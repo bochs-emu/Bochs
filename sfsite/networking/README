@@ -1,0 +1,15 @@
+README was last updated Thu Jun 14 08:03:50 PDT 2001
+
+This directory contains information about Bochs networking, and our plans
+to improve it.
+
+A summary of the different networking plans under consideration:
+bochs-network-planning.txt
+
+Conversation between Peter and Bryce from 6/14/2001 with more details:
+peter_bryce_20010614.html
+
+Diagrams that Peter sketched to describe some possibile plans.
+host_only.gif     describes plan #1
+pkt_filter.gif    describes plan #2
+bridge.gif        describes plan #5

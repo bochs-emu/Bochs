@@ -1,0 +1,13 @@
+</td></tr></table>
+</td></tr>
+<tr><td colspan="3" bgcolor="#4079d6" height="1"><img src="images/sm.gif" width="1" height="1"></td></tr>
+<tr><td width="140" bgcolor="#aacbff">&nbsp;</td><td bgcolor="#6d95d7" width="400">&nbsp;</td><td width="100%"><table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td bgcolor="#4079d6" width="50%">&nbsp;</td><td bgcolor="#1e029a" width="50%">&nbsp;</td></tr></table></td></tr>
+<tr><td>
+<center>
+<A href="http://sourceforge.net">
+<IMG src="http://sourceforge.net/sflogo.php?group_id=12580&type=1" width="88" height="31" border="0" alt="SourceForge Logo">
+</A>
+</center>
+</td>
+<td colspan="2"><font size="2" face="arial, helvetica">Please send comments and questions concerning the site to <a href="mailto:tbutler@uninetsolutions.com">Timothy R. Butler</a>.<BR>
+Web site feature requests and bug reports should be added to the <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Website+Tracker&url=http://sourceforge.net/tracker/?atideq389510ampgroup_ideq12580ampfunceqbrowse">website tracker</a>.<BR>

@@ -1,0 +1,1903 @@
+*** Topic for #Bochs: Bochs Pentium Emulator .:. How is the latest release
++working on different platforms? .:. Who uses Bochs anyway? .:. Bugs and
++features! bochs is cool come here
+<uninet> (although I think it just captures the upt to the current point... so
++I'll save it again before I close and all will be well.
+<bryce> first thing on my list is: how is the Bochs pre-release working for
++people?
+<yakovlev> no comment.
+<bryce> anybody tried it?
+<uninet> I haven't done a lot of testing yet, but so far so good. The RPM
++loads flawlessly.
+<MarkK> Is the prerelease the RPM?
+<uninet> Yes.
+<MarkK> I've loaded it under RH
+<MarkK> worked fine
+<bryce> I heard someone say "I couldn't find bochs because I didn't have
++/usr/local/bin in my path"
+<MarkK> ran the Linux model
+<MarkK> that was me!
+<bryce> some docs will fix that
+<bryce> :)
+<uninet> Mark - you have SuSE too, right? That problem doesn't show up
++there...
+<MarkK> And shucks.....I'm a hardware guy....and I still figured it out! ;-)
+<bryce> haha
+<MarkK> No, SuSE is my email server at work....
+<MarkK> so I haven't tried it there
+<uninet> Ah.
+<MarkK> I use RH for my Linux work
+<uninet> Gotcha. I wasn't sure...
+<bryce> I was hoping to get some bug reports on 1.2.pre1 to know what needs to
++be fixed before 1.2
+<MarkK> yes...
+<bryce> here's what's already been fixed since 1.2.pre1:
+<bryce>     - fixed compile problems in gui/nogui.cc, iodev/pci.cc
+<bryce>     - removed extra paren that broke SHOW_IPS
+<bryce>     - HALT macro in rombios.c causes a bochs panic (which can be
++turned off
+<bryce>       in .bochsrc) instead of actually halting.
+<bryce>     - added additional check for null pointer in debugger exit routine
+<bryce>     - now font/vga.pcf will be installed in the RPM package.  Some
++systems
+<bryce>       don't have it.
+<bryce> mostly really minor stuff
+<uninet> What about Mark's problem? Perhaps a symlink to /usr/bin would be
++good.
+<yakovlev> We should put in a fix for the timing.
+<yakovlev> No, it belongs in /usr/local/bin on linux.
+<MarkK> I would have been happy with finding it in a readme...
+<bryce> timing? as in bochs takes 100% cpu?
+<uninet> It seems that it is rather bad it installs outside the path of RH
++though...
+<yakovlev> and sometimes runs faster than real time.
+<yakovlev> I had an idea on that one.
+<bryce> I agree that's important, but I think not for the 1.2
+<bryce> I'm thinking bug fixes only, basically, but let's get the timing fixes
++into CVS for the next
+<yakovlev> Well, what is 1.2?
+<yakovlev> Are we calling it a bugfix release of any existing feature
++improvements?
+<yakovlev> essentially?
+<bryce> right. here's what I was thinking with 1.2.pre1
+<uninet> I thought it was a feature release
+<bryce> we had lots of features that only the authors have tried
+<bryce> and finally the ability to make RPMS and win32 binaries
+<bryce> so I wanted as many people as possible to be able to try the features
+<MarkK> So I'll ask the question.....
+<bryce> but wasn't so sure of stability, so I called it a pre-1.2 release
+<MarkK> What features?
+<MarkK> (Where do I find a list?)
+<yakovlev> SMP, for one.
+<bryce> CHANGES.txt in the source TAR file
+<bryce> I'll paste them in now if you want.
+<yakovlev> bochs-RFB I think is new in 1.2 also.
+<MarkK> not necessary....I can't run tonight anyway
+<MarkK> I'll look at the tar file
+<bryce> there are some important ones, esp in the area of I/O (log file
++output)
+<bryce> and what you see on stderr
+<yakovlev> Oh yeah, the code maintenance issues like that one.
+<uninet> http://bochs.sourceforge.net/docs-html/changelog.html has the log of
++changes too.
+<yakovlev> Ugh, I'd really like to get my pit changes in, but Abigail has had
++different ideas... Babies do that.  :)
+<MarkK> I'm there now reading
+*** smapnipss (rooot@cs6668169-151.austin.rr.com) has joined channel #Bochs
+<bryce> so I think 1.2 OFFICIAL should be 1.2.pre1 with a few bug fixes
+<uninet> Sounds reasonable.
+<bryce> and anything major should go into CVS snapshots and wait for 1.3 or
++something
+<yakovlev> Wow, already doing a feature freeze.
+<bryce> :)
+<uninet> Bochs going big time. :-)
+<yakovlev> here's a stupid question:
+<yakovlev> What kind of release schedule are we expecting here?
+<yakovlev> 1.2 definitely is NOT ready for the big stuff.
+<yakovlev> but, it's an incremental improvement.
+<bryce> I should say pretty early on, I have only worked on projects of 2-3
++people before and have not done this kind of thing before, so I'm learning as
++I go.
+<MarkK> so far I must say I'm REALLY impressed here though
+<MarkK> I'm participating on some much larger projects
+<MarkK> and they're no where as organized
+<MarkK> (of course I don't really know how many are participating here!!)
+<bryce> I hope to get more people involved in making decisions like when to do
++releases, but here's what I was thinking for the 1.2 thing
+<bryce> I wanted to get binary releases out as soon as possible
+<bryce> since that will allow the most people to try it out, and potentially
++bring in more develoeprs
+<bryce> first thought was to do binaries of bugfix3 but the I/O improvements
++made such a difference that it seemed like a waste of time.
+<yakovlev> Well, with the HALT bugfix in the bios... could we do a binary
++release of 1.1.2 also?
+<bryce> sure, but what about the stderr cleanup, the .bochsrc cleanup, the I/O
++cleanup?
+<uninet> What would be the advantage of a 1.1.2 binary release?
+<bryce> there's too much that should be backported IMHO to make it worth it
+<yakovlev> It would potentially run when the main problem is that HALT bugfix.
+<bryce> ?
+<bryce> what would run better in 1.1.2?
+<yakovlev> What if we independently did a release of just the bios?
+<yakovlev> I guess that's really what I'm advocating.
+<bryce> anything is possible.  we can backport anything we want.
+<bryce> given enough time.
+<yakovlev> We had at least a few messages on the list about people getting
++HALT messages when things used to run fine.
+<uninet> Can't that be stopped in bochsrc?
+<bryce> the bug fix to HALT causes errors to be reported correctly, that's
++all.
+<yakovlev> from the bios fixes you recently added.
+*** Signoff: nolu (Read error: Connection timed out)
+<yakovlev> yup, that's the problem.
+<bryce> anything that has STOPPED working because of that was always producing
++error conditions but they weren't being reported.
+<bryce> so fixing the error reporting is causing people to see the errors that
++before were silent.  Does that make sense?
+<yakovlev> Okay, then what about a bios version that possibly reports but
++continues to run after errors occur.
+<yakovlev> right
+<uninet> I thought Bryce said the Bochsrc config allowed for this...
+<bryce> that's easy enough, although we should eventually fix those errors
++instead of ignore them :)
+<yakovlev> of course
+<yakovlev> but once reported, it's a possibly easy workaround.
+<bryce> Tim, the HALTs now produce a bochs panic.  In 1.2 all panics can be
++turned non-fatal by changing the .bochsrc.
+<yakovlev> but I don't trust any code executing after a HALT.
+<uninet> So, that would include the ones Greg is referring to, right?
+<bryce> Tim, yes
+<yakovlev> Unles you guys are sure that wouldn't make a difference.
+<bryce> we should distinguish between the rombios code calling the HALT macro
++and a HLT x86 instruction.
+<MarkK> I agree with that
+<uninet> That'd be very nice.
+<yakovlev> I just mean have a version of the bios with HALT defined to be nop.
+<bryce> the HALT macro was broken until 1.2.pre1, it did absolutely nothing
+<yakovlev> Which was good from a user perspective, bad from a debugging one.
+<bryce> the hlt instruction halts the bochs simulation, no question.
+<yakovlev> doesn't HALT do a hlt?
+<bryce> in 1.2.pre1, it does.
+<bryce> I've been working on cvs, and here's what it does now:
+<yakovlev> Right, and I'm just saying I don't want to have to disable all
++hlts, just the one in HALT.
+<bryce> the HALT macro causes bochs to call panic
+<bryce> with the line number of the HALT macro (in rombios.c)
+<bryce> and then it does NOT call the x86 hlt
+<yakovlev> oh, that's somewhat better.
+<bryce> this lets you control what happens through the bochsrc by saying
++"panic: action=fatal" or "panic: action=report"
+<bryce> do you think that's an ok behavior for a 1.2 release?
+<yakovlev> Not too bad.
+<bryce> :)
+<yakovlev> You guys had talked about being able to isolate panic behavior to a
++particular unit.
+<yakovlev> well, a particular section of code.
+<bryce> right
+<yakovlev> Sorry, work slipping in there.
+<yakovlev> Is that doable from .bochsrc?
+<bryce> Todd's I/O code has the capability of having a different action for
++each of panic,error,info,debug for each "module"
+<bryce> where module is something like "HD", "CPU", "PIT"
+<bryce> but there is not yet any .bochsrc syntax to specify this
+<yakovlev> could we define the panics caused by the bios to be a specific
++macro?
+<yakovlev> macroXXXXX module
+<bryce> I think you mean something like:  panic: facility=cdrom, action=fatal
+<bryce> panic: facility=bios, action=report
+<bryce> ?
+<yakovlev> yup.
+<bryce> panic: facility=default, action=fatal
+<yakovlev> although that's a little awkward.
+<bryce> yes, needs work
+<yakovlev> but yes, basically that.
+<bryce> the I/O functions are all ready to do that, we just need a syntax!
+<bryce> any suggestion?
+<yakovlev> PIT: panic=fatal
+<yakovlev> default: panic=fatal
+<bryce> what about debug,info, and error though?
+<bryce> PIT: panic=fatal, error=report, info=report, debug=ignore
+<yakovlev> HD: debug=ignore
+<yakovlev> sure.
+<bryce> that seems good enough
+<yakovlev> it has the added advantage of giving us some direction for
++additional "module parameters"
+<bryce> I have a feeling it will be better if the thing left of the colon can
++be the same for all such statements, but I'm not sure how to make it look ok.
+<yakovlev> It seems to me that the only issue for panics, etc. is the action.
+<yakovlev> hmmmm...
+<yakovlev> well...
+<bryce> true but what if you wanted to log HD messages to a different file?
+<yakovlev> panic: action=fatal <insert char here> PIT
+<bryce> log: obj=HD, file="hdlog.txt", panic=fatal, error=report, info=report,
++debug=ignore
+<bryce> it's getting LONG
+<bryce> :)
+<bryce> but soon the GUI will do this for us.
+<bryce> :)
+<yakovlev> yup.
+<yakovlev> just a minute, I like the log idea.
+<yakovlev> hmmmm...
+<yakovlev> what if we viewed these more as commands.
+<yakovlev> so, we could use:
+<yakovlev> log: filename="outfile", panic=fatal, error=report
+<yakovlev> log: obj=PIT, filename="outfile2", panic=report, info=report
+<yakovlev> that's cleaner.
+<yakovlev> we'd have to decide just how to parse different things.
+<bryce> so if you have no obj=X then it means the default?
+<bryce> is that your point?
+<yakovlev> yup.
+<bryce> makes sense
+<yakovlev> no, not just that.
+<bryce> and later lines override settings from earlier lines
+<yakovlev> we only have to specify part on a line,
+<bryce> right
+<yakovlev> right.
+<bryce> ok, that sounds like a good start.
+<yakovlev> filename would apply either only to the module.
+<yakovlev> or even only to the reporting specified on that line.
+<MarkK> Is there something easy you could do to keep separate runs in separate
++files?
+<MarkK> So that if you wanted to run regression it would be easy
+<bryce> (let's continue the .bochsrc syntax on email, so that we can get to
++other things too)
+<MarkK> sure
+<bryce> mark, maybe you could put in a %d or something
+<bryce> into the filename, and then sprintf some time stamp into the %d
+<MarkK> that's an idea
+<yakovlev> there are several ways to do it.
+<yakovlev> the calling program could just change the value in .bochsrc between
++runs.
+<yakovlev> at any rate, next topic...
+<bryce> I had a little survey written up
+<yakovlev> Maybe the GUI interface would be appropriate?
+<yakovlev> oh, go ahead.
+<bryce> but given that we have only 5-6 people...
+<bryce> let's just take a peek at it but try to get more people to answer it
++later on
+<yakovlev> K.
+<bryce> it's at http://bochs.sourceforge.net/ircsurvey.html
+<bryce> or if it's easier I'll just paste it in
+<bryce> let's add any number of possible responses that you can think of, and
++maybe we can make this into a web survey instead (or maybe SourceForge
++survey)
+<uninet> Should I post my response here?
+<bryce> sure!!
+<yakovlev> I write bochs as a hobby.  I'm more interested in getting it right
++than using it.
+<bryce> Educator/Student: to see how the computer works
+<yakovlev> However, I'm also interested in getting x86 programs to run on
++other OSes.
+<uninet> For the first question (What do you use bochs for): Initially to try
++out Win32, although now just for the enjoyment of running a PC in my PC. :-)
+<uninet> Future Bug fixes: bug 1. Feature Request: feature 8.
+<bryce> also to be able to watch the OS working (esp Linux since I can see the
++source too)
+<uninet> (Mouse problems, and emulation speed respectively)
+<MarkK> Chip Designer: Inteested in interfacign it to my new design.
+<MarkK> bad spelling. ;-)
+<bryce> mark, are you allowed to say what you're designing? :)
+<MarkK> Sort of....
+<smapnipss> i use bochs for os development
+<MarkK> I'm working on some leading edge 1394 stuff
+<bryce> I understand, I'm a chip designer too.
+<yakovlev> wow, me too.
+<yakovlev> I can say.  POWER4
+<MarkK> but I'm also interested in chipset design, and how that might play in
++here
+<uninet> I'm feeling out numbered here... I'm just a lowly web designer.
+<bryce> We're thinking about SMP chip designs
+<bryce> big surprise :)
+<MarkK> The web rules...;-) We just work!
+<MarkK> Anyway, long term I'm interestedin how I can use this with new chip
++designs prior to tapeout...
+<yakovlev> Interesting.
+<bryce> it could certainly be made into a good driver/monitor...
+<yakovlev> Were you one of the guys pushing for a more modular design?
+<MarkK> yes, driver could get deveoped in Windows. 
+*** Signoff: smapnipss ()
+<MarkK> I usually have some sort of C model for the chip
+<MarkK> hook it all together and try it out...
+<uninet> That would be nice. Would the C code your are writting be able to be
++open sourced?
+<bryce> haha
+<MarkK> LOL
+<uninet> :-)
+<yakovlev> ;)
+<MarkK> Laugh Out Loud or Lot's Of Luck
+<MarkK> you're choice!!
+*** eks|x (eks@HSE-Montreal-ppp123837.qc.sympatico.ca) has joined channel
++#Bochs
+<eks|x> hi guys :)
+<bryce> sorry, I'm just trying to picture the open source chip design...
++People have talked about it, but it's hard to see it happening.
+<MarkK> hi eks
+<bryce> Hi eks!
+<uninet> Hi eks!
+<eks|x> :)
+<MarkK> Not really....
+<bryce> eks: we're just talking about our answers to a little survey at
++http://bochs.sourceforge.net/ircsurvey.html
+<MarkK> I worked in the IP industry before Phoenix bought us...
+<uninet> <sigh> Oh well, I guess bochs needs more speed before it needs IEEE
++1394 anyway...
+<MarkK> people are starting to do open source Verilog
+<yakovlev> depends on how prevalent FPGAs become in configurable consumer
++electronics.
+<MarkK> Or faster platforms to run Bochs on.
+<yakovlev> Anyways, we're getting very sidetracked.
+<MarkK> yes
+<bryce> good point :)
+<bryce> so I heard several votes for better mouse support (bug1)
+<uninet> Definately.
+<eks|x> what I would really appreciate is having the fpu more closely related
++to the debugger, aka fpu stack on cpu_dump
+<bryce> ah, I never thought about that.
+<MarkK> Is your 'Disk Image Tools' about how to build HDs with certain OS's
++and apps?
+<yakovlev> bug1, bug4
+<bryce> eks, that should not be hard to manage.  Bochs must have the values in
++there somewhere, you just need printed out right?
+<uninet> bug3 sounds like a nice one to fix too...
+<bryce> yes, bug3 is tough though
+<bryce> well maybe not tough, just lots of OSes out there.
+<yakovlev> feature7, feature2
+<eks|x> bryce: right
+<uninet> Yeah, at least it would be nice on Win9x.
+<bryce> for the cdrom support, what if we made a portable way to read from a
++cdrom disk image?
+<yakovlev> yes, but if we get the CDROM model right, we're done.
+<eks|x> bryce: we have some 3D computing code we try to work out in a gaming
++station, we worked out out own fpu stack out code, but it would be kinda neat
++to have them out on cpu_dump
+<eks|x> yakovlev: cdrom model shouldn't be too hard to implement, close to hdd
++model
+<MarkK> Bryce: So that part is under feature 1?
+<bryce> not as convenient as the real cdrom (need lots of disk space) but then
++the job of reading the raw cd is left to platform-dependent tools that are
++already around.
+<yakovlev> that would be good, Bryce.
+<yakovlev> I was surprised that wasn't there already.
+<uninet> Would it be possible to make bochs pretend /dev/cdrom was a cdrom
++image?
+<bryce> I think we just need to understand a few of the ioctls (maybe snatch
++from linux kernel code or something) to see how to read table of contents and
++stuff
+<yakovlev> well, it would take some looking, but basically, yes.
+<eks|x> just out of nowhere like that, any of you familiar with 'bfe' ? ;)
+<yakovlev> We'd have to add the removable media controls to the CDROM
++interface, but even that isn't ridiculous.
+<bryce> eks: can you add that as a feature request on SF?  otherwise I promise
++I'll forget. :)
+<eks|x> it's a nice addition to bochs I think
+<eks|x> bryce: I can do that,sure :)
+<bryce> bfe: I looked at it once, and asked the author if he wanted to
++integrate it, he's not that interested.
+<uninet> yakovlev: Could it do something similar to Win4Lin, where the guest
++OS handles how the CD's are mounted?
+<uninet> (i.e. automount, standard mount, etc.)
+<MarkK> could do that for all the physical I/O if you wanted to...
+<yakovlev> well, bochs needs to know if a CD is there or not.
+<eks|x> bryce: yeah, I know, but it's a good tool, I use it often, mostly to
++generate cpu-flow tracing in the history file
+<bryce> bfe is actually what started me thinking about guis
+<yakovlev> in the emulated sense.
+<uninet> Hmm...
+<yakovlev> Beyond that, it's just a file.
+<eks|x> yakovlev: one problem I see is changing the actual cd ocne bochs is
++started
+<uninet> Could it probe the CD-ROM drive every time it is requested?
+<bryce> slow
+<yakovlev> Wrong layer, guys.
+<yakovlev> All bochs needs is:
+<uninet> How's autmount do it?
+<yakovlev> CDROM_INSERT().
+<yakovlev> CDROM_EJECT().
+<yakovlev> the OS interface code figures out when to call them.
+<uninet> That'd make sense.
+<eks|x> yip
+<bryce> cdrom would be a big help in installing new software
+<yakovlev> then maybe DISK_SEEK, DISK_READ, and DISK_WRITE to complete the
++set.
+<MarkK> what's the interface look like between the IDE controller and the
++HD/CDROM?
+<bryce> if I manage to make a larger-scale survey out of this, anything you'd
++like to add to it?
+<MarkK> Does it run ATAPI commands?
+<yakovlev> yes, ATAPI.
+<uninet> bryce: perhaps a question on the most important feature of a new GUI?
+<bryce> feature10: GUI for configuration and runtime control
+<bryce> oh I see
+<bryce> like what do you want the gui to do?
+<uninet> Right.
+<bryce> Answer: everything.
+<uninet> Assuming that the GUI could have lots of different things (GUI
++debugger, GUI config, etc.)
+<uninet> Bryce, I like that answer.
+<bryce> should we talk about guis now?
+<yakovlev> Answer: everything.  I want to push all the interface as far away
++from bochs internals as possible.  :)
+<yakovlev> Notice a recurring theme in my messages?  :)
+<eks|x> any of you tried simnow! ?
+<eks|x> yakolev? layering?  ;)
+<bryce> I like what Greg said in an email, that we can get separation just by
++putting the GUI code and the bochs code into different libraries that are
++linked together.  Do I have that right?
+<yakovlev> Nope.  My impression is that it contains almost an entire
++microprocessor worth of simulation data.
+<yakovlev> Sort of.
+<uninet> Yeah, I liked that idea too.
+<yakovlev> It doesn't necessarily HAVE to be in a different library, but
++that's the idea.
+<uninet> Well, actually one should be a normal program that requires the
++shared library that contains the other code, right?
+<yakovlev> Also, I used "GUI code" very loosely.
+<yakovlev> right, tim.
+<bryce> no reason to require shared library, but that is one way to do it.
+<yakovlev> Tim, I mean.
+<uninet> I think that would be best.
+<uninet> (not shared library)
+*** Psyon (exodus@exodus.psyon.org) has joined channel #Bochs
+<yakovlev> Shared library good, but could be compiled separately.
+<bryce> hi Don!
+<Psyon> Im here!
+<uninet> Or rather, what I mean, is Greg's idea. I have no preference in how
++it's done... I'm just thinking in terms of Perl. :-)
+<Psyon> What did I miss?
+<Psyon> HEY
+<uninet> Hi Don!
+<bryce> it will all be on the web site.
+<Psyon> hehe
+<Psyon> ok
+<bryce> we're starting to talk about the GUI!
+<Psyon> well... what am I hearing about Perl?
+<Psyon> Good that is my dept?
+<bryce> we're going reimplement all of bochs in perl.
+<Psyon> oops
+<uninet> Yeah, if it is dynamically linked that would be good. That way the
++GUI code could be switched without a recompile.
+<Psyon> I meant !
+<Psyon> Uhh...
+<Psyon> is that a good idea?
+<bryce> :)
+<bryce> (that was a joke)
+<Psyon> oh
+<Psyon> ok
+<Psyon> well...
+<Psyon> You can write perl modules in C
+<Psyon> cant you?
+<uninet> :-) Maybe... it wouldn't require a compilier then.
+<Psyon> I was told
+<Psyon> write a bochs perl module
+<Psyon> that would allow you to run bochs and have events caught by perl
+<yakovlev> Anyways, I used "GUI code" to refer to any thing that interfaces
++with the host system.
+<yakovlev> Ahh, but then we have to port perl to MacOS.
+<Psyon> They have a Mac Perl
+<Psyon> dont they?
+<uninet> Yeah, I think that's a good definition... so anything that could be
++considered "client code" right?
+<eks|x> btw, perl is an easy to write into language, but afaik, it's never as
++fast as optimized-compiled C
+<yakovlev> Yeah, basically.
+<bryce> greg, how is your model different from what Bochs already does?
+<bryce> we have cpu, iodev, and gui all in separate libraries.
+<yakovlev> Not very.
+<yakovlev> iodev is pretty close to CPU.
+<Psyon> so the new model reflects the Plex86 plugin structure?
+<uninet> Is the current GUI library dynamically loaded?
+<bryce> so with some makefile tricks we could compile them as shared
++libraries.
+<bryce> not dynamic, no
+<eks|x> bryce: feature added on sf (fpu stack dump)
+<bryce> eks: thanks
+<bryce> uh, I don't know anything about the plex86 plugins, is it based on
++shared libraries?
+<Psyon> That is how Plex86 does the GUI and IO dev stuff now isnt it?
+<yakovlev> Right, but we may want to clean up some of the interfaces a bit.
+<Psyon> I know the GUI is
+<uninet> bryce: Would it be difficult to make it dynamic so the GUI could be
++changed like a plugin?
+<Psyon> it compiles it as a shared library
+<Psyon> the GUI is in the bochs plugin 
+<Psyon> hehe
+<Psyon> uni: There are just certain functions that are needed to be
++implemented for the GUI
+<yakovlev> Methinks plugins is going a little far.
+<Psyon> a shared lib that has them wouldnt be a problem
+<bryce> it seems like compiling as a shared library is not really an important
++feature.  it can be done on some platforms and not on others, big deal.
+<uninet> I'm using plugins in the loose sense of being able to swap in another
++module without having to recompile (like Linux kernel modules)
+<bryce> it reduces the size of the binary, and maybe you can load up only the
++device models you want that time.
+<Psyon> the bad thing is that shared libs are done differently on different
++plat forms
+<bryce> psyon, that's my worry too
+<Psyon> THey are compiled differently
+<eks|x> are you guys going with bochs using gui modules or gui using bochs
++module?
+<Psyon> and... DLLs in windows have to have the exported functions defined
+<Psyon> __declspec(dllexport)
+<Psyon> or have a .def file
+<eks|x> I don't see the real need to swap gui very often without recompile,but
++I might see where switching cpu would be a +
+<uninet> eks|x: I would think the GUI would use the bochs module.
+<Psyon> eks: it might come in handy with somethign like Bochs-RFB
+<Psyon> where one time you want to run natively
+<Psyon> then switch it so you can run over a network
+<eks|x> yeah
+<Psyon> but the compiled EXE is so small
+<Psyon> I just keep two copies
+<eks|x> one bochs without debugger one with it
+<uninet> eks|x: It would also be handy if you wanted to use the console gui,
++and then wanted an X11 gui.
+<bryce> modules might let you make a binary distribution with all the GUIs
++available at .bochsrc time, rather than only one
+<eks|x> uninet: how often do you switch from one to the other?
+<Psyon> How big is the compiled bochs on linux?
+<uninet> eks|x: never. But I haven't actually even tried the console GUI yet.
+<Psyon> I havent looked at it in linux in a while
+<eks|x> -rwxr-xr-x    1 root     root      1962770 May 29 20:24 bochs
+<Psyon> whoa!
+<Psyon> its like 400k in windows
+<eks|x> with fpu, debugger, and disasm
+<Psyon> wait
+<bryce> [bryce@monster bochs-1.2.pre1]$ strip bochs
+<bryce> ls -[bryce@monster bochs-1.2.pre1]$ ls -l bochs
+<bryce> -rwxrwxr-x    1 bryce    bryce      441036 May 30 22:44 bochs*
+<Psyon> 384kb
+<Psyon> that is an out of the box compile of BugFix 2
+<eks|x> 1.1.3 with a few addys
+<bryce> I don't think it's the binary size, it's the ability to mix and match
++parts that's powerful, right?
+<yakovlev> Well, it sounds like we want a bochs executable which loads both a
++GUI and a BOCHS module.
+<uninet> eks|x: the GUI module would probably be best in Binary releases. If
++you could switch from say a theoretical Motif gui to a GTK GUI or QT GUI...
+<uninet> ...it would be good since one binary would work on all of those
++GUI's.
+<eks|x> what about having a main binary using a bochs module and a gui module?
+<bryce> you can do any of these, however you want.
+<Psyon> This is where having a separate process for the viewer and the emu
++comes into play
+<Psyon> that would make it easier to switch the viewer type
+<yakovlev> eks: jynx
+<bryce> bochs module with no debugger, optimized for speed, or bochs module
++with debugger and SMP enabled, etc.
+<MarkK> or modules across a network?
+<bryce> I haven't used shared libs much.  does that make it hard for debugger
++to step through the source and tell you where you are?
+<uninet> MarkK: That would be another nice reason for modules. RFB could be
++used just by changing modules.
+<yakovlev> I actually don't like using shared libs for the main bochs at all.
+<yakovlev> Too hard to make portable.
+<Psyon> Usually a debugger will tell you which module (lib or dll) the code is
++in
+<MarkK> I'm also thinking about sim speed....
+<yakovlev> But compiling them separately would make them useful for other
++things.
+<MarkK> I can link up 5 or 10 PCs if it's networked together
+<bryce> they are already compiled separately, as static libraries
+<yakovlev> Well, a bigger wrapper.
+<eks|x> -rwxr-xr-x    1 eks      users     1472404 May 30 22:42 bochs
+<eks|x> bare bochs 1.1.3
+<uninet> bryce: but since they are static libraries, that would mean they need
++to be recompiled for each change, right?
+<bryce> markk, are you thinking that several pcs would simulate it faster?
+<yakovlev> Eat up most of iodev, for one.
+<MarkK> just thinking it might, in the long term
+<bryce> markk: maybe, probably the first step is multithread support on a
++single machine
+<MarkK> Also, it might simulate concurrency better later on...
+*** Roadkill (~ondrej@baikonur.orbitec.com.au) has joined channel #Bochs
+<MarkK> when you want a disk model running in parallel to a VGA model
+<MarkK> that sort of thing
+*** Roadkill has left channel #Bochs
+<MarkK> If I had one PC running the HD model, and it had the disk image
+<bryce> Another big question is what GUI library to use, and I think it should
++be determined by whoever is actually motivated to do some coding.
+<MarkK> and anotehr running the CPU model...
+<MarkK> then things would be a bit more like a real PC
+<MarkK> (this is later though)
+<uninet> bryce: Like I said (on IM) I'd be willing to make a QT GUI, but I
++would need to wait and see how someone else created a C++ gui for bochs
++first...
+<yakovlev> Mark, that's a lower down distinction than where we're talking
++about.
+<MarkK> I'm a hardware guy! ;-)
+<Psyon> hehe
+<yakovlev> :)
+<MarkK> gimme a break! ;-)
+<bryce> markk: we should try some of these things.  I'm afraid that bochs
++spends very little time simulating the behavior of the devices and TONS OF
++TIME simulating all those complicated x86 instructions.
+<MarkK> yes, and I think no time (maybe) simulating the chip set right now?
+<Psyon> I think if we are going to make a GUI that uses a toolkit, it should
++use one that Is cross platform
+<Psyon> QT has a windows version
+<Psyon> but it costs
+<Psyon> we might be able to get a special version for bochs though
+<bryce> what about Tk or wxWindows?
+<Psyon> is wxWindows any good?
+<bryce> I have no idea, their website says it is :)
+<bryce> but it's cross platform, all C++ based, and open-source
+<uninet> Psyon: I was mainly thinking I could port what ever free
++crossplatform GUI came out to QT, after the initial work was done. I've never
++done a GUI before, so I probably couldn't do the initial work.
+<uninet> All I can say is that it seems to me C++ is the way to go...
+<uninet> (versus C for the GUI)
+<Psyon> Well... I dont see why using the standard bochs GUIs are a problem
+<yakovlev> neither do I.
+<Psyon> using a GTK of some sort would still have code for Windows and X11 in
++it
+<uninet> Psyon: GTK for Windows isn't very good at the moment, is it?
+<Psyon> its decent
+<Psyon> the Mouse code needs work
+<Psyon> ive been looking at ways to improve
+<Psyon> the problem is the way events are handled
+<bryce> the problem with the current one is that there's no framework to add
++anything at all
+<Psyon> since handle_events() is only called every so often
+<uninet> Wouldn't it also cause some problems since it is C-based, where as I
++think MS's commonctrls are C++?
+<Psyon> do to the emulation, the time between calls is a sec or so
+<Psyon> so it slows it down
+<Psyon> Who here is pretty familiar with how the mouse emu works?
+<bryce> not me
+<yakovlev> not I.
+<MarkK> nor I
+<bryce> basically, you're the expert :)
+<Psyon> when i say handle_events() do you guys know what im refering to?
+<yakovlev> I've looked at it, but haven't had time to really get into it.
+<Psyon> well...
+<eks|x> same here
+<yakovlev> Are you saying the mouse code is polled.
+<Psyon> when you amke the GUI
+<yakovlev> ?
+<Psyon> you have to keep your own queue of mouse and key events
+<Psyon> then bochs calls handle_events() in the GUI code
+<Psyon> and you have to pass it all the events
+<Psyon> and all of bochs runs in the same thread
+<Psyon> so it sometimes has a delay between cals
+<Psyon> to pass teh events to bochs
+<Psyon> you use mouse_move() or somethign like that
+<Psyon> and I was thinking about just passing them to bochs as they come in
+<Psyon> but the window callback for events is on a diff thread
+<Psyon> and I dont know if that will cause problems
+<bryce> how often does handle_events get called, and is it on Bochs emulate
++time or real time?
+<Psyon> It seems to be called every .5 to 1 sec
+<yakovlev> Hmmmm, sounds like something potentially worth moving from the GUI
++layer into the general bochs layer.
+<Psyon> when there is heavy emulation being done
+<Psyon> Well...
+<Psyon> if we made IODevs have diff threads
+<Psyon> it would help
+<bryce> but is it scheduled by the real machine's timer, or by bochs timer
++(like N instructions have gone by)
+<Psyon> Bochs just has it in a loop
+<Psyon> Its called as often as It can be i guess
+<yakovlev> from what Don is saying, sounds like bochs instructions.
+<bryce> I'm afraid I need to look at it more to be able to know what is going
++on.
+<Psyon> // Called periodically (vga_update_interval in .bochsrc) so the// the
++gui code can poll for keyboard, mouse, and other// relevant events.
+<eks|x> I tend to agree with Greg that it's bochs' instructions
+<Psyon> There
+<Psyon> that is from Win32.cc in the GUI dir
+<Psyon> Hmm...
+<Psyon> I never noticed that
+<Psyon> I wonder if I set vga_update_interval lower
+<Psyon> but still
+<Psyon> with bochs all in one thread
+<Psyon> it would still cause latency
+<bryce> I'm worried that we're getting far far away from gui libraries and who
++wants to write some dialog boxes... :)
+<Psyon> hehe
+<bryce> I want to fix that mouse too, some day.
+<Psyon> I think that is a big part of the useability problem
+<uninet> The GUI code is already seperated into a different module, right?
+<uninet> (or rather library)
+<Psyon> how well does the mouse work in X11?
+<bryce> greg and don said, what's wrong with the current gui ?
+<eks|x> tim: right
+<eks|x> tim: libgui.a
+<Psyon> There are some optimizing and cleanup that needs to be done with the
++current ones
+<Psyon> but that is all
+<uninet> eks|x: Do you know if it is done in C or C++?
+<eks|x> tim: seemslike c++ to me
+<Psyon> it is technically C++
+<eks|x> bx_gui_c::handle_events(void)
+<Psyon> but doesnt use classes
+<eks|x> ;)
+<Psyon> oh
+<yakovlev> It sounds to me like the way handle_events is used is awkward.
+<Psyon> guess it doees
+<Psyon> hehe
+<eks|x> eheh
+<bryce> Bochs is a wierd mix of C++ without using a single feature of C++. 
+<bryce> :)
+<Psyon> heheh
+<uninet> Ah, thanks Bryce.
+<bryce> greg and don said, what's wrong with the current gui ?
+<Psyon> I dont think anything is
+<bryce> and I think that's important to hash out
+<uninet> So, theoretically, it wouldn't be hard to create a GUI using a C++
++toolkit?
+<Psyon> It might look to plain for some people
+<yakovlev> No GUI configuration of parameters.
+<bryce> the thing I'm missing a LOT is the ability to put up dialogs
+<uninet> Psyon: It looks rather bad, and doesn't have any config tools.
+<bryce> such as "You just got a panic. do you want to continue"
+<Psyon> hehehe
+<bryce> or "Now choose the disk image you want to be in drive A:"
+<Psyon> I think a live register display would help for debugging  too
+<bryce> that sort of thing
+<MarkK> Speaking of "You just got a panic. do you want to continue?"
+<Psyon> making swapable floppy images wouldnt be hard
+<Psyon> beings you can do it now
+<Psyon> just unmount it
+<bryce> how?
+<Psyon> copy a new disk
+<MarkK> My 9 year old wants me to come say goodnight
+<Psyon> and remount
+<MarkK> bye
+<eks|x> Psyon: if you mean live reg update, simnow! made the mistake of doing
++such, should be on/off thingy
+<bryce> renaming the disk image file?
+<bryce> markk: good night!
+<Psyon> yes
+<MarkK> later
+*** Signoff: MarkK ()
+<Psyon> just copy the new image to the one that is named in bochsrc
+<Psyon> well...
+<Psyon> we would want to make it loadable
+<Psyon> but im saying
+<yakovlev> copying the image file is awkward.
+<Psyon> the features are there to do so
+<bryce> yeah, and then click the stupid disk icon twice?
+<bryce> it sucks!
+<yakovlev> And the size can't change.
+<Psyon> oviously you would unmount... change the image name in memmory
+<Psyon> then remount
+<Psyon> Im just saying
+<Psyon> it should be hard to implement
+<bryce> what's keeping us from having a dialog box?
+<yakovlev> And you often forget to unmount, or forget to remount.
+<bryce> IMHO, no GUI toolkit to write in
+<yakovlev> I see your point.
+<Psyon> Well... just make a new toolbar button that lets you load a new image
+<bryce> psyon: should or shouldn't be hard to implement
+<Psyon> shouldnt be
+<bryce> right
+<Psyon> well...
+<Psyon> the GUI shoudl have access to all the internal bochs functions
+<Psyon> init_disk
+<Psyon> or waht ever it is
+<yakovlev> What do you mean all the internal bochs functions?
+<yakovlev> I VERY MUCH disagree with that statement.
+<Psyon> Well
+<Psyon> functions that arent in the GUI code
+<bryce> more toolbar buttons would be fine, but I think we should use
++wxWindows or Tk to allow us to write a somewhat friendly set of controls for
++disk changes, choosing how verbose the logging should be, setting IPS
+<yakovlev> The GUI should have access to only a limited number of bochs
++functions.
+<bryce> (or something other than having to write native gui code for every
++little thing)
+<eks|x> reducing the number of interaction points reduce the error rate
+<eks|x> easier to debug
+<yakovlev> I was thinking, what if we used something like an STL dictionary
++and/or list of parms that the GUI code gives bochs on startum.
+<Psyon> bx_floppy_ctrl_c::init(
+<Psyon> )
+<uninet> bryce: I think Tk would be a mistake since it really doesn't work
++very well in Windows (in my experience).
+<bryce> we haven't even agreed that we need any gui library, that's what I'm
++getting at.
+<yakovlev> no, the GUI should get some well thought-out interfaces, not
++willy-nilly access to bochs internals.
+<Psyon> BAH! I cant find the function that ejects it
+<bryce> IMHO just making all the interfaces to the GUI through public member
++functions is a good way to "define the interface"
+<yakovlev> Sort of.
+<bryce> then the .h file for the outermose gui object says exactly what you
++can and can't do with it.
+<yakovlev> What we really need are acls.
+<bryce> ?   access control lists?
+<yakovlev> For instance, some disk public member functions should only be
++called by the emulator.
+<yakovlev> others should only be called by the GUI.
+<eks|x> can acl be checked at startup only or does it need to be checked at
++every function call?
+<bryce> I mean that the GUI can only call public member functions of the
++interface object, not that the GUI can call public member functions of any
++object it can find.
+<uninet> yakovlev: Right... the GUI doesn't need access to everything.
+<yakovlev> Having a single .h file with the functions that are allowed to be
++accessed outside would be listed there.
+<yakovlev> acls was just saying that public vs. private isn't descriptive
++enough in some cases.
+<Psyon> Hmm.... (kinda old topic) but If im looking at this correctly you can
++call bx_floppy_ctrl_c::init() with a new image name it bochs should reload it
+<Psyon> and it can be a new size
+<bryce> for example, compile the gui library with only the .h file of one
++bochs class, an interface object whose methods define exactly what a GUI can
++do.
+<yakovlev> Oh, okay, that's exactly what I'm advocating then, Bryce.
+<yakovlev> maybe, but bochs doesn't handle floppies right anyways.
+<Psyon> that seems like a smart idea
+<Psyon> what doesnt it handle?
+<Psyon> I reads my real floppies now :)
+<eks|x> read with MT=0 ;)
+<Psyon> hehe
+<yakovlev> They should be interfaced to the GUI as simply a file interface and
++ejected/inserted.
+<yakovlev> it's not separated that well.
+<yakovlev> file interface meaning a large set of unorganized data.
+<Psyon> hehe
+<bryce> maybe the first step will be to clean up the interface between current
++GUI library and the rest.
+<uninet> Question: if and when the GUI gets a config dialog, how should it
++decide whether to save changes to ~/bochsrc or to the bochsrc in the current
++directory?
+<yakovlev> Right, that's the idea.
+<Psyon> File/Save menu?
+<bryce> wherever you choose
+<Psyon> or ask on close
+<Psyon> if changes are to be saved
+<uninet> Ah, that would make sense.
+<Psyon> just like a word processor would do
+<yakovlev> What's a bochsrc?
+<Psyon> bochsrc is the config file
+<yakovlev> no, you missed the point.
+<bryce> :)
+<uninet> Psyon: good point, that would permit runtime only changes.
+<bryce> bochsrc = some place to save the settings that you like, in some form
+<bryce> so that you can get them back
+<yakovlev> right.
+<bryce> and also send them to somebody so they can duplicate your setup
+<Psyon> Would be nice to have something like VMWare, so that when the program
++starts it asks what configuration you wish to load
+<yakovlev> Something which exists totally outside the bochs emulation layer.
+<Psyon> and has the option to start with power off
+<uninet> Psyon: I agree, that would be VERY nice.
+<bryce> greg, yes only that gui part would be reading and writing the bochsrc
++I think.
+<uninet> VMware has a very well thought out GUI, I think it would be a good
++idea to use a lot of it's ideas.
+<Psyon> hehehe
+<eks|x> VMWare is quite good on the gui side, simply missing debugging :P
+<yakovlev> Watch out for patents there.  They're going to be looking at us
++fairly closely.
+<Psyon> hehe
+<eks|x> are gui patentable?
+<bryce> yes, I've been handling different configurations by making a different
++directory for every OS that I can run
+<Psyon> well... I dont think that a start with power off option is patented
+<Psyon> I just like that idea, so you can start the program
+<bryce> and each one has its own .bochsrc, disk images, and symbolic link to
++the most recent bochs binary and ROM
+<Psyon> make config changes
+<Psyon> then power on the system
+<Psyon> and since there is already a power button on the toolbar
+<uninet> yakovlev: you would just want to copy the general ideas, hopefully
++with enough improvements that the VMware people wouldn't even care.
+<bryce> I'm not saying I like the "each os in a different directory", only
++that that's what I've resorted to for now.
+<bryce> unless we do a blatant copy of their toolbar or something, I don't
++think we're in trouble.
+<Psyon> can you run bochs with a config file as an argument... like "bochs
++mysystem.rc"
+<Psyon> if not
+<bryce> not sure if it works now, but it would be useful sometimes
+<Psyon> yes
+<Psyon> that is something else that might be done in the next release or
++something
+<bryce> go for it :)
+<Psyon> actually
+<uninet> I thought it already worked as a command argument.
+<Psyon> I think all options can be done on the command line
+<Psyon> cant they
+<Psyon> yeah
+<bryce> yes something like bochs "boot:c" "diskc:blabla"
+<Psyon> I mostly look at the GUI code so im kinda dumb as to how the rest
++works
+<Psyon> hehe
+<bryce> I think we should be able to do basically any kind of .bochsrc work in
++a GUI, if we ever expect to make it a user-friendly thing.
+<Psyon> yeah
+<yakovlev> I'll make up a generic interface in the next few days and post it
++to the list.  It'll be VERY generic.  That'll be a RFC.
+<Psyon> I think the current way of bochs telling the GUI what Buttons to make
++on the tool bar could be carried over to a menu system also
+<bryce> and once you've got that, it's not much of a stretch to have runtime
++control of some things like IPS and log behavior too
+<yakovlev> For now, I'm headed to bed.
+<uninet> 'night Yak.
+<Psyon> cya
+<bryce> greg, sounds great!
+<yakovlev> All you West Coast boys have fun.
+<yakovlev> :)
+<bryce> good night
+<Psyon> night
+*** Signoff: yakovlev (Java Chat http://www.undernet.org/webchat.php)
+<Psyon> bx_gui_c::headerbar_bitmap
+<Psyon> oops
+<Psyon> right now bochs calles  bx_gui_c::headerbar_bitmap() and
++bx_gui_c::show_headerbar() to make the toolbar
+<Psyon> something like that could be done for a Menu system
+<Psyon> basically
+<eks|x> Psyon: I think the bochs gfx window shouldn't have icons at all
+<Psyon> well...
+<Psyon> im saying
+<Psyon> the same system 
+<Psyon> could be used to build menus
+<eks|x> Psyon: I think the gfx window should be a videocard dev using the gui
++toolkit
+<Psyon> so that the GUI doesnt have to be changed with each new option
+<bryce> right, something pretty generic can be worked out like the toolbar
++thing
+<uninet> eks|x: Wouldn't removing the icons lower the friendliness level below
++it's already "lowness"?
+<eks|x> the gui interface would be using the gui toolkit for the icons
++directly
+<eks|x> uninet: if you build up a gui to control bochs, you can have icons in
++it, no on the bochs output
+<Psyon> bx_gui_c::headerbar_bitmap() is passed a bitmap ID returned by an
++earlier function, the alignment (left or right), and a pointer to a function
+<eks|x> what I would like to see, is a window with nothing in it else than
++what you see on the crt of your comp
+<Psyon> eks: the current Icons are just simple bit maps used to display the
++buttons
+<Psyon> nothing stopping us from making that A toolbar button
+<Psyon> or a menu item
+<eks|x> and another window that is the bochs control/debugger/etc
+<Psyon> I would like a full screen option :)
+<Psyon> Ive been looking at how to do that also
+<eks|x> definately :)
+<Psyon> the current tool bar messes it up a little
+<eks|x> yip
+<Psyon> but I can work around it
+<Psyon> at least for windows
+<uninet> Does anyone here know how to convert normal bitmaps to the ones in
++the .h files in the source code?
+<eks|x> having it all in the gui bochs control would allow that
+<Psyon> Im not as familiar with X11 programming
+<eks|x> tim: sorry, not me
+<Psyon> uni: the ones in the H are just 1bit bitmaps
+<bryce> we need to choose at what level the gui/bochs interface should talk. 
++I guess this is what Greg said he would work on
+<eks|x> yeah, the rfc
+<uninet> Pyson: Win4Lin accomplishes fullscreen by starting a new X session on
++another tty, and then maximizing the window it's in...
+<bryce> but there is everything from:  Now print dialog box #7, which asks
++what disk you want to insert now
+<uninet> Psyon: 1bit bitmaps?
+<bryce> to:  create a dialog, with a text field here and a button there
+<Psyon> yep
+<eks|x> bryce: the 'to:' is a gui toolkit job
+<Psyon> each bit represetns one pixel
+<bryce> this is a large space, and somewhere in the middle is the best answer
+<Psyon> either black or white
+<Psyon> or forground or background
+<eks|x> #7 is the actual job of a gui front-end
+<bryce> psyon: I think he wants to know how to make a new 1-bit bitmap to
++substitute
+<Psyon> I should say monochomr
+<uninet> Psyon: Ah, is there anyway to do color 8 bit bitmaps this way?
+<Psyon> We would have to change how they are passed to the gui
+<uninet> bryce: Yeah, although perferably also raise the quality above 1-bit.
+<Psyon> unsigned bx_gui_c::create_bitmap(const unsigned char *bmap, unsigned
++xdim, unsigned ydim)
+<Psyon> char *bmap is the bitmap
+<Psyon> and that function in the GUI makes a native bitmap
+<bryce> what tool can convert a GIF into such a bitmap though?
+<eks|x> don: seems to me like the internals of the functions uses one bit
+<Psyon> Hmm...
+<Psyon> yes
+<Psyon> You might have to do it manually
+<uninet> Manually?
+<uninet> How so?
+<Psyon> yes
+<eks|x> bryce: afaik, The Gimp under X, or photoshop under Win
+<Psyon> picture an 16 by 16 square
+<bryce> what format? XBM ?
+<eks|x> bryce: monochrome bitmaps
+<eks|x> .bmp
+<Psyon> that would take 4 bytes to display
+<Psyon> wait
+<eks|x> Psyon: is the routine actually using whole byte of value 1 or 0 only?
+<Psyon> well
+<Psyon> it uses the bits
+<Psyon> not the bytes
+<bryce> that icon currently looks like this:
+<bryce> static unsigned char bochs_icon_bits[] = {
+<bryce>   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
++0x00,
+<bryce>   0xe0, 0xff, 0xff, 0x07, 0xf8, 0xff, 0xff, 0x1f, 0xf8, 0xff, 0xff,
++0x1f,
+<bryce>   0xfc, 0xc7, 0xe3, 0x3f, 0xfc, 0xc7, 0xe3, 0x3f, 0xfc, 0xc3, 0xc3,
++0x3f,
+<bryce>   0xfc, 0xc3, 0xc3, 0x3f, 0xf8, 0xc1, 0x83, 0x1f, 0xf0, 0xc0, 0x03,
++0x0f,
+<bryce>   0x00, 0xc0, 0x03, 0x00, 0x00, 0xc0, 0x03, 0x00, 0x00, 0xc0, 0x03,
++0x00,
+<bryce>   0x00, 0xc0, 0x03, 0x00, 0x00, 0xc0, 0x03, 0x00, 0x00, 0xc0, 0x03,
++0x00,
+<eks|x> so a pic shouldn't be bigger than 32bytes
+<bryce>   0x00, 0xc0, 0x03, 0x00, 0x00, 0xc0, 0x03, 0x00, 0xf0, 0xc0, 0x03,
++0x0f,
+<bryce>   0xf8, 0xc1, 0x83, 0x1f, 0xfc, 0xc3, 0xc3, 0x3f, 0xfc, 0xc3, 0xc3,
++0x3f,
+<bryce>   0xfc, 0xc7, 0xe3, 0x3f, 0xfc, 0xc7, 0xe3, 0x3f, 0xf8, 0xff, 0xff,
++0x1f,
+<bryce>   0xf8, 0xff, 0xff, 0x1f, 0xe0, 0xff, 0xff, 0x07, 0x00, 0xff, 0xff,
++0x00,
+<bryce>   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, };
+<uninet> So if you created a 1-bit picture in the gimp, and saved it as a bmp,
++how would you get it in that format?
+<Psyon> make that into 1s and 0s 
+<Psyon> and you will actually see the picture
+<bryce> no, BMP is not the same as a C header file!
+<Psyon> you have to convert that to a BMP
+<eks|x> tim: you need some tool that converts binary->c headers
+<uninet> eks|x: Hmm... do you know of a tool that can do that?
+<eks|x> tim: a search on freshmeat should do that for ya
+<Psyon> I could prolly make one
+<eks|x> tim: or wait, are ya under win?
+<bryce> this sort of crap is what a GUI toolkit should be doing for us
+<bryce> read BMP or GIF or something, and execute the right code for each
++platform to make that the icon.
+<eks|x> bryce: right
+<Psyon> well... GTKs will want to use XPM or Jpg or PNG
+<Psyon> which would look nicer
+<eks|x> png seems fine to me
+<uninet> eks|x: Linux.
+<eks|x> tim: freshmeat.net <-- solution for ya ;)
+<bryce> we are using a VERY low-level toolkit and that's why we have icons
++that look like a C header file. 
+<Psyon> I think we could easily convert this to use 256 color bitmaps
+<uninet> eks|x: thanks. I think I'll try my hands at creating some new bitmaps
++then.
+<uninet> Psyon: that would be nice.
+<Psyon> each byte representing a color in the color table that bochs uses
+<eks|x> Psyon: normalized palette or each their owns?
+<eks|x> k
+<Psyon> normallized
+<eks|x> bochs palette
+<Psyon> bochs has an internal pallet
+<Psyon> Actually... looking at this
+<eks|x> btw, one annoying thing I've seen is the actual colors used when
++displaying text in bochs (16 colors)
+<Psyon> the GUI code would all that needs to be changed
+<Psyon> just specify the bitmap the same way in the header
+<eks|x> is this palette easily modifiable?
+<Psyon> create_bitmap is just passed a pointer to the first byte
+<Psyon> the they dimensions of the pic
+<Psyon> so with a mono BMP
+<Psyon> the size of the pic is (X * Y) / 8
+<Psyon> but create images still wont be real easy
+<Psyon> the bytes in the .h files are not in BMP format
+<uninet> Hmm... I wonder how Kevin did it?
+<bryce> I'm going to sound like a broken record...
+<Psyon> he drew them out by hand
+<bryce> :)
+<Psyon> like an ASCII artist would
+<bryce> ....use a toolkit!
+<Psyon> why?
+<Psyon> Toolkits take up too much space
+<Psyon> :)
+<eks|x> eheh
+<bryce> a cross-platform GUI library has to deal with this problem
+<uninet> Psyon: So you would just put out hex symbols until they looked like
++something?
+<eks|x> "let's write bochs in asm, so it can fit in 100kb"
+<eks|x> ;)
+<bryce> of icon image formats or whatever
+<Psyon> Yep
+<Psyon> hehe
+<Psyon> I think the current way of doing the GUI is nice
+<Psyon> its just the actuall GUIs
+<Psyon> that suck
+<Psyon> heheh
+<eks|x> don: any idea for that 16 colors palette used to display vga text?
+<eks|x> hard to fix?
+<Psyon> reword that
+<eks|x> well, clear white gets out as light blue..
+<eks|x> etc, colors are screwed
+* eks|x should add a bug report..
+<Psyon> Hmm...
+<uninet> So most likely it would be easier to wait until we switch to a
++toolkit to work on the icons?
+<eks|x> hrmm.. the vga color palette, when displaying text in the guest, gets
++out wrong
+<Psyon> actually that standard VGA pallet kinda shows it as offwhite I think
+<bryce> Tim, IMHO yes :)
+<Psyon> and text looks fine to me
+<eks|x> Psyon: colors are screwed on my side
+<uninet> The text looks good to me too... just like a normal console.
+<eks|x> Psyon: light blue is dark blue
+<uninet> bryce: thanks.
+<eks|x> Psyon: white is light blue, etc
+<Psyon> It might be the GUI code then
+<uninet> eks|x: Are you running at 256 colors?
+<Psyon> each char on the screen is represented by 2 bytes
+<bryce> on X windows, my text colors are always messed up unless I quit
++netscape first, and then run bochs
+<Psyon> one is the character
+<Psyon> and one is the format options
+<eks|x> tim: full 32bit color
+<Psyon> forground and background color
+<Psyon> you running in X or windows?
+<eks|x> X
+<Psyon> ok
+<uninet> eks|x: do the other apps around Bochs have weird colors too (when
++bochs is running)?
+<Psyon> can you send me a screen?
+<bryce> I have 8-bit color I guess, so netscape sucks up all the available
++colors , leaving my text purple or something
+* eks|x is an anti-windows kindof guy ;)
+<eks|x> tim: nope, I can screw in The Gimp in full color no problem but bochs
++is always screwed, alone or not
+<bryce> wierd
+<eks|x> the 0x07 color in text is fine
+<eks|x> the 0x01 color is very too dark
+<eks|x> and the 0x09 is like the 0x01 should normally be
+<uninet> eks|x: Hmm... could it be an misconfig with bochrc's pallet settings
++(I think it can have a shared or internal pallet, IIRC)?
+<eks|x> 0x0F gets out as the original 0x09
+<Psyon> That is proably the internal bochs Pallet
+<eks|x> that's my guess too
+<Psyon> http://bochs.sourceforge.net/screenshot/freedos.png
+<Psyon> that screen shot looks fine
+<Psyon> so maybe its just you :)
+<eks|x> eheh
+<Psyon> actually it looks yellow
+<Psyon> http://bochs.sourceforge.net/screenshot/kidos.jpg
+<Psyon> but that one seems ok
+<eks|x> ehe
+<Psyon> I need to set up another linux box to play with bochs on
+<Psyon> I dont like to run it on my web server
+<Psyon> the X11 GUI uses XSetForeground and XSetBackground
+<Psyon> so it maybe a problem with those
+<Psyon> Yeah...
+<Psyon> looking over the X code
+<Psyon> I woudl say it is somethign with your X color pallet
+<Psyon> Did I say somethign wrong? everyone is quiet?
+*** Signoff: eks|x (h51.us.undernet.org McLean.VA.US.Undernet.Org)
+*** Signoff: bryce (h51.us.undernet.org McLean.VA.US.Undernet.Org)
+*** Signoff: uninet (h51.us.undernet.org McLean.VA.US.Undernet.Org)
+*** Signoff: Psyon (http://www.psyon.org <-- It's all that and a Unix manual!)
+*** uninet (~tbutler@c1331724-a.schrls1.mo.home.com) has joined channel #Bochs
+*** Psyon (exodus@exodus.psyon.org) has joined channel #Bochs
+*** bryce (~bryce@debussy.ne.mediaone.net) has joined channel #Bochs
+<uninet> Ah people are posting again... I thought everyone had left and my
++client just didn't sense it.
+<uninet> Psyon: Thanks!
+<Psyon> Hmm..
+<uninet> Perhaps I can make sense of some of this.
+<Psyon> well that kinda explains why he did it that way
+<Psyon> In windows
+<Psyon> I an make it use 256 color bitmaps
+<Psyon> not sure how to do it in X11
+<Psyon> or Mac
+<Psyon> for that matter
+<Psyon> :)
+<uninet> :-)
+<uninet> I suppose this is a good reason for me to finally apply myself to
++learn C++.
+<uninet> This chat seems to be dying a slow death...
+<bryce> I'm back, sorry
+<uninet> Hey Bryce!
+<bryce> who's left
+<Psyon> hehe
+<uninet> eveyone besides myself and Don.
+<Psyon> me
+<uninet> (and you of course)
+<bryce> are you still talking about icons :)
+<uninet> Yup.
+<Psyon> Yeah, but we can change the subject to something more important
+<Psyon> hehe
+<uninet> Sounds good, I think I'll sit it out for the toolkit to be decided on
++(if we even decide on one)
+<bryce> I'm hoping that someone has actual experience with a cross-platform
++toolkit or is willing to learn
+<Psyon> hehe
+<Psyon> I can learn
+<Psyon> I guess
+<bryce> since we have bugs and features galore in addition to the gui to work
++on too
+<uninet> The difficult thing is, there are lots of qualified people, but not
++so many that actually know bochs.
+<Psyon> I know the bochs GUI parts
+<Psyon> at least the current way
+<uninet> I'd love to help... maybe I could help out somewhat...
+<bryce> I would say it doesn't matter if they know bochs, it only matters that
++they care about it enough to spend some time on it
+<bryce> we need to help define the interface
+<Psyon> That is my big problem right now
+<Psyon> I have to kill some of my other projects
+<Psyon> and devot time to the major ones
+<uninet> killall *projects
+<Psyon> hehe
+<bryce> (we = people who do know bochs and know what the GUI needs to be able
++to do)
+<Psyon> http://www.perlhq.com <-- I have to keep stuff on that page updated.
+<bryce> my road map is:
+<bryce> fix up 1.2.pre1
+<bryce> then call it 1.2
+<bryce> put binaries of 1.2 everywhere under the sun
+<Psyon> hehehe
+<bryce> and then we have a chance at getting more people aware of the project
+<uninet> Sounds good.
+<bryce> I bet there are lots of people who stopped looking at www.bochs.com
++during the last year
+<uninet> I'm suppose to get it up everywhere under the sun, right?
+<bryce> I'll be happy to help with that, once we have a 1.2 that we're proud
++of.
+<uninet> It seems to me, you should be proud of the current 1.2, it's a lot
++nicer being able to type bochs-dlx immediately after install, and try it out!
+<bryce> :)
+<Psyon> I need to fix up the raw disk code a little
+<bryce> I'm nearly proud of it :)
+<Psyon> right now its a hack
+<Psyon> I need to make it proper
+<uninet> Will that be difficult?
+<Psyon> no
+<Psyon> It just assumes a size of the disk 
+<bryce> well even having a 1.2 that makes people say "Wow that has a lot of
++potential, I wonder if there's a new one" would be good enough
+<Psyon> _stat() on windows doesnt work when \\.\a: is opened
+<Psyon> just need to make it check to see if its using a raw disk or now
+<Psyon> not
+<uninet> bryce: I agree. If people see Bochs poping on Freshmeat and such
++every few weeks, it might make people realize this project is alive!
+<Psyon> Just need to get disk info a diff way
+<bryce> psyon, do you have cvs?
+<Psyon> I can set it up again
+<bryce> it would probably help in staying current
+<bryce> or maybe CVS snapshots are better, I don't know
+<Psyon> oh
+<Psyon> you just mean to get the code
+<bryce> yes
+<Psyon> i thought you meant the CVS server
+<bryce> no we have one of those now
+<Psyon> I have CVS on the linux box
+<Psyon> Ill have to get a client for this one
+<Psyon> ive just been using snapshots
+<bryce> whatever works
+<bryce> if you are actively messing with the code, cvs update would be useful
+<bryce> random RFB thought: if we get networking going on bochs, you could run
++vncserver within bochs and connect to it with a vncviewer on the real
++machine, right?
+<Psyon> Yes
+<bryce> might be slow
+<Psyon> but it would work slowly
+<uninet> What is the difference between RFB and VNC again?
+<Psyon> RFB is the protolcol
+<Psyon> VNC is the program
+<bryce> RFB = request for Bochs?
+<uninet> Ah, I see... thanks. Sorry, I know that was a dump question.
+<Psyon> brb... potty break
+<uninet> hahaha
+<uninet> I don't know if that was what AT&T was thinking, but I think that is 
++a good explaination of that acronym
+<bryce> :)
+<uninet> Well, and then there were two.
+<bryce> I think it might be easy to put those few survey questions on a
++SourceForge survey
+<uninet> That would be nice... to get a feel for the general opinions of the
++Bochs community.
+<Psyon> ok
+<Psyon> bak
+<bryce> I first looked at the SF survey as a way to handle the testing forms,
++and it really was not good for that, but for independent questions like
++these, it would be fine.
+<Psyon> I just may be tooting my own horn... but I think bochs-RFB is a good
++way to separate the emulator and the GUI :)
+<uninet> How do you set it up?
+<Psyon> bochs RFB?
+<bryce> tim: you have to be admin on the project
+<uninet> Don, I agree, I think RFB is a very good system of dividing the GUI
++and emulator.
+<bryce> and then type in the questions and answers, it's all web form stuff
+<uninet> Psyon: I meant survey forms.
+<uninet> bryce: Ah... I see. That's why I couldn't figure out how to set up a
++survey. :-)
+<bryce> Don: doesn't RFB imply that you are sending a bunch of pixels for each
++VGA character, not just a single ascii code?
+<Psyon> Uhh... Yes
+<uninet> afk.
+<Psyon> We need to write our own proto to optimize it
+<bryce> did you have to "draw" the toolbar yourself?
+<Psyon> but I went with RFB 
+<Psyon> since there are so many viewers
+<Psyon> yes I drew the toolbar
+<Psyon> but all teh GUIs do that
+<bryce> right
+<Psyon> I just draw it in the local frame buffer
+<Psyon> and send it like the rest of the screen updates
+<bryce> so if you were going to make a dialog box in Bochs-RFB, you would
++really have to do it without benefit of any library.
+<Psyon> Right!
+<bryce> like a button, you have to render it, handle clicks to it, etc.
+<Psyon> yeah
+<uninet> back.
+<Psyon> I never said there werent draw backs
+<Psyon> but
+<uninet> Could the client vnc GUI use a toolkit to render a button?
+<Psyon> I was going for compatibility of the viewer
+<bryce> no a VNC client is VERY simple, right?
+<Psyon> VNC client just draws data sent to it
+<uninet> Yeah... could the RFB protocol be extended for "Boch Enhanced"
++clients, while maintaing compatiblity with normal VNC clients?
+<Psyon> Hmm....
+<Psyon> Sure
+<bryce> VNC is open source right?
+<Psyon> RFB is event based
+<Psyon> Yep
+<Psyon> so adding new Events for Bochs Enhancements
+<bryce> have you seen Xvnc the VNC-X server for linux
+<Psyon> would work
+<Psyon> yes
+<uninet> That way, an enhance client could do the fancy stuff like (dialog
++boxes) where the normal VNC client could just continue doing what it does
++now...
+<Psyon> We would be better off just modifying it all
+<bryce> Xvnc is portable, since it has no display code only networking code,
+<Psyon> and just base it on RFB
+<Psyon> It would be better to send a text update event and just send the chars
+<Psyon> but that will only work while in a text mode
+<Psyon> when In windows
+<bryce> it seems like you could hack their Xvnc so that you could use any X11
++library you like
+<Psyon> Text would still have to be sent as images
+<uninet> bryce: I think you are right.
+<Psyon> You know...
+<bryce> the X11 library could be used to draw dialog boxes, handle all events,
++etc. without having to rewrite low level gui code.
+<Psyon> I guess to extend RFB to work how we want it... you would only need to
++add two events
+<Psyon> RFBEventGetUserInput or something to pop up a dialog box... 
+<Psyon> that would be sent to the client
+<Psyon> RFBDialogItemEvent sent to the bochs server
+<Psyon> those would be followed by data as to which dialog item was acted on
+<Psyon> or what type of input to get
+<uninet> If the client and server where on one computer, would there be much
++of a performance hit over the current system?
+<Psyon> There is a bit
+<bryce> yes
+<Psyon> Bochs-RFB runs slowly even on the same computer, because I have not
++implemented compression yet
+<Psyon> and passing all the graphics through Winsock
+<Psyon> casues a bottlnet
+<Psyon> bottleneck
+<uninet> But if you did, do you think there would still be a hit?
+<Psyon> not as much
+<bryce> now bochs uses the lowest level APIs to draw graphics, and I think
++anything else will be a performance hit.
+<uninet> bryce: that's true.
+<Psyon> Then why do you want to use a toolkit?
+<bryce> I'm advocating GUI libraries for dialogs and control panels and suc
+<bryce> such
+<bryce> NOT as a replacement for the current VGA display window
+<Psyon> oh
+<Psyon> ok
+<bryce> which is performance-critical
+<uninet> I still am not sure that Don's idea of using RFB to seperate the GUI
++might not be the best way to go...
+<uninet> (no matter which toolkit is used)
+<Psyon> I dont think it is the best way to go
+<Psyon> I just think its a good start
+<bryce> it can be done, but I think a much higher-level communication between
++bochs and gui is better
+<Psyon> the concept and idea
+<Psyon> did you put bochs-RFB in the CVS tree btw?
+<uninet> Right, it would need to be worked on, but the concept is good.
+<bryce> like gui says: "Hey Bochs, I want you to change the floppy disk to
++/home/bryce/newimage.img"
+<bryce> and bochs says: "Ok, I did it"
+<Psyon> I dont think it should be done like that
+<Psyon> I think it should be done how the current toolbar is done
+<Psyon> bochs tells the GUI to make a button
+<Psyon> and gives it a function pointer
+<bryce> the RFB way would be more like, gui says:  "hey they clicked on
++312,12" 
+<Psyon> to be called
+<Psyon> in this case
+<Psyon> it could be giving an ID
+<Psyon> and then when the Button or what ever is pushed
+<Psyon> it would tell bochs that button ID has been pushed
+<Psyon> and bochs will act on it
+<bryce> and bochs says "ok 312,12 looks like the reset button so now gui
++should display an "Are you sure" message"
+<Psyon> Yes
+<uninet> that would work really well...
+<bryce> I like the fact that that's general, and higher level
+<Psyon> I dont think using the coords of the click is a good idea
+<Psyon> then we would be limited to using images again
+<bryce> but I'm afraid that a whole protocol like that will not give the GUI
++(whoever has to turn the dialog into actual API calls)
+<Psyon> Hmm...
+<uninet> Well, on non image things, couldn't it say "hey the user clicked on
++menuitem1"?
+<bryce> a chance to make a decent looking dialog
+<Psyon> uninet that is what I was thinking
+<bryce> psyon, so what type of messages should bochs be telling the gui?
+<Psyon> That is how the current one basically works
+<uninet> Ah.
+<bryce> buttons are easy, how about dialogs?
+<Psyon> The current way of doing it is a good concept
+<Psyon> it just needs improving
+<Psyon> Well...
+<Psyon> What are the types of dialogs that will be needed?
+<Psyon> Yes/No, File, OK
+<Psyon> what else?
+<bryce> For each of these devices (HD, CMOS, CDROM, Floppy), choose what
+<Psyon> well...
+<Psyon> just in general
+<bryce> a panic, debug, info, and error message should do?
+<Psyon> well...
+<bryce> crash, print, or ignore?
+<uninet> Config dialogs too, right?
+<Psyon> Oh yah
+<Psyon> i forgot the config stuff
+<Psyon> Hmm....
+<bryce> that's a complicated one, and I think you may end up with the best
++looking dialog
+<bryce> if you send a very high level message, like "show the log options
++dialog now"
+<Psyon> I would like to see the dialogs defined by bochs
+<bryce> rather than trying to make your protocol SO general that bochs can ask
++for any kind of dialog it might need
+<Psyon> and just displayed by the GUI
+<Psyon> like have bochs send the GUI a template for the dialog
+<Psyon> and draw it based on that
+<bryce> basically like a web form?
+<Psyon> yes
+<Psyon> HEY!
+<bryce> oh no!
+<Psyon> thats not a bad Idea
+<Psyon> use XML or HTML to do the dialogs
+<bryce> :)
+<Psyon> then when submited... data can be passed back to bochs in a URLENcoded
++string
+<uninet> Couldn't the GUI have the config template on the GUI side rather than
++have bochs send it to it?
+<Psyon> boot=c&hd=linux.img
+<Psyon> stuff like that
+<Psyon> uninet: the GUI wouldnt have to be updated as much if bochs told it
++how to make it
+<bryce> It certainly could be done that way, and if you're very sneaky you
++might use your browser as the viewer.
+<Psyon> Well... you wouldnt use it as the viewer
+<Psyon> cant draw the VGA screen to the browser
+<Psyon> well... you could push it to it
+<Psyon> as a streaming video
+<bryce> no, VGA screen is low level APIs as it is now
+<bryce> otherwise you add lots of overhead
+<Psyon> Could do
+<bryce> I mean the control panel
+<uninet> Well, if you were using the browser as teh viewer, couldn't the VGA
++screen be shown in a Java applet and config handled by normal browser means?
+<Psyon> char *bx_gui::ShowDialog(XMLCode *gui);
+<Psyon> XMLCode beings XML or HTML code for the form
+<bryce> yes, but slowly!  We don't need any more speed penalties here.
+<Psyon> and the return would be a string much like the QUERY_STRING of the web
++form
+<Psyon> parsing would be a pain though
+<Psyon> and might make a performace hit
+<bryce> are you thinking of a custom viewer or an existing web browser?
+<Psyon> custom viewer
+<bryce> ok
+<Psyon> well... there are plenty of open source HTML viewers
+<bryce> I'm thinking nothing should go through this interface that is
++performance critical anyway.
+<Psyon> could steal some code to rended the HTML forms
+<uninet> Although what toolkit would be used to render the HTML forms? :-)
+<bryce> anything performance critical should either go to the existing
++low-level API, or logged directly to a file.
+<Psyon> What is with you people and toolkits?
+<Psyon> :)
+<uninet> I dunno... :-) I was just thinking you now have the same problem of
++rendering lots of things, and the added complexity of an HTML rendering
++layer.
+<Psyon> well... it would only be HTML forms
+<Psyon> not full HTML
+<Psyon> maybe that is a bad idea
+<Psyon> but its an idea
+<uninet> It sounds good to me, I was just thinking you still have to figure
++out how to render the widgets on the form.
+<bryce> well you can write XML for a form that describes exactly what the GUI
++needs
+<bryce> without it having to be standard HTML
+<Psyon> yes
+<Psyon> and libXml is cross platform
+<bryce> but is any of this a benefit?
+<Psyon> hold on..
+<Psyon> let me clear something up.
+<bryce> ok
+<uninet> I guess that the GUI could be seperate, but still extensible.
+<Psyon> Will the GUI be a separate process... or the same one?
+<Psyon> we need to make a decision on that
+<uninet> I would think a seperate process would be better (better cross
++platform support), but that's only me.
+<bryce> it could be either way
+<Psyon> before we go any farther
+<bryce> I think it's no problem to open a network socket between them,
++although then you need portable socket code and some semblance of security
+<Psyon> Well, using XML for dialogs would benefit for remote viewers
+<Psyon> most all socket code is pretty close to the same
+<Psyon> in the sense that what if bochs is running on linux and being viewed
++in windows
+<Psyon> or Vice Versa
+<uninet> The nice thing about seperate processes with network code is it
++doesn't matter if the viewer is on the same computer or 2,000 miles away...
+<Psyon> Even if it is the same process
+<Psyon> it would work ok
+<bryce> ok, sockets are fine and same process or different process is fine
+<Psyon> Ok...
+<bryce> but it seems like there are disadvantages to sending XML too
+<Psyon> can we see any problems with using XML for dialogs?
+<Psyon> why?
+<bryce> as opposed to just saying "Ok gui, show dialog number 7"
+<Psyon> well... the XML code can be cached
+<Psyon> do like
+<uninet> Idea:
+<uninet> What if the GUI and Bochs sync on startup with the XML forms...
+<bryce> if you tell it "show #7" then you can make the dialog look as good as
++possible for that system
+<bryce> which is not a hard task
+<uninet> ...so that once it was started, requests would just be show7, or what
++ever.
+<Psyon> yes
+<Psyon> thats what I was going to say
+<bryce> if you send it XML, then the viewer's job is to make anything in the
++world look as good as possible, which is a hard task
+<Psyon> send the code with and ID number
+<Psyon> They only big problem im seeing with XMl is how to return data back to
++bochs
+<Psyon> user URLEncoded strings would work
+<bryce> anything would work
+<uninet> Well, the nice thing about this too, is that even if the different
++platforms had different GUIs using different toolkits (or lack of), the menus
++and dialogs would look the same.
+<bryce> you have a binary connection, send bytes?
+<bryce> true
+<Psyon> I think we should just do the dialogs in XML one way or the other
+<Psyon> then we dont have to worry about crossplatform toolkits
+<uninet> Exactly.
+<uninet> Then the best toolkit for each platform could be used, rather than
++simply the lowest common denominator.
+<Psyon> yes
+<bryce> you do have to worry about writing a general form viewer for every
++platform, which is not exactly simple
+<Psyon> Hmm...
+<bryce> nor, one might argue, in the realm of bochs development at all :)
+<uninet> True...
+<bryce> maybe we should FIND one rather than write one
+<uninet> Well, you could port the existing GUI to this system (without
++configs), and then as voluteers appears willing to create an "enhanced
++viewer" it could become available.
+<Psyon> we could make our own toolkit
+<bryce> aaaaaaaaah
+<uninet> :-)
+<bryce> :)
+<uninet> Well, unless we make our own toolkit, BTK (?), or keep bochs
++toolkit-independant (where it uses the best gui for each platform)...
+<Psyon> You know... the whole cross platform thing is what is making this hard
+<uninet> ...there are going to be platform limitations based on the toolkit.
+<Psyon> I can think of a hundred ways to just do it in windows
+<uninet> Yup.
+<bryce> yup.
+<bryce> what is wrong with making the XML viewer in wxWindows which runs on
++tons of platforms already?
+<uninet> That would be a good idea.
+<uninet> We could always aim to have more viewers (using other toolkits) later
++on... but that would get the ball rolling.
+<Psyon> how does wxWindows look?
+<bryce> no idea
+<uninet> I think it looks like Windows in Windows, Motif or GTK in *nix...
+<Psyon> if the page will load
+<bryce> http://www.wxwindows.org/
+<uninet> http://www.wxwindows.org/samples.htm
+<Psyon> ok
+<Psyon> that looks ok
+<Psyon> I guess
+<Psyon> we can always mod it
+<bryce> it looks good to me, but I haven't seen the API
+<Psyon> and it runs on mac
+<bryce> but it's open source, C++, and cross platform, that's a very good
++start
+<uninet> It ain't beatiful, but if other GUI's could be written on the XML
++framework, that wouldn't be a problem...
+<Psyon> If QT was opensource on all platforms
+<Psyon> I would go for that
+<Psyon> it has an XML renderer and everything
+<uninet> I hear it wouldn't be hard to get QT-free to work in Windows...
+<Psyon> Ive gotten it to work
+<Psyon> but it requires an X server
+<uninet> Really?
+<uninet> Oh.
+<Psyon> That is one of my other projects
+<Psyon> I found some code on the MS FTP
+<bryce> at the risk of being the devil's advocate all the time:  why not write
++gui/wxWindows.cc and compile it directly into bochs?  Would this not be a
++great starting point?
+<Psyon> that maps some Xlib functions to Win32 API
+<uninet> According to Mosfet (of KDE), it shouldn't be to hard to make it work
++like TrollTech's QT for windows, since they are both from the same codebase. 
+<Psyon> and I was working with that too
+<Psyon> Uninet: http://www.sourceforge.net/projects/kde-cygwin
+<bryce> well ok not a great one
+<Psyon> that guy talks about the problems with compiling KDE on windows
+<Psyon> bryce: that is a good start yes
+<Psyon> that is what we need is a start
+<uninet> If you compiled the wxWindows directly into Bochs, wouldn't that
++limit the expansion into other toolkits?
+<Psyon> ok... have you guys looked at the bochs GUI functions yet?  like
++tile_update, create_bitmap, text_unpdate?
+<uninet> Wow! Don, I didn't know you were working on kde-cygwin! I just read
++about that at KDE's The Dot the other day.
+<Psyon> any of them?
+<Psyon> Im not working on that
+<Psyon> thats not my projects
+<Psyon> I have been doing the same thing
+<Psyon> but thats not mine
+<bryce> no I haven't
+<uninet> Oh, I saw you are the developer list and assumed you were.
+<Psyon> I am?
+<Psyon> He added me?
+<bryce> haha
+<uninet> Yup.
+<uninet> You are.
+<uninet> http://sourceforge.net/project/memberlist.php?group_id=27249
+<Psyon> oh
+<uninet> Nothing like being on a project without being told about it, huh? ;-)
+<Psyon> ok
+<Psyon> :)
+<Psyon> I emailed the guy a few times
+<Psyon> and discussed some things with him
+<Psyon> that is what takes up a lot of my time
+<Psyon> im fighting against MS in my own way
+<uninet> :-)
+<Psyon> I figure by making KDE (or more importantly, Konqueror
+<bryce> aren't we all.
+<Psyon> ) run in windows
+<Psyon> that strikes a blow against IE
+<Psyon> :)
+<uninet> I'd love to see Konqi in Windows.
+<uninet> How's it going with that project?
+<Psyon> Its going ok
+<Psyon> I mostly was trying to make QT/Free compile in cygwin
+<Psyon> which I did fine as a static lib
+<Psyon> but had troubles making shared
+<Psyon> but Ralf succeeded where I failed
+<Psyon> and got that to work
+<uninet> So, would it be hard to get QT/Free to work well enough in Windows
++that it could be used for the Bochs toolkit?
+<Psyon> It will work with an X server now
+<Psyon> as to make it work without one
+<Psyon> im looking into it
+<Psyon> I dont know exactly how dependant QT/Free is on X
+<Psyon> Its a lot of code to look over
+<Psyon> I know they tried to keep is as OS independant as possible
+<uninet> It seems to me QT would be better than wxWindows in that you would
++also add QT/Embedded (which comes in a "free" version) to the platforms Bochs
++could run on...
+<Psyon> QT/Embedded draws directly to the FrameBuffer of your graphics card
+<Psyon> and wouldnt work in windows
+<bryce> not being free is a big problem though, as good as QT might be
+<uninet> Have you ever tried talking to mosfet about it?
+<Psyon> oh
+<Psyon> nm
+<Psyon> mosfet?
+<uninet> He's at www.mosfet.org.
+<Psyon> Oh
+<uninet> He's the one that wrote that it wouldn't be hard to port QT/free to
++natively run on windows.
+<Psyon> the KDE guys
+<uninet> yeah.
+<Psyon> Ive talked to some of them about it
+<uninet> It seems to me both Bochs and KDE could benefit if QT/free worked
++natively under Win32... maybe some of the KDE folks could help. :-)
+<Psyon> heheh
+<bryce> hard to see how porting toolkits is in the scope of Bochs... 
+<Psyon> hehe
+<bryce> this QT must be pretty amazing!
+<uninet> Well, I was just thinking if Don had already been investigating it...
+<Psyon> QT is nice
+<uninet> From my limited knowledge of it... it is.
+<Psyon> and has a lot of the functionality we need
+<bryce> how is it different from other GUI toolkits?
+<Psyon> HEY! anyways
+<uninet> It will also most likely be the toolkit of the future. Trolltech is
++on an ambitious campaign to make it the defacto toolkit used in Universities.
+<Psyon> back to what I was saying before!!!
+<bryce> ok
+<bryce> XML?
+<uninet> ?
+<Psyon> Before we use QT or wxWindows
+<Psyon> ok
+<Psyon> now
+<Psyon> as I was saying
+<Psyon> right now bochs tells teh GUI code to add a bitmap to the toolbar
+<Psyon> got that part?
+<Psyon> well...
+<uninet> yes.
+<bryce> yes
+<Psyon> we would need to add something
+<Psyon> that tells it to add a menu item
+<Psyon> or a button
+<Psyon> or  whatever
+<uninet> right.
+<bryce> right.
+<Psyon> we have to do that before we make it use QT or wxWindows
+<uninet> I'm still with you there.
+<Psyon> bx_gui_c::add_menu_item
+<bryce> I would have said "as" rather than "before"
+<Psyon> then in that function
+<Psyon> call the TK function to add the item
+<bryce> no way to test it until you have something to hook it to, but go on
+<Psyon> well
+<Psyon> yes
+<uninet> So in essence, this would become a compatiblity layer between bochs
++and what ever toolkit, right?
+<Psyon> This keeps the same concept the the current GUI structure... but adds
++more functionality
+<Psyon> yes
+<Psyon> and we would d something like bx_gui_c::do_dialog()
+<bryce> right, we need to make the C++ calls look more like the interface
++between bochs and the XML thing will eventually look
+<Psyon> or something
+<uninet> gotcha.
+<Psyon> This doesnt push us towards having a separate GUI and Emu
+<Psyon> but It does get us going towards user friendly
+<Psyon> which I think is more important
+<bryce> yes
+<uninet> right.
+<Psyon> and again, you could always recompile with Bochs-RFB :)
+<uninet> :-)
+<Psyon> also... the menu items should not be critical to bochs running
+<Psyon> incase a GUI cant create them
+<Psyon> like the curses one
+<uninet> right.
+<bryce> sure.  (btw, yes rfb is in CVS, and in fact in 1.2.pre1)
+<Psyon> oooh... good
+<Psyon> now I can put Bochs Developer on my resume :)
+<Psyon> hehehehe
+<uninet> :-)
+<bryce> :)
+<Psyon> http://www.psyon.org/resume/index.html <--- well it needs some spicing
++up
+<uninet> a good thing considering we are still in the No. 2 slot on SF.
+<Psyon> I suck at resumes.
+<Psyon> I dont like to look at that
+<Psyon> but anways
+<Psyon> so what would we need implemented... add_menu_item, show_dialog,
++add_button?
+<Psyon> something along those lines?
+<uninet> Sounds good to me...
+<bryce> well are we going toward XML already, or waiting until later?
+<uninet> Psyon: your resume actually looks good.
+<Psyon> The layout is good... the content sucks
+<Psyon> hmm...
+<uninet> It seems to me, if you can do it with something simpler than XML, why
++not?
+<Psyon> bryce: if we are keeping the current way of doing the GUI
+<Psyon> lets wait till later
+<Psyon> Well...
+<Psyon> hmm...
+<bryce> yeah, it's tricky
+<Psyon> then how should we do dialogs
+<Psyon> I think we will have to
+<Psyon> to do the dialogs
+<uninet> Couldn't XML be sandwiched in as an additional layer, if it was ever
++needed?
+<Psyon> well... again... if this was all os specific, we could have each GUI
++with its own menu, and its own dialogs
+<Psyon> I think we will have to look into XML 
+<Psyon> to do the dialogs
+<bryce> yes, and I wonder if that's even the best way to do it...later.
+<Psyon> Unless!
+<Psyon> we do a separate function for each needed dialog
+<bryce> once you have 3 dialogs coded in your new toolkit
+<Psyon> show_config
+<Psyon> hmm...
+<bryce> it will then be easy to write XML that can reproduce those dialogs
+<bryce> but without any examples to work from, you have a very general, very
++hard task in writing the XML parser
+<bryce> without any XML code to try it with
+<uninet> At the risk of sounding stupid, what would be the advantage of XML
++over sending the info without XML?
+<Psyon> we could do, show_config() show_change_disk() and stuff like that
+<bryce> (not writing the xml parser)
+<Psyon> XML is a standard
+<Psyon> well... what would be better
+<Psyon> having one function called to show all dialogs
+<uninet> True... but would that necessarily be beneficial in this case?
+<Psyon> or a separate one for each
+<bryce> I think doing show_config() and show_change_disk() is a good start
+<uninet> me too.
+<Psyon> so a separate one
+<Psyon> and when we call add_menu_item (or whatever) it will contain a
++function pointer... which coudl be a pointer to show_blah_dialog directly
+<uninet> right...
+<bryce> something like that
+<Psyon> ok
+<bryce> that will get us going
+<Psyon> so who is in chareg of getting this started :)
+<Psyon> hehehe
+<Psyon> Im guessing im the candidate?
+<uninet> Idea: for an XML parser (if needed) could you take the one out of QT
++and make it independant?
+<bryce> I think once we have some concrete examples of dialogs, it will be
++much more clear what the XML should look like.
+<uninet> I vote for you.
+<Psyon> uni: ive been thinking of that already
+<uninet> (psyon)
+<bryce> :)
+<uninet> Psyon: we seem to be thinking along the same lines a lot tonight.
+<Psyon> I will warn you guys that I will be out of town from the 8th till the
++14th of june
+<Psyon> hehe
+<bryce> I guess it better be done by the 8th then ;-)
+<Psyon> Umm...
+<Psyon> i doubt it
+<Psyon> maybe a start
+<Psyon> but not finished
+<uninet> Sounds like a good idea... that's a whole 9 days!
+<Psyon> the functions them selves wont be hard to add
+<Psyon> its the dialogs that will be a pain
+<bryce> right
+<uninet> And the dialogs themselves will require settling on a starting point
++GUI, right?
+<bryce> if we are using CVS, it's much easier to collaborate
+<uninet> (or rather toolkit)
+<bryce> so that one person doesn't have to do everything alone and send a diff
++when he's done
+<Psyon> the current calls to create the toolbar are hard coded
+<Psyon> so this wont be hard at all to implement the stufs
+<Psyon> stubs
+<uninet> So, you could stick with the hardcoded with the new implementation
++until you settled on a toolkit(s)?
+<Psyon> yes
+<bryce> do you think we should leave the icons alone for now?
+<bryce> maybe that was the same question
+<Psyon> My one problem here is how do different toolkits handle sub menus?
+<Psyon> icons are staying for now
+<bryce> ok
+<uninet> I'd be happy to make new icons (if you want) but perhaps we should
++wait until something like wxWindows or QT comes into the picture...
+<Psyon> Probably just change that over to a toolbar with buttons later
+<bryce> I think between the two we should at least try wxWindows since it
++already runs on win32
+<bryce> (without hacking necessary)
+<Psyon> heheh
+<uninet> true. The beauty of this system is that QT would still be an option
++for an additional GUI afterwards..
+<bryce> one of the best benefits of separation of bochs and GUI is that they
++can be _developed_ independently
+<Psyon> Yes
+<uninet> that's very true.
+<bryce> since the dialog code is the hard part, and connecting it to bochs is
++easy
+<bryce> let's work together on the first few dialogs
+<Psyon> Ok guys, hate to do this
+<Psyon> but I need sleep
+<bryce> sleep??
+<uninet> What's that?
+<Psyon> My fiance is already pissed that I didnt go to bed with her earlier
+<Psyon> :)
+<bryce> *nod*
+<Psyon> I will work out a menu function
+<Psyon> in the morning or when ever
+<uninet> Hmm... man sleep says: "sleep - delay for a specified amount of time"
+<Psyon> Yep, im delaying
+<uninet> :-) Well good night Don! Sleep well.
+<bryce> good night!  
+<Psyon> cya guys later
+

@@ -1,0 +1,78 @@
+<style TYPE="text/CSS">
+<!--
+A:link {color: blue; text-decoration: none}
+A:visited {color: blue; text-decoration: none}
+A:active {color: blue; text-decoration: none}
+A:hover {color: blue; text-decoration: underline}
+
+
+.sidebar {font-family:Verdana, Arial, Helvetica; color: #000000}
+A.sidebar:link {color: #000000; font-style: normal; text-decoration: none}
+A.sidebar:visited {color: #000000; font-style: normal; text-decoration: none}
+A.sidebar:active {color: #000000; font-style: normal; text-decoration: none}
+A.sidebar:hover {color: blue; text-decoration: underline}
+-->
+</style>
+
+<META NAME="resource-type" CONTENT="document">
+<META NAME="distribution" CONTENT="GLOBAL">
+<META NAME="description" CONTENT="Bochs IA-32 Emulator provides a virtual PC that can run operating systems such as Windows, Linux, and BSD.">
+<META NAME="copyright" CONTENT="Copyright 2001 The Bochs Project.">
+<META NAME="keywords" CONTENT="pc emulation, vmware, win4lin, netraverse, trelos, x86 emulation, emulator,insignia, softpc, connectix, virtualpc, fx!32, freemware, dynamic translation,open source, gnu, linux, windows, bsd">
+<META NAME="Author" CONTENT="Timothy R. Butler">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html;CHARSET=iso-8859-1">
+
+</HEAD>
+<BODY BGCOLOR="#FFFFFF" VLINK="#000000" ALINK="#000000" LINK="#000000" TOPMARGIN="0" LEFTMARGIN="0" MARGINWIDTH="0" MARGINHEIGHT="0">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr><td width="140" bgcolor="#aacbff">&nbsp;</td><td bgcolor="#6d95d7" width="400"><font face="arial, helvetica" size="2" color="#1e029a"><center><b>T H E&nbsp;&nbsp;&nbsp;C R O S S&nbsp;&nbsp;&nbsp;P L A T F O R M&nbsp;&nbsp;&nbsp;I A - 3 2&nbsp;&nbsp;&nbsp;E M U L A T O R</b></center></font></td><td width="100%"><table border="0" cellspacing="0" cellpadding="0" width="100%"><tr><td bgcolor="#4079d6" width="50%">&nbsp;</td><td bgcolor="#1e029a" width="50%">&nbsp;</td></tr></table></td></tr>
+<tr><td width="140" bgcolor="#6d95d7"><font face="arial, helvetica"><center><b>Current Release:</b><BR><a href="<!--#include virtual="release.txt" -->" class="sidebar"><i><u>Bochs 1.2.1</u></i></a></font></center></td><td width="400" height="130"><img src="images/lgban.gif" width="400" height="130" alt="bochs: think inside the bochs."></td><td>&nbsp;</td></tr>
+<tr><td colspan="3" bgcolor="#4079d6" height="1">
+<img src="images/smblue.gif" width="1" height="1"></td></tr>
+<tr><td bgcolor="#4079d6" width="140" valign="top">
+<font face="arial, helvetica" size="-1">
+<img src="images/smblue.gif" width="140" height="1">
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net" class="sidebar">Home Page</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Project+Page&url=http://sourceforge.net/projects/bochs" class="sidebar">SF Project Page</a>
+
+<br><br><center><b>Get Bochs</b></center>
+
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="<!--#include virtual="release.txt" -->" class="sidebar">Download Current</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=See+All+Releases&url=http://sourceforge.net/project/showfiles.phpqmrkgroup_ideq12580" class="sidebar">See All Releases</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="diskimages.html" class="sidebar">Disk Images</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">Anonymous CVS</a>
+
+
+<br><br><center><b>Support</b></center>
+
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+FAQ&url=http://bochs.sourceforge.net/docs-html/faq.html" class="sidebar">Bochs FAQ</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Help+Documents&url=http://bochs.sourceforge.net/docs-html/" class="sidebar">Documentation</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="mailinglists.html" class="sidebar">Mailing Lists</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Discussion+Boards&url=http://sourceforge.net/forum/qmrkgroup_ideq12580" class="sidebar">Dicussion Boards</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/cgi-bin/status2.pl" class="sidebar">Testing Status</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=SourceForge+Site+Docs&url=http://sourceforge.net/docman/qmrkgroup_ideq1" class="sidebar">SF Site Docs</a>
+
+<br><br><center><b>Feedback</b></center>
+
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Report+a+Bug&url=http://sourceforge.net/tracker/qmrkgroup_ideq12580ampatideq112580" class="sidebar">Bug Reports</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Request+a+Feature&url=http://sourceforge.net/tracker/qmrkatideq362580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Feature Requests</a>
+
+
+<br><br><center><b>Development</b></center>
+
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="getinvolved.html" class="sidebar">Get Involved</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Patches&url=http://sourceforge.net/tracker/qmrkatideq312580ampgroup_ideq12580ampfunceqbrowse" class="sidebar">Patches</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="techdata.html" class="sidebar">Tech Specs Pages</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580" class="sidebar">CVS Write Access</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Status&url=http://bochs.sourceforge.net/docs-html/cvs-status.html" class="sidebar">CVS Status</a>
+
+<br><br><center><b>Resources</b></center>
+
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="news.html" class="sidebar">Bochs History</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="links.html" class="sidebar">Bochs Links</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="related.html" class="sidebar">Related Links</a>
+<br>&nbsp;&nbsp;<b>-</b>&nbsp;<a href="screenshots.html" class="sidebar">Screen Shots</a>
+
+</font>
+</td><td colspan="2" valign="top">
+<table width="100%" border="0"><tr><td>

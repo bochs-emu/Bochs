@@ -1,0 +1,39 @@
+This is a catalog of sites where we have submitted bochs.
+All in this list have Bryce's standard bochs password, which
+is written as <PASSWORD>
+
+--------------------------------------------------------------------------
+winsite.com
+updated to bochs 1.2.1, jun 15 2001
+
+- Go to uploads.winsite.com
+- click on "if you already have a winsite software submission account"
+- email is "bryce.denney@bigfoot.com" password is <PASSWORD>
+- click on "replace existing program with new version"
+- update information and submit
+--------------------------------------------------------------------------
+nonags.com
+I submitted 1.2 but I they haven't updated yet
+can't remember the password, but I have a few guesses :)
+--------------------------------------------------------------------------
+www.icewalkers.com
+updated to 1.2.1, june 15 2001
+
+- At the top of the home page, find the Name and Password fields.
+- Type name "Bryce Denney" and password <PASSWORD>, then Login.
+- in the upper left corner, find the search text box and type bochs return.
+- click on update
+- update the download and redhat package URL
+- press submit
+--------------------------------------------------------------------------
+tucows.com
+
+For 1.2.1 they updated for us!
+Go to tucows.com
+in the "Search Software library" blank type bochs return.
+This brings up bochs and also macbochs
+Click bochs 1.*
+Choose on a mirror site from list.
+You should see bochs on there.
+Down in the choices at bottom, choose "Submit Software"
+

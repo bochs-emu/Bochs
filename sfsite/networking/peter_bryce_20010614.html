@@ -1,0 +1,469 @@
+<FONT COLOR="#ff0000"><FONT SIZE="2">(07:59:11) </FONT><B>peter_grehan:</B></FONT> finally logged on...
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(07:59:36) </FONT><B>brycedenney:</B></FONT> hey
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(07:59:41) </FONT><B>brycedenney:</B></FONT> how's it going?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:00:28) </FONT><B>brycedenney:</B></FONT> if lag is too bad, we can try irc or AOL IM
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:01:40) </FONT><B>peter_grehan:</B></FONT> sorry
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:01:46) </FONT><B>peter_grehan:</B></FONT> fire away with the net questions.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:02:07) </FONT><B>brycedenney:</B></FONT> did you see Dave's post this morning?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:02:25) </FONT><B>peter_grehan:</B></FONT> no
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:02:27) </FONT><B>brycedenney:</B></FONT> (EKS)  he and I got to talking about kernel drivers
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:03:05) </FONT><B>brycedenney:</B></FONT> you'll get it soon, I guess we should start with the big picture
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:03:30) </FONT><B>brycedenney:</B></FONT> we need bochs to be able to talk to the host machine and other machines in the world.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:03:43) </FONT><B>peter_grehan:</B></FONT> just reading the email now...
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:03:46) </FONT><B>brycedenney:</B></FONT> ok
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:04:14) </FONT><B>brycedenney:</B></FONT> we have user-code solutions for a few OSes that talk to the world but not the host machine
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:04:57) </FONT><B>peter_grehan:</B></FONT> ok
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:05:32) </FONT><B>brycedenney:</B></FONT> so we need to dream up a plan to talk to both host and world, eventually supporting all systems
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:05:36) </FONT><B>brycedenney:</B></FONT> :)
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:06:36) </FONT><B>peter_grehan:</B></FONT> this involves writing a virtual ethernet driver
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:06:56) </FONT><B>brycedenney:</B></FONT> isn't that what EKS describes?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:07:09) </FONT><B>peter_grehan:</B></FONT> engineer the interface from the source they provide. However
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:07:24) </FONT><B>peter_grehan:</B></FONT> yep
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:08:31) </FONT><B>peter_grehan:</B></FONT> the host o/s driver *can't* be generic
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:08:34) </FONT><B>peter_grehan:</B></FONT> ps-specific code
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:08:40) </FONT><B>brycedenney:</B></FONT> os
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:08:43) </FONT><B>brycedenney:</B></FONT> right
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:09:38) </FONT><B>brycedenney:</B></FONT> ok so one plan is to write a virtual ethernet driver for each supported OS
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:10:13) </FONT><B>peter_grehan:</B></FONT> that's the only real way to do this.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:10:15) </FONT><B>brycedenney:</B></FONT> I need to test this:  can you get multiline sends (this is 3 lines long)<BR>
+line 2<BR>
+line 3
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:10:51) </FONT><B>peter_grehan:</B></FONT> yep. 
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:10:53) </FONT><B>brycedenney:</B></FONT> good
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:11:02) </FONT><B>brycedenney:</B></FONT> one plan:
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:11:06) </FONT><B>brycedenney:</B></FONT> A virtual ethernet driver allows you to talk to the host and the world.<BR>
+Pros: talk to both host and world<BR>
+Cons: Must have root access.<BR>
+
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:11:23) </FONT><B>brycedenney:</B></FONT> does that seem correct to you?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:11:41) </FONT><B>brycedenney:</B></FONT> cons: must be written separately for each OS
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:12:32) </FONT><B>peter_grehan:</B></FONT> not necessarily - it really only allows you to talk to the host
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:12:42) </FONT><B>brycedenney:</B></FONT> but then IP routing lets you talk to the rest
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:12:49) </FONT><B>brycedenney:</B></FONT> without any wierd hacks
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:12:55) </FONT><B>brycedenney:</B></FONT> ?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:13:20) </FONT><B>peter_grehan:</B></FONT> only if forwarding is enabled
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:13:38) </FONT><B>brycedenney:</B></FONT> with root access, you can make it work
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:13:45) </FONT><B>peter_grehan:</B></FONT> yep.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:13:48) </FONT><B>brycedenney:</B></FONT> you might need to redo your kernel or something
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:14:11) </FONT><B>peter_grehan:</B></FONT> you need to load a module
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:15:08) </FONT><B>brycedenney:</B></FONT> how about this then:
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:15:11) </FONT><B>brycedenney:</B></FONT> 1. A virtual ethernet driver <BR>
+Pros: you can talk to both host and world<BR>
+Cons: Must have root access to load a kernel module, <BR>
+      must be written separately for each host OS,<BR>
+      must set up IP forwarding to talk to the world.<BR>
+
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:15:56) </FONT><B>peter_grehan:</B></FONT> that's correct.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:16:05) </FONT><B>brycedenney:</B></FONT> ok here's another plan
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:16:21) </FONT><B>brycedenney:</B></FONT> 2. packet filters (BPF, LSF)<BR>
+Pros: infrastructure is already there in iodev/eth_*.cc<BR>
+      each packet mover can support several OSes if <BR>
+      they have the right library/kernel feature.<BR>
+      user can run it, <BR>
+Cons: can't talk to host<BR>
+
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:17:44) </FONT><B>peter_grehan:</B></FONT> that's right. there are still some issues with this - at one stage
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:18:33) </FONT><B>peter_grehan:</B></FONT> I just remembered: there is a port of BPF to windows which I've used. It's quite good
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:18:46) </FONT><B>brycedenney:</B></FONT> cool!
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:19:39) </FONT><B>peter_grehan:</B></FONT> one other option is a kernel module that hooks into bridging code. this is what VmWare uses - it makes the guest o/s look like it's on the same LAN as the host o/s. Very similar to the packet filter option.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:20:35) </FONT><B>brycedenney:</B></FONT> does bridging code make other machines on the net see a different MAC address from the host?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:20:50) </FONT><B>brycedenney:</B></FONT> or is it IP based?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:21:08) </FONT><B>peter_grehan:</B></FONT> yep
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:21:12) </FONT><B>brycedenney:</B></FONT> ip
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:21:15) </FONT><B>brycedenney:</B></FONT> ?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:22:16) </FONT><B>peter_grehan:</B></FONT> I should have mentioned: other hosts would see a different MAC addr
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:22:24) </FONT><B>brycedenney:</B></FONT> cool!
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:22:49) </FONT><B>brycedenney:</B></FONT> any hope of doing that in windows?  does it have bridging code?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:23:31) </FONT><B>peter_grehan:</B></FONT> no
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:23:49) </FONT><B>brycedenney:</B></FONT> but it's a good solution for systems that support it
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:24:28) </FONT><B>peter_grehan:</B></FONT> it's the best in that it requires no extra config on the host o/s
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:25:32) </FONT><B>brycedenney:</B></FONT> 5. Kernel module using bridging code<BR>
+Pros: bochs appears to be a different MAC than the host,<BR>
+      requires no extra config on the host o/s<BR>
+Cons: Must have root access to load a kernel module,<BR>
+      must be written separately for each host OS,<BR>
+      bridging code not present in all kernels,<BR>
+
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:26:47) </FONT><B>peter_grehan:</B></FONT> yep
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:27:01) </FONT><B>brycedenney:</B></FONT> you may wonder where are 3 & 4 :)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:27:08) </FONT><B>brycedenney:</B></FONT> 3. TCP only networking<BR>
+Pros: can be portable socket code,<BR>
+      can run as a normal user<BR>
+Cons: each protocol must be handled separately<BR>
+      hard to extract TCP information from ethernet frames (maybe<BR>
+      we could borrow linux or other networking code)<BR>
+
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:27:58) </FONT><B>peter_grehan:</B></FONT> that one ain't gonna work. there are whole companies built on the basis of less code than what that will take !
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:28:10) </FONT><B>brycedenney:</B></FONT> :)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:28:47) </FONT><B>brycedenney:</B></FONT> I don't want to spent too much time on it
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:29:17) </FONT><B>brycedenney:</B></FONT> but why couldn't you rip off code from an open source kernel
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:29:30) </FONT><B>brycedenney:</B></FONT> that translates ethernet frames into a usable form
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:30:11) </FONT><B>peter_grehan:</B></FONT> it's not just translating - you have to implement a complete stack
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:30:21) </FONT><B>peter_grehan:</B></FONT> possible work for outgoing TCP connections
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:30:34) </FONT><B>peter_grehan:</B></FONT> I should say
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:32:02) </FONT><B>brycedenney:</B></FONT> You mentioned in an email that you have to get the kernel code running as a user, and FYI ther's a whole project that has already done that (<A HREF="http://user-mode-linux.sourceforge.net/">http://user-mode-linux.sourceforge.net/</A>)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:33:24) </FONT><B>brycedenney:</B></FONT> for incoming TCP connections you would need some tricks.  What if you tell bochs "Map local TCP port 3023 to bochs port 23"
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:34:02) </FONT><B>brycedenney:</B></FONT> then bochs would have to bind to TCP port 3023, and when it gets connections it would build up the appropriate ethernet frame and put it into bochs's NE2K packet mover.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:35:01) </FONT><B>peter_grehan:</B></FONT> yep
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:35:01) </FONT><B>peter_grehan:</B></FONT> psuedo driver !
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:35:01) </FONT><B>peter_grehan:</B></FONT> plus
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:35:30) </FONT><B>brycedenney:</B></FONT> The only reason I'm so interested in this plan is the pros are very important: portable code, running as a user
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:35:44) </FONT><B>peter_grehan:</B></FONT> that's a lot of configuration. you may not know in advance all the ports you would need.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:35:51) </FONT><B>brycedenney:</B></FONT> almost all the other plans, a student with a user account could never even try it.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:36:15) </FONT><B>brycedenney:</B></FONT> bochs configuration at runtime we can do, we're planning a control panel of sorts
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:37:03) </FONT><B>brycedenney:</B></FONT> we linux users have to remember, not everybody is root! :)
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:37:58) </FONT><B>peter_grehan:</B></FONT> the student account thing isn't quite true
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:38:13) </FONT><B>brycedenney:</B></FONT> what plan would allow non-root networking?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:39:41) </FONT><B>peter_grehan:</B></FONT> I can't think of one that is going to cover all cases. For windows
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:41:58) </FONT><B>peter_grehan:</B></FONT> I'll try and draw some pictures and send them to you
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:42:01) </FONT><B>brycedenney:</B></FONT> ok
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:42:26) </FONT><B>brycedenney:</B></FONT> so under cons I will add "Peter thinks it's not worth the trouble" :)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:42:44) </FONT><B>brycedenney:</B></FONT> BTW, how much time do you have left?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:42:55) </FONT><B>peter_grehan:</B></FONT> yeh
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:43:22) </FONT><B>peter_grehan:</B></FONT> maybe another 1/2 hour or so... did you want to go over any other net stuff ???
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:43:34) </FONT><B>brycedenney:</B></FONT> I have one more plan.....
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:43:37) </FONT><B>brycedenney:</B></FONT> :_
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:43:39) </FONT><B>brycedenney:</B></FONT> :)
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:43:52) </FONT><B>peter_grehan:</B></FONT> have at it..
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:44:00) </FONT><B>brycedenney:</B></FONT> 4. IP only networking through hack of PPP on host.  Bochs guest OS runs an <BR>
+NE2K, bochs emulator includes some parts of user-level PPP code and moves<BR>
+packets to/from the PPP kernel module.<BR>
+<BR>
+Pros: PPP kernel code already written for many platforms<BR>
+      PPP user code already written<BR>
+      maybe can be run as a normal user<BR>
+      all IP protocols supported<BR>
+Cons: maybe hard to extract IP information from ethernet frames<BR>
+      (is it really that hard?)<BR>
+      have to emulate some ethernet functions<BR>
+
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:45:22) </FONT><B>brycedenney:</B></FONT> It's a bit crazy, but motivated by the fact that tons of people get all their network access through PPP, so it's not that much of a limitation for Bochs to get its network access through PPP.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:45:32) </FONT><B>peter_grehan:</B></FONT> I thought that would be better off done through the serial driver itself
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:45:41) </FONT><B>peter_grehan:</B></FONT> doing a type of eth-ppp bridge.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:45:59) </FONT><B>brycedenney:</B></FONT> it seems like better performance to get many bytes at a time in the ne2k than sending bits at a time via serial
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:46:11) </FONT><B>peter_grehan:</B></FONT> The serial driver is currently optimised for interactive input
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:47:20) </FONT><B>brycedenney:</B></FONT> Do you have a concept of how many emulated instructions are required to build an ethernet frame VS sending the equivalent amount of data through serial driver?  
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:47:42) </FONT><B>peter_grehan:</B></FONT> Maybe I'm being a bit too harsh. Many early PPP implementations were made to look like ethernet drivers to the host. I just noticed today that the standard 'pppd' has a config option to direct output to a pseudo-terminal
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:47:44) </FONT><B>brycedenney:</B></FONT> it's the number of emulated instructions that's the limiting factor.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:48:51) </FONT><B>peter_grehan:</B></FONT> The ne2k has to manually write every byte out in any case
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:49:08) </FONT><B>brycedenney:</B></FONT> no DMA? :)
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:49:27) </FONT><B>peter_grehan:</B></FONT> nope
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:49:41) </FONT><B>brycedenney:</B></FONT> we could emulate a DMA capable card one day, but whatever.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:50:05) </FONT><B>brycedenney:</B></FONT> do you think serial and ne2k methods would take approximately the same # of bochs instructions to send out?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:51:00) </FONT><B>peter_grehan:</B></FONT> The serial is going to take more
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:51:12) </FONT><B>brycedenney:</B></FONT> I expected it would, but why
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:51:29) </FONT><B>brycedenney:</B></FONT> (I haven't programmed either one :) )
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:51:58) </FONT><B>peter_grehan:</B></FONT> I only wanted to get a FreeBSD serial console working
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:53:12) </FONT><B>brycedenney:</B></FONT> any reason why the current bochs serial emulation couldn't handle a PPP connection?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:53:54) </FONT><B>peter_grehan:</B></FONT> some work would be needed to abstract out the sending/receiving of bytes
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:54:07) </FONT><B>brycedenney:</B></FONT> ?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:55:33) </FONT><B>peter_grehan:</B></FONT> the serial code currently writes bytes to file descriptor 0
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:55:50) </FONT><B>brycedenney:</B></FONT> right, you'd want to open a TTY or something instead
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:56:03) </FONT><B>peter_grehan:</B></FONT> yep.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:56:26) </FONT><B>brycedenney:</B></FONT> other than that, anything not supported that PPP might need?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:57:10) </FONT><B>peter_grehan:</B></FONT> You'd have to set up the TTY for raw mode
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:57:45) </FONT><B>brycedenney:</B></FONT> ok, but as far as the serial port emulation in bochs, it has all the registers and bits
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:58:31) </FONT><B>brycedenney:</B></FONT> Did you say why serial would take more instructions? I'm interested in some guess like 50% more, 100% more, since I don't know what the constraints are.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(08:58:34) </FONT><B>peter_grehan:</B></FONT> yep
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:58:47) </FONT><B>brycedenney:</B></FONT> great!  I'll play with serial a bit.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(08:59:11) </FONT><B>brycedenney:</B></FONT> (bad pun was not intended :) )
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:00:20) </FONT><B>peter_grehan:</B></FONT> async PPP has overhead
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:01:27) </FONT><B>brycedenney:</B></FONT> ok
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:02:27) </FONT><B>brycedenney:</B></FONT> we didn't actually talk about <BR>
+4. IP only networking through hack of PPP on host.  Bochs guest OS runs an<BR>
+NE2K, bochs emulator includes some parts of user-level PPP code and moves<BR>
+packets to/from the PPP kernel module.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:02:52) </FONT><B>brycedenney:</B></FONT> except to say that it might be done with PPP on the guest os
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:02:58) </FONT><B>brycedenney:</B></FONT> does it have any merits at all?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:03:19) </FONT><B>brycedenney:</B></FONT> is my description clear enough to know what I'm talking about?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:03:58) </FONT><B>peter_grehan:</B></FONT> Yeh
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:04:01) </FONT><B>peter_grehan:</B></FONT> it could be made to work.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:04:23) </FONT><B>brycedenney:</B></FONT> it's only useful if the overhead of running PPP on the guest rather than ethernet driver is large enough
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:05:06) </FONT><B>brycedenney:</B></FONT> if overhead is similar, we should just use serial since it doesn't require any PPP hacking.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:05:12) </FONT><B>peter_grehan:</B></FONT> it would also allow non-root networking
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:05:55) </FONT><B>brycedenney:</B></FONT> same as running PPP direct, you may need root to set you up as a legal PPP user
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:05:55) </FONT><B>peter_grehan:</B></FONT> it doesn't need hacking
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:06:15) </FONT><B>brycedenney:</B></FONT> you mean plan 4 doesn't need hacking?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:06:57) </FONT><B>peter_grehan:</B></FONT> no kernel hacking
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:07:35) </FONT><B>brycedenney:</B></FONT> right, but some changes to PPPD I expect
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:08:34) </FONT><B>peter_grehan:</B></FONT> I don't think so - from what I saw
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:09:00) </FONT><B>brycedenney:</B></FONT> are you saying bochs could read and write to a PPPD-controlled terminal
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:09:27) </FONT><B>brycedenney:</B></FONT> and just translate ethernet<->PPP when bochs or the ppp had a packet?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:10:08) </FONT><B>peter_grehan:</B></FONT> That's right
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:10:17) </FONT><B>brycedenney:</B></FONT> hey
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:10:31) </FONT><B>brycedenney:</B></FONT> I didn't think of it that way, but it's good
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:10:35) </FONT><B>peter_grehan:</B></FONT> Bochs serial driver - when a character is sent out
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:10:57) </FONT><B>peter_grehan:</B></FONT> The translation from ethernet-ppp
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:11:58) </FONT><B>brycedenney:</B></FONT> I missed something
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:12:20) </FONT><B>peter_grehan:</B></FONT> about eth-ppp ?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:12:22) </FONT><B>brycedenney:</B></FONT> are you doing  multiline sends ?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:12:33) </FONT><B>peter_grehan:</B></FONT> I think I hit return accidentally there :-(
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:12:46) </FONT><B>brycedenney:</B></FONT> I only got:  "Bochs serial driver - when a character is sent out" and then "The translation from ethernet-ppp" that's all
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:13:13) </FONT><B>peter_grehan:</B></FONT> I'll type that bit again:
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:13:21) </FONT><B>brycedenney:</B></FONT> sorry
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:13:47) </FONT><B>peter_grehan:</B></FONT> when a character is sent out
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:13:58) </FONT><B>peter_grehan:</B></FONT> did that come thru OK ?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:14:11) </FONT><B>brycedenney:</B></FONT> one line only "when a character is sent out"
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:14:58) </FONT><B>peter_grehan:</B></FONT> next line: when a char arrives on the pseudo-term
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:15:57) </FONT><B>brycedenney:</B></FONT> ok
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:16:56) </FONT><B>brycedenney:</B></FONT> it seems that yahoo IM is failing here :(
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:17:17) </FONT><B>peter_grehan:</B></FONT> the east coast is coming on-line :-)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:18:31) </FONT><B>brycedenney:</B></FONT> ping1
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:18:57) </FONT><B>peter_grehan:</B></FONT> still here
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:19:08) </FONT><B>brycedenney:</B></FONT> good
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:19:16) </FONT><B>brycedenney:</B></FONT> I can't tell if I'm losing messages or just dense.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:19:38) </FONT><B>peter_grehan:</B></FONT> maybe msgs are being lost...
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:04) </FONT><B>brycedenney:</B></FONT> we're close to being out of time anyway
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:18) </FONT><B>brycedenney:</B></FONT> we have 6 plans now!!
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:23) </FONT><B>brycedenney:</B></FONT> 1. A virtual ethernet driver<BR>
+
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:27) </FONT><B>brycedenney:</B></FONT> 2. packet filters (BPF, LSF)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:31) </FONT><B>brycedenney:</B></FONT> 3. TCP only networking
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:36) </FONT><B>brycedenney:</B></FONT> 4. IP only networking through hack of PPP on host.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:41) </FONT><B>brycedenney:</B></FONT> 5. Kernel module using bridging code
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:20:45) </FONT><B>brycedenney:</B></FONT> 6. PPP link using bochs serial code
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:21:00) </FONT><B>brycedenney:</B></FONT> all have pros and cons of course
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:21:26) </FONT><B>brycedenney:</B></FONT> Is there any of them that you would like to work on, time permitting?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:22:12) </FONT><B>brycedenney:</B></FONT> or do you want to advise others who do have the time and seem to know what they're talking about?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:22:12) </FONT><B>peter_grehan:</B></FONT> I can help out
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:22:19) </FONT><B>peter_grehan:</B></FONT> sure
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:22:35) </FONT><B>brycedenney:</B></FONT> which seems most promising?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:22:42) </FONT><B>brycedenney:</B></FONT> what OS do you use anyway? freebsd?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:23:11) </FONT><B>peter_grehan:</B></FONT> I run Linux on my desktop
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:23:18) </FONT><B>brycedenney:</B></FONT> cool, me too
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:23:23) </FONT><B>peter_grehan:</B></FONT> I used a heavily modified FreeBSD when I was at Nokia :-)
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:23:59) </FONT><B>brycedenney:</B></FONT> which plan interests you the most?
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:24:37) </FONT><B>peter_grehan:</B></FONT> probably 1
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:24:48) </FONT><B>peter_grehan:</B></FONT> 6 would be the easiest to get up and running.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:25:26) </FONT><B>brycedenney:</B></FONT> maybe it's worth making 6 work first since it seems pretty easy
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:25:35) </FONT><B>peter_grehan:</B></FONT> sure
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:25:53) </FONT><B>brycedenney:</B></FONT> and then let's start talking about #1 on bochs-developers and plex86 since they will both be interested
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:25:58) </FONT><B>brycedenney:</B></FONT> esp on linux
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:26:30) </FONT><B>peter_grehan:</B></FONT> OK. Is there much io-dev work coming out of plex86 ?
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:26:47) </FONT><B>brycedenney:</B></FONT> we can probably get some volunteers to help
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:27:17) </FONT><B>brycedenney:</B></FONT> iodev on plex86: not yet, but I think a lot of people are not sure how to help until Kevin's done more of the core stuff
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:27:26) </FONT><B>brycedenney:</B></FONT> I think there will be interest.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:27:49) </FONT><B>peter_grehan:</B></FONT> they have some catching up to do
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:28:08) </FONT><B>brycedenney:</B></FONT> plex86 doesn't consider kernel modules a Con :)
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:29:04) </FONT><B>peter_grehan:</B></FONT> OK
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:29:49) </FONT><B>brycedenney:</B></FONT> would you like to describe #1 in more detail and send it to plex86 and bochs-dev list?  I'll finish up my summary of the various plans and send it to bochs-dev at least.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:30:10) </FONT><B>peter_grehan:</B></FONT> OK. See you later.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:30:12) </FONT><B>brycedenney:</B></FONT> and if you don't mind, I would like to post a log of this conversation since I think it will give some important details.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:30:22) </FONT><B>peter_grehan:</B></FONT> Sure.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:30:22) </FONT><B>brycedenney:</B></FONT> or put it on the web or something
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:30:33) </FONT><B>brycedenney:</B></FONT> Thanks Peter!  This was very helpful.
+<BR>
+<FONT COLOR="#ff0000"><FONT SIZE="2">(09:30:43) </FONT><B>peter_grehan:</B></FONT> Bye.
+<BR>
+<FONT COLOR="#0000ff"><FONT SIZE="2">(09:30:54) </FONT><B>brycedenney:</B></FONT> bye
+<BR>

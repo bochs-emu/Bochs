@@ -1,0 +1,2614 @@
+    <HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (Mailing Lists)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <!--content starts here-->
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+
+<BR><font face="arial, helvetica" color="#1e029a"
+size="4"><b>Transcript of 5/30/2001 Bochs Chat</b></font><BR><BR> <b>Those in 
+attendance were:</b> Bryce Denney (bryce), Greg Alexander (yakovlev), Donald
+Becker (psyon), Mark Knecht (Markk), Tim Butler (uninet), eks|x, nolu, and
+smapnipss<BR>
+<B>Elapsed Time:</b> 4.5 Hours (6:00PM - 10:30 PM PDT)<BR> <tt>
+***&nbsp;Topic&nbsp;for&nbsp;#Bochs:&nbsp;Bochs&nbsp;Pentium&nbsp;Emulator&nbsp;
+.:.&nbsp;How&nbsp;is&nbsp;the&nbsp;latest&nbsp;release
+working&nbsp;on&nbsp;different&nbsp;platforms?&nbsp;.:.&nbsp;Who&nbsp;uses&nbsp;
+Bochs&nbsp;anyway?&nbsp;.:.&nbsp;Bugs&nbsp;and
+features!&nbsp;bochs&nbsp;is&nbsp;cool&nbsp;come&nbsp;here
+<br><b>bryce:</b>&nbsp;first&nbsp;thing&nbsp;on&nbsp;my&nbsp;list&nbsp;is:&nbsp;
+how&nbsp;is&nbsp;the&nbsp;Bochs&nbsp;pre-release&nbsp;working&nbsp;for people?
+<br><b>yakovlev:</b>&nbsp;no&nbsp;comment.
+<br><b>bryce:</b>&nbsp;anybody&nbsp;tried&nbsp;it?
+<br><b>uninet:</b>&nbsp;I&nbsp;haven't&nbsp;done&nbsp;a&nbsp;lot&nbsp;of&nbsp;te
+sting&nbsp;yet,&nbsp;but&nbsp;so&nbsp;far&nbsp;so&nbsp;good.&nbsp;The&nbsp;RPM
+loads&nbsp;flawlessly.
+<br><b>MarkK:</b>&nbsp;Is&nbsp;the&nbsp;prerelease&nbsp;the&nbsp;RPM?
+<br><b>uninet:</b>&nbsp;Yes.
+<br><b>MarkK:</b>&nbsp;I've&nbsp;loaded&nbsp;it&nbsp;under&nbsp;RH
+<br><b>MarkK:</b>&nbsp;worked&nbsp;fine
+<br><b>bryce:</b>&nbsp;I&nbsp;heard&nbsp;someone&nbsp;say&nbsp;"I&nbsp;couldn't&
+nbsp;find&nbsp;bochs&nbsp;because&nbsp;I&nbsp;didn't&nbsp;have
+/usr/local/bin&nbsp;in&nbsp;my&nbsp;path"
+<br><b>MarkK:</b>&nbsp;ran&nbsp;the&nbsp;Linux&nbsp;model
+<br><b>MarkK:</b>&nbsp;that&nbsp;was&nbsp;me!
+<br><b>bryce:</b>&nbsp;some&nbsp;docs&nbsp;will&nbsp;fix&nbsp;that
+<br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Mark&nbsp;-&nbsp;you&nbsp;have&nbsp;SuSE&nbsp;too,&nbsp;
+right?&nbsp;That&nbsp;problem&nbsp;doesn't&nbsp;show&nbsp;up there...
+<br><b>MarkK:</b>&nbsp;And&nbsp;shucks.....I'm&nbsp;a&nbsp;hardware&nbsp;guy....
+and&nbsp;I&nbsp;still&nbsp;figured&nbsp;it&nbsp;out!&nbsp;;-)
+<br><b>bryce:</b>&nbsp;haha
+<br><b>MarkK:</b>&nbsp;No,&nbsp;SuSE&nbsp;is&nbsp;my&nbsp;email&nbsp;server&nbsp
+;at&nbsp;work....
+<br><b>MarkK:</b>&nbsp;so&nbsp;I&nbsp;haven't&nbsp;tried&nbsp;it&nbsp;there
+<br><b>uninet:</b>&nbsp;Ah.
+<br><b>MarkK:</b>&nbsp;I&nbsp;use&nbsp;RH&nbsp;for&nbsp;my&nbsp;Linux&nbsp;work
+<br><b>uninet:</b>&nbsp;Gotcha.&nbsp;I&nbsp;wasn't&nbsp;sure...
+<br><b>bryce:</b>&nbsp;I&nbsp;was&nbsp;hoping&nbsp;to&nbsp;get&nbsp;some&nbsp;bu
+g&nbsp;reports&nbsp;on&nbsp;1.2.pre1&nbsp;to&nbsp;know&nbsp;what&nbsp;needs&nbsp
+;to be&nbsp;fixed&nbsp;before&nbsp;1.2 <br><b>MarkK:</b>&nbsp;yes...
+<br><b>bryce:</b>&nbsp;here's&nbsp;what's&nbsp;already&nbsp;been&nbsp;fixed&nbsp
+;since&nbsp;1.2.pre1:
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;fixed&nbsp;compile&nbsp;pr
+oblems&nbsp;in&nbsp;gui/nogui.cc,&nbsp;iodev/pci.cc
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;removed&nbsp;extra&nbsp;pa
+ren&nbsp;that&nbsp;broke&nbsp;SHOW_IPS
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;HALT&nbsp;macro&nbsp;in&nb
+sp;rombios.c&nbsp;causes&nbsp;a&nbsp;bochs&nbsp;panic&nbsp;(which&nbsp;can&nbsp;
+be turned&nbsp;off
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;in&nbsp;.bochsrc)&nbs
+p;instead&nbsp;of&nbsp;actually&nbsp;halting.
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;added&nbsp;additional&nbsp
+;check&nbsp;for&nbsp;null&nbsp;pointer&nbsp;in&nbsp;debugger&nbsp;exit&nbsp;rout
+ine
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;now&nbsp;font/vga.pcf&nbsp
+;will&nbsp;be&nbsp;installed&nbsp;in&nbsp;the&nbsp;RPM&nbsp;package.&nbsp;&nbsp;
+Some systems
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;don't&nbsp;have&nbsp;
+it. <br><b>bryce:</b>&nbsp;mostly&nbsp;really&nbsp;minor&nbsp;stuff
+<br><b>uninet:</b>&nbsp;What&nbsp;about&nbsp;Mark's&nbsp;problem?&nbsp;Perhaps&n
+bsp;a&nbsp;symlink&nbsp;to&nbsp;/usr/bin&nbsp;would&nbsp;be good.
+<br><b>yakovlev:</b>&nbsp;We&nbsp;should&nbsp;put&nbsp;in&nbsp;a&nbsp;fix&nbsp;f
+or&nbsp;the&nbsp;timing.
+<br><b>yakovlev:</b>&nbsp;No,&nbsp;it&nbsp;belongs&nbsp;in&nbsp;/usr/local/bin&n
+bsp;on&nbsp;linux.
+<br><b>MarkK:</b>&nbsp;I&nbsp;would&nbsp;have&nbsp;been&nbsp;happy&nbsp;with&nbs
+p;finding&nbsp;it&nbsp;in&nbsp;a&nbsp;readme...
+<br><b>bryce:</b>&nbsp;timing?&nbsp;as&nbsp;in&nbsp;bochs&nbsp;takes&nbsp;100%&n
+bsp;cpu?
+<br><b>uninet:</b>&nbsp;It&nbsp;seems&nbsp;that&nbsp;it&nbsp;is&nbsp;rather&nbsp
+;bad&nbsp;it&nbsp;installs&nbsp;outside&nbsp;the&nbsp;path&nbsp;of&nbsp;RH
+though...
+<br><b>yakovlev:</b>&nbsp;and&nbsp;sometimes&nbsp;runs&nbsp;faster&nbsp;than&nbs
+p;real&nbsp;time.
+<br><b>yakovlev:</b>&nbsp;I&nbsp;had&nbsp;an&nbsp;idea&nbsp;on&nbsp;that&nbsp;on
+e.
+<br><b>bryce:</b>&nbsp;I&nbsp;agree&nbsp;that's&nbsp;important,&nbsp;but&nbsp;I&
+nbsp;think&nbsp;not&nbsp;for&nbsp;the&nbsp;1.2
+<br><b>bryce:</b>&nbsp;I'm&nbsp;thinking&nbsp;bug&nbsp;fixes&nbsp;only,&nbsp;bas
+ically,&nbsp;but&nbsp;let's&nbsp;get&nbsp;the&nbsp;timing&nbsp;fixes
+into&nbsp;CVS&nbsp;for&nbsp;the&nbsp;next
+<br><b>yakovlev:</b>&nbsp;Well,&nbsp;what&nbsp;is&nbsp;1.2?
+<br><b>yakovlev:</b>&nbsp;Are&nbsp;we&nbsp;calling&nbsp;it&nbsp;a&nbsp;bugfix&nb
+sp;release&nbsp;of&nbsp;any&nbsp;existing&nbsp;feature improvements?
+<br><b>yakovlev:</b>&nbsp;essentially?
+<br><b>bryce:</b>&nbsp;right.&nbsp;here's&nbsp;what&nbsp;I&nbsp;was&nbsp;thinkin
+g&nbsp;with&nbsp;1.2.pre1
+<br><b>uninet:</b>&nbsp;I&nbsp;thought&nbsp;it&nbsp;was&nbsp;a&nbsp;feature&nbsp
+;release
+<br><b>bryce:</b>&nbsp;we&nbsp;had&nbsp;lots&nbsp;of&nbsp;features&nbsp;that&nbs
+p;only&nbsp;the&nbsp;authors&nbsp;have&nbsp;tried
+<br><b>bryce:</b>&nbsp;and&nbsp;finally&nbsp;the&nbsp;ability&nbsp;to&nbsp;make&
+nbsp;RPMS&nbsp;and&nbsp;win32&nbsp;binaries
+<br><b>bryce:</b>&nbsp;so&nbsp;I&nbsp;wanted&nbsp;as&nbsp;many&nbsp;people&nbsp;
+as&nbsp;possible&nbsp;to&nbsp;be&nbsp;able&nbsp;to&nbsp;try&nbsp;the&nbsp;featur
+es <br><b>MarkK:</b>&nbsp;So&nbsp;I'll&nbsp;ask&nbsp;the&nbsp;question.....
+<br><b>bryce:</b>&nbsp;but&nbsp;wasn't&nbsp;so&nbsp;sure&nbsp;of&nbsp;stability,
+&nbsp;so&nbsp;I&nbsp;called&nbsp;it&nbsp;a&nbsp;pre-1.2&nbsp;release
+<br><b>MarkK:</b>&nbsp;What&nbsp;features?
+<br><b>MarkK:</b>&nbsp;(Where&nbsp;do&nbsp;I&nbsp;find&nbsp;a&nbsp;list?)
+<br><b>yakovlev:</b>&nbsp;SMP,&nbsp;for&nbsp;one.
+<br><b>bryce:</b>&nbsp;CHANGES.txt&nbsp;in&nbsp;the&nbsp;source&nbsp;TAR&nbsp;fi
+le
+<br><b>bryce:</b>&nbsp;I'll&nbsp;paste&nbsp;them&nbsp;in&nbsp;now&nbsp;if&nbsp;y
+ou&nbsp;want.
+<br><b>yakovlev:</b>&nbsp;bochs-RFB&nbsp;I&nbsp;think&nbsp;is&nbsp;new&nbsp;in&n
+bsp;1.2&nbsp;also.
+<br><b>MarkK:</b>&nbsp;not&nbsp;necessary....I&nbsp;can't&nbsp;run&nbsp;tonight&
+nbsp;anyway
+<br><b>MarkK:</b>&nbsp;I'll&nbsp;look&nbsp;at&nbsp;the&nbsp;tar&nbsp;file
+<br><b>bryce:</b>&nbsp;there&nbsp;are&nbsp;some&nbsp;important&nbsp;ones,&nbsp;e
+sp&nbsp;in&nbsp;the&nbsp;area&nbsp;of&nbsp;I/O&nbsp;(log&nbsp;file output)
+<br><b>bryce:</b>&nbsp;and&nbsp;what&nbsp;you&nbsp;see&nbsp;on&nbsp;stderr
+<br><b>yakovlev:</b>&nbsp;Oh&nbsp;yeah,&nbsp;the&nbsp;code&nbsp;maintenance&nbsp
+;issues&nbsp;like&nbsp;that&nbsp;one.
+<br><b>uninet:</b>&nbsp;http://bochs.sourceforge.net/docs-html/changelog.html&nb
+sp;has&nbsp;the&nbsp;log&nbsp;of changes&nbsp;too.
+<br><b>yakovlev:</b>&nbsp;Ugh,&nbsp;I'd&nbsp;really&nbsp;like&nbsp;to&nbsp;get&n
+bsp;my&nbsp;pit&nbsp;changes&nbsp;in,&nbsp;but&nbsp;Abigail&nbsp;has&nbsp;had
+different&nbsp;ideas...&nbsp;Babies&nbsp;do&nbsp;that.&nbsp;&nbsp;:)
+<br><b>MarkK:</b>&nbsp;I'm&nbsp;there&nbsp;now&nbsp;reading
+***&nbsp;smapnipss&nbsp;(rooot@cs6668169-151.austin.rr.com)&nbsp;has&nbsp;joined
+&nbsp;channel&nbsp;#Bochs
+<br><b>bryce:</b>&nbsp;so&nbsp;I&nbsp;think&nbsp;1.2&nbsp;OFFICIAL&nbsp;should&n
+bsp;be&nbsp;1.2.pre1&nbsp;with&nbsp;a&nbsp;few&nbsp;bug&nbsp;fixes
+<br><b>uninet:</b>&nbsp;Sounds&nbsp;reasonable.
+<br><b>bryce:</b>&nbsp;and&nbsp;anything&nbsp;major&nbsp;should&nbsp;go&nbsp;int
+o&nbsp;CVS&nbsp;snapshots&nbsp;and&nbsp;wait&nbsp;for&nbsp;1.3&nbsp;or something
+<br><b>yakovlev:</b>&nbsp;Wow,&nbsp;already&nbsp;doing&nbsp;a&nbsp;feature&nbsp;
+freeze. <br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Bochs&nbsp;going&nbsp;big&nbsp;time.&nbsp;:-)
+<br><b>yakovlev:</b>&nbsp;here's&nbsp;a&nbsp;stupid&nbsp;question:
+<br><b>yakovlev:</b>&nbsp;What&nbsp;kind&nbsp;of&nbsp;release&nbsp;schedule&nbsp
+;are&nbsp;we&nbsp;expecting&nbsp;here?
+<br><b>yakovlev:</b>&nbsp;1.2&nbsp;definitely&nbsp;is&nbsp;NOT&nbsp;ready&nbsp;f
+or&nbsp;the&nbsp;big&nbsp;stuff.
+<br><b>yakovlev:</b>&nbsp;but,&nbsp;it's&nbsp;an&nbsp;incremental&nbsp;improveme
+nt.
+<br><b>bryce:</b>&nbsp;I&nbsp;should&nbsp;say&nbsp;pretty&nbsp;early&nbsp;on,&nb
+sp;I&nbsp;have&nbsp;only&nbsp;worked&nbsp;on&nbsp;projects&nbsp;of&nbsp;2-3
+people&nbsp;before&nbsp;and&nbsp;have&nbsp;not&nbsp;done&nbsp;this&nbsp;kind&nbs
+p;of&nbsp;thing&nbsp;before,&nbsp;so&nbsp;I'm&nbsp;learning&nbsp;as I&nbsp;go.
+<br><b>MarkK:</b>&nbsp;so&nbsp;far&nbsp;I&nbsp;must&nbsp;say&nbsp;I'm&nbsp;REALL
+Y&nbsp;impressed&nbsp;here&nbsp;though
+<br><b>MarkK:</b>&nbsp;I'm&nbsp;participating&nbsp;on&nbsp;some&nbsp;much&nbsp;l
+arger&nbsp;projects
+<br><b>MarkK:</b>&nbsp;and&nbsp;they're&nbsp;no&nbsp;where&nbsp;as&nbsp;organize
+d
+<br><b>MarkK:</b>&nbsp;(of&nbsp;course&nbsp;I&nbsp;don't&nbsp;really&nbsp;know&n
+bsp;how&nbsp;many&nbsp;are&nbsp;participating&nbsp;here!!)
+<br><b>bryce:</b>&nbsp;I&nbsp;hope&nbsp;to&nbsp;get&nbsp;more&nbsp;people&nbsp;i
+nvolved&nbsp;in&nbsp;making&nbsp;decisions&nbsp;like&nbsp;when&nbsp;to&nbsp;do
+releases,&nbsp;but&nbsp;here's&nbsp;what&nbsp;I&nbsp;was&nbsp;thinking&nbsp;for&
+nbsp;the&nbsp;1.2&nbsp;thing
+<br><b>bryce:</b>&nbsp;I&nbsp;wanted&nbsp;to&nbsp;get&nbsp;binary&nbsp;releases&
+nbsp;out&nbsp;as&nbsp;soon&nbsp;as&nbsp;possible
+<br><b>bryce:</b>&nbsp;since&nbsp;that&nbsp;will&nbsp;allow&nbsp;the&nbsp;most&n
+bsp;people&nbsp;to&nbsp;try&nbsp;it&nbsp;out,&nbsp;and&nbsp;potentially
+bring&nbsp;in&nbsp;more&nbsp;develoeprs
+<br><b>bryce:</b>&nbsp;first&nbsp;thought&nbsp;was&nbsp;to&nbsp;do&nbsp;binaries
+&nbsp;of&nbsp;bugfix3&nbsp;but&nbsp;the&nbsp;I/O&nbsp;improvements
+made&nbsp;such&nbsp;a&nbsp;difference&nbsp;that&nbsp;it&nbsp;seemed&nbsp;like&nb
+sp;a&nbsp;waste&nbsp;of&nbsp;time.
+<br><b>yakovlev:</b>&nbsp;Well,&nbsp;with&nbsp;the&nbsp;HALT&nbsp;bugfix&nbsp;in
+&nbsp;the&nbsp;bios...&nbsp;could&nbsp;we&nbsp;do&nbsp;a&nbsp;binary
+release&nbsp;of&nbsp;1.1.2&nbsp;also?
+<br><b>bryce:</b>&nbsp;sure,&nbsp;but&nbsp;what&nbsp;about&nbsp;the&nbsp;stderr&
+nbsp;cleanup,&nbsp;the&nbsp;.bochsrc&nbsp;cleanup,&nbsp;the&nbsp;I/O cleanup?
+<br><b>uninet:</b>&nbsp;What&nbsp;would&nbsp;be&nbsp;the&nbsp;advantage&nbsp;of&
+nbsp;a&nbsp;1.1.2&nbsp;binary&nbsp;release?
+<br><b>bryce:</b>&nbsp;there's&nbsp;too&nbsp;much&nbsp;that&nbsp;should&nbsp;be&
+nbsp;backported&nbsp;IMHO&nbsp;to&nbsp;make&nbsp;it&nbsp;worth&nbsp;it
+<br><b>yakovlev:</b>&nbsp;It&nbsp;would&nbsp;potentially&nbsp;run&nbsp;when&nbsp
+;the&nbsp;main&nbsp;problem&nbsp;is&nbsp;that&nbsp;HALT&nbsp;bugfix.
+<br><b>bryce:</b>&nbsp;?
+<br><b>bryce:</b>&nbsp;what&nbsp;would&nbsp;run&nbsp;better&nbsp;in&nbsp;1.1.2?
+<br><b>yakovlev:</b>&nbsp;What&nbsp;if&nbsp;we&nbsp;independently&nbsp;did&nbsp;
+a&nbsp;release&nbsp;of&nbsp;just&nbsp;the&nbsp;bios?
+<br><b>yakovlev:</b>&nbsp;I&nbsp;guess&nbsp;that's&nbsp;really&nbsp;what&nbsp;I'
+m&nbsp;advocating.
+<br><b>bryce:</b>&nbsp;anything&nbsp;is&nbsp;possible.&nbsp;&nbsp;we&nbsp;can&nb
+sp;backport&nbsp;anything&nbsp;we&nbsp;want.
+<br><b>bryce:</b>&nbsp;given&nbsp;enough&nbsp;time.
+<br><b>yakovlev:</b>&nbsp;We&nbsp;had&nbsp;at&nbsp;least&nbsp;a&nbsp;few&nbsp;me
+ssages&nbsp;on&nbsp;the&nbsp;list&nbsp;about&nbsp;people&nbsp;getting
+HALT&nbsp;messages&nbsp;when&nbsp;things&nbsp;used&nbsp;to&nbsp;run&nbsp;fine.
+<br><b>uninet:</b>&nbsp;Can't&nbsp;that&nbsp;be&nbsp;stopped&nbsp;in&nbsp;bochsr
+c?
+<br><b>bryce:</b>&nbsp;the&nbsp;bug&nbsp;fix&nbsp;to&nbsp;HALT&nbsp;causes&nbsp;
+errors&nbsp;to&nbsp;be&nbsp;reported&nbsp;correctly,&nbsp;that's all.
+<br><b>yakovlev:</b>&nbsp;from&nbsp;the&nbsp;bios&nbsp;fixes&nbsp;you&nbsp;recen
+tly&nbsp;added.
+***&nbsp;Signoff:&nbsp;nolu&nbsp;(Read&nbsp;error:&nbsp;Connection&nbsp;timed&nb
+sp;out) <br><b>yakovlev:</b>&nbsp;yup,&nbsp;that's&nbsp;the&nbsp;problem.
+<br><b>bryce:</b>&nbsp;anything&nbsp;that&nbsp;has&nbsp;STOPPED&nbsp;working&nbs
+p;because&nbsp;of&nbsp;that&nbsp;was&nbsp;always&nbsp;producing
+error&nbsp;conditions&nbsp;but&nbsp;they&nbsp;weren't&nbsp;being&nbsp;reported.
+<br><b>bryce:</b>&nbsp;so&nbsp;fixing&nbsp;the&nbsp;error&nbsp;reporting&nbsp;is
+&nbsp;causing&nbsp;people&nbsp;to&nbsp;see&nbsp;the&nbsp;errors&nbsp;that
+before&nbsp;were&nbsp;silent.&nbsp;&nbsp;Does&nbsp;that&nbsp;make&nbsp;sense?
+<br><b>yakovlev:</b>&nbsp;Okay,&nbsp;then&nbsp;what&nbsp;about&nbsp;a&nbsp;bios&
+nbsp;version&nbsp;that&nbsp;possibly&nbsp;reports&nbsp;but
+continues&nbsp;to&nbsp;run&nbsp;after&nbsp;errors&nbsp;occur.
+<br><b>yakovlev:</b>&nbsp;right
+<br><b>uninet:</b>&nbsp;I&nbsp;thought&nbsp;Bryce&nbsp;said&nbsp;the&nbsp;Bochsr
+c&nbsp;config&nbsp;allowed&nbsp;for&nbsp;this...
+<br><b>bryce:</b>&nbsp;that's&nbsp;easy&nbsp;enough,&nbsp;although&nbsp;we&nbsp;
+should&nbsp;eventually&nbsp;fix&nbsp;those&nbsp;errors
+instead&nbsp;of&nbsp;ignore&nbsp;them&nbsp;:)
+<br><b>yakovlev:</b>&nbsp;of&nbsp;course
+<br><b>yakovlev:</b>&nbsp;but&nbsp;once&nbsp;reported,&nbsp;it's&nbsp;a&nbsp;pos
+sibly&nbsp;easy&nbsp;workaround.
+<br><b>bryce:</b>&nbsp;Tim,&nbsp;the&nbsp;HALTs&nbsp;now&nbsp;produce&nbsp;a&nbs
+p;bochs&nbsp;panic.&nbsp;&nbsp;In&nbsp;1.2&nbsp;all&nbsp;panics&nbsp;can&nbsp;be
+turned&nbsp;non-fatal&nbsp;by&nbsp;changing&nbsp;the&nbsp;.bochsrc.
+<br><b>yakovlev:</b>&nbsp;but&nbsp;I&nbsp;don't&nbsp;trust&nbsp;any&nbsp;code&nb
+sp;executing&nbsp;after&nbsp;a&nbsp;HALT.
+<br><b>uninet:</b>&nbsp;So,&nbsp;that&nbsp;would&nbsp;include&nbsp;the&nbsp;ones
+&nbsp;Greg&nbsp;is&nbsp;referring&nbsp;to,&nbsp;right?
+<br><b>bryce:</b>&nbsp;Tim,&nbsp;yes
+<br><b>yakovlev:</b>&nbsp;Unles&nbsp;you&nbsp;guys&nbsp;are&nbsp;sure&nbsp;that&
+nbsp;wouldn't&nbsp;make&nbsp;a&nbsp;difference.
+<br><b>bryce:</b>&nbsp;we&nbsp;should&nbsp;distinguish&nbsp;between&nbsp;the&nbs
+p;rombios&nbsp;code&nbsp;calling&nbsp;the&nbsp;HALT&nbsp;macro
+and&nbsp;a&nbsp;HLT&nbsp;x86&nbsp;instruction.
+<br><b>MarkK:</b>&nbsp;I&nbsp;agree&nbsp;with&nbsp;that
+<br><b>uninet:</b>&nbsp;That'd&nbsp;be&nbsp;very&nbsp;nice.
+<br><b>yakovlev:</b>&nbsp;I&nbsp;just&nbsp;mean&nbsp;have&nbsp;a&nbsp;version&nb
+sp;of&nbsp;the&nbsp;bios&nbsp;with&nbsp;HALT&nbsp;defined&nbsp;to&nbsp;be&nbsp;n
+op.
+<br><b>bryce:</b>&nbsp;the&nbsp;HALT&nbsp;macro&nbsp;was&nbsp;broken&nbsp;until&
+nbsp;1.2.pre1,&nbsp;it&nbsp;did&nbsp;absolutely&nbsp;nothing
+<br><b>yakovlev:</b>&nbsp;Which&nbsp;was&nbsp;good&nbsp;from&nbsp;a&nbsp;user&nb
+sp;perspective,&nbsp;bad&nbsp;from&nbsp;a&nbsp;debugging&nbsp;one.
+<br><b>bryce:</b>&nbsp;the&nbsp;hlt&nbsp;instruction&nbsp;halts&nbsp;the&nbsp;bo
+chs&nbsp;simulation,&nbsp;no&nbsp;question.
+<br><b>yakovlev:</b>&nbsp;doesn't&nbsp;HALT&nbsp;do&nbsp;a&nbsp;hlt?
+<br><b>bryce:</b>&nbsp;in&nbsp;1.2.pre1,&nbsp;it&nbsp;does.
+<br><b>bryce:</b>&nbsp;I've&nbsp;been&nbsp;working&nbsp;on&nbsp;cvs,&nbsp;and&nb
+sp;here's&nbsp;what&nbsp;it&nbsp;does&nbsp;now:
+<br><b>yakovlev:</b>&nbsp;Right,&nbsp;and&nbsp;I'm&nbsp;just&nbsp;saying&nbsp;I&
+nbsp;don't&nbsp;want&nbsp;to&nbsp;have&nbsp;to&nbsp;disable&nbsp;all
+hlts,&nbsp;just&nbsp;the&nbsp;one&nbsp;in&nbsp;HALT.
+<br><b>bryce:</b>&nbsp;the&nbsp;HALT&nbsp;macro&nbsp;causes&nbsp;bochs&nbsp;to&n
+bsp;call&nbsp;panic
+<br><b>bryce:</b>&nbsp;with&nbsp;the&nbsp;line&nbsp;number&nbsp;of&nbsp;the&nbsp
+;HALT&nbsp;macro&nbsp;(in&nbsp;rombios.c)
+<br><b>bryce:</b>&nbsp;and&nbsp;then&nbsp;it&nbsp;does&nbsp;NOT&nbsp;call&nbsp;t
+he&nbsp;x86&nbsp;hlt
+<br><b>yakovlev:</b>&nbsp;oh,&nbsp;that's&nbsp;somewhat&nbsp;better.
+<br><b>bryce:</b>&nbsp;this&nbsp;lets&nbsp;you&nbsp;control&nbsp;what&nbsp;happe
+ns&nbsp;through&nbsp;the&nbsp;bochsrc&nbsp;by&nbsp;saying
+"panic:&nbsp;action=fatal"&nbsp;or&nbsp;"panic:&nbsp;action=report"
+<br><b>bryce:</b>&nbsp;do&nbsp;you&nbsp;think&nbsp;that's&nbsp;an&nbsp;ok&nbsp;b
+ehavior&nbsp;for&nbsp;a&nbsp;1.2&nbsp;release?
+<br><b>yakovlev:</b>&nbsp;Not&nbsp;too&nbsp;bad. <br><b>bryce:</b>&nbsp;:)
+<br><b>yakovlev:</b>&nbsp;You&nbsp;guys&nbsp;had&nbsp;talked&nbsp;about&nbsp;bei
+ng&nbsp;able&nbsp;to&nbsp;isolate&nbsp;panic&nbsp;behavior&nbsp;to&nbsp;a
+particular&nbsp;unit.
+<br><b>yakovlev:</b>&nbsp;well,&nbsp;a&nbsp;particular&nbsp;section&nbsp;of&nbsp
+;code. <br><b>bryce:</b>&nbsp;right
+<br><b>yakovlev:</b>&nbsp;Sorry,&nbsp;work&nbsp;slipping&nbsp;in&nbsp;there.
+<br><b>yakovlev:</b>&nbsp;Is&nbsp;that&nbsp;doable&nbsp;from&nbsp;.bochsrc?
+<br><b>bryce:</b>&nbsp;Todd's&nbsp;I/O&nbsp;code&nbsp;has&nbsp;the&nbsp;capabili
+ty&nbsp;of&nbsp;having&nbsp;a&nbsp;different&nbsp;action&nbsp;for
+each&nbsp;of&nbsp;panic,error,info,debug&nbsp;for&nbsp;each&nbsp;"module"
+<br><b>bryce:</b>&nbsp;where&nbsp;module&nbsp;is&nbsp;something&nbsp;like&nbsp;"
+HD",&nbsp;"CPU",&nbsp;"PIT"
+<br><b>bryce:</b>&nbsp;but&nbsp;there&nbsp;is&nbsp;not&nbsp;yet&nbsp;any&nbsp;.b
+ochsrc&nbsp;syntax&nbsp;to&nbsp;specify&nbsp;this
+<br><b>yakovlev:</b>&nbsp;could&nbsp;we&nbsp;define&nbsp;the&nbsp;panics&nbsp;ca
+used&nbsp;by&nbsp;the&nbsp;bios&nbsp;to&nbsp;be&nbsp;a&nbsp;specific macro?
+<br><b>yakovlev:</b>&nbsp;macroXXXXX&nbsp;module
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;you&nbsp;mean&nbsp;something&nbsp;like:
+&nbsp;&nbsp;panic:&nbsp;facility=cdrom,&nbsp;action=fatal
+<br><b>bryce:</b>&nbsp;panic:&nbsp;facility=bios,&nbsp;action=report
+<br><b>bryce:</b>&nbsp;? <br><b>yakovlev:</b>&nbsp;yup.
+<br><b>bryce:</b>&nbsp;panic:&nbsp;facility=default,&nbsp;action=fatal
+<br><b>yakovlev:</b>&nbsp;although&nbsp;that's&nbsp;a&nbsp;little&nbsp;awkward.
+<br><b>bryce:</b>&nbsp;yes,&nbsp;needs&nbsp;work
+<br><b>yakovlev:</b>&nbsp;but&nbsp;yes,&nbsp;basically&nbsp;that.
+<br><b>bryce:</b>&nbsp;the&nbsp;I/O&nbsp;functions&nbsp;are&nbsp;all&nbsp;ready&
+nbsp;to&nbsp;do&nbsp;that,&nbsp;we&nbsp;just&nbsp;need&nbsp;a&nbsp;syntax!
+<br><b>bryce:</b>&nbsp;any&nbsp;suggestion?
+<br><b>yakovlev:</b>&nbsp;PIT:&nbsp;panic=fatal
+<br><b>yakovlev:</b>&nbsp;default:&nbsp;panic=fatal
+<br><b>bryce:</b>&nbsp;what&nbsp;about&nbsp;debug,info,&nbsp;and&nbsp;error&nbsp
+;though?
+<br><b>bryce:</b>&nbsp;PIT:&nbsp;panic=fatal,&nbsp;error=report,&nbsp;info=repor
+t,&nbsp;debug=ignore <br><b>yakovlev:</b>&nbsp;HD:&nbsp;debug=ignore
+<br><b>yakovlev:</b>&nbsp;sure.
+<br><b>bryce:</b>&nbsp;that&nbsp;seems&nbsp;good&nbsp;enough
+<br><b>yakovlev:</b>&nbsp;it&nbsp;has&nbsp;the&nbsp;added&nbsp;advantage&nbsp;of
+&nbsp;giving&nbsp;us&nbsp;some&nbsp;direction&nbsp;for
+additional&nbsp;"module&nbsp;parameters"
+<br><b>bryce:</b>&nbsp;I&nbsp;have&nbsp;a&nbsp;feeling&nbsp;it&nbsp;will&nbsp;be
+&nbsp;better&nbsp;if&nbsp;the&nbsp;thing&nbsp;left&nbsp;of&nbsp;the&nbsp;colon&n
+bsp;can
+be&nbsp;the&nbsp;same&nbsp;for&nbsp;all&nbsp;such&nbsp;statements,&nbsp;but&nbsp
+;I'm&nbsp;not&nbsp;sure&nbsp;how&nbsp;to&nbsp;make&nbsp;it&nbsp;look&nbsp;ok.
+<br><b>yakovlev:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;me&nbsp;that&nbsp;the&nbsp;
+only&nbsp;issue&nbsp;for&nbsp;panics,&nbsp;etc.&nbsp;is&nbsp;the&nbsp;action.
+<br><b>yakovlev:</b>&nbsp;hmmmm... <br><b>yakovlev:</b>&nbsp;well...
+<br><b>bryce:</b>&nbsp;true&nbsp;but&nbsp;what&nbsp;if&nbsp;you&nbsp;wanted&nbsp
+;to&nbsp;log&nbsp;HD&nbsp;messages&nbsp;to&nbsp;a&nbsp;different&nbsp;file?
+<br><b>yakovlev:</b>&nbsp;panic:&nbsp;action=fatal&nbsp;<br><b>insert&nbsp;char&
+nbsp;here:</b>&nbsp;PIT
+<br><b>bryce:</b>&nbsp;log:&nbsp;obj=HD,&nbsp;file="hdlog.txt",&nbsp;panic=fatal
+,&nbsp;error=report,&nbsp;info=report, debug=ignore
+<br><b>bryce:</b>&nbsp;it's&nbsp;getting&nbsp;LONG <br><b>bryce:</b>&nbsp;:)
+<br><b>bryce:</b>&nbsp;but&nbsp;soon&nbsp;the&nbsp;GUI&nbsp;will&nbsp;do&nbsp;th
+is&nbsp;for&nbsp;us. <br><b>bryce:</b>&nbsp;:) <br><b>yakovlev:</b>&nbsp;yup.
+<br><b>yakovlev:</b>&nbsp;just&nbsp;a&nbsp;minute,&nbsp;I&nbsp;like&nbsp;the&nbs
+p;log&nbsp;idea. <br><b>yakovlev:</b>&nbsp;hmmmm...
+<br><b>yakovlev:</b>&nbsp;what&nbsp;if&nbsp;we&nbsp;viewed&nbsp;these&nbsp;more&
+nbsp;as&nbsp;commands.
+<br><b>yakovlev:</b>&nbsp;so,&nbsp;we&nbsp;could&nbsp;use:
+<br><b>yakovlev:</b>&nbsp;log:&nbsp;filename="outfile",&nbsp;panic=fatal,&nbsp;e
+rror=report
+<br><b>yakovlev:</b>&nbsp;log:&nbsp;obj=PIT,&nbsp;filename="outfile2",&nbsp;pani
+c=report,&nbsp;info=report <br><b>yakovlev:</b>&nbsp;that's&nbsp;cleaner.
+<br><b>yakovlev:</b>&nbsp;we'd&nbsp;have&nbsp;to&nbsp;decide&nbsp;just&nbsp;how&
+nbsp;to&nbsp;parse&nbsp;different&nbsp;things.
+<br><b>bryce:</b>&nbsp;so&nbsp;if&nbsp;you&nbsp;have&nbsp;no&nbsp;obj=X&nbsp;the
+n&nbsp;it&nbsp;means&nbsp;the&nbsp;default?
+<br><b>bryce:</b>&nbsp;is&nbsp;that&nbsp;your&nbsp;point?
+<br><b>yakovlev:</b>&nbsp;yup. <br><b>bryce:</b>&nbsp;makes&nbsp;sense
+<br><b>yakovlev:</b>&nbsp;no,&nbsp;not&nbsp;just&nbsp;that.
+<br><b>bryce:</b>&nbsp;and&nbsp;later&nbsp;lines&nbsp;override&nbsp;settings&nbs
+p;from&nbsp;earlier&nbsp;lines
+<br><b>yakovlev:</b>&nbsp;we&nbsp;only&nbsp;have&nbsp;to&nbsp;specify&nbsp;part&
+nbsp;on&nbsp;a&nbsp;line, <br><b>bryce:</b>&nbsp;right
+<br><b>yakovlev:</b>&nbsp;right.
+<br><b>bryce:</b>&nbsp;ok,&nbsp;that&nbsp;sounds&nbsp;like&nbsp;a&nbsp;good&nbsp
+;start.
+<br><b>yakovlev:</b>&nbsp;filename&nbsp;would&nbsp;apply&nbsp;either&nbsp;only&n
+bsp;to&nbsp;the&nbsp;module.
+<br><b>yakovlev:</b>&nbsp;or&nbsp;even&nbsp;only&nbsp;to&nbsp;the&nbsp;reporting
+&nbsp;specified&nbsp;on&nbsp;that&nbsp;line.
+<br><b>MarkK:</b>&nbsp;Is&nbsp;there&nbsp;something&nbsp;easy&nbsp;you&nbsp;coul
+d&nbsp;do&nbsp;to&nbsp;keep&nbsp;separate&nbsp;runs&nbsp;in&nbsp;separate files?
+<br><b>MarkK:</b>&nbsp;So&nbsp;that&nbsp;if&nbsp;you&nbsp;wanted&nbsp;to&nbsp;ru
+n&nbsp;regression&nbsp;it&nbsp;would&nbsp;be&nbsp;easy
+<br><b>bryce:</b>&nbsp;(let's&nbsp;continue&nbsp;the&nbsp;.bochsrc&nbsp;syntax&n
+bsp;on&nbsp;email,&nbsp;so&nbsp;that&nbsp;we&nbsp;can&nbsp;get&nbsp;to
+other&nbsp;things&nbsp;too) <br><b>MarkK:</b>&nbsp;sure
+<br><b>bryce:</b>&nbsp;mark,&nbsp;maybe&nbsp;you&nbsp;could&nbsp;put&nbsp;in&nbs
+p;a&nbsp;%d&nbsp;or&nbsp;something
+<br><b>bryce:</b>&nbsp;into&nbsp;the&nbsp;filename,&nbsp;and&nbsp;then&nbsp;spri
+ntf&nbsp;some&nbsp;time&nbsp;stamp&nbsp;into&nbsp;the&nbsp;%d
+<br><b>MarkK:</b>&nbsp;that's&nbsp;an&nbsp;idea
+<br><b>yakovlev:</b>&nbsp;there&nbsp;are&nbsp;several&nbsp;ways&nbsp;to&nbsp;do&
+nbsp;it.
+<br><b>yakovlev:</b>&nbsp;the&nbsp;calling&nbsp;program&nbsp;could&nbsp;just&nbs
+p;change&nbsp;the&nbsp;value&nbsp;in&nbsp;.bochsrc&nbsp;between runs.
+<br><b>yakovlev:</b>&nbsp;at&nbsp;any&nbsp;rate,&nbsp;next&nbsp;topic...
+<br><b>bryce:</b>&nbsp;I&nbsp;had&nbsp;a&nbsp;little&nbsp;survey&nbsp;written&nb
+sp;up
+<br><b>yakovlev:</b>&nbsp;Maybe&nbsp;the&nbsp;GUI&nbsp;interface&nbsp;would&nbsp
+;be&nbsp;appropriate? <br><b>yakovlev:</b>&nbsp;oh,&nbsp;go&nbsp;ahead.
+<br><b>bryce:</b>&nbsp;but&nbsp;given&nbsp;that&nbsp;we&nbsp;have&nbsp;only&nbsp
+;5-6&nbsp;people...
+<br><b>bryce:</b>&nbsp;let's&nbsp;just&nbsp;take&nbsp;a&nbsp;peek&nbsp;at&nbsp;i
+t&nbsp;but&nbsp;try&nbsp;to&nbsp;get&nbsp;more&nbsp;people&nbsp;to&nbsp;answer&n
+bsp;it later&nbsp;on <br><b>yakovlev:</b>&nbsp;K.
+<br><b>bryce:</b>&nbsp;it's&nbsp;at&nbsp;<a
+href="http://bochs.sourceforge.net/ircsurvey.html">http://bochs.sourceforge.net/ircsurvey.html</a>
+<br><b>bryce:</b>&nbsp;or&nbsp;if&nbsp;it's&nbsp;easier&nbsp;I'll&nbsp;just&nbsp
+;paste&nbsp;it&nbsp;in
+<br><b>bryce:</b>&nbsp;let's&nbsp;add&nbsp;any&nbsp;number&nbsp;of&nbsp;possible
+&nbsp;responses&nbsp;that&nbsp;you&nbsp;can&nbsp;think&nbsp;of,&nbsp;and
+maybe&nbsp;we&nbsp;can&nbsp;make&nbsp;this&nbsp;into&nbsp;a&nbsp;web&nbsp;survey
+&nbsp;instead&nbsp;(or&nbsp;maybe&nbsp;SourceForge survey)
+<br><b>uninet:</b>&nbsp;Should&nbsp;I&nbsp;post&nbsp;my&nbsp;response&nbsp;here?
+<br><b>bryce:</b>&nbsp;sure!!
+<br><b>yakovlev:</b>&nbsp;I&nbsp;write&nbsp;bochs&nbsp;as&nbsp;a&nbsp;hobby.&nbs
+p;&nbsp;I'm&nbsp;more&nbsp;interested&nbsp;in&nbsp;getting&nbsp;it&nbsp;right
+than&nbsp;using&nbsp;it.
+<br><b>bryce:</b>&nbsp;Educator/Student:&nbsp;to&nbsp;see&nbsp;how&nbsp;the&nbsp
+;computer&nbsp;works
+<br><b>yakovlev:</b>&nbsp;However,&nbsp;I'm&nbsp;also&nbsp;interested&nbsp;in&nb
+sp;getting&nbsp;x86&nbsp;programs&nbsp;to&nbsp;run&nbsp;on other&nbsp;OSes.
+<br><b>uninet:</b>&nbsp;For&nbsp;the&nbsp;first&nbsp;question&nbsp;(What&nbsp;do
+&nbsp;you&nbsp;use&nbsp;bochs&nbsp;for):&nbsp;Initially&nbsp;to&nbsp;try
+out&nbsp;Win32,&nbsp;although&nbsp;now&nbsp;just&nbsp;for&nbsp;the&nbsp;enjoymen
+t&nbsp;of&nbsp;running&nbsp;a&nbsp;PC&nbsp;in&nbsp;my&nbsp;PC.&nbsp;:-)
+<br><b>uninet:</b>&nbsp;Future&nbsp;Bug&nbsp;fixes:&nbsp;bug&nbsp;1.&nbsp;Featur
+e&nbsp;Request:&nbsp;feature&nbsp;8.
+<br><b>bryce:</b>&nbsp;also&nbsp;to&nbsp;be&nbsp;able&nbsp;to&nbsp;watch&nbsp;th
+e&nbsp;OS&nbsp;working&nbsp;(esp&nbsp;Linux&nbsp;since&nbsp;I&nbsp;can&nbsp;see&
+nbsp;the source&nbsp;too)
+<br><b>uninet:</b>&nbsp;(Mouse&nbsp;problems,&nbsp;and&nbsp;emulation&nbsp;speed
+&nbsp;respectively)
+<br><b>MarkK:</b>&nbsp;Chip&nbsp;Designer:&nbsp;Inteested&nbsp;in&nbsp;interfaci
+gn&nbsp;it&nbsp;to&nbsp;my&nbsp;new&nbsp;design.
+<br><b>MarkK:</b>&nbsp;bad&nbsp;spelling.&nbsp;;-)
+<br><b>bryce:</b>&nbsp;mark,&nbsp;are&nbsp;you&nbsp;allowed&nbsp;to&nbsp;say&nbs
+p;what&nbsp;you're&nbsp;designing?&nbsp;:)
+<br><b>MarkK:</b>&nbsp;Sort&nbsp;of....
+<br><b>smapnipss:</b>&nbsp;i&nbsp;use&nbsp;bochs&nbsp;for&nbsp;os&nbsp;developme
+nt
+<br><b>MarkK:</b>&nbsp;I'm&nbsp;working&nbsp;on&nbsp;some&nbsp;leading&nbsp;edge
+&nbsp;1394&nbsp;stuff
+<br><b>bryce:</b>&nbsp;I&nbsp;understand,&nbsp;I'm&nbsp;a&nbsp;chip&nbsp;designe
+r&nbsp;too. <br><b>yakovlev:</b>&nbsp;wow,&nbsp;me&nbsp;too.
+<br><b>yakovlev:</b>&nbsp;I&nbsp;can&nbsp;say.&nbsp;&nbsp;POWER4
+<br><b>MarkK:</b>&nbsp;but&nbsp;I'm&nbsp;also&nbsp;interested&nbsp;in&nbsp;chips
+et&nbsp;design,&nbsp;and&nbsp;how&nbsp;that&nbsp;might&nbsp;play&nbsp;in here
+<br><b>uninet:</b>&nbsp;I'm&nbsp;feeling&nbsp;out&nbsp;numbered&nbsp;here...&nbs
+p;I'm&nbsp;just&nbsp;a&nbsp;lowly&nbsp;web&nbsp;designer.
+<br><b>bryce:</b>&nbsp;We're&nbsp;thinking&nbsp;about&nbsp;SMP&nbsp;chip&nbsp;de
+signs <br><b>bryce:</b>&nbsp;big&nbsp;surprise&nbsp;:)
+<br><b>MarkK:</b>&nbsp;The&nbsp;web&nbsp;rules...;-)&nbsp;We&nbsp;just&nbsp;work
+!
+<br><b>MarkK:</b>&nbsp;Anyway,&nbsp;long&nbsp;term&nbsp;I'm&nbsp;interestedin&nb
+sp;how&nbsp;I&nbsp;can&nbsp;use&nbsp;this&nbsp;with&nbsp;new&nbsp;chip
+designs&nbsp;prior&nbsp;to&nbsp;tapeout...
+<br><b>yakovlev:</b>&nbsp;Interesting.
+<br><b>bryce:</b>&nbsp;it&nbsp;could&nbsp;certainly&nbsp;be&nbsp;made&nbsp;into&
+nbsp;a&nbsp;good&nbsp;driver/monitor...
+<br><b>yakovlev:</b>&nbsp;Were&nbsp;you&nbsp;one&nbsp;of&nbsp;the&nbsp;guys&nbsp
+;pushing&nbsp;for&nbsp;a&nbsp;more&nbsp;modular&nbsp;design?
+<br><b>MarkK:</b>&nbsp;yes,&nbsp;driver&nbsp;could&nbsp;get&nbsp;deveoped&nbsp;i
+n&nbsp;Windows. ***&nbsp;Signoff:&nbsp;smapnipss&nbsp;()
+<br><b>MarkK:</b>&nbsp;I&nbsp;usually&nbsp;have&nbsp;some&nbsp;sort&nbsp;of&nbsp
+;C&nbsp;model&nbsp;for&nbsp;the&nbsp;chip
+<br><b>MarkK:</b>&nbsp;hook&nbsp;it&nbsp;all&nbsp;together&nbsp;and&nbsp;try&nbs
+p;it&nbsp;out...
+<br><b>uninet:</b>&nbsp;That&nbsp;would&nbsp;be&nbsp;nice.&nbsp;Would&nbsp;the&n
+bsp;C&nbsp;code&nbsp;your&nbsp;are&nbsp;writting&nbsp;be&nbsp;able&nbsp;to&nbsp;
+be open&nbsp;sourced? <br><b>bryce:</b>&nbsp;haha <br><b>MarkK:</b>&nbsp;LOL
+<br><b>uninet:</b>&nbsp;:-) <br><b>yakovlev:</b>&nbsp;;)
+<br><b>MarkK:</b>&nbsp;Laugh&nbsp;Out&nbsp;Loud&nbsp;or&nbsp;Lot's&nbsp;Of&nbsp;
+Luck <br><b>MarkK:</b>&nbsp;you're&nbsp;choice!!
+***&nbsp;eks|x&nbsp;(eks@HSE-Montreal-ppp123837.qc.sympatico.ca)&nbsp;has&nbsp;j
+oined&nbsp;channel #Bochs <br><b>eks|x:</b>&nbsp;hi&nbsp;guys&nbsp;:)
+<br><b>bryce:</b>&nbsp;sorry,&nbsp;I'm&nbsp;just&nbsp;trying&nbsp;to&nbsp;pictur
+e&nbsp;the&nbsp;open&nbsp;source&nbsp;chip&nbsp;design...
+People&nbsp;have&nbsp;talked&nbsp;about&nbsp;it,&nbsp;but&nbsp;it's&nbsp;hard&nb
+sp;to&nbsp;see&nbsp;it&nbsp;happening. <br><b>MarkK:</b>&nbsp;hi&nbsp;eks
+<br><b>bryce:</b>&nbsp;Hi&nbsp;eks! <br><b>uninet:</b>&nbsp;Hi&nbsp;eks!
+<br><b>eks|x:</b>&nbsp;:) <br><b>MarkK:</b>&nbsp;Not&nbsp;really....
+<br><b>bryce:</b>&nbsp;eks:&nbsp;we're&nbsp;just&nbsp;talking&nbsp;about&nbsp;ou
+r&nbsp;answers&nbsp;to&nbsp;a&nbsp;little&nbsp;survey&nbsp;at
+http://bochs.sourceforge.net/ircsurvey.html
+<br><b>MarkK:</b>&nbsp;I&nbsp;worked&nbsp;in&nbsp;the&nbsp;IP&nbsp;industry&nbsp
+;before&nbsp;Phoenix&nbsp;bought&nbsp;us...
+<br><b>uninet:</b>&nbsp;<br><b>sigh:</b>&nbsp;Oh&nbsp;well,&nbsp;I&nbsp;guess&nb
+sp;bochs&nbsp;needs&nbsp;more&nbsp;speed&nbsp;before&nbsp;it&nbsp;needs&nbsp;IEE
+E 1394&nbsp;anyway...
+<br><b>MarkK:</b>&nbsp;people&nbsp;are&nbsp;starting&nbsp;to&nbsp;do&nbsp;open&n
+bsp;source&nbsp;Verilog
+<br><b>yakovlev:</b>&nbsp;depends&nbsp;on&nbsp;how&nbsp;prevalent&nbsp;FPGAs&nbs
+p;become&nbsp;in&nbsp;configurable&nbsp;consumer electronics.
+<br><b>MarkK:</b>&nbsp;Or&nbsp;faster&nbsp;platforms&nbsp;to&nbsp;run&nbsp;Bochs
+&nbsp;on.
+<br><b>yakovlev:</b>&nbsp;Anyways,&nbsp;we're&nbsp;getting&nbsp;very&nbsp;sidetr
+acked. <br><b>MarkK:</b>&nbsp;yes <br><b>bryce:</b>&nbsp;good&nbsp;point&nbsp;:)
+<br><b>bryce:</b>&nbsp;so&nbsp;I&nbsp;heard&nbsp;several&nbsp;votes&nbsp;for&nbs
+p;better&nbsp;mouse&nbsp;support&nbsp;(bug1) <br><b>uninet:</b>&nbsp;Definately.
+<br><b>eks|x:</b>&nbsp;what&nbsp;I&nbsp;would&nbsp;really&nbsp;appreciate&nbsp;i
+s&nbsp;having&nbsp;the&nbsp;fpu&nbsp;more&nbsp;closely&nbsp;related
+to&nbsp;the&nbsp;debugger,&nbsp;aka&nbsp;fpu&nbsp;stack&nbsp;on&nbsp;cpu_dump
+<br><b>bryce:</b>&nbsp;ah,&nbsp;I&nbsp;never&nbsp;thought&nbsp;about&nbsp;that.
+<br><b>MarkK:</b>&nbsp;Is&nbsp;your&nbsp;'Disk&nbsp;Image&nbsp;Tools'&nbsp;about
+&nbsp;how&nbsp;to&nbsp;build&nbsp;HDs&nbsp;with&nbsp;certain&nbsp;OS's
+and&nbsp;apps? <br><b>yakovlev:</b>&nbsp;bug1,&nbsp;bug4
+<br><b>bryce:</b>&nbsp;eks,&nbsp;that&nbsp;should&nbsp;not&nbsp;be&nbsp;hard&nbs
+p;to&nbsp;manage.&nbsp;&nbsp;Bochs&nbsp;must&nbsp;have&nbsp;the&nbsp;values&nbsp
+;in
+there&nbsp;somewhere,&nbsp;you&nbsp;just&nbsp;need&nbsp;printed&nbsp;out&nbsp;ri
+ght?
+<br><b>uninet:</b>&nbsp;bug3&nbsp;sounds&nbsp;like&nbsp;a&nbsp;nice&nbsp;one&nbs
+p;to&nbsp;fix&nbsp;too...
+<br><b>bryce:</b>&nbsp;yes,&nbsp;bug3&nbsp;is&nbsp;tough&nbsp;though
+<br><b>bryce:</b>&nbsp;well&nbsp;maybe&nbsp;not&nbsp;tough,&nbsp;just&nbsp;lots&
+nbsp;of&nbsp;OSes&nbsp;out&nbsp;there.
+<br><b>yakovlev:</b>&nbsp;feature7,&nbsp;feature2
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;right
+<br><b>uninet:</b>&nbsp;Yeah,&nbsp;at&nbsp;least&nbsp;it&nbsp;would&nbsp;be&nbsp
+;nice&nbsp;on&nbsp;Win9x.
+<br><b>bryce:</b>&nbsp;for&nbsp;the&nbsp;cdrom&nbsp;support,&nbsp;what&nbsp;if&n
+bsp;we&nbsp;made&nbsp;a&nbsp;portable&nbsp;way&nbsp;to&nbsp;read&nbsp;from&nbsp;
+a cdrom&nbsp;disk&nbsp;image?
+<br><b>yakovlev:</b>&nbsp;yes,&nbsp;but&nbsp;if&nbsp;we&nbsp;get&nbsp;the&nbsp;C
+DROM&nbsp;model&nbsp;right,&nbsp;we're&nbsp;done.
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;we&nbsp;have&nbsp;some&nbsp;3D&nbsp;computing
+&nbsp;code&nbsp;we&nbsp;try&nbsp;to&nbsp;work&nbsp;out&nbsp;in&nbsp;a&nbsp;gamin
+g
+station,&nbsp;we&nbsp;worked&nbsp;out&nbsp;out&nbsp;own&nbsp;fpu&nbsp;stack&nbsp
+;out&nbsp;code,&nbsp;but&nbsp;it&nbsp;would&nbsp;be&nbsp;kinda&nbsp;neat
+to&nbsp;have&nbsp;them&nbsp;out&nbsp;on&nbsp;cpu_dump
+<br><b>eks|x:</b>&nbsp;yakovlev:&nbsp;cdrom&nbsp;model&nbsp;shouldn't&nbsp;be&nb
+sp;too&nbsp;hard&nbsp;to&nbsp;implement,&nbsp;close&nbsp;to&nbsp;hdd model
+<br><b>MarkK:</b>&nbsp;Bryce:&nbsp;So&nbsp;that&nbsp;part&nbsp;is&nbsp;under&nbs
+p;feature&nbsp;1?
+<br><b>bryce:</b>&nbsp;not&nbsp;as&nbsp;convenient&nbsp;as&nbsp;the&nbsp;real&nb
+sp;cdrom&nbsp;(need&nbsp;lots&nbsp;of&nbsp;disk&nbsp;space)&nbsp;but&nbsp;then
+the&nbsp;job&nbsp;of&nbsp;reading&nbsp;the&nbsp;raw&nbsp;cd&nbsp;is&nbsp;left&nb
+sp;to&nbsp;platform-dependent&nbsp;tools&nbsp;that&nbsp;are already&nbsp;around.
+<br><b>yakovlev:</b>&nbsp;that&nbsp;would&nbsp;be&nbsp;good,&nbsp;Bryce.
+<br><b>yakovlev:</b>&nbsp;I&nbsp;was&nbsp;surprised&nbsp;that&nbsp;wasn't&nbsp;t
+here&nbsp;already.
+<br><b>uninet:</b>&nbsp;Would&nbsp;it&nbsp;be&nbsp;possible&nbsp;to&nbsp;make&nb
+sp;bochs&nbsp;pretend&nbsp;/dev/cdrom&nbsp;was&nbsp;a&nbsp;cdrom image?
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;just&nbsp;need&nbsp;to&nbsp;und
+erstand&nbsp;a&nbsp;few&nbsp;of&nbsp;the&nbsp;ioctls&nbsp;(maybe&nbsp;snatch
+from&nbsp;linux&nbsp;kernel&nbsp;code&nbsp;or&nbsp;something)&nbsp;to&nbsp;see&n
+bsp;how&nbsp;to&nbsp;read&nbsp;table&nbsp;of&nbsp;contents&nbsp;and stuff
+<br><b>yakovlev:</b>&nbsp;well,&nbsp;it&nbsp;would&nbsp;take&nbsp;some&nbsp;look
+ing,&nbsp;but&nbsp;basically,&nbsp;yes.
+<br><b>eks|x:</b>&nbsp;just&nbsp;out&nbsp;of&nbsp;nowhere&nbsp;like&nbsp;that,&n
+bsp;any&nbsp;of&nbsp;you&nbsp;familiar&nbsp;with&nbsp;'bfe'&nbsp;?&nbsp;;)
+<br><b>yakovlev:</b>&nbsp;We'd&nbsp;have&nbsp;to&nbsp;add&nbsp;the&nbsp;removabl
+e&nbsp;media&nbsp;controls&nbsp;to&nbsp;the&nbsp;CDROM
+interface,&nbsp;but&nbsp;even&nbsp;that&nbsp;isn't&nbsp;ridiculous.
+<br><b>bryce:</b>&nbsp;eks:&nbsp;can&nbsp;you&nbsp;add&nbsp;that&nbsp;as&nbsp;a&
+nbsp;feature&nbsp;request&nbsp;on&nbsp;SF?&nbsp;&nbsp;otherwise&nbsp;I&nbsp;prom
+ise I'll&nbsp;forget.&nbsp;:)
+<br><b>eks|x:</b>&nbsp;it's&nbsp;a&nbsp;nice&nbsp;addition&nbsp;to&nbsp;bochs&nb
+sp;I&nbsp;think
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;I&nbsp;can&nbsp;do&nbsp;that,sure&nbsp;:)
+<br><b>bryce:</b>&nbsp;bfe:&nbsp;I&nbsp;looked&nbsp;at&nbsp;it&nbsp;once,&nbsp;a
+nd&nbsp;asked&nbsp;the&nbsp;author&nbsp;if&nbsp;he&nbsp;wanted&nbsp;to
+integrate&nbsp;it,&nbsp;he's&nbsp;not&nbsp;that&nbsp;interested.
+<br><b>uninet:</b>&nbsp;yakovlev:&nbsp;Could&nbsp;it&nbsp;do&nbsp;something&nbsp
+;similar&nbsp;to&nbsp;Win4Lin,&nbsp;where&nbsp;the&nbsp;guest
+OS&nbsp;handles&nbsp;how&nbsp;the&nbsp;CD's&nbsp;are&nbsp;mounted?
+<br><b>uninet:</b>&nbsp;(i.e.&nbsp;automount,&nbsp;standard&nbsp;mount,&nbsp;etc
+.)
+<br><b>MarkK:</b>&nbsp;could&nbsp;do&nbsp;that&nbsp;for&nbsp;all&nbsp;the&nbsp;p
+hysical&nbsp;I/O&nbsp;if&nbsp;you&nbsp;wanted&nbsp;to...
+<br><b>yakovlev:</b>&nbsp;well,&nbsp;bochs&nbsp;needs&nbsp;to&nbsp;know&nbsp;if&
+nbsp;a&nbsp;CD&nbsp;is&nbsp;there&nbsp;or&nbsp;not.
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;yeah,&nbsp;I&nbsp;know,&nbsp;but&nbsp;it's&nb
+sp;a&nbsp;good&nbsp;tool,&nbsp;I&nbsp;use&nbsp;it&nbsp;often,&nbsp;mostly&nbsp;t
+o generate&nbsp;cpu-flow&nbsp;tracing&nbsp;in&nbsp;the&nbsp;history&nbsp;file
+<br><b>bryce:</b>&nbsp;bfe&nbsp;is&nbsp;actually&nbsp;what&nbsp;started&nbsp;me&
+nbsp;thinking&nbsp;about&nbsp;guis
+<br><b>yakovlev:</b>&nbsp;in&nbsp;the&nbsp;emulated&nbsp;sense.
+<br><b>uninet:</b>&nbsp;Hmm...
+<br><b>yakovlev:</b>&nbsp;Beyond&nbsp;that,&nbsp;it's&nbsp;just&nbsp;a&nbsp;file
+.
+<br><b>eks|x:</b>&nbsp;yakovlev:&nbsp;one&nbsp;problem&nbsp;I&nbsp;see&nbsp;is&n
+bsp;changing&nbsp;the&nbsp;actual&nbsp;cd&nbsp;ocne&nbsp;bochs&nbsp;is started
+<br><b>uninet:</b>&nbsp;Could&nbsp;it&nbsp;probe&nbsp;the&nbsp;CD-ROM&nbsp;drive
+&nbsp;every&nbsp;time&nbsp;it&nbsp;is&nbsp;requested?
+<br><b>bryce:</b>&nbsp;slow
+<br><b>yakovlev:</b>&nbsp;Wrong&nbsp;layer,&nbsp;guys.
+<br><b>yakovlev:</b>&nbsp;All&nbsp;bochs&nbsp;needs&nbsp;is:
+<br><b>uninet:</b>&nbsp;How's&nbsp;autmount&nbsp;do&nbsp;it?
+<br><b>yakovlev:</b>&nbsp;CDROM_INSERT().
+<br><b>yakovlev:</b>&nbsp;CDROM_EJECT().
+<br><b>yakovlev:</b>&nbsp;the&nbsp;OS&nbsp;interface&nbsp;code&nbsp;figures&nbsp
+;out&nbsp;when&nbsp;to&nbsp;call&nbsp;them.
+<br><b>uninet:</b>&nbsp;That'd&nbsp;make&nbsp;sense. <br><b>eks|x:</b>&nbsp;yip
+<br><b>bryce:</b>&nbsp;cdrom&nbsp;would&nbsp;be&nbsp;a&nbsp;big&nbsp;help&nbsp;i
+n&nbsp;installing&nbsp;new&nbsp;software
+<br><b>yakovlev:</b>&nbsp;then&nbsp;maybe&nbsp;DISK_SEEK,&nbsp;DISK_READ,&nbsp;a
+nd&nbsp;DISK_WRITE&nbsp;to&nbsp;complete&nbsp;the set.
+<br><b>MarkK:</b>&nbsp;what's&nbsp;the&nbsp;interface&nbsp;look&nbsp;like&nbsp;b
+etween&nbsp;the&nbsp;IDE&nbsp;controller&nbsp;and&nbsp;the HD/CDROM?
+<br><b>bryce:</b>&nbsp;if&nbsp;I&nbsp;manage&nbsp;to&nbsp;make&nbsp;a&nbsp;large
+r-scale&nbsp;survey&nbsp;out&nbsp;of&nbsp;this,&nbsp;anything&nbsp;you'd
+like&nbsp;to&nbsp;add&nbsp;to&nbsp;it?
+<br><b>MarkK:</b>&nbsp;Does&nbsp;it&nbsp;run&nbsp;ATAPI&nbsp;commands?
+<br><b>yakovlev:</b>&nbsp;yes,&nbsp;ATAPI.
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;perhaps&nbsp;a&nbsp;question&nbsp;on&nbsp;th
+e&nbsp;most&nbsp;important&nbsp;feature&nbsp;of&nbsp;a&nbsp;new&nbsp;GUI?
+<br><b>bryce:</b>&nbsp;feature10:&nbsp;GUI&nbsp;for&nbsp;configuration&nbsp;and&
+nbsp;runtime&nbsp;control <br><b>bryce:</b>&nbsp;oh&nbsp;I&nbsp;see
+<br><b>bryce:</b>&nbsp;like&nbsp;what&nbsp;do&nbsp;you&nbsp;want&nbsp;the&nbsp;g
+ui&nbsp;to&nbsp;do? <br><b>uninet:</b>&nbsp;Right.
+<br><b>bryce:</b>&nbsp;Answer:&nbsp;everything.
+<br><b>uninet:</b>&nbsp;Assuming&nbsp;that&nbsp;the&nbsp;GUI&nbsp;could&nbsp;hav
+e&nbsp;lots&nbsp;of&nbsp;different&nbsp;things&nbsp;(GUI
+debugger,&nbsp;GUI&nbsp;config,&nbsp;etc.)
+<br><b>uninet:</b>&nbsp;Bryce,&nbsp;I&nbsp;like&nbsp;that&nbsp;answer.
+<br><b>bryce:</b>&nbsp;should&nbsp;we&nbsp;talk&nbsp;about&nbsp;guis&nbsp;now?
+<br><b>yakovlev:</b>&nbsp;Answer:&nbsp;everything.&nbsp;&nbsp;I&nbsp;want&nbsp;t
+o&nbsp;push&nbsp;all&nbsp;the&nbsp;interface&nbsp;as&nbsp;far&nbsp;away
+from&nbsp;bochs&nbsp;internals&nbsp;as&nbsp;possible.&nbsp;&nbsp;:)
+<br><b>yakovlev:</b>&nbsp;Notice&nbsp;a&nbsp;recurring&nbsp;theme&nbsp;in&nbsp;m
+y&nbsp;messages?&nbsp;&nbsp;:)
+<br><b>eks|x:</b>&nbsp;any&nbsp;of&nbsp;you&nbsp;tried&nbsp;simnow!&nbsp;?
+<br><b>eks|x:</b>&nbsp;yakolev?&nbsp;layering?&nbsp;&nbsp;;)
+<br><b>bryce:</b>&nbsp;I&nbsp;like&nbsp;what&nbsp;Greg&nbsp;said&nbsp;in&nbsp;an
+&nbsp;email,&nbsp;that&nbsp;we&nbsp;can&nbsp;get&nbsp;separation&nbsp;just&nbsp;
+by
+putting&nbsp;the&nbsp;GUI&nbsp;code&nbsp;and&nbsp;the&nbsp;bochs&nbsp;code&nbsp;
+into&nbsp;different&nbsp;libraries&nbsp;that&nbsp;are
+linked&nbsp;together.&nbsp;&nbsp;Do&nbsp;I&nbsp;have&nbsp;that&nbsp;right?
+<br><b>yakovlev:</b>&nbsp;Nope.&nbsp;&nbsp;My&nbsp;impression&nbsp;is&nbsp;that&
+nbsp;it&nbsp;contains&nbsp;almost&nbsp;an&nbsp;entire
+microprocessor&nbsp;worth&nbsp;of&nbsp;simulation&nbsp;data.
+<br><b>yakovlev:</b>&nbsp;Sort&nbsp;of.
+<br><b>uninet:</b>&nbsp;Yeah,&nbsp;I&nbsp;liked&nbsp;that&nbsp;idea&nbsp;too.
+<br><b>yakovlev:</b>&nbsp;It&nbsp;doesn't&nbsp;necessarily&nbsp;HAVE&nbsp;to&nbs
+p;be&nbsp;in&nbsp;a&nbsp;different&nbsp;library,&nbsp;but
+that's&nbsp;the&nbsp;idea.
+<br><b>uninet:</b>&nbsp;Well,&nbsp;actually&nbsp;one&nbsp;should&nbsp;be&nbsp;a&
+nbsp;normal&nbsp;program&nbsp;that&nbsp;requires&nbsp;the
+shared&nbsp;library&nbsp;that&nbsp;contains&nbsp;the&nbsp;other&nbsp;code,&nbsp;
+right?
+<br><b>yakovlev:</b>&nbsp;Also,&nbsp;I&nbsp;used&nbsp;"GUI&nbsp;code"&nbsp;very&
+nbsp;loosely. <br><b>yakovlev:</b>&nbsp;right,&nbsp;tim.
+<br><b>bryce:</b>&nbsp;no&nbsp;reason&nbsp;to&nbsp;require&nbsp;shared&nbsp;libr
+ary,&nbsp;but&nbsp;that&nbsp;is&nbsp;one&nbsp;way&nbsp;to&nbsp;do&nbsp;it.
+<br><b>yakovlev:</b>&nbsp;Tim,&nbsp;I&nbsp;mean.
+<br><b>uninet:</b>&nbsp;I&nbsp;think&nbsp;that&nbsp;would&nbsp;be&nbsp;best.
+<br><b>uninet:</b>&nbsp;(not&nbsp;shared&nbsp;library)
+***&nbsp;Psyon&nbsp;(exodus@exodus.psyon.org)&nbsp;has&nbsp;joined&nbsp;channel&
+nbsp;#Bochs
+<br><b>yakovlev:</b>&nbsp;Shared&nbsp;library&nbsp;good,&nbsp;but&nbsp;could&nbs
+p;be&nbsp;compiled&nbsp;separately. <br><b>bryce:</b>&nbsp;hi&nbsp;Don!
+<br><b>Psyon:</b>&nbsp;Im&nbsp;here!
+<br><b>uninet:</b>&nbsp;Or&nbsp;rather,&nbsp;what&nbsp;I&nbsp;mean,&nbsp;is&nbsp
+;Greg's&nbsp;idea.&nbsp;I&nbsp;have&nbsp;no&nbsp;preference&nbsp;in&nbsp;how
+it's&nbsp;done...&nbsp;I'm&nbsp;just&nbsp;thinking&nbsp;in&nbsp;terms&nbsp;of&nb
+sp;Perl.&nbsp;:-) <br><b>Psyon:</b>&nbsp;What&nbsp;did&nbsp;I&nbsp;miss?
+<br><b>Psyon:</b>&nbsp;HEY <br><b>uninet:</b>&nbsp;Hi&nbsp;Don!
+<br><b>bryce:</b>&nbsp;it&nbsp;will&nbsp;all&nbsp;be&nbsp;on&nbsp;the&nbsp;web&n
+bsp;site. <br><b>Psyon:</b>&nbsp;hehe <br><b>Psyon:</b>&nbsp;ok
+<br><b>bryce:</b>&nbsp;we're&nbsp;starting&nbsp;to&nbsp;talk&nbsp;about&nbsp;the
+&nbsp;GUI!
+<br><b>Psyon:</b>&nbsp;well...&nbsp;what&nbsp;am&nbsp;I&nbsp;hearing&nbsp;about&
+nbsp;Perl? <br><b>Psyon:</b>&nbsp;Good&nbsp;that&nbsp;is&nbsp;my&nbsp;dept?
+<br><b>bryce:</b>&nbsp;we're&nbsp;going&nbsp;reimplement&nbsp;all&nbsp;of&nbsp;b
+ochs&nbsp;in&nbsp;perl. <br><b>Psyon:</b>&nbsp;oops
+<br><b>uninet:</b>&nbsp;Yeah,&nbsp;if&nbsp;it&nbsp;is&nbsp;dynamically&nbsp;link
+ed&nbsp;that&nbsp;would&nbsp;be&nbsp;good.&nbsp;That&nbsp;way&nbsp;the
+GUI&nbsp;code&nbsp;could&nbsp;be&nbsp;switched&nbsp;without&nbsp;a&nbsp;recompil
+e. <br><b>Psyon:</b>&nbsp;I&nbsp;meant&nbsp;! <br><b>Psyon:</b>&nbsp;Uhh...
+<br><b>Psyon:</b>&nbsp;is&nbsp;that&nbsp;a&nbsp;good&nbsp;idea?
+<br><b>bryce:</b>&nbsp;:)
+<br><b>bryce:</b>&nbsp;(that&nbsp;was&nbsp;a&nbsp;joke)
+<br><b>Psyon:</b>&nbsp;oh <br><b>Psyon:</b>&nbsp;ok
+<br><b>Psyon:</b>&nbsp;well...
+<br><b>Psyon:</b>&nbsp;You&nbsp;can&nbsp;write&nbsp;perl&nbsp;modules&nbsp;in&nb
+sp;C <br><b>Psyon:</b>&nbsp;cant&nbsp;you?
+<br><b>uninet:</b>&nbsp;:-)&nbsp;Maybe...&nbsp;it&nbsp;wouldn't&nbsp;require&nbs
+p;a&nbsp;compilier&nbsp;then. <br><b>Psyon:</b>&nbsp;I&nbsp;was&nbsp;told
+<br><b>Psyon:</b>&nbsp;write&nbsp;a&nbsp;bochs&nbsp;perl&nbsp;module
+<br><b>Psyon:</b>&nbsp;that&nbsp;would&nbsp;allow&nbsp;you&nbsp;to&nbsp;run&nbsp
+;bochs&nbsp;and&nbsp;have&nbsp;events&nbsp;caught&nbsp;by&nbsp;perl
+<br><b>yakovlev:</b>&nbsp;Anyways,&nbsp;I&nbsp;used&nbsp;"GUI&nbsp;code"&nbsp;to
+&nbsp;refer&nbsp;to&nbsp;any&nbsp;thing&nbsp;that&nbsp;interfaces
+with&nbsp;the&nbsp;host&nbsp;system.
+<br><b>yakovlev:</b>&nbsp;Ahh,&nbsp;but&nbsp;then&nbsp;we&nbsp;have&nbsp;to&nbsp
+;port&nbsp;perl&nbsp;to&nbsp;MacOS.
+<br><b>Psyon:</b>&nbsp;They&nbsp;have&nbsp;a&nbsp;Mac&nbsp;Perl
+<br><b>Psyon:</b>&nbsp;dont&nbsp;they?
+<br><b>uninet:</b>&nbsp;Yeah,&nbsp;I&nbsp;think&nbsp;that's&nbsp;a&nbsp;good&nbs
+p;definition...&nbsp;so&nbsp;anything&nbsp;that&nbsp;could&nbsp;be
+considered&nbsp;"client&nbsp;code"&nbsp;right?
+<br><b>eks|x:</b>&nbsp;btw,&nbsp;perl&nbsp;is&nbsp;an&nbsp;easy&nbsp;to&nbsp;wri
+te&nbsp;into&nbsp;language,&nbsp;but&nbsp;afaik,&nbsp;it's&nbsp;never&nbsp;as
+fast&nbsp;as&nbsp;optimized-compiled&nbsp;C
+<br><b>yakovlev:</b>&nbsp;Yeah,&nbsp;basically.
+<br><b>bryce:</b>&nbsp;greg,&nbsp;how&nbsp;is&nbsp;your&nbsp;model&nbsp;differen
+t&nbsp;from&nbsp;what&nbsp;Bochs&nbsp;already&nbsp;does?
+<br><b>bryce:</b>&nbsp;we&nbsp;have&nbsp;cpu,&nbsp;iodev,&nbsp;and&nbsp;gui&nbsp
+;all&nbsp;in&nbsp;separate&nbsp;libraries.
+<br><b>yakovlev:</b>&nbsp;Not&nbsp;very.
+<br><b>yakovlev:</b>&nbsp;iodev&nbsp;is&nbsp;pretty&nbsp;close&nbsp;to&nbsp;CPU.
+<br><b>Psyon:</b>&nbsp;so&nbsp;the&nbsp;new&nbsp;model&nbsp;reflects&nbsp;the&nb
+sp;Plex86&nbsp;plugin&nbsp;structure?
+<br><b>uninet:</b>&nbsp;Is&nbsp;the&nbsp;current&nbsp;GUI&nbsp;library&nbsp;dyna
+mically&nbsp;loaded?
+<br><b>bryce:</b>&nbsp;so&nbsp;with&nbsp;some&nbsp;makefile&nbsp;tricks&nbsp;we&
+nbsp;could&nbsp;compile&nbsp;them&nbsp;as&nbsp;shared libraries.
+<br><b>bryce:</b>&nbsp;not&nbsp;dynamic,&nbsp;no
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;feature&nbsp;added&nbsp;on&nbsp;sf&nbsp;(fpu&
+nbsp;stack&nbsp;dump) <br><b>bryce:</b>&nbsp;eks:&nbsp;thanks
+<br><b>bryce:</b>&nbsp;uh,&nbsp;I&nbsp;don't&nbsp;know&nbsp;anything&nbsp;about&
+nbsp;the&nbsp;plex86&nbsp;plugins,&nbsp;is&nbsp;it&nbsp;based&nbsp;on
+shared&nbsp;libraries?
+<br><b>Psyon:</b>&nbsp;That&nbsp;is&nbsp;how&nbsp;Plex86&nbsp;does&nbsp;the&nbsp
+;GUI&nbsp;and&nbsp;IO&nbsp;dev&nbsp;stuff&nbsp;now&nbsp;isnt&nbsp;it?
+<br><b>yakovlev:</b>&nbsp;Right,&nbsp;but&nbsp;we&nbsp;may&nbsp;want&nbsp;to&nbs
+p;clean&nbsp;up&nbsp;some&nbsp;of&nbsp;the&nbsp;interfaces&nbsp;a&nbsp;bit.
+<br><b>Psyon:</b>&nbsp;I&nbsp;know&nbsp;the&nbsp;GUI&nbsp;is
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;Would&nbsp;it&nbsp;be&nbsp;difficult&nbsp;to
+&nbsp;make&nbsp;it&nbsp;dynamic&nbsp;so&nbsp;the&nbsp;GUI&nbsp;could&nbsp;be
+changed&nbsp;like&nbsp;a&nbsp;plugin?
+<br><b>Psyon:</b>&nbsp;it&nbsp;compiles&nbsp;it&nbsp;as&nbsp;a&nbsp;shared&nbsp;
+library
+<br><b>Psyon:</b>&nbsp;the&nbsp;GUI&nbsp;is&nbsp;in&nbsp;the&nbsp;bochs&nbsp;plu
+gin <br><b>Psyon:</b>&nbsp;hehe
+<br><b>Psyon:</b>&nbsp;uni:&nbsp;There&nbsp;are&nbsp;just&nbsp;certain&nbsp;func
+tions&nbsp;that&nbsp;are&nbsp;needed&nbsp;to&nbsp;be
+implemented&nbsp;for&nbsp;the&nbsp;GUI
+<br><b>yakovlev:</b>&nbsp;Methinks&nbsp;plugins&nbsp;is&nbsp;going&nbsp;a&nbsp;l
+ittle&nbsp;far.
+<br><b>Psyon:</b>&nbsp;a&nbsp;shared&nbsp;lib&nbsp;that&nbsp;has&nbsp;them&nbsp;
+wouldnt&nbsp;be&nbsp;a&nbsp;problem
+<br><b>bryce:</b>&nbsp;it&nbsp;seems&nbsp;like&nbsp;compiling&nbsp;as&nbsp;a&nbs
+p;shared&nbsp;library&nbsp;is&nbsp;not&nbsp;really&nbsp;an&nbsp;important
+feature.&nbsp;&nbsp;it&nbsp;can&nbsp;be&nbsp;done&nbsp;on&nbsp;some&nbsp;platfor
+ms&nbsp;and&nbsp;not&nbsp;on&nbsp;others,&nbsp;big&nbsp;deal.
+<br><b>uninet:</b>&nbsp;I'm&nbsp;using&nbsp;plugins&nbsp;in&nbsp;the&nbsp;loose&
+nbsp;sense&nbsp;of&nbsp;being&nbsp;able&nbsp;to&nbsp;swap&nbsp;in&nbsp;another
+module&nbsp;without&nbsp;having&nbsp;to&nbsp;recompile&nbsp;(like&nbsp;Linux&nbs
+p;kernel&nbsp;modules)
+<br><b>bryce:</b>&nbsp;it&nbsp;reduces&nbsp;the&nbsp;size&nbsp;of&nbsp;the&nbsp;
+binary,&nbsp;and&nbsp;maybe&nbsp;you&nbsp;can&nbsp;load&nbsp;up&nbsp;only&nbsp;t
+he device&nbsp;models&nbsp;you&nbsp;want&nbsp;that&nbsp;time.
+<br><b>Psyon:</b>&nbsp;the&nbsp;bad&nbsp;thing&nbsp;is&nbsp;that&nbsp;shared&nbs
+p;libs&nbsp;are&nbsp;done&nbsp;differently&nbsp;on&nbsp;different
+plat&nbsp;forms
+<br><b>bryce:</b>&nbsp;psyon,&nbsp;that's&nbsp;my&nbsp;worry&nbsp;too
+<br><b>Psyon:</b>&nbsp;THey&nbsp;are&nbsp;compiled&nbsp;differently
+<br><b>eks|x:</b>&nbsp;are&nbsp;you&nbsp;guys&nbsp;going&nbsp;with&nbsp;bochs&nb
+sp;using&nbsp;gui&nbsp;modules&nbsp;or&nbsp;gui&nbsp;using&nbsp;bochs module?
+<br><b>Psyon:</b>&nbsp;and...&nbsp;DLLs&nbsp;in&nbsp;windows&nbsp;have&nbsp;to&n
+bsp;have&nbsp;the&nbsp;exported&nbsp;functions&nbsp;defined
+<br><b>Psyon:</b>&nbsp;__declspec(dllexport)
+<br><b>Psyon:</b>&nbsp;or&nbsp;have&nbsp;a&nbsp;.def&nbsp;file
+<br><b>eks|x:</b>&nbsp;I&nbsp;don't&nbsp;see&nbsp;the&nbsp;real&nbsp;need&nbsp;t
+o&nbsp;swap&nbsp;gui&nbsp;very&nbsp;often&nbsp;without&nbsp;recompile,but
+I&nbsp;might&nbsp;see&nbsp;where&nbsp;switching&nbsp;cpu&nbsp;would&nbsp;be&nbsp
+;a&nbsp;
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;I&nbsp;would&nbsp;think&nbsp;the&nbsp;GUI&nb
+sp;would&nbsp;use&nbsp;the&nbsp;bochs&nbsp;module.
+<br><b>Psyon:</b>&nbsp;eks:&nbsp;it&nbsp;might&nbsp;come&nbsp;in&nbsp;handy&nbsp
+;with&nbsp;somethign&nbsp;like&nbsp;Bochs-RFB
+<br><b>Psyon:</b>&nbsp;where&nbsp;one&nbsp;time&nbsp;you&nbsp;want&nbsp;to&nbsp;
+run&nbsp;natively
+<br><b>Psyon:</b>&nbsp;then&nbsp;switch&nbsp;it&nbsp;so&nbsp;you&nbsp;can&nbsp;r
+un&nbsp;over&nbsp;a&nbsp;network <br><b>eks|x:</b>&nbsp;yeah
+<br><b>Psyon:</b>&nbsp;but&nbsp;the&nbsp;compiled&nbsp;EXE&nbsp;is&nbsp;so&nbsp;
+small <br><b>Psyon:</b>&nbsp;I&nbsp;just&nbsp;keep&nbsp;two&nbsp;copies
+<br><b>eks|x:</b>&nbsp;one&nbsp;bochs&nbsp;without&nbsp;debugger&nbsp;one&nbsp;w
+ith&nbsp;it
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;It&nbsp;would&nbsp;also&nbsp;be&nbsp;handy&n
+bsp;if&nbsp;you&nbsp;wanted&nbsp;to&nbsp;use&nbsp;the&nbsp;console&nbsp;gui,
+and&nbsp;then&nbsp;wanted&nbsp;an&nbsp;X11&nbsp;gui.
+<br><b>bryce:</b>&nbsp;modules&nbsp;might&nbsp;let&nbsp;you&nbsp;make&nbsp;a&nbs
+p;binary&nbsp;distribution&nbsp;with&nbsp;all&nbsp;the&nbsp;GUIs
+available&nbsp;at&nbsp;.bochsrc&nbsp;time,&nbsp;rather&nbsp;than&nbsp;only&nbsp;
+one
+<br><b>eks|x:</b>&nbsp;uninet:&nbsp;how&nbsp;often&nbsp;do&nbsp;you&nbsp;switch&
+nbsp;from&nbsp;one&nbsp;to&nbsp;the&nbsp;other?
+<br><b>Psyon:</b>&nbsp;How&nbsp;big&nbsp;is&nbsp;the&nbsp;compiled&nbsp;bochs&nb
+sp;on&nbsp;linux?
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;never.&nbsp;But&nbsp;I&nbsp;haven't&nbsp;act
+ually&nbsp;even&nbsp;tried&nbsp;the&nbsp;console&nbsp;GUI&nbsp;yet.
+<br><b>Psyon:</b>&nbsp;I&nbsp;havent&nbsp;looked&nbsp;at&nbsp;it&nbsp;in&nbsp;li
+nux&nbsp;in&nbsp;a&nbsp;while
+<br><b>eks|x:</b>&nbsp;-rwxr-xr-x&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;root&nbsp;&nbsp;
+&nbsp;&nbsp;&nbsp;root&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1962770&nbsp;May&nbsp;
+29&nbsp;20:24&nbsp;bochs <br><b>Psyon:</b>&nbsp;whoa!
+<br><b>Psyon:</b>&nbsp;its&nbsp;like&nbsp;400k&nbsp;in&nbsp;windows
+<br><b>eks|x:</b>&nbsp;with&nbsp;fpu,&nbsp;debugger,&nbsp;and&nbsp;disasm
+<br><b>Psyon:</b>&nbsp;wait
+<br><b>bryce:</b>&nbsp;[bryce@monster&nbsp;bochs-1.2.pre1]$&nbsp;strip&nbsp;boch
+s
+<br><b>bryce:</b>&nbsp;ls&nbsp;-[bryce@monster&nbsp;bochs-1.2.pre1]$&nbsp;ls&nbs
+p;-l&nbsp;bochs
+<br><b>bryce:</b>&nbsp;-rwxrwxr-x&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;bryce&nbsp;&nbsp
+;&nbsp;&nbsp;bryce&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;441036&nbsp;May&nbsp;30&nb
+sp;22:44&nbsp;bochs* <br><b>Psyon:</b>&nbsp;384kb
+<br><b>Psyon:</b>&nbsp;that&nbsp;is&nbsp;an&nbsp;out&nbsp;of&nbsp;the&nbsp;box&n
+bsp;compile&nbsp;of&nbsp;BugFix&nbsp;2
+<br><b>eks|x:</b>&nbsp;1.1.3&nbsp;with&nbsp;a&nbsp;few&nbsp;addys
+<br><b>bryce:</b>&nbsp;I&nbsp;don't&nbsp;think&nbsp;it's&nbsp;the&nbsp;binary&nb
+sp;size,&nbsp;it's&nbsp;the&nbsp;ability&nbsp;to&nbsp;mix&nbsp;and&nbsp;match
+parts&nbsp;that's&nbsp;powerful,&nbsp;right?
+<br><b>yakovlev:</b>&nbsp;Well,&nbsp;it&nbsp;sounds&nbsp;like&nbsp;we&nbsp;want&
+nbsp;a&nbsp;bochs&nbsp;executable&nbsp;which&nbsp;loads&nbsp;both&nbsp;a
+GUI&nbsp;and&nbsp;a&nbsp;BOCHS&nbsp;module.
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;the&nbsp;GUI&nbsp;module&nbsp;would&nbsp;pro
+bably&nbsp;be&nbsp;best&nbsp;in&nbsp;Binary&nbsp;releases.&nbsp;If
+you&nbsp;could&nbsp;switch&nbsp;from&nbsp;say&nbsp;a&nbsp;theoretical&nbsp;Motif
+&nbsp;gui&nbsp;to&nbsp;a&nbsp;GTK&nbsp;GUI&nbsp;or&nbsp;QT&nbsp;GUI...
+<br><b>uninet:</b>&nbsp;...it&nbsp;would&nbsp;be&nbsp;good&nbsp;since&nbsp;one&n
+bsp;binary&nbsp;would&nbsp;work&nbsp;on&nbsp;all&nbsp;of&nbsp;those GUI's.
+<br><b>eks|x:</b>&nbsp;what&nbsp;about&nbsp;having&nbsp;a&nbsp;main&nbsp;binary&
+nbsp;using&nbsp;a&nbsp;bochs&nbsp;module&nbsp;and&nbsp;a&nbsp;gui&nbsp;module?
+<br><b>bryce:</b>&nbsp;you&nbsp;can&nbsp;do&nbsp;any&nbsp;of&nbsp;these,&nbsp;ho
+wever&nbsp;you&nbsp;want.
+<br><b>Psyon:</b>&nbsp;This&nbsp;is&nbsp;where&nbsp;having&nbsp;a&nbsp;separate&
+nbsp;process&nbsp;for&nbsp;the&nbsp;viewer&nbsp;and&nbsp;the&nbsp;emu
+comes&nbsp;into&nbsp;play
+<br><b>Psyon:</b>&nbsp;that&nbsp;would&nbsp;make&nbsp;it&nbsp;easier&nbsp;to&nbs
+p;switch&nbsp;the&nbsp;viewer&nbsp;type <br><b>yakovlev:</b>&nbsp;eks:&nbsp;jynx
+<br><b>bryce:</b>&nbsp;bochs&nbsp;module&nbsp;with&nbsp;no&nbsp;debugger,&nbsp;o
+ptimized&nbsp;for&nbsp;speed,&nbsp;or&nbsp;bochs&nbsp;module
+with&nbsp;debugger&nbsp;and&nbsp;SMP&nbsp;enabled,&nbsp;etc.
+<br><b>MarkK:</b>&nbsp;or&nbsp;modules&nbsp;across&nbsp;a&nbsp;network?
+<br><b>bryce:</b>&nbsp;I&nbsp;haven't&nbsp;used&nbsp;shared&nbsp;libs&nbsp;much.
+&nbsp;&nbsp;does&nbsp;that&nbsp;make&nbsp;it&nbsp;hard&nbsp;for&nbsp;debugger
+to&nbsp;step&nbsp;through&nbsp;the&nbsp;source&nbsp;and&nbsp;tell&nbsp;you&nbsp;
+where&nbsp;you&nbsp;are?
+<br><b>uninet:</b>&nbsp;MarkK:&nbsp;That&nbsp;would&nbsp;be&nbsp;another&nbsp;ni
+ce&nbsp;reason&nbsp;for&nbsp;modules.&nbsp;RFB&nbsp;could&nbsp;be
+used&nbsp;just&nbsp;by&nbsp;changing&nbsp;modules.
+<br><b>yakovlev:</b>&nbsp;I&nbsp;actually&nbsp;don't&nbsp;like&nbsp;using&nbsp;s
+hared&nbsp;libs&nbsp;for&nbsp;the&nbsp;main&nbsp;bochs&nbsp;at&nbsp;all.
+<br><b>yakovlev:</b>&nbsp;Too&nbsp;hard&nbsp;to&nbsp;make&nbsp;portable.
+<br><b>Psyon:</b>&nbsp;Usually&nbsp;a&nbsp;debugger&nbsp;will&nbsp;tell&nbsp;you
+&nbsp;which&nbsp;module&nbsp;(lib&nbsp;or&nbsp;dll)&nbsp;the&nbsp;code&nbsp;is
+in
+<br><b>MarkK:</b>&nbsp;I'm&nbsp;also&nbsp;thinking&nbsp;about&nbsp;sim&nbsp;spee
+d....
+<br><b>yakovlev:</b>&nbsp;But&nbsp;compiling&nbsp;them&nbsp;separately&nbsp;woul
+d&nbsp;make&nbsp;them&nbsp;useful&nbsp;for&nbsp;other things.
+<br><b>MarkK:</b>&nbsp;I&nbsp;can&nbsp;link&nbsp;up&nbsp;5&nbsp;or&nbsp;10&nbsp;
+PCs&nbsp;if&nbsp;it's&nbsp;networked&nbsp;together
+<br><b>bryce:</b>&nbsp;they&nbsp;are&nbsp;already&nbsp;compiled&nbsp;separately,
+&nbsp;as&nbsp;static&nbsp;libraries
+<br><b>yakovlev:</b>&nbsp;Well,&nbsp;a&nbsp;bigger&nbsp;wrapper.
+<br><b>eks|x:</b>&nbsp;-rwxr-xr-x&nbsp;&nbsp;&nbsp;&nbsp;1&nbsp;eks&nbsp;&nbsp;&
+nbsp;&nbsp;&nbsp;&nbsp;users&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1472404&nbsp;May&nbsp;
+30&nbsp;22:42&nbsp;bochs <br><b>eks|x:</b>&nbsp;bare&nbsp;bochs&nbsp;1.1.3
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;but&nbsp;since&nbsp;they&nbsp;are&nbsp;stati
+c&nbsp;libraries,&nbsp;that&nbsp;would&nbsp;mean&nbsp;they&nbsp;need
+to&nbsp;be&nbsp;recompiled&nbsp;for&nbsp;each&nbsp;change,&nbsp;right?
+<br><b>bryce:</b>&nbsp;markk,&nbsp;are&nbsp;you&nbsp;thinking&nbsp;that&nbsp;sev
+eral&nbsp;pcs&nbsp;would&nbsp;simulate&nbsp;it&nbsp;faster?
+<br><b>yakovlev:</b>&nbsp;Eat&nbsp;up&nbsp;most&nbsp;of&nbsp;iodev,&nbsp;for&nbs
+p;one.
+<br><b>MarkK:</b>&nbsp;just&nbsp;thinking&nbsp;it&nbsp;might,&nbsp;in&nbsp;the&n
+bsp;long&nbsp;term
+<br><b>bryce:</b>&nbsp;markk:&nbsp;maybe,&nbsp;probably&nbsp;the&nbsp;first&nbsp
+;step&nbsp;is&nbsp;multithread&nbsp;support&nbsp;on&nbsp;a single&nbsp;machine
+<br><b>MarkK:</b>&nbsp;Also,&nbsp;it&nbsp;might&nbsp;simulate&nbsp;concurrency&n
+bsp;better&nbsp;later&nbsp;on...
+***&nbsp;Roadkill&nbsp;(~ondrej@baikonur.orbitec.com.au)&nbsp;has&nbsp;joined&nb
+sp;channel&nbsp;#Bochs
+<br><b>MarkK:</b>&nbsp;when&nbsp;you&nbsp;want&nbsp;a&nbsp;disk&nbsp;model&nbsp;
+running&nbsp;in&nbsp;parallel&nbsp;to&nbsp;a&nbsp;VGA&nbsp;model
+<br><b>MarkK:</b>&nbsp;that&nbsp;sort&nbsp;of&nbsp;thing
+***&nbsp;Roadkill&nbsp;has&nbsp;left&nbsp;channel&nbsp;#Bochs
+<br><b>MarkK:</b>&nbsp;If&nbsp;I&nbsp;had&nbsp;one&nbsp;PC&nbsp;running&nbsp;the
+&nbsp;HD&nbsp;model,&nbsp;and&nbsp;it&nbsp;had&nbsp;the&nbsp;disk&nbsp;image
+<br><b>bryce:</b>&nbsp;Another&nbsp;big&nbsp;question&nbsp;is&nbsp;what&nbsp;GUI
+&nbsp;library&nbsp;to&nbsp;use,&nbsp;and&nbsp;I&nbsp;think&nbsp;it&nbsp;should
+be&nbsp;determined&nbsp;by&nbsp;whoever&nbsp;is&nbsp;actually&nbsp;motivated&nbs
+p;to&nbsp;do&nbsp;some&nbsp;coding.
+<br><b>MarkK:</b>&nbsp;and&nbsp;anotehr&nbsp;running&nbsp;the&nbsp;CPU&nbsp;mode
+l...
+<br><b>MarkK:</b>&nbsp;then&nbsp;things&nbsp;would&nbsp;be&nbsp;a&nbsp;bit&nbsp;
+more&nbsp;like&nbsp;a&nbsp;real&nbsp;PC
+<br><b>MarkK:</b>&nbsp;(this&nbsp;is&nbsp;later&nbsp;though)
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;Like&nbsp;I&nbsp;said&nbsp;(on&nbsp;IM)&nbsp
+;I'd&nbsp;be&nbsp;willing&nbsp;to&nbsp;make&nbsp;a&nbsp;QT&nbsp;GUI,&nbsp;but&nb
+sp;I
+would&nbsp;need&nbsp;to&nbsp;wait&nbsp;and&nbsp;see&nbsp;how&nbsp;someone&nbsp;e
+lse&nbsp;created&nbsp;a&nbsp;C&nbsp;gui&nbsp;for&nbsp;bochs first...
+<br><b>yakovlev:</b>&nbsp;Mark,&nbsp;that's&nbsp;a&nbsp;lower&nbsp;down&nbsp;dis
+tinction&nbsp;than&nbsp;where&nbsp;we're&nbsp;talking about.
+<br><b>MarkK:</b>&nbsp;I'm&nbsp;a&nbsp;hardware&nbsp;guy!&nbsp;;-)
+<br><b>Psyon:</b>&nbsp;hehe <br><b>yakovlev:</b>&nbsp;:)
+<br><b>MarkK:</b>&nbsp;gimme&nbsp;a&nbsp;break!&nbsp;;-)
+<br><b>bryce:</b>&nbsp;markk:&nbsp;we&nbsp;should&nbsp;try&nbsp;some&nbsp;of&nbs
+p;these&nbsp;things.&nbsp;&nbsp;I'm&nbsp;afraid&nbsp;that&nbsp;bochs
+spends&nbsp;very&nbsp;little&nbsp;time&nbsp;simulating&nbsp;the&nbsp;behavior&nb
+sp;of&nbsp;the&nbsp;devices&nbsp;and&nbsp;TONS&nbsp;OF
+TIME&nbsp;simulating&nbsp;all&nbsp;those&nbsp;complicated&nbsp;x86&nbsp;instruct
+ions.
+<br><b>MarkK:</b>&nbsp;yes,&nbsp;and&nbsp;I&nbsp;think&nbsp;no&nbsp;time&nbsp;(m
+aybe)&nbsp;simulating&nbsp;the&nbsp;chip&nbsp;set&nbsp;right&nbsp;now?
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;if&nbsp;we&nbsp;are&nbsp;going&nbsp;to&
+nbsp;make&nbsp;a&nbsp;GUI&nbsp;that&nbsp;uses&nbsp;a&nbsp;toolkit,&nbsp;it&nbsp;
+should use&nbsp;one&nbsp;that&nbsp;Is&nbsp;cross&nbsp;platform
+<br><b>Psyon:</b>&nbsp;QT&nbsp;has&nbsp;a&nbsp;windows&nbsp;version
+<br><b>Psyon:</b>&nbsp;but&nbsp;it&nbsp;costs
+<br><b>Psyon:</b>&nbsp;we&nbsp;might&nbsp;be&nbsp;able&nbsp;to&nbsp;get&nbsp;a&n
+bsp;special&nbsp;version&nbsp;for&nbsp;bochs&nbsp;though
+<br><b>bryce:</b>&nbsp;what&nbsp;about&nbsp;Tk&nbsp;or&nbsp;wxWindows?
+<br><b>Psyon:</b>&nbsp;is&nbsp;wxWindows&nbsp;any&nbsp;good?
+<br><b>bryce:</b>&nbsp;I&nbsp;have&nbsp;no&nbsp;idea,&nbsp;their&nbsp;website&nb
+sp;says&nbsp;it&nbsp;is&nbsp;:)
+<br><b>bryce:</b>&nbsp;but&nbsp;it's&nbsp;cross&nbsp;platform,&nbsp;all&nbsp;C&n
+bsp;based,&nbsp;and&nbsp;open-source
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;I&nbsp;was&nbsp;mainly&nbsp;thinking&nbsp;I&
+nbsp;could&nbsp;port&nbsp;what&nbsp;ever&nbsp;free
+crossplatform&nbsp;GUI&nbsp;came&nbsp;out&nbsp;to&nbsp;QT,&nbsp;after&nbsp;the&n
+bsp;initial&nbsp;work&nbsp;was&nbsp;done.&nbsp;I've&nbsp;never
+done&nbsp;a&nbsp;GUI&nbsp;before,&nbsp;so&nbsp;I&nbsp;probably&nbsp;couldn't&nbs
+p;do&nbsp;the&nbsp;initial&nbsp;work.
+<br><b>uninet:</b>&nbsp;All&nbsp;I&nbsp;can&nbsp;say&nbsp;is&nbsp;that&nbsp;it&n
+bsp;seems&nbsp;to&nbsp;me&nbsp;C&nbsp;is&nbsp;the&nbsp;way&nbsp;to&nbsp;go...
+<br><b>uninet:</b>&nbsp;(versus&nbsp;C&nbsp;for&nbsp;the&nbsp;GUI)
+<br><b>Psyon:</b>&nbsp;Well...&nbsp;I&nbsp;dont&nbsp;see&nbsp;why&nbsp;using&nbs
+p;the&nbsp;standard&nbsp;bochs&nbsp;GUIs&nbsp;are&nbsp;a&nbsp;problem
+<br><b>yakovlev:</b>&nbsp;neither&nbsp;do&nbsp;I.
+<br><b>Psyon:</b>&nbsp;using&nbsp;a&nbsp;GTK&nbsp;of&nbsp;some&nbsp;sort&nbsp;wo
+uld&nbsp;still&nbsp;have&nbsp;code&nbsp;for&nbsp;Windows&nbsp;and&nbsp;X11&nbsp;
+in it
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;GTK&nbsp;for&nbsp;Windows&nbsp;isn't&nbsp;ve
+ry&nbsp;good&nbsp;at&nbsp;the&nbsp;moment,&nbsp;is&nbsp;it?
+<br><b>Psyon:</b>&nbsp;its&nbsp;decent
+<br><b>Psyon:</b>&nbsp;the&nbsp;Mouse&nbsp;code&nbsp;needs&nbsp;work
+<br><b>Psyon:</b>&nbsp;ive&nbsp;been&nbsp;looking&nbsp;at&nbsp;ways&nbsp;to&nbsp
+;improve
+<br><b>Psyon:</b>&nbsp;the&nbsp;problem&nbsp;is&nbsp;the&nbsp;way&nbsp;events&nb
+sp;are&nbsp;handled
+<br><b>bryce:</b>&nbsp;the&nbsp;problem&nbsp;with&nbsp;the&nbsp;current&nbsp;one
+&nbsp;is&nbsp;that&nbsp;there's&nbsp;no&nbsp;framework&nbsp;to&nbsp;add
+anything&nbsp;at&nbsp;all
+<br><b>Psyon:</b>&nbsp;since&nbsp;handle_events()&nbsp;is&nbsp;only&nbsp;called&
+nbsp;every&nbsp;so&nbsp;often
+<br><b>uninet:</b>&nbsp;Wouldn't&nbsp;it&nbsp;also&nbsp;cause&nbsp;some&nbsp;pro
+blems&nbsp;since&nbsp;it&nbsp;is&nbsp;C-based,&nbsp;where&nbsp;as&nbsp;I
+think&nbsp;MS's&nbsp;commonctrls&nbsp;are&nbsp;C?
+<br><b>Psyon:</b>&nbsp;do&nbsp;to&nbsp;the&nbsp;emulation,&nbsp;the&nbsp;time&nb
+sp;between&nbsp;calls&nbsp;is&nbsp;a&nbsp;sec&nbsp;or&nbsp;so
+<br><b>Psyon:</b>&nbsp;so&nbsp;it&nbsp;slows&nbsp;it&nbsp;down
+<br><b>Psyon:</b>&nbsp;Who&nbsp;here&nbsp;is&nbsp;pretty&nbsp;familiar&nbsp;with
+&nbsp;how&nbsp;the&nbsp;mouse&nbsp;emu&nbsp;works?
+<br><b>bryce:</b>&nbsp;not&nbsp;me <br><b>yakovlev:</b>&nbsp;not&nbsp;I.
+<br><b>MarkK:</b>&nbsp;nor&nbsp;I
+<br><b>bryce:</b>&nbsp;basically,&nbsp;you're&nbsp;the&nbsp;expert&nbsp;:)
+<br><b>Psyon:</b>&nbsp;when&nbsp;i&nbsp;say&nbsp;handle_events()&nbsp;do&nbsp;yo
+u&nbsp;guys&nbsp;know&nbsp;what&nbsp;im&nbsp;refering&nbsp;to?
+<br><b>yakovlev:</b>&nbsp;I've&nbsp;looked&nbsp;at&nbsp;it,&nbsp;but&nbsp;haven'
+t&nbsp;had&nbsp;time&nbsp;to&nbsp;really&nbsp;get&nbsp;into&nbsp;it.
+<br><b>Psyon:</b>&nbsp;well... <br><b>eks|x:</b>&nbsp;same&nbsp;here
+<br><b>yakovlev:</b>&nbsp;Are&nbsp;you&nbsp;saying&nbsp;the&nbsp;mouse&nbsp;code
+&nbsp;is&nbsp;polled.
+<br><b>Psyon:</b>&nbsp;when&nbsp;you&nbsp;amke&nbsp;the&nbsp;GUI
+<br><b>yakovlev:</b>&nbsp;?
+<br><b>Psyon:</b>&nbsp;you&nbsp;have&nbsp;to&nbsp;keep&nbsp;your&nbsp;own&nbsp;q
+ueue&nbsp;of&nbsp;mouse&nbsp;and&nbsp;key&nbsp;events
+<br><b>Psyon:</b>&nbsp;then&nbsp;bochs&nbsp;calls&nbsp;handle_events()&nbsp;in&n
+bsp;the&nbsp;GUI&nbsp;code
+<br><b>Psyon:</b>&nbsp;and&nbsp;you&nbsp;have&nbsp;to&nbsp;pass&nbsp;it&nbsp;all
+&nbsp;the&nbsp;events
+<br><b>Psyon:</b>&nbsp;and&nbsp;all&nbsp;of&nbsp;bochs&nbsp;runs&nbsp;in&nbsp;th
+e&nbsp;same&nbsp;thread
+<br><b>Psyon:</b>&nbsp;so&nbsp;it&nbsp;sometimes&nbsp;has&nbsp;a&nbsp;delay&nbsp
+;between&nbsp;cals
+<br><b>Psyon:</b>&nbsp;to&nbsp;pass&nbsp;teh&nbsp;events&nbsp;to&nbsp;bochs
+<br><b>Psyon:</b>&nbsp;you&nbsp;use&nbsp;mouse_move()&nbsp;or&nbsp;somethign&nbs
+p;like&nbsp;that
+<br><b>Psyon:</b>&nbsp;and&nbsp;I&nbsp;was&nbsp;thinking&nbsp;about&nbsp;just&nb
+sp;passing&nbsp;them&nbsp;to&nbsp;bochs&nbsp;as&nbsp;they&nbsp;come&nbsp;in
+<br><b>Psyon:</b>&nbsp;but&nbsp;the&nbsp;window&nbsp;callback&nbsp;for&nbsp;even
+ts&nbsp;is&nbsp;on&nbsp;a&nbsp;diff&nbsp;thread
+<br><b>Psyon:</b>&nbsp;and&nbsp;I&nbsp;dont&nbsp;know&nbsp;if&nbsp;that&nbsp;wil
+l&nbsp;cause&nbsp;problems
+<br><b>bryce:</b>&nbsp;how&nbsp;often&nbsp;does&nbsp;handle_events&nbsp;get&nbsp
+;called,&nbsp;and&nbsp;is&nbsp;it&nbsp;on&nbsp;Bochs&nbsp;emulate
+time&nbsp;or&nbsp;real&nbsp;time?
+<br><b>Psyon:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;be&nbsp;called&nbsp;every&nbsp
+;.5&nbsp;to&nbsp;1&nbsp;sec
+<br><b>yakovlev:</b>&nbsp;Hmmmm,&nbsp;sounds&nbsp;like&nbsp;something&nbsp;poten
+tially&nbsp;worth&nbsp;moving&nbsp;from&nbsp;the&nbsp;GUI
+layer&nbsp;into&nbsp;the&nbsp;general&nbsp;bochs&nbsp;layer.
+<br><b>Psyon:</b>&nbsp;when&nbsp;there&nbsp;is&nbsp;heavy&nbsp;emulation&nbsp;be
+ing&nbsp;done <br><b>Psyon:</b>&nbsp;Well...
+<br><b>Psyon:</b>&nbsp;if&nbsp;we&nbsp;made&nbsp;IODevs&nbsp;have&nbsp;diff&nbsp
+;threads <br><b>Psyon:</b>&nbsp;it&nbsp;would&nbsp;help
+<br><b>bryce:</b>&nbsp;but&nbsp;is&nbsp;it&nbsp;scheduled&nbsp;by&nbsp;the&nbsp;
+real&nbsp;machine's&nbsp;timer,&nbsp;or&nbsp;by&nbsp;bochs&nbsp;timer
+(like&nbsp;N&nbsp;instructions&nbsp;have&nbsp;gone&nbsp;by)
+<br><b>Psyon:</b>&nbsp;Bochs&nbsp;just&nbsp;has&nbsp;it&nbsp;in&nbsp;a&nbsp;loop
+<br><b>Psyon:</b>&nbsp;Its&nbsp;called&nbsp;as&nbsp;often&nbsp;as&nbsp;It&nbsp;c
+an&nbsp;be&nbsp;i&nbsp;guess
+<br><b>yakovlev:</b>&nbsp;from&nbsp;what&nbsp;Don&nbsp;is&nbsp;saying,&nbsp;soun
+ds&nbsp;like&nbsp;bochs&nbsp;instructions.
+<br><b>bryce:</b>&nbsp;I'm&nbsp;afraid&nbsp;I&nbsp;need&nbsp;to&nbsp;look&nbsp;a
+t&nbsp;it&nbsp;more&nbsp;to&nbsp;be&nbsp;able&nbsp;to&nbsp;know&nbsp;what&nbsp;i
+s&nbsp;going on.
+<br><b>Psyon:</b>&nbsp;//&nbsp;Called&nbsp;periodically&nbsp;(vga_update_interva
+l&nbsp;in&nbsp;.bochsrc)&nbsp;so&nbsp;the//&nbsp;the
+gui&nbsp;code&nbsp;can&nbsp;poll&nbsp;for&nbsp;keyboard,&nbsp;mouse,&nbsp;and&nb
+sp;other//&nbsp;relevant&nbsp;events.
+<br><b>eks|x:</b>&nbsp;I&nbsp;tend&nbsp;to&nbsp;agree&nbsp;with&nbsp;Greg&nbsp;t
+hat&nbsp;it's&nbsp;bochs'&nbsp;instructions <br><b>Psyon:</b>&nbsp;There
+<br><b>Psyon:</b>&nbsp;that&nbsp;is&nbsp;from&nbsp;Win32.cc&nbsp;in&nbsp;the&nbs
+p;GUI&nbsp;dir <br><b>Psyon:</b>&nbsp;Hmm...
+<br><b>Psyon:</b>&nbsp;I&nbsp;never&nbsp;noticed&nbsp;that
+<br><b>Psyon:</b>&nbsp;I&nbsp;wonder&nbsp;if&nbsp;I&nbsp;set&nbsp;vga_update_int
+erval&nbsp;lower <br><b>Psyon:</b>&nbsp;but&nbsp;still
+<br><b>Psyon:</b>&nbsp;with&nbsp;bochs&nbsp;all&nbsp;in&nbsp;one&nbsp;thread
+<br><b>Psyon:</b>&nbsp;it&nbsp;would&nbsp;still&nbsp;cause&nbsp;latency
+<br><b>bryce:</b>&nbsp;I'm&nbsp;worried&nbsp;that&nbsp;we're&nbsp;getting&nbsp;f
+ar&nbsp;far&nbsp;away&nbsp;from&nbsp;gui&nbsp;libraries&nbsp;and&nbsp;who
+wants&nbsp;to&nbsp;write&nbsp;some&nbsp;dialog&nbsp;boxes...&nbsp;:)
+<br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;I&nbsp;want&nbsp;to&nbsp;fix&nbsp;that&nbsp;mouse&nbsp;to
+o,&nbsp;some&nbsp;day.
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;that&nbsp;is&nbsp;a&nbsp;big&nbsp;part&
+nbsp;of&nbsp;the&nbsp;useability&nbsp;problem
+<br><b>uninet:</b>&nbsp;The&nbsp;GUI&nbsp;code&nbsp;is&nbsp;already&nbsp;seperat
+ed&nbsp;into&nbsp;a&nbsp;different&nbsp;module,&nbsp;right?
+<br><b>uninet:</b>&nbsp;(or&nbsp;rather&nbsp;library)
+<br><b>Psyon:</b>&nbsp;how&nbsp;well&nbsp;does&nbsp;the&nbsp;mouse&nbsp;work&nbs
+p;in&nbsp;X11?
+<br><b>bryce:</b>&nbsp;greg&nbsp;and&nbsp;don&nbsp;said,&nbsp;what's&nbsp;wrong&
+nbsp;with&nbsp;the&nbsp;current&nbsp;gui&nbsp;?
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;right <br><b>eks|x:</b>&nbsp;tim:&nbsp;libgui.a
+<br><b>Psyon:</b>&nbsp;There&nbsp;are&nbsp;some&nbsp;optimizing&nbsp;and&nbsp;cl
+eanup&nbsp;that&nbsp;needs&nbsp;to&nbsp;be&nbsp;done&nbsp;with&nbsp;the
+current&nbsp;ones <br><b>Psyon:</b>&nbsp;but&nbsp;that&nbsp;is&nbsp;all
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Do&nbsp;you&nbsp;know&nbsp;if&nbsp;it&nbsp;i
+s&nbsp;done&nbsp;in&nbsp;C&nbsp;or&nbsp;C?
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;seemslike&nbsp;c&nbsp;to&nbsp;me
+<br><b>Psyon:</b>&nbsp;it&nbsp;is&nbsp;technically&nbsp;C
+<br><b>eks|x:</b>&nbsp;bx_gui_c::handle_events(void)
+<br><b>Psyon:</b>&nbsp;but&nbsp;doesnt&nbsp;use&nbsp;classes
+<br><b>eks|x:</b>&nbsp;;) <br><b>Psyon:</b>&nbsp;oh
+<br><b>yakovlev:</b>&nbsp;It&nbsp;sounds&nbsp;to&nbsp;me&nbsp;like&nbsp;the&nbsp
+;way&nbsp;handle_events&nbsp;is&nbsp;used&nbsp;is&nbsp;awkward.
+<br><b>Psyon:</b>&nbsp;guess&nbsp;it&nbsp;doees <br><b>Psyon:</b>&nbsp;hehe
+<br><b>eks|x:</b>&nbsp;eheh
+<br><b>bryce:</b>&nbsp;Bochs&nbsp;is&nbsp;a&nbsp;wierd&nbsp;mix&nbsp;of&nbsp;C&n
+bsp;without&nbsp;using&nbsp;a&nbsp;single&nbsp;feature&nbsp;of&nbsp;C.
+<br><b>bryce:</b>&nbsp;:) <br><b>Psyon:</b>&nbsp;heheh
+<br><b>uninet:</b>&nbsp;Ah,&nbsp;thanks&nbsp;Bryce.
+<br><b>bryce:</b>&nbsp;greg&nbsp;and&nbsp;don&nbsp;said,&nbsp;what's&nbsp;wrong&
+nbsp;with&nbsp;the&nbsp;current&nbsp;gui&nbsp;?
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;think&nbsp;anything&nbsp;is
+<br><b>bryce:</b>&nbsp;and&nbsp;I&nbsp;think&nbsp;that's&nbsp;important&nbsp;to&
+nbsp;hash&nbsp;out
+<br><b>uninet:</b>&nbsp;So,&nbsp;theoretically,&nbsp;it&nbsp;wouldn't&nbsp;be&nb
+sp;hard&nbsp;to&nbsp;create&nbsp;a&nbsp;GUI&nbsp;using&nbsp;a&nbsp;C toolkit?
+<br><b>Psyon:</b>&nbsp;It&nbsp;might&nbsp;look&nbsp;to&nbsp;plain&nbsp;for&nbsp;
+some&nbsp;people
+<br><b>yakovlev:</b>&nbsp;No&nbsp;GUI&nbsp;configuration&nbsp;of&nbsp;parameters
+.
+<br><b>bryce:</b>&nbsp;the&nbsp;thing&nbsp;I'm&nbsp;missing&nbsp;a&nbsp;LOT&nbsp
+;is&nbsp;the&nbsp;ability&nbsp;to&nbsp;put&nbsp;up&nbsp;dialogs
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;It&nbsp;looks&nbsp;rather&nbsp;bad,&nbsp;and
+&nbsp;doesn't&nbsp;have&nbsp;any&nbsp;config&nbsp;tools.
+<br><b>bryce:</b>&nbsp;such&nbsp;as&nbsp;"You&nbsp;just&nbsp;got&nbsp;a&nbsp;pan
+ic.&nbsp;do&nbsp;you&nbsp;want&nbsp;to&nbsp;continue"
+<br><b>Psyon:</b>&nbsp;hehehe
+<br><b>bryce:</b>&nbsp;or&nbsp;"Now&nbsp;choose&nbsp;the&nbsp;disk&nbsp;image&nb
+sp;you&nbsp;want&nbsp;to&nbsp;be&nbsp;in&nbsp;drive&nbsp;A:"
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;a&nbsp;live&nbsp;register&nbsp;display&
+nbsp;would&nbsp;help&nbsp;for&nbsp;debugging&nbsp;&nbsp;too
+<br><b>bryce:</b>&nbsp;that&nbsp;sort&nbsp;of&nbsp;thing
+<br><b>MarkK:</b>&nbsp;Speaking&nbsp;of&nbsp;"You&nbsp;just&nbsp;got&nbsp;a&nbsp
+;panic.&nbsp;do&nbsp;you&nbsp;want&nbsp;to&nbsp;continue?"
+<br><b>Psyon:</b>&nbsp;making&nbsp;swapable&nbsp;floppy&nbsp;images&nbsp;wouldnt
+&nbsp;be&nbsp;hard
+<br><b>Psyon:</b>&nbsp;beings&nbsp;you&nbsp;can&nbsp;do&nbsp;it&nbsp;now
+<br><b>Psyon:</b>&nbsp;just&nbsp;unmount&nbsp;it <br><b>bryce:</b>&nbsp;how?
+<br><b>Psyon:</b>&nbsp;copy&nbsp;a&nbsp;new&nbsp;disk
+<br><b>MarkK:</b>&nbsp;My&nbsp;9&nbsp;year&nbsp;old&nbsp;wants&nbsp;me&nbsp;to&n
+bsp;come&nbsp;say&nbsp;goodnight <br><b>Psyon:</b>&nbsp;and&nbsp;remount
+<br><b>MarkK:</b>&nbsp;bye
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;if&nbsp;you&nbsp;mean&nbsp;live&nbsp;reg&nbsp
+;update,&nbsp;simnow!&nbsp;made&nbsp;the&nbsp;mistake&nbsp;of&nbsp;doing
+such,&nbsp;should&nbsp;be&nbsp;on/off&nbsp;thingy
+<br><b>bryce:</b>&nbsp;renaming&nbsp;the&nbsp;disk&nbsp;image&nbsp;file?
+<br><b>bryce:</b>&nbsp;markk:&nbsp;good&nbsp;night! <br><b>Psyon:</b>&nbsp;yes
+<br><b>MarkK:</b>&nbsp;later ***&nbsp;Signoff:&nbsp;MarkK&nbsp;()
+<br><b>Psyon:</b>&nbsp;just&nbsp;copy&nbsp;the&nbsp;new&nbsp;image&nbsp;to&nbsp;
+the&nbsp;one&nbsp;that&nbsp;is&nbsp;named&nbsp;in&nbsp;bochsrc
+<br><b>Psyon:</b>&nbsp;well...
+<br><b>Psyon:</b>&nbsp;we&nbsp;would&nbsp;want&nbsp;to&nbsp;make&nbsp;it&nbsp;lo
+adable <br><b>Psyon:</b>&nbsp;but&nbsp;im&nbsp;saying
+<br><b>yakovlev:</b>&nbsp;copying&nbsp;the&nbsp;image&nbsp;file&nbsp;is&nbsp;awk
+ward.
+<br><b>Psyon:</b>&nbsp;the&nbsp;features&nbsp;are&nbsp;there&nbsp;to&nbsp;do&nbs
+p;so
+<br><b>bryce:</b>&nbsp;yeah,&nbsp;and&nbsp;then&nbsp;click&nbsp;the&nbsp;stupid&
+nbsp;disk&nbsp;icon&nbsp;twice? <br><b>bryce:</b>&nbsp;it&nbsp;sucks!
+<br><b>yakovlev:</b>&nbsp;And&nbsp;the&nbsp;size&nbsp;can't&nbsp;change.
+<br><b>Psyon:</b>&nbsp;oviously&nbsp;you&nbsp;would&nbsp;unmount...&nbsp;change&
+nbsp;the&nbsp;image&nbsp;name&nbsp;in&nbsp;memmory
+<br><b>Psyon:</b>&nbsp;then&nbsp;remount
+<br><b>Psyon:</b>&nbsp;Im&nbsp;just&nbsp;saying
+<br><b>Psyon:</b>&nbsp;it&nbsp;should&nbsp;be&nbsp;hard&nbsp;to&nbsp;implement
+<br><b>bryce:</b>&nbsp;what's&nbsp;keeping&nbsp;us&nbsp;from&nbsp;having&nbsp;a&
+nbsp;dialog&nbsp;box?
+<br><b>yakovlev:</b>&nbsp;And&nbsp;you&nbsp;often&nbsp;forget&nbsp;to&nbsp;unmou
+nt,&nbsp;or&nbsp;forget&nbsp;to&nbsp;remount.
+<br><b>bryce:</b>&nbsp;IMHO,&nbsp;no&nbsp;GUI&nbsp;toolkit&nbsp;to&nbsp;write&nb
+sp;in <br><b>yakovlev:</b>&nbsp;I&nbsp;see&nbsp;your&nbsp;point.
+<br><b>Psyon:</b>&nbsp;Well...&nbsp;just&nbsp;make&nbsp;a&nbsp;new&nbsp;toolbar&
+nbsp;button&nbsp;that&nbsp;lets&nbsp;you&nbsp;load&nbsp;a&nbsp;new&nbsp;image
+<br><b>bryce:</b>&nbsp;psyon:&nbsp;should&nbsp;or&nbsp;shouldn't&nbsp;be&nbsp;ha
+rd&nbsp;to&nbsp;implement <br><b>Psyon:</b>&nbsp;shouldnt&nbsp;be
+<br><b>bryce:</b>&nbsp;right <br><b>Psyon:</b>&nbsp;well...
+<br><b>Psyon:</b>&nbsp;the&nbsp;GUI&nbsp;shoudl&nbsp;have&nbsp;access&nbsp;to&nb
+sp;all&nbsp;the&nbsp;internal&nbsp;bochs&nbsp;functions
+<br><b>Psyon:</b>&nbsp;init_disk
+<br><b>Psyon:</b>&nbsp;or&nbsp;waht&nbsp;ever&nbsp;it&nbsp;is
+<br><b>yakovlev:</b>&nbsp;What&nbsp;do&nbsp;you&nbsp;mean&nbsp;all&nbsp;the&nbsp
+;internal&nbsp;bochs&nbsp;functions?
+<br><b>yakovlev:</b>&nbsp;I&nbsp;VERY&nbsp;MUCH&nbsp;disagree&nbsp;with&nbsp;tha
+t&nbsp;statement. <br><b>Psyon:</b>&nbsp;Well
+<br><b>Psyon:</b>&nbsp;functions&nbsp;that&nbsp;arent&nbsp;in&nbsp;the&nbsp;GUI&
+nbsp;code
+<br><b>bryce:</b>&nbsp;more&nbsp;toolbar&nbsp;buttons&nbsp;would&nbsp;be&nbsp;fi
+ne,&nbsp;but&nbsp;I&nbsp;think&nbsp;we&nbsp;should&nbsp;use
+wxWindows&nbsp;or&nbsp;Tk&nbsp;to&nbsp;allow&nbsp;us&nbsp;to&nbsp;write&nbsp;a&n
+bsp;somewhat&nbsp;friendly&nbsp;set&nbsp;of&nbsp;controls&nbsp;for
+disk&nbsp;changes,&nbsp;choosing&nbsp;how&nbsp;verbose&nbsp;the&nbsp;logging&nbs
+p;should&nbsp;be,&nbsp;setting&nbsp;IPS
+<br><b>yakovlev:</b>&nbsp;The&nbsp;GUI&nbsp;should&nbsp;have&nbsp;access&nbsp;to
+&nbsp;only&nbsp;a&nbsp;limited&nbsp;number&nbsp;of&nbsp;bochs functions.
+<br><b>bryce:</b>&nbsp;(or&nbsp;something&nbsp;other&nbsp;than&nbsp;having&nbsp;
+to&nbsp;write&nbsp;native&nbsp;gui&nbsp;code&nbsp;for&nbsp;every
+little&nbsp;thing)
+<br><b>eks|x:</b>&nbsp;reducing&nbsp;the&nbsp;number&nbsp;of&nbsp;interaction&nb
+sp;points&nbsp;reduce&nbsp;the&nbsp;error&nbsp;rate
+<br><b>eks|x:</b>&nbsp;easier&nbsp;to&nbsp;debug
+<br><b>yakovlev:</b>&nbsp;I&nbsp;was&nbsp;thinking,&nbsp;what&nbsp;if&nbsp;we&nb
+sp;used&nbsp;something&nbsp;like&nbsp;an&nbsp;STL&nbsp;dictionary
+and/or&nbsp;list&nbsp;of&nbsp;parms&nbsp;that&nbsp;the&nbsp;GUI&nbsp;code&nbsp;g
+ives&nbsp;bochs&nbsp;on&nbsp;startum.
+<br><b>Psyon:</b>&nbsp;bx_floppy_ctrl_c::init( <br><b>Psyon:</b>&nbsp;)
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;I&nbsp;think&nbsp;Tk&nbsp;would&nbsp;be&nbsp
+;a&nbsp;mistake&nbsp;since&nbsp;it&nbsp;really&nbsp;doesn't&nbsp;work
+very&nbsp;well&nbsp;in&nbsp;Windows&nbsp;(in&nbsp;my&nbsp;experience).
+<br><b>bryce:</b>&nbsp;we&nbsp;haven't&nbsp;even&nbsp;agreed&nbsp;that&nbsp;we&n
+bsp;need&nbsp;any&nbsp;gui&nbsp;library,&nbsp;that's&nbsp;what&nbsp;I'm
+getting&nbsp;at.
+<br><b>yakovlev:</b>&nbsp;no,&nbsp;the&nbsp;GUI&nbsp;should&nbsp;get&nbsp;some&n
+bsp;well&nbsp;thought-out&nbsp;interfaces,&nbsp;not
+willy-nilly&nbsp;access&nbsp;to&nbsp;bochs&nbsp;internals.
+<br><b>Psyon:</b>&nbsp;BAH!&nbsp;I&nbsp;cant&nbsp;find&nbsp;the&nbsp;function&nb
+sp;that&nbsp;ejects&nbsp;it
+<br><b>bryce:</b>&nbsp;IMHO&nbsp;just&nbsp;making&nbsp;all&nbsp;the&nbsp;interfa
+ces&nbsp;to&nbsp;the&nbsp;GUI&nbsp;through&nbsp;public&nbsp;member
+functions&nbsp;is&nbsp;a&nbsp;good&nbsp;way&nbsp;to&nbsp;"define&nbsp;the&nbsp;i
+nterface" <br><b>yakovlev:</b>&nbsp;Sort&nbsp;of.
+<br><b>bryce:</b>&nbsp;then&nbsp;the&nbsp;.h&nbsp;file&nbsp;for&nbsp;the&nbsp;ou
+termose&nbsp;gui&nbsp;object&nbsp;says&nbsp;exactly&nbsp;what&nbsp;you
+can&nbsp;and&nbsp;can't&nbsp;do&nbsp;with&nbsp;it.
+<br><b>yakovlev:</b>&nbsp;What&nbsp;we&nbsp;really&nbsp;need&nbsp;are&nbsp;acls.
+<br><b>bryce:</b>&nbsp;?&nbsp;&nbsp;&nbsp;access&nbsp;control&nbsp;lists?
+<br><b>yakovlev:</b>&nbsp;For&nbsp;instance,&nbsp;some&nbsp;disk&nbsp;public&nbs
+p;member&nbsp;functions&nbsp;should&nbsp;only&nbsp;be
+called&nbsp;by&nbsp;the&nbsp;emulator.
+<br><b>yakovlev:</b>&nbsp;others&nbsp;should&nbsp;only&nbsp;be&nbsp;called&nbsp;
+by&nbsp;the&nbsp;GUI.
+<br><b>eks|x:</b>&nbsp;can&nbsp;acl&nbsp;be&nbsp;checked&nbsp;at&nbsp;startup&nb
+sp;only&nbsp;or&nbsp;does&nbsp;it&nbsp;need&nbsp;to&nbsp;be&nbsp;checked&nbsp;at
+every&nbsp;function&nbsp;call?
+<br><b>bryce:</b>&nbsp;I&nbsp;mean&nbsp;that&nbsp;the&nbsp;GUI&nbsp;can&nbsp;onl
+y&nbsp;call&nbsp;public&nbsp;member&nbsp;functions&nbsp;of&nbsp;the
+interface&nbsp;object,&nbsp;not&nbsp;that&nbsp;the&nbsp;GUI&nbsp;can&nbsp;call&n
+bsp;public&nbsp;member&nbsp;functions&nbsp;of&nbsp;any
+object&nbsp;it&nbsp;can&nbsp;find.
+<br><b>uninet:</b>&nbsp;yakovlev:&nbsp;Right...&nbsp;the&nbsp;GUI&nbsp;doesn't&n
+bsp;need&nbsp;access&nbsp;to&nbsp;everything.
+<br><b>yakovlev:</b>&nbsp;Having&nbsp;a&nbsp;single&nbsp;.h&nbsp;file&nbsp;with&
+nbsp;the&nbsp;functions&nbsp;that&nbsp;are&nbsp;allowed&nbsp;to&nbsp;be
+accessed&nbsp;outside&nbsp;would&nbsp;be&nbsp;listed&nbsp;there.
+<br><b>yakovlev:</b>&nbsp;acls&nbsp;was&nbsp;just&nbsp;saying&nbsp;that&nbsp;pub
+lic&nbsp;vs.&nbsp;private&nbsp;isn't&nbsp;descriptive
+enough&nbsp;in&nbsp;some&nbsp;cases.
+<br><b>Psyon:</b>&nbsp;Hmm....&nbsp;(kinda&nbsp;old&nbsp;topic)&nbsp;but&nbsp;If
+&nbsp;im&nbsp;looking&nbsp;at&nbsp;this&nbsp;correctly&nbsp;you&nbsp;can
+call&nbsp;bx_floppy_ctrl_c::init()&nbsp;with&nbsp;a&nbsp;new&nbsp;image&nbsp;nam
+e&nbsp;it&nbsp;bochs&nbsp;should&nbsp;reload&nbsp;it
+<br><b>Psyon:</b>&nbsp;and&nbsp;it&nbsp;can&nbsp;be&nbsp;a&nbsp;new&nbsp;size
+<br><b>bryce:</b>&nbsp;for&nbsp;example,&nbsp;compile&nbsp;the&nbsp;gui&nbsp;lib
+rary&nbsp;with&nbsp;only&nbsp;the&nbsp;.h&nbsp;file&nbsp;of&nbsp;one
+bochs&nbsp;class,&nbsp;an&nbsp;interface&nbsp;object&nbsp;whose&nbsp;methods&nbs
+p;define&nbsp;exactly&nbsp;what&nbsp;a&nbsp;GUI&nbsp;can do.
+<br><b>yakovlev:</b>&nbsp;Oh,&nbsp;okay,&nbsp;that's&nbsp;exactly&nbsp;what&nbsp
+;I'm&nbsp;advocating&nbsp;then,&nbsp;Bryce.
+<br><b>yakovlev:</b>&nbsp;maybe,&nbsp;but&nbsp;bochs&nbsp;doesn't&nbsp;handle&nb
+sp;floppies&nbsp;right&nbsp;anyways.
+<br><b>Psyon:</b>&nbsp;that&nbsp;seems&nbsp;like&nbsp;a&nbsp;smart&nbsp;idea
+<br><b>Psyon:</b>&nbsp;what&nbsp;doesnt&nbsp;it&nbsp;handle?
+<br><b>Psyon:</b>&nbsp;I&nbsp;reads&nbsp;my&nbsp;real&nbsp;floppies&nbsp;now&nbs
+p;:) <br><b>eks|x:</b>&nbsp;read&nbsp;with&nbsp;MT=0&nbsp;;)
+<br><b>Psyon:</b>&nbsp;hehe
+<br><b>yakovlev:</b>&nbsp;They&nbsp;should&nbsp;be&nbsp;interfaced&nbsp;to&nbsp;
+the&nbsp;GUI&nbsp;as&nbsp;simply&nbsp;a&nbsp;file&nbsp;interface&nbsp;and
+ejected/inserted.
+<br><b>yakovlev:</b>&nbsp;it's&nbsp;not&nbsp;separated&nbsp;that&nbsp;well.
+<br><b>yakovlev:</b>&nbsp;file&nbsp;interface&nbsp;meaning&nbsp;a&nbsp;large&nbs
+p;set&nbsp;of&nbsp;unorganized&nbsp;data. <br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;maybe&nbsp;the&nbsp;first&nbsp;step&nbsp;will&nbsp;be&nbs
+p;to&nbsp;clean&nbsp;up&nbsp;the&nbsp;interface&nbsp;between&nbsp;current
+GUI&nbsp;library&nbsp;and&nbsp;the&nbsp;rest.
+<br><b>uninet:</b>&nbsp;Question:&nbsp;if&nbsp;and&nbsp;when&nbsp;the&nbsp;GUI&n
+bsp;gets&nbsp;a&nbsp;config&nbsp;dialog,&nbsp;how&nbsp;should&nbsp;it
+decide&nbsp;whether&nbsp;to&nbsp;save&nbsp;changes&nbsp;to&nbsp;~/bochsrc&nbsp;o
+r&nbsp;to&nbsp;the&nbsp;bochsrc&nbsp;in&nbsp;the&nbsp;current directory?
+<br><b>yakovlev:</b>&nbsp;Right,&nbsp;that's&nbsp;the&nbsp;idea.
+<br><b>Psyon:</b>&nbsp;File/Save&nbsp;menu?
+<br><b>bryce:</b>&nbsp;wherever&nbsp;you&nbsp;choose
+<br><b>Psyon:</b>&nbsp;or&nbsp;ask&nbsp;on&nbsp;close
+<br><b>Psyon:</b>&nbsp;if&nbsp;changes&nbsp;are&nbsp;to&nbsp;be&nbsp;saved
+<br><b>uninet:</b>&nbsp;Ah,&nbsp;that&nbsp;would&nbsp;make&nbsp;sense.
+<br><b>Psyon:</b>&nbsp;just&nbsp;like&nbsp;a&nbsp;word&nbsp;processor&nbsp;would
+&nbsp;do <br><b>yakovlev:</b>&nbsp;What's&nbsp;a&nbsp;bochsrc?
+<br><b>Psyon:</b>&nbsp;bochsrc&nbsp;is&nbsp;the&nbsp;config&nbsp;file
+<br><b>yakovlev:</b>&nbsp;no,&nbsp;you&nbsp;missed&nbsp;the&nbsp;point.
+<br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;good&nbsp;point,&nbsp;that&nbsp;would&nbsp;p
+ermit&nbsp;runtime&nbsp;only&nbsp;changes.
+<br><b>bryce:</b>&nbsp;bochsrc&nbsp;=&nbsp;some&nbsp;place&nbsp;to&nbsp;save&nbs
+p;the&nbsp;settings&nbsp;that&nbsp;you&nbsp;like,&nbsp;in&nbsp;some&nbsp;form
+<br><b>bryce:</b>&nbsp;so&nbsp;that&nbsp;you&nbsp;can&nbsp;get&nbsp;them&nbsp;ba
+ck <br><b>yakovlev:</b>&nbsp;right.
+<br><b>bryce:</b>&nbsp;and&nbsp;also&nbsp;send&nbsp;them&nbsp;to&nbsp;somebody&n
+bsp;so&nbsp;they&nbsp;can&nbsp;duplicate&nbsp;your&nbsp;setup
+<br><b>Psyon:</b>&nbsp;Would&nbsp;be&nbsp;nice&nbsp;to&nbsp;have&nbsp;something&
+nbsp;like&nbsp;VMWare,&nbsp;so&nbsp;that&nbsp;when&nbsp;the&nbsp;program
+starts&nbsp;it&nbsp;asks&nbsp;what&nbsp;configuration&nbsp;you&nbsp;wish&nbsp;to
+&nbsp;load
+<br><b>yakovlev:</b>&nbsp;Something&nbsp;which&nbsp;exists&nbsp;totally&nbsp;out
+side&nbsp;the&nbsp;bochs&nbsp;emulation&nbsp;layer.
+<br><b>Psyon:</b>&nbsp;and&nbsp;has&nbsp;the&nbsp;option&nbsp;to&nbsp;start&nbsp
+;with&nbsp;power&nbsp;off
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;I&nbsp;agree,&nbsp;that&nbsp;would&nbsp;be&n
+bsp;VERY&nbsp;nice.
+<br><b>bryce:</b>&nbsp;greg,&nbsp;yes&nbsp;only&nbsp;that&nbsp;gui&nbsp;part&nbs
+p;would&nbsp;be&nbsp;reading&nbsp;and&nbsp;writing&nbsp;the&nbsp;bochsrc
+I&nbsp;think.
+<br><b>uninet:</b>&nbsp;VMware&nbsp;has&nbsp;a&nbsp;very&nbsp;well&nbsp;thought&
+nbsp;out&nbsp;GUI,&nbsp;I&nbsp;think&nbsp;it&nbsp;would&nbsp;be&nbsp;a&nbsp;good
+idea&nbsp;to&nbsp;use&nbsp;a&nbsp;lot&nbsp;of&nbsp;it's&nbsp;ideas.
+<br><b>Psyon:</b>&nbsp;hehehe
+<br><b>eks|x:</b>&nbsp;VMWare&nbsp;is&nbsp;quite&nbsp;good&nbsp;on&nbsp;the&nbsp
+;gui&nbsp;side,&nbsp;simply&nbsp;missing&nbsp;debugging&nbsp;:P
+<br><b>yakovlev:</b>&nbsp;Watch&nbsp;out&nbsp;for&nbsp;patents&nbsp;there.&nbsp;
+&nbsp;They're&nbsp;going&nbsp;to&nbsp;be&nbsp;looking&nbsp;at&nbsp;us
+fairly&nbsp;closely. <br><b>Psyon:</b>&nbsp;hehe
+<br><b>eks|x:</b>&nbsp;are&nbsp;gui&nbsp;patentable?
+<br><b>bryce:</b>&nbsp;yes,&nbsp;I've&nbsp;been&nbsp;handling&nbsp;different&nbs
+p;configurations&nbsp;by&nbsp;making&nbsp;a&nbsp;different
+directory&nbsp;for&nbsp;every&nbsp;OS&nbsp;that&nbsp;I&nbsp;can&nbsp;run
+<br><b>Psyon:</b>&nbsp;well...&nbsp;I&nbsp;dont&nbsp;think&nbsp;that&nbsp;a&nbsp
+;start&nbsp;with&nbsp;power&nbsp;off&nbsp;option&nbsp;is&nbsp;patented
+<br><b>Psyon:</b>&nbsp;I&nbsp;just&nbsp;like&nbsp;that&nbsp;idea,&nbsp;so&nbsp;y
+ou&nbsp;can&nbsp;start&nbsp;the&nbsp;program
+<br><b>bryce:</b>&nbsp;and&nbsp;each&nbsp;one&nbsp;has&nbsp;its&nbsp;own&nbsp;.b
+ochsrc,&nbsp;disk&nbsp;images,&nbsp;and&nbsp;symbolic&nbsp;link&nbsp;to
+the&nbsp;most&nbsp;recent&nbsp;bochs&nbsp;binary&nbsp;and&nbsp;ROM
+<br><b>Psyon:</b>&nbsp;make&nbsp;config&nbsp;changes
+<br><b>Psyon:</b>&nbsp;then&nbsp;power&nbsp;on&nbsp;the&nbsp;system
+<br><b>Psyon:</b>&nbsp;and&nbsp;since&nbsp;there&nbsp;is&nbsp;already&nbsp;a&nbs
+p;power&nbsp;button&nbsp;on&nbsp;the&nbsp;toolbar
+<br><b>uninet:</b>&nbsp;yakovlev:&nbsp;you&nbsp;would&nbsp;just&nbsp;want&nbsp;t
+o&nbsp;copy&nbsp;the&nbsp;general&nbsp;ideas,&nbsp;hopefully
+with&nbsp;enough&nbsp;improvements&nbsp;that&nbsp;the&nbsp;VMware&nbsp;people&nb
+sp;wouldn't&nbsp;even&nbsp;care.
+<br><b>bryce:</b>&nbsp;I'm&nbsp;not&nbsp;saying&nbsp;I&nbsp;like&nbsp;the&nbsp;"
+each&nbsp;os&nbsp;in&nbsp;a&nbsp;different&nbsp;directory",&nbsp;only
+that&nbsp;that's&nbsp;what&nbsp;I've&nbsp;resorted&nbsp;to&nbsp;for&nbsp;now.
+<br><b>bryce:</b>&nbsp;unless&nbsp;we&nbsp;do&nbsp;a&nbsp;blatant&nbsp;copy&nbsp
+;of&nbsp;their&nbsp;toolbar&nbsp;or&nbsp;something,&nbsp;I&nbsp;don't
+think&nbsp;we're&nbsp;in&nbsp;trouble.
+<br><b>Psyon:</b>&nbsp;can&nbsp;you&nbsp;run&nbsp;bochs&nbsp;with&nbsp;a&nbsp;co
+nfig&nbsp;file&nbsp;as&nbsp;an&nbsp;argument...&nbsp;like&nbsp;"bochs
+mysystem.rc" <br><b>Psyon:</b>&nbsp;if&nbsp;not
+<br><b>bryce:</b>&nbsp;not&nbsp;sure&nbsp;if&nbsp;it&nbsp;works&nbsp;now,&nbsp;b
+ut&nbsp;it&nbsp;would&nbsp;be&nbsp;useful&nbsp;sometimes
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;that&nbsp;is&nbsp;something&nbsp;else&nbsp;that&nbsp;migh
+t&nbsp;be&nbsp;done&nbsp;in&nbsp;the&nbsp;next&nbsp;release&nbsp;or something
+<br><b>bryce:</b>&nbsp;go&nbsp;for&nbsp;it&nbsp;:)
+<br><b>Psyon:</b>&nbsp;actually
+<br><b>uninet:</b>&nbsp;I&nbsp;thought&nbsp;it&nbsp;already&nbsp;worked&nbsp;as&
+nbsp;a&nbsp;command&nbsp;argument.
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;all&nbsp;options&nbsp;can&nbsp;be&nbsp;
+done&nbsp;on&nbsp;the&nbsp;command&nbsp;line
+<br><b>Psyon:</b>&nbsp;cant&nbsp;they <br><b>Psyon:</b>&nbsp;yeah
+<br><b>bryce:</b>&nbsp;yes&nbsp;something&nbsp;like&nbsp;bochs&nbsp;"boot:c"&nbs
+p;"diskc:blabla"
+<br><b>Psyon:</b>&nbsp;I&nbsp;mostly&nbsp;look&nbsp;at&nbsp;the&nbsp;GUI&nbsp;co
+de&nbsp;so&nbsp;im&nbsp;kinda&nbsp;dumb&nbsp;as&nbsp;to&nbsp;how&nbsp;the&nbsp;r
+est works <br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;should&nbsp;be&nbsp;able&nbsp;t
+o&nbsp;do&nbsp;basically&nbsp;any&nbsp;kind&nbsp;of&nbsp;.bochsrc&nbsp;work&nbsp
+;in
+a&nbsp;GUI,&nbsp;if&nbsp;we&nbsp;ever&nbsp;expect&nbsp;to&nbsp;make&nbsp;it&nbsp
+;a&nbsp;user-friendly&nbsp;thing. <br><b>Psyon:</b>&nbsp;yeah
+<br><b>yakovlev:</b>&nbsp;I'll&nbsp;make&nbsp;up&nbsp;a&nbsp;generic&nbsp;interf
+ace&nbsp;in&nbsp;the&nbsp;next&nbsp;few&nbsp;days&nbsp;and&nbsp;post&nbsp;it
+to&nbsp;the&nbsp;list.&nbsp;&nbsp;It'll&nbsp;be&nbsp;VERY&nbsp;generic.&nbsp;&nb
+sp;That'll&nbsp;be&nbsp;a&nbsp;RFC.
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;the&nbsp;current&nbsp;way&nbsp;of&nbsp;
+bochs&nbsp;telling&nbsp;the&nbsp;GUI&nbsp;what&nbsp;Buttons&nbsp;to&nbsp;make
+on&nbsp;the&nbsp;tool&nbsp;bar&nbsp;could&nbsp;be&nbsp;carried&nbsp;over&nbsp;to
+&nbsp;a&nbsp;menu&nbsp;system&nbsp;also
+<br><b>bryce:</b>&nbsp;and&nbsp;once&nbsp;you've&nbsp;got&nbsp;that,&nbsp;it's&n
+bsp;not&nbsp;much&nbsp;of&nbsp;a&nbsp;stretch&nbsp;to&nbsp;have&nbsp;runtime
+control&nbsp;of&nbsp;some&nbsp;things&nbsp;like&nbsp;IPS&nbsp;and&nbsp;log&nbsp;
+behavior&nbsp;too
+<br><b>yakovlev:</b>&nbsp;For&nbsp;now,&nbsp;I'm&nbsp;headed&nbsp;to&nbsp;bed.
+<br><b>uninet:</b>&nbsp;'night&nbsp;Yak. <br><b>Psyon:</b>&nbsp;cya
+<br><b>bryce:</b>&nbsp;greg,&nbsp;sounds&nbsp;great!
+<br><b>yakovlev:</b>&nbsp;All&nbsp;you&nbsp;West&nbsp;Coast&nbsp;boys&nbsp;have&
+nbsp;fun. <br><b>yakovlev:</b>&nbsp;:) <br><b>bryce:</b>&nbsp;good&nbsp;night
+<br><b>Psyon:</b>&nbsp;night
+***&nbsp;Signoff:&nbsp;yakovlev&nbsp;(Java&nbsp;Chat&nbsp;http://www.undernet.or
+g/webchat.php) <br><b>Psyon:</b>&nbsp;bx_gui_c::headerbar_bitmap
+<br><b>Psyon:</b>&nbsp;oops
+<br><b>Psyon:</b>&nbsp;right&nbsp;now&nbsp;bochs&nbsp;calles&nbsp;&nbsp;bx_gui_c
+::headerbar_bitmap()&nbsp;and
+bx_gui_c::show_headerbar()&nbsp;to&nbsp;make&nbsp;the&nbsp;toolbar
+<br><b>Psyon:</b>&nbsp;something&nbsp;like&nbsp;that&nbsp;could&nbsp;be&nbsp;don
+e&nbsp;for&nbsp;a&nbsp;Menu&nbsp;system <br><b>Psyon:</b>&nbsp;basically
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;I&nbsp;think&nbsp;the&nbsp;bochs&nbsp;gfx&nbs
+p;window&nbsp;shouldn't&nbsp;have&nbsp;icons&nbsp;at&nbsp;all
+<br><b>Psyon:</b>&nbsp;well... <br><b>Psyon:</b>&nbsp;im&nbsp;saying
+<br><b>Psyon:</b>&nbsp;the&nbsp;same&nbsp;system
+<br><b>Psyon:</b>&nbsp;could&nbsp;be&nbsp;used&nbsp;to&nbsp;build&nbsp;menus
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;I&nbsp;think&nbsp;the&nbsp;gfx&nbsp;window&nb
+sp;should&nbsp;be&nbsp;a&nbsp;videocard&nbsp;dev&nbsp;using&nbsp;the&nbsp;gui
+toolkit
+<br><b>Psyon:</b>&nbsp;so&nbsp;that&nbsp;the&nbsp;GUI&nbsp;doesnt&nbsp;have&nbsp
+;to&nbsp;be&nbsp;changed&nbsp;with&nbsp;each&nbsp;new&nbsp;option
+<br><b>bryce:</b>&nbsp;right,&nbsp;something&nbsp;pretty&nbsp;generic&nbsp;can&n
+bsp;be&nbsp;worked&nbsp;out&nbsp;like&nbsp;the&nbsp;toolbar thing
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Wouldn't&nbsp;removing&nbsp;the&nbsp;icons&n
+bsp;lower&nbsp;the&nbsp;friendliness&nbsp;level&nbsp;below
+it's&nbsp;already&nbsp;"lowness"?
+<br><b>eks|x:</b>&nbsp;the&nbsp;gui&nbsp;interface&nbsp;would&nbsp;be&nbsp;using
+&nbsp;the&nbsp;gui&nbsp;toolkit&nbsp;for&nbsp;the&nbsp;icons directly
+<br><b>eks|x:</b>&nbsp;uninet:&nbsp;if&nbsp;you&nbsp;build&nbsp;up&nbsp;a&nbsp;g
+ui&nbsp;to&nbsp;control&nbsp;bochs,&nbsp;you&nbsp;can&nbsp;have&nbsp;icons&nbsp;
+in it,&nbsp;no&nbsp;on&nbsp;the&nbsp;bochs&nbsp;output
+<br><b>Psyon:</b>&nbsp;bx_gui_c::headerbar_bitmap()&nbsp;is&nbsp;passed&nbsp;a&n
+bsp;bitmap&nbsp;ID&nbsp;returned&nbsp;by&nbsp;an
+earlier&nbsp;function,&nbsp;the&nbsp;alignment&nbsp;(left&nbsp;or&nbsp;right),&n
+bsp;and&nbsp;a&nbsp;pointer&nbsp;to&nbsp;a&nbsp;function
+<br><b>eks|x:</b>&nbsp;what&nbsp;I&nbsp;would&nbsp;like&nbsp;to&nbsp;see,&nbsp;i
+s&nbsp;a&nbsp;window&nbsp;with&nbsp;nothing&nbsp;in&nbsp;it&nbsp;else&nbsp;than
+what&nbsp;you&nbsp;see&nbsp;on&nbsp;the&nbsp;crt&nbsp;of&nbsp;your&nbsp;comp
+<br><b>Psyon:</b>&nbsp;eks:&nbsp;the&nbsp;current&nbsp;Icons&nbsp;are&nbsp;just&
+nbsp;simple&nbsp;bit&nbsp;maps&nbsp;used&nbsp;to&nbsp;display&nbsp;the buttons
+<br><b>Psyon:</b>&nbsp;nothing&nbsp;stopping&nbsp;us&nbsp;from&nbsp;making&nbsp;
+that&nbsp;A&nbsp;toolbar&nbsp;button
+<br><b>Psyon:</b>&nbsp;or&nbsp;a&nbsp;menu&nbsp;item
+<br><b>eks|x:</b>&nbsp;and&nbsp;another&nbsp;window&nbsp;that&nbsp;is&nbsp;the&n
+bsp;bochs&nbsp;control/debugger/etc
+<br><b>Psyon:</b>&nbsp;I&nbsp;would&nbsp;like&nbsp;a&nbsp;full&nbsp;screen&nbsp;
+option&nbsp;:)
+<br><b>Psyon:</b>&nbsp;Ive&nbsp;been&nbsp;looking&nbsp;at&nbsp;how&nbsp;to&nbsp;
+do&nbsp;that&nbsp;also <br><b>eks|x:</b>&nbsp;definately&nbsp;:)
+<br><b>Psyon:</b>&nbsp;the&nbsp;current&nbsp;tool&nbsp;bar&nbsp;messes&nbsp;it&n
+bsp;up&nbsp;a&nbsp;little <br><b>eks|x:</b>&nbsp;yip
+<br><b>Psyon:</b>&nbsp;but&nbsp;I&nbsp;can&nbsp;work&nbsp;around&nbsp;it
+<br><b>Psyon:</b>&nbsp;at&nbsp;least&nbsp;for&nbsp;windows
+<br><b>uninet:</b>&nbsp;Does&nbsp;anyone&nbsp;here&nbsp;know&nbsp;how&nbsp;to&nb
+sp;convert&nbsp;normal&nbsp;bitmaps&nbsp;to&nbsp;the&nbsp;ones&nbsp;in
+the&nbsp;.h&nbsp;files&nbsp;in&nbsp;the&nbsp;source&nbsp;code?
+<br><b>eks|x:</b>&nbsp;having&nbsp;it&nbsp;all&nbsp;in&nbsp;the&nbsp;gui&nbsp;bo
+chs&nbsp;control&nbsp;would&nbsp;allow&nbsp;that
+<br><b>Psyon:</b>&nbsp;Im&nbsp;not&nbsp;as&nbsp;familiar&nbsp;with&nbsp;X11&nbsp
+;programming <br><b>eks|x:</b>&nbsp;tim:&nbsp;sorry,&nbsp;not&nbsp;me
+<br><b>Psyon:</b>&nbsp;uni:&nbsp;the&nbsp;ones&nbsp;in&nbsp;the&nbsp;H&nbsp;are&
+nbsp;just&nbsp;1bit&nbsp;bitmaps
+<br><b>bryce:</b>&nbsp;we&nbsp;need&nbsp;to&nbsp;choose&nbsp;at&nbsp;what&nbsp;l
+evel&nbsp;the&nbsp;gui/bochs&nbsp;interface&nbsp;should&nbsp;talk.
+I&nbsp;guess&nbsp;this&nbsp;is&nbsp;what&nbsp;Greg&nbsp;said&nbsp;he&nbsp;would&
+nbsp;work&nbsp;on <br><b>eks|x:</b>&nbsp;yeah,&nbsp;the&nbsp;rfc
+<br><b>uninet:</b>&nbsp;Pyson:&nbsp;Win4Lin&nbsp;accomplishes&nbsp;fullscreen&nb
+sp;by&nbsp;starting&nbsp;a&nbsp;new&nbsp;X&nbsp;session&nbsp;on
+another&nbsp;tty,&nbsp;and&nbsp;then&nbsp;maximizing&nbsp;the&nbsp;window&nbsp;i
+t's&nbsp;in...
+<br><b>bryce:</b>&nbsp;but&nbsp;there&nbsp;is&nbsp;everything&nbsp;from:&nbsp;&n
+bsp;Now&nbsp;print&nbsp;dialog&nbsp;box&nbsp;#7,&nbsp;which&nbsp;asks
+what&nbsp;disk&nbsp;you&nbsp;want&nbsp;to&nbsp;insert&nbsp;now
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;1bit&nbsp;bitmaps?
+<br><b>bryce:</b>&nbsp;to:&nbsp;&nbsp;create&nbsp;a&nbsp;dialog,&nbsp;with&nbsp;
+a&nbsp;text&nbsp;field&nbsp;here&nbsp;and&nbsp;a&nbsp;button&nbsp;there
+<br><b>Psyon:</b>&nbsp;yep
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;the&nbsp;'to:'&nbsp;is&nbsp;a&nbsp;gui&nbsp;t
+oolkit&nbsp;job
+<br><b>Psyon:</b>&nbsp;each&nbsp;bit&nbsp;represetns&nbsp;one&nbsp;pixel
+<br><b>bryce:</b>&nbsp;this&nbsp;is&nbsp;a&nbsp;large&nbsp;space,&nbsp;and&nbsp;
+somewhere&nbsp;in&nbsp;the&nbsp;middle&nbsp;is&nbsp;the&nbsp;best&nbsp;answer
+<br><b>Psyon:</b>&nbsp;either&nbsp;black&nbsp;or&nbsp;white
+<br><b>Psyon:</b>&nbsp;or&nbsp;forground&nbsp;or&nbsp;background
+<br><b>eks|x:</b>&nbsp;#7&nbsp;is&nbsp;the&nbsp;actual&nbsp;job&nbsp;of&nbsp;a&n
+bsp;gui&nbsp;front-end
+<br><b>bryce:</b>&nbsp;psyon:&nbsp;I&nbsp;think&nbsp;he&nbsp;wants&nbsp;to&nbsp;
+know&nbsp;how&nbsp;to&nbsp;make&nbsp;a&nbsp;new&nbsp;1-bit&nbsp;bitmap&nbsp;to
+substitute <br><b>Psyon:</b>&nbsp;I&nbsp;should&nbsp;say&nbsp;monochomr
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;Ah,&nbsp;is&nbsp;there&nbsp;anyway&nbsp;to&n
+bsp;do&nbsp;color&nbsp;8&nbsp;bit&nbsp;bitmaps&nbsp;this&nbsp;way?
+<br><b>Psyon:</b>&nbsp;We&nbsp;would&nbsp;have&nbsp;to&nbsp;change&nbsp;how&nbsp
+;they&nbsp;are&nbsp;passed&nbsp;to&nbsp;the&nbsp;gui
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;Yeah,&nbsp;although&nbsp;perferably&nbsp;als
+o&nbsp;raise&nbsp;the&nbsp;quality&nbsp;above&nbsp;1-bit.
+<br><b>Psyon:</b>&nbsp;unsigned&nbsp;bx_gui_c::create_bitmap(const&nbsp;unsigned
+&nbsp;char&nbsp;*bmap,&nbsp;unsigned xdim,&nbsp;unsigned&nbsp;ydim)
+<br><b>Psyon:</b>&nbsp;char&nbsp;*bmap&nbsp;is&nbsp;the&nbsp;bitmap
+<br><b>Psyon:</b>&nbsp;and&nbsp;that&nbsp;function&nbsp;in&nbsp;the&nbsp;GUI&nbs
+p;makes&nbsp;a&nbsp;native&nbsp;bitmap
+<br><b>bryce:</b>&nbsp;what&nbsp;tool&nbsp;can&nbsp;convert&nbsp;a&nbsp;GIF&nbsp
+;into&nbsp;such&nbsp;a&nbsp;bitmap&nbsp;though?
+<br><b>eks|x:</b>&nbsp;don:&nbsp;seems&nbsp;to&nbsp;me&nbsp;like&nbsp;the&nbsp;i
+nternals&nbsp;of&nbsp;the&nbsp;functions&nbsp;uses&nbsp;one&nbsp;bit
+<br><b>Psyon:</b>&nbsp;Hmm... <br><b>Psyon:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;You&nbsp;might&nbsp;have&nbsp;to&nbsp;do&nbsp;it&nbsp;man
+ually <br><b>uninet:</b>&nbsp;Manually? <br><b>uninet:</b>&nbsp;How&nbsp;so?
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;afaik,&nbsp;The&nbsp;Gimp&nbsp;under&nbsp;X,&
+nbsp;or&nbsp;photoshop&nbsp;under&nbsp;Win
+<br><b>Psyon:</b>&nbsp;picture&nbsp;an&nbsp;16&nbsp;by&nbsp;16&nbsp;square
+<br><b>bryce:</b>&nbsp;what&nbsp;format?&nbsp;XBM&nbsp;?
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;monochrome&nbsp;bitmaps
+<br><b>eks|x:</b>&nbsp;.bmp
+<br><b>Psyon:</b>&nbsp;that&nbsp;would&nbsp;take&nbsp;4&nbsp;bytes&nbsp;to&nbsp;
+display <br><b>Psyon:</b>&nbsp;wait
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;is&nbsp;the&nbsp;routine&nbsp;actually&nbsp;u
+sing&nbsp;whole&nbsp;byte&nbsp;of&nbsp;value&nbsp;1&nbsp;or&nbsp;0&nbsp;only?
+<br><b>Psyon:</b>&nbsp;well
+<br><b>Psyon:</b>&nbsp;it&nbsp;uses&nbsp;the&nbsp;bits
+<br><b>Psyon:</b>&nbsp;not&nbsp;the&nbsp;bytes
+<br><b>bryce:</b>&nbsp;that&nbsp;icon&nbsp;currently&nbsp;looks&nbsp;like&nbsp;t
+his:
+<br><b>bryce:</b>&nbsp;static&nbsp;unsigned&nbsp;char&nbsp;bochs_icon_bits[]&nbs
+p;=&nbsp;{
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0
+x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0xff,&nbsp;0xff, 0x00,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xe0,&nbsp;0xff,&nbsp;0xff,&nbsp;0x07,&nbsp;0
+xf8,&nbsp;0xff,&nbsp;0xff,&nbsp;0x1f,&nbsp;0xf8,&nbsp;0xff,&nbsp;0xff, 0x1f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xfc,&nbsp;0xc7,&nbsp;0xe3,&nbsp;0x3f,&nbsp;0
+xfc,&nbsp;0xc7,&nbsp;0xe3,&nbsp;0x3f,&nbsp;0xfc,&nbsp;0xc3,&nbsp;0xc3, 0x3f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xfc,&nbsp;0xc3,&nbsp;0xc3,&nbsp;0x3f,&nbsp;0
+xf8,&nbsp;0xc1,&nbsp;0x83,&nbsp;0x1f,&nbsp;0xf0,&nbsp;0xc0,&nbsp;0x03, 0x0f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0
+x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0x00,&nbsp;0xc0,&nbsp;0x03, 0x00,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0
+x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0x00,&nbsp;0xc0,&nbsp;0x03, 0x00,
+<br><b>eks|x:</b>&nbsp;so&nbsp;a&nbsp;pic&nbsp;shouldn't&nbsp;be&nbsp;bigger&nbs
+p;than&nbsp;32bytes
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0
+x00,&nbsp;0xc0,&nbsp;0x03,&nbsp;0x00,&nbsp;0xf0,&nbsp;0xc0,&nbsp;0x03, 0x0f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xf8,&nbsp;0xc1,&nbsp;0x83,&nbsp;0x1f,&nbsp;0
+xfc,&nbsp;0xc3,&nbsp;0xc3,&nbsp;0x3f,&nbsp;0xfc,&nbsp;0xc3,&nbsp;0xc3, 0x3f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xfc,&nbsp;0xc7,&nbsp;0xe3,&nbsp;0x3f,&nbsp;0
+xfc,&nbsp;0xc7,&nbsp;0xe3,&nbsp;0x3f,&nbsp;0xf8,&nbsp;0xff,&nbsp;0xff, 0x1f,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0xf8,&nbsp;0xff,&nbsp;0xff,&nbsp;0x1f,&nbsp;0
+xe0,&nbsp;0xff,&nbsp;0xff,&nbsp;0x07,&nbsp;0x00,&nbsp;0xff,&nbsp;0xff, 0x00,
+<br><b>bryce:</b>&nbsp;&nbsp;&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0
+x00,&nbsp;0x00,&nbsp;0x00,&nbsp;0x00,&nbsp;};
+<br><b>uninet:</b>&nbsp;So&nbsp;if&nbsp;you&nbsp;created&nbsp;a&nbsp;1-bit&nbsp;
+picture&nbsp;in&nbsp;the&nbsp;gimp,&nbsp;and&nbsp;saved&nbsp;it&nbsp;as&nbsp;a&n
+bsp;bmp, how&nbsp;would&nbsp;you&nbsp;get&nbsp;it&nbsp;in&nbsp;that&nbsp;format?
+<br><b>Psyon:</b>&nbsp;make&nbsp;that&nbsp;into&nbsp;1s&nbsp;and&nbsp;0s
+<br><b>Psyon:</b>&nbsp;and&nbsp;you&nbsp;will&nbsp;actually&nbsp;see&nbsp;the&nb
+sp;picture
+<br><b>bryce:</b>&nbsp;no,&nbsp;BMP&nbsp;is&nbsp;not&nbsp;the&nbsp;same&nbsp;as&
+nbsp;a&nbsp;C&nbsp;header&nbsp;file!
+<br><b>Psyon:</b>&nbsp;you&nbsp;have&nbsp;to&nbsp;convert&nbsp;that&nbsp;to&nbsp
+;a&nbsp;BMP
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;you&nbsp;need&nbsp;some&nbsp;tool&nbsp;that&nbs
+p;converts&nbsp;binary-:</b>c&nbsp;headers
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Hmm...&nbsp;do&nbsp;you&nbsp;know&nbsp;of&nb
+sp;a&nbsp;tool&nbsp;that&nbsp;can&nbsp;do&nbsp;that?
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;a&nbsp;search&nbsp;on&nbsp;freshmeat&nbsp;shoul
+d&nbsp;do&nbsp;that&nbsp;for&nbsp;ya
+<br><b>Psyon:</b>&nbsp;I&nbsp;could&nbsp;prolly&nbsp;make&nbsp;one
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;or&nbsp;wait,&nbsp;are&nbsp;ya&nbsp;under&nbsp;
+win?
+<br><b>bryce:</b>&nbsp;this&nbsp;sort&nbsp;of&nbsp;crap&nbsp;is&nbsp;what&nbsp;a
+&nbsp;GUI&nbsp;toolkit&nbsp;should&nbsp;be&nbsp;doing&nbsp;for&nbsp;us
+<br><b>bryce:</b>&nbsp;read&nbsp;BMP&nbsp;or&nbsp;GIF&nbsp;or&nbsp;something,&nb
+sp;and&nbsp;execute&nbsp;the&nbsp;right&nbsp;code&nbsp;for&nbsp;each
+platform&nbsp;to&nbsp;make&nbsp;that&nbsp;the&nbsp;icon.
+<br><b>eks|x:</b>&nbsp;bryce:&nbsp;right
+<br><b>Psyon:</b>&nbsp;well...&nbsp;GTKs&nbsp;will&nbsp;want&nbsp;to&nbsp;use&nb
+sp;XPM&nbsp;or&nbsp;Jpg&nbsp;or&nbsp;PNG
+<br><b>Psyon:</b>&nbsp;which&nbsp;would&nbsp;look&nbsp;nicer
+<br><b>eks|x:</b>&nbsp;png&nbsp;seems&nbsp;fine&nbsp;to&nbsp;me
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Linux.
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;freshmeat.net&nbsp;<br><b>--&nbsp;solution&nbsp
+;for&nbsp;ya&nbsp;;)
+<br><b>bryce:</b>&nbsp;we&nbsp;are&nbsp;using&nbsp;a&nbsp;VERY&nbsp;low-level&nb
+sp;toolkit&nbsp;and&nbsp;that's&nbsp;why&nbsp;we&nbsp;have&nbsp;icons
+that&nbsp;look&nbsp;like&nbsp;a&nbsp;C&nbsp;header&nbsp;file.
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;could&nbsp;easily&nbsp;convert&
+nbsp;this&nbsp;to&nbsp;use&nbsp;256&nbsp;color&nbsp;bitmaps
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;thanks.&nbsp;I&nbsp;think&nbsp;I'll&nbsp;try
+&nbsp;my&nbsp;hands&nbsp;at&nbsp;creating&nbsp;some&nbsp;new&nbsp;bitmaps then.
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;that&nbsp;would&nbsp;be&nbsp;nice.
+<br><b>Psyon:</b>&nbsp;each&nbsp;byte&nbsp;representing&nbsp;a&nbsp;color&nbsp;i
+n&nbsp;the&nbsp;color&nbsp;table&nbsp;that&nbsp;bochs&nbsp;uses
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;normalized&nbsp;palette&nbsp;or&nbsp;each&nbs
+p;their&nbsp;owns? <br><b>eks|x:</b>&nbsp;k <br><b>Psyon:</b>&nbsp;normallized
+<br><b>eks|x:</b>&nbsp;bochs&nbsp;palette
+<br><b>Psyon:</b>&nbsp;bochs&nbsp;has&nbsp;an&nbsp;internal&nbsp;pallet
+<br><b>Psyon:</b>&nbsp;Actually...&nbsp;looking&nbsp;at&nbsp;this
+<br><b>eks|x:</b>&nbsp;btw,&nbsp;one&nbsp;annoying&nbsp;thing&nbsp;I've&nbsp;see
+n&nbsp;is&nbsp;the&nbsp;actual&nbsp;colors&nbsp;used&nbsp;when
+displaying&nbsp;text&nbsp;in&nbsp;bochs&nbsp;(16&nbsp;colors)
+<br><b>Psyon:</b>&nbsp;the&nbsp;GUI&nbsp;code&nbsp;would&nbsp;all&nbsp;that&nbsp
+;needs&nbsp;to&nbsp;be&nbsp;changed
+<br><b>Psyon:</b>&nbsp;just&nbsp;specify&nbsp;the&nbsp;bitmap&nbsp;the&nbsp;same
+&nbsp;way&nbsp;in&nbsp;the&nbsp;header
+<br><b>eks|x:</b>&nbsp;is&nbsp;this&nbsp;palette&nbsp;easily&nbsp;modifiable?
+<br><b>Psyon:</b>&nbsp;create_bitmap&nbsp;is&nbsp;just&nbsp;passed&nbsp;a&nbsp;p
+ointer&nbsp;to&nbsp;the&nbsp;first&nbsp;byte
+<br><b>Psyon:</b>&nbsp;the&nbsp;they&nbsp;dimensions&nbsp;of&nbsp;the&nbsp;pic
+<br><b>Psyon:</b>&nbsp;so&nbsp;with&nbsp;a&nbsp;mono&nbsp;BMP
+<br><b>Psyon:</b>&nbsp;the&nbsp;size&nbsp;of&nbsp;the&nbsp;pic&nbsp;is&nbsp;(X&n
+bsp;*&nbsp;Y)&nbsp;/&nbsp;8
+<br><b>Psyon:</b>&nbsp;but&nbsp;create&nbsp;images&nbsp;still&nbsp;wont&nbsp;be&
+nbsp;real&nbsp;easy
+<br><b>Psyon:</b>&nbsp;the&nbsp;bytes&nbsp;in&nbsp;the&nbsp;.h&nbsp;files&nbsp;a
+re&nbsp;not&nbsp;in&nbsp;BMP&nbsp;format
+<br><b>uninet:</b>&nbsp;Hmm...&nbsp;I&nbsp;wonder&nbsp;how&nbsp;Kevin&nbsp;did&n
+bsp;it?
+<br><b>bryce:</b>&nbsp;I'm&nbsp;going&nbsp;to&nbsp;sound&nbsp;like&nbsp;a&nbsp;b
+roken&nbsp;record...
+<br><b>Psyon:</b>&nbsp;he&nbsp;drew&nbsp;them&nbsp;out&nbsp;by&nbsp;hand
+<br><b>bryce:</b>&nbsp;:)
+<br><b>Psyon:</b>&nbsp;like&nbsp;an&nbsp;ASCII&nbsp;artist&nbsp;would
+<br><b>bryce:</b>&nbsp;....use&nbsp;a&nbsp;toolkit! <br><b>Psyon:</b>&nbsp;why?
+<br><b>Psyon:</b>&nbsp;Toolkits&nbsp;take&nbsp;up&nbsp;too&nbsp;much&nbsp;space
+<br><b>Psyon:</b>&nbsp;:) <br><b>eks|x:</b>&nbsp;eheh
+<br><b>bryce:</b>&nbsp;a&nbsp;cross-platform&nbsp;GUI&nbsp;library&nbsp;has&nbsp
+;to&nbsp;deal&nbsp;with&nbsp;this&nbsp;problem
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;So&nbsp;you&nbsp;would&nbsp;just&nbsp;put&nb
+sp;out&nbsp;hex&nbsp;symbols&nbsp;until&nbsp;they&nbsp;looked&nbsp;like
+something?
+<br><b>eks|x:</b>&nbsp;"let's&nbsp;write&nbsp;bochs&nbsp;in&nbsp;asm,&nbsp;so&nb
+sp;it&nbsp;can&nbsp;fit&nbsp;in&nbsp;100kb" <br><b>eks|x:</b>&nbsp;;)
+<br><b>bryce:</b>&nbsp;of&nbsp;icon&nbsp;image&nbsp;formats&nbsp;or&nbsp;whateve
+r <br><b>Psyon:</b>&nbsp;Yep <br><b>Psyon:</b>&nbsp;hehe
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;the&nbsp;current&nbsp;way&nbsp;of&nbsp;
+doing&nbsp;the&nbsp;GUI&nbsp;is&nbsp;nice
+<br><b>Psyon:</b>&nbsp;its&nbsp;just&nbsp;the&nbsp;actuall&nbsp;GUIs
+<br><b>Psyon:</b>&nbsp;that&nbsp;suck <br><b>Psyon:</b>&nbsp;heheh
+<br><b>eks|x:</b>&nbsp;don:&nbsp;any&nbsp;idea&nbsp;for&nbsp;that&nbsp;16&nbsp;c
+olors&nbsp;palette&nbsp;used&nbsp;to&nbsp;display&nbsp;vga&nbsp;text?
+<br><b>eks|x:</b>&nbsp;hard&nbsp;to&nbsp;fix?
+<br><b>Psyon:</b>&nbsp;reword&nbsp;that
+<br><b>eks|x:</b>&nbsp;well,&nbsp;clear&nbsp;white&nbsp;gets&nbsp;out&nbsp;as&nb
+sp;light&nbsp;blue..
+<br><b>eks|x:</b>&nbsp;etc,&nbsp;colors&nbsp;are&nbsp;screwed
+*&nbsp;eks|x&nbsp;should&nbsp;add&nbsp;a&nbsp;bug&nbsp;report..
+<br><b>Psyon:</b>&nbsp;Hmm...
+<br><b>uninet:</b>&nbsp;So&nbsp;most&nbsp;likely&nbsp;it&nbsp;would&nbsp;be&nbsp
+;easier&nbsp;to&nbsp;wait&nbsp;until&nbsp;we&nbsp;switch&nbsp;to&nbsp;a
+toolkit&nbsp;to&nbsp;work&nbsp;on&nbsp;the&nbsp;icons?
+<br><b>eks|x:</b>&nbsp;hrmm..&nbsp;the&nbsp;vga&nbsp;color&nbsp;palette,&nbsp;wh
+en&nbsp;displaying&nbsp;text&nbsp;in&nbsp;the&nbsp;guest,&nbsp;gets
+out&nbsp;wrong
+<br><b>Psyon:</b>&nbsp;actually&nbsp;that&nbsp;standard&nbsp;VGA&nbsp;pallet&nbs
+p;kinda&nbsp;shows&nbsp;it&nbsp;as&nbsp;offwhite&nbsp;I&nbsp;think
+<br><b>bryce:</b>&nbsp;Tim,&nbsp;IMHO&nbsp;yes&nbsp;:)
+<br><b>Psyon:</b>&nbsp;and&nbsp;text&nbsp;looks&nbsp;fine&nbsp;to&nbsp;me
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;colors&nbsp;are&nbsp;screwed&nbsp;on&nbsp;my&
+nbsp;side
+<br><b>uninet:</b>&nbsp;The&nbsp;text&nbsp;looks&nbsp;good&nbsp;to&nbsp;me&nbsp;
+too...&nbsp;just&nbsp;like&nbsp;a&nbsp;normal&nbsp;console.
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;light&nbsp;blue&nbsp;is&nbsp;dark&nbsp;blue
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;thanks.
+<br><b>eks|x:</b>&nbsp;Psyon:&nbsp;white&nbsp;is&nbsp;light&nbsp;blue,&nbsp;etc
+<br><b>Psyon:</b>&nbsp;It&nbsp;might&nbsp;be&nbsp;the&nbsp;GUI&nbsp;code&nbsp;th
+en
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Are&nbsp;you&nbsp;running&nbsp;at&nbsp;256&n
+bsp;colors?
+<br><b>Psyon:</b>&nbsp;each&nbsp;char&nbsp;on&nbsp;the&nbsp;screen&nbsp;is&nbsp;
+represented&nbsp;by&nbsp;2&nbsp;bytes
+<br><b>bryce:</b>&nbsp;on&nbsp;X&nbsp;windows,&nbsp;my&nbsp;text&nbsp;colors&nbs
+p;are&nbsp;always&nbsp;messed&nbsp;up&nbsp;unless&nbsp;I&nbsp;quit
+netscape&nbsp;first,&nbsp;and&nbsp;then&nbsp;run&nbsp;bochs
+<br><b>Psyon:</b>&nbsp;one&nbsp;is&nbsp;the&nbsp;character
+<br><b>Psyon:</b>&nbsp;and&nbsp;one&nbsp;is&nbsp;the&nbsp;format&nbsp;options
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;full&nbsp;32bit&nbsp;color
+<br><b>Psyon:</b>&nbsp;forground&nbsp;and&nbsp;background&nbsp;color
+<br><b>Psyon:</b>&nbsp;you&nbsp;running&nbsp;in&nbsp;X&nbsp;or&nbsp;windows?
+<br><b>eks|x:</b>&nbsp;X <br><b>Psyon:</b>&nbsp;ok
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;do&nbsp;the&nbsp;other&nbsp;apps&nbsp;around
+&nbsp;Bochs&nbsp;have&nbsp;weird&nbsp;colors&nbsp;too&nbsp;(when
+bochs&nbsp;is&nbsp;running)?
+<br><b>Psyon:</b>&nbsp;can&nbsp;you&nbsp;send&nbsp;me&nbsp;a&nbsp;screen?
+<br><b>bryce:</b>&nbsp;I&nbsp;have&nbsp;8-bit&nbsp;color&nbsp;I&nbsp;guess,&nbsp
+;so&nbsp;netscape&nbsp;sucks&nbsp;up&nbsp;all&nbsp;the&nbsp;available
+colors&nbsp;,&nbsp;leaving&nbsp;my&nbsp;text&nbsp;purple&nbsp;or&nbsp;something
+*&nbsp;eks|x&nbsp;is&nbsp;an&nbsp;anti-windows&nbsp;kindof&nbsp;guy&nbsp;;)
+<br><b>eks|x:</b>&nbsp;tim:&nbsp;nope,&nbsp;I&nbsp;can&nbsp;screw&nbsp;in&nbsp;T
+he&nbsp;Gimp&nbsp;in&nbsp;full&nbsp;color&nbsp;no&nbsp;problem&nbsp;but&nbsp;boc
+hs is&nbsp;always&nbsp;screwed,&nbsp;alone&nbsp;or&nbsp;not
+<br><b>bryce:</b>&nbsp;wierd
+<br><b>eks|x:</b>&nbsp;the&nbsp;0x07&nbsp;color&nbsp;in&nbsp;text&nbsp;is&nbsp;f
+ine
+<br><b>eks|x:</b>&nbsp;the&nbsp;0x01&nbsp;color&nbsp;is&nbsp;very&nbsp;too&nbsp;
+dark
+<br><b>eks|x:</b>&nbsp;and&nbsp;the&nbsp;0x09&nbsp;is&nbsp;like&nbsp;the&nbsp;0x
+01&nbsp;should&nbsp;normally&nbsp;be
+<br><b>uninet:</b>&nbsp;eks|x:&nbsp;Hmm...&nbsp;could&nbsp;it&nbsp;be&nbsp;an&nb
+sp;misconfig&nbsp;with&nbsp;bochrc's&nbsp;pallet&nbsp;settings
+(I&nbsp;think&nbsp;it&nbsp;can&nbsp;have&nbsp;a&nbsp;shared&nbsp;or&nbsp;interna
+l&nbsp;pallet,&nbsp;IIRC)?
+<br><b>eks|x:</b>&nbsp;0x0F&nbsp;gets&nbsp;out&nbsp;as&nbsp;the&nbsp;original&nb
+sp;0x09
+<br><b>Psyon:</b>&nbsp;That&nbsp;is&nbsp;proably&nbsp;the&nbsp;internal&nbsp;boc
+hs&nbsp;Pallet <br><b>eks|x:</b>&nbsp;that's&nbsp;my&nbsp;guess&nbsp;too
+<br><b>Psyon:</b>&nbsp;http://bochs.sourceforge.net/screenshot/freedos.png
+<br><b>Psyon:</b>&nbsp;that&nbsp;screen&nbsp;shot&nbsp;looks&nbsp;fine
+<br><b>Psyon:</b>&nbsp;so&nbsp;maybe&nbsp;its&nbsp;just&nbsp;you&nbsp;:)
+<br><b>eks|x:</b>&nbsp;eheh
+<br><b>Psyon:</b>&nbsp;actually&nbsp;it&nbsp;looks&nbsp;yellow
+<br><b>Psyon:</b>&nbsp;http://bochs.sourceforge.net/screenshot/kidos.jpg
+<br><b>Psyon:</b>&nbsp;but&nbsp;that&nbsp;one&nbsp;seems&nbsp;ok
+<br><b>eks|x:</b>&nbsp;ehe
+<br><b>Psyon:</b>&nbsp;I&nbsp;need&nbsp;to&nbsp;set&nbsp;up&nbsp;another&nbsp;li
+nux&nbsp;box&nbsp;to&nbsp;play&nbsp;with&nbsp;bochs&nbsp;on
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;like&nbsp;to&nbsp;run&nbsp;it&nbsp;on&nb
+sp;my&nbsp;web&nbsp;server
+<br><b>Psyon:</b>&nbsp;the&nbsp;X11&nbsp;GUI&nbsp;uses&nbsp;XSetForeground&nbsp;
+and&nbsp;XSetBackground
+<br><b>Psyon:</b>&nbsp;so&nbsp;it&nbsp;maybe&nbsp;a&nbsp;problem&nbsp;with&nbsp;
+those <br><b>Psyon:</b>&nbsp;Yeah...
+<br><b>Psyon:</b>&nbsp;looking&nbsp;over&nbsp;the&nbsp;X&nbsp;code
+<br><b>Psyon:</b>&nbsp;I&nbsp;woudl&nbsp;say&nbsp;it&nbsp;is&nbsp;somethign&nbsp
+;with&nbsp;your&nbsp;X&nbsp;color&nbsp;pallet
+<br><b>Psyon:</b>&nbsp;Did&nbsp;I&nbsp;say&nbsp;somethign&nbsp;wrong?&nbsp;every
+one&nbsp;is&nbsp;quiet?
+***&nbsp;Signoff:&nbsp;eks|x&nbsp;(h51.us.undernet.org&nbsp;McLean.VA.US.Underne
+t.Org)
+***&nbsp;Signoff:&nbsp;bryce&nbsp;(h51.us.undernet.org&nbsp;McLean.VA.US.Underne
+t.Org)
+***&nbsp;Signoff:&nbsp;uninet&nbsp;(h51.us.undernet.org&nbsp;McLean.VA.US.Undern
+et.Org)
+***&nbsp;Signoff:&nbsp;Psyon&nbsp;(http://www.psyon.org&nbsp;<br><b>--&nbsp;It's
+&nbsp;all&nbsp;that&nbsp;and&nbsp;a&nbsp;Unix&nbsp;manual!)
+***&nbsp;uninet&nbsp;(~tbutler@c1331724-a.schrls1.mo.home.com)&nbsp;has&nbsp;joi
+ned&nbsp;channel&nbsp;#Bochs
+***&nbsp;Psyon&nbsp;(exodus@exodus.psyon.org)&nbsp;has&nbsp;joined&nbsp;channel&
+nbsp;#Bochs
+***&nbsp;bryce&nbsp;(~bryce@debussy.ne.mediaone.net)&nbsp;has&nbsp;joined&nbsp;c
+hannel&nbsp;#Bochs
+<br><b>uninet:</b>&nbsp;Ah&nbsp;people&nbsp;are&nbsp;posting&nbsp;again...&nbsp;
+I&nbsp;thought&nbsp;everyone&nbsp;had&nbsp;left&nbsp;and&nbsp;my
+client&nbsp;just&nbsp;didn't&nbsp;sense&nbsp;it.
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;Thanks! <br><b>Psyon:</b>&nbsp;Hmm..
+<br><b>uninet:</b>&nbsp;Perhaps&nbsp;I&nbsp;can&nbsp;make&nbsp;sense&nbsp;of&nbs
+p;some&nbsp;of&nbsp;this.
+<br><b>Psyon:</b>&nbsp;well&nbsp;that&nbsp;kinda&nbsp;explains&nbsp;why&nbsp;he&
+nbsp;did&nbsp;it&nbsp;that&nbsp;way <br><b>Psyon:</b>&nbsp;In&nbsp;windows
+<br><b>Psyon:</b>&nbsp;I&nbsp;an&nbsp;make&nbsp;it&nbsp;use&nbsp;256&nbsp;color&
+nbsp;bitmaps
+<br><b>Psyon:</b>&nbsp;not&nbsp;sure&nbsp;how&nbsp;to&nbsp;do&nbsp;it&nbsp;in&nb
+sp;X11 <br><b>Psyon:</b>&nbsp;or&nbsp;Mac
+<br><b>Psyon:</b>&nbsp;for&nbsp;that&nbsp;matter <br><b>Psyon:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;:-)
+<br><b>uninet:</b>&nbsp;I&nbsp;suppose&nbsp;this&nbsp;is&nbsp;a&nbsp;good&nbsp;r
+eason&nbsp;for&nbsp;me&nbsp;to&nbsp;finally&nbsp;apply&nbsp;myself&nbsp;to
+learn&nbsp;C.
+<br><b>uninet:</b>&nbsp;This&nbsp;chat&nbsp;seems&nbsp;to&nbsp;be&nbsp;dying&nbs
+p;a&nbsp;slow&nbsp;death... <br><b>bryce:</b>&nbsp;I'm&nbsp;back,&nbsp;sorry
+<br><b>uninet:</b>&nbsp;Hey&nbsp;Bryce! <br><b>bryce:</b>&nbsp;who's&nbsp;left
+<br><b>Psyon:</b>&nbsp;hehe
+<br><b>uninet:</b>&nbsp;eveyone&nbsp;besides&nbsp;myself&nbsp;and&nbsp;Don.
+<br><b>Psyon:</b>&nbsp;me
+<br><b>uninet:</b>&nbsp;(and&nbsp;you&nbsp;of&nbsp;course)
+<br><b>bryce:</b>&nbsp;are&nbsp;you&nbsp;still&nbsp;talking&nbsp;about&nbsp;icon
+s&nbsp;:) <br><b>uninet:</b>&nbsp;Yup.
+<br><b>Psyon:</b>&nbsp;Yeah,&nbsp;but&nbsp;we&nbsp;can&nbsp;change&nbsp;the&nbsp
+;subject&nbsp;to&nbsp;something&nbsp;more&nbsp;important
+<br><b>Psyon:</b>&nbsp;hehe
+<br><b>uninet:</b>&nbsp;Sounds&nbsp;good,&nbsp;I&nbsp;think&nbsp;I'll&nbsp;sit&n
+bsp;it&nbsp;out&nbsp;for&nbsp;the&nbsp;toolkit&nbsp;to&nbsp;be&nbsp;decided&nbsp
+;on (if&nbsp;we&nbsp;even&nbsp;decide&nbsp;on&nbsp;one)
+<br><b>bryce:</b>&nbsp;I'm&nbsp;hoping&nbsp;that&nbsp;someone&nbsp;has&nbsp;actu
+al&nbsp;experience&nbsp;with&nbsp;a&nbsp;cross-platform
+toolkit&nbsp;or&nbsp;is&nbsp;willing&nbsp;to&nbsp;learn
+<br><b>Psyon:</b>&nbsp;hehe <br><b>Psyon:</b>&nbsp;I&nbsp;can&nbsp;learn
+<br><b>Psyon:</b>&nbsp;I&nbsp;guess
+<br><b>bryce:</b>&nbsp;since&nbsp;we&nbsp;have&nbsp;bugs&nbsp;and&nbsp;features&
+nbsp;galore&nbsp;in&nbsp;addition&nbsp;to&nbsp;the&nbsp;gui&nbsp;to&nbsp;work
+on&nbsp;too
+<br><b>uninet:</b>&nbsp;The&nbsp;difficult&nbsp;thing&nbsp;is,&nbsp;there&nbsp;a
+re&nbsp;lots&nbsp;of&nbsp;qualified&nbsp;people,&nbsp;but&nbsp;not
+so&nbsp;many&nbsp;that&nbsp;actually&nbsp;know&nbsp;bochs.
+<br><b>Psyon:</b>&nbsp;I&nbsp;know&nbsp;the&nbsp;bochs&nbsp;GUI&nbsp;parts
+<br><b>Psyon:</b>&nbsp;at&nbsp;least&nbsp;the&nbsp;current&nbsp;way
+<br><b>uninet:</b>&nbsp;I'd&nbsp;love&nbsp;to&nbsp;help...&nbsp;maybe&nbsp;I&nbs
+p;could&nbsp;help&nbsp;out&nbsp;somewhat...
+<br><b>bryce:</b>&nbsp;I&nbsp;would&nbsp;say&nbsp;it&nbsp;doesn't&nbsp;matter&nb
+sp;if&nbsp;they&nbsp;know&nbsp;bochs,&nbsp;it&nbsp;only&nbsp;matters&nbsp;that
+they&nbsp;care&nbsp;about&nbsp;it&nbsp;enough&nbsp;to&nbsp;spend&nbsp;some&nbsp;
+time&nbsp;on&nbsp;it
+<br><b>bryce:</b>&nbsp;we&nbsp;need&nbsp;to&nbsp;help&nbsp;define&nbsp;the&nbsp;
+interface
+<br><b>Psyon:</b>&nbsp;That&nbsp;is&nbsp;my&nbsp;big&nbsp;problem&nbsp;right&nbs
+p;now
+<br><b>Psyon:</b>&nbsp;I&nbsp;have&nbsp;to&nbsp;kill&nbsp;some&nbsp;of&nbsp;my&n
+bsp;other&nbsp;projects
+<br><b>Psyon:</b>&nbsp;and&nbsp;devot&nbsp;time&nbsp;to&nbsp;the&nbsp;major&nbsp
+;ones <br><b>uninet:</b>&nbsp;killall&nbsp;*projects <br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;(we&nbsp;=&nbsp;people&nbsp;who&nbsp;do&nbsp;know&nbsp;bo
+chs&nbsp;and&nbsp;know&nbsp;what&nbsp;the&nbsp;GUI&nbsp;needs&nbsp;to&nbsp;be&nb
+sp;able to&nbsp;do)
+<br><b>Psyon:</b>&nbsp;http://www.perlhq.com&nbsp;<br><b>--&nbsp;I&nbsp;have&nbs
+p;to&nbsp;keep&nbsp;stuff&nbsp;on&nbsp;that&nbsp;page&nbsp;updated.
+<br><b>bryce:</b>&nbsp;my&nbsp;road&nbsp;map&nbsp;is:
+<br><b>bryce:</b>&nbsp;fix&nbsp;up&nbsp;1.2.pre1
+<br><b>bryce:</b>&nbsp;then&nbsp;call&nbsp;it&nbsp;1.2
+<br><b>bryce:</b>&nbsp;put&nbsp;binaries&nbsp;of&nbsp;1.2&nbsp;everywhere&nbsp;u
+nder&nbsp;the&nbsp;sun <br><b>Psyon:</b>&nbsp;hehehe
+<br><b>bryce:</b>&nbsp;and&nbsp;then&nbsp;we&nbsp;have&nbsp;a&nbsp;chance&nbsp;a
+t&nbsp;getting&nbsp;more&nbsp;people&nbsp;aware&nbsp;of&nbsp;the&nbsp;project
+<br><b>uninet:</b>&nbsp;Sounds&nbsp;good.
+<br><b>bryce:</b>&nbsp;I&nbsp;bet&nbsp;there&nbsp;are&nbsp;lots&nbsp;of&nbsp;peo
+ple&nbsp;who&nbsp;stopped&nbsp;looking&nbsp;at&nbsp;www.bochs.com
+during&nbsp;the&nbsp;last&nbsp;year
+<br><b>uninet:</b>&nbsp;I'm&nbsp;suppose&nbsp;to&nbsp;get&nbsp;it&nbsp;up&nbsp;e
+verywhere&nbsp;under&nbsp;the&nbsp;sun,&nbsp;right?
+<br><b>bryce:</b>&nbsp;I'll&nbsp;be&nbsp;happy&nbsp;to&nbsp;help&nbsp;with&nbsp;
+that,&nbsp;once&nbsp;we&nbsp;have&nbsp;a&nbsp;1.2&nbsp;that&nbsp;we're&nbsp;prou
+d of.
+<br><b>uninet:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;me,&nbsp;you&nbsp;should&nbsp
+;be&nbsp;proud&nbsp;of&nbsp;the&nbsp;current&nbsp;1.2,&nbsp;it's&nbsp;a&nbsp;lot
+nicer&nbsp;being&nbsp;able&nbsp;to&nbsp;type&nbsp;bochs-dlx&nbsp;immediately&nbs
+p;after&nbsp;install,&nbsp;and&nbsp;try&nbsp;it&nbsp;out!
+<br><b>bryce:</b>&nbsp;:)
+<br><b>Psyon:</b>&nbsp;I&nbsp;need&nbsp;to&nbsp;fix&nbsp;up&nbsp;the&nbsp;raw&nb
+sp;disk&nbsp;code&nbsp;a&nbsp;little
+<br><b>bryce:</b>&nbsp;I'm&nbsp;nearly&nbsp;proud&nbsp;of&nbsp;it&nbsp;:)
+<br><b>Psyon:</b>&nbsp;right&nbsp;now&nbsp;its&nbsp;a&nbsp;hack
+<br><b>Psyon:</b>&nbsp;I&nbsp;need&nbsp;to&nbsp;make&nbsp;it&nbsp;proper
+<br><b>uninet:</b>&nbsp;Will&nbsp;that&nbsp;be&nbsp;difficult?
+<br><b>Psyon:</b>&nbsp;no
+<br><b>Psyon:</b>&nbsp;It&nbsp;just&nbsp;assumes&nbsp;a&nbsp;size&nbsp;of&nbsp;t
+he&nbsp;disk
+<br><b>bryce:</b>&nbsp;well&nbsp;even&nbsp;having&nbsp;a&nbsp;1.2&nbsp;that&nbsp
+;makes&nbsp;people&nbsp;say&nbsp;"Wow&nbsp;that&nbsp;has&nbsp;a&nbsp;lot&nbsp;of
+potential,&nbsp;I&nbsp;wonder&nbsp;if&nbsp;there's&nbsp;a&nbsp;new&nbsp;one"&nbs
+p;would&nbsp;be&nbsp;good&nbsp;enough
+<br><b>Psyon:</b>&nbsp;_stat()&nbsp;on&nbsp;windows&nbsp;doesnt&nbsp;work&nbsp;w
+hen&nbsp;\\.\a:&nbsp;is&nbsp;opened
+<br><b>Psyon:</b>&nbsp;just&nbsp;need&nbsp;to&nbsp;make&nbsp;it&nbsp;check&nbsp;
+to&nbsp;see&nbsp;if&nbsp;its&nbsp;using&nbsp;a&nbsp;raw&nbsp;disk&nbsp;or&nbsp;n
+ow <br><b>Psyon:</b>&nbsp;not
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;I&nbsp;agree.&nbsp;If&nbsp;people&nbsp;see&n
+bsp;Bochs&nbsp;poping&nbsp;on&nbsp;Freshmeat&nbsp;and&nbsp;such
+every&nbsp;few&nbsp;weeks,&nbsp;it&nbsp;might&nbsp;make&nbsp;people&nbsp;realize
+&nbsp;this&nbsp;project&nbsp;is&nbsp;alive!
+<br><b>Psyon:</b>&nbsp;Just&nbsp;need&nbsp;to&nbsp;get&nbsp;disk&nbsp;info&nbsp;
+a&nbsp;diff&nbsp;way
+<br><b>bryce:</b>&nbsp;psyon,&nbsp;do&nbsp;you&nbsp;have&nbsp;cvs?
+<br><b>Psyon:</b>&nbsp;I&nbsp;can&nbsp;set&nbsp;it&nbsp;up&nbsp;again
+<br><b>bryce:</b>&nbsp;it&nbsp;would&nbsp;probably&nbsp;help&nbsp;in&nbsp;stayin
+g&nbsp;current
+<br><b>bryce:</b>&nbsp;or&nbsp;maybe&nbsp;CVS&nbsp;snapshots&nbsp;are&nbsp;bette
+r,&nbsp;I&nbsp;don't&nbsp;know <br><b>Psyon:</b>&nbsp;oh
+<br><b>Psyon:</b>&nbsp;you&nbsp;just&nbsp;mean&nbsp;to&nbsp;get&nbsp;the&nbsp;co
+de <br><b>bryce:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;i&nbsp;thought&nbsp;you&nbsp;meant&nbsp;the&nbsp;CVS&nbsp
+;server
+<br><b>bryce:</b>&nbsp;no&nbsp;we&nbsp;have&nbsp;one&nbsp;of&nbsp;those&nbsp;now
+<br><b>Psyon:</b>&nbsp;I&nbsp;have&nbsp;CVS&nbsp;on&nbsp;the&nbsp;linux&nbsp;box
+<br><b>Psyon:</b>&nbsp;Ill&nbsp;have&nbsp;to&nbsp;get&nbsp;a&nbsp;client&nbsp;fo
+r&nbsp;this&nbsp;one
+<br><b>Psyon:</b>&nbsp;ive&nbsp;just&nbsp;been&nbsp;using&nbsp;snapshots
+<br><b>bryce:</b>&nbsp;whatever&nbsp;works
+<br><b>bryce:</b>&nbsp;if&nbsp;you&nbsp;are&nbsp;actively&nbsp;messing&nbsp;with
+&nbsp;the&nbsp;code,&nbsp;cvs&nbsp;update&nbsp;would&nbsp;be&nbsp;useful
+<br><b>bryce:</b>&nbsp;random&nbsp;RFB&nbsp;thought:&nbsp;if&nbsp;we&nbsp;get&nb
+sp;networking&nbsp;going&nbsp;on&nbsp;bochs,&nbsp;you&nbsp;could&nbsp;run
+vncserver&nbsp;within&nbsp;bochs&nbsp;and&nbsp;connect&nbsp;to&nbsp;it&nbsp;with
+&nbsp;a&nbsp;vncviewer&nbsp;on&nbsp;the&nbsp;real machine,&nbsp;right?
+<br><b>Psyon:</b>&nbsp;Yes <br><b>bryce:</b>&nbsp;might&nbsp;be&nbsp;slow
+<br><b>Psyon:</b>&nbsp;but&nbsp;it&nbsp;would&nbsp;work&nbsp;slowly
+<br><b>uninet:</b>&nbsp;What&nbsp;is&nbsp;the&nbsp;difference&nbsp;between&nbsp;
+RFB&nbsp;and&nbsp;VNC&nbsp;again?
+<br><b>Psyon:</b>&nbsp;RFB&nbsp;is&nbsp;the&nbsp;protolcol
+<br><b>Psyon:</b>&nbsp;VNC&nbsp;is&nbsp;the&nbsp;program
+<br><b>bryce:</b>&nbsp;RFB&nbsp;=&nbsp;request&nbsp;for&nbsp;Bochs?
+<br><b>uninet:</b>&nbsp;Ah,&nbsp;I&nbsp;see...&nbsp;thanks.&nbsp;Sorry,&nbsp;I&n
+bsp;know&nbsp;that&nbsp;was&nbsp;a&nbsp;dump&nbsp;question.
+<br><b>Psyon:</b>&nbsp;brb...&nbsp;potty&nbsp;break
+<br><b>uninet:</b>&nbsp;hahaha
+<br><b>uninet:</b>&nbsp;I&nbsp;don't&nbsp;know&nbsp;if&nbsp;that&nbsp;was&nbsp;w
+hat&nbsp;AT&T&nbsp;was&nbsp;thinking,&nbsp;but&nbsp;I&nbsp;think&nbsp;that&nbsp;
+is a&nbsp;good&nbsp;explaination&nbsp;of&nbsp;that&nbsp;acronym
+<br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Well,&nbsp;and&nbsp;then&nbsp;there&nbsp;were&nbsp;two.
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;it&nbsp;might&nbsp;be&nbsp;easy&nbsp;to
+&nbsp;put&nbsp;those&nbsp;few&nbsp;survey&nbsp;questions&nbsp;on&nbsp;a
+SourceForge&nbsp;survey
+<br><b>uninet:</b>&nbsp;That&nbsp;would&nbsp;be&nbsp;nice...&nbsp;to&nbsp;get&nb
+sp;a&nbsp;feel&nbsp;for&nbsp;the&nbsp;general&nbsp;opinions&nbsp;of&nbsp;the
+Bochs&nbsp;community. <br><b>Psyon:</b>&nbsp;ok <br><b>Psyon:</b>&nbsp;bak
+<br><b>bryce:</b>&nbsp;I&nbsp;first&nbsp;looked&nbsp;at&nbsp;the&nbsp;SF&nbsp;su
+rvey&nbsp;as&nbsp;a&nbsp;way&nbsp;to&nbsp;handle&nbsp;the&nbsp;testing&nbsp;form
+s,
+and&nbsp;it&nbsp;really&nbsp;was&nbsp;not&nbsp;good&nbsp;for&nbsp;that,&nbsp;but
+&nbsp;for&nbsp;independent&nbsp;questions&nbsp;like
+these,&nbsp;it&nbsp;would&nbsp;be&nbsp;fine.
+<br><b>Psyon:</b>&nbsp;I&nbsp;just&nbsp;may&nbsp;be&nbsp;tooting&nbsp;my&nbsp;ow
+n&nbsp;horn...&nbsp;but&nbsp;I&nbsp;think&nbsp;bochs-RFB&nbsp;is&nbsp;a&nbsp;goo
+d
+way&nbsp;to&nbsp;separate&nbsp;the&nbsp;emulator&nbsp;and&nbsp;the&nbsp;GUI&nbsp
+;:) <br><b>uninet:</b>&nbsp;How&nbsp;do&nbsp;you&nbsp;set&nbsp;it&nbsp;up?
+<br><b>Psyon:</b>&nbsp;bochs&nbsp;RFB?
+<br><b>bryce:</b>&nbsp;tim:&nbsp;you&nbsp;have&nbsp;to&nbsp;be&nbsp;admin&nbsp;o
+n&nbsp;the&nbsp;project
+<br><b>uninet:</b>&nbsp;Don,&nbsp;I&nbsp;agree,&nbsp;I&nbsp;think&nbsp;RFB&nbsp;
+is&nbsp;a&nbsp;very&nbsp;good&nbsp;system&nbsp;of&nbsp;dividing&nbsp;the&nbsp;GU
+I and&nbsp;emulator.
+<br><b>bryce:</b>&nbsp;and&nbsp;then&nbsp;type&nbsp;in&nbsp;the&nbsp;questions&n
+bsp;and&nbsp;answers,&nbsp;it's&nbsp;all&nbsp;web&nbsp;form&nbsp;stuff
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;I&nbsp;meant&nbsp;survey&nbsp;forms.
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;Ah...&nbsp;I&nbsp;see.&nbsp;That's&nbsp;why&
+nbsp;I&nbsp;couldn't&nbsp;figure&nbsp;out&nbsp;how&nbsp;to&nbsp;set&nbsp;up&nbsp
+;a survey.&nbsp;:-)
+<br><b>bryce:</b>&nbsp;Don:&nbsp;doesn't&nbsp;RFB&nbsp;imply&nbsp;that&nbsp;you&
+nbsp;are&nbsp;sending&nbsp;a&nbsp;bunch&nbsp;of&nbsp;pixels&nbsp;for&nbsp;each
+VGA&nbsp;character,&nbsp;not&nbsp;just&nbsp;a&nbsp;single&nbsp;ascii&nbsp;code?
+<br><b>Psyon:</b>&nbsp;Uhh...&nbsp;Yes <br><b>uninet:</b>&nbsp;afk.
+<br><b>Psyon:</b>&nbsp;We&nbsp;need&nbsp;to&nbsp;write&nbsp;our&nbsp;own&nbsp;pr
+oto&nbsp;to&nbsp;optimize&nbsp;it
+<br><b>bryce:</b>&nbsp;did&nbsp;you&nbsp;have&nbsp;to&nbsp;"draw"&nbsp;the&nbsp;
+toolbar&nbsp;yourself?
+<br><b>Psyon:</b>&nbsp;but&nbsp;I&nbsp;went&nbsp;with&nbsp;RFB
+<br><b>Psyon:</b>&nbsp;since&nbsp;there&nbsp;are&nbsp;so&nbsp;many&nbsp;viewers
+<br><b>Psyon:</b>&nbsp;yes&nbsp;I&nbsp;drew&nbsp;the&nbsp;toolbar
+<br><b>Psyon:</b>&nbsp;but&nbsp;all&nbsp;teh&nbsp;GUIs&nbsp;do&nbsp;that
+<br><b>bryce:</b>&nbsp;right
+<br><b>Psyon:</b>&nbsp;I&nbsp;just&nbsp;draw&nbsp;it&nbsp;in&nbsp;the&nbsp;local
+&nbsp;frame&nbsp;buffer
+<br><b>Psyon:</b>&nbsp;and&nbsp;send&nbsp;it&nbsp;like&nbsp;the&nbsp;rest&nbsp;o
+f&nbsp;the&nbsp;screen&nbsp;updates
+<br><b>bryce:</b>&nbsp;so&nbsp;if&nbsp;you&nbsp;were&nbsp;going&nbsp;to&nbsp;mak
+e&nbsp;a&nbsp;dialog&nbsp;box&nbsp;in&nbsp;Bochs-RFB,&nbsp;you&nbsp;would
+really&nbsp;have&nbsp;to&nbsp;do&nbsp;it&nbsp;without&nbsp;benefit&nbsp;of&nbsp;
+any&nbsp;library. <br><b>Psyon:</b>&nbsp;Right!
+<br><b>bryce:</b>&nbsp;like&nbsp;a&nbsp;button,&nbsp;you&nbsp;have&nbsp;to&nbsp;
+render&nbsp;it,&nbsp;handle&nbsp;clicks&nbsp;to&nbsp;it,&nbsp;etc.
+<br><b>Psyon:</b>&nbsp;yeah <br><b>uninet:</b>&nbsp;back.
+<br><b>Psyon:</b>&nbsp;I&nbsp;never&nbsp;said&nbsp;there&nbsp;werent&nbsp;draw&n
+bsp;backs <br><b>Psyon:</b>&nbsp;but
+<br><b>uninet:</b>&nbsp;Could&nbsp;the&nbsp;client&nbsp;vnc&nbsp;GUI&nbsp;use&nb
+sp;a&nbsp;toolkit&nbsp;to&nbsp;render&nbsp;a&nbsp;button?
+<br><b>Psyon:</b>&nbsp;I&nbsp;was&nbsp;going&nbsp;for&nbsp;compatibility&nbsp;of
+&nbsp;the&nbsp;viewer
+<br><b>bryce:</b>&nbsp;no&nbsp;a&nbsp;VNC&nbsp;client&nbsp;is&nbsp;VERY&nbsp;sim
+ple,&nbsp;right?
+<br><b>Psyon:</b>&nbsp;VNC&nbsp;client&nbsp;just&nbsp;draws&nbsp;data&nbsp;sent&
+nbsp;to&nbsp;it
+<br><b>uninet:</b>&nbsp;Yeah...&nbsp;could&nbsp;the&nbsp;RFB&nbsp;protocol&nbsp;
+be&nbsp;extended&nbsp;for&nbsp;"Boch&nbsp;Enhanced"
+clients,&nbsp;while&nbsp;maintaing&nbsp;compatiblity&nbsp;with&nbsp;normal&nbsp;
+VNC&nbsp;clients? <br><b>Psyon:</b>&nbsp;Hmm.... <br><b>Psyon:</b>&nbsp;Sure
+<br><b>bryce:</b>&nbsp;VNC&nbsp;is&nbsp;open&nbsp;source&nbsp;right?
+<br><b>Psyon:</b>&nbsp;RFB&nbsp;is&nbsp;event&nbsp;based
+<br><b>Psyon:</b>&nbsp;Yep
+<br><b>Psyon:</b>&nbsp;so&nbsp;adding&nbsp;new&nbsp;Events&nbsp;for&nbsp;Bochs&n
+bsp;Enhancements
+<br><b>bryce:</b>&nbsp;have&nbsp;you&nbsp;seen&nbsp;Xvnc&nbsp;the&nbsp;VNC-X&nbs
+p;server&nbsp;for&nbsp;linux <br><b>Psyon:</b>&nbsp;would&nbsp;work
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>uninet:</b>&nbsp;That&nbsp;way,&nbsp;an&nbsp;enhance&nbsp;client&nbsp;cou
+ld&nbsp;do&nbsp;the&nbsp;fancy&nbsp;stuff&nbsp;like&nbsp;(dialog
+boxes)&nbsp;where&nbsp;the&nbsp;normal&nbsp;VNC&nbsp;client&nbsp;could&nbsp;just
+&nbsp;continue&nbsp;doing&nbsp;what&nbsp;it&nbsp;does now...
+<br><b>Psyon:</b>&nbsp;We&nbsp;would&nbsp;be&nbsp;better&nbsp;off&nbsp;just&nbsp
+;modifying&nbsp;it&nbsp;all
+<br><b>bryce:</b>&nbsp;Xvnc&nbsp;is&nbsp;portable,&nbsp;since&nbsp;it&nbsp;has&n
+bsp;no&nbsp;display&nbsp;code&nbsp;only&nbsp;networking&nbsp;code,
+<br><b>Psyon:</b>&nbsp;and&nbsp;just&nbsp;base&nbsp;it&nbsp;on&nbsp;RFB
+<br><b>Psyon:</b>&nbsp;It&nbsp;would&nbsp;be&nbsp;better&nbsp;to&nbsp;send&nbsp;
+a&nbsp;text&nbsp;update&nbsp;event&nbsp;and&nbsp;just&nbsp;send&nbsp;the&nbsp;ch
+ars
+<br><b>Psyon:</b>&nbsp;but&nbsp;that&nbsp;will&nbsp;only&nbsp;work&nbsp;while&nb
+sp;in&nbsp;a&nbsp;text&nbsp;mode
+<br><b>Psyon:</b>&nbsp;when&nbsp;In&nbsp;windows
+<br><b>bryce:</b>&nbsp;it&nbsp;seems&nbsp;like&nbsp;you&nbsp;could&nbsp;hack&nbs
+p;their&nbsp;Xvnc&nbsp;so&nbsp;that&nbsp;you&nbsp;could&nbsp;use&nbsp;any&nbsp;X
+11 library&nbsp;you&nbsp;like
+<br><b>Psyon:</b>&nbsp;Text&nbsp;would&nbsp;still&nbsp;have&nbsp;to&nbsp;be&nbsp
+;sent&nbsp;as&nbsp;images
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;I&nbsp;think&nbsp;you&nbsp;are&nbsp;right.
+<br><b>Psyon:</b>&nbsp;You&nbsp;know...
+<br><b>bryce:</b>&nbsp;the&nbsp;X11&nbsp;library&nbsp;could&nbsp;be&nbsp;used&nb
+sp;to&nbsp;draw&nbsp;dialog&nbsp;boxes,&nbsp;handle&nbsp;all&nbsp;events,
+etc.&nbsp;without&nbsp;having&nbsp;to&nbsp;rewrite&nbsp;low&nbsp;level&nbsp;gui&
+nbsp;code.
+<br><b>Psyon:</b>&nbsp;I&nbsp;guess&nbsp;to&nbsp;extend&nbsp;RFB&nbsp;to&nbsp;wo
+rk&nbsp;how&nbsp;we&nbsp;want&nbsp;it...&nbsp;you&nbsp;would&nbsp;only&nbsp;need
+&nbsp;to add&nbsp;two&nbsp;events
+<br><b>Psyon:</b>&nbsp;RFBEventGetUserInput&nbsp;or&nbsp;something&nbsp;to&nbsp;
+pop&nbsp;up&nbsp;a&nbsp;dialog&nbsp;box...
+<br><b>Psyon:</b>&nbsp;that&nbsp;would&nbsp;be&nbsp;sent&nbsp;to&nbsp;the&nbsp;c
+lient
+<br><b>Psyon:</b>&nbsp;RFBDialogItemEvent&nbsp;sent&nbsp;to&nbsp;the&nbsp;bochs&
+nbsp;server
+<br><b>Psyon:</b>&nbsp;those&nbsp;would&nbsp;be&nbsp;followed&nbsp;by&nbsp;data&
+nbsp;as&nbsp;to&nbsp;which&nbsp;dialog&nbsp;item&nbsp;was&nbsp;acted&nbsp;on
+<br><b>Psyon:</b>&nbsp;or&nbsp;what&nbsp;type&nbsp;of&nbsp;input&nbsp;to&nbsp;ge
+t
+<br><b>uninet:</b>&nbsp;If&nbsp;the&nbsp;client&nbsp;and&nbsp;server&nbsp;where&
+nbsp;on&nbsp;one&nbsp;computer,&nbsp;would&nbsp;there&nbsp;be&nbsp;much
+of&nbsp;a&nbsp;performance&nbsp;hit&nbsp;over&nbsp;the&nbsp;current&nbsp;system?
+<br><b>Psyon:</b>&nbsp;There&nbsp;is&nbsp;a&nbsp;bit <br><b>bryce:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;Bochs-RFB&nbsp;runs&nbsp;slowly&nbsp;even&nbsp;on&nbsp;th
+e&nbsp;same&nbsp;computer,&nbsp;because&nbsp;I&nbsp;have&nbsp;not
+implemented&nbsp;compression&nbsp;yet
+<br><b>Psyon:</b>&nbsp;and&nbsp;passing&nbsp;all&nbsp;the&nbsp;graphics&nbsp;thr
+ough&nbsp;Winsock <br><b>Psyon:</b>&nbsp;casues&nbsp;a&nbsp;bottlnet
+<br><b>Psyon:</b>&nbsp;bottleneck
+<br><b>uninet:</b>&nbsp;But&nbsp;if&nbsp;you&nbsp;did,&nbsp;do&nbsp;you&nbsp;thi
+nk&nbsp;there&nbsp;would&nbsp;still&nbsp;be&nbsp;a&nbsp;hit?
+<br><b>Psyon:</b>&nbsp;not&nbsp;as&nbsp;much
+<br><b>bryce:</b>&nbsp;now&nbsp;bochs&nbsp;uses&nbsp;the&nbsp;lowest&nbsp;level&
+nbsp;APIs&nbsp;to&nbsp;draw&nbsp;graphics,&nbsp;and&nbsp;I&nbsp;think
+anything&nbsp;else&nbsp;will&nbsp;be&nbsp;a&nbsp;performance&nbsp;hit.
+<br><b>uninet:</b>&nbsp;bryce:&nbsp;that's&nbsp;true.
+<br><b>Psyon:</b>&nbsp;Then&nbsp;why&nbsp;do&nbsp;you&nbsp;want&nbsp;to&nbsp;use
+&nbsp;a&nbsp;toolkit?
+<br><b>bryce:</b>&nbsp;I'm&nbsp;advocating&nbsp;GUI&nbsp;libraries&nbsp;for&nbsp
+;dialogs&nbsp;and&nbsp;control&nbsp;panels&nbsp;and&nbsp;suc
+<br><b>bryce:</b>&nbsp;such
+<br><b>bryce:</b>&nbsp;NOT&nbsp;as&nbsp;a&nbsp;replacement&nbsp;for&nbsp;the&nbs
+p;current&nbsp;VGA&nbsp;display&nbsp;window <br><b>Psyon:</b>&nbsp;oh
+<br><b>Psyon:</b>&nbsp;ok
+<br><b>bryce:</b>&nbsp;which&nbsp;is&nbsp;performance-critical
+<br><b>uninet:</b>&nbsp;I&nbsp;still&nbsp;am&nbsp;not&nbsp;sure&nbsp;that&nbsp;D
+on's&nbsp;idea&nbsp;of&nbsp;using&nbsp;RFB&nbsp;to&nbsp;seperate&nbsp;the&nbsp;G
+UI might&nbsp;not&nbsp;be&nbsp;the&nbsp;best&nbsp;way&nbsp;to&nbsp;go...
+<br><b>uninet:</b>&nbsp;(no&nbsp;matter&nbsp;which&nbsp;toolkit&nbsp;is&nbsp;use
+d)
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;think&nbsp;it&nbsp;is&nbsp;the&nbsp;best
+&nbsp;way&nbsp;to&nbsp;go
+<br><b>Psyon:</b>&nbsp;I&nbsp;just&nbsp;think&nbsp;its&nbsp;a&nbsp;good&nbsp;sta
+rt
+<br><b>bryce:</b>&nbsp;it&nbsp;can&nbsp;be&nbsp;done,&nbsp;but&nbsp;I&nbsp;think
+&nbsp;a&nbsp;much&nbsp;higher-level&nbsp;communication&nbsp;between
+bochs&nbsp;and&nbsp;gui&nbsp;is&nbsp;better
+<br><b>Psyon:</b>&nbsp;the&nbsp;concept&nbsp;and&nbsp;idea
+<br><b>Psyon:</b>&nbsp;did&nbsp;you&nbsp;put&nbsp;bochs-RFB&nbsp;in&nbsp;the&nbs
+p;CVS&nbsp;tree&nbsp;btw?
+<br><b>uninet:</b>&nbsp;Right,&nbsp;it&nbsp;would&nbsp;need&nbsp;to&nbsp;be&nbsp
+;worked&nbsp;on,&nbsp;but&nbsp;the&nbsp;concept&nbsp;is&nbsp;good.
+<br><b>bryce:</b>&nbsp;like&nbsp;gui&nbsp;says:&nbsp;"Hey&nbsp;Bochs,&nbsp;I&nbs
+p;want&nbsp;you&nbsp;to&nbsp;change&nbsp;the&nbsp;floppy&nbsp;disk&nbsp;to
+/home/bryce/newimage.img"
+<br><b>bryce:</b>&nbsp;and&nbsp;bochs&nbsp;says:&nbsp;"Ok,&nbsp;I&nbsp;did&nbsp;
+it"
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;think&nbsp;it&nbsp;should&nbsp;be&nbsp;d
+one&nbsp;like&nbsp;that
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;it&nbsp;should&nbsp;be&nbsp;done&nbsp;h
+ow&nbsp;the&nbsp;current&nbsp;toolbar&nbsp;is&nbsp;done
+<br><b>Psyon:</b>&nbsp;bochs&nbsp;tells&nbsp;the&nbsp;GUI&nbsp;to&nbsp;make&nbsp
+;a&nbsp;button
+<br><b>Psyon:</b>&nbsp;and&nbsp;gives&nbsp;it&nbsp;a&nbsp;function&nbsp;pointer
+<br><b>bryce:</b>&nbsp;the&nbsp;RFB&nbsp;way&nbsp;would&nbsp;be&nbsp;more&nbsp;l
+ike,&nbsp;gui&nbsp;says:&nbsp;&nbsp;"hey&nbsp;they&nbsp;clicked&nbsp;on 312,12"
+<br><b>Psyon:</b>&nbsp;to&nbsp;be&nbsp;called
+<br><b>Psyon:</b>&nbsp;in&nbsp;this&nbsp;case
+<br><b>Psyon:</b>&nbsp;it&nbsp;could&nbsp;be&nbsp;giving&nbsp;an&nbsp;ID
+<br><b>Psyon:</b>&nbsp;and&nbsp;then&nbsp;when&nbsp;the&nbsp;Button&nbsp;or&nbsp
+;what&nbsp;ever&nbsp;is&nbsp;pushed
+<br><b>Psyon:</b>&nbsp;it&nbsp;would&nbsp;tell&nbsp;bochs&nbsp;that&nbsp;button&
+nbsp;ID&nbsp;has&nbsp;been&nbsp;pushed
+<br><b>Psyon:</b>&nbsp;and&nbsp;bochs&nbsp;will&nbsp;act&nbsp;on&nbsp;it
+<br><b>bryce:</b>&nbsp;and&nbsp;bochs&nbsp;says&nbsp;"ok&nbsp;312,12&nbsp;looks&
+nbsp;like&nbsp;the&nbsp;reset&nbsp;button&nbsp;so&nbsp;now&nbsp;gui
+should&nbsp;display&nbsp;an&nbsp;"Are&nbsp;you&nbsp;sure"&nbsp;message"
+<br><b>Psyon:</b>&nbsp;Yes
+<br><b>uninet:</b>&nbsp;that&nbsp;would&nbsp;work&nbsp;really&nbsp;well...
+<br><b>bryce:</b>&nbsp;I&nbsp;like&nbsp;the&nbsp;fact&nbsp;that&nbsp;that's&nbsp
+;general,&nbsp;and&nbsp;higher&nbsp;level
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;think&nbsp;using&nbsp;the&nbsp;coords&nb
+sp;of&nbsp;the&nbsp;click&nbsp;is&nbsp;a&nbsp;good&nbsp;idea
+<br><b>Psyon:</b>&nbsp;then&nbsp;we&nbsp;would&nbsp;be&nbsp;limited&nbsp;to&nbsp
+;using&nbsp;images&nbsp;again
+<br><b>bryce:</b>&nbsp;but&nbsp;I'm&nbsp;afraid&nbsp;that&nbsp;a&nbsp;whole&nbsp
+;protocol&nbsp;like&nbsp;that&nbsp;will&nbsp;not&nbsp;give&nbsp;the&nbsp;GUI
+(whoever&nbsp;has&nbsp;to&nbsp;turn&nbsp;the&nbsp;dialog&nbsp;into&nbsp;actual&n
+bsp;API&nbsp;calls) <br><b>Psyon:</b>&nbsp;Hmm...
+<br><b>uninet:</b>&nbsp;Well,&nbsp;on&nbsp;non&nbsp;image&nbsp;things,&nbsp;coul
+dn't&nbsp;it&nbsp;say&nbsp;"hey&nbsp;the&nbsp;user&nbsp;clicked&nbsp;on
+menuitem1"?
+<br><b>bryce:</b>&nbsp;a&nbsp;chance&nbsp;to&nbsp;make&nbsp;a&nbsp;decent&nbsp;l
+ooking&nbsp;dialog
+<br><b>Psyon:</b>&nbsp;uninet&nbsp;that&nbsp;is&nbsp;what&nbsp;I&nbsp;was&nbsp;t
+hinking
+<br><b>bryce:</b>&nbsp;psyon,&nbsp;so&nbsp;what&nbsp;type&nbsp;of&nbsp;messages&
+nbsp;should&nbsp;bochs&nbsp;be&nbsp;telling&nbsp;the&nbsp;gui?
+<br><b>Psyon:</b>&nbsp;That&nbsp;is&nbsp;how&nbsp;the&nbsp;current&nbsp;one&nbsp
+;basically&nbsp;works <br><b>uninet:</b>&nbsp;Ah.
+<br><b>bryce:</b>&nbsp;buttons&nbsp;are&nbsp;easy,&nbsp;how&nbsp;about&nbsp;dial
+ogs?
+<br><b>Psyon:</b>&nbsp;The&nbsp;current&nbsp;way&nbsp;of&nbsp;doing&nbsp;it&nbsp
+;is&nbsp;a&nbsp;good&nbsp;concept
+<br><b>Psyon:</b>&nbsp;it&nbsp;just&nbsp;needs&nbsp;improving
+<br><b>Psyon:</b>&nbsp;Well...
+<br><b>Psyon:</b>&nbsp;What&nbsp;are&nbsp;the&nbsp;types&nbsp;of&nbsp;dialogs&nb
+sp;that&nbsp;will&nbsp;be&nbsp;needed?
+<br><b>Psyon:</b>&nbsp;Yes/No,&nbsp;File,&nbsp;OK
+<br><b>Psyon:</b>&nbsp;what&nbsp;else?
+<br><b>bryce:</b>&nbsp;For&nbsp;each&nbsp;of&nbsp;these&nbsp;devices&nbsp;(HD,&n
+bsp;CMOS,&nbsp;CDROM,&nbsp;Floppy),&nbsp;choose&nbsp;what
+<br><b>Psyon:</b>&nbsp;well... <br><b>Psyon:</b>&nbsp;just&nbsp;in&nbsp;general
+<br><b>bryce:</b>&nbsp;a&nbsp;panic,&nbsp;debug,&nbsp;info,&nbsp;and&nbsp;error&
+nbsp;message&nbsp;should&nbsp;do? <br><b>Psyon:</b>&nbsp;well...
+<br><b>bryce:</b>&nbsp;crash,&nbsp;print,&nbsp;or&nbsp;ignore?
+<br><b>uninet:</b>&nbsp;Config&nbsp;dialogs&nbsp;too,&nbsp;right?
+<br><b>Psyon:</b>&nbsp;Oh&nbsp;yah
+<br><b>Psyon:</b>&nbsp;i&nbsp;forgot&nbsp;the&nbsp;config&nbsp;stuff
+<br><b>Psyon:</b>&nbsp;Hmm....
+<br><b>bryce:</b>&nbsp;that's&nbsp;a&nbsp;complicated&nbsp;one,&nbsp;and&nbsp;I&
+nbsp;think&nbsp;you&nbsp;may&nbsp;end&nbsp;up&nbsp;with&nbsp;the&nbsp;best
+looking&nbsp;dialog
+<br><b>bryce:</b>&nbsp;if&nbsp;you&nbsp;send&nbsp;a&nbsp;very&nbsp;high&nbsp;lev
+el&nbsp;message,&nbsp;like&nbsp;"show&nbsp;the&nbsp;log&nbsp;options
+dialog&nbsp;now"
+<br><b>Psyon:</b>&nbsp;I&nbsp;would&nbsp;like&nbsp;to&nbsp;see&nbsp;the&nbsp;dia
+logs&nbsp;defined&nbsp;by&nbsp;bochs
+<br><b>bryce:</b>&nbsp;rather&nbsp;than&nbsp;trying&nbsp;to&nbsp;make&nbsp;your&
+nbsp;protocol&nbsp;SO&nbsp;general&nbsp;that&nbsp;bochs&nbsp;can&nbsp;ask
+for&nbsp;any&nbsp;kind&nbsp;of&nbsp;dialog&nbsp;it&nbsp;might&nbsp;need
+<br><b>Psyon:</b>&nbsp;and&nbsp;just&nbsp;displayed&nbsp;by&nbsp;the&nbsp;GUI
+<br><b>Psyon:</b>&nbsp;like&nbsp;have&nbsp;bochs&nbsp;send&nbsp;the&nbsp;GUI&nbs
+p;a&nbsp;template&nbsp;for&nbsp;the&nbsp;dialog
+<br><b>Psyon:</b>&nbsp;and&nbsp;draw&nbsp;it&nbsp;based&nbsp;on&nbsp;that
+<br><b>bryce:</b>&nbsp;basically&nbsp;like&nbsp;a&nbsp;web&nbsp;form?
+<br><b>Psyon:</b>&nbsp;yes <br><b>Psyon:</b>&nbsp;HEY!
+<br><b>bryce:</b>&nbsp;oh&nbsp;no!
+<br><b>Psyon:</b>&nbsp;thats&nbsp;not&nbsp;a&nbsp;bad&nbsp;Idea
+<br><b>Psyon:</b>&nbsp;use&nbsp;XML&nbsp;or&nbsp;HTML&nbsp;to&nbsp;do&nbsp;the&n
+bsp;dialogs <br><b>bryce:</b>&nbsp;:)
+<br><b>Psyon:</b>&nbsp;then&nbsp;when&nbsp;submited...&nbsp;data&nbsp;can&nbsp;b
+e&nbsp;passed&nbsp;back&nbsp;to&nbsp;bochs&nbsp;in&nbsp;a&nbsp;URLENcoded string
+<br><b>uninet:</b>&nbsp;Couldn't&nbsp;the&nbsp;GUI&nbsp;have&nbsp;the&nbsp;confi
+g&nbsp;template&nbsp;on&nbsp;the&nbsp;GUI&nbsp;side&nbsp;rather&nbsp;than
+have&nbsp;bochs&nbsp;send&nbsp;it&nbsp;to&nbsp;it?
+<br><b>Psyon:</b>&nbsp;boot=c&hd=linux.img
+<br><b>Psyon:</b>&nbsp;stuff&nbsp;like&nbsp;that
+<br><b>Psyon:</b>&nbsp;uninet:&nbsp;the&nbsp;GUI&nbsp;wouldnt&nbsp;have&nbsp;to&
+nbsp;be&nbsp;updated&nbsp;as&nbsp;much&nbsp;if&nbsp;bochs&nbsp;told&nbsp;it
+how&nbsp;to&nbsp;make&nbsp;it
+<br><b>bryce:</b>&nbsp;It&nbsp;certainly&nbsp;could&nbsp;be&nbsp;done&nbsp;that&
+nbsp;way,&nbsp;and&nbsp;if&nbsp;you're&nbsp;very&nbsp;sneaky&nbsp;you
+might&nbsp;use&nbsp;your&nbsp;browser&nbsp;as&nbsp;the&nbsp;viewer.
+<br><b>Psyon:</b>&nbsp;Well...&nbsp;you&nbsp;wouldnt&nbsp;use&nbsp;it&nbsp;as&nb
+sp;the&nbsp;viewer
+<br><b>Psyon:</b>&nbsp;cant&nbsp;draw&nbsp;the&nbsp;VGA&nbsp;screen&nbsp;to&nbsp
+;the&nbsp;browser
+<br><b>Psyon:</b>&nbsp;well...&nbsp;you&nbsp;could&nbsp;push&nbsp;it&nbsp;to&nbs
+p;it <br><b>Psyon:</b>&nbsp;as&nbsp;a&nbsp;streaming&nbsp;video
+<br><b>bryce:</b>&nbsp;no,&nbsp;VGA&nbsp;screen&nbsp;is&nbsp;low&nbsp;level&nbsp
+;APIs&nbsp;as&nbsp;it&nbsp;is&nbsp;now
+<br><b>bryce:</b>&nbsp;otherwise&nbsp;you&nbsp;add&nbsp;lots&nbsp;of&nbsp;overhe
+ad <br><b>Psyon:</b>&nbsp;Could&nbsp;do
+<br><b>bryce:</b>&nbsp;I&nbsp;mean&nbsp;the&nbsp;control&nbsp;panel
+<br><b>uninet:</b>&nbsp;Well,&nbsp;if&nbsp;you&nbsp;were&nbsp;using&nbsp;the&nbs
+p;browser&nbsp;as&nbsp;teh&nbsp;viewer,&nbsp;couldn't&nbsp;the&nbsp;VGA
+screen&nbsp;be&nbsp;shown&nbsp;in&nbsp;a&nbsp;Java&nbsp;applet&nbsp;and&nbsp;con
+fig&nbsp;handled&nbsp;by&nbsp;normal&nbsp;browser&nbsp;means?
+<br><b>Psyon:</b>&nbsp;char&nbsp;*bx_gui::ShowDialog(XMLCode&nbsp;*gui);
+<br><b>Psyon:</b>&nbsp;XMLCode&nbsp;beings&nbsp;XML&nbsp;or&nbsp;HTML&nbsp;code&
+nbsp;for&nbsp;the&nbsp;form
+<br><b>bryce:</b>&nbsp;yes,&nbsp;but&nbsp;slowly!&nbsp;&nbsp;We&nbsp;don't&nbsp;
+need&nbsp;any&nbsp;more&nbsp;speed&nbsp;penalties&nbsp;here.
+<br><b>Psyon:</b>&nbsp;and&nbsp;the&nbsp;return&nbsp;would&nbsp;be&nbsp;a&nbsp;s
+tring&nbsp;much&nbsp;like&nbsp;the&nbsp;QUERY_STRING&nbsp;of&nbsp;the&nbsp;web
+form
+<br><b>Psyon:</b>&nbsp;parsing&nbsp;would&nbsp;be&nbsp;a&nbsp;pain&nbsp;though
+<br><b>Psyon:</b>&nbsp;and&nbsp;might&nbsp;make&nbsp;a&nbsp;performace&nbsp;hit
+<br><b>bryce:</b>&nbsp;are&nbsp;you&nbsp;thinking&nbsp;of&nbsp;a&nbsp;custom&nbs
+p;viewer&nbsp;or&nbsp;an&nbsp;existing&nbsp;web&nbsp;browser?
+<br><b>Psyon:</b>&nbsp;custom&nbsp;viewer <br><b>bryce:</b>&nbsp;ok
+<br><b>Psyon:</b>&nbsp;well...&nbsp;there&nbsp;are&nbsp;plenty&nbsp;of&nbsp;open
+&nbsp;source&nbsp;HTML&nbsp;viewers
+<br><b>bryce:</b>&nbsp;I'm&nbsp;thinking&nbsp;nothing&nbsp;should&nbsp;go&nbsp;t
+hrough&nbsp;this&nbsp;interface&nbsp;that&nbsp;is
+performance&nbsp;critical&nbsp;anyway.
+<br><b>Psyon:</b>&nbsp;could&nbsp;steal&nbsp;some&nbsp;code&nbsp;to&nbsp;rended&
+nbsp;the&nbsp;HTML&nbsp;forms
+<br><b>uninet:</b>&nbsp;Although&nbsp;what&nbsp;toolkit&nbsp;would&nbsp;be&nbsp;
+used&nbsp;to&nbsp;render&nbsp;the&nbsp;HTML&nbsp;forms?&nbsp;:-)
+<br><b>bryce:</b>&nbsp;anything&nbsp;performance&nbsp;critical&nbsp;should&nbsp;
+either&nbsp;go&nbsp;to&nbsp;the&nbsp;existing
+low-level&nbsp;API,&nbsp;or&nbsp;logged&nbsp;directly&nbsp;to&nbsp;a&nbsp;file.
+<br><b>Psyon:</b>&nbsp;What&nbsp;is&nbsp;with&nbsp;you&nbsp;people&nbsp;and&nbsp
+;toolkits? <br><b>Psyon:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;I&nbsp;dunno...&nbsp;:-)&nbsp;I&nbsp;was&nbsp;just&nbsp;
+thinking&nbsp;you&nbsp;now&nbsp;have&nbsp;the&nbsp;same&nbsp;problem&nbsp;of
+rendering&nbsp;lots&nbsp;of&nbsp;things,&nbsp;and&nbsp;the&nbsp;added&nbsp;compl
+exity&nbsp;of&nbsp;an&nbsp;HTML&nbsp;rendering layer.
+<br><b>Psyon:</b>&nbsp;well...&nbsp;it&nbsp;would&nbsp;only&nbsp;be&nbsp;HTML&nb
+sp;forms <br><b>Psyon:</b>&nbsp;not&nbsp;full&nbsp;HTML
+<br><b>Psyon:</b>&nbsp;maybe&nbsp;that&nbsp;is&nbsp;a&nbsp;bad&nbsp;idea
+<br><b>Psyon:</b>&nbsp;but&nbsp;its&nbsp;an&nbsp;idea
+<br><b>uninet:</b>&nbsp;It&nbsp;sounds&nbsp;good&nbsp;to&nbsp;me,&nbsp;I&nbsp;wa
+s&nbsp;just&nbsp;thinking&nbsp;you&nbsp;still&nbsp;have&nbsp;to&nbsp;figure
+out&nbsp;how&nbsp;to&nbsp;render&nbsp;the&nbsp;widgets&nbsp;on&nbsp;the&nbsp;for
+m.
+<br><b>bryce:</b>&nbsp;well&nbsp;you&nbsp;can&nbsp;write&nbsp;XML&nbsp;for&nbsp;
+a&nbsp;form&nbsp;that&nbsp;describes&nbsp;exactly&nbsp;what&nbsp;the&nbsp;GUI
+needs
+<br><b>bryce:</b>&nbsp;without&nbsp;it&nbsp;having&nbsp;to&nbsp;be&nbsp;standard
+&nbsp;HTML <br><b>Psyon:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;and&nbsp;libXml&nbsp;is&nbsp;cross&nbsp;platform
+<br><b>bryce:</b>&nbsp;but&nbsp;is&nbsp;any&nbsp;of&nbsp;this&nbsp;a&nbsp;benefi
+t? <br><b>Psyon:</b>&nbsp;hold&nbsp;on..
+<br><b>Psyon:</b>&nbsp;let&nbsp;me&nbsp;clear&nbsp;something&nbsp;up.
+<br><b>bryce:</b>&nbsp;ok
+<br><b>uninet:</b>&nbsp;I&nbsp;guess&nbsp;that&nbsp;the&nbsp;GUI&nbsp;could&nbsp
+;be&nbsp;seperate,&nbsp;but&nbsp;still&nbsp;extensible.
+<br><b>Psyon:</b>&nbsp;Will&nbsp;the&nbsp;GUI&nbsp;be&nbsp;a&nbsp;separate&nbsp;
+process...&nbsp;or&nbsp;the&nbsp;same&nbsp;one?
+<br><b>Psyon:</b>&nbsp;we&nbsp;need&nbsp;to&nbsp;make&nbsp;a&nbsp;decision&nbsp;
+on&nbsp;that
+<br><b>uninet:</b>&nbsp;I&nbsp;would&nbsp;think&nbsp;a&nbsp;seperate&nbsp;proces
+s&nbsp;would&nbsp;be&nbsp;better&nbsp;(better&nbsp;cross
+platform&nbsp;support),&nbsp;but&nbsp;that's&nbsp;only&nbsp;me.
+<br><b>bryce:</b>&nbsp;it&nbsp;could&nbsp;be&nbsp;either&nbsp;way
+<br><b>Psyon:</b>&nbsp;before&nbsp;we&nbsp;go&nbsp;any&nbsp;farther
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;it's&nbsp;no&nbsp;problem&nbsp;to&nbsp;
+open&nbsp;a&nbsp;network&nbsp;socket&nbsp;between&nbsp;them,
+although&nbsp;then&nbsp;you&nbsp;need&nbsp;portable&nbsp;socket&nbsp;code&nbsp;a
+nd&nbsp;some&nbsp;semblance&nbsp;of&nbsp;security
+<br><b>Psyon:</b>&nbsp;Well,&nbsp;using&nbsp;XML&nbsp;for&nbsp;dialogs&nbsp;woul
+d&nbsp;benefit&nbsp;for&nbsp;remote&nbsp;viewers
+<br><b>Psyon:</b>&nbsp;most&nbsp;all&nbsp;socket&nbsp;code&nbsp;is&nbsp;pretty&n
+bsp;close&nbsp;to&nbsp;the&nbsp;same
+<br><b>Psyon:</b>&nbsp;in&nbsp;the&nbsp;sense&nbsp;that&nbsp;what&nbsp;if&nbsp;b
+ochs&nbsp;is&nbsp;running&nbsp;on&nbsp;linux&nbsp;and&nbsp;being&nbsp;viewed
+in&nbsp;windows <br><b>Psyon:</b>&nbsp;or&nbsp;Vice&nbsp;Versa
+<br><b>uninet:</b>&nbsp;The&nbsp;nice&nbsp;thing&nbsp;about&nbsp;seperate&nbsp;p
+rocesses&nbsp;with&nbsp;network&nbsp;code&nbsp;is&nbsp;it
+doesn't&nbsp;matter&nbsp;if&nbsp;the&nbsp;viewer&nbsp;is&nbsp;on&nbsp;the&nbsp;s
+ame&nbsp;computer&nbsp;or&nbsp;2,000&nbsp;miles&nbsp;away...
+<br><b>Psyon:</b>&nbsp;Even&nbsp;if&nbsp;it&nbsp;is&nbsp;the&nbsp;same&nbsp;proc
+ess <br><b>Psyon:</b>&nbsp;it&nbsp;would&nbsp;work&nbsp;ok
+<br><b>bryce:</b>&nbsp;ok,&nbsp;sockets&nbsp;are&nbsp;fine&nbsp;and&nbsp;same&nb
+sp;process&nbsp;or&nbsp;different&nbsp;process&nbsp;is&nbsp;fine
+<br><b>Psyon:</b>&nbsp;Ok...
+<br><b>bryce:</b>&nbsp;but&nbsp;it&nbsp;seems&nbsp;like&nbsp;there&nbsp;are&nbsp
+;disadvantages&nbsp;to&nbsp;sending&nbsp;XML&nbsp;too
+<br><b>Psyon:</b>&nbsp;can&nbsp;we&nbsp;see&nbsp;any&nbsp;problems&nbsp;with&nbs
+p;using&nbsp;XML&nbsp;for&nbsp;dialogs? <br><b>Psyon:</b>&nbsp;why?
+<br><b>bryce:</b>&nbsp;as&nbsp;opposed&nbsp;to&nbsp;just&nbsp;saying&nbsp;"Ok&nb
+sp;gui,&nbsp;show&nbsp;dialog&nbsp;number&nbsp;7"
+<br><b>Psyon:</b>&nbsp;well...&nbsp;the&nbsp;XML&nbsp;code&nbsp;can&nbsp;be&nbsp
+;cached <br><b>Psyon:</b>&nbsp;do&nbsp;like <br><b>uninet:</b>&nbsp;Idea:
+<br><b>uninet:</b>&nbsp;What&nbsp;if&nbsp;the&nbsp;GUI&nbsp;and&nbsp;Bochs&nbsp;
+sync&nbsp;on&nbsp;startup&nbsp;with&nbsp;the&nbsp;XML&nbsp;forms...
+<br><b>bryce:</b>&nbsp;if&nbsp;you&nbsp;tell&nbsp;it&nbsp;"show&nbsp;#7"&nbsp;th
+en&nbsp;you&nbsp;can&nbsp;make&nbsp;the&nbsp;dialog&nbsp;look&nbsp;as&nbsp;good&
+nbsp;as possible&nbsp;for&nbsp;that&nbsp;system
+<br><b>bryce:</b>&nbsp;which&nbsp;is&nbsp;not&nbsp;a&nbsp;hard&nbsp;task
+<br><b>uninet:</b>&nbsp;...so&nbsp;that&nbsp;once&nbsp;it&nbsp;was&nbsp;started,
+&nbsp;requests&nbsp;would&nbsp;just&nbsp;be&nbsp;show7,&nbsp;or&nbsp;what ever.
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;thats&nbsp;what&nbsp;I&nbsp;was&nbsp;going&nbsp;to&nbsp;s
+ay
+<br><b>bryce:</b>&nbsp;if&nbsp;you&nbsp;send&nbsp;it&nbsp;XML,&nbsp;then&nbsp;th
+e&nbsp;viewer's&nbsp;job&nbsp;is&nbsp;to&nbsp;make&nbsp;anything&nbsp;in&nbsp;th
+e
+world&nbsp;look&nbsp;as&nbsp;good&nbsp;as&nbsp;possible,&nbsp;which&nbsp;is&nbsp
+;a&nbsp;hard&nbsp;task
+<br><b>Psyon:</b>&nbsp;send&nbsp;the&nbsp;code&nbsp;with&nbsp;and&nbsp;ID&nbsp;n
+umber
+<br><b>Psyon:</b>&nbsp;They&nbsp;only&nbsp;big&nbsp;problem&nbsp;im&nbsp;seeing&
+nbsp;with&nbsp;XMl&nbsp;is&nbsp;how&nbsp;to&nbsp;return&nbsp;data&nbsp;back&nbsp
+;to bochs
+<br><b>Psyon:</b>&nbsp;user&nbsp;URLEncoded&nbsp;strings&nbsp;would&nbsp;work
+<br><b>bryce:</b>&nbsp;anything&nbsp;would&nbsp;work
+<br><b>uninet:</b>&nbsp;Well,&nbsp;the&nbsp;nice&nbsp;thing&nbsp;about&nbsp;this
+&nbsp;too,&nbsp;is&nbsp;that&nbsp;even&nbsp;if&nbsp;the&nbsp;different
+platforms&nbsp;had&nbsp;different&nbsp;GUIs&nbsp;using&nbsp;different&nbsp;toolk
+its&nbsp;(or&nbsp;lack&nbsp;of),&nbsp;the&nbsp;menus
+and&nbsp;dialogs&nbsp;would&nbsp;look&nbsp;the&nbsp;same.
+<br><b>bryce:</b>&nbsp;you&nbsp;have&nbsp;a&nbsp;binary&nbsp;connection,&nbsp;se
+nd&nbsp;bytes? <br><b>bryce:</b>&nbsp;true
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;should&nbsp;just&nbsp;do&nbsp;t
+he&nbsp;dialogs&nbsp;in&nbsp;XML&nbsp;one&nbsp;way&nbsp;or&nbsp;the&nbsp;other
+<br><b>Psyon:</b>&nbsp;then&nbsp;we&nbsp;dont&nbsp;have&nbsp;to&nbsp;worry&nbsp;
+about&nbsp;crossplatform&nbsp;toolkits <br><b>uninet:</b>&nbsp;Exactly.
+<br><b>uninet:</b>&nbsp;Then&nbsp;the&nbsp;best&nbsp;toolkit&nbsp;for&nbsp;each&
+nbsp;platform&nbsp;could&nbsp;be&nbsp;used,&nbsp;rather&nbsp;than
+simply&nbsp;the&nbsp;lowest&nbsp;common&nbsp;denominator.
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>bryce:</b>&nbsp;you&nbsp;do&nbsp;have&nbsp;to&nbsp;worry&nbsp;about&nbsp;
+writing&nbsp;a&nbsp;general&nbsp;form&nbsp;viewer&nbsp;for&nbsp;every
+platform,&nbsp;which&nbsp;is&nbsp;not&nbsp;exactly&nbsp;simple
+<br><b>Psyon:</b>&nbsp;Hmm...
+<br><b>bryce:</b>&nbsp;nor,&nbsp;one&nbsp;might&nbsp;argue,&nbsp;in&nbsp;the&nbs
+p;realm&nbsp;of&nbsp;bochs&nbsp;development&nbsp;at&nbsp;all&nbsp;:)
+<br><b>uninet:</b>&nbsp;True...
+<br><b>bryce:</b>&nbsp;maybe&nbsp;we&nbsp;should&nbsp;FIND&nbsp;one&nbsp;rather&
+nbsp;than&nbsp;write&nbsp;one
+<br><b>uninet:</b>&nbsp;Well,&nbsp;you&nbsp;could&nbsp;port&nbsp;the&nbsp;existi
+ng&nbsp;GUI&nbsp;to&nbsp;this&nbsp;system&nbsp;(without
+configs),&nbsp;and&nbsp;then&nbsp;as&nbsp;voluteers&nbsp;appears&nbsp;willing&nb
+sp;to&nbsp;create&nbsp;an&nbsp;"enhanced
+viewer"&nbsp;it&nbsp;could&nbsp;become&nbsp;available.
+<br><b>Psyon:</b>&nbsp;we&nbsp;could&nbsp;make&nbsp;our&nbsp;own&nbsp;toolkit
+<br><b>bryce:</b>&nbsp;aaaaaaaaah <br><b>uninet:</b>&nbsp;:-)
+<br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Well,&nbsp;unless&nbsp;we&nbsp;make&nbsp;our&nbsp;own&nb
+sp;toolkit,&nbsp;BTK&nbsp;(?),&nbsp;or&nbsp;keep&nbsp;bochs
+toolkit-independant&nbsp;(where&nbsp;it&nbsp;uses&nbsp;the&nbsp;best&nbsp;gui&nb
+sp;for&nbsp;each&nbsp;platform)...
+<br><b>Psyon:</b>&nbsp;You&nbsp;know...&nbsp;the&nbsp;whole&nbsp;cross&nbsp;plat
+form&nbsp;thing&nbsp;is&nbsp;what&nbsp;is&nbsp;making&nbsp;this&nbsp;hard
+<br><b>uninet:</b>&nbsp;...there&nbsp;are&nbsp;going&nbsp;to&nbsp;be&nbsp;platfo
+rm&nbsp;limitations&nbsp;based&nbsp;on&nbsp;the&nbsp;toolkit.
+<br><b>Psyon:</b>&nbsp;I&nbsp;can&nbsp;think&nbsp;of&nbsp;a&nbsp;hundred&nbsp;wa
+ys&nbsp;to&nbsp;just&nbsp;do&nbsp;it&nbsp;in&nbsp;windows
+<br><b>uninet:</b>&nbsp;Yup. <br><b>bryce:</b>&nbsp;yup.
+<br><b>bryce:</b>&nbsp;what&nbsp;is&nbsp;wrong&nbsp;with&nbsp;making&nbsp;the&nb
+sp;XML&nbsp;viewer&nbsp;in&nbsp;wxWindows&nbsp;which&nbsp;runs&nbsp;on
+tons&nbsp;of&nbsp;platforms&nbsp;already?
+<br><b>uninet:</b>&nbsp;That&nbsp;would&nbsp;be&nbsp;a&nbsp;good&nbsp;idea.
+<br><b>uninet:</b>&nbsp;We&nbsp;could&nbsp;always&nbsp;aim&nbsp;to&nbsp;have&nbs
+p;more&nbsp;viewers&nbsp;(using&nbsp;other&nbsp;toolkits)&nbsp;later
+on...&nbsp;but&nbsp;that&nbsp;would&nbsp;get&nbsp;the&nbsp;ball&nbsp;rolling.
+<br><b>Psyon:</b>&nbsp;how&nbsp;does&nbsp;wxWindows&nbsp;look?
+<br><b>bryce:</b>&nbsp;no&nbsp;idea
+<br><b>uninet:</b>&nbsp;I&nbsp;think&nbsp;it&nbsp;looks&nbsp;like&nbsp;Windows&n
+bsp;in&nbsp;Windows,&nbsp;Motif&nbsp;or&nbsp;GTK&nbsp;in&nbsp;*nix...
+<br><b>Psyon:</b>&nbsp;if&nbsp;the&nbsp;page&nbsp;will&nbsp;load
+<br><b>bryce:</b>&nbsp;http://www.wxwindows.org/
+<br><b>uninet:</b>&nbsp;http://www.wxwindows.org/samples.htm
+<br><b>Psyon:</b>&nbsp;ok <br><b>Psyon:</b>&nbsp;that&nbsp;looks&nbsp;ok
+<br><b>Psyon:</b>&nbsp;I&nbsp;guess
+<br><b>Psyon:</b>&nbsp;we&nbsp;can&nbsp;always&nbsp;mod&nbsp;it
+<br><b>bryce:</b>&nbsp;it&nbsp;looks&nbsp;good&nbsp;to&nbsp;me,&nbsp;but&nbsp;I&
+nbsp;haven't&nbsp;seen&nbsp;the&nbsp;API
+<br><b>Psyon:</b>&nbsp;and&nbsp;it&nbsp;runs&nbsp;on&nbsp;mac
+<br><b>bryce:</b>&nbsp;but&nbsp;it's&nbsp;open&nbsp;source,&nbsp;C,&nbsp;and&nbs
+p;cross&nbsp;platform,&nbsp;that's&nbsp;a&nbsp;very&nbsp;good start
+<br><b>uninet:</b>&nbsp;It&nbsp;ain't&nbsp;beatiful,&nbsp;but&nbsp;if&nbsp;other
+&nbsp;GUI's&nbsp;could&nbsp;be&nbsp;written&nbsp;on&nbsp;the&nbsp;XML
+framework,&nbsp;that&nbsp;wouldn't&nbsp;be&nbsp;a&nbsp;problem...
+<br><b>Psyon:</b>&nbsp;If&nbsp;QT&nbsp;was&nbsp;opensource&nbsp;on&nbsp;all&nbsp
+;platforms <br><b>Psyon:</b>&nbsp;I&nbsp;would&nbsp;go&nbsp;for&nbsp;that
+<br><b>Psyon:</b>&nbsp;it&nbsp;has&nbsp;an&nbsp;XML&nbsp;renderer&nbsp;and&nbsp;
+everything
+<br><b>uninet:</b>&nbsp;I&nbsp;hear&nbsp;it&nbsp;wouldn't&nbsp;be&nbsp;hard&nbsp
+;to&nbsp;get&nbsp;QT-free&nbsp;to&nbsp;work&nbsp;in&nbsp;Windows...
+<br><b>Psyon:</b>&nbsp;Ive&nbsp;gotten&nbsp;it&nbsp;to&nbsp;work
+<br><b>Psyon:</b>&nbsp;but&nbsp;it&nbsp;requires&nbsp;an&nbsp;X&nbsp;server
+<br><b>uninet:</b>&nbsp;Really? <br><b>uninet:</b>&nbsp;Oh.
+<br><b>Psyon:</b>&nbsp;That&nbsp;is&nbsp;one&nbsp;of&nbsp;my&nbsp;other&nbsp;pro
+jects
+<br><b>Psyon:</b>&nbsp;I&nbsp;found&nbsp;some&nbsp;code&nbsp;on&nbsp;the&nbsp;MS
+&nbsp;FTP
+<br><b>bryce:</b>&nbsp;at&nbsp;the&nbsp;risk&nbsp;of&nbsp;being&nbsp;the&nbsp;de
+vil's&nbsp;advocate&nbsp;all&nbsp;the&nbsp;time:&nbsp;&nbsp;why&nbsp;not&nbsp;wr
+ite
+gui/wxWindows.cc&nbsp;and&nbsp;compile&nbsp;it&nbsp;directly&nbsp;into&nbsp;boch
+s?&nbsp;&nbsp;Would&nbsp;this&nbsp;not&nbsp;be&nbsp;a
+great&nbsp;starting&nbsp;point?
+<br><b>Psyon:</b>&nbsp;that&nbsp;maps&nbsp;some&nbsp;Xlib&nbsp;functions&nbsp;to
+&nbsp;Win32&nbsp;API
+<br><b>uninet:</b>&nbsp;According&nbsp;to&nbsp;Mosfet&nbsp;(of&nbsp;KDE),&nbsp;i
+t&nbsp;shouldn't&nbsp;be&nbsp;to&nbsp;hard&nbsp;to&nbsp;make&nbsp;it&nbsp;work
+like&nbsp;TrollTech's&nbsp;QT&nbsp;for&nbsp;windows,&nbsp;since&nbsp;they&nbsp;a
+re&nbsp;both&nbsp;from&nbsp;the&nbsp;same&nbsp;codebase.
+<br><b>Psyon:</b>&nbsp;and&nbsp;I&nbsp;was&nbsp;working&nbsp;with&nbsp;that&nbsp
+;too
+<br><b>Psyon:</b>&nbsp;Uninet:&nbsp;http://www.sourceforge.net/projects/kde-cygw
+in <br><b>bryce:</b>&nbsp;well&nbsp;ok&nbsp;not&nbsp;a&nbsp;great&nbsp;one
+<br><b>Psyon:</b>&nbsp;that&nbsp;guy&nbsp;talks&nbsp;about&nbsp;the&nbsp;problem
+s&nbsp;with&nbsp;compiling&nbsp;KDE&nbsp;on&nbsp;windows
+<br><b>Psyon:</b>&nbsp;bryce:&nbsp;that&nbsp;is&nbsp;a&nbsp;good&nbsp;start&nbsp
+;yes
+<br><b>Psyon:</b>&nbsp;that&nbsp;is&nbsp;what&nbsp;we&nbsp;need&nbsp;is&nbsp;a&n
+bsp;start
+<br><b>uninet:</b>&nbsp;If&nbsp;you&nbsp;compiled&nbsp;the&nbsp;wxWindows&nbsp;d
+irectly&nbsp;into&nbsp;Bochs,&nbsp;wouldn't&nbsp;that
+limit&nbsp;the&nbsp;expansion&nbsp;into&nbsp;other&nbsp;toolkits?
+<br><b>Psyon:</b>&nbsp;ok...&nbsp;have&nbsp;you&nbsp;guys&nbsp;looked&nbsp;at&nb
+sp;the&nbsp;bochs&nbsp;GUI&nbsp;functions&nbsp;yet?&nbsp;&nbsp;like
+tile_update,&nbsp;create_bitmap,&nbsp;text_unpdate?
+<br><b>uninet:</b>&nbsp;Wow!&nbsp;Don,&nbsp;I&nbsp;didn't&nbsp;know&nbsp;you&nbs
+p;were&nbsp;working&nbsp;on&nbsp;kde-cygwin!&nbsp;I&nbsp;just&nbsp;read
+about&nbsp;that&nbsp;at&nbsp;KDE's&nbsp;The&nbsp;Dot&nbsp;the&nbsp;other&nbsp;da
+y. <br><b>Psyon:</b>&nbsp;any&nbsp;of&nbsp;them?
+<br><b>Psyon:</b>&nbsp;Im&nbsp;not&nbsp;working&nbsp;on&nbsp;that
+<br><b>Psyon:</b>&nbsp;thats&nbsp;not&nbsp;my&nbsp;projects
+<br><b>Psyon:</b>&nbsp;I&nbsp;have&nbsp;been&nbsp;doing&nbsp;the&nbsp;same&nbsp;
+thing <br><b>Psyon:</b>&nbsp;but&nbsp;thats&nbsp;not&nbsp;mine
+<br><b>bryce:</b>&nbsp;no&nbsp;I&nbsp;haven't
+<br><b>uninet:</b>&nbsp;Oh,&nbsp;I&nbsp;saw&nbsp;you&nbsp;are&nbsp;the&nbsp;deve
+loper&nbsp;list&nbsp;and&nbsp;assumed&nbsp;you&nbsp;were.
+<br><b>Psyon:</b>&nbsp;I&nbsp;am? <br><b>Psyon:</b>&nbsp;He&nbsp;added&nbsp;me?
+<br><b>bryce:</b>&nbsp;haha <br><b>uninet:</b>&nbsp;Yup.
+<br><b>uninet:</b>&nbsp;You&nbsp;are.
+<br><b>uninet:</b>&nbsp;http://sourceforge.net/project/memberlist.php?group_id=2
+7249 <br><b>Psyon:</b>&nbsp;oh
+<br><b>uninet:</b>&nbsp;Nothing&nbsp;like&nbsp;being&nbsp;on&nbsp;a&nbsp;project
+&nbsp;without&nbsp;being&nbsp;told&nbsp;about&nbsp;it,&nbsp;huh?&nbsp;;-)
+<br><b>Psyon:</b>&nbsp;ok <br><b>Psyon:</b>&nbsp;:)
+<br><b>Psyon:</b>&nbsp;I&nbsp;emailed&nbsp;the&nbsp;guy&nbsp;a&nbsp;few&nbsp;tim
+es
+<br><b>Psyon:</b>&nbsp;and&nbsp;discussed&nbsp;some&nbsp;things&nbsp;with&nbsp;h
+im
+<br><b>Psyon:</b>&nbsp;that&nbsp;is&nbsp;what&nbsp;takes&nbsp;up&nbsp;a&nbsp;lot
+&nbsp;of&nbsp;my&nbsp;time
+<br><b>Psyon:</b>&nbsp;im&nbsp;fighting&nbsp;against&nbsp;MS&nbsp;in&nbsp;my&nbs
+p;own&nbsp;way <br><b>uninet:</b>&nbsp;:-)
+<br><b>Psyon:</b>&nbsp;I&nbsp;figure&nbsp;by&nbsp;making&nbsp;KDE&nbsp;(or&nbsp;
+more&nbsp;importantly,&nbsp;Konqueror
+<br><b>bryce:</b>&nbsp;aren't&nbsp;we&nbsp;all.
+<br><b>Psyon:</b>&nbsp;)&nbsp;run&nbsp;in&nbsp;windows
+<br><b>Psyon:</b>&nbsp;that&nbsp;strikes&nbsp;a&nbsp;blow&nbsp;against&nbsp;IE
+<br><b>Psyon:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;I'd&nbsp;love&nbsp;to&nbsp;see&nbsp;Konqi&nbsp;in&nbsp;W
+indows.
+<br><b>uninet:</b>&nbsp;How's&nbsp;it&nbsp;going&nbsp;with&nbsp;that&nbsp;projec
+t? <br><b>Psyon:</b>&nbsp;Its&nbsp;going&nbsp;ok
+<br><b>Psyon:</b>&nbsp;I&nbsp;mostly&nbsp;was&nbsp;trying&nbsp;to&nbsp;make&nbsp
+;QT/Free&nbsp;compile&nbsp;in&nbsp;cygwin
+<br><b>Psyon:</b>&nbsp;which&nbsp;I&nbsp;did&nbsp;fine&nbsp;as&nbsp;a&nbsp;stati
+c&nbsp;lib
+<br><b>Psyon:</b>&nbsp;but&nbsp;had&nbsp;troubles&nbsp;making&nbsp;shared
+<br><b>Psyon:</b>&nbsp;but&nbsp;Ralf&nbsp;succeeded&nbsp;where&nbsp;I&nbsp;faile
+d <br><b>Psyon:</b>&nbsp;and&nbsp;got&nbsp;that&nbsp;to&nbsp;work
+<br><b>uninet:</b>&nbsp;So,&nbsp;would&nbsp;it&nbsp;be&nbsp;hard&nbsp;to&nbsp;ge
+t&nbsp;QT/Free&nbsp;to&nbsp;work&nbsp;well&nbsp;enough&nbsp;in&nbsp;Windows
+that&nbsp;it&nbsp;could&nbsp;be&nbsp;used&nbsp;for&nbsp;the&nbsp;Bochs&nbsp;tool
+kit?
+<br><b>Psyon:</b>&nbsp;It&nbsp;will&nbsp;work&nbsp;with&nbsp;an&nbsp;X&nbsp;serv
+er&nbsp;now
+<br><b>Psyon:</b>&nbsp;as&nbsp;to&nbsp;make&nbsp;it&nbsp;work&nbsp;without&nbsp;
+one <br><b>Psyon:</b>&nbsp;im&nbsp;looking&nbsp;into&nbsp;it
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;know&nbsp;exactly&nbsp;how&nbsp;dependan
+t&nbsp;QT/Free&nbsp;is&nbsp;on&nbsp;X
+<br><b>Psyon:</b>&nbsp;Its&nbsp;a&nbsp;lot&nbsp;of&nbsp;code&nbsp;to&nbsp;look&n
+bsp;over
+<br><b>Psyon:</b>&nbsp;I&nbsp;know&nbsp;they&nbsp;tried&nbsp;to&nbsp;keep&nbsp;i
+s&nbsp;as&nbsp;OS&nbsp;independant&nbsp;as&nbsp;possible
+<br><b>uninet:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;me&nbsp;QT&nbsp;would&nbsp;be
+&nbsp;better&nbsp;than&nbsp;wxWindows&nbsp;in&nbsp;that&nbsp;you&nbsp;would
+also&nbsp;add&nbsp;QT/Embedded&nbsp;(which&nbsp;comes&nbsp;in&nbsp;a&nbsp;"free"
+&nbsp;version)&nbsp;to&nbsp;the&nbsp;platforms&nbsp;Bochs
+could&nbsp;run&nbsp;on...
+<br><b>Psyon:</b>&nbsp;QT/Embedded&nbsp;draws&nbsp;directly&nbsp;to&nbsp;the&nbs
+p;FrameBuffer&nbsp;of&nbsp;your&nbsp;graphics&nbsp;card
+<br><b>Psyon:</b>&nbsp;and&nbsp;wouldnt&nbsp;work&nbsp;in&nbsp;windows
+<br><b>bryce:</b>&nbsp;not&nbsp;being&nbsp;free&nbsp;is&nbsp;a&nbsp;big&nbsp;pro
+blem&nbsp;though,&nbsp;as&nbsp;good&nbsp;as&nbsp;QT&nbsp;might&nbsp;be
+<br><b>uninet:</b>&nbsp;Have&nbsp;you&nbsp;ever&nbsp;tried&nbsp;talking&nbsp;to&
+nbsp;mosfet&nbsp;about&nbsp;it? <br><b>Psyon:</b>&nbsp;oh
+<br><b>Psyon:</b>&nbsp;nm <br><b>Psyon:</b>&nbsp;mosfet?
+<br><b>uninet:</b>&nbsp;He's&nbsp;at&nbsp;www.mosfet.org.
+<br><b>Psyon:</b>&nbsp;Oh
+<br><b>uninet:</b>&nbsp;He's&nbsp;the&nbsp;one&nbsp;that&nbsp;wrote&nbsp;that&nb
+sp;it&nbsp;wouldn't&nbsp;be&nbsp;hard&nbsp;to&nbsp;port&nbsp;QT/free&nbsp;to
+natively&nbsp;run&nbsp;on&nbsp;windows.
+<br><b>Psyon:</b>&nbsp;the&nbsp;KDE&nbsp;guys <br><b>uninet:</b>&nbsp;yeah.
+<br><b>Psyon:</b>&nbsp;Ive&nbsp;talked&nbsp;to&nbsp;some&nbsp;of&nbsp;them&nbsp;
+about&nbsp;it
+<br><b>uninet:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;me&nbsp;both&nbsp;Bochs&nbsp;
+and&nbsp;KDE&nbsp;could&nbsp;benefit&nbsp;if&nbsp;QT/free&nbsp;worked
+natively&nbsp;under&nbsp;Win32...&nbsp;maybe&nbsp;some&nbsp;of&nbsp;the&nbsp;KDE
+&nbsp;folks&nbsp;could&nbsp;help.&nbsp;:-) <br><b>Psyon:</b>&nbsp;heheh
+<br><b>bryce:</b>&nbsp;hard&nbsp;to&nbsp;see&nbsp;how&nbsp;porting&nbsp;toolkits
+&nbsp;is&nbsp;in&nbsp;the&nbsp;scope&nbsp;of&nbsp;Bochs...
+<br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;this&nbsp;QT&nbsp;must&nbsp;be&nbsp;pretty&nbsp;amazing!
+<br><b>uninet:</b>&nbsp;Well,&nbsp;I&nbsp;was&nbsp;just&nbsp;thinking&nbsp;if&nb
+sp;Don&nbsp;had&nbsp;already&nbsp;been&nbsp;investigating&nbsp;it...
+<br><b>Psyon:</b>&nbsp;QT&nbsp;is&nbsp;nice
+<br><b>uninet:</b>&nbsp;From&nbsp;my&nbsp;limited&nbsp;knowledge&nbsp;of&nbsp;it
+...&nbsp;it&nbsp;is.
+<br><b>Psyon:</b>&nbsp;and&nbsp;has&nbsp;a&nbsp;lot&nbsp;of&nbsp;the&nbsp;functi
+onality&nbsp;we&nbsp;need
+<br><b>bryce:</b>&nbsp;how&nbsp;is&nbsp;it&nbsp;different&nbsp;from&nbsp;other&n
+bsp;GUI&nbsp;toolkits? <br><b>Psyon:</b>&nbsp;HEY!&nbsp;anyways
+<br><b>uninet:</b>&nbsp;It&nbsp;will&nbsp;also&nbsp;most&nbsp;likely&nbsp;be&nbs
+p;the&nbsp;toolkit&nbsp;of&nbsp;the&nbsp;future.&nbsp;Trolltech&nbsp;is
+on&nbsp;an&nbsp;ambitious&nbsp;campaign&nbsp;to&nbsp;make&nbsp;it&nbsp;the&nbsp;
+defacto&nbsp;toolkit&nbsp;used&nbsp;in&nbsp;Universities.
+<br><b>Psyon:</b>&nbsp;back&nbsp;to&nbsp;what&nbsp;I&nbsp;was&nbsp;saying&nbsp;b
+efore!!! <br><b>bryce:</b>&nbsp;ok <br><b>bryce:</b>&nbsp;XML?
+<br><b>uninet:</b>&nbsp;?
+<br><b>Psyon:</b>&nbsp;Before&nbsp;we&nbsp;use&nbsp;QT&nbsp;or&nbsp;wxWindows
+<br><b>Psyon:</b>&nbsp;ok <br><b>Psyon:</b>&nbsp;now
+<br><b>Psyon:</b>&nbsp;as&nbsp;I&nbsp;was&nbsp;saying
+<br><b>Psyon:</b>&nbsp;right&nbsp;now&nbsp;bochs&nbsp;tells&nbsp;teh&nbsp;GUI&nb
+sp;code&nbsp;to&nbsp;add&nbsp;a&nbsp;bitmap&nbsp;to&nbsp;the&nbsp;toolbar
+<br><b>Psyon:</b>&nbsp;got&nbsp;that&nbsp;part? <br><b>Psyon:</b>&nbsp;well...
+<br><b>uninet:</b>&nbsp;yes. <br><b>bryce:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;we&nbsp;would&nbsp;need&nbsp;to&nbsp;add&nbsp;something
+<br><b>Psyon:</b>&nbsp;that&nbsp;tells&nbsp;it&nbsp;to&nbsp;add&nbsp;a&nbsp;menu
+&nbsp;item <br><b>Psyon:</b>&nbsp;or&nbsp;a&nbsp;button
+<br><b>Psyon:</b>&nbsp;or&nbsp;&nbsp;whatever <br><b>uninet:</b>&nbsp;right.
+<br><b>bryce:</b>&nbsp;right.
+<br><b>Psyon:</b>&nbsp;we&nbsp;have&nbsp;to&nbsp;do&nbsp;that&nbsp;before&nbsp;w
+e&nbsp;make&nbsp;it&nbsp;use&nbsp;QT&nbsp;or&nbsp;wxWindows
+<br><b>uninet:</b>&nbsp;I'm&nbsp;still&nbsp;with&nbsp;you&nbsp;there.
+<br><b>Psyon:</b>&nbsp;bx_gui_c::add_menu_item
+<br><b>bryce:</b>&nbsp;I&nbsp;would&nbsp;have&nbsp;said&nbsp;"as"&nbsp;rather&nb
+sp;than&nbsp;"before"
+<br><b>Psyon:</b>&nbsp;then&nbsp;in&nbsp;that&nbsp;function
+<br><b>Psyon:</b>&nbsp;call&nbsp;the&nbsp;TK&nbsp;function&nbsp;to&nbsp;add&nbsp
+;the&nbsp;item
+<br><b>bryce:</b>&nbsp;no&nbsp;way&nbsp;to&nbsp;test&nbsp;it&nbsp;until&nbsp;you
+&nbsp;have&nbsp;something&nbsp;to&nbsp;hook&nbsp;it&nbsp;to,&nbsp;but&nbsp;go&nb
+sp;on <br><b>Psyon:</b>&nbsp;well <br><b>Psyon:</b>&nbsp;yes
+<br><b>uninet:</b>&nbsp;So&nbsp;in&nbsp;essence,&nbsp;this&nbsp;would&nbsp;becom
+e&nbsp;a&nbsp;compatiblity&nbsp;layer&nbsp;between&nbsp;bochs
+and&nbsp;what&nbsp;ever&nbsp;toolkit,&nbsp;right?
+<br><b>Psyon:</b>&nbsp;This&nbsp;keeps&nbsp;the&nbsp;same&nbsp;concept&nbsp;the&
+nbsp;the&nbsp;current&nbsp;GUI&nbsp;structure...&nbsp;but&nbsp;adds
+more&nbsp;functionality <br><b>Psyon:</b>&nbsp;yes
+<br><b>Psyon:</b>&nbsp;and&nbsp;we&nbsp;would&nbsp;d&nbsp;something&nbsp;like&nb
+sp;bx_gui_c::do_dialog()
+<br><b>bryce:</b>&nbsp;right,&nbsp;we&nbsp;need&nbsp;to&nbsp;make&nbsp;the&nbsp;
+C&nbsp;calls&nbsp;look&nbsp;more&nbsp;like&nbsp;the&nbsp;interface
+between&nbsp;bochs&nbsp;and&nbsp;the&nbsp;XML&nbsp;thing&nbsp;will&nbsp;eventual
+ly&nbsp;look <br><b>Psyon:</b>&nbsp;or&nbsp;something
+<br><b>uninet:</b>&nbsp;gotcha.
+<br><b>Psyon:</b>&nbsp;This&nbsp;doesnt&nbsp;push&nbsp;us&nbsp;towards&nbsp;havi
+ng&nbsp;a&nbsp;separate&nbsp;GUI&nbsp;and&nbsp;Emu
+<br><b>Psyon:</b>&nbsp;but&nbsp;It&nbsp;does&nbsp;get&nbsp;us&nbsp;going&nbsp;to
+wards&nbsp;user&nbsp;friendly
+<br><b>Psyon:</b>&nbsp;which&nbsp;I&nbsp;think&nbsp;is&nbsp;more&nbsp;important
+<br><b>bryce:</b>&nbsp;yes <br><b>uninet:</b>&nbsp;right.
+<br><b>Psyon:</b>&nbsp;and&nbsp;again,&nbsp;you&nbsp;could&nbsp;always&nbsp;reco
+mpile&nbsp;with&nbsp;Bochs-RFB&nbsp;:) <br><b>uninet:</b>&nbsp;:-)
+<br><b>Psyon:</b>&nbsp;also...&nbsp;the&nbsp;menu&nbsp;items&nbsp;should&nbsp;no
+t&nbsp;be&nbsp;critical&nbsp;to&nbsp;bochs&nbsp;running
+<br><b>Psyon:</b>&nbsp;incase&nbsp;a&nbsp;GUI&nbsp;cant&nbsp;create&nbsp;them
+<br><b>Psyon:</b>&nbsp;like&nbsp;the&nbsp;curses&nbsp;one
+<br><b>uninet:</b>&nbsp;right.
+<br><b>bryce:</b>&nbsp;sure.&nbsp;&nbsp;(btw,&nbsp;yes&nbsp;rfb&nbsp;is&nbsp;in&
+nbsp;CVS,&nbsp;and&nbsp;in&nbsp;fact&nbsp;in&nbsp;1.2.pre1)
+<br><b>Psyon:</b>&nbsp;oooh...&nbsp;good
+<br><b>Psyon:</b>&nbsp;now&nbsp;I&nbsp;can&nbsp;put&nbsp;Bochs&nbsp;Developer&nb
+sp;on&nbsp;my&nbsp;resume&nbsp;:) <br><b>Psyon:</b>&nbsp;hehehehe
+<br><b>uninet:</b>&nbsp;:-) <br><b>bryce:</b>&nbsp;:)
+<br><b>Psyon:</b>&nbsp;http://www.psyon.org/resume/index.html&nbsp;<br><b>---&nb
+sp;well&nbsp;it&nbsp;needs&nbsp;some&nbsp;spicing up
+<br><b>uninet:</b>&nbsp;a&nbsp;good&nbsp;thing&nbsp;considering&nbsp;we&nbsp;are
+&nbsp;still&nbsp;in&nbsp;the&nbsp;No.&nbsp;2&nbsp;slot&nbsp;on&nbsp;SF.
+<br><b>Psyon:</b>&nbsp;I&nbsp;suck&nbsp;at&nbsp;resumes.
+<br><b>Psyon:</b>&nbsp;I&nbsp;dont&nbsp;like&nbsp;to&nbsp;look&nbsp;at&nbsp;that
+<br><b>Psyon:</b>&nbsp;but&nbsp;anways
+<br><b>Psyon:</b>&nbsp;so&nbsp;what&nbsp;would&nbsp;we&nbsp;need&nbsp;implemente
+d...&nbsp;add_menu_item,&nbsp;show_dialog, add_button?
+<br><b>Psyon:</b>&nbsp;something&nbsp;along&nbsp;those&nbsp;lines?
+<br><b>uninet:</b>&nbsp;Sounds&nbsp;good&nbsp;to&nbsp;me...
+<br><b>bryce:</b>&nbsp;well&nbsp;are&nbsp;we&nbsp;going&nbsp;toward&nbsp;XML&nbs
+p;already,&nbsp;or&nbsp;waiting&nbsp;until&nbsp;later?
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;your&nbsp;resume&nbsp;actually&nbsp;looks&nb
+sp;good.
+<br><b>Psyon:</b>&nbsp;The&nbsp;layout&nbsp;is&nbsp;good...&nbsp;the&nbsp;conten
+t&nbsp;sucks <br><b>Psyon:</b>&nbsp;hmm...
+<br><b>uninet:</b>&nbsp;It&nbsp;seems&nbsp;to&nbsp;me,&nbsp;if&nbsp;you&nbsp;can
+&nbsp;do&nbsp;it&nbsp;with&nbsp;something&nbsp;simpler&nbsp;than&nbsp;XML,&nbsp;
+why not?
+<br><b>Psyon:</b>&nbsp;bryce:&nbsp;if&nbsp;we&nbsp;are&nbsp;keeping&nbsp;the&nbs
+p;current&nbsp;way&nbsp;of&nbsp;doing&nbsp;the&nbsp;GUI
+<br><b>Psyon:</b>&nbsp;lets&nbsp;wait&nbsp;till&nbsp;later
+<br><b>Psyon:</b>&nbsp;Well... <br><b>Psyon:</b>&nbsp;hmm...
+<br><b>bryce:</b>&nbsp;yeah,&nbsp;it's&nbsp;tricky
+<br><b>Psyon:</b>&nbsp;then&nbsp;how&nbsp;should&nbsp;we&nbsp;do&nbsp;dialogs
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;will&nbsp;have&nbsp;to
+<br><b>Psyon:</b>&nbsp;to&nbsp;do&nbsp;the&nbsp;dialogs
+<br><b>uninet:</b>&nbsp;Couldn't&nbsp;XML&nbsp;be&nbsp;sandwiched&nbsp;in&nbsp;a
+s&nbsp;an&nbsp;additional&nbsp;layer,&nbsp;if&nbsp;it&nbsp;was&nbsp;ever needed?
+<br><b>Psyon:</b>&nbsp;well...&nbsp;again...&nbsp;if&nbsp;this&nbsp;was&nbsp;all
+&nbsp;os&nbsp;specific,&nbsp;we&nbsp;could&nbsp;have&nbsp;each&nbsp;GUI
+with&nbsp;its&nbsp;own&nbsp;menu,&nbsp;and&nbsp;its&nbsp;own&nbsp;dialogs
+<br><b>Psyon:</b>&nbsp;I&nbsp;think&nbsp;we&nbsp;will&nbsp;have&nbsp;to&nbsp;loo
+k&nbsp;into&nbsp;XML <br><b>Psyon:</b>&nbsp;to&nbsp;do&nbsp;the&nbsp;dialogs
+<br><b>bryce:</b>&nbsp;yes,&nbsp;and&nbsp;I&nbsp;wonder&nbsp;if&nbsp;that's&nbsp
+;even&nbsp;the&nbsp;best&nbsp;way&nbsp;to&nbsp;do&nbsp;it...later.
+<br><b>Psyon:</b>&nbsp;Unless!
+<br><b>Psyon:</b>&nbsp;we&nbsp;do&nbsp;a&nbsp;separate&nbsp;function&nbsp;for&nb
+sp;each&nbsp;needed&nbsp;dialog
+<br><b>bryce:</b>&nbsp;once&nbsp;you&nbsp;have&nbsp;3&nbsp;dialogs&nbsp;coded&nb
+sp;in&nbsp;your&nbsp;new&nbsp;toolkit <br><b>Psyon:</b>&nbsp;show_config
+<br><b>Psyon:</b>&nbsp;hmm...
+<br><b>bryce:</b>&nbsp;it&nbsp;will&nbsp;then&nbsp;be&nbsp;easy&nbsp;to&nbsp;wri
+te&nbsp;XML&nbsp;that&nbsp;can&nbsp;reproduce&nbsp;those&nbsp;dialogs
+<br><b>bryce:</b>&nbsp;but&nbsp;without&nbsp;any&nbsp;examples&nbsp;to&nbsp;work
+&nbsp;from,&nbsp;you&nbsp;have&nbsp;a&nbsp;very&nbsp;general,&nbsp;very
+hard&nbsp;task&nbsp;in&nbsp;writing&nbsp;the&nbsp;XML&nbsp;parser
+<br><b>bryce:</b>&nbsp;without&nbsp;any&nbsp;XML&nbsp;code&nbsp;to&nbsp;try&nbsp
+;it&nbsp;with
+<br><b>uninet:</b>&nbsp;At&nbsp;the&nbsp;risk&nbsp;of&nbsp;sounding&nbsp;stupid,
+&nbsp;what&nbsp;would&nbsp;be&nbsp;the&nbsp;advantage&nbsp;of&nbsp;XML
+over&nbsp;sending&nbsp;the&nbsp;info&nbsp;without&nbsp;XML?
+<br><b>Psyon:</b>&nbsp;we&nbsp;could&nbsp;do,&nbsp;show_config()&nbsp;show_chang
+e_disk()&nbsp;and&nbsp;stuff&nbsp;like&nbsp;that
+<br><b>bryce:</b>&nbsp;(not&nbsp;writing&nbsp;the&nbsp;xml&nbsp;parser)
+<br><b>Psyon:</b>&nbsp;XML&nbsp;is&nbsp;a&nbsp;standard
+<br><b>Psyon:</b>&nbsp;well...&nbsp;what&nbsp;would&nbsp;be&nbsp;better
+<br><b>Psyon:</b>&nbsp;having&nbsp;one&nbsp;function&nbsp;called&nbsp;to&nbsp;sh
+ow&nbsp;all&nbsp;dialogs
+<br><b>uninet:</b>&nbsp;True...&nbsp;but&nbsp;would&nbsp;that&nbsp;necessarily&n
+bsp;be&nbsp;beneficial&nbsp;in&nbsp;this&nbsp;case?
+<br><b>Psyon:</b>&nbsp;or&nbsp;a&nbsp;separate&nbsp;one&nbsp;for&nbsp;each
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;doing&nbsp;show_config()&nbsp;and&nbsp;
+show_change_disk()&nbsp;is&nbsp;a&nbsp;good&nbsp;start
+<br><b>uninet:</b>&nbsp;me&nbsp;too.
+<br><b>Psyon:</b>&nbsp;so&nbsp;a&nbsp;separate&nbsp;one
+<br><b>Psyon:</b>&nbsp;and&nbsp;when&nbsp;we&nbsp;call&nbsp;add_menu_item&nbsp;(
+or&nbsp;whatever)&nbsp;it&nbsp;will&nbsp;contain&nbsp;a
+function&nbsp;pointer...&nbsp;which&nbsp;coudl&nbsp;be&nbsp;a&nbsp;pointer&nbsp;
+to&nbsp;show_blah_dialog&nbsp;directly <br><b>uninet:</b>&nbsp;right...
+<br><b>bryce:</b>&nbsp;something&nbsp;like&nbsp;that <br><b>Psyon:</b>&nbsp;ok
+<br><b>bryce:</b>&nbsp;that&nbsp;will&nbsp;get&nbsp;us&nbsp;going
+<br><b>Psyon:</b>&nbsp;so&nbsp;who&nbsp;is&nbsp;in&nbsp;chareg&nbsp;of&nbsp;gett
+ing&nbsp;this&nbsp;started&nbsp;:) <br><b>Psyon:</b>&nbsp;hehehe
+<br><b>Psyon:</b>&nbsp;Im&nbsp;guessing&nbsp;im&nbsp;the&nbsp;candidate?
+<br><b>uninet:</b>&nbsp;Idea:&nbsp;for&nbsp;an&nbsp;XML&nbsp;parser&nbsp;(if&nbs
+p;needed)&nbsp;could&nbsp;you&nbsp;take&nbsp;the&nbsp;one&nbsp;out&nbsp;of&nbsp;
+QT and&nbsp;make&nbsp;it&nbsp;independant?
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;once&nbsp;we&nbsp;have&nbsp;some&nbsp;c
+oncrete&nbsp;examples&nbsp;of&nbsp;dialogs,&nbsp;it&nbsp;will&nbsp;be
+much&nbsp;more&nbsp;clear&nbsp;what&nbsp;the&nbsp;XML&nbsp;should&nbsp;look&nbsp
+;like. <br><b>uninet:</b>&nbsp;I&nbsp;vote&nbsp;for&nbsp;you.
+<br><b>Psyon:</b>&nbsp;uni:&nbsp;ive&nbsp;been&nbsp;thinking&nbsp;of&nbsp;that&n
+bsp;already <br><b>uninet:</b>&nbsp;(psyon) <br><b>bryce:</b>&nbsp;:)
+<br><b>uninet:</b>&nbsp;Psyon:&nbsp;we&nbsp;seem&nbsp;to&nbsp;be&nbsp;thinking&n
+bsp;along&nbsp;the&nbsp;same&nbsp;lines&nbsp;a&nbsp;lot&nbsp;tonight.
+<br><b>Psyon:</b>&nbsp;I&nbsp;will&nbsp;warn&nbsp;you&nbsp;guys&nbsp;that&nbsp;I
+&nbsp;will&nbsp;be&nbsp;out&nbsp;of&nbsp;town&nbsp;from&nbsp;the&nbsp;8th&nbsp;t
+ill&nbsp;the 14th&nbsp;of&nbsp;june <br><b>Psyon:</b>&nbsp;hehe
+<br><b>bryce:</b>&nbsp;I&nbsp;guess&nbsp;it&nbsp;better&nbsp;be&nbsp;done&nbsp;b
+y&nbsp;the&nbsp;8th&nbsp;then&nbsp;;-) <br><b>Psyon:</b>&nbsp;Umm...
+<br><b>Psyon:</b>&nbsp;i&nbsp;doubt&nbsp;it
+<br><b>Psyon:</b>&nbsp;maybe&nbsp;a&nbsp;start
+<br><b>Psyon:</b>&nbsp;but&nbsp;not&nbsp;finished
+<br><b>uninet:</b>&nbsp;Sounds&nbsp;like&nbsp;a&nbsp;good&nbsp;idea...&nbsp;that
+'s&nbsp;a&nbsp;whole&nbsp;9&nbsp;days!
+<br><b>Psyon:</b>&nbsp;the&nbsp;functions&nbsp;them&nbsp;selves&nbsp;wont&nbsp;b
+e&nbsp;hard&nbsp;to&nbsp;add
+<br><b>Psyon:</b>&nbsp;its&nbsp;the&nbsp;dialogs&nbsp;that&nbsp;will&nbsp;be&nbs
+p;a&nbsp;pain <br><b>bryce:</b>&nbsp;right
+<br><b>uninet:</b>&nbsp;And&nbsp;the&nbsp;dialogs&nbsp;themselves&nbsp;will&nbsp
+;require&nbsp;settling&nbsp;on&nbsp;a&nbsp;starting&nbsp;point GUI,&nbsp;right?
+<br><b>bryce:</b>&nbsp;if&nbsp;we&nbsp;are&nbsp;using&nbsp;CVS,&nbsp;it's&nbsp;m
+uch&nbsp;easier&nbsp;to&nbsp;collaborate
+<br><b>uninet:</b>&nbsp;(or&nbsp;rather&nbsp;toolkit)
+<br><b>bryce:</b>&nbsp;so&nbsp;that&nbsp;one&nbsp;person&nbsp;doesn't&nbsp;have&
+nbsp;to&nbsp;do&nbsp;everything&nbsp;alone&nbsp;and&nbsp;send&nbsp;a&nbsp;diff
+when&nbsp;he's&nbsp;done
+<br><b>Psyon:</b>&nbsp;the&nbsp;current&nbsp;calls&nbsp;to&nbsp;create&nbsp;the&
+nbsp;toolbar&nbsp;are&nbsp;hard&nbsp;coded
+<br><b>Psyon:</b>&nbsp;so&nbsp;this&nbsp;wont&nbsp;be&nbsp;hard&nbsp;at&nbsp;all
+&nbsp;to&nbsp;implement&nbsp;the&nbsp;stufs <br><b>Psyon:</b>&nbsp;stubs
+<br><b>uninet:</b>&nbsp;So,&nbsp;you&nbsp;could&nbsp;stick&nbsp;with&nbsp;the&nb
+sp;hardcoded&nbsp;with&nbsp;the&nbsp;new&nbsp;implementation
+until&nbsp;you&nbsp;settled&nbsp;on&nbsp;a&nbsp;toolkit(s)?
+<br><b>Psyon:</b>&nbsp;yes
+<br><b>bryce:</b>&nbsp;do&nbsp;you&nbsp;think&nbsp;we&nbsp;should&nbsp;leave&nbs
+p;the&nbsp;icons&nbsp;alone&nbsp;for&nbsp;now?
+<br><b>bryce:</b>&nbsp;maybe&nbsp;that&nbsp;was&nbsp;the&nbsp;same&nbsp;question
+<br><b>Psyon:</b>&nbsp;My&nbsp;one&nbsp;problem&nbsp;here&nbsp;is&nbsp;how&nbsp;
+do&nbsp;different&nbsp;toolkits&nbsp;handle&nbsp;sub&nbsp;menus?
+<br><b>Psyon:</b>&nbsp;icons&nbsp;are&nbsp;staying&nbsp;for&nbsp;now
+<br><b>bryce:</b>&nbsp;ok
+<br><b>uninet:</b>&nbsp;I'd&nbsp;be&nbsp;happy&nbsp;to&nbsp;make&nbsp;new&nbsp;i
+cons&nbsp;(if&nbsp;you&nbsp;want)&nbsp;but&nbsp;perhaps&nbsp;we&nbsp;should
+wait&nbsp;until&nbsp;something&nbsp;like&nbsp;wxWindows&nbsp;or&nbsp;QT&nbsp;com
+es&nbsp;into&nbsp;the&nbsp;picture...
+<br><b>Psyon:</b>&nbsp;Probably&nbsp;just&nbsp;change&nbsp;that&nbsp;over&nbsp;t
+o&nbsp;a&nbsp;toolbar&nbsp;with&nbsp;buttons&nbsp;later
+<br><b>bryce:</b>&nbsp;I&nbsp;think&nbsp;between&nbsp;the&nbsp;two&nbsp;we&nbsp;
+should&nbsp;at&nbsp;least&nbsp;try&nbsp;wxWindows&nbsp;since&nbsp;it
+already&nbsp;runs&nbsp;on&nbsp;win32
+<br><b>bryce:</b>&nbsp;(without&nbsp;hacking&nbsp;necessary)
+<br><b>Psyon:</b>&nbsp;heheh
+<br><b>uninet:</b>&nbsp;true.&nbsp;The&nbsp;beauty&nbsp;of&nbsp;this&nbsp;system
+&nbsp;is&nbsp;that&nbsp;QT&nbsp;would&nbsp;still&nbsp;be&nbsp;an&nbsp;option
+for&nbsp;an&nbsp;additional&nbsp;GUI&nbsp;afterwards..
+<br><b>bryce:</b>&nbsp;one&nbsp;of&nbsp;the&nbsp;best&nbsp;benefits&nbsp;of&nbsp
+;separation&nbsp;of&nbsp;bochs&nbsp;and&nbsp;GUI&nbsp;is&nbsp;that&nbsp;they
+can&nbsp;be&nbsp;_developed_&nbsp;independently <br><b>Psyon:</b>&nbsp;Yes
+<br><b>uninet:</b>&nbsp;that's&nbsp;very&nbsp;true.
+<br><b>bryce:</b>&nbsp;since&nbsp;the&nbsp;dialog&nbsp;code&nbsp;is&nbsp;the&nbs
+p;hard&nbsp;part,&nbsp;and&nbsp;connecting&nbsp;it&nbsp;to&nbsp;bochs&nbsp;is
+easy
+<br><b>bryce:</b>&nbsp;let's&nbsp;work&nbsp;together&nbsp;on&nbsp;the&nbsp;first
+&nbsp;few&nbsp;dialogs
+<br><b>Psyon:</b>&nbsp;Ok&nbsp;guys,&nbsp;hate&nbsp;to&nbsp;do&nbsp;this
+<br><b>Psyon:</b>&nbsp;but&nbsp;I&nbsp;need&nbsp;sleep
+<br><b>bryce:</b>&nbsp;sleep?? <br><b>uninet:</b>&nbsp;What's&nbsp;that?
+<br><b>Psyon:</b>&nbsp;My&nbsp;fiance&nbsp;is&nbsp;already&nbsp;pissed&nbsp;that
+&nbsp;I&nbsp;didnt&nbsp;go&nbsp;to&nbsp;bed&nbsp;with&nbsp;her&nbsp;earlier
+<br><b>Psyon:</b>&nbsp;:) <br><b>bryce:</b>&nbsp;*nod*
+<br><b>Psyon:</b>&nbsp;I&nbsp;will&nbsp;work&nbsp;out&nbsp;a&nbsp;menu&nbsp;func
+tion <br><b>Psyon:</b>&nbsp;in&nbsp;the&nbsp;morning&nbsp;or&nbsp;when&nbsp;ever
+<br><b>uninet:</b>&nbsp;Hmm...&nbsp;man&nbsp;sleep&nbsp;says:&nbsp;"sleep&nbsp;-
+&nbsp;delay&nbsp;for&nbsp;a&nbsp;specified&nbsp;amount&nbsp;of&nbsp;time"
+<br><b>Psyon:</b>&nbsp;Yep,&nbsp;im&nbsp;delaying
+<br><b>uninet:</b>&nbsp;:-)&nbsp;Well&nbsp;good&nbsp;night&nbsp;Don!&nbsp;Sleep&
+nbsp;well. <br><b>bryce:</b>&nbsp;good&nbsp;night!
+<br><b>Psyon:</b>&nbsp;cya&nbsp;guys&nbsp;later</tt>
+
+
+
+ <!--content ends here -->
+
+
+<!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="mailinglists.html" -->.<BR>
+
+<!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>

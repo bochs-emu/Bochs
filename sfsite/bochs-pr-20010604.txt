@@ -1,0 +1,39 @@
+DATELINE JUNE 4, 2001
+
+FOR IMMEDIATE RELEASE
+
+BOCHS PROJECT UNVEILS BOCHS x86 EMULATOR 1.2
+"Release aims to make Bochs accessible to end users"
+
+June 3, 2001 (The INTERNET) - The Bochs IA-32 Emulator Project unveiled a new
+version of the popular Bochs emulator to the public today, coming on the heels
+of Bochs 1.1.2 released May 17, 2001.
+    Bochs 1.2 includes many usability improvements such as improved control over
+error handling, binaries for RPM-based Linux(R) distributions and Windows(R),
+and improved error output messages. Other new features include an easy to use
+interactive disk image creator, multiple processor emulation (SMP), vastly
+improved documentation (including man pages), VNC remote viewer support using
+Bochs-RFB, dual virtual hard drive support, and a text mode interface. You can
+find Bochs binaries for Windows and Linux (along with the source code for UNIX,
+Linux, Windows, and Mac OS) at http://bochs.sourceforge.net .
+
+ABOUT BOCHS
+
+   Bochs is one of the oldest and most popular x86 emulators available. Bochs
+compiles on a number of platforms including UNIX(R) and UNIX-like systems,
+Windows, and MacOS.
+   Bochs can be used for many purposes such as running Windows on other
+platforms, trying a new operating system without repartitioning your system, and
+operating system debugging. You can learn more about Bochs at
+http://bochs.sourceforge.net.
+
+---
+PRESS CONTACT:
+Timothy R. Butler
+tbutler@uninetsolutions.com
+
+----
+Trademarks Notices: Windows is a trademark of Microsoft Corp. Linux is a
+registered trademark of Linus Torvalds. UNIX is a registered trademark of The
+Open Group. All other trademarks and copyrights referred to in this announcement
+are the property of their respective owners.

@@ -1,0 +1,70 @@
+While talking to Peter Grehan about network support for Bochs, we came up with
+the following possible plans.  All plans use the emulated NE2K in the guest OS
+except for #6, which uses the serial port instead.  Peter says that #6 is
+close to working already, but that #1 is the most interesting.  In the next
+few days, he will describe #1 in more detail and mail it to bochs-developers
+and plex86 lists.
+
+Here the plans, in no particular order.  Please correct mistakes, add pros and
+cons, and if you must, add even more plans at the end.  (Warning: We
+may ask you to implement it...)
+
+1. Emulated NE2K + virtual ethernet driver
+Pros: you can talk to host
+      if you set up IP forwarding in the host, you can talk to the world
+Cons: must have root access to load a kernel module,
+      must be written separately for each host OS,
+      not all OSes support IP forwarding
+
+2. Emulated NE2K + packet filters (BPF, LSF)
+Pros: infrastructure is already there in iodev/eth_*.cc
+      each packet mover can support several OSes if 
+        they have the right library/kernel feature such as bpf.
+      user can run it, if packet filter permits
+Cons: can't talk to host!
+
+3. Emulated NE2K + emulate network protocols with portable code.  Bochs
+interprets ethernet frames from the NE2K and turns them into host OS
+networking function calls.  For outgoing TCP for example, bochs would open a
+TCP port using BSD sockets and send and receive data on bochs' behalf.  To get
+data back into Bochs, we would build ethernet frames and place them in the
+emulated NE2K RX queue to make the guest OS think that another host on the
+ethernet had responded.  For incoming TCP, user tells bochs to redirect host
+port X to guest OS port Y, and bochs binds to host port X using socket code.
+When connections and data arrive, it turns them into ethernet frames and puts
+them into the emulated NE2K RX queue.
+
+Pros: can be portable socket code!
+      can run as a normal user!
+Cons: each protocol must be handled separately
+      hard to extract TCP information from ethernet frames (maybe
+        we can borrow linux or other networking code)
+      Peter Grehan, author of current NE2K code, says it's not practical!
+
+4. Emulated NE2K + PPP on host.  Bochs guest OS runs an NE2K, bochs emulator
+translates ethernet-ppp and moves packets to/from PPPD running on the host.
+This might be called EoPPP!
+
+Pros: PPP already exists for many platforms
+      all IP protocols supported
+      if you set up IP forwarding in the host, you can talk to the world
+Cons: requires root access on host to start PPP
+      may require virtual terminal (excludes win?)
+      have to emulate some ethernet functions
+
+5. Emulated NE2K + Kernel module using bridging code (this is what vmware does)
+Pros: bochs appears to be on the same LAN as the host, with different MAC
+      requires no extra config on the host or guest OS
+Cons: Must have root access to load a kernel module,
+      must be written separately for each host OS,
+      bridging code not present in all kernels
+
+6. PPP link using bochs serial code
+Pros: use normal networking on guest and host
+      only minor coding required: we just need to make serial open 
+        a TTY in the correct mode
+      works on any platform that has PPP
+      if you set up IP forwarding in the host, you can talk to the world
+Cons: requires root access on host to start PPP
+      may require virtual terminal (excludes win?)
+      probably slower because of overhead of running PPP in emulation

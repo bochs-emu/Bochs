@@ -1,0 +1,108 @@
+<HTML>
+<HEAD>
+<TITLE>bochs: The Open Source IA-32 Emulation Project (Home Page)</TITLE>
+
+<!--#include virtual="includes/header.txt" -->
+
+ <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Welcome to the Bochs IA-32 Emulator Project</b></font><BR>
+
+ &nbsp;&nbsp;&nbsp;&nbsp;Bochs is a highly portable open source IA-32 (x86) PC emulator written in
+ C++, that runs on most popular platforms. It includes emulation of the Intel x86 CPU, common I/O
+ devices, and a custom BIOS. Currently, bochs can be compiled to emulate a 386, 486 or Pentium CPU.
+ Bochs is capable of running most Operating Systems inside the emulation including Linux,
+ Windows&reg; 95, DOS, and recently Windows&reg; NT 4. Bochs was written by Kevin Lawton and
+ is currently maintained by this project.<BR>
+ &nbsp;&nbsp;&nbsp;&nbsp;Bochs can be compiled and used in a variety of modes, some which are
+ still in development. The 'typical' use of bochs is to provide complete x86 PC emulation,
+ including the x86 processor, hardware devices, and memory. This allows you to run OS's and
+ software within the emulator on your workstation, much like you have a machine inside of a
+ machine. For instance, let's say your workstation is a Unix/X11 workstation, but you want to run
+ Win'95 applications. Bochs will allow you to run Win 95 and associated software on your Unix/X11
+ workstation, displaying a window on your workstation, simulating a monitor on a PC.
+<BR><BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Current Release</b></font><BR>
+
+<b>Bochs 1.2.1</b> (June 12, 2001):
+Bochs 1.2.1 is a bugfix release based on version 1.2.  Bochs 1.2 includes
+usability improvements such as improved control over error handling, an
+interactive disk image creator, and features including dual hard drive support,
+multiple processor emulation (SMP), and VNC remote viewer mode.
+ ( <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Press+Release+for+Bochs+1.2&url=http://bochs.sourceforge.net/bochs-pr-20010604.txt">Press Release</a> - <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing+Status&url=http://bochs.sourceforge.net/docs-html/changelog.html">Details</a> - <a href="<!--#include virtual="includes/release.txt" -->">Download Now</a> )
+For the newest features, use the anonymous CVS server version. (<a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Change+Log&url=http://bochs.sourceforge.net/docs-html/cvs-status.html">Details</a> - <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=CVS+Access+Information&url=http://sourceforge.net/cvs/qmrkgroup_ideq12580">More Info</a>)
+<BR><BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Join us for a Bochs IRC Chat</b></font><BR>
+The Bochs community will hold an IRC open discussion
+chat on Tuesday, June 19th, 2001.  The discussion will take place between 6:00PM
+and 8:00PM, US Pacific time. Will we cover a large array of topics that 
+relate to
+the current happenings in Bochs (<a href="irc.html">Find out More</a>).
+
+<BR><BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Progress on Bochs
+Networking!</b></font><BR>
+Peter Grehan is the author of the NE2000 (network adapter) and serial code in
+Bochs.  He is helping us out once again to improve networking support in Bochs.
+Bryce Denney and Peter met to talk about how to get Bochs talking on the network
+in different host operating systems.  
+( <a href="http://bochs.sf.net/cgi-bin/topper.pl?name=Bochs+Networking&url=http://bochs.sf.net/networking">Learn more</a> )
+
+<BR><BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Bochs Chat on
+IRC 5/30/2001</b></font><BR>
+The Bochs community held its first ever IRC open discussion
+chat on Wednesday, May 30, 2001.  The discussion will took place between 6:00PM
+and 10:30PM, US Pacific time. We covered a large variety of topics, from what
+features should be in upcoming versions, to how a new GUI should be implemented. (<a href="irc-20010530.html">Transcript</a>)
+
+<BR><BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Help Wanted</b></font><BR>
+<i>We currently need help with the following tasks:</i>
+<ul>
+<li><a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bugs+Waiting+to+be+Fixed&url=http://sourceforge.net/tracker/qmrkgroup_ideq12580ampatideq112580">PC
+Hardware Gurus</a>:
+Mouse, interrupt controller,
+timer, IDE controller, network card, keyboard, VGA...  Most of our bug
+reports and feature requests are due to incomplete C++ models of the
+various PC devices.  To improve this, we need PC Hardware Gurus who know
+where to find the specs for this stuff and improve the hardware models for
+Bochs.  Working on models is a fun way to learn how things work, and unlike
+designing a real hard disk, you can test out your changes on a real operating
+system immediately!
+<li><a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Documentation&url=http://sourceforge.net/pm/task.phpqmrkgroup_project_ideq10272ampgroup_ideq12580ampfunceqbrowse">Documentation</a>: Adding installation help and other useful information into the docs.
+<li><a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Testing&url=http://sourceforge.net/pm/task.phpqmrkgroup_project_ideq10271ampgroup_ideq12580ampfunceqbrowse">Testing</a>: Help us fill in the blanks on our Bochs Status page by testing different combinations of host and guest OSes.
+</ul>
+To help with one of these tasks, please contact <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Email+Bryce+Denney&url=http://sourceforge.net/sendmessage.phpqmrktousereq185114">Bryce Denney</a>.
+<BR><BR>
+<font face="arial, helvetica" color="#1e029a" size="4"><b>Latest News</b></font><BR>
+<ul>
+  <li><b>June 16, 2001:</b> <a href="<!--#include virtual="includes/release.txt"
+  -->">Bochs 1.2.1</a> is now available.
+  <li><b>June 3, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.2</a> is now available in both source and binary form. Read all about this major new release over <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Press+Release+for+Bochs+1.2&url=http://bochs.sourceforge.net/bochs-pr-20010604.txt">here</a>.
+  <li><b>May 23, 2001:</b> Activity Update - Less than a month after the transfer to Sourceforge, Bochs has reached the top of the <a
+href="http://sourceforge.net/top/mostactive.php?type=week">SourceForge</a> project activity chart! Thanks to Todd T. Fries for the update.
+  <li><b>May 22, 2001:</b> Bochs is number two on the <a
+href="http://sourceforge.net/top/mostactive.php?type=week">SourceForge</a> project activity chart today!
+  <li><b>May 17, 2001:</b> <a href="<!--#include virtual="includes/release.txt" -->">Bochs 1.1.2</a> is released, fixing several bugs found in the previous Bugfix2 release.
+  <li><b>May 12, 2001:</b> After hovering around 10th place on the SourceForge <a href="http://sourceforge.net/top/mostactive.php?type=week">activity rankings</a> for
+  the better part of a week, Bochs moves up even further! Bochs is listed as the 6th most active project on SF today.
+  <li><b>May 11, 2001:</b> Our new site is released, with more information, a new screen shots section, CVS nightly tarballs, and much more!
+  <li><b>May 3, 2001:</b> We are trying to gather a screenshot gallery of Bochs in action.
+If you have a screenshot you would like to share, please e-mail it
+to <a href="mailto:tbutler@uninetsolutions.com">Tim Butler</a>.<BR>
+
+
+</ul>
+<BR><BR>
+<a href="news.html"><i>More News...</i></a>
+
+
+ <!--#include virtual="includes/footer.txt" -->
+
+
+Last Modified on <!--#flastmod file="index.html" -->.<BR>
+
+ <!--#include virtual="includes/cright.txt" -->
+
+</BODY>
+</HTML>
