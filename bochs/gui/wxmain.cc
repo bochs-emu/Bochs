@@ -1,6 +1,6 @@
 //
 // gui/wxmain.cc
-// $Id: wxmain.cc,v 1.2 2002-04-18 00:22:19 bdenney Exp $
+// $Id: wxmain.cc,v 1.3 2002-06-01 15:44:54 vruppert Exp $
 //
 // wxmain.cc implements the wxWindows frame, toolbar, menus, and dialogs.
 // When the application starts, the user is given a chance to choose/edit/save
@@ -474,6 +474,10 @@ MyFrame::HandleAskParam (BxEvent *event)
 void 
 MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
 {
+  static wxString choices[] = { "Continue", "Continue and Disable", "Die" };
+  int choice;
+  wxString string;
+
   wxLogDebug ("received a bochs event in the GUI thread");
   BxEvent *be = (BxEvent *) event.GetEventObject ();
   wxLogDebug ("event type = %d", (int) be->type);
@@ -498,6 +502,15 @@ MyFrame::OnSim2GuiEvent (wxCommandEvent& event)
 	  be->u.logmsg.level,
 	  be->u.logmsg.prefix,
 	  be->u.logmsg.msg);
+    wxMutexGuiEnter();
+    string.Printf ("%s", be->u.logmsg.msg);
+    choice = ::wxGetSingleChoiceIndex (
+               string,
+               wxString (SIM->get_log_level_name (be->u.logmsg.level)), 3, choices);
+    if (choice<0) choice = 2; // treat cancel the same as "die"
+    be->retcode = choice;
+    wxLogDebug ("you chose %d", choice);
+    wxMutexGuiLeave();
     return;
   default:
     wxLogDebug ("OnSim2GuiEvent: event type %d ignored", (int)be->type);
@@ -623,6 +636,11 @@ SimThread::SiminterfaceCallback2 (BxEvent *event)
   wxevent.SetEventObject ((wxEvent *)event);
   wxLogDebug ("Sending an event to the window");
   wxPostEvent (frame, wxevent);
+  if (event->type == BX_ASYNC_EVT_LOG_MSG) {
+    event->retcode = -1;
+    while (event->retcode == -1) this->Sleep(500);
+    return event;
+  }
   // if it is an asynchronous event, return immediately
   if (async) return NULL;
   wxLogDebug ("SiminterfaceCallback2: synchronous event; waiting for response");
