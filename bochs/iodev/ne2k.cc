@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.33 2002-04-18 00:37:09 bdenney Exp $
+// $Id: ne2k.cc,v 1.34 2002-05-03 13:52:53 cbothamy Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 {
 	put("NE2K");
 	settype(NE2KLOG);
-	BX_DEBUG(("Init $Id: ne2k.cc,v 1.33 2002-04-18 00:37:09 bdenney Exp $"));
+	BX_DEBUG(("Init $Id: ne2k.cc,v 1.34 2002-05-03 13:52:53 cbothamy Exp $"));
 	// nothing for now
 }
 
@@ -287,7 +287,9 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // have been initialised.
     //
     if (io_len > BX_NE2K_THIS s.remote_bytes)
-      BX_PANIC(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+      {BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+       return 0;
+      }
 
     //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
@@ -366,8 +368,8 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     reset_device();
     break;
 
-  default:
-    BX_PANIC(("asic write invalid address %04x", (unsigned) offset));
+  default: // this is invalid, but happens under win95 device detection
+    BX_INFO(("asic write invalid address %04x, ignoring", (unsigned) offset));
     break ;
   }
 }
@@ -1243,7 +1245,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 void
 bx_ne2k_c::init(bx_devices_c *d)
 {
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.33 2002-04-18 00:37:09 bdenney Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.34 2002-05-03 13:52:53 cbothamy Exp $"));
   BX_NE2K_THIS devices = d;
 
 
