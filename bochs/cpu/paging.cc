@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.46 2004-09-04 18:22:22 sshwarts Exp $
+// $Id: paging.cc,v 1.47 2004-10-05 20:25:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -512,8 +512,7 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 #endif  // #if BX_USE_TLB
 }
 
-  void
-BX_CPU_C::INVLPG(bxInstruction_c* i)
+void BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u   TLB_index;
@@ -525,20 +524,31 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
   if (i->modC0()) {
 
 #if BX_SUPPORT_X86_64
+
+    //
+    // Opcode 0F 01:
+    //
+
+    // ----------------------------------------------------
+    //     MOD    REG  RM  | non 64 bit mode | 64 bit mode
+    // ----------------------------------------------------
+    //  MOD <> 11  7   --- |     INVLPG      |   INVLPG
+    //  MOD == 11  7    0  |      #UD        |   SWAPGS
+    //  MOD == 11  7   1-7 |      #UD        |    #UD
+
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-#ifdef __GNUC__
-#warning PRT: check this is right. instruction is "0F 01 F8"  see AMD manual.
-#endif
       if ((i->rm() == 0) && (i->nnn() == 7)) {
         BX_CPU_THIS_PTR SWAPGS(i);
         return;
         }
       }
+
 #endif
 
     BX_INFO(("INVLPG: op is a register"));
     UndefinedOpcode(i);
-    }
+  }
+
   // Can not be executed in v8086 mode
   if (v8086_mode())
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -556,8 +566,8 @@ BX_CPU_C::INVLPG(bxInstruction_c* i)
   TLB_index = BX_TLB_INDEX_OF(laddr);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryInvlpg);
-
 #endif // BX_USE_TLB
+
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, 0);
 
 #else
