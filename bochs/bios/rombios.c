@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.27 2002-01-01 21:39:28 vruppert Exp $
+// $Id: rombios.c,v 1.28 2002-01-02 09:59:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -273,10 +273,10 @@ static void           boot_failure_msg();
 static void           nmi_handler_msg();
 static void           print_bios_banner();
 
-static char bios_cvs_version_string[] = "$Revision: 1.27 $";
-static char bios_date_string[] = "$Date: 2002-01-01 21:39:28 $";
+static char bios_cvs_version_string[] = "$Revision: 1.28 $";
+static char bios_date_string[] = "$Date: 2002-01-02 09:59:32 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.27 2002-01-01 21:39:28 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.28 2002-01-02 09:59:32 vruppert Exp $";
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
 
@@ -4703,6 +4703,8 @@ post_default_ints:
   ;; DMA
   mov al, #0xC0
   out 0xD6, al ; cascade mode of channel 4 enabled
+  mov al, #0x00
+  out 0xD4, al ; unmask channel 4
 
   ;; Parallel setup
   SET_INT_VECTOR(0x0F, #0xF000, #dummy_iret_handler)
