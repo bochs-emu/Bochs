@@ -168,12 +168,26 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       if (set==1) {
 	SIM->get_param_num(BXP_FLOPPYA_TYPE)->set_enabled (!empty);
 	SIM->get_param_num(BXP_FLOPPYA_STATUS)->set_enabled (!empty);
+	if (bx_devices.floppy) {
+	  // tell the device model that we removed, then inserted the disk
+	  bx_devices.floppy->set_media_status(0, 0);
+	  bx_devices.floppy->set_media_status(0, 1);
+	}
+	// update the UI, if it exists
+	if (SIM->get_init_done ()) bx_gui.update_floppy_status_buttons ();
       }
       break;
     case BXP_FLOPPYB_PATH:
       if (set==1) {
 	SIM->get_param_num(BXP_FLOPPYB_TYPE)->set_enabled (!empty);
 	SIM->get_param_num(BXP_FLOPPYB_STATUS)->set_enabled (!empty);
+	if (bx_devices.floppy) {
+	  // tell the device model that we removed, then inserted the disk
+	  bx_devices.floppy->set_media_status(1, 0);
+	  bx_devices.floppy->set_media_status(1, 1);
+	}
+	// update the UI, if it exists
+	if (SIM->get_init_done ()) bx_gui.update_floppy_status_buttons ();
       }
       break;
     case BXP_DISKC_PATH:
