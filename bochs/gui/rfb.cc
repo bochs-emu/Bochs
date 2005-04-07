@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.40 2004-12-20 19:32:05 vruppert Exp $
+// $Id: rfb.cc,v 1.41 2005-04-07 19:08:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -26,7 +26,6 @@
 // - depth > 8bpp support
 // - full dimension update support (desktop size should be an option)
 // - optional compression support
-// - status bar text support
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -40,6 +39,7 @@
 
 #include "icon_bochs.h"
 #include "font/vga.bitmap.h"
+#include "sdl.h" // 8x8 font for status text
 
 class bx_rfb_gui_c : public bx_gui_c {
 public:
@@ -233,6 +233,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
 
   rfbScreen = (char *)malloc(rfbWindowX * rfbWindowY); 
   memset(&rfbPalette, 0, sizeof(rfbPalette));
+  rfbPalette[7] = (char)0xAD;
   rfbPalette[63] = (char)0xFF;
 
   rfbUpdateRegion.x = rfbWindowX;
@@ -279,32 +280,42 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   new_gfx_api = 1;
 }
 
-void rfbSetStatus(int element, bx_bool active)
+void rfbSetStatusText(int element, const char *text, bx_bool active)
 {
-  char *newBits, color;
-  int xleft, xsize;
+  char *newBits;
+  unsigned xleft, xsize, color, i, len;
 
   rfbStatusitemActive[element] = active;
   xleft = rfbStatusitemPos[element] + 2;
   xsize = rfbStatusitemPos[element+1] - xleft - 1;
   newBits = (char *)malloc(((xsize / 8) + 1) * (rfbStatusbarY - 2));
   memset(newBits, 0, ((xsize / 8) + 1) * (rfbStatusbarY - 2));
-  for (unsigned i=0; i<(rfbStatusbarY - 2); i++) {
+  for (i=0; i<(rfbStatusbarY - 2); i++) {
     newBits[((xsize / 8) + 1) * i] = 0;
   }
-  color = active?0xa0:0xf0;
-  DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, true);
+  color = active?0xa0:0xf7;
+  DrawBitmap(xleft, rfbWindowY - rfbStatusbarY + 1, xsize, rfbStatusbarY - 2, newBits, color, false);
   free(newBits);
+  len = (strlen(text) > 4) ? 4 : strlen(text);
+  for (i = 0; i < len; i++) {
+    DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0,
+      (char *)&sdl_font8x8[(unsigned)text[i]][0], color, 0);
+  }
+  if (xleft < rfbUpdateRegion.x) rfbUpdateRegion.x = xleft;
+  if ((rfbWindowY - rfbStatusbarY + 1) < rfbUpdateRegion.y) rfbUpdateRegion.y = rfbWindowY - rfbStatusbarY + 1;
+  if (((xleft + xsize) - rfbUpdateRegion.x) > rfbUpdateRegion.width) rfbUpdateRegion.width = ((xleft + xsize) - rfbUpdateRegion.x);
+  if (((rfbWindowY - 2) - rfbUpdateRegion.y) > rfbUpdateRegion.height) rfbUpdateRegion.height = ((rfbWindowY - 2) - rfbUpdateRegion.y);
+  rfbUpdateRegion.updated = true;
 }
 
 void bx_rfb_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
-      rfbSetStatus(i+1, active);
+      rfbSetStatusText(i+1, statusitem_text[i], active);
     }
   } else if ((unsigned)element < statusitem_count) {
-    rfbSetStatus(element+1, active);
+    rfbSetStatusText(element+1, statusitem_text[element], active);
   }
 }
 
@@ -995,7 +1006,7 @@ void bx_rfb_gui_c::show_headerbar(void)
   DrawBitmap(0, rfbWindowY - rfbStatusbarY, rfbWindowX, rfbStatusbarY, newBits, (char)0xf0, false);
   free(newBits);
   for (i = 1; i <= statusitem_count; i++) {
-    rfbSetStatus(i, rfbStatusitemActive[i]);
+    rfbSetStatusText(i, statusitem_text[i-1], rfbStatusitemActive[i]);
   }
 }
 
@@ -1715,8 +1726,8 @@ bx_rfb_gui_c::mouse_enabled_changed_specific (bx_bool val)
   void
 bx_rfb_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
-  *xres = 640;
-  *yres = 480;
+  *xres = BX_RFB_MAX_XDIM;
+  *yres = BX_RFB_MAX_YDIM;
   *bpp = 8;
 }
 
