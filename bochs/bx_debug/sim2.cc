@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sim2.cc,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: sim2.cc,v 1.2 2005-04-08 18:30:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,8 +73,7 @@ void    sim2_loader(char *path);
 #if BX_DBG_EXTENSIONS
 // return 0 if command not handled by extensions, bochs will handle
 // return 1 if command handled by extensions, bochs will ignore
-  int
-bx_dbg_extensions(char *command)
+int bx_dbg_extensions(char *command)
 {
   UNUSED(command);
   return(0); // no extensions for now
@@ -82,8 +81,7 @@ bx_dbg_extensions(char *command)
 #endif
 
 
-  void
-sim2_init(bx_dbg_callback_t *callback, int argc, char *argv[])
+void sim2_init(bx_dbg_callback_t *callback, int argc, char *argv[])
 {
   callback->setphymem           = sim2_set_mem;
   callback->getphymem           = sim2_fetch_mem;
@@ -123,117 +121,113 @@ sim2_init(bx_dbg_callback_t *callback, int argc, char *argv[])
 #endif
 }
 
-  bx_bool
-sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
+bx_bool sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   return(0);
 }
-  bx_bool
-sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
+
+bx_bool sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   return(0);
 }
-  void
-sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid)
-{
-}
-  bx_bool
-sim2_set_reg(unsigned reg, Bit32u val)
-{
-  return(0);
-}
-  Bit32u
-sim2_get_reg(unsigned reg)
-{
-  return(0);
-}
-  bx_bool
-sim2_set_cpu(bx_dbg_cpu_t *cpu)
-{
-  return(0);
-}
-  bx_bool
-sim2_get_cpu(bx_dbg_cpu_t *cpu)
-{
-  return(0);
-}
-  void
-sim2_atexit(void)
-{
-}
-  unsigned
-sim2_query_pending(void)
-{
-  return(0);
-}
-  void
-sim2_cpu_loop(void)
-{
-}
-  void
-sim2_take_irq(void)
-{
-}
-  void
-sim2_take_dma(void)
-{
-}
-  void
-sim2_reset_cpu(void)
-{
-}
-  void
-sim2_init_mem(int size_in_bytes)
-{
-}
-  void
-sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type)
+
+void sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid)
 {
 }
 
-  void
-sim2_set_A20(unsigned val)
+bx_bool sim2_set_reg(unsigned reg, Bit32u val)
+{
+  return(0);
+}
+
+Bit32u sim2_get_reg(unsigned reg)
+{
+  return(0);
+}
+
+bx_bool sim2_set_cpu(bx_dbg_cpu_t *cpu)
+{
+  return(0);
+}
+
+bx_bool sim2_get_cpu(bx_dbg_cpu_t *cpu)
+{
+  return(0);
+}
+
+void sim2_atexit(void)
 {
 }
-  void
-sim2_set_NMI(unsigned val)
+
+unsigned sim2_query_pending(void)
+{
+  return(0);
+}
+
+void sim2_cpu_loop(void)
 {
 }
-  void
-sim2_set_RESET(unsigned val)
+
+void sim2_take_irq(void)
 {
 }
-  void
-sim2_set_INTR(unsigned val)
+
+void sim2_take_dma(void)
 {
 }
-  void
-sim2_force_interrupt(unsigned vector)
+
+void sim2_reset_cpu(void)
+{
+}
+
+void sim2_init_mem(int size_in_bytes)
+{
+}
+
+void sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type)
+{
+}
+
+void sim2_set_A20(unsigned val)
+{
+}
+
+void sim2_set_NMI(unsigned val)
+{
+}
+
+void sim2_set_RESET(unsigned val)
+{
+}
+
+void sim2_set_INTR(unsigned val)
+{
+}
+
+void sim2_force_interrupt(unsigned vector)
 {
 }
 
 #if BX_INSTRUMENTATION
-  void
-sim2_instr_start(void)
+void sim2_instr_start(void)
 {
 }
-  void
-sim2_instr_stop(void)
+
+void sim2_instr_stop(void)
 {
 }
-  void
-sim2_instr_reset(void)
+
+void sim2_instr_reset(void)
 {
 }
-  void
-sim2_instr_print(void)
+
+void sim2_instr_print(void)
 {
 }
 #endif
 
 #if BX_USE_LOADER
-  void
-sim2_loader(char *path)
+void sim2_loader(char *path)
 {
 }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.3 2004-08-24 10:15:55 vruppert Exp $
+// $Id: debug.h,v 1.4 2005-04-08 18:30:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -165,7 +165,7 @@ void bx_dbg_take_command(char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
 void bx_dbg_disassemble_command(const char *,bx_num_range);
-void bx_dbg_instrument_command(char *);
+void bx_dbg_instrument_command(const char *);
 void bx_dbg_loader_command(char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
@@ -273,7 +273,7 @@ typedef struct {
       Bit32u eip;
       unsigned bpoint_id;
       bx_bool enabled;
-      } vir[BX_DBG_MAX_VIR_BPOINTS];
+    } vir[BX_DBG_MAX_VIR_BPOINTS];
 #endif
 
 #if BX_DBG_SUPPORT_LIN_BPOINT
@@ -282,7 +282,7 @@ typedef struct {
       Bit32u addr;
       unsigned bpoint_id;
       bx_bool enabled;
-      } lin[BX_DBG_MAX_LIN_BPOINTS];
+    } lin[BX_DBG_MAX_LIN_BPOINTS];
 #endif
 
 #if BX_DBG_SUPPORT_PHY_BPOINT
@@ -291,9 +291,9 @@ typedef struct {
       Bit32u addr;
       unsigned bpoint_id;
       bx_bool enabled;
-      } phy[BX_DBG_MAX_PHY_BPOINTS];
+    } phy[BX_DBG_MAX_PHY_BPOINTS];
 #endif
-    } iaddr;
+  } iaddr;
 
   bx_dbg_icount_t icount; // stop after completing this many instructions
 
@@ -315,17 +315,17 @@ typedef struct {
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
-   bx_bool irq;
-   bx_bool a20;
-   bx_bool io;
-   bx_bool ucmem;
-   bx_bool dma;
-   } report;
+    bx_bool irq;
+    bx_bool a20;
+    bx_bool io;
+    bx_bool ucmem;
+    bx_bool dma;
+  } report;
 
   struct {
     bx_bool irq;  // should process IRQs asynchronously
     bx_bool dma;  // should process DMAs asynchronously
-    } async;
+  } async;
 
 #define BX_DBG_ASYNC_PENDING_A20   0x01
 #define BX_DBG_ASYNC_PENDING_RESET 0x02
@@ -342,8 +342,8 @@ typedef struct {
     bx_bool a20;
     bx_bool reset;
     bx_bool nmi;
-    } async_changes_pending;
-  } bx_guard_t;
+  } async_changes_pending;
+} bx_guard_t;
 
 // working information for each simulator to update when a guard
 // is reached (found)
@@ -356,12 +356,9 @@ typedef struct bx_guard_found_t {
   Bit32u   laddr;
   bx_bool  is_32bit_code; // CS seg size at guard point
   bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
-  } bx_guard_found_t;
+} bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;
-
-
-
 
 
 int  bx_dbg_main(int argc, char *argv[]);
@@ -372,7 +369,7 @@ void bx_dbg_interpret_line (char *cmd);
 typedef struct {
   Bit16u sel;
   Bit32u des_l, des_h, valid;
-  } bx_dbg_sreg_t;
+} bx_dbg_sreg_t;
 
 typedef struct {
     Bit32u eax;
@@ -399,9 +396,7 @@ typedef struct {
     Bit32u tr3, tr4, tr5, tr6, tr7;
     Bit32u cr0, cr1, cr2, cr3, cr4;
     unsigned inhibit_mask;
-    } bx_dbg_cpu_t;
-
-
+} bx_dbg_cpu_t;
 
 
 typedef struct {
@@ -443,7 +438,7 @@ typedef struct {
 #endif
   bx_bool (*crc32)(unsigned long (*f)(unsigned char *buf, int len),
                    Bit32u addr1, Bit32u addr2, Bit32u *crc);
-  } bx_dbg_callback_t;
+} bx_dbg_callback_t;
 
 extern bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
 
@@ -471,5 +466,7 @@ void    bx_dbg_set_INTR(bx_bool b);
 void bx_dbg_disassemble_current (int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */
+
 #endif // #ifdef __cplusplus
+
 #endif // #if BX_DEBUGGER
