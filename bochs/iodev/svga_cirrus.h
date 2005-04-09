@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.3 2005-03-27 09:46:31 vruppert Exp $
+// $Id: svga_cirrus.h,v 1.4 2005-04-09 11:57:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -218,11 +218,8 @@ private:
 #else
     void (*bitblt_ptr)(void *this_ptr);
 #endif // BX_USE_CIRRUS_SMF
-    int async_xbytes;
-    int async_y;
     Bit8u *memsrc_ptr; // CPU -> video
     Bit8u *memsrc_endptr;
-    int memsrc_bytesperline;
     int memsrc_needed;
     Bit8u *memdst_ptr; // video -> CPU
     Bit8u *memdst_endptr;
