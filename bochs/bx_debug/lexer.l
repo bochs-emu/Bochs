@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.3 2004-08-24 10:15:55 vruppert Exp $
+// $Id: lexer.l,v 1.4 2005-04-10 19:53:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -205,7 +205,7 @@ bx_yyinput(char *buf, int max_size)
     }
 
   len = strlen(lex_input_ptr);
-  if (len > max_size)
+  if (max_size > len)
     max_size = len;
 
   memcpy(buf, lex_input_ptr, max_size);
