@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.14 2005-04-09 11:57:23 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.15 2005-04-10 17:17:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2477,14 +2477,15 @@ bx_svga_cirrus_c::svga_bitblt()
   BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
   BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS bitblt.bltheight;
 
-  BX_INFO(("BLT: src:0x%08x,dst 0x%08x,block %ux%u,mode 0x%02x,ROP 0x%02x",
+  BX_DEBUG(("BLT: src:0x%08x,dst 0x%08x,block %ux%u,mode 0x%02x,ROP 0x%02x",
     (unsigned)srcaddr,(unsigned)dstaddr,
     (unsigned)BX_CIRRUS_THIS bitblt.bltwidth,(unsigned)BX_CIRRUS_THIS bitblt.bltheight,
     (unsigned)BX_CIRRUS_THIS bitblt.bltmode,(unsigned)BX_CIRRUS_THIS bitblt.bltrop));
-  BX_INFO(("BLT: srcpitch:0x%08x,dstpitch 0x%08x,modeext 0x%02x",
+  BX_DEBUG(("BLT: srcpitch:0x%08x,dstpitch 0x%08x,modeext 0x%02x,writemask 0x%02x",
     (unsigned)BX_CIRRUS_THIS bitblt.srcpitch,
     (unsigned)BX_CIRRUS_THIS bitblt.dstpitch,
-    (unsigned)BX_CIRRUS_THIS bitblt.bltmodeext));
+    (unsigned)BX_CIRRUS_THIS bitblt.bltmodeext,
+    BX_CIRRUS_THIS control.reg[0x2f]));
 
   switch (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PIXELWIDTHMASK) {
     case CIRRUS_BLTMODE_PIXELWIDTH8:
@@ -2533,7 +2534,7 @@ bx_svga_cirrus_c::svga_bitblt()
       BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
     }
 
-    BX_INFO(("BLT redraw: x = %d, y = %d, w = %d, h = %d", BX_CIRRUS_THIS redraw.x,
+    BX_DEBUG(("BLT redraw: x = %d, y = %d, w = %d, h = %d", BX_CIRRUS_THIS redraw.x,
       BX_CIRRUS_THIS redraw.y, BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h));
 
     // setup bitblt engine.
@@ -2582,7 +2583,11 @@ bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
   } else {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
-      BX_CIRRUS_THIS bitblt.srcpitch = (w + 7) >> 3;
+      if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_DWORDGRANULARITY) {
+        BX_CIRRUS_THIS bitblt.srcpitch = (w + 31) >> 5;
+      } else {
+        BX_CIRRUS_THIS bitblt.srcpitch = (w + 7) >> 3;
+      }
     } else {
       BX_CIRRUS_THIS bitblt.srcpitch = (BX_CIRRUS_THIS bitblt.bltwidth + 3) & (~3);
     }
@@ -2702,7 +2707,7 @@ bx_svga_cirrus_c::svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count)
   Bit8u colors[2];
   unsigned bits;
   unsigned bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = 0;
 
   colors[0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[1] = BX_CIRRUS_THIS control.shadow_reg1;
@@ -2727,7 +2732,7 @@ bx_svga_cirrus_c::svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2756,7 +2761,7 @@ bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2788,7 +2793,7 @@ bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2855,13 +2860,13 @@ bx_svga_cirrus_c::svga_patterncopy()
   Bit8u work_colorexp[256];
   Bit8u *src, *dst;
   Bit8u *dstc, *srcc;
-  int x,y, pattern_y;
+  int x, y, pattern_x = 0, pattern_y;
   int tilewidth;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int pattern_pitch = patternbytes;
   int bltbytes = BX_CIRRUS_THIS bitblt.bltwidth;
   unsigned bits, bits_xor, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int dstskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
@@ -2882,7 +2887,7 @@ bx_svga_cirrus_c::svga_patterncopy()
       pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         dst = BX_CIRRUS_THIS bitblt.dst;
-        bitmask = 0x80 >> srcskipleft;
+        bitmask = 0x80;
         bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
         for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
           if ((bitmask & 0xff) == 0) {
@@ -2904,11 +2909,13 @@ bx_svga_cirrus_c::svga_patterncopy()
       svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src,8*8,BX_CIRRUS_THIS bitblt.pixelwidth);
       BX_CIRRUS_THIS bitblt.src = work_colorexp;
       BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_COLOREXPAND;
+      pattern_x = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
     }
   } else {
     if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
       pattern_pitch = 32;
     }
+    pattern_x = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
   }
   if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_ERROR(("PATTERNCOPY: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
@@ -2921,8 +2928,8 @@ bx_svga_cirrus_c::svga_patterncopy()
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
     srcc = src + pattern_y * pattern_pitch;
-    dstc = dst;
-    for (x = 0; x < bltbytes; x += patternbytes) {
+    dstc = dst + pattern_x;;
+    for (x = pattern_x; x < bltbytes; x += patternbytes) {
       tilewidth = BX_MIN(patternbytes,bltbytes - x);
       (*BX_CIRRUS_THIS bitblt.rop_handler)(
         dstc, srcc, 0, patternbytes,
@@ -2939,11 +2946,12 @@ bx_svga_cirrus_c::svga_simplebitblt()
 {
   Bit8u color[4];
   Bit8u work_colorexp[2048];
-  Bit16u w, x, y;
+  Bit16u skip_xbytes, w, x, y;
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int dstskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 
+  skip_xbytes = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
@@ -2961,10 +2969,10 @@ bx_svga_cirrus_c::svga_simplebitblt()
       }
 
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
-        dst = BX_CIRRUS_THIS bitblt.dst;
-        bitmask = 0x80 >> srcskipleft;
+        dst = BX_CIRRUS_THIS bitblt.dst + skip_xbytes;
+        bitmask = 0x80 >> dstskipleft;
         bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
-        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+        for (x = skip_xbytes; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
             bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
@@ -3093,7 +3101,6 @@ bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc()
   int x;
   Bit8u *dst, *src;
   unsigned bits, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
 
   BX_DEBUG(("BLT, cpu-to-video, transparent"));
 
@@ -3106,7 +3113,7 @@ bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc()
     w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
     src = srcptr;
     dst = BX_CIRRUS_THIS bitblt.dst;
-    bitmask = 0x80 >> srcskipleft;
+    bitmask = 0x80;
     bits = *src++;
     for (x = 0; x < w; x++) {
       if ((bitmask & 0xff) == 0) {
