@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sim2.cc,v 1.2 2005-04-08 18:30:34 sshwarts Exp $
+// $Id: sim2.cc,v 1.3 2005-04-10 18:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 
 #include "bochs.h"
@@ -131,9 +133,7 @@ bx_bool sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
   return(0);
 }
 
-void sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid)
-{
-}
+void sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid) { }
 
 bx_bool sim2_set_reg(unsigned reg, Bit32u val)
 {
@@ -155,79 +155,45 @@ bx_bool sim2_get_cpu(bx_dbg_cpu_t *cpu)
   return(0);
 }
 
-void sim2_atexit(void)
-{
-}
+void sim2_atexit(void) { }
 
 unsigned sim2_query_pending(void)
 {
   return(0);
 }
 
-void sim2_cpu_loop(void)
-{
-}
+void sim2_cpu_loop(void) { }
 
-void sim2_take_irq(void)
-{
-}
+void sim2_take_irq(void) { }
 
-void sim2_take_dma(void)
-{
-}
+void sim2_take_dma(void) { }
 
-void sim2_reset_cpu(void)
-{
-}
+void sim2_reset_cpu(void) { }
 
-void sim2_init_mem(int size_in_bytes)
-{
-}
+void sim2_init_mem(int size_in_bytes) { }
 
-void sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type)
-{
-}
+void sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type) { }
 
-void sim2_set_A20(unsigned val)
-{
-}
+void sim2_set_A20(unsigned val) { }
 
-void sim2_set_NMI(unsigned val)
-{
-}
+void sim2_set_NMI(unsigned val) { }
 
-void sim2_set_RESET(unsigned val)
-{
-}
+void sim2_set_RESET(unsigned val) { }
 
-void sim2_set_INTR(unsigned val)
-{
-}
+void sim2_set_INTR(unsigned val) { }
 
-void sim2_force_interrupt(unsigned vector)
-{
-}
+void sim2_force_interrupt(unsigned vector) { }
 
 #if BX_INSTRUMENTATION
-void sim2_instr_start(void)
-{
-}
+void sim2_instr_start(void) { }
 
-void sim2_instr_stop(void)
-{
-}
+void sim2_instr_stop(void) { }
 
-void sim2_instr_reset(void)
-{
-}
+void sim2_instr_reset(void) { }
 
-void sim2_instr_print(void)
-{
-}
+void sim2_instr_print(void) { }
 #endif
 
 #if BX_USE_LOADER
-void sim2_loader(char *path)
-{
-}
+void sim2_loader(char *path) { }
 #endif
