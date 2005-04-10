@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.14 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: apic.h,v 1.15 2005-04-10 19:42:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@ typedef enum {
 #define APIC_BASE_ADDR    0xfee00000  // default APIC address
 
 // todo: Pentium APIC_VERSION_ID (Pentium has 3 LVT entries)
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
+#if BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2
 #  define APIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
 #  define APIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries

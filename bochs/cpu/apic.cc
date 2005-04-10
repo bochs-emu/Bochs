@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.46 2005-04-02 18:49:42 sshwarts Exp $
+// $Id: apic.cc,v 1.47 2005-04-10 19:42:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -485,10 +485,6 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         int dest_mode = (icr_low >> 11) & 1;
         int delivery_mode = (icr_low >> 8) & 7;
         int vector = (icr_low & 0xff);
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
-        trig_mode = 0;  // these flags have no meaning for P4 processor
-        level = 1;
-#endif
         // deliver will call get_delivery_bitmask to decide who to send to.
         // This local_apic class redefines get_delivery_bitmask to 
         // implement the destination shorthand field, which doesn't exist

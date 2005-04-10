@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.55 2005-03-30 19:55:47 sshwarts Exp $
+// $Id: access.cc,v 1.56 2005-04-10 19:42:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -305,7 +305,7 @@ accessOK:
           if (hostPageAddr) {
              *hostAddr = *data;
 #if BX_SUPPORT_ICACHE
-             BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+             pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
              return;
           }
@@ -356,7 +356,7 @@ accessOK:
             if (hostPageAddr) {
                WriteHostWordToLittleEndian(hostAddr, *data);
 #if BX_SUPPORT_ICACHE
-               BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+               pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
                return;
             }
@@ -408,7 +408,7 @@ accessOK:
             if (hostPageAddr) {
               WriteHostDWordToLittleEndian(hostAddr, *data);
 #if BX_SUPPORT_ICACHE
-              BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+              pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
               return;
             }
@@ -460,7 +460,7 @@ accessOK:
             if (hostPageAddr) {
               WriteHostQWordToLittleEndian(hostAddr, *data);
 #if BX_SUPPORT_ICACHE
-              BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+              pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
               return;
             }
@@ -700,7 +700,7 @@ accessOK:
             *data = *hostAddr;
             BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SUPPORT_ICACHE
-            BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+            pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
             return;
           }
@@ -754,7 +754,7 @@ accessOK:
               ReadHostWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SUPPORT_ICACHE
-              BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+              pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
               return;
             }
@@ -807,7 +807,7 @@ accessOK:
               ReadHostDWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SUPPORT_ICACHE
-              BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+              pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
               return;
             }
@@ -860,7 +860,7 @@ accessOK:
               ReadHostQWordFromLittleEndian(hostAddr, *data);
               BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
 #if BX_SUPPORT_ICACHE
-              BX_CPU_THIS_PTR iCache.decWriteStamp(tlbEntry->ppf);
+              pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
               return;
             }

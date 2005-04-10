@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.102 2005-03-19 18:43:00 sshwarts Exp $
+// $Id: cpu.cc,v 1.103 2005-04-10 19:42:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,6 +66,18 @@ BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
 #if BX_SUPPORT_ICACHE
+
+bxPageWriteStampTable pageWriteStampTable;
+
+void invalidateIcacheEntries(Bit32u a20Addr)
+{
+#if BX_SMP_PROCESSORS == 1
+  BX_CPU(0)->iCache.invalidatePage(a20Addr);
+#else
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->iCache.invalidatePage(a20Addr);
+#endif
+}
 
 #define InstrumentICACHE 0
 
@@ -215,7 +227,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
   i = &(cache_entry->i);
 
-  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);
+  Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(pAddr);
 
 #if BX_SUPPORT_ICACHE
   InstrICache_Increment(iCacheLookups);
@@ -278,7 +290,7 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
       Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
       pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
       pageWriteStamp |= fetchModeMask;         // Add in new ones.
-      BX_CPU_THIS_PTR iCache.setPageWriteStamp(pAddr, pageWriteStamp);
+      pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
       cache_entry->pAddr = pAddr;
       cache_entry->writeStamp = pageWriteStamp;
 #endif
@@ -775,7 +787,7 @@ void BX_CPU_C::prefetch(void)
   }
 
 #if BX_SUPPORT_ICACHE
-  Bit32u pageWriteStamp = BX_CPU_THIS_PTR iCache.getPageWriteStamp(pAddr);
+  Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(pAddr);
   Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
   if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
   {
@@ -783,7 +795,7 @@ void BX_CPU_C::prefetch(void)
     // physical page.
     pageWriteStamp &= ICacheWriteStampMask; // Clear out old fetch mode bits.
     pageWriteStamp |= fetchModeMask;        // Add in new ones.
-    BX_CPU_THIS_PTR iCache.setPageWriteStamp(pAddr, pageWriteStamp);
+    pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
   }
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.58 2005-01-29 23:29:08 vruppert Exp $
+// $Id: misc_mem.cc,v 1.59 2005-04-10 19:42:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.58 2005-01-29 23:29:08 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.59 2005-04-10 19:42:48 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -470,7 +470,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     }
 
 #if BX_SUPPORT_ICACHE
-    cpu->iCache.decWriteStamp(a20Addr);
+    pageWriteStampTable.decWriteStamp(a20Addr);
 #endif
 
     return(retAddr);

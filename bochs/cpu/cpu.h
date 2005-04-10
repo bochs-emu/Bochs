@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.213 2005-03-30 22:30:37 sshwarts Exp $
+// $Id: cpu.h,v 1.214 2005-04-10 19:42:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -343,7 +343,7 @@
 #if BX_SUPPORT_APIC
 #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
 #else
-#define BX_CPU_INTR  BX_CPU_THIS_PTR INTR
+#define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
 #endif
 
 class BX_CPU_C;
