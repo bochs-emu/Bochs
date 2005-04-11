@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.16 2005-04-10 19:42:48 sshwarts Exp $
+// $Id: ioapic.cc,v 1.17 2005-04-11 16:51:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -138,10 +138,11 @@ void bx_ioapic_c::raise_irq (unsigned vector, unsigned from)
 {
   BX_DEBUG(("IOAPIC: received vector %d", vector));
   if ((vector >= 0) && (vector <= BX_APIC_LAST_VECTOR)) {
-    if (vector == 0) vector = 2;
     Bit32u bit = 1<<vector;
-    irr |= bit;
-    service_ioapic ();
+    if ((irr & bit) == 0) {
+      irr |= bit;
+      service_ioapic ();
+    }
   } else {
     BX_PANIC(("IOAPIC: vector %d out of range", vector));
   }
@@ -163,7 +164,6 @@ void bx_ioapic_c::service_ioapic ()
       entry->parse_value();
       if (!entry->masked) {
 	// clear irr bit and deliver
-        BX_INFO (("dest=%02x, masked=%d, trig_mode=%d, remote_irr=%d, polarity=%d, delivery_status=%d, dest_mode=%d, delivery_mode=%d, vector=%02x", entry->dest, entry->masked, entry->trig_mode, entry->remote_irr, entry->polarity, entry->delivery_status, entry->dest_mode, entry->delivery_mode, entry->vector));
 	bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
 	if (done) {
 	  irr &= ~(1<<bit);
