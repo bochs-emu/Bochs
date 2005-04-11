@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.35 2005-03-30 22:31:03 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.36 2005-04-11 18:53:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -456,13 +456,13 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case 13: // reserved
         temp->valid    = 0;
         break;
-      case 1: // 286 TSS (available)
-      case 3: // 286 TSS (busy)
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
         temp->u.tss286.base  = (dword1 >> 16) | ((dword2 & 0xff) << 16);
         temp->u.tss286.limit = (dword1 & 0xffff);
         temp->valid    = 1;
         break;
-      case 2: // LDT descriptor
+      case BX_SYS_SEGMENT_LDT:
         temp->u.ldt.base = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
 #if BX_CPU_LEVEL >= 3
         temp->u.ldt.base |= (dword2 & 0xff000000);
@@ -470,23 +470,22 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->u.ldt.limit = (dword1 & 0xffff);
         temp->valid    = 1;
         break;
-      case 4: // 286 call gate
-      case 6: // 286 interrupt gate
-      case 7: // 286 trap gate
+      case BX_286_CALL_GATE:
+      case BX_286_INTERRUPT_GATE:
+      case BX_286_TRAP_GATE:
         /* word count only used for call gate */
         temp->u.gate286.word_count = dword2 & 0x1f;
         temp->u.gate286.dest_selector = dword1 >> 16;
         temp->u.gate286.dest_offset   = dword1 & 0xffff;
         temp->valid = 1;
         break;
-      case 5: // 286/386 task gate
+      case BX_TASK_GATE:
         temp->u.taskgate.tss_selector = dword1 >> 16;
         temp->valid = 1;
         break;
-
 #if BX_CPU_LEVEL >= 3
-      case 9:  // 386 TSS (available)
-      case 11: // 386 TSS (busy)
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
         temp->u.tss386.base  = (dword1 >> 16) |
                                ((dword2 & 0xff) << 16) |
                                (dword2 & 0xff000000);
@@ -501,9 +500,9 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->valid = 1;
         break;
 
-      case 12: // 386 call gate
-      case 14: // 386 interrupt gate
-      case 15: // 386 trap gate
+      case BX_386_CALL_GATE:
+      case BX_386_INTERRUPT_GATE:
+      case BX_386_TRAP_GATE:
         // word count only used for call gate
         temp->u.gate386.dword_count   = dword2 & 0x1f;
         temp->u.gate386.dest_selector = dword1 >> 16;
@@ -514,7 +513,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 #endif
       default: 
         BX_PANIC(("parse_descriptor(): case %u unfinished", (unsigned) temp->type));
-        temp->valid    = 0;
+        temp->valid = 0;
     }
   }
 }
@@ -576,6 +575,23 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor,
 
   // Loading CS will invalidate the EIP fetch window.
   invalidate_prefetch_q();
+}
+
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::load_ss64(Bit8u cpl)
+{
+  bx_selector_t selector;
+  bx_descriptor_t descriptor;
+
+  // set up a null descriptor
+  parse_selector(0, &selector);
+  parse_descriptor(0, 0, &descriptor);
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = selector;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = descriptor;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl = cpl;
+
+  loadSRegLMNominal(BX_SEG_REG_SS, selector.value, 0, cpl);
 }
 
   void BX_CPP_AttrRegparmN(3)

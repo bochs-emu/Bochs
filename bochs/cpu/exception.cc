@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.53 2005-03-30 22:31:03 sshwarts Exp $
+// $Id: exception.cc,v 1.54 2005-04-11 18:53:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -201,43 +201,26 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     // INTERRUPT TO INNER PRIVILEGE:
     if ((cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL) || (ist > 0))
     {
-      Bit16u old_SS;
-      Bit64u RSP_for_cpl_x, old_RSP;
-      bx_descriptor_t ss_descriptor;
-      bx_selector_t   ss_selector;
+      Bit64u RSP_for_cpl_x;
 
       BX_DEBUG(("long mode interrupt(): INTERRUPT TO INNER PRIVILEGE"));
 
       // check selector and descriptor for new stack in current TSS
       if (ist > 0) {
         BX_DEBUG(("long mode interrupt(): trap to IST, vector = %d\n",ist));
-        get_RSP_from_TSS(ist+3,&RSP_for_cpl_x);
+        get_RSP_from_TSS(ist+3, &RSP_for_cpl_x);
       }
       else {
-        get_RSP_from_TSS(cs_descriptor.dpl,&RSP_for_cpl_x);
+        get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
       }
-      // set up a null descriptor
-      parse_selector(0,&ss_selector);
-      parse_descriptor(0,0,&ss_descriptor);
 
-      // 386 int/trap gate
-      // new stack must have room for 40|48 bytes, else #SS(0)
-      //if ( is_error_code )
-      //  bytes = 48;
-      //else
-      //  bytes = 40;
+      Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+      Bit64u old_RSP = RSP;
 
-      old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-      old_RSP = RSP;
+      // set up null SS descriptor
+      load_ss64(cs_descriptor.dpl);
 
       // load new RSP values from TSS
-
-      // need to switch to 64 bit mode temporarily here.
-      // this means that any exception after here might be delivered
-      // a little insanely.  Like faults are page faults..
-
-      load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
-
       RSP = RSP_for_cpl_x;
 
       // load new CS:IP values from gate
