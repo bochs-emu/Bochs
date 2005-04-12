@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.215 2005-04-11 18:53:02 sshwarts Exp $
+// $Id: cpu.h,v 1.216 2005-04-12 18:08:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2664,6 +2664,14 @@ public: // for now...
   BX_SMF char *strseg(bx_segment_reg_t *seg) BX_CPP_AttrRegparmN(1);
   BX_SMF void interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
                  Bit16u error_code);
+  BX_SMF void real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+                 Bit16u error_code);
+  BX_SMF void protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+                 Bit16u error_code);
+#if BX_SUPPORT_X86_64
+  BX_SMF void long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code,
+                 Bit16u error_code);
+#endif
 #if BX_CPU_LEVEL >= 2
   BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();

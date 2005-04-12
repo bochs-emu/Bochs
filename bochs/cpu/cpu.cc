@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.103 2005-04-10 19:42:47 sshwarts Exp $
+// $Id: cpu.cc,v 1.104 2005-04-12 18:07:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -146,23 +146,17 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
 
-#if BX_INSTRUMENTATION
   if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) 
   { 
     // only from exception function can we get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
-  }
-#elif BX_GDBSTUB
-  if (bx_dbg.gdbstub_enabled) {
-    if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) {
+
+#if BX_GDBSTUB
+    if (bx_dbg.gdbstub_enabled) {
       return;
     }
-  } else {
-    (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
-  }
-#else
-  (void) setjmp( BX_CPU_THIS_PTR jmp_buf_env );
 #endif
+  }
 
 #if BX_DEBUGGER
   // If the exception() routine has encountered a nasty fault scenario,
@@ -491,8 +485,8 @@ debugger_check:
 
 #if BX_GDBSTUB
     if (bx_dbg.gdbstub_enabled) {
-      unsigned int reason;
-      if ((reason = bx_gdbstub_check(EIP)) != GDBSTUB_STOP_NO_REASON) {
+      unsigned int reason = bx_gdbstub_check(EIP);
+      if (reason != GDBSTUB_STOP_NO_REASON) {
         return;
       }
     }
@@ -929,10 +923,10 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
-            }
           }
         }
       }
+    }
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
@@ -943,10 +937,10 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
-            }
           }
         }
       }
+    }
 #endif
 #if BX_DBG_SUPPORT_PHY_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
@@ -965,12 +959,12 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
             return(1); // on a breakpoint
-            }
           }
         }
       }
-#endif
     }
+#endif
+  }
   return(0); // not on a breakpoint
 }
 
@@ -984,10 +978,11 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 
   // convenient point to see if user typed Ctrl-C
   if (bx_guard.interrupt_requested &&
-      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C)) {
+     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
+  {
     BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
     return(1);
-    }
+  }
 
   // see if debugger requesting icount guard
   if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
@@ -998,8 +993,8 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
       BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
       return(1);
-      }
     }
+  }
 
 #if (BX_NUM_SIMULATORS >= 2)
   // if async event pending, acknowlege them
@@ -1009,8 +1004,8 @@ BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                            bx_guard.async_changes_pending.a20);
     if (bx_guard.async_changes_pending.which) {
       BX_PANIC(("decode: async pending unrecognized."));
-      }
     }
+  }
 #endif
   return(0); // no breakpoint
 }
@@ -1031,8 +1026,8 @@ BX_CPU_C::dbg_take_irq(void)
       BX_CPU_THIS_PTR EXT   = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
       interrupt(vector, 0, 0, 0);
-      }
     }
+  }
 }
 
   void
@@ -1047,7 +1042,7 @@ BX_CPU_C::dbg_force_interrupt(unsigned vector)
     BX_CPU_THIS_PTR EXT   = 1; // external event
     BX_CPU_THIS_PTR async_event = 1; // probably don't need this
     interrupt(vector, 0, 0, 0);
-    }
+  }
 }
 
   void
@@ -1057,7 +1052,7 @@ BX_CPU_C::dbg_take_dma(void)
   if ( BX_HRQ ) {
     BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
     DEV_dma_raise_hlda();
-    }
+  }
 }
-#endif  // #if BX_DEBUGGER
 
+#endif  // #if BX_DEBUGGER

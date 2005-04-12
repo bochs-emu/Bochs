@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.30 2005-03-28 06:29:22 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.31 2005-04-12 18:08:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -226,6 +226,7 @@ BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
 
   if ( protected_mode() ) {
+    BX_PANIC(("Call protected is not implemented in x86-64 mode !"));
     BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_64);
     goto done;
     }
@@ -334,6 +335,7 @@ BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
   if ( protected_mode() ) {
+    BX_PANIC(("Jump protected is not implemented in x86-64 mode !"));
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
     goto done;
     }
