@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.15 2005-04-10 17:17:19 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.16 2005-04-12 21:26:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -24,9 +24,8 @@
 //
 // there are still many unimplemented features:
 //
-// - 1bpp/4bpp
-// - transparent compare not complete
-// - some bitblt functions
+// - destination write mask support is not complete (bit 7)
+// - 1bpp/4bpp modes
 // - ???
 //
 // some codes are copied from vga.cc and modified.
@@ -211,11 +210,10 @@
 // PCI 0x3c: 0x3c=int-line, 0x3d=int-pin, 0x3e=min-gnt, 0x3f=maax-lat
 // PCI 0x40-0xff: device dependent fields
 
-// To implement the following stuffs, memory PnP is required!
-// default PnP memory address (FIXME - can't relocate!)
+// default PnP memory address
 #define CIRRUS_PNPMEM_BASE_ADDRESS  0xe0000000
 #define CIRRUS_PNPMEM_SIZE          CIRRUS_VIDEO_MEMORY_BYTES
-// default PnP memory-mapped I/O address (FIXME - can't relocate!)
+// default PnP memory-mapped I/O address
 #define CIRRUS_PNPMMIO_BASE_ADDRESS (CIRRUS_PNPMEM_BASE_ADDRESS + CIRRUS_PNPMEM_SIZE)
 #define CIRRUS_PNPMMIO_SIZE         0x1000
 
@@ -2859,14 +2857,14 @@ bx_svga_cirrus_c::svga_patterncopy()
   Bit8u color[4];
   Bit8u work_colorexp[256];
   Bit8u *src, *dst;
-  Bit8u *dstc, *srcc;
-  int x, y, pattern_x = 0, pattern_y;
-  int tilewidth;
+  Bit8u *dstc, *srcc, *src2;
+  int x, y, pattern_y;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int pattern_pitch = patternbytes;
   int bltbytes = BX_CIRRUS_THIS bitblt.bltwidth;
   unsigned bits, bits_xor, bitmask;
-  int dstskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
@@ -2886,10 +2884,10 @@ bx_svga_cirrus_c::svga_patterncopy()
 
       pattern_y = BX_CIRRUS_THIS bitblt.srcaddr & 0x07;
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
-        dst = BX_CIRRUS_THIS bitblt.dst;
-        bitmask = 0x80;
+        dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
+        bitmask = 0x80 >> srcskipleft;
         bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
-        for (x = 0; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+        for (x = pattern_x; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
             bits = BX_CIRRUS_THIS bitblt.src[pattern_y] ^ bits_xor;
@@ -2909,13 +2907,11 @@ bx_svga_cirrus_c::svga_patterncopy()
       svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src,8*8,BX_CIRRUS_THIS bitblt.pixelwidth);
       BX_CIRRUS_THIS bitblt.src = work_colorexp;
       BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_COLOREXPAND;
-      pattern_x = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
     }
   } else {
     if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
       pattern_pitch = 32;
     }
-    pattern_x = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
   }
   if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_ERROR(("PATTERNCOPY: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
@@ -2928,13 +2924,12 @@ bx_svga_cirrus_c::svga_patterncopy()
   src = (Bit8u *)BX_CIRRUS_THIS bitblt.src;
   for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
     srcc = src + pattern_y * pattern_pitch;
-    dstc = dst + pattern_x;;
-    for (x = pattern_x; x < bltbytes; x += patternbytes) {
-      tilewidth = BX_MIN(patternbytes,bltbytes - x);
+    dstc = dst + pattern_x;
+    for (x = pattern_x; x < bltbytes; x += BX_CIRRUS_THIS bitblt.pixelwidth) {
+      src2 = srcc + (x % patternbytes);
       (*BX_CIRRUS_THIS bitblt.rop_handler)(
-        dstc, srcc, 0, patternbytes,
-        tilewidth, 1);
-      dstc += patternbytes;
+        dstc, src2, 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+      dstc += BX_CIRRUS_THIS bitblt.pixelwidth;
     }
     pattern_y = (pattern_y + 1) & 7;
     dst += BX_CIRRUS_THIS bitblt.dstpitch;
@@ -2946,12 +2941,12 @@ bx_svga_cirrus_c::svga_simplebitblt()
 {
   Bit8u color[4];
   Bit8u work_colorexp[2048];
-  Bit16u skip_xbytes, w, x, y;
+  Bit16u w, x, y;
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
-  int dstskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
 
-  skip_xbytes = dstskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
@@ -2969,10 +2964,10 @@ bx_svga_cirrus_c::svga_simplebitblt()
       }
 
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
-        dst = BX_CIRRUS_THIS bitblt.dst + skip_xbytes;
-        bitmask = 0x80 >> dstskipleft;
+        dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
+        bitmask = 0x80 >> srcskipleft;
         bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
-        for (x = skip_xbytes; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+        for (x = pattern_x; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
           if ((bitmask & 0xff) == 0) {
             bitmask = 0x80;
             bits = *BX_CIRRUS_THIS bitblt.src++ ^ bits_xor;
