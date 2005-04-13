@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.5 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: descriptor.h,v 1.6 2005-04-13 17:13:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,13 +116,13 @@ union {
     Bit16u  dest_selector;
     Bit16u  dest_offset;
   } gate286;
-  struct {                 // type 5: Task Gate Descriptor
-    Bit16u  tss_selector;  // TSS segment selector
+  struct {                 /* type 5: Task Gate Descriptor */
+    Bit16u  tss_selector;  /* TSS segment selector */
   } taskgate;
 #if BX_CPU_LEVEL >= 3
   struct {
     Bit8u   dword_count;   /* 5bits (0..31) #dwords to copy from caller's stack
-                            * to called procedure's stack.  (call gates only)*/
+                            * to called procedure's stack. (call gates only) */
     Bit16u  dest_selector;
     Bit32u  dest_offset;
   } gate386;
@@ -157,9 +157,9 @@ typedef struct {
   /* no GDTR or IDTR register in an 8086 */
 #else
 typedef struct {
-  bx_address             base;      /* base address: 24bits=286,32bits=386,64bits=x86-64 */
-  Bit16u                 limit;     /* limit, 16bits */
-  } bx_global_segment_reg_t;
+  bx_address       base;   /* base address: 24bits=286,32bits=386,64bits=x86-64 */
+  Bit16u           limit;  /* limit, 16bits */
+} bx_global_segment_reg_t;
 #endif
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.216 2005-04-12 18:08:08 sshwarts Exp $
+// $Id: cpu.h,v 1.217 2005-04-13 17:13:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2729,11 +2729,11 @@ public: // for now...
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
-  BX_SMF void    load_ss64(Bit8u cpl) BX_CPP_AttrRegparmN(1);
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
                                Bit32u *dword1, Bit32u *dword2, Bit8u exception) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
+  BX_SMF void    load_ss64(Bit8u cpl) BX_CPP_AttrRegparmN(1);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
 #endif

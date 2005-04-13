@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.55 2005-04-12 18:08:10 sshwarts Exp $
+// $Id: exception.cc,v 1.56 2005-04-13 17:13:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -185,6 +185,13 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // set up null SS descriptor
     load_ss64(cs_descriptor.dpl);
 
+    // === WORKAROUND ===
+    // need to switch to 64 bit mode temporarily here.
+    // this means that any exception after here might be delivered
+    // a little insanely. Like faults are page faults..
+    unsigned savemode = BX_CPU_THIS_PTR cpu_mode;
+    BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
+
     // load new RSP values from TSS
     RSP = RSP_for_cpl_x;
 
@@ -196,6 +203,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // set RPL of CS to CPL
 
     // push long pointer to old stack onto new stack
+    // skip segmentation checks
 
     // align ESP
 
@@ -210,6 +218,9 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     push_64(RIP);
     if ( is_error_code )
       push_64(error_code);
+
+    // restore the original cpu mode
+    BX_CPU_THIS_PTR cpu_mode = savemode;
 
     load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
 
