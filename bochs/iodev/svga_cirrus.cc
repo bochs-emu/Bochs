@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.17 2005-04-13 18:39:25 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.18 2005-04-13 20:38:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2990,9 +2990,10 @@ bx_svga_cirrus_c::svga_simplebitblt()
       for (y = 0; y < BX_CIRRUS_THIS bitblt.bltheight; y++) {
         svga_colorexpand(work_colorexp,BX_CIRRUS_THIS bitblt.src, w,
                          BX_CIRRUS_THIS bitblt.pixelwidth);
+        dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
         (*BX_CIRRUS_THIS bitblt.rop_handler)(
-          BX_CIRRUS_THIS bitblt.dst, work_colorexp, 0, 0,
-          BX_CIRRUS_THIS bitblt.bltwidth, 1);
+          dst, work_colorexp + pattern_x, 0, 0,
+          BX_CIRRUS_THIS bitblt.bltwidth - pattern_x, 1);
         BX_CIRRUS_THIS bitblt.src += ((w + 7) >> 3);
         BX_CIRRUS_THIS bitblt.dst += BX_CIRRUS_THIS bitblt.dstpitch;
       }
@@ -3055,13 +3056,12 @@ bx_svga_cirrus_c::svga_patterncopy_memsrc()
 bx_svga_cirrus_c::svga_simplebitblt_memsrc()
 {
   Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
-  Bit8u *srccurptr;
-  Bit8u work_colorexp[256];
+  Bit8u work_colorexp[2048];
   Bit16u w;
+  int pattern_x = (BX_CIRRUS_THIS control.reg[0x2f] & 0x07) * BX_CIRRUS_THIS bitblt.pixelwidth;
 
   BX_DEBUG(("svga_cirrus: BLT, cpu-to-video"));
 
-  srccurptr = srcptr;
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_COLOREXPAND) {
       BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
@@ -3070,17 +3070,18 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc()
 
     w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
     svga_colorexpand(work_colorexp,srcptr,w,BX_CIRRUS_THIS bitblt.pixelwidth);
-    srccurptr = work_colorexp;
+    (*BX_CIRRUS_THIS bitblt.rop_handler)(
+        BX_CIRRUS_THIS bitblt.dst + pattern_x, work_colorexp + pattern_x, 0, 0,
+        BX_CIRRUS_THIS bitblt.bltwidth - pattern_x, 1);
   } else {
     if (BX_CIRRUS_THIS bitblt.bltmode != 0) {
       BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
       return;
     }
+    (*BX_CIRRUS_THIS bitblt.rop_handler)(
+        BX_CIRRUS_THIS bitblt.dst, srcptr, 0, 0,
+        BX_CIRRUS_THIS bitblt.bltwidth, 1);
   }
-
-  (*BX_CIRRUS_THIS bitblt.rop_handler)(
-      BX_CIRRUS_THIS bitblt.dst, srccurptr, 0, 0,
-      BX_CIRRUS_THIS bitblt.bltwidth, 1);
 }
 
   void
