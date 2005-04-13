@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.16 2005-04-12 21:26:55 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.17 2005-04-13 18:39:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2573,11 +2573,7 @@ bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
       BX_CIRRUS_THIS bitblt.srcpitch = 8 * 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
     }
     BX_CIRRUS_THIS bitblt.memsrc_needed = BX_CIRRUS_THIS bitblt.srcpitch;
-    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
-      BX_ERROR(("BLT: patterncopy: TRANSPARENTCOMP is not implemented"));
-    } else {
-      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
-    }
+    BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memsrc_static;
   } else {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
       w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
@@ -2586,16 +2582,17 @@ bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
       } else {
         BX_CIRRUS_THIS bitblt.srcpitch = (w + 7) >> 3;
       }
+      if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
+        BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_colorexpand_transp_memsrc_static;
+      } else {
+        BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
+      }
     } else {
       BX_CIRRUS_THIS bitblt.srcpitch = (BX_CIRRUS_THIS bitblt.bltwidth + 3) & (~3);
+      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
     }
     BX_CIRRUS_THIS bitblt.memsrc_needed =
         BX_CIRRUS_THIS bitblt.srcpitch * BX_CIRRUS_THIS bitblt.bltheight;
-    if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
-      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_transp_memsrc_static;
-    } else {
-      BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memsrc_static;
-    }
   }
   BX_CIRRUS_THIS bitblt.memsrc_endptr += BX_CIRRUS_THIS bitblt.srcpitch;
 }
@@ -2832,6 +2829,12 @@ bx_svga_cirrus_c::svga_simplebitblt_static(void *this_ptr)
 }
 
   void
+bx_svga_cirrus_c::svga_solidfill_static(void *this_ptr)
+{
+  ((bx_svga_cirrus_c *)this_ptr)->svga_solidfill();
+}
+
+  void
 bx_svga_cirrus_c::svga_patterncopy_memsrc_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_patterncopy_memsrc();
@@ -2844,9 +2847,9 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc_static(void *this_ptr)
 }
 
   void
-bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc_static(void *this_ptr)
+bx_svga_cirrus_c::svga_colorexpand_transp_memsrc_static(void *this_ptr)
 {
-  ((bx_svga_cirrus_c *)this_ptr)->svga_simplebitblt_transp_memsrc();
+  ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_transp_memsrc();
 }
 
 #endif // !BX_USE_CIRRUS_SMF
@@ -3039,13 +3042,6 @@ bx_svga_cirrus_c::svga_solidfill()
   void
 bx_svga_cirrus_c::svga_patterncopy_memsrc()
 {
-  int srcavail = BX_CIRRUS_THIS bitblt.memsrc_ptr - &BX_CIRRUS_THIS bitblt.memsrc[0];
-
-  if (srcavail != BX_CIRRUS_THIS bitblt.memsrc_needed) {
-    BX_ERROR(("svga_patterncopy_memsrc() - CIRRUS_BLT_CACHESIZE is too small"));
-    BX_CIRRUS_THIS bitblt.memsrc_needed = 0;
-    return;
-  }
   BX_INFO(("svga_patterncopy_memsrc() - not tested"));
 
   BX_CIRRUS_THIS bitblt.src = &BX_CIRRUS_THIS bitblt.memsrc[0];
@@ -3088,43 +3084,46 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc()
 }
 
   void
-bx_svga_cirrus_c::svga_simplebitblt_transp_memsrc()
+bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
 {
-  Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
-  Bit16u w;
+  Bit8u *src = &BX_CIRRUS_THIS bitblt.memsrc[0];
   Bit8u color[4];
   int x;
-  Bit8u *dst, *src;
-  unsigned bits, bitmask;
+  Bit8u *dst;
+  unsigned bits, bits_xor, bitmask;
+  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
 
   BX_DEBUG(("BLT, cpu-to-video, transparent"));
 
-  color[0] = BX_CIRRUS_THIS control.shadow_reg1;
-  color[1] = BX_CIRRUS_THIS control.reg[0x11];
-  color[2] = BX_CIRRUS_THIS control.reg[0x13];
-  color[3] = BX_CIRRUS_THIS control.reg[0x15];
-
-  if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
-    w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
-    src = srcptr;
-    dst = BX_CIRRUS_THIS bitblt.dst;
-    bitmask = 0x80;
-    bits = *src++;
-    for (x = 0; x < w; x++) {
-      if ((bitmask & 0xff) == 0) {
-        bitmask = 0x80;
-        bits = *src++;
-      }
-      if (bits & bitmask) {
-        (*BX_CIRRUS_THIS bitblt.rop_handler)(
-            dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
-      }
-      dst += BX_CIRRUS_THIS bitblt.pixelwidth;
-      bitmask >>= 1;
-    }
+  if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
+    color[0] = BX_CIRRUS_THIS control.shadow_reg0;
+    color[1] = BX_CIRRUS_THIS control.reg[0x10];
+    color[2] = BX_CIRRUS_THIS control.reg[0x12];
+    color[3] = BX_CIRRUS_THIS control.reg[0x14];
+    bits_xor = 0xff;
   } else {
-    BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
-    return;
+    color[0] = BX_CIRRUS_THIS control.shadow_reg1;
+    color[1] = BX_CIRRUS_THIS control.reg[0x11];
+    color[2] = BX_CIRRUS_THIS control.reg[0x13];
+    color[3] = BX_CIRRUS_THIS control.reg[0x15];
+    bits_xor = 0x00;
+  }
+
+  dst = BX_CIRRUS_THIS bitblt.dst + pattern_x;
+  bitmask = 0x80 >> srcskipleft;
+  bits = *src++;
+  for (x = pattern_x; x < BX_CIRRUS_THIS bitblt.bltwidth; x+=BX_CIRRUS_THIS bitblt.pixelwidth) {
+    if ((bitmask & 0xff) == 0) {
+      bitmask = 0x80;
+      bits = *src++ ^ bits_xor;
+    }
+    if (bits & bitmask) {
+      (*BX_CIRRUS_THIS bitblt.rop_handler)(
+          dst, &color[0], 0, 0, BX_CIRRUS_THIS bitblt.pixelwidth, 1);
+    }
+    dst += BX_CIRRUS_THIS bitblt.pixelwidth;
+    bitmask >>= 1;
   }
 }
 

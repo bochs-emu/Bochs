@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.4 2005-04-09 11:57:23 vruppert Exp $
+// $Id: svga_cirrus.h,v 1.5 2005-04-13 18:39:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -138,22 +138,24 @@ private:
 #if !BX_USE_CIRRUS_SMF
   static void  svga_patterncopy_static(void *this_ptr);
   static void  svga_simplebitblt_static(void *this_ptr);
+  static void  svga_solidfill_static(void *this_ptr);
   static void  svga_patterncopy_memsrc_static(void *this_ptr);
   static void  svga_simplebitblt_memsrc_static(void *this_ptr);
-  static void  svga_simplebitblt_transp_memsrc_static(void *this_ptr);
+  static void  svga_colorexpand_transp_memsrc_static(void *this_ptr);
 #else
   #define svga_patterncopy_static svga_patterncopy
   #define svga_simplebitblt_static svga_simplebitblt
+  #define svga_solidfill_static svga_solidfill
   #define svga_patterncopy_memsrc_static svga_patterncopy_memsrc
   #define svga_simplebitblt_memsrc_static svga_simplebitblt_memsrc
-  #define svga_simplebitblt_transp_memsrc_static svga_simplebitblt_transp_memsrc
+  #define svga_colorexpand_transp_memsrc_static svga_colorexpand_transp_memsrc
 #endif // !BX_USE_CIRRUS_SMF
   BX_CIRRUS_SMF void svga_patterncopy();
   BX_CIRRUS_SMF void svga_simplebitblt();
   BX_CIRRUS_SMF void svga_solidfill();
   BX_CIRRUS_SMF void svga_patterncopy_memsrc();
   BX_CIRRUS_SMF void svga_simplebitblt_memsrc();
-  BX_CIRRUS_SMF void svga_simplebitblt_transp_memsrc();
+  BX_CIRRUS_SMF void svga_colorexpand_transp_memsrc();
 
   BX_CIRRUS_SMF bx_bool svga_asyncbitblt_next();
   BX_CIRRUS_SMF bx_cirrus_bitblt_rop_t svga_get_fwd_rop_handler(Bit8u rop);
