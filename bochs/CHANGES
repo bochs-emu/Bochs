@@ -223,7 +223,13 @@ Changes in 2.2.pre2 (March 25, 2005):
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
- #1172191 Screen-update bug in vga.cc [2.2.pre2]
+  #831750 bochs unlike real PC in paging
+ #1182698 PAE support doesn't work
+  #954400 debugger causes segfaults when gcc 3.4.0 is used
+ #1171312 Possible SMP problem with ICACHE pageWriteStamp
+ #1179964 PANIC: RIP>CS.limit when jumping to longmode
+ #1171067 configure fails to add -lpthread
+ #1171065 Term UI needs -lncurses 
  #1171061 SDL GUI startup failure
  #1022056 win32 error build debug version..c2146
   #957190 error while attempting to compile sb16.cc
