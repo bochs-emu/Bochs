@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.58 2005-03-03 20:24:52 sshwarts Exp $
+// $Id: paging.cc,v 1.59 2005-04-14 16:44:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -421,6 +421,15 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 
   if (bx_dbg.paging)
     BX_INFO(("pagingCR4Changed(0x%x -> 0x%x):", oldCR4, newCR4));
+
+#if BX_SupportPAE
+  if ( (oldCR4 & 0x00000020) != (newCR4 & 0x00000020) ) {
+    if (BX_CPU_THIS_PTR cr4.get_PAE())
+      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
+    else
+      BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xfffff000;
+  }
+#endif
 }
 
   void BX_CPP_AttrRegparmN(1)
