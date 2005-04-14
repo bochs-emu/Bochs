@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.18 2005-04-13 20:38:09 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.19 2005-04-14 18:59:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -406,38 +406,40 @@ bx_svga_cirrus_c::reset(unsigned type)
 bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, 
                               unsigned width, unsigned height)
 {
-  unsigned xi, yi, x1, y1, xmax, ymax;
+  unsigned xti, yti, xt0, xt1, yt0, yt1;
+
+  if ((width == 0) || (height == 0)) {
+    return;
+  }
 
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vga_c::redraw_area(x0,y0,width,height);
     return;
-    }
+  }
 
   if (BX_CIRRUS_THIS svga_needs_update_mode) {
     return;
-    }
+  }
 
   BX_CIRRUS_THIS svga_needs_update_tile = true;
 
-  x1 = x0 + width  - 1;
-  y1 = y0 + height - 1;
-  xmax = BX_CIRRUS_THIS svga_xres;
-  ymax = BX_CIRRUS_THIS svga_yres;
-  for (yi=0; yi<ymax; yi+=Y_TILESIZE) {
-    for (xi=0; xi<xmax; xi+=X_TILESIZE) {
-      // is redraw rectangle outside x boundaries of this tile?
-      if (x1 < xi) continue;
-      if (x0 > (xi+X_TILESIZE-1)) continue;
-
-      // is redraw rectangle outside y boundaries of this tile?
-      if (y1 < yi) continue;
-      if (y0 > (yi+Y_TILESIZE-1)) continue;
-
-      unsigned xti = xi/X_TILESIZE;
-      unsigned yti = yi/Y_TILESIZE;
+  xt0 = x0 / X_TILESIZE;
+  yt0 = y0 / Y_TILESIZE;
+  if (x0 < BX_CIRRUS_THIS svga_xres) {
+    xt1 = (x0 + width  - 1) / X_TILESIZE;
+  } else {
+    xt1 = (BX_CIRRUS_THIS svga_xres - 1) / X_TILESIZE;
+  }
+  if (y0 < BX_CIRRUS_THIS svga_yres) {
+    yt1 = (y0 + height - 1) / Y_TILESIZE;
+  } else {
+    yt1 = (BX_CIRRUS_THIS svga_yres - 1) / Y_TILESIZE;
+  }
+  for (yti=yt0; yti<=yt1; yti++) {
+    for (xti=xt0; xti<=xt1; xti++) {
       SET_TILE_UPDATED (xti, yti, 1);
-      }
     }
+  }
 }
 
   void
@@ -1077,14 +1079,21 @@ bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinf
         break;
     }
 
-    fgcol = MAKE_COLOUR(
-      BX_CIRRUS_THIS hidden_dac.palette[45], 6, info->red_shift, info->red_mask,
-      BX_CIRRUS_THIS hidden_dac.palette[46], 6, info->green_shift, info->green_mask,
-      BX_CIRRUS_THIS hidden_dac.palette[47], 6, info->blue_shift, info->blue_mask);
-    bgcol = MAKE_COLOUR(
-      BX_CIRRUS_THIS hidden_dac.palette[0], 6, info->red_shift, info->red_mask,
-      BX_CIRRUS_THIS hidden_dac.palette[1], 6, info->green_shift, info->green_mask,
-      BX_CIRRUS_THIS hidden_dac.palette[2], 6, info->blue_shift, info->blue_mask);
+    if (!info->is_indexed) {
+      fgcol = MAKE_COLOUR(
+        BX_CIRRUS_THIS hidden_dac.palette[45], 6, info->red_shift, info->red_mask,
+        BX_CIRRUS_THIS hidden_dac.palette[46], 6, info->green_shift, info->green_mask,
+        BX_CIRRUS_THIS hidden_dac.palette[47], 6, info->blue_shift, info->blue_mask);
+      bgcol = MAKE_COLOUR(
+        BX_CIRRUS_THIS hidden_dac.palette[0], 6, info->red_shift, info->red_mask,
+        BX_CIRRUS_THIS hidden_dac.palette[1], 6, info->green_shift, info->green_mask,
+        BX_CIRRUS_THIS hidden_dac.palette[2], 6, info->blue_shift, info->blue_mask);
+    } else {
+      // FIXME: this is a hack that works in Windows guests
+      // TODO: compare hidden DAC entries with DAC entries to find nearest match
+      fgcol = 0xff;
+      bgcol = 0x00;
+    }
 
     plane0_ptr += pitch * (cy0 - BX_CIRRUS_THIS hw_cursor.y);
     plane1_ptr += pitch * (cy0 - BX_CIRRUS_THIS hw_cursor.y);
@@ -1241,7 +1250,7 @@ bx_svga_cirrus_c::svga_update(void)
                   vid_ptr  += pitch;
                   tile_ptr += info.pitch;
                 }
-                // FIXME? hardware cursor unsupported
+                draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                 SET_TILE_UPDATED (xti, yti, 0);
               }
@@ -2702,12 +2711,11 @@ bx_svga_cirrus_c::svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count)
   Bit8u colors[2];
   unsigned bits;
   unsigned bitmask;
-  int srcskipleft = 0;
 
   colors[0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[1] = BX_CIRRUS_THIS control.shadow_reg1;
 
-  bitmask = 0x80 >> srcskipleft;
+  bitmask = 0x80;
   bits = *src++;
   for (x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
@@ -2727,14 +2735,13 @@ bx_svga_cirrus_c::svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
   colors[1][0] = BX_CIRRUS_THIS control.shadow_reg1;
   colors[1][1] = BX_CIRRUS_THIS control.reg[0x11];
 
-  bitmask = 0x80 >> srcskipleft;
+  bitmask = 0x80;
   bits = *src++;
   for (x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
@@ -2756,7 +2763,6 @@ bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2765,7 +2771,7 @@ bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
   colors[1][1] = BX_CIRRUS_THIS control.reg[0x11];
   colors[1][2] = BX_CIRRUS_THIS control.reg[0x13];
 
-  bitmask = 0x80 >> srcskipleft;
+  bitmask = 0x80;
   bits = *src++;
   for (x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
@@ -2788,7 +2794,6 @@ bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
   unsigned bits;
   unsigned bitmask;
   unsigned index;
-  int srcskipleft = 0;
 
   colors[0][0] = BX_CIRRUS_THIS control.shadow_reg0;
   colors[0][1] = BX_CIRRUS_THIS control.reg[0x10];
@@ -2799,7 +2804,7 @@ bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
   colors[1][2] = BX_CIRRUS_THIS control.reg[0x13];
   colors[1][3] = BX_CIRRUS_THIS control.reg[0x15];
 
-  bitmask = 0x80 >> srcskipleft;
+  bitmask = 0x80;
   bits = *src++;
   for (x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
