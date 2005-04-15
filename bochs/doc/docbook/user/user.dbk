@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.169 2005-04-03 10:47:01 vruppert Exp $
+$Id: user.dbk,v 1.170 2005-04-15 22:44:46 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2770,9 +2770,11 @@ Here's the procedure:
 <para>
   wxWidgets is a cross-platform C++ user interface library which
   you can download for free at <ulink url="http://wxwidgets.org/">wxwidgets.org</ulink>.
-  The wxWidgets port of Bochs provides both a graphical configuration interface (for
-  editing <filename>bochsrc</filename> options) and a display. It was written by Bryce Denney,
-  Don Becker, Dave Poirier, and Volker Ruppert.
+  The wxWidgets port of Bochs provides both a graphical configuration interface for
+  editing <filename>bochsrc</filename> options (see
+  <link linkend="bochsopt-configinterface">config_interface option</link>) and a
+  display (see <link linkend="bochsopt-displaylibrary">display_library option</link>).
+  It was written by Bryce Denney, Don Becker, Dave Poirier, and Volker Ruppert.
 <screen>
   configure --with-wx
   make
@@ -3307,16 +3309,19 @@ The configuration interface is a series of menus or dialog boxes that
 allows you to edit all the settings that control Bochs' behavior.
 There are two choices of configuration interface: a text mode version
 called "textconfig" and a graphical version called "wx".  The text
-mode version uses stdin/stdout and is always available.  The graphical
-version is only compiled when you use "--with-wx" in the configure 
-command.  If you do not write a config_interface line, Bochs will 
-choose a default for you (usually textconfig).
+mode version uses stdin/stdout and is always available while the graphical
+version is only available when Bochs is compiled with wxWidgets support, see
+<xref linkend="compile-wx">. If you do not use a config_interface line, Bochs
+will choose a default for you (usually textconfig).
 </para>
+
 <note><para>
 wxWidgets provides both a configuration interface and a display library.
 So if you use the "wx" configuration interface, you must also use
-the "wx" display library.
+the "wx" display library, see
+<link linkend="bochsopt-displaylibrary">display_library option</link>.
 </para></note>
+
 <para>
 Examples:
 <screen>
@@ -3326,40 +3331,23 @@ Examples:
 </para>
 </section>
 
-<section><title>display_library</title>
+<section id="bochsopt-displaylibrary"><title>display_library</title>
 <para>
 The display library is the code that displays the Bochs VGA screen.  Bochs 
 has a selection of about 10 different display library implementations for 
 different platforms.  If you run configure with multiple --with-* options, 
-the display_library command lets you choose which one you want to run with.
-If you do not write a display_library line, Bochs will choose a default for
+the display_library option lets you choose which one you want to run with.
+If you do not use a display_library line, Bochs will choose a default for
 you.
 </para>
-<table>   
-<title>display_library values</title>
-<tgroup cols="2">
-<thead>
-<row>
-<entry>Option</entry>
-<entry>Description</entry>
-</row>
-</thead>
-<tbody>
-<row> <entry> x          </entry><entry> use X windows interface, cross platform </entry> </row>
-<row> <entry> win32      </entry><entry> use native win32 libraries </entry> </row>
-<row> <entry> carbon     </entry><entry> use Carbon library (for MacOS X) </entry> </row>
-<row> <entry> beos       </entry><entry> use native BeOS libraries </entry> </row>
-<row> <entry> macintosh  </entry><entry> use MacOS pre-10 </entry> </row>
-<row> <entry> amigaos    </entry><entry> use native AmigaOS libraries </entry> </row>
-<row> <entry> sdl        </entry><entry> use SDL library, cross platform </entry> </row>
-<row> <entry> svga       </entry><entry> use SVGALIB library for Linux, allows graphics without X windows</entry> </row>
-<row> <entry> term       </entry><entry> text only, uses curses/ncurses library, cross platform </entry> </row>
-<row> <entry> rfb        </entry><entry> provides an interface to AT&amp;T's VNC viewer, cross platform </entry> </row>
-<row> <entry> wx         </entry><entry> use wxWidgets library, cross platform </entry> </row>
-<row> <entry> nogui      </entry><entry> no display at all </entry> </row>
-</tbody>
-</tgroup>
-</table>
+
+<note><para>
+wxWidgets provides both a configuration interface and a display library.
+So if you use the "wx" display library, you must also use
+the "wx" configuration interface, see
+<link linkend="bochsopt-configinterface">config_interface option</link>.
+</para></note>
+
 <para>
 Examples:
 <screen>
@@ -3368,12 +3356,70 @@ Examples:
 </screen>
 </para>
 
-<note><para>
-wxWidgets provides both a configuration interface and a display library.
-So if you use the "wx" configuration interface, you must also use
-the "wx" display library.
-</para></note>
-
+<table>
+<title>display_library values</title>
+<tgroup cols="2">
+<thead>
+<row>
+  <entry>Option</entry>
+  <entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+  <entry>x</entry>
+  <entry>use X windows interface, cross platform</entry>
+</row>
+<row>
+  <entry>win32</entry>
+  <entry>use native win32 libraries</entry>
+</row>
+<row>
+  <entry>carbon</entry>
+  <entry>use Carbon library (for MacOS X)</entry>
+</row>
+<row>
+  <entry>beos</entry>
+  <entry>use native BeOS libraries</entry>
+</row>
+<row>
+  <entry>macintosh</entry>
+  <entry>use MacOS pre-10</entry>
+</row>
+<row>
+  <entry>amigaos</entry>
+  <entry>use native AmigaOS libraries</entry>
+</row>
+<row>
+  <entry>sdl</entry>
+  <entry>use SDL library, cross platform,
+    details in <xref linkend="compile-sdl"></entry>
+</row>
+<row>
+  <entry>svga</entry>
+  <entry>use SVGALIB library for Linux, allows graphics without X windows</entry>
+</row>
+<row>
+  <entry>term</entry>
+  <entry>text only, uses curses/ncurses library, cross platform</entry>
+</row>
+<row>
+  <entry>rfb</entry>
+  <entry>provides an interface to AT&amp;T's VNC viewer, cross platform,
+    details in <xref linkend="compile-rfb"></entry>
+</row>
+<row>
+  <entry>wx</entry>
+  <entry>use wxWidgets library, cross platform,
+    details in <xref linkend="compile-wx"></entry>
+</row>
+<row>
+  <entry>nogui</entry>
+  <entry>no display at all</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
 </section>
 
 <section id="bochsopt-log"><title>log</title>
@@ -4083,8 +4129,6 @@ current time of the simulator host.
 
 <title>Sound Blaster 16 Emulation</title>
 
-<section><title>Preamble</title>
-
 <para>
 This section is a detailed description for configuring Sound Blaster 16 from
 source. If you have a binary and all you want to know is what to put in your
@@ -4101,10 +4145,9 @@ Bochs, however, so you can find everything you need here.
 
 <para>
 SB16 Emulation has been tested with several soundcards and versions of Linux.  Please give
-Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on 
+Josef <ulink url="mailto:jdrexler@julian.uwo.ca">feedback</ulink> on
 whether is does or doesn't work on your combination of software and hardware.
 </para>
-</section>
 
 <section><title>How well does it work?</title>
 <para>
