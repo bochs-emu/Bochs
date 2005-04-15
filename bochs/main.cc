@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.287 2005-04-10 19:42:46 sshwarts Exp $
+// $Id: main.cc,v 1.288 2005-04-15 12:02:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -852,7 +852,7 @@ bx_init_hardware()
 
 #if BX_SUPPORT_ICACHE
   pageWriteStampTable.alloc(memSize);
-#endif`
+#endif
 
 #if BX_SMP_PROCESSORS==1
   BX_MEM(0)->init_memory(memSize);
