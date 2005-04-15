@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.117 2005-03-27 08:02:54 vruppert Exp $
+// $Id: vga.cc,v 1.118 2005-04-15 17:33:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1354,22 +1354,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         (unsigned) address, (unsigned) value));
     }
   if (needs_update) {
-    BX_VGA_THIS s.vga_mem_updated = 1;
     // Mark all video as updated so the changes will go through
-    if ((BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
-#if BX_SUPPORT_VBE  
-        || (BX_VGA_THIS s.vbe_enabled)
-#endif
-       ) {
-      for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
-        for (unsigned yti = 0; yti < BX_NUM_Y_TILES; yti++) {
-          SET_TILE_UPDATED (xti, yti, 1);
-        }
-      }
-    } else {
-      memset(BX_VGA_THIS s.text_snapshot, 0,
-             sizeof(BX_VGA_THIS s.text_snapshot));
-    }
+    BX_VGA_THIS redraw_area(0, 0, old_iWidth, old_iHeight);
   }
 }
 
@@ -2738,7 +2724,11 @@ bx_vga_c::dump_status(void)
 bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
                       unsigned height)
 {
-  unsigned xi, yi, x1, y1, xmax, ymax;
+  unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
+
+  if ((width == 0) || (height == 0)) {
+    return;
+  }
 
   BX_VGA_THIS s.vga_mem_updated = 1;
 
@@ -2748,9 +2738,6 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
 #endif
     // graphics mode
-    x1 = x0 + width  - 1;
-    y1 = y0 + height - 1;
-
     xmax = old_iWidth;
     ymax = old_iHeight;
 #if BX_SUPPORT_VBE
@@ -2759,26 +2746,29 @@ bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
       ymax = BX_VGA_THIS s.vbe_yres;
     }
 #endif
-    for (yi=0; yi<ymax; yi+=Y_TILESIZE) {
-      for (xi=0; xi<xmax; xi+=X_TILESIZE) {
-        // is redraw rectangle outside x boundaries of this tile?
-        if (x1 < xi) continue;
-        if (x0 > (xi+X_TILESIZE-1)) continue;
-
-        // is redraw rectangle outside y boundaries of this tile?
-        if (y1 < yi) continue;
-        if (y0 > (yi+Y_TILESIZE-1)) continue;
-	unsigned xti = xi/X_TILESIZE;
-	unsigned yti = yi/Y_TILESIZE;
+    xt0 = x0 / X_TILESIZE;
+    yt0 = y0 / Y_TILESIZE;
+    if (x0 < xmax) {
+      xt1 = (x0 + width  - 1) / X_TILESIZE;
+    } else {
+      xt1 = (xmax - 1) / X_TILESIZE;
+    }
+    if (y0 < ymax) {
+      yt1 = (y0 + height - 1) / Y_TILESIZE;
+    } else {
+      yt1 = (ymax - 1) / Y_TILESIZE;
+    }
+    for (yti=yt0; yti<=yt1; yti++) {
+      for (xti=xt0; xti<=xt1; xti++) {
         SET_TILE_UPDATED (xti, yti, 1);
-        }
       }
     }
-  else {
+
+  } else {
     // text mode
     memset(BX_VGA_THIS s.text_snapshot, 0,
            sizeof(BX_VGA_THIS s.text_snapshot));
-    }
+  }
 }
 
 
