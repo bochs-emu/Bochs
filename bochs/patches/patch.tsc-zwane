@@ -48,7 +48,7 @@ diff -u -r1.63 proc_ctrl.cc
 +    Bit64u ticks = BX_CPU_THIS_PTR tsc;
      RAX = (Bit32u) (ticks & 0xffffffff);
 -    RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
-+    RDX = (Bit32u) ticks >> 32;
++    RDX = (Bit32u) (ticks >> 32);
      //BX_INFO(("RDTSC: returning EDX:EAX = %08x:%08x", EDX, EAX));
    } else {
      // not allowed to use RDTSC!
@@ -121,15 +121,6 @@ retrieving revision 1.22
 diff -u -r1.22 pc_system.h
 --- pc_system.h	25 Oct 2002 11:44:33 -0000	1.22
 +++ pc_system.h	14 Dec 2002 06:21:28 -0000
-@@ -27,7 +27,7 @@
- 
- 
- 
--#define BX_MAX_TIMERS (15+BX_SMP_PROCESSORS)
-+#define BX_MAX_TIMERS (128+BX_SMP_PROCESSORS)
- #define BX_NULL_TIMER_HANDLE 10000
- 
- 
 @@ -113,6 +113,9 @@
      if (--bx_pc_system.currCountdown == 0) {
        bx_pc_system.countdownEvent();
