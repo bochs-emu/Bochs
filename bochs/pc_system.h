@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.29 2004-07-06 19:59:10 vruppert Exp $
+// $Id: pc_system.h,v 1.30 2005-04-16 19:37:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -111,32 +111,26 @@ public:
   }
   static BX_CPP_INLINE void tick1(void) {
 #if BX_SHOW_IPS
-  {
-  extern unsigned long ips_count;
-  ips_count++;
-  }
+    ips_count++;
 #endif
     if (--bx_pc_system.currCountdown == 0) {
       bx_pc_system.countdownEvent();
-      }
     }
+  }
   static BX_CPP_INLINE void tickn(Bit64u n) {
 #if BX_SHOW_IPS
-  {
-  extern unsigned long ips_count;
-  ips_count += n;
-  }
+    ips_count += n;
 #endif
     while (n >= Bit64u(bx_pc_system.currCountdown)) {
       n -= Bit64u(bx_pc_system.currCountdown);
       bx_pc_system.currCountdown = 0;
       bx_pc_system.countdownEvent();
       // bx_pc_system.currCountdown is adjusted to new value by countdownevent().
-      };
+    }
     // 'n' is not (or no longer) >= the countdown size.  We can just decrement
     // the remaining requested ticks and continue.
     bx_pc_system.currCountdown -= Bit32u(n);
-    }
+  }
 
   int register_timer_ticks(void* this_ptr, bx_timer_handler_t, Bit64u ticks,
                            bx_bool continuous, bx_bool active, const char *id);
@@ -147,14 +141,14 @@ public:
   static BX_CPP_INLINE Bit64u time_ticks() {
     return bx_pc_system.ticksTotal +
       Bit64u(bx_pc_system.currCountdownPeriod - bx_pc_system.currCountdown);
-    }
+  }
   static BX_CPP_INLINE Bit64u getTicksTotal(void) {
     return bx_pc_system.ticksTotal;
-    }
+  }
 
   static BX_CPP_INLINE Bit32u  getNumCpuTicksLeftNextEvent(void) {
     return bx_pc_system.currCountdown;
-    }
+  }
 #if BX_DEBUGGER
   static void timebp_handler(void* this_ptr);
 #endif

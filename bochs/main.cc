@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.288 2005-04-15 12:02:10 vruppert Exp $
+// $Id: main.cc,v 1.289 2005-04-16 19:37:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -397,8 +397,7 @@ int main (int argc, char *argv[])
 }
 #endif
 
-void
-print_usage ()
+void print_usage ()
 {
   fprintf(stderr, 
     "Usage: bochs [flags] [bochsrc options]\n\n"
@@ -414,8 +413,7 @@ print_usage ()
 #endif
 }
 
-int
-bx_init_main (int argc, char *argv[])
+int bx_init_main (int argc, char *argv[])
 {
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
@@ -627,7 +625,8 @@ bx_init_main (int argc, char *argv[])
   return 0;
 }
 
-bx_bool load_and_init_display_lib () {
+bx_bool load_and_init_display_lib ()
+{
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
     // the simulation for the second time.
@@ -735,7 +734,6 @@ bx_begin_simulation (int argc, char *argv[])
   else
 #endif
   {
-
     bx_init_hardware();
 
     if (bx_options.load32bitOSImage.OwhichOS->get ()) {
@@ -785,9 +783,7 @@ bx_begin_simulation (int argc, char *argv[])
   return(0);
 }
 
-
-  int
-bx_init_hardware()
+int bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
@@ -933,10 +929,7 @@ bx_init_hardware()
   return(0);
 }
 
-
-
-  void
-bx_init_bx_dbg (void)
+void bx_init_bx_dbg (void)
 {
   bx_dbg.floppy = 0;
   bx_dbg.keyboard = 0;
@@ -971,12 +964,9 @@ bx_init_bx_dbg (void)
 #if BX_GDBSTUB
   bx_dbg.gdbstub_enabled = 0;
 #endif
-
 }
 
-
-int
-bx_atexit(void)
+int bx_atexit(void)
 {
   static bx_bool been_here = 0;
   if (been_here) return 1;   // protect from reentry
@@ -1016,11 +1006,11 @@ bx_atexit(void)
   signal(SIGALRM, SIG_DFL);
 #endif
 #endif
-        return 0;
+
+  return 0;
 }
 
-  void
-bx_signal_handler( int signum)
+void bx_signal_handler( int signum)
 {
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
   // threads.  This function is only intended to handle signals in the
@@ -1045,15 +1035,18 @@ bx_signal_handler( int signum)
 #if BX_SHOW_IPS
   extern unsigned long ips_count;
 
-  if (signum == SIGALRM ) {
-    BX_INFO(("ips = %lu", ips_count));
-    ips_count = 0;
+  if (signum == SIGALRM)
+  {
+    if (ips_count) {
+      BX_INFO(("ips = %lu", ips_count));
+      ips_count = 0;
+    }
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);
     alarm( 1 );
 #endif
     return;
-    }
+  }
 #endif
 
 #if BX_GUI_SIGHANDLER
@@ -1066,4 +1059,3 @@ bx_signal_handler( int signum)
 #endif
   BX_PANIC(("SIGNAL %u caught", signum));
 }
-
