@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.4 2005-04-10 19:53:42 sshwarts Exp $
+// $Id: lexer.l,v 1.5 2005-04-16 21:43:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -202,18 +202,16 @@ bx_yyinput(char *buf, int max_size)
   if (lex_input_size == 0) {
     fprintf(stderr, "lex: no characters in string input buffer.\n");
     exit(1);
-    }
+  }
 
-  len = strlen(lex_input_ptr);
-  if (max_size > len)
-    max_size = len;
+  len = strlen(lex_input_ptr) + 1;
+  if (len > max_size)
+    len = max_size;
 
-  memcpy(buf, lex_input_ptr, max_size);
-  lex_input_size -= max_size;
+  memcpy(buf, lex_input_ptr, len);
 
-  return(max_size);
+  return(len);
 }
-
 
   void
 bx_add_lex_input(char *buf)

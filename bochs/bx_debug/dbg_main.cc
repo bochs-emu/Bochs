@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.21 2005-04-10 18:03:15 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.22 2005-04-16 21:43:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2485,79 +2485,58 @@ void bx_dbg_dump_cpu_command(void)
     BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if (BX_SMP_PROCESSORS >= 2)
-    dbg_printf ( "CPU#%u\n", i);
+    dbg_printf ("CPU#%u\n", i);
 #endif
-    dbg_printf ( "eax:0x%x\n", (unsigned) cpu.eax);
-    dbg_printf ( "ebx:0x%x\n", (unsigned) cpu.ebx);
-    dbg_printf ( "ecx:0x%x\n", (unsigned) cpu.ecx);
-    dbg_printf ( "edx:0x%x\n", (unsigned) cpu.edx);
+    dbg_printf ("eax:0x%08x, ebx:0x%08x, ecx:0x%08x, edx:0x%08x\n", 
+      (unsigned) cpu.eax, (unsigned) cpu.ebx,
+      (unsigned) cpu.ecx, (unsigned) cpu.edx);
+    dbg_printf ("ebp:0x%08x, esp:0x%08x, esi:0x%08x, edi:0x%08x\n", 
+      (unsigned) cpu.ebp, (unsigned) cpu.esp,
+      (unsigned) cpu.esi, (unsigned) cpu.edi);
+    dbg_printf ("eip:0x%08x, eflags:0x%08x, inhibit_mask:%u\n",
+      (unsigned) cpu.eip, (unsigned) cpu.eflags, cpu.inhibit_mask);
 
-    dbg_printf ( "ebp:0x%x\n", (unsigned) cpu.ebp);
-    dbg_printf ( "esi:0x%x\n", (unsigned) cpu.esi);
-    dbg_printf ( "edi:0x%x\n", (unsigned) cpu.edi);
-    dbg_printf ( "esp:0x%x\n", (unsigned) cpu.esp);
-
-    dbg_printf ( "eflags:0x%x\n", (unsigned) cpu.eflags);
-    dbg_printf ( "eip:0x%x\n", (unsigned) cpu.eip);
-
-    dbg_printf ( "cs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("cs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.cs.sel, (unsigned) cpu.cs.des_l,
       (unsigned) cpu.cs.des_h, (unsigned) cpu.cs.valid);
-
-    dbg_printf ( "ss:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("ss:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ss.sel, (unsigned) cpu.ss.des_l,
       (unsigned) cpu.ss.des_h, (unsigned) cpu.ss.valid);
-
-    dbg_printf ( "ds:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("ds:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ds.sel, (unsigned) cpu.ds.des_l,
       (unsigned) cpu.ds.des_h, (unsigned) cpu.ds.valid);
-
-    dbg_printf ( "es:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("es:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.es.sel, (unsigned) cpu.es.des_l,
       (unsigned) cpu.es.des_h, (unsigned) cpu.es.valid);
-
-    dbg_printf ( "fs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("fs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.fs.sel, (unsigned) cpu.fs.des_l,
       (unsigned) cpu.fs.des_h, (unsigned) cpu.fs.valid);
-
-    dbg_printf ( "gs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("gs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.gs.sel, (unsigned) cpu.gs.des_l,
       (unsigned) cpu.gs.des_h, (unsigned) cpu.gs.valid);
 
-    dbg_printf ( "ldtr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("ldtr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ldtr.sel, (unsigned) cpu.ldtr.des_l,
       (unsigned) cpu.ldtr.des_h, (unsigned) cpu.ldtr.valid);
 
-    dbg_printf ( "tr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
+    dbg_printf ("tr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.tr.sel, (unsigned) cpu.tr.des_l,
       (unsigned) cpu.tr.des_h, (unsigned) cpu.tr.valid);
 
-    dbg_printf ( "gdtr:base=0x%x, limit=0x%x\n",
+    dbg_printf ("gdtr:base=0x%08x, limit=0x%x\n",
       (unsigned) cpu.gdtr.base, (unsigned) cpu.gdtr.limit);
-
-    dbg_printf ( "idtr:base=0x%x, limit=0x%x\n",
+    dbg_printf ("idtr:base=0x%08x, limit=0x%x\n",
       (unsigned) cpu.idtr.base, (unsigned) cpu.idtr.limit);
 
-    dbg_printf ( "dr0:0x%x\n", (unsigned) cpu.dr0);
-    dbg_printf ( "dr1:0x%x\n", (unsigned) cpu.dr1);
-    dbg_printf ( "dr2:0x%x\n", (unsigned) cpu.dr2);
-    dbg_printf ( "dr3:0x%x\n", (unsigned) cpu.dr3);
-    dbg_printf ( "dr6:0x%x\n", (unsigned) cpu.dr6);
-    dbg_printf ( "dr7:0x%x\n", (unsigned) cpu.dr7);
+    dbg_printf ("dr0:0x%08x, dr1:0x%08x, dr2:0x%08x\n", 
+      (unsigned) cpu.dr0, (unsigned) cpu.dr1, (unsigned) cpu.dr2);
+    dbg_printf ("dr3:0x%08x, dr6:0x%08x, dr7:0x%08x\n", 
+      (unsigned) cpu.dr3, (unsigned) cpu.dr6, (unsigned) cpu.dr7);
 
-    dbg_printf ( "tr3:0x%x\n", (unsigned) cpu.tr3);
-    dbg_printf ( "tr4:0x%x\n", (unsigned) cpu.tr4);
-    dbg_printf ( "tr5:0x%x\n", (unsigned) cpu.tr5);
-    dbg_printf ( "tr6:0x%x\n", (unsigned) cpu.tr6);
-    dbg_printf ( "tr7:0x%x\n", (unsigned) cpu.tr7);
-
-    dbg_printf ( "cr0:0x%x\n", (unsigned) cpu.cr0);
-    dbg_printf ( "cr1:0x%x\n", (unsigned) cpu.cr1);
-    dbg_printf ( "cr2:0x%x\n", (unsigned) cpu.cr2);
-    dbg_printf ( "cr3:0x%x\n", (unsigned) cpu.cr3);
-    dbg_printf ( "cr4:0x%x\n", (unsigned) cpu.cr4);
-
-    dbg_printf ( "inhibit_mask:%u\n", cpu.inhibit_mask);
+    dbg_printf ("cr0:0x%08x, cr1:0x%08x, cr2:0x%08x\n", 
+      (unsigned) cpu.cr0, (unsigned) cpu.cr1, (unsigned) cpu.cr2);
+    dbg_printf ("cr3:0x%08x, cr4:0x%08x\n", 
+      (unsigned) cpu.cr3, (unsigned) cpu.cr4);
   }
 
 #if BX_SUPPORT_PCI
@@ -2566,7 +2545,7 @@ void bx_dbg_dump_cpu_command(void)
   }
 #endif
 
-  dbg_printf ( "done\n");
+  dbg_printf ("done\n");
 }
 
 static void bx_print_char (Bit8u ch)
