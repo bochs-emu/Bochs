@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.47 2005-04-10 19:42:47 sshwarts Exp $
+// $Id: apic.cc,v 1.48 2005-04-16 15:55:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -203,7 +203,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // arbitrate by default
   int arbitrate = 1;
-  int broadcast = (deliver_bitmask == APIC_ALL_MASK);
+  int broadcast = (dest == 0xff);
   bx_bool once = 0;
   int i;
 
@@ -287,11 +287,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
   // the base class.
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   int found_focus = 0;
-  int broadcast = (deliver_bitmask == LOCAL_APIC_ALL_MASK);
   int bit;
-
-  if (broadcast)
-    BX_INFO(("Broadcast IPI for vector %#x delivery_mode %#x", vector, delivery_mode));
 
   switch (delivery_mode) {
   case APIC_DM_LOWPRI: // lowest priority of destinations
@@ -581,7 +577,7 @@ void bx_local_apic_c::startup_msg (Bit32u vector)
 void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
 {
   if (len != 4) {
-    BX_PANIC (("local apic write with len=%d (should be 4)", len));
+    BX_PANIC (("local apic read with len=%d (should be 4)", len));
   }
   *data = 0;  // default value for unimplemented registers
   Bit32u addr2 = addr & 0xff0;
