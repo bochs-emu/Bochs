@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.218 2005-04-17 18:54:54 sshwarts Exp $
+// $Id: cpu.h,v 1.219 2005-04-17 21:51:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2609,8 +2609,6 @@ public: // for now...
   BX_SMF void cpu_loop(Bit32s max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i);
-  BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void prefetch(void);
   // revalidate_prefetch_q is now a no-op, due to the newer EIP window
   // technique.
@@ -2659,6 +2657,11 @@ public: // for now...
 #define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
 #define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
+
+  BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
                      unsigned rw, void *data) BX_CPP_AttrRegparmN(3);

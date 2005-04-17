@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.36 2005-03-20 18:08:46 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.37 2005-04-17 21:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1933,6 +1933,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP)
   EIP = new_EIP;
   revalidate_prefetch_q();
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near64(bxInstruction_c *i)
+{
+  Bit64u new_RIP = RIP + (Bit32s) i->Id();
+
+  if (! i->os32L()) {
+    new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+  }
+  else {
+    if (! IsCanonical(new_RIP)) {
+      BX_ERROR(("branch_near64: canonical RIP violation"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  }
+
+  RIP = new_RIP;
+  revalidate_prefetch_q();
+}
+#endif
 
 void BX_CPU_C::validate_seg_regs(void)
 {

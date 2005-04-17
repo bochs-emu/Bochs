@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.32 2005-04-17 18:54:54 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.33 2005-04-17 21:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -235,21 +235,7 @@ done:
 
 void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
-  Bit64u new_RIP = RIP + (Bit32s) i->Id();
-
-  //invalidate_prefetch_q();
-
-  if (! i->os32L()) {
-    new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-  }
-  else {
-    if (! IsCanonical(new_RIP)) {
-      BX_INFO(("JMP_Jq: canonical RIP violation"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-  }
-
-  RIP = new_RIP;
+  branch_near64(i);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
@@ -283,19 +269,8 @@ void BX_CPU_C::JCC_Jq(bxInstruction_c *i)
   }
 
   if (condition) {
-    Bit64u new_RIP = RIP + (Bit32s) i->Id();
-    if (! i->os32L()) {
-      new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-    }
-    else {
-      if (! IsCanonical(new_RIP)) {
-        BX_INFO(("JCC_Jq: canonical RIP violation"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    RIP = new_RIP;
+    branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-    revalidate_prefetch_q();
   }
 #if BX_INSTRUMENTATION
   else {
@@ -327,8 +302,7 @@ void BX_CPU_C::JMP_Eq(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
-  /* Far indirect jump */
-
+/* Far indirect jump */
 void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
@@ -379,126 +353,82 @@ done:
 
 void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 {
-  Bit64u temp_RCX;
-
-  if (i->as64L())
-    temp_RCX = RCX;
-  else
-    temp_RCX = ECX;
-
-  if (temp_RCX == 0) {
-    Bit64u new_RIP = RIP + (Bit32s) i->Id();
-    if (! i->os32L()) {
-      new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+  if (i->as64L()) {
+    if ( RCX == 0 ) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
     }
-    else {
-      if (! IsCanonical(new_RIP)) {
-        BX_INFO(("JCXZ64_Jb: canonical RIP violation"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    RIP = new_RIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-    revalidate_prefetch_q();
   }
-#if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    if ( ECX == 0 ) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
+    }
   }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 void BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 {
-  Bit64u temp_RCX;
-
-  if (i->as64L())
-    temp_RCX = RCX;
-  else
-    temp_RCX = ECX;
-
-  if ( ((--temp_RCX)!=0) && (get_ZF()==0) ) {
-    Bit64u new_RIP = RIP + (Bit32s) i->Id();
-    if (! i->os32L()) {
-      new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+  if (i->as64L()) {
+    if ( ((--RCX) != 0) && (get_ZF()==0) ) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
     }
-    else {
-      if (! IsCanonical(new_RIP)) {
-        BX_INFO(("LOOPNE64_Jb: canonical RIP violation"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    RIP = new_RIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-    revalidate_prefetch_q();
   }
-#if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    if ( ((--ECX) != 0) && (get_ZF()==0) ) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
+    }
   }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 void BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 {
-  Bit64u temp_RCX;
-
-  if (i->as64L())
-    temp_RCX = RCX;
-  else
-    temp_RCX = ECX;
-
-  if ( ((--temp_RCX)!=0) && (get_ZF()) ) {
-    Bit64u new_RIP = RIP + (Bit32s) i->Id();
-    if (! i->os32L()) {
-      new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+  if (i->as64L()) {
+    if ( ((--RCX)!=0) && (get_ZF()) ) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
     }
-    else {
-      if (! IsCanonical(new_RIP)) {
-        BX_INFO(("LOOPE64_Jb: canonical RIP violation"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    RIP = new_RIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-    revalidate_prefetch_q();
   }
-#if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    if (((--ECX)!=0) && get_ZF()) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
+    }
   }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 void BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 {
-  Bit64u temp_RCX;
-
-  if (i->as64L())
-    temp_RCX = RCX;
-  else
-    temp_RCX = ECX;
-
-  if ((--temp_RCX) != 0) {
-    Bit64u new_RIP = RIP + (Bit32s) i->Id();
-    if (! i->os32L()) {
-      new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
+  if (i->as64L()) {
+    if ((--RCX) != 0) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
     }
-    else {
-      if (! IsCanonical(new_RIP)) {
-        BX_INFO(("JCC_Jq: canonical RIP violation"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-    }
-    RIP = new_RIP;
-    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-    revalidate_prefetch_q();
   }
-#if BX_INSTRUMENTATION
   else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    if ((--ECX) != 0) {
+      branch_near64(i);
+      BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+      return;
+    }
   }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */
