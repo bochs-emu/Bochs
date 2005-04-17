@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.17 2004-11-02 18:05:19 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.18 2005-04-17 18:54:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,23 +42,22 @@
   void
 BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
-BailBigRSP("JCXZ_Jb");
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if ( RCX == 0 ) {
       RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
-#endif
     }
+#endif
+  }
   else
 #endif
-   {
+  {
     Bit32u temp_ECX;
 
     if (i->as32L())
@@ -71,11 +70,11 @@ BailBigRSP("JCXZ_Jb");
       if (i->os32L()==0) new_EIP &= 0x0000ffff;
       branch_near32(new_EIP);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
+    }
 #endif
   }
 }
@@ -83,24 +82,22 @@ BailBigRSP("JCXZ_Jb");
   void
 BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
-BailBigRSP("loopne_jb");
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-
     if ( ((--RCX)!=0) && (get_ZF()==0) ) {
       RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
-#endif
     }
+#endif
+  }
   else
 #endif
-   {
+  {
     Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
@@ -120,7 +117,7 @@ BailBigRSP("loopne_jb");
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
+    }
 #endif
 
     if (i->as32L())
@@ -133,7 +130,6 @@ BailBigRSP("loopne_jb");
   void
 BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
-BailBigRSP("loope_jb");
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if ( ((--RCX)!=0) && (get_ZF()) ) {
@@ -144,9 +140,9 @@ BailBigRSP("loope_jb");
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
-#endif
     }
+#endif
+  }
   else
 #endif
  {
@@ -169,36 +165,35 @@ BailBigRSP("loope_jb");
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
+    }
 #endif
 
     if (i->as32L())
       RCX = ECX - 1;   // zero extend
     else
       CX--;
-    }
+  }
 }
 
   void
 BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
-BailBigRSP("loop_jb");
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     if ( ((--RCX)!=0) ) {
       RIP += (Bit32s) i->Id();
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
       revalidate_prefetch_q();
-      }
+    }
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
-#endif
     }
+#endif
+  }
   else
 #endif
- {
+  {
     Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
@@ -218,12 +213,12 @@ BailBigRSP("loop_jb");
 #if BX_INSTRUMENTATION
     else {
       BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-      }
+    }
 #endif
 
     if (i->as32L())
       RCX = ECX - 1;         // zero extend
     else
       CX--;
-    }
+  }
 }
