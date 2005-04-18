@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.102 2005-04-18 17:21:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.103 2005-04-18 17:41:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1719,7 +1719,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
-      BX_INFO("WRMSR: writing to BX_MSR_TSC still not implemented");
+      BX_INFO(("WRMSR: writing to BX_MSR_TSC still not implemented"));
       return;
 
     /* MSR_APICBASE
