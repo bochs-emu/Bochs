@@ -1,8 +1,11 @@
+#ifndef EXTDB_H
+#define EXTDB_H
+
 typedef struct {
   Bit64u base;
   Bit16u limit;
   Bit16u fill[3];
-  } descbase;
+} descbase;
 
 typedef struct {
         Bit64u rax,rcx,rdx,rbx,rsp,rbp,rsi,rdi,
@@ -19,7 +22,7 @@ typedef struct {
 #define debug_run         1
 #define debug_count       2
 #define debug_skip        3
-        } TRegs;
+} TRegs;
 
 extern TRegs regs;
 
@@ -27,3 +30,4 @@ extern char debug_loaded;
 
 void bx_external_debugger(BX_CPU_C *cpu);
 
+#endif

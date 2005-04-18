@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.101 2005-03-30 20:53:00 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.102 2005-04-18 17:21:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1569,10 +1569,6 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       /* TODO */
       return;
 
-    case BX_MSR_TSC:
-      RDTSC(i);
-      return;
-
     case BX_MSR_CESR:
       /* TODO */
       return;
@@ -1583,16 +1579,16 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       /* do nothing */
       return;
 
-    case BX_MSR_TSC:
-      RDTSC(i);
-      return;
-
     /* ... And these cause an exception on i686 */
     case BX_MSR_CESR:
     case BX_MSR_CTR0:
     case BX_MSR_CTR1:
       goto do_exception;
 #endif  /* BX_CPU_LEVEL == 5 */
+
+    case BX_MSR_TSC:
+      RDTSC(i);
+      return;
 
     /* MSR_APICBASE
        0:7    Reserved
@@ -1705,7 +1701,6 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     /* The following registers are defined for Pentium only */
     case BX_MSR_P5_MC_ADDR:
     case BX_MSR_MC_TYPE:
-    case BX_MSR_TSC:
     case BX_MSR_CESR:
       /* TODO */
       return;
@@ -1713,7 +1708,6 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     /* These are noops on i686... */
     case BX_MSR_P5_MC_ADDR:
     case BX_MSR_MC_TYPE:
-    case BX_MSR_TSC:
       /* do nothing */
       return;
 
@@ -1724,9 +1718,13 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       goto do_exception;
 #endif  /* BX_CPU_LEVEL == 5 */
 
+    case BX_MSR_TSC:
+      BX_INFO("WRMSR: writing to BX_MSR_TSC still not implemented");
+      return;
+
     /* MSR_APICBASE
        0:7    Reserved
-       8    This is set if its the BSP
+       8     This is set if its the BSP
        9:10    Reserved
        11    APIC Global Enable bit (1=enabled 0=disabled)
        12:35  APIC Base Address
@@ -1750,8 +1748,8 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
                 case BX_MSR_EFER:
                         // GPF #0 if lme 0->1 and cr0.pg = 1
                         // GPF #0 if lme 1->0 and cr0.pg = 1
-                        if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1))
-                           && (BX_CPU_THIS_PTR cr0.pg == 1))
+                        if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
+                            (BX_CPU_THIS_PTR cr0.pg == 1))
                         {
                           exception(BX_GP_EXCEPTION, 0, 0);
                         }
@@ -1759,16 +1757,16 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
                         BX_CPU_THIS_PTR msr.lme = (EAX >> 8) & 1;
                         return;
                 case BX_MSR_STAR:
-                        MSR_STAR = ((Bit64u) EDX << 32) + EAX;
+                        MSR_STAR   = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_LSTAR:
-                        MSR_LSTAR = ((Bit64u) EDX << 32) + EAX;
+                        MSR_LSTAR  = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_CSTAR:
-                        MSR_CSTAR = ((Bit64u) EDX << 32) + EAX;
+                        MSR_CSTAR  = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_FMASK:
-                        MSR_FMASK = ((Bit64u) EDX << 32) + EAX;
+                        MSR_FMASK  = ((Bit64u) EDX << 32) + EAX;
                         return;
                 case BX_MSR_FSBASE:
                         MSR_FSBASE = ((Bit64u) EDX << 32) + EAX;
@@ -2230,25 +2228,25 @@ Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
          (laddr_0 <= dr0_n) &&
          (laddr_n >= dr0) )
       ibpoint_found = 1;
-    }
+  }
   if ( (dr7 & 0x0000000c) ) {
     if ( (dr1_op==opa || dr1_op==opb) &&
          (laddr_0 <= dr1_n) &&
          (laddr_n >= dr1) )
       ibpoint_found = 1;
-    }
+  }
   if ( (dr7 & 0x00000030) ) {
     if ( (dr2_op==opa || dr2_op==opb) &&
          (laddr_0 <= dr2_n) &&
          (laddr_n >= dr2) )
       ibpoint_found = 1;
-    }
+  }
   if ( (dr7 & 0x000000c0) ) {
     if ( (dr3_op==opa || dr3_op==opb) &&
          (laddr_0 <= dr3_n) &&
          (laddr_n >= dr3) )
       ibpoint_found = 1;
-    }
+  }
 
   // If *any* enabled breakpoints matched, then we need to
   // set status bits for *all* breakpoints, even disabled ones,
@@ -2277,7 +2275,7 @@ Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
          (laddr_n >= dr3) )
       dr6_mask |= 0x08;
     return(dr6_mask);
-    }
+  }
   return(0);
 }
 

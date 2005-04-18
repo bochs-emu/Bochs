@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.278 2005-04-16 07:32:58 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.279 2005-04-18 17:21:32 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -922,7 +922,7 @@ AC_ARG_ENABLE(4meg-pages,
     AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
    fi],
   [
-    if test "$bx_cpu_level" -gt 5; then
+    if test "$bx_cpu_level" -gt 4; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
     else
