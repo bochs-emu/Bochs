@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.279 2005-04-18 17:21:32 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.280 2005-04-20 17:44:16 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -758,7 +758,7 @@ AC_SUBST(PCI_OBJ)
 #
 AC_MSG_CHECKING(for PCI host device mapping support)
 AC_ARG_ENABLE(pcidev,
-  [  --enable-pcidev                   enable PCI host device mapping support],
+  [  --enable-pcidev                   enable PCI host device mapping support (linux host only)],
   [
     if test "$enableval" = "yes"; then
       AC_MSG_RESULT(yes)
@@ -1091,7 +1091,7 @@ AC_ARG_ENABLE(port-e9-hack,
 
 AC_MSG_CHECKING(show IPS)
 AC_ARG_ENABLE(show-ips,
-  [  --enable-show-ips                 show IPS],
+  [  --enable-show-ips                 show IPS in Bochs log file],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SHOW_IPS, 1)
