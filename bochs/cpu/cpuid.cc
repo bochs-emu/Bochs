@@ -256,9 +256,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [15:15] CMOV: Cond Mov/Cmp Instructions
       //   [16:16] PAT: Page Attribute Table
       //   [17:17] PSE: Page-Size Extensions
-      //   [18:18] Reserved
+      //   [18:18] Processor Serial Number
       //   [19:19] CLFLUSH: CLFLUSH Instruction support
-      //   [22:20] Reserved
+      //   [20:20] Reserved
+      //   [21:21] DS: Debug Store
+      //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
       //   [23:23] MMX Technology
       //   [24]    FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //   [25]    SSE: SSE Extensions
