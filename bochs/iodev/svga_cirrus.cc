@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.19 2005-04-14 18:59:46 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.20 2005-04-21 18:31:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -24,7 +24,7 @@
 //
 // there are still many unimplemented features:
 //
-// - destination write mask support is not complete (bit 7)
+// - destination write mask support is not complete (bit 5..7)
 // - 1bpp/4bpp modes
 // - ???
 //
@@ -1942,7 +1942,7 @@ bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value
       value &= 0x3f;
       break;
     case 0x2f: // BLT WRITE MASK
-      if (value & 0x80) {
+      if (value & ~0x1f) {
         BX_ERROR(("BLT WRITE MASK support is not complete (value = 0x%02x)", value));
       }
       break;
@@ -2866,14 +2866,19 @@ bx_svga_cirrus_c::svga_patterncopy()
   Bit8u work_colorexp[256];
   Bit8u *src, *dst;
   Bit8u *dstc, *srcc, *src2;
-  int x, y, pattern_y;
+  int x, y, pattern_x, pattern_y, srcskipleft;
   int patternbytes = 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
   int pattern_pitch = patternbytes;
   int bltbytes = BX_CIRRUS_THIS bitblt.bltwidth;
   unsigned bits, bits_xor, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
-  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
 
+  if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+    pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
+    srcskipleft = pattern_x / 3;
+  } else {
+    srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+    pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
+  }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
@@ -2952,9 +2957,15 @@ bx_svga_cirrus_c::svga_simplebitblt()
   Bit16u w, x, y;
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
-  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
-
+  int pattern_x, srcskipleft;
+  
+  if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+    pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
+    srcskipleft = pattern_x / 3;
+  } else {
+    srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+    pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
+  }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_TRANSPARENTCOMP) {
       if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
@@ -3063,10 +3074,15 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc()
   Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
   Bit8u work_colorexp[2048];
   Bit16u w;
-  int pattern_x = (BX_CIRRUS_THIS control.reg[0x2f] & 0x07) * BX_CIRRUS_THIS bitblt.pixelwidth;
+  int pattern_x;
 
   BX_DEBUG(("svga_cirrus: BLT, cpu-to-video"));
 
+  if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+    pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
+  } else {
+    pattern_x = (BX_CIRRUS_THIS control.reg[0x2f] & 0x07) * BX_CIRRUS_THIS bitblt.pixelwidth;
+  }
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
     if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_COLOREXPAND) {
       BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
@@ -3094,14 +3110,19 @@ bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
 {
   Bit8u *src = &BX_CIRRUS_THIS bitblt.memsrc[0];
   Bit8u color[4];
-  int x;
+  int x, pattern_x, srcskipleft;
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
-  int srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
-  int pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
 
   BX_DEBUG(("BLT, cpu-to-video, transparent"));
 
+  if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+    pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
+    srcskipleft = pattern_x / 3;
+  } else {
+    srcskipleft = BX_CIRRUS_THIS control.reg[0x2f] & 0x07;
+    pattern_x = srcskipleft * BX_CIRRUS_THIS bitblt.pixelwidth;
+  }
   if (BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_COLOREXPINV) {
     color[0] = BX_CIRRUS_THIS control.shadow_reg0;
     color[1] = BX_CIRRUS_THIS control.reg[0x10];
