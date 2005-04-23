@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.48 2005-04-16 15:55:00 sshwarts Exp $
+// $Id: apic.cc,v 1.49 2005-04-23 17:52:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -230,7 +230,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       }
       // HACK! We need to do some IOAPIC init after the CPUs
       // are fired up
-      apic_index[i]->init();
+      apic_index[BX_IOAPIC_DEFAULT_ID]->init();
       return 1;
     
     case APIC_DM_EXTINT:
@@ -317,7 +317,8 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
       BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
       for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
         local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
-      apic_index[bit]->set_arb_id(apic_index[bit]->get_id());	// HACK !!!
+      // HACK I/O APIC ID
+      apic_index[BX_IOAPIC_DEFAULT_ID]->set_arb_id(apic_index[BX_IOAPIC_DEFAULT_ID]->get_id());
       return 1;
     }
     break; // we'll fall through to generic_deliver:case INIT
