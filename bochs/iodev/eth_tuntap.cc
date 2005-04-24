@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.19 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.20 2005-04-24 11:06:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,6 +84,7 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer ();
+  Bit8u guest_macaddr[6];
 #if BX_ETH_TUNTAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
 #endif
@@ -192,6 +193,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				1, 1, "eth_tuntap"); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
+  memcpy(&guest_macaddr[0], macaddr, 6);
 #if BX_ETH_TUNTAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
@@ -306,8 +308,8 @@ void bx_tuntap_pktmover_c::rx_timer ()
   // hack: TUN/TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
-  if (memcmp(&rxbuf[0], broadcast_macaddr, 6)) {
-    rxbuf[5] = 1;
+  if (!memcmp(&rxbuf[0], &rxbuf[6], 6)) {
+    rxbuf[5] = guest_macaddr[5];
   }
 
 #ifdef __APPLE__	//FIXME:hack

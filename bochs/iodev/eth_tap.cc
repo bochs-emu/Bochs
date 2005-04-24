@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.24 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth_tap.cc,v 1.25 2005-04-24 11:06:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,6 +129,7 @@ private:
   int rx_timer_index;
   static void rx_timer_handler(void *);
   void rx_timer ();
+  Bit8u guest_macaddr[6];
 #if BX_ETH_TAP_LOGGING
   FILE *txlog, *txlog_txt, *rxlog, *rxlog_txt;
 #endif
@@ -235,6 +236,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 				1, 1, "eth_tap"); // continuous, active
   this->rxh   = rxh;
   this->rxarg = rxarg;
+  memcpy(&guest_macaddr[0], macaddr, 6);
 #if BX_ETH_TAP_LOGGING
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
@@ -331,8 +333,8 @@ void bx_tap_pktmover_c::rx_timer ()
   // hack: TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.
   // Change the dest address to FE:FD:00:00:00:01.
-  if (memcmp(&rxbuf[0], broadcast_macaddr, 6)) {
-    rxbuf[5] = 1;
+  if (!memcmp(&rxbuf[0], &rxbuf[6], 6)) {
+    rxbuf[5] = guest_macaddr[5];
   }
 #endif
 
