@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.30 2005-04-16 19:37:53 sshwarts Exp $
+// $Id: pc_system.h,v 1.31 2005-04-26 19:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ private:
                                //   has to be stored as well.
 #define BxMaxTimerIDLen 32
     char id[BxMaxTimerIDLen]; // String ID of timer.
-    } timer[BX_MAX_TIMERS];
+  } timer[BX_MAX_TIMERS];
 
   unsigned   numTimers;  // Number of currently allocated timers.
   unsigned   triggeredTimer;  // ID of the actually triggered timer.
@@ -194,4 +194,4 @@ public:
   void    set_enable_a20(Bit8u value) BX_CPP_AttrRegparmN(1);
   bx_bool get_enable_a20(void);
   void    exit(void);
-  };
+};

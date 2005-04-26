@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.103 2005-04-18 17:41:15 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.104 2005-04-26 19:19:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1592,7 +1592,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
     /* MSR_APICBASE
        0:7    Reserved
-       8    This is set if its the BSP
+       8     This is set if its the BSP
        9:10    Reserved
        11    APIC Global Enable bit (1=enabled 0=disabled)
        12:35  APIC Base Address

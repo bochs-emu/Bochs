@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.50 2005-04-26 18:30:30 sshwarts Exp $
+// $Id: apic.cc,v 1.51 2005-04-26 19:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -201,7 +201,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // arbitrate by default
   int arbitrate = 1;
-  int broadcast = (dest == 0xff);
+  int broadcast = (dest == LOCAL_APIC_ALL_MASK); // all local apics
   bx_bool once = 0;
   int i;
 
@@ -534,10 +534,9 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         // This local_apic class redefines get_delivery_bitmask to 
         // implement the destination shorthand field, which doesn't exist
         // for all APICs.
-        bx_bool accepted = 
-           deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
+        bx_bool accepted = deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
         if (!accepted) {
-          BX_DEBUG(("An IPI didn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
+          BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
           err_status |= APIC_ERR_TX_ACCEPT_ERR;
         }
       }
@@ -715,8 +714,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   default:
     BX_INFO(("APIC register %08x not implemented", addr));
   }
-  if (bx_dbg.apic)
-    BX_INFO(("%s: read from APIC address %08x = %08x", cpu->name, addr, *data));
+  BX_DEBUG(("%s: read from APIC address %08x = %08x", cpu->name, addr, *data));
 }
 
 int bx_local_apic_c::highest_priority_int (Bit8u *array)
