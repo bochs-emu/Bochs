@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.49 2005-04-23 17:52:51 sshwarts Exp $
+// $Id: apic.cc,v 1.50 2005-04-26 18:30:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -28,9 +28,7 @@ void bx_generic_apic_c::set_arb_id (int new_arb_id)
 }
 
 // init is called during RESET and when an INIT message is delivered.
-void bx_generic_apic_c::init ()
-{
-}
+void bx_generic_apic_c::init () { }
 
 void bx_generic_apic_c::set_base (bx_address newbase)
 {
@@ -220,6 +218,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       /* once = false */
       break;
     case APIC_DM_INIT:
+      BX_DEBUG (("INIT received with deliver_bitmask=%u", deliver_bitmask));
 
       // NOTE: special behavior of local apics is handled in
       // bx_local_apic_c::deliver
@@ -277,6 +276,41 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
     }
   }
   return 1;
+}
+
+Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
+{
+  int dest_shorthand = (icr_low >> 18) & 3;
+  Bit32u mask = 0; /* stop compiler warnings */
+
+  switch (dest_shorthand) {
+  case 0:  // no shorthand, use real destination value
+    mask = bx_generic_apic_c::get_delivery_bitmask (dest, dest_mode);
+    break;
+  case 1:  // self
+    mask = (1<<id);
+    break;
+  case 2:  // all including self
+    mask = (LOCAL_APIC_ALL_MASK);
+    break;
+  case 3:  // all but self
+    mask = (LOCAL_APIC_ALL_MASK) & ~(1<<id);
+    break;
+  default:
+    BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
+  }
+
+  // prune nonexistents apics from list
+  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+  {
+    if (!local_apic_index[bit]) mask &= ~(1<<bit);
+  }
+
+  BX_DEBUG (("local::get_delivery_bitmask returning 0x%04x shorthand=%#x", mask, dest_shorthand));
+  if (mask == 0)
+    BX_INFO((">>WARNING<< returning a mask of 0x0, dest=%#x dest_mode=%#x", dest, dest_mode));
+
+  return mask;
 }
 
 bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode,
@@ -363,6 +397,8 @@ void bx_local_apic_c::hwreset ()
 
 void bx_local_apic_c::init ()
 {
+  int i;
+
   bx_generic_apic_c::init ();
 
   BX_INFO(("local apic in %s initializing", 
@@ -375,10 +411,22 @@ void bx_local_apic_c::init ()
   err_status = 0;
   log_dest = 0;
   dest_format = 0xf;
-  for (int bit=0; bit<BX_LOCAL_APIC_MAX_INTS; bit++) {
-    irr[bit] = isr[bit] = tmr[bit] = 0;
-  }
   icr_high = icr_low = log_dest = task_priority = 0;
+
+  for (i=0; i<BX_LOCAL_APIC_MAX_INTS; i++) {
+    irr[i] = isr[i] = tmr[i] = 0;
+  }
+
+  timer_divconf = 0;
+  timer_divide_factor = 1;
+  timer_initial = 0;
+  timer_current = 0;
+  timer_active = 0;
+
+  for (i=0; i<APIC_LVT_ENTRIES; i++) {
+    lvt[i] = 0x10000;
+  }
+
   spurious_vec = 0xff;   // software disabled (bit 8)
 
   // KPL: Register a non-active timer for use when the timer is started.
@@ -419,7 +467,7 @@ void bx_local_apic_c::set_divide_configuration (Bit32u value)
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT (value >= 0 && value <= 7);
   timer_divide_factor = (value==7)? 1 : (2 << value);
-  BX_DEBUG(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
+  BX_INFO(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
 }
 
 void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
@@ -488,30 +536,32 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         // for all APICs.
         bx_bool accepted = 
            deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
-        if (!accepted)
+        if (!accepted) {
+          BX_DEBUG(("An IPI didn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
           err_status |= APIC_ERR_TX_ACCEPT_ERR;
+        }
       }
       break;
     case 0x310: // interrupt command reg 31-63
       icr_high = value & 0xff000000;
       break;
     case 0x320: // LVT Timer Reg
-      lvt[APIC_LVT_TIMER] = value & 0x310ff;
+      lvt[APIC_LVT_TIMER] = value & 0x300ff;
       break;
     case 0x330: // LVT Thermal Monitor
-      lvt[APIC_LVT_THERMAL] = value & 0x117ff;
+      lvt[APIC_LVT_THERMAL] = value & 0x107ff;
       break;
     case 0x340: // LVT Performance Counter
-      lvt[APIC_LVT_PERFORM] = value & 0x117ff;
+      lvt[APIC_LVT_PERFORM] = value & 0x107ff;
       break;
     case 0x350: // LVT LINT0 Reg
-      lvt[APIC_LVT_LINT0] = value & 0x1f7ff;
+      lvt[APIC_LVT_LINT0] = value & 0x1a7ff;
       break;
     case 0x360: // LVT Lint1 Reg
-      lvt[APIC_LVT_LINT1] = value & 0x1f7ff;
+      lvt[APIC_LVT_LINT1] = value & 0x1a7ff;
       break;
     case 0x370: // LVT Error Reg
-      lvt[APIC_LVT_ERROR] = value & 0x117ff;
+      lvt[APIC_LVT_ERROR] = value & 0x100ff;
       break;
     case 0x380: // initial count for timer
       {
@@ -646,10 +696,9 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
     //fprintf(stderr, "APIC: R(Initial Count Register) = %u\n", *data);
     break;
   case 0x390: // current count for timer
-    {
-    if (timer_active==0)
+    if (timer_active==0) {
       *data = timer_current;
-    else {
+    } else {
       Bit64u delta64;
       Bit32u delta32;
       delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
@@ -658,12 +707,11 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
         BX_PANIC(("APIC: R(curr timer count): delta < initial"));
       timer_current = timer_initial - delta32;
       *data = timer_current;
-      }
-      //fprintf(stderr, "APIC: R(Current Count Register) = %u\n", *data);
     }
     break;
   case 0x3e0: // timer divide configuration
-    *data = timer_divconf; break;
+    *data = timer_divconf; 
+    break;
   default:
     BX_INFO(("APIC register %08x not implemented", addr));
   }
@@ -711,7 +759,7 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   
   if (vector > BX_APIC_LAST_VECTOR) {
     err_status |= APIC_ERR_RX_ILLEGAL_VEC;
-    BX_INFO(("bogus vector %#x,  ignoring", vector));
+    BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;
   }
 
@@ -724,6 +772,7 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   }
 
   if (irr[vector] != 0) {
+    BX_INFO(("triggered vector %#02x not accepted, raise APIC_ERR_TX_ACCEPT_ERR", vector));
     err_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
@@ -791,41 +840,6 @@ bx_bool bx_local_apic_c::match_logical_addr (Bit8u address)
   BX_DEBUG (("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
     address, log_dest, match? "Match" : "Not a match"));
   return match;
-}
-
-Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
-{
-  int dest_shorthand = (icr_low >> 18) & 3;
-  Bit32u mask = 0; /* stop compiler warnings */
-
-  switch (dest_shorthand) {
-  case 0:  // no shorthand, use real destination value
-    mask = bx_generic_apic_c::get_delivery_bitmask (dest, dest_mode);
-    break;
-  case 1:  // self
-    mask = (1<<id);
-    break;
-  case 2:  // all including self
-    mask = (LOCAL_APIC_ALL_MASK);
-    break;
-  case 3:  // all but self
-    mask = (LOCAL_APIC_ALL_MASK) & ~(1<<id);
-    break;
-  default:
-    BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
-  }
-
-  // prune nonexistents apics from list
-  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
-  {
-    if (!local_apic_index[bit]) mask &= ~(1<<bit);
-  }
-
-  BX_DEBUG (("local::get_delivery_bitmask returning 0x%04x shorthand=%#x", mask, dest_shorthand));
-  if (mask == 0)
-    BX_INFO((">>WARNING<< returning a mask of 0x0, dest=%#x dest_mode=%#x", dest, dest_mode));
-
-  return mask;
 }
 
 Bit8u bx_local_apic_c::get_ppr ()
@@ -896,25 +910,24 @@ void bx_local_apic_c::adjust_arb_id(int winning_id)
 void bx_local_apic_c::periodic_smf(void *this_ptr)
 {
   bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
-
   class_ptr->periodic();
 }
 
-void bx_local_apic_c::periodic(void) // KPL: changed prototype
+void bx_local_apic_c::periodic(void)
 {
   if (!timer_active) {
     BX_ERROR(("%s: bx_local_apic_c::periodic called, timer_active==0", cpu->name));
     return;
   }
-  BX_DEBUG(("%s: bx_local_apic_c::periodic called", cpu->name));
 
   // timer reached zero since the last call to periodic.
   Bit32u timervec = lvt[APIC_LVT_TIMER];
   if (timervec & 0x20000) {
     // Periodic mode.
     // If timer is not masked, trigger interrupt.
-    if ((timervec & 0x10000)==0)
+    if ((timervec & 0x10000)==0) {
       trigger_irq (timervec & 0xff, id, APIC_EDGE_TRIGGERED);
+    }
     // Reload timer values.
     timer_current = timer_initial;
     ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
@@ -924,11 +937,12 @@ void bx_local_apic_c::periodic(void) // KPL: changed prototype
     // one-shot mode
     timer_current = 0;
     // If timer is not masked, trigger interrupt.
-    if ((timervec & 0x10000)==0)
+    if ((timervec & 0x10000)==0) {
       trigger_irq (timervec & 0xff, id, APIC_EDGE_TRIGGERED);
+    }
     timer_active = 0;
     BX_DEBUG (("%s: local apic timer (one-shot) triggered int", cpu->name));
-    bx_pc_system.deactivate_timer(timer_handle); // Make sure.
+    bx_pc_system.deactivate_timer(timer_handle);
   }
 }
 
