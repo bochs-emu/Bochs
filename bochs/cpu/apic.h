@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.16 2005-04-26 19:19:58 sshwarts Exp $
+// $Id: apic.h,v 1.17 2005-04-27 18:09:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,7 +70,6 @@ public:
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
   virtual bx_bool match_logical_addr (Bit8u address) = 0;
   virtual bx_apic_type_t get_type () = 0;
-  virtual void set_arb_id (int newid);  // only implemented on local apics
   int apic_bus_arbitrate(Bit32u apic_mask);
   int apic_bus_arbitrate_lowpri(Bit32u apic_mask);
   void arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode);
@@ -158,6 +157,7 @@ public:
   void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
   Bit8u acknowledge_int ();  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
+  void receive_EOI(Bit32u value);
   void service_local_apic ();
   void print_status ();
   virtual bx_bool match_logical_addr (Bit8u address);
@@ -176,7 +176,7 @@ public:
   static void periodic_smf(void *); // KPL
   void periodic(void); // KPL
   void set_divide_configuration (Bit32u value);
-  virtual void set_arb_id (int newid);
+  void set_arb_id (int newid);
 };
 
 #define APIC_MAX_ID 0xff

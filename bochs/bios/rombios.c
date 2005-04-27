@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.132 2005-04-26 20:22:21 vruppert Exp $
+// $Id: rombios.c,v 1.133 2005-04-27 18:09:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -913,10 +913,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.132 $";
-static char bios_date_string[] = "$Date: 2005-04-26 20:22:21 $";
+static char bios_cvs_version_string[] = "$Revision: 1.133 $";
+static char bios_date_string[] = "$Date: 2005-04-27 18:09:23 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.132 2005-04-26 20:22:21 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.133 2005-04-27 18:09:23 sshwarts Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -10456,7 +10456,7 @@ mp_config_isa_bus:
   db 0x49, 0x53, 0x41, 0x20, 0x20, 0x20  ;; bus type="ISA   "
 mp_config_ioapic:
   db 2 ;; entry type=I/O APIC
-  db 4 ;; apic id=2. linux will set.
+  db 4 ;; apic id=4. linux will set.
   db 0x11 ;; I/O APIC version number
   db 1 ;; flags=1=enabled
   dw 0x0000, 0xfec0 ;; memory mapped address of I/O APIC

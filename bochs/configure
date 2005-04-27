@@ -33204,7 +33204,7 @@ _ACEOF
 _ACEOF
 
        cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 0x11
+#define BX_IOAPIC_DEFAULT_ID 8
 _ACEOF
 
        cat >>confdefs.h <<\_ACEOF

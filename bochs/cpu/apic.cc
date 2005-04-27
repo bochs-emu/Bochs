@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.51 2005-04-26 19:19:57 sshwarts Exp $
+// $Id: apic.cc,v 1.52 2005-04-27 18:09:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -20,11 +20,6 @@ bx_generic_apic_c::bx_generic_apic_c ()
   id = APIC_UNKNOWN_ID;
   put("APIC?");
   settype(APICLOG);
-}
-
-void bx_generic_apic_c::set_arb_id (int new_arb_id)
-{
-  // politely ignore it. This gets sent to every APIC, regardless of its type.
 }
 
 // init is called during RESET and when an INIT message is delivered.
@@ -227,9 +222,6 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
         if (deliver_bitmask & (1<<i)) local_apic_index[i]->init();
       }
-      // HACK! We need to do some IOAPIC init after the CPUs
-      // are fired up
-      apic_index[BX_IOAPIC_DEFAULT_ID]->init();
       return 1;
     
     case APIC_DM_EXTINT:
@@ -351,8 +343,6 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
       BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
       for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
         local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
-      // HACK I/O APIC ID
-      apic_index[BX_IOAPIC_DEFAULT_ID]->set_arb_id(apic_index[BX_IOAPIC_DEFAULT_ID]->get_id());
       return 1;
     }
     break; // we'll fall through to generic_deliver:case INIT
@@ -486,19 +476,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       task_priority = value & 0xff;
       break;
     case 0xb0: // EOI
-      {
-        BX_DEBUG(("%s: Wrote 0x%04x to EOI", cpu->name, value));
-        int vec = highest_priority_int (isr);
-        if (vec < 0) {
-          BX_INFO(("EOI written without any bit in ISR"));
-        } else {
-          BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
-          isr[vec] = 0; 
-          service_local_apic ();
-        }
-        if (bx_dbg.apic)
-          print_status ();
-      }
+      receive_EOI(value);
       break;
     case 0xd0: // logical destination
       log_dest = (value >> 24) & APIC_ID_MASK;
@@ -612,6 +590,22 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
   }
 }
 
+void bx_local_apic_c::receive_EOI(Bit32u value)
+{
+  BX_DEBUG(("%s: Wrote 0x%x to EOI", cpu->name, value));
+  int vec = highest_priority_int (isr);
+  if (vec < 0) {
+      BX_INFO(("EOI written without any bit in ISR"));
+  } else {
+      BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
+      isr[vec] = 0; 
+      service_local_apic ();
+  }
+
+  if (bx_dbg.apic)
+      print_status ();
+}
+
 void bx_local_apic_c::startup_msg (Bit32u vector)
 {
   if (cpu->debug_trap & 0x80000000) {
@@ -714,13 +708,15 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   default:
     BX_INFO(("APIC register %08x not implemented", addr));
   }
+
   BX_DEBUG(("%s: read from APIC address %08x = %08x", cpu->name, addr, *data));
 }
 
 int bx_local_apic_c::highest_priority_int (Bit8u *array)
 {
-  for (int i=0; i<BX_LOCAL_APIC_MAX_INTS; i++)
+  for (int i=BX_LOCAL_APIC_MAX_INTS-1; i>=0; i--)
     if (array[i]) return i;
+
   return -1;
 }
 
@@ -770,7 +766,7 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   }
 
   if (irr[vector] != 0) {
-    BX_INFO(("triggered vector %#02x not accepted, raise APIC_ERR_TX_ACCEPT_ERR", vector));
+    BX_DEBUG(("triggered vector %#02x not accepted, raise APIC_ERR_TX_ACCEPT_ERR", vector));
     err_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
