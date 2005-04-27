@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.133 2005-04-27 18:09:23 sshwarts Exp $
+// $Id: rombios.c,v 1.134 2005-04-27 18:29:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -182,7 +182,14 @@
 #if BX_PCIBIOS && BX_CPU<3
 #    error PCI BIOS can only be used with 386+ cpu
 #endif
+#if BX_APM && BX_CPU<3
+#    error APM BIOS can only be used with 386+ cpu
+#endif
 
+#ifndef BX_SMP_PROCESSORS
+#define BX_SMP_PROCESSORS 1
+#    warning BX_SMP_PROCESSORS not defined, defaulting to 1
+#endif
   
 #define PANIC_PORT  0x400
 #define PANIC_PORT2 0x401
@@ -913,10 +920,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.133 $";
-static char bios_date_string[] = "$Date: 2005-04-27 18:09:23 $";
+static char bios_cvs_version_string[] = "$Revision: 1.134 $";
+static char bios_date_string[] = "$Date: 2005-04-27 18:29:27 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.133 2005-04-27 18:09:23 sshwarts Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.134 2005-04-27 18:29:27 sshwarts Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
