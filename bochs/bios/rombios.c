@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.134 2005-04-27 18:29:27 sshwarts Exp $
+// $Id: rombios.c,v 1.135 2005-04-28 17:53:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -150,6 +150,8 @@
 #define BX_MAX_ATA_INTERFACES   4
 #define BX_MAX_ATA_DEVICES      (BX_MAX_ATA_INTERFACES*2)
 
+#define BX_VIRTUAL_PORTS 1
+
    /* model byte 0xFC = AT */
 #define SYS_MODEL_ID     0xFC
 #define SYS_SUBMODEL_ID  0x00
@@ -230,9 +232,15 @@ MACRO HALT
   ;; to print a BX_PANIC message.  This will normally halt the simulation
   ;; with a message such as "BIOS panic at rombios.c, line 4091".
   ;; However, users can choose to make panics non-fatal and continue.
+#if BX_VIRTUAL_PORTS
   mov dx,#PANIC_PORT
   mov ax,#?1
   out dx,ax
+#else
+  mov dx,#0x80
+  mov ax,#?1
+  out dx,al
+#endif
 MEND
 
 MACRO JMP_AP
@@ -920,10 +928,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.134 $";
-static char bios_date_string[] = "$Date: 2005-04-27 18:29:27 $";
+static char bios_cvs_version_string[] = "$Revision: 1.135 $";
+static char bios_date_string[] = "$Date: 2005-04-28 17:53:05 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.134 2005-04-27 18:29:27 sshwarts Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.135 2005-04-28 17:53:05 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1430,8 +1438,10 @@ send(action, c)
   Bit16u action;
   Bit8u  c;
 {
+#if BX_VIRTUAL_PORTS
   if (action & BIOS_PRINTF_DEBUG) outb(DEBUG_PORT, c);
   if (action & BIOS_PRINTF_INFO) outb(INFO_PORT, c);
+#endif
   if (action & BIOS_PRINTF_SCREEN) {
     if (c == '\n') wrch('\r');
     wrch(c);
@@ -1498,7 +1508,9 @@ bios_printf(action, s)
   format_width = 0;
 
   if ((action & BIOS_PRINTF_DEBHALT) == BIOS_PRINTF_DEBHALT) {
+#if BX_VIRTUAL_PORTS
     outb(PANIC_PORT2, 0x00);
+#endif
     bios_printf (BIOS_PRINTF_SCREEN, "FATAL: ");
   }
 
@@ -3558,16 +3570,19 @@ ASM_END
       break;
 
 
-    case 0x88: /* extended memory size */
+    case 0x88:
+      // Get the amount of extended memory (above 1M)
 #if BX_CPU < 2
       regs.u.r8.ah = UNSUPPORTED_FUNCTION;
       SET_CF();
 #else
-      /* ??? change this back later... */
-      /* number of 1K blocks of extended memory, subtract off 1st 1Meg */
-      // AX = bx_mem.get_memory_in_k() - 1024;
       regs.u.r8.al = inb_cmos(0x30);
       regs.u.r8.ah = inb_cmos(0x31);
+
+      // limit to 15M
+      if(regs.u.r16.ax > 0x3c00)
+        regs.u.r16.ax = 0x3c00;
+
       CLEAR_CF();
 #endif
       break;
@@ -4208,6 +4223,10 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
     case 0xA2: /* 122 keys capability check called by DOS 5.0+ keyb */
       // don't change AH : function int16 ah=0x20-0x22 NOT supported
       break;
+
+    case 0x6F:
+      if (GET_AL() == 0x08)
+	SET_AH(0x02); // unsupported, aka normal keyboard
 
     default:
       BX_INFO("KBD: unsupported int 16h function %02x\n", GET_AH());
