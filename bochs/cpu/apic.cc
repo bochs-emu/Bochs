@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.52 2005-04-27 18:09:26 sshwarts Exp $
+// $Id: apic.cc,v 1.53 2005-04-29 18:38:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -10,8 +10,6 @@
 
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
 bx_local_apic_c *local_apic_index[BX_LOCAL_APIC_NUM];
-
-#define APIC_ALL_MASK (0xff)
 
 #define LOCAL_APIC_ALL_MASK ((1<<BX_LOCAL_APIC_NUM) - 1)
 
@@ -41,6 +39,7 @@ void bx_generic_apic_c::set_id (Bit8u newid)
       BX_PANIC(("inconsistent APIC id table"));
     apic_index[id] = NULL;
   }
+  BX_INFO (("set APIC ID to %d", newid));
   id = newid;
   if (id != APIC_UNKNOWN_ID) {
     if (apic_index[id] != NULL)
@@ -173,7 +172,7 @@ Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
       // physical destination 0xff means everybody. only local APICs can
       // send this.
       BX_ASSERT (get_type () == APIC_TYPE_LOCAL_APIC);
-      mask = APIC_ALL_MASK; 
+      mask = LOCAL_APIC_ALL_MASK; 
     } else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
   } else {
     // logical destination. call match_logical_addr for each local APIC.
@@ -208,6 +207,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   switch (delivery_mode) {
     case APIC_DM_LOWPRI:
       /* fall through, we've already done low priority arbitration */
+      BX_DEBUG (("low priority interrupt received with deliver_bitmask=%u", deliver_bitmask));
       arbitrate = 0;
     case APIC_DM_FIXED:
       /* once = false */
@@ -272,7 +272,8 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
 
 Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 {
-  int dest_shorthand = (icr_low >> 18) & 3;
+  int dest_shorthand = (icr_lo >> 18) & 3;
+
   Bit32u mask = 0; /* stop compiler warnings */
 
   switch (dest_shorthand) {
@@ -363,9 +364,9 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
-  : bx_generic_apic_c (), cpu(mycpu)
+  : bx_generic_apic_c (), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
-  hwreset ();
+  reset ();
   INTR = 0;
 }
 
@@ -375,13 +376,10 @@ void bx_local_apic_c::set_arb_id (int new_arb_id)
   arb_id = new_arb_id;
 }
 
-void bx_local_apic_c::hwreset () 
+void bx_local_apic_c::reset () 
 {
   /* same as INIT but also sets arbitration ID and APIC ID */
   init ();
-  /* since id is set explicitly by the function that creates the CPU
-     object, do not mess around with it */
-  // id = APIC_UNKNOWN_ID;
   arb_id = id;
 }
 
@@ -391,17 +389,20 @@ void bx_local_apic_c::init ()
 
   bx_generic_apic_c::init ();
 
-  BX_INFO(("local apic in %s initializing", 
+  BX_INFO(("local apic in %s initializing",
       (cpu && cpu->name) ? cpu->name : "?"));
   local_apic_index[id] = this;
 
   // default address for a local APIC, can be moved
   base_addr = APIC_BASE_ADDR;
   bypass_irr_isr = 0;
-  err_status = 0;
+  error_status = 0;
   log_dest = 0;
   dest_format = 0xf;
-  icr_high = icr_low = log_dest = task_priority = 0;
+  icr_hi = 0;
+  icr_lo = 0;
+  log_dest = 0;
+  task_priority = 0;
 
   for (i=0; i<BX_LOCAL_APIC_MAX_INTS; i++) {
     irr[i] = isr[i] = tmr[i] = 0;
@@ -414,10 +415,10 @@ void bx_local_apic_c::init ()
   timer_active = 0;
 
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
-    lvt[i] = 0x10000;
+    lvt[i] = 0x10000;	// all LVT are masked
   }
 
-  spurious_vec = 0xff;   // software disabled (bit 8)
+  spurious_vector = 0xff;   // software disabled (bit 8)
 
   // KPL: Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
@@ -488,7 +489,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0xf0: // spurious interrupt vector
       // bits 0-3 are hardwired to logical '1
-      spurious_vec = (spurious_vec & 0xff) | (value & 0x30f);
+      spurious_vector = (spurious_vector & 0xff) | (value & 0x30f);
       break;
     case 0x280: // error status reg
       // Here's what the IA-devguide-3 says on p.7-45:
@@ -497,17 +498,17 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       // reading the ESR to allow the register to be updated.
       // This doesn't seem clear.  If the write clears the register, then
       // wouldn't you always read zero?  Otherwise, what does the write do?
-      err_status = 0;
+      error_status = 0;
       break;
     case 0x300: // interrupt command reg 0-31
       {
-        icr_low = value & ~(1<<12);  // force delivery status bit = 0 (idle)
-        int dest = (icr_high >> 24) & 0xff;
-        int trig_mode = (icr_low >> 15) & 1;
-        int level = (icr_low >> 14) & 1;
-        int dest_mode = (icr_low >> 11) & 1;
-        int delivery_mode = (icr_low >> 8) & 7;
-        int vector = (icr_low & 0xff);
+        icr_lo = value & ~(1<<12);  // force delivery status bit = 0 (idle)
+        int dest = (icr_hi >> 24) & 0xff;
+        int trig_mode = (icr_lo >> 15) & 1;
+        int level = (icr_lo >> 14) & 1;
+        int dest_mode = (icr_lo >> 11) & 1;
+        int delivery_mode = (icr_lo >> 8) & 7;
+        int vector = (icr_lo & 0xff);
         // deliver will call get_delivery_bitmask to decide who to send to.
         // This local_apic class redefines get_delivery_bitmask to 
         // implement the destination shorthand field, which doesn't exist
@@ -515,12 +516,12 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         bx_bool accepted = deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
         if (!accepted) {
           BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
-          err_status |= APIC_ERR_TX_ACCEPT_ERR;
+          error_status |= APIC_ERR_TX_ACCEPT_ERR;
         }
       }
       break;
     case 0x310: // interrupt command reg 31-63
-      icr_high = value & 0xff000000;
+      icr_hi = value & 0xff000000;
       break;
     case 0x320: // LVT Timer Reg
       lvt[APIC_LVT_TIMER] = value & 0x300ff;
@@ -584,7 +585,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       BX_INFO(("warning: write to read-only APIC register 0x%02x", addr));
       break;
     default:
-      err_status |= APIC_ERR_ILLEGAL_ADDR;
+      error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
       BX_PANIC(("APIC register %08x not implemented", addr));
   }
@@ -648,7 +649,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
   case 0xe0: // destination format
     *data = ((dest_format & 0xf) << 24) | 0x0fffffff; break;
   case 0xf0: // spurious interrupt vector
-    *data = spurious_vec; break;
+    *data = spurious_vector; break;
   case 0x100: case 0x110:
   case 0x120: case 0x130:
   case 0x140: case 0x150:
@@ -668,11 +669,11 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
     *data = irr[addr2-0x200];
     break;
   case 0x280: // error status reg
-    *data = err_status; break;
-  case 0x300: // interrupt command reg 0-31
-    *data = icr_low; break;
+    *data = error_status; break;
+  case 0x300: // interrupt command reg  0-31
+    *data = icr_lo; break;
   case 0x310: // interrupt command reg 31-63
-    *data = icr_high; break;
+    *data = icr_hi; break;
   case 0x320: // LVT Timer Reg
   case 0x330: // LVT Thermal Monitor
   case 0x340: // LVT Performance Counter
@@ -732,9 +733,8 @@ void bx_local_apic_c::service_local_apic ()
   int first_isr = highest_priority_int (isr);
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   if (first_isr >= 0 && first_irr >= first_isr) {
-    if (bx_dbg.apic)
-      BX_INFO(("local apic (%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
-    err_status |= APIC_ERR_TX_ACCEPT_ERR;
+    BX_DEBUG(("local apic (%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
+    // error_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
   // interrupt has appeared in irr.  raise INTR.  When the CPU
@@ -751,8 +751,8 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   /* check for local/apic_index usage */
   BX_ASSERT(from == id);
   
-  if (vector > BX_APIC_LAST_VECTOR) {
-    err_status |= APIC_ERR_RX_ILLEGAL_VEC;
+  if (vector > BX_APIC_LAST_VECTOR || vector < BX_APIC_FIRST_VECTOR) {
+    error_status |= APIC_ERR_RX_ILLEGAL_VEC;
     BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;
   }
@@ -766,8 +766,7 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   }
 
   if (irr[vector] != 0) {
-    BX_DEBUG(("triggered vector %#02x not accepted, raise APIC_ERR_TX_ACCEPT_ERR", vector));
-    err_status |= APIC_ERR_TX_ACCEPT_ERR;
+    BX_DEBUG(("triggered vector %#02x not accepted", vector));
     return;
   }
 
@@ -840,7 +839,7 @@ Bit8u bx_local_apic_c::get_ppr ()
 {
   int ppr = highest_priority_int (isr);
 
-  if ((ppr < 0) || ((task_priority & 0xF0) >= (ppr & 0xF0))) 
+  if ((ppr < 0) || ((task_priority & 0xF0) >= ((Bit32u) ppr & 0xF0))) 
     ppr = task_priority;
   else 
     ppr &= 0xF0;
