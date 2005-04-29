@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.45 2004-08-15 19:27:14 vruppert Exp $
+// $Id: gui.h,v 1.46 2005-04-29 19:06:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,11 @@ typedef struct {
 
 BOCHSAPI extern class bx_gui_c *bx_gui;
 
+#if BX_SUPPORT_X86_64
+  #define BOCHS_WINDOW_NAME "Bochs x86-64 emulator, http://bochs.sourceforge.net/"
+#else
+  #define BOCHS_WINDOW_NAME "Bochs x86 emulator, http://bochs.sourceforge.net/"
+#endif
 
 // The bx_gui_c class provides data and behavior that is common to
 // all guis.  Each gui implementation will override the abstract methods.

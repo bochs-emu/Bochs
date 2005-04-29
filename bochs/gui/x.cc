@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.88 2005-02-27 16:55:34 vruppert Exp $
+// $Id: x.cc,v 1.89 2005-04-29 19:06:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -347,17 +347,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   unsigned i;
   int x, y;   /* window position */
   unsigned int border_width = 4;  /* four pixels */
-#if BX_CPU_LEVEL < 2
-  char *window_name = "Bochs 8086 emulator, http://bochs.sourceforge.net/";
-#elif BX_CPU_LEVEL == 2
-  char *window_name = "Bochs 80286 emulator, http://bochs.sourceforge.net/";
-#elif BX_CPU_LEVEL == 3
-  char *window_name = "Bochs 80386 emulator, http://bochs.sourceforge.net/";
-#elif BX_CPU_LEVEL == 4
-  char *window_name = "Bochs 80486 emulator, http://bochs.sourceforge.net/";
-#else
-  char *window_name = "Bochs Pentium emulator, http://bochs.sourceforge.net/";
-#endif
+  char *window_name = BOCHS_WINDOW_NAME;
   char *icon_name = "Bochs";
   Pixmap icon_pixmap;
 #if BX_HAVE_XPM_H

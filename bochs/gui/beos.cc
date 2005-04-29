@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.26 2004-06-19 15:20:08 sshwarts Exp $
+// $Id: beos.cc,v 1.27 2005-04-29 19:06:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -210,20 +210,9 @@ bx_beos_gui_c::specific_init(int argc, char **argv,
                         unsigned tilewidth, unsigned tileheight,
                         unsigned header_bar_y)
 {
-  unsigned i;
-#if BX_CPU_LEVEL < 2
-  char *window_name = "Bochs 8086 emulator, http://world.std.com/~bochs";
-#elif BX_CPU_LEVEL == 2
-  char *window_name = "Bochs 80286 emulator, http://world.std.com/~bochs";
-#elif BX_CPU_LEVEL == 3
-  char *window_name = "Bochs 80386 emulator, http://world.std.com/~bochs";
-#else
-  char *window_name = "Bochs 80386+ emulator, http://world.std.com/~bochs";
-#endif
-
 UNUSED(argc);
 UNUSED(argv);
-UNUSED(window_name);
+
   put("BGUI");
 
 if (bx_options.Oprivate_colormap->get ()) {
@@ -234,7 +223,7 @@ if (bx_options.Oprivate_colormap->get ()) {
   y_tilesize = tileheight;
   bx_headerbar_y = header_bar_y;
 
-  for (i=0; i<80; i++) {
+  for (int i=0; i<80; i++) {
     blank_line[i] = ' ';
     }
 

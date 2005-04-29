@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.56 2004-12-10 15:57:46 vruppert Exp $
+// $Id: sdl.cc,v 1.57 2005-04-29 19:06:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -254,18 +254,7 @@ void bx_sdl_gui_c::specific_init(
   dimension_update(640,480);
 
   SDL_EnableKeyRepeat(250,50);
-  SDL_WM_SetCaption(
-#if BX_CPU_LEVEL < 2
-      "Bochs 8086 emulator, http://bochs.sourceforge.net/",
-#elif BX_CPU_LEVEL == 2
-      "Bochs 80286 emulator, http://bochs.sourceforge.net/",
-#elif BX_CPU_LEVEL == 3
-      "Bochs 80386 emulator, http://bochs.sourceforge.net/",
-#elif BX_CPU_LEVEL == 4
-      "Bochs 80486 emulator, http://bochs.sourceforge.net/",
-#else
-      "Bochs Pentium emulator, http://bochs.sourceforge.net/",
-#endif
+  SDL_WM_SetCaption(BOCHS_WINDOW_NAME,
       "Bochs" );
   SDL_WarpMouse(half_res_x, half_res_y);
 
