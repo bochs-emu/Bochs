@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.11 2003-08-04 16:03:09 akrisak Exp $
+// $Id: instrument.cc,v 1.12 2005-04-29 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,24 +193,10 @@ void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i)
   }
 }
 
-#define PROCESS_PREFIX(name)                  \
-  void bx_instr_prefix_##name(unsigned cpu)   \
-  {                                           \
-     if(active) instruction[cpu].nprefixes++; \
-  }
-
-PROCESS_PREFIX(as);
-PROCESS_PREFIX(os);
-PROCESS_PREFIX(rep);
-PROCESS_PREFIX(repne);
-PROCESS_PREFIX(lock);
-PROCESS_PREFIX(cs);
-PROCESS_PREFIX(ss);
-PROCESS_PREFIX(ds);
-PROCESS_PREFIX(es);
-PROCESS_PREFIX(fs);
-PROCESS_PREFIX(gs);
-PROCESS_PREFIX(extend8b);
+void bx_instr_prefix(unsigned cpu, Bit8u prefix)
+{
+  if(active) instruction[cpu].nprefixes++;
+}
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector)
 {

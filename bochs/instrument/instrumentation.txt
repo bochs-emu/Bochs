@@ -84,21 +84,10 @@ it  is  a  Bochs internal structure that holds all necessary information about
 currently executed instruction, such as sib/modrm bytes, execution pointer and
 etc.
 
-
-	void bx_instr_prefix_as(unsigned cpu);
-	void bx_instr_prefix_os(unsigned cpu);
-	void bx_instr_prefix_rep(unsigned cpu);
-	void bx_instr_prefix_repne(unsigned cpu);
-	void bx_instr_prefix_lock(unsigned cpu);
-	void bx_instr_prefix_cs(unsigned cpu);
-	void bx_instr_prefix_ss(unsigned cpu);
-	void bx_instr_prefix_ds(unsigned cpu);
-	void bx_instr_prefix_es(unsigned cpu);
-	void bx_instr_prefix_fs(unsigned cpu);
-	void bx_instr_prefix_gs(unsigned cpu);
+	void bx_instr_prefix(unsigned cpu, Bit8u prefix);
 
 These  callback  functions  are called by Bochs decoding stage each time, when
-corresponding prefix was decoded.
+any prefix byte was decoded.
 
 
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);

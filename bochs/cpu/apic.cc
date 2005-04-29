@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.53 2005-04-29 18:38:34 sshwarts Exp $
+// $Id: apic.cc,v 1.54 2005-04-29 21:28:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -251,10 +251,10 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       arbitrate_and_trigger_one(deliver_bitmask, vector, trig_mode);
     else {
       for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
-	if (deliver_bitmask & (1<<i)) {
-	  local_apic_index[i]->trigger_irq(vector, i, trig_mode);
-	}
-	break;
+        if (deliver_bitmask & (1<<i)) {
+          local_apic_index[i]->trigger_irq(vector, i, trig_mode);
+          break;
+        }
       }
     }
   } else {
@@ -262,11 +262,12 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       arbitrate_and_trigger(deliver_bitmask, vector, trig_mode);
     else {
       for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
-	if (deliver_bitmask & (1<<i))
-	  local_apic_index[i]->trigger_irq(vector, i, trig_mode);
+        if (deliver_bitmask & (1<<i))
+          local_apic_index[i]->trigger_irq(vector, i, trig_mode);
       }
     }
   }
+
   return 1;
 }
 
@@ -556,7 +557,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       timer_active = 1;
       Bit32u timervec = lvt[APIC_LVT_TIMER];
       bx_bool continuous = (timervec & 0x20000) > 0;
-      ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
+      ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
       bx_pc_system.activate_timer_ticks(timer_handle,
           Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
       }
@@ -923,7 +924,7 @@ void bx_local_apic_c::periodic(void)
     }
     // Reload timer values.
     timer_current = timer_initial;
-    ticksInitial = bx_pc_system.getTicksTotal(); // Take a reading.
+    ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
     BX_DEBUG(("%s: local apic timer (periodic) triggered int, reset counter to 0x%08x", cpu->name, timer_current));
   }
   else {

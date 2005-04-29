@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.12 2005-03-17 20:50:39 sshwarts Exp $
+// $Id: instrument.h,v 1.13 2005-04-29 21:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,18 +64,7 @@ void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address 
 void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32);
 void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i);
 
-void bx_instr_prefix_as(unsigned cpu);
-void bx_instr_prefix_os(unsigned cpu);
-void bx_instr_prefix_rep(unsigned cpu);
-void bx_instr_prefix_repne(unsigned cpu);
-void bx_instr_prefix_lock(unsigned cpu);
-void bx_instr_prefix_cs(unsigned cpu);
-void bx_instr_prefix_ss(unsigned cpu);
-void bx_instr_prefix_ds(unsigned cpu);
-void bx_instr_prefix_es(unsigned cpu);
-void bx_instr_prefix_fs(unsigned cpu);
-void bx_instr_prefix_gs(unsigned cpu);
-void bx_instr_prefix_extend8b(unsigned cpu);
+void bx_instr_prefix(unsigned cpu, Bit8u prefix);
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector);
@@ -107,19 +96,8 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        bx_instr_fetch_decode_completed(cpu_id, i)
      
-/* prefix decoded */
-#  define BX_INSTR_PREFIX_AS(cpu_id)       bx_instr_prefix_as(cpu_id)
-#  define BX_INSTR_PREFIX_OS(cpu_id)       bx_instr_prefix_os(cpu_id)
-#  define BX_INSTR_PREFIX_REP(cpu_id)      bx_instr_prefix_rep(cpu_id)
-#  define BX_INSTR_PREFIX_REPNE(cpu_id)    bx_instr_prefix_repne(cpu_id)
-#  define BX_INSTR_PREFIX_LOCK(cpu_id)     bx_instr_prefix_lock(cpu_id)
-#  define BX_INSTR_PREFIX_CS(cpu_id)       bx_instr_prefix_cs(cpu_id)
-#  define BX_INSTR_PREFIX_SS(cpu_id)       bx_instr_prefix_ss(cpu_id)
-#  define BX_INSTR_PREFIX_DS(cpu_id)       bx_instr_prefix_ds(cpu_id)
-#  define BX_INSTR_PREFIX_ES(cpu_id)       bx_instr_prefix_es(cpu_id)
-#  define BX_INSTR_PREFIX_FS(cpu_id)       bx_instr_prefix_fs(cpu_id)
-#  define BX_INSTR_PREFIX_GS(cpu_id)       bx_instr_prefix_gs(cpu_id)
-#  define BX_INSTR_PREFIX_EXTEND8B(cpu_id) bx_instr_prefix_extend8b(cpu_id)
+/* prefix byte decoded */
+#  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix_as(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            bx_instr_exception(cpu_id, vector)
@@ -180,19 +158,8 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32) 
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
      
-/* prefix decoded */
-#  define BX_INSTR_PREFIX_AS(cpu_id)
-#  define BX_INSTR_PREFIX_OS(cpu_id)
-#  define BX_INSTR_PREFIX_REP(cpu_id)
-#  define BX_INSTR_PREFIX_REPNE(cpu_id)
-#  define BX_INSTR_PREFIX_LOCK(cpu_id)
-#  define BX_INSTR_PREFIX_CS(cpu_id)
-#  define BX_INSTR_PREFIX_SS(cpu_id)
-#  define BX_INSTR_PREFIX_DS(cpu_id)
-#  define BX_INSTR_PREFIX_ES(cpu_id)
-#  define BX_INSTR_PREFIX_FS(cpu_id)
-#  define BX_INSTR_PREFIX_GS(cpu_id)
-#  define BX_INSTR_PREFIX_EXTEND8B(cpu_id)
+/* prefix byte decoded */
+#  define BX_INSTR_PREFIX(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

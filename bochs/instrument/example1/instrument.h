@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.10 2005-03-17 20:50:39 sshwarts Exp $
+// $Id: instrument.h,v 1.11 2005-04-29 21:28:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,18 +105,7 @@ public:
   void bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32);
   void bx_instr_fetch_decode_completed(const bxInstruction_c *i);
 
-  void bx_instr_prefix_as();
-  void bx_instr_prefix_os();
-  void bx_instr_prefix_rep();
-  void bx_instr_prefix_repne();
-  void bx_instr_prefix_lock();
-  void bx_instr_prefix_cs();
-  void bx_instr_prefix_ss();
-  void bx_instr_prefix_ds();
-  void bx_instr_prefix_es();
-  void bx_instr_prefix_fs();
-  void bx_instr_prefix_gs();
-  void bx_instr_prefix_extend8b();
+  void bx_instr_prefix(Bit8u prefix);
 
   void bx_instr_interrupt(unsigned vector);
   void bx_instr_exception(unsigned vector);
@@ -154,19 +143,8 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        icpu[cpu_id].bx_instr_fetch_decode_completed(i)
      
-/* prefix decoded */
-#  define BX_INSTR_PREFIX_AS(cpu_id)       icpu[cpu_id].bx_instr_prefix_as()
-#  define BX_INSTR_PREFIX_OS(cpu_id)       icpu[cpu_id].bx_instr_prefix_os()
-#  define BX_INSTR_PREFIX_REP(cpu_id)      icpu[cpu_id].bx_instr_prefix_rep()
-#  define BX_INSTR_PREFIX_REPNE(cpu_id)    icpu[cpu_id].bx_instr_prefix_repne()
-#  define BX_INSTR_PREFIX_LOCK(cpu_id)     icpu[cpu_id].bx_instr_prefix_lock()
-#  define BX_INSTR_PREFIX_CS(cpu_id)       icpu[cpu_id].bx_instr_prefix_cs()
-#  define BX_INSTR_PREFIX_SS(cpu_id)       icpu[cpu_id].bx_instr_prefix_ss()
-#  define BX_INSTR_PREFIX_DS(cpu_id)       icpu[cpu_id].bx_instr_prefix_ds()
-#  define BX_INSTR_PREFIX_ES(cpu_id)       icpu[cpu_id].bx_instr_prefix_es()
-#  define BX_INSTR_PREFIX_FS(cpu_id)       icpu[cpu_id].bx_instr_prefix_fs()
-#  define BX_INSTR_PREFIX_GS(cpu_id)       icpu[cpu_id].bx_instr_prefix_gs()
-#  define BX_INSTR_PREFIX_EXTEND8B(cpu_id) icpu[cpu_id].bx_instr_prefix_extend8b()
+/* prefix byte decoded */
+#  define BX_INSTR_PREFIX(cpu_id, prefix)  icpu[cpu_id].bx_instr_prefix(prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            icpu[cpu_id].bx_instr_exception(vector)
@@ -227,19 +205,8 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32) 
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
      
-/* prefix decoded */
-#  define BX_INSTR_PREFIX_AS(cpu_id)
-#  define BX_INSTR_PREFIX_OS(cpu_id)
-#  define BX_INSTR_PREFIX_REP(cpu_id)
-#  define BX_INSTR_PREFIX_REPNE(cpu_id)
-#  define BX_INSTR_PREFIX_LOCK(cpu_id)
-#  define BX_INSTR_PREFIX_CS(cpu_id)
-#  define BX_INSTR_PREFIX_SS(cpu_id)
-#  define BX_INSTR_PREFIX_DS(cpu_id)
-#  define BX_INSTR_PREFIX_ES(cpu_id)
-#  define BX_INSTR_PREFIX_FS(cpu_id)
-#  define BX_INSTR_PREFIX_GS(cpu_id)
-#  define BX_INSTR_PREFIX_EXTEND8B(cpu_id)
+/* prefix byte decoded */
+#  define BX_INSTR_PREFIX(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.12 2005-03-17 20:50:57 sshwarts Exp $
+// $Id: instrument.cc,v 1.13 2005-04-29 21:28:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,18 +46,7 @@ void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address 
 void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32) {}
 void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i) {}
 
-void bx_instr_prefix_as(unsigned cpu) {}
-void bx_instr_prefix_os(unsigned cpu) {}
-void bx_instr_prefix_rep(unsigned cpu) {}
-void bx_instr_prefix_repne(unsigned cpu) {}
-void bx_instr_prefix_lock(unsigned cpu) {}
-void bx_instr_prefix_cs(unsigned cpu) {}
-void bx_instr_prefix_ss(unsigned cpu) {}
-void bx_instr_prefix_ds(unsigned cpu) {}
-void bx_instr_prefix_es(unsigned cpu) {}
-void bx_instr_prefix_fs(unsigned cpu) {}
-void bx_instr_prefix_gs(unsigned cpu) {}
-void bx_instr_prefix_extend8b(unsigned cpu) {}
+void bx_instr_prefix(unsigned cpu, Bit8u prefix) {}
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector) {}
 void bx_instr_exception(unsigned cpu, unsigned vector) {}
