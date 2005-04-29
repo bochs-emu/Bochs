@@ -23,6 +23,7 @@
   --enable-fpu \
   --enable-sse=2 \
   --enable-pni \
+  --enable-sep \
   --enable-3dnow \
   --enable-x86-debugger \
   --enable-cdrom \
