@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.135 2005-04-28 17:53:05 vruppert Exp $
+// $Id: rombios.c,v 1.136 2005-04-30 11:10:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,6 +158,10 @@
 #define BIOS_REVISION    1
 #define BIOS_CONFIG_TABLE 0xe6f5
 
+#ifndef BIOS_BUILD_DATE
+#  define BIOS_BUILD_DATE "06/23/99"
+#endif
+
   // 1K of base memory used for Extended Bios Data Area (EBDA)
   // EBDA is used for PS/2 mouse support, and IDE BIOS, etc.
 #define EBDA_SEG           0x9FC0
@@ -200,6 +204,7 @@
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
+// #0x20 is hex 20 = 32
 // LDA  #$20
 // JSR  $E820
 // LDD  .i,S
@@ -928,10 +933,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.135 $";
-static char bios_date_string[] = "$Date: 2005-04-28 17:53:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.136 $";
+static char bios_date_string[] = "$Date: 2005-04-30 11:10:12 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.135 2005-04-28 17:53:05 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.136 2005-04-30 11:10:12 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1423,10 +1428,10 @@ wrch(c)
   mov  bp, sp
 
   push bx
-  mov  ah, #$0e
+  mov  ah, #0x0e
   mov  al, 4[bp]
   xor  bx,bx
-  int  #$10
+  int  #0x10
   pop  bx
 
   pop  bp
@@ -7366,8 +7371,8 @@ int17_function(regs, ds, iret_addr)
       outb(addr+2, val8 & ~0x01);
       while (((inb(addr+1) & 0x40) == 0x40) && (timeout)) {
         timeout--;
-        }
       }
+    }
     if (regs.u.r8.ah == 1) {
       val8 = inb(addr+2);
       outb(addr+2, val8 & ~0x04); // send init
@@ -7375,11 +7380,9 @@ int17_function(regs, ds, iret_addr)
       nop
       ASM_END
       outb(addr+2, val8 | 0x04);
-      }
-    regs.u.r8.ah = inb(addr+1);
-    val8 = (~regs.u.r8.ah & 0x48);
-    regs.u.r8.ah &= 0xB7;
-    regs.u.r8.ah |= val8;
+    }
+    val8 = inb(addr+1);
+    regs.u.r8.ah = (val8 ^ 0x48);
     if (!timeout) regs.u.r8.ah |= 0x01;
     ClearCF(iret_addr.flags);
   } else {
@@ -10187,10 +10190,10 @@ dummy_iret_handler:
   iret
 
 .org 0xfff0 ; Power-up Entry Point
-  jmp 0xf000:post;
+  jmp 0xf000:post
 
 .org 0xfff5 ; ASCII Date ROM was built - 8 characters in MM/DD/YY
-.ascii "06/23/99"
+.ascii BIOS_BUILD_DATE
 
 .org 0xfffe ; System Model ID
 db SYS_MODEL_ID
