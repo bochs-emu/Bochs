@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.118 2005-04-15 17:33:54 vruppert Exp $
+// $Id: vga.cc,v 1.119 2005-04-30 21:22:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1952,10 +1952,12 @@ bx_vga_c::update(void)
     tm_info.line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
     tm_info.split_hpanning =  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat;
     if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
-      if (tm_info.h_panning == 8)
+      if (tm_info.h_panning >= 8)
         tm_info.h_panning = 0;
       else
         tm_info.h_panning++;
+    } else {
+      tm_info.h_panning &= 0x07;
     }
 
     // Verticle Display End: find out how many lines are displayed
