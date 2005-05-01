@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.170 2005-04-15 22:44:46 vruppert Exp $
+$Id: user.dbk,v 1.171 2005-05-01 19:49:54 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -110,8 +110,10 @@ interesting to know how much Bochs used to cost and what it was used for.  I
 thought I saw an interview out there somewhere where Kevin says why he started
 it and some more background information.
 </para>
-</footnote> Finally, in March 2000, Mandrakesoft bought Bochs and made it open
-source under the GNU LGPL.
+</footnote> Finally, in March 2000, MandrakeSoft (now called
+<ulink url="http://www.mandriva.com/">Mandriva</ulink>) bought Bochs
+(<ulink url="http://www.linux-mandrake.com/en/announce-bochs-20000323.php3">press release</ulink>)
+and made it open source under the GNU LGPL.
 
 <!-- 
 we should make it clear that Kevin is not the primary maintainer of Bochs,
@@ -126,10 +128,11 @@ The last version of Bochs that he released was 3/25/2000, three days after the
 Mandrake press release.
 -->
 In March 2001, Kevin helped a few developers to move all Bochs activities from
-bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs Project
+bochs.com to a new site at bochs.sourceforge.net.  Since then the Bochs project
 has settled into its new home, and around release times has even hit #1 most
-active project of the week at Source Forge.  
-</para> </section>  <!-- end of Introduction:What is Bochs? section -->
+active project of the week at SourceForge.
+</para>
+</section><!-- end: What is Bochs? -->
 
 <section id="who-uses-bochs"><title>Who uses Bochs?</title>
 <para> It is hard to estimate how many people have tried Bochs or use it on a
@@ -578,104 +581,94 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
     </row>
   </thead>
   <tbody>
+
     <row>
       <entry>Unix/X11</entry>
-      <entry>X windows has always been well supported because it was
-      Kevin Lawton's main development platform.  Bryce Denney maintains
-      the Unix/X11 platform now.  Most features and fixes (not all) are
-      tried first in Unix and then ported to the others.
-      </entry>
       <entry>
-      x, sdl, wx, term, rfb
+        X windows has always been well supported because it was
+        Kevin Lawton's main development platform. Bryce Denney maintains
+        the Unix/X11 platform now. Most features and fixes (not all) are
+        tried first in Unix and then ported to the others; see
+        <xref linkend="compiling"> for compile instructions.
       </entry>
+      <entry>x, sdl, wx, term, rfb</entry>
     </row>
 
     <row>
       <entry>Win32</entry>
-      <entry>This port was done by David Ross and is now maintained
-      by Don Becker.  You can compile with MS Visual C++ 5.0 or 6.0,
-      or Cygwin<footnote>
-<para>Cygwin is a free Unix-like environment for Windows written by
-Steve Chamberlain and now maintained by RedHat.  Download it from--you guessed it--<ulink url="http://www.cygwin.com">www.cygwin.com</ulink></para>
-</footnote>.
-      See <xref linkend="compiling-win32"> for compile
-      instructions.  </entry> 
       <entry>
-      win32, sdl, wx, rfb
+        This port was done by David Ross and is now maintained by
+        Don Becker. You can compile with Microsoft Visual C++ 5.0 or 6.0,
+        see <xref linkend="compiling-win32"> for compile instructions,
+        or Cygwin, see <xref linkend="compile-cygwin">.
       </entry>
+      <entry>win32, sdl, wx, rfb</entry>
     </row>
 
     <row>
       <entry>BeOS</entry>
-      <entry>Kevin Lawton wrote this port, originally to R3/PPC using
-      CodeWarrior.  It now works on R4/x86 with egcs. Simon Huet picked up
-      maintaining/reworking the BeOS GUI port.  In September 2001, Bernd Korz
-      of Yellow Tab, Inc. 
-      (<ulink url="http://www.yellowtab.com">www.yellowtab.com</ulink>), took
-      over the BeOS/Zeta port.  Use the same compile and install process as
-      Unix.
-      </entry>
       <entry>
-      beos
+        Kevin Lawton wrote this port, originally to R3/PPC using
+        CodeWarrior. It now works on R4/x86 with egcs. Simon Huet picked up
+        maintaining/reworking the BeOS GUI port. In September 2001, Bernd Korz
+        of Yellow Tab, Inc.
+        (<ulink url="http://www.yellowtab.com">www.yellowtab.com</ulink>), took
+        over the BeOS/Zeta port, and is working on raw CD-ROM and raw floppy
+        support. For compiling, see <xref linkend="compile-beos">.
       </entry>
+      <entry>beos, sdl</entry>
     </row>
 
     <row>
       <entry>MacOS X</entry>
       <entry>
-      Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
-      Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
-      March 2002.
+        Emmanuel Mailliard ported the Macintosh code to MacOS X with Carbon API.
+        Jeremy Parsons (Br'fin) has been maintaining the MacOS X port since
+        March 2002; see <xref linkend="compile-macosx"> for compile instructions.
       </entry>
-      <entry>
-      carbon
-      </entry>
-    </row>
-    <row>
-      <entry>Macintosh</entry>
-      <entry>David Batterham drbatter@socs.uts.edu.au or drbatter@yahoo.com
-      ported Bochs to the Mac.  He compiled with CodeWarrior Pro R1 (CW12).  To
-      compile, you have to build headers and Makefiles on a Unix machine using
-      "configure --with-macos".  Check out David's MacBochs website.  David has
-      not had time to maintain the page or the Mac port since early 2000. If
-      you have Mac development tools and want to contribute, contact the
-      &devlist;. </entry>
-      <entry>
-      macos
-      </entry>
+      <entry>carbon, x, rfb, sdl</entry>
     </row>
 
     <row>
-      <entry>Amiga MorphOS</entry>
+      <entry>Macintosh</entry>
       <entry>
-      This port is written and maintained by Nicholai Benalal.
+        David Batterham<!-- <email>drbatter@socs.uts.edu.au</email> or <email>drbatter@yahoo.com</email> -->
+        ported Bochs to the Mac. He compiled with CodeWarrior Pro R1 (CW12)
+        but has not had time to maintain the Mac port since early 2000.
+        If you have Mac development tools and want to contribute, contact
+        the &devlist;; see <xref linkend="compile-macos9-codewarrior"> for
+        compile instructions.
       </entry>
+      <entry>macos</entry>
+    </row>
+
+    <row>
+      <entry>Amiga/MorphOS</entry>
       <entry>
-      amigaos
+        This port is written and maintained by Nicholai Benalal, see
+        <xref linkend="compile-morphos"> for compile instructions.
       </entry>
+      <entry>amigaos</entry>
     </row>
 
     <row>
       <entry>OS/2</entry>
-      <entry> Nick Behnken used PE2LX to translate David Ross' Win32
-      port to an OS/2 program.  This hasn't been updated in more than
-      a year, and Nick Behnken's page seems to be inactive.
-      Also, Craig Ballantyne ported Bochs to OS/2, but his web page has
-      disappeared and his port has not been updated since March 2000.
-      If you want to bring the OS/2 port up to date, contact the &devlist;.
-      </entry>
       <entry>
-      ???
+        Nick Behnken used PE2LX to translate David Ross' Win32
+        port to an OS/2 program. This hasn't been updated for a long time,
+        and Nick Behnken's page seems to be inactive.
+        Also, Craig Ballantyne ported Bochs to OS/2, but his web page has
+        disappeared and his port has not been updated since March 2000.
+        If you want to bring the OS/2 port up to date, contact the &devlist;.
       </entry>
+      <entry>???</entry>
     </row>
 
-   </tbody>
-   </tgroup>
-
+  </tbody>
+  </tgroup>
 </table>
-</section>  <!-- End Platforms section -->
+</section><!-- end: Supported Platforms -->
 
-<!-- *************************************************************** -->
 <section id="faq"><title>FAQ</title>
 <qandaset>
   <qandaentry>
@@ -1598,7 +1591,7 @@ descriptions or tool-tips).
 
 <section id="compiling"><title>Compiling Bochs</title>
 
-  <section><title>Standard Compile</title>
+<section><title>Standard Compile</title>
 <para>
 Bochs is written in C++, so you need a C++ compiler on your system.  Most
 platforms have been tested with GNU gcc/g++, but other compilers are known
@@ -2213,9 +2206,9 @@ turn it off.
         nothing to do with x86 hardware debug support.  It is a more powerful
         and non-intrusive native debugger.  Enabling this will of course slow
         down the emulation.  You only need this option if you know you need it.
-        After you have run ./configure, you may want to edit 'config.h' to
-        customize the debugger further.  Look at the section entitled 'OPTIONAL
-        DEBUGGER SECTION'.  &FIXME; add cross references
+        After you have run <command>./configure</command>, you may want to edit
+        <filename>config.h</filename> to customize the debugger further;
+        see <xref linkend="internal-debugger"> for more information.
       </entry>
     </row>
     <row>
@@ -2278,7 +2271,7 @@ turn it off.
     <row>
       <entry>--enable-external-debugger</entry>
       <entry>no</entry>
-      <entry> enable external debugger support </entry>
+      <entry>Enable external debugger support (only available on Win32).</entry>
     </row>
     <row>
       <entry>--enable-pci</entry>
@@ -2302,12 +2295,12 @@ turn it off.
     </row>
     <row>
       <entry>--enable-4meg-pages</entry>
-      <entry>no</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 4)</entry>
       <entry>support 4 megabyte page extensions</entry>
     </row>
     <row>
       <entry>--enable-pae</entry>
-      <entry>no</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 5)</entry>
       <entry>support physical address extensions</entry>
     </row>
     <row>
@@ -2610,35 +2603,29 @@ commands are
   sh .conf.win32-cygwin
   make
 </screen>
-These options are known to work in Cygwin, so they are enabled in the configure
-shortcut file:
-<screen>
-  --enable-cdrom
-  --enable-sb16
-  --enable-ne2000
-  --enable-vbe
-</screen>
+To find out the options which are known to work in Cygwin, open the file
+<filename>.conf.win32-cygwin</filename> in any text editor/viewer and have
+a look at the end of that file.
 </para>
 </section>  <!-- end of cygwin -->
 
-<section><title>Compiling on MacOS 9 with CodeWarrior</title>
+<section id="compile-macos9-codewarrior"><title>Compiling on MacOS 9 with CodeWarrior</title>
 <para>
-It is possible that this hasn't been tried since 1999.  In theory, you run
-<filename>sh .conf.macos</filename> on a Unix box to build the 
-makefiles and headers, copy the whole thing over to a Mac, and then
-use CodeWarrior to compile.  Since it hasn't been tested in so long,
-it is quite likely that some work is needed to bring the Mac port up 
-to date.
+  It is possible that this hasn't been tried since 1999. In theory, you
+  run <command>sh .conf.macos</command> on a Unix box to build the
+  makefiles and headers, copy the whole thing over to a Mac, and then
+  use CodeWarrior to compile. Since it hasn't been tested in so long,
+  it is quite likely that some work is needed to bring the Mac port up
+  to date.
 </para>
-
 <para>
-If you are interested and have the required MacOS development tools, please
-let us know.  Someone requests a MacOS port almost once a month, but none of
-the developers know how to help them.
+  If you are interested and have the required MacOS development tools, please
+  let us know by contacting the &devlist;. Someone requests a MacOS port
+  almost once a month, but none of the developers know how to help them.
 </para>
-</section>
+</section><!-- end: Compiling on MacOS 9 with CodeWarrior -->
 
-<section><title>Compiling on MacOS X</title>
+<section id="compile-macosx"><title>Compiling on MacOS X</title>
 <para>
 The port to MacOS X with Carbon API by Emmanuel Mailliard is quite new, and the
 configure and makefile support was added by Bryce Denney.  You will need
@@ -2668,34 +2655,39 @@ Mac developer helps to clean it up.
 
 <para>
 On MacOS X the default GUI is the Carbon interface, but you can also try other
-Bochs GUIs.  Use --with-x11 for X windows, --with-rfb for VNC/RFB, or
---with-sdl for SDL.
+Bochs GUIs. Use <option>--with-x11</option> for X windows,
+<option>--with-rfb</option> for VNC/RFB, or <option>--with-sdl</option> for SDL.
 </para>
-</section>
+</section><!-- end: Compiling on MacOS X -->
 
-<section><title>Compiling on BeOS</title>
+<section id="compile-beos"><title>Compiling on BeOS</title>
 <para>
-Kevin Lawton ported Bochs to BeOS.  Bernd Korz has taken over the port,
-and is working on raw cdrom and raw floppy support.  As of Bochs 1.4, it should
-compile if you just type "configure && make", because configure will
-detect the BeOS platform and assume you want the BeOS GUI.  Optionally,
-you can use the configure shortcut script for BeOS, <filename>.conf.beos</filename>.
-This shortcut script uses the SDL gui by default.
-</para>
-</section> <!-- end BeOS -->
-
-<section><title>Compiling on Amiga/MorphOS</title>
-<para>
-Nicholai Benalal created this port to MorphOS running on Amiga.  It should
-compile with 
+  Kevin Lawton ported Bochs to BeOS. Bernd Korz has taken over the port.
+  Since Bochs 1.4, you can use the same compile and install process as on
+  Unix, that is, configure will detect the BeOS platform and assume you
+  want the BeOS GUI.
 <screen>
-  configure && make
+  configure
+  make
 </screen>
-If the platform is not detected properly, you might need to use
---enable-amigaos as a configure option.  Optionally, you can use
-the configure shortcut script, <filename>.conf.amigaos</filename>.
+  Optionally, you can use the configure shortcut script for BeOS,
+  <filename>.conf.beos</filename>, which uses the SDL GUI by default.
 </para>
-</section> <!-- end Amiga/MorphOS -->
+</section><!-- end: Compiling on BeOS -->
+
+<section id="compile-morphos"><title>Compiling on Amiga/MorphOS</title>
+<para>
+  Nicholai Benalal created this port to MorphOS running on Amiga. It should
+  compile with:
+<screen>
+  configure
+  make
+</screen>
+  If the platform is not detected properly, you might need to use
+  <option>--enable-amigaos</option> as a configure option. Optionally, you
+  can use the configure shortcut script, <filename>.conf.amigaos</filename>.
+</para>
+</section><!-- end: Compiling on Amiga/MorphOS -->
 
 <section id="compile-rfb"><title>Compiling with the RFB interface</title>
 <para>
@@ -2737,11 +2729,17 @@ the configure shortcut script, <filename>.conf.amigaos</filename>.
   make
 </screen>
 </para>
-
-<note><para>
-This has only been tested on Linux at the time this documentation was written.
-</para></note>
-
+<para>
+  If you are on FreeBSD and have SDL installed using the ports collection, Bochs
+  won't be able to find the library automatically, as the SDL config script is
+  called <filename>sdl11-config</filename> in that case (even for version 1.2).
+  The easiest way to make Bochs find it, is to create a symlink to that script
+  called <filename>sdl-config</filename> inside a directory which is in the path.
+  For example:
+<screen>
+  ln -s /usr/local/bin/sdl11-config ~/bin/sdl-config
+</screen>
+</para>
 <para>
 To compile in Microsoft VC++, you have to configure on a different system.
 Here's the procedure:
@@ -5983,7 +5981,7 @@ Some of the other options in this group is probably also needed,
 <para>
 Note, if you are looking for a graphical front-end for the
 bochs debugger, you may want to check out
-<ulink url="http://www.qzx.com/bfe/">BFE</ulink>. This is a
+<ulink url="http://bfe.sourceforge.net/">BFE</ulink>. This is a
 package written by a Bochs user which can interface with
 the text based Bochs debugger.  No linking is necessary.
 It's not part of Bochs, but you may find it useful.
@@ -5998,9 +5996,9 @@ it if possible.
 </para>
 
 <para>
-To use the debugger, you must configure bochs with the
-'--enable-debugger' and '--enable-disasm' flags.  For example:
-
+To use the debugger, you must configure Bochs with the
+<option>--enable-debugger</option> and <option>--enable-disasm</option> flags.
+For example:
 <screen>
   ./configure --enable-debugger --enable-disasm
 </screen>
