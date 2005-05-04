@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.136 2005-04-30 11:10:12 vruppert Exp $
+// $Id: rombios.c,v 1.137 2005-05-04 16:05:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -933,10 +933,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.136 $";
-static char bios_date_string[] = "$Date: 2005-04-30 11:10:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.137 $";
+static char bios_date_string[] = "$Date: 2005-05-04 16:05:05 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.136 2005-04-30 11:10:12 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.137 2005-05-04 16:05:05 sshwarts Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -10375,7 +10375,7 @@ mp_config_proc0:
   db 0 ;; entry type=processor
   db 0 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 3 ;; cpu flags: enabled
+  db 3 ;; cpu flags: enabled, bootstrap processor
   db 0,6,0,0 ;; cpu signature
   dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
@@ -10537,7 +10537,7 @@ mp_config_proc0:
   db 0 ;; entry type=processor
   db 0 ;; local APIC id
   db 0x11 ;; local APIC version number
-  db 3 ;; cpu flags: bootstrap cpu
+  db 3 ;; cpu flags: enabled, bootstrap processor
   db 0,6,0,0 ;; cpu signature
   dw 0x201,0 ;; feature flags
   dw 0,0 ;; reserved
