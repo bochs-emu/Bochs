@@ -235,6 +235,8 @@ Detailed change log :
   - patch.v8086-exception.lightcone (LightCone)
 
 - these S.F. bugs were closed
+  #957660 >>PANIC<< APIC: R(curr timer count): delta < initial
+ #1192654 60 x 90 text not quite right... 
  #1189097 "configure --with-sdl --with-rfb" doesn't compile
  #1188980 Crash on XP when break into debugger
  #1186693 Improving quality of ./configure --help
