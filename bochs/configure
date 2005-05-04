@@ -33180,7 +33180,7 @@ echo "${ECHO_T}4" >&6
 _ACEOF
 
        cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 2
+#define BX_BOOTSTRAP_PROCESSOR 0
 _ACEOF
 
        cat >>confdefs.h <<\_ACEOF
