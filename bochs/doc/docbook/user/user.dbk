@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.171 2005-05-01 19:49:54 vruppert Exp $
+$Id: user.dbk,v 1.172 2005-05-06 17:56:34 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1283,7 +1283,8 @@ you are a Bochs expert.
 If you choose the ZIP package you need a tool like WinZip to unpack the archive.
 Note that you have to create a registry key for Bochs if you want to use the
 environment variable $BXSHARE in your config file. The name of the key is
-"HKEY_LOCAL_MACHINE\Software\Bochs 2.1.pre3" (the Bochs version may differ).
+<varname>HKEY_LOCAL_MACHINE\Software\Bochs 2.2.pre3</varname> (the Bochs version may differ).
+Edit the default value of this key and enter the path to your Bochs installation.
 For more information on environment variables see the section <link
 linkend="bochsrc">bochsrc</link>.
 </para>
@@ -2255,8 +2256,10 @@ turn it off.
       using I/O ports, so that software running in the guest OS can access
       features of the debugger.  You only want this option if you are 
       developing guest OS code for use in Bochs.  In other words, most people
-      don't.  Also, it should only be used with --enable-debugger.  See section
-      &FIXME; in the Developer's Guide for details.
+      don't.  Also, it should only be used with --enable-debugger.  See the
+      <ulink url="http://bochs.sourceforge.net/docs-html/iodebug.html">old documentation</ulink> for
+      details.
+      <footnote><para>&FIXME; move iodebug.html to the new developer docs</para></footnote>
       </entry>
     </row>
     <row>
