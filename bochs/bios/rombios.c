@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.137 2005-05-04 16:05:05 sshwarts Exp $
+// $Id: rombios.c,v 1.138 2005-05-07 15:55:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@
 #define BX_CALL_INT15_4F 1
 #define BX_USE_EBDA      1
 #define BX_SUPPORT_FLOPPY 1
-#define BX_FLOPPY_ON_CNT 37   // 2 seconds
+#define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
 
@@ -150,7 +150,8 @@
 #define BX_MAX_ATA_INTERFACES   4
 #define BX_MAX_ATA_DEVICES      (BX_MAX_ATA_INTERFACES*2)
 
-#define BX_VIRTUAL_PORTS 1
+#define BX_VIRTUAL_PORTS 1 /* normal output to Bochs ports */
+#define BX_DEBUG_SERIAL  0 /* output to COM1 */
 
    /* model byte 0xFC = AT */
 #define SYS_MODEL_ID     0xFC
@@ -933,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.137 $";
-static char bios_date_string[] = "$Date: 2005-05-04 16:05:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.138 $";
+static char bios_date_string[] = "$Date: 2005-05-07 15:55:26 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.137 2005-05-04 16:05:05 sshwarts Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.138 2005-05-07 15:55:26 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1419,6 +1420,56 @@ ASM_START
 ASM_END
 }
 
+#if BX_DEBUG_SERIAL
+/* serial debug port*/
+#define BX_DEBUG_PORT 0x03f8
+
+/* data */
+#define UART_RBR 0x00
+#define UART_THR 0x00
+
+/* control */
+#define UART_IER 0x01
+#define UART_IIR 0x02
+#define UART_FCR 0x02
+#define UART_LCR 0x03
+#define UART_MCR 0x04
+#define UART_DLL 0x00
+#define UART_DLM 0x01
+
+/* status */
+#define UART_LSR 0x05
+#define UART_MSR 0x06
+#define UART_SCR 0x07
+
+int uart_can_tx_byte(base_port)
+    Bit16u base_port;
+{
+    return inb(base_port + UART_LSR) & 0x20;
+}
+
+void uart_wait_to_tx_byte(base_port)
+    Bit16u base_port;
+{
+    while (!uart_can_tx_byte(base_port));
+}
+
+void uart_wait_until_sent(base_port)
+    Bit16u base_port;
+{
+    while (!(inb(base_port + UART_LSR) & 0x40));
+}
+
+void uart_tx_byte(base_port, data)
+    Bit16u base_port;
+    Bit8u data;
+{
+    uart_wait_to_tx_byte(base_port);
+    outb(base_port + UART_THR, data);
+    uart_wait_until_sent(base_port);
+}
+#endif
+
   void
 wrch(c)
   Bit8u  c;
@@ -1443,6 +1494,10 @@ send(action, c)
   Bit16u action;
   Bit8u  c;
 {
+#if BX_DEBUG_SERIAL
+  if (c == '\n') uart_tx_byte(BX_DEBUG_PORT, '\r');
+  uart_tx_byte(BX_DEBUG_PORT, c);
+#endif
 #if BX_VIRTUAL_PORTS
   if (action & BIOS_PRINTF_DEBUG) outb(DEBUG_PORT, c);
   if (action & BIOS_PRINTF_INFO) outb(INFO_PORT, c);
@@ -1450,7 +1505,7 @@ send(action, c)
   if (action & BIOS_PRINTF_SCREEN) {
     if (c == '\n') wrch('\r');
     wrch(c);
-    }
+  }
 }
 
   void
@@ -1849,6 +1904,9 @@ int18_panic_msg()
 void
 log_bios_start()
 {
+#if BX_DEBUG_SERIAL
+  outb(BX_DEBUG_PORT+UART_LCR, 0x03); /* setup for serial logging: 8N1 */
+#endif
   BX_INFO("%s\n", bios_version_string);
 }
 
@@ -2744,7 +2802,7 @@ Bit32u length;
 
   // Data out is not supported yet
   if (inout == ATA_DATA_OUT) {
-    BX_INFO("ata_cmd_packet: DATA_OUT not supported yet");
+    BX_INFO("ata_cmd_packet: DATA_OUT not supported yet\n");
     return 1;
     }
 
@@ -4507,7 +4565,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     default:
       if (scancode & 0x80) return; /* toss key releases ... */
       if (scancode > MAX_SCAN_CODE) {
-        BX_INFO("KBD: int09h_handler(): unknown scancode read!");
+        BX_INFO("KBD: int09h_handler(): unknown scancode read!\n");
         return;
         }
       if (shift_flags & 0x08) { /* ALT */
@@ -4543,7 +4601,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
           }
         }
       if (scancode==0 && asciicode==0) {
-        BX_INFO("KBD: int09h_handler(): scancode & asciicode are zero?");
+        BX_INFO("KBD: int09h_handler(): scancode & asciicode are zero?\n");
         }
       enqueue_key(scancode, asciicode);
       break;
@@ -6240,8 +6298,8 @@ ASM_END
     }
 }
 
-static char panic_msg_reg12h[] = "HD%d cmos reg 12h not type F";
-static char panic_msg_reg19h[] = "HD%d cmos reg %02xh not user definable type 47";
+static char panic_msg_reg12h[] = "HD%d cmos reg 12h not type F\n";
+static char panic_msg_reg19h[] = "HD%d cmos reg %02xh not user definable type 47\n";
 
   void
 get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
@@ -9162,6 +9220,7 @@ pci_init_end:
   ret
 #endif // BX_PCIBIOS
 
+; parallel port detection: base address in DX, index in BX, timeout in CL
 detect_parport:
   push dx
   add  dx, #2
@@ -9183,6 +9242,7 @@ detect_parport:
 no_parport:
   ret
 
+; serial port detection: base address in DX, index in BX, timeout in CL
 detect_serial:
   push dx
   inc  dx
