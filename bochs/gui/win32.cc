@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.92 2005-03-23 20:46:52 vruppert Exp $
+// $Id: win32.cc,v 1.93 2005-05-08 19:10:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -64,6 +64,10 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 #define EXIT_NORMAL              4
 #define EXIT_HEADER_BITMAP_ERROR 5
 
+#ifndef TBSTYLE_FLAT
+#define TBSTYLE_FLAT 0x0800
+#endif
+
 /*  FIXME: Should we add a bochsrc option to control the font usage? */
 #define BX_USE_WINDOWS_FONTS 0
 
@@ -118,8 +122,6 @@ static struct {
   void (*f)(void);
 } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
-static unsigned bx_headerbar_y = 0;
-static unsigned bx_statusbar_y = 0;
 static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
@@ -137,11 +139,11 @@ static unsigned stretch_factor=1;
 static unsigned prev_cursor_x = 0;
 static unsigned prev_cursor_y = 0;
 static HBITMAP vgafont[256];
-static unsigned x_edge=0, y_edge=0, y_caption=0;
 static int xChar = 8, yChar = 16;
 static unsigned int text_rows=25, text_cols=80;
 static BOOL BxTextMode = TRUE;
 static BOOL legacyF12 = FALSE;
+static BOOL fix_size = FALSE;
 #if !BX_USE_WINDOWS_FONTS
 static Bit8u h_panning = 0, v_panning = 0;
 static Bit16u line_compare = 1023;
@@ -657,10 +659,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     cmap_index[i] = cmap_index[0];
   }
 
-  x_edge = GetSystemMetrics(SM_CXFIXEDFRAME);
-  y_edge = GetSystemMetrics(SM_CYFIXEDFRAME);
-  y_caption = GetSystemMetrics(SM_CYCAPTION);
-
   if (stInfo.hInstance)
     workerThread = _beginthread (UIThread, 0, NULL);
   else
@@ -684,24 +682,50 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
 
 }
 
+void resize_main_window()
+{
+  RECT R;
+  int toolbar_y = 0;
+  int statusbar_y = 0;
+
+  if (IsWindowVisible(hwndTB)) {
+    GetWindowRect(hwndTB, &R);
+    toolbar_y = R.bottom - R.top;
+  }
+
+  if (IsWindowVisible(hwndSB)) {
+    GetWindowRect(hwndSB, &R);
+    statusbar_y = R.bottom - R.top;
+  }
+
+  SetRect(&R, 0, 0, stretched_x, stretched_y);
+  DWORD style = GetWindowLong(stInfo.simWnd, GWL_STYLE);
+  DWORD exstyle = GetWindowLong(stInfo.simWnd, GWL_EXSTYLE);
+  AdjustWindowRectEx(&R, style, FALSE, exstyle);
+  style = GetWindowLong(stInfo.mainWnd, GWL_STYLE);
+  AdjustWindowRect(&R, style, FALSE);
+  SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, R.right - R.left,
+               R.bottom - R.top + toolbar_y + statusbar_y,
+               SWP_NOMOVE | SWP_NOZORDER);
+  fix_size = FALSE;
+}
 
 // This thread controls the GUI window.
 VOID UIThread(PVOID pvoid) {
   MSG msg;
   HDC hdc;
   WNDCLASS wndclass;
-  RECT wndRect, wndRect2;
+  RECT wndRect;
 
   workerThreadID = GetCurrentThreadId();
 
+  GetClassInfo(NULL, WC_DIALOG, &wndclass);
   wndclass.style = CS_HREDRAW | CS_VREDRAW;
   wndclass.lpfnWndProc = mainWndProc;
   wndclass.cbClsExtra = 0;
   wndclass.cbWndExtra = 0;
   wndclass.hInstance = stInfo.hInstance;
   wndclass.hIcon = LoadIcon (stInfo.hInstance, MAKEINTRESOURCE(ICON_BOCHS));
-  wndclass.hCursor = LoadCursor (NULL, IDC_ARROW);
-  wndclass.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
   wndclass.lpszMenuName = NULL;
   wndclass.lpszClassName = szAppName;
 
@@ -720,28 +744,33 @@ VOID UIThread(PVOID pvoid) {
 
   RegisterClass (&wndclass);
 
+  SetRect(&wndRect, 0, 0, stretched_x, stretched_y);
+  DWORD sim_style = WS_CHILD;
+  DWORD sim_exstyle = WS_EX_CLIENTEDGE;
+  AdjustWindowRectEx(&wndRect, sim_style, FALSE, sim_exstyle);
+  DWORD main_style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+  AdjustWindowRect(&wndRect, main_style, FALSE);
   stInfo.mainWnd = CreateWindow (szAppName,
                      szWindowName,
-                     WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
+                     main_style,
                      CW_USEDEFAULT,
                      CW_USEDEFAULT,
-                     dimension_x + x_edge * 2,
-                     dimension_y + y_edge * 2 + y_caption,
+                     wndRect.right - wndRect.left,
+                     wndRect.bottom - wndRect.top,
                      NULL,
                      NULL,
                      stInfo.hInstance,
                      NULL);
 
   if (stInfo.mainWnd) {
-    ShowWindow (stInfo.mainWnd, SW_SHOW);
 
     InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
-               WS_CHILD | CCS_ADJUSTABLE, 0, 0, 0, 0, stInfo.mainWnd,
+               WS_CHILD | TBSTYLE_FLAT, 0, 0, 0, 0, stInfo.mainWnd,
                (HMENU) 100, stInfo.hInstance, NULL);
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
-    ShowWindow(hwndTB, SW_SHOW);
+
     hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "",
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
@@ -753,25 +782,15 @@ VOID UIThread(PVOID pvoid) {
       SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+2, (long)&SB_Edges);
     }
     SetStatusText(0, szMouseEnable, TRUE);
-    GetClientRect(hwndTB, &wndRect2);
-    bx_headerbar_y = wndRect2.bottom;
-    GetClientRect(hwndSB, &wndRect2);
-    bx_statusbar_y = wndRect2.bottom;
-    SetWindowPos(stInfo.mainWnd, NULL, 0, 0, stretched_x + x_edge * 2,
-                  stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
-                  + y_caption, SWP_NOMOVE | SWP_NOZORDER);
-    UpdateWindow (stInfo.mainWnd);
-    GetClientRect(stInfo.mainWnd, &wndRect);
-    MoveWindow(hwndSB, 0, wndRect.bottom - bx_statusbar_y, wndRect.right,
-               bx_statusbar_y, TRUE);
 
-    stInfo.simWnd = CreateWindow("SIMWINDOW",
+    stInfo.simWnd = CreateWindowEx( sim_exstyle,
+                      "SIMWINDOW",
                       "",
-                      WS_CHILD,
+                      sim_style,
                       0,
-                      bx_headerbar_y,
-                      wndRect.right,
-                      wndRect.bottom - bx_headerbar_y - bx_statusbar_y,
+                      0,
+                      0,
+                      0,
                       stInfo.mainWnd,
                       NULL,
                       stInfo.hInstance,
@@ -792,12 +811,12 @@ VOID UIThread(PVOID pvoid) {
     }
 
     ShowWindow(stInfo.simWnd, SW_SHOW);
-    UpdateWindow (stInfo.simWnd);
     SetFocus(stInfo.simWnd);
 
     ShowCursor(!mouseCaptureMode);
-    GetWindowRect(stInfo.simWnd, &wndRect);
-    SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
+    POINT pt = { 0, 0 };
+    ClientToScreen(stInfo.simWnd, &pt);
+    SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
     cursorWarped();
 
     hdc = GetDC(stInfo.simWnd);
@@ -806,6 +825,8 @@ VOID UIThread(PVOID pvoid) {
     ReleaseDC(stInfo.simWnd, hdc);
 
     if (MemoryBitmap && MemoryDC) {
+      resize_main_window();
+      ShowWindow (stInfo.mainWnd, SW_SHOW);
       stInfo.UIinited = TRUE;
 
       bx_gui->clear_screen();
@@ -885,7 +906,19 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     return 0;
 
   case WM_SIZE:
-    SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+    {
+      SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+      SendMessage(hwndSB, WM_SIZE, 0, 0);
+      int rect_data[] = { 1, 0, IsWindowVisible(hwndTB), 100, IsWindowVisible(hwndSB), 0x7712, 0, 0 };
+      RECT R;
+      GetEffectiveClientRect( hwnd, &R, rect_data );
+      MoveWindow(stInfo.simWnd, R.left, R.top, R.right - R.left, R.bottom - R.top, TRUE);
+      GetClientRect(stInfo.simWnd, &R);
+      if (((R.right - R.left) != stretched_x) || ((R.bottom - R.top) != stretched_y)) {
+        BX_ERROR(("Sim window's client size(%d, %d) was different from the stretched size(%d, %d) !!", (R.right - R.left), (R.bottom - R.top), stretched_x, stretched_y));
+        fix_size = TRUE;
+      }
+    }
     break;
 
   case WM_DRAWITEM:
@@ -909,7 +942,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
 void SetMouseCapture()
 {
-  RECT wndRect;
+  POINT pt = {0, 0};
 
   if (mouseToggleReq) {
     mouseCaptureMode = mouseCaptureNew;
@@ -919,8 +952,8 @@ void SetMouseCapture()
   }
   ShowCursor(!mouseCaptureMode);
   ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)
-  GetWindowRect(stInfo.simWnd, &wndRect);
-  SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
+  ClientToScreen(stInfo.simWnd, &pt);
+  SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
   cursorWarped();
   if (mouseCaptureMode)
     SetStatusText(0, szMouseDisable, TRUE);
@@ -932,7 +965,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
   HDC hdc, hdcMem;
   PAINTSTRUCT ps;
-  RECT wndRect;
+  POINT pt;
   static BOOL mouseModeChange = FALSE;
 
   switch (iMsg) {
@@ -950,9 +983,14 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     // If mouse escaped, bring it back
     if ( mouseCaptureMode)
     {
-      GetWindowRect(hwnd, &wndRect);
-      SetCursorPos(wndRect.left + stretched_x/2, wndRect.top + stretched_y/2);
+      pt.x = 0;
+      pt.y = 0;
+      ClientToScreen(hwnd, &pt);
+      SetCursorPos(pt.x + stretched_x/2, pt.y + stretched_y/2);
       cursorWarped();
+    }
+    if (fix_size) {
+      resize_main_window();
     }
     return 0;
 
@@ -1618,8 +1656,6 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
 void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
-  RECT R;
-
   BxTextMode = (fheight > 0);
   if (BxTextMode) {
     text_cols = x / fwidth;
@@ -1692,14 +1728,7 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   }
   current_bpp = bpp;
 
-  SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
-               stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
-               + y_caption, SWP_NOMOVE | SWP_NOZORDER);
-  GetClientRect(stInfo.mainWnd, &R);
-  MoveWindow(hwndSB, 0, R.bottom-bx_statusbar_y, stretched_x,
-             bx_statusbar_y, TRUE);
-  UpdateWindow(hwndSB);
-  MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
+  resize_main_window();
 
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
 
@@ -1809,19 +1838,10 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 
 void bx_win32_gui_c::show_headerbar(void)
 {
-  RECT R;
-
-  SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
-  GetWindowRect(hwndTB, &R);
-  if (bx_headerbar_y != (R.bottom - R.top + 1)) {
-    bx_headerbar_y = R.bottom - R.top + 1;
-    SetWindowPos(stInfo.mainWnd, HWND_TOP, 0, 0, stretched_x + x_edge * 2,
-                 stretched_y + bx_headerbar_y + bx_statusbar_y + y_edge * 2
-                 + y_caption, SWP_NOMOVE | SWP_NOZORDER);
-    GetClientRect(stInfo.mainWnd, &R);
-    MoveWindow(hwndSB, 0, R.bottom - bx_statusbar_y, stretched_x,
-               bx_statusbar_y, TRUE);
-    MoveWindow(stInfo.simWnd, 0, bx_headerbar_y, stretched_x, stretched_y, TRUE);
+  if (!IsWindowVisible(hwndTB)) {
+    SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+    ShowWindow(hwndTB, SW_SHOW);
+    resize_main_window();
   }
 }
 
@@ -1843,8 +1863,16 @@ void bx_win32_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   if (bmap_id != bx_headerbar_entry[hbar_id].bmap_id) {
     bx_headerbar_entry[hbar_id].bmap_id = bmap_id;
+    bx_bool is_visible = IsWindowVisible(hwndTB);
+    if (is_visible) {
+      ShowWindow(hwndTB, SW_HIDE);
+    }
     SendMessage(hwndTB, TB_CHANGEBITMAP, (WPARAM)hbar_id+101, (LPARAM)
                 MAKELPARAM(bmap_id, 0));
+    SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
+    if (is_visible) {
+      ShowWindow(hwndTB, SW_SHOW);
+    }
   }
 }
 
