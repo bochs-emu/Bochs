@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.93 2005-05-08 19:10:21 vruppert Exp $
+// $Id: win32.cc,v 1.94 2005-05-11 18:00:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1029,9 +1029,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (!mouseModeChange) {
       // WM_MOUSEWHEEL returns x and y relative to the main screen.
       // WM_MOUSEMOVE below returns x and y relative to the current view.
-      RECT rect;
-      GetWindowRect(stInfo.simWnd, &rect);
-      processMouseXY( LOWORD(lParam) - rect.left, HIWORD(lParam) - rect.top, (Bit16s) HIWORD(wParam) / 120, LOWORD(wParam), 0);
+      POINT pt;
+      pt.x = LOWORD(lParam);
+      pt.y = HIWORD(lParam);
+      ScreenToClient(stInfo.simWnd, &pt);
+      processMouseXY( pt.x, pt.y, (Bit16s) HIWORD(wParam) / 120, LOWORD(wParam), 0);
     }
     return 0;
 
