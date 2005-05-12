@@ -20,7 +20,7 @@ these four paragraphs for those parts of this code that are retained.
 
 /*============================================================================
  * Written for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman (gate at fidonet.org.il)
+ *            Stanislav Shwartsman (stl at fidonet.org.il)
  * ==========================================================================*/ 
 
 #define FLOAT128

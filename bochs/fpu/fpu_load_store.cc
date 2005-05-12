@@ -1,13 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.7 2005-03-20 21:19:38 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.8 2005-05-12 18:07:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2004  MandrakeSoft S.A.
 //
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2003 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,8 +18,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
 /////////////////////////////////////////////////////////////////////////
-
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"

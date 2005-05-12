@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: control_w.h,v 1.6 2005-03-20 21:19:34 sshwarts Exp $
+// $Id: control_w.h,v 1.7 2005-05-12 18:07:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <gate at fidonet.org.il>
+//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

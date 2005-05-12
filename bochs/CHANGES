@@ -223,6 +223,11 @@ Detailed change log :
  [1145423] stosq simulation bugfix by Avi Kivity
  [1151012] allow null ss on x86-64 by Avi Kivity
  [1153327] ignore segment bases in x86-64 by Avi Kivity
+ [1153511] Fixed broken screen update (VBE)
+ [1152808] use 'install' instead of 'cp' during installation by Avi Kivity
+ [1159626] bugfix [1156776] keyboard scanmode fault by Rene Kootstra
+  [843328] PATCH: support for Flat-style ToolBar with Win32GUI
+ [1198308] PATCH: fix incorrect moving mouse cursor when wheel used
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op

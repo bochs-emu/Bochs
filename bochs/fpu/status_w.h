@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: status_w.h,v 1.8 2005-03-20 21:19:38 sshwarts Exp $
+// $Id: status_w.h,v 1.9 2005-05-12 18:07:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2004 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <gate at fidonet.org.il>
+//   Copyright (c) 2003 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,9 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef _STATUS_H_
 #define _STATUS_H_

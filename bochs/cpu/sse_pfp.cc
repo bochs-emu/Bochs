@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.20 2005-03-19 20:44:01 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.21 2005-05-12 18:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <gate at fidonet.org.il>
+//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
