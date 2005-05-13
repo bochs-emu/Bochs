@@ -123,7 +123,8 @@ Detailed change log :
   - sb16
     - MacOSX sound support (Brian Huffman)
   - networking modules
-    - new: 'eth_vnet' simulates ARP, DHCP and ICMP-echo (m_suzu)
+    - new: 'eth_vnet' simulates ARP, DHCP, ICMP-echo and read-only TFTP
+      (m_suzu, easeway)
     - new: 'eth_vde' for Virtual Distributed Ethernet (Renzo Davoli)
 
 - System BIOS
@@ -228,6 +229,7 @@ Detailed change log :
  [1159626] bugfix [1156776] keyboard scanmode fault by Rene Kootstra
   [843328] PATCH: support for Flat-style ToolBar with Win32GUI
  [1198308] PATCH: fix incorrect moving mouse cursor when wheel used
+ [1200515] add TFTP server to vnet & ipv4 bug fix by easeway
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
