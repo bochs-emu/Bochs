@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.15 2005-02-03 18:43:22 sshwarts Exp $
+// $Id: mult64.cc,v 1.16 2005-05-13 14:15:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -205,214 +205,213 @@ void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divi
   }
 }
 
-  void
-BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
+void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
-    Bit64u op1_64, op2_64;
-    Bit128u product_128;
+  Bit64u op1_64, op2_64;
+  Bit128u product_128;
   
-    op1_64 = RAX;
+  op1_64 = RAX;
 
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-      }
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  }
 
-    // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
-    // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
-    // product_64h = (Bit64u) (product_128 >> 64);
+  // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
+  // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
+  // product_64h = (Bit64u) (product_128 >> 64);
 
-    long_mul(&product_128,op1_64,op2_64);
+  long_mul(&product_128,op1_64,op2_64);
 
-    /* set EFLAGS */
-    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL64);
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL64);
 
-    /* now write product back to destination */
-    RAX = product_128.lo;
-    RDX = product_128.hi;
+  /* now write product back to destination */
+  RAX = product_128.lo;
+  RDX = product_128.hi;
 }
 
-  void
-BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
+void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
 {
-    Bit64s op1_64, op2_64;
-    Bit128s product_128;
+  Bit64s op1_64, op2_64;
+  Bit128s product_128;
 
-    op1_64 = RAX;
+  op1_64 = RAX;
 
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
-      }
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
+  }
 
-    // product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
-    // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
-    // product_64h = (Bit64u) (product_128 >> 64);
+  // product_128 = ((Bit128s) op1_64) * ((Bit128s) op2_64);
+  // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
+  // product_64h = (Bit64u) (product_128 >> 64);
 
-    long_imul(&product_128,op1_64,op2_64);
+  long_imul(&product_128,op1_64,op2_64);
 
-    /* now write product back to destination */
-    RAX = product_128.lo;
-    RDX = product_128.hi;
+  /* now write product back to destination */
+  RAX = product_128.lo;
+  RDX = product_128.hi;
 
-    /* set eflags:
-     * IMUL r/m64: condition for clearing CF & OF:
-     *   RDX:RAX = sign-extend of RAX
-     */
-    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
+  /* set eflags:
+   * IMUL r/m64: condition for clearing CF & OF:
+   *   RDX:RAX = sign-extend of RAX
+   */
+  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
 }
 
-  void
-BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
+void BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
 {
-    Bit64u op2_64, remainder_64, quotient_64l;
-    Bit128u op1_128, quotient_128;
+  Bit64u op2_64, remainder_64, quotient_64l;
+  Bit128u op1_128, quotient_128;
 
-    op1_128.lo = RAX;
-    op1_128.hi = RDX;
+  op1_128.lo = RAX;
+  op1_128.hi = RDX;
 
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-      }
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  }
 
-    if (op2_64 == 0)
+  if (op2_64 == 0) {
+    exception(BX_DE_EXCEPTION, 0, 0);
+  }
+
+  // quotient_128 = op1_128 / op2_64;
+  // remainder_64 = (Bit64u) (op1_128 % op2_64);
+  // quotient_64l = (Bit64u) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+
+  long_div(&quotient_128,&remainder_64,&op1_128,op2_64);
+  quotient_64l = quotient_128.lo;
+
+  if (quotient_128.hi != 0)
+    exception(BX_DE_EXCEPTION, 0, 0);
+
+  /* set EFLAGS:
+   * DIV affects the following flags: O,S,Z,A,P,C are undefined
+   */
+
+  /* now write quotient back to destination */
+  RAX = quotient_64l;
+  RDX = remainder_64;
+}
+
+void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
+{
+  Bit64s op2_64, remainder_64, quotient_64l;
+  Bit128s op1_128, quotient_128;
+
+  op1_128.lo = RAX;
+  op1_128.hi = RDX;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
+  }
+ 
+  if (op2_64 == 0) {
+    exception(BX_DE_EXCEPTION, 0, 0);
+  }
+
+  /* check MIN_INT divided by -1 case */
+  if (op2_64 == -1)
+  {
+    if ((op1_128.hi == BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
       exception(BX_DE_EXCEPTION, 0, 0);
+  }
 
-    // quotient_128 = op1_128 / op2_64;
-    // remainder_64 = (Bit64u) (op1_128 % op2_64);
-    // quotient_64l = (Bit64u) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
+  // quotient_128 = op1_128 / op2_64;
+  // remainder_64 = (Bit64s) (op1_128 % op2_64);
+  // quotient_64l = (Bit64s) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
 
-    long_div(&quotient_128,&remainder_64,&op1_128,op2_64);
-    quotient_64l = quotient_128.lo;
+  long_idiv(&quotient_128,&remainder_64,&op1_128,op2_64);
+  quotient_64l = quotient_128.lo;
 
-    if (quotient_128.hi != 0)
-      exception(BX_DE_EXCEPTION, 0, 0);
+  if ((!(quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != 0) ||
+        (quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != BX_CONST64(0xffffffffffffffff))
+  {
+    exception(BX_DE_EXCEPTION, 0, 0);
+  }
 
-    /* set EFLAGS:
-     * DIV affects the following flags: O,S,Z,A,P,C are undefined
-     */
+  /* set EFLAGS:
+   * IDIV affects the following flags: O,S,Z,A,P,C are undefined
+   */
 
-    /* now write quotient back to destination */
-    RAX = quotient_64l;
-    RDX = remainder_64;
+  /* now write quotient back to destination */
+  RAX = quotient_64l;
+  RDX = remainder_64;
 }
 
-  void
-BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
+void BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
 {
-    Bit64s op2_64, remainder_64, quotient_64l;
-    Bit128s op1_128, quotient_128;
+  Bit64s op2_64, op3_64;
+  Bit128s product_128;
 
-    op1_128.lo = RAX;
-    op1_128.hi = RDX;
+  op3_64 = (Bit32s) i->Id();
 
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
-      }
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
+  }
 
-    if (op2_64 == 0)
-      exception(BX_DE_EXCEPTION, 0, 0);
+  long_imul(&product_128,op2_64,op3_64);
 
-    /* check MIN_INT divided by -1 case */
-    if (op2_64 == -1)
-    {
-      if ((op1_128.hi == BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
-        exception(BX_DE_EXCEPTION, 0, 0);
-    }
+  /* now write product back to destination */
+  BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
-    // quotient_128 = op1_128 / op2_64;
-    // remainder_64 = (Bit64s) (op1_128 % op2_64);
-    // quotient_64l = (Bit64s) (quotient_128 & 0xFFFFFFFFFFFFFFFF);
-
-    long_idiv(&quotient_128,&remainder_64,&op1_128,op2_64);
-    quotient_64l = quotient_128.lo;
-
-    if (quotient_128.hi != 0)
-      exception(BX_DE_EXCEPTION, 0, 0);
-
-    /* set EFLAGS:
-     * IDIV affects the following flags: O,S,Z,A,P,C are undefined
-     */
-
-    /* now write quotient back to destination */
-    RAX = quotient_64l;
-    RDX = remainder_64;
+  /* set eflags:
+   * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
+   *   result exactly fits within r64
+   */
+  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
 }
 
-  void
-BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
+void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
 {
-    Bit64s op2_64, op3_64;
-    Bit128s product_128;
+  Bit64s op1_64, op2_64;
+  Bit128s product_128;
 
-    op3_64 = (Bit32s) i->Id();
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
+  }
 
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
-      }
+  op1_64 = BX_READ_64BIT_REG(i->nnn());
 
-    long_imul(&product_128,op2_64,op3_64);
+  long_imul(&product_128,op1_64,op2_64);
 
-    /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
+  /* now write product back to destination */
+  BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
-    /* set eflags:
-     * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
-     *   result exactly fits within r64
-     */
-    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
-}
-
-  void
-BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
-{
-    Bit64s op1_64, op2_64;
-    Bit128s product_128;
-
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2_64);
-      }
-
-    op1_64 = BX_READ_64BIT_REG(i->nnn());
-
-    long_imul(&product_128,op1_64,op2_64);
-
-    /* now write product back to destination */
-    BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
-
-    /* set eflags:
-     * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
-     *   result exactly fits within r64
-     */
-    SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
+  /* set eflags:
+   * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
+   *   result exactly fits within r64
+   */
+  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */
