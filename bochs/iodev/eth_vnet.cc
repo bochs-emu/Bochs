@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.13 2005-01-19 18:21:36 sshwarts Exp $
+// $Id: eth_vnet.cc,v 1.14 2005-05-13 18:10:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
 //
-// An implementation of ARP, ping(ICMP-echo) and DHCP.
+// An implementation of ARP, ping(ICMP-echo), DHCP and read-only TFTP.
 // Virtual host acts as a DHCP server for guest.
 // There are no connections between the virtual host and real ethernets.
 //
@@ -13,7 +13,7 @@
 // Guest IP: 192.168.10.2
 // Guest netmask: 255.255.255.0
 // Guest broadcast: 192.168.10.255
-//
+// TFTP server uses ethdev value for the root directory
 
 #define BX_PLUGGABLE
 
@@ -66,6 +66,20 @@ typedef void (*layer4_handler_t)(
 #define INET_PORT_BOOTP_CLIENT 68
 #define INET_PORT_HTTP 80
 #define INET_PORT_NTP 123
+
+// TFTP server support by EaseWay <easeway@123.com>
+
+#include <string>
+
+#define INET_PORT_TFTP_SERVER 69
+
+#define TFTP_RRQ    1
+#define TFTP_WRQ    2
+#define TFTP_DATA   3
+#define TFTP_ACK    4
+#define TFTP_ERROR  5
+
+#define TFTP_BUFFER_MAX 512
 
 #define BOOTREQUEST 1
 #define BOOTREPLY 2
@@ -153,6 +167,26 @@ private:
     const Bit8u *ipheader, unsigned ipheader_len,
     unsigned sourceport, unsigned targetport,
     const Bit8u *data, unsigned data_len);
+  static void udpipv4_tftp_handler(
+    void *this_ptr,
+    const Bit8u *ipheader, unsigned ipheader_len,
+    unsigned sourceport, unsigned targetport,
+    const Bit8u *data, unsigned data_len);
+  void udpipv4_tftp_handler_ns(
+    const Bit8u *ipheader, unsigned ipheader_len,
+    unsigned sourceport, unsigned targetport,
+    const Bit8u *data, unsigned data_len);
+  void tftp_send_error(
+	Bit8u *buffer,
+    unsigned sourceport, unsigned targetport,
+    unsigned code, const char *msg);
+  void tftp_send_data(
+	Bit8u *buffer,
+	unsigned sourceport, unsigned targetport,
+    unsigned block_nr);  
+    
+  std::string tftp_filename;
+  std::string tftp_rootdir;
 
   Bit8u host_macaddr[6];
   Bit8u guest_macaddr[6];
@@ -251,6 +285,8 @@ bx_vnet_pktmover_c::pktmover_init(
   BX_INFO(("ne2k vnet driver"));
   this->rxh   = rxh;
   this->rxarg = rxarg;
+  this->tftp_rootdir = netif;
+  this->tftp_rootdir += "/";
 
   memcpy(&host_macaddr[0], macaddr, 6);
   memcpy(&guest_macaddr[0], macaddr, 6);
@@ -262,6 +298,7 @@ bx_vnet_pktmover_c::pktmover_init(
   l4data_used = 0;
 
   register_layer4_handler(0x11,INET_PORT_BOOTP_SERVER,udpipv4_dhcp_handler);
+  register_layer4_handler(0x11,INET_PORT_TFTP_SERVER,udpipv4_tftp_handler);
 
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
@@ -271,7 +308,7 @@ bx_vnet_pktmover_c::pktmover_init(
   pktlog_txt = fopen ("ne2k-pktlog.txt", "wb");
   if (!pktlog_txt) BX_PANIC (("ne2k-pktlog.txt failed"));
   fprintf (pktlog_txt, "vnet packetmover readable log file\n");
-  fprintf (pktlog_txt, "net IF = %s\n", netif);
+  fprintf (pktlog_txt, "TFTP root = %s\n", netif);
   fprintf (pktlog_txt, "host MAC address = ");
   int i;
   for (i=0; i<6; i++) 
@@ -415,13 +452,13 @@ bx_vnet_pktmover_c::process_arp(const Bit8u *buf, unsigned io_len)
         }
         break;
       case 0x0002: // ARP REPLY
-        BX_INFO(("unexpected ARP REPLY\n"));
+        BX_INFO(("unexpected ARP REPLY"));
         break;
       case 0x0003: // RARP REQUEST
-        BX_ERROR(("RARP is not implemented\n"));
+        BX_ERROR(("RARP is not implemented"));
         break;
       case 0x0004: // RARP REPLY
-        BX_INFO(("unexpected RARP REPLY\n"));
+        BX_INFO(("unexpected RARP REPLY"));
         break;
       default:
         BX_INFO(("arp: unknown ARP opcode %04x",opcode));
@@ -466,11 +503,11 @@ bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
   unsigned l4pkt_len;
 
   if (io_len < (14U+20U)) {
-    BX_INFO(("ip packet - too small packet\n"));
+    BX_INFO(("ip packet - too small packet"));
     return;
   }
   if ((buf[14+0] & 0xf0) != 0x40) {
-    BX_INFO(("ipv%u packet - not implemented\n",((unsigned)buf[14+0] >> 4)));
+    BX_INFO(("ipv%u packet - not implemented",((unsigned)buf[14+0] >> 4)));
     return;
   }
   l3header_len = ((unsigned)(buf[14+0] & 0x0f) << 2);
@@ -485,7 +522,9 @@ bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
   }
 
   total_len = get_net2(&buf[14+2]);
-  if (io_len > (14U+total_len)) return;
+  // FIXED By EaseWay
+  // Ignore this check to tolerant some cases
+  //if (io_len > (14U+total_len)) return;
 
   if (memcmp(&buf[14+16],host_ipv4addr,4) &&
       memcmp(&buf[14+16],broadcast_ipv4addr[0],4) &&
@@ -504,7 +543,7 @@ bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
   ipproto = buf[14+9];
 
   if ((fragment_flags & 0x1) || (fragment_offset != 0)) {
-    BX_INFO(("ignore fragmented packet!\n"));
+    BX_INFO(("ignore fragmented packet!"));
     return;
   } else {
     l4pkt = &buf[14 + l3header_len];
@@ -522,7 +561,7 @@ bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
     process_udpipv4(&buf[14],l3header_len,l4pkt,l4pkt_len);
     break;
   default:
-    BX_INFO(("unknown IP protocol %02x\n",ipproto));
+    BX_INFO(("unknown IP protocol %02x",ipproto));
     break;
   }
 }
@@ -1056,6 +1095,103 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
     replybuf, opts_len);
 }
 
+void 
+bx_vnet_pktmover_c::udpipv4_tftp_handler(
+  void *this_ptr,
+  const Bit8u *ipheader, unsigned ipheader_len,
+  unsigned sourceport, unsigned targetport,
+  const Bit8u *data, unsigned data_len)
+{
+  ((bx_vnet_pktmover_c *)this_ptr)->udpipv4_tftp_handler_ns(
+    ipheader,ipheader_len,sourceport,targetport,data,data_len);
+}
+
+void 
+bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
+  const Bit8u *ipheader, unsigned ipheader_len,
+  unsigned sourceport, unsigned targetport,
+  const Bit8u *data, unsigned data_len)
+{
+  Bit8u buffer[TFTP_BUFFER_MAX + 4];
+  switch (get_net2(data)) {
+    case TFTP_RRQ:
+      strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
+      buffer[data_len - 4] = 0;
+
+      // transfer mode
+      if (strlen((char*)buffer) < data_len - 2) {
+        const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
+        if (memcmp(mode, "octet\0", 6) != 0) {
+          tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
+          return;
+        }
+      }
+    
+      tftp_filename = (char*)buffer;
+      tftp_send_data(buffer, sourceport, targetport, 1);
+      break;
+    case TFTP_ACK:
+      tftp_send_data(buffer, sourceport, targetport, get_net2(data + 2) + 1);
+      break;
+    case TFTP_WRQ:
+      tftp_send_error(buffer, sourceport, targetport, 4, "TFTP WRQ not supported yet");
+      break;
+    default:
+      BX_ERROR(("TFTP unknown opt %d", get_net2(data)));
+  } 
+}
+
+void 
+bx_vnet_pktmover_c::tftp_send_error(
+  Bit8u *buffer,
+  unsigned sourceport, unsigned targetport,
+  unsigned code, const char *msg)
+{
+  put_net2(buffer, TFTP_ERROR);
+  put_net2(buffer + 2, code);
+  strcpy((char*)buffer + 4, msg);
+  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, strlen(msg) + 5);  
+}
+
+void 
+bx_vnet_pktmover_c::tftp_send_data(
+  Bit8u *buffer,
+  unsigned sourceport, unsigned targetport,
+  unsigned block_nr)
+{
+  int rd;
+
+  if (tftp_filename.empty()) {
+    tftp_send_error(buffer, sourceport, targetport, 1, "File not found");
+    return;
+  }
+  
+  std::string path = tftp_rootdir + tftp_filename;
+  FILE *fp = fopen(path.c_str(), "rb");
+  if (!fp) {
+    std::string msg("File not found: ");
+    msg += tftp_filename;
+    tftp_send_error(buffer, sourceport, targetport, 1, msg.c_str());
+    return;  	
+  }
+  
+  if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_MAX, SEEK_SET) < 0) {
+    tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
+    return;  	
+  }
+  
+  rd = fread(buffer + 4, 1, 512, fp);
+  fclose(fp);
+  
+  if (rd < 0) {
+    tftp_send_error(buffer, sourceport, targetport, 3, "Block not readable");
+    return;  	  	
+  }
+  
+  put_net2(buffer, TFTP_DATA);
+  put_net2(buffer + 2, block_nr);
+  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, rd + 4);
+}
 
 
 #endif /* if BX_NETWORKING */
