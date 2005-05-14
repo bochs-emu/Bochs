@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.172 2005-05-06 17:56:34 vruppert Exp $
+$Id: user.dbk,v 1.173 2005-05-14 16:00:33 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1806,7 +1806,7 @@ options in the first table tell which GUI library is the default for each
 platform.  Starting in version 2.0, you can use multiple
 <option>--with-*</option> options at once to compile with multiple
 display libraries, and then choose between them at runtime with the
-display_library command in the configuration file.  Or, you can 
+display_library option in the configuration file.  Or, you can 
 let the configure script detect which libraries are on your system
 and use them all, by configuring with --with-all-libs.
 </para>
@@ -2710,6 +2710,14 @@ Bochs GUIs. Use <option>--with-x11</option> for X windows,
   configure --with-rfb
   make
 </screen>
+  RFB currently uses this setup:
+<itemizedlist>
+  <listitem><para>port range 5900 to 5949 (using the first one available)</para></listitem>
+  <listitem><para>no authentification</para></listitem>
+  <listitem><para>30 seconds waiting for client</para></listitem>
+  <listitem><para>8 bpp (BGR233) supported only</para></listitem>
+  <listitem><para>desktop size 720x480 (for text mode and standard VGA)</para></listitem>
+</itemizedlist>
 </para>
 </section><!-- end compile-rfb -->
 
@@ -3354,6 +3362,12 @@ Examples:
 <screen>
   display_library: x
   display_library: sdl
+</screen>
+Starting with version 2.2, some display libraries support specific options:
+<screen>
+  display_library: rfb, options="timeout=60"  # time to wait for client
+  display_library: sdl, options="fullscreen"  # startup in fullscreen mode
+  display_library: win32, options="legacyF12" # use F12 to toggle mouse
 </screen>
 </para>
 
@@ -4014,10 +4028,11 @@ version where this module was added.
   </row>
   <row>
     <entry>vnet</entry>
-    <entry>ARP, ping (ICMP-echo) and DHCP simulator. The virtual host uses
-    192.168.10.1. DHCP assigns 192.168.10.2 to the guest.
+    <entry>ARP, ping (ICMP-echo), DHCP and read-only TFTP simulation. The virtual
+    host uses 192.168.10.1. DHCP assigns 192.168.10.2 to the guest. The TFTP server
+    uses the ethdev value for the root directory.
     </entry>
-    <entry>No</entry>
+    <entry>Yes, for TFTP</entry>
     <entry>No</entry>
     <entry>2.2</entry>
   </row>
