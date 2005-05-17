@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.75 2004-12-04 13:49:27 vruppert Exp $
+// $Id: wxdialog.cc,v 1.76 2005-05-17 18:05:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1185,7 +1185,9 @@ void ParamDialog::AddParam (
 	if (list->get_options()->get () & bx_list_c::USE_TAB_WINDOW) {
 	  // put each item in a separate tab of a tabbed window
 	  wxNotebook *notebook = new wxNotebook (context->parent, -1);
+#if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
 	  wxNotebookSizer *nbsizer = new wxNotebookSizer (notebook);
+#endif
 	  // put all items in the list into a separate page of the notebook.
 	  for (int i=0; i<list->get_size (); i++) {
 	    bx_param_c *child = list->get (i);
@@ -1211,7 +1213,11 @@ void ParamDialog::AddParam (
 	    panel->SetSizer (boxsz);
 	    notebook->AddPage (panel, wxString(pagename));
 	  }
+#if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
 	  context->vertSizer->Add (nbsizer, 0, wxALL|wxGROW, 10);
+#else
+	  context->vertSizer->Add (notebook, 0, wxALL|wxGROW, 10);
+#endif
 	  // clear gridSizer variable so that any future parameters force
 	  // creation of a new one.
 	  context->gridSizer = NULL;
