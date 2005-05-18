@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.105 2005-05-17 22:22:35 kevinlawton Exp $
+// $Id: proc_ctrl.cc,v 1.106 2005-05-18 05:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2281,6 +2281,8 @@ Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
 
 #endif
 
+/*
 void BX_CPU_C::LFENCE(bxInstruction_c *i) {}
 void BX_CPU_C::MFENCE(bxInstruction_c *i) {}
 void BX_CPU_C::SFENCE(bxInstruction_c *i) {}
+*/
