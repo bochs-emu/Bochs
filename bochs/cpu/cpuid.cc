@@ -118,10 +118,14 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 /* Get CPU extended feature flags. */
 Bit32u BX_CPU_C::get_extended_cpuid_features()
 {
-  Bit32u features = 0;	// start with none
+  Bit32u features = 0;
 
 #if BX_SUPPORT_PNI
-      features |= 0x01; // report PNI
+    features |= 0x01;     // report PNI
+#endif
+
+#if BX_SUPPORT_X86_64
+    features |= (1<<13);  // support CMPXCHG16B
 #endif
   
   return features;
@@ -130,7 +134,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
 /* Get CPU feature flags. Returned by CPUID functions 1 and 80000001.  */
 Bit32u BX_CPU_C::get_std_cpuid_features()
 {
-  Bit32u features = 0; // start with none
+  Bit32u features = 0;
 
 #if BX_SUPPORT_FPU
       features |= 0x01;

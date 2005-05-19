@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.75 2005-04-29 21:28:42 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.76 2005-05-19 20:25:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -427,6 +427,17 @@ static BxOpcodeInfo_t BxOpcodeInfo64G8EvIb[8] = {
 static BxOpcodeInfo_t BxOpcodeInfo64G9[8] = {
   /* 0 */  { 0, &BX_CPU_C::BxError },
   /* 1 */  { BxLockable, &BX_CPU_C::CMPXCHG8B },
+  /* 2 */  { 0, &BX_CPU_C::BxError },
+  /* 3 */  { 0, &BX_CPU_C::BxError },
+  /* 4 */  { 0, &BX_CPU_C::BxError },
+  /* 5 */  { 0, &BX_CPU_C::BxError },
+  /* 6 */  { 0, &BX_CPU_C::BxError },
+  /* 7 */  { 0, &BX_CPU_C::BxError }
+  };
+
+static BxOpcodeInfo_t BxOpcodeInfo64G9q[8] = {
+  /* 0 */  { 0, &BX_CPU_C::BxError },
+  /* 1 */  { BxLockable, &BX_CPU_C::CMPXCHG16B },
   /* 2 */  { 0, &BX_CPU_C::BxError },
   /* 3 */  { 0, &BX_CPU_C::BxError },
   /* 4 */  { 0, &BX_CPU_C::BxError },
@@ -2003,7 +2014,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F C4 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fc4 },
   /* 0F C5 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fc5 },
   /* 0F C6 */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fc6 },
-  /* 0F C7 */  { BxAnother | BxGroup9, NULL, BxOpcodeInfo64G9 },
+  /* 0F C7 */  { BxAnother | BxGroup9, NULL, BxOpcodeInfo64G9q },
   /* 0F C8 */  { 0, &BX_CPU_C::BSWAP_RAX },
   /* 0F C9 */  { 0, &BX_CPU_C::BSWAP_RCX },
   /* 0F CA */  { 0, &BX_CPU_C::BSWAP_RDX },

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.219 2005-04-17 21:51:58 sshwarts Exp $
+// $Id: cpu.h,v 1.220 2005-05-19 20:25:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2439,6 +2439,8 @@ public: // for now...
   BX_SMF void LOOPE64_Jb(bxInstruction_c *);
   BX_SMF void LOOP64_Jb(bxInstruction_c *);
   BX_SMF void JCXZ64_Jb(bxInstruction_c *);
+
+  BX_SMF void CMPXCHG16B(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
 
   // mch added
