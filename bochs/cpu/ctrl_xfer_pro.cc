@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.37 2005-04-17 21:51:59 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.38 2005-05-19 18:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -99,8 +99,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     }
 
     /* instruction pointer must be in code segment limit else #GP(0) */
-    if (dispBig > descriptor.u.segment.limit_scaled) {
-      BX_ERROR(("jump_protected: IP > limit"));
+    if (!IsLongMode() && dispBig > descriptor.u.segment.limit_scaled) {
+      BX_ERROR(("jump_protected: EIP > limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -119,27 +119,38 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     Bit16u gate_cs_raw;
     Bit32u temp_eIP;
 
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR msr.lma) {         // LONG MODE
+      if (descriptor.type != BX_386_CALL_GATE) {
+        BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+        return;
+      }
+    }
+#endif
+
+    // descriptor DPL must be >= CPL else #GP(gate selector)
+    if (descriptor.dpl < CPL) {
+      BX_ERROR(("jump_protected: descriptor.dpl < CPL"));
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      return;
+    }
+
+    // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
+    if (descriptor.dpl < selector.rpl) {
+      BX_ERROR(("jump_protected: descriptor.dpl < selector.rpl"));
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      return;
+    }
+
     switch ( descriptor.type ) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
+
         //if ( descriptor.type==BX_SYS_SEGMENT_AVAIL_286_TSS )
         //  BX_INFO(("jump to 286 TSS"));
         //else
         //  BX_INFO(("jump to 386 TSS"));
-
-        // TSS DPL must be >= CPL, else #GP(TSS selector)
-        if (descriptor.dpl < CPL) {
-          BX_ERROR(("jump_protected: TSS.dpl < CPL"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // TSS DPL must be >= TSS selector RPL, else #GP(TSS selector)
-        if (descriptor.dpl < selector.rpl) {
-          BX_ERROR(("jump_protected: TSS.dpl < selector.rpl"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
 
         // descriptor AR byte must specify available TSS,
         //   else #GP(TSS selector) */
@@ -162,20 +173,6 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
       case BX_286_CALL_GATE:
         BX_DEBUG(("jump_protected: JUMP TO 286 CALL GATE"));
 
-        // descriptor DPL must be >= CPL else #GP(gate selector)
-        if (descriptor.dpl < CPL) {
-          BX_ERROR(("jump_protected: gate.dpl < CPL"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
-        if (descriptor.dpl < selector.rpl) {
-          BX_ERROR(("jump_protected: gate.dpl < selector.rpl"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
         // gate must be present else #NP(gate selector)
         if (descriptor.p==0) {
           BX_ERROR(("jump_protected: task gate.p == 0"));
@@ -186,8 +183,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         // examine selector to code segment given in call gate descriptor
         // selector must not be null, else #GP(0)
         gate_cs_raw = descriptor.u.gate286.dest_selector;
-        if ((gate_cs_raw & 0xfffc) == 0) 
-        {
+        if ((gate_cs_raw & 0xfffc) == 0) {
           BX_ERROR(("jump_protected: CS selector null"));
           exception(BX_GP_EXCEPTION, 0, 0);
         }
@@ -243,21 +239,6 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         return;
 
       case BX_TASK_GATE:
-        // gate descriptor DPL must be >= CPL else #GP(gate selector)
-        if (descriptor.dpl < CPL) {
-          BX_ERROR(("jump_protected: gate.dpl < CPL"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // gate descriptor DPL must be >= gate selector RPL
-        //   else #GP(gate selector)
-        if (descriptor.dpl < selector.rpl) {
-          BX_ERROR(("jump_protected: gate.dpl < selector.rpl"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
         // task gate must be present else #NP(gate selector)
         if (descriptor.p==0) {
           BX_ERROR(("jump_protected: task gate.p == 0"));
@@ -315,18 +296,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         break;
 
       case BX_386_CALL_GATE:
-        // descriptor DPL must be >= CPL else #GP(gate selector)
-        if (descriptor.dpl < CPL) {
-          BX_ERROR(("jump_protected: gate.dpl < CPL"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
-        if (descriptor.dpl < selector.rpl) {
-          BX_ERROR(("jump_protected: gate.dpl < selector.rpl"));
-          exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
+        if (BX_CPU_THIS_PTR msr.lma) {         // LONG MODE
+          BX_PANIC(("jump to CALL_GATE64 still not implemented"));
         }
 
         // gate must be present else #NP(gate selector)
@@ -410,7 +381,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
   /* Opsize in effect for CALL is specified by the D bit for the
    * segment containing dest & by any opsize prefix.
-   * For gate descriptor, deterermined by type of call gate:
+   * For gate descriptor, determined by type of call gate:
    * 4=16bit, 12=32bit
    * count field: 16bit specifies #words, 32bit specifies #dwords
    */
@@ -536,27 +507,28 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     gate_descriptor = cs_descriptor;
     gate_selector   = cs_selector;
 
+    // descriptor DPL must be >= CPL else #GP(gate selector)
+    if (descriptor.dpl < CPL) {
+      BX_ERROR(("jump_protected: descriptor.dpl < CPL"));
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      return;
+    }
+
+    // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
+    if (descriptor.dpl < selector.rpl) {
+      BX_ERROR(("jump_protected: descriptor.dpl < selector.rpl"));
+      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+      return;
+    }
+
     switch (gate_descriptor.type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
+
         //if (gate_descriptor.type==1)
         //  BX_INFO(("call_protected: 16bit available TSS"));
         //else
         //  BX_INFO(("call_protected: 32bit available TSS"));
-
-        // TSS DPL must be >= CPL, else #TS(TSS selector)
-        if (gate_descriptor.dpl < CPL) {
-          BX_ERROR(("call_protected: TSS.dpl < CPL"));
-          exception(BX_TS_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // TSS DPL must be >= TSS selector RPL, else #TS(TSS selector)
-        if (gate_descriptor.dpl < gate_selector.rpl) {
-          BX_ERROR(("call_protected: TSS.dpl < selector.rpl"));
-          exception(BX_TS_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
 
         // descriptor AR byte must specify available TSS,
         //   else #TS(TSS selector) */
@@ -577,21 +549,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         return;
 
       case BX_TASK_GATE:
-        // gate descriptor DPL must be >= CPL else #TS(gate selector)
-        if (gate_descriptor.dpl < CPL) {
-          BX_ERROR(("call_protected: gate.dpl < CPL"));
-          exception(BX_TS_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
-        // gate descriptor DPL must be >= gate selector RPL
-        //   else #TS(gate selector)
-        if (gate_descriptor.dpl < gate_selector.rpl) {
-          BX_ERROR(("call_protected: gate.dpl < selector.rpl"));
-          exception(BX_TS_EXCEPTION, cs_raw & 0xfffc, 0);
-          return;
-        }
-
         // task gate must be present else #NP(gate selector)
         if (gate_descriptor.p==0) {
           BX_ERROR(("call_protected: task gate.p == 0"));
@@ -650,19 +607,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
       case BX_286_CALL_GATE:
       case BX_386_CALL_GATE:
-         //if (gate_descriptor.type==BX_286_CALL_GATE)
-         //  BX_INFO(("CALL: 16bit call gate"));
-         //else
-         //  BX_INFO(("CALL: 32bit call gate"));
 
-        // call gate DPL must be >= CPL, else #GP(call gate selector)
-        // call gate DPL must be >= RPL, else #GP(call gate selector)
-        if ( (gate_descriptor.dpl < CPL) ||
-             (gate_descriptor.dpl < gate_selector.rpl) )
-        {
-          BX_ERROR(("call_protected: DPL < CPL or RPL"));
-          exception(BX_GP_EXCEPTION, gate_selector.value & 0xfffc, 0);
-        }
+        //if (gate_descriptor.type==BX_286_CALL_GATE)
+        //  BX_INFO(("CALL: 16bit call gate"));
+        //else
+        //  BX_INFO(("CALL: 32bit call gate"));
 
         // call gate must be present, else #NP(call gate selector)
         if (gate_descriptor.p==0) {

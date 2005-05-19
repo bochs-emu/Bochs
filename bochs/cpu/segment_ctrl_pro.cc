@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.37 2005-04-13 17:13:05 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.38 2005-05-19 18:13:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,7 +198,6 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       Bit8u rpl;
       bx_descriptor_t descriptor;
       Bit32u dword1, dword2;
-
 
       if ((new_value & 0xfffc) == 0) { /* null selector */
         seg->selector.index = 0;

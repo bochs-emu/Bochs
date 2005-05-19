@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.33 2005-04-17 21:51:59 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.34 2005-05-19 18:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -319,7 +319,6 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
   if ( protected_mode() ) {
-    BX_PANIC(("Jump protected is not implemented in x86-64 mode !"));
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
     goto done;
   }
