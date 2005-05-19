@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.6 2005-04-13 17:13:04 sshwarts Exp $
+// $Id: descriptor.h,v 1.7 2005-05-19 19:46:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,6 +147,13 @@ union {
 } u;
 
 } bx_descriptor_t;
+
+
+#if BX_SUPPORT_X86_64
+  #define IS_LONG64_SEGMENT(descriptor)  (descriptor.u.segment.l)
+#else
+  #define IS_LONG64_SEGMENT(descriptor)  (0)
+#endif
 
 typedef struct {
   bx_selector_t    selector;
