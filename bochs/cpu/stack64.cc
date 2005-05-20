@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.20 2005-03-28 06:29:22 sshwarts Exp $
+// $Id: stack64.cc,v 1.21 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,8 +31,7 @@
 
 #if BX_SUPPORT_X86_64
 
-  void
-BX_CPU_C::POP_Eq(bxInstruction_c *i)
+void BX_CPU_C::POP_Eq(bxInstruction_c *i)
 {
   Bit64u val64;
 
@@ -40,7 +39,7 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
 
   if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), val64);
-    }
+  }
   else {
     // Note: there is one little weirdism here.  When 64bit addressing
     // is used, it is possible to use RSP in the modrm addressing.
@@ -49,77 +48,70 @@ BX_CPU_C::POP_Eq(bxInstruction_c *i)
     if (i->as64L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
       // call method on BX_CPU_C object
       BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-      }
-    write_virtual_qword(i->seg(), RMAddr(i), &val64);
     }
+    write_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
 }
 
-  void
-BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
+void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx);
 }
 
-  void
-BX_CPU_C::POP_RRX(bxInstruction_c *i)
+void BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
   Bit64u rrx;
   pop_64(&rrx);
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = rrx;
 }
 
-  void
-BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
+void BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
-  void
-BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
+
+void BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 {
   push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
-  void
-BX_CPU_C::POP64_FS(bxInstruction_c *i)
+void BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
   Bit64u fs;
   pop_64(&fs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
 }
-  void
-BX_CPU_C::POP64_GS(bxInstruction_c *i)
+
+void BX_CPU_C::POP64_GS(bxInstruction_c *i)
 {
   Bit64u gs;
   pop_64(&gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
 }
 
-  void
-BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
+void BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
 {
-    Bit64u imm64 = (Bit32s) i->Id();
-    push_64(imm64);
+  Bit64u imm64 = (Bit32s) i->Id();
+  push_64(imm64);
 }
 
-  void
-BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
+void BX_CPU_C::PUSH_Eq(bxInstruction_c *i)
 {
-    Bit64u op1_64;
+  Bit64u op1_64;
 
-    /* op1_64 is a register or memory reference */
-    if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
-      }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-      }
+  /* op1_64 is a register or memory reference */
+  if (i->modC0()) {
+    op1_64 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  }
 
-    push_64(op1_64);
+  push_64(op1_64);
 }
 
-  void
-BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
+void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 {
   Bit8u level = i->Ib2();
   level &= 0x1F;
@@ -156,8 +148,7 @@ BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   RSP -= i->Iw();
 }
 
-  void
-BX_CPU_C::LEAVE64(bxInstruction_c *i)
+void BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
   // delete frame
   RSP = RBP;

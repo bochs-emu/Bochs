@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.14 2005-02-16 21:26:49 sshwarts Exp $
+// $Id: bcd.cc,v 1.15 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,15 +25,12 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-
-  void
-BX_CPU_C::AAA(bxInstruction_c *)
+void BX_CPU_C::AAA(bxInstruction_c *)
 {
   /* 
    *  Note: This instruction incorrectly documented in Intel's materials.
@@ -81,8 +78,7 @@ BX_CPU_C::AAA(bxInstruction_c *)
   set_PF_base(AL);
 }
 
-  void
-BX_CPU_C::AAS(bxInstruction_c *)
+void BX_CPU_C::AAS(bxInstruction_c *)
 {
   /* AAS affects the following flags: A,C */
 
@@ -110,8 +106,7 @@ BX_CPU_C::AAS(bxInstruction_c *)
   set_PF_base(AL);
 }
 
-  void
-BX_CPU_C::AAM(bxInstruction_c *i)
+void BX_CPU_C::AAM(bxInstruction_c *i)
 {
   Bit8u al, imm8 = i->Ib();
 
@@ -137,8 +132,7 @@ BX_CPU_C::AAM(bxInstruction_c *i)
   set_PF_base(AL);
 }
 
-  void
-BX_CPU_C::AAD(bxInstruction_c *i)
+void BX_CPU_C::AAD(bxInstruction_c *i)
 {
   Bit8u imm8 = i->Ib();
 
@@ -163,8 +157,7 @@ BX_CPU_C::AAD(bxInstruction_c *i)
   set_PF_base(AL);
 }
 
-  void
-BX_CPU_C::DAA(bxInstruction_c *)
+void BX_CPU_C::DAA(bxInstruction_c *)
 {
   Bit8u tmpAL = AL;
   int   tmpCF = 0;
@@ -197,8 +190,7 @@ BX_CPU_C::DAA(bxInstruction_c *)
   set_CF(tmpCF);
 }
 
-  void
-BX_CPU_C::DAS(bxInstruction_c *)
+void BX_CPU_C::DAS(bxInstruction_c *)
 {
   /* The algorithm for DAS is fashioned after the pseudo code in the
    * Pentium Processor Family Developer's Manual, volume 3.  It seems

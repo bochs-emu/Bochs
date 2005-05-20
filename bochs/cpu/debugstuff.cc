@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.38 2005-03-30 22:31:02 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.39 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,7 +257,7 @@ Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
     default:
       BX_PANIC(("get_reg: request for unknown register"));
       return(0);
-    }
+  }
 }
 
 bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
@@ -281,7 +281,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
       if ( val & 0xffff0000 ) {
         BX_INFO(("dbg_set_reg: can not set upper 16 bits of eflags."));
         return(0);
-        }
+      }
       // make sure none of the system bits are being changed
       current_sys_bits = ((BX_CPU_THIS_PTR getB_NT()) << 14) |
                          (BX_CPU_THIS_PTR get_IOPL () << 12) |
@@ -289,7 +289,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
       if ( current_sys_bits != (val & 0x0000f100) ) {
         BX_INFO(("dbg_set_reg: can not modify NT, IOPL, or TF."));
         return(0);
-        }
+      }
       BX_CPU_THIS_PTR set_CF(val & 0x01); val >>= 2;
       BX_CPU_THIS_PTR set_PF(val & 0x01); val >>= 2;
       BX_CPU_THIS_PTR set_AF(val & 0x01); val >>= 2;
@@ -322,7 +322,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     default:
       BX_PANIC(("dbg_set_reg: unrecognized register ID (%u)", reg));
       return(0);
-    }
+  }
 
   if (BX_CPU_THIS_PTR real_mode()) {
     seg->selector.value = val;
@@ -332,10 +332,10 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     seg->cache.segment = 1; // regular segment
     if (reg == BX_DBG_REG_CS) {
       seg->cache.u.segment.executable = 1; // code segment
-      }
+    }
     else {
       seg->cache.u.segment.executable = 0; // data segment
-      }
+    }
     seg->cache.u.segment.c_ed = 0;       // expand up/non-conforming
     seg->cache.u.segment.r_w = 1;        // writeable
     seg->cache.u.segment.a = 1;          // accessed
@@ -346,7 +346,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     seg->cache.u.segment.d_b   = 0;      // default 16bit size
     seg->cache.u.segment.avl   = 0;
     return(1); // ok
-    }
+  }
 
   return(0); // can't change when not in real mode
 }
@@ -357,11 +357,11 @@ unsigned BX_CPU_C::dbg_query_pending(void)
 
   if ( BX_HRQ ) {  // DMA Hold Request
     ret |= BX_DBG_PENDING_DMA;
-    }
+  }
 
   if ( BX_CPU_THIS_PTR INTR && BX_CPU_THIS_PTR get_IF () ) {
     ret |= BX_DBG_PENDING_IRQ;
-    }
+  }
 
   return(ret);
 }
@@ -377,13 +377,13 @@ Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
 
   if (d->valid == 0) {
     return(0);
-    }
+  }
 
   if (d->segment) {
     val = ((d->u.segment.base & 0xffff) << 16) |
           (d->u.segment.limit & 0xffff);
     return(val);
-    }
+  }
   else {
     switch (d->type) {
       case 0: // Reserved (not yet defined)
@@ -408,8 +408,8 @@ Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
       default:
         BX_ERROR(( "#get_descriptor_l(): type %d not finished", d->type ));
         return(0);
-      }
     }
+  }
 }
 
 Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
@@ -418,7 +418,7 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
 
   if (d->valid == 0) {
     return(0);
-    }
+  }
 
   if (d->segment) {
     val = (d->u.segment.base & 0xff000000) |
@@ -435,7 +435,7 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
           (d->u.segment.d_b << 22) |
           (d->u.segment.g << 23);
     return(val);
-    }
+  }
   else {
     switch (d->type) {
       case 0: // Reserved (not yet defined)
@@ -471,8 +471,8 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
       default:
         BX_ERROR(( "#get_descriptor_h(): type %d not finished", d->type ));
         return(0);
-      }
     }
+  }
 }
 
 bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
@@ -530,7 +530,6 @@ bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->gs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
   cpu->gs.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
   cpu->gs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid;
-
 
   cpu->ldtr.sel   = BX_CPU_THIS_PTR ldtr.selector.value;
   cpu->ldtr.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR ldtr.cache);
@@ -591,76 +590,76 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   if (!cpu->cs.valid) {
     BX_ERROR(( "Error: CS not valid" ));
     return(0); // error
-    }
+  }
   if ( (cpu->cs.des_h & 0x1000) == 0 ) {
     BX_ERROR(( "Error: CS not application type" ));
     return(0); // error
-    }
+  }
   if ( (cpu->cs.des_h & 0x0800) == 0 ) {
     BX_ERROR(( "Error: CS not executable" ));
     return(0); // error
-    }
+  }
 
   if (!cpu->ss.valid) {
     BX_ERROR(( "Error: SS not valid" ));
     return(0); // error
-    }
+  }
   if ( (cpu->ss.des_h & 0x1000) == 0 ) {
     BX_ERROR(( "Error: SS not application type" ));
     return(0); // error
-    }
+  }
 
   if (cpu->ds.valid) {
     if ( (cpu->ds.des_h & 0x1000) == 0 ) {
       BX_ERROR(( "Error: DS not application type" ));
       return(0); // error
-      }
     }
+  }
 
   if (cpu->es.valid) {
     if ( (cpu->es.des_h & 0x1000) == 0 ) {
       BX_ERROR(( "Error: ES not application type" ));
       return(0); // error
-      }
     }
+  }
 
   if (cpu->fs.valid) {
     if ( (cpu->fs.des_h & 0x1000) == 0 ) {
       BX_ERROR(( "Error: FS not application type" ));
       return(0); // error
-      }
     }
+  }
 
   if (cpu->gs.valid) {
     if ( (cpu->gs.des_h & 0x1000) == 0 ) {
       BX_ERROR(( "Error: GS not application type" ));
       return(0); // error
-      }
     }
+  }
 
   if (cpu->ldtr.valid) {
     if ( cpu->ldtr.des_h & 0x1000 ) {
       BX_ERROR(( "Error: LDTR not system type" ));
       return(0); // error
-      }
+    }
     if ( ((cpu->ldtr.des_h >> 8) & 0x0f) != 2 ) {
       BX_ERROR(( "Error: LDTR descriptor type not LDT" ));
       return(0); // error
-      }
     }
+  }
 
   if (cpu->tr.valid) {
     if ( cpu->tr.des_h & 0x1000 ) {
       BX_ERROR(( "Error: TR not system type"));
       return(0); // error
-      }
+    }
     type = (cpu->tr.des_h >> 8) & 0x0f;
 
     if ( (type != 1) && (type != 9) ) {
       BX_ERROR(( "Error: TR descriptor type not TSS" ));
       return(0); // error
-      }
     }
+  }
 
   // =============
   // end of checks
@@ -700,7 +699,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 #endif
 
   EIP = cpu->eip;
-
 
   // CS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cpu->cs.sel;
@@ -793,7 +791,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit;
-
 
 
   // ES:

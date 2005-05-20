@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.18 2005-04-17 18:54:54 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.19 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,6 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-
 #if BX_SUPPORT_X86_64==0
 // Make life a little easier for the 64/32-bit merge.
 #define RCX ECX
@@ -39,8 +38,7 @@
 #endif
 
 
-  void
-BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
+void BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -79,8 +77,7 @@ BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
+void BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -127,8 +124,7 @@ BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
     }
 }
 
-  void
-BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
+void BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -175,8 +171,7 @@ BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
+void BX_CPU_C::LOOP_Jb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {

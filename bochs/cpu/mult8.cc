@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.18 2005-02-16 21:27:20 sshwarts Exp $
+// $Id: mult8.cc,v 1.19 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,8 +30,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-  void
-BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
+void BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
 
@@ -40,11 +39,11 @@ BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
   /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
-    }
+  }
 
   Bit32u product_16  = ((Bit16u) op1) * ((Bit16u) op2);
 
@@ -58,8 +57,7 @@ BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
   AX = product_16;
 }
 
-  void
-BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
+void BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
 {
   Bit8s op2, op1;
 
@@ -68,11 +66,11 @@ BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
   /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), (Bit8u *) &op2);
-    }
+  }
 
   Bit16s product_16 = op1 * op2;
 
@@ -89,8 +87,7 @@ BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
   AX = product_16;
 }
 
-  void
-BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
+void BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
 {
   Bit8u op2, quotient_8l, remainder_8;
   Bit16u quotient_16, op1;
@@ -100,11 +97,11 @@ BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
   /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
-    }
+  }
 
   if (op2 == 0) {
     exception(BX_DE_EXCEPTION, 0, 0);
@@ -124,7 +121,7 @@ BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
    */
 
 #if INTEL_DIV_FLAG_BUG == 1
-    set_CF(1);
+  set_CF(1);
 #endif
 
   /* now write quotient back to destination */
@@ -132,8 +129,7 @@ BX_CPU_C::DIV_ALEb(bxInstruction_c *i)
   AH = remainder_8;
 }
 
-  void
-BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
+void BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
 {
   Bit8s op2, quotient_8l, remainder_8;
   Bit16s quotient_16, op1;
@@ -143,11 +139,11 @@ BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
   /* op2 is a register or memory reference */
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), (Bit8u *) &op2);
-    }
+  }
 
   if (op2 == 0)
     exception(BX_DE_EXCEPTION, 0, 0);
@@ -168,7 +164,7 @@ BX_CPU_C::IDIV_ALEb(bxInstruction_c *i)
    */
 
 #if INTEL_DIV_FLAG_BUG == 1
-    set_CF(1);
+  set_CF(1);
 #endif
 
   /* now write quotient back to destination */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.25 2004-08-13 20:00:03 sshwarts Exp $
+// $Id: logical8.cc,v 1.26 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,8 +30,7 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-  void
-BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
+void BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -41,18 +40,17 @@ BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     result = op1 ^ op2;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
     Write_RMW_virtual_byte(result);
-    }
+  }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
-  void
-BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
+void BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
 {
   Bit8u op1, op2, result;
 
@@ -60,10 +58,10 @@ BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
-    }
+  }
 
   result = op1 ^ op2;
 
@@ -72,8 +70,7 @@ BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
-  void
-BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
+void BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, sum;
 
@@ -85,8 +82,7 @@ BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_8(sum, BX_INSTR_LOGIC8);
 }
 
-  void
-BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
+void BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -96,20 +92,17 @@ BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     result = op1 ^ op2;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
     Write_RMW_virtual_byte(result);
-    }
+  }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
-
-
-  void
-BX_CPU_C::OR_EbIb(bxInstruction_c *i)
+void BX_CPU_C::OR_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -119,19 +112,17 @@ BX_CPU_C::OR_EbIb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     result = op1 | op2;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
     Write_RMW_virtual_byte(result);
-    }
+  }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
-
-  void
-BX_CPU_C::NOT_Eb(bxInstruction_c *i)
+void BX_CPU_C::NOT_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
 
@@ -139,17 +130,15 @@ BX_CPU_C::NOT_Eb(bxInstruction_c *i)
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     result_8 = ~op1_8;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     result_8 = ~op1_8;
     Write_RMW_virtual_byte(result_8);
-    }
+  }
 }
 
-
-  void
-BX_CPU_C::OR_EbGb(bxInstruction_c *i)
+void BX_CPU_C::OR_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -159,18 +148,17 @@ BX_CPU_C::OR_EbGb(bxInstruction_c *i)
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
     result = op1 | op2;
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result);
-    }
+  }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
     Write_RMW_virtual_byte(result);
-    }
+  }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
-  void
-BX_CPU_C::OR_GbEb(bxInstruction_c *i)
+void BX_CPU_C::OR_GbEb(bxInstruction_c *i)
 {
   Bit8u op1, op2, result;
 
@@ -178,10 +166,10 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+   }
   else {
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
-    }
+   }
 
 #if defined(BX_HostAsm_Or8)
   Bit32u flags32;
@@ -195,9 +183,7 @@ BX_CPU_C::OR_GbEb(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 }
 
-
-  void
-BX_CPU_C::OR_ALIb(bxInstruction_c *i)
+void BX_CPU_C::OR_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, result;
 
@@ -206,7 +192,6 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
 
 #if defined(BX_HostAsm_Or8)
   Bit32u flags32;
-
   asmOr8(result, op1, op2, flags32);
   setEFlagsOSZAPC(flags32);
 #else
@@ -217,9 +202,7 @@ BX_CPU_C::OR_ALIb(bxInstruction_c *i)
   AL = result;
 }
 
-
-  void
-BX_CPU_C::AND_EbGb(bxInstruction_c *i)
+void BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -257,9 +240,7 @@ BX_CPU_C::AND_EbGb(bxInstruction_c *i)
 #endif
 }
 
-
-  void
-BX_CPU_C::AND_GbEb(bxInstruction_c *i)
+void BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 {
   Bit8u op1, op2, result;
 
@@ -267,10 +248,10 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     read_virtual_byte(i->seg(), RMAddr(i), &op2);
-    }
+  }
 
 #if defined(BX_HostAsm_And8)
   Bit32u flags32;
@@ -284,8 +265,7 @@ BX_CPU_C::AND_GbEb(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), result);
 }
 
-  void
-BX_CPU_C::AND_ALIb(bxInstruction_c *i)
+void BX_CPU_C::AND_ALIb(bxInstruction_c *i)
 {
   Bit8u op1, op2, result;
 
@@ -304,8 +284,7 @@ BX_CPU_C::AND_ALIb(bxInstruction_c *i)
   AL = result;
 }
 
-  void
-BX_CPU_C::AND_EbIb(bxInstruction_c *i)
+void BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1, result;
 
@@ -343,9 +322,7 @@ BX_CPU_C::AND_EbIb(bxInstruction_c *i)
 #endif
 }
 
-
-  void
-BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
+void BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
 
@@ -353,10 +330,10 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
-    }
+  }
 
 #if defined(BX_HostAsm_Test8)
   Bit32u flags32;
@@ -368,9 +345,7 @@ BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 #endif
 }
 
-
-  void
-BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
+void BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
 
@@ -387,8 +362,7 @@ BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 #endif
 }
 
-  void
-BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
+void BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
 
@@ -396,10 +370,10 @@ BX_CPU_C::TEST_EbIb(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     read_virtual_byte(i->seg(), RMAddr(i), &op1);
-    }
+  }
 
 #if defined(BX_HostAsm_Test8)
   Bit32u flags32;

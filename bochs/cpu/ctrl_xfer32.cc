@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.40 2005-03-20 18:01:01 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.41 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -183,10 +183,10 @@ void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    }
+  }
   else {
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    }
+  }
 
   if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -295,7 +295,7 @@ void BX_CPU_C::JZ_Jd(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.26 2005-04-02 11:30:07 vruppert Exp $
+// $Id: io.cc,v 1.27 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,16 +39,15 @@
 #endif
 
 
-  void
-BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
+void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 {
   Bit8u value8=0;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
     if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -65,7 +64,7 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
       RDI--;
     else
       RDI++;
-    }
+  }
   else
 #endif
    if (i->as32L()) {
@@ -80,11 +79,11 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 
     if (BX_CPU_THIS_PTR get_DF ()) {
       RDI = EDI - 1;
-      }
+    }
     else {
       RDI = EDI + 1;
-      }
     }
+  }
   else {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
@@ -102,8 +101,7 @@ BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
+void BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
   // input word/doubleword from port to string
 {
   bx_address edi;
@@ -125,8 +123,8 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 4) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
@@ -137,7 +135,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
     /* no seg override allowed */
     write_virtual_dword(BX_SEG_REG_ES, edi, &value32);
     incr = 4;
-    }
+  }
   else {
     Bit16u value16=0;
 
@@ -203,12 +201,12 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
               goto noAcceleration;
             wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
             pointerDelta = -2;
-            }
+          }
           else {
             // Counting upward.
             wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
             pointerDelta =  2;
-            }
+          }
 
           // Restrict word count to the number that will fit in this page.
           if (wordCount > wordsFitDst)
@@ -235,7 +233,7 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             // are non-expand down (thus we can make a simple limit check).
             if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration;
-              }
+            }
             if ( !IsLongMode() ) {
               // Now make sure transfer will fit within the constraints of the
               // segment boundaries, 0..limit for non expand-down.  We know
@@ -245,14 +243,14 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
                 Bit32u minOffset = (wordCount-1) << 1;
                 if ( edi < minOffset )
                   goto noAcceleration;
-                }
+              }
               else {
                 // Counting upward.
                 Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
                 if ( edi > dstMaxOffset )
                   goto noAcceleration;
-                }
               }
+            }
 
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
@@ -260,23 +258,23 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
               if ( BX_CPU_THIS_PTR get_DF ()==0 ) { // Only do accel for DF=0
                 bx_devices.bulkIOHostAddr = hostAddrDst;
                 bx_devices.bulkIOQuantumsRequested = (wordCount - j);
-                }
+              }
               else
                 bx_devices.bulkIOQuantumsRequested = 0;
               temp16 = BX_INP(DX, 2);
               if ( bx_devices.bulkIOQuantumsTransferred ) {
                 hostAddrDst =  bx_devices.bulkIOHostAddr;
                 j += bx_devices.bulkIOQuantumsTransferred;
-                }
+              }
               else {
                 * (Bit16u *) hostAddrDst = temp16;
                 hostAddrDst += pointerDelta;
                 j++;
-                }
+              }
               // Terminate early if there was an event.
               if ( BX_CPU_THIS_PTR async_event )
                 break;
-              }
+            }
             // Reset for next non-bulk IO.
             bx_devices.bulkIOQuantumsRequested = 0;
             wordCount = j;
@@ -294,10 +292,10 @@ BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
               CX  -= (wordCount-1);
             incr = wordCount << 1; // count * 2.
             goto doIncr;
-            }
           }
         }
       }
+    }
 
 noAcceleration:
 
@@ -314,7 +312,7 @@ noAcceleration:
     /* no seg override allowed */
     write_virtual_word(BX_SEG_REG_ES, edi, &value16);
     incr = 2;
-    }
+  }
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -330,7 +328,7 @@ doIncr:
       RDI = RDI - incr;
     else
       RDI = RDI + incr;
-    }
+  }
   else
 #endif
   if (i->as32L()) {
@@ -338,17 +336,16 @@ doIncr:
       RDI = EDI - incr;
     else
       RDI = EDI + incr;
-    }
+  }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
       DI = DI - incr;
     else
       DI = DI + incr;
-    }
+  }
 }
 
-  void
-BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
+void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 {
   unsigned seg;
   Bit8u value8;
@@ -357,15 +354,15 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
     if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
       exception(BX_GP_EXCEPTION, 0, 0);
-      }
     }
+  }
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -387,7 +384,7 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
       RSI--;
     else
       RSI++;
-    }
+  }
   else
 #endif
   if (i->as32L()) {
@@ -395,18 +392,17 @@ BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
       RSI--;
     else
       RSI++;
-    }
+  }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
       SI--;
     else
       SI++;
-    }
+  }
 }
 
-  void
-BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
-  // output word/doubleword string to port
+// output word/doubleword string to port
+void BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
 {
   unsigned seg;
   bx_address esi;
@@ -414,10 +410,10 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -435,22 +431,22 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 4) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 
     read_virtual_dword(seg, esi, &value32);
 
     BX_OUTP(DX, value32, 4);
     incr = 4;
-    }
+  }
   else {
     Bit16u value16;
 
     if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
       if ( !BX_CPU_THIS_PTR allow_io(DX, 2) ) {
         exception(BX_GP_EXCEPTION, 0, 0);
-        }
       }
+    }
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -509,12 +505,12 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
               goto noAcceleration;
             wordsFitSrc = (2 + (paddrSrc & 0xfff)) >> 1;
             pointerDelta = (unsigned) -2;
-            }
+          }
           else {
             // Counting upward.
             wordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 1;
             pointerDelta =  2;
-            }
+          }
 
           // Restrict word count to the number that will fit in this page.
           if (wordCount > wordsFitSrc)
@@ -532,7 +528,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             if (!i->as32L()) {
               if (srcSegLimit > 0xffff)
                 srcSegLimit = 0xffff;
-              }
+            }
 
             // Before we copy memory, we need to make sure that the segments
             // allow the accesses up to the given source and dest offset.  If
@@ -541,7 +537,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             // are non-expand down (thus we can make a simple limit check).
             if ( !(srcSegPtr->cache.valid & SegAccessROK) ) {
               goto noAcceleration;
-              }
+            }
             if ( !IsLongMode() ) {
               // Now make sure transfer will fit within the constraints of the
               // segment boundaries, 0..limit for non expand-down.  We know
@@ -551,14 +547,14 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
                 Bit32u minOffset = (wordCount-1) << 1;
                 if ( esi < minOffset )
                   goto noAcceleration;
-                }
+              }
               else {
                 // Counting upward.
                 Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
                 if ( esi > srcMaxOffset )
                   goto noAcceleration;
-                }
               }
+            }
 
             for (j=0; j<wordCount; ) {
               Bit16u temp16;
@@ -566,7 +562,7 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
               if ( BX_CPU_THIS_PTR get_DF ()==0 ) { // Only do accel for DF=0
                 bx_devices.bulkIOHostAddr = hostAddrSrc;
                 bx_devices.bulkIOQuantumsRequested = (wordCount - j);
-                }
+              }
               else
                 bx_devices.bulkIOQuantumsRequested = 0;
               temp16 = * (Bit16u *) hostAddrSrc;
@@ -574,15 +570,15 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
               if ( bx_devices.bulkIOQuantumsTransferred ) {
                 hostAddrSrc =  bx_devices.bulkIOHostAddr;
                 j += bx_devices.bulkIOQuantumsTransferred;
-                }
+              }
               else {
                 hostAddrSrc += pointerDelta;
                 j++;
-                }
+              }
               // Terminate early if there was an event.
               if ( BX_CPU_THIS_PTR async_event )
                 break;
-              }
+            }
             // Reset for next non-bulk IO.
             bx_devices.bulkIOQuantumsRequested = 0;
             wordCount = j;
@@ -600,10 +596,10 @@ BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
               CX  -= (wordCount-1);
             incr = wordCount << 1; // count * 2.
             goto doIncr;
-            }
           }
         }
       }
+    }
 
 noAcceleration:
 
@@ -615,7 +611,7 @@ noAcceleration:
 
     BX_OUTP(DX, value16, 2);
     incr = 2;
-    }
+  }
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -631,7 +627,7 @@ doIncr:
       RSI = RSI - incr;
     else
       RSI = RSI + incr;
-    }
+  }
   else
 #endif
   if (i->as32L()) {
@@ -639,96 +635,85 @@ doIncr:
       RSI = ESI - incr;
     else
       RSI = ESI + incr;
-    }
+  }
   else {
     if (BX_CPU_THIS_PTR get_DF ())
       SI = SI - incr;
     else
       SI = SI + incr;
-    }
+  }
 }
 
-  void
-BX_CPU_C::IN_ALIb(bxInstruction_c *i)
+void BX_CPU_C::IN_ALIb(bxInstruction_c *i)
 {
   AL = BX_CPU_THIS_PTR inp8(i->Ib());
 }
 
-  void
-BX_CPU_C::IN_eAXIb(bxInstruction_c *i)
+void BX_CPU_C::IN_eAXIb(bxInstruction_c *i)
 {
-
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
     Bit32u eax = BX_CPU_THIS_PTR inp32(i->Ib());
     RAX = eax;
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
-    {
+  {
     AX = BX_CPU_THIS_PTR inp16(i->Ib());
-    }
+  }
 }
 
-  void
-BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
+void BX_CPU_C::OUT_IbAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp8(i->Ib(), AL);
 }
 
-  void
-BX_CPU_C::OUT_IbeAX(bxInstruction_c *i)
+void BX_CPU_C::OUT_IbeAX(bxInstruction_c *i)
 {
-
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
     BX_CPU_THIS_PTR outp32(i->Ib(), EAX);
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
-    {
+  {
     BX_CPU_THIS_PTR outp16(i->Ib(), AX);
-    }
+  }
 }
 
-  void
-BX_CPU_C::IN_ALDX(bxInstruction_c *i)
+void BX_CPU_C::IN_ALDX(bxInstruction_c *i)
 {
   AL = BX_CPU_THIS_PTR inp8(DX);
 }
 
-  void
-BX_CPU_C::IN_eAXDX(bxInstruction_c *i)
+void BX_CPU_C::IN_eAXDX(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
     Bit32u eax = BX_CPU_THIS_PTR inp32(DX);
     RAX = eax;
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
-    {
+  {
     AX = BX_CPU_THIS_PTR inp16(DX);
-    }
+  }
 }
 
-  void
-BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
+void BX_CPU_C::OUT_DXAL(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR outp8(DX, AL);
 }
 
-  void
-BX_CPU_C::OUT_DXeAX(bxInstruction_c *i)
+void BX_CPU_C::OUT_DXeAX(bxInstruction_c *i)
 {
-
 #if BX_CPU_LEVEL > 2
   if (i->os32L()) {
     BX_CPU_THIS_PTR outp32(DX, EAX);
-    }
+  }
   else
 #endif /* BX_CPU_LEVEL > 2 */
-    {
+  {
     BX_CPU_THIS_PTR outp16(DX, AX);
-    }
+  }
 }

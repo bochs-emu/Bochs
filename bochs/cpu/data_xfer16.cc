@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.32 2004-11-26 20:21:27 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.33 2005-05-20 20:06:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,7 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -84,14 +83,14 @@ void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
   if (i->modC0()) {
     if ( i->os32L() ) {
       BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
-      }
+    }
     else {
       BX_WRITE_16BIT_REG(i->rm(), seg_reg);
-      }
     }
+  }
   else {
     write_virtual_word(i->seg(), RMAddr(i), &seg_reg);
-    }
+  }
 }
 
 void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
@@ -115,10 +114,10 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-    }
+  }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], op2_16);
 
@@ -148,10 +147,10 @@ void BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
   /* read from memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
     read_virtual_word(i->seg(), i->Id(), &AX);
-    }
+  }
   else {
     read_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
-    }
+  }
 }
 
 void BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
@@ -159,108 +158,90 @@ void BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
   /* write to memory address */
   if (!BX_NULL_SEG_REG(i->seg())) {
     write_virtual_word(i->seg(), i->Id(), &AX);
-    }
+  }
   else {
     write_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
-    }
+  }
 }
 
 void BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
 {
-    Bit16u op2_16 = i->Iw();
+  Bit16u op2_16 = i->Iw();
 
-    /* now write sum back to destination */
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), op2_16);
-      }
-    else {
-      write_virtual_word(i->seg(), RMAddr(i), &op2_16);
-      }
+  /* now write sum back to destination */
+  if (i->modC0()) {
+    BX_WRITE_16BIT_REG(i->rm(), op2_16);
+  }
+  else {
+    write_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  }
 }
 
+#if BX_CPU_LEVEL >= 3
 void BX_CPU_C::MOVZX_GwEb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("MOVZX_GvEb: not supported on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u  op2_8;
 
   if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
-    }
+  }
 
-    /* zero extend byte op2 into word op1 */
-    BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) op2_8);
-#endif /* BX_CPU_LEVEL < 3 */
+  /* zero extend byte op2 into word op1 */
+  BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) op2_8);
 }
 
 void BX_CPU_C::MOVZX_GwEw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("MOVZX_GvEw: not supported on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit16u op2_16;
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-    }
+  }
 
-    /* normal move */
-    BX_WRITE_16BIT_REG(i->nnn(), op2_16);
-#endif /* BX_CPU_LEVEL < 3 */
+  /* normal move */
+  BX_WRITE_16BIT_REG(i->nnn(), op2_16);
 }
 
 void BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("MOVSX_GvEb: not supported on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit8u op2_8;
 
   if (i->modC0()) {
     op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
-    }
+  }
 
-    /* sign extend byte op2 into word op1 */
-    BX_WRITE_16BIT_REG(i->nnn(), (Bit8s) op2_8);
-#endif /* BX_CPU_LEVEL < 3 */
+  /* sign extend byte op2 into word op1 */
+  BX_WRITE_16BIT_REG(i->nnn(), (Bit8s) op2_8);
 }
 
 void BX_CPU_C::MOVSX_GwEw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 3
-  BX_INFO(("MOVSX_GvEw: not supported on < 386"));
-  UndefinedOpcode(i);
-#else
   Bit16u op2_16;
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-    }
+  }
 
-    /* normal move */
-    BX_WRITE_16BIT_REG(i->nnn(), op2_16);
-#endif /* BX_CPU_LEVEL < 3 */
+  /* normal move */
+  BX_WRITE_16BIT_REG(i->nnn(), op2_16);
 }
+#endif
 
 void BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
 {
@@ -275,21 +256,20 @@ void BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
   }
 #endif
 
-    /* op2_16 is a register, op2_addr is an index of a register */
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-      BX_WRITE_16BIT_REG(i->rm(), op2_16);
-      }
-    else {
-      /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-      Write_RMW_virtual_word(op2_16);
-      }
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
+    BX_WRITE_16BIT_REG(i->rm(), op2_16);
+  }
+  else {
+    /* pointer, segment address pair */
+    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    Write_RMW_virtual_word(op2_16);
+  }
 
-    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 }
 
 void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
@@ -322,19 +302,19 @@ void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
     case 0x14F: condition = !get_ZF() && (getB_SF() == getB_OF()); break;
     default:
       BX_PANIC(("CMOV_GwEw: default case"));
-    }
+  }
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-    }
+  }
 
   if (condition) {
     BX_WRITE_16BIT_REG(i->nnn(), op2_16);
-    }
+  }
 #else
   BX_INFO(("CMOV_GwEw: required P6 support, use --enable-cpu-level=6 option"));
   UndefinedOpcode(i);
