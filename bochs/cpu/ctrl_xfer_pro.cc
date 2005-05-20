@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.40 2005-05-19 19:46:19 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.41 2005-05-20 17:04:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -299,9 +299,12 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         break;
 
       case BX_386_CALL_GATE:
+
+#if BX_SUPPORT_X86_64
         if (BX_CPU_THIS_PTR msr.lma) {         // LONG MODE
           BX_PANIC(("jump to CALL_GATE64 still not implemented"));
         }
+#endif
 
         // gate must be present else #NP(gate selector)
         if (descriptor.p==0) {
