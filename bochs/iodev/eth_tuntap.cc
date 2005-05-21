@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.20 2005-04-24 11:06:49 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.21 2005-05-21 07:38:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -347,7 +347,7 @@ void bx_tuntap_pktmover_c::rx_timer ()
     fflush (rxlog_txt);
   }
 #endif
-  BX_DEBUG(("eth_tuntap: got packet: %d bytes, dst=%x:%x:%x:%x:%x:%x, src=%x:%x:%x:%x:%x:%x\n", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
+  BX_DEBUG(("eth_tuntap: got packet: %d bytes, dst=%02x:%02x:%02x:%02x:%02x:%02x, src=%02x:%02x:%02x:%02x:%02x:%02x", nbytes, rxbuf[0], rxbuf[1], rxbuf[2], rxbuf[3], rxbuf[4], rxbuf[5], rxbuf[6], rxbuf[7], rxbuf[8], rxbuf[9], rxbuf[10], rxbuf[11]));
   if (nbytes < 60) {
     BX_INFO (("packet too short (%d), padding to 60", nbytes));
     nbytes = 60;
@@ -372,12 +372,13 @@ int tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information  
    */ 
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
-  if (*dev)
-    strncpy(ifr.ifr_name, dev, IFNAMSIZ);
+  ifr.ifr_name[0]=0;
   if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
     close(fd);
     return err;
   }
+  strncpy(dev, ifr.ifr_name, IFNAMSIZ);
+  dev[IFNAMSIZ-1]=0;
 
   ioctl( fd, TUNSETNOCSUM, 1 );
 #endif
