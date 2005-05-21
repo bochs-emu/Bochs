@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.14 2005-05-13 18:10:58 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.15 2005-05-21 19:33:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -79,7 +79,7 @@ typedef void (*layer4_handler_t)(
 #define TFTP_ACK    4
 #define TFTP_ERROR  5
 
-#define TFTP_BUFFER_MAX 512
+#define TFTP_BUFFER_SIZE 512
 
 #define BOOTREQUEST 1
 #define BOOTREPLY 2
@@ -187,6 +187,7 @@ private:
     
   std::string tftp_filename;
   std::string tftp_rootdir;
+  Bit16u tftp_tid;
 
   Bit8u host_macaddr[6];
   Bit8u guest_macaddr[6];
@@ -287,6 +288,7 @@ bx_vnet_pktmover_c::pktmover_init(
   this->rxarg = rxarg;
   this->tftp_rootdir = netif;
   this->tftp_rootdir += "/";
+  this->tftp_tid = 0;
 
   memcpy(&host_macaddr[0], macaddr, 6);
   memcpy(&guest_macaddr[0], macaddr, 6);
@@ -1112,29 +1114,37 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   unsigned sourceport, unsigned targetport,
   const Bit8u *data, unsigned data_len)
 {
-  Bit8u buffer[TFTP_BUFFER_MAX + 4];
+  Bit8u buffer[TFTP_BUFFER_SIZE + 4];
   switch (get_net2(data)) {
     case TFTP_RRQ:
-      strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
-      buffer[data_len - 4] = 0;
+      if (tftp_tid == 0) {
+        strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
+        buffer[data_len - 4] = 0;
 
-      // transfer mode
-      if (strlen((char*)buffer) < data_len - 2) {
-        const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
-        if (memcmp(mode, "octet\0", 6) != 0) {
-          tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
-          return;
+        // transfer mode
+        if (strlen((char*)buffer) < data_len - 2) {
+          const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
+          if (memcmp(mode, "octet\0", 6) != 0) {
+            tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
+            return;
+          }
         }
+
+        tftp_filename = (char*)buffer;
+        tftp_tid = sourceport;
+        tftp_send_data(buffer, sourceport, targetport, 1);
+      } else {
+        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
       }
-    
-      tftp_filename = (char*)buffer;
-      tftp_send_data(buffer, sourceport, targetport, 1);
       break;
     case TFTP_ACK:
       tftp_send_data(buffer, sourceport, targetport, get_net2(data + 2) + 1);
       break;
     case TFTP_WRQ:
       tftp_send_error(buffer, sourceport, targetport, 4, "TFTP WRQ not supported yet");
+      break;
+    case TFTP_ERROR:
+      // silently ignore error packets
       break;
     default:
       BX_ERROR(("TFTP unknown opt %d", get_net2(data)));
@@ -1151,6 +1161,7 @@ bx_vnet_pktmover_c::tftp_send_error(
   put_net2(buffer + 2, code);
   strcpy((char*)buffer + 4, msg);
   host_to_guest_udpipv4_packet(sourceport, targetport, buffer, strlen(msg) + 5);  
+  tftp_tid = 0;
 }
 
 void 
@@ -1175,12 +1186,12 @@ bx_vnet_pktmover_c::tftp_send_data(
     return;  	
   }
   
-  if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_MAX, SEEK_SET) < 0) {
+  if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
     tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
     return;  	
   }
   
-  rd = fread(buffer + 4, 1, 512, fp);
+  rd = fread(buffer + 4, 1, TFTP_BUFFER_SIZE, fp);
   fclose(fp);
   
   if (rd < 0) {
@@ -1191,6 +1202,9 @@ bx_vnet_pktmover_c::tftp_send_data(
   put_net2(buffer, TFTP_DATA);
   put_net2(buffer + 2, block_nr);
   host_to_guest_udpipv4_packet(sourceport, targetport, buffer, rd + 4);
+  if (rd < TFTP_BUFFER_SIZE) {
+    tftp_tid = 0;
+  }
 }
 
 
