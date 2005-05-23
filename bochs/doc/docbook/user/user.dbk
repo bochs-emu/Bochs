@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.173 2005-05-14 16:00:33 vruppert Exp $
+$Id: user.dbk,v 1.174 2005-05-23 20:04:43 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -869,7 +869,7 @@ to mention, running DOOM, though at then-pathetic speeds.
 
 <para>
 The change log is stored in the Bochs source code in a file called
-CHANGES.  Click <ulink url="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/bochs/bochs/CHANGES?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">here</ulink> to see the latest version of the CHANGES file.
+CHANGES.  Click <ulink url="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=HEAD&amp;content-type=text/vnd.viewcvs-markup">here</ulink> to see the latest version of the CHANGES file.
 </para>
 <para>
 The link above is provided by Source Forge and might change one day.  If it
@@ -1668,7 +1668,8 @@ In the Bochs source directory, you will see a series of scripts called
 These scripts run the <command>configure</command> script for you, with a set of
 options that are appropriate for that platform.  It is not necessary to
 use the shortcut scripts; they are simply there to show you an example that
-the developers have used.
+the developers have used. Some of these scripts have been used to build official
+binary packages.
 
 <tip>
 <para>
@@ -2841,7 +2842,7 @@ what if configure fails?
 what if make fails?
 - try make dist-clean, and run configure and make again
 - use configure options to disable options.  For example, if errors in 
-fpu/fpu_system.h, you could try --disable-fpu.
+fpu/fpu.cc, you could try --disable-fpu.
 - search for the error on the Bochs website (bug reports, patches)
 - if familiar with C++, many minor problems can be corrected
 - move to more stable code.  if it's CVS, see if a release version will
@@ -2886,6 +2887,11 @@ at least one bootable media, either as disk image (floppy, hard disk or CD-ROM) 
 
 <note><para>
 Both VGA BIOS versions as well as the ROM BIOS are part of Bochs. No separate download is necessary.
+</para></note>
+
+<note><para>
+If you want to use the Cirrus SVGA adapter instead of VGA + Bochs VBE, you should
+have a look at <xref linkend="cirrus-notes">.
 </para></note>
 
 <para>
