@@ -90,6 +90,11 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.5b : May 24 2005
+  - Volker
+    . fixed return value for the default case in the VBE section (non-debug mode)
+    . removed unused stuff
+
 vgabios-0.5a : Mar 07 2005
   - Volker
     . Cirrus SVGA extension (initial patches from Makoto Suzuki, improvements
