@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.174 2005-05-23 20:04:43 vruppert Exp $
+$Id: user.dbk,v 1.175 2005-05-25 18:24:47 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1807,7 +1807,8 @@ options in the first table tell which GUI library is the default for each
 platform.  Starting in version 2.0, you can use multiple
 <option>--with-*</option> options at once to compile with multiple
 display libraries, and then choose between them at runtime with the
-display_library option in the configuration file.  Or, you can 
+<link linkend="bochsopt-displaylibrary">display_library option</link>
+in the configuration file. Or, you can
 let the configure script detect which libraries are on your system
 and use them all, by configuring with --with-all-libs.
 </para>
@@ -3050,7 +3051,7 @@ Example:
    optromimage1: file=optionalrom.bin, address=0xd0000
 </screen>
 
- This enables Bochs to load up to 4 optional ROM images. 
+This enables Bochs to load up to 4 optional ROM images.
 </para>
 <para>
 Be sure to use a
@@ -3076,10 +3077,14 @@ Examples:
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
 </screen>
-You also need to load a VGA ROM BIOS at 0xC0000.
+This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
 </para>
-<para> A VGA BIOS file from Elpin Systems, Inc. is provided in the source and binary distributions.</para>
-<para> A free LGPL'd VGA BIOS is also provided in the source and binary distributions.</para>
+<para>A VGA BIOS from Elpin Systems, Inc. as well as a free LGPL'd VGA BIOS 
+are provided in the source and binary distributions.</para>
+<note><para>
+  Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
+  what VGA BIOS to use.
+</para></note>
 </section>
 
 <section id="bochsopt-vga">
@@ -3092,7 +3097,10 @@ Examples:
 </screen>
 Here you can specify the display extension to be used. With the value
 'none' you can use standard VGA with no extension. Other supported
-values are 'vbe' for Bochs VBE and 'cirrus' for Cirrus SVGA support.
+values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> as
+VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>)
+and 'cirrus' for Cirrus SVGA support (needs
+<filename>VGABIOS-lgpl-latest-cirrus</filename> as VGA BIOS).
 </para>
 </section>
 
@@ -3924,6 +3932,7 @@ ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
 ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0 #macosx
 ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
+ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 
