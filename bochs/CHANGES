@@ -1,11 +1,12 @@
-Changes in 2.2.pre4 (May 15, 2005):
+Changes in 2.2 (May ??, 2005):
 
 Brief summary :
 - New floating point emulator based on SoftFloat floating point 
   emulation library.
 - improved x86-64 emulation
 - Cirrus SVGA card emulation added
-- many improvements in Bochs emulated I/O devices 
+- status bar with indicators for keyboard, floppy, cdrom and disk (gui dependant)
+- many improvements in Bochs emulated I/O devices (e.g. PCI subsystem)
 
 Detailed change log :
 
@@ -230,6 +231,7 @@ Detailed change log :
   [843328] PATCH: support for Flat-style ToolBar with Win32GUI
  [1198308] PATCH: fix incorrect moving mouse cursor when wheel used
  [1200515] add TFTP server to vnet & ipv4 bug fix by easeway
+ [1203305] tuntap incompatibility by Jan Kratochvil
 
 - SF patches partially applied
   [896733] Lazy flags, for more instructions, only 1 src op
