@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.72 2005-01-01 09:31:38 vruppert Exp $
+// $Id: ne2k.cc,v 1.73 2005-05-26 09:24:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -328,11 +328,10 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     // and the source-address and length registers must  
     // have been initialised.
     //
-    if (io_len > BX_NE2K_THIS s.remote_bytes)
-      {
-       BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
-       //return 0;
-      }
+    if (io_len > BX_NE2K_THIS s.remote_bytes) {
+      BX_ERROR(("ne2K: dma read underrun iolen=%d remote_bytes=%d",io_len,BX_NE2K_THIS s.remote_bytes));
+      //return 0;
+    }
 
     //BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS s.remote_bytes));
     retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
@@ -359,13 +358,13 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
     else
       BX_NE2K_THIS s.remote_bytes = 0;
 
-	// If all bytes have been written, signal remote-DMA complete
-	if (BX_NE2K_THIS s.remote_bytes == 0) {
-	    BX_NE2K_THIS s.ISR.rdma_done = 1;
-	    if (BX_NE2K_THIS s.IMR.rdma_inte) {
-              set_irq_level(1);
-	    }
-	}
+    // If all bytes have been written, signal remote-DMA complete
+    if (BX_NE2K_THIS s.remote_bytes == 0) {
+      BX_NE2K_THIS s.ISR.rdma_done = 1;
+      if (BX_NE2K_THIS s.IMR.rdma_inte) {
+        set_irq_level(1);
+      }
+    }
     break;
 
   case 0xf:  // Reset register
@@ -543,6 +542,8 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
+  Bit8u value2;
+
   BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
 	   (unsigned) io_len));
 
@@ -563,7 +564,6 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0x2:  // PSTOP
-	// BX_INFO(("Writing to PSTOP: %02x", value));
     BX_NE2K_THIS s.page_stop = value;
     break;
 
@@ -708,7 +708,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xf:  // IMR
     // Check for reserved bit
     if (value & 0x80)
-      BX_PANIC(("IMR write, reserved bit set"));
+      BX_ERROR(("IMR write, reserved bit set"));
 
     // Set other values
     BX_NE2K_THIS s.IMR.rx_inte    = ((value & 0x01) == 0x01);
@@ -718,6 +718,18 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     BX_NE2K_THIS s.IMR.overw_inte = ((value & 0x10) == 0x10);
     BX_NE2K_THIS s.IMR.cofl_inte  = ((value & 0x20) == 0x20);
     BX_NE2K_THIS s.IMR.rdma_inte  = ((value & 0x40) == 0x40);
+    value2 = ((BX_NE2K_THIS s.ISR.rdma_done << 6) |
+              (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+              (BX_NE2K_THIS s.ISR.overwrite << 4) |
+              (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+              (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+              (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+              (BX_NE2K_THIS s.ISR.pkt_rx));
+    if (((value & value2) & 0x7f) == 0) {
+      set_irq_level(0);
+    } else {
+      set_irq_level(1);
+    }
     break;
 
   default:
@@ -1276,9 +1288,7 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   }
   
   BX_NE2K_THIS s.RSR.rx_ok = 1;
-  if (pktbuf[0] & 0x80) {
-    BX_NE2K_THIS s.RSR.rx_mbit = 1;
-  }
+  BX_NE2K_THIS s.RSR.rx_mbit = (bx_bool)((pktbuf[0] & 0x01) > 0);
 
   BX_NE2K_THIS s.ISR.pkt_rx = 1;
 
@@ -1293,7 +1303,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.72 2005-01-01 09:31:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.73 2005-05-26 09:24:28 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
