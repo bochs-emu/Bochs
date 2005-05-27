@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.106 2005-05-18 05:05:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.107 2005-05-27 01:53:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,8 +134,6 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
 
 void BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
-  BX_INFO(("WBINVD: (ignoring)"));
-
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 

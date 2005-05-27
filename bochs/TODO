@@ -370,7 +370,9 @@ In the patches folder we already have at least 3 patches for APIC, I hope
 one of them or their combination will fix the problem or approach my 
 WINNT SMP boot tries.
 Status:
-Stanislav, please fill in.
+The APIC functionality was improved from last release. But the modern OSes
+require ACPI APIC tables in BIOS in additional to the regular MP tables so 
+Bochs still not able to boot WinNT SMP.
 
 22. add to the roadmap that we should find some ideas to check 
 correctness of instructions emulation, especially system instructions.  
