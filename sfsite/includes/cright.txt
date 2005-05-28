@@ -1,2 +1,0 @@
-&copy; 2001-2004 The Bochs Project. See the project <a href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=Bochs+Project+Statistics&url=http://sourceforge.net/project/stats/qmrkgroup_ideq12580">statistics</a> here.</font></td></tr>
-</table>
