@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.18 2005-04-27 18:09:27 sshwarts Exp $
+// $Id: ioapic.cc,v 1.19 2005-06-04 17:44:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -12,16 +12,16 @@ class bx_ioapic_c bx_ioapic;
 
 void bx_io_redirect_entry_t::parse_value ()
 {
-  dest = (value >> 56) & APIC_ID_MASK;
-  masked = (value >> 16) & 1;
-  trig_mode = (value >> 15) & 1;
-  remote_irr = (value >> 14) & 1;
-  polarity = (value >> 13) & 1;
+  dest = (Bit8u)((value >> 56) & APIC_ID_MASK);
+  masked = (Bit8u)((value >> 16) & 1);
+  trig_mode = (Bit8u)((value >> 15) & 1);
+  remote_irr = (Bit8u)((value >> 14) & 1);
+  polarity = (Bit8u)((value >> 13) & 1);
   //delivery_status = (value >> 12) & 1;
   delivery_status = 0;  // we'll change this later...
-  dest_mode = (value >> 11) & 1;
-  delivery_mode = (value >> 8) & 7;
-  vector = value & 0xff;
+  dest_mode = (Bit8u)((value >> 11) & 1);
+  delivery_mode = (Bit8u)((value >> 8) & 7);
+  vector = (Bit8u)(value & 0xff);
 }
 
 void bx_io_redirect_entry_t::sprintf_self (char *buf)

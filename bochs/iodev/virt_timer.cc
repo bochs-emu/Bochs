@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.21 2004-06-19 15:20:15 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.22 2005-06-04 17:44:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -409,7 +409,8 @@ bx_virt_timer_c::init(void) {
 
   register_timer(this, nullTimer, (Bit32u)NullTimerInterval, 1, 1, "Null Timer");
 
-  system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,virtual_next_event_time , 0, 1, "Virtual Timer");
+  system_timer_id = bx_pc_system.register_timer(this, pc_system_timer_handler,
+                                                (Bit32u)virtual_next_event_time, 0, 1, "Virtual Timer");
 
   //Real time variables:
 #if BX_HAVE_REALTIME_USEC

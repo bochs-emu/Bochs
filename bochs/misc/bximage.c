@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.25 2005-01-28 10:25:06 sshwarts Exp $
+ * $Id: bximage.c,v 1.26 2005-06-04 17:44:59 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -45,7 +45,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.25 2005-01-28 10:25:06 sshwarts Exp $";
+char *rcsid = "$Id: bximage.c,v 1.26 2005-06-04 17:44:59 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -319,8 +319,8 @@ int make_flat_image_win32(HANDLE hFile, Bit64u sec)
   WriteFile(hFile, buffer, 512, &dwCount, NULL); // set the first sector to 0, Win98 doesn't zero out the file
                                                  // if there is a write at/over the end
   DeviceIoControl(hFile, FSCTL_SET_COMPRESSION, &mode, sizeof(mode), NULL, 0, &dwCount, NULL);
-  pos.u.LowPart = (sec - 1) << 9;
-  pos.u.HighPart = (sec - 1) >> 23;
+  pos.u.LowPart = (unsigned long)((sec - 1) << 9);
+  pos.u.HighPart = (unsigned long)((sec - 1) >> 23);
   pos.u.LowPart = SetFilePointer(hFile, pos.u.LowPart, &pos.u.HighPart, FILE_BEGIN);
   memset(buffer, 0, 512);
   if ((pos.u.LowPart == 0xffffffff && GetLastError() != NO_ERROR) || !WriteFile(hFile, buffer, 512, &dwCount, NULL) || dwCount != 512)
@@ -344,7 +344,7 @@ int make_flat_image(FILE *fp, Bit64u sec)
      /* temp <-- min(sec, 4194303)
      * 4194303 is (int)(0x7FFFFFFF/512)
      */
-     long temp = ((sec < 4194303) ? sec : 4194303);
+     long temp = (long)((sec < 4194303) ? sec : 4194303);
      fseek(fp, 512*temp, SEEK_CUR);
      sec -= temp;
    }
@@ -373,7 +373,7 @@ int make_sparse_image(FILE *fp, Bit64u sec)
    header.pagesize = htod32((1 << 10) * 32); // Use 32 KB Pages - could be configurable
    numpages = (sec / (dtoh32(header.pagesize) / 512)) + 1;
 
-   header.numpages = htod32(numpages);
+   header.numpages = htod32((Bit32u)numpages);
 
    if (numpages != dtoh32(header.numpages))
    {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.20 2005-04-21 18:31:58 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.21 2005-06-04 17:44:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -1113,12 +1113,12 @@ bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinf
           if (plane1 & 1) {
             if (info->is_little_endian) {
               for (i=info->bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = fgcol >> i;
+                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
               }
             }
             else {
               for (i=0; i<info->bpp; i+=8) {
-                *(tile_ptr2--) = fgcol >> i;
+                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
               }
             }
           }
@@ -1132,12 +1132,12 @@ bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinf
           if (plane1 & 1) {
             if (info->is_little_endian) {
               for (i=info->bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = bgcol >> i;
+                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
               }
             }
             else {
               for (i=0; i<info->bpp; i+=8) {
-                *(tile_ptr2--) = bgcol >> i;
+                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
               }
             }
           }
