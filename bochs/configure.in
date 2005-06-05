@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.287 2005-06-03 15:54:35 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.288 2005-06-05 18:42:50 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2390,12 +2390,12 @@ case "$target" in
     CFP="/Tc"
     OFP="/Fo"
     MAKE=nmake
-    MAKELIB="lib.exe /nologo /subsystem:console /machine:I386 /verbose /out:\$@"
+    MAKELIB="lib /nologo /subsystem:console /machine:I386 /verbose /out:\$@"
     RMCOMMAND="-del"
     RANLIB="echo"
     #L_OPT="/debug"    # for debugging
     L_OPT=""           # no debug info
-    LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ BINMODE.OBJ"
+    LINK="link $L_OPT /nologo /subsystem:console /incremental:no /machine:I386 /out:\$@ "
     LINK_CONSOLE=$LINK
     EXE=".exe"
     PRIMARY_TARGET="bochs.exe"
