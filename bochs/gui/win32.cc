@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.94 2005-05-11 18:00:02 vruppert Exp $
+// $Id: win32.cc,v 1.95 2005-06-06 20:14:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -867,10 +867,10 @@ void
 bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
-    for (int i = 0; i < statusitem_count; i++) {
+    for (int i = 0; i < (int)statusitem_count; i++) {
       SetStatusText(i+1, statusitem_text[i], active);
     }
-  } else if (element < statusitem_count) {
+  } else if (element < (int)statusitem_count) {
     SetStatusText(element+1, statusitem_text[element], active);
   }
 }
@@ -1348,7 +1348,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
         BOOL gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
-        for (unsigned i=0; i<yChar; i++) {
+        for (unsigned i=0; i<(unsigned)yChar; i++) {
           data[i*2] = vga_charmap[c*32+i];
           if (gfxchar) {
             data[i*2+1] = (data[i*2] << 7);

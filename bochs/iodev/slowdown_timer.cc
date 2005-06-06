@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.20 2005-06-04 17:44:58 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.21 2005-06-06 20:14:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ bx_slowdown_timer_c::handle_timer() {
 #if BX_HAVE_USLEEP
     usleep(s.Q);
 #elif BX_HAVE_MSLEEP
-    msleep(usectomsec(s.Q));
+    msleep(usectomsec((Bit32u)s.Q));
 #elif BX_HAVE_SLEEP
     sleep(usectosec(s.Q));
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.18 2005-05-12 18:07:45 sshwarts Exp $
+// $Id: xmm.h,v 1.19 2005-06-06 20:14:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -154,7 +154,7 @@ typedef union bx_xmm_reg_t {
 
 #define MXCSR_RESET 0x00001F80  /* reset value of the MXCSR register */
 
-struct bx_mxcsr_t 
+struct BOCHSAPI bx_mxcsr_t 
 {
   Bit32u mxcsr;
 
