@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.59 2005-04-10 19:42:48 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.60 2005-06-07 19:26:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
     vector = NULL;
   }
   Bit64u test_mask = alignment - 1;
-  actual_vector = new Bit8u [bytes+test_mask];
+  actual_vector = new Bit8u [(unsigned int)(bytes+test_mask)];
   // round address forward to nearest multiple of alignment.  Alignment 
   // MUST BE a power of two for this to work.
   Bit64u masked = ((Bit64u)(actual_vector + test_mask)) & ~test_mask;
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.59 2005-04-10 19:42:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.60 2005-06-07 19:26:21 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -177,7 +177,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     return;
     }
 
-  size = stat_buf.st_size;
+  size = (unsigned long)stat_buf.st_size;
 
   if (type > 0) {
     max_size = 0x10000;

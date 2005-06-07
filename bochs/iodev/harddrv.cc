@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.132 2005-05-04 18:19:49 vruppert Exp $
+// $Id: harddrv.cc,v 1.133 2005-06-07 19:26:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.132 2005-05-04 18:19:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.133 2005-06-07 19:26:20 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3771,8 +3771,8 @@ off_t sparse_image_t::lseek (off_t offset, int whence)
 
  //printf("Seeking to position %ld\n", (long) offset);
 
- set_virtual_page(offset >> pagesize_shift);
- position_page_offset = offset & pagesize_mask;
+ set_virtual_page((uint32)(offset >> pagesize_shift));
+ position_page_offset = (uint32)(offset & pagesize_mask);
 
  return 0;
 }
@@ -3919,7 +3919,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      // We just add on another page at the end of the file
      // Reclamation, compaction etc should currently be done off-line
 
-     size_t  data_size = underlying_filesize - data_start;
+     size_t  data_size = (size_t)(underlying_filesize - data_start);
      BX_ASSERT((data_size % pagesize) == 0);
 
 
@@ -3954,7 +3954,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
        }
 
        int ret;
-       ret = ::lseek(fd, page_file_start, SEEK_SET);
+       ret = (int)::lseek(fd, page_file_start, SEEK_SET);
        // underlying_current_filepos update deferred
        if (-1 == ret) panic(strerror(errno));
 
@@ -3976,7 +3976,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
        // This produces a sparse file which has blanks
        // Also very quick, even when pagesize is massive
        int ret;
-       ret = ::lseek(fd, page_file_start + pagesize - 4, SEEK_SET);
+       ret = (int)::lseek(fd, page_file_start + pagesize - 4, SEEK_SET);
        // underlying_current_filepos update deferred
        if (-1 == ret) panic(strerror(errno));
 
@@ -4058,7 +4058,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
    if (!done)
    {
-     int ret = ::lseek(fd, pagetable_write_from, SEEK_SET);
+     int ret = (int)::lseek(fd, pagetable_write_from, SEEK_SET);
      // underlying_current_filepos update deferred
      if (ret == -1) panic(strerror(errno));
 
@@ -4411,8 +4411,8 @@ redolog_t::lseek (off_t offset, int whence)
                 return -1;
         }
 
-        extent_index = offset / dtoh32(header.specific.extent);
-        extent_offset = (offset % dtoh32(header.specific.extent)) / 512;
+        extent_index = (Bit32u)(offset / dtoh32(header.specific.extent));
+        extent_offset = (Bit32u)((offset % dtoh32(header.specific.extent)) / 512);
 
         BX_DEBUG(("redolog : lseeking extent index %d, offset %d",extent_index, extent_offset));
 

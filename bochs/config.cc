@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.34 2005-04-03 15:00:44 vruppert Exp $
+// $Id: config.cc,v 1.35 2005-06-07 19:26:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,7 +66,7 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
     case BXP_VGA_UPDATE_INTERVAL:
       // if after init, notify the vga device to change its timer.
       if (set && SIM->get_init_done ())
-        DEV_vga_set_update_interval (val);
+        DEV_vga_set_update_interval ((unsigned int)val);
       break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI

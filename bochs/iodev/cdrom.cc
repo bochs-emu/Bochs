@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.77 2005-05-04 18:19:49 vruppert Exp $
+// $Id: cdrom.cc,v 1.78 2005-06-07 19:26:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.77 2005-05-04 18:19:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.78 2005-06-07 19:26:20 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -888,6 +888,8 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
     *length = iBytesReturned;
 
     return true;
+  } else {
+    return false;
   }
 #elif __linux__ || defined(__sun)
   {
@@ -1281,13 +1283,13 @@ cdrom_interface::capacity()
     } else if(using_file) {
       ULARGE_INTEGER FileSize;
       FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-      return (FileSize.QuadPart / 2048);
+      return (Bit32u)(FileSize.QuadPart / 2048);
     } else {  /* direct device access */
       ULARGE_INTEGER FreeBytesForCaller;
       ULARGE_INTEGER TotalNumOfBytes;
       ULARGE_INTEGER TotalFreeBytes;
       GetDiskFreeSpaceEx( path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
-      return (TotalNumOfBytes.QuadPart / 2048);
+      return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
     }
   }
 #elif defined __APPLE__
