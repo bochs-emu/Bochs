@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.35 2005-06-07 19:26:20 vruppert Exp $
+// $Id: config.cc,v 1.36 2005-06-08 18:25:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1132,7 +1132,7 @@ void bx_init_options ()
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
       1, BX_MAX_BIT32U,
-      30000);
+      25000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
   bx_options.Ovga_update_interval->set_runtime_param (1);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
@@ -1187,7 +1187,7 @@ void bx_init_options ()
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
-      500000);
+      1000000);
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
@@ -1624,7 +1624,7 @@ void bx_init_options ()
       "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
       1, BX_MAX_BIT32U,
-      20000);
+      250);
   bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
       "Keyboard paste delay",
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
@@ -1636,7 +1636,7 @@ void bx_init_options ()
       "Floppy command delay",
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
       1, BX_MAX_BIT32U,
-      50000);
+      500);
   bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
       "Use a CMOS image",
       "Controls the usage of a CMOS image",
