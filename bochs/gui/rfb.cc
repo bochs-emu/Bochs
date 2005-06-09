@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.43 2005-04-25 17:10:12 vruppert Exp $
+// $Id: rfb.cc,v 1.44 2005-06-09 20:08:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -1697,7 +1697,7 @@ void rfbMouseMove(int x, int y, int bmask)
   static int oldy = -1;
   int xorigin;
 
-  if (oldx == oldy == -1) {
+  if ((oldx == 1) && (oldy == -1)) {
     oldx = x;
     oldy = y;
     return;

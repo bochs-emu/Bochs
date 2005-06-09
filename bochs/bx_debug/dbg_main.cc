@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.22 2005-04-16 21:43:06 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.23 2005-06-09 20:08:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1291,7 +1291,7 @@ void playback_entry_t::trigger ()
 void bx_dbg_print_stack_command(int nwords)
 {
   // Get linear address for stack top
-  bool UseESP=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
+  bx_bool UseESP=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
   Bit32u linear_sp = BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_SS)+
     (UseESP?BX_CPU(dbg_cpu)->get_ESP():BX_CPU(dbg_cpu)->get_SP());
   Bit8u buf[8];
@@ -3281,7 +3281,7 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
       ilen = bx_disassemble.disasm(dis_size==32,
         0, (Bit32u)range.from, bx_disasm_ibuf, bx_disasm_tbuf);
 
-      char *Sym=bx_dbg_disasm_symbolic_address(range.from, 0);
+      char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)range.from, 0);
 
       dbg_printf ( "%08x: ", (unsigned) range.from);
       dbg_printf ( "(%20s): ", Sym?Sym:"");
@@ -4201,7 +4201,7 @@ void bx_dbg_info_ivt_command(bx_num_range r)
     { dbg_printf("wrong range\n");
       return;
     }
-    for (i = r.from; i < r.to; i++)
+    for (i = (int)r.from; i < r.to; i++)
     { 
       BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
