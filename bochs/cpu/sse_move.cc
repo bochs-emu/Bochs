@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.36 2005-05-12 18:07:44 sshwarts Exp $
+// $Id: sse_move.cc,v 1.37 2005-06-09 17:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -103,14 +103,14 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word ();
 
-  if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
-  if(twd & 0x000c != 0x000c) tag_byte |= 0x0200;
-  if(twd & 0x0030 != 0x0030) tag_byte |= 0x0400;
-  if(twd & 0x00c0 != 0x00c0) tag_byte |= 0x0800;
-  if(twd & 0x0300 != 0x0300) tag_byte |= 0x1000;
-  if(twd & 0x0c00 != 0x0c00) tag_byte |= 0x2000;
-  if(twd & 0x3000 != 0x3000) tag_byte |= 0x4000;
-  if(twd & 0xc000 != 0xc000) tag_byte |= 0x8000;
+  if((twd & 0x0003) != 0x0003) tag_byte |= 0x0100;
+  if((twd & 0x000c) != 0x000c) tag_byte |= 0x0200;
+  if((twd & 0x0030) != 0x0030) tag_byte |= 0x0400;
+  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x0800;
+  if((twd & 0x0300) != 0x0300) tag_byte |= 0x1000;
+  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x2000;
+  if((twd & 0x3000) != 0x3000) tag_byte |= 0x4000;
+  if((twd & 0xc000) != 0xc000) tag_byte |= 0x8000;
 
   xmm.xmm16u(2) = tag_byte;
 

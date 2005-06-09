@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.55 2005-06-07 05:54:51 sshwarts Exp $
+// $Id: apic.cc,v 1.56 2005-06-09 17:42:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -88,7 +88,7 @@ char *bx_generic_apic_c::get_name ()
 bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
 {
   if ((addr & ~0xfff) == get_base ()) {
-    if ((addr & 0xf != 0) || (len != 4))
+    if (((addr & 0xf) != 0) || (len != 4))
       BX_INFO(("warning: misaligned or wrong-size APIC access. addr=" FMT_ADDRX " len=%d", addr, len));
     return 1;
   }
