@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.26 2005-06-04 17:44:59 vruppert Exp $
+ * $Id: bximage.c,v 1.27 2005-06-10 12:15:29 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -45,7 +45,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.26 2005-06-04 17:44:59 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.27 2005-06-10 12:15:29 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -587,6 +587,7 @@ int parse_cmdline (int argc, char *argv[])
   }
   if (bx_hdimage == -1) {
     bx_hdimage = 1;
+    bx_fdsize_idx = 3;
     bx_interactive = 1;
   }
   if (bx_hdimage == 1) {
