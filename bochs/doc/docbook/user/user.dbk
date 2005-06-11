@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.175 2005-05-25 18:24:47 vruppert Exp $
+$Id: user.dbk,v 1.176 2005-06-11 17:24:44 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1151,6 +1151,10 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.2</entry>
+        <entry>REL_2_2_FINAL</entry>
+      </row>
       <row>
         <entry>2.1.1 (bugfix1)</entry>
         <entry>REL_2_1_1_FINAL</entry>
@@ -4280,8 +4284,9 @@ in that file (see <link linkend="sb16line">sb16 option</link>).
 The source for the SB16CTRL program that is used to modify
 the runtime behaviour of the SB16 emulation is included in
 <filename class="directory">misc/sb16/</filename>. It is a C
-program that can be run from inside the emulation. You can compile it or download the
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>.
+program that can be run from inside the emulation.
+<!-- You can compile it or download the
+<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>. -->
 </para>
 
 <para>
@@ -7789,6 +7794,32 @@ The flat disk images must be created with the bximage utility
 </section>
 
 <section id="using-bximage"><title>Using the bximage tool</title>
+<para>
+Bximage is an easy to use console based tool for creating disk images,
+particularly for use with Bochs. It is completely  interactive if no command
+line arguments are used. It can be switched to a non-interactive mode if all
+required parameters are given in the command line.
+</para>
+<para>
+When you run bximage without one of the following options,
+it will  appear  in  interactive  mode and  ask   for  all
+required parameters to create an image.
+<screen>
+-fd        Create a floppy image.
+-hd        Create a hard disk image.
+-mode=...  Image mode (for hard disks only - see the bochsrc sample for
+           supported options).
+-size=...  Image size in megabytes (e.g. 1.44 for floppy image, 10 for hard
+           disk image).
+-q         Quiet  mode (don't prompt for user input). Without this option bximage
+           uses the command line parameters as defaults for the interactive mode.
+           If this option is given and one of the required parameters is missing,
+           bximage will fall back to interactive mode.
+--help     Print  a  summary  of  the command line options for bximage and exit.
+
+The filename parameter specifies the name of the image to be created.
+</screen>
+</para>
 <para>
 For an example of the usage, refer to <xref linkend="diskimagehowto">.
 </para>

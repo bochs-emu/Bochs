@@ -1,4 +1,5 @@
-This is the base directory for the DocBook documents for the Bochs project. It has been broken down into the following directories:
+This is the base directory for the DocBook documents for the Bochs project. 
+It has been broken down into the following directories:
 
 user - The Bochs User Guide - describes how to setup and use Bochs
 
@@ -6,7 +7,7 @@ development - The Bochs Develement Guide - contains development information and
 how to contribute to the Bochs project
 
 documentation - The Bochs Documentation Guide - contains information on how to 
-contribute to the documation of the the Bochs project
+contribute to the documentation of the the Bochs project
 
 images - pictures that may be reused in any of the three books.  They can
 be referenced using "../images/FILENAME".
