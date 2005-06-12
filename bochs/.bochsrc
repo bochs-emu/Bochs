@@ -594,10 +594,11 @@ private_colormap: enabled=0
 # you can use the following 'ethmod's to simulate a virtual network.
 #   null: All packets are discarded, but logged to a few files.
 #   arpback: ARP is simulated. Disabled by default.
-#   vnet: ARP, ICMP-echo(ping), DHCP and read-only TFTP are simulated.
+#   vnet: ARP, ICMP-echo(ping), DHCP and read/write TFTP are simulated.
 #         The virtual host uses 192.168.10.1.
 #         DHCP assignes 192.168.10.2 to the guest.
-#         TFTP uses the ethdev value for the root directory.
+#         TFTP uses the ethdev value for the root directory and doesn't
+#         overwrite files.
 #
 #=======================================================================
 # ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=fbsd, ethdev=en0 #macosx
