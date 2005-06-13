@@ -407,7 +407,7 @@
 #  if BX_PLUGINS && defined(BX_PLUGGABLE)
 //   #warning I will import DLL symbols from Bochs main program.
 #    define BOCHSAPI __declspec(dllimport) 
-#  else
+#  elif BX_PLUGINS
 //   #warning I will export DLL symbols.
 #    define BOCHSAPI __declspec(dllexport) 
 #  endif
