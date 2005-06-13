@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.37 2005-06-09 17:42:34 vruppert Exp $
+// $Id: sse_move.cc,v 1.38 2005-06-13 20:25:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -279,7 +279,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   {
       if(tag_byte & tag_byte_mask) {
          const floatx80 &fpu_reg = BX_FPU_REG(index);
-         twd = FPU_tagof(fpu_reg);
+         twd |= FPU_tagof(fpu_reg);
       }
       else {
          twd |= FPU_Tag_Empty;
