@@ -129,12 +129,12 @@ unsigned disassembler::disasm(bx_bool is_32,
           break;
 
         case 0x66:
-          i32bit_opsize = !i32bit_opsize;
+          i32bit_opsize = !is_32;
           sse_prefix |= SSE_PREFIX_66;
           break;
 
         case 0x67:
-          i32bit_addrsize = !i32bit_addrsize;
+          i32bit_addrsize = !is_32;
           break;
 
         case 0xf0:      // lock
