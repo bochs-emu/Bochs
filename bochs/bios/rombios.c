@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.138 2005-05-07 15:55:26 vruppert Exp $
+// $Id: rombios.c,v 1.139 2005-06-14 18:21:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.138 $";
-static char bios_date_string[] = "$Date: 2005-05-07 15:55:26 $";
+static char bios_cvs_version_string[] = "$Revision: 1.139 $";
+static char bios_date_string[] = "$Date: 2005-06-14 18:21:57 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.138 2005-05-07 15:55:26 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.139 2005-06-14 18:21:57 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1040,7 +1040,7 @@ static char CVSID[] = "$Id: rombios.c,v 1.138 2005-05-07 15:55:26 vruppert Exp $
 #define UNSUPPORTED_FUNCTION 0x86
 
 #define none 0
-#define MAX_SCAN_CODE 0x53
+#define MAX_SCAN_CODE 0x58
 
 static struct {
   Bit16u normal;
@@ -1132,7 +1132,12 @@ static struct {
       { 0x5000, 0x5032,   none,   none, 0x20 }, /* 2 Down */
       { 0x5100, 0x5133, 0x7600,   none, 0x20 }, /* 3 PgDn */
       { 0x5200, 0x5230,   none,   none, 0x20 }, /* 0 Ins */
-      { 0x5300, 0x532e,   none,   none, 0x20 }  /* Del */
+      { 0x5300, 0x532e,   none,   none, 0x20 }, /* Del */
+      {   none,   none,   none,   none, none },
+      {   none,   none,   none,   none, none },
+      {   none,   none,   none,   none, none },
+      { 0x5700, 0x5700,   none,   none, none }, /* F11 */
+      { 0x5800, 0x5800,   none,   none, none }  /* F12 */
       };
 
   Bit8u
@@ -4565,7 +4570,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     default:
       if (scancode & 0x80) return; /* toss key releases ... */
       if (scancode > MAX_SCAN_CODE) {
-        BX_INFO("KBD: int09h_handler(): unknown scancode read!\n");
+        BX_INFO("KBD: int09h_handler(): unknown scancode read: 0x%02x!\n", scancode);
         return;
         }
       if (shift_flags & 0x08) { /* ALT */
