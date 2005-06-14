@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.220 2005-05-19 20:25:15 sshwarts Exp $
+// $Id: cpu.h,v 1.221 2005-06-14 20:55:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -524,10 +524,10 @@ typedef struct {
   BX_SMF BX_CPP_INLINE void   set_##name(Bit32u val)
 
 #define IMPLEMENT_8LBIT_REGISTER_ACCESSORS(name)                             \
-  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit8u val) {                \
+  BX_CPP_INLINE void BX_CPU_C::set_##name(Bit8u val) {                       \
     BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl = val;          \
   }                                                                          \
-  BX_CPP_INLINE Bit8u BX_CPU_C::get_##name(void) {                    \
+  BX_CPP_INLINE Bit8u BX_CPU_C::get_##name(void) {                           \
     return (BX_CPU_THIS_PTR gen_reg[BX_8BIT_REG_##name].word.byte.rl);       \
   }
 
@@ -921,60 +921,58 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 #if BX_USE_TLB
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
-  typedef struct {
-    bx_address lpf; // linear page frame
-    Bit32u ppf; // physical page frame
-    Bit32u accessBits; // Page Table Address for updating A & D bits
-    bx_hostpageaddr_t hostPageAddr;
-    } bx_TLB_entry;
+typedef struct {
+  bx_address lpf; // linear page frame
+  Bit32u ppf; // physical page frame
+  Bit32u accessBits; // Page Table Address for updating A & D bits
+  bx_hostpageaddr_t hostPageAddr;
+} bx_TLB_entry;
 #endif  // #if BX_USE_TLB
-
 
 #if BX_SUPPORT_X86_64
 
 #ifdef BX_BIG_ENDIAN
- typedef struct {
-   union {
-     struct {
-       Bit32u dword_filler;
-       Bit16u word_filler;
-       union {
-         Bit16u rx;
-         struct {
-           Bit8u rh;
-           Bit8u rl;
-           } byte;
-         };
-       } word;
-     Bit64u rrx;
-     struct {
-       Bit32u hrx;  // hi 32 bits
-       Bit32u erx;  // low 32 bits
-       } dword;
-     };
-   } bx_gen_reg_t;
+typedef struct {
+  union {
+    struct {
+      Bit32u dword_filler;
+      Bit16u word_filler;
+      union {
+        Bit16u rx;
+        struct {
+          Bit8u rh;
+          Bit8u rl;
+        } byte;
+      };
+    } word;
+    Bit64u rrx;
+    struct {
+      Bit32u hrx;  // hi 32 bits
+      Bit32u erx;  // low 32 bits
+    } dword;
+  };
+} bx_gen_reg_t;
 #else
-
- typedef struct {
-   union {
-     struct {
-       union {
-         Bit16u rx;
-         struct {
-           Bit8u rl;
-           Bit8u rh;
-           } byte;
-         };
-       Bit16u word_filler;
-       Bit32u dword_filler;
-       } word;
-     Bit64u rrx;
-     struct {
-       Bit32u erx;  // low 32 bits
-       Bit32u hrx;  // hi 32 bits
-       } dword;
-     };
-   } bx_gen_reg_t;
+typedef struct {
+  union {
+    struct {
+      union {
+        Bit16u rx;
+        struct {
+          Bit8u rl;
+          Bit8u rh;
+        } byte;
+      };
+      Bit16u word_filler;
+      Bit32u dword_filler;
+    } word;
+    Bit64u rrx;
+    struct {
+      Bit32u erx;  // low 32 bits
+      Bit32u hrx;  // hi 32 bits
+    } dword;
+  };
+} bx_gen_reg_t;
 
 #endif
 
@@ -985,7 +983,7 @@ typedef struct {
   union {
     struct {
       Bit32u erx;
-      } dword;
+    } dword;
     struct {
       Bit16u word_filler;
       union {
@@ -993,31 +991,29 @@ typedef struct {
         struct {
           Bit8u rh;
           Bit8u rl;
-          } byte;
-        };
-      } word;
-    };
-  } bx_gen_reg_t;
-
+        } byte;
+      };
+    } word;
+  };
+} bx_gen_reg_t;
 #else
-
 typedef struct {
   union {
     struct {
       Bit32u erx;
-      } dword;
+    } dword;
     struct {
       union {
         Bit16u rx;
         struct {
           Bit8u rl;
           Bit8u rh;
-          } byte;
-        };
+        } byte;
+      };
       Bit16u word_filler;
-      } word;
-    };
-  } bx_gen_reg_t;
+    } word;
+  };
+} bx_gen_reg_t;
 #endif
 
 #endif  // #if BX_SUPPORT_X86_64
@@ -1073,16 +1069,10 @@ public: // for now...
     Bit64u rip;
   };
 #else
-    union {
-      Bit32u eip;    // instruction pointer
-    } dword;
+  union {
+    Bit32u eip;    // instruction pointer
+  } dword;
 #endif
-
-  // so that we can back up when handling faults, exceptions, etc.
-  // we need to store the value of the instruction pointer, before
-  // each fetch/execute cycle.
-  bx_address prev_eip;
-  bx_address prev_esp;
 
   // status and control flags register set
   Bit32u lf_flags_status;
@@ -1090,6 +1080,12 @@ public: // for now...
 
   bx_lf_flags_entry oszapc;
   bx_lf_flags_entry oszap;
+
+  // so that we can back up when handling faults, exceptions, etc.
+  // we need to store the value of the instruction pointer, before
+  // each fetch/execute cycle.
+  bx_address prev_eip;
+  bx_address prev_esp;
 
 #define BX_INHIBIT_INTERRUPTS 0x01
 #define BX_INHIBIT_DEBUG      0x02
@@ -1124,7 +1120,6 @@ public: // for now...
   /* Control registers */
 #if BX_CPU_LEVEL >= 2
   bx_cr0_t      cr0;
-
   Bit32u        cr1;
   bx_address    cr2;
   bx_address    cr3;
@@ -2970,55 +2965,55 @@ BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 
     BX_CPP_INLINE void
 BX_CPU_C::set_CF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<0);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val);
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<0);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val);
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_AF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<4;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<4;
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_ZF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<6;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<6;
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_SF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<7;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<7;
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_OF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<11;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<11;
+}
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF(bx_bool val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
-    BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<2;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
+  BX_CPU_THIS_PTR eflags.val32 |= (!!val)<<2;
+}
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];
 
     BX_CPP_INLINE void
 BX_CPU_C::set_PF_base(Bit8u val) {
-    BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
-    val = bx_parity_lookup[val]; // Always returns 0 or 1.
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
-    BX_CPU_THIS_PTR eflags.val32 |= val<<2;
-    }
+  BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
+  val = bx_parity_lookup[val]; // Always returns 0 or 1.
+  BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
+  BX_CPU_THIS_PTR eflags.val32 |= val<<2;
+}
 
 // *******************
 // OSZAPC
@@ -3026,97 +3021,97 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 
 /* op1, op2, result */
 #define SET_FLAGS_OSZAPC_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
 }
 
 #define SET_FLAGS_OSZAPC_8(op1, op2, result, ins) \
-    SET_FLAGS_OSZAPC_SIZE(_8, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(_8, op1, op2, result, ins)
 #define SET_FLAGS_OSZAPC_16(op1, op2, result, ins) \
-    SET_FLAGS_OSZAPC_SIZE(_16, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(_16, op1, op2, result, ins)
 #define SET_FLAGS_OSZAPC_32(op1, op2, result, ins) \
-    SET_FLAGS_OSZAPC_SIZE(_32, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(_32, op1, op2, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_64(op1, op2, result, ins) \
-    SET_FLAGS_OSZAPC_SIZE(_64, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(_64, op1, op2, result, ins)
 #endif
 
 /* op1 and result only */
 #define SET_FLAGS_OSZAPC_S1_SIZE(size, lf_op1, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
 }
 
 #define SET_FLAGS_OSZAPC_S1_8(op1, result, ins) \
-    SET_FLAGS_OSZAPC_S1_SIZE(_8, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(_8, op1, result, ins)
 #define SET_FLAGS_OSZAPC_S1_16(op1, result, ins) \
-    SET_FLAGS_OSZAPC_S1_SIZE(_16, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(_16, op1, result, ins)
 #define SET_FLAGS_OSZAPC_S1_32(op1, result, ins) \
-    SET_FLAGS_OSZAPC_S1_SIZE(_32, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(_32, op1, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_S1_64(op1, result, ins) \
-    SET_FLAGS_OSZAPC_S1_SIZE(_64, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(_64, op1, result, ins)
 #endif
 
 /* op2 and result only */
 #define SET_FLAGS_OSZAPC_S2_SIZE(size, lf_op2, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
 }
 
 #define SET_FLAGS_OSZAPC_S2_8(op2, result, ins) \
-    SET_FLAGS_OSZAPC_S2_SIZE(_8, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(_8, op2, result, ins)
 #define SET_FLAGS_OSZAPC_S2_16(op2, result, ins) \
-    SET_FLAGS_OSZAPC_S2_SIZE(_16, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(_16, op2, result, ins)
 #define SET_FLAGS_OSZAPC_S2_32(op2, result, ins) \
-    SET_FLAGS_OSZAPC_S2_SIZE(_32, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(_32, op2, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_S2_64(op2, result, ins) \
-    SET_FLAGS_OSZAPC_S2_SIZE(_64, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(_64, op2, result, ins)
 #endif
 
 /* op1 and op2 only */
 #define SET_FLAGS_OSZAPC_S1S2_SIZE(size, lf_op1, lf_op2, ins) { \
-    BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-    BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
+  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
+  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
 }
 
 #define SET_FLAGS_OSZAPC_S1S2_8(op1, op2, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_8, op1, op2, ins)
+  SET_FLAGS_OSZAPC_S1S2_SIZE(_8, op1, op2, ins)
 #define SET_FLAGS_OSZAPC_S1S2_16(op1, op2, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_16, op1, op2, ins)
+  SET_FLAGS_OSZAPC_S1S2_SIZE(_16, op1, op2, ins)
 #define SET_FLAGS_OSZAPC_S1S2_32(op1, op2, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_32, op1, op2, ins)
+  SET_FLAGS_OSZAPC_S1S2_SIZE(_32, op1, op2, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_S1S2_64(op1, op2, ins) \
-    SET_FLAGS_OSZAPC_S1S2_SIZE(_64, op1, op2, ins)
+  SET_FLAGS_OSZAPC_S1S2_SIZE(_64, op1, op2, ins)
 #endif
 
 /* result only */
 #define SET_FLAGS_OSZAPC_RESULT_SIZE(size, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszapc.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
+  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = BX_LF_MASK_OSZAPC; \
 }
 
 #define SET_FLAGS_OSZAPC_RESULT_8(result, ins) \
-    SET_FLAGS_OSZAPC_RESULT_SIZE(_8, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(_8, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_16(result, ins) \
-    SET_FLAGS_OSZAPC_RESULT_SIZE(_16, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(_16, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_32(result, ins) \
-    SET_FLAGS_OSZAPC_RESULT_SIZE(_32, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(_32, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_RESULT_64(result, ins) \
-    SET_FLAGS_OSZAPC_RESULT_SIZE(_64, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(_64, result, ins)
 #endif
 
 // *******************
@@ -3125,40 +3120,40 @@ BX_CPU_C::set_PF_base(Bit8u val) {
 
 /* op1, op2, result */
 #define SET_FLAGS_OSZAP_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszap.op1##size = lf_op1; \
-    BX_CPU_THIS_PTR oszap.op2##size = lf_op2; \
-    BX_CPU_THIS_PTR oszap.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszap.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
+  BX_CPU_THIS_PTR oszap.op1##size = lf_op1; \
+  BX_CPU_THIS_PTR oszap.op2##size = lf_op2; \
+  BX_CPU_THIS_PTR oszap.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszap.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
 }
 
 #define SET_FLAGS_OSZAP_8(op1, op2, result, ins) \
-    SET_FLAGS_OSZAP_SIZE(_8, op1, op2, result, ins)
+  SET_FLAGS_OSZAP_SIZE(_8, op1, op2, result, ins)
 #define SET_FLAGS_OSZAP_16(op1, op2, result, ins) \
-    SET_FLAGS_OSZAP_SIZE(_16, op1, op2, result, ins)
+  SET_FLAGS_OSZAP_SIZE(_16, op1, op2, result, ins)
 #define SET_FLAGS_OSZAP_32(op1, op2, result, ins) \
-    SET_FLAGS_OSZAP_SIZE(_32, op1, op2, result, ins)
+  SET_FLAGS_OSZAP_SIZE(_32, op1, op2, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAP_64(op1, op2, result, ins) \
-    SET_FLAGS_OSZAP_SIZE(_64, op1, op2, result, ins)
+  SET_FLAGS_OSZAP_SIZE(_64, op1, op2, result, ins)
 #endif
 
 /* result only */
 #define SET_FLAGS_OSZAP_RESULT_SIZE(size, lf_result, ins) { \
-    BX_CPU_THIS_PTR oszap.result##size = lf_result; \
-    BX_CPU_THIS_PTR oszap.instr = ins; \
-    BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
+  BX_CPU_THIS_PTR oszap.result##size = lf_result; \
+  BX_CPU_THIS_PTR oszap.instr = ins; \
+  BX_CPU_THIS_PTR lf_flags_status = (BX_CPU_THIS_PTR lf_flags_status & 0x00000f) | BX_LF_MASK_OSZAP; \
 }
 
 #define SET_FLAGS_OSZAP_RESULT_8(result, ins) \
-    SET_FLAGS_OSZAP_RESULT_SIZE(_8, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(_8, result, ins)
 #define SET_FLAGS_OSZAP_RESULT_16(result, ins) \
-    SET_FLAGS_OSZAP_RESULT_SIZE(_16, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(_16, result, ins)
 #define SET_FLAGS_OSZAP_RESULT_32(result, ins) \
-    SET_FLAGS_OSZAP_RESULT_SIZE(_32, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(_32, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAP_RESULT_64(result, ins) \
-    SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
 #endif
 
 IMPLEMENT_EFLAGS_ACCESSORS()
@@ -3254,19 +3249,19 @@ typedef enum _show_flags {
     (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPCMask) | \
     (flags32 & EFlagsOSZAPCMask);                        \
   BX_CPU_THIS_PTR lf_flags_status = 0;                   \
-  }
+}
 
 #define setEFlagsOSZAP(flags32) {                        \
   BX_CPU_THIS_PTR eflags.val32 =                         \
     (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) |  \
     (flags32 & EFlagsOSZAPMask);                         \
   BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;           \
-  }
+}
 
 #define SET_FLAGS_OxxxxC(new_of, new_cf) { \
     BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
     BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
     BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
-    }
+}
 
 #endif  // #ifndef BX_CPU_H
