@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.16 2004-09-30 16:50:03 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.17 2005-06-16 17:25:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,11 +95,9 @@ BX_CPU_C::write_eflags(Bit32u eflags_raw, bx_bool change_IOPL, bx_bool change_IF
 }
 #endif /* BX_CPU_LEVEL >= 3 */
 
-Bit16u BX_CPU_C::read_flags(void)
+// Cause arithmetic flags to be in known state and cached in val32.
+Bit32u BX_CPU_C::force_flags(void)
 {
-  Bit16u flags16;
-
-  // Cause arithmetic flags to be in known state and cached in val32.
   if (BX_CPU_THIS_PTR lf_flags_status) {
     (void) get_CF();
     (void) get_PF();
@@ -109,20 +107,25 @@ Bit16u BX_CPU_C::read_flags(void)
     (void) get_OF();
   }
 
-  flags16 = (Bit16u) BX_CPU_THIS_PTR eflags.val32;
+  return BX_CPU_THIS_PTR eflags.val32;
+}
+
+Bit16u BX_CPU_C::read_flags(void)
+{
+  Bit16u flags16 = (Bit16u) BX_CPU_THIS_PTR force_flags();
 
   /* 8086: bits 12-15 always set to 1.
    * 286: in real mode, bits 12-15 always cleared.
    * 386+: real-mode: bit15 cleared, bits 14..12 are last loaded value
    *       protected-mode: bit 15 clear, bit 14 = last loaded, IOPL?
    */
+
 #if BX_CPU_LEVEL < 2
-  flags16 |= 0xF000;  /* 8086 nature */
+  flags16 |= 0xF000;    /* 8086 nature */
 #elif BX_CPU_LEVEL == 2
   if (real_mode()) {
     flags16 &= 0x0FFF;  /* 80286 in real mode nature */
-    }
-#else /* 386+ */
+  }
 #endif
 
   return(flags16);
@@ -131,19 +134,7 @@ Bit16u BX_CPU_C::read_flags(void)
 #if BX_CPU_LEVEL >= 3
 Bit32u BX_CPU_C::read_eflags(void)
 {
-  Bit32u flags32;
-
-  // Cause arithmetic flags to be in known state and cached in val32.
-  if (BX_CPU_THIS_PTR lf_flags_status) {
-    (void) get_CF();
-    (void) get_PF();
-    (void) get_AF();
-    (void) get_ZF();
-    (void) get_SF();
-    (void) get_OF();
-  }
-
-  flags32 = BX_CPU_THIS_PTR eflags.val32;
+  Bit32u flags32 = BX_CPU_THIS_PTR force_flags();
 
 #if 0
   /*
@@ -154,4 +145,4 @@ Bit32u BX_CPU_C::read_eflags(void)
 
   return(flags32);
 }
-#endif /* BX_CPU_LEVEL >= 3 */
+#endif

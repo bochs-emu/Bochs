@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.221 2005-06-14 20:55:56 sshwarts Exp $
+// $Id: cpu.h,v 1.222 2005-06-16 17:24:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2720,6 +2720,7 @@ public: // for now...
 #if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
   BX_SMF void write_eflags_fpu_compare(int float_relation);
 #endif
+  BX_SMF Bit32u force_flags(void);
   BX_SMF Bit16u read_flags(void);
   BX_SMF Bit32u read_eflags(void);
 
