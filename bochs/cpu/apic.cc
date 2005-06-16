@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.56 2005-06-09 17:42:34 vruppert Exp $
+// $Id: apic.cc,v 1.57 2005-06-16 16:56:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -567,22 +567,26 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0x380: // initial count for timer
       {
-      // If active before, deactive the current timer before changing it.
-      if (timer_active)
-        bx_pc_system.deactivate_timer(timer_handle);
-      timer_initial = value;
-      if (timer_initial == 0)
-        BX_PANIC(("APIC: W(init timer count): count=0"));
-      // This should trigger the counter to start.  If already started,
-      // restart from the new start value.
-      // fprintf(stderr, "APIC: W(Initial Count Register) = %u\n", value);
-      timer_current = timer_initial;
-      timer_active = 1;
-      Bit32u timervec = lvt[APIC_LVT_TIMER];
-      bx_bool continuous = (timervec & 0x20000) > 0;
-      ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
-      bx_pc_system.activate_timer_ticks(timer_handle,
-          Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+        // If active before, deactive the current timer before changing it.
+        if (timer_active) {
+          bx_pc_system.deactivate_timer(timer_handle);
+          timer_active = 0;
+        }
+        timer_initial = value;
+        timer_current = 0;
+        if (timer_initial != 0)  // terminate the counting if timer_initial = 0
+        {
+          // This should trigger the counter to start.  If already started,
+          // restart from the new start value.
+          BX_DEBUG(("APIC: Initial Timer Count Register = %u\n", value));
+          timer_current = timer_initial;
+          timer_active = 1;
+          Bit32u timervec = lvt[APIC_LVT_TIMER];
+          bx_bool continuous = (timervec & 0x20000) > 0;
+          ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
+          bx_pc_system.activate_timer_ticks(timer_handle,
+            Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+        }
       }
       break;
     case 0x3e0: // timer divide configuration
@@ -892,10 +896,13 @@ Bit8u bx_local_apic_c::get_apr_lowpri()
   Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;
   Bit32u irrv = (highest_priority_int(irr) >> 4) & 0xf;
 
-  if ((tpr >= irrv) && (tpr > isrv))
+  if ((tpr >= irrv) && (tpr > isrv)) {
     arb_id = task_priority & 0xff;
-  else
-    arb_id = ((tpr && isrv) > irrv) ? (tpr && isrv) : irrv;
+  }
+  else {
+    arb_id = ((tpr & isrv) > irrv) ? (tpr & isrv) : irrv;
+    arb_id <<= 4;
+  }
 
   BX_INFO(("apr = %d\n", arb_id));
   return (Bit8u)arb_id;
