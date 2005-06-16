@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.41 2005-06-16 20:28:26 sshwarts Exp $
+// $Id: pc_system.cc,v 1.42 2005-06-16 20:35:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,14 +51,11 @@ double     m_ips; // Millions of Instructions Per Second
 #define SpewPeriodicTimerInfo 0
 #define MinAllowableTimerPeriod 1
 
-
-#if SpewPeriodicTimerInfo
-// If debugging, set the heartbeat to 5M cycles.  Each heartbeat
-// spews the active timer info.
-const Bit64u bx_pc_system_c::NullTimerInterval = 5000000;
+#if BX_SUPPORT_ICACHE
+const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampMax;
 #else
 // This must be the maximum 32-bit unsigned int value, NOT (Bit64u) -1.
-const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampMax;
+const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
 #endif
 
   // constructor
