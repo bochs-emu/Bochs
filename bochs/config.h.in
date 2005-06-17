@@ -210,8 +210,8 @@
 #define BX_HAVE_MKTIME 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
-// gui. If people try to enable it elsewhere, give a compile error after the
-// gui definition so that they don't waste their time trying.
+// and term gui. If people try to enable it elsewhere, give a compile error
+// after the gui definition so that they don't waste their time trying.
 #define BX_USE_IDLE_HACK 0
 
 // Minimum Emulated IPS.
@@ -442,8 +442,8 @@
 // Roland Mainz's idle hack is presently specific to X11. If people try to
 // enable it elsewhere, give a compile error so that they don't waste their
 // time trying.
-#if (BX_USE_IDLE_HACK && !BX_WITH_X11)
-#  error IDLE_HACK will only work with the X11 gui. Correct configure args and retry.
+#if (BX_USE_IDLE_HACK && !BX_WITH_X11 && !BX_WITH_TERM)
+#  error IDLE_HACK will only work with the X11 or term gui. Correct configure args and retry.
 #endif
 
 #define WORDS_BIGENDIAN 0
