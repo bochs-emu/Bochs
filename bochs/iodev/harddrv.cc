@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.133 2005-06-07 19:26:20 vruppert Exp $
+// $Id: harddrv.cc,v 1.134 2005-06-18 15:00:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.133 2005-06-07 19:26:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.134 2005-06-18 15:00:11 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2042,12 +2042,16 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            * sector count of 0 means 256 sectors
            */
 
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("write multiple issued to non-disk"));
-
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_PANIC(("ata%d-%d: write multiple issued to non-disk",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
           if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("write command: BSY bit set"));
-            }
+            BX_PANIC(("ata%d-%d: write command: BSY bit set",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
           BX_SELECTED_CONTROLLER(channel).current_command = value;
 
           // implicit seek done :^)
@@ -2062,10 +2066,15 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x90: // EXECUTE DEVICE DIAGNOSTIC
           if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("diagnostic command: BSY bit set"));
-            }
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("drive diagnostics issued to non-disk"));
+            BX_PANIC(("ata%d-%d: diagnostic command: BSY bit set",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_PANIC(("ata%d-%d: drive diagnostics issued to non-disk",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
           BX_SELECTED_CONTROLLER(channel).error_register = 0x81; // Drive 1 failed, no error on drive 0
           // BX_SELECTED_CONTROLLER(channel).status.busy = 0; // not needed
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
@@ -2074,12 +2083,18 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x91: // INITIALIZE DRIVE PARAMETERS
           if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("init drive parameters command: BSY bit set"));
-            }
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("initialize drive parameters issued to non-disk"));
+            BX_PANIC(("ata%d-%d: init drive parameters command: BSY bit set",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_PANIC(("ata%d-%d: initialize drive parameters issued to non-disk",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+          }
           // sets logical geometry of specified drive
-          BX_DEBUG(("init drive params: sec=%u, drive sel=%u, head=%u",
+          BX_DEBUG(("ata%d-%d: init drive params: sec=%u, drive sel=%u, head=%u",
+            channel, BX_SLAVE_SELECTED(channel),
             (unsigned) BX_SELECTED_CONTROLLER(channel).sector_count,
             (unsigned) BX_HD_THIS channels[channel].drive_select,
             (unsigned) BX_SELECTED_CONTROLLER(channel).head_no));
@@ -2090,59 +2105,64 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
             BX_SELECTED_CONTROLLER(channel).status.err = 0;
-	    raise_interrupt(channel);
+            raise_interrupt(channel);
             break;
-	  }
-          if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hard_drive->sectors)
-            BX_PANIC(("init drive params: sector count doesnt match %d!=%d", BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
-          if ( BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1) )
-            BX_PANIC(("init drive params: head number doesn't match %d != %d",BX_SELECTED_CONTROLLER(channel).head_no, BX_SELECTED_DRIVE(channel).hard_drive->heads-1));
+          }
+          if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
+            BX_PANIC(("ata%d-%d: init drive params: sector count doesnt match %d!=%d", channel, BX_SLAVE_SELECTED(channel),
+              BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
+            command_aborted(channel, value);
+          }
+          if ( BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1) ) {
+            BX_PANIC(("ata%d-%d: init drive params: head number doesn't match %d != %d", channel, BX_SLAVE_SELECTED(channel),
+              BX_SELECTED_CONTROLLER(channel).head_no, BX_SELECTED_DRIVE(channel).hard_drive->heads-1));
+            command_aborted(channel, value);
+          }
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
           BX_SELECTED_CONTROLLER(channel).status.err = 0;
-	  raise_interrupt(channel);
+          raise_interrupt(channel);
           break;
 
         case 0xec: // IDENTIFY DEVICE
           if (bx_options.OnewHardDriveSupport->get ()) {
 	    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
-		  BX_INFO(("Drive ID Command issued : 0xec "));
+              BX_INFO(("Drive ID Command issued : 0xec "));
 
             if (!BX_SELECTED_IS_PRESENT(channel)) {
               BX_INFO(("disk ata%d-%d not present, aborting",channel,BX_SLAVE_SELECTED(channel)));
               command_aborted(channel, value);
               break;
               }
-	    if (BX_SELECTED_IS_CD(channel)) {
-		  BX_SELECTED_CONTROLLER(channel).head_no        = 0;
-		  BX_SELECTED_CONTROLLER(channel).sector_count   = 1;
-		  BX_SELECTED_CONTROLLER(channel).sector_no      = 1;
-		  BX_SELECTED_CONTROLLER(channel).cylinder_no    = 0xeb14;
-		  command_aborted(channel, 0xec);
-	    } else {
-		  BX_SELECTED_CONTROLLER(channel).current_command = value;
-		  BX_SELECTED_CONTROLLER(channel).error_register = 0;
+            if (BX_SELECTED_IS_CD(channel)) {
+              BX_SELECTED_CONTROLLER(channel).head_no        = 0;
+              BX_SELECTED_CONTROLLER(channel).sector_count   = 1;
+              BX_SELECTED_CONTROLLER(channel).sector_no      = 1;
+              BX_SELECTED_CONTROLLER(channel).cylinder_no    = 0xeb14;
+              command_aborted(channel, 0xec);
+            } else {
+              BX_SELECTED_CONTROLLER(channel).current_command = value;
+              BX_SELECTED_CONTROLLER(channel).error_register = 0;
 
-		  // See ATA/ATAPI-4, 8.12
-		  BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
-		  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-		  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-		  BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-		  BX_SELECTED_CONTROLLER(channel).status.err   = 0;
+              // See ATA/ATAPI-4, 8.12
+              BX_SELECTED_CONTROLLER(channel).status.busy  = 0;
+              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+              BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+              BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
+              BX_SELECTED_CONTROLLER(channel).status.err   = 0;
 
-		  BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-		  BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
 
-		  BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
-		  raise_interrupt(channel);
-		  identify_drive(channel);
-	    }
-	  }
-          else {
-	    BX_INFO(("sent IDENTIFY DEVICE (0xec) to old hard drive"));
+              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+              raise_interrupt(channel);
+              identify_drive(channel);
+            }
+          } else {
+            BX_INFO(("sent IDENTIFY DEVICE (0xec) to old hard drive"));
             command_aborted(channel, value);
-	  }
+          }
           break;
 
         case 0xef: // SET FEATURES
