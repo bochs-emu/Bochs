@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.134 2005-06-18 15:00:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.135 2005-06-19 07:22:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.134 2005-06-18 15:00:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.135 2005-06-19 07:22:20 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1928,10 +1928,10 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
 
     case 0x07: // hard disk command 0x1f7
-	  // (mch) Writes to the command register with drive_select != 0
-	  // are ignored if no secondary device is present
+      // (mch) Writes to the command register with drive_select != 0
+      // are ignored if no secondary device is present
       if ((BX_SLAVE_SELECTED(channel)) && (!BX_SLAVE_IS_PRESENT(channel)))
-	    break;
+        break;
       // Writes to the command register clear the IRQ
       DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
 
@@ -1942,11 +1942,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       switch (value) {
 
         case 0x10: // CALIBRATE DRIVE
-	  if (!BX_SELECTED_IS_HD(channel))
-		BX_INFO(("calibrate drive issued to non-disk"));
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_INFO(("ata%d-%d: calibrate drive issued to non-disk",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+            break;
+          }
 
-          // FIXME Maybe we should signal an error in case of cdrom
-          // if (!BX_SELECTED_IS_PRESENT(channel) || !BX_SELECTED_IS_HD(channel))
           if (!BX_SELECTED_IS_PRESENT(channel)) {
             BX_SELECTED_CONTROLLER(channel).error_register = 0x02; // Track 0 not found
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
@@ -1954,10 +1956,10 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 0;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
             BX_SELECTED_CONTROLLER(channel).status.err = 1;
-	    raise_interrupt(channel);
+            raise_interrupt(channel);
             BX_INFO(("calibrate drive: disk ata%d-%d not present", channel, BX_SLAVE_SELECTED(channel)));
             break;
-            }
+          }
 
           /* move head to cylinder 0, issue IRQ */
           BX_SELECTED_CONTROLLER(channel).error_register = 0;
@@ -1967,7 +1969,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
           BX_SELECTED_CONTROLLER(channel).status.err = 0;
-	  raise_interrupt(channel);
+          raise_interrupt(channel);
           break;
 
         case 0x20: // READ MULTIPLE SECTORS, with retries
@@ -1980,23 +1982,25 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            * sector count of 0 means 256 sectors
            */
 
-	  if (!BX_SELECTED_IS_HD(channel)) {
-		BX_ERROR(("read multiple issued to non-disk"));
-		command_aborted(channel, value);
-		break;
-	  }
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_ERROR(("ata%d-%d: read multiple issued to non-disk",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+            break;
+          }
 
           BX_SELECTED_CONTROLLER(channel).current_command = value;
 
-	  // Lose98 accesses 0/0/0 in CHS mode
-	  if (!BX_SELECTED_CONTROLLER(channel).lba_mode &&
-	      !BX_SELECTED_CONTROLLER(channel).head_no &&
-	      !BX_SELECTED_CONTROLLER(channel).cylinder_no &&
-	      !BX_SELECTED_CONTROLLER(channel).sector_no) {
-		BX_INFO(("Read from 0/0/0, aborting command"));
-		command_aborted(channel, value);
-		break;
-	  }
+          // Lose98 accesses 0/0/0 in CHS mode
+          if (!BX_SELECTED_CONTROLLER(channel).lba_mode &&
+              !BX_SELECTED_CONTROLLER(channel).head_no &&
+              !BX_SELECTED_CONTROLLER(channel).cylinder_no &&
+              !BX_SELECTED_CONTROLLER(channel).sector_no) {
+            BX_INFO(("ata%d-%d: : read from 0/0/0, aborting command",
+              channel, BX_SLAVE_SELECTED(channel)));
+            command_aborted(channel, value);
+            break;
+          }
 
 	  if (!calculate_logical_address(channel, &logical_sector)) {
 	    BX_ERROR(("initial read from sector %lu out of bounds, aborting", (unsigned long)logical_sector));
@@ -2046,11 +2050,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PANIC(("ata%d-%d: write multiple issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           if (BX_SELECTED_CONTROLLER(channel).status.busy) {
             BX_PANIC(("ata%d-%d: write command: BSY bit set",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           BX_SELECTED_CONTROLLER(channel).current_command = value;
 
@@ -2069,11 +2075,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PANIC(("ata%d-%d: diagnostic command: BSY bit set",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           if (!BX_SELECTED_IS_HD(channel)) {
             BX_PANIC(("ata%d-%d: drive diagnostics issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           BX_SELECTED_CONTROLLER(channel).error_register = 0x81; // Drive 1 failed, no error on drive 0
           // BX_SELECTED_CONTROLLER(channel).status.busy = 0; // not needed
@@ -2086,11 +2094,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PANIC(("ata%d-%d: init drive parameters command: BSY bit set",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           if (!BX_SELECTED_IS_HD(channel)) {
             BX_PANIC(("ata%d-%d: initialize drive parameters issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
+            break;
           }
           // sets logical geometry of specified drive
           BX_DEBUG(("ata%d-%d: init drive params: sec=%u, drive sel=%u, head=%u",
@@ -2112,11 +2122,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_PANIC(("ata%d-%d: init drive params: sector count doesnt match %d!=%d", channel, BX_SLAVE_SELECTED(channel),
               BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
             command_aborted(channel, value);
+            break;
           }
           if ( BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1) ) {
             BX_PANIC(("ata%d-%d: init drive params: head number doesn't match %d != %d", channel, BX_SLAVE_SELECTED(channel),
               BX_SELECTED_CONTROLLER(channel).head_no, BX_SELECTED_DRIVE(channel).hard_drive->heads-1));
             command_aborted(channel, value);
+            break;
           }
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -2127,14 +2139,14 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xec: // IDENTIFY DEVICE
           if (bx_options.OnewHardDriveSupport->get ()) {
-	    if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
+            if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom))
               BX_INFO(("Drive ID Command issued : 0xec "));
 
             if (!BX_SELECTED_IS_PRESENT(channel)) {
               BX_INFO(("disk ata%d-%d not present, aborting",channel,BX_SLAVE_SELECTED(channel)));
               command_aborted(channel, value);
               break;
-              }
+            }
             if (BX_SELECTED_IS_CD(channel)) {
               BX_SELECTED_CONTROLLER(channel).head_no        = 0;
               BX_SELECTED_CONTROLLER(channel).sector_count   = 1;
@@ -2166,40 +2178,45 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xef: // SET FEATURES
-	  switch(BX_SELECTED_CONTROLLER(channel).features) {
-	    case 0x02: // Enable and
-	    case 0x82: //  Disable write cache.
-	    case 0xAA: // Enable and
-	    case 0x55: //  Disable look-ahead cache.
-	    case 0xCC: // Enable and
-	    case 0x66: //  Disable reverting to power-on default
+          switch(BX_SELECTED_CONTROLLER(channel).features) {
+            case 0x02: // Enable and
+            case 0x82: //  Disable write cache.
+            case 0xAA: // Enable and
+            case 0x55: //  Disable look-ahead cache.
+            case 0xCC: // Enable and
+            case 0x66: //  Disable reverting to power-on default
             case 0x03: // Set Transfer Mode
-	      BX_INFO(("SET FEATURES subcommand 0x%02x not supported by disk.", (unsigned) BX_SELECTED_CONTROLLER(channel).features));
-	      command_aborted(channel, value);
-	    break;
+              BX_INFO(("ata%d-%d: SET FEATURES subcommand 0x%02x not supported by disk.",
+                channel,BX_SLAVE_SELECTED(channel),(unsigned) BX_SELECTED_CONTROLLER(channel).features));
+              command_aborted(channel, value);
+              break;
 
-	    default:
-	      BX_PANIC(("SET FEATURES with unknown subcommand: 0x%02x", (unsigned) BX_SELECTED_CONTROLLER(channel).features ));
+            default:
+              BX_PANIC(("ata%d-%d: SET FEATURES with unknown subcommand: 0x%02x",
+                channel,BX_SLAVE_SELECTED(channel),(unsigned) BX_SELECTED_CONTROLLER(channel).features));
               // We'd better signal the error if the user chose to continue
-	      command_aborted(channel, value);
-	  }
-	  break;
+              command_aborted(channel, value);
+          }
+          break;
 
         case 0x40: // READ VERIFY SECTORS
           if (bx_options.OnewHardDriveSupport->get ()) {
-	    if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("read verify issued to non-disk"));
-            BX_INFO(("Verify Command : 0x40 ! "));
+            if (!BX_SELECTED_IS_HD(channel)) {
+              BX_PANIC(("ata%d-%d: read verify issued to non-disk",
+                channel,BX_SLAVE_SELECTED(channel)));
+              command_aborted(channel, value);
+              break;
+            }
+            BX_INFO(("ata%d-%d: verify command : 0x40 !", channel,BX_SLAVE_SELECTED(channel)));
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
             BX_SELECTED_CONTROLLER(channel).status.err = 0;
-	    raise_interrupt(channel);
-            }
-          else {
-	    BX_INFO(("sent READ VERIFY SECTORS (0x40) to old hard drive"));
+            raise_interrupt(channel);
+          } else {
+            BX_INFO(("sent READ VERIFY SECTORS (0x40) to old hard drive"));
             command_aborted(channel, value);
-	  }
+          }
           break;
 
 	case 0xc6: // SET MULTIPLE MODE (mch)
