@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.77 2005-05-27 01:53:38 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.78 2005-06-21 17:01:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2602,12 +2602,13 @@ modrm_done:
         }
         else {
           if ((ilen+3) < remain) {
-            // Sign extend ???
-            instruction->IqForm.Iq = FetchDWORD(iptr);
+            instruction->IqForm.Iq = (Bit64u) FetchDWORD(iptr);
             ilen += 4;
           }
           else return(0);
         }
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_SEG_REG_DS);
         break;
       case BxImmediate_Iw:
       case BxImmediate_IwIb:

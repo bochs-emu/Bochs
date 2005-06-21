@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.13 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: logical64.cc,v 1.14 2005-06-21 17:01:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,19 +41,13 @@ void BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 ^ op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 ^ op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 ^ op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 
@@ -108,19 +102,13 @@ void BX_CPU_C::XOR_EqId(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 ^ op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 ^ op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 ^ op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 
@@ -136,19 +124,13 @@ void BX_CPU_C::OR_EqId(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 | op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 | op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 | op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 
@@ -162,19 +144,13 @@ void BX_CPU_C::NOT_Eq(bxInstruction_c *i)
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = ~op1_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = ~op1_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = ~op1_64;
     Write_RMW_virtual_qword(result_64);
   }
 }
@@ -188,19 +164,13 @@ void BX_CPU_C::OR_EqGq(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 | op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 | op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 | op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 
@@ -253,19 +223,13 @@ void BX_CPU_C::AND_EqGq(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 & op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 & op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 & op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 
@@ -318,19 +282,13 @@ void BX_CPU_C::AND_EqId(bxInstruction_c *i)
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
+    result_64 = op1_64 & op2_64;
+    BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
-
-  result_64 = op1_64 & op2_64;
-
-  /* now write result back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), result_64);
-  }
-  else {
+    result_64 = op1_64 & op2_64;
     Write_RMW_virtual_qword(result_64);
   }
 

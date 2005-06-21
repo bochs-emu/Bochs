@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.28 2005-02-28 18:56:05 sshwarts Exp $
+// $Id: string.cc,v 1.29 2005-06-21 17:01:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,10 +49,10 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -102,7 +102,6 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     }
 
     // zero extension of RSI/RDI
-
     RSI = esi;
     RDI = edi;
   }
@@ -319,10 +318,10 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -334,12 +333,10 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     write_virtual_word(BX_SEG_REG_ES, rdi, &temp16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement RSI */
       rsi -= 2;
       rdi -= 2;
     }
     else {
-      /* increment RSI */
       rsi += 2;
       rdi += 2;
     }
@@ -358,12 +355,10 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     write_virtual_word(BX_SEG_REG_ES, edi, &temp16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 2;
       edi -= 2;
     }
     else {
-      /* increment ESI */
       esi += 2;
       edi += 2;
     }
@@ -567,10 +562,10 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -581,12 +576,10 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
     write_virtual_dword(BX_SEG_REG_ES, rdi, &temp32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement RSI */
       rsi -= 4;
       rdi -= 4;
     }
     else {
-      /* increment ESI */
       rsi += 4;
       rdi += 4;
     }
@@ -763,18 +756,15 @@ doIncr32:
 #endif
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= incr;
       edi -= incr;
     }
     else {
-      /* increment ESI */
       esi += incr;
       edi += incr;
     }
 
     // zero extension of RSI/RDI
-
     RSI = esi;
     RDI = edi;
   }
@@ -787,12 +777,10 @@ doIncr32:
     write_virtual_dword(BX_SEG_REG_ES, di, &temp32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si -= 4;
       di -= 4;
     }
     else {
-      /* increment ESI */
       si += 4;
       di += 4;
     }
@@ -812,10 +800,10 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
@@ -825,12 +813,10 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_ES, rdi, &temp64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement RSI */
       rsi -= 8;
       rdi -= 8;
     }
     else {
-      /* increment ESI */
       rsi += 8;
       rdi += 8;
     }
@@ -847,12 +833,10 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_ES, edi, &temp64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 8;
       edi -= 8;
     }
     else {
-      /* increment ESI */
       esi += 8;
       edi += 8;
     }
@@ -872,10 +856,10 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -890,12 +874,10 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement RSI */
       rsi--;
       rdi--;
     }
     else {
-      /* increment RSI */
       rsi++;
       rdi++;
     }
@@ -917,12 +899,10 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi--;
       edi--;
     }
     else {
-      /* increment ESI */
       esi++;
       edi++;
     }
@@ -944,12 +924,10 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si--;
       di--;
     }
     else {
-      /* increment ESI */
       si++;
       di++;
     }
@@ -967,10 +945,10 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -987,12 +965,10 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 2;
       rdi -= 2;
     }
     else {
-      /* increment ESI */
       rsi += 2;
       rdi += 2;
     }
@@ -1014,12 +990,10 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 2;
       edi -= 2;
     }
     else {
-      /* increment ESI */
       esi += 2;
       edi += 2;
     }
@@ -1040,12 +1014,10 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si -= 2;
       di -= 2;
     }
     else {
-      /* increment ESI */
       si += 2;
       di += 2;
     }
@@ -1063,10 +1035,10 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1083,12 +1055,10 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 4;
       rdi -= 4;
     }
     else {
-      /* increment ESI */
       rsi += 4;
       rdi += 4;
     }
@@ -1110,12 +1080,10 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 4;
       edi -= 4;
     }
     else {
-      /* increment ESI */
       esi += 4;
       edi += 4;
     }
@@ -1137,12 +1105,10 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si -= 4;
       di -= 4;
     }
     else {
-      /* increment ESI */
       si += 4;
       di += 4;
     }
@@ -1162,10 +1128,10 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
@@ -1179,12 +1145,10 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 8;
       rdi -= 8;
     }
     else {
-      /* increment ESI */
       rsi += 8;
       rdi += 8;
     }
@@ -1205,12 +1169,10 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 8;
       edi -= 8;
     }
     else {
-      /* increment ESI */
       esi += 8;
       edi += 8;
     }
@@ -1240,11 +1202,9 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
  
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rdi--;
     }
     else {
-      /* increment ESI */
       rdi++;
     }
 
@@ -1262,11 +1222,9 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       edi--;
     }
     else {
-      /* increment ESI */
       edi++;
     }
 
@@ -1284,11 +1242,9 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       di--;
     }
     else {
-      /* increment ESI */
       di++;
     }
 
@@ -1313,11 +1269,9 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rdi -= 2;
     }
     else {
-      /* increment ESI */
       rdi += 2;
     }
 
@@ -1334,11 +1288,9 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       edi -= 2;
     }
     else {
-      /* increment ESI */
       edi += 2;
     }
 
@@ -1355,11 +1307,9 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       di -= 2;
     }
     else {
-      /* increment ESI */
       di += 2;
     }
 
@@ -1384,11 +1334,9 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi -= 4;
     }
     else {
-      /* increment EDI */
       rdi += 4;
     }
 
@@ -1405,11 +1353,9 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       edi -= 4;
     }
     else {
-      /* increment ESI */
       edi += 4;
     }
 
@@ -1426,11 +1372,9 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       di -= 4;
     }
     else {
-      /* increment ESI */
       di += 4;
     }
 
@@ -1456,11 +1400,9 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi -= 8;
     }
     else {
-      /* increment EDI */
       rdi += 8;
     }
 
@@ -1476,11 +1418,9 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       edi -= 8;
     }
     else {
-      /* increment ESI */
       edi += 8;
     }
 
@@ -1502,11 +1442,9 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
     write_virtual_byte(BX_SEG_REG_ES, rdi, &al);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi--;
     }
     else {
-      /* increment EDI */
       rdi++;
     }
 
@@ -1677,11 +1615,9 @@ doIncr16:
 #endif
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       edi -= incr;
     }
     else {
-      /* increment EDI */
       edi += incr;
     }
 
@@ -1705,11 +1641,9 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
     write_virtual_word(BX_SEG_REG_ES, rdi, &ax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi -= 2;
     }
     else {
-      /* increment EDI */
       rdi += 2;
     }
 
@@ -1724,11 +1658,9 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
     write_virtual_word(BX_SEG_REG_ES, edi, &ax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       edi -= 2;
     }
     else {
-      /* increment EDI */
       edi += 2;
     }
 
@@ -1742,11 +1674,9 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
     write_virtual_word(BX_SEG_REG_ES, di, &ax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       di -= 2;
     }
     else {
-      /* increment EDI */
       di += 2;
     }
 
@@ -1766,11 +1696,9 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
     write_virtual_dword(BX_SEG_REG_ES, rdi, &eax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi -= 4;
     }
     else {
-      /* increment EDI */
       rdi += 4;
     }
 
@@ -1785,11 +1713,9 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
     write_virtual_dword(BX_SEG_REG_ES, edi, &eax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       edi -= 4;
     }
     else {
-      /* increment EDI */
       edi += 4;
     }
 
@@ -1803,11 +1729,9 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
     write_virtual_dword(BX_SEG_REG_ES, di, &eax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       di -= 4;
     }
     else {
-      /* increment EDI */
       di += 4;
     }
 
@@ -1828,11 +1752,9 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_ES, rdi, &rax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       rdi -= 8;
     }
     else {
-      /* increment EDI */
       rdi += 8;
     }
 
@@ -1845,11 +1767,9 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_ES, edi, &rax);
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement EDI */
       edi -= 8;
     }
     else {
-      /* increment EDI */
       edi += 8;
     }
 
@@ -1867,10 +1787,10 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1880,11 +1800,9 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi--;
     }
     else {
-      /* increment ESI */
       rsi++;
     }
 
@@ -1900,11 +1818,9 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi--;
     }
     else {
-      /* increment ESI */
       esi++;
     }
 
@@ -1919,11 +1835,9 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si--;
     }
     else {
-      /* increment ESI */
       si++;
     }
 
@@ -1939,10 +1853,10 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1952,11 +1866,9 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 2;
     }
     else {
-      /* increment ESI */
       rsi += 2;
     }
 
@@ -1972,11 +1884,9 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 2;
     }
     else {
-      /* increment ESI */
       esi += 2;
     }
 
@@ -1991,11 +1901,9 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si -= 2;
     }
     else {
-      /* increment ESI */
       si += 2;
     }
 
@@ -2011,10 +1919,10 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -2024,11 +1932,9 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 4;
     }
     else {
-      /* increment ESI */
       rsi += 4;
     }
 
@@ -2044,11 +1950,9 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 4;
     }
     else {
-      /* increment ESI */
       esi += 4;
     }
 
@@ -2063,11 +1967,9 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       si -= 4;
     }
     else {
-      /* increment ESI */
       si += 4;
     }
 
@@ -2085,10 +1987,10 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
 
   if (!BX_NULL_SEG_REG(i->seg())) {
     seg = i->seg();
-    }
+  }
   else {
     seg = BX_SEG_REG_DS;
-    }
+  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
@@ -2097,11 +1999,9 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
     RAX = rax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       rsi -= 8;
     }
     else {
-      /* increment ESI */
       rsi += 8;
     }
 
@@ -2115,11 +2015,9 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
     RAX = rax;
 
     if (BX_CPU_THIS_PTR get_DF ()) {
-      /* decrement ESI */
       esi -= 8;
     }
     else {
-      /* increment ESI */
       esi += 8;
     }
 
