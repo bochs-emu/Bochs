@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.20 2005-03-04 21:03:22 sshwarts Exp $
+// $Id: tasking.cc,v 1.21 2005-06-22 18:13:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,16 +198,15 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Task State Seg must be present, else #NP(TSS selector)
   if (tss_descriptor->p==0) {
-    BX_INFO(("task_switch: TSS.p == 0"));
+    BX_ERROR(("task_switch: TSS.p == 0"));
     exception(BX_NP_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
 
   // TSS must have valid limit, else #TS(TSS selector)
-  if (tss_selector->ti ||
-      tss_descriptor->valid==0 ||
+  if (tss_selector->ti || tss_descriptor->valid==0 ||
       new_TSS_limit < new_TSS_max)
   {
-    BX_PANIC(("task_switch(): TR not valid"));
+    BX_ERROR(("task_switch(): TR not valid"));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
 
@@ -919,7 +918,6 @@ post_exception:
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_INFO(("task switch: posting exception %u after commit point", exception_no));
   exception(exception_no, error_code, 0);
-  return;
 }
 
 void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)

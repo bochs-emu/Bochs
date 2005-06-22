@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.38 2005-03-29 21:37:06 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.39 2005-06-22 18:13:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -430,7 +430,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
-    BX_INFO(("LTR: The current priveledge level is not 0"));
+    BX_ERROR(("LTR: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -455,7 +455,8 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   parse_selector(raw_selector, &selector);
 
   if (selector.ti) {
-    BX_PANIC(("LTR: selector.ti != 0"));
+    BX_ERROR(("LTR: selector.ti != 0"));
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
     return;
   }
 
@@ -466,35 +467,40 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // set upper 32 bits of tss base
-    access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0,
-        BX_READ, &dword3);
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.tss386.base |= ((Bit64u)dword3 << 32);
-    BX_INFO(("64 bit tss base = 0x%08x%08x",(Bit32u)(descriptor.u.tss386.base >> 32),(Bit32u)descriptor.u.tss386.base));
+    BX_INFO(("64 bit tss base = 0x%08x%08x",
+       (Bit32u)(descriptor.u.tss386.base >> 32),
+       (Bit32u) descriptor.u.tss386.base));
   }
 #endif
 
   /* #GP(selector) if object is not a TSS or is already busy */
   if (descriptor.valid==0 || descriptor.segment ||
-         (descriptor.type!=1 && descriptor.type!=9)) 
+         (descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS && 
+          descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)) 
   {
-    BX_PANIC(("LTR: doesn't point to an available TSS descriptor!"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0); /* 0 ? */
+    BX_ERROR(("LTR: doesn't point to an available TSS descriptor!"));
+    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
     return;
   }
 
   /* #NP(selector) if TSS descriptor is not present */
   if (descriptor.p==0) {
-    BX_PANIC(("LTR: LDT descriptor not present!"));
-    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0); /* 0 ? */
+    BX_ERROR(("LTR: LDT descriptor not present!"));
+    exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
     return;
   }
 
+/*
+  // the real hardware CPU allow loading of tss with limit < minimum
   if (descriptor.type==1 && descriptor.u.tss286.limit<43) {
     BX_PANIC(("LTR:286TSS: loading tr.limit < 43"));
   }
   else if (descriptor.type==9 && descriptor.u.tss386.limit_scaled<103) {
     BX_PANIC(("LTR:386TSS: loading tr.limit < 103"));
   }
+*/
 
   BX_CPU_THIS_PTR tr.selector = selector;
   BX_CPU_THIS_PTR tr.cache    = descriptor;
