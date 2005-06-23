@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.57 2005-04-29 19:06:24 sshwarts Exp $
+// $Id: sdl.cc,v 1.58 2005-06-23 18:39:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -216,6 +216,14 @@ bx_sdl_gui_c::bx_sdl_gui_c ()
 {
 }
 
+#ifdef __MORPHOS__
+void bx_sdl_morphos_exit(void)
+{
+    SDL_Quit();
+    if (PowerSDLBase) CloseLibrary(PowerSDLBase);
+}
+#endif
+
 void bx_sdl_gui_c::specific_init(
     int argc,
     char **argv,
@@ -240,14 +248,27 @@ void bx_sdl_gui_c::specific_init(
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
-
+  
+  #ifdef __MORPHOS__
+  if (!(PowerSDLBase=OpenLibrary("powersdl.library",0)))
+  {
+    LOG_THIS setonoff(LOGLEVEL_PANIC, ACT_FATAL);
+    BX_PANIC (("Unable to open SDL libraries"));
+    return;
+  }
+  #endif
+  
   if( SDL_Init(SDL_INIT_VIDEO) < 0 )
   {
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC (("Unable to initialize SDL libraries"));
     return;
   }
+  #ifdef __MORPHOS__
+  atexit(bx_sdl_morphos_exit);
+  #else
   atexit(SDL_Quit);
+  #endif
 
   sdl_screen = NULL;
   sdl_fullscreen_toggle = 0;

@@ -1,5 +1,5 @@
 #####################################################################
-# $Id: aclocal.m4,v 1.5 2005-01-05 19:50:53 vruppert Exp $
+# $Id: aclocal.m4,v 1.6 2005-06-23 18:39:46 vruppert Exp $
 #####################################################################
 
 dnl -------------------------------------------------------------------
@@ -760,7 +760,7 @@ AC_CACHE_VAL([lt_cv_sys_max_cmd_len], [dnl
     lt_cv_sys_max_cmd_len=8192;
     ;;
 
-  amigaos*)
+  amigaos* | morphos*)
     # On AmigaOS with pdksh, this test takes hours, literally.
     # So we just punt and use a minimum line length of 8192.
     lt_cv_sys_max_cmd_len=8192;

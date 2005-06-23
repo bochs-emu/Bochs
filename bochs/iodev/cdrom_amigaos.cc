@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.6 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: cdrom_amigaos.cc,v 1.7 2005-06-23 18:39:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -34,6 +34,7 @@
 
 #include "iodev.h"
 #include "scsi_commands.h"
+#include "cdrom.h"
 
 #include <exec/types.h>
 #include <exec/memory.h>
@@ -230,6 +231,19 @@ cdrom_interface::read_block(uint8* buf, int lba)
     BX_PANIC(("Error %d reading CD data sector: %ld\n", CDIO->iotd_Req.io_Error, lba));
   }
 }
+
+  int
+cdrom_interface::start_cdrom()
+{
+  // Spin up the cdrom drive.
+
+  if (fd >= 0) {
+    BX_INFO(("start_cdrom: your OS is not supported yet."));
+    return(false); // OS not supported yet, return false always.
+  }
+  return(false);
+}
+
 
 int DoSCSI(UBYTE *data, int datasize, uint8 *cmd,int cmdsize, UBYTE direction)
 {
