@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.7 2005-06-23 18:39:47 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.8 2005-06-26 10:54:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -118,9 +118,9 @@ cdrom_interface::~cdrom_interface(void)
   bx_bool
 cdrom_interface::insert_cdrom(char *dev)
 {
-  uint8 cdb[6];
-  uint8 buf[2*BX_CD_FRAMESIZE];
-  uint8 i = 0;
+  Bit8u cdb[6];
+  Bit8u buf[2*BX_CD_FRAMESIZE];
+  Bit8u i = 0;
   
   memset(cdb,0,sizeof(cdb));
 
@@ -156,7 +156,7 @@ cdrom_interface::insert_cdrom(char *dev)
   void
 cdrom_interface::eject_cdrom()
 {
-  uint8 cdb[6];
+  Bit8u cdb[6];
 
   memset(cdb,0,sizeof(cdb));
 
@@ -169,9 +169,9 @@ cdrom_interface::eject_cdrom()
 
 
   bx_bool
-cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
+cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track)
 {
-  uint8 cdb[10];
+  Bit8u cdb[10];
   TOC *toc;
   toc = (TOC*) buf;
 
@@ -196,11 +196,11 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track)
 }
 
 
-  uint32
+  Bit32u
 cdrom_interface::capacity()
 {
   CAPACITY cap;
-  uint8 cdb[10];
+  Bit8u cdb[10];
 
 
   memset(cdb,0,sizeof(cdb));
@@ -219,7 +219,7 @@ cdrom_interface::capacity()
 }
 
   void
-cdrom_interface::read_block(uint8* buf, int lba)
+cdrom_interface::read_block(Bit8u* buf, int lba)
 {
   CDIO->iotd_Req.io_Data    = buf;
   CDIO->iotd_Req.io_Command = CMD_READ;
@@ -245,7 +245,7 @@ cdrom_interface::start_cdrom()
 }
 
 
-int DoSCSI(UBYTE *data, int datasize, uint8 *cmd,int cmdsize, UBYTE direction)
+int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
 {
   struct SCSICmd scmd;
 

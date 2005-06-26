@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.9 2005-01-19 18:21:39 sshwarts Exp $
+ * $Id: bxcommit.c,v 1.10 2005-06-26 10:54:49 vruppert Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -43,17 +43,13 @@ int snprintf (char *s, size_t maxlen, const char *format, ...)
 }
 #endif  /* !BX_HAVE_SNPRINTF */
 
-#define uint8   Bit8u
-#define uint16  Bit16u
-#define uint32  Bit32u
-
 #include "../osdep.h"
 
 #define INCLUDE_ONLY_HD_HEADERS 1
 #include "../iodev/harddrv.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.9 2005-01-19 18:21:39 sshwarts Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.10 2005-06-26 10:54:49 vruppert Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)

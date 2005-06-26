@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.78 2005-06-07 19:26:20 vruppert Exp $
+// $Id: cdrom.cc,v 1.79 2005-06-26 10:54:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.78 2005-06-07 19:26:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.79 2005-06-26 10:54:49 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -772,7 +772,7 @@ if (using_file == 0)
 
 
   bx_bool
-cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track, int format)
+cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   unsigned i;
   // Read CD TOC. Returns false if start track is out of bounds.
@@ -830,9 +830,9 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
         // Start address
         if (msf) {
           buf[len++] = 0; // reserved
-          buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
-          buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
-          buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+          buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
+          buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
+          buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
         } else {
           buf[len++] = (blocks >> 24) & 0xff;
           buf[len++] = (blocks >> 16) & 0xff;
@@ -1093,14 +1093,14 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
   buf[len++] = 0xaa; // Track number
   buf[len++] = 0; // Reserved
 
-  uint32 blocks = capacity();
+  Bit32u blocks = capacity();
 
   // Start address
   if (msf) {
     buf[len++] = 0; // reserved
-    buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
-    buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
-    buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+    buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
+    buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
+    buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
   } else {
     buf[len++] = (blocks >> 24) & 0xff;
     buf[len++] = (blocks >> 16) & 0xff;
@@ -1126,7 +1126,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
 }
 
 
-  uint32
+  Bit32u
 cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
@@ -1361,7 +1361,7 @@ cdrom_interface::capacity()
 }
 
   void BX_CPP_AttrRegparmN(2)
-cdrom_interface::read_block(uint8* buf, int lba)
+cdrom_interface::read_block(Bit8u* buf, int lba)
 {
   // Read a single block from the CD
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.135 2005-06-19 07:22:20 vruppert Exp $
+// $Id: harddrv.cc,v 1.136 2005-06-26 10:54:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 #define EXTRACT_FIELD(arr,byte,start,num_bits) (((arr)[(byte)] >> (start)) & ((1 << (num_bits)) - 1))
 #define get_packet_field(c,b,s,n) (EXTRACT_FIELD((BX_SELECTED_CONTROLLER((c)).buffer),(b),(s),(n)))
 #define get_packet_byte(c,b) (BX_SELECTED_CONTROLLER((c)).buffer[(b)])
-#define get_packet_word(c,b) (((uint16)BX_SELECTED_CONTROLLER((c)).buffer[(b)] << 8) | BX_SELECTED_CONTROLLER((c)).buffer[(b)+1])
+#define get_packet_word(c,b) (((Bit16u)BX_SELECTED_CONTROLLER((c)).buffer[(b)] << 8) | BX_SELECTED_CONTROLLER((c)).buffer[(b)+1])
 
 
 #define BX_CONTROLLER(c,a) (BX_HD_THIS channels[(c)].drives[(a)]).controller
@@ -82,13 +82,13 @@ static unsigned curr_multiple_sectors = 0; // was 0x3f
 #define BX_SELECTED_MODEL(c) (BX_HD_THIS channels[(c)].drives[BX_HD_THIS channels[(c)].drive_select].model_no)
 #define BX_SELECTED_TYPE_STRING(channel) ((BX_SELECTED_IS_CD(channel)) ? "CD-ROM" : "DISK")
 
-#define WRITE_FEATURES(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).features = _a; BX_CONTROLLER((c),1).features = _a; } while(0)
-#define WRITE_SECTOR_COUNT(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).sector_count = _a; BX_CONTROLLER((c),1).sector_count = _a; } while(0)
-#define WRITE_SECTOR_NUMBER(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).sector_no = _a; BX_CONTROLLER((c),1).sector_no = _a; } while(0)
-#define WRITE_CYLINDER_LOW(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).cylinder_no = (BX_CONTROLLER((c),0).cylinder_no & 0xff00) | _a; BX_CONTROLLER((c),1).cylinder_no = (BX_CONTROLLER((c),1).cylinder_no & 0xff00) | _a; } while(0)
-#define WRITE_CYLINDER_HIGH(c,a) do { uint16 _a = a; BX_CONTROLLER((c),0).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),0).cylinder_no & 0xff); BX_CONTROLLER((c),1).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),1).cylinder_no & 0xff); } while(0)
-#define WRITE_HEAD_NO(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
-#define WRITE_LBA_MODE(c,a) do { uint8 _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
+#define WRITE_FEATURES(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).features = _a; BX_CONTROLLER((c),1).features = _a; } while(0)
+#define WRITE_SECTOR_COUNT(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).sector_count = _a; BX_CONTROLLER((c),1).sector_count = _a; } while(0)
+#define WRITE_SECTOR_NUMBER(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).sector_no = _a; BX_CONTROLLER((c),1).sector_no = _a; } while(0)
+#define WRITE_CYLINDER_LOW(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).cylinder_no = (BX_CONTROLLER((c),0).cylinder_no & 0xff00) | _a; BX_CONTROLLER((c),1).cylinder_no = (BX_CONTROLLER((c),1).cylinder_no & 0xff00) | _a; } while(0)
+#define WRITE_CYLINDER_HIGH(c,a) do { Bit16u _a = a; BX_CONTROLLER((c),0).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),0).cylinder_no & 0xff); BX_CONTROLLER((c),1).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),1).cylinder_no & 0xff); } while(0)
+#define WRITE_HEAD_NO(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
+#define WRITE_LBA_MODE(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
 bx_hard_drive_c *theHardDrive = NULL;
 
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.135 2005-06-19 07:22:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.136 2005-06-26 10:54:49 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1373,7 +1373,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      break;
 
 			      case 0xbd: { // mechanism status
-				    uint16 alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 8);
+				    Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 8);
 
 				    if (alloc_length == 0)
 					  BX_PANIC(("Zero allocation length to MECHANISM STATUS not impl."));
@@ -1397,7 +1397,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      break;
 
 			      case 0x5a: { // mode sense
-				    uint16 alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+				    Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
 
 				    Bit8u PC = BX_SELECTED_CONTROLLER(channel).buffer[2] >> 6;
 				    Bit8u PageCode = BX_SELECTED_CONTROLLER(channel).buffer[2] & 0x3f;
@@ -1557,7 +1557,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      break;
 
 			      case 0x12: { // inquiry
-				    uint8 alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
+				    Bit8u alloc_length = BX_SELECTED_CONTROLLER(channel).buffer[4];
 
 				    init_send_atapi_command(channel, atapi_command, 36, alloc_length);
 
@@ -1595,7 +1595,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				    init_send_atapi_command(channel, atapi_command, 8, 8);
 
 				    if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-					  uint32 capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity;
+					  Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity;
 					  BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
 					  BX_SELECTED_CONTROLLER(channel).buffer[0] = (capacity >> 24) & 0xff;
 					  BX_SELECTED_CONTROLLER(channel).buffer[1] = (capacity >> 16) & 0xff;
@@ -1629,12 +1629,12 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 				    if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
 					  bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
-					  uint8 starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
+					  Bit8u starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
 					  int toc_length;
 #endif
-					  uint16 alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
+					  Bit16u alloc_length = read_16bit(BX_SELECTED_CONTROLLER(channel).buffer + 7);
 
-					  uint8 format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
+					  Bit8u format = (BX_SELECTED_CONTROLLER(channel).buffer[9] >> 6);
 // Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
 #if defined(WIN32)
 #ifdef LOWLEVEL_CDROM
@@ -1763,7 +1763,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 break;
 
 				case 0x2b: { // seek
-					uint32 lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
+					Bit32u lba = read_32bit(BX_SELECTED_CONTROLLER(channel).buffer + 2);
 					if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
 						atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
 						raise_interrupt(channel);
@@ -1795,9 +1795,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 			      case 0x42: { // read sub-channel
 				    bool msf = get_packet_field(channel,1, 1, 1);
 				    bool sub_q = get_packet_field(channel,2, 6, 1);
-				    uint8 data_format = get_packet_byte(channel,3);
-				    uint8 track_number = get_packet_byte(channel,6);
-				    uint16 alloc_length = get_packet_word(channel,7);
+				    Bit8u data_format = get_packet_byte(channel,3);
+				    Bit8u track_number = get_packet_byte(channel,6);
+				    Bit16u alloc_length = get_packet_word(channel,7);
                                     UNUSED(msf);
                                     UNUSED(data_format);
                                     UNUSED(track_number);
@@ -3595,7 +3595,7 @@ sparse_image_t::sparse_image_t ()
 
 
 /*
-void showpagetable(uint32 * pagetable, size_t numpages)
+void showpagetable(Bit32u * pagetable, size_t numpages)
 {
  printf("Non null pages: ");
  for (int i = 0; i < numpages; i++)
@@ -3637,7 +3637,7 @@ void sparse_image_t::read_header()
  }
 
  pagesize = dtoh32(header.pagesize);
- uint32 numpages = dtoh32(header.numpages);
+ Bit32u numpages = dtoh32(header.numpages);
 
  total_size = pagesize;
  total_size *= numpages;
@@ -3645,14 +3645,14 @@ void sparse_image_t::read_header()
  pagesize_shift = 0;
  while ((pagesize >> pagesize_shift) > 1) pagesize_shift++;
 
- if ((uint32)(1 << pagesize_shift) != pagesize)
+ if ((Bit32u)(1 << pagesize_shift) != pagesize)
  {
    panic("failed block size header check");
  }
 
  pagesize_mask = pagesize - 1;
 
- size_t  preamble_size = (sizeof(uint32) * numpages) + sizeof(header);
+ size_t  preamble_size = (sizeof(Bit32u) * numpages) + sizeof(header);
  data_start = 0;
  while (data_start < preamble_size) data_start += pagesize;
 
@@ -3670,7 +3670,7 @@ void sparse_image_t::read_header()
  {
    mmap_length = preamble_size;
    did_mmap = true;
-   pagetable = ((uint32 *) (((uint8 *) mmap_header) + sizeof(header)));
+   pagetable = ((Bit32u *) (((Bit8u *) mmap_header) + sizeof(header)));
 
 //   system_pagesize = getpagesize();
    system_pagesize_mask = getpagesize() - 1;
@@ -3679,21 +3679,21 @@ void sparse_image_t::read_header()
 
  if (!did_mmap)
  {
-   pagetable = new uint32[numpages];
+   pagetable = new Bit32u[numpages];
 
    if (pagetable == NULL)
    {
      panic("could not allocate memory for sparse disk block table");
    }
 
-   ret = ::read(fd, pagetable, sizeof(uint32) * numpages);
+   ret = ::read(fd, pagetable, sizeof(Bit32u) * numpages);
 
    if (-1 == ret)
    {
        panic(strerror(errno));
    }
 
-   if ((int)(sizeof(uint32) * numpages) != ret)
+   if ((int)(sizeof(Bit32u) * numpages) != ret)
    {
      panic("could not read entire block table");
    }
@@ -3808,8 +3808,8 @@ off_t sparse_image_t::lseek (off_t offset, int whence)
 
  //printf("Seeking to position %ld\n", (long) offset);
 
- set_virtual_page((uint32)(offset >> pagesize_shift));
- position_page_offset = (uint32)(offset & pagesize_mask);
+ set_virtual_page((Bit32u)(offset >> pagesize_shift));
+ position_page_offset = (Bit32u)(offset & pagesize_mask);
 
  return 0;
 }
@@ -3823,14 +3823,14 @@ inline off_t sparse_image_t::get_physical_offset()
  return physical_offset;
 }
 
-void sparse_image_t::set_virtual_page(uint32 new_virtual_page)
+void sparse_image_t::set_virtual_page(Bit32u new_virtual_page)
 {
  position_virtual_page = new_virtual_page;
 
  position_physical_page = dtoh32(pagetable[position_virtual_page]);
 }
 
-ssize_t sparse_image_t::read_page_fragment(uint32 read_virtual_page, uint32 read_page_offset, size_t read_size, void * buf)
+ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf)
 {
  if (read_virtual_page != position_virtual_page)
  {
@@ -3911,7 +3911,7 @@ ssize_t sparse_image_t::read(void* buf, size_t count)
 
    BX_ASSERT(position_page_offset < pagesize);
 
-   buf = (((uint8 *) buf) + can_read);
+   buf = (((Bit8u *) buf) + can_read);
    count -= can_read;
  }
 
@@ -3938,8 +3938,8 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
  ssize_t total_written = 0;
 
- uint32  update_pagetable_start = position_virtual_page;
- uint32  update_pagetable_count = 0;
+ Bit32u  update_pagetable_start = position_virtual_page;
+ Bit32u  update_pagetable_count = 0;
 
  if (bx_dbg.disk)
     BX_DEBUG(("sparse_image_t.write %ld bytes", (long)count));
@@ -3960,8 +3960,8 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      BX_ASSERT((data_size % pagesize) == 0);
 
 
-     uint32  data_size_pages = data_size / pagesize;
-     uint32  next_data_page = data_size_pages;
+     Bit32u  data_size_pages = data_size / pagesize;
+     Bit32u  next_data_page = data_size_pages;
 
      pagetable[position_virtual_page] = htod32(next_data_page);
      position_physical_page = next_data_page;
@@ -3986,7 +3986,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
          // Read entire page - could optimize, but simple for now
          parent_image->read_page_fragment(position_virtual_page, 0, pagesize, writebuffer);
 
-         void * dest_start = ((uint8 *) writebuffer) + position_page_offset;
+         void * dest_start = ((Bit8u *) writebuffer) + position_page_offset;
          memcpy(dest_start, buf, can_write);
        }
 
@@ -3999,7 +3999,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
        if (-1 == ret) panic(strerror(errno));
 
-       if (pagesize != (uint32)ret) panic("failed to write entire merged page to disk");
+       if (pagesize != (Bit32u)ret) panic("failed to write entire merged page to disk");
 
        if (can_write != pagesize)
        {
@@ -4017,7 +4017,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
        // underlying_current_filepos update deferred
        if (-1 == ret) panic(strerror(errno));
 
-       uint32  zero = 0;
+       Bit32u  zero = 0;
        ret = ::write(fd, &zero, 4);
 
        if (-1 == ret) panic(strerror(errno));
@@ -4067,22 +4067,22 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
    BX_ASSERT(position_page_offset < pagesize);
 
-   buf = (((uint8 *) buf) + can_write);
+   buf = (((Bit8u *) buf) + can_write);
    count -= can_write;
  }
 
  if (update_pagetable_count != 0)
  {
    bool done = false;
-   off_t pagetable_write_from = sizeof(header) + (sizeof(uint32) * update_pagetable_start);
-   size_t  write_bytecount = update_pagetable_count * sizeof(uint32);
+   off_t pagetable_write_from = sizeof(header) + (sizeof(Bit32u) * update_pagetable_start);
+   size_t  write_bytecount = update_pagetable_count * sizeof(Bit32u);
 
 #ifdef _POSIX_MAPPED_FILES
    if (mmap_header != NULL)
    {
      // Sync from the beginning of the page
      size_t system_page_offset = pagetable_write_from & system_pagesize_mask;
-     void * start = ((uint8 *) mmap_header + pagetable_write_from - system_page_offset);
+     void * start = ((Bit8u *) mmap_header + pagetable_write_from - system_page_offset);
 
      int ret = msync(start, system_page_offset + write_bytecount, MS_ASYNC);
 
@@ -4198,14 +4198,14 @@ error_recovery_t::error_recovery_t ()
       data[7] = 0x00;
 }
 
-uint16  BX_CPP_AttrRegparmN(1) 
-read_16bit(const uint8* buf)
+Bit16u  BX_CPP_AttrRegparmN(1) 
+read_16bit(const Bit8u* buf)
 {
       return (buf[0] << 8) | buf[1];
 }
 
-uint32  BX_CPP_AttrRegparmN(1)
-read_32bit(const uint8* buf)
+Bit32u  BX_CPP_AttrRegparmN(1)
+read_32bit(const Bit8u* buf)
 {
       return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }
