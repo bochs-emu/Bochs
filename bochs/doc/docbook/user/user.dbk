@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.176 2005-06-11 17:24:44 vruppert Exp $
+$Id: user.dbk,v 1.177 2005-07-01 19:14:03 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1325,10 +1325,12 @@ DLX Linux screenshot.
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
 <row><entry>VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
-<row><entry>VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
+<row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-README.txt </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
 <row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>dlxlinux\readme.txt </entry> <entry> description of DLX linux</entry> </row>
@@ -1508,6 +1510,8 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
@@ -4047,9 +4051,9 @@ version where this module was added.
   </row>
   <row>
     <entry>vnet</entry>
-    <entry>ARP, ping (ICMP-echo), DHCP and read-only TFTP simulation. The virtual
+    <entry>ARP, ping (ICMP-echo), DHCP and read/write TFTP simulation. The virtual
     host uses 192.168.10.1. DHCP assigns 192.168.10.2 to the guest. The TFTP server
-    uses the ethdev value for the root directory.
+    uses the ethdev value for the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>No</entry>
