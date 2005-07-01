@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.27 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: stack32.cc,v 1.28 2005-07-01 14:06:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -403,8 +403,6 @@ void BX_CPU_C::LEAVE(bxInstruction_c *i)
   UndefinedOpcode(i);
 #else
   Bit32u temp_EBP;
-
-//invalidate_prefetch_q();
 
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)

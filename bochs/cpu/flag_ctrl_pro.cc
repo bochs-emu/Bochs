@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.17 2005-06-16 17:25:04 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.18 2005-07-01 14:05:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,9 +73,8 @@ BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 
 
 #if BX_CPU_LEVEL >= 3
-  void
-BX_CPU_C::write_eflags(Bit32u eflags_raw, bx_bool change_IOPL, bx_bool change_IF,
-                bx_bool change_VM, bx_bool change_RF)
+void BX_CPU_C::write_eflags(Bit32u eflags_raw, bx_bool change_IOPL, 
+                bx_bool change_IF, bx_bool change_VM, bx_bool change_RF)
 {
   Bit32u changeMask = 0x4dd5;
 

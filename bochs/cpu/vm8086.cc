@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.19 2005-03-13 20:18:37 sshwarts Exp $
+// $Id: vm8086.cc,v 1.20 2005-07-01 14:06:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -304,4 +304,5 @@ void BX_CPU_C::v8086_message(void)
   BX_INFO(("  to use virtual-8086 mode features."));
   BX_PANIC(("Bummer!"));
 }
+
 #endif // BX_SUPPORT_V8086_MODE
