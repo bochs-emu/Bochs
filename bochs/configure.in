@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.289 2005-06-13 20:26:55 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.290 2005-07-03 07:37:22 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2424,6 +2424,7 @@ case "$target" in
     AC_DEFINE(BX_HAVE_SYS_MMAN_H, 0)
     AC_DEFINE(BX_HAVE_USLEEP, 0)
     AC_DEFINE(HAVE_ETHERTAP, 0)
+    AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-cygwin*)
     EXE=".exe"
@@ -2432,12 +2433,14 @@ case "$target" in
     if test "$networking" = yes; then
       PRIMARY_TARGET="$PRIMARY_TARGET niclist.exe"
     fi
+    AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-pc-mingw*)
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$networking" = yes; then
       PRIMARY_TARGET="$PRIMARY_TARGET niclist"
     fi
+    AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
   *-beos*)
     PRIMARY_TARGET=.bochs_beos_target
