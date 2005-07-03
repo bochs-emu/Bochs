@@ -19,26 +19,13 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-../clean/configure --enable-cdrom \
-	--enable-ne2000 \
-	--enable-vbe \
-	--enable-all-optimizations 
-
-#./configure --enable-fpu
-#./configure
-#./configure --enable-instrumentation
-#./configure --with-nogui
-#./configure --enable-disasm
-#./configure --enable-debugger
-#./configure --enable-debugger --enable-disasm
-#./configure --enable-debugger --enable-disasm --enable-loader
-#./configure --enable-debugger --enable-disasm --enable-instrumentation
-#./configure --enable-debugger --enable-disasm --enable-instrumentation="instrument/stubs"
-
-#./configure --enable-debugger --enable-disasm --enable-instrumentation="instrument/example0"
-#./configure --enable-instrumentation="instrument/example0"
-
-#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=0
-#./configure --enable-debugger --enable-disasm --enable-num-sim=2 --enable-simid=1
+./configure --enable-cdrom \
+            --enable-ne2000 \
+	    --enable-vbe \
+	    --enable-all-optimizations \
+	    --enable-cpu-level=6 \
+	    --enable-sse=1 \
+	    --enable-pci \
+	    --enable-clgd54xx 
 
 unset echo

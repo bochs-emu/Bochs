@@ -208,6 +208,7 @@
 #define BX_HAVE_TIMELOCAL 0
 #define BX_HAVE_GMTIME 0
 #define BX_HAVE_MKTIME 0
+#define BX_HAVE_NET_IF_H 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
 // and term gui. If people try to enable it elsewhere, give a compile error
