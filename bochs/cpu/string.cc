@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.29 2005-06-21 17:01:21 sshwarts Exp $
+// $Id: string.cc,v 1.30 2005-07-04 17:44:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,10 +38,710 @@
 #endif
 
 
+#if BX_SupportRepeatSpeedups
+Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, unsigned dstSeg, bx_address dstOff, Bit32u count)
+{
+  Bit32u bytesFitSrc, bytesFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst, laddrSrc;
+  Bit32u     paddrDst, paddrSrc;
+
+  bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  // Do segment checks for the 1st byte. We do not want to
+  // trip an exception beyond this, because the address would
+  // be incorrect.  After we know how many bytes we will directly
+  // transfer, we can do the full segment limit check ourselves
+  // without generating an exception.
+  read_virtual_checks(srcSegPtr, srcOff, 1);
+  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
+  }
+  else {
+    paddrSrc = laddrSrc;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrSrc = A20ADDR(paddrSrc);
+  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+
+  if (! hostAddrSrc) return 0;
+
+  write_virtual_checks(dstSegPtr, dstOff, 1);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many bytes can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    bytesFitSrc = 1 + (paddrSrc & 0xfff);
+    bytesFitDst = 1 + (paddrDst & 0xfff);
+    pointerDelta = (signed int) -1;
+  }
+  else {
+    // Counting upward.
+    bytesFitSrc = (0x1000 - (paddrSrc & 0xfff));
+    bytesFitDst = (0x1000 - (paddrDst & 0xfff));
+    pointerDelta = (signed int)  1;
+  }
+
+  // Restrict word count to the number that will fit in either
+  // source or dest pages.
+  if (count > bytesFitSrc)
+    count = bytesFitSrc;
+  if (count > bytesFitDst)
+    count = bytesFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
+         !(dstSegPtr->cache.valid & SegAccessWOK) )
+    {
+      return 0;
+    }
+
+    if ( !IsLongMode() )
+    {
+      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using si/di
+        // rolling over 16-bit boundaries.
+        if (srcSegLimit > 0xffff)
+          srcSegLimit = 0xffff;
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        Bit32u minOffset = (count-1);
+        if ( srcOff < minOffset )
+          return 0;
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u srcMaxOffset = (srcSegLimit - count) + 1;
+        Bit32u dstMaxOffset = (dstSegLimit - count) + 1;
+        if ( srcOff > srcMaxOffset )
+          return 0;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit8u *) hostAddrDst = * (Bit8u *) hostAddrSrc;
+      hostAddrDst += pointerDelta;
+      hostAddrSrc += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, unsigned dstSeg, bx_address dstOff, Bit32u count)
+{
+  Bit32u wordsFitSrc, wordsFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst, laddrSrc;
+  Bit32u     paddrDst, paddrSrc;
+
+  bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  // Do segment checks for the 1st word.  We do not want to
+  // trip an exception beyond this, because the address would
+  // be incorrect.  After we know how many bytes we will directly
+  // transfer, we can do the full segment limit check ourselves
+  // without generating an exception.
+  read_virtual_checks(srcSegPtr, srcOff, 2);
+  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
+  }
+  else {
+    paddrSrc = laddrSrc;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrSrc = A20ADDR(paddrSrc);
+  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+
+  if (! hostAddrSrc) return 0;
+
+  write_virtual_checks(dstSegPtr, dstOff, 2);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many words can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    // Note: 1st word must not cross page boundary.
+    if ( ((paddrSrc & 0xfff) > 0xffe) || ((paddrDst & 0xfff) > 0xffe) )
+       return 0;
+    wordsFitSrc = (2 + (paddrSrc & 0xfff)) >> 1;
+    wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
+    pointerDelta = (signed int) -2;
+  }
+  else {
+    // Counting upward.
+    wordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 1;
+    wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
+    pointerDelta = (signed int)  2;
+  }
+
+  // Restrict word count to the number that will fit in either
+  // source or dest pages.
+  if (count > wordsFitSrc)
+    count = wordsFitSrc;
+  if (count > wordsFitDst)
+    count = wordsFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
+         !(dstSegPtr->cache.valid & SegAccessWOK) )
+    {
+      return 0;
+    }
+
+    if ( !IsLongMode() )
+    {
+      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using si/di
+        // rolling over 16-bit boundaries.
+        if (srcSegLimit > 0xffff)
+          srcSegLimit = 0xffff;
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        // Counting downward.
+        Bit32u minOffset = (count-1) << 1;
+        if ( srcOff < minOffset )
+          return 0;
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u srcMaxOffset = (srcSegLimit - (count<<1)) + 1;
+        Bit32u dstMaxOffset = (dstSegLimit - (count<<1)) + 1;
+        if ( srcOff > srcMaxOffset )
+          return 0;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit16u *) hostAddrDst = * (Bit16u *) hostAddrSrc;
+      hostAddrDst += pointerDelta;
+      hostAddrSrc += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, unsigned dstSeg, bx_address dstOff, Bit32u count)
+{
+  Bit32u dwordsFitSrc, dwordsFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst, laddrSrc;
+  Bit32u     paddrDst, paddrSrc;
+
+  bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  // Do segment checks for the 1st dword.  We do not want to
+  // trip an exception beyond this, because the address would
+  // be incorrect.  After we know how many bytes we will directly
+  // transfer, we can do the full segment limit check ourselves
+  // without generating an exception.
+  read_virtual_checks(srcSegPtr, srcOff, 4);
+  laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
+  }
+  else {
+    paddrSrc = laddrSrc;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrSrc = A20ADDR(paddrSrc);
+  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrSrc, BX_READ);
+
+  if (! hostAddrSrc) return 0;
+
+  write_virtual_checks(dstSegPtr, dstOff, 4);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many dwords can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    // Note: 1st dword must not cross page boundary.
+    if ( ((paddrSrc & 0xfff) > 0xffc) || ((paddrDst & 0xfff) > 0xffc) )
+      return 0;    
+    dwordsFitSrc = (4 + (paddrSrc & 0xfff)) >> 2;
+    dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
+    pointerDelta = (signed int) -4;
+  }
+  else {
+    // Counting upward.
+    dwordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 2;
+    dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
+    pointerDelta = (signed int)  4;
+  }
+
+  // Restrict dword count to the number that will fit in either
+  // source or dest pages.
+  if (count > dwordsFitSrc)
+    count = dwordsFitSrc;
+  if (count > dwordsFitDst)
+    count = dwordsFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
+         !(dstSegPtr->cache.valid & SegAccessWOK) )
+    {
+      return 0;
+    }
+
+    if ( !IsLongMode() )
+    {
+      Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using si/di
+        // rolling over 16-bit boundaries.
+        if (srcSegLimit > 0xffff)
+          srcSegLimit = 0xffff;
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        // Counting downward.
+        Bit32u minOffset = (count-1) << 2;
+        if ( srcOff < minOffset )
+          return 0;
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u srcMaxOffset = (srcSegLimit - (count<<2)) + 1;
+        Bit32u dstMaxOffset = (dstSegLimit - (count<<2)) + 1;
+        if ( srcOff > srcMaxOffset )
+          return 0;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit32u *) hostAddrDst = * (Bit32u *) hostAddrSrc;
+      hostAddrDst += pointerDelta;
+      hostAddrSrc += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff, Bit8u val, Bit32u count)
+{
+  Bit32u bytesFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst;
+  Bit32u     paddrDst;
+
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  write_virtual_checks(dstSegPtr, dstOff, 1);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many bytes can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    bytesFitDst = 1 + (paddrDst & 0xfff);
+    pointerDelta = (signed int) -1;
+  }
+  else {
+    // Counting upward.
+    bytesFitDst = (0x1000 - (paddrDst & 0xfff));
+    pointerDelta = (signed int)  1;
+  }
+
+  // Restrict word count to the number that will fit in either
+  // source or dest pages.
+  if (count > bytesFitDst)
+    count = bytesFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
+
+    if ( !IsLongMode() )
+    {
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using di
+        // rolling over 16-bit boundaries.
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        Bit32u minOffset = (count-1);
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u dstMaxOffset = (dstSegLimit - count) + 1;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit8u *) hostAddrDst = val;
+      hostAddrDst += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff, Bit16u val, Bit32u count)
+{
+  Bit32u wordsFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst;
+  Bit32u     paddrDst;
+
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  write_virtual_checks(dstSegPtr, dstOff, 2);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many words can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    // Note: 1st word must not cross page boundary.
+    if ((paddrDst & 0xfff) > 0xffe) return 0;
+    wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
+    pointerDelta = (signed int) -2;
+  }
+  else {
+    // Counting upward.
+    wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
+    pointerDelta = (signed int)  2;
+  }
+
+  // Restrict word count to the number that will fit in either
+  // source or dest pages.
+  if (count > wordsFitDst)
+    count = wordsFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
+
+    if ( !IsLongMode() )
+    {
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using di
+        // rolling over 16-bit boundaries.
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        // Counting downward.
+        Bit32u minOffset = (count-1) << 1;
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u dstMaxOffset = (dstSegLimit - (count<<1)) + 1;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit16u *) hostAddrDst = val;
+      hostAddrDst += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+
+Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff, Bit32u val, Bit32u count)
+{
+  Bit32u dwordsFitDst;
+  signed int pointerDelta;
+  bx_address laddrDst;
+  Bit32u     paddrDst;
+
+  bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
+
+  write_virtual_checks(dstSegPtr, dstOff, 4);
+  laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+  if (BX_CPU_THIS_PTR cr0.pg) {
+    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+  }
+  else {
+    paddrDst = laddrDst;
+  }
+
+  // If we want to write directly into the physical memory array,
+  // we need the A20 address.
+  paddrDst = A20ADDR(paddrDst);
+  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            paddrDst, BX_WRITE);
+
+  if (! hostAddrDst) return 0;
+
+  // See how many dwords can fit in the rest of this page.
+  if (BX_CPU_THIS_PTR get_DF ()) {
+    // Counting downward.
+    // Note: 1st dword must not cross page boundary.
+    if ((paddrDst & 0xfff) > 0xffc) return 0;    
+    dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
+    pointerDelta = (signed int) -4;
+  }
+  else {
+    // Counting upward.
+    dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
+    pointerDelta = (signed int)  4;
+  }
+
+  // Restrict dword count to the number that will fit in either
+  // source or dest pages.
+  if (count > dwordsFitDst)
+    count = dwordsFitDst;
+  if (count > bx_pc_system.getNumCpuTicksLeftNextEvent())
+    count = bx_pc_system.getNumCpuTicksLeftNextEvent();
+
+  // If after all the restrictions, there is anything left to do...
+  if (count) {
+    // Before we copy memory, we need to make sure that the segments
+    // allow the accesses up to the given source and dest offset.  If
+    // the cache.valid bits have SegAccessWOK and ROK, we know that
+    // the cache is valid for those operations, and that the segments
+    // are non expand-down (thus we can make a simple limit check).
+    if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
+
+    if ( !IsLongMode() )
+    {
+      Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
+
+      if (! i->as32L()) {
+        // For 16-bit addressing mode, clamp the segment limits to 16bits
+        // so we don't have to worry about computations using di
+        // rolling over 16-bit boundaries.
+        if (dstSegLimit > 0xffff)
+          dstSegLimit = 0xffff;
+      }
+
+      // Now make sure transfer will fit within the constraints of the
+      // segment boundaries, 0..limit for non expand-down.  We know
+      // count >= 1 here.
+      if (BX_CPU_THIS_PTR get_DF ()) {
+        // Counting downward.
+        Bit32u minOffset = (count-1) << 2;
+        if ( dstOff < minOffset )
+          return 0;
+      }
+      else {
+        // Counting upward.
+        Bit32u dstMaxOffset = (dstSegLimit - (count<<2)) + 1;
+        if ( dstOff > dstMaxOffset )
+          return 0;
+      }
+    }
+
+    // Transfer data directly using host addresses
+    for (unsigned j=0; j<count; j++) {
+      * (Bit32u *) hostAddrDst = val;
+      hostAddrDst += pointerDelta;
+    }
+
+    return count;
+  }
+
+  return 0;
+}
+#endif
+
+
 /* MOVSB ES:[EDI], DS:[ESI]   DS may be overridden
  *   mov string from DS:[ESI] into ES:[EDI]
  */
-
 void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 {
   unsigned seg;
@@ -107,7 +807,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
   }
   else
   { /* 16 bit address mode */
-    unsigned incr;
+    unsigned incr = 1;
 
     Bit16u si = SI;
     Bit16u di = DI;
@@ -115,178 +815,33 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
-     * in a batch, rather than one instruction at a time.
-     */
+     * in a batch, rather than one instruction at a time */
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
-      Bit32u byteCount;
+      Bit32u byteCount = CX;
+      BX_ASSERT(byteCount > 0);
+      byteCount = FastRepMOVSB(i, seg, si, BX_SEG_REG_ES, di, byteCount);
+      if (byteCount)
+      {
+        // Decrement the ticks count by the number of iterations, minus
+        // one, since the main cpu loop will decrement one.  Also,
+        // the count is predecremented before examined, so defintely
+        // don't roll it under zero.
+        BX_TICKN(byteCount-1);
 
-#if BX_SUPPORT_X86_64
-      if (i->as64L())
-        byteCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
-      else
-#endif
-      if (i->as32L())
-        byteCount = ECX;
-      else
-        byteCount = CX;
+        // Decrement eCX. Note, the main loop will decrement 1 also, so
+        // decrement by one less than expected, like the case above.
+        CX -= (byteCount-1);
 
-      if (byteCount) {
-        Bit32u bytesFitSrc, bytesFitDst;
-        Bit8u  *hostAddrSrc, *hostAddrDst;
-        signed int pointerDelta;
-        bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        bx_address laddrDst, laddrSrc;
-        Bit32u     paddrDst, paddrSrc;
-
-        srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
-        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
-
-        // Do segment checks for the 1st word.  We do not want to
-        // trip an exception beyond this, because the address would
-        // be incorrect.  After we know how many bytes we will directly
-        // transfer, we can do the full segment limit check ourselves
-        // without generating an exception.
-        read_virtual_checks(srcSegPtr, si, 1);
-        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + si;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
-        }
-        else {
-          paddrSrc = laddrSrc;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrSrc = A20ADDR(paddrSrc);
-
-        write_virtual_checks(dstSegPtr, di, 1);
-        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + di;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
-        }
-        else {
-          paddrDst = laddrDst;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrDst = A20ADDR(paddrDst);
-
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
-
-        if ( hostAddrSrc && hostAddrDst )
-        {
-          // See how many bytes can fit in the rest of this page.
-          if (BX_CPU_THIS_PTR get_DF ()) {
-            // Counting downward.
-            bytesFitSrc = 1 + (paddrSrc & 0xfff);
-            bytesFitDst = 1 + (paddrDst & 0xfff);
-            pointerDelta = (signed int) -1;
-          }
-          else {
-            // Counting upward.
-            bytesFitSrc = (0x1000 - (paddrSrc & 0xfff));
-            bytesFitDst = (0x1000 - (paddrDst & 0xfff));
-            pointerDelta =  (signed int) 1;
-          }
-          // Restrict count to the number that will fit in either
-          // source or dest pages.
-          if (byteCount > bytesFitSrc)
-            byteCount = bytesFitSrc;
-          if (byteCount > bytesFitDst)
-            byteCount = bytesFitDst;
-          if (byteCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
-            byteCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-          // If after all the restrictions, there is anything left to do...
-          if (byteCount) {
-            Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-            Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-            // For 16-bit addressing mode, clamp the segment limits to 16bits
-            // so we don't have to worry about computations using si/di
-            // rolling over 16-bit boundaries.
-            if (!i->as32L()) {
-              if (srcSegLimit > 0xffff)
-                srcSegLimit = 0xffff;
-              if (dstSegLimit > 0xffff)
-                dstSegLimit = 0xffff;
-            }
-
-            // Before we copy memory, we need to make sure that the segments
-            // allow the accesses up to the given source and dest offset.  If
-            // the cache.valid bits have SegAccessWOK and ROK, we know that
-            // the cache is valid for those operations, and that the segments
-            // are non expand-down (thus we can make a simple limit check).
-            if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-                 !(dstSegPtr->cache.valid & SegAccessWOK) )
-            {
-              goto noAcceleration16;
-            }
-
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // byteCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (byteCount-1);
-              if ( si < minOffset )
-                goto noAcceleration16;
-              if ( di < minOffset )
-                goto noAcceleration16;
-            }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - byteCount) + 1;
-              Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
-              if ( si > srcMaxOffset )
-                goto noAcceleration16;
-              if ( di > dstMaxOffset )
-                goto noAcceleration16;
-            }
-
-            // Transfer data directly using host addresses.
-            for (unsigned j=0; j<byteCount; j++) {
-              * (Bit8u *) hostAddrDst = * (Bit8u *) hostAddrSrc;
-              hostAddrDst += pointerDelta;
-              hostAddrSrc += pointerDelta;
-            }
-
-            // Decrement the ticks count by the number of iterations, minus
-            // one, since the main cpu loop will decrement one.  Also,
-            // the count is predecremented before examined, so defintely
-            // don't roll it under zero.
-            BX_TICKN(byteCount-1);
-
-            // Decrement eCX. Note, the main loop will decrement 1 also, so
-            // decrement by one less than expected, like the case above.
-#if BX_SUPPORT_X86_64
-            if (i->as64L())
-              RCX -= (byteCount-1);
-            else
-#endif
-            if (i->as32L())
-              ECX -= (byteCount-1);
-            else
-              CX  -= (byteCount-1);
-            incr = byteCount;
-            goto doIncr16;
-          }
-        }
+        incr = byteCount;
+        goto doIncr16;
       }
     }
-
-noAcceleration16:
-
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
     read_virtual_byte(seg, si, &temp8);
-
     write_virtual_byte(BX_SEG_REG_ES, di, &temp8);
-    incr = 1;
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -369,7 +924,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
   }
   else
   { /* 16bit address mode */
-    unsigned incr;
+    unsigned incr = 2;
 
     Bit16u si = SI;
     Bit16u di = DI;
@@ -382,155 +937,29 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
       Bit32u wordCount = CX;
+      BX_ASSERT(wordCount > 0);
+      wordCount = FastRepMOVSW(i, seg, si, BX_SEG_REG_ES, di, wordCount);
+      if (wordCount)
+      {
+        // Decrement the ticks count by the number of iterations, minus
+        // one, since the main cpu loop will decrement one.  Also,
+        // the count is predecremented before examined, so defintely
+        // don't roll it under zero.
+        BX_TICKN(wordCount-1);
 
-      if (wordCount) {
-        Bit32u wordsFitSrc, wordsFitDst;
-        Bit8u  *hostAddrSrc, *hostAddrDst;
-        signed int pointerDelta;
-        bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        bx_address laddrDst, laddrSrc;
-        Bit32u     paddrDst, paddrSrc;
+        // Decrement eCX. Note, the main loop will decrement 1 also, so
+        // decrement by one less than expected, like the case above.
+        CX -= (wordCount-1);
 
-        srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
-        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
-
-        // Do segment checks for the 1st word.  We do not want to
-        // trip an exception beyond this, because the address would
-        // be incorrect.  After we know how many bytes we will directly
-        // transfer, we can do the full segment limit check ourselves
-        // without generating an exception.
-        read_virtual_checks(srcSegPtr, si, 2);
-        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + si;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
-        }
-        else {
-          paddrSrc = laddrSrc;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrSrc = A20ADDR(paddrSrc);
-
-        write_virtual_checks(dstSegPtr, di, 2);
-        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + di;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
-        }
-        else {
-          paddrDst = laddrDst;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrDst = A20ADDR(paddrDst);
-
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
-
-        if ( hostAddrSrc && hostAddrDst ) {
-          // See how many words can fit in the rest of this page.
-          if (BX_CPU_THIS_PTR get_DF ()) {
-            // Counting downward.
-            // Note: 1st word must not cross page boundary.
-            if ( ((paddrSrc & 0xfff) > 0xffe) ||
-                 ((paddrDst & 0xfff) > 0xffe) )
-              goto noAcceleration16;
-            wordsFitSrc = (2 + (paddrSrc & 0xfff)) >> 1;
-            wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
-            pointerDelta = (signed int) -2;
-          }
-          else {
-            // Counting upward.
-            wordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 1;
-            wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
-            pointerDelta =  (signed int) 2;
-          }
-          // Restrict word count to the number that will fit in either
-          // source or dest pages.
-          if (wordCount > wordsFitSrc)
-            wordCount = wordsFitSrc;
-          if (wordCount > wordsFitDst)
-            wordCount = wordsFitDst;
-          if (wordCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
-            wordCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-          // If after all the restrictions, there is anything left to do...
-          if (wordCount) {
-            Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-            Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-            // For 16-bit addressing mode, clamp the segment limits to 16bits
-            // so we don't have to worry about computations using si/di
-            // rolling over 16-bit boundaries.
-            if (srcSegLimit > 0xffff)
-              srcSegLimit = 0xffff;
-            if (dstSegLimit > 0xffff)
-              dstSegLimit = 0xffff;
-
-            // Before we copy memory, we need to make sure that the segments
-            // allow the accesses up to the given source and dest offset.  If
-            // the cache.valid bits have SegAccessWOK and ROK, we know that
-            // the cache is valid for those operations, and that the segments
-            // are non expand-down (thus we can make a simple limit check).
-            if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-                 !(dstSegPtr->cache.valid & SegAccessWOK) )
-            {
-              goto noAcceleration16;
-            }
-
-            // Now make sure transfer will fit within the constraints of the
-            // segment boundaries, 0..limit for non expand-down.  We know
-            // wordCount >= 1 here.
-            if (BX_CPU_THIS_PTR get_DF ()) {
-              // Counting downward.
-              Bit32u minOffset = (wordCount-1) << 1;
-              if ( si < minOffset )
-                goto noAcceleration16;
-              if ( di < minOffset )
-                goto noAcceleration16;
-            }
-            else {
-              // Counting upward.
-              Bit32u srcMaxOffset = (srcSegLimit - (wordCount<<1)) + 1;
-              Bit32u dstMaxOffset = (dstSegLimit - (wordCount<<1)) + 1;
-              if ( si > srcMaxOffset )
-                goto noAcceleration16;
-              if ( di > dstMaxOffset )
-                goto noAcceleration16;
-            }
-
-            // Transfer data directly using host addresses.
-            for (unsigned j=0; j<wordCount; j++) {
-              * (Bit16u *) hostAddrDst = * (Bit16u *) hostAddrSrc;
-              hostAddrDst += pointerDelta;
-              hostAddrSrc += pointerDelta;
-            }
-
-            // Decrement the ticks count by the number of iterations, minus
-            // one, since the main cpu loop will decrement one.  Also,
-            // the count is predecremented before examined, so defintely
-            // don't roll it under zero.
-            BX_TICKN(wordCount-1);
-
-            // Decrement eCX.  Note, the main loop will decrement 1 also, so
-            // decrement by one less than expected, like the case above.
-            CX  -= (wordCount-1);
-            incr = wordCount << 1; // count * 2.
-            goto doIncr16;
-          }
-        }
+        incr = wordCount << 1; // count * 2
+        goto doIncr16;
       }
     }
-
-noAcceleration16:
-
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
     read_virtual_word(seg, si, &temp16);
     write_virtual_word(BX_SEG_REG_ES, di, &temp16);
-    incr = 2;
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -591,7 +1020,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L())
   {
-    unsigned incr;
+    unsigned incr = 4;
 
     Bit32u esi = ESI;
     Bit32u edi = EDI;
@@ -604,150 +1033,29 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
       Bit32u dwordCount = ECX;
-
+      BX_ASSERT(dwordCount > 0);
+      dwordCount = FastRepMOVSD(i, seg, esi, BX_SEG_REG_ES, edi, dwordCount);
       if (dwordCount)
       {
-        Bit32u dwordsFitSrc, dwordsFitDst;
-        Bit8u  *hostAddrSrc, *hostAddrDst;
-        signed int pointerDelta;
-        bx_segment_reg_t *srcSegPtr, *dstSegPtr;
-        bx_address laddrDst, laddrSrc;
-        Bit32u     paddrDst, paddrSrc;
+        // Decrement the ticks count by the number of iterations, minus
+        // one, since the main cpu loop will decrement one.  Also,
+        // the count is predecremented before examined, so defintely
+        // don't roll it under zero.
+        BX_TICKN(dwordCount-1);
 
-        srcSegPtr = &BX_CPU_THIS_PTR sregs[seg];
-        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
+        // Decrement eCX. Note, the main loop will decrement 1 also, so
+        // decrement by one less than expected, like the case above.
+        ECX -= (dwordCount-1);
 
-        // Do segment checks for the 1st word.  We do not want to
-        // trip an exception beyond this, because the address would
-        // be incorrect.  After we know how many bytes we will directly
-        // transfer, we can do the full segment limit check ourselves
-        // without generating an exception.
-        read_virtual_checks(srcSegPtr, esi, 4);
-        laddrSrc = BX_CPU_THIS_PTR get_segment_base(seg) + esi;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
-        }
-        else {
-          paddrSrc = laddrSrc;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrSrc = A20ADDR(paddrSrc);
-
-        write_virtual_checks(dstSegPtr, edi, 4);
-        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + edi;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
-        }
-        else {
-          paddrDst = laddrDst;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrDst = A20ADDR(paddrDst);
-
-        hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
-
-        if ( hostAddrSrc && hostAddrDst )
-        {
-          // See how many dwords can fit in the rest of this page.
-          if (BX_CPU_THIS_PTR get_DF ()) {
-            // Counting downward.
-            // Note: 1st dword must not cross page boundary.
-            if ( ((paddrSrc & 0xfff) > 0xffc) ||
-                 ((paddrDst & 0xfff) > 0xffc) )
-              goto noAcceleration32;
-            dwordsFitSrc = (4 + (paddrSrc & 0xfff)) >> 2;
-            dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
-            pointerDelta = (signed int) -4;
-          }
-          else {
-            // Counting upward.
-            dwordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 2;
-            dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
-            pointerDelta =  (signed int) 4;
-          }
-          // Restrict dword count to the number that will fit in either
-          // source or dest pages.
-          if (dwordCount > dwordsFitSrc)
-            dwordCount = dwordsFitSrc;
-          if (dwordCount > dwordsFitDst)
-            dwordCount = dwordsFitDst;
-          if (dwordCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
-            dwordCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-          // If after all the restrictions, there is anything left to do...
-          if (dwordCount) {
-            Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
-            Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-            // Before we copy memory, we need to make sure that the segments
-            // allow the accesses up to the given source and dest offset.  If
-            // the cache.valid bits have SegAccessWOK and ROK, we know that
-            // the cache is valid for those operations, and that the segments
-            // are non expand-down (thus we can make a simple limit check).
-            if ( !(srcSegPtr->cache.valid & SegAccessROK) ||
-                 !(dstSegPtr->cache.valid & SegAccessWOK) )
-            {
-              goto noAcceleration32;
-            }
-            if ( !IsLongMode() ) {
-              // Now make sure transfer will fit within the constraints of the
-              // segment boundaries, 0..limit for non expand-down.  We know
-              // dwordCount >= 1 here.
-              if (BX_CPU_THIS_PTR get_DF ()) {
-                // Counting downward.
-                Bit32u minOffset = (dwordCount-1) << 2;
-                if ( esi < minOffset )
-                  goto noAcceleration32;
-                if ( edi < minOffset )
-                  goto noAcceleration32;
-              }
-              else {
-                // Counting upward.
-                Bit32u srcMaxOffset = (srcSegLimit - (dwordCount<<2)) + 1;
-                Bit32u dstMaxOffset = (dstSegLimit - (dwordCount<<2)) + 1;
-                if ( esi > srcMaxOffset )
-                  goto noAcceleration32;
-                if ( edi > dstMaxOffset )
-                  goto noAcceleration32;
-              }
-            }
-
-            // Transfer data directly using host addresses.
-            for (unsigned j=0; j<dwordCount; j++) {
-              * (Bit32u *) hostAddrDst = * (Bit32u *) hostAddrSrc;
-              hostAddrDst += pointerDelta;
-              hostAddrSrc += pointerDelta;
-            }
-
-            // Decrement the ticks count by the number of iterations, minus
-            // one, since the main cpu loop will decrement one.  Also,
-            // the count is predecremented before examined, so defintely
-            // don't roll it under zero.
-            BX_TICKN(dwordCount-1);
-
-            // Decrement eCX.  Note, the main loop will decrement 1 also, so
-            // decrement by one less than expected, like the case above.
-            ECX -= (dwordCount-1);
-            incr = dwordCount << 2; // count * 4.
-            goto doIncr32;
-          }
-        }
+        incr = dwordCount << 2; // count * 4
+        goto doIncr32;
       }
     }
-
-noAcceleration32:
-
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
     read_virtual_dword(seg, esi, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
-    incr = 4;
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -1453,7 +1761,7 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
   else
 #endif  // #if BX_SUPPORT_X86_64
   {
-    unsigned incr;
+    unsigned incr = 1;
     Bit32u edi;
 
     if (i->as32L()) {
@@ -1473,140 +1781,36 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
     {
       Bit32u byteCount;
 
-#if BX_SUPPORT_X86_64
-      if (i->as64L())
-        byteCount = RCX; // Truncated to 32bits. (we're only doing 1 page)
-      else
-#endif
       if (i->as32L())
         byteCount = ECX;
       else
         byteCount = CX;
 
-      if (byteCount) {
-        Bit32u bytesFitDst;
-        Bit8u  *hostAddrDst;
-        signed int pointerDelta;
-        bx_segment_reg_t *dstSegPtr;
-        bx_address laddrDst;
-        Bit32u     paddrDst;
+      BX_ASSERT(byteCount);
+      byteCount = FastRepSTOSB(i, BX_SEG_REG_ES, edi, al, byteCount);
+      if (byteCount)
+      {
+        // Decrement the ticks count by the number of iterations, minus
+        // one, since the main cpu loop will decrement one.  Also,
+        // the count is predecremented before examined, so defintely
+        // don't roll it under zero.
+        BX_TICKN(byteCount-1);
 
-        dstSegPtr = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
+        // Decrement eCX.  Note, the main loop will decrement 1 also, so
+        // decrement by one less than expected, like the case above.
+        if (i->as32L())
+          ECX -= (byteCount-1);
+        else
+          CX  -= (byteCount-1);
 
-        // Do segment checks for the 1st word.  We do not want to
-        // trip an exception beyond this, because the address would
-        // be incorrect.  After we know how many bytes we will directly
-        // transfer, we can do the full segment limit check ourselves
-        // without generating an exception.
-        write_virtual_checks(dstSegPtr, edi, 1);
-        laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + edi;
-        if (BX_CPU_THIS_PTR cr0.pg) {
-          paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
-        }
-        else {
-          paddrDst = laddrDst;
-        }
-        // If we want to write directly into the physical memory array,
-        // we need the A20 address.
-        paddrDst = A20ADDR(paddrDst);
-
-        hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
-
-        if ( hostAddrDst )
-        {
-          // See how many bytes can fit in the rest of this page.
-          if (BX_CPU_THIS_PTR get_DF ()) {
-            // Counting downward.
-            bytesFitDst = 1 + (paddrDst & 0xfff);
-            pointerDelta = (signed int) -1;
-          }
-          else {
-            // Counting upward.
-            bytesFitDst = (0x1000 - (paddrDst & 0xfff));
-            pointerDelta =  (signed int) 1;
-          }
-          // Restrict count to the number that will fit in either
-          // source or dest pages.
-          if (byteCount > bytesFitDst)
-            byteCount = bytesFitDst;
-          if (byteCount > bx_pc_system.getNumCpuTicksLeftNextEvent())
-            byteCount = bx_pc_system.getNumCpuTicksLeftNextEvent();
-
-          // If after all the restrictions, there is anything left to do...
-          if (byteCount) {
-            Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
-
-            // For 16-bit addressing mode, clamp the segment limits to 16bits
-            // so we don't have to worry about computations using si/di
-            // rolling over 16-bit boundaries.
-            if (!i->as32L()) {
-              if (dstSegLimit > 0xffff)
-                dstSegLimit = 0xffff;
-              }
-
-            // Before we copy memory, we need to make sure that the segments
-            // allow the accesses up to the given source and dest offset.  If
-            // the cache.valid bits have SegAccessWOK and ROK, we know that
-            // the cache is valid for those operations, and that the segments
-            // are non expand-down (thus we can make a simple limit check).
-            if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
-              goto noAcceleration16;
-            }
-            if ( !IsLongMode() ) {
-              // Now make sure transfer will fit within the constraints of the
-              // segment boundaries, 0..limit for non expand-down.  We know
-              // byteCount >= 1 here.
-              if (BX_CPU_THIS_PTR get_DF ()) {
-                // Counting downward.
-                Bit32u minOffset = (byteCount-1);
-                if ( edi < minOffset )
-                  goto noAcceleration16;
-              }
-              else {
-                // Counting upward.
-                Bit32u dstMaxOffset = (dstSegLimit - byteCount) + 1;
-                if ( edi > dstMaxOffset )
-                  goto noAcceleration16;
-              }
-            }
-
-            // Transfer data directly using host addresses.
-            for (unsigned j=0; j<byteCount; j++) {
-              * (Bit8u *) hostAddrDst = al;
-              hostAddrDst += pointerDelta;
-            }
-            // Decrement the ticks count by the number of iterations, minus
-            // one, since the main cpu loop will decrement one.  Also,
-            // the count is predecremented before examined, so defintely
-            // don't roll it under zero.
-            BX_TICKN(byteCount-1);
-
-            // Decrement eCX.  Note, the main loop will decrement 1 also, so
-            // decrement by one less than expected, like the case above.
-#if BX_SUPPORT_X86_64
-            if (i->as64L())
-              RCX -= (byteCount-1);
-            else
-#endif
-            if (i->as32L())
-              ECX -= (byteCount-1);
-            else
-              CX  -= (byteCount-1);
-            incr = byteCount;
-            goto doIncr16;
-          }
-        }
+        incr = byteCount;
+        goto doIncr16;
       }
     }
-
-noAcceleration16:
-
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
     write_virtual_byte(BX_SEG_REG_ES, edi, &al);
-    incr = 1;
 
 #if BX_SupportRepeatSpeedups
 #if (BX_DEBUGGER == 0)
@@ -1625,7 +1829,7 @@ doIncr16:
       // zero extension of RDI
       RDI = edi;
     else
-      DI = edi;
+       DI = edi;
   }
 }
 

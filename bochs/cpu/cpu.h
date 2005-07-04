@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.222 2005-06-16 17:24:50 sshwarts Exp $
+// $Id: cpu.h,v 1.223 2005-07-04 17:44:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2658,6 +2658,22 @@ public: // for now...
   BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
+
+#if BX_SupportRepeatSpeedups
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+       unsigned dstSeg, bx_address dstOff, Bit32u count);
+  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+       unsigned dstSeg, bx_address dstOff, Bit32u count);
+  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+       unsigned dstSeg, bx_address dstOff, Bit32u count);
+
+  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+       Bit8u  val, Bit32u count);
+  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+       Bit16u val, Bit32u count);
+  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+       Bit32u val, Bit32u count);
 #endif
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
