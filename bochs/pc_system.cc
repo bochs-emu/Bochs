@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.42 2005-06-16 20:35:31 sshwarts Exp $
+// $Id: pc_system.cc,v 1.43 2005-07-04 18:02:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,10 +35,6 @@
 // #include <winsock2.h> // +++
 #include <winsock.h>
 #endif
-#endif
-
-#if BX_SHOW_IPS
-unsigned long ips_count=0;
 #endif
 
 #if defined(PROVIDE_M_IPS)

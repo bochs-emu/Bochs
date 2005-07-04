@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.289 2005-04-16 19:37:38 sshwarts Exp $
+// $Id: main.cc,v 1.290 2005-07-04 18:02:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1010,7 +1010,7 @@ int bx_atexit(void)
   return 0;
 }
 
-void bx_signal_handler( int signum)
+void bx_signal_handler(int signum)
 {
   // in a multithreaded environment, a signal such as SIGINT can be sent to all
   // threads.  This function is only intended to handle signals in the
@@ -1033,13 +1033,15 @@ void bx_signal_handler( int signum)
 #endif
 
 #if BX_SHOW_IPS
-  extern unsigned long ips_count;
+  static Bit64u ticks_count = 0;
 
   if (signum == SIGALRM)
   {
+    // amount of system ticks passed from last time the handler was called
+    Bit64u ips_count = bx_pc_system.time_ticks() - ticks_count;
     if (ips_count) {
-      BX_INFO(("ips = %lu", ips_count));
-      ips_count = 0;
+      BX_INFO(("ips = %lu", (unsigned long) ips_count));
+      ticks_count = bx_pc_system.time_ticks();
     }
 #ifndef __MINGW32__
     signal(SIGALRM, bx_signal_handler);
@@ -1057,5 +1059,6 @@ void bx_signal_handler( int signum)
     }
   }
 #endif
+
   BX_PANIC(("SIGNAL %u caught", signum));
 }
