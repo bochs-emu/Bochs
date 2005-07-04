@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.90 2005-06-26 10:54:48 vruppert Exp $
+// $Id: x.cc,v 1.91 2005-07-04 18:08:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1899,8 +1899,11 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
       switch(res)
       {
         case -1: /* select() error - should not happen */ 
-            perror("XPeekEventTimeout: select() failure"); 
-            return(False);
+          if (errno == EINTR) 
+             break; // caused e.g. by alarm(3)
+          perror("XPeekEventTimeout: select() failure"); 
+          return(False);
+
         case  0: /* timeout */
           return(False);
       }
@@ -1910,7 +1913,6 @@ Bool XPeekEventTimeout( Display *display, XEvent *event_return, struct timeval *
     return(True);
 }
 
-#if BX_USE_IDLE_HACK
 void bx_x_gui_c::sim_is_idle () {
   XEvent dummy;
   struct timeval   timeout;   
@@ -1918,7 +1920,6 @@ void bx_x_gui_c::sim_is_idle () {
   timeout.tv_usec = 1000; /* 1/1000 s */  
   XPeekEventTimeout(bx_x_display, &dummy, &timeout);
 }
-#endif
 #endif /* BX_USE_IDLE_HACK */  
 
 
