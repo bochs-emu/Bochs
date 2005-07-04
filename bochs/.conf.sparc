@@ -7,9 +7,9 @@
 # superSPARC w/ Solaris 2.x
 set echo
 CC="gcc"
-CXX="$CC"
-CFLAGS="-Wall -O2 -mv8 -msupersparc -mno-epilogue"
-#CFLAGS="-Wall -O2 -mv8 -msupersparc"
+CXX="g++"
+#CFLAGS="-Wall -O2 -mv8 -msupersparc -mno-epilogue"
+CFLAGS="-Wall -O2 -mv8 -msupersparc"
 #CFLAGS="-Wall -O2 -g"
 CXXFLAGS="$CFLAGS"
 
