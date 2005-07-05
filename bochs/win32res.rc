@@ -1,7 +1,11 @@
+#define ISOLATION_AWARE_ENABLED
 #include <windows.h>
 #include "gui\win32res.h"
 
 ICON_BOCHS ICON build\win32\nsis\bochs.ico
+
+// Manifest for WinXP & Win2003
+1 24 build\win32\bochs.manifest
 
 ASK_DLG DIALOG 30, 30, 200, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
