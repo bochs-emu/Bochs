@@ -16,23 +16,22 @@ PATCH 2:
 
 You also need to add file from patch.win32-new-files-vitaly-vorobyov.tgz
 
+The file bochs.manifest is now present in the source tree and the WinXP style
+works fine. We still have to check if we really need all of these icons.
+(Volker Ruppert, Jul 5th 2005)
+
 Patch was created with:
-  cvs diff -u
+  diff -u
 Apply patch to what version:
-  cvs checked out on 3 Aug 2003
+  cvs checked out on 5 Jul 2005
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-Index: win32res.rc
-===================================================================
-RCS file: /cvsroot/bochs/bochs/win32res.rc,v
-retrieving revision 1.4
-diff -u -r1.4 win32res.rc
---- win32res.rc	15 Jul 2003 21:02:05 -0000	1.4
-+++ win32res.rc	4 Aug 2003 14:58:47 -0000
-@@ -1,7 +1,13 @@
-+#define ISOLATION_AWARE_ENABLED
+diff -urN ../bochs/win32res.rc ./win32res.rc
+--- ../bochs/win32res.rc	2005-07-05 19:24:06.000000000 +0200
++++ ./win32res.rc	2005-07-05 21:03:03.861472256 +0200
+@@ -2,7 +2,9 @@
  #include <windows.h>
  #include "gui\win32res.h"
  
@@ -40,14 +39,6 @@ diff -u -r1.4 win32res.rc
 +ICON_BOCHS ICON build\win32\nsis\logo.ico
 +1 ICON build\win32\nsis\lgban.ico
 +2 ICON build\win32\nsis\bochs.ico
-+
-+// Manifest for WinXP & Win2003
-+1 24 "bochs.manifest"
  
- ASK_DLG DIALOG 30, 30, 200, 100
- STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-@@ -38,3 +44,4 @@
-     DEFPUSHBUTTON   "OK", IDOK, 40, 55, 50, 14
-     PUSHBUTTON      "Cancel", IDCANCEL, 100, 55, 50, 14
- END
-+
+ // Manifest for WinXP & Win2003
+ 1 24 build\win32\bochs.manifest
