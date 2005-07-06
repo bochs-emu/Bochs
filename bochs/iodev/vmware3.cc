@@ -319,7 +319,7 @@ off_t vmware3_image_t::perform_seek()
 		return INVALID_OFFSET;
 	}
 
-    unsigned relative_offset = (requested_offset - current->min_offset);
+    unsigned relative_offset = (unsigned)(requested_offset - current->min_offset);
     unsigned i = relative_offset >> FL_SHIFT;
     unsigned j = (relative_offset & ~FL_MASK) / tlb_size;
 
@@ -354,7 +354,7 @@ ssize_t vmware3_image_t::read(void * buf, size_t count)
             BX_DEBUG(("vmware3 COW read failed on %d bytes", count));
             return -1;
         }
-        unsigned bytes_remaining = tlb_size - offset;
+        unsigned bytes_remaining = (unsigned)(tlb_size - offset);
         unsigned amount = (bytes_remaining > count) ? count : bytes_remaining;
         memcpy(buf, current->tlb + offset, amount);
         requested_offset += amount;
@@ -374,7 +374,7 @@ bool vmware3_image_t::sync()
 	if(current->synced)
 		return true;
 
-    unsigned relative_offset = (current->offset - current->min_offset);
+    unsigned relative_offset = (unsigned)(current->offset - current->min_offset);
     unsigned i = relative_offset >> FL_SHIFT;
     unsigned j = (relative_offset & ~FL_MASK) / tlb_size;
     
@@ -447,7 +447,7 @@ ssize_t vmware3_image_t::write(const void * buf, size_t count)
         off_t offset = perform_seek();
         if(offset == INVALID_OFFSET)
             return -1;
-        unsigned bytes_remaining = tlb_size - offset;
+        unsigned bytes_remaining = (unsigned)(tlb_size - offset);
         unsigned amount = 0;
 		current->synced = false;
         if(bytes_remaining > count)
