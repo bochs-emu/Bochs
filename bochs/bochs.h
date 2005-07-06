@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.154 2005-03-16 16:36:31 vruppert Exp $
+// $Id: bochs.h,v 1.154.2.1 2005-07-06 20:01:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -387,10 +387,6 @@ BOCHSAPI extern logfunc_t *genlog;
 #ifndef UNUSED
 #  define UNUSED(x) ((void)x)
 #endif
-
-#define uint8   Bit8u
-#define uint16  Bit16u
-#define uint32  Bit32u
 
 #if BX_SUPPORT_X86_64
 #define FMT_ADDRX FMT_LL "x"
