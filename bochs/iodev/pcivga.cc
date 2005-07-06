@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.6 2004-08-06 15:49:55 vruppert Exp $
+// $Id: pcivga.cc,v 1.6.4.1 2005-07-06 20:54:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -74,13 +74,15 @@ bx_pcivga_c::init(void)
   // called once when bochs initializes
 
   Bit8u devfunc = 0x00;
+  unsigned i;
+
   DEV_register_pci_handlers(this,
                             pci_read_handler,
                             pci_write_handler,
                             &devfunc, BX_PLUGIN_PCIVGA,
                             "Experimental PCI VGA");
 
-  for (unsigned i=0; i<256; i++) {
+  for (i=0; i<256; i++) {
     BX_PCIVGA_THIS s.pci_conf[i] = 0x0;
   }
 
@@ -98,7 +100,7 @@ bx_pcivga_c::init(void)
     { 0x0b, 0x03 },                 // class_base display
     { 0x0e, 0x00 }                  // header_type_generic
   };
-  for (unsigned i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
+  for (i = 0; i < sizeof(init_vals) / sizeof(*init_vals); ++i) {
     BX_PCIVGA_THIS s.pci_conf[init_vals[i].addr] = init_vals[i].val;
   }
 }
