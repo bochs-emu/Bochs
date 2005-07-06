@@ -208,10 +208,11 @@
 #define BX_HAVE_TIMELOCAL 0
 #define BX_HAVE_GMTIME 0
 #define BX_HAVE_MKTIME 0
+#define BX_HAVE_NET_IF_H 0
 
 // This turns on Roland Mainz's idle hack.  Presently it is specific to the X11
-// gui. If people try to enable it elsewhere, give a compile error after the
-// gui definition so that they don't waste their time trying.
+// and term gui. If people try to enable it elsewhere, give a compile error
+// after the gui definition so that they don't waste their time trying.
 #define BX_USE_IDLE_HACK 0
 
 // Minimum Emulated IPS.
@@ -407,7 +408,7 @@
 #  if BX_PLUGINS && defined(BX_PLUGGABLE)
 //   #warning I will import DLL symbols from Bochs main program.
 #    define BOCHSAPI __declspec(dllimport) 
-#  else
+#  elif BX_PLUGINS
 //   #warning I will export DLL symbols.
 #    define BOCHSAPI __declspec(dllexport) 
 #  endif
@@ -426,14 +427,24 @@
 #define BOCHSAPI_CYGONLY /*empty*/
 #endif
 
+#if defined(_MSC_VER)
+// Make BOCHSAPI_MSVCONLY exactly the same as BOCHSAPI.  This symbol
+// will be used for any cases where VC++ requires a special tag
+// but Cygwin does not.
+#define BOCHSAPI_MSVCONLY BOCHSAPI
+#else
+// define the symbol to be empty
+#define BOCHSAPI_MSVCONLY /*empty*/
+#endif
+
 #define BX_DEFAULT_CONFIG_INTERFACE "defined_by_configure"
 #define BX_DEFAULT_DISPLAY_LIBRARY "defined_by_configure"
 
 // Roland Mainz's idle hack is presently specific to X11. If people try to
 // enable it elsewhere, give a compile error so that they don't waste their
 // time trying.
-#if (BX_USE_IDLE_HACK && !BX_WITH_X11)
-#  error IDLE_HACK will only work with the X11 gui. Correct configure args and retry.
+#if (BX_USE_IDLE_HACK && !BX_WITH_X11 && !BX_WITH_TERM)
+#  error IDLE_HACK will only work with the X11 or term gui. Correct configure args and retry.
 #endif
 
 #define WORDS_BIGENDIAN 0
