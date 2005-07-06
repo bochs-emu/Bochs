@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.32 2005-04-29 21:28:41 sshwarts Exp $
+// $Id: pc_system.h,v 1.32.2.1 2005-07-06 20:20:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -26,14 +26,8 @@
 
 
 
-
 #define BX_MAX_TIMERS 64
 #define BX_NULL_TIMER_HANDLE 10000
-
-
-#if BX_SHOW_IPS
-extern unsigned long ips_count;
-#endif
 
 
 typedef void (*bx_timer_handler_t)(void *);
@@ -110,17 +104,11 @@ public:
     return triggeredTimer;
   }
   static BX_CPP_INLINE void tick1(void) {
-#if BX_SHOW_IPS
-    ips_count++;
-#endif
     if (--bx_pc_system.currCountdown == 0) {
       bx_pc_system.countdownEvent();
     }
   }
   static BX_CPP_INLINE void tickn(Bit64u n) {
-#if BX_SHOW_IPS
-    ips_count += n;
-#endif
     while (n >= Bit64u(bx_pc_system.currCountdown)) {
       n -= Bit64u(bx_pc_system.currCountdown);
       bx_pc_system.currCountdown = 0;
