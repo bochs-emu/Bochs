@@ -2,9 +2,6 @@
 
 set echo
 
-#export CC=cl
-#export CXX=cl
-
 ./configure --target=pentium-windows \
             --enable-cdrom \
             --enable-sb16 \
@@ -16,7 +13,8 @@ set echo
             --enable-pci \
             --enable-clgd54xx \
             --disable-readline \
-            --without-x
+            --without-x \
+            --enable-cpp
 
 unset echo
 
