@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.19 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: slowdown_timer.cc,v 1.19.4.1 2005-07-06 20:51:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ bx_slowdown_timer_c::handle_timer() {
 #endif
   } else {
     bx_pc_system.deactivate_timer(s.timer_handle);
-    bx_pc_system.activate_timer(s.timer_handle,s.Q,0);
+    bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
     printf("running at NORMAL speed\n");
 #endif
@@ -146,7 +146,7 @@ bx_slowdown_timer_c::handle_timer() {
 #if BX_HAVE_USLEEP
     usleep(s.Q);
 #elif BX_HAVE_MSLEEP
-    msleep(usectomsec(s.Q));
+    msleep(usectomsec((Bit32u)s.Q));
 #elif BX_HAVE_SLEEP
     sleep(usectosec(s.Q));
 #else
