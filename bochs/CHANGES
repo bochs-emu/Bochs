@@ -1,8 +1,8 @@
-Changes in 2.2.1:
+Changes in 2.2.1 (not yet released):
 
 - Fixed several compilation warnings and errors for different platforms (Volker)
 - Fixed FPU tag word restore in FXRSTOR instruction (Stanislav)
-- Added missing scancodes for F11 and F12 to translation table (Volker)
+- Added missing scancodes for F11 and F12 to BIOS translation table (Volker)
 - Bochs disassembler bugfixes (h.johansson)
 - About 5% emulation speed improvement (h.johansson)
 - Handle writing of zero to APIC timer initial count register (Stanislav)
@@ -10,6 +10,9 @@ Changes in 2.2.1:
 - Reduced overhead of BX_SHOW_IPS option to minimum. Now every simulation 
   could run with --enable-show-ips without significant performance 
   penalty. (Stanislav)
+- Fixed pcipnic register access (Volker)
+- Limited write support for TFTP server in 'vnet' networking module added (Volker)
+- WinXP/2003 style common controls now supported (Vitaly Vorobyov)
 
 -------------------------------------------------------------------------
 Changes in 2.2 (May 28, 2005):
