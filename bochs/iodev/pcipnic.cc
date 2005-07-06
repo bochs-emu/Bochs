@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.12 2004-10-07 17:38:03 vruppert Exp $
+// $Id: pcipnic.cc,v 1.12.4.1 2005-07-06 19:37:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -33,7 +33,7 @@
 
 bx_pcipnic_c* thePNICDevice = NULL;
 
-const Bit8u pnic_iomask[16] = {2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const Bit8u pnic_iomask[16] = {2, 0, 2, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -204,23 +204,14 @@ bx_pcipnic_c::read(Bit32u address, unsigned io_len)
 
   switch (offset) {
   case PNIC_REG_STAT :
-    if (io_len != 2)
-      BX_PANIC(("PNIC read from status register, bad i/o length %u",
-		(unsigned) io_len ));
     val = BX_PNIC_THIS s.rStatus;
     break;
     
   case PNIC_REG_LEN :
-    if (io_len != 2)
-      BX_PANIC(("PNIC read from length register, bad i/o length %u",
-		(unsigned) io_len ));
     val = BX_PNIC_THIS s.rLength;
     break;
     
   case PNIC_REG_DATA :
-    if (io_len != 1)
-      BX_PANIC(("PNIC read from data register, bad i/o length %u",
-		(unsigned) io_len ));
     if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
       BX_PANIC(("PNIC read at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
@@ -265,17 +256,11 @@ bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (offset) {
   case PNIC_REG_CMD :
-    if (io_len != 2)
-      BX_PANIC(("PNIC write to command register, bad i/o length %u",
-		(unsigned) io_len ));
     BX_PNIC_THIS s.rCmd = value;
     BX_PNIC_THIS exec_command();
     break;
     
   case PNIC_REG_LEN :
-    if (io_len != 2)
-      BX_PANIC(("PNIC write to length register, bad i/o length %u",
-		(unsigned) io_len ));
     if ( value > PNIC_DATA_SIZE )
       BX_PANIC(("PNIC bad length %u written to length register, max is %u",
 		value, PNIC_DATA_SIZE));
@@ -284,9 +269,6 @@ bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     break;
     
   case PNIC_REG_DATA :
-    if (io_len != 1)
-      BX_PANIC(("PNIC write to data register, bad i/o length %u",
-		(unsigned) io_len ));
     if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
       BX_PANIC(("PNIC write at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
