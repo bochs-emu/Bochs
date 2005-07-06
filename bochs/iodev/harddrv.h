@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.29 2005-05-04 18:19:49 vruppert Exp $
+// $Id: harddrv.h,v 1.29.2.1 2005-07-06 21:02:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,12 +32,12 @@
 
  typedef struct
  {
-   uint32  magic;
-   uint32  version;
-   uint32  pagesize;
-   uint32  numpages;
+   Bit32u  magic;
+   Bit32u  version;
+   Bit32u  pagesize;
+   Bit32u  numpages;
 
-   uint32  padding[60];
+   Bit32u  padding[60];
  } sparse_header_t;
 
 #define STANDARD_HEADER_MAGIC     "Bochs Virtual HD Image"
@@ -257,7 +257,7 @@ class sparse_image_t : public device_image_t
  size_t  mmap_length;
  size_t  system_pagesize_mask;
 #endif
- uint32 *  pagetable;
+ Bit32u *  pagetable;
 
  // Header is written to disk in little-endian (x86) format
  // Thus needs to be converted on big-endian systems before read
@@ -265,9 +265,9 @@ class sparse_image_t : public device_image_t
 
  sparse_header_t header;
 
- uint32  pagesize;
+ Bit32u  pagesize;
  int     pagesize_shift;
- uint32  pagesize_mask;
+ Bit32u  pagesize_mask;
 
  off_t   data_start;
  off_t   underlying_filesize;
@@ -276,9 +276,9 @@ class sparse_image_t : public device_image_t
 
  off_t position;
 
- uint32 position_virtual_page;
- uint32 position_physical_page;
- uint32 position_page_offset;
+ Bit32u position_virtual_page;
+ Bit32u position_physical_page;
+ Bit32u position_page_offset;
 
  off_t underlying_current_filepos;
 
@@ -294,9 +294,9 @@ class sparse_image_t : public device_image_t
 #ifndef PARANOID
        sparse_image_t::
 #endif
-                       set_virtual_page(uint32 new_virtual_page);
+                       set_virtual_page(Bit32u new_virtual_page);
  void read_header();
- ssize_t read_page_fragment(uint32 read_virtual_page, uint32 read_page_offset, size_t read_size, void * buf);
+ ssize_t read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf);
 
  sparse_image_t *  parent_image;
 };
@@ -635,8 +635,8 @@ struct error_recovery_t {
   error_recovery_t ();
 };
 
-uint16 read_16bit(const uint8* buf) BX_CPP_AttrRegparmN(1);
-uint32 read_32bit(const uint8* buf) BX_CPP_AttrRegparmN(1);
+Bit16u read_16bit(const Bit8u* buf) BX_CPP_AttrRegparmN(1);
+Bit32u read_32bit(const Bit8u* buf) BX_CPP_AttrRegparmN(1);
 
 
 struct cdrom_t
@@ -646,7 +646,7 @@ struct cdrom_t
 #ifdef LOWLEVEL_CDROM
   LOWLEVEL_CDROM* cd;
 #endif
-  uint32 capacity;
+  Bit32u capacity;
   int next_lba;
   int remaining_blocks;
   struct currentStruct {
@@ -656,7 +656,7 @@ struct cdrom_t
 
 struct atapi_t
 {
-  uint8 command;
+  Bit8u command;
   int drq_bytes;
   int total_bytes_remaining;
 };
