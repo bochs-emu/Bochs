@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.119 2005-04-30 21:22:26 vruppert Exp $
+// $Id: vga.cc,v 1.119.2.1 2005-07-06 20:48:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1460,12 +1460,12 @@ bx_vga_c::update(void)
                       }
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
@@ -1502,12 +1502,12 @@ bx_vga_c::update(void)
                         BX_VGA_THIS s.pel.data[colour].blue, dac_size, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
@@ -1538,12 +1538,12 @@ bx_vga_c::update(void)
                         colour & 0x7c00, 15, info.red_shift, info.red_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
@@ -1574,12 +1574,12 @@ bx_vga_c::update(void)
                         colour & 0xf800, 16, info.red_shift, info.red_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
@@ -1611,12 +1611,12 @@ bx_vga_c::update(void)
                         blue, 8, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
@@ -1649,12 +1649,12 @@ bx_vga_c::update(void)
                         blue, 8, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                       else {
                         for (i=info.bpp-8; i>-8; i-=8) {
-                          *(tile_ptr2++) = colour >> i;
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
                         }
                       }
                     }
