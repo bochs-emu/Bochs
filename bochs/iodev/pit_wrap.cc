@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.58 2004-12-13 19:10:38 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.58.2.1 2005-07-06 20:53:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -313,7 +313,7 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
     case 0x61:
       BX_PIT_THIS s.speaker_data_on = (value >> 1) & 0x01;
       if ( BX_PIT_THIS s.speaker_data_on ) {
-	  DEV_speaker_beep_on(1193180.0 / this->get_timer(2));
+	  DEV_speaker_beep_on((float)(1193180.0 / this->get_timer(2)));
       } else {
 	  DEV_speaker_beep_off();
       }
