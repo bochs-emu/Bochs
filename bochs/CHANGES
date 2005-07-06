@@ -1,3 +1,17 @@
+Changes in 2.2.1:
+
+- Fixed several compilation warnings and errors for different platforms (Volker)
+- Fixed FPU tag word restore in FXRSTOR instruction (Stanislav)
+- Added missing scancodes for F11 and F12 to translation table (Volker)
+- Bochs disassembler bugfixes (h.johansson)
+- About 5% emulation speed improvement (h.johansson)
+- Handle writing of zero to APIC timer initial count register (Stanislav)
+- Enable Idle-Hack for 'TERM' GUI (h.johansson)
+- Reduced overhead of BX_SHOW_IPS option to minimum. Now every simulation 
+  could run with --enable-show-ips without significant performance 
+  penalty. (Stanislav)
+
+-------------------------------------------------------------------------
 Changes in 2.2 (May 28, 2005):
 
 Brief summary :
