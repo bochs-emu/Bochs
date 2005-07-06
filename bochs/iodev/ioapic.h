@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.8 2005-03-17 20:50:57 sshwarts Exp $
+// $Id: ioapic.h,v 1.8.2.1 2005-07-06 20:58:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 extern class bx_ioapic_c bx_ioapic;
@@ -10,8 +10,8 @@ extern class bx_ioapic_c bx_ioapic;
 class bx_io_redirect_entry_t {
   Bit64u value;
 public:
-  Bit32u get_even_word () { return value & 0xffffffff; }
-  Bit32u get_odd_word () { return (value>>32) & 0xffffffff; }
+  Bit32u get_even_word () { return (Bit32u)(value & 0xffffffff); }
+  Bit32u get_odd_word () { return (Bit32u)((value>>32) & 0xffffffff); }
   void set_even_word (Bit32u even) {
     // keep high 32 bits of value, replace low 32
     value = ((value >> 32) << 32) | (even & 0xffffffff);
