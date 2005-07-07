@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.26 2004-12-24 22:44:13 sshwarts Exp $
+// $Id: shift32.cc,v 1.26.2.1 2005-07-07 07:50:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -399,7 +399,7 @@ void BX_CPU_C::SAR_Ed(bxInstruction_c *i)
 
   if (!count) return;
 
-    /* count < 32, since only lower 5 bits used */
+  /* count < 32, since only lower 5 bits used */
   if (op1_32 & 0x80000000) {
     result_32 = (op1_32 >> count) | (0xffffffff << (32 - count));
   }
