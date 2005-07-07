@@ -90,6 +90,12 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.5c : Jul 07 2005
+  - Volker
+    . BIOS configuration word usually reports initial mode 80x25 color text
+    . vgabios function 0x0e (write teletype): linefeed (0x0a) only increments the
+      cursor row value
+
 vgabios-0.5b : May 24 2005
   - Volker
     . fixed return value for the default case in the VBE section (non-debug mode)
