@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.13 2005-05-12 18:07:45 sshwarts Exp $
+// $Id: fpu.cc,v 1.13.2.1 2005-07-07 07:23:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -491,11 +491,11 @@ void BX_CPU_C::print_state_FPU()
   static double scale_factor = pow(2.0, -63.0);
 
   Bit32u reg;
-  reg = BX_CPU_THIS_PTR the_i387.cwd;
+  reg = BX_CPU_THIS_PTR the_i387.get_control_word();
   fprintf(stderr, "control word: 0x%04x\n", reg);
-  reg = BX_CPU_THIS_PTR the_i387.swd;
+  reg = BX_CPU_THIS_PTR the_i387.get_status_word();
   fprintf(stderr, "status word:  0x%04x\n", reg);
-  reg = BX_CPU_THIS_PTR the_i387.twd;
+  reg = BX_CPU_THIS_PTR the_i387.get_tag_word();
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
   fprintf(stderr, "operand:      0x%04x\n", reg);
