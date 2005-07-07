@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.20 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.20.2.1 2005-07-07 08:11:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,28 +64,12 @@ void BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
 {
-  bx_address addr = i->Id();
-
-  /* read from memory address and write to register */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), addr, &AL);
-  }
-  else {
-    read_virtual_byte(BX_SEG_REG_DS, addr, &AL);
-  }
+  read_virtual_byte(i->seg(), i->Id(), &AL);
 }
 
 void BX_CPU_C::MOV_ObAL(bxInstruction_c *i)
 {
-  bx_address addr = i->Id();
-
-  /* write to memory address and write to register */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_byte(i->seg(), addr, &AL);
-  }
-  else {
-    write_virtual_byte(BX_SEG_REG_DS, addr, &AL);
-  }
+  write_virtual_byte(i->seg(), i->Id(), &AL);
 }
 
 void BX_CPU_C::MOV_EbIb(bxInstruction_c *i)
@@ -126,11 +110,11 @@ void BX_CPU_C::XCHG_EbGb(bxInstruction_c *i)
 {
   Bit8u op2, op1;
 
-  op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
+  op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
   }
   else {
