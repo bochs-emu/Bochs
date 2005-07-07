@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.60 2005-06-07 19:26:21 vruppert Exp $
+// $Id: misc_mem.cc,v 1.61 2005-07-07 16:57:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.60 2005-06-07 19:26:21 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.61 2005-07-07 16:57:53 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -242,8 +242,8 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     checksum += BX_MEM_THIS rom[romaddress - 0xc0000 + i];
   }
   if (checksum != 0) {
-    if (type < 2) {
-      BX_PANIC(( "ROM: checksum error in BIOS image: '%s'",path));
+    if (type == 1) {
+      BX_PANIC(( "ROM: checksum error in VGABIOS image: '%s'",path));
     } else {
       BX_ERROR(( "ROM: checksum error in BIOS image: '%s'",path));
     }
