@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.21 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.21.2.1 2005-07-07 08:13:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,13 +87,7 @@ void BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
   Bit8u temp_8;
   bx_address addr = i->Iq();
 
-  /* read from memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), addr, &temp_8);
-  }
-  else {
-    read_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
-  }
+  read_virtual_byte(i->seg(), addr, &temp_8);
 
   /* write to register */
   RAX = temp_8;
@@ -101,18 +95,7 @@ void BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 {
-  bx_address addr = i->Iq();
-
-  /* read from register */
-  Bit8u temp_8 = AL;
-
-  /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_byte(i->seg(), addr, &temp_8);
-  }
-  else {
-    write_virtual_byte(BX_SEG_REG_DS, addr, &temp_8);
-  }
+  write_virtual_byte(i->seg(), i->Iq(), &AL);
 }
 
 void BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
@@ -120,13 +103,7 @@ void BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
   Bit16u temp_16;
   bx_address addr = i->Iq();
 
-  /* read from memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_word(i->seg(), addr, &temp_16);
-  }
-  else {
-    read_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
-  }
+  read_virtual_word(i->seg(), addr, &temp_16);
 
   /* write to register */
   AX = temp_16;
@@ -134,18 +111,7 @@ void BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 {
-  bx_address addr = i->Iq();
-
-  /* read from register */
-  Bit16u temp_16 = AX;
-
-  /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_word(i->seg(), addr, &temp_16);
-  }
-  else {
-    write_virtual_word(BX_SEG_REG_DS, addr, &temp_16);
-  }
+  write_virtual_word(i->seg(), i->Iq(), &AX);
 }
 
 void BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
@@ -153,13 +119,7 @@ void BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
   Bit32u temp_32;
   bx_address addr = i->Iq();
 
-  /* read from memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_dword(i->seg(), addr, &temp_32);
-  }
-  else {
-    read_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
-  }
+  read_virtual_dword(i->seg(), addr, &temp_32);
 
   /* write to register */
   RAX = temp_32;
@@ -167,51 +127,17 @@ void BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OqEAX(bxInstruction_c *i)
 {
-  bx_address addr = i->Iq();
-
-  /* read from register */
-  Bit32u temp_32 = EAX;
-
-  /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_dword(i->seg(), addr, &temp_32);
-  }
-  else {
-    write_virtual_dword(BX_SEG_REG_DS, addr, &temp_32);
-  }
+  write_virtual_dword(i->seg(), i->Iq(), &EAX);
 }
 
 void BX_CPU_C::MOV_RAXOq(bxInstruction_c *i)
 {
-  Bit64u temp_64;
-  bx_address addr = i->Iq();
-
-  /* read from memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_qword(i->seg(), addr, &temp_64);
-  }
-  else {
-    read_virtual_qword(BX_SEG_REG_DS, addr, &temp_64);
-  }
-
-  /* write to register */
-  RAX = temp_64;
+  read_virtual_qword(i->seg(), i->Iq(), &RAX);
 }
 
 void BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
 {
-  bx_address addr = i->Iq();
-
-  /* read from register */
-  Bit64u temp_64 = RAX;
-
-  /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_qword(i->seg(), addr, &temp_64);
-  }
-  else {
-    write_virtual_qword(BX_SEG_REG_DS, addr, &temp_64);
-  }
+  write_virtual_qword(i->seg(), i->Iq(), &RAX);
 }
 
 void BX_CPU_C::MOV_EqId(bxInstruction_c *i)
