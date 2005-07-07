@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.29 2004-11-22 13:14:54 akrisak Exp $
+// $Id: textconfig.cc,v 1.29.2.1 2005-07-07 07:20:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -468,12 +468,12 @@ int bx_config_interface (int menu)
      }
      break;
    case BX_CI_RUNTIME:
-     char prompt[1024];
      bx_floppy_options floppyop;
      bx_atadevice_options cdromop;
 #ifdef WIN32
      choice = RuntimeOptionsDialog();
 #else
+     char prompt[1024];
      build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
      if (ask_uint (prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
 #endif
@@ -844,7 +844,7 @@ bx_param_num_c::text_ask (FILE *fpin, FILE *fpout)
       prompt = "Enter new value in hex: [%x] ";
   }
   Bit32u n = get ();
-  status = ask_uint (prompt, min, max, n, &n, base);
+  status = ask_uint (prompt, (Bit32u)min, (Bit32u)max, n, &n, base);
   if (status < 0) return status;
   set (n);
   return 0;
@@ -882,7 +882,7 @@ bx_param_enum_c::text_ask (FILE *fpin, FILE *fpout)
     prompt = "Enter new value: [%s] ";
   }
   Bit32s n = (Bit32s)(get () - min);
-  int status = ask_menu (prompt, (max-min+1), choices, n, &n);
+  int status = ask_menu (prompt, (Bit32u)(max-min+1), choices, n, &n);
   if (status < 0) return status;
   n += (Bit32s)min;
   set (n);
