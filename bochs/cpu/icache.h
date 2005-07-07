@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.6 2005-04-10 19:42:47 sshwarts Exp $
+// $Id: icache.h,v 1.6.2.1 2005-07-07 08:01:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,8 +28,6 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
-#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
-
 // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
 // bit30: 1=Long Mode, 0=not Long Mode.
 // bit29: 1=iCache page, 0=Data.
@@ -38,6 +36,69 @@
 #define ICacheWriteStampMask      0x1fffffff
 #define ICacheFetchModeMask       (~ICacheWriteStampMask)
 #define iCachePageDataMask        0x20000000
+
+class bxPageWriteStampTable
+{
+  // A table (dynamically allocated) to store write-stamp generation IDs.  
+  // Each time a write occurs to a physical page, a generation ID is 
+  // decremented. Only iCache entries which have write stamps matching 
+  // the physical page write stamp are valid.
+
+  Bit32u *pageWriteStampTable;
+  Bit32u  memSizeInBytes;
+
+public:
+  bxPageWriteStampTable(): pageWriteStampTable(NULL), memSizeInBytes(0) {}
+  bxPageWriteStampTable(Bit32u memSize) { alloc(memSize); }
+ ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
+
+  BX_CPP_INLINE void alloc(Bit32u memSize)
+  {
+    memSizeInBytes = memSize;
+    pageWriteStampTable = new Bit32u [memSizeInBytes>>12];
+    resetWriteStamps();
+  }
+
+  BX_CPP_INLINE Bit32u getPageWriteStamp(Bit32u pAddr) const
+  {
+    if (pAddr < memSizeInBytes) 
+       return pageWriteStampTable[pAddr>>12];
+    else 
+       return ICacheWriteStampInvalid;
+  }
+
+  BX_CPP_INLINE void setPageWriteStamp(Bit32u pAddr, Bit32u pageWriteStamp)
+  {
+    if (pAddr < memSizeInBytes) 
+       pageWriteStampTable[pAddr>>12] = pageWriteStamp;
+  }
+
+  BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr)
+  {
+    // Increment page write stamp, so iCache entries with older stamps
+    // are effectively invalidated.
+    Bit32u pageIndex = a20Addr >> 12;
+    Bit32u writeStamp = pageWriteStampTable[pageIndex];
+
+    if (writeStamp & iCachePageDataMask)
+    {
+      pageWriteStampTable[pageIndex]--;
+    }
+  }
+
+  BX_CPP_INLINE void resetWriteStamps(void);
+};
+
+BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
+{
+  for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
+    pageWriteStampTable[i] = ICacheWriteStampInvalid;
+  }
+}
+
+extern bxPageWriteStampTable pageWriteStampTable;
+
+#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
 
 class bxICacheEntry_c {
   public:
@@ -69,90 +130,25 @@ public:
     return pAddr & (BxICacheEntries-1);
   }
 
-  BX_CPP_INLINE void invalidatePage(Bit32u a20Addr);
+  BX_CPP_INLINE void purgeICacheEntries(void);
 };
 
-BX_CPP_INLINE void bxICache_c::invalidatePage(Bit32u a20Addr)
+BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
 {
-  // Take the hash of the 0th page offset.
-  unsigned iCacheHash = hash(a20Addr & 0xfffff000);
-  for (unsigned o=0; o<4096; o++) {
-    entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
-    iCacheHash = (iCacheHash + 1) % BxICacheEntries;
+  // Since the write stamps may overflow if we always simply decrese them,
+  // this function has to be called often enough that we can reset them
+  // (without invalidating the cache).
+  for (unsigned i=0;i<BxICacheEntries;i++)
+  {
+    bxICacheEntry_c *e = &entry[i];
+    Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(e->pAddr);
+    if (e->writeStamp != pageWriteStamp)
+      e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
+    else
+      e->writeStamp |= 0x1fffffff;
   }
 }
 
-extern void invalidateIcacheEntries(Bit32u a20AddrPage);
-
-class bxPageWriteStampTable {
-
-  // A table (dynamically allocated) to store write-stamp generation IDs.  
-  // Each time a write occurs to a physical page, a generation ID is 
-  // decremented. Only iCache entries which have write stamps matching 
-  // the physical page write stamp are valid.
-
-  Bit32u *pageWriteStampTable;
-  Bit32u  memSizeInBytes;
-
-public:
-  bxPageWriteStampTable(): pageWriteStampTable(NULL), memSizeInBytes(0) {}
-  bxPageWriteStampTable(Bit32u memSize) { alloc(memSize); }
- ~bxPageWriteStampTable() { delete [] pageWriteStampTable; }
-
-  BX_CPP_INLINE void alloc(Bit32u memSize)
-  {
-    memSizeInBytes = memSize;
-    pageWriteStampTable = new Bit32u [memSizeInBytes>>12];
-
-    for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
-      pageWriteStampTable[i] = ICacheWriteStampInvalid;
-    }
-  }
-
-  BX_CPP_INLINE Bit32u getPageWriteStamp(Bit32u pAddr) const
-  {
-    if (pAddr < memSizeInBytes) 
-       return pageWriteStampTable[pAddr>>12];
-    else 
-       return ICacheWriteStampInvalid;
-  }
-
-  BX_CPP_INLINE void setPageWriteStamp(Bit32u pAddr, Bit32u pageWriteStamp)
-  {
-    if (pAddr < memSizeInBytes) 
-       pageWriteStampTable[pAddr>>12] = pageWriteStamp;
-  }
-
-  BX_CPP_INLINE void decWriteStamp(Bit32u a20Addr);
-};
-
-BX_CPP_INLINE void bxPageWriteStampTable::decWriteStamp(Bit32u a20Addr)
-{
-  // Increment page write stamp, so iCache entries with older stamps
-  // are effectively invalidated.
-  Bit32u pageIndex = a20Addr >> 12;
-  Bit32u writeStamp = pageWriteStampTable[pageIndex];
-
-  if (writeStamp & iCachePageDataMask)
-  {
-    // Page possibly contains iCache code.
-    if (writeStamp & ICacheWriteStampMask) {
-      // Short case: there is room to decrement the generation counter.
-      pageWriteStampTable[pageIndex]--;
-    }
-    else {
-      // Long case: there is no more room to decrement. We have to dump
-      // all iCache entries which can possibly hash to this page since
-      // we don't keep track of individual entries.
-      invalidateIcacheEntries(a20Addr);
-
-      // Reset write stamp to highest value to begin the decrementing
-      // process again.
-      pageWriteStampTable[pageIndex] = ICacheWriteStampInvalid;
-    }
-  }
-}
-
-extern bxPageWriteStampTable pageWriteStampTable;
+extern void purgeICache(void);
 
 #endif
