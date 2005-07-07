@@ -1,6 +1,29 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.54 2005-04-29 21:28:42 sshwarts Exp $
+// $Id: apic.cc,v 1.54.2.1 2005-07-07 08:21:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2001  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -65,7 +88,7 @@ char *bx_generic_apic_c::get_name ()
 bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
 {
   if ((addr & ~0xfff) == get_base ()) {
-    if ((addr & 0xf != 0) || (len != 4))
+    if (((addr & 0xf) != 0) || (len != 4))
       BX_INFO(("warning: misaligned or wrong-size APIC access. addr=" FMT_ADDRX " len=%d", addr, len));
     return 1;
   }
@@ -544,22 +567,26 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       break;
     case 0x380: // initial count for timer
       {
-      // If active before, deactive the current timer before changing it.
-      if (timer_active)
-        bx_pc_system.deactivate_timer(timer_handle);
-      timer_initial = value;
-      if (timer_initial == 0)
-        BX_PANIC(("APIC: W(init timer count): count=0"));
-      // This should trigger the counter to start.  If already started,
-      // restart from the new start value.
-      // fprintf(stderr, "APIC: W(Initial Count Register) = %u\n", value);
-      timer_current = timer_initial;
-      timer_active = 1;
-      Bit32u timervec = lvt[APIC_LVT_TIMER];
-      bx_bool continuous = (timervec & 0x20000) > 0;
-      ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
-      bx_pc_system.activate_timer_ticks(timer_handle,
-          Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+        // If active before, deactive the current timer before changing it.
+        if (timer_active) {
+          bx_pc_system.deactivate_timer(timer_handle);
+          timer_active = 0;
+        }
+        timer_initial = value;
+        timer_current = 0;
+        if (timer_initial != 0)  // terminate the counting if timer_initial = 0
+        {
+          // This should trigger the counter to start.  If already started,
+          // restart from the new start value.
+          BX_DEBUG(("APIC: Initial Timer Count Register = %u\n", value));
+          timer_current = timer_initial;
+          timer_active = 1;
+          Bit32u timervec = lvt[APIC_LVT_TIMER];
+          bx_bool continuous = (timervec & 0x20000) > 0;
+          ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
+          bx_pc_system.activate_timer_ticks(timer_handle,
+            Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
+        }
       }
       break;
     case 0x3e0: // timer divide configuration
@@ -869,10 +896,13 @@ Bit8u bx_local_apic_c::get_apr_lowpri()
   Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;
   Bit32u irrv = (highest_priority_int(irr) >> 4) & 0xf;
 
-  if ((tpr >= irrv) && (tpr > isrv))
+  if ((tpr >= irrv) && (tpr > isrv)) {
     arb_id = task_priority & 0xff;
-  else
-    arb_id = ((tpr && isrv) > irrv) ? (tpr && isrv) : irrv;
+  }
+  else {
+    arb_id = ((tpr & isrv) > irrv) ? (tpr & isrv) : irrv;
+    arb_id <<= 4;
+  }
 
   BX_INFO(("apr = %d\n", arb_id));
   return (Bit8u)arb_id;
