@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.15 2005-05-21 19:33:25 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.15.2.1 2005-07-07 07:06:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
 //
-// An implementation of ARP, ping(ICMP-echo), DHCP and read-only TFTP.
+// An implementation of ARP, ping(ICMP-echo), DHCP and read/write TFTP.
 // Virtual host acts as a DHCP server for guest.
 // There are no connections between the virtual host and real ethernets.
 //
@@ -13,7 +13,7 @@
 // Guest IP: 192.168.10.2
 // Guest netmask: 255.255.255.0
 // Guest broadcast: 192.168.10.255
-// TFTP server uses ethdev value for the root directory
+// TFTP server uses ethdev value for the root directory and doesn't overwrite files
 
 #define BX_PLUGGABLE
 
@@ -69,8 +69,6 @@ typedef void (*layer4_handler_t)(
 
 // TFTP server support by EaseWay <easeway@123.com>
 
-#include <string>
-
 #define INET_PORT_TFTP_SERVER 69
 
 #define TFTP_RRQ    1
@@ -83,6 +81,7 @@ typedef void (*layer4_handler_t)(
 
 #define BOOTREQUEST 1
 #define BOOTREPLY 2
+
 #define BOOTPOPT_PADDING 0
 #define BOOTPOPT_END 255
 #define BOOTPOPT_SUBNETMASK 1
@@ -112,12 +111,13 @@ typedef void (*layer4_handler_t)(
 #define BOOTPOPT_CLIENT_IDENTIFIER 61
 
 #define DHCPDISCOVER 1
-#define DHCPOFFER 2
-#define DHCPREQUEST 3
-#define DHCPDECLINE 4
-#define DHCPACK 5
-#define DHCPNAK 6
-#define DHCPRELEASE 7
+#define DHCPOFFER    2
+#define DHCPREQUEST  3
+#define DHCPDECLINE  4
+#define DHCPACK      5
+#define DHCPNAK      6
+#define DHCPRELEASE  7
+#define DHCPINFORM   8
 
 class bx_vnet_pktmover_c : public eth_pktmover_c {
 public:
@@ -177,16 +177,21 @@ private:
     unsigned sourceport, unsigned targetport,
     const Bit8u *data, unsigned data_len);
   void tftp_send_error(
-	Bit8u *buffer,
+    Bit8u *buffer,
     unsigned sourceport, unsigned targetport,
     unsigned code, const char *msg);
   void tftp_send_data(
-	Bit8u *buffer,
-	unsigned sourceport, unsigned targetport,
+    Bit8u *buffer,
+    unsigned sourceport, unsigned targetport,
     unsigned block_nr);  
+  void tftp_send_ack(
+    Bit8u *buffer,
+    unsigned sourceport, unsigned targetport,
+    unsigned block_nr);
     
-  std::string tftp_filename;
-  std::string tftp_rootdir;
+  char tftp_filename[BX_PATHNAME_LEN];
+  char tftp_rootdir[BX_PATHNAME_LEN];
+  bx_bool tftp_write;
   Bit16u tftp_tid;
 
   Bit8u host_macaddr[6];
@@ -286,9 +291,9 @@ bx_vnet_pktmover_c::pktmover_init(
   BX_INFO(("ne2k vnet driver"));
   this->rxh   = rxh;
   this->rxarg = rxarg;
-  this->tftp_rootdir = netif;
-  this->tftp_rootdir += "/";
+  strcpy(this->tftp_rootdir, netif);
   this->tftp_tid = 0;
+  this->tftp_write = 0;
 
   memcpy(&host_macaddr[0], macaddr, 6);
   memcpy(&guest_macaddr[0], macaddr, 6);
@@ -1115,6 +1120,11 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   const Bit8u *data, unsigned data_len)
 {
   Bit8u buffer[TFTP_BUFFER_SIZE + 4];
+  char path[BX_PATHNAME_LEN];
+  FILE *fp;
+  unsigned block_nr;
+  unsigned tftp_len;
+
   switch (get_net2(data)) {
     case TFTP_RRQ:
       if (tftp_tid == 0) {
@@ -1130,18 +1140,82 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
           }
         }
 
-        tftp_filename = (char*)buffer;
+        strcpy(tftp_filename, (char*)buffer);
         tftp_tid = sourceport;
+        tftp_write = 0;
         tftp_send_data(buffer, sourceport, targetport, 1);
+      } else {
+        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
+      }
+      break;
+    case TFTP_WRQ:
+      if (tftp_tid == 0) {
+        strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
+        buffer[data_len - 4] = 0;
+
+        // transfer mode
+        if (strlen((char*)buffer) < data_len - 2) {
+          const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
+          if (memcmp(mode, "octet\0", 6) != 0) {
+            tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
+            return;
+          }
+        }
+
+        strcpy(tftp_filename, (char*)buffer);
+        sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
+        fp = fopen(path, "rb");
+        if (fp) {
+          tftp_send_error(buffer, sourceport, targetport, 6, "File exists");
+          fclose(fp);
+          return;  	
+        }
+        fp = fopen(path, "wb");
+        if (!fp) {
+          tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
+          return;  	
+        }
+        fclose(fp);
+        tftp_tid = sourceport;
+        tftp_write = 1;
+
+        tftp_send_ack(buffer, sourceport, targetport, 0);
+      } else {
+        tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
+      }
+      break;
+    case TFTP_DATA:
+      if ((tftp_tid == sourceport) && (tftp_write == 1)) {
+        block_nr = get_net2(data + 2);
+        strncpy((char*)buffer, (const char*)data + 4, data_len - 4);
+        tftp_len = data_len - 4;
+        buffer[tftp_len] = 0;
+        if (tftp_len <= 512) {
+          sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
+          fp = fopen(path, "ab");
+          if (!fp) {
+            tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
+            return;  	
+          }
+          if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
+            tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
+            return;  	
+          }
+          fwrite(buffer, 1, tftp_len, fp);
+          fclose(fp);
+          tftp_send_ack(buffer, sourceport, targetport, block_nr);
+          if (tftp_len < 512) {
+            tftp_tid = 0;
+          }
+        } else {
+          tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
+        }
       } else {
         tftp_send_error(buffer, sourceport, targetport, 4, "Illegal request");
       }
       break;
     case TFTP_ACK:
       tftp_send_data(buffer, sourceport, targetport, get_net2(data + 2) + 1);
-      break;
-    case TFTP_WRQ:
-      tftp_send_error(buffer, sourceport, targetport, 4, "TFTP WRQ not supported yet");
       break;
     case TFTP_ERROR:
       // silently ignore error packets
@@ -1170,19 +1244,25 @@ bx_vnet_pktmover_c::tftp_send_data(
   unsigned sourceport, unsigned targetport,
   unsigned block_nr)
 {
+  char path[BX_PATHNAME_LEN];
+  char msg[BX_PATHNAME_LEN];
   int rd;
 
-  if (tftp_filename.empty()) {
+  if (strlen(tftp_filename) == 0) {
     tftp_send_error(buffer, sourceport, targetport, 1, "File not found");
     return;
   }
-  
-  std::string path = tftp_rootdir + tftp_filename;
-  FILE *fp = fopen(path.c_str(), "rb");
+
+  if ((strlen(tftp_rootdir) + strlen(tftp_filename)) > BX_PATHNAME_LEN) {
+    tftp_send_error(buffer, sourceport, targetport, 1, "Path name too long");
+    return;
+  }
+
+  sprintf(path, "%s/%s", tftp_rootdir, tftp_filename);
+  FILE *fp = fopen(path, "rb");
   if (!fp) {
-    std::string msg("File not found: ");
-    msg += tftp_filename;
-    tftp_send_error(buffer, sourceport, targetport, 1, msg.c_str());
+    sprintf(msg, "File not found: %s", tftp_filename);
+    tftp_send_error(buffer, sourceport, targetport, 1, msg);
     return;  	
   }
   
@@ -1205,6 +1285,17 @@ bx_vnet_pktmover_c::tftp_send_data(
   if (rd < TFTP_BUFFER_SIZE) {
     tftp_tid = 0;
   }
+}
+
+void 
+bx_vnet_pktmover_c::tftp_send_ack(
+  Bit8u *buffer,
+  unsigned sourceport, unsigned targetport,
+  unsigned block_nr)
+{
+  put_net2(buffer, TFTP_ACK);
+  put_net2(buffer + 2, block_nr);
+  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, 4);
 }
 
 
