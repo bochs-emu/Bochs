@@ -12,7 +12,9 @@ Changes in 2.2.1 (not yet released):
   penalty. (Stanislav)
 - Fixed pcipnic register access (Volker)
 - Limited write support for TFTP server in 'vnet' networking module added (Volker)
+- Changed some timing defaults changed to more useful values (Volker)
 - WinXP/2003 style common controls now supported (Vitaly Vorobyov)
+- Updated LGPL'd VGABIOS to version 0.5c (Volker)
 
 -------------------------------------------------------------------------
 Changes in 2.2 (May 28, 2005):
