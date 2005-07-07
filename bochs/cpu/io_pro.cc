@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.16 2005-03-09 22:01:13 sshwarts Exp $
+// $Id: io_pro.cc,v 1.16.2.1 2005-07-07 07:58:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,30 +131,27 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
   BX_OUTP(addr, value, 1);
 }
 
-
-  bx_bool
-BX_CPU_C::allow_io(Bit16u addr, unsigned len)
+bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
 {
   Bit16u io_base, permission16;
   unsigned bit_index, i;
 
-  if (BX_CPU_THIS_PTR tr.cache.valid==0 || BX_CPU_THIS_PTR tr.cache.type!=9) {
-    BX_INFO(("allow_io(): TR doesn't point to a valid 32bit TSS"));
+  if (BX_CPU_THIS_PTR tr.cache.valid==0 || 
+      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS)
+  {
+    BX_ERROR(("allow_io(): TR doesn't point to a valid 32bit TSS"));
     return(0);
   }
 
   if (BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled < 103) {
-    BX_PANIC(("allow_io(): TR.limit < 103"));
+    BX_ERROR(("allow_io(): TR.limit < 103"));
+    return(0);
   }
 
   access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + 102, 
                    2, 0, BX_READ, &io_base);
 
   if (io_base <= 103) {
-     BX_INFO(("PE is %u", BX_CPU_THIS_PTR cr0.pe));
-     BX_INFO(("VM is %u", BX_CPU_THIS_PTR getB_VM ()));
-     BX_INFO(("CPL is %u, IOPL is %u", CPL, BX_CPU_THIS_PTR get_IOPL ()));
-     BX_INFO(("addr is %u, len = %u", addr, len));
      BX_PANIC(("allow_io(): TR:io_base (%u) <= 103",io_base));
      return(0);
   }
