@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.36 2005-05-12 18:07:44 sshwarts Exp $
+// $Id: sse_move.cc,v 1.36.2.1 2005-07-07 07:49:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -86,7 +86,6 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
-  Bit16u twd = BX_CPU_THIS_PTR the_i387.get_tag_word(), tag_byte = 0;
   unsigned index;
   BxPackedXmmRegister xmm;
 
@@ -103,14 +102,16 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   xmm.xmm16u(0) = BX_CPU_THIS_PTR the_i387.get_control_word();
   xmm.xmm16u(1) = BX_CPU_THIS_PTR the_i387.get_status_word ();
 
-  if(twd & 0x0003 != 0x0003) tag_byte |= 0x0100;
-  if(twd & 0x000c != 0x000c) tag_byte |= 0x0200;
-  if(twd & 0x0030 != 0x0030) tag_byte |= 0x0400;
-  if(twd & 0x00c0 != 0x00c0) tag_byte |= 0x0800;
-  if(twd & 0x0300 != 0x0300) tag_byte |= 0x1000;
-  if(twd & 0x0c00 != 0x0c00) tag_byte |= 0x2000;
-  if(twd & 0x3000 != 0x3000) tag_byte |= 0x4000;
-  if(twd & 0xc000 != 0xc000) tag_byte |= 0x8000;
+  Bit16u twd = BX_CPU_THIS_PTR the_i387.get_tag_word(), tag_byte = 0;
+
+  if((twd & 0x0003) != 0x0003) tag_byte |= 0x01;
+  if((twd & 0x000c) != 0x000c) tag_byte |= 0x02;
+  if((twd & 0x0030) != 0x0030) tag_byte |= 0x04;
+  if((twd & 0x00c0) != 0x00c0) tag_byte |= 0x08;
+  if((twd & 0x0300) != 0x0300) tag_byte |= 0x10;
+  if((twd & 0x0c00) != 0x0c00) tag_byte |= 0x20;
+  if((twd & 0x3000) != 0x3000) tag_byte |= 0x40;
+  if((twd & 0xc000) != 0xc000) tag_byte |= 0x80;
 
   xmm.xmm16u(2) = tag_byte;
 
@@ -185,8 +186,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BxPackedXmmRegister xmm;
-  Bit32u tag_byte, tag_byte_mask, twd = 0;
-  unsigned index;
+  int index;
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
@@ -206,7 +206,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /* FOO/FPU IP restore still not implemented */
 
-  tag_byte = xmm.xmm16u(2);
+  Bit32u twd = 0, tag_byte = xmm.xmm16u(2);
 
   /* FPU DP restore still not implemented */
 
@@ -273,13 +273,11 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
    * is all 0's.  
    */
 
-  tag_byte_mask = 0x0100;
-
-  for(index = 0;index < 8; index++, twd <<= 2, tag_byte_mask <<= 1)
+  for(index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
   {
-      if(tag_byte & tag_byte_mask) {
+      if(tag_byte & 0x80) {
          const floatx80 &fpu_reg = BX_FPU_REG(index);
-         twd = FPU_tagof(fpu_reg);
+         twd |= FPU_tagof(fpu_reg);
       }
       else {
          twd |= FPU_Tag_Empty;
