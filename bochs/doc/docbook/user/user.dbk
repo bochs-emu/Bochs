@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.175 2005-05-25 18:24:47 vruppert Exp $
+$Id: user.dbk,v 1.175.2.1 2005-07-07 07:25:32 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1152,6 +1152,10 @@ The tag tells which release you want, and it can be one of the following:
     </thead>
     <tbody>
       <row>
+        <entry>2.2</entry>
+        <entry>REL_2_2_FINAL</entry>
+      </row>
+      <row>
         <entry>2.1.1 (bugfix1)</entry>
         <entry>REL_2_1_1_FINAL</entry>
       </row>
@@ -1321,10 +1325,12 @@ DLX Linux screenshot.
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
 <row><entry>VGABIOS-elpin-* </entry> <entry> VGA BIOS image for Bochs </entry> </row>
-<row><entry>VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
+<row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-README.txt </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>uninstall.exe </entry> <entry> uninstall program for Bochs (created by the installation wizard) </entry> </row>
 <row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>dlxlinux\readme.txt </entry> <entry> description of DLX linux</entry> </row>
@@ -1504,6 +1510,8 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/bin/bochs-dlx </entry> <entry> run this script to try out DLX Linux inside Bochs!</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
@@ -4043,9 +4051,9 @@ version where this module was added.
   </row>
   <row>
     <entry>vnet</entry>
-    <entry>ARP, ping (ICMP-echo), DHCP and read-only TFTP simulation. The virtual
+    <entry>ARP, ping (ICMP-echo), DHCP and read/write TFTP simulation. The virtual
     host uses 192.168.10.1. DHCP assigns 192.168.10.2 to the guest. The TFTP server
-    uses the ethdev value for the root directory.
+    uses the ethdev value for the root directory and doesn't overwrite files.
     </entry>
     <entry>Yes, for TFTP</entry>
     <entry>No</entry>
@@ -4280,8 +4288,9 @@ in that file (see <link linkend="sb16line">sb16 option</link>).
 The source for the SB16CTRL program that is used to modify
 the runtime behaviour of the SB16 emulation is included in
 <filename class="directory">misc/sb16/</filename>. It is a C
-program that can be run from inside the emulation. You can compile it or download the
-<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>.
+program that can be run from inside the emulation.
+<!-- You can compile it or download the
+<ulink url="http://publish.uwo.ca/~jdrexler/bochs/">executable</ulink>. -->
 </para>
 
 <para>
@@ -7789,6 +7798,32 @@ The flat disk images must be created with the bximage utility
 </section>
 
 <section id="using-bximage"><title>Using the bximage tool</title>
+<para>
+Bximage is an easy to use console based tool for creating disk images,
+particularly for use with Bochs. It is completely  interactive if no command
+line arguments are used. It can be switched to a non-interactive mode if all
+required parameters are given in the command line.
+</para>
+<para>
+When you run bximage without one of the following options,
+it will  appear  in  interactive  mode and  ask   for  all
+required parameters to create an image.
+<screen>
+-fd        Create a floppy image.
+-hd        Create a hard disk image.
+-mode=...  Image mode (for hard disks only - see the bochsrc sample for
+           supported options).
+-size=...  Image size in megabytes (e.g. 1.44 for floppy image, 10 for hard
+           disk image).
+-q         Quiet  mode (don't prompt for user input). Without this option bximage
+           uses the command line parameters as defaults for the interactive mode.
+           If this option is given and one of the required parameters is missing,
+           bximage will fall back to interactive mode.
+--help     Print  a  summary  of  the command line options for bximage and exit.
+
+The filename parameter specifies the name of the image to be created.
+</screen>
+</para>
 <para>
 For an example of the usage, refer to <xref linkend="diskimagehowto">.
 </para>
