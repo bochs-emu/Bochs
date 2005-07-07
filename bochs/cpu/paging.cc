@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.59 2005-04-14 16:44:40 sshwarts Exp $
+// $Id: paging.cc,v 1.59.2.1 2005-07-07 07:55:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -319,7 +319,10 @@
 //                  to the host space could not be generated, likely because
 //                  that page of memory is not standard memory (it might
 //                  be memory mapped IO, ROM, etc).
-//     bits 10..4:  (currently unused)
+//     bits  9..10: (currently unused)
+//
+//     bit   8:     Page is a global page.
+//
 //
 //       The following 4 bits are used for a very efficient permissions
 //       check.  The goal is to be able, using only the current privilege
@@ -335,19 +338,39 @@
 //       The test is:
 //         OK = 1 << ( (W<<1) | U )   [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
 //       
-//       Thus for reads, it's simply:
-//         OK = 1 << (          U )
+//       Thus for reads, it is:
+//         OK = 0x10 << (          U )
+//       And for writes:
+//         OK = 0x40 << (          U )
 //
-//     bit 8:       Page is a global page.
-//     bit 3:       a Write from User   privilege is OK
-//     bit 2:       a Write from System privilege is OK
-//     bit 1:       a Read  from User   privilege is OK
-//     bit 0:       a Read  from System privilege is OK
+//     bit 7:       a Write from User   privilege is OK
+//     bit 6:       a Write from System privilege is OK
+//     bit 5:       a Read  from User   privilege is OK
+//     bit 4:       a Read  from System privilege is OK
+//
+//       And the lowest 4 bits are as above, except that they also indicate
+//       that hostPageAddr is valid, so we do not separately need to test 
+//       that pointer against NULL.  These have smaller constants for us
+//       to be able to use smaller encodings in the trace generators.  Note
+//       that whenever bit n (n=0,1,2,3) is set, then also n+4 is set.
+//       (The opposite is of course not true)
+//
+//     bit 3:       a Write from User   privilege is OK, hostPageAddr is valid
+//     bit 2:       a Write from System privilege is OK, hostPageAddr is valid
+//     bit 1:       a Read  from User   privilege is OK, hostPageAddr is valid
+//     bit 0:       a Read  from System privilege is OK, hostPageAddr is valid
+//
 
-#define WriteUserOK       0x08
-#define WriteSysOK        0x04
-#define ReadUserOK        0x02
-#define ReadSysOK         0x01
+#define TLB_GlobalPage       0x100
+
+#define TLB_WriteUserOK       0x80
+#define TLB_WriteSysOK        0x40
+#define TLB_ReadUserOK        0x20
+#define TLB_ReadSysOK         0x10
+#define TLB_WriteUserPtrOK    0x08
+#define TLB_WriteSysPtrOK     0x04
+#define TLB_ReadUserPtrOK     0x02
+#define TLB_ReadSysPtrOK      0x01
 
 
 
@@ -524,13 +547,13 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
   for (unsigned i=0; i<BX_TLB_SIZE; i++) {
     // To be conscious of the native cache line usage, only
     // write to (invalidate) entries which need it.
-    if (BX_CPU_THIS_PTR TLB.entry[i].lpf != BX_INVALID_TLB_ENTRY) {
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[i];
+    if (tlbEntry->lpf != BX_INVALID_TLB_ENTRY) {
 #if BX_SupportGlobalPages
-      if ( invalidateGlobal ||
-           !(BX_CPU_THIS_PTR TLB.entry[i].accessBits & 0x100) )
+      if ( invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage) )
 #endif
       {
-        BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+        tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
         InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
       }
     }
@@ -635,13 +658,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_USE_TLB
     TLB_index = BX_TLB_INDEX_OF(lpf);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-    if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) 
+    if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) 
     {
-      paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
-      accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+      paddress   = tlbEntry->ppf | poffset;
+      accessBits = tlbEntry->accessBits;
 
-      if (accessBits & (1 << ((isWrite<<1) | pl)))
+      if (accessBits & (0x10 << ((isWrite<<1) | pl)))
         return(paddress);
 
       // The current access does not have permission according to the info
@@ -740,7 +764,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_SupportGlobalPages
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
-        combined_access |= (pde & 0x100);  // G
+        combined_access |= (pde & TLB_GlobalPage);  // G
       }
 #endif
 
@@ -791,7 +815,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_SupportGlobalPages
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
-        combined_access |= (pte & 0x100);  // G
+        combined_access |= (pte & TLB_GlobalPage);  // G
       }
 #endif
 
@@ -829,13 +853,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_USE_TLB
     TLB_index = BX_TLB_INDEX_OF(lpf);
+    bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-    if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf))
+    if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf))
     {
-      paddress   = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
-      accessBits = BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits;
+      paddress   = tlbEntry->ppf | poffset;
+      accessBits = tlbEntry->accessBits;
 
-      if (accessBits & (1 << ((isWrite<<1) | pl)))
+      if (accessBits & (0x10 << ((isWrite<<1) | pl)))
         return(paddress);
 
       // The current access does not have permission according to the info
@@ -874,7 +899,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_SupportGlobalPages
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
-        combined_access |= pde & 0x100;    // {G}
+        combined_access |= pde & TLB_GlobalPage;    // {G}
       }
 #endif
 
@@ -926,7 +951,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       combined_access  = (pde & pte) & 0x06; // U/S and R/W
 #if BX_SupportGlobalPages
       if (BX_CPU_THIS_PTR cr4.get_PGE()) {
-        combined_access |= (pte & 0x100); // G
+        combined_access |= (pte & TLB_GlobalPage); // G
       }
 #endif
 #endif
@@ -973,35 +998,42 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 // b1: Read  User  OK
 // b0: Read  Sys   OK
   if ( combined_access & 4 ) { // User
-    accessBits = 0x3;    // User priv; read from {user,sys} OK.
-    if ( isWrite )       // Current operation is a write (Dirty bit updated)
+    // User priv; read from {user,sys} OK.
+    accessBits = (TLB_ReadUserOK | TLB_ReadSysOK);
+    if ( isWrite )  // Current operation is a write (Dirty bit updated)
     {
       if (combined_access & 2) {
-        accessBits |= 0x8; // R/W access from {user,sys} OK.
+         // R/W access from {user,sys} OK.
+        accessBits |= (TLB_WriteUserOK | TLB_WriteSysOK);
       }
       else {
-        accessBits |= 0x4; // read only page, only {sys} write allowed
+        accessBits |= TLB_WriteSysOK; // read only page, only {sys} write allowed
       }
     }
   }
   else { // System
-    accessBits = 0x1;    // System priv; read from {sys} OK.
+    accessBits = TLB_ReadSysOK;     // System priv; read from {sys} OK.
     if ( isWrite ) {     // Current operation is a write (Dirty bit updated)
-      accessBits |= 0x4; // write from {sys} OK.
+      accessBits |= TLB_WriteSysOK; // write from {sys} OK.
     }
   }
 #if BX_SupportGlobalPages
-  accessBits |= combined_access & 0x100; // Global bit
+  accessBits |= combined_access & TLB_GlobalPage; // Global bit
 #endif
 #if BX_USE_TLB
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 #if BX_SupportGuest2HostTLB
   // Attempt to get a host pointer to this physical page. Put that
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
     (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(ppf), rw);
+
+  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr) {
+    // All access allowed also via direct pointer
+    accessBits |= (accessBits & 0xf0) >> 4; 
+  }
 #endif
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
 #endif
 
   return(paddress);
@@ -1062,7 +1094,6 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *valid)
 {
   bx_address lpf, poffset, paddress;
-  Bit32u TLB_index;
 
   if (BX_CPU_THIS_PTR cr0.pg == 0) {
     *phy = laddr;
@@ -1072,12 +1103,14 @@ void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *vali
 
   lpf       = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
   poffset   = laddr & 0x00000fff; // physical offset
-  TLB_index = BX_TLB_INDEX_OF(lpf);
 
   // see if page is in the TLB first
 #if BX_USE_TLB
-  if (BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf == BX_TLB_LPF_VALUE(lpf)) {
-    paddress = BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf | poffset;
+  Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
+  bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
+
+  if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
+    paddress = tlbEntry->ppf | poffset;
     *phy = paddress;
     *valid = 1;
     return;
@@ -1265,34 +1298,37 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, laddr, length);
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         Bit32u lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
+
+        if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, length, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = BX_TLB_LPF_VALUE(lpf);
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
+        tlbEntry->lpf = BX_TLB_LPF_VALUE(lpf);
+        tlbEntry->ppf = lpf;
         // Request a direct write pointer so we can do either R or W.
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (bx_hostpageaddr_t)
+        tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
             BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE);
-        if (!BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
+
+        if (! tlbEntry->hostPageAddr) {
           // Direct write vetoed.  Try requesting only direct reads.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (bx_hostpageaddr_t)
+          tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
               BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ);
-          if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
+          if (tlbEntry->hostPageAddr) {
             // Got direct read pointer OK.
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
-                (ReadSysOK | ReadUserOK);
+            tlbEntry->accessBits =
+              (TLB_ReadSysOK | TLB_ReadUserOK | TLB_ReadSysPtrOK | TLB_ReadUserPtrOK);
           }
           else
-            BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = 0;
+            tlbEntry->accessBits = 0;
         }
         else {
           // Got direct write pointer OK.  Mark for any operation to succeed.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
-              (ReadSysOK | ReadUserOK | WriteSysOK | WriteUserOK);
+          tlbEntry->accessBits =(TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
+            TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
         }
 #endif  // BX_SupportGuest2HostTLB
 
@@ -1303,26 +1339,29 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, laddr, length);
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         Bit32u lpf = laddr & 0xfffff000;
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf == BX_TLB_LPF_VALUE(lpf)) {
+
+        if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, length, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].lpf = BX_TLB_LPF_VALUE(lpf);
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].ppf = lpf;
+        tlbEntry->lpf = BX_TLB_LPF_VALUE(lpf);
+        tlbEntry->ppf = lpf;
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
-        BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr = (bx_hostpageaddr_t)
+        tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
             BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE);
-        if (BX_CPU_THIS_PTR TLB.entry[tlbIndex].hostPageAddr) {
+
+        if (tlbEntry->hostPageAddr) {
           // Got direct write pointer OK.  Mark for any operation to succeed.
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits =
-              (ReadSysOK | ReadUserOK | WriteSysOK | WriteUserOK);
+          tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
+            TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
         }
         else
-          BX_CPU_THIS_PTR TLB.entry[tlbIndex].accessBits = 0;
+          tlbEntry->accessBits = 0;
 #endif  // BX_SupportGuest2HostTLB
 
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, length, data);
