@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.33 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.33.2.1 2005-07-07 08:15:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,24 +144,12 @@ void BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
 {
-  /* read from memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_word(i->seg(), i->Id(), &AX);
-  }
-  else {
-    read_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
-  }
+  read_virtual_word(i->seg(), i->Id(), &AX);
 }
 
 void BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
 {
-  /* write to memory address */
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    write_virtual_word(i->seg(), i->Id(), &AX);
-  }
-  else {
-    write_virtual_word(BX_SEG_REG_DS, i->Id(), &AX);
-  }
+  write_virtual_word(i->seg(), i->Id(), &AX);
 }
 
 void BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
