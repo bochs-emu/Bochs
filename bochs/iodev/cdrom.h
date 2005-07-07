@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.15 2004-08-23 09:39:45 vruppert Exp $
+// $Id: cdrom.h,v 1.15.4.1 2005-07-07 07:12:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,13 +41,13 @@ public:
   void eject_cdrom();
 
   // Read CD TOC. Returns false if start track is out of bounds.
-  bx_bool read_toc(uint8* buf, int* length, bx_bool msf, int start_track, int format);
+  bx_bool read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format);
 
   // Return CD-ROM capacity (in 2048 byte frames)
-  uint32 capacity();
+  Bit32u capacity();
 
   // Read a single block from the CD
-  void read_block(uint8* buf, int lba) BX_CPP_AttrRegparmN(2);
+  void read_block(Bit8u* buf, int lba) BX_CPP_AttrRegparmN(2);
 
   // Start (spin up) the CD.
   int start_cdrom();

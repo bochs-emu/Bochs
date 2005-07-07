@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.77 2005-05-04 18:19:49 vruppert Exp $
+// $Id: cdrom.cc,v 1.77.2.1 2005-07-07 07:12:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,7 +523,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.77 2005-05-04 18:19:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.77.2.1 2005-07-07 07:12:08 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -772,7 +772,7 @@ if (using_file == 0)
 
 
   bx_bool
-cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track, int format)
+cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   unsigned i;
   // Read CD TOC. Returns false if start track is out of bounds.
@@ -830,9 +830,9 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
         // Start address
         if (msf) {
           buf[len++] = 0; // reserved
-          buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
-          buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
-          buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+          buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
+          buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
+          buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
         } else {
           buf[len++] = (blocks >> 24) & 0xff;
           buf[len++] = (blocks >> 16) & 0xff;
@@ -888,6 +888,8 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
     *length = iBytesReturned;
 
     return true;
+  } else {
+    return false;
   }
 #elif __linux__ || defined(__sun)
   {
@@ -1091,14 +1093,14 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
   buf[len++] = 0xaa; // Track number
   buf[len++] = 0; // Reserved
 
-  uint32 blocks = capacity();
+  Bit32u blocks = capacity();
 
   // Start address
   if (msf) {
     buf[len++] = 0; // reserved
-    buf[len++] = (uint8)(((blocks + 150) / 75) / 60); // minute
-    buf[len++] = (uint8)(((blocks + 150) / 75) % 60); // second
-    buf[len++] = (uint8)((blocks + 150) % 75); // frame;
+    buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
+    buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
+    buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
   } else {
     buf[len++] = (blocks >> 24) & 0xff;
     buf[len++] = (blocks >> 16) & 0xff;
@@ -1124,7 +1126,7 @@ cdrom_interface::read_toc(uint8* buf, int* length, bx_bool msf, int start_track,
 }
 
 
-  uint32
+  Bit32u
 cdrom_interface::capacity()
 {
   // Return CD-ROM capacity.  I believe you want to return
@@ -1281,13 +1283,13 @@ cdrom_interface::capacity()
     } else if(using_file) {
       ULARGE_INTEGER FileSize;
       FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-      return (FileSize.QuadPart / 2048);
+      return (Bit32u)(FileSize.QuadPart / 2048);
     } else {  /* direct device access */
       ULARGE_INTEGER FreeBytesForCaller;
       ULARGE_INTEGER TotalNumOfBytes;
       ULARGE_INTEGER TotalFreeBytes;
       GetDiskFreeSpaceEx( path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
-      return (TotalNumOfBytes.QuadPart / 2048);
+      return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
     }
   }
 #elif defined __APPLE__
@@ -1359,7 +1361,7 @@ cdrom_interface::capacity()
 }
 
   void BX_CPP_AttrRegparmN(2)
-cdrom_interface::read_block(uint8* buf, int lba)
+cdrom_interface::read_block(Bit8u* buf, int lba)
 {
   // Read a single block from the CD
 
