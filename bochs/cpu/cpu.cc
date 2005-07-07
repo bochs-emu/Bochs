@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.104 2005-04-12 18:07:58 sshwarts Exp $
+// $Id: cpu.cc,v 1.104.2.1 2005-07-07 08:19:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,14 +69,16 @@ BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 
 bxPageWriteStampTable pageWriteStampTable;
 
-void invalidateIcacheEntries(Bit32u a20Addr)
+void purgeICache(void)
 {
 #if BX_SMP_PROCESSORS == 1
-  BX_CPU(0)->iCache.invalidatePage(a20Addr);
+  BX_CPU(0)->iCache.purgeICacheEntries();
 #else
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-    BX_CPU(i)->iCache.invalidatePage(a20Addr);
+    BX_CPU(i)->iCache.purgeICacheEntries();
 #endif
+
+  pageWriteStampTable.resetWriteStamps();
 }
 
 #define InstrumentICACHE 0
@@ -130,9 +132,7 @@ static unsigned iCacheMisses=0;
 #define RSP ESP
 #endif
 
-
-  void
-BX_CPU_C::cpu_loop(Bit32s max_instr_count)
+void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
   unsigned ret;
   bxInstruction_c iStorage BX_CPP_AlignN(32);
@@ -196,8 +196,9 @@ BX_CPU_C::cpu_loop(Bit32s max_instr_count)
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
          debug_eip,
          BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) ) {
-    return;
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) )
+    {
+      return;
     }
   }
 #endif  // #if BX_DEBUGGER
