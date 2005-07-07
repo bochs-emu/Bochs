@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.29 2005-05-12 18:07:41 sshwarts Exp $
+// $Id: i387.h,v 1.29.2.1 2005-07-07 08:04:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
@@ -47,7 +47,7 @@ extern int FPU_tagof(const floatx80 &reg);
 //
 // Minimal i387 structure
 //
-struct i387_t 
+struct BOCHSAPI_MSVCONLY i387_t 
 {
     i387_t() {}
 
