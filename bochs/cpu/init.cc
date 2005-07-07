@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.70 2005-04-10 19:42:48 sshwarts Exp $
+// $Id: init.cc,v 1.70.2.1 2005-07-07 08:00:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.70 2005-04-10 19:42:48 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.70.2.1 2005-07-07 08:00:41 vruppert Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -603,8 +603,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl = 0;
 #endif
 
-  /* FS and descriptor cache */
 #if BX_CPU_LEVEL >= 3
+  /* FS and descriptor cache */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0x0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.index = 0x0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.ti    = 0;
@@ -626,10 +626,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.d_b = 0; /* 16bit default size */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.avl = 0;
-#endif
 
   /* GS and descriptor cache */
-#if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0x0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.index = 0x0000;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.ti    = 0;
