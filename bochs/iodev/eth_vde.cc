@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.8 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth_vde.cc,v 1.8.4.1 2005-07-07 07:07:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -272,8 +272,8 @@ void bx_vde_pktmover_c::rx_timer ()
 #define REQ_NEW_CONTROL 0
 
 struct request_v3 {
-	uint32_t magic;
-	uint32_t version;
+	Bit32u_t magic;
+	Bit32u_t version;
 	//enum request_type type;
 	int type;
 	struct sockaddr_un sock;
