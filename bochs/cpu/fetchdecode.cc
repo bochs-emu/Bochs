@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.79 2005-04-29 21:28:42 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.79.2.1 2005-07-07 08:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1891,6 +1891,7 @@ modrm_done:
         }
         break;
       case BxImmediate_O:
+        // For instructions which embed the address in the opcode.
         if (instruction->as32L()) {
           // fetch 32bit address into Id
           if ((ilen+3) < remain) {
@@ -1907,6 +1908,8 @@ modrm_done:
           }
           else return(0);
         }
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(BX_SEG_REG_DS);
         break;
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
