@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.56 2005-04-13 17:13:04 sshwarts Exp $
+// $Id: exception.cc,v 1.57 2005-07-07 18:40:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,10 +64,10 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // else #GP(vector number*16 + 2 + EXT)
   idtindex = vector*16;
   if ( (idtindex + 15) > BX_CPU_THIS_PTR idtr.limit) {
+    BX_ERROR(("interrupt(long mode): vector > idtr.limit"));
     BX_ERROR(("IDT.limit = %04x", (unsigned) BX_CPU_THIS_PTR idtr.limit));
     BX_ERROR(("IDT.base  = %06x", (unsigned) BX_CPU_THIS_PTR idtr.base));
     BX_ERROR(("interrupt vector must be within IDT table limits"));
-    BX_ERROR(("interrupt(long mode): vector > idtr.limit"));
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
@@ -125,7 +125,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // examine CS selector and descriptor given in gate descriptor
   // selector must be non-null else #GP(EXT)
   if ( (gate_dest_selector & 0xfffc) == 0 ) {
-    BX_PANIC(("int_trap_gate(): selector null"));
+    BX_PANIC(("int_trap_gate(long mode): selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -435,7 +435,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     // examine CS selector and descriptor given in gate descriptor
     // selector must be non-null else #GP(EXT)
     if ( (gate_dest_selector & 0xfffc) == 0 ) {
-      BX_PANIC(("int_trap_gate(): selector null"));
+      BX_ERROR(("int_trap_gate(): selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 

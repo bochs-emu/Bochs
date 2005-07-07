@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.18 2005-05-31 04:47:50 sshwarts Exp $
+// $Id: instrument.h,v 1.19 2005-07-07 18:40:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ class bxInstruction_c;
 void bx_instr_init(unsigned cpu);
 void bx_instr_shutdown(unsigned cpu);
 void bx_instr_reset(unsigned cpu);
+void bx_instr_hlt(unsigned cpu);
 void bx_instr_new_instruction(unsigned cpu);
 
 void bx_instr_debug_promt();
@@ -104,6 +105,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
 #  define BX_INSTR_SHUTDOWN(cpu_id)        bx_instr_shutdown(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           bx_instr_reset(cpu_id)
+#  define BX_INSTR_HLT(cpu_id)             bx_instr_hlt(cpu_id)
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id) bx_instr_new_instruction(cpu_id)
 
 /* called from command line debugger */
@@ -169,6 +171,7 @@ void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value);
 #  define BX_INSTR_INIT(cpu_id)
 #  define BX_INSTR_SHUTDOWN(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)
+#  define BX_INSTR_HLT(cpu_id)
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id)
 
 /* called from command line debugger */

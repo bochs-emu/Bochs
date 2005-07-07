@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.13 2005-04-29 21:28:59 sshwarts Exp $
+// $Id: instrument.cc,v 1.14 2005-07-07 18:40:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,7 @@
 void bx_instr_init(unsigned cpu) {}
 void bx_instr_shutdown(unsigned cpu) {}
 void bx_instr_reset(unsigned cpu) {}
+void bx_instr_hlt(unsigned cpu) {}
 void bx_instr_new_instruction(unsigned cpu) {}
 
 void bx_instr_debug_promt() {}
