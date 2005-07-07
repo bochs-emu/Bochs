@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.32 2004-06-26 07:06:23 sshwarts Exp $
+// $Id: term.cc,v 1.32.4.1 2005-07-07 07:20:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -46,6 +46,9 @@ class bx_term_gui_c : public bx_gui_c {
 public:
   bx_term_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+#if BX_USE_IDLE_HACK
+  virtual void sim_is_idle(void);
+#endif
 
   virtual Bit32u get_sighandler_mask ();
   // called when registered signal arrives
@@ -841,4 +844,38 @@ bx_term_gui_c::exit(void)
 bx_term_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
+
+#if BX_USE_IDLE_HACK
+void bx_term_gui_c::sim_is_idle () {
+
+  int      res;
+  fd_set   readfds;
+  
+  struct timeval   timeout;   
+  timeout.tv_sec  = 0;
+  timeout.tv_usec = 1000; /* 1/1000 s */  
+
+  FD_ZERO(&readfds);
+  FD_SET(0, &readfds); // Wait for input
+
+  res = select(1, &readfds, NULL, NULL, &timeout);
+      
+  switch(res)
+    {
+    case -1: /* select() error - should not happen */ 
+      // This can happen when we have a alarm running, lets return
+      // perror("sim_is_idle: select() failure\n"); 
+      //fprintf (stderr,"Interrupted...\n");
+      //handle_events();
+      return;
+    case  0: /* timeout */
+      //      fprintf (stderr,"Timeout...\n");
+      //handle_events();
+      return;
+    }
+  //fprintf (stderr,"Input...\n");
+  //handle_events();
+}
+#endif
+
 #endif /* if BX_WITH_TERM */
