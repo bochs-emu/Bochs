@@ -24,7 +24,6 @@ The  callback  is  called each time, when Bochs initializes the CPU object. It
 can  be  used for initialization of user's data, dynamic memory allocation and
 etc.
 
-
 	void bx_instr_shutdown(unsigned cpu);
 
 The  callback is called each time, when Bochs destructs the CPU object. It can
@@ -37,6 +36,11 @@ The  callback  is called each time, when Bochs resets the CPU object. It would
 be  executed  once  at the start of simulation and each time that user presses
 RESET BUTTON on the simulator's control panel.
 
+
+	void bx_instr_hlt(unsigned cpu);
+
+The  callback is called each time, when Bochs' emulated CPU enters to the HALT
+state. 
 
 	void bx_instr_new_instruction(unsigned cpu);
 
