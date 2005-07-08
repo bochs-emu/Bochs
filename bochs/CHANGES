@@ -1,4 +1,4 @@
-Changes in 2.2.1 (not yet released):
+Changes in 2.2.1 (July 8, 2005):
 
 - Fixed several compilation warnings and errors for different platforms (Volker)
 - Fixed FPU tag word restore in FXRSTOR instruction (Stanislav)
