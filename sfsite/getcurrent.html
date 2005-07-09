@@ -7,7 +7,30 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.2</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.2.1</font><BR><BR>
+
+Version 2.2.1 is a bugfix release :
+<ul>
+<li> About 5% emulation speed improvement
+<li> Fixed several compilation warnings and errors for different platforms
+<li> Fixed FPU tag word restore in FXRSTOR instruction
+<li> Added missing scancodes for F11 and F12 to BIOS translation table
+<li> Bochs disassembler bugfixes
+<li> Handle writing of zero to APIC timer initial count register
+<li> Limited write support for TFTP server in 'vnet' networking module added
+<li> Changed some timing defaults to more useful values
+<li> WinXP/2003 style common controls now supported
+<li> Updated LGPL'd VGABIOS to version 0.5c
+</ul>
+
+<BR/>
+<a href="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=REL_2_2_1_FINAL&content-type=text/vnd.viewcvs-markup">
+Details on what has changed since version 2.2
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.2</font><BR><BR>
 
 It's been more than one year since the last stable release :
 <ul>
@@ -35,60 +58,6 @@ user documentation for more information.<BR>
 <a href="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=REL_2_2_FINAL&content-type=text/vnd.viewcvs-markup">
 Details on what has changed since version 2.1.1
 </a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous bugfix release:</b> Bochs 2.1.1</font><BR><BR>
-
-Version 2.1.1 is a bugfix release :
-<ul>
-<li> fix bug in int15h function 0xe820
-<li> fix vmware3 disk support on big-endian platforms
-<li> fix conditions for NM exception on FWAIT instruction
-<li> fix symbol conflict in rfb and x display libraries
-<li> allow 16 bit writes to ne2k page 0
-<li> notify display libraries on change of bpp
-<li> fix bug in int13h function 0x10
-<li> fix floppy dialog error on win2k
-<li> fix adress check in TSS IO permission bitmap 
-<li> fix buffer overflow vulnerability 
-<li> updates for MacOS compile 
-</ul>
-
-<BR/>
-<a href="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=REL_2_1_1_FINAL&content-type=text/vnd.viewcvs-markup">
-Details on what has changed since version 2.1
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous major release:</b> Bochs 2.1</font><BR><BR>
-
-It's been nearly one year since the last stable release :
-<ul>
-<li>We have improved
-the accuracy of the simulation in many ways, notably in the cpu, fpu, and
-vga areas. 
-<li>3DNow! and PNI instructions are now supported, and Bochs 
-includes a new disassembler that supports all IA-32 instruction sets. 
-<li>On the I/O devices side, Bochs now provides experimental PCI VGA and USB 
-cards, 16550A uarts and gameport emulation. 
-<li>New types of disk image can be used as harddisks : stackable, commitable or growing. Bochs can also
-use VMWare 3 cow disk images.
-<li>Sdl, x11, win32 and wxwindows display libraries now support
-15, 16, 24 and 32 bpp color depth, and the x11 vga font is not needed
-any more.
-</ul>
-
-Note that some configuration file options have been deprectated :
-please update these options to the new syntax, as they're likely to be 
-removed in future releases.
-
-<BR/><BR/>
-<a href="http://cvs.sourceforge.net/viewcvs.py/bochs/bochs/CHANGES?rev=REL_2_1_FINAL&content-type=text/vnd.viewcvs-markup">
-Details on what has changed since version 2.0.2.
-</a>
-
 
 
  <BR><BR>
