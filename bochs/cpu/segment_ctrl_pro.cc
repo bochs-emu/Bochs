@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.38 2005-05-19 18:13:08 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.39 2005-07-10 20:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       }
 
       /* segment must be marked PRESENT else #SS(selector) */
-      if (descriptor.p == 0) {
+      if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("load_seg_reg(): not present"));
         exception(BX_SS_EXCEPTION, new_value & 0xfffc, 0);
       }
@@ -274,7 +274,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       }
 
       /* segment must be marked PRESENT else #NP(selector) */
-      if (descriptor.p == 0) {
+      if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("load_seg_reg: segment not present"));
         exception(BX_NP_EXCEPTION, new_value & 0xfffc, 0);
         return;

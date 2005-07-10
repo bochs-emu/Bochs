@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.7 2005-05-19 19:46:20 sshwarts Exp $
+// $Id: descriptor.h,v 1.8 2005-07-10 20:32:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -148,6 +148,7 @@ union {
 
 } bx_descriptor_t;
 
+#define IS_PRESENT(descriptor) (descriptor.p)
 
 #if BX_SUPPORT_X86_64
   #define IS_LONG64_SEGMENT(descriptor)  (descriptor.u.segment.l)

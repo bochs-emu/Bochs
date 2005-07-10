@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.41 2005-05-20 17:04:42 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.42 2005-07-10 20:32:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,8 +91,8 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
       }
     }
 
-    /* segment must be PRESENT else #NP(selector) */
-    if (descriptor.p == 0) {
+    /* segment must be present else #NP(selector) */
+    if (! IS_PRESENT(descriptor)) {
       BX_ERROR(("jump_protected: p == 0"));
       exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
       return;
@@ -177,7 +177,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         BX_DEBUG(("jump_protected: JUMP TO 286 CALL GATE"));
 
         // gate must be present else #NP(gate selector)
-        if (descriptor.p==0) {
+        if (! IS_PRESENT(descriptor)) {
           BX_ERROR(("jump_protected: task gate.p == 0"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
@@ -221,7 +221,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         }
 
         // code segment must be present else #NP(CS selector)
-        if (gate_cs_descriptor.p==0) {
+        if (! IS_PRESENT(gate_cs_descriptor)) {
           BX_ERROR(("jump_protected: code seg not present"));
           exception(BX_NP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
         }
@@ -243,7 +243,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
       case BX_TASK_GATE:
         // task gate must be present else #NP(gate selector)
-        if (descriptor.p==0) {
+        if (! IS_PRESENT(descriptor)) {
           BX_ERROR(("jump_protected: task gate.p == 0"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
@@ -276,7 +276,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         }
 
         // task state segment must be present, else #NP(tss selector)
-        if (tss_descriptor.p==0) {
+        if (! IS_PRESENT(tss_descriptor)) {
           BX_ERROR(("jump_protected: task descriptor.p == 0"));
           exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
@@ -307,7 +307,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 #endif
 
         // gate must be present else #NP(gate selector)
-        if (descriptor.p==0) {
+        if (! IS_PRESENT(descriptor)) {
           BX_ERROR(("jump_protected: task gate.p == 0"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
@@ -350,7 +350,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         }
 
         // code segment must be present else #NP(CS selector)
-        if (gate_cs_descriptor.p==0) {
+        if (! IS_PRESENT(gate_cs_descriptor)) {
           BX_ERROR(("jump_protected: code seg not present"));
           exception(BX_NP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
         }
@@ -440,7 +440,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     }
 
     // segment must be present, else #NP(code seg selector)
-    if (cs_descriptor.p == 0) {
+    if (! IS_PRESENT(cs_descriptor)) {
       BX_ERROR(("call_protected: cs.p = 0"));
       exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
@@ -556,7 +556,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
       case BX_TASK_GATE:
         // task gate must be present else #NP(gate selector)
-        if (gate_descriptor.p==0) {
+        if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: task gate.p == 0"));
           exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
           return;
@@ -589,7 +589,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         }
 
         // task state segment must be present, else #NP(tss selector)
-        if (tss_descriptor.p==0) {
+        if (! IS_PRESENT(tss_descriptor)) {
           BX_ERROR(("call_protected: task descriptor.p == 0"));
           exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
@@ -620,7 +620,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         //  BX_INFO(("CALL: 32bit call gate"));
 
         // call gate must be present, else #NP(call gate selector)
-        if (gate_descriptor.p==0) {
+        if (! IS_PRESENT(gate_descriptor)) {
           BX_ERROR(("call_protected: not present"));
           exception(BX_NP_EXCEPTION, gate_selector.value & 0xfffc, 0);
         }
@@ -738,7 +738,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
           }
 
           // segment must be present, else #SS(SS selector)
-          if (ss_descriptor.p==0) {
+          if (! IS_PRESENT(ss_descriptor)) {
             BX_ERROR(("call_protected: ss descriptor not present."));
             exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
             return;
@@ -932,6 +932,16 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
   BX_PANIC(("call_protected: shouldn't get here!"));
 }
 
+#if BX_SUPPORT_X86_64
+
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::long_return(bxInstruction_c *i, Bit16u pop_bytes)
+{
+  BX_PANIC(("Return protected is not implemented in x86-64 mode !"));
+}
+
+#endif
+
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 {
@@ -991,7 +1001,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   }
 
   // if return selector RPL == CPL then
-  // RETURN TO SAME LEVEL
+  // RETURN TO SAME PRIVILEGE LEVEL
   if ( cs_selector.rpl == CPL ) {
     //BX_INFO(("return: to same level %04x:%08x",
     //   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
@@ -1040,7 +1050,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     // code segment must be present, else #NP(selector)
-    if (cs_descriptor.p==0) {
+    if (! IS_PRESENT(cs_descriptor)) {
       BX_ERROR(("return_protected: not present"));
       exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
@@ -1093,9 +1103,9 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* + 2:     CS      | + 4:         CS */
     /* + 0:     IP      | + 0:        EIP */
 
-//BX_INFO(("return: to outer level %04x:%08x",
-//  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-//  BX_CPU_THIS_PTR prev_eip));
+    //BX_INFO(("return: to outer level %04x:%08x",
+    //  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+    //  BX_CPU_THIS_PTR prev_eip));
 
     if (i->os32L()) {
       /* top 16+immediate bytes on stack must be within stack limits, else #SS(0) */
@@ -1158,8 +1168,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* segment must be present else #NP(selector) */
-    if (cs_descriptor.p==0) {
-      BX_INFO(("return_protected: segment not present"));
+    if (! IS_PRESENT(cs_descriptor)) {
+      BX_ERROR(("return_protected: segment not present"));
       exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
     }
@@ -1228,8 +1238,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* segment must be present else #SS(selector) */
-    if (ss_descriptor.p==0) {
-      BX_ERROR(("ss.p == 0"));
+    if (! IS_PRESENT(ss_descriptor)) {
+      BX_ERROR(("ss.present == 0"));
       exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
       return;
     }
@@ -1319,8 +1329,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     // TSS must be present, else #NP(new TSS selector)
-    if (tss_descriptor.p==0) {
-      BX_INFO(("iret: task descriptor.p == 0"));
+    if (! IS_PRESENT(tss_descriptor)) {
+      BX_ERROR(("iret: task descriptor.p == 0"));
       exception(BX_NP_EXCEPTION, raw_link_selector & 0xfffc, 0);
     }
 
@@ -1442,8 +1452,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     // segment must be present else #NP(return selector)
-    if ( cs_descriptor.p==0 ) {
-      BX_PANIC(("iret: not present"));
+    if (! IS_PRESENT(cs_descriptor)) {
+      BX_ERROR(("iret: not present"));
       exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
     }
@@ -1524,8 +1534,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
 
         /* SS must be present, else #NP(SS selector) */
-        if ( ss_descriptor.p==0 ) {
-          BX_PANIC(("iret: SS not present!"));
+        if (! IS_PRESENT(ss_descriptor)) {
+          BX_ERROR(("iret: SS not present!"));
           exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
           return;
         }
@@ -1699,8 +1709,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     // segment must be present else #NP(return selector)
-    if ( cs_descriptor.p==0 ) {
-      BX_PANIC(("iret: not present"));
+    if (! IS_PRESENT(cs_descriptor)) {
+      BX_ERROR(("iret: segment not present"));
       exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
       return;
     }
@@ -1812,7 +1822,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
 
       /* SS must be present, else #NP(SS selector) */
-      if ( ss_descriptor.p==0 ) {
+      if (! IS_PRESENT(ss_descriptor)) {
         BX_ERROR(("iret: SS not present!"));
         exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
         return;

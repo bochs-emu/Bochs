@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.34 2005-05-19 18:13:07 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.35 2005-07-10 20:32:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,21 +98,10 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit16u imm16 = i->Iw();
+  BX_ASSERT(protected_mode());
 
-  if (protected_mode()) {
-    BX_PANIC(("Return protected is not implemented in x86-64 mode !"));
-    BX_CPU_THIS_PTR return_protected(i, imm16);
-    goto done;
-  }
+  long_return(i, i->Iw());
 
-  pop_64(&rip);
-  pop_64(&rcs_raw);
-  RIP = rip;
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) rcs_raw);
-  RSP += imm16;
-
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
@@ -127,18 +116,10 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  if ( protected_mode() ) {
-    BX_PANIC(("Return protected is not implemented in x86-64 mode !"));
-    BX_CPU_THIS_PTR return_protected(i, 0);
-    goto done;
-  }
+  BX_ASSERT(protected_mode());
 
-  pop_64(&rip);
-  pop_64(&rcs_raw); /* 64bit pop, upper 48 bits discarded */
-  RIP = rip;
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) rcs_raw);
+  long_return(i, 0);
 
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }

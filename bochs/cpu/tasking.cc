@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.21 2005-06-22 18:13:45 sshwarts Exp $
+// $Id: tasking.cc,v 1.22 2005-07-10 20:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -557,11 +557,12 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     }
 
     // LDT of new task is present in memory, else #TS(new tasks's LDT)
-    else if (ldt_descriptor.p==0) {
+    if (! IS_PRESENT(ldt_descriptor)) {
       exception_no = BX_TS_EXCEPTION;
       error_code   = raw_ldt_selector & 0xfffc;
       goto post_exception;
     }
+
     // All checks pass, fill in LDTR shadow cache
     BX_CPU_THIS_PTR ldtr.cache = ldt_descriptor;
   }
@@ -603,7 +604,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // if non-conforming then DPL must equal selector RPL else #TS(CS)
-      else if (cs_descriptor.u.segment.c_ed==0 &&
+      if (cs_descriptor.u.segment.c_ed==0 &&
           cs_descriptor.dpl!=cs_selector.rpl)
       {
         BX_INFO(("task_switch: non-conforming: CS.dpl!=CS.RPL"));
@@ -613,7 +614,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // if conforming then DPL must be <= selector RPL else #TS(CS)
-      else if (cs_descriptor.u.segment.c_ed &&
+      if (cs_descriptor.u.segment.c_ed &&
                cs_descriptor.dpl>cs_selector.rpl)
       {
         BX_INFO(("task_switch: conforming: CS.dpl>RPL"));
@@ -623,8 +624,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // Code segment is present in memory, else #NP(new code segment)
-      else if (cs_descriptor.p==0)
-      {
+      if (! IS_PRESENT(cs_descriptor)) {
         BX_PANIC(("task_switch: CS.p==0"));
         exception_no = BX_NP_EXCEPTION;
         error_code   = raw_cs_selector & 0xfffc;
@@ -671,7 +671,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       //
       // Stack segment is present in memory, else #SF(new stack segment)
       //
-      else if (ss_descriptor.p==0) {
+      if (! IS_PRESENT(ss_descriptor)) {
         BX_PANIC(("task_switch: SS not present"));
         exception_no = BX_SS_EXCEPTION;
         error_code   = raw_ss_selector & 0xfffc;
@@ -679,7 +679,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // Stack segment DPL matches CS.RPL, else #TS(new stack segment)
-      else if (ss_descriptor.dpl != cs_selector.rpl) {
+      if (ss_descriptor.dpl != cs_selector.rpl) {
         BX_PANIC(("task_switch: SS.rpl != CS.RPL"));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_ss_selector & 0xfffc;
@@ -687,7 +687,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // Stack segment DPL matches selector RPL, else #TS(new stack segment)
-      else if (ss_descriptor.dpl != ss_selector.rpl) {
+      if (ss_descriptor.dpl != ss_selector.rpl) {
         BX_PANIC(("task_switch: SS.dpl != SS.rpl"));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_ss_selector & 0xfffc;
@@ -695,8 +695,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
 #if 0
-      // +++
-      else if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
+      if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
         BX_DEBUG(( "++++++++++++++++++++++++++" ));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_ss_selector & 0xfffc;
@@ -735,6 +734,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       parse_descriptor(dword1, dword2, &ds_descriptor);
+
       if (ds_descriptor.valid==0 || ds_descriptor.segment==0 ||
          (ds_descriptor.u.segment.executable &&
           ds_descriptor.u.segment.r_w==0))
@@ -744,17 +744,19 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         error_code   = raw_ds_selector & 0xfffc;
         goto post_exception;
       }
+
       // if data or non-conforming code
-      else if (ds_descriptor.type<12 &&
-              (ds_descriptor.dpl<cs_selector.rpl ||
-               ds_descriptor.dpl<ds_selector.rpl))
+      if (ds_descriptor.type<12 &&
+         (ds_descriptor.dpl<cs_selector.rpl ||
+          ds_descriptor.dpl<ds_selector.rpl))
       {
         BX_PANIC(("task_switch: DS.dpl not valid"));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_ds_selector & 0xfffc;
         goto post_exception;
       }
-      else if (ds_descriptor.p==0) {
+
+      if (! IS_PRESENT(ds_descriptor)) {
         BX_PANIC(("task_switch: DS.p==0"));
         exception_no = BX_NP_EXCEPTION;
         error_code   = raw_ds_selector & 0xfffc;
@@ -779,6 +781,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       parse_descriptor(dword1, dword2, &es_descriptor);
+
       if (es_descriptor.valid==0 || es_descriptor.segment==0 ||
          (es_descriptor.u.segment.executable &&
           es_descriptor.u.segment.r_w==0))
@@ -788,17 +791,19 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         error_code   = raw_es_selector & 0xfffc;
         goto post_exception;
       }
+
       // if data or non-conforming code
-      else if (es_descriptor.type<12 &&
-              (es_descriptor.dpl<cs_selector.rpl ||
-               es_descriptor.dpl<es_selector.rpl))
+      if (es_descriptor.type<12 &&
+         (es_descriptor.dpl<cs_selector.rpl ||
+          es_descriptor.dpl<es_selector.rpl))
       {
         BX_PANIC(("task_switch: ES.dpl not valid"));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_es_selector & 0xfffc;
         goto post_exception;
       }
-      else if (es_descriptor.p==0) {
+
+      if (! IS_PRESENT(es_descriptor)) {
         BX_PANIC(("task_switch: ES.p==0"));
         exception_no = BX_NP_EXCEPTION;
         error_code   = raw_es_selector & 0xfffc;
@@ -832,8 +837,9 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         error_code   = raw_fs_selector & 0xfffc;
         goto post_exception;
       }
+
       // if data or non-conforming code
-      else if (fs_descriptor.type<12 &&
+      if (fs_descriptor.type<12 &&
               (fs_descriptor.dpl<cs_selector.rpl ||
                fs_descriptor.dpl<fs_selector.rpl))
       {
@@ -842,7 +848,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         error_code   = raw_fs_selector & 0xfffc;
         goto post_exception;
       }
-      else if (fs_descriptor.p==0) {
+
+      if (! IS_PRESENT(fs_descriptor)) {
         BX_PANIC(("task_switch: FS.p==0"));
         exception_no = BX_NP_EXCEPTION;
         error_code   = raw_fs_selector & 0xfffc;
@@ -876,17 +883,19 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         error_code   = raw_gs_selector & 0xfffc;
         goto post_exception;
       }
+
       // if data or non-conforming code
-      else if (gs_descriptor.type<12 &&
-              (gs_descriptor.dpl<cs_selector.rpl ||
-               gs_descriptor.dpl<gs_selector.rpl))
+      if (gs_descriptor.type<12 &&
+         (gs_descriptor.dpl<cs_selector.rpl ||
+          gs_descriptor.dpl<gs_selector.rpl))
       {
         BX_PANIC(("task_switch: GS.dpl not valid"));
         exception_no = BX_TS_EXCEPTION;
         error_code   = raw_gs_selector & 0xfffc;
         goto post_exception;
       }
-      else if (gs_descriptor.p==0) {
+
+      if (! IS_PRESENT(gs_descriptor)) {
         BX_PANIC(("task_switch: GS.p==0"));
         exception_no = BX_NP_EXCEPTION;
         error_code   = raw_gs_selector & 0xfffc;

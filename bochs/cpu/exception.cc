@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.57 2005-07-07 18:40:26 sshwarts Exp $
+// $Id: exception.cc,v 1.58 2005-07-10 20:32:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   // Gate must be present, else #NP(vector * 8 + 2 + EXT)
-  if (gate_descriptor.p == 0) {
+  if (! IS_PRESENT(gate_descriptor)) {
     BX_ERROR(("interrupt(long mode): p == 0"));
     exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
   }
@@ -157,7 +157,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   // segment must be present, else #NP(selector + EXT)
-  if ( cs_descriptor.p==0 ) {
+  if (! IS_PRESENT(cs_descriptor)) {
     BX_ERROR(("interrupt(long mode): segment not present"));
     exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
   }
@@ -351,7 +351,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   }
 
   // Gate must be present, else #NP(vector * 8 + 2 + EXT)
-  if (gate_descriptor.p == 0) {
+  if (! IS_PRESENT(gate_descriptor)) {
     BX_DEBUG(("interrupt(): gate not present"));
     exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
   }
@@ -458,8 +458,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     }
 
     // segment must be present, else #NP(selector + EXT)
-    if ( cs_descriptor.p==0 )
-    {
+    if (! IS_PRESENT(cs_descriptor)) {
       BX_DEBUG(("interrupt(): segment not present"));
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
@@ -525,8 +524,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       }
 
       // seg must be present, else #SS(SS selector + ext)
-      if (ss_descriptor.p==0) {
-        BX_PANIC(("interrupt(): SS not present"));
+      if (! IS_PRESENT(ss_descriptor)) {
+        BX_ERROR(("interrupt(): SS not present"));
         exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
       }
 
