@@ -32,7 +32,7 @@ makedlxdir() {
   #echo DEBUG: Creating $HOME/.bochsdlx/bochsrc
   echo DLXPATH=$DLXPATH > $CONFFILE
   . $CONFFILE
-  for file in bochsrc.txt README testform.txt; do
+  for file in bochsrc.txt readme.txt testform.txt; do
     if [ ! -f $DLXPATH/$file ]; then
       echo Copying $DLXINST/$file '->' $DLXPATH/.
       cp $DLXINST/$file $DLXPATH/.
