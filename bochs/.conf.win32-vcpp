@@ -14,7 +14,8 @@ set echo
             --enable-clgd54xx \
             --disable-readline \
             --without-x \
-            --enable-cpp
+            --enable-cpp \
+            --with-win32 --with-rfb --with-nogui
 
 unset echo
 

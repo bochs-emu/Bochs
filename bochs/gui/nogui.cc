@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.21 2003-06-28 08:04:31 vruppert Exp $
+// $Id: nogui.cc,v 1.22 2005-07-10 09:02:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,7 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
+#if BX_WITH_NOGUI
 #include "icon_bochs.h"
 
 class bx_nogui_gui_c : public bx_gui_c {
@@ -334,3 +335,5 @@ bx_nogui_gui_c::exit(void)
 bx_nogui_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
 }
+
+#endif /* if BX_WITH_NOGUI */

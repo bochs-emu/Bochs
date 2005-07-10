@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.135 2005-02-01 19:16:19 vruppert Exp $
+// $Id: siminterface.h,v 1.136 2005-07-10 09:02:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Before I can describe what this file is for, I have to make the
@@ -39,17 +39,17 @@
 // Only the CI code uses library specific graphics and I/O functions; the
 // siminterface deals in portable abstractions and callback functions.
 // The first CI implementation was a series of text mode menus implemented in
-// control.cc.
+// textconfig.cc.
 //
 // The configuration interface MUST use the siminterface methods to access the
 // simulator.  It should not modify settings in some device with code like
 // bx_floppy.s.media[2].heads = 17.  If such access is needed, then a
 // siminterface method should be written to make the change on the CI's behalf.
 // This separation is enforced by the fact that the CI does not even include
-// bochs.h.  You'll notice that control.cc include osdep.h, control.h, and
-// siminterface.h, so it doesn't know what bx_floppy or bx_cpu_c are.  I'm sure
-// some people will say is overly restrictive and/or annoying.  When I set it
-// up this way, we were still talking about making the CI in a seperate
+// bochs.h.  You'll notice that textconfig.cc include osdep.h, textconfig.h,
+// and siminterface.h, so it doesn't know what bx_floppy or bx_cpu_c are.
+// I'm sure some people will say is overly restrictive and/or annoying.  When I
+// set it up this way, we were still talking about making the CI in a seperate
 // process, where direct method calls would be impossible.  Also, we have been
 // considering turning devices into plugin modules which are dynamically 
 // linked.  Any direct references to something like bx_floppy.s.media[2].heads
