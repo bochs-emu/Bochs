@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.25 2004-12-05 20:23:39 vruppert Exp $
+// $Id: serial.h,v 1.26 2005-07-10 16:51:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -36,6 +36,10 @@
 #  define BX_SER_THIS this->
 #endif
 
+#if defined(WIN32)
+#define SERIAL_ENABLE
+#endif
+
 #if defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux__) || defined(__GNU__) || defined(__GLIBC__) || defined(__APPLE__)
 #define SERIAL_ENABLE
 extern "C" {
@@ -67,6 +71,7 @@ extern "C" {
 #define BX_SER_MODE_TERM  2
 #define BX_SER_MODE_RAW   3
 #define BX_SER_MODE_MOUSE 4
+#define BX_SER_MODE_SOCKET 5 
 
 enum {
   BX_SER_INT_IER,
@@ -109,12 +114,13 @@ typedef struct {
 
   int io_mode;
   int tty_id;
+  int socket_id;
   FILE *output;
 
 #if USE_RAW_SERIAL
   serial_raw* raw;
 #endif
-#if defined(SERIAL_ENABLE)
+#if defined(SERIAL_ENABLE) && !defined(WIN32)
   struct termios term_orig, term_new;
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.36 2005-06-08 18:25:49 vruppert Exp $
+// $Id: config.cc,v 1.37 2005-07-10 16:51:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -866,6 +866,7 @@ void bx_init_options ()
     "term",
     "raw",
     "mouse",
+    "socket",
     NULL
   };
 
@@ -880,7 +881,7 @@ void bx_init_options ()
                 strdup(descr), 
                 (i==0)?1 : 0);  // only enable the first by default
         sprintf (name, "I/O mode of the serial device for COM%d", i+1);
-        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse'");
+        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket'");
         bx_options.com[i].Omode = new bx_param_enum_c (
                 BXP_COMx_MODE(i+1),
                 strdup(name), 

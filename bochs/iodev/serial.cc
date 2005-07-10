@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.64 2005-01-19 18:21:37 sshwarts Exp $
+// $Id: serial.cc,v 1.65 2005-07-10 16:51:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -38,6 +38,10 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#ifndef WIN32
+#include <sys/socket.h>
+#include <netdb.h>
+#endif
 
 #if USE_RAW_SERIAL
 #include "serial_raw.h"
@@ -83,7 +87,7 @@ bx_serial_c::~bx_serial_c(void)
             fclose(BX_SER_THIS s[i].output);
           break;
         case BX_SER_MODE_TERM:
-#if defined(SERIAL_ENABLE)
+#if defined(SERIAL_ENABLE) && !defined(WIN32)
           if (s[i].tty_id >= 0) {
             tcsetattr(s[i].tty_id, TCSAFLUSH, &s[i].term_orig);
           }
@@ -93,6 +97,9 @@ bx_serial_c::~bx_serial_c(void)
 #if USE_RAW_SERIAL
           delete [] BX_SER_THIS s[i].raw;
 #endif
+          break;
+        case BX_SER_MODE_SOCKET:
+          if (BX_SER_THIS s[i].socket_id >= 0) ::close(BX_SER_THIS s[i].socket_id);
           break;
       }
     }
@@ -228,11 +235,11 @@ bx_serial_c::init(void)
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
         }
       } else if (!strcmp(mode, "term")) {
-#if defined(SERIAL_ENABLE)
+#if defined(SERIAL_ENABLE) && !defined(WIN32)
         if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
           BX_SER_THIS s[i].tty_id = open(bx_options.com[i].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
           if (BX_SER_THIS s[i].tty_id < 0) {
-            BX_PANIC(("open of com%d (%s) failed\n", i+1, bx_options.com[i].Odev->getptr ()));
+            BX_PANIC(("open of com%d (%s) failed", i+1, bx_options.com[i].Odev->getptr ()));
           } else {
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_TERM;
             BX_DEBUG(("com%d tty_id: %d", i+1, BX_SER_THIS s[i].tty_id));
@@ -273,6 +280,59 @@ bx_serial_c::init(void)
       } else if (!strcmp(mode, "mouse")) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
         BX_SER_THIS mouse_port = i;
+      } else if (!strcmp(mode, "socket")) {
+        BX_SER_THIS s[i].io_mode = BX_SER_MODE_SOCKET;
+        struct sockaddr_in  sin;
+        struct hostent      *hp;
+        char                host[BX_PATHNAME_LEN];
+        int                 port;
+        int                 socket;
+
+#if defined(WIN32)
+        static bool winsock_init = false;
+        if (!winsock_init) {
+          WORD wVersionRequested;
+          WSADATA wsaData;
+          int err;
+          wVersionRequested = MAKEWORD (2, 0);
+          err = WSAStartup (wVersionRequested, &wsaData);
+          if (err != 0)
+            BX_PANIC (("WSAStartup failed"));
+          winsock_init = true;
+        }
+#endif
+
+        char *substr = strtok(bx_options.com[i].Odev->getptr(), ":");
+        strcpy(host, substr);
+        substr = strtok(NULL, ":");
+        if (!substr) {
+          BX_PANIC(("com%d: inet address is wrong (%s)", i+1,
+            bx_options.com[i].Odev->getptr ()));
+        }
+        port = atoi (substr);
+
+        hp = gethostbyname (host);
+        if (!hp) {
+          BX_PANIC(("com%d: gethostbyname failed (%s)", i+1, host));
+        }
+
+        memset ((char*) &sin, 0, sizeof (sin));
+        memcpy ((char*) &(sin.sin_addr), hp->h_addr, hp->h_length);
+        sin.sin_family = hp->h_addrtype;
+        sin.sin_port = htons (port);
+
+        socket = ::socket (AF_INET, SOCK_STREAM, 0);
+        if (socket < 0) {
+          BX_PANIC(("com%d: socket() failed",i+1));
+        }
+
+        if (::connect (socket, (sockaddr *) &sin, sizeof (sin)) < 0) {
+          socket = -1;
+          BX_INFO(("com%d: connect() failed (host:%s, port:%d)",i+1, host, port));
+        } else {
+          BX_INFO(("com%d - inet - socket_id: %d, ip:%s, port:%d", i+1, socket, host, port));
+        }
+        BX_SER_THIS s[i].socket_id = socket;
       } else if (strcmp(mode, "null")) {
         BX_PANIC(("unknown serial i/o mode"));
       }
@@ -1049,6 +1109,17 @@ bx_serial_c::tx_timer(void)
       case BX_SER_MODE_MOUSE:
         BX_INFO(("com%d: write to mouse ignored: 0x%02x", port+1, BX_SER_THIS s[port].tsrbuffer));
         break;
+      case BX_SER_MODE_SOCKET:
+        if (BX_SER_THIS s[port].socket_id >= 0) {
+#ifdef WIN32
+          BX_INFO(("attempting to write win32 : %c", BX_SER_THIS s[port].tsrbuffer));
+          ::send(BX_SER_THIS s[port].socket_id,
+                 (const char*) & BX_SER_THIS s[port].tsrbuffer, 1, 0);
+#else
+          ::write(BX_SER_THIS s[port].socket_id,
+                  (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+#endif
+      }
     }
   }
 
@@ -1127,6 +1198,26 @@ bx_serial_c::rx_timer(void)
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
       (BX_SER_THIS s[port].fifo_cntl.enable)) {
     switch (BX_SER_THIS s[port].io_mode) {
+      case BX_SER_MODE_SOCKET:
+#if defined(SERIAL_ENABLE)
+        if (BX_SER_THIS s[port].line_status.rxdata_ready == 0) {
+          tval.tv_sec  = 0;
+          tval.tv_usec = 0;
+          FD_ZERO(&fds);
+          int socketid = BX_SER_THIS s[port].socket_id;
+          if (socketid >= 0) FD_SET(socketid, &fds);  
+          if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
+#ifdef WIN32 
+            (void) ::recv(socketid, (char*) &chbuf, 1, 0);
+#else
+            (void)   read(socketid, &chbuf, 1);
+#endif
+            BX_INFO((" -- COM %d : read byte [%d]", port+1, chbuf));
+            data_ready = 1;
+          }
+        }
+#endif
+        break;    
       case BX_SER_MODE_RAW:
 #if USE_RAW_SERIAL
         int data;
