@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.65 2005-07-10 16:51:08 vruppert Exp $
+// $Id: serial.cc,v 1.66 2005-07-11 16:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -40,6 +40,7 @@
 #include "iodev.h"
 #ifndef WIN32
 #include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #endif
 
@@ -317,6 +318,9 @@ bx_serial_c::init(void)
         }
 
         memset ((char*) &sin, 0, sizeof (sin));
+#if BX_HAVE_SOCKADDR_IN_SIN_LEN
+       sin.sin_len = sizeof sin;
+#endif
         memcpy ((char*) &(sin.sin_addr), hp->h_addr, hp->h_length);
         sin.sin_family = hp->h_addrtype;
         sin.sin_port = htons (port);
