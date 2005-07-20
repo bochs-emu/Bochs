@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.42 2005-07-10 20:32:31 sshwarts Exp $
+////////////////////////////////////////////////////////////////////////
+// $Id: ctrl_xfer_pro.cc,v 1.43 2005-07-20 01:26:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -657,7 +657,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
             cs_descriptor.u.segment.executable==0 ||
             cs_descriptor.dpl > CPL)
         {
-          BX_ERROR(("call_protected: selected desciptor not code"));
+          BX_ERROR(("call_protected: selected descriptor is not code"));
           exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
         }
 
@@ -949,25 +949,37 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   bx_selector_t cs_selector, ss_selector;
   bx_descriptor_t cs_descriptor, ss_descriptor;
   Bit32u stack_cs_offset, stack_param_offset;
-  Bit32u return_EIP, return_ESP, temp_ESP;
+  bx_address return_RIP, return_RSP, temp_RSP;
   Bit32u dword1, dword2;
-  Bit16u return_IP;
 
+  /* + 6+N*2: SS      | +12+N*4:     SS | +24+N*8      SS */
+  /* + 4+N*2: SP      | + 8+N*4:    ESP | +16+N*8     RSP */
+  /*          parm N  | +        parm N | +        parm N */
+  /*          parm 3  | +        parm 3 | +        parm 3 */
+  /*          parm 2  | +        parm 2 | +        parm 2 */
+  /* + 4:     parm 1  | + 8:     parm 1 | +16:     parm 1 */
+  /* + 2:     CS      | + 4:         CS | + 8:         CS */
+  /* + 0:     IP      | + 0:        EIP | + 0:        RIP */
 
-  /* + 6+N*2: SS      | +12+N*4:     SS */
-  /* + 4+N*2: SP      | + 8+N*4:    ESP */
-  /*          parm N  | +        parm N */
-  /*          parm 3  | +        parm 3 */
-  /*          parm 2  | +        parm 2 */
-  /*          parm 1  | + 8:     parm 1 */
-  /* + 2:     CS      | + 4:         CS */
-  /* + 0:     IP      | + 0:        EIP */
-
-  if ( i->os32L() ) {
-    /* operand size=32: third word on stack must be within stack limits,
+#if BX_SUPPORT_X86_64
+  if ( i->os64L() ) {
+    /* operand size=64: 2nd qword on stack must be within stack limits,
      *   else #SS(0); */
-    if (!can_pop(6)) {
-      BX_ERROR(("return_protected: 3rd word not in stack limits"));
+    if (!can_pop(16)) {
+      BX_ERROR(("return_protected: 2rd qword not in stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+      return;
+    }
+    stack_cs_offset = 8;
+    stack_param_offset = 16;
+  } 
+  else
+#endif
+  if ( i->os32L() ) {
+    /* operand size=32: 2nd dword on stack must be within stack limits,
+     *   else #SS(0); */
+    if (!can_pop(8)) {
+      BX_ERROR(("return_protected: 2rd dword not in stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
       return;
     }
@@ -986,11 +998,17 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     stack_param_offset = 4;
   }
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_ESP = ESP;
-  else temp_ESP = SP;
+#if BX_SUPPORT_X86_64
+  if (IsLongMode()) temp_RSP = RSP;
+  else 
+#endif
+  {
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_RSP = ESP;
+    else temp_RSP = SP;
+  }
 
   // return selector RPL must be >= CPL, else #GP(return selector)
-  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP +
+  access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP +
                        stack_cs_offset, 2, CPL==3, BX_READ, &raw_cs_selector);
   parse_selector(raw_cs_selector, &cs_selector);
 
@@ -1063,19 +1081,29 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       return;
     }
 
+#if BX_SUPPORT_X86_64
+    if (i->os64L()) {
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP,
+        8, CPL==3, BX_READ, &return_RIP);
+    }
+    else
+#endif
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      Bit32u return_EIP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP,
         4, CPL==3, BX_READ, &return_EIP);
+      return_RIP = return_EIP;
     }
     else {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      Bit16u return_IP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP,
         2, CPL==3, BX_READ, &return_IP);
-      return_EIP = return_IP;
+      return_RIP = return_IP;
     }
 
     // EIP must be in code segment limit, else #GP(0)
-    if ( return_EIP > cs_descriptor.u.segment.limit_scaled ) {
-      BX_ERROR(("return_protected: return IP > CS.limit"));
+    if ( return_RIP > cs_descriptor.u.segment.limit_scaled ) {
+      BX_ERROR(("return_protected: return RIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -1084,28 +1112,41 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     // load CS register with descriptor
     // increment eSP
     load_cs(&cs_selector, &cs_descriptor, CPL);
-    EIP = return_EIP;
-    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-      ESP += stack_param_offset + pop_bytes;
-    else
-       SP += stack_param_offset + pop_bytes;
+    RIP = return_RIP;
+
+#if BX_SUPPORT_X86_64
+    if (IsLongMode()) RSP += stack_param_offset + pop_bytes;
+    else 
+#endif
+    {
+      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+        ESP += stack_param_offset + pop_bytes;
+      else
+         SP += stack_param_offset + pop_bytes;
+    }
 
     return;
   }
   /* RETURN TO OUTER PRIVILEGE LEVEL */
   else {
-    /* + 6+N*2: SS      | +12+N*4:     SS */
-    /* + 4+N*2: SP      | + 8+N*4:    ESP */
-    /*          parm N  | +        parm N */
-    /*          parm 3  | +        parm 3 */
-    /*          parm 2  | +        parm 2 */
-    /*          parm 1  | + 8:     parm 1 */
-    /* + 2:     CS      | + 4:         CS */
-    /* + 0:     IP      | + 0:        EIP */
+    /* + 6+N*2: SS      | +12+N*4:     SS | +24+N*8      SS */
+    /* + 4+N*2: SP      | + 8+N*4:    ESP | +16+N*8     RSP */
+    /*          parm N  | +        parm N | +        parm N */
+    /*          parm 3  | +        parm 3 | +        parm 3 */
+    /*          parm 2  | +        parm 2 | +        parm 2 */
+    /* + 4:     parm 1  | + 8:     parm 1 | +16:     parm 1 */
+    /* + 2:     CS      | + 4:         CS | + 8:         CS */
+    /* + 0:     IP      | + 0:        EIP | + 0:        RIP */
 
     //BX_INFO(("return: to outer level %04x:%08x",
     //  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
     //  BX_CPU_THIS_PTR prev_eip));
+
+#if BX_SUPPORT_X86_64
+    if (i->os64L()) {
+      BX_PANIC(("RETF64: return to outer priviledge level still not implemented !"));
+    }
+#endif
 
     if (i->os32L()) {
       /* top 16+immediate bytes on stack must be within stack limits, else #SS(0) */
@@ -1176,24 +1217,27 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* examine return SS selector and associated descriptor: */
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12 + pop_bytes,
+      Bit16u return_EIP, return_ESP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8 + pop_bytes,
         4, 0, BX_READ, &return_ESP);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      return_RSP = return_ESP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
         4, 0, BX_READ, &return_EIP);
+      return_RIP = return_EIP;
     }
     else {
-      Bit16u return_SP;
+      Bit16u return_SP, return_IP;
 
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4 + pop_bytes,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4 + pop_bytes,
         2, 0, BX_READ, &return_SP);
-      return_ESP = return_SP;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      return_RSP = return_SP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
         2, 0, BX_READ, &return_IP);
-      return_EIP = return_IP;
+      return_RIP = return_IP;
     }
 
     /* selector must be non-null else #GP(0) */
@@ -1245,7 +1289,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* EIP must be in code segment limit, else #GP(0) */
-    if (return_EIP > cs_descriptor.u.segment.limit_scaled) {
+    if (return_RIP > cs_descriptor.u.segment.limit_scaled) {
       BX_ERROR(("return_protected: EIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -1256,15 +1300,15 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* set CS RPL to CPL */
     /* load the CS-cache with return CS descriptor */
     load_cs(&cs_selector, &cs_descriptor, cs_selector.rpl);
-    EIP = return_EIP;
+    EIP = return_RIP;
 
     /* load SS:SP from stack */
     /* load SS-cache with return SS descriptor */
     load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
     if (ss_descriptor.u.segment.d_b)
-      ESP = return_ESP + pop_bytes;
+      ESP = return_RSP + pop_bytes;
     else
-      SP  = (Bit16u) return_ESP + pop_bytes;
+      SP  = (Bit16u) return_RSP + pop_bytes;
 
     /* check ES, DS, FS, GS for validity */
     validate_seg_regs();
@@ -1445,7 +1489,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       //     then #GP(return selector)
       if (cs_descriptor.dpl != cs_selector.rpl)
       {
-        BX_INFO(("(mch) iret: Return with DPL != RPL. #GP(selector)"));
+        BX_INFO(("iret: Return with DPL != RPL. #GP(selector)"));
         exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
         return;
       }
@@ -1590,7 +1634,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
     Bit16u top_nbytes_same, top_nbytes_outer;
     Bit32u cs_offset, ss_offset;
-    Bit32u new_eip, new_esp, temp_ESP, new_eflags;
+    Bit32u new_eip, new_esp, temp_RSP, new_eflags;
     Bit16u new_ip, new_sp, new_flags;
     Bit8u prev_cpl;
 
@@ -1625,17 +1669,17 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-      temp_ESP = ESP;
+      temp_RSP = ESP;
     else
-      temp_ESP = SP;
+      temp_RSP = SP;
 
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + cs_offset,
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + cs_offset,
       2, CPL==3, BX_READ, &raw_cs_selector);
 
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
         4, CPL==3, BX_READ, &new_eip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
         4, CPL==3, BX_READ, &new_eflags);
 
       // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
@@ -1648,9 +1692,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
     }
     else {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
         2, CPL==3, BX_READ, &new_ip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
         2, CPL==3, BX_READ, &new_flags);
     }
 
@@ -1775,7 +1819,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
 
       /* examine return SS selector and associated descriptor */
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + ss_offset,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
         2, 0, BX_READ, &raw_ss_selector);
 
       /* selector must be non-null, else #GP(0) */
@@ -1829,19 +1873,19 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
 
       if (i->os32L()) {
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
           4, 0, BX_READ, &new_eip);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
           4, 0, BX_READ, &new_eflags);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12,
           4, 0, BX_READ, &new_esp);
       }
       else {
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
           2, 0, BX_READ, &new_ip);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
           2, 0, BX_READ, &new_flags);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6,
           2, 0, BX_READ, &new_sp);
         new_eip = new_ip;
         new_esp = new_sp;

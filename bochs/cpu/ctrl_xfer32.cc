@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.41 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.42 2005-07-20 01:26:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,11 +263,8 @@ void BX_CPU_C::JCC_Jd(bxInstruction_c *i)
     case 0x0B: /* JNP */ condition = !get_PF(); break;
     case 0x0C: /* JL */ condition = getB_SF() != getB_OF(); break;
     case 0x0D: /* JNL */ condition = getB_SF() == getB_OF(); break;
-    case 0x0E: /* JLE */ condition = get_ZF() || (getB_SF() != getB_OF());
-      break;
-    case 0x0F: /* JNLE */ condition = (getB_SF() == getB_OF()) &&
-                            !get_ZF();
-      break;
+    case 0x0E: /* JLE */ condition = get_ZF() || (getB_SF() != getB_OF()); break;
+    case 0x0F: /* JNLE */ condition = (getB_SF() == getB_OF()) && !get_ZF(); break;
     default:
       condition = 0; // For compiler...all targets should set condition.
       break;
@@ -309,7 +306,7 @@ void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 #if BX_INSTRUMENTATION
   else {
     BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-    }
+  }
 #endif
 }
 
@@ -348,11 +345,11 @@ void BX_CPU_C::JMP_Ed(bxInstruction_c *i)
   /* op1_32 is a register or memory reference */
   if (i->modC0()) {
     new_EIP = BX_READ_32BIT_REG(i->rm());
-    }
+  }
   else {
     /* pointer, segment address pair */
     read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
-    }
+  }
 
   branch_near32(new_EIP); // includes revalidate_prefetch_q()
 

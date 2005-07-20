@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.35 2005-07-10 20:32:30 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.36 2005-07-20 01:26:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,19 +197,11 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
 
-  if ( protected_mode() ) {
-    BX_PANIC(("Call protected is not implemented in x86-64 mode !"));
-    BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_64);
-    goto done;
-  }
+  BX_ASSERT(protected_mode());
 
-  push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  push_64(BX_CPU_THIS_PTR rip);
+  BX_PANIC(("Call protected is not implemented in x86-64 mode !"));
+  BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_64);
 
-  RIP = op1_64;
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }
@@ -299,15 +291,9 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
-  if ( protected_mode() ) {
-    BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
-    goto done;
-  }
+  BX_ASSERT(protected_mode());
+  BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
 
-  RIP = op1_32;
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
@@ -321,10 +307,8 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR rip;
 #endif
 
-  if (BX_CPU_THIS_PTR cr0.pe) {
-    iret_protected(i);
-    goto done;
-  }
+  BX_ASSERT(protected_mode());
+  iret_protected(i);
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,

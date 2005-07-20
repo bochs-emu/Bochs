@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.22 2005-07-01 14:06:02 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.23 2005-07-20 01:26:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ void BX_CPU_C::push_64(Bit64u value64)
   if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, 8)) {
     BX_INFO(("push_64(): push outside stack limits"));
     exception(BX_SS_EXCEPTION, 0, 0); /* #SS(0) */
-    }
+  }
 #endif
 
   write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
