@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.36 2005-07-20 01:26:45 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.37 2005-07-21 01:59:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,8 +90,6 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
 
 void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 {
-  Bit64u rip, rcs_raw;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -100,7 +98,9 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  long_return(i, i->Iw());
+  BX_INFO(("RETF64_Iw instruction executed ..."));
+
+  return_protected(i, i->Iw());
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
@@ -108,8 +108,6 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
 void BX_CPU_C::RETfar64(bxInstruction_c *i)
 {
-  Bit64u rip, rcs_raw;
-
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -118,7 +116,9 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  long_return(i, 0);
+  BX_INFO(("RETF64 instruction executed ..."));
+
+  return_protected(i, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
@@ -291,6 +291,8 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
+  BX_INFO(("JMPF64 instruction executed ..."));
+
   BX_ASSERT(protected_mode());
   BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
 
@@ -310,7 +312,6 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_ASSERT(protected_mode());
   iret_protected(i);
 
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
 }

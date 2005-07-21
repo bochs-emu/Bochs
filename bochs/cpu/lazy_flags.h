@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.19 2004-09-04 10:21:15 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.20 2005-07-21 01:59:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,22 +32,32 @@
 #define BX_INSTR_ADD32          3
 #define BX_INSTR_ADD64          4
 
-#define BX_INSTR_SUB8           5
-#define BX_INSTR_SUB16          6
-#define BX_INSTR_SUB32          7
-#define BX_INSTR_SUB64          8
-
 // used only if CF = 1 when executing ADC instruction
-#define BX_INSTR_ADC8           9
-#define BX_INSTR_ADC16          10
-#define BX_INSTR_ADC32          11
-#define BX_INSTR_ADC64          12
+#define BX_INSTR_ADC8           5
+#define BX_INSTR_ADC16          6
+#define BX_INSTR_ADC32          7
+#define BX_INSTR_ADC64          8
+
+#define BX_INSTR_ADD_ADC8(cf)  (1 + (cf)<<2)
+#define BX_INSTR_ADD_ADC16(cf) (2 + (cf)<<2)
+#define BX_INSTR_ADD_ADC32(cf) (3 + (cf)<<2)
+#define BX_INSTR_ADD_ADC64(cf) (4 + (cf)<<2)
+
+#define BX_INSTR_SUB8           9
+#define BX_INSTR_SUB16          10
+#define BX_INSTR_SUB32          11
+#define BX_INSTR_SUB64          12
 
 // used only if CF = 1 when executing SBB instruction
 #define BX_INSTR_SBB8           13
 #define BX_INSTR_SBB16          14
 #define BX_INSTR_SBB32          15
 #define BX_INSTR_SBB64          16
+
+#define BX_INSTR_SUB_SBB8(cf)  (9  + (cf)<<2)
+#define BX_INSTR_SUB_SBB16(cf) (10 + (cf)<<2)
+#define BX_INSTR_SUB_SBB32(cf) (11 + (cf)<<2)
+#define BX_INSTR_SUB_SBB64(cf) (12 + (cf)<<2)
 
 #define BX_INSTR_INC8           17
 #define BX_INSTR_INC16          18

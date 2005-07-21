@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.45 2005-05-19 20:25:14 sshwarts Exp $
+// $Id: arith32.cc,v 1.46 2005-07-21 01:59:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -163,8 +163,7 @@ void BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
     Write_RMW_virtual_dword(sum_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, 
-	       (temp_CF) ? BX_INSTR_ADC32 : BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
 void BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
@@ -186,8 +185,7 @@ void BX_CPU_C::ADC_GdEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, 
-	       (temp_CF) ? BX_INSTR_ADC32 : BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
 void BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
@@ -202,8 +200,7 @@ void BX_CPU_C::ADC_EAXId(bxInstruction_c *i)
 
   RAX = sum_32;
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, 
-	       (temp_CF) ? BX_INSTR_ADC32 : BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
 void BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
@@ -225,8 +222,7 @@ void BX_CPU_C::SBB_EdGd(bxInstruction_c *i)
     Write_RMW_virtual_dword(diff_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, 
-	       (temp_CF) ? BX_INSTR_SBB32 : BX_INSTR_SUB32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
 void BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
@@ -248,8 +244,7 @@ void BX_CPU_C::SBB_GdEd(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), diff_32);
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, 
-	       (temp_CF) ? BX_INSTR_SBB32 : BX_INSTR_SUB32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
 void BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
@@ -264,8 +259,7 @@ void BX_CPU_C::SBB_EAXId(bxInstruction_c *i)
 
   RAX = diff_32;
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, 
-	       (temp_CF) ? BX_INSTR_SBB32 : BX_INSTR_SUB32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
 void BX_CPU_C::SBB_EdId(bxInstruction_c *i)
@@ -287,8 +281,7 @@ void BX_CPU_C::SBB_EdId(bxInstruction_c *i)
     Write_RMW_virtual_dword(diff_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, 
-	       (temp_CF) ? BX_INSTR_SBB32 : BX_INSTR_SUB32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB_SBB32(temp_CF));
 }
 
 void BX_CPU_C::SUB_EdGd(bxInstruction_c *i)
@@ -553,8 +546,7 @@ void BX_CPU_C::ADC_EdId(bxInstruction_c *i)
     Write_RMW_virtual_dword(sum_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, 
-	       (temp_CF) ? BX_INSTR_ADC32 : BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD_ADC32(temp_CF));
 }
 
 void BX_CPU_C::SUB_EdId(bxInstruction_c *i)

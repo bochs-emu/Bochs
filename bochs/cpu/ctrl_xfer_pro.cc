@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.43 2005-07-20 01:26:45 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.44 2005-07-21 01:59:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -359,7 +359,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         if ( descriptor.u.gate386.dest_offset >
              gate_cs_descriptor.u.segment.limit_scaled )
         {
-          BX_ERROR(("jump_protected: IP > limit"));
+          BX_ERROR(("jump_protected: EIP > limit"));
           exception(BX_GP_EXCEPTION, 0, 0);
         }
 
@@ -489,14 +489,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
     // load eIP with new offset
     load_cs(&cs_selector, &cs_descriptor, CPL);
     RIP = dispBig;
-#if BX_SUPPORT_X86_64
+
     // not sure about this ???? - fix to work in long mode
-    if (cs_descriptor.u.segment.d_b==0 && cs_descriptor.u.segment.l==0)
-      EIP &= 0x0000ffff;
-#else
-    if (cs_descriptor.u.segment.d_b==0)
-      EIP &= 0x0000ffff;
-#endif
+    if (cs_descriptor.u.segment.d_b==0 && !IS_LONG64_SEGMENT(cs_descriptor))
+      RIP &= 0x0000ffff;
+
     return;
   }
   else { // gate & special segment
@@ -652,8 +649,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
         //   else #GP(code segment selector)
         // DPL of selected descriptor must be <= CPL,
         // else #GP(code segment selector)
-        if (cs_descriptor.valid==0 ||
-            cs_descriptor.segment==0 ||
+        if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
             cs_descriptor.u.segment.executable==0 ||
             cs_descriptor.dpl > CPL)
         {
@@ -727,8 +723,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
 
           // descriptor must indicate writable data segment,
           //   else #TS(SS selector)
-          if (ss_descriptor.valid==0 ||
-              ss_descriptor.segment==0  ||
+          if (ss_descriptor.valid==0 || ss_descriptor.segment==0  ||
               ss_descriptor.u.segment.executable ||
               ss_descriptor.u.segment.r_w==0)
           {
@@ -932,16 +927,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address dispBig)
   BX_PANIC(("call_protected: shouldn't get here!"));
 }
 
-#if BX_SUPPORT_X86_64
-
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::long_return(bxInstruction_c *i, Bit16u pop_bytes)
-{
-  BX_PANIC(("Return protected is not implemented in x86-64 mode !"));
-}
-
-#endif
-
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 {
@@ -1012,7 +997,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
                        stack_cs_offset, 2, CPL==3, BX_READ, &raw_cs_selector);
   parse_selector(raw_cs_selector, &cs_selector);
 
-  if ( cs_selector.rpl < CPL ) {
+  if (cs_selector.rpl < CPL) {
     BX_ERROR(("return_protected: CS.rpl < CPL"));
     exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
     return;
@@ -1020,13 +1005,14 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
   // if return selector RPL == CPL then
   // RETURN TO SAME PRIVILEGE LEVEL
-  if ( cs_selector.rpl == CPL ) {
-    //BX_INFO(("return: to same level %04x:%08x",
+  if (cs_selector.rpl == CPL)
+  {
+    // BX_INFO(("return: to same level %04x:%08x",
     //   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
     //   BX_CPU_THIS_PTR prev_eip));
 
     // return selector must be non-null, else #GP(0) (???)
-    if ( (raw_cs_selector & 0xfffc) == 0 ) {
+    if ((raw_cs_selector & 0xfffc) == 0) {
       BX_INFO(("return_protected: CS null"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
@@ -1039,8 +1025,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     // descriptor AR byte must indicate code segment, else #GP(selector)
     parse_descriptor(dword1, dword2, &cs_descriptor);
 
-    if (cs_descriptor.valid==0 ||
-        cs_descriptor.segment==0 ||
+    if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
         cs_descriptor.u.segment.executable==0)
     {
       BX_INFO(("return_protected: same: AR byte not code"));
@@ -1102,18 +1087,28 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     // EIP must be in code segment limit, else #GP(0)
-    if ( return_RIP > cs_descriptor.u.segment.limit_scaled ) {
-      BX_ERROR(("return_protected: return RIP > CS.limit"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      return;
+#if BX_SUPPORT_X86_64
+    if (IsLongMode()) {
+      if (! IsCanonical(return_RIP)) {
+        BX_ERROR(("branch_near64: canonical RIP violation"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+    }
+    else
+#endif
+    {
+      if (return_RIP > cs_descriptor.u.segment.limit_scaled) {
+        BX_ERROR(("return_protected: return RIP > CS.limit"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
     }
 
     // load CS:EIP from stack
     // load CS register with descriptor
-    // increment eSP
     load_cs(&cs_selector, &cs_descriptor, CPL);
     RIP = return_RIP;
 
+    // increment eSP
 #if BX_SUPPORT_X86_64
     if (IsLongMode()) RSP += stack_param_offset + pop_bytes;
     else 
@@ -1167,7 +1162,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     /* examine return CS selector and associated descriptor */
 
-    /* selector must be non-null else #GP(0) (???) */
+    /* selector must be non-null else #GP(0) */
     if ( (raw_cs_selector & 0xfffc) == 0 ) {
       BX_INFO(("return_protected: CS selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -1179,7 +1174,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &cs_descriptor);
 
-    /* descriptor AR byte must indicate code segment else #GP(selector) (???) */
+    /* descriptor AR byte must indicate code segment else #GP(selector) */
     if (cs_descriptor.valid==0 ||
         cs_descriptor.segment==0  ||
         cs_descriptor.u.segment.executable==0)
@@ -1216,6 +1211,17 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* examine return SS selector and associated descriptor: */
+#if BX_SUPPORT_X86_64
+    if (i->os64L()) {
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24 + pop_bytes,
+        2, 0, BX_READ, &raw_ss_selector);
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16 + pop_bytes,
+        8, 0, BX_READ, &return_RSP);
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+        8, 0, BX_READ, &return_RIP);
+    }
+    else
+#endif
     if (i->os32L()) {
       Bit16u return_EIP, return_ESP;
       access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12 + pop_bytes,
@@ -1229,7 +1235,6 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
     else {
       Bit16u return_SP, return_IP;
-
       access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6 + pop_bytes,
         2, 0, BX_READ, &raw_ss_selector);
       access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4 + pop_bytes,
@@ -1262,9 +1267,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* descriptor AR byte must indicate a writable data segment,
-     * else #GP(selector) (???) */
-    if (ss_descriptor.valid==0 ||
-        ss_descriptor.segment==0 ||
+     * else #GP(selector) */
+    if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
         ss_descriptor.u.segment.executable ||
         ss_descriptor.u.segment.r_w==0)
     {
@@ -1289,10 +1293,20 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     /* EIP must be in code segment limit, else #GP(0) */
-    if (return_RIP > cs_descriptor.u.segment.limit_scaled) {
-      BX_ERROR(("return_protected: EIP > CS.limit"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      return;
+#if BX_SUPPORT_X86_64
+    if (IsLongMode()) {
+      if (! IsCanonical(return_RIP)) {
+        BX_ERROR(("branch_near64: canonical RIP violation"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+    }
+    else
+#endif
+    {
+      if (return_RIP > cs_descriptor.u.segment.limit_scaled) {
+        BX_ERROR(("return_protected: EIP > CS.limit"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
     }
 
     /* set CPL to RPL of return CS selector */
@@ -1300,13 +1314,13 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     /* set CS RPL to CPL */
     /* load the CS-cache with return CS descriptor */
     load_cs(&cs_selector, &cs_descriptor, cs_selector.rpl);
-    EIP = return_RIP;
+    RIP = return_RIP;
 
     /* load SS:SP from stack */
     /* load SS-cache with return SS descriptor */
     load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
     if (ss_descriptor.u.segment.d_b)
-      ESP = return_RSP + pop_bytes;
+      RSP = return_RSP + pop_bytes;
     else
       SP  = (Bit16u) return_RSP + pop_bytes;
 
