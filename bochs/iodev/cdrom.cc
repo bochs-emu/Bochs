@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.79 2005-06-26 10:54:49 vruppert Exp $
+// $Id: cdrom.cc,v 1.80 2005-07-24 07:25:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,11 @@ extern "C" {
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#if defined (__GNUC__) && ( __GNUC__ >= 4 )
+#include <sys/disk.h>
+#else
 #include <dev/disk.h>
+#endif
 #include <errno.h>
 #include <paths.h>
 #include <sys/param.h>
@@ -523,7 +527,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.79 2005-06-26 10:54:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.80 2005-07-24 07:25:02 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 

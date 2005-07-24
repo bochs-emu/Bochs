@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.27 2004-08-15 19:27:14 vruppert Exp $
+// $Id: carbon.cc,v 1.28 2005-07-24 07:25:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -159,7 +159,7 @@ unsigned        bx_bitmap_right_xorigin = 2+TOOL_SPACING; // pixels from right
 //PixMapHandle  bx_pixmap[BX_MAX_PIXMAPS];
 CIconHandle     bx_cicn[BX_MAX_PIXMAPS];
 
-struct {
+struct __bx_tool_pixmap {
 //  CIconHandle cicn;
 //  PixMapHandle pm;
   ControlRef control;

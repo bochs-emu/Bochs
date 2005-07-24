@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.21 2005-05-21 07:38:29 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.22 2005-07-24 07:25:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,7 +228,7 @@ void
 bx_tuntap_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
 #ifdef __APPLE__	//FIXME
-  unsigned int size = write (fd, buf+14, io_len-14);
+  unsigned int size = write (fd, (char*)buf+14, io_len-14);
   if (size != io_len-14) {
     BX_PANIC (("write on tuntap device: %s", strerror (errno)));
   } else {
