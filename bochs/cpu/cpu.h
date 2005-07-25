@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.225 2005-07-21 01:59:03 sshwarts Exp $
+// $Id: cpu.h,v 1.226 2005-07-25 04:18:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1564,12 +1564,21 @@ public: // for now...
 
   BX_SMF void BT_EwGw(bxInstruction_c *);
   BX_SMF void BT_EdGd(bxInstruction_c *);
+  BX_SMF void BT_EwIb(bxInstruction_c *);
+  BX_SMF void BT_EdIb(bxInstruction_c *);
+
   BX_SMF void BTS_EwGw(bxInstruction_c *);
   BX_SMF void BTS_EdGd(bxInstruction_c *);
+  BX_SMF void BTS_EwIb(bxInstruction_c *);
+  BX_SMF void BTS_EdIb(bxInstruction_c *);
   BX_SMF void BTR_EwGw(bxInstruction_c *);
   BX_SMF void BTR_EdGd(bxInstruction_c *);
+  BX_SMF void BTR_EwIb(bxInstruction_c *);
+  BX_SMF void BTR_EdIb(bxInstruction_c *);
   BX_SMF void BTC_EwGw(bxInstruction_c *);
   BX_SMF void BTC_EdGd(bxInstruction_c *);
+  BX_SMF void BTC_EwIb(bxInstruction_c *);
+  BX_SMF void BTC_EdIb(bxInstruction_c *);
 
   BX_SMF void LES_GvMp(bxInstruction_c *);
   BX_SMF void LDS_GvMp(bxInstruction_c *);
@@ -1691,11 +1700,6 @@ public: // for now...
   BX_SMF void LIDT_Ms(bxInstruction_c *);
   BX_SMF void SMSW_Ew(bxInstruction_c *);
   BX_SMF void LMSW_Ew(bxInstruction_c *);
-
-  BX_SMF void BT_EvIb(bxInstruction_c *);
-  BX_SMF void BTS_EvIb(bxInstruction_c *);
-  BX_SMF void BTR_EvIb(bxInstruction_c *);
-  BX_SMF void BTC_EvIb(bxInstruction_c *);
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
   BX_SMF void FPU_ESC(bxInstruction_c *);
@@ -2359,9 +2363,14 @@ public: // for now...
   BX_SMF void BSR_GqEq(bxInstruction_c *);
 
   BX_SMF void BT_EqGq(bxInstruction_c *);
+  BX_SMF void BT_EqIb(bxInstruction_c *);
+
   BX_SMF void BTS_EqGq(bxInstruction_c *);
+  BX_SMF void BTS_EqIb(bxInstruction_c *);
   BX_SMF void BTR_EqGq(bxInstruction_c *);
+  BX_SMF void BTR_EqIb(bxInstruction_c *);
   BX_SMF void BTC_EqGq(bxInstruction_c *);
+  BX_SMF void BTC_EqIb(bxInstruction_c *);
 
   BX_SMF void BSWAP_RAX(bxInstruction_c *);
   BX_SMF void BSWAP_RCX(bxInstruction_c *);
