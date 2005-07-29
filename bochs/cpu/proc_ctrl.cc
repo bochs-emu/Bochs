@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.109 2005-07-07 18:40:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.110 2005-07-29 06:29:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1339,7 +1339,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   if (prev_pg==0 && BX_CPU_THIS_PTR cr0.pg) {
     if (BX_CPU_THIS_PTR msr.lme) {
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
-        BX_PANIC(("SetCR0: attempt to enter x86-64 LONG mode without enabling CR4.PAE !!!"));
+        BX_ERROR(("SetCR0: attempt to enter x86-64 LONG mode without enabling CR4.PAE !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       BX_CPU_THIS_PTR msr.lma = 1;

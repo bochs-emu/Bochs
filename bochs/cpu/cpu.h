@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.226 2005-07-25 04:18:10 sshwarts Exp $
+// $Id: cpu.h,v 1.227 2005-07-29 06:29:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -328,11 +328,11 @@
 #define BX_MSR_KERNELGSBASE     0xc0000102
 #endif
 
-#define BX_MODE_IA32_REAL       0x0   // CR0.PE=0
-#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1
-#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0
-#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 0, EFER.LME = 1, CR0.PE=1
-#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, EFER.LME = 1, CR0.PE=1
+#define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
+#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
+#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
+#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = EFER.LME = 1, CR0.PE=1, CS.L=0
+#define BX_MODE_LONG_64         0x4   // EFER.LMA = EFER.LME = 1, CR0.PE=1, CS.L=1
 
 #define BX_CANONICAL_BITS   (48)
 
@@ -2665,6 +2665,8 @@ public: // for now...
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
 
   BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_far(bx_selector_t *selector, 
+       bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -2686,9 +2688,9 @@ public: // for now...
 #endif
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
-                     unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
+       unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit32u  translate_linear(bx_address laddr, 
-     unsigned pl, unsigned rw, unsigned access_type) BX_CPP_AttrRegparmN(3);
+       unsigned pl, unsigned rw, unsigned access_type) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
