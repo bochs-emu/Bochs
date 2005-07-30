@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.293 2005-07-26 17:16:01 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.294 2005-07-30 15:02:40 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1472,6 +1472,17 @@ AC_ARG_ENABLE(time0,
     ]
   )
 
+dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
+if test "$bx_plugins" = 0; then
+  case $target in
+    *-pc-windows*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS wsock32.lib"
+      ;;
+    *-cygwin* | *-mingw32*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwsock32"
+      ;;
+  esac
+fi
 
 AC_MSG_CHECKING(for raw serial support)
 AC_ARG_ENABLE(raw-serial,
@@ -2359,6 +2370,13 @@ AC_SUBST(GUI_CXXFLAGS)
 AC_SUBST(WX_CONFIG)
 AC_SUBST(WX_CFLAGS)
 AC_SUBST(WX_CXXFLAGS)
+
+AC_CHECK_PROGS(WGET, wget curl fetch, not_found)
+if test "$WGET" = not_found; then 
+  AC_MSG_WARN([cannot find wget (or equivalent) command])
+fi
+# everybody has to re-invent the wheel. differently.
+test "${WGET}" = "curl" && WGET="curl -O"
 
 # modify settings based on target platform
 case "$target" in
