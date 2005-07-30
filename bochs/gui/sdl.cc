@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.58 2005-06-23 18:39:47 vruppert Exp $
+// $Id: sdl.cc,v 1.59 2005-07-30 18:57:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -963,6 +963,7 @@ void bx_sdl_gui_c::handle_events(void)
 	  headerbar_click(sdl_event.button.x);
 	  break;
 	}
+#ifdef SDL_BUTTON_WHEELUP
         // get the wheel status
         if (sdl_event.button.button == SDL_BUTTON_WHEELUP) {
           wheel_status = 1;
@@ -970,6 +971,7 @@ void bx_sdl_gui_c::handle_events(void)
         if (sdl_event.button.button == SDL_BUTTON_WHEELDOWN) {
           wheel_status = -1;
         }
+#endif
       case SDL_MOUSEBUTTONUP:
 	// figure out mouse state
 	new_mousex = (int)(sdl_event.button.x);
