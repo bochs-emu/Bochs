@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.227 2005-07-29 06:29:57 sshwarts Exp $
+// $Id: cpu.h,v 1.228 2005-07-31 17:57:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -337,15 +337,17 @@
 #define BX_CANONICAL_BITS   (48)
 
 #if BX_SUPPORT_X86_64
-#define IsLongMode() (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-#else
-#define IsLongMode() (0)
-#endif
-
-#if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_CANONICAL_BITS-1)) + 1) < 2)
 #else
 #define IsCanonical(offset) (0)
+#endif
+
+#if BX_SUPPORT_X86_64
+#define IsLongMode()        (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+#define StackAddrSize64()   (IsLongMode())
+#else
+#define IsLongMode()        (0)
+#define StackAddrSize64()   (0)
 #endif
 
 #if BX_SUPPORT_APIC
@@ -1327,17 +1329,29 @@ public: // for now...
   BX_SMF void OR_EAXId(bxInstruction_c *);
   BX_SMF void OR_AXIw(bxInstruction_c *);
 
-  BX_SMF void PUSH_CS(bxInstruction_c *);
-  BX_SMF void PUSH_DS(bxInstruction_c *);
-  BX_SMF void POP_DS(bxInstruction_c *);
-  BX_SMF void PUSH_ES(bxInstruction_c *);
-  BX_SMF void POP_ES(bxInstruction_c *);
-  BX_SMF void PUSH_FS(bxInstruction_c *);
-  BX_SMF void POP_FS(bxInstruction_c *);
-  BX_SMF void PUSH_GS(bxInstruction_c *);
-  BX_SMF void POP_GS(bxInstruction_c *);
-  BX_SMF void PUSH_SS(bxInstruction_c *);
-  BX_SMF void POP_SS(bxInstruction_c *);
+  BX_SMF void PUSH16_CS(bxInstruction_c *);
+  BX_SMF void PUSH16_DS(bxInstruction_c *);
+  BX_SMF void POP16_DS(bxInstruction_c *);
+  BX_SMF void PUSH16_ES(bxInstruction_c *);
+  BX_SMF void POP16_ES(bxInstruction_c *);
+  BX_SMF void PUSH16_FS(bxInstruction_c *);
+  BX_SMF void POP16_FS(bxInstruction_c *);
+  BX_SMF void PUSH16_GS(bxInstruction_c *);
+  BX_SMF void POP16_GS(bxInstruction_c *);
+  BX_SMF void PUSH16_SS(bxInstruction_c *);
+  BX_SMF void POP16_SS(bxInstruction_c *);
+
+  BX_SMF void PUSH32_CS(bxInstruction_c *);
+  BX_SMF void PUSH32_DS(bxInstruction_c *);
+  BX_SMF void POP32_DS(bxInstruction_c *);
+  BX_SMF void PUSH32_ES(bxInstruction_c *);
+  BX_SMF void POP32_ES(bxInstruction_c *);
+  BX_SMF void PUSH32_FS(bxInstruction_c *);
+  BX_SMF void POP32_FS(bxInstruction_c *);
+  BX_SMF void PUSH32_GS(bxInstruction_c *);
+  BX_SMF void POP32_GS(bxInstruction_c *);
+  BX_SMF void PUSH32_SS(bxInstruction_c *);
+  BX_SMF void POP32_SS(bxInstruction_c *);
 
   BX_SMF void ADC_EbGb(bxInstruction_c *);
   BX_SMF void ADC_EdGd(bxInstruction_c *);
@@ -2665,11 +2679,13 @@ public: // for now...
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
 
   BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
-  BX_SMF void branch_far(bx_selector_t *selector, 
-       bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
+  BX_SMF void branch_far32(bx_selector_t *selector, 
+       bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl);
+  BX_SMF void branch_far64(bx_selector_t *selector, 
+       bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SupportRepeatSpeedups
   BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
@@ -2777,14 +2793,10 @@ public: // for now...
                                 Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
   BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);
   BX_SMF void    push_32(Bit32u value32);
-#if BX_SUPPORT_X86_64
   BX_SMF void    push_64(Bit64u value64);
-#endif
   BX_SMF void    pop_16(Bit16u *value16_ptr);
   BX_SMF void    pop_32(Bit32u *value32_ptr);
-#if BX_SUPPORT_X86_64
   BX_SMF void    pop_64(Bit64u *value64_ptr);
-#endif
   BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool can_pop(Bit32u bytes);
   BX_SMF void    decrementESPForPush(unsigned nBytes, Bit32u *eSP);

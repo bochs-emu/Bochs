@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.18 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: stack16.cc,v 1.19 2005-07-31 17:57:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,6 +35,79 @@ void BX_CPU_C::PUSH_RX(bxInstruction_c *i)
   push_16( BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx );
 }
 
+void BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+}
+
+void BX_CPU_C::PUSH16_DS(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+}
+
+void BX_CPU_C::PUSH16_ES(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+}
+
+void BX_CPU_C::PUSH16_FS(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+}
+
+void BX_CPU_C::PUSH16_GS(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+}
+
+void BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
+{
+  push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+}
+
+void BX_CPU_C::POP16_DS(bxInstruction_c *i)
+{
+  Bit16u ds;
+  pop_16(&ds);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+}
+
+void BX_CPU_C::POP16_ES(bxInstruction_c *i)
+{
+  Bit16u es;
+  pop_16(&es);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
+}
+
+void BX_CPU_C::POP16_FS(bxInstruction_c *i)
+{
+  Bit16u fs;
+  pop_16(&fs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
+}
+
+void BX_CPU_C::POP16_GS(bxInstruction_c *i)
+{
+  Bit16u gs;
+  pop_16(&gs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+}
+
+void BX_CPU_C::POP16_SS(bxInstruction_c *i)
+{
+  Bit16u ss;
+  pop_16(&ss);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
+
+  // POP SS inhibits interrupts, debug exceptions and single-step
+  // trap exceptions until the execution boundary following the
+  // next instruction is reached.
+  // Same code as MOV_SwEw()
+  BX_CPU_THIS_PTR inhibit_mask |=
+    BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
+  BX_CPU_THIS_PTR async_event = 1;
+}
+
 void BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
   Bit16u rx;
@@ -63,12 +136,9 @@ void BX_CPU_C::POP_Ew(bxInstruction_c *i)
   }
 }
 
+#if BX_CPU_LEVEL >= 3
 void BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("PUSHAD: not supported on an 8086"));
-  UndefinedOpcode(i);
-#else
   Bit32u temp_ESP;
   Bit16u sp;
 
@@ -103,16 +173,10 @@ void BX_CPU_C::PUSHAD16(bxInstruction_c *i)
   push_16(BP);
   push_16(SI);
   push_16(DI);
-#endif
 }
 
 void BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("POPA not supported on an 8086"));
-  UndefinedOpcode(i);
-#else /* 286+ */
-
   Bit16u di, si, bp, tmp, bx, dx, cx, ax;
 
   if (protected_mode()) {
@@ -140,8 +204,8 @@ void BX_CPU_C::POPAD16(bxInstruction_c *i)
   DX = dx;
   CX = cx;
   AX = ax;
-#endif
 }
+#endif
 
 void BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 {

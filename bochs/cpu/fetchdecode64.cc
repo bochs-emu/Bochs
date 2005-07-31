@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.79 2005-07-25 04:18:11 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.80 2005-07-31 17:57:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -951,16 +951,16 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 9D */  { BxAnother, &BX_CPU_C::SETNL_Eb },
   /* 0F 9E */  { BxAnother, &BX_CPU_C::SETLE_Eb },
   /* 0F 9F */  { BxAnother, &BX_CPU_C::SETNLE_Eb },
-  /* 0F A0 */  { 0, &BX_CPU_C::PUSH_FS },
-  /* 0F A1 */  { 0, &BX_CPU_C::POP_FS },
+  /* 0F A0 */  { 0, &BX_CPU_C::PUSH16_FS },
+  /* 0F A1 */  { 0, &BX_CPU_C::POP16_FS },
   /* 0F A2 */  { 0, &BX_CPU_C::CPUID },
   /* 0F A3 */  { BxAnother, &BX_CPU_C::BT_EwGw },
   /* 0F A4 */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHLD_EwGw },
   /* 0F A5 */  { BxAnother,                  &BX_CPU_C::SHLD_EwGw },
   /* 0F A6 */  { 0, &BX_CPU_C::BxError },
   /* 0F A7 */  { 0, &BX_CPU_C::BxError },
-  /* 0F A8 */  { 0, &BX_CPU_C::PUSH_GS },
-  /* 0F A9 */  { 0, &BX_CPU_C::POP_GS },
+  /* 0F A8 */  { 0, &BX_CPU_C::PUSH16_GS },
+  /* 0F A9 */  { 0, &BX_CPU_C::POP16_GS },
   /* 0F AA */  { 0, &BX_CPU_C::RSM },
   /* 0F AB */  { BxAnother | BxLockable, &BX_CPU_C::BTS_EwGw },
   /* 0F AC */  { BxAnother | BxImmediate_Ib, &BX_CPU_C::SHRD_EwGw },

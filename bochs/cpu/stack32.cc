@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.28 2005-07-01 14:06:02 sshwarts Exp $
+// $Id: stack32.cc,v 1.29 2005-07-31 17:57:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,146 +69,87 @@ void BX_CPU_C::POP_ERX(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx = erx;
 }
 
-void BX_CPU_C::PUSH_CS(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_CS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
 }
 
-void BX_CPU_C::PUSH_DS(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_DS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
 }
 
-void BX_CPU_C::PUSH_ES(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
 }
 
-void BX_CPU_C::PUSH_FS(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
 
-void BX_CPU_C::PUSH_GS(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
-void BX_CPU_C::PUSH_SS(bxInstruction_c *i)
+void BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u eSP;
-    decrementESPForPush(4, &eSP);
-    write_virtual_word(BX_SEG_REG_SS, eSP,
-                       &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-  }
-  else
-    push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+  Bit32u eSP;
+  decrementESPForPush(4, &eSP);
+  write_virtual_word(BX_SEG_REG_SS, eSP,
+            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
 
-void BX_CPU_C::POP_DS(bxInstruction_c *i)
+void BX_CPU_C::POP32_DS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u ds;
-    pop_32(&ds);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], (Bit16u) ds);
-  }
-  else {
-    Bit16u ds;
-    pop_16(&ds);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
-  }
+  Bit32u ds;
+  pop_32(&ds);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], (Bit16u) ds);
 }
 
-void BX_CPU_C::POP_ES(bxInstruction_c *i)
+void BX_CPU_C::POP32_ES(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u es;
-    pop_32(&es);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], (Bit16u) es);
-  }
-  else {
-    Bit16u es;
-    pop_16(&es);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
-  }
+  Bit32u es;
+  pop_32(&es);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], (Bit16u) es);
 }
 
-void BX_CPU_C::POP_FS(bxInstruction_c *i)
+void BX_CPU_C::POP32_FS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u fs;
-    pop_32(&fs);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
-  }
-  else {
-    Bit16u fs;
-    pop_16(&fs);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
-  }
+  Bit32u fs;
+  pop_32(&fs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
 }
 
-void BX_CPU_C::POP_GS(bxInstruction_c *i)
+void BX_CPU_C::POP32_GS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u gs;
-    pop_32(&gs);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
-  }
-  else {
-    Bit16u gs;
-    pop_16(&gs);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
-  }
+  Bit32u gs;
+  pop_32(&gs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
 }
 
-void BX_CPU_C::POP_SS(bxInstruction_c *i)
+void BX_CPU_C::POP32_SS(bxInstruction_c *i)
 {
-  if (i->os32L()) {
-    Bit32u ss;
-    pop_32(&ss);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], (Bit16u) ss);
-  }
-  else {
-    Bit16u ss;
-    pop_16(&ss);
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
-  }
+  Bit32u ss;
+  pop_32(&ss);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], (Bit16u) ss);
 
   // POP SS inhibits interrupts, debug exceptions and single-step
   // trap exceptions until the execution boundary following the
@@ -219,12 +160,9 @@ void BX_CPU_C::POP_SS(bxInstruction_c *i)
   BX_CPU_THIS_PTR async_event = 1;
 }
 
+#if BX_CPU_LEVEL >= 2
 void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("PUSHAD: not supported on an 8086"));
-  UndefinedOpcode(i);
-#else
   Bit32u temp_ESP;
   Bit32u esp;
 
@@ -256,15 +194,10 @@ void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
   push_32(EBP);
   push_32(ESI);
   push_32(EDI);
-#endif
 }
 
 void BX_CPU_C::POPAD32(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("POPAD: not supported on an 8086"));
-  UndefinedOpcode(i);
-#else
   Bit32u edi, esi, ebp, etmp, ebx, edx, ecx, eax;
 
   if (protected_mode()) {
@@ -292,8 +225,8 @@ void BX_CPU_C::POPAD32(bxInstruction_c *i)
   EDX = edx;
   ECX = ecx;
   EAX = eax;
-#endif
 }
+#endif
 
 void BX_CPU_C::PUSH_Id(bxInstruction_c *i)
 {
@@ -316,13 +249,9 @@ void BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
   push_32(op1_32);
 }
 
+#if BX_CPU_LEVEL >= 2
 void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("ENTER_IwIb: not supported by 8086!"));
-  UndefinedOpcode(i);
-#else
-
   unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
 
   Bit16u imm16 = i->Iw();
@@ -393,15 +322,10 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
     BP = (Bit16u) frame_ptr32;
     SP -= imm16;
   }
-#endif
 }
 
 void BX_CPU_C::LEAVE(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_INFO(("LEAVE: not supported by 8086!"));
-  UndefinedOpcode(i);
-#else
   Bit32u temp_EBP;
 
 #if BX_CPU_LEVEL >= 3
@@ -448,5 +372,5 @@ void BX_CPU_C::LEAVE(bxInstruction_c *i)
     pop_16(&temp16);
     BP = temp16;
   }
-#endif
 }
+#endif

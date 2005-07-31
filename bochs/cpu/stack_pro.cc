@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.23 2005-07-20 01:26:47 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.24 2005-07-31 17:57:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,186 +33,173 @@
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::push_16(Bit16u value16)
 {
-  /* must use StackAddrSize, and either ESP or SP accordingly */
+  /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
 #if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+  {
+    write_virtual_word(BX_SEG_REG_SS, RSP-2, &value16);
+    RSP -= 2;
+  }
+  else
+#endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    /* 32bit stack size: pushes use SS:ESP  */
-    if (protected_mode()) {
-      if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, ESP, 2)) {
-        BX_INFO(("push_16(): push outside stack limits"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-    else 
-    { /* real mode */
-      if (ESP == 1)
-        BX_PANIC(("CPU shutting down due to lack of stack space, ESP==1"));
-    }
-
     write_virtual_word(BX_SEG_REG_SS, ESP-2, &value16);
     ESP -= 2;
   }
   else
 #endif
   {
-    /* 16bit stack size: pushes use SS:SP  */
-#if BX_CPU_LEVEL >= 2
-    if (protected_mode()) {
-      if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, SP, 2)) {
-        BX_INFO(("push_16(): push outside stack limits"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-    else 
-#endif
-    { /* real mode */
-      if (SP == 1)
-        BX_PANIC(("CPU shutting down due to lack of stack space, SP==1"));
-    }
-
     write_virtual_word(BX_SEG_REG_SS, (Bit16u) (SP-2), &value16);
-    SP -= 2;
+    SP  -= 2;
   }
 }
 
-#if BX_CPU_LEVEL >= 3
 /* push 32 bit operand size */
 void BX_CPU_C::push_32(Bit32u value32)
 {
-  /* must use StackAddrSize, and either ESP or SP accordingly */
+  /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+  {
+    write_virtual_dword(BX_SEG_REG_SS, RSP-4, &value32);
+    RSP -= 4;
+  }
+  else
+#endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    /* 32bit stack size: pushes use SS:ESP  */
-    if (protected_mode()) {
-      if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, ESP, 4)) {
-        BX_INFO(("push_32(): push outside stack limits"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-    else { /* real mode */
-      if ((ESP>=1) && (ESP<=3)) {
-        BX_PANIC(("push_32: ESP=%08x", (unsigned) ESP));
-      }
-    }
-
     write_virtual_dword(BX_SEG_REG_SS, ESP-4, &value32);
     ESP -= 4;
   }
-  else { /* 16bit stack size: pushes use SS:SP  */
-    if (protected_mode()) {
-      if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, SP, 4)) {
-        BX_INFO(("push_32(): push outside stack limits"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-    }
-    else { /* real mode */
-      if ((SP>=1) && (SP<=3)) {
-        BX_PANIC(("push_32: SP=%08x", (unsigned) SP));
-      }
-    }
-
+  else
+#endif
+  {
     write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (SP-4), &value32);
-    SP -= 4;
+    SP  -= 4;
   }
 }
 
-#if BX_SUPPORT_X86_64
 void BX_CPU_C::push_64(Bit64u value64)
 {
-  /* 64bit stack size: pushes use SS:RSP, assume protected mode  */
-#if BX_IGNORE_THIS
-  if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, RSP, 8)) {
-    BX_INFO(("push_64(): push outside stack limits"));
-    exception(BX_SS_EXCEPTION, 0, 0); /* #SS(0) */
+  /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+  {
+    write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
+    RSP -= 8;
   }
+  else
 #endif
-
-  write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
-  RSP -= 8;
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
+    write_virtual_qword(BX_SEG_REG_SS, ESP-8, &value64);
+    ESP -= 8;
+  }
+  else
+#endif
+  {
+    write_virtual_qword(BX_SEG_REG_SS, (Bit16u) (SP-8), &value64);
+    SP  -= 8;
+  }
 }
-#endif  // #if BX_SUPPORT_X86_64
-
-#endif /* BX_CPU_LEVEL >= 3 */
 
 void BX_CPU_C::pop_16(Bit16u *value16_ptr)
 {
-  Bit32u temp_ESP;
+  bx_address temp_RSP;
 
 #if BX_CPU_LEVEL >= 3
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_ESP = ESP;
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    temp_RSP = RSP;
   else
 #endif
-    temp_ESP = SP;
-
-#if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    if ( !can_pop(2) ) {
-      BX_ERROR(("pop_16(): can't pop from stack"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
-  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+    temp_RSP = ESP;
+  else
 #endif
+    temp_RSP = SP;
 
   /* access within limits */
-  read_virtual_word(BX_SEG_REG_SS, temp_ESP, value16_ptr);
+  read_virtual_word(BX_SEG_REG_SS, temp_RSP, value16_ptr);
 
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    RSP += 2;
+  else
+#endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += 2;
   else
-    SP += 2;
+#endif
+    SP  += 2;
 }
 
-#if BX_CPU_LEVEL >= 3
 void BX_CPU_C::pop_32(Bit32u *value32_ptr)
 {
-  Bit32u temp_ESP;
+  bx_address temp_RSP;
 
-  /* 32 bit stack mode: use SS:ESP */
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_ESP = ESP;
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    temp_RSP = RSP;
   else
-    temp_ESP = SP;
-
-  /* 16 bit stack mode: use SS:SP */
-  if (protected_mode()) {
-    if ( !can_pop(4) ) {
-      BX_ERROR(("pop_32(): can't pop from stack"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
-  }
+#endif
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+    temp_RSP = ESP;
+  else
+#endif
+    temp_RSP = SP;
 
   /* access within limits */
-  read_virtual_dword(BX_SEG_REG_SS, temp_ESP, value32_ptr);
+  read_virtual_dword(BX_SEG_REG_SS, temp_RSP, value32_ptr);
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b==1)
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    RSP += 4;
+  else
+#endif
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += 4;
   else
-    SP += 4;
+#endif
+    SP  += 4;
 }
 
-#if BX_SUPPORT_X86_64
 void BX_CPU_C::pop_64(Bit64u *value64_ptr)
 {
-  if ( !can_pop(8) ) {
-    BX_ERROR(("pop_64(): can't pop from stack"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-    return;
-  }
+  bx_address temp_RSP;
+
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    temp_RSP = RSP;
+  else
+#endif
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+    temp_RSP = ESP;
+  else
+#endif
+    temp_RSP = SP;
 
   /* access within limits */
+  read_virtual_qword(BX_SEG_REG_SS, temp_RSP, value64_ptr);
 
-  read_virtual_qword(BX_SEG_REG_SS, RSP, value64_ptr);
-
-  RSP += 8;
-}
-#endif  // #if BX_SUPPORT_X86_64
-
+#if BX_CPU_LEVEL >= 3
+#if BX_SUPPORT_X86_64
+  if (StackAddrSize64())
+    RSP += 8;
+  else
 #endif
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+    ESP += 8;
+  else
+#endif
+    SP  += 8;
+}
 
-
-#if BX_CPU_LEVEL >= 2
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
 {
@@ -225,7 +212,6 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
   // small stack compares against 16-bit SP
   if (!descriptor->u.segment.d_b)
     esp &= 0x0000ffff;
-
 
   if (descriptor->valid==0) {
     BX_PANIC(("can_push(): SS invalidated."));
@@ -299,10 +285,7 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
     return(1);
   }
 }
-#endif
 
-
-#if BX_CPU_LEVEL >= 2
 bx_bool BX_CPU_C::can_pop(Bit32u bytes)
 {
   Bit32u temp_ESP, expand_down_limit;
@@ -358,10 +341,8 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
     return(0);
   }
 }
-#endif
 
-  void
-BX_CPU_C::decrementESPForPush(unsigned nBytes, Bit32u *eSP_ptr)
+void BX_CPU_C::decrementESPForPush(unsigned nBytes, Bit32u *eSP_ptr)
 {
   Bit32u eSP;
 

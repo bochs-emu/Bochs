@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.37 2005-07-21 01:59:04 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.38 2005-07-31 17:57:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8 + imm16;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
 
 void BX_CPU_C::RETnear64(bxInstruction_c *i)
@@ -85,7 +85,7 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
   RIP = return_RIP;
   RSP += 8;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
 
 void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
@@ -103,7 +103,7 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
   return_protected(i, i->Iw());
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::RETfar64(bxInstruction_c *i)
@@ -121,7 +121,7 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
   return_protected(i, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
@@ -141,10 +141,10 @@ void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
   }
 
   /* push 64 bit EA of next instruction */
-  push_64(BX_CPU_THIS_PTR rip);
+  push_64(RIP);
   RIP = new_RIP;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
 void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
@@ -170,16 +170,16 @@ void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  push_64(BX_CPU_THIS_PTR rip);
+  push_64(RIP);
   RIP = op1_64;
 
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, BX_CPU_THIS_PTR rip);
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
 void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;
-  Bit64u op1_64;
+  Bit32u op1_32;
 
   invalidate_prefetch_q();
 
@@ -194,16 +194,16 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
   }
 
   /* pointer, segment address pair */
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
 
   BX_ASSERT(protected_mode());
 
   BX_PANIC(("Call protected is not implemented in x86-64 mode !"));
-  BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_64);
+  BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_32);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
@@ -306,14 +306,14 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-  BX_CPU_THIS_PTR show_eip = BX_CPU_THIS_PTR rip;
+  BX_CPU_THIS_PTR show_eip = RIP;
 #endif
 
   BX_ASSERT(protected_mode());
   iret_protected(i);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
-                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR rip);
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)

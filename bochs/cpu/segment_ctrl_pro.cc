@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.41 2005-07-29 06:29:57 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.42 2005-07-31 17:57:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -415,7 +415,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   temp->type     = (AR_byte & 0x0f);
   temp->valid    = 0; /* start out invalid */
 
-
   if (temp->segment) { /* data/code segment descriptors */
     temp->u.segment.executable = (AR_byte >> 3) & 0x01;
     temp->u.segment.c_ed       = (AR_byte >> 2) & 0x01;
@@ -637,6 +636,7 @@ BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
+      debug(BX_CPU_THIS_PTR prev_eip);
     }
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",

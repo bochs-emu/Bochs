@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.110 2005-07-29 06:29:57 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.111 2005-07-31 17:57:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -549,77 +549,6 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 }
 #endif // #if BX_SUPPORT_X86_64
 
-#endif // #if BX_CPU_LEVEL >= 3
-
-void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LMSW_Ew(): not supported on 8086!"));
-#else
-  Bit16u msw;
-  Bit32u cr0;
-
-  invalidate_prefetch_q();
-
-  if (protected_mode() || v8086_mode()) {
-    if (CPL != 0) {
-      BX_INFO(("LMSW: CPL != 0, CPL=%u", (unsigned) CPL));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-  }
-
-  if (i->modC0()) {
-    msw = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    read_virtual_word(i->seg(), RMAddr(i), &msw);
-  }
-
-  // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
-
-  // LMSW cannot clear PE
-  if (BX_CPU_THIS_PTR cr0.pe)
-    msw |= 0x0001; // adjust PE bit to current value of 1
-
-  msw &= 0x000f; // LMSW only affects last 4 flags
-  cr0 = (BX_CPU_THIS_PTR cr0.val32 & 0xfffffff0) | msw;
-  SetCR0(cr0);
-#endif /* BX_CPU_LEVEL < 2 */
-}
-
-void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("SMSW_Ew: not supported yet!"));
-#else
-  Bit16u msw;
-
-#if BX_CPU_LEVEL == 2
-  msw = 0xfff0; /* 80286 init value */
-  msw |= (BX_CPU_THIS_PTR cr0.ts << 3) |
-         (BX_CPU_THIS_PTR cr0.em << 2) |
-         (BX_CPU_THIS_PTR cr0.mp << 1) |
-         (BX_CPU_THIS_PTR cr0.pe);
-#else /* 386+ */
-  msw = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
-#endif
-
-  if (i->modC0()) {
-    if (i->os32L()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
-    }
-    else {
-      BX_WRITE_16BIT_REG(i->rm(), msw);
-    }
-  }
-  else {
-    write_virtual_word(i->seg(), RMAddr(i), &msw);
-  }
-
-#endif
-}
-
-#if BX_CPU_LEVEL >= 3
 void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
   // mov general register data to control register
@@ -921,6 +850,67 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
 #endif // #if BX_SUPPORT_X86_64
 
 #endif // #if BX_CPU_LEVEL >= 3
+
+#if BX_CPU_LEVEL >= 2
+void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
+{
+  Bit16u msw;
+  Bit32u cr0;
+
+  invalidate_prefetch_q();
+
+  if (protected_mode() || v8086_mode()) {
+    if (CPL != 0) {
+      BX_INFO(("LMSW: CPL != 0, CPL=%u", (unsigned) CPL));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  }
+
+  if (i->modC0()) {
+    msw = BX_READ_16BIT_REG(i->rm());
+  }
+  else {
+    read_virtual_word(i->seg(), RMAddr(i), &msw);
+  }
+
+  // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
+
+  // LMSW cannot clear PE
+  if (BX_CPU_THIS_PTR cr0.pe)
+    msw |= 0x0001; // adjust PE bit to current value of 1
+
+  msw &= 0x000f; // LMSW only affects last 4 flags
+  cr0 = (BX_CPU_THIS_PTR cr0.val32 & 0xfffffff0) | msw;
+  SetCR0(cr0);
+}
+
+void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
+{
+  Bit16u msw;
+
+#if BX_CPU_LEVEL == 2
+  msw = 0xfff0; /* 80286 init value */
+  msw |= (BX_CPU_THIS_PTR cr0.ts << 3) |
+         (BX_CPU_THIS_PTR cr0.em << 2) |
+         (BX_CPU_THIS_PTR cr0.mp << 1) |
+         (BX_CPU_THIS_PTR cr0.pe);
+#else /* 386+ */
+  msw = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
+#endif
+
+  if (i->modC0()) {
+    if (i->os32L()) {
+      BX_WRITE_32BIT_REGZ(i->rm(), msw);  // zeros out high 16bits
+    }
+    else {
+      BX_WRITE_16BIT_REG(i->rm(), msw);
+    }
+  }
+  else {
+    write_virtual_word(i->seg(), RMAddr(i), &msw);
+  }
+}
+#endif
 
 void BX_CPU_C::MOV_TdRd(bxInstruction_c *i)
 {
