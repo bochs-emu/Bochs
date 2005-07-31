@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.290 2005-07-04 18:02:23 sshwarts Exp $
+// $Id: main.cc,v 1.291 2005-07-31 15:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -51,12 +51,6 @@
 #include <Carbon/Carbon.h>
 #undef Float32
 #undef Float64
-#endif
-
-// BX_SHARE_PATH should be defined by the makefile.  If not, give it
-// a value of NULL to avoid compile problems.
-#ifndef BX_SHARE_PATH
-#define BX_SHARE_PATH NULL
 #endif
 
 

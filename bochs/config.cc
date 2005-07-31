@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.37 2005-07-10 16:51:08 vruppert Exp $
+// $Id: config.cc,v 1.38 2005-07-31 15:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,12 +37,6 @@
 // SDL_getenv, but then neglects to provide SDL_getenv.  It happens
 // because we are defining -Dmacintosh.
 #undef getenv
-#endif
-
-// BX_SHARE_PATH should be defined by the makefile.  If not, give it
-// a value of NULL to avoid compile problems.
-#ifndef BX_SHARE_PATH
-#define BX_SHARE_PATH NULL
 #endif
 
 

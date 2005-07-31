@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.155 2005-06-26 10:54:48 vruppert Exp $
+// $Id: bochs.h,v 1.156 2005-07-31 15:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -98,8 +98,19 @@ extern "C" {
 
 #include "gui/siminterface.h"
 
+// BX_SHARE_PATH should be defined by the makefile.  If not, give it
+// a value of NULL to avoid compile problems.
+#ifndef BX_SHARE_PATH
+#define BX_SHARE_PATH NULL
+#endif
+
 // prototypes
 int bx_begin_simulation (int argc, char *argv[]);
+char *bx_find_bochsrc (void);
+int bx_parse_cmdline (int arg, int argc, char *argv[]);
+int bx_read_configuration (char *rcfile);
+int bx_write_configuration (char *rcfile, int overwrite);
+void bx_reset_options (void);
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -502,12 +513,6 @@ extern bx_bool bx_gui_sighandler;
 // gets called.  The timer is set up in iodev/devices.cc.
 #define BX_IODEV_HANDLER_PERIOD 100    // microseconds
 //#define BX_IODEV_HANDLER_PERIOD 10    // microseconds
-
-char *bx_find_bochsrc (void);
-int bx_parse_cmdline (int arg, int argc, char *argv[]);
-int bx_read_configuration (char *rcfile);
-int bx_write_configuration (char *rcfile, int overwrite);
-void bx_reset_options (void);
 
 #define BX_PATHNAME_LEN 512
 
