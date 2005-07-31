@@ -1,6 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.136 2005-07-10 09:02:30 vruppert Exp $
+// $Id: siminterface.h,v 1.137 2005-07-31 14:49:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
+//
+// Intro to siminterface by Bryce Denney:
 //
 // Before I can describe what this file is for, I have to make the
 // distinction between a configuration interface (CI) and the VGA display
@@ -46,18 +48,18 @@
 // bx_floppy.s.media[2].heads = 17.  If such access is needed, then a
 // siminterface method should be written to make the change on the CI's behalf.
 // This separation is enforced by the fact that the CI does not even include
-// bochs.h.  You'll notice that textconfig.cc include osdep.h, textconfig.h,
+// bochs.h.  You'll notice that textconfig.cc includes osdep.h, textconfig.h,
 // and siminterface.h, so it doesn't know what bx_floppy or bx_cpu_c are.
 // I'm sure some people will say is overly restrictive and/or annoying.  When I
 // set it up this way, we were still talking about making the CI in a seperate
 // process, where direct method calls would be impossible.  Also, we have been
-// considering turning devices into plugin modules which are dynamically 
+// considering turning devices into plugin modules which are dynamically
 // linked.  Any direct references to something like bx_floppy.s.media[2].heads
 // would have to be reworked before a plugin interface was possible as well.
 //
 // The siminterface is the glue between the CI and the simulator.  There is
 // just one global instance of the siminterface object, which can be referred
-// to by the global variable bx_simulator_interface_c *SIM; The base class
+// to by the global variable bx_simulator_interface_c *SIM.  The base class
 // bx_simulator_interface_c, contains only virtual functions and it defines the
 // interface that the CI is allowed to use.  In siminterface.cc, a class
 // called bx_real_sim_c is defined with bx_simulator_interface_c as its parent
@@ -981,7 +983,7 @@ public:
 // a bx_shadow_num_c is like a bx_param_num_c except that it doesn't
 // store the actual value with its data. Instead, it uses val.p32bit
 // to keep a pointer to the actual data.  This is used to register
-// existing variables as parameters, without have to access it via
+// existing variables as parameters, without having to access it via
 // set/get methods.
 class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
   Bit8u varsize;   // must be 64, 32, 16, or 8
