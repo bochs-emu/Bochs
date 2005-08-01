@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.228 2005-07-31 17:57:25 sshwarts Exp $
+// $Id: cpu.h,v 1.229 2005-08-01 21:40:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,8 +331,8 @@
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
 #define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
 #define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
-#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = EFER.LME = 1, CR0.PE=1, CS.L=0
-#define BX_MODE_LONG_64         0x4   // EFER.LMA = EFER.LME = 1, CR0.PE=1, CS.L=1
+#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
+#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 #define BX_CANONICAL_BITS   (48)
 
@@ -343,8 +343,8 @@
 #endif
 
 #if BX_SUPPORT_X86_64
-#define IsLongMode()        (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-#define StackAddrSize64()   (IsLongMode())
+#define IsLongMode()        (BX_CPU_THIS_PTR msr.lma)
+#define StackAddrSize64()   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
 #else
 #define IsLongMode()        (0)
 #define StackAddrSize64()   (0)
@@ -2779,6 +2779,7 @@ public: // for now...
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
+  BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
@@ -2982,8 +2983,11 @@ BX_CPP_INLINE Bit32u BX_CPU_C::get_EIP(void)
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
 #if BX_SUPPORT_X86_64
-   if (IsLongMode() && seg != BX_SEG_REG_FS && seg != BX_SEG_REG_GS)
-       return 0;
+   if ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && 
+             (seg != BX_SEG_REG_FS) && (seg != BX_SEG_REG_GS))
+   {
+     return 0;
+   }
 #endif
    return (BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.27 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: io.cc,v 1.28 2005-08-01 21:40:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,7 +234,7 @@ void BX_CPU_C::INSW_YvDX(bxInstruction_c *i)
             if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) {
               goto noAcceleration;
             }
-            if ( !IsLongMode() ) {
+            if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64) {
               // Now make sure transfer will fit within the constraints of the
               // segment boundaries, 0..limit for non expand-down.  We know
               // wordCount >= 1 here.
@@ -538,7 +538,7 @@ void BX_CPU_C::OUTSW_DXXv(bxInstruction_c *i)
             if ( !(srcSegPtr->cache.valid & SegAccessROK) ) {
               goto noAcceleration;
             }
-            if ( !IsLongMode() ) {
+            if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64) {
               // Now make sure transfer will fit within the constraints of the
               // segment boundaries, 0..limit for non expand-down.  We know
               // wordCount >= 1 here.

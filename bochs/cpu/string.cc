@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.30 2005-07-04 17:44:08 sshwarts Exp $
+// $Id: string.cc,v 1.31 2005-08-01 21:40:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,7 +124,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       return 0;
     }
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
@@ -261,7 +261,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       return 0;
     }
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
@@ -399,7 +399,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       return 0;
     }
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u srcSegLimit = srcSegPtr->cache.u.segment.limit_scaled;
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
@@ -503,7 +503,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
     // are non expand-down (thus we can make a simple limit check).
     if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
 
@@ -599,7 +599,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
     // are non expand-down (thus we can make a simple limit check).
     if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
 
@@ -696,7 +696,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
     // are non expand-down (thus we can make a simple limit check).
     if ( !(dstSegPtr->cache.valid & SegAccessWOK) ) return 0;
 
-    if ( !IsLongMode() )
+    if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
     {
       Bit32u dstSegLimit = dstSegPtr->cache.u.segment.limit_scaled;
 
