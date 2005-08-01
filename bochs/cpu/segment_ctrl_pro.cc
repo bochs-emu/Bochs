@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.43 2005-08-01 21:40:17 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.44 2005-08-01 22:06:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,6 +378,31 @@ BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
 }
 #endif
 
+void BX_CPU_C::validate_seg_regs(void)
+{
+  Bit8u cs_dpl = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl;
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl < cs_dpl)
+  {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl< cs_dpl)
+  {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl < cs_dpl)
+  {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl < cs_dpl)
+  {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
+  }
+}
 
 #if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(2)
@@ -524,96 +549,6 @@ BX_CPU_C::load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor)
   }
 
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
-}
-
-/* pass zero in check_rpl if no needed selector RPL checking for 
-   non-conforming segments */
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl)
-{
-#if BX_SUPPORT_X86_64
-  if (descriptor->u.segment.l)
-  {
-    if (! BX_CPU_THIS_PTR msr.lma) {
-      BX_PANIC(("check_cs: attempt to jump to long mode without enabling EFER.LMA !"));
-    }
-
-    if (descriptor->u.segment.d_b) {
-      BX_ERROR(("check_cs: Both L and D bits enabled for segment descriptor !"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-  }
-#endif
-
-  // descriptor AR byte must indicate code segment else #GP(selector)
-  if ((descriptor->valid==0) || (descriptor->segment==0) ||
-      (descriptor->u.segment.executable==0))
-  {
-    BX_ERROR(("check_cs: not a valid code segment !"));
-    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-  }
-
-  // if non-conforming, code segment descriptor DPL must = CPL else #GP(selector)
-  if (descriptor->u.segment.c_ed==0) {
-    if (descriptor->dpl != CPL) {
-      BX_ERROR(("check_cs: non-conforming code seg descriptor DPL != CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-
-    /* RPL of destination selector must be <= CPL else #GP(selector) */
-    if (check_rpl > CPL) {
-      BX_ERROR(("check_cs: non-conforming code seg selector rpl > CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-  }
-  // if conforming, then code segment descriptor DPL must <= CPL else #GP(selector)
-  else {
-    if (descriptor->dpl > CPL) {
-      BX_ERROR(("check_cs: conforming code seg descriptor DPL > CPL"));
-      exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-    }
-  }
-
-  // code segment must be present else #NP(selector)
-  if (! descriptor->p) {
-    BX_ERROR(("check_cs: code segment not present !"));
-    exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-  }
-}
-
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl)
-{
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache    = *descriptor;
-
-  /* caller may request different CPL then in selector */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl = cpl;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid  = 1;
-  // Added cpl to the selector value.
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value =
-    (0xfffc & BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value) | cpl;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma) {
-    if (descriptor->u.segment.l) {
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-      BX_DEBUG(("Long Mode Activated"));
-      loadSRegLMNominal(BX_SEG_REG_CS, selector->value, 0, cpl);
-    }
-    else {
-      BX_DEBUG(("Compatibility Mode Activated"));
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-    }
-  }
-#endif
-
-#if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
-#endif
-
-  // Loading CS will invalidate the EIP fetch window.
-  invalidate_prefetch_q();
 }
 
 #if BX_SUPPORT_X86_64

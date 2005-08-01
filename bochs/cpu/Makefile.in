@@ -101,6 +101,10 @@ OBJS = \
 	flag_ctrl.o \
 	mult32.o \
 	arith32.o \
+	jmp_far.o \
+	call_far.o \
+	ret_far.o \
+	iret.o \
 	ctrl_xfer_pro.o \
 	segment_ctrl_pro.o \
 	io.o \
@@ -264,6 +268,34 @@ ctrl_xfer8.o: ctrl_xfer8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h
 ctrl_xfer_pro.o: ctrl_xfer_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
+  ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+  ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
+  ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h
+jmp_far.o: jmp_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
+  ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+  ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
+  ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h
+call_far.o: call_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
+  ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+  ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
+  ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h
+ret_far.o: ret_far.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
+  ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
+  ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
+  ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
+  ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h
+iret.o: iret.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
