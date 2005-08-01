@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.57 2005-06-16 16:56:30 sshwarts Exp $
+// $Id: apic.cc,v 1.58 2005-08-01 18:55:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -415,7 +415,9 @@ void bx_local_apic_c::init ()
 
   BX_INFO(("local apic in %s initializing",
       (cpu && cpu->name) ? cpu->name : "?"));
-  local_apic_index[id] = this;
+
+  if (id!=APIC_UNKNOWN_ID)
+      local_apic_index[id] = this;
 
   // default address for a local APIC, can be moved
   base_addr = APIC_BASE_ADDR;
