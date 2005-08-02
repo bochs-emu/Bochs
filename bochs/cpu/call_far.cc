@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.2 2005-08-01 22:18:40 sshwarts Exp $
+// $Id: call_far.cc,v 1.3 2005-08-02 18:44:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
   if (cs_descriptor.segment)   // normal segment
   {
-    check_cs(&cs_descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw));
+    check_cs(&cs_descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
 
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
@@ -107,27 +107,30 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
     // descriptor DPL must be >= CPL else #GP(gate selector)
     if (gate_descriptor.dpl < CPL) {
-      BX_ERROR(("jump_protected: descriptor.dpl < CPL"));
+      BX_ERROR(("call_protected: descriptor.dpl < CPL"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
     // descriptor DPL must be >= gate selector RPL else #GP(gate selector)
     if (gate_descriptor.dpl < gate_selector.rpl) {
-      BX_ERROR(("jump_protected: descriptor.dpl < selector.rpl"));
+      BX_ERROR(("call_protected: descriptor.dpl < selector.rpl"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+    }
+
+    // gate descriptor must be present else #NP(gate selector)
+    if (! IS_PRESENT(gate_descriptor)) {
+       BX_ERROR(("call_protected: gate.p == 0"));
+       exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
     switch (gate_descriptor.type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
 
-        //if (gate_descriptor.type==1)
-        //  BX_INFO(("call_protected: 16bit available TSS"));
-        //else
-        //  BX_INFO(("call_protected: 32bit available TSS"));
-
-        // Task State Seg must be present, else #NP(TSS selector)
-        // checked in task_switch()
+        if (gate_descriptor.type==BX_SYS_SEGMENT_AVAIL_286_TSS)
+          BX_DEBUG(("call_protected: 16bit available TSS"));
+        else
+          BX_DEBUG(("call_protected: 32bit available TSS"));
 
         // SWITCH_TASKS _without_ nesting to TSS
         task_switch(&gate_selector, &gate_descriptor,
@@ -141,15 +144,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         return;
 
       case BX_TASK_GATE:
-        // task gate must be present else #NP(gate selector)
-        if (! IS_PRESENT(gate_descriptor)) {
-          BX_ERROR(("call_protected: task gate.p == 0"));
-          exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
-        }
-
         // examine selector to TSS, given in Task Gate descriptor
         // must specify global in the local/global bit else #TS(TSS selector)
-
         raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
         parse_selector(raw_tss_selector, &tss_selector);
         if (tss_selector.ti) {
@@ -163,6 +159,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // descriptor AR byte must specify available TSS
         //   else #TS(TSS selector)
         parse_descriptor(dword1, dword2, &tss_descriptor);
+
         if (tss_descriptor.valid==0 || tss_descriptor.segment) {
           BX_ERROR(("call_protected: TSS selector points to bad TSS"));
           exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
@@ -197,20 +194,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
       case BX_286_CALL_GATE:
       case BX_386_CALL_GATE:
-
-        //if (gate_descriptor.type==BX_286_CALL_GATE)
-        //  BX_INFO(("CALL: 16bit call gate"));
-        //else
-        //  BX_INFO(("CALL: 32bit call gate"));
-
-        // call gate must be present, else #NP(call gate selector)
-        if (! IS_PRESENT(gate_descriptor)) {
-          BX_ERROR(("call_protected: not present"));
-          exception(BX_NP_EXCEPTION, gate_selector.value & 0xfffc, 0);
-        }
+        if (gate_descriptor.type == BX_286_CALL_GATE)
+          BX_DEBUG(("CALL: 16bit call gate"));
+        else
+          BX_DEBUG(("CALL: 32bit call gate"));
 
         // examine code segment selector in call gate descriptor
-        if (gate_descriptor.type==BX_286_CALL_GATE) {
+        if (gate_descriptor.type == BX_286_CALL_GATE) {
           dest_selector = gate_descriptor.u.gate286.dest_selector;
           new_EIP = gate_descriptor.u.gate286.dest_offset;
         }
@@ -257,12 +247,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
           Bit32u   return_ss_base;
-          unsigned i;
           Bit16u   parameter_word[32];
           Bit32u   parameter_dword[32];
           Bit32u   temp_ESP;
 
-          // BX_INFO(("CALL: Call Gate: to more priviliged level"));
+          BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
 
           // Help for OS/2
           BX_CPU_THIS_PTR except_chk = 1;  
@@ -367,13 +356,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             return_EIP = IP;
 
           if (gate_descriptor.type==BX_286_CALL_GATE) {
-            for (i=0; i<param_count; i++) {
+            for (unsigned i=0; i<param_count; i++) {
               access_linear(return_ss_base + return_ESP + i*2,
                 2, 0, BX_READ, &parameter_word[i]);
             }
           }
           else {
-            for (i=0; i<param_count; i++) {
+            for (unsigned i=0; i<param_count; i++) {
               access_linear(return_ss_base + return_ESP + i*4,
                 4, 0, BX_READ, &parameter_dword[i]);
             }
@@ -395,13 +384,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           EIP = new_EIP;
 
           // push pointer of old stack onto new stack
-          if (gate_descriptor.type==BX_286_CALL_GATE) {
-            push_16(return_SS);
-            push_16((Bit16u) return_ESP);
-          }
-          else {
+          if (gate_descriptor.type==BX_386_CALL_GATE) {
             push_32(return_SS);
             push_32(return_ESP);
+          }
+          else {
+            push_16(return_SS);
+            push_16((Bit16u) return_ESP);
           }
 
           /* get word count from call gate, mask to 5 bits */
@@ -412,12 +401,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             temp_ESP =  SP;
 
           if (gate_descriptor.type==BX_286_CALL_GATE) {
-            for (i=param_count; i>0; i--) {
+            for (unsigned i=param_count; i>0; i--) {
               push_16(parameter_word[i-1]);
             }
           }
           else {
-            for (i=param_count; i>0; i--) {
+            for (unsigned i=param_count; i>0; i--) {
               push_32(parameter_dword[i-1]);
             }
           }

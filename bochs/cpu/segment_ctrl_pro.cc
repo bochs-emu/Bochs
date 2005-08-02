@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.44 2005-08-01 22:06:19 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.45 2005-08-02 18:44:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -626,8 +626,6 @@ BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
   }
 }
 
-#endif
-
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2)
@@ -655,3 +653,44 @@ BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
     return(1);
   }
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::fetch_raw_descriptor64(bx_selector_t *selector,
+           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, Bit8u exception_no)
+{
+  if (selector->ti == 0) { /* GDT */
+    if ((selector->index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
+      BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
+          (selector->index*8 + 15), selector->index,
+          BX_CPU_THIS_PTR gdtr.limit));
+      exception(exception_no, selector->value & 0xfffc, 0);
+    }
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8,     4, 0,
+      BX_READ, dword1);
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 4, 4, 0,
+      BX_READ, dword2);
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8 + 8, 4, 0,
+      BX_READ, dword3);
+  }
+  else { /* LDT */
+    if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
+      BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
+      debug(BX_CPU_THIS_PTR prev_eip);
+    }
+    if ((selector->index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
+      BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
+          (selector->index*8 + 15), selector->index,
+          BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+      exception(exception_no, selector->value & 0xfffc, 0);
+    }
+    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8,     4, 0,
+      BX_READ, dword1);
+    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8 + 4, 4, 0,
+      BX_READ, dword2);
+    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8 + 8, 4, 0,
+      BX_READ, dword3);
+  }
+}
+#endif
+
+#endif

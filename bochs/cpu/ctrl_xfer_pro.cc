@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.49 2005-08-01 22:06:18 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.50 2005-08-02 18:44:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,9 +38,16 @@
 
 /* pass zero in check_rpl if no needed selector RPL checking for 
    non-conforming segments */
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl)
+void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)
 {
+  // descriptor AR byte must indicate code segment else #GP(selector)
+  if ((descriptor->valid==0) || (descriptor->segment==0) ||
+      (descriptor->u.segment.executable==0))
+  {
+    BX_ERROR(("check_cs: not a valid code segment !"));
+    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
+  }
+
 #if BX_SUPPORT_X86_64
   if (descriptor->u.segment.l)
   {
@@ -55,31 +62,23 @@ BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl)
   }
 #endif
 
-  // descriptor AR byte must indicate code segment else #GP(selector)
-  if ((descriptor->valid==0) || (descriptor->segment==0) ||
-      (descriptor->u.segment.executable==0))
-  {
-    BX_ERROR(("check_cs: not a valid code segment !"));
-    exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
-  }
-
   // if non-conforming, code segment descriptor DPL must = CPL else #GP(selector)
   if (descriptor->u.segment.c_ed==0) {
-    if (descriptor->dpl != CPL) {
-      BX_ERROR(("check_cs: non-conforming code seg descriptor DPL != CPL"));
+    if (descriptor->dpl != check_cpl) {
+      BX_ERROR(("check_cs: non-conforming code seg descriptor dpl != cpl"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
     /* RPL of destination selector must be <= CPL else #GP(selector) */
-    if (check_rpl > CPL) {
-      BX_ERROR(("check_cs: non-conforming code seg selector rpl > CPL"));
+    if (check_rpl > check_cpl) {
+      BX_ERROR(("check_cs: non-conforming code seg selector rpl > cpl"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
   // if conforming, then code segment descriptor DPL must <= CPL else #GP(selector)
   else {
-    if (descriptor->dpl > CPL) {
-      BX_ERROR(("check_cs: conforming code seg descriptor DPL > CPL"));
+    if (descriptor->dpl > check_cpl) {
+      BX_ERROR(("check_cs: conforming code seg descriptor dpl > cpl"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
@@ -139,6 +138,23 @@ BX_CPU_C::branch_near32(Bit32u new_EIP)
   revalidate_prefetch_q();
 }
 
+void BX_CPU_C::branch_far32(bx_selector_t *selector, 
+           bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl)
+{
+  /* instruction pointer must be in code segment limit else #GP(0) */
+  if (eip > descriptor->u.segment.limit_scaled) {
+    BX_ERROR(("branch_far: EIP > limit"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  /* Load CS:IP from destination pointer */
+  /* Load CS-cache with new segment descriptor */
+  load_cs(selector, descriptor, cpl);
+
+  /* Change the EIP value */
+  EIP = eip;
+}
+
 #if BX_SUPPORT_X86_64
   void BX_CPP_AttrRegparmN(1) 
 BX_CPU_C::branch_near64(bxInstruction_c *i)
@@ -159,23 +175,6 @@ BX_CPU_C::branch_near64(bxInstruction_c *i)
   revalidate_prefetch_q();
 }
 #endif
-
-void BX_CPU_C::branch_far32(bx_selector_t *selector, 
-           bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl)
-{
-  /* instruction pointer must be in code segment limit else #GP(0) */
-  if (eip > descriptor->u.segment.limit_scaled) {
-    BX_ERROR(("branch_far: EIP > limit"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  /* Load CS:IP from destination pointer */
-  /* Load CS-cache with new segment descriptor */
-  load_cs(selector, descriptor, cpl);
-
-  /* Change the EIP value */
-  RIP = eip;
-}
 
 void BX_CPU_C::branch_far64(bx_selector_t *selector, 
            bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl)

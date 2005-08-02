@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.58 2005-07-10 20:32:31 sshwarts Exp $
+// $Id: exception.cc,v 1.59 2005-08-02 18:44:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       BX_ERROR(("interrupt(long mode): gate.type(%u) != {5,6,7,14,15}",
         (unsigned) gate_descriptor.type));
       exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-      return;
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
@@ -107,7 +106,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   {
     BX_ERROR(("interrupt(long mode): is_INT && (dpl < CPL)"));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-    return;
   }
 
   // Gate must be present, else #NP(vector * 8 + 2 + EXT)
@@ -340,7 +338,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
       (unsigned) gate_descriptor.type));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
-    return;
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
@@ -370,7 +367,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     if (tss_selector.ti) {
       BX_PANIC(("interrupt: tss_selector.ti=1"));
       exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-      return;
     }
 
     // index must be within GDT limits, else #TS(TSS selector)
@@ -383,16 +379,17 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
       BX_PANIC(("exception: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-      return;
     }
     if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
       BX_INFO(("exception: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
-      return;
     }
 
     // TSS must be present, else #NP(TSS selector)
-    // done in task_switch()
+    if (! IS_PRESENT(tss_descriptor)) {
+      BX_ERROR(("exception: TSS descriptor.p == 0"));
+      exception(BX_NP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
+    }
 
     // switch tasks with nesting to TSS
     task_switch(&tss_selector, &tss_descriptor,
@@ -402,9 +399,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     //   stack limits must allow push of 2 more bytes, else #SS(0)
     // push error code onto stack
 
-    //??? push_16 vs push_32
     if ( is_error_code ) {
-      //if (tss_descriptor.type==9)
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
         push_32(error_code);
       else
