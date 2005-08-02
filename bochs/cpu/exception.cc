@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.59 2005-08-02 18:44:16 sshwarts Exp $
+// $Id: exception.cc,v 1.60 2005-08-02 20:20:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,20 +84,15 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   if ((gate_descriptor.valid==0) || gate_descriptor.segment)
   {
     BX_ERROR(("interrupt(long mode): gate descriptor is not valid sys seg"));
-    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  switch (gate_descriptor.type) {
-    //case BX_TASK_GATE:
-    //case BX_286_INTERRUPT_GATE:
-    //case BX_286_TRAP_GATE:
-    case BX_386_INTERRUPT_GATE:
-    case BX_386_TRAP_GATE:
-      break;
-    default:
-      BX_ERROR(("interrupt(long mode): gate.type(%u) != {5,6,7,14,15}",
+  if (gate_descriptor.type != BX_386_INTERRUPT_GATE && 
+      gate_descriptor.type != BX_386_TRAP_GATE)
+  {
+      BX_ERROR(("interrupt(long mode): unsupported gate type %u",
         (unsigned) gate_descriptor.type));
-      exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
+      exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
@@ -105,13 +100,13 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   if (is_INT && (gate_descriptor.dpl < CPL))
   {
     BX_ERROR(("interrupt(long mode): is_INT && (dpl < CPL)"));
-    exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
   // Gate must be present, else #NP(vector * 8 + 2 + EXT)
   if (! IS_PRESENT(gate_descriptor)) {
     BX_ERROR(("interrupt(long mode): p == 0"));
-    exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
+    exception(BX_NP_EXCEPTION, vector*16 + 2, 0);
   }
 
   gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
@@ -123,7 +118,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // examine CS selector and descriptor given in gate descriptor
   // selector must be non-null else #GP(EXT)
   if ( (gate_dest_selector & 0xfffc) == 0 ) {
-    BX_PANIC(("int_trap_gate(long mode): selector null"));
+    BX_ERROR(("int_trap_gate(long mode): selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -885,7 +880,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     bx_guard.special_unwind_stack = true;
 #endif
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-    }
+  }
 
   /* ??? this is not totally correct, should be done depending on
    * vector */

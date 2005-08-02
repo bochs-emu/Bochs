@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.45 2005-08-02 18:44:20 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.46 2005-08-02 20:20:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -381,6 +381,17 @@ BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
 void BX_CPU_C::validate_seg_regs(void)
 {
   Bit8u cs_dpl = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl;
+
+  /*
+     FOR (seg = ES, DS, FS, GS)
+     DO
+       IF ((seg.attr.dpl < CPL) && ((seg.attr.type = 'data')
+                || (seg.attr.type = 'non-conforming-code')))
+       {
+          seg = NULL // can't use lower dpl data segment at higher cpl
+       }
+     END
+  */
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl < cs_dpl)
   {
