@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.3 2005-08-02 20:20:22 sshwarts Exp $
+// $Id: iret.cc,v 1.4 2005-08-03 21:19:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,6 +43,14 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   bx_selector_t cs_selector, ss_selector;
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.lma)
+  {
+    long_iret(i);
+    return;
+  }
+#endif
 
   if ( BX_CPU_THIS_PTR get_NT () ) { /* NT = 1: RETURN FROM NESTED TASK */
     /* what's the deal with NT & VM ? */
@@ -113,233 +121,12 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     return;
   }
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma)
-  {
-    BX_DEBUG (("LONG MODE IRET"));
-
-    /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
-    Bit16u top_nbytes_same, top_nbytes_outer;
-    Bit64u cs_offset, ss_offset;
-    Bit64u new_rip, new_rsp, temp_RSP, new_eflags;
-    Bit8u prev_cpl;
-
-    /* 64bit opsize
-     * ============
-     * SS     eSP+32
-     * ESP    eSP+24
-     * -------------
-     * EFLAGS eSP+16
-     * CS     eSP+8
-     * EIP    eSP+0
-     */
-
-    top_nbytes_same    = 24;
-    top_nbytes_outer   = 40;
-    cs_offset = 8;
-    ss_offset = 32;
-
-    /* CS on stack must be within stack limits, else #SS(0) */
-    if ( !can_pop(top_nbytes_same) ) {
-      BX_ERROR(("iret: CS not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
-    temp_RSP = RSP;
-
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + cs_offset,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-      8, CPL==3, BX_READ, &new_rip);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
-      8, CPL==3, BX_READ, &new_eflags);
-
-    // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
-    if (new_eflags & 0x00020000) {
-      BX_PANIC(("iret: no V86 mode in x86-64 LONG mode"));
-      return;
-    }
-
-    parse_selector(raw_cs_selector, &cs_selector);
-
-    // return CS selector must be non-null, else #GP(0)
-    if ( (raw_cs_selector & 0xfffc) == 0 ) {
-      BX_ERROR(("iret: return CS selector null"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-
-    // selector index must be within descriptor table limits,
-    // else #GP(return selector)
-    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-    parse_descriptor(dword1, dword2, &cs_descriptor);
-
-    // AR byte must indicate code segment else #GP(return selector)
-    if ( cs_descriptor.valid==0 ||
-         cs_descriptor.segment==0  ||
-         cs_descriptor.u.segment.executable==0 ) 
-    {
-      BX_ERROR(("iret: AR byte indicated non code segment (%x) %x:%x",
-         raw_cs_selector, dword1, dword2));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-    }
-
-    // return CS selector RPL must be >= CPL, else #GP(return selector)
-    if (cs_selector.rpl < CPL) {
-      BX_ERROR(("iret: return selector RPL < CPL"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-    }
-
-    if (cs_descriptor.u.segment.c_ed) {
-      // if return code seg descriptor is conforming
-      //   and return code seg DPL > return code seg selector RPL
-      //     then #GP(return selector)
-      if (cs_descriptor.dpl > cs_selector.rpl)
-      {
-        BX_PANIC(("iret: conforming, DPL > cs_selector.RPL"));
-        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      }
-    }
-    else {
-      // if return code seg descriptor is non-conforming
-      //   and return code seg DPL != return code seg selector RPL
-      //     then #GP(return selector)
-      if (cs_descriptor.dpl != cs_selector.rpl)
-      {
-        BX_INFO(("iret: Return with DPL != RPL. #GP(selector)"));
-        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      }
-    }
-
-    // segment must be present else #NP(return selector)
-    if (! IS_PRESENT(cs_descriptor)) {
-      BX_ERROR(("iret: not present"));
-      exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-    }
-
-    if (cs_selector.rpl == CPL
-          && BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64) 
-    { /* INTERRUPT RETURN TO SAME LEVEL */
-      /* top 24 bytes on stack must be within limits, else #SS(0) */
-      /* satisfied above */
-
-      /* load CS:EIP from stack */
-      /* load CS-cache with new code segment descriptor */
-      load_cs(&cs_selector, &cs_descriptor, CPL);
-      RIP = new_rip;
-
-      /* load EFLAGS with 3rd doubleword from stack */
-      write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
-
-      /* increment stack by 24 */
-      RSP += top_nbytes_same;
-    }
-    else { /* INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL or 64 bit mode */
-      /* 64bit opsize
-       * ============
-       * SS     eSP+32
-       * ESP    eSP+24
-       * EFLAGS eSP+16
-       * CS     eSP+8
-       * EIP    eSP+0
-       */
-
-      /* top 10/20 bytes on stack must be within limits else #SS(0) */
-      if ( !can_pop(top_nbytes_outer) ) {
-        BX_PANIC(("iret: top 10/20 bytes not within stack limits"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-      }
-
-      /* examine return SS selector and associated descriptor */
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
-        2, 0, BX_READ, &raw_ss_selector);
-
-      if ( (raw_ss_selector & 0xfffc) != 0 ) {
-        parse_selector(raw_ss_selector, &ss_selector);
-
-        /* selector RPL must = RPL of return CS selector,
-         * else #GP(SS selector) */
-        if ( ss_selector.rpl != cs_selector.rpl) {
-          BX_PANIC(("iret: SS.rpl != CS.rpl"));
-          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        }
-
-        /* selector index must be within its descriptor table limits,
-         * else #GP(SS selector) */
-        fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-        parse_descriptor(dword1, dword2, &ss_descriptor);
-
-        /* AR byte must indicate a writable data segment,
-         * else #GP(SS selector) */
-        if ( ss_descriptor.valid==0 ||
-             ss_descriptor.segment==0  ||
-             ss_descriptor.u.segment.executable  ||
-             ss_descriptor.u.segment.r_w==0 )
-        {
-          BX_PANIC(("iret: SS AR byte not writable code segment"));
-          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        }
-
-        /* stack segment DPL must equal the RPL of the return CS selector,
-         * else #GP(SS selector) */
-        if ( ss_descriptor.dpl != cs_selector.rpl ) {
-          BX_PANIC(("iret: SS.dpl != CS selector RPL"));
-          exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        }
-
-        /* SS must be present, else #NP(SS selector) */
-        if (! IS_PRESENT(ss_descriptor)) {
-          BX_ERROR(("iret: SS not present!"));
-          exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-        }
-      }
-
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-        8, 0, BX_READ, &new_rip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
-        4, 0, BX_READ, &new_eflags);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24,
-        8, 0, BX_READ, &new_rsp);
-
-      prev_cpl = CPL; /* previous CPL */
-
-      /* set CPL to the RPL of the return CS selector */
-      branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
-
-      /* load flags from stack */
-      // perhaps I should always write_eflags(), thus zeroing
-      // out the upper 16bits of eflags for CS.D_B==0 ???
-      if (cs_descriptor.u.segment.d_b)
-        write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
-      else
-        write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
-
-      if ( (raw_ss_selector & 0xfffc) != 0 ) {
-        // load SS:RSP from stack
-        // load the SS-cache with SS descriptor
-        load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
-      }
-      else {
-        loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, 0, cs_selector.rpl);
-      }
-      RSP = new_rsp;
-
-      validate_seg_regs();
-
-      return;
-    }
-  }
-#endif  // #if BX_SUPPORT_X86_64
   else {
     /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
-    Bit16u top_nbytes_same, top_nbytes_outer;
-    Bit32u cs_offset, ss_offset;
-    Bit32u new_eip, new_esp, temp_RSP, new_eflags;
-    Bit16u new_ip, new_sp, new_flags;
-    Bit8u prev_cpl;
+    unsigned top_nbytes_outer, ss_offset;
+    Bit16u new_flags;
+    Bit32u new_eip, new_esp, new_eflags;
+    Bit32u temp_ESP;
 
     /* 16bit opsize  |   32bit opsize
      * ==============================
@@ -351,37 +138,22 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
      * IP     eSP+0  |   EIP    eSP+0
      */
 
-    if (i->os32L()) {
-      top_nbytes_same    = 12;
-      top_nbytes_outer   = 20;
-      cs_offset = 4;
-      ss_offset = 16;
-    }
-    else {
-      top_nbytes_same    = 6;
-      top_nbytes_outer   = 10;
-      cs_offset = 2;
-      ss_offset = 8;
-    }
-
-    /* CS on stack must be within stack limits, else #SS(0) */
-    if ( !can_pop(top_nbytes_same) ) {
-      BX_ERROR(("iret: CS not within stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-      temp_RSP = ESP;
+      temp_ESP = ESP;
     else
-      temp_RSP = SP;
-
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + cs_offset,
-      2, CPL==3, BX_READ, &raw_cs_selector);
+      temp_ESP = SP;
 
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+      /* CS on stack must be within stack limits, else #SS(0) */
+      if (! can_pop(12) ) {
+        BX_ERROR(("iret: CS not within stack limits"));
+        exception(BX_SS_EXCEPTION, 0, 0);
+      }
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
+        2, CPL==3, BX_READ, &raw_cs_selector);
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         4, CPL==3, BX_READ, &new_eip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
         4, CPL==3, BX_READ, &new_eflags);
 
       // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
@@ -392,12 +164,27 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         }
         else BX_INFO(("iret: VM set on stack, CPL!=0"));
       }
+
+      top_nbytes_outer = 20;
+      ss_offset = 16;
     }
     else {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+      /* CS on stack must be within stack limits, else #SS(0) */
+      if (! can_pop(6) ) {
+        BX_ERROR(("iret: CS not within stack limits"));
+        exception(BX_SS_EXCEPTION, 0, 0);
+      }
+      Bit16u new_ip = 0;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 2,
+        2, CPL==3, BX_READ, &raw_cs_selector);
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
         2, CPL==3, BX_READ, &new_ip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
         2, CPL==3, BX_READ, &new_flags);
+      new_eip = new_ip;
+      
+      top_nbytes_outer = 10;
+      ss_offset = 8;
     }
 
     parse_selector(raw_cs_selector, &cs_selector);
@@ -411,17 +198,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // selector index must be within descriptor table limits,
     // else #GP(return selector)
     fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
     parse_descriptor(dword1, dword2, &cs_descriptor);
-
-    // AR byte must indicate code segment else #GP(return selector)
-    if ( cs_descriptor.valid==0 ||
-         cs_descriptor.segment==0  ||
-         cs_descriptor.u.segment.executable==0 )
-    {
-      BX_ERROR(("iret: AR byte indicated non code segment"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-    }
 
     // return CS selector RPL must be >= CPL, else #GP(return selector)
     if (cs_selector.rpl < CPL) {
@@ -429,70 +206,31 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
     }
 
-    if (cs_descriptor.u.segment.c_ed)
+    // check code-segment descriptor
+    check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
+
+    /* INTERRUPT RETURN TO SAME LEVEL */
+    if (cs_selector.rpl == CPL)
     {
-      // if return code seg descriptor is conforming
-      //   and return code seg DPL > return code seg selector RPL
-      //     then #GP(return selector)
-      if (cs_descriptor.dpl > cs_selector.rpl) {
-        BX_PANIC(("iret: conforming, DPL > cs_selector.RPL"));
-        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      }
-    }
-    else {
-      // if return code seg descriptor is non-conforming
-      //   and return code seg DPL != return code seg selector RPL
-      //     then #GP(return selector)
-      if (cs_descriptor.dpl != cs_selector.rpl) {
-        BX_INFO(("iret: Return with DPL != RPL. #GP(selector)"));
-        exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-      }
-    }
-
-    // segment must be present else #NP(return selector)
-    if (! IS_PRESENT(cs_descriptor)) {
-      BX_ERROR(("iret: segment not present"));
-      exception(BX_NP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
-    }
-
-    if (cs_selector.rpl == CPL) { /* INTERRUPT RETURN TO SAME LEVEL */
       /* top 6/12 bytes on stack must be within limits, else #SS(0) */
       /* satisfied above */
 
-      if (i->os32L()) {
-        /* return EIP must be in code segment limit else #GP(0) */
-        if ( new_eip > cs_descriptor.u.segment.limit_scaled ) {
-          BX_ERROR(("iret: IP > descriptor limit"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-        }
-        /* load CS:EIP from stack */
-        /* load CS-cache with new code segment descriptor */
-        load_cs(&cs_selector, &cs_descriptor, CPL);
-        EIP = new_eip;
+      branch_far32(&cs_selector, &cs_descriptor, new_eip, CPL);
 
-        /* load EFLAGS with 3rd doubleword from stack */
+      if (i->os32L()) {
+        /* load eflags with 3rd doubleword from stack */
         write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
       }
       else {
-        /* return IP must be in code segment limit else #GP(0) */
-        if ( new_ip > cs_descriptor.u.segment.limit_scaled ) {
-          BX_ERROR(("iret: IP > descriptor limit"));
-          exception(BX_GP_EXCEPTION, 0, 0);
-        }
-        /* load CS:IP from stack */
-        /* load CS-cache with new code segment descriptor */
-        load_cs(&cs_selector, &cs_descriptor, CPL);
-        EIP = new_ip;
-
         /* load flags with third word on stack */
         write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL ());
       }
 
       /* increment stack by 6/12 */
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-        ESP += top_nbytes_same;
+        ESP += 12;
       else
-        SP += top_nbytes_same;
+         SP += 6;
       return;
     }
     else { /* INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL */
@@ -512,7 +250,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
 
       /* examine return SS selector and associated descriptor */
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + ss_offset,
         2, 0, BX_READ, &raw_ss_selector);
 
       /* selector must be non-null, else #GP(0) */
@@ -561,37 +299,19 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       }
 
       if (i->os32L()) {
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-          4, 0, BX_READ, &new_eip);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
-          4, 0, BX_READ, &new_eflags);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12,
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12,
           4, 0, BX_READ, &new_esp);
       }
       else {
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-          2, 0, BX_READ, &new_ip);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
-          2, 0, BX_READ, &new_flags);
-        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6,
+        Bit16u new_sp = 0;
+        access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6,
           2, 0, BX_READ, &new_sp);
-        new_eip = new_ip;
         new_esp = new_sp;
-        new_eflags = new_flags;
       }
 
-      /* EIP must be in code segment limit, else #GP(0) */
-      if ( new_eip > cs_descriptor.u.segment.limit_scaled ) {
-        BX_ERROR(("iret: IP > descriptor limit"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
+      Bit8u prev_cpl = CPL; /* previous CPL */
 
-      /* load CS:EIP from stack */
-      /* load the CS-cache with CS descriptor */
-      /* set CPL to the RPL of the return CS selector */
-      prev_cpl = CPL; /* previous CPL */
-      load_cs(&cs_selector, &cs_descriptor, cs_selector.rpl);
-      EIP = new_eip;
+      branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
       /* load flags from stack */
       // perhaps I should always write_eflags(), thus zeroing
@@ -599,7 +319,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       if (cs_descriptor.u.segment.d_b)
         write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
       else
-        write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL ());
+        write_flags(new_flags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL ());
 
       // load SS:eSP from stack
       // load the SS-cache with SS descriptor
@@ -610,10 +330,248 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
         SP  = new_esp;
 
       validate_seg_regs();
-
-      return;
     }
   }
-
-  BX_PANIC(("IRET: shouldn't get here!"));
 }
+
+#if BX_SUPPORT_X86_64
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::long_iret(bxInstruction_c *i)
+{
+  Bit16u raw_cs_selector, raw_ss_selector;
+  bx_selector_t cs_selector, ss_selector;
+  Bit32u dword1, dword2;
+  bx_descriptor_t cs_descriptor, ss_descriptor;
+  Bit32u new_eflags;
+  Bit64u new_rip, new_rsp, temp_RSP;
+  unsigned top_nbytes_outer, ss_offset;
+
+  BX_DEBUG (("LONG MODE IRET"));
+
+  /* 64bit opsize
+   * ============
+   * SS     eSP+32
+   * ESP    eSP+24
+   * -------------
+   * EFLAGS eSP+16
+   * CS     eSP+8
+   * EIP    eSP+0
+   */
+
+  if (StackAddrSize64()) temp_RSP = RSP;
+  else {
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_RSP = ESP;
+    else temp_RSP = SP;
+  }
+
+  if (i->os64L()) {
+    Bit64u new_rflags = 0;
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
+      2, CPL==3, BX_READ, &raw_cs_selector);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+      8, CPL==3, BX_READ, &new_rip);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
+      8, CPL==3, BX_READ, &new_rflags);
+    new_eflags = (Bit32u) new_rflags;
+    top_nbytes_outer = 40;
+    ss_offset = 32;
+  }
+  else if (i->os32L()) {
+    /* CS on stack must be within stack limits, else #SS(0) */
+    if ( !can_pop(12) ) {
+      BX_ERROR(("iret64: CS not within stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+    }
+
+    Bit32u return_EIP = 0;
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
+      2, CPL==3, BX_READ, &raw_cs_selector);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+      4, CPL==3, BX_READ, &return_EIP);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
+      4, CPL==3, BX_READ, &new_eflags);
+    new_rip = return_EIP;
+    top_nbytes_outer = 20;
+    ss_offset = 16;
+  }
+  else {
+    /* CS on stack must be within stack limits, else #SS(0) */
+    if ( !can_pop(6) ) {
+      BX_ERROR(("iret64: CS not within stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+    }
+
+    Bit16u return_IP = 0, new_flags = 0;
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 2,
+      2, CPL==3, BX_READ, &raw_cs_selector);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
+      2, CPL==3, BX_READ, &return_IP);
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
+      2, CPL==3, BX_READ, &new_flags);
+    new_rip = return_IP;
+    new_eflags = (Bit32u) new_flags;
+    top_nbytes_outer = 10;
+    ss_offset = 8;
+  }
+
+  // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
+  if (new_eflags & 0x00020000) {
+    BX_PANIC(("iret64: no V86 mode in x86-64 LONG mode"));
+    return;
+  }
+
+  parse_selector(raw_cs_selector, &cs_selector);
+
+  // return CS selector must be non-null, else #GP(0)
+  if ( (raw_cs_selector & 0xfffc) == 0 ) {
+    BX_ERROR(("iret64: return CS selector null"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  // selector index must be within descriptor table limits,
+  // else #GP(return selector)
+  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, &cs_descriptor);
+
+  // return CS selector RPL must be >= CPL, else #GP(return selector)
+  if (cs_selector.rpl < CPL) {
+    BX_ERROR(("iret64: return selector RPL < CPL"));
+    exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc, 0);
+  }
+
+  // check code-segment descriptor
+  check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
+
+  /* INTERRUPT RETURN TO SAME PRIVILEGE LEVEL */
+  if ((cs_selector.rpl == CPL) && (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64))
+  {
+    /* top 24 bytes on stack must be within limits, else #SS(0) */
+    /* satisfied above */
+
+    /* load CS:EIP from stack */
+    /* load CS-cache with new code segment descriptor */
+    branch_far32(&cs_selector, &cs_descriptor, new_rip, CPL);
+
+    /* load EFLAGS with 3rd doubleword from stack */
+    write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
+
+    /* we are NOT in 64-bit mode */
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) ESP += 12;
+    else SP += 6;
+  }
+  else { /* INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL or 64 BIT MODE */
+    /* 64bit opsize
+     * ============
+     * SS     eSP+32
+     * ESP    eSP+24
+     * EFLAGS eSP+16
+     * CS     eSP+8
+     * EIP    eSP+0
+     */
+
+    /* top 10/20 bytes on stack must be within limits else #SS(0) */
+    if ( !can_pop(top_nbytes_outer) ) {
+      BX_PANIC(("iret64: top bytes not within stack limits"));
+      exception(BX_SS_EXCEPTION, 0, 0);
+    }
+
+    /* examine return SS selector and associated descriptor */
+    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
+      2, 0, BX_READ, &raw_ss_selector);
+
+    if ((raw_ss_selector & 0xfffc) == 0) {
+      if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
+        BX_ERROR(("iret64: SS selector null"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+    }
+    else {
+      parse_selector(raw_ss_selector, &ss_selector);
+
+      /* selector RPL must = RPL of return CS selector,
+       * else #GP(SS selector) */
+      if (ss_selector.rpl != cs_selector.rpl) {
+        BX_ERROR(("iret64: SS.rpl != CS.rpl"));
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      /* selector index must be within its descriptor table limits,
+       * else #GP(SS selector) */
+      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+      parse_descriptor(dword1, dword2, &ss_descriptor);
+
+      /* AR byte must indicate a writable data segment,
+       * else #GP(SS selector) */
+      if ( ss_descriptor.valid==0 ||
+           ss_descriptor.segment==0  ||
+           ss_descriptor.u.segment.executable  ||
+           ss_descriptor.u.segment.r_w==0 )
+      {
+        BX_ERROR(("iret64: SS AR byte not writable code segment"));
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      /* stack segment DPL must equal the RPL of the return CS selector,
+       * else #GP(SS selector) */
+      if ( ss_descriptor.dpl != cs_selector.rpl ) {
+        BX_ERROR(("iret64: SS.dpl != CS selector RPL"));
+        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+
+      /* SS must be present, else #NP(SS selector) */
+      if (! IS_PRESENT(ss_descriptor)) {
+        BX_ERROR(("iret64: SS not present!"));
+        exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
+      }
+    }
+
+    if (i->os64L()) {
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24,
+        8, CPL==3, BX_READ, &new_rsp);
+    }
+    else if (i->os32L()) {
+      Bit32u return_ESP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12,
+        4, CPL==3, BX_READ, &return_ESP);
+      new_rsp = return_ESP;
+    }
+    else {
+      Bit16u return_SP;
+      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6,
+        2, CPL==3, BX_READ, &return_SP);
+      new_rsp = return_SP;
+    }
+
+    Bit8u prev_cpl = CPL; /* previous CPL */
+
+    /* set CPL to the RPL of the return CS selector */
+    branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
+
+    /* load flags from stack */
+    // perhaps I should always write_eflags(), thus zeroing
+    // out the upper 16bits of eflags for CS.D_B==0 ???
+    if (cs_descriptor.u.segment.d_b)
+      write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
+    else
+      write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
+
+    if ( (raw_ss_selector & 0xfffc) != 0 ) {
+      // load SS:RSP from stack
+      // load the SS-cache with SS descriptor
+      load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
+    }
+    else {
+      // we are in 64-bit mode !
+      loadSRegLMNominal(BX_SEG_REG_SS, raw_ss_selector, 0, cs_selector.rpl);
+    }
+
+    if (StackAddrSize64()) RSP = new_rsp;
+    else {
+      if (ss_descriptor.u.segment.d_b) ESP = (Bit32u) new_rsp;
+      else SP = (Bit16u) new_rsp;
+    }
+
+    if (prev_cpl != CPL) validate_seg_regs();
+  }
+}
+#endif
