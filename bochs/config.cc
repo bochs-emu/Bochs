@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.38 2005-07-31 15:35:01 vruppert Exp $
+// $Id: config.cc,v 1.39 2005-08-03 19:24:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -368,7 +368,7 @@ void bx_init_options ()
   int i;
   bx_list_c *menu;
   bx_list_c *deplist;
-  char name[1024], descr[1024], group[16];
+  char name[1024], descr[1024], group[16], label[1024];
 
   memset (&bx_options, 0, sizeof(bx_options));
 
@@ -814,12 +814,11 @@ void bx_init_options ()
       "Amount of RAM in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
+  bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
   bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
 #if BX_WITH_WX
   bx_options.memory.Osize->set_label ("Memory size (megabytes)");
   bx_options.memory.Osize->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-#else
-  bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
 #endif
 
   // initialize serial and parallel port options
@@ -1016,81 +1015,40 @@ void bx_init_options ()
 #if BX_WITH_WX
   bx_options.rom.Opath->set_label ("ROM BIOS image");
   bx_options.rom.Oaddress->set_label ("ROM BIOS address");
+  bx_options.rom.Oaddress->set_format ("0x%05x");
 #else
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
 #endif
 
-  bx_options.optrom[0].Opath = new bx_param_filename_c (BXP_OPTROM1_PATH,
-      "optional romimage #1",
-      "Pathname of optional ROM image #1 to load",
+  for (i=0; i<4; i++) {
+    sprintf (name, "memory.optrom.%d.path", i+1);
+    sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
+    bx_options.optrom[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTROM1_PATH+i),
+      strdup(name), 
+      strdup(descr),
       "", BX_PATHNAME_LEN);
-  bx_options.optrom[0].Opath->set_format ("Name of optional ROM image #1 : %s");
-  bx_options.optrom[0].Oaddress = new bx_param_num_c (BXP_OPTROM1_ADDRESS,
-      "optional romaddr #1",
-      "The address at which the optional ROM image #1 should be loaded",
+    sprintf (label, "Name of optional ROM image #%d", i+1);
+    strcat(label, " : %s");
+    bx_options.optrom[i].Opath->set_format (strdup(label));
+    sprintf (name, "memory.optrom.%d.address", i+1);
+    sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
+    bx_options.optrom[i].Oaddress = new bx_param_num_c ((bx_id)(BXP_OPTROM1_ADDRESS+i),
+      strdup(name), 
+      strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.optrom[0].Oaddress->set_base (16);
+    bx_options.optrom[i].Oaddress->set_base (16);
 #if BX_WITH_WX
-  bx_options.optrom[0].Opath->set_label ("Optional ROM image #1");
-  bx_options.optrom[0].Oaddress->set_label ("Address");
+    sprintf (label, "Optional ROM image #%d", i+1);
+    bx_options.optrom[i].Opath->set_label (strdup(label));
+    bx_options.optrom[i].Oaddress->set_label ("Address");
+    bx_options.optrom[i].Oaddress->set_format ("0x%05x");
 #else
-  bx_options.optrom[0].Oaddress->set_format ("optional ROM #1 address: 0x%05x");
+    sprintf (label, "Optional ROM #%d address:", i+1);
+    strcat(label, " 0x%05x");
+    bx_options.optrom[i].Oaddress->set_format (strdup(label));
 #endif
-
-  bx_options.optrom[1].Opath = new bx_param_filename_c (BXP_OPTROM2_PATH,
-      "optional romimage #2",
-      "Pathname of optional ROM image #2 to load",
-      "", BX_PATHNAME_LEN);
-  bx_options.optrom[1].Opath->set_format ("Name of optional ROM image #2 : %s");
-  bx_options.optrom[1].Oaddress = new bx_param_num_c (BXP_OPTROM2_ADDRESS,
-      "optional romaddr #2",
-      "The address at which the optional ROM image #2 should be loaded",
-      0, BX_MAX_BIT32U, 
-      0);
-  bx_options.optrom[1].Oaddress->set_base (16);
-#if BX_WITH_WX
-  bx_options.optrom[1].Opath->set_label ("Optional ROM image #2");
-  bx_options.optrom[1].Oaddress->set_label ("Address");
-#else
-  bx_options.optrom[1].Oaddress->set_format ("optional ROM #2 address: 0x%05x");
-#endif
-
-  bx_options.optrom[2].Opath = new bx_param_filename_c (BXP_OPTROM3_PATH,
-      "optional romimage #3",
-      "Pathname of optional ROM image #3 to load",
-      "", BX_PATHNAME_LEN);
-  bx_options.optrom[2].Opath->set_format ("Name of optional ROM image #3 : %s");
-  bx_options.optrom[2].Oaddress = new bx_param_num_c (BXP_OPTROM3_ADDRESS,
-      "optional romaddr #3",
-      "The address at which the optional ROM image #3 should be loaded",
-      0, BX_MAX_BIT32U, 
-      0);
-  bx_options.optrom[2].Oaddress->set_base (16);
-#if BX_WITH_WX
-  bx_options.optrom[2].Opath->set_label ("Optional ROM image #3");
-  bx_options.optrom[2].Oaddress->set_label ("Address");
-#else
-  bx_options.optrom[2].Oaddress->set_format ("optional ROM #3 address: 0x%05x");
-#endif
-
-  bx_options.optrom[3].Opath = new bx_param_filename_c (BXP_OPTROM4_PATH,
-      "optional romimage #4",
-      "Pathname of optional ROM image #4 to load",
-      "", BX_PATHNAME_LEN);
-  bx_options.optrom[3].Opath->set_format ("Name of optional ROM image #4 : %s");
-  bx_options.optrom[3].Oaddress = new bx_param_num_c (BXP_OPTROM4_ADDRESS,
-      "optional romaddr #4",
-      "The address at which the optional ROM image #4 should be loaded",
-      0, BX_MAX_BIT32U, 
-      0);
-  bx_options.optrom[3].Oaddress->set_base (16);
-#if BX_WITH_WX
-  bx_options.optrom[3].Opath->set_label ("Optional ROM image #4");
-  bx_options.optrom[3].Oaddress->set_label ("Address");
-#else
-  bx_options.optrom[3].Oaddress->set_format ("optional ROM #4 address: 0x%05x");
-#endif
+  }
 
   bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
       "vgaromimage",
