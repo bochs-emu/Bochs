@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.21 2005-06-04 17:44:58 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.22 2005-08-03 20:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -607,7 +607,7 @@ bx_svga_cirrus_c::mem_read(Bit32u addr)
       return svga_mmio_blt_read(offset);
     }
   else {
-    BX_ERROR(("mem_read 0x%08x",addr));
+    BX_DEBUG(("mem_read 0x%08x",addr));
     }
 
   return 0xff;
@@ -753,7 +753,7 @@ bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
       }
     }
   else {
-    BX_ERROR(("mem_write 0x%08x, value 0x%02x",addr,value));
+    BX_DEBUG(("mem_write 0x%08x, value 0x%02x",addr,value));
     }
 }
 
