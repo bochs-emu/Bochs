@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.230 2005-08-02 18:44:15 sshwarts Exp $
+// $Id: cpu.h,v 1.231 2005-08-03 21:10:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2796,7 +2796,6 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF  void   fetch_raw_descriptor64(bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, Bit8u exception_no);
-  BX_SMF void    load_ss64(Bit8u cpl) BX_CPP_AttrRegparmN(1);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
 #endif

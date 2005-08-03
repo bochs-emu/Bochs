@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.4 2005-08-02 20:20:21 sshwarts Exp $
+// $Id: call_far.cc,v 1.5 2005-08-03 21:10:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -449,10 +449,9 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           // Help for OS/2
           BX_CPU_THIS_PTR except_chk = 0;
-          return;
         }
-        // CALL GATE TO SAME PRIVILEGE
-        else {
+        else   // CALL GATE TO SAME PRIVILEGE
+        {
           BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
 
 #if BX_SUPPORT_X86_64
@@ -478,10 +477,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           // load code segment descriptor into CS register
           // set RPL of CS to CPL
           branch_far64(&cs_selector, &cs_descriptor, new_EIP, CPL);
-          return;
         }
-
-        BX_PANIC(("call_protected: call gate: should not get here"));
         return;
 
       default:

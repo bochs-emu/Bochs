@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.60 2005-08-02 20:20:21 sshwarts Exp $
+// $Id: exception.cc,v 1.61 2005-08-03 21:10:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,9 +90,9 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   if (gate_descriptor.type != BX_386_INTERRUPT_GATE && 
       gate_descriptor.type != BX_386_TRAP_GATE)
   {
-      BX_ERROR(("interrupt(long mode): unsupported gate type %u",
+    BX_ERROR(("interrupt(long mode): unsupported gate type %u",
         (unsigned) gate_descriptor.type));
-      exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
+    exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
@@ -126,8 +126,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // selector must be within its descriptor table limits
   // else #GP(selector+EXT)
-  fetch_raw_descriptor(&cs_selector, &dword1, &dword2,
-                            BX_GP_EXCEPTION);
+  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
   // descriptor AR byte must indicate code seg
@@ -142,8 +141,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   // check that it's a 64 bit segment
-  if ( cs_descriptor.u.segment.l == 0 ||
-       cs_descriptor.u.segment.d_b == 1)
+  if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("interrupt(long mode): must be 64 bit segment"));
     exception(BX_GP_EXCEPTION, vector, 0);
@@ -172,52 +170,43 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
     }
 
+    if (! IsCanonical(RSP)) {
+      BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
+         (Bit32u)(RSP >> 32), (Bit32u)(RSP & 0xffffffff)));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    Bit16u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+    Bit64u old_RIP = RIP;
     Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
 
+    bx_selector_t ss_selector;
+    bx_descriptor_t ss_descriptor;
+
+    // set up a null descriptor
+    parse_selector(0, &ss_selector);
+    parse_descriptor(0, 0, &ss_descriptor);
+
+    // load CS:RIP (guaranteed to be in 64 bit mode)
+    branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
+
     // set up null SS descriptor
-    load_ss64(cs_descriptor.dpl);
+    load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
-    // === WORKAROUND ===
-    // need to switch to 64 bit mode temporarily here.
-    // this means that any exception after here might be delivered
-    // a little insanely. Like faults are page faults..
-    unsigned savemode = BX_CPU_THIS_PTR cpu_mode;
-    BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-
-    // load new RSP values from TSS
     RSP = RSP_for_cpl_x;
 
-    // load new CS:IP values from gate
-    // set CPL to new code segment DPL
+    /* the size of the gate controls the size of the stack pushes */
 
-    CPL = cs_descriptor.dpl;
-
-    // set RPL of CS to CPL
-
-    // push long pointer to old stack onto new stack
-    // skip segmentation checks
-
-    // align ESP
-
+    // push old stack long pointer onto new stack
     push_64(old_SS);
     push_64(old_RSP);
-
-    // push EFLAGS
     push_64(read_eflags());
-
     // push long pointer to return address onto new stack
-    push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-    push_64(RIP);
+    push_64(old_CS);
+    push_64(old_RIP);
     if ( is_error_code )
       push_64(error_code);
-
-    // restore the original cpu mode
-    BX_CPU_THIS_PTR cpu_mode = savemode;
-
-    load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
-
-    RIP = gate_dest_offset;
 
     // if INTERRUPT GATE set IF to 0
     if ( !(gate_descriptor.type & 1) ) // even is int-gate
@@ -257,11 +246,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     if ( is_error_code )
       push_64(error_code);
 
-    // load CS:IP from gate
-    // load CS descriptor
     // set the RPL field of CS to CPL
-    load_cs(&cs_selector, &cs_descriptor, CPL);
-    RIP = gate_dest_offset;
+    branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
 
     // if interrupt gate then set IF to 0
     if ( !(gate_descriptor.type & 1) ) // even is int-gate
