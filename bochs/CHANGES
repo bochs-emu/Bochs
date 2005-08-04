@@ -1,3 +1,10 @@
+Changes after 2.2.1:
+
+- com->socket redirection support added (#SF patch by Andrew Backer)
+- implemented long mode call_far/ret_far/jmp_far operation (Stanislav)
+- fixed IRET operation in long mode (Stanislav)
+
+-------------------------------------------------------------------------
 Changes in 2.2.1 (July 8, 2005):
 
 - Fixed several compilation warnings and errors for different platforms (Volker)
