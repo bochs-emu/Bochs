@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.61 2005-08-03 21:10:41 sshwarts Exp $
+// $Id: exception.cc,v 1.62 2005-08-04 19:31:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -170,9 +170,11 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
     }
 
-    if (! IsCanonical(RSP)) {
+    RSP_for_cpl_x &= BX_CONST64(0xfffffffffffffff0);
+
+    if (! IsCanonical(RSP_for_cpl_x)) {
       BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
-         (Bit32u)(RSP >> 32), (Bit32u)(RSP & 0xffffffff)));
+         (Bit32u)(RSP_for_cpl_x >> 32), (Bit32u)(RSP_for_cpl_x & 0xffffffff)));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
@@ -220,7 +222,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // if code segment is conforming OR code segment DPL = CPL then
   // INTERRUPT TO SAME PRIVILEGE LEVEL:
-  if (cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL)
+  if (cs_descriptor.u.segment.c_ed || cs_descriptor.dpl==CPL)
   {
     BX_DEBUG(("interrupt(long mode): INTERRUPT TO SAME PRIVILEGE"));
 
@@ -233,7 +235,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     }
 
     // align stack
-    RSP = RSP & BX_CONST64(0xfffffffffffffff0);
+    RSP &= BX_CONST64(0xfffffffffffffff0);
 
     // push flags onto stack
     // push current CS selector onto stack
