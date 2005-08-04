@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.232 2005-08-03 21:19:10 sshwarts Exp $
+// $Id: cpu.h,v 1.233 2005-08-04 19:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2743,6 +2743,9 @@ public: // for now...
   BX_SMF void jmp_call_gate64(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
+#if BX_SUPPORT_X86_64
+  BX_SMF void call_gate64(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+#endif
   BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64

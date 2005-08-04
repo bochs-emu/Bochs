@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.38 2005-07-31 17:57:25 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.39 2005-08-04 19:38:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_INFO(("RETF64_Iw instruction executed ..."));
+  BX_INFO(("RETfar64_Iw instruction executed ..."));
 
   return_protected(i, i->Iw());
 
@@ -116,7 +116,7 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_INFO(("RETF64 instruction executed ..."));
+  BX_INFO(("RETfar64 instruction executed ..."));
 
   return_protected(i, 0);
 
@@ -199,7 +199,7 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_PANIC(("Call protected is not implemented in x86-64 mode !"));
+  BX_INFO(("call far instruction executed ..."));
   BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_32);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,

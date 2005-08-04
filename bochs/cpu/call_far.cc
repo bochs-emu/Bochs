@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.5 2005-08-03 21:10:39 sshwarts Exp $
+// $Id: call_far.cc,v 1.6 2005-08-04 19:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -92,18 +92,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     return;
   }
   else { // gate & special segment
-    bx_descriptor_t  gate_descriptor;
-    bx_selector_t    gate_selector;
+    bx_descriptor_t  gate_descriptor = cs_descriptor;
+    bx_selector_t    gate_selector = cs_selector;
     Bit32u new_EIP;
     Bit16u dest_selector;
     Bit16u          raw_tss_selector;
     bx_selector_t   tss_selector;
     bx_descriptor_t tss_descriptor;
     Bit32u temp_eIP;
-
-    /* 1 level of indirection via gate, switch gate & cs */
-    gate_descriptor = cs_descriptor;
-    gate_selector   = cs_selector;
 
     // descriptor DPL must be >= CPL else #GP(gate selector)
     if (gate_descriptor.dpl < CPL) {
@@ -130,7 +126,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
       else {
-        BX_PANIC(("call protected: call gate 64 still not implemented !"));
+        call_gate64(&gate_descriptor);
+        return;
       }
     }
 #endif
@@ -242,17 +239,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
         }
 
-        // In long mode, only 64-bit call gates are allowed, and they must point
-        // to 64-bit code segments, else #GP(selector)
-#if BX_SUPPORT_X86_64
-        if (!IsLongMode()) {
-          if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
-          {
-            BX_ERROR(("jump_protected: not 64-bit code segment in call gate 64"));
-            exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
-          }
-        }
-#endif
         // code segment must be present else #NP(selector)
         if (! IS_PRESENT(cs_descriptor)) {
           BX_ERROR(("call_protected: code segment not present !"));
@@ -268,8 +254,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           Bit32u ESP_for_cpl_x;
           bx_selector_t   ss_selector;
           bx_descriptor_t ss_descriptor;
-          unsigned room_needed;
-          Bit8u    param_count;
+          unsigned room_needed, param_count;
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
           Bit32u   return_ss_base;
@@ -290,10 +275,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           // check selector & descriptor for new SS:
           // selector must not be null, else #TS(0)
           if ( (SS_for_cpl_x & 0xfffc) == 0 ) {
-            if (! IsLongMode()) {
-              BX_ERROR(("call_protected: new SS null"));
-              exception(BX_TS_EXCEPTION, 0, 0);
-            }
+            BX_ERROR(("call_protected: new SS null"));
+            exception(BX_TS_EXCEPTION, 0, 0);
           }
 
           // selector index must be within its descriptor table limits,
@@ -302,37 +285,34 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
           parse_descriptor(dword1, dword2, &ss_descriptor);
 
-          if (! IsLongMode())
+          // selector's RPL must equal DPL of code segment,
+          //   else #TS(SS selector)
+          if (ss_selector.rpl != cs_descriptor.dpl) {
+            BX_DEBUG(("call_protected: SS selector.rpl != CS descr.dpl"));
+            exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+          }
+
+          // stack segment DPL must equal DPL of code segment,
+          //   else #TS(SS selector)
+          if (ss_descriptor.dpl != cs_descriptor.dpl) {
+            BX_ERROR(("call_protected: SS descr.rpl != CS descr.dpl"));
+            exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+          }
+
+          // descriptor must indicate writable data segment,
+          //   else #TS(SS selector)
+          if (ss_descriptor.valid==0 || ss_descriptor.segment==0  ||
+              ss_descriptor.u.segment.executable ||
+              ss_descriptor.u.segment.r_w==0)
           {
-            // selector's RPL must equal DPL of code segment,
-            //   else #TS(SS selector)
-            if (ss_selector.rpl != cs_descriptor.dpl) {
-              BX_DEBUG(("call_protected: SS selector.rpl != CS descr.dpl"));
-              exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+            BX_ERROR(("call_protected: ss descriptor not writable data seg"));
+            exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
+          }
 
-            // stack segment DPL must equal DPL of code segment,
-            //   else #TS(SS selector)
-            if (ss_descriptor.dpl != cs_descriptor.dpl) {
-              BX_ERROR(("call_protected: SS descr.rpl != CS descr.dpl"));
-              exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
-
-            // descriptor must indicate writable data segment,
-            //   else #TS(SS selector)
-            if (ss_descriptor.valid==0 || ss_descriptor.segment==0  ||
-                ss_descriptor.u.segment.executable ||
-                ss_descriptor.u.segment.r_w==0)
-            {
-              BX_ERROR(("call_protected: ss descriptor not writable data seg"));
-              exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
-
-            // segment must be present, else #SS(SS selector)
-            if (! IS_PRESENT(ss_descriptor)) {
-              BX_ERROR(("call_protected: ss descriptor not present"));
-              exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
-            }
+          // segment must be present, else #SS(SS selector)
+          if (! IS_PRESENT(ss_descriptor)) {
+            BX_ERROR(("call_protected: ss descriptor not present"));
+            exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
           }
 
           if ( cs_descriptor.u.segment.d_b )
@@ -430,19 +410,15 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             for (unsigned i=param_count; i>0; i--) {
               push_16(parameter_word[i-1]);
             }
+            // push return address onto new stack
+            push_16(return_CS);
+            push_16((Bit16u) return_EIP);
           }
           else {
             for (unsigned i=param_count; i>0; i--) {
               push_32(parameter_dword[i-1]);
             }
-          }
-
-          // push return address onto new stack
-          if (gate_descriptor.type==BX_286_CALL_GATE) {
-            push_16(return_CS);
-            push_16((Bit16u) return_EIP);
-          }
-          else {
+            // push return address onto new stack
             push_32(return_CS);
             push_32(return_EIP);
           }
@@ -454,14 +430,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         {
           BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
 
-#if BX_SUPPORT_X86_64
-          if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-            // call gate 64bit, push return address onto stack
-            push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
-            push_64(RIP);
-          }
-          else
-#endif
           if (gate_descriptor.type == BX_386_CALL_GATE) {
             // call gate 32bit, push return address onto stack
             push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
@@ -476,7 +444,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           // load CS:EIP from gate
           // load code segment descriptor into CS register
           // set RPL of CS to CPL
-          branch_far64(&cs_selector, &cs_descriptor, new_EIP, CPL);
+          branch_far32(&cs_selector, &cs_descriptor, new_EIP, CPL);
         }
         return;
 
@@ -486,3 +454,124 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     }
   }
 }
+
+#if BX_SUPPORT_X86_64
+  void BX_CPP_AttrRegparmN(1)
+BX_CPU_C::call_gate64(bx_descriptor_t *gate_descriptor)
+{
+  bx_selector_t cs_selector;
+  Bit32u dword1, dword2, dword3;
+  bx_descriptor_t cs_descriptor;
+
+  // examine code segment selector in call gate descriptor
+  BX_DEBUG(("call_gate64: CALL 64bit call gate"));
+
+  Bit16u dest_selector = gate_descriptor->u.gate386.dest_selector;
+
+  // selector must not be null else #GP(0)
+  if ( (dest_selector & 0xfffc) == 0 ) {
+    BX_ERROR(("call_gate64: selector in gate null"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  parse_selector(dest_selector, &cs_selector);
+  // selector must be within its descriptor table limits,
+  //   else #GP(code segment selector)
+  fetch_raw_descriptor64(&cs_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, &cs_descriptor);
+
+  Bit64u new_RIP = gate_descriptor->u.gate386.dest_offset;
+  new_RIP |= ((Bit64u)dword3 << 32);
+
+  // AR byte of selected descriptor must indicate code segment,
+  //   else #GP(code segment selector)
+  // DPL of selected descriptor must be <= CPL,
+  // else #GP(code segment selector)
+  if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
+      cs_descriptor.u.segment.executable==0 ||
+      cs_descriptor.dpl > CPL)
+  {
+    BX_ERROR(("call_gate64: selected descriptor is not code"));
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+  }
+
+  // In long mode, only 64-bit call gates are allowed, and they must point
+  // to 64-bit code segments, else #GP(selector)
+  if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
+  {
+    BX_ERROR(("call_gate64: not 64-bit code segment in call gate 64"));
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+  }
+
+  // code segment must be present else #NP(selector)
+  if (! IS_PRESENT(cs_descriptor)) {
+    BX_ERROR(("call_gate64: code segment not present !"));
+    exception(BX_NP_EXCEPTION, dest_selector & 0xfffc, 0);
+  }
+
+  Bit16u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  Bit64u old_RIP = RIP;
+
+  // CALL GATE TO MORE PRIVILEGE
+  // if non-conforming code segment and DPL < CPL then
+  if ( (cs_descriptor.u.segment.c_ed==0) &&
+       (cs_descriptor.dpl < CPL) )
+  {
+    Bit64u RSP_for_cpl_x;
+
+    BX_DEBUG(("CALL GATE TO MORE PRIVILEGE LEVEL"));
+
+    // get new RSP for new privilege level from TSS
+    get_RSP_from_TSS(cs_descriptor.dpl, &RSP_for_cpl_x);
+
+    if (! IsCanonical(RSP_for_cpl_x)) {
+      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
+         (Bit32u)(RSP_for_cpl_x >> 32), (Bit32u)(RSP_for_cpl_x & 0xffffffff)));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+    Bit64u old_RSP = RSP;
+
+    bx_selector_t ss_selector;
+    bx_descriptor_t ss_descriptor;
+
+    // set up a null descriptor
+    parse_selector(0, &ss_selector);
+    parse_descriptor(0, 0, &ss_descriptor);
+
+    // load CS:RIP (guaranteed to be in 64 bit mode)
+    branch_far64(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
+
+    // set up null SS descriptor
+    load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
+
+    RSP = RSP_for_cpl_x;
+
+    // push old stack long pointer onto new stack
+    push_64(old_SS);
+    push_64(old_RSP);
+    // push long pointer to return address onto new stack
+    push_64(old_CS);
+    push_64(old_RIP);
+  }
+  else
+  {
+    BX_DEBUG(("CALL GATE TO SAME PRIVILEGE"));
+
+    // make sure that push CS:RIP will not fail 
+    if (! IsCanonical(RSP)) {
+      BX_ERROR(("call_gate64: canonical address failure %08x%08x",
+         (Bit32u)(RSP >> 32), (Bit32u)(RSP & 0xffffffff)));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    // load CS:RIP (guaranteed to be in 64 bit mode)
+    branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
+
+    // push return address onto stack
+    push_64(old_CS);
+    push_64(old_RIP);
+  }
+}
+#endif
