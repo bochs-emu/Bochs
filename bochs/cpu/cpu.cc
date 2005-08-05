@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.105 2005-06-16 20:28:26 sshwarts Exp $
+// $Id: cpu.cc,v 1.106 2005-08-05 18:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -473,13 +473,13 @@ debugger_check:
 
     {
       // check for icount or control-C.  If found, set guard reg and return.
-    Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
-    if ( dbg_is_end_instr_bpoint(
+      Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
+      if ( dbg_is_end_instr_bpoint(
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
            debug_eip,
            BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) ) {
-      return;
+        return;
       }
     }
 #endif  // #if BX_DEBUGGER
@@ -724,21 +724,23 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
 void BX_CPU_C::prefetch(void)
 {
-  // cs:eIP
   // prefetch QSIZE byte quantity aligned on corresponding boundary
-  bx_address laddr;
   Bit32u pAddr;
-  bx_address temp_rip;
-  Bit32u temp_limit;
   bx_address laddrPageOffset0, eipPageOffset0;
 
-  temp_rip   = RIP;
-  temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-  laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
+  bx_address temp_rip = RIP;
+  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
 
-  if (((Bit32u)temp_rip) > temp_limit) {
-    BX_PANIC(("prefetch: RIP > CS.limit"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+  if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64) {
+    Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
+
+    if (((Bit32u) temp_rip) > temp_limit) {
+      BX_PANIC(("prefetch: RIP > CS.limit"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    // check if segment boundary comes into play
+    // if ((temp_limit - (Bit32u)temp_rip) < 4096) ...
   }
 
 #if BX_SUPPORT_PAGING
@@ -752,10 +754,6 @@ void BX_CPU_C::prefetch(void)
   {
     pAddr = A20ADDR(laddr);
   }
-
-  // check if segment boundary comes into play
-  //if ((temp_limit - (Bit32u)temp_rip) < 4096) {
-  //  }
 
   // Linear address at the beginning of the page.
 #if BX_SUPPORT_X86_64
