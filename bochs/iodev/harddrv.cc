@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.136 2005-06-26 10:54:49 vruppert Exp $
+// $Id: harddrv.cc,v 1.137 2005-08-05 18:35:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.136 2005-06-26 10:54:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.137 2005-08-05 18:35:00 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2606,16 +2606,19 @@ bx_hard_drive_c::increment_address(Bit8u channel)
 bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
 {
   unsigned i;
+  char serial_number[21];
 
   BX_SELECTED_DRIVE(channel).id_drive[0] = (2 << 14) | (5 << 8) | (1 << 7) | (2 << 5) | (0 << 0); // Removable CDROM, 50us response, 12 byte packets
 
   for (i = 1; i <= 9; i++)
 	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
-  const char* serial_number = " VT00001\0\0\0\0\0\0\0\0\0\0\0\0";
+  strcpy(serial_number, "BXCD00000           ");
+  serial_number[7] = channel + 49;
+  serial_number[8] = BX_HD_THIS channels[channel].drive_select + 49;
   for (i = 0; i < 10; i++) {
-	BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
-	      serial_number[i*2 + 1];
+    BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
+      serial_number[i*2 + 1];
   }
 
   for (i = 20; i <= 22; i++)
@@ -2704,6 +2707,7 @@ bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
 bx_hard_drive_c::identify_drive(Bit8u channel)
 {
   unsigned i;
+  char serial_number[21];
   Bit32u temp32;
   Bit16u temp16;
 
@@ -2719,10 +2723,10 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[8] = 0x000a;
   BX_SELECTED_DRIVE(channel).id_drive[9] = 0x0000;
 
-  char* serial_number = " CA00GSQ\0\0\0\0\0\0\0\0\0\0\0\0";
+  strcpy(serial_number, " CA00GSQ\0\0\0\0\0\0\0\0\0\0\0\0";
   for (i = 0; i < 10; i++) {
-	BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
-	      serial_number[i*2 + 1];
+    BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
+      serial_number[i*2 + 1];
   }
 
   BX_SELECTED_DRIVE(channel).id_drive[20] = 3;
@@ -2865,8 +2869,13 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
 
   // Word 10-19: Serial number (20 ASCII characters, 0000h=not specified)
   // This field is right justified and padded with spaces (20h).
-  for (i=10; i<=19; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+  strcpy(serial_number, "BXHD00000           ");
+  serial_number[7] = channel + 49;
+  serial_number[8] = BX_HD_THIS channels[channel].drive_select + 49;
+  for (i = 0; i < 10; i++) {
+    BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
+      serial_number[i*2 + 1];
+  }
 
   // Word 20: buffer type
   //          0000h = not specified
