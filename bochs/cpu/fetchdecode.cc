@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.83 2005-08-05 12:47:31 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.84 2005-08-05 12:53:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1218,13 +1218,19 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 02 */  { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */  { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */  { 0, &BX_CPU_C::BxError },
-#if BX_CPU_LEVEL == 2
+#if BX_SUPPORT_X86_64
+  /* 0F 05 */  { 0, &BX_CPU_C::SYSCALL },
+#elif BX_CPU_LEVEL == 2
   /* 0F 05 */  { 0, &BX_CPU_C::LOADALL },
 #else
-  /* 0F 05 */  { 0, &BX_CPU_C::BxError }, // SYSCALL is invalid in legacy mode
+  /* 0F 05 */  { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 06 */  { 0, &BX_CPU_C::CLTS },
-  /* 0F 07 */  { 0, &BX_CPU_C::BxError }, // SYSRET  is invalid in legacy mode
+#if BX_SUPPORT_X86_64
+  /* 0F 07 */  { 0, &BX_CPU_C::SYSRET },
+#else
+  /* 0F 07 */  { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 08 */  { 0, &BX_CPU_C::INVD },
   /* 0F 09 */  { 0, &BX_CPU_C::WBINVD },
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
