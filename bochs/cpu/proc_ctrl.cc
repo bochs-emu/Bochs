@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.111 2005-07-31 17:57:27 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.112 2005-08-05 12:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1506,16 +1506,24 @@ void BX_CPU_C::RDTSC(bxInstruction_c *i)
     Bit64u ticks = bx_pc_system.time_ticks ();
     RAX = (Bit32u) (ticks & 0xffffffff);
     RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
-    //BX_INFO(("RDTSC: returning EDX:EAX = %08x:%08x", EDX, EAX));
   } else {
     // not allowed to use RDTSC!
+    BX_ERROR(("RDTSC: incorrect usage of RDTSC instruction !"));
     exception (BX_GP_EXCEPTION, 0, 0);
   }
 #else
-  BX_INFO(("RDTSC: Pentium CPU required"));
+  BX_INFO(("RDTSC: Pentium CPU required, use --enable-cpu=5"));
   UndefinedOpcode(i);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::RDTSCP(bxInstruction_c *i)
+{
+  RDTSC(i);
+  RCX = MSR_TSC_AUX;
+}
+#endif
 
 void BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
@@ -1524,21 +1532,32 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
   if (v8086_mode()) {
     BX_INFO(("RDMSR: Invalid in virtual 8086 mode"));
-    goto do_exception;
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  if (CPL!= 0) {
+  if (protected_mode() && CPL != 0) {
     BX_INFO(("RDMSR: CPL != 0"));
-    goto do_exception;
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   /* We have the requested MSR register in ECX */
   switch(ECX) {
 
 #if BX_SUPPORT_SEP
-    case BX_MSR_SYSENTER_CS:  { EAX = BX_CPU_THIS_PTR sysenter_cs_msr;  EDX = 0; return; }
-    case BX_MSR_SYSENTER_ESP: { EAX = BX_CPU_THIS_PTR sysenter_esp_msr; EDX = 0; return; }
-    case BX_MSR_SYSENTER_EIP: { EAX = BX_CPU_THIS_PTR sysenter_eip_msr; EDX = 0; return; }
+    case BX_MSR_SYSENTER_CS:
+      RAX = BX_CPU_THIS_PTR sysenter_cs_msr;  
+      RDX = 0; 
+      return;
+
+    case BX_MSR_SYSENTER_ESP: 
+      RAX = BX_CPU_THIS_PTR sysenter_esp_msr; 
+      RDX = 0; 
+      return;
+
+    case BX_MSR_SYSENTER_EIP: 
+      RAX = BX_CPU_THIS_PTR sysenter_eip_msr; 
+      RDX = 0; 
+      return;
 #endif 
 
 #if BX_CPU_LEVEL == 5
@@ -1565,8 +1584,11 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       goto do_exception;
 #endif  /* BX_CPU_LEVEL == 5 */
 
-    case BX_MSR_TSC:
-      RDTSC(i);
+    case BX_MSR_TSC: {
+        Bit64u ticks = bx_pc_system.time_ticks ();
+        RAX = (Bit32u) (ticks & 0xffffffff);
+        RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
+      }
       return;
 
     /* MSR_APICBASE
@@ -1585,47 +1607,54 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       return;
 
 #if BX_SUPPORT_X86_64
-                case BX_MSR_EFER:
-                        RAX = (BX_CPU_THIS_PTR msr.sce << 0)
-                            | (BX_CPU_THIS_PTR msr.lme << 8)
-                            | (BX_CPU_THIS_PTR msr.lma << 10);
-                        RDX = 0;
-                        return;
+    case BX_MSR_EFER:
+      RAX = (BX_CPU_THIS_PTR msr.sce   <<  0)
+          | (BX_CPU_THIS_PTR msr.lme   <<  8)
+          | (BX_CPU_THIS_PTR msr.lma   << 10)
+          | (BX_CPU_THIS_PTR msr.nxe   << 11)
+          | (BX_CPU_THIS_PTR msr.ffxsr << 14);
+      RDX = 0;
+      return;
 
-                case BX_MSR_STAR:
-                        RAX = MSR_STAR;
-                        RDX = MSR_STAR >> 32;
-                        return;
+    case BX_MSR_STAR:
+      RAX = MSR_STAR & 0xffffffff;
+      RDX = MSR_STAR >> 32;
+      return;
 
-                case BX_MSR_LSTAR:
-                        RAX = MSR_LSTAR;
-                        RDX = MSR_LSTAR >> 32;
-                        return;
+    case BX_MSR_LSTAR:
+      RAX = MSR_LSTAR & 0xffffffff;
+      RDX = MSR_LSTAR >> 32;
+      return;
 
-                case BX_MSR_CSTAR:
-                        RAX = MSR_CSTAR;
-                        RDX = MSR_CSTAR >> 32;
-                        return;
+    case BX_MSR_CSTAR:
+      RAX = MSR_CSTAR & 0xffffffff;
+      RDX = MSR_CSTAR >> 32;
+      return;
 
-                case BX_MSR_FMASK:
-                        RAX = MSR_FMASK;
-                        RDX = MSR_FMASK >> 32;
-                        return;
+    case BX_MSR_FMASK:
+      RAX = MSR_FMASK & 0xffffffff;
+      RDX = MSR_FMASK >> 32;
+      return;
 
-                case BX_MSR_FSBASE:
-                        RAX = MSR_FSBASE;
-                        RDX = MSR_FSBASE >> 32;
-                        return;
+    case BX_MSR_FSBASE:
+      RAX = MSR_FSBASE & 0xffffffff;
+      RDX = MSR_FSBASE >> 32;
+      return;
 
-                case BX_MSR_GSBASE:
-                        RAX = MSR_GSBASE;
-                        RDX = MSR_GSBASE >> 32;
-                        return;
+    case BX_MSR_GSBASE:
+      RAX = MSR_GSBASE & 0xffffffff;
+      RDX = MSR_GSBASE >> 32;
+      return;
 
-                case BX_MSR_KERNELGSBASE:
-                        RAX = MSR_KERNELGSBASE;
-                        RDX = MSR_KERNELGSBASE >> 32;
-                        return;
+    case BX_MSR_KERNELGSBASE:
+      RAX = MSR_KERNELGSBASE & 0xffffffff;
+      RDX = MSR_KERNELGSBASE >> 32;
+      return;
+
+    case BX_MSR_TSC_AUX:
+      RAX = MSR_TSC_AUX;   // 32 bit MSR
+      RDX = 0;
+      return;
 #endif  // #if BX_SUPPORT_X86_64
 
     default:
@@ -1653,12 +1682,12 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   if (v8086_mode()) {
     BX_INFO(("WRMSR: Invalid in virtual 8086 mode"));
-    goto do_exception;
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  if (CPL!= 0) {
+  if (protected_mode() && CPL != 0) {
     BX_INFO(("WDMSR: CPL != 0"));
-    goto do_exception;
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   BX_INSTR_WRMSR(BX_CPU_ID, ECX, ((Bit64u) EDX << 32) + EAX);
@@ -1667,13 +1696,20 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
   switch(ECX) {
 
 #if BX_SUPPORT_SEP
-    case BX_MSR_SYSENTER_CS:  {
-      if (EAX & 3) BX_PANIC (("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));  // not a bug according to book
-      BX_CPU_THIS_PTR sysenter_cs_msr  = EAX;                                                     // ... but very stOOpid
+    case BX_MSR_SYSENTER_CS: {
+      // not a bug according to book ... but very stOOpid
+      if (EAX & 3) BX_PANIC(("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));
+      BX_CPU_THIS_PTR sysenter_cs_msr  = EAX;
       return;
     }
-    case BX_MSR_SYSENTER_ESP: { BX_CPU_THIS_PTR sysenter_esp_msr = EAX; return; }
-    case BX_MSR_SYSENTER_EIP: { BX_CPU_THIS_PTR sysenter_eip_msr = EAX; return; }
+
+    case BX_MSR_SYSENTER_ESP:
+      BX_CPU_THIS_PTR sysenter_esp_msr = EAX; 
+      return;
+
+    case BX_MSR_SYSENTER_EIP: 
+      BX_CPU_THIS_PTR sysenter_eip_msr = EAX; 
+      return;
 #endif
 
 #if BX_CPU_LEVEL == 5
@@ -1724,38 +1760,51 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_X86_64
-                case BX_MSR_EFER:
-                        // GPF #0 if lme 0->1 and cr0.pg = 1
-                        // GPF #0 if lme 1->0 and cr0.pg = 1
-                        if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
-                            (BX_CPU_THIS_PTR cr0.pg == 1))
-                        {
-                          exception(BX_GP_EXCEPTION, 0, 0);
-                        }
-                        BX_CPU_THIS_PTR msr.sce = (EAX >> 0) & 1;
-                        BX_CPU_THIS_PTR msr.lme = (EAX >> 8) & 1;
-                        return;
-                case BX_MSR_STAR:
-                        MSR_STAR   = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_LSTAR:
-                        MSR_LSTAR  = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_CSTAR:
-                        MSR_CSTAR  = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_FMASK:
-                        MSR_FMASK  = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_FSBASE:
-                        MSR_FSBASE = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_GSBASE:
-                        MSR_GSBASE = ((Bit64u) EDX << 32) + EAX;
-                        return;
-                case BX_MSR_KERNELGSBASE:
-                        MSR_KERNELGSBASE = ((Bit64u) EDX << 32) + EAX;
-                        return;
+    case BX_MSR_EFER:
+      // GPF #0 if lme 0->1 and cr0.pg = 1
+      // GPF #0 if lme 1->0 and cr0.pg = 1
+      if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
+          (BX_CPU_THIS_PTR cr0.pg == 1))
+      {
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+      BX_CPU_THIS_PTR msr.sce   = (EAX >> 0)  & 1;
+      BX_CPU_THIS_PTR msr.lme   = (EAX >> 8)  & 1;
+      BX_CPU_THIS_PTR msr.nxe   = (EAX >> 11) & 1;
+      BX_CPU_THIS_PTR msr.ffxsr = (EAX >> 14) & 1;
+      return;
+
+     case BX_MSR_STAR:
+      MSR_STAR   = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_LSTAR:
+      MSR_LSTAR  = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_CSTAR:
+      MSR_CSTAR  = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_FMASK:
+      MSR_FMASK  = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_FSBASE:
+      MSR_FSBASE = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_GSBASE:
+      MSR_GSBASE = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_KERNELGSBASE:
+      MSR_KERNELGSBASE = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_TSC_AUX:
+      MSR_TSC_AUX = EAX;
+      return;
 #endif  // #if BX_SUPPORT_X86_64
 
     default:

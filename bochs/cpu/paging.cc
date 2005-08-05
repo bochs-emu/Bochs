@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.60 2005-06-14 20:55:57 sshwarts Exp $
+// $Id: paging.cc,v 1.61 2005-08-05 12:47:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -582,12 +582,22 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
     // ----------------------------------------------------
     //  MOD <> 11  7   --- |     INVLPG      |   INVLPG
     //  MOD == 11  7    0  |      #UD        |   SWAPGS
-    //  MOD == 11  7   1-7 |      #UD        |    #UD
+    //  MOD == 11  7    1  |      #UD        |   RDTSCP
+    //  MOD == 11  7   2-7 |      #UD        |    #UD
 
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      if ((i->rm() == 0) && (i->nnn() == 7)) {
-        BX_CPU_THIS_PTR SWAPGS(i);
-        return;
+      if (i->nnn() == 7) {
+        switch(i->rm()) {
+        case 0:
+          BX_CPU_THIS_PTR SWAPGS(i);
+          return;
+        case 1:
+          BX_CPU_THIS_PTR RDTSCP(i);
+          return;
+        default:
+          BX_INFO(("INVLPG: 0F 01 /7 RM=%d opcode is undefined !", i->rm()));
+          UndefinedOpcode(i);
+        }
       }
     }
 
@@ -604,7 +614,6 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   // Protected instruction: CPL0 only
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      BX_INFO(("INVLPG: CPL!=0"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -620,6 +629,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 
 #else
   // not supported on < 486
+  BX_INFO(("INVLPG: required i486, use --enable-cpu=4 option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -703,8 +713,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       }
 
       // Get PDP entry
-      pdp_addr =  (pml4 & 0xfffff000) |
-                  ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
+      pdp_addr = (pml4 & 0xfffff000) |
+                 ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
     }
     else
 #endif
@@ -1284,7 +1294,6 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
                               BX_CPU_THIS_PTR address_xlation.len2, data);
       }
 #endif
-
       return;
     }
   }

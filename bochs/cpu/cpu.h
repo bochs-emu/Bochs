@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.233 2005-08-04 19:38:49 sshwarts Exp $
+// $Id: cpu.h,v 1.234 2005-08-05 12:47:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -172,6 +172,7 @@
 #define MSR_CSTAR   (BX_CPU_THIS_PTR msr.cstar)
 #define MSR_FMASK   (BX_CPU_THIS_PTR msr.fmask)
 #define MSR_KERNELGSBASE   (BX_CPU_THIS_PTR msr.kernelgsbase)
+#define MSR_TSC_AUX (BX_CPU_THIS_PTR msr.tsc_aux)
 
 #endif
 
@@ -326,6 +327,7 @@
 #define BX_MSR_FSBASE           0xc0000100
 #define BX_MSR_GSBASE           0xc0000101
 #define BX_MSR_KERNELGSBASE     0xc0000102
+#define BX_MSR_TSC_AUX          0xc0000103
 #endif
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
@@ -645,6 +647,8 @@ typedef struct {
   Bit64u cstar;
   Bit64u fmask;
   Bit64u kernelgsbase;
+
+  Bit32u tsc_aux;
 #endif
 
   /* TODO finish of the others */
@@ -2458,6 +2462,7 @@ public: // for now...
   BX_SMF void LOOP64_Jb(bxInstruction_c *);
   BX_SMF void JCXZ64_Jb(bxInstruction_c *);
 
+  BX_SMF void RDTSCP(bxInstruction_c *);
   BX_SMF void CMPXCHG16B(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
 

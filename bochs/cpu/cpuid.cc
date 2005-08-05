@@ -325,12 +325,16 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //     [21:21] Reserved
       //     [22:22] AMD MMX Extensions
       //     [25:25] Fast FXSAVE/FXRSTOR mode support
-      //     [25:28] Reserved
+      //     [26:26] Reserved
+      //     [27:27] Support RDTSCP Instruction
+      //     [28:28] Reserved
       //     [29:29] Long Mode
       //     [30:30] AMD 3DNow! Extensions
       //     [31:31] AMD 3DNow! Instructions
       features = features & 0x00003F3FF;
-      RDX = features | (1 << 29) | (1 << 25) | (1 << 22) | (1 << 20) | (1 << 11);
+
+      RDX = features | (1 << 29) | (1 << 27) | (1 << 25) | 
+                       (1 << 22) | (1 << 20) | (1 << 11);
       RBX = 0;
       RCX = 0;
       break;
