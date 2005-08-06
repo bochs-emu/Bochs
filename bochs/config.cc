@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.39 2005-08-03 19:24:20 vruppert Exp $
+// $Id: config.cc,v 1.40 2005-08-06 18:29:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2330,7 +2330,8 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
-    Bit8u channel = params[0][3], slave = 0;
+    Bit8u channel = params[0][3], slave = 0, type = 0, mode = BX_ATA_MODE_FLAT;
+    Bit32u cylinders = 0, heads = 0, sectors = 0;
 
     if ((channel < '0') || (channel > '9')) {
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
@@ -2351,131 +2352,101 @@ parse_line_formatted(char *context, int num_params, char *params[])
 
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "type=disk")) {
-        bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_DISK);
-        }
-      else if (!strcmp(params[i], "type=cdrom")) {
-        bx_options.atadevice[channel][slave].Otype->set (BX_ATA_DEVICE_CDROM);
-        }
-      else if (!strcmp(params[i], "mode=flat")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_FLAT);
-        }
-      else if (!strcmp(params[i], "mode=concat")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_CONCAT);
-        }
-      else if (!strcmp(params[i], "mode=external")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_EXTDISKSIM);
-        }
-      else if (!strcmp(params[i], "mode=dll")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_DLL_HD);
-        }
-      else if (!strcmp(params[i], "mode=sparse")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPARSE);
-        }
-      else if (!strcmp(params[i], "mode=vmware3")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VMWARE3);
-        }
-//      else if (!strcmp(params[i], "mode=split")) {
-//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_SPLIT);
-//        }
-      else if (!strcmp(params[i], "mode=undoable")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_UNDOABLE);
-        }
-      else if (!strcmp(params[i], "mode=growing")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_GROWING);
-        }
-      else if (!strcmp(params[i], "mode=volatile")) {
-        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_VOLATILE);
-        }
-//      else if (!strcmp(params[i], "mode=z-undoable")) {
-//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_UNDOABLE);
-//        }
-//      else if (!strcmp(params[i], "mode=z-volatile")) {
-//        bx_options.atadevice[channel][slave].Omode->set (BX_ATA_MODE_Z_VOLATILE);
-//        }
-      else if (!strncmp(params[i], "path=", 5)) {
+        type = BX_ATA_DEVICE_DISK;
+      } else if (!strcmp(params[i], "type=cdrom")) {
+        type = BX_ATA_DEVICE_CDROM;
+      } else if (!strcmp(params[i], "mode=flat")) {
+        mode = BX_ATA_MODE_FLAT;
+      } else if (!strcmp(params[i], "mode=concat")) {
+        mode = BX_ATA_MODE_CONCAT;
+      } else if (!strcmp(params[i], "mode=external")) {
+        mode = BX_ATA_MODE_EXTDISKSIM;
+      } else if (!strcmp(params[i], "mode=dll")) {
+        mode = BX_ATA_MODE_DLL_HD;
+      } else if (!strcmp(params[i], "mode=sparse")) {
+        mode = BX_ATA_MODE_SPARSE;
+      } else if (!strcmp(params[i], "mode=vmware3")) {
+        mode = BX_ATA_MODE_VMWARE3;
+//      } else if (!strcmp(params[i], "mode=split")) {
+//        mode = BX_ATA_MODE_SPLIT;
+      } else if (!strcmp(params[i], "mode=undoable")) {
+        mode = BX_ATA_MODE_UNDOABLE;
+      } else if (!strcmp(params[i], "mode=growing")) {
+        mode = BX_ATA_MODE_GROWING;
+      } else if (!strcmp(params[i], "mode=volatile")) {
+        mode = BX_ATA_MODE_VOLATILE;
+//      } else if (!strcmp(params[i], "mode=z-undoable")) {
+//        mode = BX_ATA_MODE_Z_UNDOABLE;
+//      } else if (!strcmp(params[i], "mode=z-volatile")) {
+//        mode = BX_ATA_MODE_Z_VOLATILE;
+      } else if (!strncmp(params[i], "path=", 5)) {
         bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
-        }
-      else if (!strncmp(params[i], "cylinders=", 10)) {
-        bx_options.atadevice[channel][slave].Ocylinders->set (atol(&params[i][10]));
-        }
-      else if (!strncmp(params[i], "heads=", 6)) {
-        bx_options.atadevice[channel][slave].Oheads->set (atol(&params[i][6]));
-        }
-      else if (!strncmp(params[i], "spt=", 4)) {
-        bx_options.atadevice[channel][slave].Ospt->set (atol(&params[i][4]));
-        }
-      else if (!strncmp(params[i], "model=", 6)) {
+      } else if (!strncmp(params[i], "cylinders=", 10)) {
+        cylinders = atol(&params[i][10]);
+      } else if (!strncmp(params[i], "heads=", 6)) {
+        heads = atol(&params[i][6]);
+      } else if (!strncmp(params[i], "spt=", 4)) {
+        sectors = atol(&params[i][4]);
+      } else if (!strncmp(params[i], "model=", 6)) {
         bx_options.atadevice[channel][slave].Omodel->set(&params[i][6]);
-        }
-      else if (!strcmp(params[i], "biosdetect=none")) {
+      } else if (!strcmp(params[i], "biosdetect=none")) {
         bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_NONE);
-        }
-      else if (!strcmp(params[i], "biosdetect=cmos")) {
+      } else if (!strcmp(params[i], "biosdetect=cmos")) {
         bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_CMOS);
-        }
-      else if (!strcmp(params[i], "biosdetect=auto")) {
+      } else if (!strcmp(params[i], "biosdetect=auto")) {
         bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_AUTO);
-        }
-      else if (!strcmp(params[i], "translation=none")) {
+      } else if (!strcmp(params[i], "translation=none")) {
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_NONE);
-        }
-      else if (!strcmp(params[i], "translation=lba")) {
+      } else if (!strcmp(params[i], "translation=lba")) {
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
-        }
-      else if (!strcmp(params[i], "translation=large")) { 
+      } else if (!strcmp(params[i], "translation=large")) { 
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
-        }
-      else if (!strcmp(params[i], "translation=echs")) { // synonym of large
+      } else if (!strcmp(params[i], "translation=echs")) { // synonym of large
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
-        }
-      else if (!strcmp(params[i], "translation=rechs")) {
+      } else if (!strcmp(params[i], "translation=rechs")) {
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_RECHS);
-        }
-      else if (!strcmp(params[i], "translation=auto")) {
+      } else if (!strcmp(params[i], "translation=auto")) {
         bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_AUTO);
-        }
-      else if (!strcmp(params[i], "status=ejected")) {
+      } else if (!strcmp(params[i], "status=ejected")) {
         bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
-        }
-      else if (!strcmp(params[i], "status=inserted")) {
+      } else if (!strcmp(params[i], "status=inserted")) {
         bx_options.atadevice[channel][slave].Ostatus->set(BX_INSERTED);
-        }
-      else if (!strncmp(params[i], "journal=", 8)) {
+      } else if (!strncmp(params[i], "journal=", 8)) {
         bx_options.atadevice[channel][slave].Ojournal->set(&params[i][8]);
-        }
-      else {
+      } else {
         PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
-        }
       }
+    }
 
     // Enables the ata device
-    bx_options.atadevice[channel][slave].Opresent->set(1);
+    if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) > 0) {
+      bx_options.atadevice[channel][slave].Opresent->set(1);
+      bx_options.atadevice[channel][slave].Otype->set (type);
+      bx_options.atadevice[channel][slave].Omode->set (mode);
+      bx_options.atadevice[channel][slave].Ocylinders->set (cylinders);
+      bx_options.atadevice[channel][slave].Oheads->set (heads);
+      bx_options.atadevice[channel][slave].Ospt->set (sectors);
+    }
 
     // if enabled, check if device ok
     if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
       if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
-        if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) ==0)
-          PARSE_WARN(("%s: ataX-master/slave has empty path", context));
-        if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) ||
-            (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) ||
+        if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) &&
+            (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) &&
             (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
-          PARSE_WARN(("%s: ataX-master/slave cannot have zero cylinders, heads, or sectors/track", context));
-          }
+          PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
+          // using heads = 16 and spt = 63 for autodetection (bximage defaults)
+          bx_options.atadevice[channel][slave].Oheads->set (16);
+          bx_options.atadevice[channel][slave].Ospt->set (63);
         }
-      else if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_CDROM) {
-        if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) == 0) {
-          PARSE_WARN(("%s: ataX-master/slave has empty path", context));
-          }
-        }
-      else {
+      } else if (bx_options.atadevice[channel][slave].Otype->get() != BX_ATA_DEVICE_CDROM) {
         PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
-        }
       }
     }
-  else if (!strcmp(params[0], "boot")) {
+  } else if (!strcmp(params[0], "boot")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: boot directive malformed.", context));
-      }
+    }
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "none")) {
         bx_options.Obootdrive[i-1]->set (BX_BOOT_NONE);
@@ -2491,19 +2462,18 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.Obootdrive[i-1]->set (BX_BOOT_CDROM);
       } else {
         PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[i]));
-        }
       }
+    }
     if (bx_options.Obootdrive[0]->get () == BX_BOOT_NONE) {
       PARSE_ERR(("%s: first boot drive must be one of 'floppy', 'disk' or 'cdrom'.", context));
-      }
+    }
     if ((bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[1]->get ()) ||
         (bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[2]->get ()) ||
         ((bx_options.Obootdrive[2]->get () != BX_BOOT_NONE) &&
         (bx_options.Obootdrive[1]->get () == bx_options.Obootdrive[2]->get ()))) {
       PARSE_ERR(("%s: a boot drive appears twice in boot sequence.", context));
-      }
     }
-  else if (!strcmp(params[0], "floppy_bootsig_check")) {
+  } else if (!strcmp(params[0], "floppy_bootsig_check")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
       }

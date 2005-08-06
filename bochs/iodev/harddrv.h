@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.30 2005-06-26 10:54:49 vruppert Exp $
+// $Id: harddrv.h,v 1.31 2005-08-06 18:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,6 +140,7 @@ class device_image_t
       unsigned cylinders;
       unsigned heads;
       unsigned sectors;
+      off_t    hd_size;
 };
 
 // FLAT MODE

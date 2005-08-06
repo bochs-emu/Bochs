@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.137 2005-08-05 18:35:00 vruppert Exp $
+// $Id: harddrv.cc,v 1.138 2005-08-06 18:29:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.137 2005-08-05 18:35:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.138 2005-08-06 18:29:34 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -236,16 +236,16 @@ bx_hard_drive_c::init(void)
 
       BX_CONTROLLER(channel,device).sectors_per_block   = 0x80;
       BX_CONTROLLER(channel,device).lba_mode            = 0;
-      
-	  BX_CONTROLLER(channel,device).features            = 0;
-	
-	  // If not present
+
+      BX_CONTROLLER(channel,device).features            = 0;
+
+      // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       BX_HD_THIS channels[channel].drives[device].iolight_counter = 0;
       if (!bx_options.atadevice[channel][device].Opresent->get()) {
         continue;
-        }
+      }
 
       // Make model string
       strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no, 
@@ -256,7 +256,7 @@ bx_hard_drive_c::init(void)
 
       if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
-        BX_HD_THIS channels[channel].drives[device].device_type           = IDE_DISK;
+        BX_HD_THIS channels[channel].drives[device].device_type = IDE_DISK;
         sprintf(sbtext, "HD:%d-%s", channel, device?"S":"M");
         BX_HD_THIS channels[channel].drives[device].statusbar_id =
           bx_gui->register_statusitem(sbtext);
@@ -368,16 +368,36 @@ bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
 
-        if (cyl == 0 || heads == 0 || spt == 0) {
-          BX_PANIC(("ata%d/%d cannot have zero cylinders, heads, or sectors/track", channel, device));
+        if (bx_options.atadevice[channel][device].Omode->get() == BX_ATA_MODE_FLAT) {
+          if ((heads == 0) || (spt == 0)) {
+            BX_PANIC(("ata%d/%d cannot have zero heads, or sectors/track", channel, device));
           }
+        } else {
+          if (cyl == 0 || heads == 0 || spt == 0) {
+            BX_PANIC(("ata%d/%d cannot have zero cylinders, heads, or sectors/track", channel, device));
+          }
+        }
 
         /* open hard drive image file */
         if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(bx_options.atadevice[channel][device].Opath->getptr ())) < 0) {
           BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
+        }
+
+        if (bx_options.atadevice[channel][device].Omode->get() == BX_ATA_MODE_FLAT) {
+          if (cyl > 0) {
+            if (disk_size != (Bit64u)BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
+              BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));
+            }
+          } else {
+            // Autodetect number of cylinders
+            disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
+            cyl = disk_size / (heads * spt * 512);
+            BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+            bx_options.atadevice[channel][device].Ocylinders->set (cyl);
+            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           }
         }
-      else if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
+      } else if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
         BX_DEBUG(( "CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;
@@ -3397,51 +3417,55 @@ bx_hard_drive_c::bmdma_complete(Bit8u channel)
 
 int default_image_t::open (const char* pathname)
 {
-      return open(pathname, O_RDWR);
+  return open(pathname, O_RDWR);
 }
 
 int default_image_t::open (const char* pathname, int flags)
 {
-      fd = ::open(pathname, flags
+  fd = ::open(pathname, flags
 #ifdef O_BINARY
-		  | O_BINARY
+              | O_BINARY
 #endif
-	    );
+              );
 
-      if (fd < 0) {
-	    return fd;
-      }
+  if (fd < 0) {
+    return fd;
+  }
 
-      /* look at size of image file to calculate disk geometry */
-      struct stat stat_buf;
-      int ret = fstat(fd, &stat_buf);
-      if (ret) {
-	    BX_PANIC(("fstat() returns error!"));
-      }
+  /* look at size of image file to calculate disk geometry */
+  struct stat stat_buf;
+  int ret = fstat(fd, &stat_buf);
+  if (ret) {
+    BX_PANIC(("fstat() returns error!"));
+  }
+  if ((stat_buf.st_size % 512) != 0) {
+    BX_PANIC(("size of disk image must be multiple of 512 bytes"));
+  }
+  hd_size = stat_buf.st_size;
 
-      return fd;
+  return fd;
 }
 
 void default_image_t::close ()
 {
-      if (fd > -1) {
-	    ::close(fd);
-      }
+  if (fd > -1) {
+    ::close(fd);
+  }
 }
 
 off_t default_image_t::lseek (off_t offset, int whence)
 {
-      return ::lseek(fd, offset, whence);
+  return ::lseek(fd, offset, whence);
 }
 
 ssize_t default_image_t::read (void* buf, size_t count)
 {
-      return ::read(fd, (char*) buf, count);
+  return ::read(fd, (char*) buf, count);
 }
 
 ssize_t default_image_t::write (const void* buf, size_t count)
 {
-      return ::write(fd, (char*) buf, count);
+  return ::write(fd, (char*) buf, count);
 }
 
 char increment_string (char *str, int diff)
@@ -3493,7 +3517,7 @@ int concat_image_t::open (const char* pathname0)
     struct stat stat_buf;
     int ret = fstat(fd_table[i], &stat_buf);
     if (ret) {
-	  BX_PANIC(("fstat() returns error!"));
+      BX_PANIC(("fstat() returns error!"));
     }
 #ifdef S_ISBLK
     if (S_ISBLK(stat_buf.st_mode)) {
