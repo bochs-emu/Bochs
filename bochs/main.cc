@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.291 2005-07-31 15:35:01 vruppert Exp $
+// $Id: main.cc,v 1.292 2005-08-07 09:03:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -433,7 +433,11 @@ int bx_init_main (int argc, char *argv[])
   int arg = 1, load_rcfile=1;
   while (arg < argc) {
     // parse next arg
-    if (!strcmp ("--help", argv[arg]) || !strncmp ("-h", argv[arg], 2)) {
+    if (!strcmp ("--help", argv[arg]) || !strncmp ("-h", argv[arg], 2)
+#if defined(WIN32)
+        || !strncmp ("/?", argv[arg], 2)
+#endif
+       ) {
       print_usage();
       SIM->quit_sim (0);
     }
@@ -800,7 +804,7 @@ int bx_init_hardware()
 
   io->set_log_prefix(bx_options.log.Oprefix->getptr());
 
-  // Output to the log file the cpu settings
+  // Output to the log file the cpu and device settings
   // This will by handy for bug reports
   BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
   BX_INFO(("  %s", REL_STRING));
@@ -827,6 +831,13 @@ int bx_init_hardware()
   BX_INFO(("  Icache support: %s",BX_SUPPORT_ICACHE?"yes":"no"));
   BX_INFO(("  Host Asm support: %s",BX_SupportHostAsms?"yes":"no"));
   BX_INFO(("  Fast function calls: %s",BX_FAST_FUNC_CALL?"yes":"no"));
+  BX_INFO(("Devices configuration"));
+  BX_INFO(("  NE2000 support: %s",BX_SUPPORT_NE2K?"yes":"no"));
+  BX_INFO(("  PCI support: %s",BX_SUPPORT_PCI?"yes":"no"));
+  BX_INFO(("  SB16 support: %s",BX_SUPPORT_SB16?"yes":"no"));
+  BX_INFO(("  USB support: %s",BX_SUPPORT_PCIUSB?"yes":"no"));
+  BX_INFO(("  VGA extension support: %s %s",BX_SUPPORT_VBE?"vbe":"",
+           BX_SUPPORT_CLGD54XX?"cirrus":""));
 
   // set up memory and CPU objects
 #if BX_SUPPORT_APIC
