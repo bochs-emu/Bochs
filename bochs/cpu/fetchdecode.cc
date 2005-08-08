@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.84 2005-08-05 12:53:09 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.85 2005-08-08 19:56:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -557,8 +557,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 99 */  { 0, &BX_CPU_C::CWD },
   /* 9A */  { BxImmediate_IvIw, &BX_CPU_C::CALL16_Ap },
   /* 9B */  { 0, &BX_CPU_C::FWAIT },
-  /* 9C */  { 0, &BX_CPU_C::PUSHF_Fv },
-  /* 9D */  { 0, &BX_CPU_C::POPF_Fv },
+  /* 9C */  { 0, &BX_CPU_C::PUSHF_Fw },
+  /* 9D */  { 0, &BX_CPU_C::POPF_Fw },
   /* 9E */  { 0, &BX_CPU_C::SAHF },
   /* 9F */  { 0, &BX_CPU_C::LAHF },
   /* A0 */  { BxImmediate_O, &BX_CPU_C::MOV_ALOb },
@@ -1100,8 +1100,8 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 99 */  { 0, &BX_CPU_C::CDQ },
   /* 9A */  { BxImmediate_IvIw, &BX_CPU_C::CALL32_Ap },
   /* 9B */  { 0, &BX_CPU_C::FWAIT },
-  /* 9C */  { 0, &BX_CPU_C::PUSHF_Fv },
-  /* 9D */  { 0, &BX_CPU_C::POPF_Fv },
+  /* 9C */  { 0, &BX_CPU_C::PUSHF_Fd },
+  /* 9D */  { 0, &BX_CPU_C::POPF_Fd },
   /* 9E */  { 0, &BX_CPU_C::SAHF },
   /* 9F */  { 0, &BX_CPU_C::LAHF },
   /* A0 */  { BxImmediate_O, &BX_CPU_C::MOV_ALOb },

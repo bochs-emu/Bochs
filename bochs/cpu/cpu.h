@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.234 2005-08-05 12:47:28 sshwarts Exp $
+// $Id: cpu.h,v 1.235 2005-08-08 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -193,19 +193,19 @@
 
 #define BX_READ_16BIT_BASE_REG(var, index) {\
   var = *BX_CPU_THIS_PTR _16bit_base_reg[index];\
-  }
+}
 
 #define BX_READ_16BIT_INDEX_REG(var, index) {\
   var = *BX_CPU_THIS_PTR _16bit_index_reg[index];\
-  }
+}
 
 #define BX_WRITE_16BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
-  }
+}
 
 #define BX_WRITE_32BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
-  }
+}
 
 #if BX_SUPPORT_X86_64
 
@@ -214,18 +214,18 @@
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
   else \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
-  }
+}
 
 #define BX_WRITE_32BIT_REGZ(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].rrx = (Bit32u) val; \
-  }
+}
 
 #define BX_WRITE_64BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].rrx = val; \
-  }
+}
 #define BX_CLEAR_64BIT_HIGH(index) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.hrx = 0; \
-  }
+}
 
 #else
 
@@ -234,14 +234,14 @@
     BX_CPU_THIS_PTR gen_reg[index].word.byte.rl = val; \
   else \
     BX_CPU_THIS_PTR gen_reg[(index)-4].word.byte.rh = val; \
-  }
+}
 #define BX_WRITE_8BIT_REGx(index, ext, val) BX_WRITE_8BIT_REG(index, val)
 
 // For x86-32, I just pretend this one is like the macro above,
 // so common code can be used.
 #define BX_WRITE_32BIT_REGZ(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = (Bit32u) val; \
-  }
+}
 
 #define BX_CLEAR_64BIT_HIGH(index)
 
@@ -499,12 +499,23 @@ typedef struct {
     return 3 & (BX_CPU_THIS_PTR eflags.val32 >> 12);                         \
   }
 
-#define EFlagsCFMask     0x00000001
-#define EFlagsPFMask     0x00000004
-#define EFlagsAFMask     0x00000010
-#define EFlagsZFMask     0x00000040
-#define EFlagsSFMask     0x00000080
-#define EFlagsOFMask     0x00000800
+#define EFlagsCFMask     (1 <<  0)
+#define EFlagsPFMask     (1 <<  2)
+#define EFlagsAFMask     (1 <<  4)
+#define EFlagsZFMask     (1 <<  6)
+#define EFlagsSFMask     (1 <<  7)
+#define EFlagsTFMask     (1 <<  8)
+#define EFlagsIFMask     (1 <<  9)
+#define EFlagsDFMask     (1 << 10)
+#define EFlagsOFMask     (1 << 11)
+#define EFlagsIOPLMask   (3 << 12)
+#define EFlagsNTMask     (1 << 14)
+#define EFlagsRFMask     (1 << 16)
+#define EFlagsVMMask     (1 << 17)
+#define EFlagsACMask     (1 << 18)
+#define EFlagsVFMask     (1 << 19)
+#define EFlagsVPMask     (1 << 20)
+#define EFlagsIDMask     (1 << 21)
 
 #define EFlagsOSZAPCMask \
     (EFlagsCFMask | EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
@@ -512,7 +523,10 @@ typedef struct {
 #define EFlagsOSZAPMask  \
     (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
 
-  } bx_flags_reg_t;
+#define EFlagsVIFMask    EFlagsVFMask
+#define EFlagsVIPMask    EFlagsVPMask
+
+} bx_flags_reg_t;
 
 
 #define DECLARE_8BIT_REGISTER_ACCESSORS(name)                                \
@@ -599,7 +613,7 @@ typedef struct {
   bx_bool em; // emulate math coprocessor
   bx_bool mp; // monitor coprocessor
   bx_bool pe; // protected mode enable
-  } bx_cr0_t;
+} bx_cr0_t;
 #endif
 
 #if BX_CPU_LEVEL >= 4
@@ -610,10 +624,10 @@ typedef struct {
 #define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                                 \
   BX_CPP_INLINE bx_bool get_##name () {                                      \
     return 1 & (registerValue >> bitnum);                                    \
-    }                                                                        \
+  }                                                                        \
   BX_CPP_INLINE void set_##name (Bit8u val) {                                \
     registerValue = (registerValue&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
-    }
+  }
   IMPLEMENT_CR4_ACCESSORS(VME, 0);
   IMPLEMENT_CR4_ACCESSORS(PVI, 1);
   IMPLEMENT_CR4_ACCESSORS(TSD, 2);
@@ -627,7 +641,7 @@ typedef struct {
   IMPLEMENT_CR4_ACCESSORS(OSXMMEXCPT, 10);
   BX_CPP_INLINE Bit32u  getRegister() { return registerValue; }
   BX_CPP_INLINE void    setRegister(Bit32u r) { registerValue = r; }
-  } bx_cr4_t;
+} bx_cr4_t;
 #endif  // #if BX_CPU_LEVEL >= 4
 
 #if BX_CPU_LEVEL >= 5
@@ -1273,7 +1287,7 @@ public: // for now...
                         //   is greated than 2 (the maximum possible for
                         //   normal cases) it is a native pointer and is used
                         //   for a direct write access.
-    } address_xlation;
+  } address_xlation;
 
 #if BX_EXTERNAL_DEBUGGER
   virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
@@ -1450,8 +1464,10 @@ public: // for now...
   BX_SMF void CWD(bxInstruction_c *);
   BX_SMF void CALL32_Ap(bxInstruction_c *);
   BX_SMF void CALL16_Ap(bxInstruction_c *);
-  BX_SMF void PUSHF_Fv(bxInstruction_c *);
-  BX_SMF void POPF_Fv(bxInstruction_c *);
+  BX_SMF void PUSHF_Fw(bxInstruction_c *);
+  BX_SMF void POPF_Fw(bxInstruction_c *);
+  BX_SMF void PUSHF_Fd(bxInstruction_c *);
+  BX_SMF void POPF_Fd(bxInstruction_c *);
   BX_SMF void SAHF(bxInstruction_c *);
   BX_SMF void LAHF(bxInstruction_c *);
 
@@ -2431,6 +2447,8 @@ public: // for now...
   BX_SMF void JMP_Eq(bxInstruction_c *);
   BX_SMF void JMP64_Ep(bxInstruction_c *);
   BX_SMF void PUSH_Eq(bxInstruction_c *);
+  BX_SMF void PUSHF_Fq(bxInstruction_c *);
+  BX_SMF void POPF_Fq(bxInstruction_c *);
 
   BX_SMF void CMPXCHG_EqGq(bxInstruction_c *);
   BX_SMF void CDQE(bxInstruction_c *);

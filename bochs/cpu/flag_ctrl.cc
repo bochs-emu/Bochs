@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.20 2005-03-13 20:18:36 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.21 2005-08-08 19:56:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -177,132 +177,136 @@ void BX_CPU_C::CMC(bxInstruction_c *i)
   set_CF( !get_CF() );
 }
 
-void BX_CPU_C::PUSHF_Fv(bxInstruction_c *i)
+void BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
 {
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL ()<3)) {
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
 
-#if BX_CPU_LEVEL >= 3
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    if (i->os32L()) {
-      push_64(read_eflags() & 0x00fcffff);
-    }
-    else
-    {
-      Bit16u flags16 = read_flags();
-      write_virtual_word(BX_SEG_REG_SS, RSP-2, &flags16);
-      RSP -= 2;
-    }
-  }
-  else
-#endif
-  if (i->os32L()) {
-    push_32(read_eflags() & 0x00fcffff);
-  }
-  else
-#endif
-  {
-    push_16(read_flags());
-  }
+  push_16(read_flags());
 }
 
-void BX_CPU_C::POPF_Fv(bxInstruction_c *i)
+#if BX_CPU_LEVEL >= 3
+
+void BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
+{
+  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL ()<3)) {
+    exception(BX_GP_EXCEPTION, 0, 0);
+    return;
+  }
+
+  // VM & RF flags cleared in image stored on the stack
+  push_32(read_eflags() & 0x00fcffff);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::PUSHF_Fq(bxInstruction_c *i)
+{
+  // VM & RF flags cleared in image stored on the stack
+  push_64(read_eflags() & 0x00fcffff);
+}
+#endif
+
+#endif  // BX_CPU_LEVEL >= 3
+
+void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 {
   Bit32u changeMask = 0x004dd5;
-  Bit32u flags32;
+  Bit16u flags16;
 
-#if BX_CPU_LEVEL >= 3
   if (protected_mode()) {
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      Bit64u flags64;
-
-      if (i->os32L()) {
-        pop_64(&flags64);
-        flags32 = flags64;
-        changeMask |= 0x240000; // ID,AC
-        if (CPL==0)
-          changeMask |= (3<<12); // IOPL
-        if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-          changeMask |= (1<<9); // IF
-      }
-      else
-      {
-        Bit16u flags16;
-
-        read_virtual_word(BX_SEG_REG_SS, RSP, &flags16);
-
-        RSP += 2;
-        flags32 = flags16;
-        if (CPL==0)
-          changeMask |= (3<<12); // IOPL
-        if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-          changeMask |= (1<<9); // IF
-      }
-    }
-    else
-#endif  // #if BX_SUPPORT_X86_64
-    if (i->os32L()) {
-      pop_32(&flags32);
-      changeMask |= 0x240000; // ID,AC
-      if (CPL==0)
-        changeMask |= (3<<12); // IOPL
-      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-        changeMask |= (1<<9); // IF
-    }
-    else
-#endif  // BX_CPU_LEVEL >= 3
-    {
-      Bit16u flags16;
-      pop_16(&flags16);
-      flags32 = flags16;
-      if (CPL==0)
-        changeMask |= (3<<12); // IOPL
-      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
-        changeMask |= (1<<9); // IF
-    }
-
-    // Protected-mode: VIP/VIF cleared, VM unaffected.
-    // Does this happen for 16 bit case?  fixme!
-    flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
+    pop_16(&flags16);
+    if (CPL==0)
+      changeMask |= EFlagsIOPLMask;
+    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+      changeMask |= EFlagsIFMask;
   }
   else if (v8086_mode()) {
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
-    if (i->os32L()) {
-      pop_32(&flags32);
-      changeMask |= 0x240000; // ID,AC
+    pop_16(&flags16);
+    // All non-reserved flags except IOPL can be modified
+    changeMask |= EFlagsIFMask;
+  }
+  else {
+    pop_16(&flags16);
+    // All non-reserved flags can be modified
+    changeMask |= (EFlagsIOPLMask | EFlagsIFMask);
+  }
+
+  writeEFlags((Bit32u) flags16, changeMask);
+}
+
+#if BX_CPU_LEVEL >= 3
+
+void BX_CPU_C::POPF_Fd(bxInstruction_c *i)
+{
+  Bit32u changeMask = 0x244dd5;	// AC, ID
+  Bit32u flags32;
+
+  if (protected_mode()) {
+    pop_32(&flags32);
+    if (CPL==0)
+      changeMask |= EFlagsIOPLMask;
+    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+      changeMask |= EFlagsIFMask;
+
+    // All non-reserved flags except VIP/VIF and VM can be modified
+    // VIP/VIF are cleared, VM is unaffected
+    changeMask |= (EFlagsRFMask | EFlagsVIPMask | EFlagsVIFMask);
+
+    flags32 &= ~(EFlagsVIFMask | EFlagsVIPMask); // Clear VIP/VIF
+  }
+  else if (v8086_mode()) {
+    if (BX_CPU_THIS_PTR get_IOPL() < 3) {
+      exception(BX_GP_EXCEPTION, 0, 0);
+      return;
     }
-    else {
-      Bit16u flags16;
-      pop_16(&flags16);
-      flags32 = flags16;
-    }
+    pop_32(&flags32);
     // v8086-mode: VM,RF,IOPL,VIP,VIF are unaffected.
-    changeMask |= (1<<9); // IF
+    changeMask |= EFlagsIFMask;
   }
   else { // Real-mode
-    if (i->os32L()) {
-      pop_32(&flags32);
-      changeMask |= 0x243200; // ID,AC,IOPL,IF
-    }
-    else { /* 16 bit opsize */
-      Bit16u flags16;
-      pop_16(&flags16);
-      flags32 = flags16;
-      changeMask |= 0x3200; // IOPL,IF
-    }
-    // Real-mode: VIP/VIF cleared, VM unaffected.
-    flags32 &= ~( (1<<20) | (1<<19) ); // Clear VIP/VIF
+    pop_32(&flags32);
+
+    // All non-reserved flags except VIP/VIF and VM can be modified
+    // VIP/VIF are cleared, VM is unaffected
+    changeMask |= (EFlagsIOPLMask | EFlagsIFMask | EFlagsRFMask |
+                    EFlagsVIPMask | EFlagsVIFMask);
+
+    flags32 &= ~(EFlagsVIPMask | EFlagsVIFMask); // Clear VIP/VIF
   }
 
   writeEFlags(flags32, changeMask);
 }
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::POPF_Fq(bxInstruction_c *i)
+{
+  Bit32u changeMask = 0x3d4dd5; // AC, ID, RF, VIP/VIF
+  Bit64u flags64;
+
+  BX_ASSERT (protected_mode());
+
+  pop_64(&flags64);
+  Bit32u flags32 = flags64 & 0xffffffff;
+  if (CPL==0)
+    changeMask |= EFlagsIOPLMask;
+  if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+    changeMask |= EFlagsIFMask;
+
+  // All non-reserved flags except VIP/VIF and VM can be modified
+  // VIP/VIF are cleared, VM is unaffected
+  flags32 &= ~(EFlagsVIPMask | EFlagsVIFMask); // Clear VIP/VIF
+
+  writeEFlags(flags32, changeMask);
+}
+#endif
+
+#endif  // BX_CPU_LEVEL >= 3
 
 void BX_CPU_C::SALC(bxInstruction_c *i)
 {
