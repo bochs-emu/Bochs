@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.62 2005-08-04 19:31:59 sshwarts Exp $
+// $Id: exception.cc,v 1.63 2005-08-08 21:03:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -791,9 +791,10 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
     long_mode_int(vector, is_INT, is_error_code, error_code);
+    return;
   }
-  else
 #endif  // #if BX_SUPPORT_X86_64
+
   if(real_mode()) {
     real_mode_int(vector, is_INT, is_error_code, error_code);
   }
@@ -840,8 +841,9 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   BX_CPU_THIS_PTR errorno++;
   if (BX_CPU_THIS_PTR errorno >= 3) {
 #if BX_RESET_ON_TRIPLE_FAULT
-    BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector,  DEV_cmos_get_reg(0x0f)));
-    bx_pc_system.Reset( BX_RESET_SOFTWARE );
+    BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
+    debug(BX_CPU_THIS_PTR prev_eip);
+    bx_pc_system.Reset(BX_RESET_SOFTWARE);
 #else
     BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
@@ -859,7 +861,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
 #if BX_RESET_ON_TRIPLE_FAULT
     BX_INFO(("exception(): triple fault encountered, shutdown status is %02xh, resetting", DEV_cmos_get_reg(0x0f)));
-    bx_pc_system.Reset( BX_RESET_SOFTWARE );
+    debug(BX_CPU_THIS_PTR prev_eip);
+    bx_pc_system.Reset(BX_RESET_SOFTWARE);
 #else
     BX_PANIC(("exception(): triple fault encountered"));
     BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
