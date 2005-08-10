@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.29 2005-07-31 17:57:27 sshwarts Exp $
+// $Id: stack32.cc,v 1.30 2005-08-10 18:40:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,8 +302,8 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
           read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
         }
         push_16(temp16);
-        }
-      } /* while (--level) */
+      }
+    } /* while (--level) */
 
     /* push(frame pointer) */
     if (i->os32L()) {
