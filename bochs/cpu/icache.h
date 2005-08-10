@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.7 2005-06-16 20:28:26 sshwarts Exp $
+// $Id: icache.h,v 1.8 2005-08-10 18:18:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,11 +31,11 @@
 // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
 // bit30: 1=Long Mode, 0=not Long Mode.
 // bit29: 1=iCache page, 0=Data.
-#define ICacheWriteStampInvalid   0x1fffffff
-#define ICacheWriteStampMax       0x1fffffff // Decrements from here.
-#define ICacheWriteStampMask      0x1fffffff
-#define ICacheFetchModeMask       (~ICacheWriteStampMask)
-#define iCachePageDataMask        0x20000000
+const Bit32u ICacheWriteStampInvalid = 0x1fffffff;
+const Bit32u ICacheWriteStampMax     = 0x1fffffff;
+const Bit32u ICacheWriteStampMask    = 0x1fffffff;
+const Bit32u ICacheFetchModeMask     = ~ICacheWriteStampMask;
+const Bit32u iCachePageDataMask      = 0x20000000;
 
 class bxPageWriteStampTable
 {
@@ -65,6 +65,14 @@ public:
        return pageWriteStampTable[pAddr>>12];
     else 
        return ICacheWriteStampInvalid;
+  }
+
+  BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(Bit32u pAddr) const
+  {
+    if (pAddr < memSizeInBytes) 
+       return &pageWriteStampTable[pAddr>>12];
+    else 
+       return &ICacheWriteStampInvalid;
   }
 
   BX_CPP_INLINE void setPageWriteStamp(Bit32u pAddr, Bit32u pageWriteStamp)
