@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.39 2005-06-18 20:46:08 sshwarts Exp $
+// $Id: sse_move.cc,v 1.40 2005-08-10 18:34:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -753,7 +753,7 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
     mask = BX_READ_XMM_REG(i->rm());
 
 #if BX_SUPPORT_X86_64
-  if (i->os64L()) { 	/* 64 bit operand size mode */
+  if (i->as64L()) { 	/* 64 bit operand size mode */
       rdi = RDI;
   } 
   else
