@@ -1,0 +1,33 @@
+TODO (know issues in CPU model):
+-------------------------------
+
+[!] The following 3DNow! instructions still not implemented:
+	PF2IW_PqQq
+	PFNACC_PqQq
+	PFPNACC_PqQq
+	PFCMPGE_PqQq
+	PFCMPGT_PqQq
+	PFCMPEQ_PqQq
+	PFMIN_PqQq
+	PFMAX_PqQq
+	PFRCP_PqQq
+	PFRSQRT_PqQq
+	PFSUB_PqQq
+	PFSUBR_PqQq
+	PFADD_PqQq
+	PFACC_PqQq,
+	PFMUL_PqQq
+	PFRCPIT1_PqQq
+	PFRSQIT1_PqQq
+	PFRCPIT2_PqQq
+
+[!] CPUID does not report 3DNow! instruction set
+
+[!] Some of APIC functionality (like spurious interrupt vector) still
+    not implemented
+
+[!] VME (v8086 mode extension) still not implemented. 
+    The implementation requires validation of VIF/VIP flags handling in 
+    all the CPU methods.
+
+[!] No support for Big Real Mode segmentation
