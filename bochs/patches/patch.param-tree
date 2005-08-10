@@ -40,19 +40,22 @@ The new way to look it up is with the string
 
 The patch now applies to current CVS again. There are no functional changes
 present yet.
-(Volker Ruppert, July 31th 2005)
+(Volker Ruppert, July 31, 2005)
+Converted romimage, vgaromimage and optromimage parameter to the param-tree
+structure.
+(Volker Ruppert, Aug 10, 2005)
 
 Patch was created with:
   diff -u
 Apply patch to what version:
-  cvs checked out on 31 Jul 2005
+  cvs checked out on 10 Aug 2005
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
 ----------------------------------------------------------------------
-diff -urN ../bochs/bochs.h ./bochs.h
---- ../bochs/bochs.h	2005-07-31 17:35:01.000000000 +0200
-+++ ./bochs.h	2005-07-31 17:45:13.474468584 +0200
+diff -urNX /home/volker/exclude-bochs /home/volker/bochs/bochs.h ./bochs.h
+--- /home/volker/bochs/bochs.h	2005-07-31 17:35:01.000000000 +0200
++++ ./bochs.h	2005-07-31 17:45:13.000000000 +0200
 @@ -111,6 +111,7 @@
  int bx_read_configuration (char *rcfile);
  int bx_write_configuration (char *rcfile, int overwrite);
@@ -61,9 +64,9 @@ diff -urN ../bochs/bochs.h ./bochs.h
  
  //
  // some macros to interface the CPU and memory to external environment
-diff -urN ../bochs/config.cc ./config.cc
---- ../bochs/config.cc	2005-07-31 17:35:01.000000000 +0200
-+++ ./config.cc	2005-07-31 17:45:40.113418848 +0200
+diff -urNX /home/volker/exclude-bochs /home/volker/bochs/config.cc ./config.cc
+--- /home/volker/bochs/config.cc	2005-08-07 17:50:07.000000000 +0200
++++ ./config.cc	2005-08-07 19:39:41.822785232 +0200
 @@ -372,6 +372,8 @@
  
    memset (&bx_options, 0, sizeof(bx_options));
@@ -73,7 +76,7 @@ diff -urN ../bochs/config.cc ./config.cc
    // quick start option, set by command line arg
    new bx_param_enum_c (BXP_BOCHS_START,
        "Bochs start types",
-@@ -808,8 +810,14 @@
+@@ -809,9 +811,16 @@
    menu = new bx_list_c (BXP_BOOT, "Boot options", "", boot_init_list);
  #endif
  
@@ -81,15 +84,75 @@ diff -urN ../bochs/config.cc ./config.cc
 +  bx_list_c *memory = new bx_list_c (root_param, "memory", "");
 +  bx_list_c *ram = new bx_list_c (memory, "ram", "");
 +  bx_list_c *rom = new bx_list_c (memory, "rom", "");
-+  bx_list_c *optional_rom = new bx_list_c (memory, "optional_rom", "");
++  bx_list_c *vgarom = new bx_list_c (memory, "vgarom", "");
++  bx_list_c *optrom = new bx_list_c (memory, "optrom", "");
 +
-   // memory options menu
+   // memory options (ram & rom)
 -  bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
+-      "memory.ram.megs",
 +  bx_options.memory.Osize = new bx_param_num_c (ram,
-       "megs",
++      "megs",
        "Amount of RAM in megabytes",
        1, 2048,
-@@ -1734,6 +1742,9 @@
+       BX_DEFAULT_MEM_MEGS);
+@@ -822,15 +831,15 @@
+   bx_options.memory.Osize->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+ #endif
+ 
+-  bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
+-      "memory.rom.path",
++  bx_options.rom.Opath = new bx_param_filename_c (rom,
++      "path",
+       "Pathname of ROM image to load",
+       "", BX_PATHNAME_LEN);
+   bx_options.rom.Opath->set_format ("Name of ROM BIOS image: %s");
+   sprintf(name, "%s/BIOS-bochs-latest", BX_SHARE_PATH);
+   bx_options.rom.Opath->set (name);
+-  bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
+-      "memory.rom.addr",
++  bx_options.rom.Oaddress = new bx_param_num_c (rom,
++      "addr",
+       "The address at which the ROM image should be loaded",
+       0, BX_MAX_BIT32U, 
+       0xf0000);
+@@ -843,8 +852,8 @@
+   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
+ #endif
+ 
+-  bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
+-      "memory.vgarom.path",
++  bx_options.vgarom.Opath = new bx_param_filename_c (vgarom,
++      "path",
+       "Pathname of VGA ROM image to load",
+       "", BX_PATHNAME_LEN);
+   bx_options.vgarom.Opath->set_format ("Name of VGA BIOS image: %s");
+@@ -855,19 +864,19 @@
+   bx_options.vgarom.Opath->set (name);
+ 
+   for (i=0; i<4; i++) {
+-    sprintf (name, "memory.optrom.%d.path", i+1);
++    sprintf (name, "%d", i+1);
++    bx_list_c *optnum = new bx_list_c (optrom, strdup(name), "");
+     sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
+-    bx_options.optrom[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTROM1_PATH+i),
+-      strdup(name), 
++    bx_options.optrom[i].Opath = new bx_param_filename_c (optnum,
++      "path", 
+       strdup(descr),
+       "", BX_PATHNAME_LEN);
+     sprintf (label, "Name of optional ROM image #%d", i+1);
+     strcat(label, " : %s");
+     bx_options.optrom[i].Opath->set_format (strdup(label));
+-    sprintf (name, "memory.optrom.%d.address", i+1);
+     sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
+-    bx_options.optrom[i].Oaddress = new bx_param_num_c ((bx_id)(BXP_OPTROM1_ADDRESS+i),
+-      strdup(name), 
++    bx_options.optrom[i].Oaddress = new bx_param_num_c (optnum,
++      "addr", 
+       strdup(descr),
+       0, BX_MAX_BIT32U, 
+       0);
+@@ -1700,6 +1709,9 @@
    };
    menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
    menu->get_options ()->set (menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
@@ -99,27 +162,27 @@ diff -urN ../bochs/config.cc ./config.cc
  }
  
  void bx_reset_options ()
-@@ -1777,7 +1788,7 @@
-     bx_options.Obootdrive[i]->reset();
-   }
+@@ -1745,7 +1757,7 @@
    bx_options.OfloppySigCheck->reset();
+ 
+   // memory (ram & rom)
 -  bx_options.memory.Osize->reset();
 +  SIM->get_param("memory.ram.megs")->reset ();
- 
-   // standard ports
-   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-@@ -2771,7 +2782,7 @@
+   bx_options.rom.Opath->reset();
+   bx_options.rom.Oaddress->reset();
+   bx_options.vgarom.Opath->reset();
+@@ -2609,7 +2621,7 @@
      if (num_params != 2) {
        PARSE_ERR(("%s: megs directive: wrong # args.", context));
-       }
+     }
 -    bx_options.memory.Osize->set (atol(params[1]));
 +    SIM->get_param_num("memory.ram.megs")->set (atol(params[1]));
-     }
-   else if (!strcmp(params[0], "floppy_command_delay")) {
-     if (num_params != 2) {
-diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
---- ../bochs/gui/siminterface.cc	2005-01-05 20:50:54.000000000 +0100
-+++ ./gui/siminterface.cc	2005-07-31 12:19:59.000000000 +0200
+   } else if (!strcmp(params[0], "romimage")) {
+     if (num_params != 3) {
+       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
+diff -urNX /home/volker/exclude-bochs /home/volker/bochs/gui/siminterface.cc ./gui/siminterface.cc
+--- /home/volker/bochs/gui/siminterface.cc	2005-01-05 20:50:54.000000000 +0100
++++ ./gui/siminterface.cc	2005-08-07 18:50:56.320529176 +0200
 @@ -11,6 +11,7 @@
  
  bx_simulator_interface_c *SIM = NULL;
@@ -381,7 +444,56 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
  bx_param_bool_c::bx_param_bool_c (bx_id id,
      char *name,
      char *description,
-@@ -1316,6 +1480,7 @@
+@@ -1213,6 +1377,31 @@
+   set (initial_val);
+ }
+ 
++bx_param_string_c::bx_param_string_c (bx_param_c *parent,
++    char *name,
++    char *description,
++    char *initial_val,
++    int maxsize)
++  : bx_param_c (BXP_NULL, name, description)
++{
++  set_type (BXT_PARAM_STRING);
++  if (maxsize < 0) 
++    maxsize = strlen(initial_val) + 1;
++  this->val = new char[maxsize];
++  this->initial_val = new char[maxsize];
++  this->handler = NULL;
++  this->enable_handler = NULL;
++  this->maxsize = maxsize;
++  strncpy (this->val, initial_val, maxsize);
++  strncpy (this->initial_val, initial_val, maxsize);
++  this->options = new bx_param_num_c (BXP_NULL,
++      "stringoptions", NULL, 0, BX_MAX_BIT64S, 0);
++  set (initial_val);
++  BX_ASSERT(parent->get_type() == BXT_LIST);
++  this->parent = (bx_list_c *) parent;
++  if (this->parent) this->parent->add (this);
++}
++
+ bx_param_filename_c::bx_param_filename_c (bx_id id,
+     char *name,
+     char *description,
+@@ -1223,6 +1412,16 @@
+   get_options()->set (IS_FILENAME);
+ }
+ 
++bx_param_filename_c::bx_param_filename_c (bx_param_c *parent,
++    char *name,
++    char *description,
++    char *initial_val,
++    int maxsize)
++  : bx_param_string_c (parent, name, description, initial_val, maxsize)
++{
++  get_options()->set (IS_FILENAME);
++}
++
+ bx_param_string_c::~bx_param_string_c ()
+ {
+     if ( this->val != NULL )
+@@ -1316,6 +1515,7 @@
    this->size = 0;
    this->maxsize = maxsize;
    this->list = new bx_param_c*  [maxsize];
@@ -389,7 +501,7 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
    init ();
  }
  
-@@ -1326,6 +1491,24 @@
+@@ -1326,6 +1526,24 @@
    this->size = 0;
    this->maxsize = maxsize;
    this->list = new bx_param_c*  [maxsize];
@@ -414,7 +526,7 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
    init ();
  }
  
-@@ -1341,6 +1524,7 @@
+@@ -1341,6 +1559,7 @@
    for (int i=0; i<this->size; i++)
      this->list[i] = init_list[i];
    init ();
@@ -422,7 +534,7 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
  }
  
  bx_list_c::~bx_list_c()
-@@ -1381,17 +1565,15 @@
+@@ -1381,17 +1600,15 @@
    this->choice = new bx_param_num_c (BXP_NULL,
        "list_choice", "", 0, BX_MAX_BIT64S,
        1);
@@ -441,7 +553,7 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
    return newlist;
  }
  
-@@ -1411,3 +1593,16 @@
+@@ -1411,3 +1628,16 @@
    return list[index];
  }
  
@@ -458,9 +570,9 @@ diff -urN ../bochs/gui/siminterface.cc ./gui/siminterface.cc
 +  return NULL;
 +}
 +
-diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
---- ../bochs/gui/siminterface.h	2005-07-31 16:49:45.000000000 +0200
-+++ ./gui/siminterface.h	2005-07-31 17:04:35.189144296 +0200
+diff -urNX /home/volker/exclude-bochs /home/volker/bochs/gui/siminterface.h ./gui/siminterface.h
+--- /home/volker/bochs/gui/siminterface.h	2005-07-31 16:49:45.000000000 +0200
++++ ./gui/siminterface.h	2005-08-07 18:51:30.985259336 +0200
 @@ -885,6 +885,7 @@
  class BOCHSAPI bx_param_c : public bx_object_c {
    BOCHSAPI_CYGONLY static const char *default_text_format;
@@ -507,17 +619,30 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
  };
  
  class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
-@@ -1114,7 +1121,7 @@
+@@ -1113,8 +1120,13 @@
+       char *description,
        char *initial_val,
        int maxsize=-1);
++  bx_param_string_c (bx_param_c *parent,
++      char *name,
++      char *description,
++      char *initial_val,
++      int maxsize=-1);
    virtual ~bx_param_string_c ();
 -  void reset ();
 +  virtual void reset ();
    void set_handler (param_string_event_handler handler);
    void set_enable_handler (param_enable_handler handler);
    virtual void set_enabled (int enabled);
-@@ -1144,8 +1151,10 @@
+@@ -1142,10 +1154,17 @@
+       char *description,
+       char *initial_val,
        int maxsize=-1);
++  bx_param_filename_c (bx_param_c *parent,
++      char *name,
++      char *description,
++      char *initial_val,
++      int maxsize=-1);
  };
  
 +#define BX_DEFAULT_LIST_SIZE 6
@@ -528,7 +653,7 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
    // just a list of bx_param_c objects.  size tells current number of
    // objects in the list, and maxsize tells how many list items are
    // allocated in the constructor.
-@@ -1162,8 +1171,7 @@
+@@ -1162,8 +1181,7 @@
    // title of the menu or series
    bx_param_string_c *title;
    // if the menu shows a "return to previous menu" type of choice,
@@ -538,7 +663,7 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
    void init ();
  public:
    enum {
-@@ -1188,19 +1196,21 @@
+@@ -1188,19 +1206,21 @@
      // item (used in the runtime menu).
      SHOW_GROUP_NAME = (1<<4)
    } bx_listopt_bits;
@@ -563,7 +688,7 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
    bx_param_c *get_parent () { return parent; }
  #if BX_USE_TEXTCONFIG
    virtual void text_print (FILE *);
-@@ -1404,10 +1414,19 @@
+@@ -1404,10 +1424,19 @@
    virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
    virtual void reset_all_param () {}
    virtual bx_param_c *get_param (bx_id id) {return NULL;}
@@ -583,10 +708,10 @@ diff -urN ../bochs/gui/siminterface.h ./gui/siminterface.h
    virtual int get_n_log_modules () {return -1;}
    virtual char *get_prefix (int mod) {return 0;}
    virtual int get_log_action (int mod, int level) {return -1;}
-diff -urN ../bochs/main.cc ./main.cc
---- ../bochs/main.cc	2005-07-31 17:35:01.000000000 +0200
-+++ ./main.cc	2005-07-31 17:47:06.079350040 +0200
-@@ -176,6 +176,101 @@
+diff -urNX /home/volker/exclude-bochs /home/volker/bochs/main.cc ./main.cc
+--- /home/volker/bochs/main.cc	2005-08-07 11:03:15.000000000 +0200
++++ ./main.cc	2005-08-07 19:56:48.715673784 +0200
+@@ -176,6 +176,105 @@
  }
  #endif
  
@@ -634,7 +759,11 @@ diff -urN ../bochs/main.cc ./main.cc
 +  }
 +  switch (node->get_type()) {
 +    case BXT_PARAM_NUM:
-+      printf ("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
++      if (((bx_param_num_c*)node)->get_base() == 10) {
++        printf ("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
++      } else {
++        printf ("%s = 0x%x  (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
++      }
 +      break;
 +    case BXT_PARAM_BOOL:
 +      printf ("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
@@ -688,7 +817,7 @@ diff -urN ../bochs/main.cc ./main.cc
  int bxmain () {
  #ifdef HAVE_LOCALE_H
    // Initialize locale (for isprint() and other functions)
-@@ -183,6 +278,12 @@
+@@ -183,6 +282,12 @@
  #endif
    bx_user_quit = 0;
    bx_init_siminterface ();   // create the SIM object
@@ -701,7 +830,7 @@ diff -urN ../bochs/main.cc ./main.cc
    static jmp_buf context;
    if (setjmp (context) == 0) {
      SIM->set_quit_context (&context);
-@@ -838,7 +939,8 @@
+@@ -849,7 +954,8 @@
      BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
    }
  
