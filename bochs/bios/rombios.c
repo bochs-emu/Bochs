@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.139 2005-06-14 18:21:57 vruppert Exp $
+// $Id: rombios.c,v 1.140 2005-08-12 19:49:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.139 $";
-static char bios_date_string[] = "$Date: 2005-06-14 18:21:57 $";
+static char bios_cvs_version_string[] = "$Revision: 1.140 $";
+static char bios_date_string[] = "$Date: 2005-08-12 19:49:30 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.139 2005-06-14 18:21:57 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.140 2005-08-12 19:49:30 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -7826,11 +7826,11 @@ ASM_END
           // Done waiting.
           Bit16u segment, offset;
 
-          offset = read_word( 0x40, 0x98 );
-          segment = read_word( 0x40, 0x9A );
+          segment = read_word( 0x40, 0x98 );
+          offset = read_word( 0x40, 0x9A );
           write_byte( 0x40, 0xA0, 0 );  // Turn of status byte.
           outb_cmos( 0xB, registerB & 0x37 ); // Clear the Periodic Interrupt.
-          write_byte( segment, offset, 0x80 );  // Write to specified flag byte.
+          write_byte(segment, offset, read_byte(segment, offset) | 0x80 );  // Write to specified flag byte.
         } else {
           // Continue waiting.
           time -= 0x3D1;
