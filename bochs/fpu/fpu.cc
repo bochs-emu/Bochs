@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.14 2005-06-18 20:46:08 sshwarts Exp $
+// $Id: fpu.cc,v 1.15 2005-08-13 17:40:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -62,6 +62,11 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
 {
   if(BX_CPU_THIS_PTR the_i387.get_partial_status() & FPU_SW_Summary)
   {
+    // NE=1 selects the native or internal mode, which generates #MF, 
+    // which is the same as the native version of exception handling 
+    // for the 80286 and 80287 and the i386 processors and i387 math 
+    // coprocessor.
+#if BX_CPU_LEVEL >= 4
     if (BX_CPU_THIS_PTR cr0.ne == 0)
     {
       // MSDOS compatibility external interrupt (IRQ13)
@@ -69,6 +74,7 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
       DEV_pic_raise_irq(13);
     }
     else
+#endif
       exception(BX_MF_EXCEPTION, 0, 0);
   }
 }
