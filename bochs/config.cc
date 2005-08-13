@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.41 2005-08-07 15:50:07 vruppert Exp $
+// $Id: config.cc,v 1.42 2005-08-13 16:49:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ extern bx_debug_t bx_dbg;
 
 bx_options_t bx_options; // initialized in bx_init_options()
 
+static char *get_builtin_variable(char *varname);
 static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
@@ -827,7 +828,7 @@ void bx_init_options ()
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
   bx_options.rom.Opath->set_format ("Name of ROM BIOS image: %s");
-  sprintf(name, "%s/BIOS-bochs-latest", BX_SHARE_PATH);
+  sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
   bx_options.rom.Opath->set (name);
   bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
       "memory.rom.addr",
@@ -851,7 +852,7 @@ void bx_init_options ()
 #if BX_WITH_WX
   bx_options.vgarom.Opath->set_label ("VGA BIOS image");
 #endif
-  sprintf(name, "%s/VGABIOS-lgpl-latest", BX_SHARE_PATH);
+  sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
   bx_options.vgarom.Opath->set (name);
 
   for (i=0; i<4; i++) {
