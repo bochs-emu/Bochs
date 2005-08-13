@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.107 2005-08-10 18:18:57 sshwarts Exp $
+// $Id: cpu.cc,v 1.108 2005-08-13 14:10:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -768,8 +768,6 @@ void BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
        BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, BX_CPU_THIS_PTR pAddrA20Page, BX_READ);
-  BX_CPU_THIS_PTR currPageWriteStampPtr =
-       pageWriteStampTable.getPageWriteStampPtr(pAddr);
 
   // Sanity checks
   if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
@@ -782,7 +780,8 @@ void BX_CPU_C::prefetch(void)
   }
 
 #if BX_SUPPORT_ICACHE
-  Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(pAddr);
+  BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(pAddr);
+  Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
   Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
   if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
   {

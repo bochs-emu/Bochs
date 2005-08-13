@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.236 2005-08-10 18:18:57 sshwarts Exp $
+// $Id: cpu.h,v 1.237 2005-08-13 14:10:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1217,7 +1217,9 @@ public: // for now...
   Bit8u     *eipFetchPtr;
   Bit32u     pAddrA20Page; // Guest physical address of current instruction
                            // page with A20() already applied.
+#if BX_SUPPORT_ICACHE
   const Bit32u *currPageWriteStampPtr;
+#endif
   unsigned cpu_mode;
 
 #if BX_DEBUGGER
