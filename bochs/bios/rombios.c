@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.140 2005-08-12 19:49:30 vruppert Exp $
+// $Id: rombios.c,v 1.141 2005-08-13 08:53:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.140 $";
-static char bios_date_string[] = "$Date: 2005-08-12 19:49:30 $";
+static char bios_cvs_version_string[] = "$Revision: 1.141 $";
+static char bios_date_string[] = "$Date: 2005-08-13 08:53:12 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.140 2005-08-12 19:49:30 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.141 2005-08-13 08:53:12 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -10179,11 +10179,11 @@ int1a_callfunction:
 ;;
 int70_handler:
   push ds
-  pusha
+  pushad
   xor  ax, ax
   mov  ds, ax
   call _int70_function
-  popa
+  popad
   pop  ds
   iret
 
