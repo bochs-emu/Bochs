@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.5 2005-08-14 17:23:03 sshwarts Exp $
+// $Id: iret.cc,v 1.6 2005-08-14 18:01:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -263,7 +263,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* selector RPL must = RPL of return CS selector,
      * else #GP(SS selector) */
-    if ( ss_selector.rpl != cs_selector.rpl) {
+    if (ss_selector.rpl != cs_selector.rpl) {
       BX_ERROR(("iret: SS.rpl != CS.rpl"));
       exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
     }
@@ -278,7 +278,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
      * else #GP(SS selector) */
     if ( ss_descriptor.valid==0 ||
          ss_descriptor.segment==0  ||
-         ss_descriptor.u.segment.executable  ||
+         ss_descriptor.u.segment.executable ||
          ss_descriptor.u.segment.r_w==0 )
     {
       BX_ERROR(("iret: SS AR byte not writable code segment"));
@@ -287,7 +287,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* stack segment DPL must equal the RPL of the return CS selector,
      * else #GP(SS selector) */
-    if ( ss_descriptor.dpl != cs_selector.rpl ) {
+    if (ss_descriptor.dpl != cs_selector.rpl) {
       BX_ERROR(("iret: SS.dpl != CS selector RPL"));
       exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
     }
@@ -330,9 +330,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // perhaps I should always write_eflags(), thus zeroing
     // out the upper 16bits of eflags for CS.D_B==0 ???
     if (cs_descriptor.u.segment.d_b)
-      write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
+      write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
     else
-      write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL ());
+      write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
 
     // load SS:eSP from stack
     // load the SS-cache with SS descriptor
@@ -359,6 +359,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   unsigned top_nbytes_outer, ss_offset;
 
   BX_DEBUG (("LONG MODE IRET"));
+
+  if ( BX_CPU_THIS_PTR get_NT () ) { 
+   BX_ERROR(("iret64: return from nested task not supported in x86-64 mode !"));
+   exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   /* 64bit opsize
    * ============
