@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.141 2005-08-13 08:53:12 vruppert Exp $
+// $Id: rombios.c,v 1.142 2005-08-14 17:19:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.141 $";
-static char bios_date_string[] = "$Date: 2005-08-13 08:53:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.142 $";
+static char bios_date_string[] = "$Date: 2005-08-14 17:19:14 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.141 2005-08-13 08:53:12 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.142 2005-08-14 17:19:14 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -4279,7 +4279,8 @@ int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
     case 0x12: /* get extended keyboard status */
       shift_flags = read_byte(0x0040, 0x17);
       SET_AL(shift_flags);
-      shift_flags = read_byte(0x0040, 0x18);
+      shift_flags = read_byte(0x0040, 0x18) & 0x73;
+      shift_flags |= read_byte(0x0040, 0x96) & 0x0c;
       SET_AH(shift_flags);
       BX_DEBUG_INT16("int16: func 12 sending %04x\n",AX);
       break;
@@ -4461,8 +4462,8 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       shift_flags ^= 0x40;
       write_byte(0x0040, 0x17, shift_flags);
       mf2_flags |= 0x40;
-      write_byte(0x0040, 0x18, mf2_flags);
       led_flags ^= 0x04;
+      write_byte(0x0040, 0x18, mf2_flags);
       write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xba: /* Caps Lock release */
@@ -4471,11 +4472,8 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x2a: /* L Shift press */
-      /*shift_flags &= ~0x40;*/
       shift_flags |= 0x02;
       write_byte(0x0040, 0x17, shift_flags);
-      led_flags &= ~0x04;
-      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xaa: /* L Shift release */
       shift_flags &= ~0x02;
@@ -4483,11 +4481,8 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x36: /* R Shift press */
-      /*shift_flags &= ~0x40;*/
       shift_flags |= 0x01;
       write_byte(0x0040, 0x17, shift_flags);
-      led_flags &= ~0x04;
-      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xb6: /* R Shift release */
       shift_flags &= ~0x01;
@@ -4498,42 +4493,46 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       shift_flags |= 0x04;
       write_byte(0x0040, 0x17, shift_flags);
       if (mf2_state & 0x01) {
-        mf2_flags |= 0x04;
+        mf2_state |= 0x04;
+        write_byte(0x0040, 0x96, mf2_state);
       } else {
         mf2_flags |= 0x01;
-        }
-      write_byte(0x0040, 0x18, mf2_flags);
+        write_byte(0x0040, 0x18, mf2_flags);
+      }
       break;
     case 0x9d: /* Ctrl release */
       shift_flags &= ~0x04;
       write_byte(0x0040, 0x17, shift_flags);
       if (mf2_state & 0x01) {
-        mf2_flags &= ~0x04;
+        mf2_state &= ~0x04;
+        write_byte(0x0040, 0x96, mf2_state);
       } else {
         mf2_flags &= ~0x01;
-        }
-      write_byte(0x0040, 0x18, mf2_flags);
+        write_byte(0x0040, 0x18, mf2_flags);
+      }
       break;
 
     case 0x38: /* Alt press */
       shift_flags |= 0x08;
       write_byte(0x0040, 0x17, shift_flags);
       if (mf2_state & 0x01) {
-        mf2_flags |= 0x08;
+        mf2_state |= 0x08;
+        write_byte(0x0040, 0x96, mf2_state);
       } else {
         mf2_flags |= 0x02;
-        }
-      write_byte(0x0040, 0x18, mf2_flags);
+        write_byte(0x0040, 0x18, mf2_flags);
+      }
       break;
     case 0xb8: /* Alt release */
       shift_flags &= ~0x08;
       write_byte(0x0040, 0x17, shift_flags);
       if (mf2_state & 0x01) {
-        mf2_flags &= ~0x08;
+        mf2_state &= ~0x08;
+        write_byte(0x0040, 0x96, mf2_state);
       } else {
         mf2_flags &= ~0x02;
-        }
-      write_byte(0x0040, 0x18, mf2_flags);
+        write_byte(0x0040, 0x18, mf2_flags);
+      }
       break;
 
     case 0x45: /* Num Lock press */
@@ -4544,13 +4543,13 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         led_flags ^= 0x02;
         write_byte(0x0040, 0x17, shift_flags);
         write_byte(0x0040, 0x97, led_flags);
-        }
+      }
       break;
     case 0xc5: /* Num Lock release */
       if ((mf2_state & 0x01) == 0) {
         mf2_flags &= ~0x20;
         write_byte(0x0040, 0x18, mf2_flags);
-        }
+      }
       break;
 
     case 0x46: /* Scroll Lock press */
@@ -4612,6 +4611,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
     }
   mf2_state &= ~0x01;
+  write_byte(0x0040, 0x96, mf2_state);
 }
 
   unsigned int
