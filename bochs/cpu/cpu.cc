@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.109 2005-08-15 05:32:36 akrisak Exp $
+// $Id: cpu.cc,v 1.110 2005-08-15 15:43:04 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -924,6 +924,7 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                (bx_guard.iaddr.vir[i].eip == eip) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+	    BX_CPU_THIS_PTR guard_found.time_tick = tt;
             return(1); // on a breakpoint
           }
         }
@@ -939,6 +940,7 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
               (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+	    BX_CPU_THIS_PTR guard_found.time_tick = tt;
             return(1); // on a breakpoint
           }
         }
