@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.4 2005-04-08 18:30:33 sshwarts Exp $
+// $Id: debug.h,v 1.5 2005-08-15 05:32:36 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -356,6 +356,8 @@ typedef struct bx_guard_found_t {
   Bit32u   laddr;
   bx_bool  is_32bit_code; // CS seg size at guard point
   bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
+  
+  Bit64u   time_tick; //time tick when guard reached
 } bx_guard_found_t;
 
 extern bx_guard_t        bx_guard;

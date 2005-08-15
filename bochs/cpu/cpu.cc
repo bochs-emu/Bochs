@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.108 2005-08-13 14:10:22 sshwarts Exp $
+// $Id: cpu.cc,v 1.109 2005-08-15 05:32:36 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -885,7 +885,8 @@ extern unsigned int dbg_show_mask;
   bx_bool
 BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
                                     Bit32u is_32)
-{
+{ Bit64u tt = bx_pc_system.time_ticks();
+
   //fprintf (stderr, "begin_instr_bp: checking cs:eip %04x:%08x\n", cs, eip);
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = eip;
@@ -915,7 +916,8 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if BX_DBG_SUPPORT_VIR_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
-      if (BX_CPU_THIS_PTR guard_found.icount!=0) {
+      if ((BX_CPU_THIS_PTR guard_found.icount!=0) ||
+          (tt != BX_CPU_THIS_PTR guard_found.time_tick)) {
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
           if ( bx_guard.iaddr.vir[i].enabled &&
                (bx_guard.iaddr.vir[i].cs  == cs) &&
@@ -930,7 +932,8 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
-      if (BX_CPU_THIS_PTR guard_found.icount!=0) {
+      if ((BX_CPU_THIS_PTR guard_found.icount!=0) ||
+          (tt != BX_CPU_THIS_PTR guard_found.time_tick)) {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
           if (bx_guard.iaddr.lin[i].enabled && 
               (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) ) {
@@ -952,12 +955,16 @@ BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       // continue beyond a breakpoint.  Bryce tried removing it once,
       // and once you get to a breakpoint you are stuck there forever.
       // Not pretty.
-      if (valid && (BX_CPU_THIS_PTR guard_found.icount!=0)) {
+      if (valid && ((BX_CPU_THIS_PTR guard_found.icount!=0) ||
+          (tt != BX_CPU_THIS_PTR guard_found.time_tick))) {
         for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
+	
+	
           if ( bx_guard.iaddr.phy[i].enabled && 
                (bx_guard.iaddr.phy[i].addr == phy) ) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
+	    BX_CPU_THIS_PTR guard_found.time_tick = tt;
             return(1); // on a breakpoint
           }
         }
