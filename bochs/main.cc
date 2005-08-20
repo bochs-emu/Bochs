@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.292 2005-08-07 09:03:15 vruppert Exp $
+// $Id: main.cc,v 1.293 2005-08-20 16:41:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -386,6 +386,9 @@ int main (int argc, char *argv[])
 #if BX_WITH_SDL && defined(WIN32)
   // if SDL/win32, try to create a console window.
   RedirectIOToConsole ();
+#endif
+#if defined(WIN32)
+  SetConsoleTitle("Bochs for Windows - Console");
 #endif
   return bxmain ();
 }
