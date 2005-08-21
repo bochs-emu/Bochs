@@ -232,7 +232,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f16[4] = {
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f17[4] = {
   /* -- */  { "movhps",     0, Mq, Vps, XX },
-  /* 66 */  { "mpvhpd",     0, Mq, Vpd, XX },
+  /* 66 */  { "movhpd",     0, Mq, Vpd, XX },
   /* F2 */  { "(invalid)",  0, XX,  XX, XX },
   /* F3 */  { "(invalid)",  0, XX,  XX, XX }
 };
