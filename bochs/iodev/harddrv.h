@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.31 2005-08-06 18:29:36 vruppert Exp $
+// $Id: harddrv.h,v 1.32 2005-08-21 17:40:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -726,6 +726,7 @@ private:
   BX_HD_SMF void init_mode_sense_single(Bit8u channel, const void* src, int size);
   BX_HD_SMF void atapi_cmd_nop(Bit8u channel) BX_CPP_AttrRegparmN(1);
   BX_HD_SMF bx_bool bmdma_present(void);
+  BX_HD_SMF void set_signature(Bit8u channel);
 
   // FIXME:
   // For each ATA channel we should have one controller struct

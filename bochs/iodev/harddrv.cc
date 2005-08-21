@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.138 2005-08-06 18:29:34 vruppert Exp $
+// $Id: harddrv.cc,v 1.139 2005-08-21 17:40:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.138 2005-08-06 18:29:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.139 2005-08-21 17:40:45 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2092,19 +2092,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x90: // EXECUTE DEVICE DIAGNOSTIC
           if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("ata%d-%d: diagnostic command: BSY bit set",
+            BX_ERROR(("ata%d-%d: diagnostic command: BSY bit set",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
           }
-          if (!BX_SELECTED_IS_HD(channel)) {
-            BX_PANIC(("ata%d-%d: drive diagnostics issued to non-disk",
-              channel, BX_SLAVE_SELECTED(channel)));
-            command_aborted(channel, value);
-            break;
-          }
-          BX_SELECTED_CONTROLLER(channel).error_register = 0x81; // Drive 1 failed, no error on drive 0
-          // BX_SELECTED_CONTROLLER(channel).status.busy = 0; // not needed
+          set_signature(channel);
+          BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
           BX_SELECTED_CONTROLLER(channel).status.err = 0;
           break;
@@ -2168,10 +2162,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               break;
             }
             if (BX_SELECTED_IS_CD(channel)) {
-              BX_SELECTED_CONTROLLER(channel).head_no        = 0;
-              BX_SELECTED_CONTROLLER(channel).sector_count   = 1;
-              BX_SELECTED_CONTROLLER(channel).sector_no      = 1;
-              BX_SELECTED_CONTROLLER(channel).cylinder_no    = 0xeb14;
+              set_signature(channel);
               command_aborted(channel, 0xec);
             } else {
               BX_SELECTED_CONTROLLER(channel).current_command = value;
@@ -2284,28 +2275,23 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	      break;
 
         case 0x08: // DEVICE RESET (atapi)
-	      if (BX_SELECTED_IS_CD(channel)) {
-		    BX_SELECTED_CONTROLLER(channel).status.busy = 1;
-		    BX_SELECTED_CONTROLLER(channel).error_register &= ~(1 << 7);
+          if (BX_SELECTED_IS_CD(channel)) {
+            set_signature(channel);
 
-		    // device signature
-		    BX_SELECTED_CONTROLLER(channel).head_no        = 0;
-		    BX_SELECTED_CONTROLLER(channel).sector_count   = 1;
-		    BX_SELECTED_CONTROLLER(channel).sector_no      = 1;
-		    BX_SELECTED_CONTROLLER(channel).cylinder_no    = 0xeb14;
+            BX_SELECTED_CONTROLLER(channel).status.busy = 1;
+            BX_SELECTED_CONTROLLER(channel).error_register &= ~(1 << 7);
 
-		    BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-		    BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-		    BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-		    BX_SELECTED_CONTROLLER(channel).status.err = 0;
+            BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+            BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+            BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
-		    BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-
-	      } else {
-		BX_DEBUG(("ATAPI Device Reset on non-cd device"));
-		command_aborted(channel, 0x08);
-	      }
-	      break;
+            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+          } else {
+            BX_DEBUG(("ATAPI Device Reset on non-cd device"));
+            command_aborted(channel, 0x08);
+          }
+          break;
 
         case 0xa0: // SEND PACKET (atapi)
 	      if (BX_SELECTED_IS_CD(channel)) {
@@ -2480,74 +2466,63 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case 0x16: // hard disk adapter control 0x3f6
-	  // (mch) Even if device 1 was selected, a write to this register
-	  // goes to device 0 (if device 1 is absent)
-		
-	  prev_control_reset = BX_SELECTED_CONTROLLER(channel).control.reset;
-	  BX_HD_THIS channels[channel].drives[0].controller.control.reset         = value & 0x04;
-	  BX_HD_THIS channels[channel].drives[1].controller.control.reset         = value & 0x04;
-	  // CGS: was: BX_SELECTED_CONTROLLER(channel).control.disable_irq    = value & 0x02;
-	  BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
-	  BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
+               // (mch) Even if device 1 was selected, a write to this register
+               // goes to device 0 (if device 1 is absent)
+
+      prev_control_reset = BX_SELECTED_CONTROLLER(channel).control.reset;
+      BX_HD_THIS channels[channel].drives[0].controller.control.reset         = value & 0x04;
+      BX_HD_THIS channels[channel].drives[1].controller.control.reset         = value & 0x04;
+      // CGS: was: BX_SELECTED_CONTROLLER(channel).control.disable_irq    = value & 0x02;
+      BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
+      BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
 
       BX_DEBUG(( "adpater control reg: reset controller = %d",
         (unsigned) (BX_SELECTED_CONTROLLER(channel).control.reset) ? 1 : 0 ));
       BX_DEBUG(( "adpater control reg: disable_irq(X) = %d",
         (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0 ));
 
-	  if (!prev_control_reset && BX_SELECTED_CONTROLLER(channel).control.reset) {
-		// transition from 0 to 1 causes all drives to reset
-		BX_DEBUG(("hard drive: RESET"));
+      if (!prev_control_reset && BX_SELECTED_CONTROLLER(channel).control.reset) {
+        // transition from 0 to 1 causes all drives to reset
+        BX_DEBUG(("hard drive: RESET"));
 
-		// (mch) Set BSY, drive not ready
-		for (int id = 0; id < 2; id++) {
-		      BX_CONTROLLER(channel,id).status.busy           = 1;
-		      BX_CONTROLLER(channel,id).status.drive_ready    = 0;
-		      BX_CONTROLLER(channel,id).reset_in_progress     = 1;
+        // (mch) Set BSY, drive not ready
+        for (int id = 0; id < 2; id++) {
+          BX_CONTROLLER(channel,id).status.busy           = 1;
+          BX_CONTROLLER(channel,id).status.drive_ready    = 0;
+          BX_CONTROLLER(channel,id).reset_in_progress     = 1;
 
-		      BX_CONTROLLER(channel,id).status.write_fault    = 0;
-		      BX_CONTROLLER(channel,id).status.seek_complete  = 1;
-		      BX_CONTROLLER(channel,id).status.drq            = 0;
-		      BX_CONTROLLER(channel,id).status.corrected_data = 0;
-		      BX_CONTROLLER(channel,id).status.err            = 0;
+          BX_CONTROLLER(channel,id).status.write_fault    = 0;
+          BX_CONTROLLER(channel,id).status.seek_complete  = 1;
+          BX_CONTROLLER(channel,id).status.drq            = 0;
+          BX_CONTROLLER(channel,id).status.corrected_data = 0;
+          BX_CONTROLLER(channel,id).status.err            = 0;
 
-		      BX_CONTROLLER(channel,id).error_register = 0x01; // diagnostic code: no error
+          BX_CONTROLLER(channel,id).error_register = 0x01; // diagnostic code: no error
 
-		      BX_CONTROLLER(channel,id).current_command = 0x00;
-		      BX_CONTROLLER(channel,id).buffer_index = 0;
+          BX_CONTROLLER(channel,id).current_command = 0x00;
+          BX_CONTROLLER(channel,id).buffer_index = 0;
 
-		      BX_CONTROLLER(channel,id).sectors_per_block = 0x80;
-		      BX_CONTROLLER(channel,id).lba_mode          = 0;
+          BX_CONTROLLER(channel,id).sectors_per_block = 0x80;
+          BX_CONTROLLER(channel,id).lba_mode          = 0;
 
-		      BX_CONTROLLER(channel,id).control.disable_irq = 0;
-		      DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
-		}
-	  } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
-		     !BX_SELECTED_CONTROLLER(channel).control.reset) {
-		// Clear BSY and DRDY
-		BX_DEBUG(("Reset complete {%s}", BX_SELECTED_TYPE_STRING(channel)));
-		for (int id = 0; id < 2; id++) {
-		      BX_CONTROLLER(channel,id).status.busy           = 0;
-		      BX_CONTROLLER(channel,id).status.drive_ready    = 1;
-		      BX_CONTROLLER(channel,id).reset_in_progress     = 0;
+          BX_CONTROLLER(channel,id).control.disable_irq = 0;
+          DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
+        }
+      } else if (BX_SELECTED_CONTROLLER(channel).reset_in_progress &&
+                 !BX_SELECTED_CONTROLLER(channel).control.reset) {
+        // Clear BSY and DRDY
+        BX_DEBUG(("Reset complete {%s}", BX_SELECTED_TYPE_STRING(channel)));
+        for (int id = 0; id < 2; id++) {
+          BX_CONTROLLER(channel,id).status.busy           = 0;
+          BX_CONTROLLER(channel,id).status.drive_ready    = 1;
+          BX_CONTROLLER(channel,id).reset_in_progress     = 0;
 
-		      // Device signature
-	              if (BX_DRIVE_IS_HD(channel,id)) {
-			    BX_CONTROLLER(channel,id).head_no        = 0;
-			    BX_CONTROLLER(channel,id).sector_count   = 1;
-			    BX_CONTROLLER(channel,id).sector_no      = 1;
-			    BX_CONTROLLER(channel,id).cylinder_no    = 0;
-		      } else {
-			    BX_CONTROLLER(channel,id).head_no        = 0;
-			    BX_CONTROLLER(channel,id).sector_count   = 1;
-			    BX_CONTROLLER(channel,id).sector_no      = 1;
-			    BX_CONTROLLER(channel,id).cylinder_no    = 0xeb14;
-		      }
-		}
-	  }
-	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[0]).controller.control.disable_irq));
-	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[1]).controller.control.disable_irq));
-	  break;
+          set_signature(channel);
+        }
+      }
+      BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[0]).controller.control.disable_irq));
+      BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[1]).controller.control.disable_irq));
+      break;
 
     default:
       BX_PANIC(("hard drive: io write to address %x = %02x",
@@ -3411,6 +3386,21 @@ bx_hard_drive_c::bmdma_complete(Bit8u channel)
   raise_interrupt(channel);
 }
 #endif
+
+void bx_hard_drive_c::set_signature(Bit8u channel)
+{
+  // Device signature
+  BX_SELECTED_CONTROLLER(channel).head_no       = 0;
+  BX_SELECTED_CONTROLLER(channel).sector_count  = 1;
+  BX_SELECTED_CONTROLLER(channel).sector_no     = 1;
+  if (BX_SELECTED_IS_HD(channel)) {
+    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0;
+  } else if (BX_SELECTED_IS_CD(channel)) {
+    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0xeb14;
+  } else {
+    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0xffff;
+  }
+}
 
 
 /*** default_image_t function definitions ***/
