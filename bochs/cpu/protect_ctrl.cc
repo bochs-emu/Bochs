@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.40 2005-07-10 20:32:31 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.41 2005-08-21 18:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,15 +30,10 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_CPU_LEVEL >= 2
 
-  void
-BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
+void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("ARPL_EwRw: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else /* 286+ */
-
   Bit16u op2_16, op1_16;
 
   if (protected_mode()) {
@@ -82,11 +77,11 @@ BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
     BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
-#endif
 }
 
-  void
-BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
+#endif
+
+void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -188,8 +183,7 @@ BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
+void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
   Bit16u raw_selector;
@@ -277,13 +271,10 @@ lsl_ok:
     BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) limit32)
 }
 
-  void
-BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
+#if BX_CPU_LEVEL >= 2
+
+void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("SLDT: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
   if (real_mode() || v8086_mode()) {
     BX_INFO(("SLDT: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
@@ -297,11 +288,11 @@ BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
       write_virtual_word(i->seg(), RMAddr(i), &val16);
     }
   }
-#endif
 }
 
-  void
-BX_CPU_C::STR_Ew(bxInstruction_c *i)
+#endif
+
+void BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
     BX_INFO(("STR: not recognized in real or virtual-8086 mode"));
@@ -318,14 +309,10 @@ BX_CPU_C::STR_Ew(bxInstruction_c *i)
   }
 }
 
-  void
-BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LLDT_Ew: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
+#if BX_CPU_LEVEL >= 2
 
+void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
+{
   if (real_mode() || v8086_mode()) {
     BX_INFO(("LLDT: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
@@ -395,23 +382,13 @@ BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 
-  if (descriptor.u.ldt.limit < 7) {
-    BX_ERROR(("LLDT: ldtr.limit < 7"));
-  }
-
   BX_CPU_THIS_PTR ldtr.selector = selector;
   BX_CPU_THIS_PTR ldtr.cache = descriptor;
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
-#endif
 }
 
 void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LTR_Ew: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
-
   if (real_mode() || v8086_mode()) {
     BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
@@ -513,8 +490,9 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   dword2 |= 0x00000200; /* set busy bit */
   access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0,
       BX_WRITE, &dword2);
-#endif
 }
+
+#endif
 
 void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 {
@@ -674,13 +652,10 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   BX_INFO(("VERW: data seg not writable"));
 }
 
+#if BX_CPU_LEVEL >= 2
+
 void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("SGDT_Ms: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
     /* undefined opcode exception */
@@ -751,17 +726,10 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
     write_virtual_word(i->seg(), RMAddr(i), &limit_16);
     write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
   }
-
-#endif
 }
 
 void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LGDT_Ms: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
-
   if (v8086_mode()) {
     BX_INFO(("LGDT: not recognized in virtual-8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -819,16 +787,10 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
     BX_CPU_THIS_PTR gdtr.base = (base16_23 << 16) | base0_15;
   }
-#endif
 }
 
 void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("LIDT_Ms: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
-
   Bit16u limit_16;
   Bit32u base_32;
 
@@ -880,5 +842,6 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
     BX_CPU_THIS_PTR idtr.limit = limit_16;
     BX_CPU_THIS_PTR idtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
   }
-#endif
 }
+
+#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.22 2005-07-10 20:32:32 sshwarts Exp $
+// $Id: tasking.cc,v 1.23 2005-08-21 18:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -470,16 +470,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   BX_CPU_THIS_PTR prev_eip = EIP = newEIP;
   write_eflags(newEFLAGS, 1,1,1,1);
-#if BX_SUPPORT_X86_64
-  RAX = newEAX;
-  RCX = newECX;
-  RDX = newEDX;
-  RBX = newEBX;
-  RSP = newESP;
-  RBP = newEBP;
-  RSI = newESI;
-  RDI = newEDI;
-#else
   EAX = newEAX;
   ECX = newECX;
   EDX = newEDX;
@@ -488,7 +478,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   EBP = newEBP;
   ESI = newESI;
   EDI = newEDI;
-#endif
 
   // Fill in selectors for all segment registers.  If errors
   // occur later, the selectors will at least be loaded.
@@ -547,8 +536,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // LDT selector of new task is valid, else #TS(new task's LDT)
     if (ldt_descriptor.valid==0 ||
         ldt_descriptor.type!=BX_SYS_SEGMENT_LDT ||
-        ldt_descriptor.segment ||
-        ldt_descriptor.u.ldt.limit<7)
+        ldt_descriptor.segment)
     {
       BX_INFO(("task_switch: bad LDT segment"));
       exception_no = BX_TS_EXCEPTION;
