@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.237 2005-08-13 14:10:22 sshwarts Exp $
+// $Id: cpu.h,v 1.238 2005-08-23 20:01:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2696,13 +2696,24 @@ public: // for now...
   BX_SMF void read_RMW_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_RMW_virtual_byte(Bit8u val8) BX_CPP_AttrRegparmN(1);
   BX_SMF void write_RMW_virtual_word(Bit16u val16) BX_CPP_AttrRegparmN(1);
-  BX_SMF void write_RMW_virtual_dword(Bit32u val32);
-  BX_SMF void write_RMW_virtual_qword(Bit64u val64);
+  BX_SMF void write_RMW_virtual_dword(Bit32u val32) BX_CPP_AttrRegparmN(1);
+  BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
 
 #define Write_RMW_virtual_byte(val8)   write_RMW_virtual_byte(val8)
 #define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
 #define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
 #define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
+
+#if BX_SupportGuest2HostTLB
+  BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u* v2h_read_word(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u* v2h_read_dword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u* v2h_read_qword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u* v2h_write_byte(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u* v2h_write_word(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u* v2h_write_dword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u* v2h_write_qword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+#endif
 
   BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
