@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.142 2005-08-14 17:19:14 vruppert Exp $
+// $Id: rombios.c,v 1.143 2005-08-24 20:44:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -934,10 +934,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.142 $";
-static char bios_date_string[] = "$Date: 2005-08-14 17:19:14 $";
+static char bios_cvs_version_string[] = "$Revision: 1.143 $";
+static char bios_date_string[] = "$Date: 2005-08-24 20:44:55 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.142 2005-08-14 17:19:14 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.143 2005-08-24 20:44:55 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -6355,6 +6355,23 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 // FLOPPY functions //
 //////////////////////
 
+  void
+floppy_reset_controller()
+{
+  Bit8u val8;
+
+  // Reset controller
+  val8 = inb(0x03f2);
+  outb(0x03f2, val8 & ~0x04);
+  outb(0x03f2, val8 | 0x04);
+
+  // Wait for controller to come out of reset  
+  val8 = inb(0x3f4);
+  while ( (val8 & 0xc0) != 0x80 ) {
+    val8 = inb(0x3f4);
+    }
+}
+
   bx_bool
 floppy_media_known(drive)
   Bit16u drive;
@@ -6781,6 +6798,15 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         // wait on 40:3e bit 7 to become 1
         val8 = (read_byte(0x0000, 0x043e) & 0x80);
         while ( val8 == 0 ) {
+          val8 = read_byte(0x0040, 0x0040);
+          if (val8 == 0) {
+            floppy_reset_controller();
+            SET_AH(0x0C); // Media type not found
+            set_diskette_ret_status(0x0C);
+            SET_AL(0); // no sectors read
+            SET_CF(); // error occurred
+            return;
+            }
           val8 = (read_byte(0x0000, 0x043e) & 0x80);
           }
 
@@ -6929,6 +6955,15 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         // wait on 40:3e bit 7 to become 1
         val8 = (read_byte(0x0000, 0x043e) & 0x80);
         while ( val8 == 0 ) {
+          val8 = read_byte(0x0040, 0x0040);
+          if (val8 == 0) {
+            floppy_reset_controller();
+            SET_AH(0x0C); // Media type not found
+            set_diskette_ret_status(0x0C);
+            SET_AL(0); // no sectors written
+            SET_CF(); // error occurred
+            return;
+            }
           val8 = (read_byte(0x0000, 0x043e) & 0x80);
           }
 
@@ -7099,11 +7134,21 @@ BX_DEBUG_INT13_FL("floppy f05\n");
   ASM_START
       sti
   ASM_END
+
       // wait on 40:3e bit 7 to become 1
       val8 = (read_byte(0x0000, 0x043e) & 0x80);
       while ( val8 == 0 ) {
+        val8 = read_byte(0x0040, 0x0040);
+        if (val8 == 0) {
+          floppy_reset_controller();
+          SET_AH(0x0C); // Media type not found
+          set_diskette_ret_status(0x0C);
+          SET_CF(); // error occurred
+          return;
+          }
         val8 = (read_byte(0x0000, 0x043e) & 0x80);
         }
+
      val8 = 0; // separate asm from while() loop
      // turn off interrupts
   ASM_START
