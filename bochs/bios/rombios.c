@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.143 2005-08-24 20:44:55 vruppert Exp $
+// $Id: rombios.c,v 1.144 2005-08-26 17:46:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -22,7 +22,7 @@
 //
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 
 // ROM BIOS for use with Bochs/Plex x86 emulation environment
 
@@ -202,6 +202,11 @@
 #define PANIC_PORT2 0x401
 #define INFO_PORT   0x402
 #define DEBUG_PORT  0x403
+
+// define this if you want to make PCIBIOS working on a specific bridge only
+// undef enables PCIBIOS when at least one PCI device is found
+// i440FX is emulated by Bochs and QEMU
+#define PCI_FIXED_HOST_BRIDGE 0x12378086 ;; i440FX PCI bridge
 
 // #20  is dec 20
 // #$20 is hex 20 = 32
@@ -934,13 +939,14 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.143 $";
-static char bios_date_string[] = "$Date: 2005-08-24 20:44:55 $";
+static char bios_cvs_version_string[] = "$Revision: 1.144 $";
+static char bios_date_string[] = "$Date: 2005-08-26 17:46:44 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.143 2005-08-24 20:44:55 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.144 2005-08-26 17:46:44 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
+#define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
 #define BIOS_PRINTF_HALT     1
 #define BIOS_PRINTF_SCREEN   2
@@ -6519,15 +6525,16 @@ floppy_media_sense(drive)
 floppy_drive_recal(drive)
   Bit16u drive;
 {
-  Bit8u  val8, dor;
+  Bit8u  val8, dor, prev_reset;
   Bit16u curr_cyl_offset;
 
   // set 40:3e bit 7 to 0
-  val8 = read_byte(0x0000, 0x043e);
+  val8 = read_byte(0x0040, 0x003e);
   val8 &= 0x7f;
-  write_byte(0x0000, 0x043e, val8);
+  write_byte(0x0040, 0x003e, val8);
 
   // turn on motor of selected drive, DMA & int enabled, normal operation
+  prev_reset = inb(0x03f2) & 0x04;
   if (drive)
     dor = 0x20;
   else
@@ -6539,34 +6546,46 @@ floppy_drive_recal(drive)
   // reset the disk motor timeout value of INT 08
   write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
 
-  // check port 3f4 for drive readiness
-  val8 = inb(0x3f4);
-  if ( (val8 & 0xf0) != 0x80 )
-    BX_PANIC("floppy recal:f07: ctrl not ready\n");
+  // wait for drive readiness
+  do {
+    val8 = inb(0x3f4);
+  } while ( (val8 & 0xc0) != 0x80 );
+
+  if (prev_reset == 0) {
+    // turn on interrupts
+ASM_START
+    sti
+ASM_END
+    // wait on 40:3e bit 7 to become 1
+    do {
+      val8 = read_byte(0x0040, 0x003e);
+    } while ( (val8 & 0x80) == 0 );
+    val8 &= 0x7f;
+    write_byte(0x0040, 0x003e, val8);
+  }
 
   // send Recalibrate command (2 bytes) to controller
   outb(0x03f5, 0x07);  // 07: Recalibrate
   outb(0x03f5, drive); // 0=drive0, 1=drive1
 
- // turn on interrupts
+  // turn on interrupts
 ASM_START
   sti
 ASM_END
 
   // wait on 40:3e bit 7 to become 1
-  val8 = (read_byte(0x0000, 0x043e) & 0x80);
-  while ( val8 == 0 ) {
-    val8 = (read_byte(0x0000, 0x043e) & 0x80);
-    }
+  do {
+    val8 = (read_byte(0x0040, 0x003e) & 0x80);
+  } while ( val8 == 0 );
 
- val8 = 0; // separate asm from while() loop
- // turn off interrupts
+  val8 = 0; // separate asm from while() loop
+  // turn off interrupts
 ASM_START
   cli
 ASM_END
 
   // set 40:3e bit 7 to 0, and calibrated bit
-  val8 = read_byte(0x0000, 0x043e);
+  val8 = read_byte(0x0040, 0x003e);
   val8 &= 0x7f;
   if (drive) {
     val8 |= 0x02; // Drive 1 calibrated
@@ -6758,9 +6777,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         //--------------------------------------
 
         // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0000, 0x043e);
+        val8 = read_byte(0x0040, 0x003e);
         val8 &= 0x7f;
-        write_byte(0x0000, 0x043e, val8);
+        write_byte(0x0040, 0x003e, val8);
 
         // turn on motor of selected drive, DMA & int enabled, normal operation
         if (drive)
@@ -6796,19 +6815,18 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
   ASM_END
 
         // wait on 40:3e bit 7 to become 1
-        val8 = (read_byte(0x0000, 0x043e) & 0x80);
-        while ( val8 == 0 ) {
+        do {
           val8 = read_byte(0x0040, 0x0040);
           if (val8 == 0) {
             floppy_reset_controller();
-            SET_AH(0x0C); // Media type not found
-            set_diskette_ret_status(0x0C);
+            SET_AH(0x80); // drive not ready (timeout)
+            set_diskette_ret_status(0x80);
             SET_AL(0); // no sectors read
             SET_CF(); // error occurred
             return;
-            }
-          val8 = (read_byte(0x0000, 0x043e) & 0x80);
           }
+          val8 = (read_byte(0x0040, 0x003e) & 0x80);
+        } while ( val8 == 0 );
 
        val8 = 0; // separate asm from while() loop
        // turn off interrupts
@@ -6817,9 +6835,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
   ASM_END
 
         // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0000, 0x043e);
+        val8 = read_byte(0x0040, 0x003e);
         val8 &= 0x7f;
-        write_byte(0x0000, 0x043e, val8);
+        write_byte(0x0040, 0x003e, val8);
 
         // check port 3f4 for accessibility to status bytes
         val8 = inb(0x3f4);
@@ -6915,9 +6933,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         //--------------------------------------
 
         // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0000, 0x043e);
+        val8 = read_byte(0x0040, 0x003e);
         val8 &= 0x7f;
-        write_byte(0x0000, 0x043e, val8);
+        write_byte(0x0040, 0x003e, val8);
 
         // turn on motor of selected drive, DMA & int enabled, normal operation
         if (drive)
@@ -6953,30 +6971,29 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
   ASM_END
 
         // wait on 40:3e bit 7 to become 1
-        val8 = (read_byte(0x0000, 0x043e) & 0x80);
-        while ( val8 == 0 ) {
+        do {
           val8 = read_byte(0x0040, 0x0040);
           if (val8 == 0) {
             floppy_reset_controller();
-            SET_AH(0x0C); // Media type not found
-            set_diskette_ret_status(0x0C);
+            SET_AH(0x80); // drive not ready (timeout)
+            set_diskette_ret_status(0x80);
             SET_AL(0); // no sectors written
             SET_CF(); // error occurred
             return;
-            }
-          val8 = (read_byte(0x0000, 0x043e) & 0x80);
           }
+          val8 = (read_byte(0x0040, 0x003e) & 0x80);
+        } while ( val8 == 0 );
 
-       val8 = 0; // separate asm from while() loop
-       // turn off interrupts
+        val8 = 0; // separate asm from while() loop
+        // turn off interrupts
   ASM_START
         cli
   ASM_END
 
         // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0000, 0x043e);
+        val8 = read_byte(0x0040, 0x003e);
         val8 &= 0x7f;
-        write_byte(0x0000, 0x043e, val8);
+        write_byte(0x0040, 0x003e, val8);
 
         // check port 3f4 for accessibility to status bytes
         val8 = inb(0x3f4);
@@ -7103,9 +7120,9 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       outb(0x000a, 0x02);
 
       // set up floppy controller for transfer
-      val8 = read_byte(0x0000, 0x043e);
+      val8 = read_byte(0x0040, 0x003e);
       val8 &= 0x7f;
-      write_byte(0x0000, 0x043e, val8);
+      write_byte(0x0040, 0x003e, val8);
       // turn on motor of selected drive, DMA & int enabled, normal operation
       if (drive)
         dor = 0x20;
@@ -7136,28 +7153,27 @@ BX_DEBUG_INT13_FL("floppy f05\n");
   ASM_END
 
       // wait on 40:3e bit 7 to become 1
-      val8 = (read_byte(0x0000, 0x043e) & 0x80);
-      while ( val8 == 0 ) {
+      do {
         val8 = read_byte(0x0040, 0x0040);
         if (val8 == 0) {
           floppy_reset_controller();
-          SET_AH(0x0C); // Media type not found
-          set_diskette_ret_status(0x0C);
+          SET_AH(0x80); // drive not ready (timeout)
+          set_diskette_ret_status(0x80);
           SET_CF(); // error occurred
           return;
-          }
-        val8 = (read_byte(0x0000, 0x043e) & 0x80);
         }
+        val8 = (read_byte(0x0040, 0x003e) & 0x80);
+      } while ( val8 == 0 );
 
-     val8 = 0; // separate asm from while() loop
-     // turn off interrupts
+      val8 = 0; // separate asm from while() loop
+      // turn off interrupts
   ASM_START
       cli
   ASM_END
       // set 40:3e bit 7 to 0
-      val8 = read_byte(0x0000, 0x043e);
+      val8 = read_byte(0x0040, 0x003e);
       val8 &= 0x7f;
-      write_byte(0x0000, 0x043e, val8);
+      write_byte(0x0040, 0x003e, val8);
       // check port 3f4 for accessibility to status bytes
       val8 = inb(0x3f4);
       if ( (val8 & 0xc0) != 0xc0 )
@@ -8734,15 +8750,21 @@ bios32_structure:
 .align 16
 bios32_entry_point:
   pushf
-  cmp eax, #0x49435024
+  cmp eax, #0x49435024 ;; "$PCI"
   jne unknown_service
   mov eax, #0x80000000
   mov dx, #0x0cf8
   out dx, eax
   mov dx, #0x0cfc
   in  eax, dx
-  cmp eax, #0x12378086
+#ifdef PCI_FIXED_HOST_BRIDGE
+  cmp eax, #PCI_FIXED_HOST_BRIDGE
   jne unknown_service
+#else
+  ;; say ok if a device is present
+  cmp eax, #0xffffffff
+  je unknown_service
+#endif
   mov ebx, #0x000f0000
   mov ecx, #0
   mov edx, #pcibios_protected
@@ -8764,7 +8786,7 @@ pcibios_protected:
   jne pci_pro_f02
   mov bx, #0x0210
   mov cx, #0
-  mov edx, #0x20494350
+  mov edx, #0x20494350 ;; "PCI "
   mov al, #0x01
   jmp pci_pro_ok
 pci_pro_f02: ;; find pci device
@@ -8898,8 +8920,14 @@ pcibios_real:
   out dx, eax
   mov dx, #0x0cfc
   in  eax, dx
-  cmp eax, #0x12378086
+#ifdef PCI_FIXED_HOST_BRIDGE
+  cmp eax, #PCI_FIXED_HOST_BRIDGE
   je  pci_present
+#else
+  ;; say ok if a device is present
+  cmp eax, #0xffffffff
+  jne  pci_present
+#endif
   pop dx
   pop eax
   mov ah, #0xff
@@ -8913,7 +8941,7 @@ pci_present:
   mov ax, #0x0001
   mov bx, #0x0210
   mov cx, #0
-  mov edx, #0x20494350
+  mov edx, #0x20494350 ;; "PCI "
   mov edi, #0xf0000
   mov di, #pcibios_protected
   clc
@@ -10286,7 +10314,7 @@ int08_store_ticks:
 
 
 .org 0xff00
-.ascii "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
+.ascii BIOS_COPYRIGHT_STRING
 
 ;------------------------------------------------
 ;- IRET Instruction for Dummy Interrupt Handler -
