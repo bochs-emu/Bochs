@@ -457,12 +457,14 @@ The file to write the sb16 emulator messages to.
 loglevel:
 
  0 = No log.
- 1 = Only midi program and bank changes.
+ 1 = Resource changes, midi program and bank changes.
  2 = Severe errors.
  3 = All errors.
  4 = All errors plus all port accesses.
  5 = All  errors and port  accesses plus a lot
  of extra information.
+
+It is possible to change the loglevel at runtime.
 
 dmatimer:
 
@@ -470,8 +472,8 @@ Microseconds per second for a DMA cycle.  Make
 it smaller to fix non-continous sound.  750000
 is  usually  a  good  value.    This  needs  a
 reasonably  correct   setting  for  IPS   (see
-below).
-
+below). It is possible to adjust the dmatimer
+at runtime.
 
 Example:
   sb16: midimode=1, midi=/dev/midi00,

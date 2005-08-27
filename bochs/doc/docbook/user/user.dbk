@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.178 2005-08-19 17:59:30 vruppert Exp $
+$Id: user.dbk,v 1.179 2005-08-27 08:17:12 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3661,7 +3661,7 @@ are in the usual "property=value" format.
    loglevel: 
    <screen>
    0 = No log.
-   1 = Only midi program and bank changes.
+   1 = Resource changes, midi program and bank changes.
    2 = Severe errors.
    3 = All errors.
    4 = All errors plus all port accesses.

@@ -446,7 +446,7 @@ parport1: enabled=1, file="parport.out"
 # log:  The file to write the sb16 emulator messages to.
 # loglevel:
 #      0=no log
-#      1=only midi program and bank changes
+#      1=resource changes, midi program and bank changes
 #      2=severe errors
 #      3=all errors
 #      4=all errors plus all port accesses
