@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.23 2005-08-21 18:23:36 sshwarts Exp $
+// $Id: tasking.cc,v 1.24 2005-08-28 17:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -138,14 +138,11 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   Bit16u temp16, trap_word;
   bx_selector_t cs_selector, ss_selector, ds_selector, es_selector,
                 fs_selector, gs_selector, ldt_selector;
-  bx_descriptor_t cs_descriptor, ss_descriptor, ds_descriptor, es_descriptor,
-                  fs_descriptor, gs_descriptor, ldt_descriptor;
+  bx_descriptor_t cs_descriptor, ss_descriptor, ldt_descriptor;
   Bit32u old_TSS_max, new_TSS_max, old_TSS_limit, new_TSS_limit;
   Bit32u newEAX, newECX, newEDX, newEBX;
   Bit32u newESP, newEBP, newESI, newEDI;
   Bit32u newEFLAGS, oldEFLAGS, newEIP;
-  unsigned exception_no;
-  Bit16u error_code;
 
   BX_DEBUG(( "TASKING: ENTER" ));
 
@@ -166,8 +163,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Privilege and busy checks done in CALL, JUMP, INT, IRET
 
-  exception_no = 256; // no exception
-  error_code   = 0;
+  unsigned exception_no = 256; // no exception
+  Bit16u error_code = 0;
   oldEFLAGS = read_eflags();
 
   // Gather info about old TSS
@@ -194,6 +191,11 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     nbase32 = tss_descriptor->u.tss386.base; // new TSS.base
     new_TSS_max   = 103;
     new_TSS_limit = tss_descriptor->u.tss386.limit_scaled;
+  }
+
+  if (obase32 == nbase32)
+  {
+    BX_PANIC(("Task switching to the same TSS might be not implemented correctly !"));
   }
 
   // Task State Seg must be present, else #NP(TSS selector)
@@ -303,15 +305,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // I/O Map Base Address ???
   }
 
-#if 0
-  if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
-    BX_DEBUG(( "++++++++++++++++++++++++++" ));
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
-    exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc, 0);
-  //exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
-  }
-#endif
-
   //
   // Step 6: If JMP or IRET, clear busy bit in old task TSS descriptor,
   //         otherwise leave set.
@@ -320,8 +313,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // effect on Busy bit of old task
   if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_IRET) ) {
     // Bit is cleared
-    Bit32u laddr;
-    laddr = BX_CPU_THIS_PTR gdtr.base +
+    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base +
             (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
     access_linear(laddr, 4, 0, BX_READ, &temp32);
     temp32 &= ~0x00000200;
@@ -427,8 +419,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_CALL_OR_INT) ) {
     // set the new task's busy bit
-    Bit32u laddr;
-    laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
+    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
     access_linear(laddr, 4, 0, BX_READ, &dword2);
     dword2 |= 0x00000200;
     access_linear(laddr, 4, 0, BX_WRITE, &dword2);
@@ -506,7 +497,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
 
-
   // need to test valid bit in fetch_raw_descriptor?()
   // or set limit to 0 instead when LDT is loaded with
   // null. ??? +++
@@ -569,6 +559,15 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   }
   else {
 
+    // if new selector is not null then perform following checks:
+    //    index must be within its descriptor table limits else #TS(selector)
+    //    AR byte must indicate data or readable code else #TS(selector)
+    //    if data or non-conforming code then:
+    //      DPL must be >= CPL else #TS(selector)
+    //      DPL must be >= RPL else #TS(selector)
+    //    AR byte must indicate PRESENT else #NP(selector)
+    //    load cache with new segment descriptor and set valid bit
+
     // CS
     if ( (raw_cs_selector & 0xfffc) != 0 ) {
       bx_bool good = fetch_raw_descriptor2(&cs_selector, &dword1, &dword2);
@@ -593,7 +592,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
       // if non-conforming then DPL must equal selector RPL else #TS(CS)
       if (cs_descriptor.u.segment.c_ed==0 &&
-          cs_descriptor.dpl!=cs_selector.rpl)
+               cs_descriptor.dpl!=cs_selector.rpl)
       {
         BX_INFO(("task_switch: non-conforming: CS.dpl!=CS.RPL"));
         exception_no = BX_TS_EXCEPTION;
@@ -645,8 +644,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       // SS selector must be within its descriptor table limits else #TS(SS)
       // SS descriptor AR byte must must indicate writable data segment,
       // else #TS(SS)
-      if (ss_descriptor.valid==0 ||
-          ss_descriptor.segment==0 ||
+      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
           ss_descriptor.u.segment.executable ||
           ss_descriptor.u.segment.r_w==0)
       {
@@ -657,7 +655,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       //
-      // Stack segment is present in memory, else #SF(new stack segment)
+      // Stack segment is present in memory, else #SS(new stack segment)
       //
       if (! IS_PRESENT(ss_descriptor)) {
         BX_PANIC(("task_switch: SS not present"));
@@ -682,15 +680,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
         goto post_exception;
       }
 
-#if 0
-      if (ss_descriptor.u.segment.d_b && (tss_descriptor->type<9)) {
-        BX_DEBUG(( "++++++++++++++++++++++++++" ));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_ss_selector & 0xfffc;
-        goto post_exception;
-      }
-#endif
-
       // All checks pass, fill in shadow cache
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache = ss_descriptor;
     }
@@ -702,200 +691,14 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       goto post_exception;
     }
 
-    // if new selector is not null then perform following checks:
-    //    index must be within its descriptor table limits else #TS(selector)
-    //    AR byte must indicate data or readable code else #TS(selector)
-    //    if data or non-conforming code then:
-    //      DPL must be >= CPL else #TS(selector)
-    //      DPL must be >= RPL else #TS(selector)
-    //    AR byte must indicate PRESENT else #NP(selector)
-    //    load cache with new segment descriptor and set valid bit
-
-    // DS
-    if ( (raw_ds_selector & 0xfffc) != 0 ) {
-      bx_bool good = fetch_raw_descriptor2(&ds_selector, &dword1, &dword2);
-      if (!good) {
-        BX_INFO(("task_switch: bad DS fetch"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_ds_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      parse_descriptor(dword1, dword2, &ds_descriptor);
-
-      if (ds_descriptor.valid==0 || ds_descriptor.segment==0 ||
-         (ds_descriptor.u.segment.executable &&
-          ds_descriptor.u.segment.r_w==0))
-      {
-        BX_PANIC(("task_switch: DS not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_ds_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // if data or non-conforming code
-      if (ds_descriptor.type<12 &&
-         (ds_descriptor.dpl<cs_selector.rpl ||
-          ds_descriptor.dpl<ds_selector.rpl))
-      {
-        BX_PANIC(("task_switch: DS.dpl not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_ds_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      if (! IS_PRESENT(ds_descriptor)) {
-        BX_PANIC(("task_switch: DS.p==0"));
-        exception_no = BX_NP_EXCEPTION;
-        error_code   = raw_ds_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // All checks pass, fill in shadow cache
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache = ds_descriptor;
-    }
-    else {
-      // NULL DS selector is OK, leave cache invalid
-    }
-
-    // ES
-    if ( (raw_es_selector & 0xfffc) != 0 ) {
-      bx_bool good = fetch_raw_descriptor2(&es_selector, &dword1, &dword2);
-      if (!good) {
-        BX_INFO(("task_switch: bad ES fetch"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_es_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      parse_descriptor(dword1, dword2, &es_descriptor);
-
-      if (es_descriptor.valid==0 || es_descriptor.segment==0 ||
-         (es_descriptor.u.segment.executable &&
-          es_descriptor.u.segment.r_w==0))
-      {
-        BX_PANIC(("task_switch: ES not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_es_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // if data or non-conforming code
-      if (es_descriptor.type<12 &&
-         (es_descriptor.dpl<cs_selector.rpl ||
-          es_descriptor.dpl<es_selector.rpl))
-      {
-        BX_PANIC(("task_switch: ES.dpl not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_es_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      if (! IS_PRESENT(es_descriptor)) {
-        BX_PANIC(("task_switch: ES.p==0"));
-        exception_no = BX_NP_EXCEPTION;
-        error_code   = raw_es_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // All checks pass, fill in shadow cache
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache    = es_descriptor;
-    }
-    else {
-      // NULL ES selector is OK, leave cache invalid
-    }
-
-    // FS
-    if ( (raw_fs_selector & 0xfffc) != 0 ) { // not NULL
-      bx_bool good = fetch_raw_descriptor2(&fs_selector, &dword1, &dword2);
-      if (!good) {
-        BX_INFO(("task_switch: bad FS fetch"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_fs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      parse_descriptor(dword1, dword2, &fs_descriptor);
-      if (fs_descriptor.valid==0 || fs_descriptor.segment==0 ||
-         (fs_descriptor.u.segment.executable &&
-          fs_descriptor.u.segment.r_w==0))
-      {
-        BX_PANIC(("task_switch: FS not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_fs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // if data or non-conforming code
-      if (fs_descriptor.type<12 &&
-              (fs_descriptor.dpl<cs_selector.rpl ||
-               fs_descriptor.dpl<fs_selector.rpl))
-      {
-        BX_PANIC(("task_switch: FS.dpl not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_fs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      if (! IS_PRESENT(fs_descriptor)) {
-        BX_PANIC(("task_switch: FS.p==0"));
-        exception_no = BX_NP_EXCEPTION;
-        error_code   = raw_fs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // All checks pass, fill in shadow cache
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache    = fs_descriptor;
-    }
-    else {
-      // NULL FS selector is OK, leave cache invalid
-    }
-
-    // GS
-    if ( (raw_gs_selector & 0xfffc) != 0 ) {
-      bx_bool good = fetch_raw_descriptor2(&gs_selector, &dword1, &dword2);
-      if (!good) {
-        BX_INFO(("task_switch: bad GS fetch"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_gs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      parse_descriptor(dword1, dword2, &gs_descriptor);
-      if (gs_descriptor.valid==0 || gs_descriptor.segment==0 ||
-         (gs_descriptor.u.segment.executable &&
-          gs_descriptor.u.segment.r_w==0))
-      {
-        BX_PANIC(("task_switch: GS not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_gs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // if data or non-conforming code
-      if (gs_descriptor.type<12 &&
-         (gs_descriptor.dpl<cs_selector.rpl ||
-          gs_descriptor.dpl<gs_selector.rpl))
-      {
-        BX_PANIC(("task_switch: GS.dpl not valid"));
-        exception_no = BX_TS_EXCEPTION;
-        error_code   = raw_gs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      if (! IS_PRESENT(gs_descriptor)) {
-        BX_PANIC(("task_switch: GS.p==0"));
-        exception_no = BX_NP_EXCEPTION;
-        error_code   = raw_gs_selector & 0xfffc;
-        goto post_exception;
-      }
-
-      // All checks pass, fill in shadow cache
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache    = gs_descriptor;
-    }
-    else {
-      // NULL GS selector is OK, leave cache invalid
-    }
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
+        raw_ds_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
+        raw_es_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS],
+        raw_fs_selector, cs_selector.rpl);
+    task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS],
+        raw_gs_selector, cs_selector.rpl);
   }
 
   if ((tss_descriptor->type>=9) && (trap_word & 0x0001)) {
@@ -915,6 +718,48 @@ post_exception:
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_INFO(("task switch: posting exception %u after commit point", exception_no));
   exception(exception_no, error_code, 0);
+}
+
+void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg, Bit16u raw_selector, Bit8u cs_rpl)
+{
+  bx_selector_t selector;
+  bx_descriptor_t descriptor;
+  Bit32u dword1, dword2;
+
+  // NULL selector is OK, will leave cache invalid
+  if ( (raw_selector & 0xfffc) != 0 )
+  {
+    bx_bool good = fetch_raw_descriptor2(&selector, &dword1, &dword2);
+    if (!good) {
+      BX_ERROR(("task_switch(%s): bad selector fetch !", strseg(seg)));
+      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+
+    parse_descriptor(dword1, dword2, &descriptor);
+
+    if (descriptor.valid==0 || descriptor.segment==0 ||
+       (descriptor.u.segment.executable &&
+        descriptor.u.segment.r_w==0))
+    {
+      BX_ERROR(("task_switch(%s): not a writeable data segment !", strseg(seg)));
+      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+
+    if (descriptor.type < 12 &&
+            (descriptor.dpl < cs_rpl || descriptor.dpl < selector.rpl))
+    {
+      BX_ERROR(("task_switch(%s): descriptor DPL check failed !", strseg(seg)));
+      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+
+    if (! IS_PRESENT(descriptor)) {
+      BX_ERROR(("task_switch(%s): descriptor not present !", strseg(seg)));
+      exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
+    }
+
+    // All checks pass, fill in shadow cache
+    seg->cache = descriptor;
+  }
 }
 
 void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)

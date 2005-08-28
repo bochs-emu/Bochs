@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.24 2005-07-31 17:57:27 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.25 2005-08-28 17:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ BX_CPU_C::push_16(Bit16u value16)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_word(BX_SEG_REG_SS, ESP-2, &value16);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (ESP-2), &value16);
     ESP -= 2;
   }
   else
@@ -69,7 +69,7 @@ void BX_CPU_C::push_32(Bit32u value32)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_dword(BX_SEG_REG_SS, ESP-4, &value32);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (ESP-4), &value32);
     ESP -= 4;
   }
   else
@@ -93,7 +93,7 @@ void BX_CPU_C::push_64(Bit64u value64)
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_qword(BX_SEG_REG_SS, ESP-8, &value64);
+    write_virtual_qword(BX_SEG_REG_SS, (Bit32u) (ESP-8), &value64);
     ESP -= 8;
   }
   else
@@ -222,7 +222,6 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
     BX_PANIC(("can_push(): descriptor not present"));
     return(0);
   }
-
 
   if (descriptor->u.segment.c_ed) { /* expand down segment */
     Bit32u expand_down_limit;
