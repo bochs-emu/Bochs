@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.79 2005-08-24 20:44:55 vruppert Exp $
+// $Id: floppy.cc,v 1.80 2005-08-31 19:48:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.79 2005-08-24 20:44:55 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.80 2005-08-31 19:48:03 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -374,38 +374,31 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_FD_SMF
-  Bit8u value, drive;
-
-  if (bx_dbg.floppy)
-    BX_INFO(("read access to port %04x", (unsigned) address));
+  Bit8u value = 0, drive;
 
   switch (address) {
 #if BX_DMA_FLOPPY_IO
     case 0x3F2: // diskette controller digital output register
       value = BX_FD_THIS s.DOR;
-      return(value);
       break;
 
     case 0x3F4: /* diskette controller main status register */
       value = BX_FD_THIS s.main_status_reg;
-      return(value);
       break;
 
     case 0x3F5: /* diskette controller data */
       if (BX_FD_THIS s.result_size == 0) {
         BX_ERROR(("port 0x3f5: no results to read"));
         BX_FD_THIS s.main_status_reg = 0;
-        return BX_FD_THIS s.result[0];
+        value = BX_FD_THIS s.result[0];
+      } else {
+        value = BX_FD_THIS s.result[BX_FD_THIS s.result_index++];
+        BX_FD_THIS s.main_status_reg &= 0xF0;
+        BX_FD_THIS lower_interrupt();
+        if (BX_FD_THIS s.result_index >= BX_FD_THIS s.result_size) {
+          enter_idle_phase();
         }
-
-      value = BX_FD_THIS s.result[BX_FD_THIS s.result_index++];
-      BX_FD_THIS s.main_status_reg &= 0xF0;
-      if (BX_FD_THIS s.result_index >= BX_FD_THIS s.result_size) {
-        if (!BX_FD_THIS s.reset_sensei) BX_FD_THIS s.pending_irq = 0;
-        DEV_pic_lower_irq(6);
-        enter_idle_phase();
-        }
-      return(value);
+      }
       break;
 #endif  // #if BX_DMA_FLOPPY_IO
 
@@ -432,17 +425,15 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
           default: // BX_FLOPPY_NONE
             value = 0x20;
             break;
-          }
         }
-      else {
+      } else {
         value = 0x20;
-        }
-      return( value );
+      }
+      break;
       
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
       value = DEV_hd_read_handler(bx_devices.pluginHardDrive, address, io_len);
-      return( value );
       break;
 
     case 0x3F7: // diskette controller digital input register
@@ -453,13 +444,15 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       value &= 0x7f;
       // add in diskette change line
       value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
-      return( value );
       break;
+
     default:
       BX_ERROR(("io_read: unsupported address 0x%04x", (unsigned) address));
       return(0);
       break;
-    }
+  }
+  BX_DEBUG(("read access to port %04x returns 0x%02x", address, value));
+  return (value);
 }
 
 
@@ -487,9 +480,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u drive_select;
   Bit8u motor_on_drive0, motor_on_drive1;
 
-  if (bx_dbg.floppy)
-    BX_INFO(("write access to port %04x, value=%02x",
-      (unsigned) address, (unsigned) value));
+  BX_DEBUG(("write access to port %04x, value=%02x", address, value));
 
   switch (address) {
 #if BX_DMA_FLOPPY_IO
@@ -553,7 +544,8 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_FD_THIS s.command_complete = 0;
         BX_FD_THIS s.command_index = 1;
         /* read/write command in progress */
-        BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_BUSY;
+        BX_FD_THIS s.main_status_reg &= 0x0f; // leave drive status untouched
+        BX_FD_THIS s.main_status_reg |= FD_MS_MRQ | FD_MS_BUSY;
         switch (value) {
           case 0x03: /* specify */
             BX_FD_THIS s.command_size = 3;
@@ -670,7 +662,7 @@ bx_floppy_ctrl_c::floppy_command(void)
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
   Bit8u sector_size, data_length;
-  Bit32u logical_sector;
+  Bit32u logical_sector, sector_time;
 
   // Print command
   char buf[9+(9*5)+1], *p = buf;
@@ -746,19 +738,14 @@ bx_floppy_ctrl_c::floppy_command(void)
        *   byte0 = status reg0
        *   byte1 = current cylinder number (0 to 79)
        */
-      drive = BX_FD_THIS s.DOR & 0x03;
-      if (!BX_FD_THIS s.pending_irq) {
+      if (BX_FD_THIS s.reset_sensei > 0) {
+        drive = 4 - BX_FD_THIS s.reset_sensei;
+        BX_FD_THIS s.status_reg0 &= 0xf8;
+        BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2) | drive;
+        BX_FD_THIS s.reset_sensei--;
+      } else if (!BX_FD_THIS s.pending_irq) {
         BX_FD_THIS s.status_reg0 = 0x80;
-        }
-      else {
-        if (BX_FD_THIS s.reset_sensei > 0) {
-          drive = 4 - BX_FD_THIS s.reset_sensei;
-          BX_FD_THIS s.status_reg0 &= 0xf8;
-          BX_FD_THIS s.status_reg0 |= (BX_FD_THIS s.head[drive] << 2) | drive;
-          BX_FD_THIS s.reset_sensei--;
-          }
-        }
-
+      }
       BX_DEBUG(("sense interrupt status"));
       enter_result_phase();
       return;
@@ -971,31 +958,26 @@ bx_floppy_ctrl_c::floppy_command(void)
       if ((BX_FD_THIS s.command[0] & 0x4f) == 0x46) { // read
         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                     512, FROM_FLOPPY);
-
-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
-
         /* data reg not ready, controller busy */
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
-        return;
-        }
-      else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
-
-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
-
+        // time to read one sector at 300 rpm
+        sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+                                    sector_time , 0);
+      } else if ((BX_FD_THIS s.command[0] & 0x7f) == 0x45) { // write
         /* data reg not ready, controller busy */
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
-        return;
-        }
-      else
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+      } else {
         BX_PANIC(("floppy_command(): unknown read/write command"));
-
-      return;
+        return;
+      }
       break;
 
     default: // invalid or unsupported command; these are captured in write() above
       BX_PANIC(("You should never get here! cmd = 0x%02x", 
                 BX_FD_THIS s.command[0]));
-    }
+  }
 #endif
 }
 
@@ -1143,6 +1125,14 @@ bx_floppy_ctrl_c::timer()
       enter_result_phase();
       break;
 
+    case 0x46: // read normal data
+    case 0x66:
+    case 0xc6:
+    case 0xe6:
+      // transfer next sector
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+      break;
+
     case 0xfe: // (contrived) RESET
       theFloppyController->reset(BX_RESET_SOFTWARE);
       BX_FD_THIS s.pending_command = 0;
@@ -1189,13 +1179,12 @@ bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
         BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
         BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
         BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
-        }
+      }
 
       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       enter_result_phase();
-      }
-    else { // more data to transfer
-      Bit32u logical_sector;
+    } else { // more data to transfer
+      Bit32u logical_sector, sector_time;
 
       // original assumed all floppies had two sides...now it does not  *delete this comment line*
       logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads *
@@ -1206,8 +1195,13 @@ bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
 
       floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                   512, FROM_FLOPPY);
-      }
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+      // time to read one sector at 300 rpm
+      sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+                                  sector_time , 0);
     }
+  }
 }
 
   void
@@ -1315,8 +1309,10 @@ bx_floppy_ctrl_c::raise_interrupt(void)
   void
 bx_floppy_ctrl_c::lower_interrupt(void)
 {
-  DEV_pic_lower_irq(6);
-  BX_FD_THIS s.pending_irq = 0;
+  if (BX_FD_THIS s.pending_irq) {
+    DEV_pic_lower_irq(6);
+    BX_FD_THIS s.pending_irq = 0;
+  }
 }
 
 
@@ -1693,7 +1689,8 @@ bx_floppy_ctrl_c::enter_result_phase(void)
 
   /* these are always the same */
   BX_FD_THIS s.result_index = 0;
-  BX_FD_THIS s.main_status_reg = FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
+  BX_FD_THIS s.main_status_reg &= 0x0f; // leave drive status untouched
+  BX_FD_THIS s.main_status_reg |= FD_MS_MRQ | FD_MS_DIO | FD_MS_BUSY;
 
   /* invalid command */
   if ((BX_FD_THIS s.status_reg0 & 0xc0) == 0x80) {
