@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.179 2005-08-27 08:17:12 vruppert Exp $
+$Id: user.dbk,v 1.180 2005-09-02 15:38:46 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -5463,8 +5463,8 @@ Ben Lunt wrote a set of utilities for Dos/Win32 to manipulate flat disk images.
 </para>
 <para>
 You can find it at 
-<ulink url="http://www.cybertrails.com/~fys/mtools.htm">
-http://www.cybertrails.com/~fys/mtools.htm</ulink>
+<ulink url="http://www.frontiernet.net/~fys/mtools.htm">
+http://www.frontiernet.net/~fys/mtools.htm</ulink>
 </para>
 <para>
 These utilities includes :

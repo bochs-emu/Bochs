@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.144 2005-08-26 17:46:44 vruppert Exp $
+// $Id: rombios.c,v 1.145 2005-09-02 15:38:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -722,7 +722,7 @@ typedef struct {
   
   // for access to EBDA area
   //     The EBDA structure should conform to 
-  //     http://www.cybertrails.com/~fys/rombios.htm document
+  //     http://www.frontiernet.net/~fys/rombios.htm document
   //     I made the ata and cdemu structs begin at 0x121 in the EBDA seg
   typedef struct {
     unsigned char filler1[0x3D];
@@ -939,10 +939,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.144 $";
-static char bios_date_string[] = "$Date: 2005-08-26 17:46:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.145 $";
+static char bios_date_string[] = "$Date: 2005-09-02 15:38:46 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.144 2005-08-26 17:46:44 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.145 2005-09-02 15:38:46 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
