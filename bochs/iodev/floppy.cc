@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.80 2005-08-31 19:48:03 vruppert Exp $
+// $Id: floppy.cc,v 1.81 2005-09-03 17:20:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.80 2005-08-31 19:48:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.81 2005-09-03 17:20:18 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1125,12 +1125,23 @@ bx_floppy_ctrl_c::timer()
       enter_result_phase();
       break;
 
-    case 0x46: // read normal data
+    case 0x46: /* read normal data */
     case 0x66:
     case 0xc6:
     case 0xe6:
       // transfer next sector
       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+      break;
+
+    case 0x4d: /* format track */
+      if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
+        BX_FD_THIS s.format_count = 0;
+        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+        enter_result_phase();
+      } else {
+        // transfer next sector
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+      }
       break;
 
     case 0xfe: // (contrived) RESET
@@ -1212,11 +1223,11 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   // via DMA to I/O (write block to floppy)
 
   Bit8u drive;
-  Bit32u logical_sector;
+  Bit32u logical_sector, sector_time;
 
   drive = BX_FD_THIS s.DOR & 0x03;
   if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
-    --BX_FD_THIS s.format_count;
+    BX_FD_THIS s.format_count--;
     switch (3 - (BX_FD_THIS s.format_count & 0x03)) {
       case 0:
         BX_FD_THIS s.cylinder[drive] = *data_byte;
@@ -1235,67 +1246,61 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                   BX_FD_THIS s.sector[drive]));
         for (unsigned i = 0; i < 512; i++) {
           BX_FD_THIS s.floppy_buffer[i] = BX_FD_THIS s.format_fillbyte;
-          }
-        // original assumed all floppies had two sides...now it does not *delete this comment line*
+        }
         logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
                          (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
                          (BX_FD_THIS s.sector[drive] - 1);
         floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
                     512, TO_FLOPPY);
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+        // time to write one sector at 300 rpm
+        sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+                                    sector_time , 0);
         break;
-      }
-    if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
-      BX_FD_THIS s.format_count = 0;
-      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
-      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
-      enter_result_phase();
-      }
-    return;
     }
+  } else { // write normal data
+    BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
 
-  BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
+    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+      logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
+                       (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
+                       (BX_FD_THIS s.sector[drive] - 1);
+      if (BX_FD_THIS s.media[drive].write_protected) {
+        // write protected error
+        BX_INFO(("tried to write disk %u, which is write-protected", drive));
+        // ST0: IC1,0=01  (abnormal termination: started execution but failed)
+        BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
+        // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
+        BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
+        // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
+        BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
+        enter_result_phase();
+        return;
+      }
+      floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
+                  512, TO_FLOPPY);
+      increment_sector(); // increment to next sector after writing current one
+      BX_FD_THIS s.floppy_buffer_index = 0;
+      if (DEV_dma_get_tc()) { // Terminal Count line, done
+        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+        BX_FD_THIS s.status_reg1 = 0;
+        BX_FD_THIS s.status_reg2 = 0;
 
-  if (BX_FD_THIS s.floppy_buffer_index >= 512) {
-    // original assumed all floppies had two sides...now it does not *delete this comment line*
-    logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
-                     (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
-                     (BX_FD_THIS s.sector[drive] - 1);
-  if ( BX_FD_THIS s.media[drive].write_protected ) {
-    // write protected error
-    BX_INFO(("tried to write disk %u, which is write-protected", drive));
-    // ST0: IC1,0=01  (abnormal termination: started execution but failed)
-    BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
-    // ST1: DataError=1, NDAT=1, NotWritable=1, NID=1
-    BX_FD_THIS s.status_reg1 = 0x27; // 0010 0111
-    // ST2: CRCE=1, SERR=1, BCYL=1, NDAM=1.
-    BX_FD_THIS s.status_reg2 = 0x31; // 0011 0001
-    enter_result_phase();
-    return;
-    }
-    floppy_xfer(drive, logical_sector*512, BX_FD_THIS s.floppy_buffer,
-                512, TO_FLOPPY);
-    increment_sector(); // increment to next sector after writing current one
-    BX_FD_THIS s.floppy_buffer_index = 0;
-    if (DEV_dma_get_tc()) { // Terminal Count line, done
-      BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
-      BX_FD_THIS s.status_reg1 = 0;
-      BX_FD_THIS s.status_reg2 = 0;
-
-      if (bx_dbg.floppy) {
-        BX_INFO(("<<WRITE DONE>>"));
-        BX_INFO(("AFTER"));
-        BX_INFO(("  drive    = %u", (unsigned) drive));
-        BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
-        BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
-        BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+        if (bx_dbg.floppy) {
+          BX_INFO(("<<WRITE DONE>>"));
+          BX_INFO(("AFTER"));
+          BX_INFO(("  drive    = %u", (unsigned) drive));
+          BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
+          BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
+          BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
         }
 
-      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
-      enter_result_phase();
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+        enter_result_phase();
       }
-    else { // more data to transfer
-      } // else
-    } // if BX_FD_THIS s.floppy_buffer_index >= 512
+    }
+  }
 }
 
   void
