@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.24 2005-08-28 17:37:37 sshwarts Exp $
+// $Id: tasking.cc,v 1.25 2005-09-03 11:39:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -497,6 +497,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
 
+
   // need to test valid bit in fetch_raw_descriptor?()
   // or set limit to 0 instead when LDT is loaded with
   // null. ??? +++
@@ -592,7 +593,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
       // if non-conforming then DPL must equal selector RPL else #TS(CS)
       if (cs_descriptor.u.segment.c_ed==0 &&
-               cs_descriptor.dpl!=cs_selector.rpl)
+          cs_descriptor.dpl!=cs_selector.rpl)
       {
         BX_INFO(("task_switch: non-conforming: CS.dpl!=CS.RPL"));
         exception_no = BX_TS_EXCEPTION;
@@ -692,13 +693,13 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     }
 
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
-        raw_ds_selector, cs_selector.rpl);
+        &ds_selector, raw_ds_selector, cs_selector.rpl);
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
-        raw_es_selector, cs_selector.rpl);
+        &es_selector, raw_es_selector, cs_selector.rpl);
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS],
-        raw_fs_selector, cs_selector.rpl);
+        &fs_selector, raw_fs_selector, cs_selector.rpl);
     task_switch_load_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS],
-        raw_gs_selector, cs_selector.rpl);
+        &gs_selector, raw_gs_selector, cs_selector.rpl);
   }
 
   if ((tss_descriptor->type>=9) && (trap_word & 0x0001)) {
@@ -720,16 +721,16 @@ post_exception:
   exception(exception_no, error_code, 0);
 }
 
-void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg, Bit16u raw_selector, Bit8u cs_rpl)
+void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
+                 bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl)
 {
-  bx_selector_t selector;
   bx_descriptor_t descriptor;
   Bit32u dword1, dword2;
 
   // NULL selector is OK, will leave cache invalid
   if ( (raw_selector & 0xfffc) != 0 )
   {
-    bx_bool good = fetch_raw_descriptor2(&selector, &dword1, &dword2);
+    bx_bool good = fetch_raw_descriptor2(selector, &dword1, &dword2);
     if (!good) {
       BX_ERROR(("task_switch(%s): bad selector fetch !", strseg(seg)));
       exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
@@ -746,7 +747,7 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg, Bit16u raw_selec
     }
 
     if (descriptor.type < 12 &&
-            (descriptor.dpl < cs_rpl || descriptor.dpl < selector.rpl))
+            (descriptor.dpl < cs_rpl || descriptor.dpl < selector->rpl))
     {
       BX_ERROR(("task_switch(%s): descriptor DPL check failed !", strseg(seg)));
       exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
