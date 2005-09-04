@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.145 2005-09-02 15:38:46 vruppert Exp $
+// $Id: rombios.c,v 1.146 2005-09-04 09:37:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,10 +939,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.145 $";
-static char bios_date_string[] = "$Date: 2005-09-02 15:38:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.146 $";
+static char bios_date_string[] = "$Date: 2005-09-04 09:37:49 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.145 2005-09-02 15:38:46 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.146 2005-09-04 09:37:49 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -1828,9 +1828,25 @@ shutdown_status_panic(status)
 void
 print_bios_banner()
 {
-  printf(BX_APPNAME" BIOS, %d cpu%s, ", BX_SMP_PROCESSORS, BX_SMP_PROCESSORS>1?"s":"");
+  printf(BX_APPNAME" BIOS ");
   printf("%s %s\n", bios_cvs_version_string, bios_date_string);
-  printf("\n");
+  printf("Options: ");
+#if BX_SMP_PROCESSORS > 1
+  printf("smp (%d cpus) ", BX_SMP_PROCESSORS);
+#else
+  printf("1 cpu ");
+#endif
+  printf(
+#ifdef BX_APM
+  "apmbios "
+#endif
+#ifdef BX_PCIBIOS
+  "pcibios "
+#endif
+#ifdef BX_ELTORITO_BOOT
+  "eltorito "
+#endif
+  "\n\n");
 }
 
 //--------------------------------------------------------------------------
@@ -6361,8 +6377,7 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 // FLOPPY functions //
 //////////////////////
 
-  void
-floppy_reset_controller()
+void floppy_reset_controller()
 {
   Bit8u val8;
 
@@ -6372,10 +6387,54 @@ floppy_reset_controller()
   outb(0x03f2, val8 | 0x04);
 
   // Wait for controller to come out of reset  
-  val8 = inb(0x3f4);
-  while ( (val8 & 0xc0) != 0x80 ) {
+  do {
     val8 = inb(0x3f4);
-    }
+  } while ( (val8 & 0xc0) != 0x80 );
+}
+
+void floppy_prepare_controller(drive)
+  Bit16u drive;
+{
+  Bit8u  val8, dor, prev_reset;
+
+  // set 40:3e bit 7 to 0
+  val8 = read_byte(0x0040, 0x003e);
+  val8 &= 0x7f;
+  write_byte(0x0040, 0x003e, val8);
+
+  // turn on motor of selected drive, DMA & int enabled, normal operation
+  prev_reset = inb(0x03f2) & 0x04;
+  if (drive)
+    dor = 0x20;
+  else
+    dor = 0x10;
+  dor |= 0x0c;
+  dor |= drive;
+  outb(0x03f2, dor);
+
+  // reset the disk motor timeout value of INT 08
+  write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
+
+  // wait for drive readiness
+  do {
+    val8 = inb(0x3f4);
+  } while ( (val8 & 0xc0) != 0x80 );
+
+  if (prev_reset == 0) {
+    // turn on interrupts
+ASM_START
+    sti
+ASM_END
+    // wait on 40:3e bit 7 to become 1
+    do {
+      val8 = read_byte(0x0040, 0x003e);
+    } while ( (val8 & 0x80) == 0 );
+    val8 &= 0x7f;
+ASM_START
+    cli
+ASM_END
+    write_byte(0x0040, 0x003e, val8);
+  }
 }
 
   bx_bool
@@ -6525,44 +6584,10 @@ floppy_media_sense(drive)
 floppy_drive_recal(drive)
   Bit16u drive;
 {
-  Bit8u  val8, dor, prev_reset;
+  Bit8u  val8;
   Bit16u curr_cyl_offset;
 
-  // set 40:3e bit 7 to 0
-  val8 = read_byte(0x0040, 0x003e);
-  val8 &= 0x7f;
-  write_byte(0x0040, 0x003e, val8);
-
-  // turn on motor of selected drive, DMA & int enabled, normal operation
-  prev_reset = inb(0x03f2) & 0x04;
-  if (drive)
-    dor = 0x20;
-  else
-    dor = 0x10;
-  dor |= 0x0c;
-  dor |= drive;
-  outb(0x03f2, dor);
-
-  // reset the disk motor timeout value of INT 08
-  write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
-
-  // wait for drive readiness
-  do {
-    val8 = inb(0x3f4);
-  } while ( (val8 & 0xc0) != 0x80 );
-
-  if (prev_reset == 0) {
-    // turn on interrupts
-ASM_START
-    sti
-ASM_END
-    // wait on 40:3e bit 7 to become 1
-    do {
-      val8 = read_byte(0x0040, 0x003e);
-    } while ( (val8 & 0x80) == 0 );
-    val8 &= 0x7f;
-    write_byte(0x0040, 0x003e, val8);
-  }
+  floppy_prepare_controller(drive);
 
   // send Recalibrate command (2 bytes) to controller
   outb(0x03f5, 0x07);  // 07: Recalibrate
@@ -6590,11 +6615,10 @@ ASM_END
   if (drive) {
     val8 |= 0x02; // Drive 1 calibrated
     curr_cyl_offset = 0x0095;
-    }
-  else {
+  } else {
     val8 |= 0x01; // Drive 0 calibrated
     curr_cyl_offset = 0x0094;
-    }
+  }
   write_byte(0x0040, 0x003e, val8);
   write_byte(0x0040, curr_cyl_offset, 0); // current cylinder is 0
 
@@ -6647,7 +6671,7 @@ BX_DEBUG_INT13_FL("floppy f00\n");
         set_diskette_ret_status(1);
         SET_CF();
         return;
-        }
+      }
       drive_type = inb_cmos(0x10);
 
       if (drive == 0)
@@ -6659,7 +6683,7 @@ BX_DEBUG_INT13_FL("floppy f00\n");
         set_diskette_ret_status(0x80);
         SET_CF();
         return;
-        }
+      }
       SET_AH(0);
       set_diskette_ret_status(0);
       CLEAR_CF(); // successful
@@ -6672,7 +6696,7 @@ BX_DEBUG_INT13_FL("floppy f00\n");
       SET_AH(val8);
       if (val8) {
         SET_CF();
-        }
+      }
       return;
 
     case 0x02: // Read Diskette Sectors
@@ -6692,7 +6716,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         SET_AL(0); // no sectors read
         SET_CF(); // error occurred
         return;
-        }
+      }
 
       // see if drive exists
       if (floppy_drive_exists(drive) == 0) {
@@ -6701,7 +6725,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         SET_AL(0); // no sectors read
         SET_CF(); // error occurred
         return;
-        }
+      }
 
       // see if media in drive, and type is known
       if (floppy_media_known(drive) == 0) {
@@ -6711,8 +6735,8 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
           SET_AL(0); // no sectors read
           SET_CF(); // error occurred
           return;
-          }
         }
+      }
 
       if (ah == 0x02) {
         // Read Diskette Sectors
@@ -6731,7 +6755,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         if ( base_address < base_es ) {
           // in case of carry, adjust page by 1
           page++;
-          }
+        }
         base_count = (num_sectors * 512) - 1;
 
         // check for 64K boundary overrun
@@ -6742,7 +6766,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
           SET_AL(0); // no sectors read
           SET_CF(); // error occurred
           return;
-          }
+        }
 
         BX_DEBUG_INT13_FL("masking DMA-1 c2\n");
         outb(0x000a, 0x06);
@@ -6775,28 +6799,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         //--------------------------------------
         // set up floppy controller for transfer
         //--------------------------------------
-
-        // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0040, 0x003e);
-        val8 &= 0x7f;
-        write_byte(0x0040, 0x003e, val8);
-
-        // turn on motor of selected drive, DMA & int enabled, normal operation
-        if (drive)
-          dor = 0x20;
-        else
-          dor = 0x10;
-        dor |= 0x0c;
-        dor |= drive;
-        outb(0x03f2, dor);
-
-        // reset the disk motor timeout value of INT 08
-        write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
-
-        // check port 3f4 for drive readiness
-        val8 = inb(0x3f4);
-        if ( (val8 & 0xf0) != 0x80 )
-          BX_PANIC("int13_diskette:f02: ctrl not ready\n");
+        floppy_prepare_controller(drive);
 
         // send read-normal-data command (9 bytes) to controller
         outb(0x03f5, 0xe6); // e6: read normal data
@@ -6809,7 +6812,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, 0); // Gap length
         outb(0x03f5, 0xff); // Gap length
 
-       // turn on interrupts
+        // turn on interrupts
   ASM_START
         sti
   ASM_END
@@ -6828,8 +6831,8 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
           val8 = (read_byte(0x0040, 0x003e) & 0x80);
         } while ( val8 == 0 );
 
-       val8 = 0; // separate asm from while() loop
-       // turn off interrupts
+        val8 = 0; // separate asm from while() loop
+        // turn off interrupts
   ASM_START
         cli
   ASM_END
@@ -6868,7 +6871,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
           SET_AL(0); // no sectors read
           SET_CF(); // error occurred
           return;
-          }
+        }
 
         // ??? should track be new val from return_status[3] ?
         set_diskette_current_cyl(drive, track);
@@ -6876,8 +6879,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         SET_AH(0x00); // success
         CLEAR_CF();   // success
         return;
-        }
-      else if (ah == 0x03) {
+      } else if (ah == 0x03) {
         // Write Diskette Sectors
 
         //-----------------------------------
@@ -6894,7 +6896,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         if ( base_address < base_es ) {
           // in case of carry, adjust page by 1
           page++;
-          }
+        }
         base_count = (num_sectors * 512) - 1;
 
         // check for 64K boundary overrun
@@ -6905,7 +6907,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
           SET_AL(0); // no sectors read
           SET_CF(); // error occurred
           return;
-          }
+        }
 
         BX_DEBUG_INT13_FL("masking DMA-1 c2\n");
         outb(0x000a, 0x06);
@@ -6931,30 +6933,9 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         //--------------------------------------
         // set up floppy controller for transfer
         //--------------------------------------
+        floppy_prepare_controller(drive);
 
-        // set 40:3e bit 7 to 0
-        val8 = read_byte(0x0040, 0x003e);
-        val8 &= 0x7f;
-        write_byte(0x0040, 0x003e, val8);
-
-        // turn on motor of selected drive, DMA & int enabled, normal operation
-        if (drive)
-          dor = 0x20;
-        else
-          dor = 0x10;
-        dor |= 0x0c;
-        dor |= drive;
-        outb(0x03f2, dor);
-
-        // reset the disk motor timeout value of INT 08
-        write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
-
-        // check port 3f4 for drive readiness
-        val8 = inb(0x3f4);
-        if ( (val8 & 0xf0) != 0x80 )
-          BX_PANIC("int13_diskette:f03: ctrl not ready\n");
-
-        // send read-normal-data command (9 bytes) to controller
+        // send write-normal-data command (9 bytes) to controller
         outb(0x03f5, 0xc5); // c5: write normal data
         outb(0x03f5, (head << 2) | drive); // HD DR1 DR2
         outb(0x03f5, track);
@@ -6965,7 +6946,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, 0); // Gap length
         outb(0x03f5, 0xff); // Gap length
 
-       // turn on interrupts
+        // turn on interrupts
   ASM_START
         sti
   ASM_END
@@ -7037,8 +7018,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         SET_AH(0x00); // success
         CLEAR_CF();   // success
         return;
-        }
-      else {  // if (ah == 0x04)
+      } else {  // if (ah == 0x04)
         // Verify Diskette Sectors
 
         // ??? should track be new val from return_status[3] ?
@@ -7047,8 +7027,8 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         CLEAR_CF();   // success
         SET_AH(0x00); // success
         return;
-        }
-
+      }
+      break;
 
     case 0x05: // format diskette track
 BX_DEBUG_INT13_FL("floppy f05\n");
@@ -7063,7 +7043,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
         SET_AH(1);
         set_diskette_ret_status(1);
         SET_CF(); // error occurred
-        }
+      }
 
       // see if drive exists
       if (floppy_drive_exists(drive) == 0) {
@@ -7071,7 +7051,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
         set_diskette_ret_status(0x80);
         SET_CF(); // error occurred
         return;
-        }
+      }
 
       // see if media in drive, and type is known
       if (floppy_media_known(drive) == 0) {
@@ -7081,8 +7061,8 @@ BX_DEBUG_INT13_FL("floppy f05\n");
           SET_AL(0); // no sectors read
           SET_CF(); // error occurred
           return;
-          }
         }
+      }
 
       // set up DMA controller for transfer
       page = (ES >> 12);   // upper 4 bits
@@ -7092,7 +7072,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       if ( base_address < base_es ) {
         // in case of carry, adjust page by 1
         page++;
-        }
+      }
       base_count = (num_sectors * 4) - 1;
 
       // check for 64K boundary overrun
@@ -7103,7 +7083,7 @@ BX_DEBUG_INT13_FL("floppy f05\n");
         SET_AL(0); // no sectors read
         SET_CF(); // error occurred
         return;
-        }
+      }
 
       outb(0x000a, 0x06);
       outb(0x000c, 0x00); // clear flip-flop
@@ -7120,27 +7100,9 @@ BX_DEBUG_INT13_FL("floppy f05\n");
       outb(0x000a, 0x02);
 
       // set up floppy controller for transfer
-      val8 = read_byte(0x0040, 0x003e);
-      val8 &= 0x7f;
-      write_byte(0x0040, 0x003e, val8);
-      // turn on motor of selected drive, DMA & int enabled, normal operation
-      if (drive)
-        dor = 0x20;
-      else
-        dor = 0x10;
-      dor |= 0x0c;
-      dor |= drive;
-      outb(0x03f2, dor);
+      floppy_prepare_controller(drive);
 
-      // reset the disk motor timeout value of INT 08
-      write_byte(0x40,0x40, BX_FLOPPY_ON_CNT);
-
-      // check port 3f4 for drive readiness
-      val8 = inb(0x3f4);
-      if ( (val8 & 0xf0) != 0x80 )
-        BX_PANIC("int13_diskette:f05: ctrl not ready\n");
-
-      // send read-normal-data command (6 bytes) to controller
+      // send format-track command (6 bytes) to controller
       outb(0x03f5, 0x4d); // 4d: format track
       outb(0x03f5, (head << 2) | drive); // HD DR1 DR2
       outb(0x03f5, 2); // 512 byte sector size
