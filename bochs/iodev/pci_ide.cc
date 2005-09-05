@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.10 2005-03-24 19:19:19 vruppert Exp $
+// $Id: pci_ide.cc,v 1.11 2005-09-05 18:32:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ bx_pci_ide_c::reset(unsigned type)
     BX_PIDE_THIS s.bmdma[i].prd_current = 0;
   }
   // This should be done by the PCI BIOS
-  WriteHostDWordToLittleEndian(&BX_PIDE_THIS s.pci_conf[0x20], 0x0000);
+  WriteHostDWordToLittleEndian(&BX_PIDE_THIS s.pci_conf[0x20], 0xc000);
   DEV_pci_set_base_io(this, read_handler, write_handler,
                       &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
                       16, &bmdma_iomask[0], "PIIX3 PCI IDE controller");
@@ -137,6 +137,14 @@ bx_pci_ide_c::bmdma_present(void)
 {
 //  return (BX_PIDE_THIS s.bmdma_addr > 0);
   return 0; // For now
+}
+
+  void
+bx_pci_ide_c::bmdma_set_irq(Bit8u channel)
+{
+  if (channel < 2) {
+    BX_PIDE_THIS s.bmdma[channel].status |= 0x04;
+  }
 }
 
   void
@@ -309,7 +317,7 @@ bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_PIDE_THIS s.bmdma[channel].status = (value & 0x60)
         | (BX_PIDE_THIS s.bmdma[channel].status & 0x01)
         | (BX_PIDE_THIS s.bmdma[channel].status & (~value & 0x06));
-      BX_INFO(("BM-DMA write status register, channel %d, value = 0x%02x", channel, value));
+      BX_DEBUG(("BM-DMA write status register, channel %d, value = 0x%02x", channel, value));
       break;
     case 0x04:
       BX_PIDE_THIS s.bmdma[channel].dtpr = value & 0xfffffffc;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.61 2005-04-02 11:30:08 vruppert Exp $
+// $Id: iodev.h,v 1.62 2005-09-05 18:32:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -307,9 +307,10 @@ class BOCHSAPI bx_pci2isa_stub_c : public bx_devmodel_c {
 
 class BOCHSAPI bx_pci_ide_stub_c : public bx_devmodel_c {
   public:
-  virtual bx_bool bmdma_present (void) {
+  virtual bx_bool bmdma_present(void) {
     return 0;
   }
+  virtual void bmdma_set_irq(Bit8u channel) {}
 };
 
 class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
