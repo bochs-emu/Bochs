@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.41 2005-08-10 18:40:38 sshwarts Exp $
+// $Id: sse_move.cc,v 1.42 2005-09-05 17:02:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -289,7 +289,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
-  if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR())) 
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR())
   {
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
