@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.42 2005-09-05 17:02:30 sshwarts Exp $
+// $Id: sse_move.cc,v 1.43 2005-09-06 19:12:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -213,7 +213,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
-  if(! (BX_CPU_THIS_PTR cr4.get_OSFXSR())) 
+  if(BX_CPU_THIS_PTR cr4.get_OSFXSR())
   {
     readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
