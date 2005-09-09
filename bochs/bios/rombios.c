@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.146 2005-09-04 09:37:49 vruppert Exp $
+// $Id: rombios.c,v 1.147 2005-09-09 16:33:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,10 +939,10 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.146 $";
-static char bios_date_string[] = "$Date: 2005-09-04 09:37:49 $";
+static char bios_cvs_version_string[] = "$Revision: 1.147 $";
+static char bios_date_string[] = "$Date: 2005-09-09 16:33:49 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.146 2005-09-04 09:37:49 vruppert Exp $";
+static char CVSID[] = "$Id: rombios.c,v 1.147 2005-09-09 16:33:49 vruppert Exp $";
 
 /* Offset to skip the CVS $Id: prefix */ 
 #define bios_version_string  (CVSID + 4)
@@ -4514,7 +4514,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     case 0x1d: /* Ctrl press */
       shift_flags |= 0x04;
       write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x01) {
+      if (mf2_state & 0x02) {
         mf2_state |= 0x04;
         write_byte(0x0040, 0x96, mf2_state);
       } else {
@@ -4525,7 +4525,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     case 0x9d: /* Ctrl release */
       shift_flags &= ~0x04;
       write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x01) {
+      if (mf2_state & 0x02) {
         mf2_state &= ~0x04;
         write_byte(0x0040, 0x96, mf2_state);
       } else {
@@ -4537,7 +4537,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     case 0x38: /* Alt press */
       shift_flags |= 0x08;
       write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x01) {
+      if (mf2_state & 0x02) {
         mf2_state |= 0x08;
         write_byte(0x0040, 0x96, mf2_state);
       } else {
@@ -4548,7 +4548,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
     case 0xb8: /* Alt release */
       shift_flags &= ~0x08;
       write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x01) {
+      if (mf2_state & 0x02) {
         mf2_state &= ~0x08;
         write_byte(0x0040, 0x96, mf2_state);
       } else {
@@ -4558,7 +4558,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x45: /* Num Lock press */
-      if ((mf2_state & 0x01) == 0) {
+      if ((mf2_state & 0x02) == 0) {
         mf2_flags |= 0x20;
         write_byte(0x0040, 0x18, mf2_flags);
         shift_flags ^= 0x20;
@@ -4568,7 +4568,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       }
       break;
     case 0xc5: /* Num Lock release */
-      if ((mf2_state & 0x01) == 0) {
+      if ((mf2_state & 0x02) == 0) {
         mf2_flags &= ~0x20;
         write_byte(0x0040, 0x18, mf2_flags);
       }
@@ -4632,7 +4632,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       enqueue_key(scancode, asciicode);
       break;
     }
-  mf2_state &= ~0x01;
+  mf2_state &= ~0x02;
   write_byte(0x0040, 0x96, mf2_state);
 }
 
@@ -9924,7 +9924,7 @@ int09_handler:
   push ds
   xor  ax, ax
   mov  ds, ax
-  mov  al, BYTE [0x496]     ;; mf2_state |= 0x01
+  mov  al, BYTE [0x496]     ;; mf2_state |= 0x02
   or   al, #0x01
   mov  BYTE [0x496], al
   pop  ds
