@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.9 2003-01-04 00:02:07 vruppert Exp $
+// $Id: cmos.h,v 1.10 2005-09-10 13:22:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,8 +25,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
+// Number of CMOS registers (64 or 128)
+#define BX_NUM_CMOS_REGS 64
 
 #if BX_USE_CMOS_SMF
 #  define BX_CMOS_SMF  static
@@ -64,6 +64,7 @@ public:
     time_t  timeval;
     Bit8u   cmos_mem_address;
     bx_bool timeval_change;
+    bx_bool rtc_mode_12hour;
 
     Bit8u   reg[BX_NUM_CMOS_REGS];
     } s;  // state information

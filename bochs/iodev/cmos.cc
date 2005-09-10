@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.45 2004-06-19 15:20:10 sshwarts Exp $
+// $Id: cmos.cc,v 1.46 2005-09-10 13:22:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,7 +78,7 @@ bx_cmos_c *theCmosDevice = NULL;
 #if (BX_NUM_CMOS_REGS == 64)
 #elif (BX_NUM_CMOS_REGS == 128)
 #else
-#error "Invalid BX_NUM_CMOS_REGS value in config.h"
+#error "Invalid BX_NUM_CMOS_REGS value in cmos.h"
 #endif
 
 
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.45 2004-06-19 15:20:10 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.46 2005-09-10 13:22:51 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -195,6 +195,7 @@ bx_cmos_c::init(void)
 
   BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
 
+  BX_CMOS_THIS s.rtc_mode_12hour = 0;
   update_clock();
   BX_CMOS_THIS s.timeval_change = 0;
 
@@ -228,8 +229,7 @@ bx_cmos_c::init(void)
     close(fd);
     BX_INFO(("successfuly read from image file '%s'.",
       bx_options.cmos.Opath->getptr ()));
-    }
-  else {
+  } else {
     // CMOS values generated
     BX_CMOS_THIS s.reg[REG_STAT_A] = 0x26;
     BX_CMOS_THIS s.reg[REG_STAT_B] = 0x02;
@@ -238,7 +238,7 @@ bx_cmos_c::init(void)
 #if BX_SUPPORT_FPU == 1
     BX_CMOS_THIS s.reg[REG_EQUIPMENT_BYTE] |= 0x02;
 #endif
-    }
+  }
 }
 
   void
@@ -366,10 +366,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_CMOS_SMF
 
-  if (bx_dbg.cmos)
-    BX_INFO(("CMOS write to address: 0x%04x = 0x%02x",
-      (unsigned) address, (unsigned) value));
-
+  BX_DEBUG(("CMOS write to address: 0x%04x = 0x%02x", address, value));
 
   switch (address) {
     case 0x0070:
@@ -382,230 +379,222 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x0071:
       if (BX_CMOS_THIS s.cmos_mem_address >= BX_NUM_CMOS_REGS) {
-     BX_PANIC(("unsupported cmos io write, register(0x%02x) = 0x%02x !",
-       (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
-     return;
-     }
+        BX_PANIC(("unsupported cmos io write, register(0x%02x) = 0x%02x !",
+          (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
+       return;
+      }
       switch (BX_CMOS_THIS s.cmos_mem_address) {
-     case REG_SEC_ALARM:             // seconds alarm
-     case REG_MIN_ALARM:             // minutes alarm
-     case REG_HOUR_ALARM:            // hours alarm
-       BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
-       BX_DEBUG(("alarm time changed to %02x:%02x:%02x", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
-                 BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
-       return;
-       break;
+        case REG_SEC_ALARM:             // seconds alarm
+        case REG_MIN_ALARM:             // minutes alarm
+        case REG_HOUR_ALARM:            // hours alarm
+          BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+          BX_DEBUG(("alarm time changed to %02x:%02x:%02x", BX_CMOS_THIS s.reg[REG_HOUR_ALARM],
+                    BX_CMOS_THIS s.reg[REG_MIN_ALARM], BX_CMOS_THIS s.reg[REG_SEC_ALARM]));
+          break;
 
-     case REG_SEC:                   // seconds
-     case REG_MIN:                   // minutes
-     case REG_HOUR:                  // hours
-     case REG_WEEK_DAY:              // day of the week
-     case REG_MONTH_DAY:             // day of the month
-     case REG_MONTH:                 // month
-     case REG_YEAR:                  // year
-     case REG_IBM_CENTURY_BYTE:      // century
-     case REG_IBM_PS2_CENTURY_BYTE:  // century (PS/2)
-       //BX_INFO(("write reg 0x%02x: value = 0x%02x",
-       //    (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value);
-       BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
-       if (BX_CMOS_THIS s.cmos_mem_address == REG_IBM_PS2_CENTURY_BYTE) {
-         BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = value;
-       }
-       if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80) {
-         BX_CMOS_THIS s.timeval_change = 1;
-       } else {
-         update_timeval();
-       }
-       return;
-       break;
+        case REG_SEC:                   // seconds
+        case REG_MIN:                   // minutes
+        case REG_HOUR:                  // hours
+        case REG_WEEK_DAY:              // day of the week
+        case REG_MONTH_DAY:             // day of the month
+        case REG_MONTH:                 // month
+        case REG_YEAR:                  // year
+        case REG_IBM_CENTURY_BYTE:      // century
+        case REG_IBM_PS2_CENTURY_BYTE:  // century (PS/2)
+          BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+          if (BX_CMOS_THIS s.cmos_mem_address == REG_IBM_PS2_CENTURY_BYTE) {
+            BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = value;
+          }
+          if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x80) {
+            BX_CMOS_THIS s.timeval_change = 1;
+          } else {
+            update_timeval();
+          }
+          break;
 
-     case REG_STAT_A: // Control Register A
-       // bit 7: Update in Progress (read-only)
-       //   1 = signifies time registers will be updated within 244us
-       //   0 = time registers will not occur before 244us
-       //   note: this bit reads 0 when CRB bit 7 is 1
-       // bit 6..4: Divider Chain Control
-       //   000 oscillator disabled
-       //   001 oscillator disabled
-       //   010 Normal operation
-       //   011 TEST
-       //   100 TEST
-       //   101 TEST
-       //   110 Divider Chain RESET
-       //   111 Divider Chain RESET
-       // bit 3..0: Periodic Interrupt Rate Select
-       //   0000 None
-       //   0001 3.90625  ms
-       //   0010 7.8125   ms
-       //   0011 122.070  us
-       //   0100 244.141  us
-       //   0101 488.281  us
-       //   0110 976.562  us
-       //   0111 1.953125 ms
-       //   1000 3.90625  ms
-       //   1001 7.8125   ms
-       //   1010 15.625   ms
-       //   1011 31.25    ms
-       //   1100 62.5     ms
-       //   1101 125      ms
-       //   1110 250      ms
-       //   1111 500      ms
+        case REG_STAT_A: // Control Register A
+          // bit 7: Update in Progress (read-only)
+          //   1 = signifies time registers will be updated within 244us
+          //   0 = time registers will not occur before 244us
+          //   note: this bit reads 0 when CRB bit 7 is 1
+          // bit 6..4: Divider Chain Control
+          //   000 oscillator disabled
+          //   001 oscillator disabled
+          //   010 Normal operation
+          //   011 TEST
+          //   100 TEST
+          //   101 TEST
+          //   110 Divider Chain RESET
+          //   111 Divider Chain RESET
+          // bit 3..0: Periodic Interrupt Rate Select
+          //   0000 None
+          //   0001 3.90625  ms
+          //   0010 7.8125   ms
+          //   0011 122.070  us
+          //   0100 244.141  us
+          //   0101 488.281  us
+          //   0110 976.562  us
+          //   0111 1.953125 ms
+          //   1000 3.90625  ms
+          //   1001 7.8125   ms
+          //   1010 15.625   ms
+          //   1011 31.25    ms
+          //   1100 62.5     ms
+          //   1101 125      ms
+          //   1110 250      ms
+          //   1111 500      ms
 
-       unsigned dcc;
-       dcc = (value >> 4) & 0x07;
-       if ((dcc & 0x06) == 0x06) {
-         BX_INFO(("CRA: divider chain RESET"));
-       } else if (dcc != 0x02) {
-         BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
-       }
-       BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;
-       BX_CMOS_THIS s.reg[REG_STAT_A] |= (value & 0x7f);
-       BX_CMOS_THIS CRA_change();
-       return;
-       break;
+          unsigned dcc;
+          dcc = (value >> 4) & 0x07;
+          if ((dcc & 0x06) == 0x06) {
+            BX_INFO(("CRA: divider chain RESET"));
+          } else if (dcc != 0x02) {
+            BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
+          }
+          BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;
+          BX_CMOS_THIS s.reg[REG_STAT_A] |= (value & 0x7f);
+          BX_CMOS_THIS CRA_change();
+          break;
 
-     case REG_STAT_B: // Control Register B
-       // bit 0: Daylight Savings Enable
-       //   1 = enable daylight savings
-       //   0 = disable daylight savings
-       // bit 1: 24/12 houre mode
-       //   1 = 24 hour format
-       //   0 = 12 hour format
-       // bit 2: Data Mode
-       //   1 = binary format
-       //   0 = BCD format
-       // bit 3: "square wave enable"
-       //   Not supported and always read as 0
-       // bit 4: Update Ended Interrupt Enable
-       //   1 = enable generation of update ended interrupt
-       //   0 = disable
-       // bit 5: Alarm Interrupt Enable
-       //   1 = enable generation of alarm interrupt
-       //   0 = disable
-       // bit 6: Periodic Interrupt Enable
-       //   1 = enable generation of periodic interrupt
-       //   0 = disable
-       // bit 7: Set mode
-       //   1 = user copy of time is "frozen" allowing time registers
-       //       to be accessed without regard for an occurance of an update
-       //   0 = time updates occur normally
+        case REG_STAT_B: // Control Register B
+          // bit 0: Daylight Savings Enable
+          //   1 = enable daylight savings
+          //   0 = disable daylight savings
+          // bit 1: 24/12 hour mode
+          //   1 = 24 hour format
+          //   0 = 12 hour format
+          // bit 2: Data Mode
+          //   1 = binary format
+          //   0 = BCD format
+          // bit 3: "square wave enable"
+          //   Not supported and always read as 0
+          // bit 4: Update Ended Interrupt Enable
+          //   1 = enable generation of update ended interrupt
+          //   0 = disable
+          // bit 5: Alarm Interrupt Enable
+          //   1 = enable generation of alarm interrupt
+          //   0 = disable
+          // bit 6: Periodic Interrupt Enable
+          //   1 = enable generation of periodic interrupt
+          //   0 = disable
+          // bit 7: Set mode
+          //   1 = user copy of time is "frozen" allowing time registers
+          //       to be accessed without regard for an occurance of an update
+          //   0 = time updates occur normally
 
-       // can not handle binary or 12-hour mode yet.
-       if (value & 0x04)
-       BX_PANIC(("write status reg B, binary format enabled."));
-       if ( !(value & 0x02) )
-       BX_PANIC(("write status reg B, 12 hour mode enabled."));
+          if (value & 0x04)
+            BX_PANIC(("write status reg B, binary format enabled."));
 
-       value &= 0xf7; // bit3 always 0
-       // Note: setting bit 7 clears bit 4
-       if (value & 0x80)
-       value &= 0xef;
+          value &= 0xf7; // bit3 always 0
+          // Note: setting bit 7 clears bit 4
+          if (value & 0x80)
+            value &= 0xef;
 
-       unsigned prev_CRB;
-       prev_CRB = BX_CMOS_THIS s.reg[REG_STAT_B];
-       BX_CMOS_THIS s.reg[REG_STAT_B] = value;
-       if ( (prev_CRB & 0x40) != (value & 0x40) ) {
-       // Periodic Interrupt Enabled changed
-       if (prev_CRB & 0x40) {
-         // transition from 1 to 0, deactivate timer
-         bx_pc_system.deactivate_timer(
-           BX_CMOS_THIS s.periodic_timer_index);
-         }
-       else {
-         // transition from 0 to 1
-         // if rate select is not 0, activate timer
-         if ( (BX_CMOS_THIS s.reg[REG_STAT_A] & 0x0f) != 0 ) {
-           bx_pc_system.activate_timer(
-             BX_CMOS_THIS s.periodic_timer_index,
-             BX_CMOS_THIS s.periodic_interval_usec, 1);
-           }
-         }
-       }
-       if ( (prev_CRB >= 0x80) && (value < 0x80) && BX_CMOS_THIS s.timeval_change) {
-         update_timeval();
-         BX_CMOS_THIS s.timeval_change = 0;
-       }
-       return;
-       break;
+          unsigned prev_CRB;
+          prev_CRB = BX_CMOS_THIS s.reg[REG_STAT_B];
+          BX_CMOS_THIS s.reg[REG_STAT_B] = value;
+          if ( (prev_CRB & 0x02) != (value & 0x02) ) {
+            BX_CMOS_THIS s.rtc_mode_12hour = ((value & 0x02) == 0);
+            update_clock();
+          }
+          if ((prev_CRB & 0x40) != (value & 0x40)) {
+            // Periodic Interrupt Enabled changed
+            if (prev_CRB & 0x40) {
+              // transition from 1 to 0, deactivate timer
+              bx_pc_system.deactivate_timer(BX_CMOS_THIS s.periodic_timer_index);
+            } else {
+              // transition from 0 to 1
+              // if rate select is not 0, activate timer
+              if ((BX_CMOS_THIS s.reg[REG_STAT_A] & 0x0f) != 0) {
+                bx_pc_system.activate_timer(
+                  BX_CMOS_THIS s.periodic_timer_index,
+                  BX_CMOS_THIS s.periodic_interval_usec, 1);
+              }
+            }
+          }
+          if ((prev_CRB >= 0x80) && (value < 0x80) && BX_CMOS_THIS s.timeval_change) {
+            update_timeval();
+            BX_CMOS_THIS s.timeval_change = 0;
+          }
+          break;
 
-     case REG_STAT_C: // Control Register C
-     case REG_STAT_D: // Control Register D
-       BX_ERROR(("write to control register 0x%02x (read-only)",
-              BX_CMOS_THIS s.cmos_mem_address));
-       break;
+        case REG_STAT_C: // Control Register C
+        case REG_STAT_D: // Control Register D
+          BX_ERROR(("write to control register 0x%02x ignored (read-only)",
+            BX_CMOS_THIS s.cmos_mem_address));
+          break;
 
-     case REG_DIAGNOSTIC_STATUS:
-       BX_DEBUG(("write register 0x0e: 0x%02x", (unsigned) value));
-       break;
+        case REG_DIAGNOSTIC_STATUS:
+          BX_DEBUG(("write register 0x0e: 0x%02x", value));
+          BX_CMOS_THIS s.reg[REG_DIAGNOSTIC_STATUS] = value;
+          break;
 
-     case REG_SHUTDOWN_STATUS:
-       switch (value) {
-       case 0x00: /* proceed with normal POST (soft reset) */
-         BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));
-         break;
-       case 0x01: /* shutdown after memory size check */
-         BX_DEBUG(("Reg 0Fh(01): request to change shutdown action"
+        case REG_SHUTDOWN_STATUS:
+          switch (value) {
+            case 0x00: /* proceed with normal POST (soft reset) */
+              BX_DEBUG(("Reg 0Fh(00): shutdown action = normal POST"));
+              break;
+            case 0x01: /* shutdown after memory size check */
+              BX_DEBUG(("Reg 0Fh(01): request to change shutdown action"
                         " to shutdown after memory size check"));
-       case 0x02: /* shutdown after successful memory test */
-         BX_DEBUG(("Reg 0Fh(02): request to change shutdown action"
+              break;
+            case 0x02: /* shutdown after successful memory test */
+              BX_DEBUG(("Reg 0Fh(02): request to change shutdown action"
                         " to shutdown after successful memory test"));
-         break;
-       case 0x03: /* shutdown after failed memory test */
-         BX_DEBUG(("Reg 0Fh(03): request to change shutdown action"
+              break;
+            case 0x03: /* shutdown after failed memory test */
+              BX_DEBUG(("Reg 0Fh(03): request to change shutdown action"
                         " to shutdown after successful memory test"));
-         break;
-       case 0x04: /* jump to disk bootstrap routine */
-         BX_DEBUG(("Reg 0Fh(04): request to change shutdown action "
+              break;
+            case 0x04: /* jump to disk bootstrap routine */
+              BX_DEBUG(("Reg 0Fh(04): request to change shutdown action "
                         "to jump to disk bootstrap routine."));
-         break;
-       case 0x05: /* flush keyboard (issue EOI) and jump via 40h:0067h */
-         BX_DEBUG(("Reg 0Fh(05): request to change shutdown action "
+              break;
+            case 0x05: /* flush keyboard (issue EOI) and jump via 40h:0067h */
+              BX_DEBUG(("Reg 0Fh(05): request to change shutdown action "
                         "to flush keyboard (issue EOI) and jump via 40h:0067h."));
-         break;
-       case 0x06:
-         BX_DEBUG(("Reg 0Fh(06): Shutdown after memory test !"));
-         break;
-       case 0x07: /* reset (after failed test in virtual mode) */
-         BX_DEBUG(("Reg 0Fh(07): request to change shutdown action "
+              break;
+            case 0x06:
+              BX_DEBUG(("Reg 0Fh(06): Shutdown after memory test !"));
+              break;
+            case 0x07: /* reset (after failed test in virtual mode) */
+              BX_DEBUG(("Reg 0Fh(07): request to change shutdown action "
                         "to reset (after failed test in virtual mode)."));
-         break;
-       case 0x08: /* used by POST during protected-mode RAM test (return to POST) */
-         BX_DEBUG(("Reg 0Fh(08): request to change shutdown action "
+              break;
+            case 0x08: /* used by POST during protected-mode RAM test (return to POST) */
+              BX_DEBUG(("Reg 0Fh(08): request to change shutdown action "
                         "to return to POST (used by POST during protected-mode RAM test)."));
-         break;
-       case 0x09: /* return to BIOS extended memory block move
+              break;
+            case 0x09: /* return to BIOS extended memory block move
                   (interrupt 15h, func 87h was in progress) */
-         BX_DEBUG(("Reg 0Fh(09): request to change shutdown action "
+              BX_DEBUG(("Reg 0Fh(09): request to change shutdown action "
                         "to return to BIOS extended memory block move."));
-         break;
-       case 0x0a: /* jump to DWORD pointer at 40:67 */
-         BX_DEBUG(("Reg 0Fh(0a): request to change shutdown action"
+              break;
+            case 0x0a: /* jump to DWORD pointer at 40:67 */
+              BX_DEBUG(("Reg 0Fh(0a): request to change shutdown action"
                         " to jump to DWORD at 40:67"));
-         break;
-       case 0x0b: /* iret to DWORD pointer at 40:67 */
-         BX_DEBUG(("Reg 0Fh(0b): request to change shutdown action"
+              break;
+            case 0x0b: /* iret to DWORD pointer at 40:67 */
+              BX_DEBUG(("Reg 0Fh(0b): request to change shutdown action"
                         " to iret to DWORD at 40:67"));
-         break;
-       case 0x0c: /* retf to DWORD pointer at 40:67 */
-         BX_DEBUG(("Reg 0Fh(0c): request to change shutdown action"
+              break;
+            case 0x0c: /* retf to DWORD pointer at 40:67 */
+              BX_DEBUG(("Reg 0Fh(0c): request to change shutdown action"
                         " to retf to DWORD at 40:67"));
-         break;
-       default:
-         BX_PANIC(("unsupported cmos io write to reg F, case 0x%02x!",
-           (unsigned) value));
-         break;
-       }
-       break;
+              break;
+            default:
+              BX_ERROR(("unsupported shutdown status: 0x%02x!", value));
+          }
+          BX_CMOS_THIS s.reg[REG_SHUTDOWN_STATUS] = value;
+          break;
 
-     default:
-       BX_DEBUG(("write reg 0x%02x: value = 0x%02x",
-       (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
-       break;
-     }
-
-      BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+        default:
+          BX_DEBUG(("write reg 0x%02x: value = 0x%02x",
+            BX_CMOS_THIS s.cmos_mem_address, value));
+          BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address] = value;
+      }
       break;
-    }
+  }
 }
 
 
@@ -725,7 +714,7 @@ bx_cmos_c::update_clock()
 {
   struct tm *time_calendar;
   unsigned year, month, day, century;
-  Bit8u val_bcd;
+  Bit8u val_bcd, hour;
 
   time_calendar = localtime(& BX_CMOS_THIS s.timeval);
 
@@ -742,9 +731,17 @@ bx_cmos_c::update_clock()
   BX_CMOS_THIS s.reg[REG_MIN] = val_bcd;
 
   // update hours
-  val_bcd =
-     ((time_calendar->tm_hour  / 10) << 4) |
-     (time_calendar->tm_hour % 10);
+  if (BX_CMOS_THIS s.rtc_mode_12hour) {
+    hour = time_calendar->tm_hour;
+    val_bcd = (hour > 11) ? 0x80 : 0x00;
+    if (hour > 11) hour -= 12;
+    if (hour == 0) hour = 12;
+    val_bcd |= ((hour  / 10) << 4) | (hour % 10);
+  } else {
+    val_bcd =
+       ((time_calendar->tm_hour  / 10) << 4) |
+       (time_calendar->tm_hour % 10);
+  }
   BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
 
   // update day of the week
@@ -778,7 +775,7 @@ bx_cmos_c::update_clock()
 bx_cmos_c::update_timeval()
 {
   struct tm time_calendar;
-  Bit8u val_bin;
+  Bit8u val_bin, pm_flag;
 
   // update seconds
   val_bin =
@@ -793,9 +790,21 @@ bx_cmos_c::update_timeval()
   time_calendar.tm_min = val_bin;
 
   // update hours
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+  if (BX_CMOS_THIS s.rtc_mode_12hour) {
+    pm_flag = BX_CMOS_THIS s.reg[REG_HOUR] & 0x80;
+    val_bin =
+       (((BX_CMOS_THIS s.reg[REG_HOUR] & 0x70) >> 4) * 10) +
+       (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+    if ((val_bin < 12) & (pm_flag > 0)) {
+      val_bin += 12;
+    } else if ((val_bin == 12) & (pm_flag == 0)) {
+      val_bin = 0;
+    }
+  } else {
+    val_bin =
+       ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) +
+       (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+  }
   time_calendar.tm_hour = val_bin;
 
   // update day of the month

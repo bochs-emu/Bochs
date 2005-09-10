@@ -182,10 +182,6 @@
 // if set to 0, the simulation will panic.
 #define BX_RESET_ON_TRIPLE_FAULT 1
 
-// Number of CMOS registers
-#define BX_NUM_CMOS_REGS 64
-//#define BX_NUM_CMOS_REGS 128
-
 // Use Greg Alexander's new PIT model (summer 2001) instead of the original.
 #define BX_USE_NEW_PIT 0
 
