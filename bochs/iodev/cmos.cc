@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.46 2005-09-10 13:22:51 vruppert Exp $
+// $Id: cmos.cc,v 1.47 2005-09-10 16:40:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.46 2005-09-10 13:22:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.47 2005-09-10 16:40:14 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -142,50 +142,37 @@ bx_cmos_c::init(void)
         244, 0, 0, "cmos"); // one-shot, not-active
   }
 
-#if BX_USE_SPECIFIED_TIME0 != 0
-  // ??? this will not be correct for using an image file.
-  // perhaps take values in CMOS and work backwards to find
-  // s.timeval from values read in.
-  BX_CMOS_THIS s.timeval = BX_USE_SPECIFIED_TIME0;
-
-#else // BX_USE_SPECIFIED_TIME0 != 0
-
-  // localtime
   if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_LOCAL) {
-       BX_INFO(("Using local time for initial clock"));
-       BX_CMOS_THIS s.timeval = time(NULL);
-  }
-  // utc
-  else if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
-       bx_bool utc_ok = 0;
+    BX_INFO(("Using local time for initial clock"));
+    BX_CMOS_THIS s.timeval = time(NULL);
+  } else if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
+    bx_bool utc_ok = 0;
 
-       BX_INFO(("Using utc time for initial clock"));
-       
-       BX_CMOS_THIS s.timeval = time(NULL);
+    BX_INFO(("Using utc time for initial clock"));
+
+    BX_CMOS_THIS s.timeval = time(NULL);
 
 #if BX_HAVE_GMTIME
 #if BX_HAVE_MKTIME
-       struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
-       utc_holder->tm_isdst = -1;
-       utc_ok = 1;
-       BX_CMOS_THIS s.timeval = mktime(utc_holder);
+    struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
+    utc_holder->tm_isdst = -1;
+    utc_ok = 1;
+    BX_CMOS_THIS s.timeval = mktime(utc_holder);
 #elif BX_HAVE_TIMELOCAL
-       struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
-       utc_holder->tm_isdst = 0;	// XXX Is this correct???
-       utc_ok = 1;
-       BX_CMOS_THIS s.timeval = timelocal(utc_holder);
+    struct tm *utc_holder = gmtime(&BX_CMOS_THIS s.timeval);
+    utc_holder->tm_isdst = 0;	// XXX Is this correct???
+    utc_ok = 1;
+    BX_CMOS_THIS s.timeval = timelocal(utc_holder);
 #endif //BX_HAVE_MKTIME
 #endif //BX_HAVE_GMTIME
 
-       if (!utc_ok) {
-           BX_ERROR(("UTC time is not supported on your platform. Using current time(NULL)"));
-       }
+    if (!utc_ok) {
+      BX_ERROR(("UTC time is not supported on your platform. Using current time(NULL)"));
+    }
+  } else {
+    BX_INFO(("Using specified time for initial clock"));
+    BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
   }
-  else {
-       BX_INFO(("Using specified time for initial clock"));
-       BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
-  }
-#endif // BX_USE_SPECIFIED_TIME0 != 0
 
   char *tmptime;
   while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
@@ -212,20 +199,20 @@ bx_cmos_c::init(void)
         );
     if (fd < 0) {
       BX_PANIC(("trying to open cmos image file '%s'",
-     bx_options.cmos.Opath->getptr ()));
-      }
+        bx_options.cmos.Opath->getptr ()));
+    }
     ret = fstat(fd, &stat_buf);
     if (ret) {
       BX_PANIC(("CMOS: could not fstat() image file."));
-      }
+    }
     if (stat_buf.st_size != BX_NUM_CMOS_REGS) {
       BX_PANIC(("CMOS: image file not same size as BX_NUM_CMOS_REGS."));
-      }
+    }
 
     ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
     if (ret != BX_NUM_CMOS_REGS) {
       BX_PANIC(("CMOS: error reading cmos file."));
-      }
+    }
     close(fd);
     BX_INFO(("successfuly read from image file '%s'.",
       bx_options.cmos.Opath->getptr ()));
@@ -265,29 +252,29 @@ bx_cmos_c::reset(unsigned type)
   void
 bx_cmos_c::CRA_change(void)
 {
-  unsigned nibble;
+  Bit8u nibble, dcc;
 
   // Periodic Interrupt timer
   nibble = BX_CMOS_THIS s.reg[REG_STAT_A] & 0x0f;
-  if (nibble == 0) {
+  dcc = (BX_CMOS_THIS s.reg[REG_STAT_A] >> 4) & 0x07;
+  if ((nibble == 0) || ((dcc & 0x06) == 0)) {
     // No Periodic Interrupt Rate when 0, deactivate timer
     bx_pc_system.deactivate_timer(BX_CMOS_THIS s.periodic_timer_index);
     BX_CMOS_THIS s.periodic_interval_usec = (Bit32u) -1; // max value
-    }
-  else {
+  } else {
     // values 0001b and 0010b are the same as 1000b and 1001b
     if (nibble <= 2)
       nibble += 7;
     BX_CMOS_THIS s.periodic_interval_usec = (unsigned) (1000000.0L /
-     (32768.0L / (1 << (nibble - 1))));
+      (32768.0L / (1 << (nibble - 1))));
 
     // if Periodic Interrupt Enable bit set, activate timer
-    if ( BX_CMOS_THIS s.reg[REG_STAT_B] & 0x40 )
+    if (BX_CMOS_THIS s.reg[REG_STAT_B] & 0x40)
       bx_pc_system.activate_timer(BX_CMOS_THIS s.periodic_timer_index,
-     BX_CMOS_THIS s.periodic_interval_usec, 1);
+        BX_CMOS_THIS s.periodic_interval_usec, 1);
     else
       bx_pc_system.deactivate_timer(BX_CMOS_THIS s.periodic_timer_index);
-    }
+  }
 }
 
 
@@ -448,7 +435,7 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           dcc = (value >> 4) & 0x07;
           if ((dcc & 0x06) == 0x06) {
             BX_INFO(("CRA: divider chain RESET"));
-          } else if (dcc != 0x02) {
+          } else if (dcc > 0x02) {
             BX_PANIC(("CRA: divider chain control 0x%02x", dcc));
           }
           BX_CMOS_THIS s.reg[REG_STAT_A] &= 0x80;

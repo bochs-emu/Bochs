@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.294 2005-07-30 15:02:40 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.295 2005-09-10 16:40:14 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1458,19 +1458,15 @@ AC_ARG_ENABLE(num-sim,
     ]
   )
 
+AC_MSG_CHECKING(for specified CMOS start time)
 AC_ARG_ENABLE(time0,
-  [  --enable-time0=n                  start at n instead of using time()],
-  [if test "$enableval" = yes; then
-    AC_DEFINE(BX_USE_SPECIFIED_TIME0, 917385580)
-   elif test "$enableval" = no; then
-    AC_DEFINE(BX_USE_SPECIFIED_TIME0, 0)
-   else
-    AC_DEFINE_UNQUOTED(BX_USE_SPECIFIED_TIME0, $enableval)
-   fi],
+  [  --enable-time0=n                  start at n (obsolete)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([obsolete option - use runtime option 'clock' instead])
+  ],
   [
-    AC_DEFINE(BX_USE_SPECIFIED_TIME0, 0)
-    ]
-  )
+   AC_MSG_RESULT(no)
+  ])
 
 dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
 if test "$bx_plugins" = 0; then
