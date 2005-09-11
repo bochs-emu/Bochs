@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.47 2005-09-10 16:40:14 vruppert Exp $
+// $Id: cmos.cc,v 1.48 2005-09-11 08:46:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,21 +65,36 @@ bx_cmos_c *theCmosDevice = NULL;
 #define  REG_IBM_CENTURY_BYTE        0x32  /* alternatives */
 #define  REG_IBM_PS2_CENTURY_BYTE    0x37  /* alternatives */
 
-// Bochs CMOS map (to be completed)
+// Bochs CMOS map
 //
 // Idx  Len   Description
-// 0x15   2   Base memory in 1k
-// 0x17   2   Memory size above 1M in 1k
-// 0x30   2   Memory size above 1M in 1k
-// 0x34   2   Memory size above 16M in 64k
+// 0x10   1   floppy drive types
+// 0x11   1   configuration bits
+// 0x12   1   harddisk types
+// 0x13   1   advanced configuration bits
+// 0x15   2   base memory in 1k
+// 0x17   2   memory size above 1M in 1k
+// 0x19   2   extended harddisk types
+// 0x1b   9   harddisk configuration (hd0)
+// 0x24   9   harddisk configuration (hd1)
+// 0x2d   1   boot sequence (fd/hd)
+// 0x30   2   memory size above 1M in 1k
+// 0x34   2   memory size above 16M in 64k
+// 0x38   1   eltorito boot sequence (#3) + bootsig check
+// 0x39   2   ata translation policy (ata0...ata3)
+// 0x3d   1   eltorito boot sequence (#1 + #2)
 //
 
-// check that BX_NUM_CMOS_REGS is 64 or 128
-#if (BX_NUM_CMOS_REGS == 64)
-#elif (BX_NUM_CMOS_REGS == 128)
-#else
-#error "Invalid BX_NUM_CMOS_REGS value in cmos.h"
-#endif
+
+Bit8u bcd_to_bin(Bit8u value)
+{
+  return ((value >> 4) * 10) + (value & 0x0f);
+}
+
+Bit8u bin_to_bcd(Bit8u value)
+{
+  return ((value  / 10) << 4) | (value % 10);
+}
 
 
   int
@@ -102,7 +117,7 @@ bx_cmos_c::bx_cmos_c(void)
   settype(CMOSLOG);
 
   unsigned i;
-  for (i=0; i<BX_NUM_CMOS_REGS; i++)
+  for (i=0; i<128; i++)
     s.reg[i] = 0;
   s.periodic_timer_index = BX_NULL_TIMER_HANDLE;
   s.one_second_timer_index = BX_NULL_TIMER_HANDLE;
@@ -118,7 +133,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.47 2005-09-10 16:40:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.48 2005-09-11 08:46:09 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -205,12 +220,12 @@ bx_cmos_c::init(void)
     if (ret) {
       BX_PANIC(("CMOS: could not fstat() image file."));
     }
-    if (stat_buf.st_size != BX_NUM_CMOS_REGS) {
-      BX_PANIC(("CMOS: image file not same size as BX_NUM_CMOS_REGS."));
+    if ((stat_buf.st_size != 64) && (stat_buf.st_size != 128)) {
+      BX_PANIC(("CMOS: image file size must be 64 or 128"));
     }
 
-    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, BX_NUM_CMOS_REGS);
-    if (ret != BX_NUM_CMOS_REGS) {
+    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, stat_buf.st_size);
+    if (ret != stat_buf.st_size) {
       BX_PANIC(("CMOS: error reading cmos file."));
     }
     close(fd);
@@ -305,23 +320,17 @@ bx_cmos_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x0070:
+      // this register is write-only on most machines
       BX_INFO(("read of index port 0x70. returning 0xff"));
-      // Volker says his boxes return 0xff
-      //ret8 = BX_CMOS_THIS s.cmos_mem_address;
       return(0xff);
       break;
     case 0x0071:
-      if (BX_CMOS_THIS s.cmos_mem_address >= BX_NUM_CMOS_REGS) {
-     BX_PANIC(("unsupported cmos io read, register(0x%02x)!",
-       (unsigned) BX_CMOS_THIS s.cmos_mem_address));
-     }
-
       ret8 = BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address];
       // all bits of Register C are cleared after a read occurs.
       if (BX_CMOS_THIS s.cmos_mem_address == REG_STAT_C) {
         BX_CMOS_THIS s.reg[REG_STAT_C] = 0x00;
         DEV_pic_lower_irq(8);
-        }
+      }
       return(ret8);
       break;
 
@@ -357,19 +366,10 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x0070:
-#if (BX_NUM_CMOS_REGS == 64)
-      BX_CMOS_THIS s.cmos_mem_address = value & 0x3F;
-#else
       BX_CMOS_THIS s.cmos_mem_address = value & 0x7F;
-#endif
       break;
 
     case 0x0071:
-      if (BX_CMOS_THIS s.cmos_mem_address >= BX_NUM_CMOS_REGS) {
-        BX_PANIC(("unsupported cmos io write, register(0x%02x) = 0x%02x !",
-          (unsigned) BX_CMOS_THIS s.cmos_mem_address, (unsigned) value));
-       return;
-      }
       switch (BX_CMOS_THIS s.cmos_mem_address) {
         case REG_SEC_ALARM:             // seconds alarm
         case REG_MIN_ALARM:             // minutes alarm
@@ -469,8 +469,10 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           //       to be accessed without regard for an occurance of an update
           //   0 = time updates occur normally
 
+          if (value & 0x01)
+            BX_ERROR(("write status reg B, daylight savings unsupported"));
           if (value & 0x04)
-            BX_PANIC(("write status reg B, binary format enabled."));
+            BX_PANIC(("write status reg B, binary format unsupported"));
 
           value &= 0xf7; // bit3 always 0
           // Note: setting bit 7 clears bit 4
@@ -706,16 +708,10 @@ bx_cmos_c::update_clock()
   time_calendar = localtime(& BX_CMOS_THIS s.timeval);
 
   // update seconds
-  val_bcd =
-     ((time_calendar->tm_sec  / 10) << 4) |
-     (time_calendar->tm_sec % 10);
-  BX_CMOS_THIS s.reg[REG_SEC] = val_bcd;
+  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec);
 
   // update minutes
-  val_bcd =
-     ((time_calendar->tm_min  / 10) << 4) |
-     (time_calendar->tm_min % 10);
-  BX_CMOS_THIS s.reg[REG_MIN] = val_bcd;
+  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
@@ -723,34 +719,31 @@ bx_cmos_c::update_clock()
     val_bcd = (hour > 11) ? 0x80 : 0x00;
     if (hour > 11) hour -= 12;
     if (hour == 0) hour = 12;
-    val_bcd |= ((hour  / 10) << 4) | (hour % 10);
+    val_bcd |= bin_to_bcd(hour);
+    BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
   } else {
-    val_bcd =
-       ((time_calendar->tm_hour  / 10) << 4) |
-       (time_calendar->tm_hour % 10);
+    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour);
   }
-  BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
 
   // update day of the week
   day = time_calendar->tm_wday + 1; // 0..6 to 1..7
-  BX_CMOS_THIS s.reg[REG_WEEK_DAY] = ((day / 10) << 4) | (day % 10);
+  BX_CMOS_THIS s.reg[REG_WEEK_DAY] = bin_to_bcd(day);
 
   // update day of the month
   day = time_calendar->tm_mday;
-  BX_CMOS_THIS s.reg[REG_MONTH_DAY] = ((day / 10) << 4) | (day % 10);
+  BX_CMOS_THIS s.reg[REG_MONTH_DAY] = bin_to_bcd(day);
 
   // update month
   month   = time_calendar->tm_mon + 1;
-  BX_CMOS_THIS s.reg[REG_MONTH] = ((month / 10) << 4) | (month % 10);
+  BX_CMOS_THIS s.reg[REG_MONTH] = bin_to_bcd(month);
 
   // update year
   year = time_calendar->tm_year % 100;
-  BX_CMOS_THIS s.reg[REG_YEAR] = ((year  / 10) << 4) | (year % 10);
+  BX_CMOS_THIS s.reg[REG_YEAR] = bin_to_bcd(year);
 
   // update century
   century = (time_calendar->tm_year / 100) + 19;
-  BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = 
-    ((century  / 10) << 4) | (century % 10);
+  BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = bin_to_bcd(century);
 
   // Raul Hudea pointed out that some bioses also use reg 0x37 for the 
   // century byte.  Tony Heller says this is critical in getting WinXP to run.
@@ -765,55 +758,35 @@ bx_cmos_c::update_timeval()
   Bit8u val_bin, pm_flag;
 
   // update seconds
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_SEC] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_SEC] & 0x0f);
-  time_calendar.tm_sec = val_bin;
+  time_calendar.tm_sec = bcd_to_bin(BX_CMOS_THIS s.reg[REG_SEC]);
 
   // update minutes
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MIN] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_MIN] & 0x0f);
-  time_calendar.tm_min = val_bin;
+  time_calendar.tm_min = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MIN]);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
     pm_flag = BX_CMOS_THIS s.reg[REG_HOUR] & 0x80;
-    val_bin =
-       (((BX_CMOS_THIS s.reg[REG_HOUR] & 0x70) >> 4) * 10) +
-       (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+    val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR] & 0x70);
     if ((val_bin < 12) & (pm_flag > 0)) {
       val_bin += 12;
     } else if ((val_bin == 12) & (pm_flag == 0)) {
       val_bin = 0;
     }
+    time_calendar.tm_hour = val_bin;
   } else {
-    val_bin =
-       ((BX_CMOS_THIS s.reg[REG_HOUR] >> 4) * 10) +
-       (BX_CMOS_THIS s.reg[REG_HOUR] & 0x0f);
+    time_calendar.tm_hour = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR]);
   }
-  time_calendar.tm_hour = val_bin;
 
   // update day of the month
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MONTH_DAY] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_MONTH_DAY] & 0x0f);
-  time_calendar.tm_mday = val_bin;
+  time_calendar.tm_mday = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH_DAY]);
 
   // update month
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_MONTH] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_MONTH] & 0x0f);
-  time_calendar.tm_mon = val_bin - 1;
+  time_calendar.tm_mon = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH]) - 1;
 
   // update year
-  val_bin =
-     ((BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] & 0x0f);
+  val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE]);
   val_bin = (val_bin - 19) * 100;
-  val_bin +=
-     (((BX_CMOS_THIS s.reg[REG_YEAR] >> 4) * 10) +
-     (BX_CMOS_THIS s.reg[REG_YEAR] & 0x0f));
+  val_bin += bcd_to_bin(BX_CMOS_THIS s.reg[REG_YEAR]);
   time_calendar.tm_year = val_bin;
 
   BX_CMOS_THIS s.timeval = mktime(& time_calendar);
