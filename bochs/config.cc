@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.42 2005-08-13 16:49:11 vruppert Exp $
+// $Id: config.cc,v 1.43 2005-09-11 20:03:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1599,17 +1599,22 @@ void bx_init_options ()
       "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
       1, BX_MAX_BIT32U,
       500);
-  bx_options.cmos.OcmosImage = new bx_param_bool_c (BXP_CMOS_IMAGE,
+  bx_options.cmosimage.Oenabled = new bx_param_bool_c (BXP_CMOSIMAGE_ENABLED,
       "Use a CMOS image",
       "Controls the usage of a CMOS image",
       0);
-  bx_options.cmos.Opath = new bx_param_filename_c (BXP_CMOS_PATH,
+  bx_options.cmosimage.Opath = new bx_param_filename_c (BXP_CMOSIMAGE_PATH,
       "Pathname of CMOS image",
       "Pathname of CMOS image",
       "", BX_PATHNAME_LEN);
-  deplist = new bx_list_c (BXP_NULL, 1);
-  deplist->add (bx_options.cmos.Opath);
-  bx_options.cmos.OcmosImage->set_dependent_list (deplist);
+  bx_options.cmosimage.Ouse_rtc = new bx_param_bool_c (BXP_CMOSIMAGE_USE_RTC,
+      "Use RTC values from image",
+      "Controls whether to use the RTC values stored in the image",
+      0);
+  deplist = new bx_list_c (BXP_NULL, 2);
+  deplist->add (bx_options.cmosimage.Opath);
+  deplist->add (bx_options.cmosimage.Ouse_rtc);
+  bx_options.cmosimage.Oenabled->set_dependent_list (deplist);
 
   // Keyboard mapping
   bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
@@ -1660,8 +1665,9 @@ void bx_init_options ()
 
   bx_param_c *other_init_list[] = {
       bx_options.Ofloppy_command_delay,
-      bx_options.cmos.OcmosImage,
-      bx_options.cmos.Opath,
+      bx_options.cmosimage.Oenabled,
+      bx_options.cmosimage.Opath,
+      bx_options.cmosimage.Ouse_rtc,
       SIM->get_param (BXP_CLOCK),
       SIM->get_param (BXP_LOAD32BITOS),
       NULL
@@ -1684,8 +1690,9 @@ void bx_init_options ()
       bx_options.Ofullscreen,
       bx_options.Oscreenmode,
 #endif
-      bx_options.cmos.OcmosImage,
-      bx_options.cmos.Opath,
+      bx_options.cmosimage.Oenabled,
+      bx_options.cmosimage.Opath,
+      bx_options.cmosimage.Ouse_rtc,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
@@ -1838,8 +1845,9 @@ void bx_reset_options ()
   // other
   bx_options.Ofloppy_command_delay->reset();
   bx_options.Oi440FXSupport->reset();
-  bx_options.cmos.OcmosImage->reset();
-  bx_options.cmos.Opath->reset();
+  bx_options.cmosimage.Oenabled->reset();
+  bx_options.cmosimage.Opath->reset();
+  bx_options.cmosimage.Ouse_rtc->reset();
   bx_options.Otext_snapshot_check->reset();
 }
 
@@ -2921,15 +2929,23 @@ parse_line_formatted(char *context, int num_params, char *params[])
         BX_ERROR(("%s: unknown parameter for pcidev ignored.", context));
       }
     }
-  }
-  else if (!strcmp(params[0], "cmosimage")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: cmosimage directive: wrong # args.", context));
+  } else if (!strcmp(params[0], "cmosimage")) {
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "file=", 5)) {
+        bx_options.cmosimage.Opath->set (strdup(&params[i][5]));
+      } else if (!strcmp(params[i], "rtc=time0")) {
+        bx_options.cmosimage.Ouse_rtc->set (0);
+      } else if (!strcmp(params[i], "rtc=image")) {
+        bx_options.cmosimage.Ouse_rtc->set (1);
+      } else {
+        // for backward compatiblity
+        bx_options.cmosimage.Opath->set (strdup(params[i]));
       }
-    bx_options.cmos.Opath->set (strdup(params[1]));
-    bx_options.cmos.OcmosImage->set (1);                // CMOS Image is true
     }
-  else if (!strcmp(params[0], "clock")) {
+    if (strlen(bx_options.cmosimage.Opath->getptr()) > 0) {
+      bx_options.cmosimage.Oenabled->set (1);
+    }
+  } else if (!strcmp(params[0], "clock")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "sync=", 5)) {
         bx_options.clock.Osync->set_by_name (&params[i][5]);
@@ -3676,10 +3692,12 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
                                        bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mf");
   fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
-  if (strlen (bx_options.cmos.Opath->getptr ()) > 0)
-    fprintf (fp, "cmosimage: %s\n", bx_options.cmos.Opath->getptr());
-  else
+  if (strlen (bx_options.cmosimage.Opath->getptr ()) > 0) {
+    fprintf (fp, "cmosimage: file=%s, ", bx_options.cmosimage.Opath->getptr());
+    fprintf (fp, "rtc=%s", bx_options.cmosimage.Ouse_rtc->get()?"image":"time0");
+  } else {
     fprintf (fp, "# no cmosimage\n");
+  }
   fclose (fp);
   return 0;
 }

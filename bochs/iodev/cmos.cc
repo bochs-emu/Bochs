@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.48 2005-09-11 08:46:09 vruppert Exp $
+// $Id: cmos.cc,v 1.49 2005-09-11 20:03:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -86,14 +86,20 @@ bx_cmos_c *theCmosDevice = NULL;
 //
 
 
-Bit8u bcd_to_bin(Bit8u value)
+Bit8u bcd_to_bin(Bit8u value, bx_bool is_binary)
 {
-  return ((value >> 4) * 10) + (value & 0x0f);
+  if (is_binary)
+    return value;
+  else
+    return ((value >> 4) * 10) + (value & 0x0f);
 }
 
-Bit8u bin_to_bcd(Bit8u value)
+Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
 {
-  return ((value  / 10) << 4) | (value % 10);
+  if (is_binary)
+    return value;
+  else
+    return ((value  / 10) << 4) | (value % 10);
 }
 
 
@@ -133,7 +139,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.48 2005-09-11 08:46:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.49 2005-09-11 20:03:56 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -189,32 +195,20 @@ bx_cmos_c::init(void)
     BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
   }
 
-  char *tmptime;
-  while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
-    BX_PANIC(("Out of memory."));
-  }
-  tmptime[strlen(tmptime)-1]='\0';
-
-  BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
-
-  BX_CMOS_THIS s.rtc_mode_12hour = 0;
-  update_clock();
-  BX_CMOS_THIS s.timeval_change = 0;
-
   // load CMOS from image file if requested.
-  if (bx_options.cmos.OcmosImage->get ()) {
+  if (bx_options.cmosimage.Oenabled->get ()) {
     // CMOS image file requested
     int fd, ret;
     struct stat stat_buf;
 
-    fd = open(bx_options.cmos.Opath->getptr (), O_RDONLY
+    fd = open(bx_options.cmosimage.Opath->getptr (), O_RDONLY
 #ifdef O_BINARY
        | O_BINARY
 #endif
         );
     if (fd < 0) {
       BX_PANIC(("trying to open cmos image file '%s'",
-        bx_options.cmos.Opath->getptr ()));
+        bx_options.cmosimage.Opath->getptr ()));
     }
     ret = fstat(fd, &stat_buf);
     if (ret) {
@@ -224,13 +218,20 @@ bx_cmos_c::init(void)
       BX_PANIC(("CMOS: image file size must be 64 or 128"));
     }
 
-    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, stat_buf.st_size);
+    ret = ::read(fd, (bx_ptr_t) BX_CMOS_THIS s.reg, (unsigned)stat_buf.st_size);
     if (ret != stat_buf.st_size) {
       BX_PANIC(("CMOS: error reading cmos file."));
     }
     close(fd);
     BX_INFO(("successfuly read from image file '%s'.",
-      bx_options.cmos.Opath->getptr ()));
+      bx_options.cmosimage.Opath->getptr ()));
+    BX_CMOS_THIS s.rtc_mode_12hour = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x02) == 0);
+    BX_CMOS_THIS s.rtc_mode_binary = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x04) != 0);
+    if (bx_options.cmosimage.Ouse_rtc->get ()) {
+      update_timeval();
+    } else {
+      update_clock();
+    }
   } else {
     // CMOS values generated
     BX_CMOS_THIS s.reg[REG_STAT_A] = 0x26;
@@ -240,7 +241,20 @@ bx_cmos_c::init(void)
 #if BX_SUPPORT_FPU == 1
     BX_CMOS_THIS s.reg[REG_EQUIPMENT_BYTE] |= 0x02;
 #endif
+    BX_CMOS_THIS s.rtc_mode_12hour = 0;
+    BX_CMOS_THIS s.rtc_mode_binary = 0;
+    update_clock();
   }
+
+  char *tmptime;
+  while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
+    BX_PANIC(("Out of memory."));
+  }
+  tmptime[strlen(tmptime)-1]='\0';
+
+  BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
+
+  BX_CMOS_THIS s.timeval_change = 0;
 }
 
   void
@@ -471,8 +485,6 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
           if (value & 0x01)
             BX_ERROR(("write status reg B, daylight savings unsupported"));
-          if (value & 0x04)
-            BX_PANIC(("write status reg B, binary format unsupported"));
 
           value &= 0xf7; // bit3 always 0
           // Note: setting bit 7 clears bit 4
@@ -484,6 +496,10 @@ bx_cmos_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_CMOS_THIS s.reg[REG_STAT_B] = value;
           if ( (prev_CRB & 0x02) != (value & 0x02) ) {
             BX_CMOS_THIS s.rtc_mode_12hour = ((value & 0x02) == 0);
+            update_clock();
+          }
+          if ( (prev_CRB & 0x04) != (value & 0x04) ) {
+            BX_CMOS_THIS s.rtc_mode_binary = ((value & 0x04) != 0);
             update_clock();
           }
           if ((prev_CRB & 0x40) != (value & 0x40)) {
@@ -708,10 +724,12 @@ bx_cmos_c::update_clock()
   time_calendar = localtime(& BX_CMOS_THIS s.timeval);
 
   // update seconds
-  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec);
+  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update minutes
-  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min);
+  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
@@ -719,31 +737,37 @@ bx_cmos_c::update_clock()
     val_bcd = (hour > 11) ? 0x80 : 0x00;
     if (hour > 11) hour -= 12;
     if (hour == 0) hour = 12;
-    val_bcd |= bin_to_bcd(hour);
+    val_bcd |= bin_to_bcd(hour, BX_CMOS_THIS s.rtc_mode_binary);
     BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
   } else {
-    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour);
+    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour,
+      BX_CMOS_THIS s.rtc_mode_binary);
   }
 
   // update day of the week
   day = time_calendar->tm_wday + 1; // 0..6 to 1..7
-  BX_CMOS_THIS s.reg[REG_WEEK_DAY] = bin_to_bcd(day);
+  BX_CMOS_THIS s.reg[REG_WEEK_DAY] = bin_to_bcd(day,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update day of the month
   day = time_calendar->tm_mday;
-  BX_CMOS_THIS s.reg[REG_MONTH_DAY] = bin_to_bcd(day);
+  BX_CMOS_THIS s.reg[REG_MONTH_DAY] = bin_to_bcd(day,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update month
   month   = time_calendar->tm_mon + 1;
-  BX_CMOS_THIS s.reg[REG_MONTH] = bin_to_bcd(month);
+  BX_CMOS_THIS s.reg[REG_MONTH] = bin_to_bcd(month,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update year
   year = time_calendar->tm_year % 100;
-  BX_CMOS_THIS s.reg[REG_YEAR] = bin_to_bcd(year);
+  BX_CMOS_THIS s.reg[REG_YEAR] = bin_to_bcd(year,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update century
   century = (time_calendar->tm_year / 100) + 19;
-  BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = bin_to_bcd(century);
+  BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE] = bin_to_bcd(century,
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // Raul Hudea pointed out that some bioses also use reg 0x37 for the 
   // century byte.  Tony Heller says this is critical in getting WinXP to run.
@@ -758,15 +782,18 @@ bx_cmos_c::update_timeval()
   Bit8u val_bin, pm_flag;
 
   // update seconds
-  time_calendar.tm_sec = bcd_to_bin(BX_CMOS_THIS s.reg[REG_SEC]);
+  time_calendar.tm_sec = bcd_to_bin(BX_CMOS_THIS s.reg[REG_SEC],
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update minutes
-  time_calendar.tm_min = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MIN]);
+  time_calendar.tm_min = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MIN],
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
     pm_flag = BX_CMOS_THIS s.reg[REG_HOUR] & 0x80;
-    val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR] & 0x70);
+    val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR] & 0x70,
+      BX_CMOS_THIS s.rtc_mode_binary);
     if ((val_bin < 12) & (pm_flag > 0)) {
       val_bin += 12;
     } else if ((val_bin == 12) & (pm_flag == 0)) {
@@ -774,19 +801,24 @@ bx_cmos_c::update_timeval()
     }
     time_calendar.tm_hour = val_bin;
   } else {
-    time_calendar.tm_hour = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR]);
+    time_calendar.tm_hour = bcd_to_bin(BX_CMOS_THIS s.reg[REG_HOUR],
+      BX_CMOS_THIS s.rtc_mode_binary);
   }
 
   // update day of the month
-  time_calendar.tm_mday = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH_DAY]);
+  time_calendar.tm_mday = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH_DAY],
+    BX_CMOS_THIS s.rtc_mode_binary);
 
   // update month
-  time_calendar.tm_mon = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH]) - 1;
+  time_calendar.tm_mon = bcd_to_bin(BX_CMOS_THIS s.reg[REG_MONTH],
+    BX_CMOS_THIS s.rtc_mode_binary) - 1;
 
   // update year
-  val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE]);
+  val_bin = bcd_to_bin(BX_CMOS_THIS s.reg[REG_IBM_CENTURY_BYTE],
+    BX_CMOS_THIS s.rtc_mode_binary);
   val_bin = (val_bin - 19) * 100;
-  val_bin += bcd_to_bin(BX_CMOS_THIS s.reg[REG_YEAR]);
+  val_bin += bcd_to_bin(BX_CMOS_THIS s.reg[REG_YEAR],
+    BX_CMOS_THIS s.rtc_mode_binary);
   time_calendar.tm_year = val_bin;
 
   BX_CMOS_THIS s.timeval = mktime(& time_calendar);

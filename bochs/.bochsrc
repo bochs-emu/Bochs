@@ -675,7 +675,7 @@ keyboard_mapping: enabled=0, map=
 # other stuff
 #=======================================================================
 #magic_break: enabled=1
-#cmosimage: cmos.img
+#cmosimage: file=cmos.img, rtc=time0
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 #text_snapshot_check: enable

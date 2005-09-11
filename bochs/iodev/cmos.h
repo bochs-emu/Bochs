@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.11 2005-09-11 08:46:09 vruppert Exp $
+// $Id: cmos.h,v 1.12 2005-09-11 20:03:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,6 +62,7 @@ public:
     Bit8u   cmos_mem_address;
     bx_bool timeval_change;
     bx_bool rtc_mode_12hour;
+    bx_bool rtc_mode_binary;
 
     Bit8u   reg[128];
   } s;  // state information

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.140 2005-09-05 18:32:22 vruppert Exp $
+// $Id: harddrv.cc,v 1.141 2005-09-11 20:03:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.140 2005-09-05 18:32:22 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.141 2005-09-11 20:03:56 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -457,7 +457,7 @@ bx_hard_drive_c::init(void)
   }
 
   // generate CMOS values for hard drive if not using a CMOS image
-  if (!bx_options.cmos.OcmosImage->get ()) {
+  if (!bx_options.cmosimage.Oenabled->get ()) {
     DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {
@@ -590,7 +590,7 @@ bx_hard_drive_c::init(void)
     DEV_cmos_set_reg(0x38, bx_options.OfloppySigCheck->get() |
                            (bx_options.Obootdrive[2]->get () << 4));
     BX_INFO(("Floppy boot signature check is %sabled", bx_options.OfloppySigCheck->get() ? "dis" : "en"));
-    }
+  }
 
   // register timer for HD/CD i/o light
   if (BX_HD_THIS iolight_timer_index == BX_NULL_TIMER_HANDLE) {
