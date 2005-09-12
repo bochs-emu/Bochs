@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.43 2005-09-06 19:12:02 sshwarts Exp $
+// $Id: sse_move.cc,v 1.44 2005-09-12 18:08:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -792,7 +792,7 @@ void BX_CPU_C::MOVMSKPS_GdVRps(bxInstruction_c *i)
   if(op.xmm32u(2) & 0x80000000) val32 |= 0x4;
   if(op.xmm32u(3) & 0x80000000) val32 |= 0x8;
 
-  BX_WRITE_32BIT_REG(i->rm(), val32);
+  BX_WRITE_32BIT_REGZ(i->rm(), val32);
 #else
   BX_INFO(("MOVMSKPS_GdVRps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -811,7 +811,7 @@ void BX_CPU_C::MOVMSKPD_EdVRpd(bxInstruction_c *i)
   if(op.xmm32u(1) & 0x80000000) val32 |= 0x1;
   if(op.xmm32u(3) & 0x80000000) val32 |= 0x2;
  
-  BX_WRITE_32BIT_REG(i->rm(), val32);
+  BX_WRITE_32BIT_REGZ(i->rm(), val32);
 #else
   BX_INFO(("MOVMSKPD_EdVRpd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
