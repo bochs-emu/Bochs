@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.16 2005-03-31 17:11:01 vruppert Exp $
+$Id: development.dbk,v 1.17 2005-09-12 18:34:25 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -208,43 +208,47 @@ Ideas:
 
 </chapter>
 
- <chapter id="about-the-code"><title>About the code</title>
+<chapter id="about-the-code"><title>About the code</title>
 
-<section><title>How to add keymapping in a GUI client</title>
+<section id="directory-structure"><title>Directory Structure</title>
 <para>
-Christophe Bothamy, wrote the keymapping code for Bochs, provided these
-instructions to help developers to add keymapping to a GUI.
+<table>   
+<title>Directory structure</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Location</entry>
+<entry>Meaning</entry>
+</row>
+</thead>
+<tbody>
+<row><entry>bios</entry><entry>System and VGA BIOS images, system BIOS sources and makefile</entry></row>
+<row><entry>build</entry><entry>additional stuff required for building Bochs on different platforms</entry></row>
+<row><entry>bx_debug</entry><entry>the builtin Bochs debugger</entry></row>
+<row><entry>cpu</entry><entry>the cpu emulation sources</entry></row>
+<row><entry>disasm</entry><entry>the disassembler for the Bochs debugger</entry></row>
+<row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
+<row><entry>doc/man</entry><entry>Bochs manual pages</entry></row>
+<row><entry>docs-html</entry><entry>old Bochs documentation in HTML (will be replaced by DocBook)</entry></row>
+<row><entry>dynamic</entry><entry>empty directory (reserved for dynamic translation code)</entry></row>
+<row><entry>font</entry><entry>the default VGA font used by most of the display libraries</entry></row>
+<row><entry>fpu</entry><entry>the fpu emulation sources</entry></row>
+<row><entry>gui</entry><entry>display libraries (guis), the simulator interface and text mode config interface</entry></row>
+<row><entry>gui/bitmaps</entry><entry>bitmaps for the headerbar</entry></row>
+<row><entry>gui/keymaps</entry><entry>keymaps for the keyboard mapping feature</entry></row>
+<row><entry>host</entry><entry>host specific drivers (currently only used by the pcidev kernel module for Linux)</entry></row>
+<row><entry>instrument</entry><entry>directory tree for the instrumentation feature</entry></row>
+<row><entry>iodev</entry><entry>standard PC devices, PCI devices, lowlevel networking and sound drivers</entry></row>
+<row><entry>memory</entry><entry>memory management and ROM loader</entry></row>
+<row><entry>misc</entry><entry>useful utilities (e.g. bximage, bxcommit, niclist)</entry></row>
+<row><entry>misc/sb16</entry><entry>tool to control the SB16 emulation from the guest side</entry></row>
+<row><entry>patches</entry><entry>pending patches</entry></row>
+<row><entry>plex86</entry><entry>plex86 directory structure (possibly outdated)</entry></row>
+</tbody>
+</tgroup>
+</table>
 </para>
-
-<screen>
-Bochs creates a bx_keymap_c object named bx_keymap.
-This object allows you to :
-  - load the configuration specified keymap file
-  - get the translated BX_KEY_* from your GUI key
-
-You have to provide a translation function from string to your Bit32u key
-constant. Casting will be necessary if your key constants are not Bit32u typed.
-The function must be "static Bit32u (*)(const char *)" typed, and must return
-BX_KEYMAP_UNKNOWN if it can not translate the parameter string.
-
-What you have to do is :
-  - call once "void loadKeymap(Bit32u (*)(const char*))", 
-    providing your translation function, to load the keymap
-  - call "Bit32u getBXKey(Bit32u)" that returns the BX_KEY_*
-    constant, for each key you want to map.
-
-The file gui/x.cc implements this architecture, so you can refer to it
-as an example.
-</screen>
-
 </section>
-
-    <section id="directory-structure"><title>Directory Structure</title>
-      <para>
-      &FIXME;
-      cpu directory does this, iodev does that, gui does that
-      </para>
-    </section>
 
      <section id="configure-scripting"><title>Configure Scripting</title>
       <para>
@@ -272,6 +276,132 @@ as an example.
       &FIXME;
       </para>
       </section>
+
+<section id="cmos-map"><title>Bochs's CMOS map</title>
+<para>
+In addition to the default CMOS RAM layout, the Bochs BIOS uses some additional 
+registers for harddisk parameters and the boot sequence. The following table 
+shows all CMOS registers and their meaning.
+</para>
+<para>
+<screen>
+Legend:
+S	- set by the emulator (bochs)
+B	- set by the bios
+U	- unused by the bios
+
+LOC	NOTES	MEANING
+0x00	S	rtc seconds
+0x01	B	second alarm
+0x02	S	rtc minutes
+0x03	B	minute alarm
+0x04	S	rtc hours
+0x05	B	hour alarm
+
+0x06	S,U	day of week
+0x07	S,B	date of month
+0x08	S,B	month
+0x09	S,B	year
+
+0x0a	S,B	status register A
+0x0b	S,B	status register B
+0x0c	S	status register C
+0x0d	S	status register D
+
+0x0f	S	shutdown status
+    values:
+	0x00: normal startup
+	0x09: normal
+	0x0d+: normal
+	0x05: eoi ?
+	else: unimpl
+
+0x10	S	fd drive type (2 nibbles: high=fd0, low=fd1)
+    values:
+	1: 360K 5.25"
+	2: 1.2MB 5.25"
+	3: 720K 3.5"
+	4: 1.44MB 3.5"
+	5: 2.88MB 3.5"
+
+!0x11	configuration bits!!
+
+0x12	S	how many disks first (hd type)
+
+!0x13	advanced configuration bits!!
+
+0x14	S,U	equipment byte (?)
+	bits	where		what
+	7-6	floppy.cc
+	5-4	vga.cc		0 = vga
+	2	keyboard.cc	1 = enabled
+	0	floppy.cc
+
+0x15	S,U	base memory - low
+0x16	S,U	base memory - high
+
+0x17	S,U	extended memory in k - low
+0x18	S,U	extended memory in k - high
+
+0x19	S	hd0: extended type
+0x1a	S	hd1: extended type
+
+0x1b	S,U	hd0:cylinders - low
+0x1c	S,U	hd0:cylinders - high
+0x1d	S,U	hd0:heads
+0x1e	S,U	hd0:write pre-comp - low
+0x1f	S,U	hd0:write pre-comp - high
+0x20	S,U	hd0:retries/bad_map/heads>8
+0x21	S,U	hd0:landing zone - low
+0x22	S,U	hd0:landing zone - high
+0x23	S,U	hd0:sectors per track
+
+0x24	S,U	hd1:cylinders - low
+0x25	S,U	hd1:cylinders - high
+0x26	S,U	hd1:heads
+0x27	S,U	hd1:write pre-comp - low
+0x28	S,U	hd1:write pre-comp - high
+0x29	S,U	hd1:retries/bad_map/heads>8
+0x2a	S,U	hd1:landing zone - low
+0x2b	S,U	hd1:landing zone - high
+0x2c	S,U	hd1:sectors per track
+
+0x2d	S	boot from (bit5: 0:fd, 1:hd)
+
+0x2e	S,U	standard cmos checksum (0x10->0x2d) - high
+0x2f	S,U	standard cmos checksum (0x10->0x2d) - low
+
+0x30	S	extended memory in k - low
+0x31	S	extended memory in k - high
+
+0x32	S	rtc century
+
+0x34	S	extended memory in 64k - low
+0x35	S	extended memory in 64k - high
+
+0x37	S	ps/2 rtc century (copy of 0x32, needed for winxp)
+
+0x38	S	eltorito boot sequence + boot signature check
+	bits
+	0	floppy boot signature check (1: disabled, 0: enabled)
+	7-4	boot drive #3 (0: unused, 1: fd, 2: hd, 3:cd, else: fd)
+
+0x39	S	ata translation policy - ata0 + ata1
+	bits
+	1-0	ata0-master (0: none, 1: LBA, 2: LARGE, 3: R-ECHS)
+	3-2	ata0-slave
+	5-4	ata1-master
+	7-6	ata1-slave
+
+0x3a	S	ata translation policy - ata2 + ata3 (see above)
+
+0x3d	S	eltorito boot sequence (see above)
+	bits
+	3-0	boot drive #1
+	7-4	boot drive #2
+</screen>
+</para>
+</section>
 
 <section id="sb16-emulation-basics"> <!-- start of SB16 section-->
 
@@ -1574,6 +1704,35 @@ Returns the number of bytes written.
 </section>
 
 </section>
+
+</section>
+
+<section id="add-keymapping"><title>How to add keymapping in a GUI client</title>
+<para>
+Christophe Bothamy, wrote the keymapping code for Bochs, provided these
+instructions to help developers to add keymapping to a GUI.
+</para>
+
+<screen>
+Bochs creates a bx_keymap_c object named bx_keymap.
+This object allows you to :
+  - load the configuration specified keymap file
+  - get the translated BX_KEY_* from your GUI key
+
+You have to provide a translation function from string to your Bit32u key
+constant. Casting will be necessary if your key constants are not Bit32u typed.
+The function must be "static Bit32u (*)(const char *)" typed, and must return
+BX_KEYMAP_UNKNOWN if it can not translate the parameter string.
+
+What you have to do is :
+  - call once "void loadKeymap(Bit32u (*)(const char*))", 
+    providing your translation function, to load the keymap
+  - call "Bit32u getBXKey(Bit32u)" that returns the BX_KEY_*
+    constant, for each key you want to map.
+
+The file gui/x.cc implements this architecture, so you can refer to it
+as an example.
+</screen>
 
 </section>
 
