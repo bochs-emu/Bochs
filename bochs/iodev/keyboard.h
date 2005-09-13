@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.29 2004-12-13 19:10:38 vruppert Exp $
+// $Id: keyboard.h,v 1.30 2005-09-13 19:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -107,7 +107,8 @@ private:
       bx_bool scancodes_translate;
       bx_bool expecting_scancodes_set;
       Bit8u   current_scancodes_set;
-      } kbd_controller;
+      bx_bool bat_in_progress;
+    } kbd_controller;
 
     struct mouseStruct {
       Bit8u   type;
@@ -162,7 +163,7 @@ private:
       Bit16s delayed_dz;
       Bit8u im_request;
       bx_bool im_mode;
-      } mouse;
+    } mouse;
 
     struct {
       int     num_elements;
@@ -174,18 +175,18 @@ private:
       Bit8u   repeat_rate;
       Bit8u   led_status;
       bx_bool scanning_enabled;
-      } kbd_internal_buffer;
+    } kbd_internal_buffer;
 
     struct {
       int     num_elements;
       Bit8u   buffer[BX_MOUSE_BUFF_SIZE];
       int     head;
-      } mouse_internal_buffer;
+    } mouse_internal_buffer;
 #define BX_KBD_CONTROLLER_QSIZE 5
     Bit8u    controller_Q[BX_KBD_CONTROLLER_QSIZE];
     unsigned controller_Qsize;
     unsigned controller_Qsource; // 0=keyboard, 1=mouse
-    } s; // State information for saving/loading
+  } s; // State information for saving/loading
 
   // The paste buffer does NOT exist in the hardware.  It is a bochs
   // construction that allows the user to "paste" arbitrary length sequences of
@@ -230,7 +231,6 @@ private:
   void   timer(void);
   int    timer_handle;
   int    statusbar_id[3];
-  };
-
+};
 
 #endif  // #ifndef _PCKEY_H

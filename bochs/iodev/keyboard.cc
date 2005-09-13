@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.103 2005-03-14 20:43:45 vruppert Exp $
+// $Id: keyboard.cc,v 1.104 2005-09-13 19:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.103 2005-03-14 20:43:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.104 2005-09-13 19:35:01 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -173,6 +173,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
   BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
+  BX_KEY_THIS s.kbd_controller.bat_in_progress = 0;
 
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
@@ -328,6 +329,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
       BX_KEY_THIS s.kbd_controller.outb = 0;
       BX_KEY_THIS s.kbd_controller.auxb = 0;
       BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
+      BX_KEY_THIS s.kbd_controller.bat_in_progress = 0;
 
       if (BX_KEY_THIS s.controller_Qsize) {
         unsigned i;
@@ -587,8 +589,8 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             BX_PANIC(("kbd: OUTB set and command 0x%02x encountered", value));
             break;
           }
-          // keyboard power normal
-          controller_enQ(0x00, 0);
+          // keyboard not inhibited
+          controller_enQ(0x80, 0);
           break;
         case 0xd0: // read output port: next byte read from port 60h
           BX_DEBUG(("io write to port 64h, command d0h (partial)"));
@@ -598,8 +600,8 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
             break;
           }
           controller_enQ(
-              (BX_KEY_THIS s.kbd_controller.auxb << 5) |
-              (BX_KEY_THIS s.kbd_controller.outb << 4) |
+              (BX_KEY_THIS s.kbd_controller.irq12_requested << 5) |
+              (BX_KEY_THIS s.kbd_controller.irq1_requested << 4) |
               (BX_GET_ENABLE_A20() << 1) |
               0x01, 0);
           break;
@@ -1109,6 +1111,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       BX_DEBUG(("reset command received"));
       resetinternals(1);
       kbd_enQ(0xFA); // send ACK
+      BX_KEY_THIS s.kbd_controller.bat_in_progress = 1;
       kbd_enQ(0xAA); // BAT test passed
       return;
       break;
@@ -1183,7 +1186,8 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   }
 
   /* nothing in outb, look for possible data xfer from keyboard or mouse */
-  if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled && BX_KEY_THIS s.kbd_internal_buffer.num_elements) {
+  if (BX_KEY_THIS s.kbd_internal_buffer.num_elements &&
+      (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled || BX_KEY_THIS s.kbd_controller.bat_in_progress)) {
     BX_DEBUG(("service_keyboard: key in internal buffer waiting"));
     BX_KEY_THIS s.kbd_controller.kbd_output_buffer =
       BX_KEY_THIS s.kbd_internal_buffer.buffer[BX_KEY_THIS s.kbd_internal_buffer.head];
