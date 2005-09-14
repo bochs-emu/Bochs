@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.112 2005-08-05 12:47:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.113 2005-09-14 20:01:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value == 0xf000)
     BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
-  if (CPL!=0) {
+  if (!real_mode() && CPL!=0) {
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
@@ -95,12 +95,8 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
 
 void BX_CPU_C::CLTS(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("CLTS: not implemented for < 286"));
-#else
-
   // #GP(0) if CPL is not 0
-  if ((v8086_mode() || protected_mode()) && CPL!=0) {
+  if (!real_mode() && CPL!=0) {
     BX_INFO(("CLTS: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
@@ -108,7 +104,6 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR cr0.ts = 0;
   BX_CPU_THIS_PTR cr0.val32 &= ~0x08;
-#endif
 }
 
 void BX_CPU_C::INVD(bxInstruction_c *i)
