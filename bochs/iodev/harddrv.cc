@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.141 2005-09-11 20:03:56 vruppert Exp $
+// $Id: harddrv.cc,v 1.142 2005-09-14 19:52:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.141 2005-09-11 20:03:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.142 2005-09-14 19:52:41 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -309,14 +309,6 @@ bx_hard_drive_c::init(void)
             channels[channel].drives[device].hard_drive = new vmware3_image_t();
             break;
 
-#if 0
-          case BX_ATA_MODE_SPLIT:
-            BX_INFO(("HD on ata%d-%d: '%s' 'split' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
-            channels[channel].drives[device].hard_drive = new split_image_t();
-            break;
-#endif
-
           case BX_ATA_MODE_UNDOABLE:
             BX_INFO(("HD on ata%d-%d: '%s' 'undoable' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
@@ -337,25 +329,27 @@ bx_hard_drive_c::init(void)
                             bx_options.atadevice[channel][device].Ojournal->getptr());
             break;
 
-#if 0
 #if BX_COMPRESSED_HD_SUPPORT
           case BX_ATA_MODE_Z_UNDOABLE:
             BX_PANIC(("z-undoable disk support not implemented"));
+#if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
             channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size,
                             bx_options.atadevice[channel][device].Ojournal->getptr());
+#endif
             break;
 
           case BX_ATA_MODE_Z_VOLATILE:
             BX_PANIC(("z-volatile disk support not implemented"));
+#if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-volatile' mode ", channel, device, 
                                     bx_options.atadevice[channel][device].Opath->getptr ()));
             channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size,
                             bx_options.atadevice[channel][device].Ojournal->getptr());
+#endif
             break;
 #endif //BX_COMPRESSED_HD_SUPPORT
-#endif
 
           default:
             BX_PANIC(("HD on ata%d-%d: '%s' unsupported HD mode : %s", channel, device, 
@@ -1065,7 +1059,6 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                (BX_SELECTED_CONTROLLER(channel).head_no << 0);
       goto return_value8;
       break;
-//BX_CONTROLLER(channel,0).lba_mode
 
     case 0x07: // Hard Disk Status 0x1f7
     case 0x16: // Hard Disk Alternate Status 0x3f6
@@ -2476,9 +2469,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
       BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
 
-      BX_DEBUG(( "adpater control reg: reset controller = %d",
+      BX_DEBUG(( "adapter control reg: reset controller = %d",
         (unsigned) (BX_SELECTED_CONTROLLER(channel).control.reset) ? 1 : 0 ));
-      BX_DEBUG(( "adpater control reg: disable_irq(X) = %d",
+      BX_DEBUG(( "adapter control reg: disable_irq(X) = %d",
         (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0 ));
 
       if (!prev_control_reset && BX_SELECTED_CONTROLLER(channel).control.reset) {
@@ -4845,59 +4838,60 @@ ssize_t volatile_image_t::write (const void* buf, size_t count)
 
 z_ro_image_t::z_ro_image_t()
 {
-        offset = (off_t)0;
+  offset = (off_t)0;
 }
 
 int z_ro_image_t::open (const char* pathname)
 {
-        fd = ::open(pathname, O_RDONLY
+  fd = ::open(pathname, O_RDONLY
 #ifdef O_BINARY
-		  | O_BINARY
+              | O_BINARY
 #endif
-	    );
+             );
 
-        if(fd < 0)
-        {
-              BX_PANIC(("Could not open '%s' file", pathname));
-              return fd;
-        }
+  if (fd < 0)
+  {
+    BX_PANIC(("Could not open '%s' file", pathname));
+    return fd;
+  }
 
-        gzfile = gzdopen(fd, "rb");
+  gzfile = gzdopen(fd, "rb");
+  return 0;
 }
 
 void z_ro_image_t::close ()
 {
-        if (fd > -1) {
-            gzclose(gzfile);
-	    // ::close(fd);
-        }
+  if (fd > -1) {
+    gzclose(gzfile);
+    // ::close(fd);
+  }
 }
 
 off_t z_ro_image_t::lseek (off_t _offset, int whence)
 {
-        // Only SEEK_SET supported
-        if (whence != SEEK_SET)
-        {
-              BX_PANIC(("lseek on compressed images : only SEEK_SET supported"));
-        }
+  // Only SEEK_SET supported
+  if (whence != SEEK_SET)
+  {
+    BX_PANIC(("lseek on compressed images : only SEEK_SET supported"));
+  }
 
-        // Seeking is expensive on compressed files, so we do it
-        // only when necessary, at the latest moment
-        offset = _offset;
+  // Seeking is expensive on compressed files, so we do it
+  // only when necessary, at the latest moment
+  offset = _offset;
 
-        return offset;
+  return offset;
 }
 
 ssize_t z_ro_image_t::read (void* buf, size_t count)
 {
-      gzseek(gzfile, offset, SEEK_SET);
-      return gzread(gzfile, buf, count);
+  gzseek(gzfile, offset, SEEK_SET);
+  return gzread(gzfile, buf, count);
 }
 
 ssize_t z_ro_image_t::write (const void* buf, size_t count)
 {
-      BX_PANIC(("z_ro_image: write not supported"));
-      return 0;
+  BX_PANIC(("z_ro_image: write not supported"));
+  return 0;
 }
 
 

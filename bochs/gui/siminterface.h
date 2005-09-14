@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.138 2005-09-11 20:03:56 vruppert Exp $
+// $Id: siminterface.h,v 1.139 2005-09-14 19:52:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1283,7 +1283,6 @@ enum {
 #define BX_ATA_MODE_LAST        8
 //#define BX_ATA_MODE_Z_UNDOABLE  9
 //#define BX_ATA_MODE_Z_VOLATILE  10
-//#define BX_ATA_MODE_SPLIT       6
 
 #define BX_CLOCK_SYNC_NONE     0
 #define BX_CLOCK_SYNC_REALTIME 1
