@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.148 2005-09-09 18:56:05 vruppert Exp $
+// $Id: rombios.c,v 1.149 2005-09-15 18:06:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,13 +939,8 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.148 $";
-static char bios_date_string[] = "$Date: 2005-09-09 18:56:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.149 $ $Date: 2005-09-15 18:06:58 $";
 
-static char CVSID[] = "$Id: rombios.c,v 1.148 2005-09-09 18:56:05 vruppert Exp $";
-
-/* Offset to skip the CVS $Id: prefix */ 
-#define bios_version_string  (CVSID + 4)
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
 #define BIOS_PRINTF_HALT     1
@@ -1828,9 +1823,8 @@ shutdown_status_panic(status)
 void
 print_bios_banner()
 {
-  printf(BX_APPNAME" BIOS ");
-  printf("%s %s\n", bios_cvs_version_string, bios_date_string);
-  printf("Options: ");
+  printf(BX_APPNAME" BIOS - build: %s\n%s\nOptions: ",
+    BIOS_BUILD_DATE, bios_cvs_version_string);
 #if BX_SMP_PROCESSORS > 1
   printf("smp (%d cpus) ", BX_SMP_PROCESSORS);
 #else
@@ -1934,7 +1928,7 @@ log_bios_start()
 #if BX_DEBUG_SERIAL
   outb(BX_DEBUG_PORT+UART_LCR, 0x03); /* setup for serial logging: 8N1 */
 #endif
-  BX_INFO("%s\n", bios_version_string);
+  BX_INFO("%s\n", bios_cvs_version_string);
 }
 
   bx_bool
@@ -4589,49 +4583,46 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     default:
-      if (scancode & 0x80) return; /* toss key releases ... */
+      if (scancode & 0x80) {
+        break; /* toss key releases ... */
+      }
       if (scancode > MAX_SCAN_CODE) {
         BX_INFO("KBD: int09h_handler(): unknown scancode read: 0x%02x!\n", scancode);
         return;
-        }
+      }
       if (shift_flags & 0x08) { /* ALT */
         asciicode = scan_to_scanascii[scancode].alt;
         scancode = scan_to_scanascii[scancode].alt >> 8;
-        }
-      else if (shift_flags & 0x04) { /* CONTROL */
+      } else if (shift_flags & 0x04) { /* CONTROL */
         asciicode = scan_to_scanascii[scancode].control;
         scancode = scan_to_scanascii[scancode].control >> 8;
-        }
-      else if (shift_flags & 0x03) { /* LSHIFT + RSHIFT */
+      } else if (shift_flags & 0x03) { /* LSHIFT + RSHIFT */
         /* check if lock state should be ignored 
          * because a SHIFT key are pressed */
-         
+
         if (shift_flags & scan_to_scanascii[scancode].lock_flags) {
           asciicode = scan_to_scanascii[scancode].normal;
           scancode = scan_to_scanascii[scancode].normal >> 8;
-          }
-        else {
+        } else {
           asciicode = scan_to_scanascii[scancode].shift;
           scancode = scan_to_scanascii[scancode].shift >> 8;
-          }
         }
-      else {
+      } else {
         /* check if lock is on */
         if (shift_flags & scan_to_scanascii[scancode].lock_flags) {
           asciicode = scan_to_scanascii[scancode].shift;
           scancode = scan_to_scanascii[scancode].shift >> 8;
-          }
-        else {
+        } else {
           asciicode = scan_to_scanascii[scancode].normal;
           scancode = scan_to_scanascii[scancode].normal >> 8;
-          }
         }
+      }
       if (scancode==0 && asciicode==0) {
         BX_INFO("KBD: int09h_handler(): scancode & asciicode are zero?\n");
-        }
+      }
       enqueue_key(scancode, asciicode);
       break;
-    }
+  }
   mf2_state &= ~0x02;
   write_byte(0x0040, 0x96, mf2_state);
 }
