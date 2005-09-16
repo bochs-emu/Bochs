@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.149 2005-09-15 18:06:58 vruppert Exp $
+// $Id: rombios.c,v 1.150 2005-09-16 16:04:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.149 $ $Date: 2005-09-15 18:06:58 $";
+static char bios_cvs_version_string[] = "$Revision: 1.150 $ $Date: 2005-09-16 16:04:24 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9905,26 +9905,7 @@ int09_handler:
   jz  int09_finish
 
   in  al, #0x60             ;;read key from keyboard controller
-  //test al, #0x80            ;;look for key release
-  //jnz  int09_process_key    ;; dont pass releases to intercept?
-
-  ;; check for extended key
-  cmp  al, #0xe0
-  jne int09_call_int15_4f
-  
-  push ds
-  xor  ax, ax
-  mov  ds, ax
-  mov  al, BYTE [0x496]     ;; mf2_state |= 0x02
-  or   al, #0x02
-  mov  BYTE [0x496], al
-  pop  ds
-  
-  in  al, #0x60             ;;read another key from keyboard controller
-
   sti
-
-int09_call_int15_4f:
   push  ds
   pusha
 #ifdef BX_CALL_INT15_4F
@@ -9934,8 +9915,17 @@ int09_call_int15_4f:
   jnc  int09_done
 #endif
 
+  ;; check for extended key
+  cmp  al, #0xe0
+  jne int09_process_key
+  xor  ax, ax
+  mov  ds, ax
+  mov  al, BYTE [0x496]     ;; mf2_state |= 0x02
+  or   al, #0x02
+  mov  BYTE [0x496], al
+  jmp int09_done
 
-//int09_process_key:
+int09_process_key:
   mov   bx, #0xf000
   mov   ds, bx
   call  _int09_function
@@ -9951,8 +9941,6 @@ int09_finish:
   out #0x64, al
   pop ax
   iret
-
-
 
 
 ;----------------------------------------
