@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.150 2005-09-16 16:04:24 vruppert Exp $
+// $Id: rombios.c,v 1.151 2005-09-17 17:43:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.150 $ $Date: 2005-09-16 16:04:24 $";
+static char bios_cvs_version_string[] = "$Revision: 1.151 $ $Date: 2005-09-17 17:43:01 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4506,25 +4506,29 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x1d: /* Ctrl press */
-      shift_flags |= 0x04;
-      write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x02) {
-        mf2_state |= 0x04;
-        write_byte(0x0040, 0x96, mf2_state);
-      } else {
-        mf2_flags |= 0x01;
-        write_byte(0x0040, 0x18, mf2_flags);
+      if ((mf2_state & 0x01) == 0) {
+        shift_flags |= 0x04;
+        write_byte(0x0040, 0x17, shift_flags);
+        if (mf2_state & 0x02) {
+          mf2_state |= 0x04;
+          write_byte(0x0040, 0x96, mf2_state);
+        } else {
+          mf2_flags |= 0x01;
+          write_byte(0x0040, 0x18, mf2_flags);
+        }
       }
       break;
     case 0x9d: /* Ctrl release */
-      shift_flags &= ~0x04;
-      write_byte(0x0040, 0x17, shift_flags);
-      if (mf2_state & 0x02) {
-        mf2_state &= ~0x04;
-        write_byte(0x0040, 0x96, mf2_state);
-      } else {
-        mf2_flags &= ~0x01;
-        write_byte(0x0040, 0x18, mf2_flags);
+      if ((mf2_state & 0x01) == 0) {
+        shift_flags &= ~0x04;
+        write_byte(0x0040, 0x17, shift_flags);
+        if (mf2_state & 0x02) {
+          mf2_state &= ~0x04;
+          write_byte(0x0040, 0x96, mf2_state);
+        } else {
+          mf2_flags &= ~0x01;
+          write_byte(0x0040, 0x18, mf2_flags);
+        }
       }
       break;
 
@@ -4552,7 +4556,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       break;
 
     case 0x45: /* Num Lock press */
-      if ((mf2_state & 0x02) == 0) {
+      if ((mf2_state & 0x03) == 0) {
         mf2_flags |= 0x20;
         write_byte(0x0040, 0x18, mf2_flags);
         shift_flags ^= 0x20;
@@ -4562,7 +4566,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       }
       break;
     case 0xc5: /* Num Lock release */
-      if ((mf2_state & 0x02) == 0) {
+      if ((mf2_state & 0x03) == 0) {
         mf2_flags &= ~0x20;
         write_byte(0x0040, 0x18, mf2_flags);
       }
@@ -4622,6 +4626,9 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       }
       enqueue_key(scancode, asciicode);
       break;
+  }
+  if ((scancode & 0x7f) != 0x1d) {
+    mf2_state &= ~0x01;
   }
   mf2_state &= ~0x02;
   write_byte(0x0040, 0x96, mf2_state);
@@ -9127,6 +9134,10 @@ pcibios_init_sel_reg:
   pop eax
   ret
   
+pcibios_init_iomem_bases:
+  /* TODO */
+  ret
+
 pcibios_init_set_elcr:
   push ax
   push cx
@@ -9146,7 +9157,7 @@ is_master_pic:
   pop  ax
   ret
 
-pcibios_init:
+pcibios_init_irqs:
   push ds
   push bp
   mov  ax, #0xf000
@@ -9184,10 +9195,10 @@ pcibios_init:
   push ax
   xor  ax, ax
   push ax
-pci_init_loop1:
+pci_init_irq_loop1:
   mov  bh, [si]
   mov  bl, [si+1]
-pci_init_loop2:
+pci_init_irq_loop2:
   mov  dl, #0x00
   call pcibios_init_sel_reg
   mov  dx, #0x0cfc
@@ -9238,11 +9249,11 @@ next_pci_func:
   inc  byte ptr[bp-3]
   inc  bl
   test bl, #0x07
-  jnz  pci_init_loop2
+  jnz  pci_init_irq_loop2
 next_pir_entry:
   add  si, #0x10
   mov  byte ptr[bp-3], #0x00
-  loop pci_init_loop1
+  loop pci_init_irq_loop1
   mov  sp, bp
   pop  bx
 pci_init_end:
@@ -9648,7 +9659,8 @@ post_default_ints:
 #endif
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
-  call pcibios_init
+  call pcibios_init_iomem_bases
+  call pcibios_init_irqs
 
   call rom_scan
 
@@ -9917,11 +9929,21 @@ int09_handler:
 
   ;; check for extended key
   cmp  al, #0xe0
-  jne int09_process_key
+  jne int09_check_pause
   xor  ax, ax
   mov  ds, ax
   mov  al, BYTE [0x496]     ;; mf2_state |= 0x02
   or   al, #0x02
+  mov  BYTE [0x496], al
+  jmp int09_done
+
+int09_check_pause:  ;; check for pause key
+  cmp  al, #0xe1
+  jne int09_process_key
+  xor  ax, ax
+  mov  ds, ax
+  mov  al, BYTE [0x496]     ;; mf2_state |= 0x01
+  or   al, #0x01
   mov  BYTE [0x496], al
   jmp int09_done
 
