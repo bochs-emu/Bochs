@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.37 2004-08-06 15:49:54 vruppert Exp $
+// $Id: pci.cc,v 1.38 2005-09-18 09:01:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -338,7 +338,7 @@ bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           break;
         default:
           BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
-          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address,
+          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i,
                     value8));
         }
       }

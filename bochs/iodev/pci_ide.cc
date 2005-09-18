@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.11 2005-09-05 18:32:23 vruppert Exp $
+// $Id: pci_ide.cc,v 1.12 2005-09-18 09:01:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -383,6 +383,9 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   Bit8u value8, oldval;
   bx_bool bmdma_change = 0;
 
+  if (((address >= 0x10) && (address < 0x20)) ||
+      ((address > 0x21) && (address < 0x40)))
+    return;
   if (io_len <= 4) {
     for (unsigned i=0; i<io_len; i++) {
       oldval = BX_PIDE_THIS s.pci_conf[address+i];
@@ -390,8 +393,6 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       switch (address+i) {
         case 0x05:
         case 0x06:
-        case 0x22:
-        case 0x23:
           break;
         case 0x04:
           BX_PIDE_THIS s.pci_conf[address+i] = value8 & 0x05;
@@ -401,7 +402,7 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           bmdma_change |= (value8 != oldval);
         default:
           BX_PIDE_THIS s.pci_conf[address+i] = value8;
-          BX_DEBUG(("PIIX3 PCI IDE write register 0x%02x value 0x%02x", address,
+          BX_DEBUG(("PIIX3 PCI IDE write register 0x%02x value 0x%02x", address+i,
                     value8));
       }
     }

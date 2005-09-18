@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.73 2005-05-26 09:24:28 vruppert Exp $
+// $Id: ne2k.cc,v 1.74 2005-09-18 09:01:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1303,7 +1303,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.73 2005-05-26 09:24:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.74 2005-09-18 09:01:04 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
@@ -1519,7 +1519,7 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           baseaddr_change |= (value8 != oldval);
         default:
           BX_NE2K_THIS s.pci_conf[address+i] = value8;
-          BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address,
+          BX_DEBUG(("NE2000 PCI NIC write register 0x%02x value 0x%02x", address+i,
                     value8));
       }
     }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.22 2004-09-25 22:15:02 vruppert Exp $
+// $Id: pci2isa.cc,v 1.23 2005-09-18 09:01:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -382,7 +382,7 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           break;
         default:
           BX_P2I_THIS s.pci_conf[address+i] = value8;
-          BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address,
+          BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address+i,
                     value8));
         }
       }
