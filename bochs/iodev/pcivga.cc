@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.7 2005-06-04 17:44:58 vruppert Exp $
+// $Id: pcivga.cc,v 1.8 2005-09-18 13:02:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -215,12 +215,8 @@ bx_pcivga_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_PCIVGA_SMF
 
-  if (io_len > 4 || io_len == 0) {
-    BX_DEBUG(("Experimental PCIVGA write register 0x%02x, len=%u !",
-             (unsigned) address, (unsigned) io_len));
+  if ((address >= 0x10) && (address < 0x34))
     return;
-  }
-
   // This odd code is to display only what bytes actually were written.
   char szTmp[9];
   char szTmp2[3];
@@ -229,10 +225,6 @@ bx_pcivga_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   for (unsigned i=0; i<io_len; i++) {
     const Bit8u value8 = (value >> (i*8)) & 0xFF;
     switch (address+i) {
-      case 0x30: // Oh, no, you're not writing to rom_base!
-      case 0x31: //
-      case 0x32: //
-      case 0x33: //
       case 0x04: // disallowing write to command
       case 0x06: // disallowing write to status lo-byte (is that expected?)
         strcpy(szTmp2, "..");
