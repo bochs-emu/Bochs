@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.139 2005-09-14 19:52:41 vruppert Exp $
+// $Id: siminterface.h,v 1.140 2005-09-18 07:16:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -348,7 +348,7 @@ typedef enum {
   BXP_DEBUGGER_LOG_FILENAME,
   BXP_CMOSIMAGE_ENABLED,
   BXP_CMOSIMAGE_PATH,
-  BXP_CMOSIMAGE_USE_RTC,
+  BXP_CMOSIMAGE_RTC_INIT,
   BXP_CLOCK,
   BXP_CLOCK_TIME0,
   BXP_CLOCK_SYNC,

@@ -397,14 +397,16 @@ debugger_log: -
 # com1 (port 0x3f8) will all go to the other window.
 # Other serial modes are 'null' (no input/output), 'file' (output to a file
 # specified as the 'dev' parameter), 'raw' (use the real serial port - under
-# construction for win32) and 'mouse' (standard serial mouse - requires
-# mouse option setting 'type=serial' or 'type=serial_wheel')
+# construction for win32), 'mouse' (standard serial mouse - requires
+# mouse option setting 'type=serial' or 'type=serial_wheel') and 'socket'
+# (connect a networking socket).
 #
 # Examples:
 #   com1: enabled=1, mode=null
 #   com1: enabled=1, mode=mouse
 #   com2: enabled=1, mode=file, dev=serial.out
 #   com3: enabled=1, mode=raw, dev=com1
+#   com3: enabled=1, mode=socket, dev=localhost:8888
 #=======================================================================
 #com1: enabled=1, mode=term, dev=/dev/ttyp9
 
@@ -675,7 +677,7 @@ keyboard_mapping: enabled=0, map=
 # other stuff
 #=======================================================================
 #magic_break: enabled=1
-#cmosimage: file=cmos.img, rtc=time0
+#cmosimage: file=cmos.img, rtc_init=time0
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 #text_snapshot_check: enable

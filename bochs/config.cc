@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.44 2005-09-14 19:52:41 vruppert Exp $
+// $Id: config.cc,v 1.45 2005-09-18 07:16:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1607,13 +1607,13 @@ void bx_init_options ()
       "Pathname of CMOS image",
       "Pathname of CMOS image",
       "", BX_PATHNAME_LEN);
-  bx_options.cmosimage.Ouse_rtc = new bx_param_bool_c (BXP_CMOSIMAGE_USE_RTC,
-      "Use RTC values from image",
-      "Controls whether to use the RTC values stored in the image",
+  bx_options.cmosimage.Ortc_init = new bx_param_bool_c (BXP_CMOSIMAGE_RTC_INIT,
+      "Initialize RTC from image",
+      "Controls whether to initialize the RTC with values stored in the image",
       0);
   deplist = new bx_list_c (BXP_NULL, 2);
   deplist->add (bx_options.cmosimage.Opath);
-  deplist->add (bx_options.cmosimage.Ouse_rtc);
+  deplist->add (bx_options.cmosimage.Ortc_init);
   bx_options.cmosimage.Oenabled->set_dependent_list (deplist);
 
   // Keyboard mapping
@@ -1667,7 +1667,7 @@ void bx_init_options ()
       bx_options.Ofloppy_command_delay,
       bx_options.cmosimage.Oenabled,
       bx_options.cmosimage.Opath,
-      bx_options.cmosimage.Ouse_rtc,
+      bx_options.cmosimage.Ortc_init,
       SIM->get_param (BXP_CLOCK),
       SIM->get_param (BXP_LOAD32BITOS),
       NULL
@@ -1692,7 +1692,7 @@ void bx_init_options ()
 #endif
       bx_options.cmosimage.Oenabled,
       bx_options.cmosimage.Opath,
-      bx_options.cmosimage.Ouse_rtc,
+      bx_options.cmosimage.Ortc_init,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
@@ -1847,7 +1847,7 @@ void bx_reset_options ()
   bx_options.Oi440FXSupport->reset();
   bx_options.cmosimage.Oenabled->reset();
   bx_options.cmosimage.Opath->reset();
-  bx_options.cmosimage.Ouse_rtc->reset();
+  bx_options.cmosimage.Ortc_init->reset();
   bx_options.Otext_snapshot_check->reset();
 }
 
@@ -2931,10 +2931,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
         bx_options.cmosimage.Opath->set (strdup(&params[i][5]));
-      } else if (!strcmp(params[i], "rtc=time0")) {
-        bx_options.cmosimage.Ouse_rtc->set (0);
-      } else if (!strcmp(params[i], "rtc=image")) {
-        bx_options.cmosimage.Ouse_rtc->set (1);
+      } else if (!strcmp(params[i], "rtc_init=time0")) {
+        bx_options.cmosimage.Ortc_init->set (0);
+      } else if (!strcmp(params[i], "rtc_init=image")) {
+        bx_options.cmosimage.Ortc_init->set (1);
       } else {
         // for backward compatiblity
         bx_options.cmosimage.Opath->set (strdup(params[i]));
@@ -3689,7 +3689,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
   if (strlen (bx_options.cmosimage.Opath->getptr ()) > 0) {
     fprintf (fp, "cmosimage: file=%s, ", bx_options.cmosimage.Opath->getptr());
-    fprintf (fp, "rtc=%s", bx_options.cmosimage.Ouse_rtc->get()?"image":"time0");
+    fprintf (fp, "rtc_init=%s", bx_options.cmosimage.Ortc_init->get()?"image":"time0");
   } else {
     fprintf (fp, "# no cmosimage\n");
   }

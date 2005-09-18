@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.49 2005-09-11 20:03:56 vruppert Exp $
+// $Id: cmos.cc,v 1.50 2005-09-18 07:16:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.49 2005-09-11 20:03:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.50 2005-09-18 07:16:28 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -227,7 +227,7 @@ bx_cmos_c::init(void)
       bx_options.cmosimage.Opath->getptr ()));
     BX_CMOS_THIS s.rtc_mode_12hour = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x02) == 0);
     BX_CMOS_THIS s.rtc_mode_binary = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x04) != 0);
-    if (bx_options.cmosimage.Ouse_rtc->get ()) {
+    if (bx_options.cmosimage.Ortc_init->get ()) {
       update_timeval();
     } else {
       update_clock();
