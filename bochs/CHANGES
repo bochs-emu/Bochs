@@ -26,6 +26,23 @@ Detailed change log :
       problems with Linux kernels 2.6.x: "ignoring undecoded slave")
     - geometry autodetection for 'flat' hard disk images added. Works with 
       images created with bximage (heads = 16, sectors per track = 63)
+  - floppy
+    - fixes for OS/2 (patch by Robin Kay)
+    - more accurate timing for read data and format track commands using a motor
+      speed of 300 RPM
+  - cmos
+    - RTC 12-hour and binary mode implemented
+    - number of CMOS registers changed from 64 to 128
+    - bochsrc option 'cmosimage' improved
+  - speaker
+    - simple speaker support for OS X added (patch by brianonn@telus.net)
+  - pci
+    - BeOS boot failure fix in the PCI IDE code
+
+- System BIOS
+  - PCI i/o and memory base address initialization added
+  - several keyboard interrupt handler fixes (e.g. patch by japheth)
+  - several floppy fixes (e.g. OS/2 works with patch by Robin Kay)
 
 -------------------------------------------------------------------------
 Changes in 2.2.1 (July 8, 2005):
