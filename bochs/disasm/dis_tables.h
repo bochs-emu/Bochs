@@ -367,8 +367,8 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f59[4] = {
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5a[4] = {
   /* -- */  { "cvtps2pd",   0, Vpd, Wps, XX },
   /* 66 */  { "cvtpd2ps",   0, Vps, Wpd, XX },
-  /* F2 */  { "cvtsd2ss",   0, Vss, Wsd, XX },
-  /* F3 */  { "cvtss2sd",   0, Vsd, Wss, XX }
+  /* F2 */  { "cvtsd2ss",   0, Vss, Wss, XX },
+  /* F3 */  { "cvtss2sd",   0, Vsd, Wsd, XX }
 };
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f5b[4] = {
@@ -2590,10 +2590,10 @@ static BxDisasmOpcodeInfo_t BxDisasmOpcodes[256*2] = {
   /* 0F AF */  { "imulV",      0,  Gv,  Ev, XX },
   /* 0F B0 */  { "cmpxchgB",   0,  Eb,  Gb, XX },
   /* 0F B1 */  { "cmpxchgV",   0,  Ev,  Gv, XX },
-  /* 0F B2 */  { "lss",        0,  Mp,  XX, XX },
+  /* 0F B2 */  { "lss",        0,  Gv,  Mp, XX },
   /* 0F B3 */  { "btrV",       0,  Ev,  Gv, XX },
-  /* 0F B4 */  { "lfs",        0,  Mp,  XX, XX },
-  /* 0F B5 */  { "lgs",        0,  Mp,  XX, XX },
+  /* 0F B4 */  { "lfs",        0,  Gv,  Mp, XX },
+  /* 0F B5 */  { "lgs",        0,  Gv,  Mp, XX },
   /* 0F B6 */  { "movzX",      0,  Gv,  Eb, XX },
   /* 0F B7 */  { "movzX",      0,  Gv,  Ew, XX },
   /* 0F B8 */  { INVALID },       
