@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.13 2005-06-04 07:58:02 vruppert Exp $
+// $Id: pcipnic.cc,v 1.14 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -109,11 +109,7 @@ bx_pcipnic_c::init(void)
 
   BX_PNIC_THIS s.base_ioaddr = 0;
 
-  Bit16u base_ioaddr = bx_options.pnic.Oioaddr->get();
-  Bit8u irq = bx_options.pnic.Oirq->get();
-
-  BX_INFO( ( "pnic at 0x%04x-0x%04x irq %d",
-	     base_ioaddr, base_ioaddr + PNIC_MAX_REG, irq ) );
+  BX_INFO(("PCI Pseudo NIC initialized - I/O base and IRQ assigned by PCI BIOS"));
 }
 
 void
@@ -138,8 +134,7 @@ bx_pcipnic_c::reset(unsigned type)
     { 0x0D, 0x20 },                 // bus latency
     { 0x0e, 0x00 },                 // header_type_generic
     // address space 0x20 - 0x23
-    { 0x20, (( bx_options.pnic.Oioaddr->get() & 0xE0) | 0x01) },
-    { 0x21, ( bx_options.pnic.Oioaddr->get() >> 8) },
+    { 0x20, 0x01 }, { 0x21, 0x00 },
     { 0x22, 0x00 }, { 0x23, 0x00 },
     { 0x3c, 0x00, },                // IRQ
     { 0x3d, BX_PCI_INTA },          // INT
@@ -160,11 +155,6 @@ bx_pcipnic_c::reset(unsigned type)
   BX_PNIC_THIS s.recvQueueLength = 0;
   BX_PNIC_THIS s.irqEnabled = 0;
 
-  // This should be done by the PCI BIOS
-  DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
-                      &BX_PNIC_THIS s.base_ioaddr,
-                      &BX_PNIC_THIS s.pci_conf[0x20],
-                      16, &pnic_iomask[0], "PNIC");
   // Deassert IRQ
   set_irq_level(0);
 }
@@ -417,6 +407,7 @@ bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           }
           break;
         case 0x20:
+          value8 = (value8 & 0xfc) | 0x01;
         case 0x21:
           baseaddr_change = (value8 != oldval);
         default:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.22 2005-08-03 20:59:35 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.23 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -365,30 +365,6 @@ bx_svga_cirrus_c::svga_init_members()
 
   memset(BX_CIRRUS_THIS vidmem, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem;
-
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  if (BX_CIRRUS_THIS pci_enabled) {
-    // This should be done by the PCI BIOS
-    WriteHostDWordToLittleEndian(
-      &BX_CIRRUS_THIS pci_conf[0x10],
-      (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT | PCI_MAP_MEMFLAGS_CACHEABLE |
-      CIRRUS_PNPMEM_BASE_ADDRESS));
-    WriteHostDWordToLittleEndian(
-      &BX_CIRRUS_THIS pci_conf[0x14],
-      (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT |
-      CIRRUS_PNPMMIO_BASE_ADDRESS));
-    DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                         cirrus_mem_write_handler,
-                         &BX_CIRRUS_THIS pci_memaddr,
-                         &BX_CIRRUS_THIS pci_conf[0x10],
-                         CIRRUS_PNPMEM_SIZE);
-    DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                         cirrus_mem_write_handler,
-                         &BX_CIRRUS_THIS pci_mmioaddr,
-                         &BX_CIRRUS_THIS pci_conf[0x14],
-                         CIRRUS_PNPMMIO_SIZE);
-  }
-#endif
 }
 
   void
@@ -2308,6 +2284,12 @@ bx_svga_cirrus_c::svga_init_pcihandlers(void)
   WriteHostWordToLittleEndian(
     &BX_CIRRUS_THIS pci_conf[0x04],
     (PCI_COMMAND_IOACCESS | PCI_COMMAND_MEMACCESS));
+  WriteHostDWordToLittleEndian(
+    &BX_CIRRUS_THIS pci_conf[0x10],
+    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT | PCI_MAP_MEMFLAGS_CACHEABLE));
+  WriteHostDWordToLittleEndian(
+    &BX_CIRRUS_THIS pci_conf[0x14],
+    (PCI_MAP_MEM | PCI_MAP_MEMFLAGS_32BIT));
   BX_CIRRUS_THIS pci_conf[0x0a] = PCI_CLASS_SUB_VGA;
   BX_CIRRUS_THIS pci_conf[0x0b] = PCI_CLASS_BASE_DISPLAY;
   BX_CIRRUS_THIS pci_conf[0x0e] = PCI_CLASS_HEADERTYPE_00h;
@@ -2389,11 +2371,15 @@ bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           new_value = old_value & (~new_value);
           break;
 
-        case 0x10: case 0x11: case 0x12: case 0x13: // base address #0
-          baseaddr0_change = (old_value != new_value);
+        case 0x10: // base address #0
+          new_value = (new_value & 0xf0) | (old_value & 0x0f);
+        case 0x11: case 0x12: case 0x13:
+          baseaddr0_change |= (old_value != new_value);
           break;
-        case 0x14: case 0x15: case 0x16: case 0x17: // base address #1
-          baseaddr1_change = (old_value != new_value);
+        case 0x14: // base address #1
+          new_value = (new_value & 0xf0) | (old_value & 0x0f);
+        case 0x15: case 0x16: case 0x17:
+          baseaddr1_change |= (old_value != new_value);
           break;
 
         // read-only.

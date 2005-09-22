@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.140 2005-09-18 07:16:28 vruppert Exp $
+// $Id: siminterface.h,v 1.141 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -332,9 +332,8 @@ typedef enum {
   BXP_COM4_ENABLED,
   BXP_COM4_MODE,
   BXP_COM4_PATH,
-#define BXP_PARAMS_PER_USB_HUB 4
+#define BXP_PARAMS_PER_USB_HUB 3
   BXP_USB1_ENABLED,
-  BXP_USB1_IOADDR,
   BXP_USB1_PORT1,
   BXP_USB1_PORT2,
   BXP_PRIVATE_COLORMAP,
@@ -382,8 +381,6 @@ typedef enum {
   BXP_NE2K_SCRIPT,
   BXP_NE2K,
   BXP_PNIC_ENABLED,
-  BXP_PNIC_IOADDR,
-  BXP_PNIC_IRQ,
   BXP_PNIC_MACADDR,
   BXP_PNIC_ETHMOD,
   BXP_PNIC_ETHDEV,
@@ -516,8 +513,6 @@ typedef enum {
 // use x=1
 #define BXP_USBx_ENABLED(x) \
    (bx_id)(BXP_USB1_ENABLED + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-#define BXP_USBx_IOADDR(x) \
-   (bx_id)(BXP_USB1_IOADDR + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
 #define BXP_USBx_PORT1(x) \
    (bx_id)(BXP_USB1_PORT1 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
 #define BXP_USBx_PORT2(x) \
@@ -1324,7 +1319,7 @@ typedef struct {
   bx_param_string_c *Opath;
   bx_param_enum_c *Otype;
   bx_param_enum_c *Ostatus;
-  } bx_floppy_options;
+} bx_floppy_options;
 
 typedef struct {
   bx_list_c *Omenu;
@@ -1340,35 +1335,32 @@ typedef struct {
   bx_param_string_c *Omodel;
   bx_param_enum_c *Obiosdetect;
   bx_param_enum_c *Otranslation;
-  } bx_atadevice_options;
+} bx_atadevice_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_enum_c *Omode;
   bx_param_string_c *Odev;
-  } bx_serial_options;
+} bx_serial_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
-  bx_param_num_c *Oioaddr;
   bx_param_string_c *Oport1;
   bx_param_string_c *Oport2;
-  } bx_usb_options;
+} bx_usb_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
-  bx_param_num_c *Oioaddr;
-  bx_param_num_c *Oirq;
   bx_param_string_c *Omacaddr;
   bx_param_enum_c *Oethmod;
   bx_param_string_c *Oethdev;
   bx_param_string_c *Oscript;
-  } bx_pnic_options;
+} bx_pnic_options;
 
 typedef struct {
   bx_param_bool_c *Oused;
   bx_param_string_c *Odevname;
-  } bx_pcislot_options;
+} bx_pcislot_options;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

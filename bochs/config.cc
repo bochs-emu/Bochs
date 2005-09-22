@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.45 2005-09-18 07:16:28 vruppert Exp $
+// $Id: config.cc,v 1.46 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -998,12 +998,6 @@ void bx_init_options ()
                 strdup(name), 
                 strdup(descr), 
                 0);
-        bx_options.usb[i].Oioaddr = new bx_param_num_c (
-                BXP_USBx_IOADDR(i+1),
-                "I/O Address",
-                "I/O base adress of USB hub",
-                0, 0xffe0,
-                0);
         bx_options.usb[i].Oport1 = new bx_param_string_c (
                 BXP_USBx_PORT1(i+1), 
                 "port #1 device", 
@@ -1014,20 +1008,15 @@ void bx_init_options ()
                 "port #2 device", 
                 "Device connected to USB port #2",
                 "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 3);
-        deplist->add (bx_options.usb[i].Oioaddr);
+        deplist = new bx_list_c (BXP_NULL, 2);
         deplist->add (bx_options.usb[i].Oport1);
         deplist->add (bx_options.usb[i].Oport2);
         bx_options.usb[i].Oenabled->set_dependent_list (deplist);
         // add to menu
         *par_ser_ptr++ = bx_options.usb[i].Oenabled;
-        *par_ser_ptr++ = bx_options.usb[i].Oioaddr;
         *par_ser_ptr++ = bx_options.usb[i].Oport1;
         *par_ser_ptr++ = bx_options.usb[i].Oport2;
 
-        bx_options.usb[i].Oioaddr->set_ask_format ("Enter new ioaddr: [0x%x] ");
-        bx_options.usb[i].Oioaddr->set_base (16);
-        bx_options.usb[i].Oioaddr->set_group (strdup(group));
         bx_options.usb[i].Oport1->set_group (strdup(group));
         bx_options.usb[i].Oport2->set_group (strdup(group));
   }
@@ -1354,18 +1343,6 @@ void bx_init_options ()
       "Enable Pseudo NIC emulation",
       "Enables the Pseudo NIC emulation",
       0);
-  bx_options.pnic.Oioaddr = new bx_param_num_c (BXP_PNIC_IOADDR,
-      "Pseudo NIC I/O Address",
-      "I/O base address of the emulated Pseudo NIC device",
-      0, 0xffff,
-      0xdc00);
-  bx_options.pnic.Oioaddr->set_base (16);
-  bx_options.pnic.Oirq = new bx_param_num_c (BXP_PNIC_IRQ,
-      "Pseudo NIC Interrupt",
-      "IRQ used by the Pseudo NIC device",
-      0, 15,
-      11);
-  bx_options.pnic.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
   bx_options.pnic.Omacaddr = new bx_param_string_c (BXP_PNIC_MACADDR,
       "MAC Address",
       "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
@@ -1403,8 +1380,6 @@ void bx_init_options ()
   };
   bx_param_c *pnic_init_list[] = {
     bx_options.pnic.Oenabled,
-    bx_options.pnic.Oioaddr,
-    bx_options.pnic.Oirq,
     bx_options.pnic.Omacaddr,
     bx_options.pnic.Oethmod,
     bx_options.pnic.Oethdev,
@@ -1771,17 +1746,16 @@ void bx_reset_options ()
     bx_options.com[i].Oenabled->reset();
     bx_options.com[i].Omode->reset();
     bx_options.com[i].Odev->reset();
-    }
+  }
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
     bx_options.par[i].Oenabled->reset();
     bx_options.par[i].Ooutfile->reset();
-    }
+  }
   for (i=0; i<BX_N_USB_HUBS; i++) {
     bx_options.usb[i].Oenabled->reset();
-    bx_options.usb[i].Oioaddr->reset();
     bx_options.usb[i].Oport1->reset();
     bx_options.usb[i].Oport2->reset();
-    }
+  }
 
   // interface
   bx_options.Odisplaylib_options->reset();
@@ -1804,6 +1778,13 @@ void bx_reset_options ()
   bx_options.ne2k.Oethmod->reset();
   bx_options.ne2k.Oethdev->reset();
   bx_options.ne2k.Oscript->reset();
+
+  // pnic
+  bx_options.pnic.Oenabled->reset();
+  bx_options.pnic.Omacaddr->reset();
+  bx_options.pnic.Oethmod->reset();
+  bx_options.pnic.Oethdev->reset();
+  bx_options.pnic.Oscript->reset();
 
   // pcidev
   bx_options.pcidev.Ovendor->reset();
@@ -2858,16 +2839,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.usb[idx].Oenabled->set (atol(&params[i][8]));
-      } else if (!strncmp(params[i], "ioaddr=", 7)) {
-        if ( (params[i][7] == '0') && (params[i][8] == 'x') )
-          bx_options.usb[idx].Oioaddr->set (strtoul (&params[i][7], NULL, 16));
-        else
-          bx_options.usb[idx].Oioaddr->set (strtoul (&params[i][7], NULL, 10));
-        bx_options.usb[idx].Oenabled->set (1);
       } else if (!strncmp(params[i], "port1=", 6)) {
         bx_options.usb[idx].Oport1->set (strdup(&params[i][6]));
       } else if (!strncmp(params[i], "port2=", 6)) {
         bx_options.usb[idx].Oport2->set (strdup(&params[i][6]));
+      } else if (!strncmp(params[i], "ioaddr=", 7)) {
+        PARSE_WARN(("%s: usb ioaddr is now deprecated (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
         PARSE_WARN(("%s: usb irq is now deprecated (assigned by BIOS).", context));
       } else {
@@ -3079,31 +3056,24 @@ parse_line_formatted(char *context, int num_params, char *params[])
     else {
       if (valid & 0x80) {
         bx_options.ne2k.Oenabled->set (0);
-        }
       }
     }
-
-  else if (!strcmp(params[0], "pnic")) {
+  } else if (!strcmp(params[0], "pnic")) {
     int tmp[6];
     char tmpchar[6];
     int valid = 0;
     int n;
     if (!bx_options.pnic.Oenabled->get ()) {
       bx_options.pnic.Oethmod->set_by_name ("null");
-      }
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (atol(&params[i][8]) == 0) valid |= 0x80;
-        }
-      else if (!strncmp(params[i], "ioaddr=", 7)) {
-        bx_options.pnic.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
-        valid |= 0x01;
-        }
-      else if (!strncmp(params[i], "irq=", 4)) {
-        bx_options.pnic.Oirq->set (atol(&params[i][4]));
-        valid |= 0x02;
-        }
-      else if (!strncmp(params[i], "mac=", 4)) {
+      } else if (!strncmp(params[i], "ioaddr=", 7)) {
+        PARSE_WARN(("%s: pnic ioaddr is now deprecated (assigned by BIOS).", context));
+      } else if (!strncmp(params[i], "irq=", 4)) {
+        PARSE_WARN(("%s: pnic irq is now deprecated (assigned by BIOS).", context));
+      } else if (!strncmp(params[i], "mac=", 4)) {
         n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
                    &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
         if (n != 6) {
@@ -3112,38 +3082,30 @@ parse_line_formatted(char *context, int num_params, char *params[])
         for (n=0;n<6;n++)
           tmpchar[n] = (unsigned char)tmp[n];
         bx_options.pnic.Omacaddr->set (tmpchar);
-        valid |= 0x04;
-        }
-      else if (!strncmp(params[i], "ethmod=", 7)) {
+        valid |= 0x07;
+      } else if (!strncmp(params[i], "ethmod=", 7)) {
         if (!bx_options.pnic.Oethmod->set_by_name (strdup(&params[i][7])))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
-        }
-      else if (!strncmp(params[i], "ethdev=", 7)) {
+      } else if (!strncmp(params[i], "ethdev=", 7)) {
         bx_options.pnic.Oethdev->set (strdup(&params[i][7]));
-        }
-      else if (!strncmp(params[i], "script=", 7)) {
+      } else if (!strncmp(params[i], "script=", 7)) {
         bx_options.pnic.Oscript->set (strdup(&params[i][7]));
-        }
-      else {
+      } else {
         PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
-        }
       }
+    }
     if (!bx_options.pnic.Oenabled->get ()) {
       if (valid == 0x07) {
         bx_options.pnic.Oenabled->set (1);
-        }
-      else if (valid < 0x80) {
+      } else if (valid < 0x80) {
         PARSE_ERR(("%s: pnic directive incomplete (ioaddr, irq and mac are required)", context));
-        }
       }
-    else {
+    } else {
       if (valid & 0x80) {
         bx_options.pnic.Oenabled->set (0);
-        }
       }
     }
-
-  else if (!strcmp(params[0], "load32bitOSImage")) {
+  } else if (!strcmp(params[0], "load32bitOSImage")) {
     if ( (num_params!=4) && (num_params!=5) ) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
       }
@@ -3437,8 +3399,7 @@ bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
 {
   fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, ", ioaddr=0x%04x, port1=%s, port2=%s", opt->Oioaddr->get (),
-      opt->Oport1->getptr (), opt->Oport2->getptr ());
+    fprintf (fp, ", port1=%s, port2=%s", opt->Oport1->getptr (), opt->Oport2->getptr ());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3450,9 +3411,7 @@ bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
   fprintf (fp, "pnic: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
     char *ptr = opt->Omacaddr->getptr ();
-    fprintf (fp, ", ioaddr=0x%04x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
-      opt->Oioaddr->get (),
-      opt->Oirq->get (),
+    fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
       (unsigned int)(0xff & ptr[0]),
       (unsigned int)(0xff & ptr[1]),
       (unsigned int)(0xff & ptr[2]),

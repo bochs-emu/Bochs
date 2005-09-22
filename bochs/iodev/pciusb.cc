@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.20 2005-01-21 16:07:37 vruppert Exp $
+// $Id: pciusb.cc,v 1.21 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -117,9 +117,7 @@ bx_pciusb_c::init(void)
 
   BX_USB_THIS hub[0].base_ioaddr = 0x0;
 
-  Bit16u base_ioaddr = bx_options.usb[0].Oioaddr->get();
-
-  BX_INFO(("usb1 at 0x%04x-0x%04x irq assigned by BIOS", base_ioaddr, base_ioaddr+0x13));
+  BX_INFO(("usb1 initialized - I/O base and IRQ assigned by PCI BIOS"));
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB");
@@ -148,8 +146,7 @@ bx_pciusb_c::reset(unsigned type)
       { 0x0D, 0x20 },                 // bus latency
       { 0x0e, 0x00 },                 // header_type_generic
       // address space 0x20 - 0x23
-      { 0x20, ((bx_options.usb[0].Oioaddr->get() & 0xE0) | 0x01) },
-      { 0x21, (bx_options.usb[0].Oioaddr->get() >> 8) },
+      { 0x20, 0x01 }, { 0x21, 0x00 },
       { 0x22, 0x00 }, { 0x23, 0x00 },
       { 0x3c, 0x00 },                 // IRQ
       { 0x3d, BX_PCI_INTD },          // INT
@@ -160,11 +157,6 @@ bx_pciusb_c::reset(unsigned type)
     for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
         BX_USB_THIS hub[0].pci_conf[reset_vals[i].addr] = reset_vals[i].val;
     }
-    // This should be done by the PCI BIOS
-    DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
-                        &BX_USB_THIS hub[0].base_ioaddr,
-                        &BX_USB_THIS hub[0].pci_conf[0x20],
-                        32, &usb_iomask[0], "USB Hub #1");
   }
 
   // reset locals
@@ -1427,6 +1419,7 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           sprintf(szTmp2, "%02x", value8);
           break;
         case 0x20:
+          value8 = (value8 & 0xfc) | 0x01;
         case 0x21:
           baseaddr_change |= (value8 != oldval);
         default:

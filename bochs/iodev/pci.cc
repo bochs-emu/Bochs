@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.38 2005-09-18 09:01:05 vruppert Exp $
+// $Id: pci.cc,v 1.39 2005-09-22 21:12:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -523,11 +523,13 @@ bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t
     DEV_unregister_memory_handlers(f1, f2, baseaddr, baseaddr + size - 1);
   }
   Bit32u mask = ~(size - 1);
+  Bit8u pci_flags = pci_conf[0x00] & 0x0f;
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
   ReadHostDWordFromLittleEndian(pci_conf, baseaddr);
+  pci_conf[0x00] |= pci_flags;
   if (baseaddr > 0) {
     DEV_register_memory_handlers(f1, this_ptr, f2, this_ptr, baseaddr, baseaddr + size - 1);
   }
@@ -551,12 +553,13 @@ bx_pci_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler
     }
   }
   Bit16u mask = ~(size - 1);
-  pci_conf[0x00] &= (mask & 0xfe);
+  Bit8u pci_flags = pci_conf[0x00] & 0x03;
+  pci_conf[0x00] &= (mask & 0xfc);
   pci_conf[0x01] &= (mask >> 8);
   pci_conf[0x02] = 0x00;
   pci_conf[0x03] = 0x00;
   ReadHostDWordFromLittleEndian(pci_conf, baseaddr);
-  pci_conf[0x00] |= 0x01;
+  pci_conf[0x00] |= pci_flags;
   if (baseaddr > 0) {
     for (i=0; i<size; i++) {
       if (iomask[i] > 0) {

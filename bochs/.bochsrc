@@ -669,9 +669,9 @@ keyboard_mapping: enabled=0, map=
 # have a 3-button USB mouse.
 #
 # Example:
-#   usb1: enabled=1, ioaddr=0xFF80, port1=mouse, port2=keypad
+#   usb1: enabled=1, port1=mouse, port2=keypad
 #=======================================================================
-#usb1: enabled=1, ioaddr=0xFF80
+#usb1: enabled=1
 
 #=======================================================================
 # other stuff
