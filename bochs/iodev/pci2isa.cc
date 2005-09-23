@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.23 2005-09-18 09:01:05 vruppert Exp $
+// $Id: pci2isa.cc,v 1.24 2005-09-23 19:31:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -100,6 +100,7 @@ bx_pci2isa_c::init(void)
   BX_P2I_THIS s.pci_conf[0x01] = 0x80;
   BX_P2I_THIS s.pci_conf[0x02] = 0x00;
   BX_P2I_THIS s.pci_conf[0x03] = 0x70;
+  BX_P2I_THIS s.pci_conf[0x04] = 0x07;
   BX_P2I_THIS s.pci_conf[0x0a] = 0x01;
   BX_P2I_THIS s.pci_conf[0x0b] = 0x06;
   BX_P2I_THIS s.pci_conf[0x0e] = 0x80;
@@ -113,7 +114,6 @@ bx_pci2isa_c::init(void)
   void
 bx_pci2isa_c::reset(unsigned type)
 {
-  BX_P2I_THIS s.pci_conf[0x04] = 0x07;
   BX_P2I_THIS s.pci_conf[0x05] = 0x00;
   BX_P2I_THIS s.pci_conf[0x06] = 0x00;
   BX_P2I_THIS s.pci_conf[0x07] = 0x02;
@@ -364,6 +364,7 @@ bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     for (unsigned i=0; i<io_len; i++) {
       value8 = (value >> (i*8)) & 0xFF;
       switch (address+i) {
+        case 0x04:
         case 0x06:
           break;
         case 0x60:

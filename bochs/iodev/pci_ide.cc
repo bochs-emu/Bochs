@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.13 2005-09-22 21:12:26 vruppert Exp $
+// $Id: pci_ide.cc,v 1.14 2005-09-23 19:31:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -107,7 +107,6 @@ bx_pci_ide_c::init(void)
 bx_pci_ide_c::reset(unsigned type)
 {
   BX_PIDE_THIS s.pci_conf[0x04] = 0x01;
-  BX_PIDE_THIS s.pci_conf[0x05] = 0x00;
   BX_PIDE_THIS s.pci_conf[0x06] = 0x80;
   BX_PIDE_THIS s.pci_conf[0x07] = 0x02;
   if (bx_options.ata[0].Opresent->get ()) {

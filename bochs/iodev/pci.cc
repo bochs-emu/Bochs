@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.39 2005-09-22 21:12:26 vruppert Exp $
+// $Id: pci.cc,v 1.40 2005-09-23 19:31:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -333,6 +333,9 @@ bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     for (unsigned i=0; i<io_len; i++) {
       value8 = (value >> (i*8)) & 0xFF;
       switch (address+i) {
+        case 0x04:
+          BX_PCI_THIS s.i440fx.pci_conf[address+i] = (value8 & 0x40) | 0x06;
+          break;
         case 0x06:
         case 0x0c:
           break;
