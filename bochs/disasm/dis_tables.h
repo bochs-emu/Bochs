@@ -254,7 +254,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f29[4] = {
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2a[4] = {
   /* -- */  { "cvtpi2ps",   0, Vps,  Qq, XX },
-  /* 66 */  { "cvtpi2pd",   0, Vpd,  Qd, XX },
+  /* 66 */  { "cvtpi2pd",   0, Vpd,  Qq, XX },
   /* F2 */  { "cvtsi2sd",   0, Vsd,  Ed, XX },
   /* F3 */  { "cvtsi2ss",   0, Vss,  Ed, XX }
 };
@@ -296,7 +296,7 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f2f[4] = {
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0f50[4] = {
   /* -- */  { "movmskps",   0,  Gd, Vps, XX },
-  /* 66 */  { "movmskpd",   0,  Ed, Vpd, XX },
+  /* 66 */  { "movmskpd",   0,  Gd, Vpd, XX },
   /* F2 */  { INVALID },
   /* F3 */  { INVALID }
 };
@@ -596,8 +596,8 @@ static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc4[4] = {
 };
 
 static BxDisasmOpcodeInfo_t BxDisasmGroupSSE_0fc5[4] = {
-  /* -- */  { "pextrw",     0,  Pq, Ed, Ib },
-  /* 66 */  { "pextrw",     0, Vdq, Ed, Ib },
+  /* -- */  { "pextrw",     0,  Gd,  Pq, Ib },
+  /* 66 */  { "pextrw",     0,  Gd, Vdq, Ib },
   /* F2 */  { INVALID },
   /* F3 */  { INVALID }
 };

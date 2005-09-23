@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.33 2005-09-12 18:08:35 sshwarts Exp $
+// $Id: sse.cc,v 1.34 2005-09-23 16:45:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -365,7 +365,7 @@ void BX_CPU_C::PINSRW_VdqEdIb(bxInstruction_c *i)
 }
 
 /* 66 0F C5 */
-void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
+void BX_CPU_C::PEXTRW_GdVRdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -376,7 +376,7 @@ void BX_CPU_C::PEXTRW_VdqEdIb(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #else
-  BX_INFO(("PEXTRW_VdqEdIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PEXTRW_GdVRdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

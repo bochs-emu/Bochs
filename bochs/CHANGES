@@ -5,6 +5,7 @@ Detailed change log :
 - CPU
   - fixed XMM registers restore in FXRSTOR instruction (Andrej Palkovsky)
   - print registers dump to the log if tripple fault occured
+  - fixed switch from vm8086 to protected mode
 
 - CPU (x86-64) (Stanislav)
   - implemented call_far/ret_far/jmp_far instructions in long mode

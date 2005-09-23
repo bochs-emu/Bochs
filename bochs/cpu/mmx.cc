@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.48 2005-09-12 18:08:35 sshwarts Exp $
+// $Id: mmx.cc,v 1.49 2005-09-23 16:45:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -777,7 +777,7 @@ void BX_CPU_C::PINSRW_PqEdIb(bxInstruction_c *i)
 }
 
 /* 0F C5 */
-void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
+void BX_CPU_C::PEXTRW_GdPqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
@@ -787,7 +787,7 @@ void BX_CPU_C::PEXTRW_PqEdIb(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
 #else
-  BX_INFO(("PEXTRW_PqEdIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
+  BX_INFO(("PEXTRW_GdPqIb: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);
 #endif
 }

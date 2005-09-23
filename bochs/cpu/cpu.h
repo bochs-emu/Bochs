@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.241 2005-09-11 20:00:29 sshwarts Exp $
+// $Id: cpu.h,v 1.242 2005-09-23 16:45:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1632,11 +1632,9 @@ public: // for now...
   BX_SMF void MOVZX_GdEb(bxInstruction_c *);
   BX_SMF void MOVZX_GwEb(bxInstruction_c *);
   BX_SMF void MOVZX_GdEw(bxInstruction_c *);
-  BX_SMF void MOVZX_GwEw(bxInstruction_c *);
   BX_SMF void MOVSX_GdEb(bxInstruction_c *);
   BX_SMF void MOVSX_GwEb(bxInstruction_c *);
   BX_SMF void MOVSX_GdEw(bxInstruction_c *);
-  BX_SMF void MOVSX_GwEw(bxInstruction_c *);
 
   BX_SMF void BSWAP_EAX(bxInstruction_c *);
   BX_SMF void BSWAP_ECX(bxInstruction_c *);
@@ -2025,7 +2023,7 @@ public: // for now...
   BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void CMPSS_VssWssIb(bxInstruction_c *i);
   BX_SMF void PINSRW_PqEdIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_PqEdIb(bxInstruction_c *i);
+  BX_SMF void PEXTRW_GdPqIb(bxInstruction_c *i);
   BX_SMF void SHUFPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void PMOVMSKB_GdPRq(bxInstruction_c *i);
   BX_SMF void PMINUB_PqQq(bxInstruction_c *i);
@@ -2043,7 +2041,7 @@ public: // for now...
   /* SSE2 */
   BX_SMF void MOVSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void MOVSD_WsdVsd(bxInstruction_c *i);
-  BX_SMF void CVTPI2PD_VpdQd(bxInstruction_c *i);
+  BX_SMF void CVTPI2PD_VpdQq(bxInstruction_c *i);
   BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *i);
   BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *i);
   BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *i);
@@ -2051,7 +2049,7 @@ public: // for now...
   BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *i);
   BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *i);            	
   BX_SMF void COMISD_VpdWpd(bxInstruction_c *i);   
-  BX_SMF void MOVMSKPD_EdVRpd(bxInstruction_c *i);
+  BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *i);
   BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void ADDPD_VpdWpd(bxInstruction_c *i);
@@ -2099,7 +2097,7 @@ public: // for now...
   BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *i);
   BX_SMF void MOVNTI_MdGd(bxInstruction_c *i);
   BX_SMF void PINSRW_VdqEdIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_VdqEdIb(bxInstruction_c *i);
+  BX_SMF void PEXTRW_GdVRdqIb(bxInstruction_c *i);
   BX_SMF void SHUFPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void PSRLW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSRLD_VdqWdq(bxInstruction_c *i);
