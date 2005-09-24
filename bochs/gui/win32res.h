@@ -16,6 +16,7 @@
 #define IDBROWSE    2230
 #define IDSTATUS    2240
 #define IDCREATE    2250
+#define IDCHANGETX  2255
 #define CDROM1_DLG  2300
 #define RUNTIME_DLG 2400
 #define IDRTOTAB    2401
