@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.45 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: sse_move.cc,v 1.46 2005-09-24 16:56:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -217,9 +217,8 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   {
     readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
-    Bit32u new_mxcsr = xmm.xmm32u(2), mxcsr_mask = xmm.xmm32u(3);
-    if(! mxcsr_mask) mxcsr_mask = MXCSR_MASK;
-    if(new_mxcsr & ~mxcsr_mask)
+    Bit32u new_mxcsr = xmm.xmm32u(2);
+    if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0, 0);
 
     BX_MXCSR_REGISTER = new_mxcsr;
