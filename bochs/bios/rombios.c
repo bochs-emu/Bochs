@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.153 2005-09-19 21:09:02 vruppert Exp $
+// $Id: rombios.c,v 1.154 2005-09-24 08:09:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.153 $ $Date: 2005-09-19 21:09:02 $";
+static char bios_cvs_version_string[] = "$Revision: 1.154 $ $Date: 2005-09-24 08:09:38 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9151,12 +9151,12 @@ pci_init_io_loop1:
   in   ax, dx
   cmp  ax, #0xffff
   jz   next_pci_dev
-  mov  dl, #0x04
+  mov  dl, #0x04 ;; disable i/o and memory space access
   call pcibios_init_sel_reg
   mov  dx, #0x0cfc
   in   al, dx
-  and  al, #0x03
-  jz   next_pci_dev
+  and  al, #0xfc
+  out  dx, al
 pci_init_io_loop2:
   mov  dl, [bp-8]
   call pcibios_init_sel_reg
@@ -9198,9 +9198,16 @@ next_pci_base:
   mov  al, [bp-8]
   add  al, #0x04
   cmp  al, #0x28
-  je   next_pci_dev
+  je   enable_iomem_space
   mov  byte ptr[bp-8], al
   jmp  pci_init_io_loop2
+enable_iomem_space:
+  mov  dl, #0x04 ;; enable i/o and memory space access if available
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfc
+  in   al, dx
+  or   al, #0x07
+  out  dx, al
 next_pci_dev:
   mov  byte ptr[bp-8], #0x10
   inc  bx
