@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.181 2005-09-10 16:40:14 vruppert Exp $
+$Id: user.dbk,v 1.182 2005-09-25 09:01:05 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1152,6 +1152,10 @@ The tag tells which release you want, and it can be one of the following:
     </thead>
     <tbody>
       <row>
+        <entry>2.2.1 (bugfix1)</entry>
+        <entry>REL_2_2_1_FINAL</entry>
+      </row>
+      <row>
         <entry>2.2</entry>
         <entry>REL_2_2_FINAL</entry>
       </row>
@@ -2022,12 +2026,11 @@ turn it off.
       <entry>--enable-sb16={<option>dummy</option>}</entry>
       <entry>no</entry>
       <entry>
-      Enable Sound Blaster emulation. SB16 output to the host sound interface is
-      currently supported on Windows, Linux, FreeBSD, MacOS 9 and MacOSX host systems.
+      Enable Sound Blaster emulation.
       The <constant>dummy</constant> option means to support an SB16, but don't
-      use an output device. By default the lowlevel sound interface is autodetected.
+      use an output device. By default (without a parameter) the lowlevel sound interface is autodetected.
       See section <link linkend="sb16-emulation">Sound Blaster 16 Emulation</link>
-      for more info. This option also enables the standard PC gameport which is a
+      for supported platforms and more info. This option also enables the standard PC gameport which is a
       part of the SB16. If you don't want to use it, you might use
       <option>--disable-gameport</option>.
       </entry>
@@ -2070,9 +2073,9 @@ turn it off.
       Enables Roland Mainz's experimental idle code, which is intended to
       keep Bochs from always using 100% of CPU time.  When Bochs is waiting
       around for an interrupt, the idle code uses a select() loop and some
-      X11 tricks to wait until user input arrives.  This is designed to 
+      X11 tricks to wait until user input arrives.  This is designed to
       keep Bochs responsive while still yielding to other processes when
-      Bochs is idle.
+      Bochs is idle. It only works with X11 or term GUI.
       </entry>
     </row>
     <row>
@@ -2309,7 +2312,7 @@ turn it off.
     <row>
       <entry>--enable-4meg-pages</entry>
       <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> > 4)</entry>
-      <entry>support 4 megabyte page extensions</entry>
+      <entry>support 4 megabyte page extensions (PSE, page size extension)</entry>
     </row>
     <row>
       <entry>--enable-pae</entry>
@@ -3549,6 +3552,7 @@ Examples:
   com1: enabled=1, mode=term, dev=/dev/ttyp9
   com2: enabled=1, mode=file, dev=serial.out
   com3: enabled=1, mode=raw, dev=com1
+  com3: enabled=1, mode=socket, dev=localhost:8888
 </screen>
   This defines a serial port (UART type 16550A).
 </para>
@@ -3565,9 +3569,9 @@ Examples:
 <para>
   Other serial modes are 'null' (no input/output), 'file' (output to a file
   specified as the 'dev' parameter), 'raw' (use the real serial port - under
-  construction for win32) and 'mouse' (standard serial mouse - requires
+  construction for win32), 'mouse' (standard serial mouse - requires
   <link linkend="bochsopt-mouse">mouse option</link> setting 'type=serial'
-  or 'type=serial_wheel').
+  or 'type=serial_wheel') and 'socket' (connect a networking socket).
 </para>
 </section>
 
@@ -3729,13 +3733,13 @@ Measured IPS value will then be logged into your <link linkend="bochsopt-log">lo
 </para>
 
 <para>
-IPS is used to calibrate  many  time-dependent events   within   the  bochs
+IPS is used to calibrate many time-dependent events within the Bochs
 simulation.  For example, changing IPS affects the frequency of VGA updates,
 the duration of time before a key starts to autorepeat, and the measurement
-of BogoMips and other benchmarks.  The table below lists some typical 
+of BogoMips and other benchmarks.  The table below lists some typical
 IPS settings for different machines<footnote><para>IPS measurements depend on
-OS and compiler configuration  in addition  to processor clock
-speed.</para></footnote>.  
+OS and compiler configuration in addition to processor clock
+speed.</para></footnote>.
 </para>
 
 <table><title>Example IPS Settings</title>
@@ -3880,7 +3884,7 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 <para>
 Example:
 <screen>
-  usb1: enabled=1, ioaddr=0xFF80, port1=mouse, port2=keypad
+  usb1: enabled=1, port1=mouse, port2=keypad
 </screen>
 This option controls the presence of the USB root hub which is a part of the i440FX PCI
 chipset.
@@ -4105,9 +4109,13 @@ Up to 3 keys can be pressed at a time.
 <para>
 Example:
 <screen>
-  cmosimage: cmos.img
+  cmosimage: file=cmos.img, rtc_init=time0
 </screen>
 This defines image file that can be loaded into the CMOS RAM at startup.
+The rtc_init parameter controls whether initialize the RTC with values stored
+in the image. By default the time0 argument given to the
+<link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
+the image is the source for the initial time.
 </para>
 </section>
 
