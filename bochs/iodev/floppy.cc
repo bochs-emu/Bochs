@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.81 2005-09-03 17:20:18 vruppert Exp $
+// $Id: floppy.cc,v 1.82 2005-09-28 17:36:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.81 2005-09-03 17:20:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.82 2005-09-28 17:36:01 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -442,8 +442,11 @@ bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
       //   Bits 6..0: hard drive
       value = DEV_hd_read_handler(bx_devices.pluginHardDrive, address, io_len);
       value &= 0x7f;
-      // add in diskette change line
-      value |= (BX_FD_THIS s.DIR[BX_FD_THIS s.DOR & 0x03] & 0x80);
+      // add in diskette change line if motor is on
+      drive = BX_FD_THIS s.DOR & 0x03;
+      if (BX_FD_THIS s.DOR & (1<<(drive+4))) {
+        value |= (BX_FD_THIS s.DIR[drive] & 0x80);
+      }
       break;
 
     default:
@@ -655,7 +658,7 @@ bx_floppy_ctrl_c::floppy_command(void)
   BX_PANIC(("floppy_command(): uses DMA: not supported for"
            " external environment"));
 #else
-  unsigned i;
+  unsigned i, no_cl_reset = 0;
   Bit8u step_rate_time;
   Bit8u head_unload_time;
   Bit8u head_load_time;
@@ -663,7 +666,10 @@ bx_floppy_ctrl_c::floppy_command(void)
   Bit8u head, drive, cylinder, sector, eot;
   Bit8u sector_size, data_length;
   Bit32u logical_sector, sector_time;
-
+  
+  // on hardware I checked, the FDC does not reset the change line on some commands (ben lunt)
+  if ((BX_FD_THIS s.command[0] == 0x04) || (BX_FD_THIS s.command[0] == 0x4A)) no_cl_reset = 1;
+  
   // Print command
   char buf[9+(9*5)+1], *p = buf;
   p += sprintf(p, "COMMAND: ");
@@ -674,7 +680,7 @@ bx_floppy_ctrl_c::floppy_command(void)
 
   /* reset changeline */
   drive = BX_FD_THIS s.DOR & 0x03;
-  if (BX_FD_THIS s.media_present[drive])
+  if (BX_FD_THIS s.media_present[drive] && !no_cl_reset)
     BX_FD_THIS s.DIR[drive] &= ~0x80;
 
   BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
