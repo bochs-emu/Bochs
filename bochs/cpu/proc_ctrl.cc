@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.113 2005-09-14 20:01:42 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.114 2005-09-29 17:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1603,11 +1603,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      RAX = (BX_CPU_THIS_PTR msr.sce   <<  0)
-          | (BX_CPU_THIS_PTR msr.lme   <<  8)
-          | (BX_CPU_THIS_PTR msr.lma   << 10)
-          | (BX_CPU_THIS_PTR msr.nxe   << 11)
-          | (BX_CPU_THIS_PTR msr.ffxsr << 14);
+      RAX = (Bit64u) get_EFER();
       RDX = 0;
       return;
 
@@ -1834,9 +1830,9 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_THIS_PTR set_VM(0);           // do this just like the book says to do
-  BX_CPU_THIS_PTR set_IF(0);
-  BX_CPU_THIS_PTR set_RF(0);
+  BX_CPU_THIS_PTR clear_VM();       // do this just like the book says to do
+  BX_CPU_THIS_PTR clear_IF();
+  BX_CPU_THIS_PTR clear_RF();
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr & BX_SELECTOR_RPL_MASK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;

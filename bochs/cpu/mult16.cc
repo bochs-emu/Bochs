@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.19 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: mult16.cc,v 1.20 2005-09-29 17:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
    */
 
 #if INTEL_DIV_FLAG_BUG == 1
-  set_CF(1);
+  assert_CF();
 #endif
 
   /* now write quotient back to destination */
@@ -161,7 +161,7 @@ void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
    */
 
 #if INTEL_DIV_FLAG_BUG == 1
-  set_CF(1);
+  assert_CF();
 #endif
 
   /* now write quotient back to destination */

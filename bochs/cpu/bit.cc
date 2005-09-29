@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.24 2005-07-25 04:18:10 sshwarts Exp $
+// $Id: bit.cc,v 1.25 2005-09-29 17:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -346,7 +346,7 @@ void BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
   }
 
   if (op2_16 == 0) {
-    set_ZF(1); /* op1_16 undefined */
+    assert_ZF(); /* op1_16 undefined */
     return;
   }
 
@@ -377,7 +377,7 @@ void BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
   }
 
   if (op2_32 == 0) {
-    set_ZF(1); /* op1_32 undefined */
+    assert_ZF(); /* op1_32 undefined */
     return;
   }
 
@@ -409,7 +409,7 @@ void BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
   }
 
   if (op2_64 == 0) {
-    set_ZF(1); /* op1_64 undefined */
+    assert_ZF(); /* op1_64 undefined */
     return;
   }
 
@@ -440,7 +440,7 @@ void BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
   }
 
   if (op2_16 == 0) {
-    set_ZF(1); /* op1_16 undefined */
+    assert_ZF(); /* op1_16 undefined */
     return;
   }
 
@@ -471,7 +471,7 @@ void BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
   }
 
   if (op2_32 == 0) {
-    set_ZF(1); /* op1_32 undefined */
+    assert_ZF(); /* op1_32 undefined */
     return;
   }
 
@@ -503,7 +503,7 @@ void BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
   }
 
   if (op2_64 == 0) {
-    set_ZF(1); /* op1_64 undefined */
+    assert_ZF(); /* op1_64 undefined */
     return;
   }
 

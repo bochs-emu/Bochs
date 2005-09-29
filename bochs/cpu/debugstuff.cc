@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.39 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.40 2005-09-29 17:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,8 +48,9 @@ void BX_CPU_C::debug(bx_address offset)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
-
 #if BX_SUPPORT_X86_64
+  BX_INFO(("EFER   = 0x%08x", get_EFER()));
+
   BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
           (unsigned) (RBX >> 32), (unsigned) EBX));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.21 2005-08-08 19:56:11 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.22 2005-09-29 17:32:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,12 +52,12 @@ void BX_CPU_C::LAHF(bxInstruction_c *i)
 
 void BX_CPU_C::CLC(bxInstruction_c *i)
 {
-  set_CF(0);
+  clear_CF ();
 }
 
 void BX_CPU_C::STC(bxInstruction_c *i)
 {
-  set_CF(1);
+  assert_CF();
 }
 
 void BX_CPU_C::CLI(bxInstruction_c *i)
@@ -127,15 +127,12 @@ void BX_CPU_C::STI(bxInstruction_c *i)
           }
 
           exception(BX_GP_EXCEPTION, 0, 0);
-          return;
         }
       }
     }
 #endif
-    if (cpl > IOPL) {
+    if (cpl > IOPL)
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
-    }
   }
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode())
@@ -149,7 +146,6 @@ void BX_CPU_C::STI(bxInstruction_c *i)
       }
 #endif
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
   }
 #endif
