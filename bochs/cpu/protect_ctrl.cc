@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.41 2005-08-21 18:23:36 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.42 2005-10-01 07:47:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -419,13 +419,9 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
   /* if selector is NULL, invalidate and done */
-  if ((raw_selector & 0xfffc) == 0) {
-    BX_PANIC(("LTR: loading with NULL selector!"));
-    /* if this is OK, then invalidate and load selector & descriptor cache */
-    /* load here */
-    BX_CPU_THIS_PTR tr.selector.value = raw_selector;
-    BX_CPU_THIS_PTR tr.cache.valid = 0;
-    return;
+  if (BX_SELECTOR_RPL_MASK(raw_selector) == 0) {
+    BX_ERROR(("LTR: loading with NULL selector!"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   /* parse fields in selector, then check for null selector */
@@ -434,7 +430,6 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   if (selector.ti) {
     BX_ERROR(("LTR: selector.ti != 0"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
-    return;
   }
 
   /* fetch 2 dwords of descriptor; call handles out of limits checks */
@@ -459,14 +454,12 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   {
     BX_ERROR(("LTR: doesn't point to an available TSS descriptor!"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
-    return;
   }
 
   /* #NP(selector) if TSS descriptor is not present */
   if (! IS_PRESENT(descriptor)) {
     BX_ERROR(("LTR: LDT descriptor not present!"));
     exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
-    return;
   }
 
 /*

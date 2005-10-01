@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.15 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: bcd.cc,v 1.16 2005-10-01 07:47:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,9 +122,9 @@ void BX_CPU_C::AAM(bxInstruction_c *i)
 
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  set_OF(0);	/* undocumented flag modification */
-  set_AF(0);
-  set_CF(0);
+  clear_OF();	/* undocumented flag modification */
+  clear_AF();
+  clear_CF();
 
   /* AAM affects the following flags: S,Z,P */
   set_SF(AL >= 0x80);
@@ -148,9 +148,9 @@ void BX_CPU_C::AAD(bxInstruction_c *i)
 
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  set_OF(0);	/* undocumented flag modification */
-  set_AF(0);
-  set_CF(0);
+  clear_OF();	/* undocumented flag modification */
+  clear_AF();
+  clear_CF();
 
   set_SF(AL >= 0x80);
   set_ZF(AL == 0);
