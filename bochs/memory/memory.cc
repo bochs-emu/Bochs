@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.40 2005-04-10 19:42:48 sshwarts Exp $
+// $Id: memory.cc,v 1.41 2005-10-01 09:52:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,15 +43,6 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 #endif
 
   a20addr = A20ADDR(addr);
-  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-	  if (memory_handler->begin <= a20addr &&
-		memory_handler->end >= a20addr &&
-	  	memory_handler->write_handler(a20addr, len, data, memory_handler->write_param))
-		  return;
-	  memory_handler = memory_handler->next;
-  }
-  
   BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
@@ -64,6 +55,15 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
               break;
         }
 #endif
+
+  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
+  while (memory_handler) {
+	  if (memory_handler->begin <= a20addr &&
+		memory_handler->end >= a20addr &&
+	  	memory_handler->write_handler(a20addr, len, data, memory_handler->write_param))
+		  return;
+	  memory_handler = memory_handler->next;
+  }
 
 #if BX_SUPPORT_ICACHE
   if (a20addr < BX_MEM_THIS len)
@@ -202,15 +202,6 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 #endif
  
   a20addr = A20ADDR(addr);
-  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-	  if (memory_handler->begin <= a20addr &&
-		memory_handler->end >= a20addr &&
-	  	memory_handler->read_handler(a20addr, len, data, memory_handler->read_param))
-		  return;
-	  memory_handler = memory_handler->next;
-  }
-  
   BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
@@ -223,6 +214,15 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
               break;
         }
 #endif
+
+  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
+  while (memory_handler) {
+	  if (memory_handler->begin <= a20addr &&
+		memory_handler->end >= a20addr &&
+	  	memory_handler->read_handler(a20addr, len, data, memory_handler->read_param))
+		  return;
+	  memory_handler = memory_handler->next;
+  }
 
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
