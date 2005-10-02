@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.158 2005-09-18 07:16:28 vruppert Exp $
+// $Id: bochs.h,v 1.159 2005-10-02 10:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -656,7 +656,6 @@ typedef struct BOCHSAPI {
   bx_cmosimage_options   cmosimage;
   bx_clock_options  clock;
   bx_ne2k_options   ne2k;
-  bx_param_bool_c   *OnewHardDriveSupport;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
   bx_keyboard_options keyboard;

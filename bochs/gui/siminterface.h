@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.141 2005-09-22 21:12:26 vruppert Exp $
+// $Id: siminterface.h,v 1.142 2005-10-02 10:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -341,7 +341,6 @@ typedef enum {
   BXP_SCREENMODE,
   BXP_I440FX_SUPPORT,
   BXP_PCI,
-  BXP_NEWHARDDRIVESUPPORT,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,

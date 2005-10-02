@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.32 2005-08-21 17:40:45 vruppert Exp $
+// $Id: harddrv.h,v 1.33 2005-10-02 10:16:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,10 +108,11 @@ typedef enum _sense {
 } sense_t;
 
 typedef enum _asc {
+      ASC_ILLEGAL_OPCODE = 0x20,
+      ASC_LOGICAL_BLOCK_OOR = 0x21,
       ASC_INV_FIELD_IN_CMD_PACKET = 0x24,
-      ASC_MEDIUM_NOT_PRESENT = 0x3a,
       ASC_SAVING_PARAMETERS_NOT_SUPPORTED = 0x39,
-      ASC_LOGICAL_BLOCK_OOR = 0x21
+      ASC_MEDIUM_NOT_PRESENT = 0x3a
 } asc_t;
 
 class LOWLEVEL_CDROM;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.46 2005-09-22 21:12:26 vruppert Exp $
+// $Id: config.cc,v 1.47 2005-10-02 10:16:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -744,11 +744,6 @@ void bx_init_options ()
 
       }
     }
-
-  bx_options.OnewHardDriveSupport = new bx_param_bool_c (BXP_NEWHARDDRIVESUPPORT,
-      "New hard drive support",
-      "Enables new features found on newer hard drives.",
-      1);
 
   // boot sequence
   for (i=0; i<3; i++) {
@@ -1717,9 +1712,8 @@ void bx_reset_options ()
       bx_options.atadevice[channel][slave].Omodel->reset();
       bx_options.atadevice[channel][slave].Obiosdetect->reset();
       bx_options.atadevice[channel][slave].Otranslation->reset();
-      }
     }
-  bx_options.OnewHardDriveSupport->reset();
+  }
 
   // boot
   for (i=0; i<3; i++) {
