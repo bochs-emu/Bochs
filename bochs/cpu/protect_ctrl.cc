@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.42 2005-10-01 07:47:00 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.43 2005-10-02 15:26:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -419,7 +419,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   }
 
   /* if selector is NULL, invalidate and done */
-  if (BX_SELECTOR_RPL_MASK(raw_selector) == 0) {
+  if ((raw_selector & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("LTR: loading with NULL selector!"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
