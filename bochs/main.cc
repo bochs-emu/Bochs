@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.293 2005-08-20 16:41:41 vruppert Exp $
+// $Id: main.cc,v 1.294 2005-10-03 10:28:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -575,11 +575,6 @@ int bx_init_main (int argc, char *argv[])
 #endif
 #endif  /* if BX_PLUGINS */
 
-#if !BX_USE_CONFIG_INTERFACE
-  // this allows people to get quick start behavior by default
-  SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
-#endif
-
   int norcfile = 1;
 
   if (load_rcfile) {
@@ -791,9 +786,6 @@ int bx_init_hardware()
   if (SIM->get_param_enum(BXP_BOCHS_START)->get ()==BX_QUICK_START) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = SIM->get_default_log_action (level);
-#if !BX_USE_CONFIG_INTERFACE
-      if (action == ACT_ASK) action = ACT_FATAL;
-#endif
       io->set_log_action (level, action);
     }
   }

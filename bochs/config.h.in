@@ -48,8 +48,6 @@
 #define BX_EXIT(x)  ::exit(x)
 #endif
 
-#define BX_USE_CONFIG_INTERFACE 1
-
 // I have tested the following combinations:
 //  * processors=1, bootstrap=0, ioapic_id=1   (uniprocessor system)
 //  * processors=2, bootstrap=0, ioapic_id=2
