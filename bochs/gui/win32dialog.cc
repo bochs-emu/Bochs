@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.24 2005-01-19 18:21:31 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.25 2005-10-07 23:28:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -17,12 +17,13 @@ extern "C" {
 #include "win32dialog.h"
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
+static int retcode = 0;
 
 HWND GetBochsWindow()
 {
   HWND hwnd;
 
-  hwnd = FindWindow("Bochs for Windows", NULL);
+  hwnd = FindWindow("Bochs for Windows - Display", NULL);
   if (hwnd == NULL) {
     hwnd = GetForegroundWindow();
   }
@@ -276,48 +277,6 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   return FALSE;
 }
 
-void RuntimeDlgSetTab(HWND hDlg, int tabnum)
-{
-  ShowWindow(GetDlgItem(hDlg, IDGROUP2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDGROUP3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDGROUP4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLABEL4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDCDROM2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDCDROM3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDCDROM4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDBROWSE2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDBROWSE3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDBROWSE4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDSTATUS2), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDSTATUS3), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDSTATUS4), (tabnum == 0) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDDEVLIST), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGLBL1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGLBL2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGLBL3), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGLBL4), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGLBL5), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGEVT1), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGEVT2), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGEVT3), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGEVT4), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDLOGEVT5), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDADVLOGOPT), (tabnum == 1) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMISCLBL1), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMISCLBL2), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMISCLBL3), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMISCLBL4), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMISCLBL5), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDVGAUPDATE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDMOUSE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDKBDPASTE), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDUSERBTN), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDSB16TIMER), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-  ShowWindow(GetDlgItem(hDlg, IDSBLOGLEV), (tabnum == 2) ? SW_SHOW : SW_HIDE);
-}
-
 void RuntimeDlgSetStdLogOpt(HWND hDlg)
 {
   int level, idx;
@@ -379,37 +338,23 @@ void RuntimeDlgSetAdvLogOpt(HWND hDlg)
   }
 }
 
-static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  TC_ITEM tItem;
-  NMHDR tcinfo;
-  int device, tabnum;
-  static BOOL advanced;
   static int devcount;
-  long noticode;
-  static unsigned changed;
-  unsigned old_changed;
-  int idx, level, mod, value;
   static bx_atadevice_options cdromop[4];
-  char buffer[32];
   static char origpath[4][MAX_PATH];
-  char path[MAX_PATH];
-  char prefix[8];
+  static BOOL changed;
+  int device;
+  long noticode;
   Bit8u cdrom;
+  char path[MAX_PATH];
+  PSHNOTIFY *psn;
 
   switch (msg) {
     case WM_INITDIALOG:
-      SetForegroundWindow(hDlg);
-      tItem.mask = TCIF_TEXT;
-      tItem.pszText = "CD-ROM Options";
-      TabCtrl_InsertItem(GetDlgItem(hDlg, IDRTOTAB), 0, &tItem);
-      tItem.mask = TCIF_TEXT;
-      tItem.pszText = "Log Options";
-      TabCtrl_InsertItem(GetDlgItem(hDlg, IDRTOTAB), 1, &tItem);
-      tItem.mask = TCIF_TEXT;
-      tItem.pszText = "Misc Options";
-      TabCtrl_InsertItem(GetDlgItem(hDlg, IDRTOTAB), 2, &tItem);
-      RuntimeDlgSetTab(hDlg, 0);
+      SetForegroundWindow(GetParent(hDlg));
+      SetDlgItemText(GetParent(hDlg), IDOK, "Continue");
+      SetDlgItemText(GetParent(hDlg), IDCANCEL, "Quit");
       // 4 cdroms supported at run time
       devcount = 1;
       for (cdrom=1; cdrom<4; cdrom++) {
@@ -429,40 +374,46 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
           devcount++;
         }
       }
-      idx = 0;
-      for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
-        if (strcmp(SIM->get_prefix(mod), "[     ]")) {
-          lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
-          lstrcpy(prefix, prefix+1);
-          prefix[5] = 0;
-          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
-          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
-          idx++;
-        }
+      changed = FALSE;
+      return TRUE;
+    case WM_NOTIFY:
+      psn = (PSHNOTIFY *)lParam;
+      switch(psn->hdr.code) {
+        case PSN_APPLY:
+          if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
+            for (device=1; device<devcount; device++) {
+              if (SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
+                if (lstrlen(path)) {
+                  cdromop[device].Ostatus->set(BX_INSERTED);
+                  if (lstrcmp(path, cdromop[device].Opath->getptr())) {
+                    cdromop[device].Opath->set(path);
+                  }
+                } else {
+                  cdromop[device].Ostatus->set(BX_EJECTED);
+                }
+              } else {
+                cdromop[device].Ostatus->set(BX_EJECTED);
+              }
+            }
+            changed = FALSE;
+          } else {
+            if (changed) {
+              for (device=1; device<devcount; device++) {
+                if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
+                  cdromop[device].Opath->set(origpath[device]);
+                }
+              }
+            }
+            retcode = BX_CI_RT_CONT;
+          }
+          return PSNRET_NOERROR;
+        case PSN_QUERYCANCEL:
+          retcode = BX_CI_RT_QUIT;
+          return TRUE;
       }
-      RuntimeDlgSetStdLogOpt(hDlg);
-      SetDlgItemInt(hDlg, IDVGAUPDATE, SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->get(), FALSE);
-      SetDlgItemInt(hDlg, IDKBDPASTE, SIM->get_param_num(BXP_KBD_PASTE_DELAY)->get(), FALSE);
-      if (SIM->get_param_num(BXP_MOUSE_ENABLED)->get()) {
-        SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_SETCHECK, BST_CHECKED, 0);
-      }
-      SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXP_USER_SHORTCUT)->getptr());
-      SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXP_SB16_DMATIMER)->get(), FALSE);
-      SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXP_SB16_LOGLEVEL)->get(), FALSE);
-      EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
-      advanced = FALSE;
-      changed = 0;
-      break;
-    case WM_CLOSE:
-      for (device=1; device<devcount; device++) {
-        if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
-          cdromop[device].Opath->set(origpath[device]);
-        }
-      }
-      EndDialog(hDlg, BX_CI_RT_QUIT);
       break;
     case WM_COMMAND:
-      old_changed = changed;
       noticode = HIWORD(wParam);
       switch(noticode) {
         case EN_CHANGE:
@@ -470,34 +421,8 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             case IDCDROM2:
             case IDCDROM3:
             case IDCDROM4:
-              changed |= 0x01;
-              break;
-            case IDVGAUPDATE:
-            case IDKBDPASTE:
-            case IDUSERBTN:
-            case IDSB16TIMER:
-            case IDSBLOGLEV:
-              changed |= 0x04;
-              break;
-          }
-          break;
-        case CBN_SELCHANGE: /* LBN_SELCHANGE is the same value */
-          switch (LOWORD(wParam)) {
-            case IDDEVLIST:
-              RuntimeDlgSetAdvLogOpt(hDlg);
-              break;
-            case IDLOGEVT1:
-            case IDLOGEVT2:
-            case IDLOGEVT3:
-            case IDLOGEVT4:
-            case IDLOGEVT5:
-              if ((changed & 0x02) == 0) {
-                EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), FALSE);
-                if (advanced) {
-                  EnableWindow(GetDlgItem(hDlg, IDDEVLIST), FALSE);
-                }
-                changed |= 0x02;
-              }
+              changed = TRUE;
+              SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
               break;
           }
           break;
@@ -514,6 +439,106 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_SETCHECK, BST_CHECKED, 0);
               }
               break;
+            case IDSTATUS2:
+            case IDSTATUS3:
+            case IDSTATUS4:
+              changed = TRUE;
+              SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              break;
+          }
+      }
+      break;
+  }
+  return FALSE;
+}
+
+static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static BOOL advanced;
+  static BOOL changed;
+  int idx, level, mod, value;
+  long noticode;
+  char prefix[8];
+  PSHNOTIFY *psn;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      idx = 0;
+      for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
+        if (strcmp(SIM->get_prefix(mod), "[     ]")) {
+          lstrcpyn(prefix, SIM->get_prefix(mod), sizeof(prefix));
+          lstrcpy(prefix, prefix+1);
+          prefix[5] = 0;
+          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_ADDSTRING, 0, (LPARAM)prefix);
+          SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
+          idx++;
+        }
+      }
+      RuntimeDlgSetStdLogOpt(hDlg);
+      advanced = FALSE;
+      changed = FALSE;
+      return TRUE;
+    case WM_NOTIFY:
+      psn = (PSHNOTIFY *)lParam;
+      switch(psn->hdr.code) {
+        case PSN_APPLY:
+          if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
+            if (advanced) {
+              idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
+              mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
+              for (level=0; level<5; level++) {
+                idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+                value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
+                SIM->set_log_action (mod, level, value);
+              }
+              EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
+            } else {
+              for (level=0; level<5; level++) {
+                idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
+                value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
+                if (value < 4) {
+                  // set new default
+                  SIM->set_default_log_action (level, value);
+                  // apply that action to all modules (devices)
+                  SIM->set_log_action (-1, level, value);
+                }
+              }
+            }
+            EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
+            changed = FALSE;
+          }
+          return PSNRET_NOERROR;
+        case PSN_QUERYCANCEL:
+          retcode = BX_CI_RT_QUIT;
+          return TRUE;
+      }
+      break;
+    case WM_COMMAND:
+      noticode = HIWORD(wParam);
+      switch(noticode) {
+        case CBN_SELCHANGE: /* LBN_SELCHANGE is the same value */
+          switch (LOWORD(wParam)) {
+            case IDDEVLIST:
+              RuntimeDlgSetAdvLogOpt(hDlg);
+              break;
+            case IDLOGEVT1:
+            case IDLOGEVT2:
+            case IDLOGEVT3:
+            case IDLOGEVT4:
+            case IDLOGEVT5:
+              if (!changed) {
+                EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), FALSE);
+                if (advanced) {
+                  EnableWindow(GetDlgItem(hDlg, IDDEVLIST), FALSE);
+                }
+                changed = TRUE;
+                SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              }
+              break;
+          }
+          break;
+        default:
+          switch (LOWORD(wParam)) {
             case IDADVLOGOPT:
               if (SendMessage(GetDlgItem(hDlg, IDADVLOGOPT), BM_GETCHECK, 0, 0) == BST_CHECKED) {
                 EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
@@ -526,99 +551,80 @@ static BOOL CALLBACK RuntimeDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
                 advanced = FALSE;
               }
               break;
-            case IDSTATUS2:
-            case IDSTATUS3:
-            case IDSTATUS4:
-              changed |= 0x01;
-              break;
-            case IDMOUSE:
-              changed |= 0x04;
-              break;
-            case IDAPPLY:
-              if (changed & 0x01) {
-                for (device=1; device<devcount; device++) {
-                  if (SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_GETCHECK, 0, 0) == BST_CHECKED) {
-                    GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
-                    if (lstrlen(path)) {
-                      cdromop[device].Ostatus->set(BX_INSERTED);
-                      if (lstrcmp(path, cdromop[device].Opath->getptr())) {
-                        cdromop[device].Opath->set(path);
-                      }
-                    } else {
-                      cdromop[device].Ostatus->set(BX_EJECTED);
-                    }
-                  } else {
-                    cdromop[device].Ostatus->set(BX_EJECTED);
-                  }
-                }
-              }
-              if (changed & 0x02) {
-                if (advanced) {
-                  idx = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETCURSEL, 0, 0);
-                  mod = SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_GETITEMDATA, idx, 0);
-                  for (level=0; level<5; level++) {
-                    idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
-                    value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-                    SIM->set_log_action (mod, level, value);
-                  }
-                  EnableWindow(GetDlgItem(hDlg, IDDEVLIST), TRUE);
-                } else {
-                  for (level=0; level<5; level++) {
-                    idx = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETCURSEL, 0, 0);
-                    value = SendMessage(GetDlgItem(hDlg, IDLOGEVT1+level), CB_GETITEMDATA, idx, 0);
-                    if (value < 4) {
-                      // set new default
-                      SIM->set_default_log_action (level, value);
-                      // apply that action to all modules (devices)
-                      SIM->set_log_action (-1, level, value);
-                    }
-                  }
-                }
-                EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
-              }
-              if (changed & 0x04) {
-                value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
-                SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->set(value);
-                value = GetDlgItemInt(hDlg, IDKBDPASTE, NULL, FALSE);
-                SIM->get_param_num(BXP_KBD_PASTE_DELAY)->set(value);
-                value = SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_GETCHECK, 0, 0);
-                SIM->get_param_num(BXP_MOUSE_ENABLED)->set(value==BST_CHECKED);
-                GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
-                SIM->get_param_string(BXP_USER_SHORTCUT)->set(buffer);
-                value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
-                SIM->get_param_num(BXP_SB16_DMATIMER)->set(value);
-                value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
-                SIM->get_param_num(BXP_SB16_LOGLEVEL)->set(value);
-              }
-              EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
-              changed = 0;
-              break;
-            case IDOK:
-              EndDialog(hDlg, BX_CI_RT_CONT);
-              break;
-            case IDCANCEL:
-              for (device=1; device<devcount; device++) {
-                if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
-                  cdromop[device].Opath->set(origpath[device]);
-                }
-              }
-              EndDialog(hDlg, BX_CI_RT_QUIT);
-              break;
           }
-      }
-      if ((changed > 0) && (old_changed == 0)) {
-        EnableWindow(GetDlgItem(hDlg, IDAPPLY), TRUE);
       }
       break;
+  }
+  return FALSE;
+}
+
+static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static BOOL changed;
+  int value;
+  long noticode;
+  char buffer[32];
+  PSHNOTIFY *psn;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      SetDlgItemInt(hDlg, IDVGAUPDATE, SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDKBDPASTE, SIM->get_param_num(BXP_KBD_PASTE_DELAY)->get(), FALSE);
+      if (SIM->get_param_num(BXP_MOUSE_ENABLED)->get()) {
+        SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_SETCHECK, BST_CHECKED, 0);
+      }
+      SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXP_USER_SHORTCUT)->getptr());
+      SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXP_SB16_DMATIMER)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXP_SB16_LOGLEVEL)->get(), FALSE);
+      changed = FALSE;
+      return TRUE;
     case WM_NOTIFY:
-      switch(LOWORD(wParam)) {
-        case IDRTOTAB:
-          tcinfo = *(LPNMHDR)lParam;
-          if (tcinfo.code == TCN_SELCHANGE) {
-            tabnum = TabCtrl_GetCurSel(GetDlgItem(hDlg, IDRTOTAB));
-            RuntimeDlgSetTab(hDlg, tabnum);
+      psn = (PSHNOTIFY *)lParam;
+      switch(psn->hdr.code) {
+        case PSN_APPLY:
+          if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
+            value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
+            SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->set(value);
+            value = GetDlgItemInt(hDlg, IDKBDPASTE, NULL, FALSE);
+            SIM->get_param_num(BXP_KBD_PASTE_DELAY)->set(value);
+            value = SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_GETCHECK, 0, 0);
+            SIM->get_param_num(BXP_MOUSE_ENABLED)->set(value==BST_CHECKED);
+            GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
+            SIM->get_param_string(BXP_USER_SHORTCUT)->set(buffer);
+            value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
+            SIM->get_param_num(BXP_SB16_DMATIMER)->set(value);
+            value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
+            SIM->get_param_num(BXP_SB16_LOGLEVEL)->set(value);
+            changed = FALSE;
+          }
+          return PSNRET_NOERROR;
+        case PSN_QUERYCANCEL:
+          retcode = BX_CI_RT_QUIT;
+          return TRUE;
+      }
+      break;
+    case WM_COMMAND:
+      noticode = HIWORD(wParam);
+      switch(noticode) {
+        case EN_CHANGE:
+          switch (LOWORD(wParam)) {
+            case IDVGAUPDATE:
+            case IDKBDPASTE:
+            case IDUSERBTN:
+            case IDSB16TIMER:
+            case IDSBLOGLEV:
+              changed = TRUE;
+              SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              break;
           }
           break;
+        default:
+          switch (LOWORD(wParam)) {
+            case IDMOUSE:
+              changed = TRUE;
+              SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              break;
+          }
       }
       break;
   }
@@ -705,8 +711,35 @@ int Cdrom1Dialog()
 
 int RuntimeOptionsDialog()
 {
-  return DialogBox(NULL, MAKEINTRESOURCE(RUNTIME_DLG), GetBochsWindow(),
-                   (DLGPROC)RuntimeDlgProc);
+  PROPSHEETPAGE psp[3];
+  PROPSHEETHEADER psh;
+  int i;
+
+  memset(psp,0,sizeof(psp));
+  for (i = 0; i < 3; i++) {
+    psp[i].dwSize = sizeof(PROPSHEETPAGE);
+    psp[i].dwFlags = PSP_DEFAULT;
+    psp[i].hInstance = NULL;
+  }
+  psp[0].pszTemplate = MAKEINTRESOURCE(RT_CDROM_DLG);
+  psp[0].pfnDlgProc = RTCdromDlgProc;
+  psp[1].pszTemplate = MAKEINTRESOURCE(RT_LOGOPT_DLG);
+  psp[1].pfnDlgProc = RTLogOptDlgProc;
+  psp[2].pszTemplate = MAKEINTRESOURCE(RT_MISC_DLG);
+  psp[2].pfnDlgProc = RTMiscDlgProc;
+
+  memset(&psh,0,sizeof(PROPSHEETHEADER));
+  psh.dwSize = sizeof(PROPSHEETHEADER);
+  psh.dwFlags = PSH_PROPSHEETPAGE;
+  psh.hwndParent = GetBochsWindow();
+  psh.hInstance = NULL;
+  psh.pszCaption = "Runtime Options";
+  psh.nPages = 3;
+  psh.ppsp = (LPCPROPSHEETPAGE)&psp;
+
+  PropertySheet(&psh);
+  PostMessage(GetBochsWindow(), WM_SETFOCUS, 0, 0);
+  return retcode;
 }
 
 #endif // BX_USE_TEXTCONFIG && defined(WIN32)
