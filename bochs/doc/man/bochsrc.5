@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "22 Sep 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "8 Oct 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -728,19 +728,25 @@ Example:
 .TP
 .I "user_shortcut:"
 This defines the keyboard shortcut to be sent when you press the "user"
-button in the headerbar. The shortcut string can be a combination of
-these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab",
-"win". Up to 3 keys can be pressed at a time.
+button in the headerbar. The shortcut string is a combination of maximum
+3 key names (listed below) separated with a '-' character. The old-style
+syntax (without the '-') is still supported for a few key combinations.
+Valid key names: "f1", ... "f12", "alt", "bksp", "ctrl", "del", "down",
+"enter", "esc", "left", "menu", "minus", "plus", "right", "space", "tab",
+"up", and "win".
 
 Example:
-  user_shortcut: keys=ctrlaltdel
+  user_shortcut: keys=ctrl-alt-del
 
 .TP
 .I "cmosimage:"
 This defines image file that can be loaded into the CMOS RAM at startup.
+The rtc_init parameter controls whether initialize the RTC with values stored
+in the image. By default the time0 argument given to the clock option is used.
+With 'rtc_init=image' the image is the source for the initial time.
 
 Example:
-  cmosimage: cmos.img
+  cmosimage: file=cmos.img, rtc_init=time0
 
 .TP
 .I "usb1:"

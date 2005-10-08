@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.80 2004-08-15 19:27:14 vruppert Exp $
+// $Id: gui.cc,v 1.81 2005-10-08 11:41:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,6 +47,46 @@ bx_gui_c *bx_gui = NULL;
 
 #define BX_GUI_THIS bx_gui->
 #define LOG_THIS BX_GUI_THIS
+
+#define BX_KEY_UNKNOWN 0x7fffffff
+#define N_USER_KEYS 28
+
+typedef struct {
+  char *key;
+  Bit32u symbol;
+} user_key_t;
+
+static user_key_t user_keys[N_USER_KEYS] =
+{
+  "f1",    BX_KEY_F1,
+  "f2",    BX_KEY_F2,
+  "f3",    BX_KEY_F3,
+  "f4",    BX_KEY_F4,
+  "f5",    BX_KEY_F5,
+  "f6",    BX_KEY_F6,
+  "f7",    BX_KEY_F7,
+  "f8",    BX_KEY_F8,
+  "f9",    BX_KEY_F9,
+  "f10",   BX_KEY_F10,
+  "f11",   BX_KEY_F11,
+  "f12",   BX_KEY_F12,
+  "alt",   BX_KEY_ALT_L,
+  "bksp",  BX_KEY_BACKSPACE,
+  "ctrl",  BX_KEY_CTRL_L,
+  "del",   BX_KEY_DELETE,
+  "down",  BX_KEY_DOWN,
+  "enter", BX_KEY_ENTER,
+  "esc",   BX_KEY_ESC,
+  "left",  BX_KEY_LEFT,
+  "menu",  BX_KEY_MENU,
+  "minus", BX_KEY_MINUS,
+  "plus",  BX_KEY_KP_ADD,
+  "right", BX_KEY_RIGHT,
+  "space", BX_KEY_SPACE,
+  "tab",   BX_KEY_TAB,
+  "up",    BX_KEY_UP,
+  "win",   BX_KEY_WIN_L
+};
 
 bx_gui_c::bx_gui_c(void)
 {
@@ -483,15 +523,27 @@ bx_gui_c::toggle_mouse_enable(void)
   bx_options.Omouse_enabled->set (!old);
 }
 
+Bit32u get_user_key(char *key)
+{
+  int i = 0;
+
+  while (i < N_USER_KEYS) {
+    if (!strcmp(key, user_keys[i].key))
+      return user_keys[i].symbol;
+    i++;
+  }
+  return BX_KEY_UNKNOWN;
+}
+
   void
 bx_gui_c::userbutton_handler(void)
 {
-  unsigned shortcut[4];
-  unsigned p;
-  char *user_shortcut;
-  int i, len, ret = 1;
+  Bit32u shortcut[4];
+  Bit32u symbol;
+  char user_shortcut[512];
+  char *ptr;
+  int i, len = 0, ret = 1;
 
-  len = 0;
 #ifdef WIN32
   if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
               "rfb")) {
@@ -501,41 +553,52 @@ bx_gui_c::userbutton_handler(void)
 #endif
     ret = SIM->ask_param (BXP_USER_SHORTCUT);
   }
-  user_shortcut = bx_options.Ouser_shortcut->getptr();
+  strcpy(user_shortcut, bx_options.Ouser_shortcut->getptr());
   if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
-    len = 0;
-    p = 0;
-    while ((p < strlen(user_shortcut)) && (len < 3)) {
-      if (!strncmp(user_shortcut+p, "alt", 3)) {
-        shortcut[len++] = BX_KEY_ALT_L;
-        p += 3;
-      } else if (!strncmp(user_shortcut+p, "ctrl", 4)) {
-        shortcut[len++] = BX_KEY_CTRL_L;
-        p += 4;
-      } else if (!strncmp(user_shortcut+p, "del", 3)) {
-        shortcut[len++] = BX_KEY_DELETE;
-        p += 3;
-      } else if (!strncmp(user_shortcut+p, "esc", 3)) {
-        shortcut[len++] = BX_KEY_ESC;
-        p += 3;
-      } else if (!strncmp(user_shortcut+p, "f1", 2)) {
-        shortcut[len++] = BX_KEY_F1;
-        p += 2;
-      } else if (!strncmp(user_shortcut+p, "f4", 2)) {
-        shortcut[len++] = BX_KEY_F4;
-        p += 2;
-      } else if (!strncmp(user_shortcut+p, "tab", 3)) {
-        shortcut[len++] = BX_KEY_TAB;
-        p += 3;
-      } else if (!strncmp(user_shortcut+p, "win", 3)) {
-        shortcut[len++] = BX_KEY_WIN_L;
-        p += 3;
-      } else if (!strncmp(user_shortcut+p, "bksp", 4)) {
-        shortcut[len++] = BX_KEY_BACKSPACE;
-        p += 4;
-      } else {
-        BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
-        return;
+    ptr = strtok(user_shortcut, "-");
+    if (strcmp(ptr, bx_options.Ouser_shortcut->getptr())) {
+      while (ptr) {
+        symbol = get_user_key(ptr);
+        if (symbol == BX_KEY_UNKNOWN) {
+          BX_ERROR(("Unknown shortcut %s ignored", ptr));
+          return;
+        }
+        shortcut[len++] = symbol;
+        ptr = strtok(NULL, "-");
+      }
+    } else {
+      while ((ptr[0]) && (len < 3)) {
+        if (!strncmp(ptr, "alt", 3)) {
+          shortcut[len++] = BX_KEY_ALT_L;
+          ptr += 3;
+        } else if (!strncmp(ptr, "ctrl", 4)) {
+          shortcut[len++] = BX_KEY_CTRL_L;
+          ptr += 4;
+        } else if (!strncmp(ptr, "del", 3)) {
+          shortcut[len++] = BX_KEY_DELETE;
+          ptr += 3;
+        } else if (!strncmp(ptr, "esc", 3)) {
+          shortcut[len++] = BX_KEY_ESC;
+          ptr += 3;
+        } else if (!strncmp(ptr, "f1", 2)) {
+          shortcut[len++] = BX_KEY_F1;
+          ptr += 2;
+        } else if (!strncmp(ptr, "f4", 2)) {
+          shortcut[len++] = BX_KEY_F4;
+          ptr += 2;
+        } else if (!strncmp(ptr, "tab", 3)) {
+          shortcut[len++] = BX_KEY_TAB;
+          ptr += 3;
+        } else if (!strncmp(ptr, "win", 3)) {
+          shortcut[len++] = BX_KEY_WIN_L;
+          ptr += 3;
+        } else if (!strncmp(ptr, "bksp", 4)) {
+          shortcut[len++] = BX_KEY_BACKSPACE;
+          ptr += 4;
+        } else {
+          BX_ERROR(("Unknown shortcut %s ignored", user_shortcut));
+          return;
+        }
       }
     }
     i = 0;

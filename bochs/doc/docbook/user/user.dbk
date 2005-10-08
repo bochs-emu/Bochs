@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.182 2005-09-25 09:01:05 vruppert Exp $
+$Id: user.dbk,v 1.183 2005-10-08 11:41:18 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4095,13 +4095,16 @@ exception is French macs, that do have a "at"-like keyboard.
 <para>
 Examples:
 <screen>
-  user_shortcut: keys=ctrlaltdel
-  user_shortcut: keys=ctrlaltesc
+  user_shortcut: keys=ctrl-alt-del
+  user_shortcut: keys=ctrl-alt-esc
 </screen>
-This defines the keyboard shortcut to be sent when you press the "user"
-button in the <link linkend="headerbar">headerbar</link>. The shortcut string can be a combination of
-these key names: "alt", "bksp", "ctrl", "del", "esc", "f1", "f4", "tab", "win".
-Up to 3 keys can be pressed at a time.
+This defines the keyboard shortcut to be sent when you press the "user" button
+in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
+combination of maximum 3 key names (listed below) separated with a '-' character.
+The old-style syntax (without the '-') is still supported for a few key combinations.
+Valid key names: "f1", ... "f12", "alt", "bksp", "ctrl", "del", "down",
+"enter", "esc", "left", "menu", "minus", "plus", "right", "space", "tab",
+"up", and "win".
 </para>
 </section>
 
