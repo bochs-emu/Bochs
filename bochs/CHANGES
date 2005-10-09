@@ -5,7 +5,7 @@ Detailed change log :
 - CPU
   - fixed XMM registers restore in FXRSTOR instruction (Andrej Palkovsky)
   - print registers dump to the log if tripple fault occured
-  - fixed switch from vm8086 to protected mode
+  - fixed PANIC in LTR instruction (Stanislav)
 
 - CPU (x86-64) (Stanislav)
   - implemented call_far/ret_far/jmp_far instructions in long mode
@@ -58,7 +58,6 @@ Detailed change log :
 - SF patches applied
  [1309763] Watchpoints don't work in device memory by Nickolai Zeldovich
  [1294930] change line status on floppy by Ben Lunt
- [1287863] vm86 -> pmode bugfix by Mathis
  [1282033] SSE FXRESTORE not working correctly by Ondrej Palkovsky
   [816979] wget generalizations by Lyndon Nerenberg
  [1214886] No more pageWriteStamp / unified icache by H. Johansson
