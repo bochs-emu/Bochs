@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.82 2005-09-28 17:36:01 vruppert Exp $
+// $Id: floppy.cc,v 1.83 2005-10-09 17:58:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.82 2005-09-28 17:36:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.83 2005-10-09 17:58:37 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -510,27 +510,24 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       if (prev_normal_operation==0 && normal_operation) {
         // transition from RESET to NORMAL
-        bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
-             bx_options.Ofloppy_command_delay->get (), 0 );
-        }
-      else if (prev_normal_operation && normal_operation==0) {
+        bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index, 250, 0 );
+      } else if (prev_normal_operation && normal_operation==0) {
         // transition from NORMAL to RESET
-        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+        BX_FD_THIS s.main_status_reg = 0;
         BX_FD_THIS s.pending_command = 0xfe; // RESET pending
-
-        }
-        BX_DEBUG(("io_write: digital output register"));
-        BX_DEBUG(("  motor on, drive1 = %d", motor_on_drive1 > 0));
-        BX_DEBUG(("  motor on, drive0 = %d", motor_on_drive0 > 0));
-        BX_DEBUG(("  dma_and_interrupt_enable=%02x",
-          (unsigned) dma_and_interrupt_enable));
-        BX_DEBUG(("  normal_operation=%02x",
-          (unsigned) normal_operation));
-        BX_DEBUG(("  drive_select=%02x",
-          (unsigned) drive_select));
+      }
+      BX_DEBUG(("io_write: digital output register"));
+      BX_DEBUG(("  motor on, drive1 = %d", motor_on_drive1 > 0));
+      BX_DEBUG(("  motor on, drive0 = %d", motor_on_drive0 > 0));
+      BX_DEBUG(("  dma_and_interrupt_enable=%02x",
+        (unsigned) dma_and_interrupt_enable));
+      BX_DEBUG(("  normal_operation=%02x",
+        (unsigned) normal_operation));
+      BX_DEBUG(("  drive_select=%02x",
+        (unsigned) drive_select));
       if (BX_FD_THIS s.device_type[drive_select] == BX_FLOPPY_NONE) {
         BX_DEBUG(("WARNING: not existing drive selected"));
-        }
+      }
       break;
 
     case 0x3f4: /* diskette controller data rate select register */
@@ -540,9 +537,9 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x3F5: /* diskette controller data */
       BX_DEBUG(("command = %02x", (unsigned) value));
       if (BX_FD_THIS s.command_complete) {
-        if (BX_FD_THIS s.pending_command!=0)
-          BX_PANIC(("io: 3f5: receiving new comm, old one (%02x) pending",
-            (unsigned) BX_FD_THIS s.pending_command));
+        if (BX_FD_THIS s.pending_command != 0)
+          BX_PANIC(("write 0x03f5: receiving new command 0x%02x, old one (0x%02x) pending",
+            value, BX_FD_THIS s.pending_command));
         BX_FD_THIS s.command[0] = value;
         BX_FD_THIS s.command_complete = 0;
         BX_FD_THIS s.command_index = 1;
