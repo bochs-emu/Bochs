@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.58 2005-08-01 18:55:58 sshwarts Exp $
+// $Id: apic.cc,v 1.59 2005-10-10 20:45:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
 /* apic_mask is the bitmask of apics allowed to arbitrate here */
 int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
 {
-  int winning_apr = 0, winning_id = 0, __apr, i;
+  int winning_apr = -1, winning_id = -1, __apr, i;
   for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (apic_mask & (1<<i)) {
       __apr = local_apic_index[i]->get_apr();
@@ -133,6 +133,7 @@ int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
       }
     }
   }
+  BX_ASSERT(winning_id >= 0);
   return winning_id;
 }
  
@@ -140,7 +141,7 @@ int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
 int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
 {
   // XXX initial winning_apr value, the datasheets say 15
-  int winning_apr = APIC_MAX_ID, winning_id = 0 , __apr, i;
+  int winning_apr = APIC_MAX_ID, winning_id = 0, __apr, i;
   for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (apic_mask & (1<<i)) {
       __apr = local_apic_index[i]->get_apr_lowpri();
@@ -155,26 +156,21 @@ int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
 
 void bx_generic_apic_c::arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode)
 {
-  int trigger_order[BX_LOCAL_APIC_NUM], winner, i, j;
-#define TERMINATE_MAGIK	0x5a
+  int trigger_order[BX_LOCAL_APIC_NUM], winner, i, j = 0;
 
   /* bus arbitrate ... */
-  for (i = 0, j = 0; i < BX_LOCAL_APIC_NUM; i++) {
+  for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (deliver_bitmask & (1<<i)) {
       winner = apic_bus_arbitrate(deliver_bitmask);
       local_apic_index[winner]->adjust_arb_id(winner);
       trigger_order[j++] = winner;
+      deliver_bitmask &= ~(1<<i);
     }
   }
-  
-  if (j < BX_LOCAL_APIC_NUM)
-    trigger_order[j] = TERMINATE_MAGIK;
 
-  i = 0;
-  do {
+  for (i = 0; i < j; i++) {
     local_apic_index[trigger_order[i]]->trigger_irq(vector, trigger_order[i], trigger_mode);
-    i++;
-  } while (trigger_order[i] != TERMINATE_MAGIK);
+  }
 }
  
 void bx_generic_apic_c::arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode)
