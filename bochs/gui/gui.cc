@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.81 2005-10-08 11:41:18 vruppert Exp $
+// $Id: gui.cc,v 1.82 2005-10-10 19:32:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -49,7 +49,7 @@ bx_gui_c *bx_gui = NULL;
 #define LOG_THIS BX_GUI_THIS
 
 #define BX_KEY_UNKNOWN 0x7fffffff
-#define N_USER_KEYS 28
+#define N_USER_KEYS 34
 
 typedef struct {
   char *key;
@@ -75,13 +75,19 @@ static user_key_t user_keys[N_USER_KEYS] =
   "ctrl",  BX_KEY_CTRL_L,
   "del",   BX_KEY_DELETE,
   "down",  BX_KEY_DOWN,
+  "end",   BX_KEY_END,
   "enter", BX_KEY_ENTER,
   "esc",   BX_KEY_ESC,
+  "home",  BX_KEY_HOME,
+  "ins",   BX_KEY_INSERT,
   "left",  BX_KEY_LEFT,
   "menu",  BX_KEY_MENU,
   "minus", BX_KEY_MINUS,
+  "pgdwn", BX_KEY_PAGE_DOWN,
+  "pgup",  BX_KEY_PAGE_UP,
   "plus",  BX_KEY_KP_ADD,
   "right", BX_KEY_RIGHT,
+  "shift", BX_KEY_SHIFT_L,
   "space", BX_KEY_SPACE,
   "tab",   BX_KEY_TAB,
   "up",    BX_KEY_UP,

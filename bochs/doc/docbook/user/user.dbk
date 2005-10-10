@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.183 2005-10-08 11:41:18 vruppert Exp $
+$Id: user.dbk,v 1.184 2005-10-10 19:32:53 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4101,10 +4101,16 @@ Examples:
 This defines the keyboard shortcut to be sent when you press the "user" button
 in the <link linkend="headerbar">headerbar</link>. The shortcut string is a
 combination of maximum 3 key names (listed below) separated with a '-' character.
-The old-style syntax (without the '-') is still supported for a few key combinations.
-Valid key names: "f1", ... "f12", "alt", "bksp", "ctrl", "del", "down",
-"enter", "esc", "left", "menu", "minus", "plus", "right", "space", "tab",
-"up", and "win".
+The old-style syntax (without the '-') still works for the key combinations
+supported in Bochs 2.2.1.
+</para>
+<para>
+Valid key names:
+</para>
+<para>
+"alt", "bksp", "ctrl", "del", "down", "end", "enter", "esc", "f1", ... "f12",
+"home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus", "right",
+"shift", "space", "tab", "up", and "win".
 </para>
 </section>
 
@@ -4119,41 +4125,6 @@ The rtc_init parameter controls whether initialize the RTC with values stored
 in the image. By default the time0 argument given to the
 <link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
 the image is the source for the initial time.
-</para>
-</section>
-
-<section><title>pit</title>
-<para>
-The pit option is deprecated. Use the <link linkend="bochsopt-clock">clock option</link> instead.
-</para>
-<para>
-Examples:
-<screen>
-  pit: realtime=0
-  pit: realtime=1
-</screen>
-The PIT is the programmable interval timer.  Bochs' PIT model was written by
-Greg Alexander.  It has a real-time option that tries to keep the PIT in sync
-with the host time.  This feature is still experimental, but it may be useful
-if you want to prevent Bochs from running too fast, for example a DOS video
-game.  Be aware that with the realtime pit option, your simulation will not be
-repeatable; this can a problem if you are debugging.
-</para>
-</section>
-
-<section id="bochsopt-time0"><title>time0</title>
-<para>
-The time0 option is deprecated. Use the <link linkend="bochsopt-clock">clock option</link> instead.
-</para>
-<para>
-Example:
-<screen>
-  time0: 938581955
-</screen>
-Specifies the start (boot) time of the virtual machine. Use a
-time value as returned by the time(2) system call. Time
-equal to 1 is a special case which starts the virtual machine at the
-current time of the simulator host.
 </para>
 </section>
 

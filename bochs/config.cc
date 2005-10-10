@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.47 2005-10-02 10:16:53 vruppert Exp $
+// $Id: config.cc,v 1.48 2005-10-10 19:32:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3159,75 +3159,52 @@ parse_line_formatted(char *context, int num_params, char *params[])
         }
       }
     }
-  else if (!strcmp(params[0], "user_shortcut")) {
+  else if (!strcmp(params[0], "user_shortcut"))
+  {
     if (num_params != 2) {
       PARSE_ERR(("%s: user_shortcut directive: wrong # args.", context));
-      }
+    }
     if(!strncmp(params[1], "keys=", 4)) {
       bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
-      }
+      if (strchr(&params[1][5], '-') == NULL)
+        PARSE_WARN(("user_shortcut: old-style syntax detected"));
+    } else {
+      PARSE_ERR(("%s: user_shortcut directive malformed.", context));
     }
-  else if (!strcmp(params[0], "config_interface")) {
+  }
+  else if (!strcmp(params[0], "config_interface"))
+  {
     if (num_params != 2) {
       PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
-      }
+    }
     if (!bx_options.Osel_config->set_by_name (params[1]))
       PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
-    }
+  }
   else if (!strcmp(params[0], "display_library")) {
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: display_library directive: wrong # args.", context));
-      }
+    }
     if (!bx_options.Osel_displaylib->set_by_name (params[1]))
       PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
     if (num_params == 3) {
       if (!strncmp(params[2], "options=", 8)) {
         bx_options.Odisplaylib_options->set (strdup(&params[2][8]));
-        }
       }
     }
-
+  }
   // Old timing options have been replaced by the 'clock' option
-  else if (!strcmp(params[0], "pit")) { // Deprecated
-    if (num_params != 2) {
-      PARSE_ERR(("%s: pit directive: wrong # args.", context));
-      }
-    BX_INFO(("WARNING: pit directive is deprecated, use clock: instead"));
-    if (!strncmp(params[1], "realtime=", 9)) {
-      switch (params[1][9]) {
-        case '0': 
-          BX_INFO(("WARNING: not disabling realtime pit"));
-          break;
-        case '1': bx_options.clock.Osync->set (BX_CLOCK_SYNC_REALTIME); break;
-        default: PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
-        }
-      }
-    else PARSE_ERR(("%s: pit expected realtime=[0|1] arg", context));
-    }
-  else if (!strcmp(params[0], "time0")) { // Deprectated
-    BX_INFO(("WARNING: time0 directive is deprecated, use clock: instead"));
-    if (num_params != 2) {
-      PARSE_ERR(("%s: time0 directive: wrong # args.", context));
-      }
-    bx_options.clock.Otime0->set (atoi(params[1]));
-    }
-
-  // Old disk options are no longer supported
-  else if (!strcmp(params[0], "diskc")) { // DEPRECATED
-    PARSE_ERR(("diskc directive is deprecated, use ata0-master: instead"));
-    }
-  else if (!strcmp(params[0], "diskd")) { // DEPRECATED
-    PARSE_ERR(("diskd directive is deprecated, use ata0-slave: instead"));
-    }
-  else if (!strcmp(params[0], "cdromd")) { // DEPRECATED
-    PARSE_ERR(("cdromd directive is deprecated, use ata0-slave: instead"));
-    }
-  else if (!strcmp(params[0], "newharddrivesupport")) { // DEPRECATED
-    PARSE_ERR(("newharddrivesupport directive is deprecated and should be removed."));
-    }
-  else {
+  else if (!strcmp(params[0], "pit")) // Deprecated
+  {
+    PARSE_ERR(("WARNING: pit directive is deprecated, use clock: instead"));
+  }
+  else if (!strcmp(params[0], "time0")) // Deprectated
+  {
+    PARSE_ERR(("WARNING: time0 directive is deprecated, use clock: instead"));
+  }
+  else
+  {
     PARSE_ERR(( "%s: directive '%s' not understood", context, params[0]));
-    }
+  }
   return 0;
 }
 

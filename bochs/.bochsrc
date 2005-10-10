@@ -640,10 +640,12 @@ keyboard_mapping: enabled=0, map=
 # This defines the keyboard shortcut to be sent when you press the "user"
 # button in the headerbar. The shortcut string is a combination of maximum
 # 3 key names (listed below) separated with a '-' character. The old-style
-# syntax (without the '-') is still supported for a few key combinations.
-# Valid key names: "f1", ... "f12", "alt", "bksp", "ctrl", "del", "down",
-# "enter", "esc", "left", "menu", "minus", "plus", "right", "space", "tab",
-# "up", and "win".
+# syntax (without the '-') still works for the key combinations supported
+# in Bochs 2.2.1.
+# Valid key names:
+# "alt", "bksp", "ctrl", "del", "down", "end", "enter", "esc", "f1", ... "f12",
+# "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus", "right",
+# "shift", "space", "tab", "up", and "win".
 #
 # Example:
 #   user_shortcut: keys=ctrl-alt-del
@@ -716,44 +718,3 @@ keyboard_mapping: enabled=0, map=
 # romimage: file=:bios:BIOS-bochs-latest, address=0xf0000
 # floppya: 1_44=[fd:], status=inserted
 #=======================================================================
-
-
-#=======================================================================
-#
-# The following directives are DEPRECATED 
-# Please convert them to the new syntax  or remove them
-#
-#=======================================================================
-
-#=======================================================================
-#
-# The TIME0 directive is DEPRECATED. Use the CLOCK directive instead
-#
-# TIME0:
-# Specifies the start (boot) time of the virtual machine. Use a time 
-# value as returned by the time(2) system call. If no time0 value is 
-# set or if time0 equal to 1 (special case), the simulation will be
-# started at the current time of the host. 
-#
-# Examples:
-#   time0: 1           # Now
-#   time0: 315529200   # Tue Jan  1 00:00:00 1980
-#   time0: 631148400   # Mon Jan  1 00:00:00 1990
-#   time0: 938581955   # Wed Sep 29 07:12:35 1999
-#   time0: 946681200   # Sat Jan  1 00:00:00 2000
-#=======================================================================
-#time0: 938581955
-
-#=======================================================================
-#
-# The PIT directive is DEPRECATED. Use the CLOCK directive instead
-#
-# PIT:
-# The PIT is the programmable interval timer.  It has an option that tries to
-# keep the PIT in sync with real time.  This feature is still experimental,
-# but it may be useful if you want to prevent Bochs from running too fast, for
-# example a DOS video game.  Be aware that with the realtime pit option, your
-# simulation will not be repeatable; this can a problem if you are debugging.
-#=======================================================================
-#pit: realtime=1
-
