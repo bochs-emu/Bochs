@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.41 2005-10-01 09:52:35 vruppert Exp $
+// $Id: memory.cc,v 1.42 2005-10-12 17:11:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -285,7 +285,14 @@ inc_one:
     {
       switch (DEV_pci_rd_memtype (a20addr)) {
         case 0x0:  // Read from ROM
-          *data_ptr = rom[a20addr - 0xc0000];
+          if ( (a20addr & 0xfffe0000) == 0x000e0000 )
+          {
+            *data_ptr = rom[a20addr & BIOS_MASK];
+          }
+          else
+          {
+            *data_ptr = rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+          }
           goto inc_one;
         case 0x1:  // Read from ShadowRAM
           *data_ptr = vector[a20addr];
@@ -298,12 +305,16 @@ inc_one:
     else
 #endif  // #if BX_SUPPORT_PCI
     {
-      if ( (a20addr & 0xfffc0000) == 0x000c0000 ) {
-        *data_ptr = rom[a20addr - 0xc0000];
+      if ( (a20addr & 0xfffc0000) != 0x000c0000 ) {
+        *data_ptr = vector[a20addr];
+      }
+      else if ( (a20addr & 0xfffe0000) == 0x000e0000 )
+      {
+        *data_ptr = rom[a20addr & BIOS_MASK];
       }
       else
       {
-        *data_ptr = vector[a20addr];
+        *data_ptr = rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
       }
       goto inc_one;
     }
@@ -320,8 +331,8 @@ inc_one:
     for (unsigned i = 0; i < len; i++) {
       if (a20addr < BX_MEM_THIS len)
         *data_ptr = vector[a20addr];
-      else if (a20addr >= 0xfffe0000)
-        *data_ptr = rom[a20addr & 0x3ffff];
+      else if (a20addr >= (Bit32u)~BIOS_MASK)
+        *data_ptr = rom[a20addr & BIOS_MASK];
       else
         *data_ptr = 0xff;
       addr++;

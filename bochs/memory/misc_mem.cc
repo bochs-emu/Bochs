@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.61 2005-07-07 16:57:53 vruppert Exp $
+// $Id: misc_mem.cc,v 1.62 2005-10-12 17:11:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,20 +95,20 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.61 2005-07-07 16:57:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.62 2005-10-12 17:11:44 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
-    alloc_vector_aligned (memsize + (1 << 18) + 4096, BX_MEM_VECTOR_ALIGN);
+    alloc_vector_aligned (memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
     BX_MEM_THIS len    = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
     BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
-    BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + (1 << 18)];
-    memset(BX_MEM_THIS rom, 0xff, (1 << 18));
+    BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
+    memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
     memset(BX_MEM_THIS bogus, 0xff, 4096);
     for (idx = 0; idx < 1024 * 1024; idx++)
 	    BX_MEM_THIS memory_handlers[idx] = NULL;
@@ -182,7 +182,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   if (type > 0) {
     max_size = 0x10000;
   } else {
-    max_size = 0x20000;
+    max_size = BIOSROMSZ;
   }
   if (size > max_size) {
     close(fd);
@@ -190,11 +190,12 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     return;
   }
   if (type == 0) {
-    if ( (romaddress + size) != 0x100000 ) {
+    if ( (romaddress + size) != 0x100000 && (romaddress + size) ) {
       close(fd);
       BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
       return;
     }
+    offset = romaddress & BIOS_MASK;
     if (romaddress < 0xf0000 ) {
       BX_MEM_THIS rom_present[64] = 1;
     }
@@ -209,27 +210,26 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       BX_PANIC(("ROM: ROM image must start at a 2k boundary"));
       return;
     }
-    if ((romaddress < 0xc0000) || (romaddress > 0xe0000)) {
+    if ((romaddress < 0xc0000) || (romaddress > 0xdffff)) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
     }
     start_idx = ((romaddress - 0xc0000) >> 11);
     end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
-    if (end_idx > 65) end_idx = 65;
+    offset = (romaddress & EXROM_MASK) + BIOSROMSZ;
     for (i = start_idx; i < end_idx; i++) {
       if (BX_MEM_THIS rom_present[i]) {
         close(fd);
-        BX_PANIC(("ROM: address space already in use"));
+        BX_PANIC(("ROM: address space 0x%x already in use", (i * 2048) + 0xc0000));
         return;
       } else {
         BX_MEM_THIS rom_present[i] = 1;
       }
     }
   }
-  offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS rom[romaddress - 0xc0000 + offset], size);
+    ret = read(fd, (bx_ptr_t) &BX_MEM_THIS rom[offset], size);
     if (ret <= 0) {
       BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
       }
@@ -237,9 +237,10 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     offset += ret;
     }
   close(fd);
+  offset -= stat_buf.st_size;
   Bit8u checksum = 0;
   for (i = 0; i < stat_buf.st_size; i++) {
-    checksum += BX_MEM_THIS rom[romaddress - 0xc0000 + i];
+    checksum += BX_MEM_THIS rom[offset + i];
   }
   if (checksum != 0) {
     if (type == 1) {
@@ -271,7 +272,14 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     {
       switch (DEV_pci_rd_memtype (addr)) {
         case 0x0:  // Read from ROM
-          *buf = rom[addr - 0xc0000];
+          if ( (addr & 0xfffe0000) == 0x000e0000 )
+          {
+            *buf = rom[addr & BIOS_MASK];
+          }
+          else
+          {
+            *buf = rom[(addr & EXROM_MASK) + BIOSROMSZ];
+          }
           break;
         case 0x1:  // Read from ShadowRAM
           *buf = vector[addr];
@@ -281,19 +289,23 @@ BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if (addr >= 0xfffe0000)
+    else if (addr < BX_MEM_THIS len)
     {
-      *buf = rom[addr & 0x3ffff];
-    }
-    else if (addr < this->len)
-    {
-      if ( (addr & 0xfffc0000) == 0x000c0000 ) {
-        *buf = rom[addr - 0xc0000];
+      if ( (addr & 0xfffc0000) != 0x000c0000 ) {
+        *buf = vector[addr];
+      }
+      else if ( (addr & 0xfffe0000) == 0x000e0000 )
+      {
+        *buf = rom[addr & BIOS_MASK];
       }
       else
       {
-        *buf = vector[addr];
+        *buf = rom[(addr & EXROM_MASK) + BIOSROMSZ];
       }
+    }
+    else if (addr >= ~BIOS_MASK)
+    {
+      *buf = rom[addr & BIOS_MASK];
     }
     else
     {
@@ -332,7 +344,7 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ( (addr & 0xfffc0000) != 0x000c0000 )
+    else if ( (addr & 0xfffc0000) != 0x000c0000 && (addr < ~BIOS_MASK) )
     {
       vector[addr] = *buf;
     }
@@ -406,7 +418,15 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     {
       switch (DEV_pci_rd_memtype (a20Addr)) {
         case 0x0:   // Read from ROM
-          return( (Bit8u *) & rom[a20Addr - 0xc0000]);
+          if ( (a20Addr & 0xfffe0000) == 0x000e0000 )
+          {
+            return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
+          }
+          else
+          {
+            return( (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
+          }
+          break;
         case 0x1:   // Read from ShadowRAM
           return( (Bit8u *) & vector[a20Addr]);
         default:
@@ -415,19 +435,23 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
       }
     }
 #endif
-    else if (a20Addr >= 0xfffe0000)
-    {
-      return( (Bit8u *) & rom[a20Addr & 0x3ffff]);
-    }
     else if (a20Addr < BX_MEM_THIS len)
     {
-      if ( (a20Addr & 0xfffc0000) == 0x000c0000 ) {
-        return( (Bit8u *) & rom[a20Addr - 0xc0000]);
+      if ( (a20Addr & 0xfffc0000) != 0x000c0000 ) {
+        return( (Bit8u *) & vector[a20Addr]);
+      }
+      else if ( (a20Addr & 0xfffe0000) == 0x000e0000 )
+      {
+        return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
       }
       else
       {
-        return( (Bit8u *) & vector[a20Addr]);
+        return( (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
       }
+    }
+    else if (a20Addr >= (Bit32u)~BIOS_MASK)
+    {
+      return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
     }
     else
     {
@@ -440,8 +464,10 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     Bit8u *retAddr;
     if ( a20Addr >= BX_MEM_THIS len )
       return(NULL); // Error, requested addr is out of bounds.
-    if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
+    else if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
+    else if (a20Addr >= (Bit32u)~BIOS_MASK)
+      return(NULL); // Vetoed!  ROMs
 #if BX_SUPPORT_PCI
     else if ( bx_options.Oi440FXSupport->get () &&
              ((a20Addr & 0xfffc0000) == 0x000c0000) )
