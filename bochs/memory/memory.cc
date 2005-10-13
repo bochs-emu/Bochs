@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.42 2005-10-12 17:11:44 vruppert Exp $
+// $Id: memory.cc,v 1.43 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,11 +58,13 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {
-	  if (memory_handler->begin <= a20addr &&
-		memory_handler->end >= a20addr &&
-	  	memory_handler->write_handler(a20addr, len, data, memory_handler->write_param))
-		  return;
-	  memory_handler = memory_handler->next;
+    if (memory_handler->begin <= a20addr &&
+          memory_handler->end >= a20addr &&
+          memory_handler->write_handler(a20addr, len, data, memory_handler->write_param))
+    {
+      return;
+    }
+    memory_handler = memory_handler->next;
   }
 
 #if BX_SUPPORT_ICACHE
@@ -71,16 +73,16 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 #endif
 
 #if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    bx_generic_apic_c *ioapic = bx_devices.ioapic;
-    if (local_apic->is_selected (a20addr, len)) {
-      local_apic->write (a20addr, (Bit32u *)data, len);
-      return;
-    }
-    if (ioapic->is_selected (a20addr, len)) {
-      ioapic->write (a20addr, (Bit32u *)data, len);
-      return;
-    }
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  bx_generic_apic_c *ioapic = bx_devices.ioapic;
+  if (local_apic->is_selected (a20addr, len)) {
+    local_apic->write (a20addr, (Bit32u *)data, len);
+    return;
+  }
+  if (ioapic->is_selected (a20addr, len)) {
+    ioapic->write (a20addr, (Bit32u *)data, len);
+    return;
+  }
 #endif
 
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
@@ -102,7 +104,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
         return;
       }
       // len == other, just fall thru to special cases handling
-      }
+    }
 
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -186,10 +188,8 @@ inc_one:
       data_ptr--;
 #endif
     }
-    return;
   }
 }
-
 
   void BX_CPP_AttrRegparmN(3)
 BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
@@ -217,24 +217,26 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {
-	  if (memory_handler->begin <= a20addr &&
-		memory_handler->end >= a20addr &&
-	  	memory_handler->read_handler(a20addr, len, data, memory_handler->read_param))
-		  return;
-	  memory_handler = memory_handler->next;
+    if (memory_handler->begin <= a20addr &&
+          memory_handler->end >= a20addr &&
+          memory_handler->read_handler(a20addr, len, data, memory_handler->read_param))
+    {
+      return;
+    }
+    memory_handler = memory_handler->next;
   }
 
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
   bx_generic_apic_c *ioapic = bx_devices.ioapic;
-    if (local_apic->is_selected (addr, len)) {
-      local_apic->read (addr, data, len);
-      return;
-    }
-    if (ioapic->is_selected (addr, len)) {
-      ioapic->read (addr, data, len);
-      return;
-    }
+  if (local_apic->is_selected (addr, len)) {
+    local_apic->read (addr, data, len);
+    return;
+  }
+  if (ioapic->is_selected (addr, len)) {
+    ioapic->read (addr, data, len);
+    return;
+  }
 #endif
 
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
@@ -249,7 +251,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
         return;
       }
       if (len == 1) {
-        * (Bit8u *) data =  * ((Bit8u *) (&vector[a20addr]));
+        * (Bit8u *) data = * ((Bit8u *) (&vector[a20addr]));
         return;
       }
       // len == 3 case can just fall thru to special cases handling
@@ -343,7 +345,6 @@ inc_one:
       data_ptr--;
 #endif
     }
-    return;
   }
 }
 

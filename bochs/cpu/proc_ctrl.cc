@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.116 2005-10-09 18:32:36 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.117 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1330,9 +1330,9 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       BX_CPU_THIS_PTR msr.lma = 1;
       BX_DEBUG(("Enter Compatibility Mode"));
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-#if BX_EXTERNAL_DEBUGGER
+//#if BX_EXTERNAL_DEBUGGER
       //trap_debugger(0);
-#endif
+//#endif
     }
   }
   else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0) {
@@ -1349,9 +1349,9 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         BX_DEBUG(("Enter Real Mode"));
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
       }
-#if BX_EXTERNAL_DEBUGGER
+//#if BX_EXTERNAL_DEBUGGER
       //trap_debugger(0);
-#endif
+//#endif
     }
   }
 #endif  // #if BX_SUPPORT_X86_64

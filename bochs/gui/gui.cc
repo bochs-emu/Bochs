@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.82 2005-10-10 19:32:53 vruppert Exp $
+// $Id: gui.cc,v 1.83 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -806,4 +806,12 @@ bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
       BX_GUI_THIS graphics_tile_update(tile, xc, yc);
     }
   }
+}
+
+  void 
+bx_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  BX_INFO(("ips = %lu", ips_count));
+#endif
 }

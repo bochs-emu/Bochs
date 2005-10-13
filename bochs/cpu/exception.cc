@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.63 2005-08-08 21:03:32 sshwarts Exp $
+// $Id: exception.cc,v 1.64 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -821,9 +821,9 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   }
 #endif
 
-#if BX_EXTERNAL_DEBUGGER
+//#if BX_EXTERNAL_DEBUGGER
   //trap_debugger(1);
-#endif
+//#endif
 
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
 

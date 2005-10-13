@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.294 2005-10-03 10:28:03 vruppert Exp $
+// $Id: main.cc,v 1.295 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1040,7 +1040,7 @@ void bx_signal_handler(int signum)
     // amount of system ticks passed from last time the handler was called
     Bit64u ips_count = bx_pc_system.time_ticks() - ticks_count;
     if (ips_count) {
-      BX_INFO(("ips = %lu", (unsigned long) ips_count));
+      bx_gui->show_ips((Bit32u) ips_count);
       ticks_count = bx_pc_system.time_ticks();
     }
 #ifndef __MINGW32__
@@ -1054,7 +1054,7 @@ void bx_signal_handler(int signum)
 #if BX_GUI_SIGHANDLER
   if (bx_gui_sighandler) {
     if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
-      bx_gui->sighandler (signum);
+      bx_gui->sighandler(signum);
       return;
     }
   }

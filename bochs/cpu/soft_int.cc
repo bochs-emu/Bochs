@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.25 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: soft_int.cc,v 1.26 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,41 +109,31 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 
   Bit8u vector = i->Ib();
 
-  if (v8086_mode())
-  {
+  if (v8086_mode()) {
 #if BX_SUPPORT_VME
-     if (BX_CPU_THIS_PTR cr4.get_VME())
-     {
-       Bit16u io_base;
-       access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + 102, 
-            2, 0, BX_READ, &io_base);
+    if (BX_CPU_THIS_PTR cr4.get_VME())
+    {
+      Bit8u vme_redirection_bitmap;
+      Bit16u io_base;
 
-       Bit8u vme_redirection_bitmap;
-       access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + io_base - 32 + (vector >> 3),
+      access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + 102, 
+            2, 0, BX_READ, &io_base);
+      access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + io_base - 32 + (vector >> 3),
             1, 0, BX_READ, &vme_redirection_bitmap);
 
-       if (vme_redirection_bitmap & (1 << (vector & 7)))
-       {
-         // VME redirecion bit is set so the interrupt is not redirected
-         if (BX_CPU_THIS_PTR get_IOPL() < 3)
-         {
-           exception(BX_GP_EXCEPTION, 0, 0);
-         }
-       }
-       else {
-         // redirect interrupt through virtual-mode idt
-         v86_redirect_interrupt(vector);
-         return;
-       }
-     }
-     else  // VME is off
+      if (! (vme_redirection_bitmap & (1 << (vector & 7))))
+      {
+        // redirect interrupt through virtual-mode idt
+        v86_redirect_interrupt(vector);
+        return;
+      }
+    }
 #endif
-     {
-       if (BX_CPU_THIS_PTR get_IOPL() < 3)
-       {
-         exception(BX_GP_EXCEPTION, 0, 0);
-       }
-     }
+    // interrupt is not redirected or VME is OFF
+    if (BX_CPU_THIS_PTR get_IOPL() < 3)
+    {
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
   }
 
 #ifdef SHOW_EXIT_STATUS

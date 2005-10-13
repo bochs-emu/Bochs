@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.159 2005-10-02 10:16:53 vruppert Exp $
+// $Id: bochs.h,v 1.160 2005-10-13 16:22:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -664,7 +664,7 @@ typedef struct BOCHSAPI {
   bx_param_enum_c *Osel_config;
   bx_param_enum_c *Osel_displaylib;
   bx_param_string_c *Odisplaylib_options;
-  } bx_options_t;
+} bx_options_t;
 
 BOCHSAPI extern bx_options_t bx_options;
 
@@ -672,10 +672,6 @@ void bx_init_options();
 
 void bx_center_print (FILE *file, char *line, int maxwidth);
 
-#if BX_PROVIDE_CPU_MEMORY==1
-#else
-// #  include "external_interface.h"
-#endif
 
 #define BX_USE_PS2_MOUSE 1
 
