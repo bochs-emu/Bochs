@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.243 2005-09-29 17:32:32 sshwarts Exp $
+// $Id: cpu.h,v 1.244 2005-10-13 19:28:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -345,11 +345,13 @@
 #endif
 
 #if BX_SUPPORT_X86_64
+#define Is64BitMode()       (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+#define StackAddrSize64()   (Is64BitMode())
 #define IsLongMode()        (BX_CPU_THIS_PTR msr.lma)
-#define StackAddrSize64()   (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
 #else
-#define IsLongMode()        (0)
+#define Is64BitMode()       (0)
 #define StackAddrSize64()   (0)
+#define IsLongMode()        (0)
 #endif
 
 #if BX_SUPPORT_APIC

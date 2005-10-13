@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.21 2005-02-16 21:27:20 sshwarts Exp $
+// $Id: shift8.cc,v 1.22 2005-10-13 19:28:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,10 +126,10 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
    * ROR count affects the following flags: C, O
    */
   bx_bool result_b7 = (result_8 & 0x80) != 0;
+  bx_bool result_b6 = (result_8 & 0x40) != 0;
 
   set_CF(result_b7);
-  if (count == 1)
-    set_OF(((op1_8 ^ result_8) & 0x80) > 0);
+  set_OF(result_b7 ^ result_b6);
 }
 
 void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
@@ -223,8 +223,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
    */
 
   set_CF((op1_8 >> (count - 1)) & 0x01);
-  if (count == 1)
-    set_OF(((op1_8 ^ result_8) & 0x80) > 0);
+  set_OF((((result_8 << 1) ^ result_8) & 0x80) > 0);
 }
 
 void BX_CPU_C::SHL_Eb(bxInstruction_c *i)

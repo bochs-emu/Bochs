@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.60 2005-08-23 20:01:54 sshwarts Exp $
+// $Id: access.cc,v 1.61 2005-10-13 19:28:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -472,7 +472,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -502,7 +502,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -533,7 +533,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
@@ -564,7 +564,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
@@ -595,7 +595,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -625,7 +625,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -655,7 +655,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
@@ -685,7 +685,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
@@ -720,7 +720,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -754,7 +754,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
@@ -786,7 +786,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
@@ -818,7 +818,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if (((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) && IsCanonical(offset))
+    if ((Is64BitMode() && IsCanonical(offset))
      || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:

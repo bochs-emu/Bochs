@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.26 2005-02-16 21:27:20 sshwarts Exp $
+// $Id: shift16.cc,v 1.27 2005-10-13 19:28:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,7 +178,7 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   /* now write result back to destination */
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), result_16);
-    }
+  }
   else {
     Write_RMW_virtual_word(result_16);
   }
@@ -236,10 +236,10 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
    * ROR count affects the following flags: C, O
    */
   bx_bool result_b15 = (result_16 & 0x8000) != 0;
+  bx_bool result_b14 = (result_16 & 0x4000) != 0;
 
   set_CF(result_b15);
-  if (count == 1)
-    set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
+  set_OF(result_b15 ^ result_b14);
 }
 
 void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
@@ -337,8 +337,7 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
    */
 
   set_CF((op1_16 >> (count - 1)) & 0x01);
-  if (count == 1)
-    set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
+  set_OF((((result_16 << 1) ^ result_16) & 0x8000) > 0);
 }
 
 void BX_CPU_C::SHL_Ew(bxInstruction_c *i)

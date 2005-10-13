@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.16 2004-12-24 22:44:13 sshwarts Exp $
+// $Id: shift64.cc,v 1.17 2005-10-13 19:28:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -199,10 +199,10 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
    * ROR count affects the following flags: C, O
    */
   bx_bool result_b63 = (result_64 & BX_CONST64(0x8000000000000000)) != 0;
+  bx_bool result_b62 = (result_64 & BX_CONST64(0x4000000000000000)) != 0;
 
   set_CF(result_b63);
-  if (count == 1)
-    set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
+  set_OF(result_b63 ^ result_b62);
 }
 
 void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
@@ -297,8 +297,7 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
    */
 
   set_CF((op1_64 >> (count - 1)) & 0x01);
-  if (count == 1)
-    set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
+  set_OF((((result_64 << 1) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
 }
 
 void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
