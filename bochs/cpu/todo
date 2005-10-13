@@ -33,3 +33,9 @@ TODO (know issues in CPU model):
 [!] No support for Big Real Mode segmentation
 
 [!] No support of AC flag (aligment checking) and #AC exception
+
+[!] REP NOP is PAUSE (on P4/XEON)
+
+    When running in SMP mode, this means that we are in a spin loop.
+    This processor should yield to the other one, as we are anyhow waiting
+    for a lock, and any other processor is responsible for this.
