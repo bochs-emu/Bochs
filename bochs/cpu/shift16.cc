@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.27 2005-10-13 19:28:10 sshwarts Exp $
+// $Id: shift16.cc,v 1.28 2005-10-13 20:21:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,17 +130,9 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   }
 
   /* set eflags:
-   * SHRD count affects the following flags: S,Z,P,C,O
+   * SHRD count affects the following flags: O,S,Z,A,P,C
    */
-
-  set_CF((op1_16 >> (count - 1)) & 0x01);
-  set_ZF(result_16 == 0);
-  set_SF(result_16 >> 15);
-  set_AF(0);
-  /* for shift of 1, OF set if sign change occurred. */
-  if (count == 1)
-    set_OF(((op1_16 ^ result_16) & 0x8000) > 0);
-  set_PF_base((Bit8u) result_16);
+  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHRD16);
 }
 
 void BX_CPU_C::ROL_Ew(bxInstruction_c *i)

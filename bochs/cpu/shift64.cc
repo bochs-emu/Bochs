@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.17 2005-10-13 19:28:10 sshwarts Exp $
+// $Id: shift64.cc,v 1.18 2005-10-13 20:21:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -107,17 +107,9 @@ void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
   }
 
   /* set eflags:
-   * SHRD count affects the following flags: S,Z,P,C,O
+   * SHRD count affects the following flags: O,S,Z,A,P,C
    */
-
-  set_CF((op1_64 >> (count - 1)) & 0x01);
-  set_ZF(result_64 == 0);
-  set_SF(result_64 >> 63);
-  set_AF(0);
-  /* for shift of 1, OF set if sign change occurred. */
-  if (count == 1)
-    set_OF(((op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
-  set_PF_base(result_64);
+  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHRD64);
 }
 
 void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
