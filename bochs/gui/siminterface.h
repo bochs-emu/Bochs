@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.142 2005-10-02 10:16:53 vruppert Exp $
+// $Id: siminterface.h,v 1.143 2005-10-13 17:36:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1374,6 +1374,7 @@ enum ci_return_t {
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
   };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
+typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
 
 // bx_gui->set_display_mode() changes the mode between the configuration
 // interface and the simulation.  This is primarily intended for display
@@ -1442,7 +1443,6 @@ public:
   // etc.) are displayed and handled by gui.cc, not by the CI or siminterface.
   // gui.cc uses its own callback functions to implement the behavior of
   // the buttons.  Some of these implementations call the siminterface.
-  typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
   virtual void set_notify_callback (bxevent_handler func, void *arg) {}
   virtual void get_notify_callback (bxevent_handler *func, void **arg) {}
 
