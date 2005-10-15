@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.109 2005-01-05 19:50:54 vruppert Exp $
+// $Id: siminterface.cc,v 1.110 2005-10-15 10:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1307,6 +1307,14 @@ bx_param_string_c::equals (const char *buf)
     return (memcmp (val, buf, maxsize) == 0);
   else
     return (strncmp (val, buf, maxsize) == 0);
+}
+
+void bx_param_string_c::set_initial_val (char *buf) { 
+  if (options->get () & RAW_BYTES)
+    memcpy (initial_val, buf, maxsize);
+  else
+    strncpy (initial_val, buf, maxsize);
+  set (initial_val);
 }
 
 bx_list_c::bx_list_c (bx_id id, int maxsize)

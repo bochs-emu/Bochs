@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.48 2005-10-10 19:32:53 vruppert Exp $
+// $Id: config.cc,v 1.49 2005-10-15 10:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -824,7 +824,7 @@ void bx_init_options ()
       "", BX_PATHNAME_LEN);
   bx_options.rom.Opath->set_format ("Name of ROM BIOS image: %s");
   sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
-  bx_options.rom.Opath->set (name);
+  bx_options.rom.Opath->set_initial_val (name);
   bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
       "memory.rom.addr",
       "The address at which the ROM image should be loaded",
@@ -848,7 +848,7 @@ void bx_init_options ()
   bx_options.vgarom.Opath->set_label ("VGA BIOS image");
 #endif
   sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
-  bx_options.vgarom.Opath->set (name);
+  bx_options.vgarom.Opath->set_initial_val (name);
 
   for (i=0; i<4; i++) {
     sprintf (name, "memory.optrom.%d.path", i+1);
@@ -1133,7 +1133,7 @@ void bx_init_options ()
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
-      1000000);
+      2000000);
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",

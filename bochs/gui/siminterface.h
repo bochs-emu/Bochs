@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.143 2005-10-13 17:36:32 vruppert Exp $
+// $Id: siminterface.h,v 1.144 2005-10-15 10:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1121,6 +1121,7 @@ public:
   void set_separator (char sep) {separator = sep; }
   char get_separator () {return separator; }
   int get_maxsize () {return maxsize; }
+  void set_initial_val (char *buf);
 #if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *fp);
   virtual int text_ask (FILE *fpin, FILE *fpout);
