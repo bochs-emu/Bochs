@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "10 Oct 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Oct 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -90,26 +90,24 @@ Example:
 
 .TP
 .I "romimage:"
-You need to load  a ROM BIOS into F0000-FFFFF. The BIOS controls
-what  the PC does when it first  powers  on.  Normally, you can use a
-precompiled BIOS in the
-.B bios/
-directory of the source tree, named BIOS-bochs-latest. You can also use
-the environment variable $BXSHARE to specify the location of the BIOS.
+The ROM BIOS controls what the PC does when it first powers on.  Normally, you
+can use a precompiled BIOS in the source or binary distribution called
+.B BIOS-bochs-latest.
+The ROM BIOS is usually loaded starting at address 0xf0000, and it is exactly 64k long.
+You can also use the environment variable $BXSHARE to specify the location of the BIOS.
+The usage of external large BIOS images (up to 512k) at memory top is
+now supported, but we still recommend to use the BIOS distributed with Bochs.
 
 Examples:
   romimage: file=bios/BIOS-bochs-latest, address=0xf0000
   romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
+  romimage: file=mybios.bin, address=0xfff80000
 
 .TP
 .I "megs:"
-Set this to the default number of Megabytes of
-memory you want to emulate.  You may also pass
-the
-.B 'megs:N'
-option to bochs.  The  default
-is 32MB, since  most OS's won't need more than
-that.
+Set the number of Megabytes of physical memory you want to emulate. 
+The default is 32MB, most OS's won't need more than that.
+The maximum amount of memory supported is 2048Mb.
 
 Example:
   megs: 32

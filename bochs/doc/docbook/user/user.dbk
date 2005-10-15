@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.184 2005-10-10 19:32:53 vruppert Exp $
+$Id: user.dbk,v 1.185 2005-10-15 09:13:57 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2918,7 +2918,8 @@ as <link linkend="bochsopt-boot">boot option</link>.
 If your keyboard output inside of Bochs is wrong, you may also need a keymap file
 to remap your keyboard layout to the U.S. layout. A set of keymap files for the
 X window system and SDL (Linux port) is distributed with Bochs. If your
-keyboard layout is not supported yet, you should have a look at <xref linkend="keymap">.
+keyboard layout is not supported yet, you can create your own one by following the
+instructions given in <xref linkend="keymap">.
 </para>
 
 <para>
@@ -2939,15 +2940,17 @@ images are the size of a floppy disk (1 meg compressed) and others are gigantic
     - grab one from a real hard disk
 </screen>
 </para>
-
 </section>
+
+
 <section id="bochsrc">
 <title>bochsrc</title>
 <para>
 Bochs uses a configuration file called <filename>bochsrc</filename> to know
 where to look for disk images, how the Bochs emulation layer should work, etc.
-When you first start up Bochs, it looks around for its configuration file, and
-parses it.  Here are a few lines from a sample file:
+When you first start up Bochs, it looks around for its configuration file
+(see <xref linkend="search-order">), and parses it.
+Here are a few lines from a sample file:
 <screen>
   ata0-master: type=disk, path="30M.sample", cylinders=615, heads=6, spt=17
   boot: disk
@@ -2963,7 +2966,7 @@ settings you need to change.
 </para>
 
 <para>
-The syntax used for bochsrc can also be used as command line arguments for Bochs.
+The syntax used for <filename>bochsrc</filename> can also be used as command line arguments for Bochs.
 If you have any spaces in your command line arguments, they should be enclosed
 in single quotes, for example:
 <screen>
@@ -3031,11 +3034,16 @@ Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most 
 Example:
 <screen>
   romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+  romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
+  romimage: file=mybios.bin, address=0xfff80000
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
 can use a precompiled BIOS in the source or binary distribution called
 <filename>BIOS-bochs-latest</filename>.  The ROM BIOS is usually loaded
 starting at address 0xf0000, and it is exactly 64k long.
+You can also use the environment variable $BXSHARE to specify the location of the BIOS.
+The usage of external large BIOS images (up to 512k) at memory top is
+now supported, but we still recommend to use the BIOS distributed with Bochs.
 </para>
 </section>
 
@@ -3827,16 +3835,16 @@ mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
 </para>
 </section>
 
-<section><title>private_colormap</title>
+<section id="bochsopt-private-colormap"><title>private_colormap</title>
 <para>
-Examples:
+Example:
 <screen>
   private_colormap: enabled=1
 </screen>
-Requests that the GUI create and use its  own non-shared colormap.  This
-colormap  will  be used when in the bochs window. If not enabled, a shared
-colormap  scheme  may be used.  Once again, enabled=1  turns on this feature
-and 0 turns it off.
+Requests that the GUI creates and uses its own non-shared colormap. This
+colormap will be used when in the Bochs window. If not enabled, a shared
+colormap scheme may be used. Once again, <varname>enabled=1</varname>
+turns on this feature and 0 turns it off.
 </para>
 </section>
 
@@ -5483,14 +5491,15 @@ These utilities includes :
 <para>
 One common problem in X windows is that the screen colors can be abnormal
 if other X programs have already allocated all the colors.  If the colors
-don't look right, try quitting colorful applications such as netscape,
-clearing any complex images in the background, etc. so that Bochs has a 
+don't look right, try quitting colorful applications such as Netscape,
+clearing any complex images in the background, etc. so that Bochs has a
 chance to allocate the colors it needs.
 </para>
 <para>
 If Bochs continues to have problems, or you want Bochs to have perfect
 colors without having to quit any other application, you can try turning
-on the private_colormap option in the configuration file.  Using a private 
+on the <link linkend="bochsopt-private-colormap">private_colormap option</link>
+in the configuration file.  Using a private
 colormap causes the Bochs window to have its own set of 256 colors to work
 with.  When the cursor is over the Bochs display, Bochs will look correct
 and other parts of the screen may change to very strange colors.  When the
@@ -8421,7 +8430,7 @@ or any later version published by the Free Software Foundation.
 
           <section id="guest-dos"><title>DOS</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install or use MS-DOS, OS/2, DR-DOS, or any other DOS as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install or use MS-DOS, OS/2, DR-DOS, or any other DOS as a guest operating system in Bochs.</para>
 <section><title>Accessing your CDROM</title>
 <para>
 To access your CDROM in DOS, you must download an IDE CDROM driver.  
@@ -8474,7 +8483,7 @@ pathname, like <filename>c:\windows\himem.sys</filename>.
 
   <para>
     You must read the message regarding software licenses in <xref linkend="thirdparty">
-    before you install Windows 95 as a guest OS in Bochs.
+    before you install Windows 95 as a guest operating system in Bochs.
   </para>
 
   <tip><para>
@@ -9164,7 +9173,7 @@ will trap this key combination. You can either use the trick described in
 (callable through the user short-cut gui button)
 in you configuration file, for example:
 <programlisting>
-user_shortcut: keys=ctrlaltdel
+user_shortcut: keys=ctrl-alt-del
 </programlisting>
 </para>
 </listitem>
@@ -9177,9 +9186,15 @@ user_shortcut: keys=ctrlaltdel
 <section id="guest-win98"><title>Windows 98</title>
 
 <para>
-You must read the message regarding software licenses in 
+You must read the message regarding software licenses in
 <xref linkend="thirdparty"> before you install Windows 98 as a guest operating system in Bochs.
 </para>
+
+<tip><para>
+If you want to use higher screen resolutions than 640x480 with more than 16 colours,
+you should enable the Cirrus video card, see <xref linkend="cirrus-notes">, as Windows 98
+comes with drivers for that video card.
+</para></tip>
 
 <para>
 There are two ways to get Windows 98 running as a guest operating system in Bochs:
@@ -10044,6 +10059,13 @@ You can also use <command>setup /is</command> to bypass scandisk.
 </para>
 </tip>
 
+<tip><para>
+If Windows 98 setup complains about the (emulated) computer being too slow or about
+a missing co-processor (in case you compiled Bochs without support for that), you can
+use the undocumented <option>/nm</option> switch to bypass the hardware check:
+<command>setup /nm</command>.
+</para></tip>
+
 <para>
 Answer the question of the Windows 98 installer. You can either supply
 answers with the keyboard including the arrow keys, or activate the 
@@ -10096,7 +10118,7 @@ some space.
         
                 <section><title>Installing Windows ME</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows ME as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows ME as a guest operating system in Bochs.</para>
 <para>
 This has been contributed by Sancho Roberto :
 </para>
@@ -10340,7 +10362,7 @@ Some bugs i've found
 <section id="guest-win2k">
         <title>Windows 2000</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows 2000 as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows 2000 as a guest operating system in Bochs.</para>
         <para>
         </para>
 
@@ -10348,13 +10370,13 @@ Some bugs i've found
 <section id="guest-win2k-server">
 <title>Windows 2000 Server</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows 2000 Server as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows 2000 Server as a guest operating system in Bochs.</para>
 </section>
 
 <section id="guest-winxp">
         <title>Windows XP</title>
 <para>You must read the message regarding software licenses in 
-<xref linkend="thirdparty"> before you install Windows XP as a guest OS in Bochs.</para>
+<xref linkend="thirdparty"> before you install Windows XP as a guest operating system in Bochs.</para>
         <para>
         Windows XP has been reported to install from the cd, and run inside Bochs. 
         The only known issue is to set the IPS to, at least, a value of 10000000.
