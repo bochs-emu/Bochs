@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.43 2005-10-02 15:26:51 vruppert Exp $
+// $Id: protect_ctrl.cc,v 1.44 2005-10-15 21:01:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
-    set_ZF(0);
+    clear_ZF();
     return;
   }
 
@@ -113,14 +113,14 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     /* not within descriptor table */
-    set_ZF(0);
+    clear_ZF();
     return;
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
 
   if (descriptor.valid==0) {
-    set_ZF(0);
+    clear_ZF();
     return;
   }
 
@@ -135,11 +135,11 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
     }
     else {
       if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-        set_ZF(0);
+        clear_ZF();
         return;
       }
     }
-    set_ZF(1);
+    assert_ZF();
     if (i->os32L()) {
       /* masked by 00FxFF00, where x is undefined */
       BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
@@ -163,16 +163,16 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 #endif
         break;
       default: /* rest not accepted types to LAR */
-        set_ZF(0);
         BX_DEBUG(("lar(): not accepted type"));
+        clear_ZF();
         return;
     }
 
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      set_ZF(0);
+      clear_ZF();
       return;
     }
-    set_ZF(1);
+    assert_ZF();
     if (i->os32L()) {
       /* masked by 00FxFF00, where x is undefined ? */
       BX_WRITE_32BIT_REGZ(i->nnn(), dword2 & 0x00ffff00);
@@ -195,7 +195,6 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   if (real_mode() || v8086_mode()) {
     BX_INFO(("LSL: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
-    return;
   }
 
   if (i->modC0()) {
@@ -208,7 +207,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
-    set_ZF(0);
+    clear_ZF();
     return;
   }
 
@@ -216,7 +215,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     /* not within descriptor table */
-    set_ZF(0);
+    clear_ZF();
     return;
   }
 
@@ -234,13 +233,13 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
         if (dword2 & 0x00800000)
           limit32 = (limit32 << 12) | 0x00000fff;
         if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
-          set_ZF(0);
+          clear_ZF();
           return;
         }
         goto lsl_ok;
         break;
       default:
-        set_ZF(0);
+        clear_ZF();
         return;
     }
   }
@@ -254,7 +253,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
     }
 
     if ((descriptor_dpl<CPL) || (descriptor_dpl<selector.rpl)) {
-      set_ZF(0);
+      clear_ZF();
       return;
     }
     goto lsl_ok;
@@ -262,7 +261,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
 lsl_ok:
   /* all checks pass, limit32 is now byte granular, write to op1 */
-  set_ZF(1);
+  assert_ZF();
 
   if (i->os32L())
     BX_WRITE_32BIT_REGZ(i->nnn(), limit32)
@@ -510,8 +509,8 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
-    set_ZF(0);
-    BX_ERROR(("VERR: null selector"));
+    BX_DEBUG(("VERR: null selector"));
+    clear_ZF();
     return;
   }
 
@@ -522,22 +521,22 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     /* not within descriptor table */
-    set_ZF(0);
-    BX_ERROR(("VERR: not in table"));
+    BX_DEBUG(("VERR: not within descriptor table"));
+    clear_ZF();
     return;
   }
 
   parse_descriptor(dword1, dword2, &descriptor);
 
   if (descriptor.segment==0) { /* system or gate descriptor */
-    set_ZF(0); /* inaccessible */
-    BX_ERROR(("VERR: system descriptor"));
+    BX_DEBUG(("VERR: system descriptor"));
+    clear_ZF();  /* inaccessible */
     return;
   }
 
   if (descriptor.valid==0) {
-    set_ZF(0);
-    BX_INFO(("VERR: valid bit cleared"));
+    BX_DEBUG(("VERR: valid bit cleared"));
+    clear_ZF();  /* inaccessible */
     return;
   }
 
@@ -545,31 +544,31 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   if (descriptor.u.segment.executable) { /* code segment */
     /* ignore DPL for readable conforming segments */
     if (descriptor.u.segment.c_ed && descriptor.u.segment.r_w) {
-      set_ZF(1); /* accessible */
-      BX_INFO(("VERR: conforming code, OK"));
+      BX_DEBUG(("VERR: conforming code, OK"));
+      assert_ZF(); /* accessible */
       return;
     }
     if (descriptor.u.segment.r_w==0) {
-      set_ZF(0); /* inaccessible */
-      BX_INFO(("VERR: code not readable"));
+      BX_DEBUG(("VERR: code not readable"));
+      clear_ZF (); /* inaccessible */
       return;
     }
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      set_ZF(0); /* inaccessible */
-      BX_INFO(("VERR: non-conforming code not withing priv level"));
+      BX_DEBUG(("VERR: non-conforming code not withing priv level"));
+      clear_ZF (); /* inaccessible */
       return;
     }
 
-    set_ZF(1); /* accessible */
+    assert_ZF(); /* accessible */
   }
   else { /* data segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      set_ZF(0); /* not accessible */
-      BX_INFO(("VERR: data seg not withing priv level"));
+      BX_DEBUG(("VERR: data seg not withing priv level"));
+      clear_ZF(); /* not accessible */
       return;
     }
-    set_ZF(1); /* accessible */
+    assert_ZF(); /* accessible */
   }
 }
 
@@ -584,7 +583,6 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   if (real_mode() || v8086_mode()) {
     BX_INFO(("VERW: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
-    return;
   }
 
   if (i->modC0()) {
@@ -597,8 +595,8 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   /* if selector null, clear ZF and done */
   if ((raw_selector & 0xfffc) == 0) {
-    set_ZF(0);
-    BX_ERROR(("VERW: null selector"));
+    BX_DEBUG(("VERW: null selector"));
+    clear_ZF();
     return;
   }
 
@@ -609,8 +607,8 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   if (!fetch_raw_descriptor2(&selector, &dword1, &dword2)) {
     /* not within descriptor table */
-    set_ZF(0);
-    BX_ERROR(("VERW: not in table"));
+    BX_DEBUG(("VERW: not within descriptor table"));
+    clear_ZF();
     return;
   }
 
@@ -618,31 +616,30 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
   /* rule out system segments & code segments */
   if (descriptor.segment==0 || descriptor.u.segment.executable) {
-    set_ZF(0);
-    BX_ERROR(("VERW: system seg or code"));
+    BX_DEBUG(("VERW: system seg or code"));
+    clear_ZF();
     return;
   }
 
   if (descriptor.valid==0) {
-    set_ZF(0);
-    BX_INFO(("VERW: valid bit cleared"));
+    BX_DEBUG(("VERW: valid bit cleared"));
+    clear_ZF();
     return;
   }
 
   /* data segment */
   if (descriptor.u.segment.r_w) { /* writable */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
-      set_ZF(0); /* not accessible */
-      BX_INFO(("VERW: writable data seg not within priv level"));
+      BX_DEBUG(("VERW: writable data seg not within priv level"));
+      clear_ZF(); /* not accessible */
       return;
     }
-
-    set_ZF(1); /* accessible */
+    assert_ZF();  /* accessible */
     return;
   }
 
-  set_ZF(0); /* not accessible */
-  BX_INFO(("VERW: data seg not writable"));
+  BX_DEBUG(("VERW: data seg not writable"));
+  clear_ZF(); /* not accessible */
 }
 
 #if BX_CPU_LEVEL >= 2
@@ -795,7 +792,7 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   if (!real_mode() && CPL!=0) {
-    BX_INFO(("LIDT: CPL!=0 in protected mode"));
+    BX_ERROR(("LIDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
