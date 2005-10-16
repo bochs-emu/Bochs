@@ -2,13 +2,14 @@
 Patch name: patch.example-override-ask
 Author: Bryce Denney
 Date: Mon Sep 23 13:00:53 EDT 2002
+Status: Demo
 
 Detailed description:
 This patch shows how to create your own siminterface callback function.
 It is not intended to be checked in anytime, only to serve as an example
 of how to use the siminterface.
 
-Patch updated for current CVS. (Volker Ruppert, Oct 13, 2005)
+Patch updated for current CVS. (Volker Ruppert, Oct 16, 2005)
 
 Patch was created with:
   diff -u
@@ -98,7 +99,7 @@ diff -urN bochs/Makefile.in bochs-overrideask/Makefile.in
 +  }
 +}
 +
-+// called from bochs.cc
++// called from textconfig.cc
 +void override_ask_init ()
 +{
 +  fprintf (stderr, "override_ask_init");
