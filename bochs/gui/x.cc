@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.91 2005-07-04 18:08:36 sshwarts Exp $
+// $Id: x.cc,v 1.92 2005-10-16 13:11:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -301,6 +301,10 @@ unsigned long col_vals[MAX_VGA_COLORS]; // 256 VGA colors
 unsigned curr_foreground, curr_background;
 
 static unsigned x_tilesize, y_tilesize;
+
+BxEvent *x11_notify_callback (void *unused, BxEvent *event);
+bxevent_handler old_callback = NULL;
+void *old_callback_arg = NULL;
 
 
 // Try to allocate NCOLORS at once in the colormap provided.  If it can
@@ -624,6 +628,11 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
 
 
   XFlush(bx_x_display);
+
+  // redirect notify callback to X11 specific code
+  SIM->get_notify_callback (&old_callback, &old_callback_arg);
+  assert (old_callback != NULL);
+  SIM->set_notify_callback (x11_notify_callback, NULL);
 
   // loads keymap for x11
   if(bx_options.keyboard.OuseMapping->get()) {
@@ -1941,6 +1950,141 @@ bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *xres = 1024;
   *yres = 768;
   *bpp = 32;
+}
+
+
+void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
+                       unsigned int width, unsigned int height, char *text)
+{
+  XDrawRectangle(display, dialog, gc, x, y, width, height);
+  XDrawImageString(display, dialog, gc, x+4, y+14, text, strlen(text));
+}
+
+int x11_ask_dialog(BxEvent *event)
+{
+  const int button_x[3] = { 18, 103, 188 };
+  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
+                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
+                            BX_LOG_ASK_CHOICE_DIE };
+  Window dialog;
+  XSizeHints hint;
+  XEvent xevent;
+  GC gc, gc_inv;
+  KeySym key;
+  int done, i, level;
+  int retcode = -1;
+  int button = 0, oldbutton = -1;
+  unsigned long black_pixel, white_pixel;
+  char name[16], text[10], device[16], message[512];
+
+  level = event->u.logmsg.level;
+  strcpy(name, SIM->get_log_level_name(level));
+  sprintf(device, "Device: %s", event->u.logmsg.prefix);
+  sprintf(message, "Message: %s", event->u.logmsg.msg);
+  hint.flags = PPosition | PSize | PMinSize | PMaxSize;
+  hint.x = 100;
+  hint.y = 100;
+  hint.width = hint.min_width = hint.max_width = 300;
+  hint.height = hint.min_height = hint.max_height = 100;
+  black_pixel = BlackPixel(bx_x_display, bx_x_screen_num);
+  white_pixel = WhitePixel(bx_x_display, bx_x_screen_num);
+  dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
+    hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
+  XSetStandardProperties(bx_x_display, dialog, name, name, None, NULL, 0, &hint);
+
+  gc = XCreateGC(bx_x_display, dialog, 0, 0);
+  gc_inv = XCreateGC(bx_x_display, dialog, 0, 0);
+  XSetState(bx_x_display, gc_inv, white_pixel, black_pixel, GXcopy, AllPlanes);
+  XSetBackground(bx_x_display,gc,WhitePixel(bx_x_display, bx_x_screen_num));
+  XSetForeground(bx_x_display,gc,BlackPixel(bx_x_display, bx_x_screen_num));
+
+  XSelectInput(bx_x_display, dialog, ButtonPressMask
+               | ButtonReleaseMask
+               | KeyPressMask
+               | KeyReleaseMask
+               | ExposureMask
+               | PointerMotionMask
+               | EnterWindowMask
+               | LeaveWindowMask);
+  XMapWindow(bx_x_display, dialog);
+  XFlush(bx_x_display);
+  done = 0;
+  while (!done) {
+    XNextEvent(bx_x_display, &xevent);
+    switch (xevent.type) {
+      case Expose:
+        if (xevent.xexpose.count == 0) {
+          XDrawImageString(xevent.xexpose.display, dialog,
+                           gc, 20, 20, device, strlen(device));
+          XDrawImageString(xevent.xexpose.display, dialog,
+                           gc, 20, 40, message, strlen(message));
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, 20, 60, 65, 20, "Continue");
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, 105, 60, 65, 20, "Alwayscont");
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, 190, 60, 65, 20, "Quit");
+          oldbutton = button - 1;
+          if (oldbutton < 0) oldbutton = 1;
+        }
+        break;
+      case ButtonPress:
+        if (xevent.xbutton.button == Button1) {
+          if ((xevent.xbutton.y > 60) && (xevent.xbutton.y < 80)) {
+            if ((xevent.xbutton.x > 20) && (xevent.xbutton.x < 85)) {
+              button = 0;
+            } else if ((xevent.xbutton.x > 105) && (xevent.xbutton.x < 170)) {
+              button = 1;
+            } else if ((xevent.xbutton.x > 190) && (xevent.xbutton.x < 255)) {
+              button = 2;
+            }
+          }
+        }
+        break;
+      case ButtonRelease:
+        if (xevent.xbutton.button == Button1) {
+          done = 1;
+        }
+        break;
+      case KeyPress:
+        i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
+        if (key == XK_Tab) {
+          button++;
+          if (button == 3) button = 0;
+        } else if ((key == XK_space) || (key == XK_Return)) {
+          done = 1;
+        }
+        break;
+    }
+    if (button != oldbutton) {
+      XDrawRectangle(xevent.xexpose.display, dialog,
+                     gc_inv, button_x[oldbutton], 58, 69, 24);
+      XDrawRectangle(xevent.xexpose.display, dialog,
+                     gc, button_x[button], 58, 69, 24);
+      oldbutton = button;
+    }
+  }
+  retcode = ask_code[button];
+  XFreeGC(bx_x_display, gc);
+  XDestroyWindow(bx_x_display, dialog);
+  return retcode;
+}
+
+BxEvent *
+x11_notify_callback (void *unused, BxEvent *event)
+{
+  switch (event->type)
+  {
+    case BX_SYNC_EVT_LOG_ASK:
+      event->retcode = x11_ask_dialog(event);
+      return event;
+    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
+    case BX_SYNC_EVT_ASK_PARAM: // called if simulator needs to know value of a param.
+    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
+      // fall into default case
+    default:
+      return (*old_callback)(old_callback_arg, event);
+  }
 }
 
 #endif /* if BX_WITH_X11 */
