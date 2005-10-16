@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.19 2005-09-29 17:32:32 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.20 2005-10-16 23:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,10 +48,13 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
   Bit32u supportMask, newEFlags;
   
   // Build a mask of the non-reserved bits:
-  // x,x,x,x,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
   supportMask = 0x00037fd5;
 #if BX_CPU_LEVEL >= 4
-  supportMask |= ((1<<21) | (1<<18)); // ID/AC
+  supportMask |= (EFlagsIDMask | EFlagsACMask); // ID/AC
+#endif
+#if BX_SUPPORT_VME
+  supportMask |= (EFlagsVPMask | EFlagsVFMask); // VIP/VIF
 #endif
 
   // Screen out changing of any unsupported bits.
@@ -62,7 +65,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
   BX_CPU_THIS_PTR setEFlags(newEFlags);
   // OSZAPC flags are known - done in setEFlags(newEFlags)
 
-  if (newEFlags & (1 << 8)) {
+  if (newEFlags & EFlagsTFMask) {
     BX_CPU_THIS_PTR async_event = 1; // TF = 1
   }
 }
@@ -70,15 +73,17 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 {
+  // Build a mask of the following bits:
+  // x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
   Bit32u changeMask = 0x0dd5;
 
 #if BX_CPU_LEVEL >= 3
-  changeMask |= (1<<14); // NT is modified as requested.
+  changeMask |= EFlagsNTMask;     // NT is modified as requested.
   if (change_IOPL)
-    changeMask |= (3<<12); // IOPL is modified as requested.
+    changeMask |= EFlagsIOPLMask; // IOPL is modified as requested.
 #endif
   if (change_IF)
-    changeMask |= (1<<9);
+    changeMask |= EFlagsIFMask;
 
   writeEFlags(Bit32u(flags), changeMask);
 }
@@ -88,19 +93,21 @@ BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 void BX_CPU_C::write_eflags(Bit32u eflags_raw, bx_bool change_IOPL, 
                 bx_bool change_IF, bx_bool change_VM, bx_bool change_RF)
 {
-  Bit32u changeMask = 0x4dd5;
-
+  // Build a mask of the following bits:
+  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+                          EFlagsDFMask | EFlagsNTMask;
 #if BX_CPU_LEVEL >= 4
-  changeMask |= ((1<<21) | (1<<18)); // ID/AC
+  changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
 #endif
   if (change_IOPL)
-    changeMask |= (3<<12);
+    changeMask |= EFlagsIOPLMask;
   if (change_IF)
-    changeMask |= (1<<9);
+    changeMask |= EFlagsIFMask;
   if (change_VM)
-    changeMask |= (1<<17);
+    changeMask |= EFlagsVMMask;
   if (change_RF)
-    changeMask |= (1<<16);
+    changeMask |= EFlagsRFMask;
 
   writeEFlags(eflags_raw, changeMask);
 }

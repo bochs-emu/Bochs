@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.244 2005-10-13 19:28:09 sshwarts Exp $
+// $Id: cpu.h,v 1.245 2005-10-16 23:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -629,6 +629,12 @@ typedef struct {
   BX_CPP_INLINE void    setRegister(Bit32u r) { registerValue = r; }
 } bx_cr4_t;
 #endif  // #if BX_CPU_LEVEL >= 4
+
+#if BX_SUPPORT_VME
+  #define CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
+#else
+  #define CR4_VME_ENABLED (0)
+#endif
 
 #if BX_CPU_LEVEL >= 5
 typedef struct {
@@ -2800,7 +2806,6 @@ public: // for now...
   BX_SMF void v86_redirect_interrupt(Bit32u vector);
 #endif
   BX_SMF void init_v8086_mode(void);
-  BX_SMF void v8086_message(void);
   BX_SMF void task_switch_load_selector(bx_segment_reg_t *seg,
                  bx_selector_t *selector, Bit16u raw_selector, Bit8u cs_rpl);
   BX_SMF void task_switch(bx_selector_t *selector, bx_descriptor_t *descriptor,

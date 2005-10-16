@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.42 2005-07-20 01:26:44 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.43 2005-10-16 23:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,8 +124,6 @@ done:
 
 void BX_CPU_C::CALL_Ad(bxInstruction_c *i)
 {
-BailBigRSP("CALL_Ad");
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif

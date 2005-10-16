@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.117 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.118 2005-10-16 23:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1380,6 +1380,10 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   //   [2]     TSD: Time Stamp Disable R/W
   //   [1]     PVI: Protected-Mode Virtual Interrupts R/W
   //   [0]     VME: Virtual-8086 Mode Extensions R/W
+
+#if BX_SUPPORT_VME
+  allowMask |= (1<<0) | (1<<1);  /* VME */
+#endif
 
 #if BX_CPU_LEVEL >= 5
   allowMask |= (1<<2);   /* TSD */

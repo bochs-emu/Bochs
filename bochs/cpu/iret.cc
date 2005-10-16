@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.7 2005-09-29 17:32:32 sshwarts Exp $
+// $Id: iret.cc,v 1.8 2005-10-16 23:13:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -169,7 +169,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       4, CPL==3, BX_READ, &new_eflags);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
-    if (new_eflags & 0x00020000) {
+    if (new_eflags & EFlagsVMMask) {
       if (CPL == 0) {
         BX_CPU_THIS_PTR stack_return_to_v86(new_eip, raw_cs_selector, new_eflags);
         return;
