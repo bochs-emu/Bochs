@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.295 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: main.cc,v 1.296 2005-10-17 14:48:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -814,6 +814,7 @@ int bx_init_hardware()
   BX_INFO(("  mmx support: %s",BX_SUPPORT_MMX?"yes":"no"));
   BX_INFO(("  sse support: %s",BX_SUPPORT_SSE==2?"2":BX_SUPPORT_SSE==1?"1":"no"));
   BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
+  BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
   BX_INFO(("  PAE support: %s",BX_SupportPAE?"yes":"no"));
   BX_INFO(("  PGE support: %s",BX_SupportGlobalPages?"yes":"no"));

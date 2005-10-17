@@ -754,7 +754,11 @@ typedef
 #define BX_IGNORE_BAD_MSR 0
 
 #if (BX_SUPPORT_VME && BX_CPU_LEVEL < 4)
-#error With CPU level < 4, you must disable virtual 8086 extensions !
+#error With CPU level < 4, you must disable v8086 mode extensions !
+#endif
+
+#if (BX_SUPPORT_VME && !BX_SUPPORT_V8086_MODE)
+#error You must enable v8086 mode support to use v8086 mode extensions !
 #endif
 
 #if (BX_SUPPORT_MMX && BX_CPU_LEVEL < 5)
