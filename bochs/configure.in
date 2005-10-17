@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.298 2005-10-16 23:13:18 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.299 2005-10-17 13:06:08 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1543,12 +1543,6 @@ AC_ARG_ENABLE(vme,
     AC_DEFINE(BX_SUPPORT_VME, 0)
    fi
    ],
-  [
-    if test "$bx_cpu_level" -ge 5; then
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_VME, 0)
-    fi
-    ]
   )
 
 AC_MSG_CHECKING(for MMX support)

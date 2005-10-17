@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.30 2005-07-20 01:26:44 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.31 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -404,7 +404,7 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
 
   if (v8086_mode()) {
     // IOPL check in stack_return_from_v86()
-    stack_return_from_v86(i);
+    iret16_stack_return_from_v86(i);
     goto done;
   }
 

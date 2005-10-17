@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.20 2005-10-16 23:13:19 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.21 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,31 +87,6 @@ BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 
   writeEFlags(Bit32u(flags), changeMask);
 }
-
-
-#if BX_CPU_LEVEL >= 3
-void BX_CPU_C::write_eflags(Bit32u eflags_raw, bx_bool change_IOPL, 
-                bx_bool change_IF, bx_bool change_VM, bx_bool change_RF)
-{
-  // Build a mask of the following bits:
-  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-  Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
-                          EFlagsDFMask | EFlagsNTMask;
-#if BX_CPU_LEVEL >= 4
-  changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
-#endif
-  if (change_IOPL)
-    changeMask |= EFlagsIOPLMask;
-  if (change_IF)
-    changeMask |= EFlagsIFMask;
-  if (change_VM)
-    changeMask |= EFlagsVMMask;
-  if (change_RF)
-    changeMask |= EFlagsRFMask;
-
-  writeEFlags(eflags_raw, changeMask);
-}
-#endif /* BX_CPU_LEVEL >= 3 */
 
 // Cause arithmetic flags to be in known state and cached in val32.
 Bit32u BX_CPU_C::force_flags(void)

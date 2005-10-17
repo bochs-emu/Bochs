@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.245 2005-10-16 23:13:19 sshwarts Exp $
+// $Id: cpu.h,v 1.246 2005-10-17 13:06:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -398,13 +398,13 @@ BOCHSAPI extern BX_CPU_C       *bx_cpu_array[BX_SMP_PROCESSORS];
 #endif
 
 typedef struct {
-  /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16
-   * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==
-   *  0| 0| 0| 0| 0| 0| 0| 0| 0| 0|ID|VP|VF|AC|VM|RF
+  /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0| 0| 0| 0|  0| 0| 0| 0|  0| 0|ID|VP| VF|AC|VM|RF
    *
-   * 15|14|13|12|11|10| 9| 8| 7| 6| 5| 4| 3| 2| 1| 0
-   * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==
-   *  0|NT| IOPL|OF|DF|IF|TF|SF|ZF| 0|AF| 0|PF| 1|CF
+   * 15|14|13|12| 11|10| 9| 8|  7| 6| 5| 4|  3| 2| 1| 0
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0|NT| IOPL| OF|DF|IF|TF| SF|ZF| 0|AF|  0|PF| 1|CF
    */
   Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
                 //   some eflags which are not cached in separate fields.
@@ -512,6 +512,8 @@ typedef struct {
 #define EFlagsVIFMask    EFlagsVFMask
 #define EFlagsVIPMask    EFlagsVPMask
 
+#define EFlagsValidMask  0x003f7fd5	// only supported bits for EFLAGS
+
 } bx_flags_reg_t;
 
 
@@ -610,12 +612,14 @@ typedef struct {
 #define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                                 \
   BX_CPP_INLINE bx_bool get_##name () {                                      \
     return 1 & (registerValue >> bitnum);                                    \
-  }                                                                        \
+  }                                                                          \
   BX_CPP_INLINE void set_##name (Bit8u val) {                                \
     registerValue = (registerValue&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
   }
+#if BX_SUPPORT_VME
   IMPLEMENT_CR4_ACCESSORS(VME, 0);
   IMPLEMENT_CR4_ACCESSORS(PVI, 1);
+#endif
   IMPLEMENT_CR4_ACCESSORS(TSD, 2);
   IMPLEMENT_CR4_ACCESSORS(DE,  3);
   IMPLEMENT_CR4_ACCESSORS(PSE, 4);
@@ -1196,8 +1200,8 @@ public: // for now...
 
   bx_segment_reg_t save_cs;
   bx_segment_reg_t save_ss;
-  Bit32u           save_eip;
-  Bit32u           save_esp;
+  bx_address       save_eip;
+  bx_address       save_esp;
   // This help for OS/2
   bx_bool          except_chk;
   Bit16u           except_cs;
@@ -2799,9 +2803,9 @@ public: // for now...
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void validate_seg_regs(void);
-  BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
-                                     Bit32u flags32);
-  BX_SMF void stack_return_from_v86(bxInstruction_c *);
+  BX_SMF void stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32u flags32);
+  BX_SMF void iret16_stack_return_from_v86(bxInstruction_c *);
+  BX_SMF void iret32_stack_return_from_v86(bxInstruction_c *);
 #if BX_SUPPORT_VME
   BX_SMF void v86_redirect_interrupt(Bit32u vector);
 #endif
@@ -2815,8 +2819,6 @@ public: // for now...
   BX_SMF void get_RSP_from_TSS(unsigned pl, Bit64u *rsp);
 #endif
   BX_SMF void write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_eflags(Bit32u eflags, bx_bool change_IOPL, bx_bool change_IF,
-                    bx_bool change_VM, bx_bool change_RF);
   BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant.
 #if BX_SUPPORT_FPU || BX_SUPPORT_SSE >= 1
   BX_SMF void write_eflags_fpu_compare(int float_relation);

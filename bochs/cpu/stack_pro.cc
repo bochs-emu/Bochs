@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.25 2005-08-28 17:37:37 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.26 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ BX_CPU_C::push_16(Bit16u value16)
   }
 }
 
-/* push 32 bit operand size */
+/* push 32 bit operand */
 void BX_CPU_C::push_32(Bit32u value32)
 {
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
@@ -80,6 +80,7 @@ void BX_CPU_C::push_32(Bit32u value32)
   }
 }
 
+/* push 64 bit operand */
 void BX_CPU_C::push_64(Bit64u value64)
 {
   /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
@@ -104,6 +105,7 @@ void BX_CPU_C::push_64(Bit64u value64)
   }
 }
 
+/* pop 16 bit operand from the stack */
 void BX_CPU_C::pop_16(Bit16u *value16_ptr)
 {
   bx_address temp_RSP;
@@ -120,7 +122,6 @@ void BX_CPU_C::pop_16(Bit16u *value16_ptr)
 #endif
     temp_RSP = SP;
 
-  /* access within limits */
   read_virtual_word(BX_SEG_REG_SS, temp_RSP, value16_ptr);
 
 #if BX_CPU_LEVEL >= 3
@@ -136,6 +137,7 @@ void BX_CPU_C::pop_16(Bit16u *value16_ptr)
     SP  += 2;
 }
 
+/* pop 32 bit operand from the stack */
 void BX_CPU_C::pop_32(Bit32u *value32_ptr)
 {
   bx_address temp_RSP;
@@ -152,7 +154,6 @@ void BX_CPU_C::pop_32(Bit32u *value32_ptr)
 #endif
     temp_RSP = SP;
 
-  /* access within limits */
   read_virtual_dword(BX_SEG_REG_SS, temp_RSP, value32_ptr);
 
 #if BX_CPU_LEVEL >= 3
@@ -168,6 +169,7 @@ void BX_CPU_C::pop_32(Bit32u *value32_ptr)
     SP  += 4;
 }
 
+/* pop 64 bit operand from the stack */
 void BX_CPU_C::pop_64(Bit64u *value64_ptr)
 {
   bx_address temp_RSP;
@@ -184,7 +186,6 @@ void BX_CPU_C::pop_64(Bit64u *value64_ptr)
 #endif
     temp_RSP = SP;
 
-  /* access within limits */
   read_virtual_qword(BX_SEG_REG_SS, temp_RSP, value64_ptr);
 
 #if BX_CPU_LEVEL >= 3

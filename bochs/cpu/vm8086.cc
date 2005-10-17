@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.21 2005-10-16 23:13:19 sshwarts Exp $
+// $Id: vm8086.cc,v 1.22 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,12 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging 64&32-bit code.
+#define RIP EIP
+#define RSP ESP
+#endif
+
 
 // Notes:
 //
@@ -55,9 +61,8 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   Bit16u raw_es_selector, raw_ds_selector, raw_fs_selector,
          raw_gs_selector, raw_ss_selector;
 
-
-  // Must be 32bit effective opsize, VM is in upper 16bits of eFLAGS
-  // CPL = 0 to get here
+  // Must be 32bit effective opsize, VM is set in upper 16bits of eFLAGS
+  // and CPL = 0 to get here
 
   // ----------------
   // |     | OLD GS | eSP+32
@@ -82,8 +87,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 
-  esp_laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base +
-              temp_ESP;
+  esp_laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP;
 
   // load SS:ESP from stack
   access_linear(esp_laddr + 12, 4, 0, BX_READ, &new_esp);
@@ -95,8 +99,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   access_linear(esp_laddr + 28, 2, 0, BX_READ, &raw_fs_selector);
   access_linear(esp_laddr + 32, 2, 0, BX_READ, &raw_gs_selector);
 
-  write_eflags(flags32, /*change IOPL*/ 1, /*change IF*/ 1,
-                  /*change VM*/ 1, /*change RF*/ 1);
+  writeEFlags(flags32, EFlagsValidMask);
 
   // load CS:IP from stack; already read and passed as args
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = raw_cs_selector;
@@ -107,16 +110,61 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = raw_fs_selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = raw_gs_selector;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = raw_ss_selector;
-#if BX_SUPPORT_X86_64
-  RSP = new_esp;
-#else
-  ESP = new_esp; // Full 32bits are loaded.
-#endif
+  RSP = new_esp;	// full 32 bit are loaded
 
   init_v8086_mode();
 }
 
-void BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
+void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
+{
+  if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+    // trap to virtual 8086 monitor
+    BX_DEBUG(("IRET in vm86 with IOPL != 3, VME = 0"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  Bit16u ip, cs_raw, flags16;
+
+  if( !can_pop(6) )
+  {
+    exception(BX_SS_EXCEPTION, 0, 0);
+    return;
+  }
+
+  pop_16(&ip);
+  pop_16(&cs_raw);
+  pop_16(&flags16);
+
+#if BX_SUPPORT_VME
+  if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3)
+  {
+    if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) || 
+         (flags16 & EFlagsTFMask))
+    {
+      BX_DEBUG(("iret16_stack_return_from_v86: #GP(0) in VME mode"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    RIP = (Bit32u) ip;
+
+    // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+                            EFlagsDFMask | EFlagsNTMask | EFlagsVIFMask;
+    Bit32u flags32 = (Bit32u) flags16;
+    if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
+    writeEFlags(flags32, changeMask);
+
+    return;
+  }
+#endif
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  RIP = (Bit32u) ip;
+  write_flags(flags16, /*IOPL*/ 0, /*IF*/ 1);
+}
+
+void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR get_IOPL() < 3) {
     // trap to virtual 8086 monitor
@@ -124,41 +172,67 @@ void BX_CPU_C::stack_return_from_v86(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  if (i->os32L()) {
-    Bit32u eip, cs_raw, eflags_tmp;
+  Bit32u eip, cs_raw, flags32;
+  // Build a mask of the following bits:
+  // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+  Bit32u change_mask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsIFMask 
+                         | EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
 
-    if( !can_pop(12) )
-    {
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
+#if BX_CPU_LEVEL >= 4
+  change_mask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
+#endif
+
+  if( !can_pop(12) )
+  {
+    exception(BX_SS_EXCEPTION, 0, 0);
+    return;
+  }
   
-    pop_32(&eip);
-    pop_32(&cs_raw);
-    pop_32(&eflags_tmp);
+  pop_32(&eip);
+  pop_32(&cs_raw);
+  pop_32(&flags32);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
-    EIP = eip;
-    write_eflags(eflags_tmp, /*IOPL*/ 0, /*IF*/ 1, /*VM*/ 0, /*RF*/ 1);
-  }
-  else {
-    Bit16u ip, cs_raw, flags;
-
-    if( !can_pop(6) )
-    {
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
-
-    pop_16(&ip);
-    pop_16(&cs_raw);
-    pop_16(&flags);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-    EIP = (Bit32u) ip;
-    write_flags(flags, /*IOPL*/ 0, /*IF*/ 1);
-  }
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
+  RIP = eip;
+  // VIF, VIP, VM, IOPL unchanged
+  writeEFlags(flags32, change_mask);
 }
+
+#if BX_SUPPORT_VME
+void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
+{
+  Bit16u temp_IP, temp_CS, temp_flags = read_flags();
+
+  access_linear(vector*4,     2, 0, BX_READ, &temp_IP);
+  access_linear(vector*4 + 2, 2, 0, BX_READ, &temp_CS);
+
+  if (BX_CPU_THIS_PTR get_IOPL() < 3) {
+    temp_flags |= EFlagsIOPLMask;
+    if (BX_CPU_THIS_PTR get_VIF())
+      temp_flags |=  EFlagsIFMask;
+    else
+      temp_flags &= ~EFlagsIFMask;
+  }
+
+  Bit16u old_IP = IP;
+  Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+  push_16(temp_flags);
+  // push return address onto new stack
+  push_16(old_CS);
+  push_16(old_IP);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) temp_CS);
+  RIP = temp_IP;
+
+  BX_CPU_THIS_PTR clear_TF ();
+  BX_CPU_THIS_PTR clear_RF ();
+  if (BX_CPU_THIS_PTR get_IOPL() == 3)
+    BX_CPU_THIS_PTR clear_IF ();
+  else
+    BX_CPU_THIS_PTR clear_VIF();
+}
+#endif
 
 void BX_CPU_C::init_v8086_mode(void)
 {
@@ -264,13 +338,6 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl                 = 3;
 }
-
-#if BX_SUPPORT_VME
-void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
-{
-  BX_PANIC(("Redirection of interrupts through virtual-mode idt still not implemented"));
-}
-#endif
 
 #endif /* BX_CPU_LEVEL >= 3 */
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.118 2005-10-16 23:13:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.119 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2012,7 +2012,7 @@ SYSCALL_LEGACY_MODE:
   Bit32u dword1, dword2;
 
   if (!BX_CPU_THIS_PTR msr.sce) {
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();
@@ -2020,10 +2020,7 @@ SYSCALL_LEGACY_MODE:
   if (BX_CPU_THIS_PTR msr.lma)
   {
     RCX = RIP;
-#ifdef __GNUC__
-#warning - PRT: SYSCALL --  do we reset RF/VM before saving to R11?
-#endif
-    R11 = read_eflags();
+    R11 = read_eflags() & ~(EFlagsRFMask);
 
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
       temp_RIP = MSR_LSTAR;
@@ -2042,8 +2039,8 @@ SYSCALL_LEGACY_MODE:
     parse_descriptor(dword1, dword2, &ss_descriptor);
     load_ss(&ss_selector, &ss_descriptor, 0);
 
-    write_eflags(read_eflags() & (~MSR_FMASK),1,1,1,0);
-    BX_CPU_THIS_PTR clear_RF ();
+    writeEFlags(read_eflags() & (~MSR_FMASK), EFlagsValidMask);
+    BX_CPU_THIS_PTR clear_RF();
     RIP = temp_RIP;
   }
   else {
@@ -2132,7 +2129,7 @@ SYSRET_NON_64BIT_MODE:
   Bit32u  dword1, dword2;
 
   if (!BX_CPU_THIS_PTR msr.sce) {
-    exception(BX_GP_EXCEPTION, 0, 0);
+    exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if(real_mode() || CPL != 0) {
@@ -2168,7 +2165,7 @@ SYSRET_NON_64BIT_MODE:
     load_ss(&ss_selector, &ss_descriptor, 0);
 
     // SS base, limit, attributes unchanged.
-    write_eflags(R11,1,1,1,1);
+    writeEFlags(R11, EFlagsValidMask);
 
     RIP = temp_RIP;
   }

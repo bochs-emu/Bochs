@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.8 2005-10-16 23:13:19 sshwarts Exp $
+// $Id: iret.cc,v 1.9 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -215,8 +215,21 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       /* load CS-cache with new code segment descriptor */
       branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
-      /* load EFLAGS with 3rd doubleword from stack */
-      write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL (), 0, 1);
+      // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+      Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+                              EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
+#if BX_CPU_LEVEL >= 4
+      changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
+#endif
+      if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+        changeMask |= EFlagsIFMask;
+      if (CPL == 0)
+        changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
+      // IF only changed if (CPL <= EFLAGS.IOPL)
+      // VIF, VIP, IOPL only changed if CPL == 0
+      // VM unaffected
+      writeEFlags(new_eflags, changeMask);
     }
     else {
       /* load CS-cache with new code segment descriptor */
@@ -326,13 +339,24 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     /* set CPL to the RPL of the return CS selector */
     branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
-    /* load flags from stack */
-    // perhaps I should always write_eflags(), thus zeroing
-    // out the upper 16bits of eflags for CS.D_B==0 ???
+    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+                            EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
+#if BX_CPU_LEVEL >= 4
+    changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
+#endif
+    if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
+      changeMask |= EFlagsIFMask;
+    if (prev_cpl == 0)
+      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
     if (cs_descriptor.u.segment.d_b)
-      write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
-    else
-      write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
+      changeMask &= 0xffff;
+
+    // IF only changed if (prev_CPL <= EFLAGS.IOPL)
+    // VIF, VIP, IOPL only changed if prev_CPL == 0
+    // VM unaffected
+    writeEFlags(new_eflags, changeMask);
 
     // load SS:eSP from stack
     // load the SS-cache with SS descriptor
@@ -473,8 +497,18 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     /* load CS-cache with new code segment descriptor */
     branch_far32(&cs_selector, &cs_descriptor, new_rip, CPL);
 
-    /* load EFLAGS with 3rd doubleword from stack */
-    write_eflags(new_eflags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
+    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
+                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
+    if (CPL <= BX_CPU_THIS_PTR get_IOPL())
+      changeMask |= EFlagsIFMask;
+    if (CPL == 0)
+      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
+    // IF only changed if (CPL <= EFLAGS.IOPL)
+    // VIF, VIP, IOPL only changed if CPL == 0
+    // VM unaffected
+    writeEFlags(new_eflags, changeMask);
 
     /* we are NOT in 64-bit mode */
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) 
@@ -570,13 +604,21 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     /* set CPL to the RPL of the return CS selector */
     branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
 
-    /* load flags from stack */
-    // perhaps I should always write_eflags(), thus zeroing
-    // out the upper 16bits of eflags for CS.D_B==0 ???
+    // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask | 
+                            EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
+    if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
+      changeMask |= EFlagsIFMask;
+    if (prev_cpl == 0)
+      changeMask |= EFlagsVIPMask | EFlagsVIFMask | EFlagsIOPLMask;
+
     if (cs_descriptor.u.segment.d_b)
-      write_eflags(new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL(), 0, 1);
-    else
-      write_flags((Bit16u) new_eflags, prev_cpl==0, prev_cpl<=BX_CPU_THIS_PTR get_IOPL());
+      changeMask &= 0xffff;
+
+    // IF only changed if (prev_CPL <= EFLAGS.IOPL)
+    // VIF, VIP, IOPL only changed if prev_CPL == 0
+    // VM unaffected
+    writeEFlags(new_eflags, changeMask);
 
     if ( (raw_ss_selector & 0xfffc) != 0 ) {
       // load SS:RSP from stack

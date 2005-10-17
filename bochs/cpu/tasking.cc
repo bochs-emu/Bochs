@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.25 2005-09-03 11:39:26 sshwarts Exp $
+// $Id: tasking.cc,v 1.26 2005-10-17 13:06:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -460,7 +460,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   }
 
   BX_CPU_THIS_PTR prev_eip = EIP = newEIP;
-  write_eflags(newEFLAGS, 1,1,1,1);
+  writeEFlags(newEFLAGS, EFlagsValidMask);
   EAX = newEAX;
   ECX = newECX;
   EDX = newEDX;
