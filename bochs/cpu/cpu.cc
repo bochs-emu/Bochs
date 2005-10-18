@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.111 2005-08-28 17:37:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.112 2005-10-18 18:07:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,13 +69,25 @@ BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
 
 bxPageWriteStampTable pageWriteStampTable;
 
-void purgeICache(void)
+void purgeICaches(void)
 {
 #if BX_SMP_PROCESSORS == 1
   BX_CPU(0)->iCache.purgeICacheEntries();
 #else
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->iCache.purgeICacheEntries();
+#endif
+
+  pageWriteStampTable.resetWriteStamps();
+}
+
+void flushICaches(void)
+{
+#if BX_SMP_PROCESSORS == 1
+  BX_CPU(0)->iCache.flushICacheEntries();
+#else
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->iCache.flushICacheEntries();
 #endif
 
   pageWriteStampTable.resetWriteStamps();

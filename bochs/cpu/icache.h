@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.8 2005-08-10 18:18:57 sshwarts Exp $
+// $Id: icache.h,v 1.9 2005-10-18 18:07:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,7 +139,15 @@ public:
   }
 
   BX_CPP_INLINE void purgeICacheEntries(void);
+  BX_CPP_INLINE void flushICacheEntries(void);
 };
+
+BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
+{
+    for (unsigned i=0; i<BxICacheEntries; i++) {
+      entry[i].writeStamp = ICacheWriteStampInvalid;
+    }
+}
 
 BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
 {
@@ -157,6 +165,7 @@ BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
   }
 }
 
-extern void purgeICache(void);
+extern void purgeICaches(void);
+extern void flushICaches(void);
 
 #endif

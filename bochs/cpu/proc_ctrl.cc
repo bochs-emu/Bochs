@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.119 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.120 2005-10-18 18:07:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,10 +108,6 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
 
 void BX_CPU_C::INVD(bxInstruction_c *i)
 {
-  BX_INFO(("---------------"));
-  BX_INFO(("- INVD called -"));
-  BX_INFO(("---------------"));
-
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
@@ -122,8 +118,16 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
+
+  BX_INFO(("INVD: Flush caches and TLB !"));
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
+  TLB_flush(1); // 1 = Flush Global entries too
+#if BX_SUPPORT_ICACHE
+  flushICaches();
+#endif
+
 #else
+  BX_INFO(("INVD: required 486 support, use --enable-cpu-level=4 option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -139,8 +143,16 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
+
+  BX_INFO(("WBINVD: Flush caches and TLB !"));
   BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
+  TLB_flush(1); // 1 = Flush Global entries too
+#if BX_SUPPORT_ICACHE
+  flushICaches();
+#endif
+
 #else
+  BX_INFO(("WBINVD: required 486 support, use --enable-cpu-level=4 option"));
   UndefinedOpcode(i);
 #endif
 }

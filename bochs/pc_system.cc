@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.43 2005-07-04 18:02:37 sshwarts Exp $
+// $Id: pc_system.cc,v 1.44 2005-10-18 18:07:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -394,7 +394,7 @@ void bx_pc_system_c::nullTimer(void* this_ptr)
 #endif
 
 #if BX_SUPPORT_ICACHE
-  purgeICache();
+  purgeICaches();
 #endif
 }
 
