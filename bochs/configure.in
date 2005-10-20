@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.299 2005-10-17 13:06:08 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.300 2005-10-20 17:24:47 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2460,7 +2460,9 @@ case $target in
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       INSTALL_PLUGINS_VAR=install_dll_plugins
     else
-      LIBS="$LIBS -lcomctl32"
+      if test "$with_win32" != yes; then
+        LIBS="$LIBS -lcomctl32"
+      fi
     fi
     DIALOG_OBJS="win32dialog.o"
     EXPORT_DYNAMIC=""
