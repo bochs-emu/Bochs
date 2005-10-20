@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.83 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: gui.cc,v 1.84 2005-10-20 17:34:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,40 +58,40 @@ typedef struct {
 
 static user_key_t user_keys[N_USER_KEYS] =
 {
-  "f1",    BX_KEY_F1,
-  "f2",    BX_KEY_F2,
-  "f3",    BX_KEY_F3,
-  "f4",    BX_KEY_F4,
-  "f5",    BX_KEY_F5,
-  "f6",    BX_KEY_F6,
-  "f7",    BX_KEY_F7,
-  "f8",    BX_KEY_F8,
-  "f9",    BX_KEY_F9,
-  "f10",   BX_KEY_F10,
-  "f11",   BX_KEY_F11,
-  "f12",   BX_KEY_F12,
-  "alt",   BX_KEY_ALT_L,
-  "bksp",  BX_KEY_BACKSPACE,
-  "ctrl",  BX_KEY_CTRL_L,
-  "del",   BX_KEY_DELETE,
-  "down",  BX_KEY_DOWN,
-  "end",   BX_KEY_END,
-  "enter", BX_KEY_ENTER,
-  "esc",   BX_KEY_ESC,
-  "home",  BX_KEY_HOME,
-  "ins",   BX_KEY_INSERT,
-  "left",  BX_KEY_LEFT,
-  "menu",  BX_KEY_MENU,
-  "minus", BX_KEY_MINUS,
-  "pgdwn", BX_KEY_PAGE_DOWN,
-  "pgup",  BX_KEY_PAGE_UP,
-  "plus",  BX_KEY_KP_ADD,
-  "right", BX_KEY_RIGHT,
-  "shift", BX_KEY_SHIFT_L,
-  "space", BX_KEY_SPACE,
-  "tab",   BX_KEY_TAB,
-  "up",    BX_KEY_UP,
-  "win",   BX_KEY_WIN_L
+  { "f1",    BX_KEY_F1 },
+  { "f2",    BX_KEY_F2 },
+  { "f3",    BX_KEY_F3 },
+  { "f4",    BX_KEY_F4 },
+  { "f5",    BX_KEY_F5 },
+  { "f6",    BX_KEY_F6 },
+  { "f7",    BX_KEY_F7 },
+  { "f8",    BX_KEY_F8 },
+  { "f9",    BX_KEY_F9 },
+  { "f10",   BX_KEY_F10 },
+  { "f11",   BX_KEY_F11 },
+  { "f12",   BX_KEY_F12 },
+  { "alt",   BX_KEY_ALT_L },
+  { "bksp",  BX_KEY_BACKSPACE },
+  { "ctrl",  BX_KEY_CTRL_L },
+  { "del",   BX_KEY_DELETE },
+  { "down",  BX_KEY_DOWN },
+  { "end",   BX_KEY_END },
+  { "enter", BX_KEY_ENTER },
+  { "esc",   BX_KEY_ESC },
+  { "home",  BX_KEY_HOME },
+  { "ins",   BX_KEY_INSERT },
+  { "left",  BX_KEY_LEFT },
+  { "menu",  BX_KEY_MENU },
+  { "minus", BX_KEY_MINUS },
+  { "pgdwn", BX_KEY_PAGE_DOWN },
+  { "pgup",  BX_KEY_PAGE_UP },
+  { "plus",  BX_KEY_KP_ADD },
+  { "right", BX_KEY_RIGHT },
+  { "shift", BX_KEY_SHIFT_L },
+  { "space", BX_KEY_SPACE },
+  { "tab",   BX_KEY_TAB },
+  { "up",    BX_KEY_UP },
+  { "win",   BX_KEY_WIN_L }
 };
 
 bx_gui_c::bx_gui_c(void)
@@ -812,6 +812,6 @@ bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
 bx_gui_c::show_ips(Bit32u ips_count)
 {
 #if BX_SHOW_IPS
-  BX_INFO(("ips = %lu", ips_count));
+  BX_INFO(("ips = %u", ips_count));
 #endif
 }
