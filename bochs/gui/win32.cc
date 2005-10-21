@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.96 2005-10-02 17:37:56 vruppert Exp $
+// $Id: win32.cc,v 1.97 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -678,8 +678,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   // load keymap tables
   if(bx_options.keyboard.OuseMapping->get()) {
     bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
-    }
+  }
 
+  user_dialog = 1;
 }
 
 void resize_main_window()

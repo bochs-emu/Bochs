@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.47 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: gui.h,v 1.48 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -165,7 +165,8 @@ protected:
   Bit16u host_pitch;
   Bit8u host_bpp;
   Bit8u *framebuffer;
-  };
+  bx_bool user_dialog;
+};
 
 
 // Add this macro in the class declaration of each GUI, to define all the

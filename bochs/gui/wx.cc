@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.74 2004-11-06 17:03:43 vruppert Exp $
+// $Id: wx.cc,v 1.75 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -914,6 +914,7 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
 #endif
 
   new_gfx_api = 1;
+  user_dialog = 1;
 }
 
 // ::HANDLE_EVENTS()

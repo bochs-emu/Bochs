@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.59 2005-07-30 18:57:02 vruppert Exp $
+// $Id: sdl.cc,v 1.60 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -297,6 +297,9 @@ void bx_sdl_gui_c::specific_init(
   }
 
   new_gfx_api = 1;
+#ifdef WIN32
+  user_dialog = 1;
+#endif
 }
 
 void sdl_set_status_text(int element, const char *text, bx_bool active)

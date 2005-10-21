@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.84 2005-10-20 17:34:22 sshwarts Exp $
+// $Id: gui.cc,v 1.85 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,6 +116,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS host_xres = 640;
   BX_GUI_THIS host_yres = 480;
   BX_GUI_THIS host_bpp = 8;
+  BX_GUI_THIS user_dialog = 0;
 
   specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
@@ -550,13 +551,7 @@ bx_gui_c::userbutton_handler(void)
   char *ptr;
   int i, len = 0, ret = 1;
 
-#ifdef WIN32
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
-#else
-  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
-              "wx")) {
-#endif
+  if (BX_GUI_THIS user_dialog) {
     ret = SIM->ask_param (BXP_USER_SHORTCUT);
   }
   strcpy(user_shortcut, bx_options.Ouser_shortcut->getptr());

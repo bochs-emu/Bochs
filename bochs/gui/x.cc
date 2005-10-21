@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.92 2005-10-16 13:11:38 vruppert Exp $
+// $Id: x.cc,v 1.93 2005-10-21 18:00:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -640,6 +640,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     }
 
   new_gfx_api = 1;
+  user_dialog = 1;
 }
 
   void
@@ -1973,7 +1974,7 @@ int x11_ask_dialog(BxEvent *event)
   KeySym key;
   int done, i, level;
   int retcode = -1;
-  int button = 0, oldbutton = -1;
+  int valid = 0, control = 0, oldctrl = -1;
   unsigned long black_pixel, white_pixel;
   char name[16], text[10], device[16], message[512];
 
@@ -2024,62 +2025,213 @@ int x11_ask_dialog(BxEvent *event)
                             gc, 105, 60, 65, 20, "Alwayscont");
           x11_create_button(xevent.xexpose.display, dialog,
                             gc, 190, 60, 65, 20, "Quit");
-          oldbutton = button - 1;
-          if (oldbutton < 0) oldbutton = 1;
+          oldctrl = control - 1;
+          if (oldctrl < 0) oldctrl = 1;
         }
         break;
       case ButtonPress:
         if (xevent.xbutton.button == Button1) {
           if ((xevent.xbutton.y > 60) && (xevent.xbutton.y < 80)) {
             if ((xevent.xbutton.x > 20) && (xevent.xbutton.x < 85)) {
-              button = 0;
+              control = 0;
+              valid = 1;
             } else if ((xevent.xbutton.x > 105) && (xevent.xbutton.x < 170)) {
-              button = 1;
+              control = 1;
+              valid = 1;
             } else if ((xevent.xbutton.x > 190) && (xevent.xbutton.x < 255)) {
-              button = 2;
+              control = 2;
+              valid = 1;
             }
           }
         }
         break;
       case ButtonRelease:
-        if (xevent.xbutton.button == Button1) {
+        if ((xevent.xbutton.button == Button1) && (valid == 1)) {
           done = 1;
         }
         break;
       case KeyPress:
         i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
         if (key == XK_Tab) {
-          button++;
-          if (button == 3) button = 0;
+          control++;
+          if (control == 3) control = 0;
+        } else if (key == XK_Escape) {
+          control = 2;
+          done = 1;
         } else if ((key == XK_space) || (key == XK_Return)) {
           done = 1;
         }
         break;
     }
-    if (button != oldbutton) {
-      XDrawRectangle(xevent.xexpose.display, dialog,
-                     gc_inv, button_x[oldbutton], 58, 69, 24);
-      XDrawRectangle(xevent.xexpose.display, dialog,
-                     gc, button_x[button], 58, 69, 24);
-      oldbutton = button;
+    if (control != oldctrl) {
+      XDrawRectangle(bx_x_display, dialog, gc_inv, button_x[oldctrl], 58, 69, 24);
+      XDrawRectangle(bx_x_display, dialog, gc, button_x[control], 58, 69, 24);
+      oldctrl = control;
     }
   }
-  retcode = ask_code[button];
+  retcode = ask_code[control];
   XFreeGC(bx_x_display, gc);
   XDestroyWindow(bx_x_display, dialog);
   return retcode;
 }
 
+int x11_string_dialog(bx_param_string_c *param)
+{
+  Window dialog;
+  XSizeHints hint;
+  XEvent xevent;
+  GC gc, gc_inv;
+  KeySym key;
+  int valid = 0, control = 0, oldctrl = -1;
+  int done, i;
+  unsigned long black_pixel, white_pixel;
+  char editstr[80], name[80], text[10], value[80];
+
+  strcpy(name, param->get_name());
+  strcpy(value, param->getptr());
+  hint.flags = PPosition | PSize | PMinSize | PMaxSize;
+  hint.x = 100;
+  hint.y = 100;
+  hint.width = hint.min_width = hint.max_width = 250;
+  hint.height = hint.min_height = hint.max_height = 90;
+  black_pixel = BlackPixel(bx_x_display, bx_x_screen_num);
+  white_pixel = WhitePixel(bx_x_display, bx_x_screen_num);
+  dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
+    hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
+  XSetStandardProperties(bx_x_display, dialog, name, name, None, NULL, 0, &hint);
+
+  gc = XCreateGC(bx_x_display, dialog, 0, 0);
+  gc_inv = XCreateGC(bx_x_display, dialog, 0, 0);
+  XSetState(bx_x_display, gc_inv, white_pixel, black_pixel, GXcopy, AllPlanes);
+  XSetBackground(bx_x_display,gc,WhitePixel(bx_x_display, bx_x_screen_num));
+  XSetForeground(bx_x_display,gc,BlackPixel(bx_x_display, bx_x_screen_num));
+
+  XSelectInput(bx_x_display, dialog, ButtonPressMask
+               | ButtonReleaseMask
+               | KeyPressMask
+               | KeyReleaseMask
+               | ExposureMask
+               | PointerMotionMask
+               | EnterWindowMask
+               | LeaveWindowMask);
+  XMapWindow(bx_x_display, dialog);
+  XFlush(bx_x_display);
+  done = 0;
+  while (!done) {
+    XNextEvent(bx_x_display, &xevent);
+    switch (xevent.type) {
+      case Expose:
+        if (xevent.xexpose.count == 0) {
+          sprintf(editstr, "%s%s", value, "_ ");
+          XDrawRectangle(xevent.xexpose.display, dialog, gc, 45, 20, 160, 20);
+          XDrawImageString(xevent.xexpose.display, dialog, gc, 49, 34, editstr, strlen(editstr));
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, 55, 60, 65, 20, "OK");
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, 130, 60, 65, 20, "Cancel");
+          oldctrl = control - 1;
+          if (oldctrl < 0) oldctrl = 1;
+        }
+        break;
+      case ButtonPress:
+        if (xevent.xbutton.button == Button1) {
+          if ((xevent.xbutton.y > 60) && (xevent.xbutton.y < 80)) {
+            if ((xevent.xbutton.x > 55) && (xevent.xbutton.x < 120)) {
+              control = 1;
+              valid = 1;
+            } else if ((xevent.xbutton.x > 130) && (xevent.xbutton.x < 195)) {
+              control = 2;
+              valid = 1;
+            }
+          } else if ((xevent.xbutton.y > 20) && (xevent.xbutton.y < 40)) {
+            if ((xevent.xbutton.x > 45) && (xevent.xbutton.x < 205)) {
+              control = 0;
+              valid = 1;
+            }
+          }
+        }
+        break;
+      case ButtonRelease:
+        if ((xevent.xbutton.button == Button1) && (valid == 1)) {
+          if (control > 0) {
+            done = 1;
+          }
+        }
+        break;
+      case KeyPress:
+        i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
+        if (key == XK_Tab) {
+          control++;
+          if (control == 3) control = 0;
+        } else if (key == XK_Escape) {
+          control = 2;
+          done = 1;
+        } else if (control > 0) {
+          if ((key == XK_space) || (key == XK_Return)) {
+            done = 1;
+          }
+        } else {
+          if (key == XK_Return) {
+            control = 1;
+            done = 1;
+          } else if (key == XK_BackSpace) {
+            if (strlen(value) > 0) {
+              value[strlen(value)-1] = 0;
+              oldctrl = -1;
+            }
+          } else if ((i == 1) && (strlen(value) < 40)) {
+            strcat(value, text);
+            oldctrl = -1;
+          }
+        }
+        break;
+    }
+    if (control != oldctrl) {
+      if (oldctrl > 0) {
+        XDrawRectangle(bx_x_display, dialog, gc_inv, oldctrl==1?53:128, 58, 69, 24);
+      } else if (oldctrl == 0) {
+        sprintf(editstr, "%s%s", value, " ");
+        XDrawImageString(bx_x_display, dialog, gc, 49, 34, editstr, strlen(editstr));
+      }
+      if (control > 0) {
+        XDrawRectangle(bx_x_display, dialog, gc, control==1?53:128, 58, 69, 24);
+      } else {
+        sprintf(editstr, "%s%s", value, "_ ");
+        XDrawImageString(bx_x_display, dialog, gc, 49, 34, editstr, strlen(editstr));
+      }
+      oldctrl = control;
+    }
+  }
+  if (control == 1) param->set(value);
+  if (control == 2) control = -1;
+  XFreeGC(bx_x_display, gc);
+  XDestroyWindow(bx_x_display, dialog);
+  return control;
+}
+
 BxEvent *
 x11_notify_callback (void *unused, BxEvent *event)
 {
+  int opts;
+  bx_param_c *param;
+  bx_param_string_c *sparam;
+
   switch (event->type)
   {
     case BX_SYNC_EVT_LOG_ASK:
       event->retcode = x11_ask_dialog(event);
       return event;
+    case BX_SYNC_EVT_ASK_PARAM:
+      param = event->u.param.param;
+      if (param->get_type() == BXT_PARAM_STRING) {
+        sparam = (bx_param_string_c *)param;
+        opts = sparam->get_options()->get();
+        if ((opts & sparam->IS_FILENAME) == 0) {
+          event->retcode = x11_string_dialog(sparam);
+          return event;
+        }
+      }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
-    case BX_SYNC_EVT_ASK_PARAM: // called if simulator needs to know value of a param.
     case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
       // fall into default case
     default:
