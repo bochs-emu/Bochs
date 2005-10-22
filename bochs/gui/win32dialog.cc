@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.25 2005-10-07 23:28:43 vruppert Exp $
+// $Id: win32dialog.cc,v 1.26 2005-10-22 11:00:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -7,6 +7,7 @@
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
 extern "C" {
+#include <assert.h>
 #include <stdio.h>
 #include <windows.h>
 #include <commctrl.h>
@@ -18,6 +19,10 @@ extern "C" {
 
 const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", "no change"};
 static int retcode = 0;
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
+
+int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
 
 HWND GetBochsWindow()
 {
@@ -97,21 +102,23 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_string_c *param;
-  char buffer[20];
+  char buffer[512];
 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_string_c *)lParam;
       SetWindowText(hDlg, param->get_name());
       SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
-      return FALSE;
+      SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, param->get_maxsize(), 0);
+      return TRUE;
+      break;
     case WM_CLOSE:
       EndDialog(hDlg, -1);
       break;
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
         case IDOK:
-          GetDlgItemText(hDlg, IDSTRING, buffer, 20);
+          GetDlgItemText(hDlg, IDSTRING, buffer, param->get_maxsize() + 1);
           param->set(buffer);
           EndDialog(hDlg, 1);
           break;
@@ -233,6 +240,7 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       if (cdromop.Ostatus->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS1), BM_SETCHECK, BST_CHECKED, 0);
       }
+      return TRUE;
       break;
     case WM_CLOSE:
       if (lstrcmp(cdromop.Opath->getptr(), origpath)) {
@@ -740,6 +748,53 @@ int RuntimeOptionsDialog()
   PropertySheet(&psh);
   PostMessage(GetBochsWindow(), WM_SETFOCUS, 0, 0);
   return retcode;
+}
+
+BxEvent* win32_notify_callback(void *unused, BxEvent *event)
+{
+  int opts;
+  bx_param_c *param;
+  bx_param_string_c *sparam;
+
+  event->retcode = -1;
+  switch (event->type)
+  {
+    case BX_SYNC_EVT_LOG_ASK:
+      LogAskDialog(event);
+      return event;
+    case BX_SYNC_EVT_ASK_PARAM:
+      param = event->u.param.param;
+      if (param->get_type() == BXT_PARAM_STRING) {
+        sparam = (bx_param_string_c *)param;
+        opts = sparam->get_options()->get();
+        if (opts & sparam->IS_FILENAME) {
+          if (param->get_id() == BXP_NULL) {
+            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
+          } else {
+            event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
+          }
+          return event;
+        } else {
+          event->retcode = AskString(sparam);
+          return event;
+        }
+      } else if (param->get_type() == BXT_LIST) {
+        event->retcode = Cdrom1Dialog();
+        return event;
+      }
+    case BX_SYNC_EVT_TICK: // called periodically by siminterface.
+    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
+      // fall into default case
+    default:
+      return (*old_callback)(old_callback_arg, event);
+  }
+}
+
+void win32_init_notify_callback()
+{
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert (old_callback != NULL);
+  SIM->set_notify_callback(win32_notify_callback, NULL);
 }
 
 #endif // BX_USE_TEXTCONFIG && defined(WIN32)

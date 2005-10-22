@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.30 2005-06-06 20:14:50 vruppert Exp $
+// $Id: textconfig.cc,v 1.31 2005-10-22 11:00:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -644,11 +644,6 @@ int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
 BxEvent *
 config_interface_notify_callback (void *unused, BxEvent *event)
 {
-#ifdef WIN32
-  int opts;
-  bx_param_c *param;
-  bx_param_string_c *sparam;
-#endif
   event->retcode = -1;
   switch (event->type)
   {
@@ -656,34 +651,10 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
-#ifdef WIN32
-      param = event->u.param.param;
-      if (param->get_type() == BXT_PARAM_STRING) {
-        sparam = (bx_param_string_c *)param;
-        opts = sparam->get_options()->get();
-        if (opts & sparam->IS_FILENAME) {
-          if (param->get_id() == BXP_NULL) {
-            event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
-          } else {
-            event->retcode = FloppyDialog((bx_param_filename_c *)sparam);
-          }
-          return event;
-        } else {
-          event->retcode = AskString(sparam);
-          return event;
-        }
-      } else if (param->get_type() == BXT_LIST) {
-        event->retcode = Cdrom1Dialog();
-        return event;
-      }
-#endif
       event->u.param.param->text_ask (stdin, stderr);
       return event;
     case BX_SYNC_EVT_LOG_ASK:
     {
-#ifdef WIN32
-      LogAskDialog(event);
-#else
       int level = event->u.logmsg.level;
       fprintf (stderr, "========================================================================\n");
       fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
@@ -713,7 +684,6 @@ ask:
       fflush(stdout);
       fflush(stderr);
       event->retcode = choice;
-#endif
     }
     return event;
   case BX_ASYNC_EVT_REFRESH:
