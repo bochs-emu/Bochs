@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.85 2005-10-21 18:00:17 vruppert Exp $
+// $Id: gui.cc,v 1.86 2005-10-22 08:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -557,7 +557,8 @@ bx_gui_c::userbutton_handler(void)
   strcpy(user_shortcut, bx_options.Ouser_shortcut->getptr());
   if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
     ptr = strtok(user_shortcut, "-");
-    if (strcmp(ptr, bx_options.Ouser_shortcut->getptr())) {
+    if ((strcmp(ptr, bx_options.Ouser_shortcut->getptr())) ||
+        (strlen(bx_options.Ouser_shortcut->getptr()) < 6)) {
       while (ptr) {
         symbol = get_user_key(ptr);
         if (symbol == BX_KEY_UNKNOWN) {

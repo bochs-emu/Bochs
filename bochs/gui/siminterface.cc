@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.110 2005-10-15 10:43:55 vruppert Exp $
+// $Id: siminterface.cc,v 1.111 2005-10-22 08:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1200,14 +1200,15 @@ bx_param_string_c::bx_param_string_c (bx_id id,
 {
   set_type (BXT_PARAM_STRING);
   if (maxsize < 0) 
-    maxsize = strlen(initial_val) + 1;
-  this->val = new char[maxsize];
-  this->initial_val = new char[maxsize];
+    maxsize = strlen(initial_val);
+  this->val = new char[maxsize + 1];
+  this->initial_val = new char[maxsize + 1];
   this->handler = NULL;
   this->enable_handler = NULL;
   this->maxsize = maxsize;
   strncpy (this->val, initial_val, maxsize);
   strncpy (this->initial_val, initial_val, maxsize);
+  this->val[maxsize] = 0;
   this->options = new bx_param_num_c (BXP_NULL,
       "stringoptions", NULL, 0, BX_MAX_BIT64S, 0);
   set (initial_val);

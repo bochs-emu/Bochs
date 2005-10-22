@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.49 2005-10-15 10:43:55 vruppert Exp $
+// $Id: config.cc,v 1.50 2005-10-22 08:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1612,7 +1612,7 @@ void bx_init_options ()
   bx_options.Ouser_shortcut = new bx_param_string_c (BXP_USER_SHORTCUT,
       "Userbutton shortcut",
       "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
-      "none", 16);
+      "none", 20);
   bx_options.Ouser_shortcut->set_runtime_param (1);
 
   // GDB stub
@@ -3166,7 +3166,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
     if(!strncmp(params[1], "keys=", 4)) {
       bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
-      if (strchr(&params[1][5], '-') == NULL)
+      if ((strchr(&params[1][5], '-') == NULL) && (strlen(&params[1][5]) > 5))
         PARSE_WARN(("user_shortcut: old-style syntax detected"));
     } else {
       PARSE_ERR(("%s: user_shortcut directive malformed.", context));

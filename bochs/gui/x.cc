@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.93 2005-10-21 18:00:17 vruppert Exp $
+// $Id: x.cc,v 1.94 2005-10-22 08:07:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2085,7 +2085,7 @@ int x11_string_dialog(bx_param_string_c *param)
   int valid = 0, control = 0, oldctrl = -1;
   int done, i;
   unsigned long black_pixel, white_pixel;
-  char editstr[80], name[80], text[10], value[80];
+  char editstr[24], name[80], text[10], value[24];
 
   strcpy(name, param->get_name());
   strcpy(value, param->getptr());
@@ -2179,7 +2179,7 @@ int x11_string_dialog(bx_param_string_c *param)
               value[strlen(value)-1] = 0;
               oldctrl = -1;
             }
-          } else if ((i == 1) && (strlen(value) < 40)) {
+          } else if ((i == 1) && (strlen(value) < 20)) {
             strcat(value, text);
             oldctrl = -1;
           }
