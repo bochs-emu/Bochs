@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.83 2005-10-01 17:40:07 vruppert Exp $
+// $Id: devices.cc,v 1.84 2005-10-22 17:31:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.83 2005-10-01 17:40:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.84 2005-10-22 17:31:02 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -334,7 +334,6 @@ bx_devices_c::reset(unsigned type)
   pluginVgaDevice->reset(type);
   pluginPicDevice->reset(type);
   pit->reset(type);
-  bx_slowdown_timer.reset(type);
 #if BX_SUPPORT_IODEBUG
   iodebug->reset(type);
 #endif

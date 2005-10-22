@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.21 2005-06-06 20:14:50 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.22 2005-10-22 17:31:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,12 +39,7 @@
 #define MSECINUSEC 1000
 #define usectomsec(a) ((a)/MSECINUSEC)
 
-#if BX_HAVE_USLEEP
-#  define Qval 1000
-#else
-#  define Qval SECINUSEC
-#endif
-
+#define Qval 1000
 #define MAXMULT 1.5
 #define REALTIME_Q SECINUSEC
 
@@ -52,10 +47,10 @@
 
 bx_slowdown_timer_c bx_slowdown_timer;
 
-bx_slowdown_timer_c::bx_slowdown_timer_c() {
+bx_slowdown_timer_c::bx_slowdown_timer_c()
+{
   put("STIMER");
   settype(STIMERLOG);
-
 
   s.start_time=0;
   s.start_emulated_time=0;
@@ -63,8 +58,8 @@ bx_slowdown_timer_c::bx_slowdown_timer_c() {
 }
 
 void
-bx_slowdown_timer_c::init(void) {
-
+bx_slowdown_timer_c::init(void)
+{
   // Return early if slowdown timer not selected
   if ( (bx_options.clock.Osync->get () != BX_CLOCK_SYNC_SLOWDOWN)
     && (bx_options.clock.Osync->get () != BX_CLOCK_SYNC_BOTH) )
@@ -82,26 +77,23 @@ bx_slowdown_timer_c::init(void) {
   s.lasttime=0;
   if (s.timer_handle == BX_NULL_TIMER_HANDLE) {
     s.timer_handle=bx_pc_system.register_timer(this, timer_handler, 100 , 1, 1,
-	"slowdown_timer");
+      "slowdown_timer");
   }
   bx_pc_system.deactivate_timer(s.timer_handle);
   bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
 }
 
 void
-bx_slowdown_timer_c::reset(unsigned type)
+bx_slowdown_timer_c::timer_handler(void * this_ptr)
 {
-}
-
-void
-bx_slowdown_timer_c::timer_handler(void * this_ptr) {
   bx_slowdown_timer_c * class_ptr = (bx_slowdown_timer_c *) this_ptr;
 
   class_ptr->handle_timer();
 }
 
 void
-bx_slowdown_timer_c::handle_timer() {
+bx_slowdown_timer_c::handle_timer()
+{
   Bit64u total_emu_time = (bx_pc_system.time_usec()) - s.start_emulated_time;
   Bit64u wanttime = s.lasttime+s.Q;
   Bit64u totaltime = sectousec(time(NULL)) - s.start_time;
@@ -116,8 +108,7 @@ bx_slowdown_timer_c::handle_timer() {
   if(totaltime > total_emu_time) {
     bx_pc_system.deactivate_timer(s.timer_handle);
     bx_pc_system.activate_timer(s.timer_handle,
-				(Bit32u)(s.MAXmultiplier * (float)((Bit64s)s.Q)),
-				0);
+      (Bit32u)(s.MAXmultiplier * (float)((Bit64s)s.Q)), 0);
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
     printf("running at MAX speed\n");
 #endif
@@ -152,7 +143,7 @@ bx_slowdown_timer_c::handle_timer() {
 #else
 #error do not know have to sleep
 #endif    //delay(wanttime-totaltime);
-    /*alternatively: delay(Q);
+    /* alternatively: delay(Q);
      * This works okay because we share the delay between
      * two time quantums.
      */
