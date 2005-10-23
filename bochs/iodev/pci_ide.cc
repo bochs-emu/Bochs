@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.14 2005-09-23 19:31:12 vruppert Exp $
+// $Id: pci_ide.cc,v 1.15 2005-10-23 20:42:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -296,7 +296,7 @@ bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
   offset &= 0x07;
   switch (offset) {
     case 0x00:
-      BX_INFO(("BM-DMA write command register, channel %d, value = 0x%02x", channel, value));
+      BX_DEBUG(("BM-DMA write command register, channel %d, value = 0x%02x", channel, value));
       BX_PIDE_THIS s.bmdma[channel].cmd_rwcon = (value >> 3) & 1;
       if ((value & 0x01) && !BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 1;
