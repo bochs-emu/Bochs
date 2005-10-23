@@ -6,6 +6,9 @@ Detailed change log :
   - fixed XMM registers restore in FXRSTOR instruction (Andrej Palkovsky)
   - print registers dump to the log if tripple fault occured
   - fixed PANIC in LTR instruction (Stanislav)
+  - added virtual 8086 mode extensions (VME) implementation, to enable
+    configure with --enable-vme (Stanislav)
+  - flush caches and TLBs when executing WBINVD and INVD instructions
 
 - CPU (x86-64) (Stanislav)
   - implemented call_far/ret_far/jmp_far instructions in long mode
@@ -56,6 +59,7 @@ Detailed change log :
   - several floppy fixes (e.g. OS/2 works with patch by Robin Kay)
 
 - SF patches applied
+ [1311170] small APIC bug fix (interrupt sent to the wrong CPU)
  [1309763] Watchpoints don't work in device memory by Nickolai Zeldovich
  [1294930] change line status on floppy by Ben Lunt
  [1282033] SSE FXRESTORE not working correctly by Ondrej Palkovsky

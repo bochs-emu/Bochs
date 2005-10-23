@@ -26,10 +26,6 @@ TODO (know issues in CPU model):
 [!] Some of APIC functionality (like spurious interrupt vector) still
     not implemented
 
-[!] VME (v8086 mode extension) still not implemented. 
-    The implementation requires validation of VIF/VIP flags handling in 
-    all the CPU methods.
-
 [!] No support for Big Real Mode segmentation
 
 [!] No support of AC flag (aligment checking) and #AC exception
