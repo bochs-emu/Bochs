@@ -8,7 +8,7 @@
 // 16/32-bit general purpose register
 void disassembler::REG32 (unsigned attr)
 {
-  if (i32bit_opsize)
+  if (os_32)
     dis_sprintf("%s", general_32bit_regname[attr]);
   else
     dis_sprintf("%s", general_16bit_regname[attr]);
@@ -87,7 +87,7 @@ void disassembler::OP_X (unsigned attr)
 {
   const char *esi, *seg;
 
-  if (i32bit_addrsize)
+  if (as_32)
     esi = general_32bit_regname[eSI_REG];
   else
     esi = general_16bit_regname[eSI_REG];
@@ -109,7 +109,7 @@ void disassembler::OP_Y (unsigned attr)
 {
   const char *edi;
 
-  if (i32bit_addrsize)
+  if (as_32)
     edi = general_32bit_regname[eDI_REG];
   else
     edi = general_16bit_regname[eDI_REG];
@@ -133,7 +133,7 @@ void disassembler::OP_O (unsigned attr)
 
   print_datasize(attr);
 
-  if (i32bit_addrsize) {
+  if (as_32) {
     Bit32u imm32 = fetch_dword();
     dis_sprintf("%s:0x%x", seg, (unsigned) imm32);
   }
@@ -147,7 +147,7 @@ void disassembler::Jb (unsigned attr)
 {
   Bit8s imm8; /* JMP rel8 is signed */
   imm8 = (Bit8s) fetch_byte();
-  if (i32bit_opsize) {
+  if (os_32) {
 #if BX_DEBUGGER
     char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)(imm8+db_eip), db_base);
     if(Sym) {
@@ -172,7 +172,7 @@ void disassembler::Jb (unsigned attr)
 
 void disassembler::Jv (unsigned attr)
 {
-  if (i32bit_opsize) {
+  if (os_32) {
     Bit32s imm32; /* JMP rel32 is signed */
     imm32 = (Bit32s) fetch_dword();
 #if BX_DEBUGGER
@@ -201,7 +201,7 @@ void disassembler::Jv (unsigned attr)
 
 void disassembler::Ap (unsigned attr)
 {
-  if (i32bit_opsize)
+  if (os_32)
   {
     Bit32u imm32 = fetch_dword();
     Bit16u cs_selector = fetch_word();
@@ -234,7 +234,7 @@ void disassembler::Ew (unsigned attr)
 
 void disassembler::Ev (unsigned attr) 
 {
-  if (i32bit_opsize)
+  if (os_32)
     Ed(attr);
   else
     Ew(attr);
@@ -256,7 +256,7 @@ void disassembler::Gb (unsigned attr)
 
 void disassembler::Gv (unsigned attr) 
 {
-  if (i32bit_opsize)
+  if (os_32)
     dis_sprintf("%s", general_32bit_regname[nnn]);
   else
     dis_sprintf("%s", general_16bit_regname[nnn]);
@@ -318,7 +318,7 @@ void disassembler::Id (unsigned attr)
 
 void disassembler::Iv (unsigned attr) 
 {
-  if (i32bit_opsize)
+  if (os_32)
     Id(attr);
   else
     Iw(attr);
@@ -327,7 +327,7 @@ void disassembler::Iv (unsigned attr)
 // sign extended immediate
 void disassembler::sIb(unsigned attr) 
 {
-  if (i32bit_opsize)
+  if (os_32)
   {
     Bit32u imm32 = (Bit8s) fetch_byte();
     if (intel_mode)

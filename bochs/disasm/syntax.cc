@@ -210,14 +210,14 @@ void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
     break;
 
   case 'S':  // string
-    if (i32bit_opsize)
+    if (os_32)
       dis_putc('d');
     else
       dis_putc('w');
     break;
 
   case 'D':
-    if (i32bit_opsize)
+    if (os_32)
       dis_putc('d');
     break;
 
@@ -282,7 +282,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
 
   case 'S':
   case 'V':
-    if (i32bit_opsize)
+    if (os_32)
       dis_putc('l');
     else
       dis_putc('w');
@@ -318,7 +318,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
       dis_putc('q');
     else if (entry->Op1Attr == V_SIZE)
     {
-      if (i32bit_opsize)
+      if (os_32)
         dis_putc('l');
       else
         dis_putc('w');
@@ -328,7 +328,7 @@ void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
     break;
 
   case 'D':
-    if (i32bit_opsize)
+    if (os_32)
       dis_putc('l');
     break;
 

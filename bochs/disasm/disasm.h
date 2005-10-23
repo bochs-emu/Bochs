@@ -160,11 +160,11 @@ private:
 
 private:
 
-  bx_bool i32bit_opsize;
-  bx_bool i32bit_addrsize;
+  bx_bool os_32;
+  bx_bool as_32;
 #if BX_DISASM_SUPPORT_X86_64
-  bx_bool i64bit_opsize;
-  bx_bool i64bit_addrsize;
+  bx_bool os_64;
+  bx_bool as_64;
 #endif
 
   Bit8u  modrm, mod, nnn, rm;

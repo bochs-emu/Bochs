@@ -80,8 +80,8 @@ static const unsigned char instruction_has_modrm[512] = {
 unsigned disassembler::disasm(bx_bool is_32, 
         bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
 {
-  i32bit_opsize = is_32;
-  i32bit_addrsize = is_32;
+  os_32 = is_32;
+  as_32 = is_32;
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
   Bit8u *instruction_begin = instruction = instr;
@@ -129,12 +129,12 @@ unsigned disassembler::disasm(bx_bool is_32,
           break;
 
         case 0x66:
-          i32bit_opsize = !is_32;
+          os_32 = !is_32;
           sse_prefix |= SSE_PREFIX_66;
           break;
 
         case 0x67:
-          i32bit_addrsize = !is_32;
+          as_32 = !is_32;
           break;
 
         case 0xf0:      // lock

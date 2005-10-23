@@ -6,7 +6,7 @@ void disassembler::decode_modrm()
   modrm = fetch_byte();
   BX_DECODE_MODRM(modrm, mod, nnn, rm);
 
-  if (i32bit_addrsize)
+  if (as_32)
   {
     /* use 32bit addressing modes. orthogonal base & index registers,
        scaling available, etc. */
@@ -194,7 +194,7 @@ void disassembler::print_datasize(unsigned mode)
       dis_sprintf("dword ptr ");
       break;
     case V_SIZE:
-      if (i32bit_opsize)
+      if (os_32)
         dis_sprintf("dword ptr ");
       else
         dis_sprintf("word ptr ");
