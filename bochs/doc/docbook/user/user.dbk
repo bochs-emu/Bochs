@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.185 2005-10-15 09:13:57 vruppert Exp $
+$Id: user.dbk,v 1.186 2005-10-23 07:16:59 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3067,7 +3067,7 @@ Those ROM images will be initialized by the bios if they contain
 the right signature (0x55AA).
 </para>
 <para>
-It can also be a convenient way to upload some arbitary code/data
+It can also be a convenient way to upload some arbitrary code/data
 in the simulation, that can be retrieved by the boot loader
 </para>
 </section>
@@ -3790,7 +3790,7 @@ the simulation will be started at the current utc time.
 <para>
 <screen>
 Syntax:
-  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
 
 Examples:
   clock: sync=none,     time0=local       # Now (localtime)
@@ -3960,7 +3960,7 @@ Windows machines, you must run niclist to get the name of the ethdev.
 Niclist source code is in misc/niclist.c and it is included in Windows 
 binary releases.
 
-script: The script value is optionnal, and is the name of a script that
+script: The script value is optional, and is the name of a script that
 is executed after bochs initialize the network interface. You can use
 this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
@@ -5822,7 +5822,7 @@ your name server as shown.
 
 <section id="config-tuntap"><title>Configuring and using a tuntap network interface</title>
 <para>
-If you use linux (optionnaly FreeBSD and Solaris, not tested), 
+If you use linux (optionally FreeBSD and Solaris, not tested), 
 you may want to access the network through a tuntap interface. The main
 advantage of this interface, is that the guest has access to the host. The guest can even
 have access to the whole network if the host routes or masquerades the guest requests.

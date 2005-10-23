@@ -100,7 +100,7 @@ megs: 32
 # F0000-FFFFF) and the videobios (located at C0000-C7FFF).
 # Those ROM images will be initialized by the bios if they contain 
 # the right signature (0x55AA) and a valid checksum.
-# It can also be a convenient way to upload some arbitary code/data
+# It can also be a convenient way to upload some arbitrary code/data
 # in the simulation, that can be retrieved by the boot loader
 #=======================================================================
 #optromimage1: file=optionalrom.bin, address=0xd0000
@@ -197,7 +197,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #   spt=        only valid for disks
 #   status=     only valid for cdroms [inserted|ejected]
 #   biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
-#   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
+#   translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
 #   model=      string returned by identify device command
 #   journal=    optional filename of the redolog for undoable and volatile disks
 #   
@@ -281,7 +281,7 @@ ips: 10000000
 # This defines the parameters of the clock inside Bochs:
 #
 #  SYNC:
-#  TO BE COMPLETED (see Greg explaination in bug #536329)
+#  TO BE COMPLETED (see Greg explanation in feature request #536329)
 #
 #  TIME0:
 #  Specifies the start (boot) time of the virtual machine. Use a time 
@@ -292,7 +292,7 @@ ips: 10000000
 #  the simulation will be started at the current utc time.
 #
 # Syntax:
-#  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+#  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
 #
 # Example:
 #   clock: sync=none,     time0=local       # Now (localtime)
@@ -459,7 +459,7 @@ parport1: enabled=1, file="parport.out"
 #      5=all errors and port accesses plus a lot of extra info
 # dmatimer:
 #      microseconds per second for a DMA cycle.  Make it smaller to fix
-#      non-continous sound.  750000 is usually a good value.  This needs a
+#      non-continuous sound.  750000 is usually a good value.  This needs a
 #      reasonably correct setting for IPS.
 #
 # For an example look at the next line:
@@ -589,7 +589,7 @@ private_colormap: enabled=0
 # Niclist source code is in misc/niclist.c and it is included in Windows 
 # binary releases.
 #
-# script: The script value is optionnal, and is the name of a script that 
+# script: The script value is optional, and is the name of a script that 
 # is executed after bochs initialize the network interface. You can use 
 # this script to configure this network interface, or enable masquerading.
 # This is mainly useful for the tun/tap devices that only exist during

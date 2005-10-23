@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "15 Oct 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "23 Oct 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -120,7 +120,7 @@ ROM images should not overwrite the rombios (located at
 F0000-FFFFF) and the videobios (located at C0000-C7FFF).
 Those ROM images will be initialized by the bios if they contain
 the right signature (0x55AA).
-It can also be a convenient way to upload some arbitary code/data
+It can also be a convenient way to upload some arbitrary code/data
 in the simulation, that can be retrieved by the boot loader
 
 Example:
@@ -155,7 +155,7 @@ booting from a floppy, floppya should point to
 a bootable disk.
 
 You can set the initial status of the media to
-'ejected' or 'inserted'. Usually you will want
+\&'ejected' or 'inserted'. Usually you will want
 to use 'inserted'.
 
 Example:
@@ -200,7 +200,7 @@ This defines the type and characteristics of all attached ata devices:
    spt=        only valid for disks
    status=     only valid for cdroms [inserted|ejected]
    biosdetect= type of biosdetection [none|auto], only for disks on ata0 [cmos]
-   translation=type of transation of the bios, only for disks [none|lba|large|rechs|auto]
+   translation=type of translation of the bios, only for disks [none|lba|large|rechs|auto]
    model=      string returned by identify device command
    journal=    optional filename of the redolog for undoable and volatile disks
    
@@ -467,7 +467,7 @@ It is possible to change the loglevel at runtime.
 dmatimer:
 
 Microseconds per second for a DMA cycle.  Make
-it smaller to fix non-continous sound.  750000
+it smaller to fix non-continuous sound.  750000
 is  usually  a  good  value.    This  needs  a
 reasonably  correct   setting  for  IPS   (see
 below). It is possible to adjust the dmatimer
@@ -570,7 +570,7 @@ This defines the parameters of the clock inside Bochs.
 
 sync
 
-TO BE COMPLETED (see Greg explaination in bug #536329)
+TO BE COMPLETED (see Greg explanation in feature request #536329)
 
 time0
 
@@ -582,7 +582,7 @@ If time0 equal to 2 (special case) or if time0 equal 'utc',
 the simulation will be started at the current utc time.
 
 Syntax:
-  clock: sync=[none|slowdown|realtime], time0=[timeValue|local|utc]
+  clock: sync=[none|slowdown|realtime|both], time0=[timeValue|local|utc]
 
 Default value are sync=none, time0=local
 
@@ -668,7 +668,7 @@ be other restrictions too.  To be safe, just use the b0:c4... address.
 
 ethmod:
 The ethmod value defines which low level OS specific module to be used
-to access pysical ethernet interface. Current implemented values include
+to access physical ethernet interface. Current implemented values include
  - fbsd   : ethernet on freebsd and openbsd
  - linux  : ethernet on linux
  - win32  : ethernet on win32
@@ -691,7 +691,7 @@ Niclist source code is in misc/niclist.c and it is included in Windows
 binary releases.
 
 script:
-The script value is optionnal, and is the name of a script that
+The script value is optional, and is the name of a script that
 is executed after bochs initialize the network interface. You can use
 this script to configure this network interface, or enable masquerading.
 This is mainly useful for the tun/tap devices that only exist during
@@ -767,7 +767,7 @@ This program  is distributed  under the terms of the  GNU
 Lesser General Public License as published  by  the  Free
 Software  Foundation.  See  the  COPYING file located  in
 /usr/local/share/doc/bochs/ for details on the license and
-the lack of warrantee.
+the lack of warranty.
 .\"SKIP_SECTION"
 .SH AVAILABILITY
 The latest version of this program can be found at:
