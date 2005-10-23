@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.cc,v 1.9 2004-09-05 17:55:12 vruppert Exp $
+// $Id: biosdev.cc,v 1.10 2005-10-23 13:23:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -152,7 +152,9 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
         break;
       }
     case 0x0400:
-      bioslog->panic("BIOS panic at rombios.c, line %d", value);
+      if (value > 0) {
+        bioslog->panic("BIOS panic at rombios.c, line %d", value);
+      }
       break;
 
     // 0x0402 is used as the info port for the rombios
@@ -165,14 +167,19 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ( BX_BIOS_THIS s.bios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_BIOS_THIS s.bios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_BIOS_THIS s.bios_message_i = 0;
-        if (address==0x403) bioslog->ldebug("%s", BX_BIOS_THIS s.bios_message);
-        else bioslog->info("%s", BX_BIOS_THIS s.bios_message);
+        if (address==0x403)
+          bioslog->ldebug("%s", BX_BIOS_THIS s.bios_message);
+        else
+          bioslog->info("%s", BX_BIOS_THIS s.bios_message);
       } else if ((value & 0xff) == '\n') {
         BX_BIOS_THIS s.bios_message[ BX_BIOS_THIS s.bios_message_i - 1 ] = 0;
         BX_BIOS_THIS s.bios_message_i = 0;
-        if (BX_BIOS_THIS s.bios_panic_flag==1) bioslog->panic("%s", BX_BIOS_THIS s.bios_message);
-        else if (address==0x403) bioslog->ldebug("%s", BX_BIOS_THIS s.bios_message);
-        else bioslog->info("%s", BX_BIOS_THIS s.bios_message);
+        if (BX_BIOS_THIS s.bios_panic_flag==1)
+          bioslog->panic("%s", BX_BIOS_THIS s.bios_message);
+        else if (address==0x403)
+          bioslog->ldebug("%s", BX_BIOS_THIS s.bios_message);
+        else
+          bioslog->info("%s", BX_BIOS_THIS s.bios_message);
         BX_BIOS_THIS s.bios_panic_flag = 0;
       }
       break;
@@ -193,7 +200,9 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
         break;
       }
     case 0x0501:
-      vgabioslog->panic("VGABIOS panic at vgabios.c, line %d", value);
+      if (value > 0) {
+        vgabioslog->panic("VGABIOS panic at vgabios.c, line %d", value);
+      }
       break;
 
     // 0x0500 is used as the message port for the vgabios
@@ -205,19 +214,24 @@ bx_biosdev_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ( BX_BIOS_THIS s.vgabios_message_i >= BX_BIOS_MESSAGE_SIZE ) {
         BX_BIOS_THIS s.vgabios_message[ BX_BIOS_MESSAGE_SIZE - 1] = 0;
         BX_BIOS_THIS s.vgabios_message_i = 0;
-        if (address==0x503) vgabioslog->ldebug("%s", BX_BIOS_THIS s.vgabios_message);
-        else vgabioslog->info("%s", BX_BIOS_THIS s.vgabios_message);
+        if (address==0x503)
+          vgabioslog->ldebug("%s", BX_BIOS_THIS s.vgabios_message);
+        else
+          vgabioslog->info("%s", BX_BIOS_THIS s.vgabios_message);
       } else if ((value & 0xff) == '\n') {
         BX_BIOS_THIS s.vgabios_message[ BX_BIOS_THIS s.vgabios_message_i - 1 ] = 0;
         BX_BIOS_THIS s.vgabios_message_i = 0;
-        if (BX_BIOS_THIS s.vgabios_panic_flag==1) vgabioslog->panic("%s", BX_BIOS_THIS s.vgabios_message);
-        else if (address==0x503) vgabioslog->ldebug("%s", BX_BIOS_THIS s.vgabios_message);
-        else vgabioslog->info("%s", BX_BIOS_THIS s.vgabios_message);
+        if (BX_BIOS_THIS s.vgabios_panic_flag==1)
+          vgabioslog->panic("%s", BX_BIOS_THIS s.vgabios_message);
+        else if (address==0x503)
+          vgabioslog->ldebug("%s", BX_BIOS_THIS s.vgabios_message);
+        else
+          vgabioslog->info("%s", BX_BIOS_THIS s.vgabios_message);
         BX_BIOS_THIS s.vgabios_panic_flag = 0;
       }
       break;
 
     default:
       break;
-    }
+  }
 }
