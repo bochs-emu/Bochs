@@ -70,7 +70,7 @@ dist-clean: clean
 bios-clean:
 	@RMCOMMAND@ BIOS-bochs-*
 
-BIOS-bochs-latest: rombios.c biossums
+BIOS-bochs-latest: rombios.c apmbios.S biossums
 	$(GCC) -DBX_SMP_PROCESSORS=1 $(BIOS_BUILD_DATE) -E -P $< > _rombios_.c
 	$(BCC) -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
@@ -80,7 +80,7 @@ BIOS-bochs-latest: rombios.c biossums
 	./biossums BIOS-bochs-latest
 	rm -f _rombios_.s
 
-BIOS-bochs-2-processors: rombios.c biossums
+BIOS-bochs-2-processors: rombios.c apmbios.S biossums
 	$(GCC) -DBX_SMP_PROCESSORS=2 $(BIOS_BUILD_DATE) -E -P $< > _rombios2_.c
 	$(BCC) -o rombios2.s -C-c -D__i86__ -0 -S _rombios2_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios2.s > _rombios2_.s
@@ -90,7 +90,7 @@ BIOS-bochs-2-processors: rombios.c biossums
 	./biossums BIOS-bochs-2-processors
 	rm -f _rombios2_.s
 
-BIOS-bochs-4-processors: rombios.c biossums
+BIOS-bochs-4-processors: rombios.c apmbios.S biossums
 	$(GCC) -DBX_SMP_PROCESSORS=4 $(BIOS_BUILD_DATE) -E -P $< > _rombios4_.c
 	$(BCC) -o rombios4.s -C-c -D__i86__ -0 -S _rombios4_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios4.s > _rombios4_.s
@@ -100,7 +100,7 @@ BIOS-bochs-4-processors: rombios.c biossums
 	./biossums BIOS-bochs-4-processors
 	rm -f _rombios4_.s
 
-BIOS-bochs-8-processors: rombios.c biossums
+BIOS-bochs-8-processors: rombios.c apmbios.S biossums
 	$(GCC) -DBX_SMP_PROCESSORS=8 $(BIOS_BUILD_DATE) -E -P $< > _rombios8_.c
 	$(BCC) -o rombios8.s -C-c -D__i86__ -0 -S _rombios8_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios8.s > _rombios8_.s
