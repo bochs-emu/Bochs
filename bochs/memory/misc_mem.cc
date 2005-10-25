@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.63 2005-10-25 08:33:55 vruppert Exp $
+// $Id: misc_mem.cc,v 1.64 2005-10-25 19:12:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.63 2005-10-25 08:33:55 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.64 2005-10-25 19:12:54 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -210,7 +210,8 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       BX_PANIC(("ROM: ROM image must start at a 2k boundary"));
       return;
     }
-    if ((romaddress < 0xc0000) || (romaddress > 0xe0000)) {
+    if ((romaddress < 0xc0000) ||
+        (((romaddress + size) > 0xdffff) && (romaddress != 0xe0000))) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
@@ -236,21 +237,23 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS rom[offset], size);
     if (ret <= 0) {
       BX_PANIC(( "ROM: read failed on BIOS image: '%s'",path));
-      }
+    }
     size -= ret;
     offset += ret;
-    }
+  }
   close(fd);
   offset -= stat_buf.st_size;
-  Bit8u checksum = 0;
-  for (i = 0; i < stat_buf.st_size; i++) {
-    checksum += BX_MEM_THIS rom[offset + i];
-  }
-  if (checksum != 0) {
-    if (type == 1) {
-      BX_PANIC(( "ROM: checksum error in VGABIOS image: '%s'",path));
-    } else {
-      BX_ERROR(( "ROM: checksum error in BIOS image: '%s'",path));
+  if ((romaddress != 0xe0000) || ((rom[offset] == 0x55) && (rom[offset] == 0xaa))) {
+    Bit8u checksum = 0;
+    for (i = 0; i < stat_buf.st_size; i++) {
+      checksum += BX_MEM_THIS rom[offset + i];
+    }
+    if (checksum != 0) {
+      if (type == 1) {
+        BX_PANIC(( "ROM: checksum error in VGABIOS image: '%s'", path));
+      } else {
+        BX_ERROR(( "ROM: checksum error in BIOS image: '%s'", path));
+      }
     }
   }
   BX_INFO(("rom at 0x%05x/%u ('%s')",
