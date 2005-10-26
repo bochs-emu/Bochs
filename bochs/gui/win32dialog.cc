@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.27 2005-10-26 09:14:24 vruppert Exp $
+// $Id: win32dialog.cc,v 1.28 2005-10-26 22:26:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -11,6 +11,7 @@ extern "C" {
 #include <stdio.h>
 #include <windows.h>
 #include <commctrl.h>
+#include <ctype.h>
 }
 #include "win32res.h"
 #include "siminterface.h"
