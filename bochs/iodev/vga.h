@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.46 2005-03-18 14:52:29 vruppert Exp $
+// $Id: vga.h,v 1.47 2005-10-27 09:32:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -277,6 +277,7 @@ protected:
     Bit16u charmap_address;
     bx_bool x_dotclockdiv2;
     bx_bool y_doublescan;
+    Bit8u last_bpp;
 
 #if BX_SUPPORT_VBE    
     Bit8u vbe_memory[VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES];

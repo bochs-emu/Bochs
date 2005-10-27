@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.120 2005-06-04 17:44:58 vruppert Exp $
+// $Id: vga.cc,v 1.121 2005-10-27 09:32:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,7 +78,7 @@ static const Bit8u ccdat[16][4] = {
 
 bx_vga_c *theVga = NULL;
 
-unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0, old_BPP = 0;
+unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0;
 
 #if BX_SUPPORT_CLGD54XX
   void
@@ -272,6 +272,7 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.charmap_address = 0;
   BX_VGA_THIS s.x_dotclockdiv2 = 0;
   BX_VGA_THIS s.y_doublescan = 0;
+  BX_VGA_THIS s.last_bpp = 8;
 
 #if BX_SUPPORT_VBE  
     // The following is for the vbe display extension
@@ -1707,11 +1708,13 @@ bx_vga_c::update(void)
 //  (unsigned) BX_VGA_THIS s.graphics_ctrl.memory_mapping);
 
     determine_screen_dimensions(&iHeight, &iWidth);
-    if( (iWidth != old_iWidth) || (iHeight != old_iHeight) || (old_BPP > 8) ) {
+    if((iWidth != old_iWidth) || (iHeight != old_iHeight) ||
+        (BX_VGA_THIS s.last_bpp > 8))
+    {
       bx_gui->dimension_update(iWidth, iHeight);
       old_iWidth = iWidth;
       old_iHeight = iHeight;
-      old_BPP = 8;
+      BX_VGA_THIS s.last_bpp = 8;
     }
 
     switch ( BX_VGA_THIS s.graphics_ctrl.shift_reg ) {
@@ -1981,13 +1984,14 @@ bx_vga_c::update(void)
     cWidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
     iWidth = cWidth * cols;
     iHeight = VDE+1;
-    if ((iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) || (old_BPP > 8))
+    if ((iWidth != old_iWidth) || (iHeight != old_iHeight) || (MSL != old_MSL) ||
+        (BX_VGA_THIS s.last_bpp > 8))
     {
       bx_gui->dimension_update(iWidth, iHeight, MSL+1, cWidth);
       old_iWidth = iWidth;
       old_iHeight = iHeight;
       old_MSL = MSL;
-      old_BPP = 8;
+      BX_VGA_THIS s.last_bpp = 8;
     }
     // pass old text snapshot & new VGA memory contents
     start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
@@ -3194,7 +3198,7 @@ bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
                 memset(BX_VGA_THIS s.vbe_memory, 0, BX_VGA_THIS s.vbe_visible_screen_size);
               }
               bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
-              old_BPP = depth;
+              BX_VGA_THIS s.last_bpp = depth;
               // some test applications expect these standard VGA settings
               BX_VGA_THIS s.CRTC.reg[9] = 0x00;
               BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 1;

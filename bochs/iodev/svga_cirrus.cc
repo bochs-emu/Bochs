@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.23 2005-09-22 21:12:26 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.24 2005-10-27 09:32:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -262,33 +262,33 @@ bx_svga_cirrus_c::init(void)
   // initialize VGA stuffs.
   BX_CIRRUS_THIS bx_vga_c::init();
   if (!strcmp(bx_options.Ovga_extension->getptr(), "cirrus")) {
+    // initialize SVGA stuffs.
     BX_CIRRUS_THIS bx_vga_c::init_iohandlers(
         svga_read_handler, svga_write_handler);
     BX_CIRRUS_THIS bx_vga_c::init_systemtimer(
         svga_timer_handler);
+#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+    BX_CIRRUS_THIS pci_enabled = DEV_is_pci_device("cirrus");
+#endif
+    BX_CIRRUS_THIS svga_init_members();
+#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+    if (BX_CIRRUS_THIS pci_enabled)
+    {
+      BX_CIRRUS_THIS svga_init_pcihandlers();
+      BX_INFO(("CL-GD5446 PCI initialized"));
+    }
+    else
+#endif
+    {
+      BX_INFO(("CL-GD5430 ISA initialized"));
+    }
     BX_CIRRUS_THIS extension_init = 1;
   } else {
+    // initialize VGA read/write handlers and timer
     BX_CIRRUS_THIS bx_vga_c::init_iohandlers(
         bx_vga_c::read_handler, bx_vga_c::write_handler);
     BX_CIRRUS_THIS bx_vga_c::init_systemtimer(
         bx_vga_c::timer_handler);
-  }
-
-  // initialize SVGA stuffs.
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  BX_CIRRUS_THIS pci_enabled = DEV_is_pci_device("cirrus");
-#endif
-  BX_CIRRUS_THIS svga_init_members();
-#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  if (BX_CIRRUS_THIS pci_enabled)
-  {
-    BX_CIRRUS_THIS svga_init_pcihandlers();
-    BX_INFO(("CL-GD5446 PCI initialized"));
-  }
-  else
-#endif
-  {
-    BX_INFO(("CL-GD5430 ISA initialized"));
   }
 }
 
@@ -333,8 +333,10 @@ bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS hw_cursor.size = 0;
 
   // memory allocation.
-  BX_CIRRUS_THIS vidmem = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
-  BX_CIRRUS_THIS tilemem = new Bit8u[X_TILESIZE * Y_TILESIZE * 4];
+  if (BX_CIRRUS_THIS vidmem == NULL)
+    BX_CIRRUS_THIS vidmem = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
+  if (BX_CIRRUS_THIS tilemem == NULL)
+    BX_CIRRUS_THIS tilemem = new Bit8u[X_TILESIZE * Y_TILESIZE * 4];
 
   // set some registers.
 
@@ -373,8 +375,10 @@ bx_svga_cirrus_c::reset(unsigned type)
   // reset VGA stuffs.
   BX_CIRRUS_THIS bx_vga_c::reset(type);
 
-  // reset SVGA stuffs.
-  BX_CIRRUS_THIS svga_init_members();
+  if (!strcmp(bx_options.Ovga_extension->getptr(), "cirrus")) {
+    // reset SVGA stuffs.
+    BX_CIRRUS_THIS svga_init_members();
+  }
 }
 
 
@@ -1165,6 +1169,7 @@ bx_svga_cirrus_c::svga_update(void)
     width  = BX_CIRRUS_THIS svga_xres;
     height = BX_CIRRUS_THIS svga_yres;
     bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
+    BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
     BX_CIRRUS_THIS svga_needs_update_mode = false;
     BX_CIRRUS_THIS svga_needs_update_dispentire = true;
   }
