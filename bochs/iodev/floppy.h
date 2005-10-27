@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.20 2005-08-24 20:44:55 vruppert Exp $
+// $Id: floppy.h,v 1.21 2005-10-27 07:37:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,6 +87,7 @@ private:
     Bit8u   cylinder[4]; // really only using 2 drives
     Bit8u   head[4];     // really only using 2 drives
     Bit8u   sector[4];   // really only using 2 drives
+    Bit8u   eot[4];      // really only using 2 drives
 
     /* MAIN STATUS REGISTER
      * b7: MRQ: main request 1=data register ready     0=data register not ready

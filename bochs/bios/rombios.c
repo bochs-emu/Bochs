@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.154 2005-09-24 08:09:38 vruppert Exp $
+// $Id: rombios.c,v 1.155 2005-10-27 07:37:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.154 $ $Date: 2005-09-24 08:09:38 $";
+static char bios_cvs_version_string[] = "$Revision: 1.155 $ $Date: 2005-10-27 07:37:46 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -6806,7 +6806,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, head);
         outb(0x03f5, sector);
         outb(0x03f5, 2); // 512 byte sector size
-        outb(0x03f5, 0); // last sector number possible on track
+        outb(0x03f5, sector + num_sectors - 1); // last sector to read on track
         outb(0x03f5, 0); // Gap length
         outb(0x03f5, 0xff); // Gap length
 
@@ -6940,7 +6940,7 @@ BX_INFO("floppy: drive>1 || head>1 ...\n");
         outb(0x03f5, head);
         outb(0x03f5, sector);
         outb(0x03f5, 2); // 512 byte sector size
-        outb(0x03f5, 0); // last sector number possible on track
+        outb(0x03f5, sector + num_sectors - 1); // last sector to write on track
         outb(0x03f5, 0); // Gap length
         outb(0x03f5, 0xff); // Gap length
 
