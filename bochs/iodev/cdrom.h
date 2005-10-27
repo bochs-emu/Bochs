@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.16 2005-06-26 10:54:49 vruppert Exp $
+// $Id: cdrom.h,v 1.17 2005-10-27 17:01:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,10 +47,10 @@ public:
   Bit32u capacity();
 
   // Read a single block from the CD
-  void read_block(Bit8u* buf, int lba) BX_CPP_AttrRegparmN(2);
+  bx_bool read_block(Bit8u* buf, int lba) BX_CPP_AttrRegparmN(2);
 
   // Start (spin up) the CD.
-  int start_cdrom();
+  bx_bool start_cdrom();
 
 private:
   int fd;

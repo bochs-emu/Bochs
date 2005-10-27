@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.144 2005-10-02 15:44:10 vruppert Exp $
+// $Id: harddrv.cc,v 1.145 2005-10-27 17:01:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.144 2005-10-02 15:44:10 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.145 2005-10-27 17:01:11 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -847,8 +847,11 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                     bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
                   BX_SELECTED_DRIVE(channel).iolight_counter = 5;
                   bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
-                  BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
-                                                                  BX_SELECTED_DRIVE(channel).cdrom.next_lba);
+                  if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(BX_SELECTED_CONTROLLER(channel).buffer,
+                                                                  BX_SELECTED_DRIVE(channel).cdrom.next_lba))
+                  {
+                    BX_PANIC(("CDROM: read block failed"));
+                  }
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
 
