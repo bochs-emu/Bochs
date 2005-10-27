@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.84 2005-10-22 17:31:02 vruppert Exp $
+// $Id: devices.cc,v 1.85 2005-10-27 08:20:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.84 2005-10-22 17:31:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.85 2005-10-27 08:20:16 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -187,7 +187,8 @@ bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
     PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_PCIVGA
-    if (!strcmp(bx_options.Ovga_extension->getptr (), "vbe")) {
+    if ((DEV_is_pci_device("pcivga")) &&
+        (!strcmp(bx_options.Ovga_extension->getptr (), "vbe"))) {
       PLUG_load_plugin(pcivga, PLUGTYPE_OPTIONAL);
     }
 #endif
