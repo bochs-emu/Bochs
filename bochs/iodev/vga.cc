@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.121 2005-10-27 09:32:02 vruppert Exp $
+// $Id: vga.cc,v 1.122 2005-10-27 17:53:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,12 +109,19 @@ bx_vga_c::bx_vga_c(void)
   s.x_tilesize = X_TILESIZE;
   s.y_tilesize = Y_TILESIZE;
   timer_id = BX_NULL_TIMER_HANDLE;
+#if BX_SUPPORT_VBE
+  s.vbe_memory = NULL;
+#endif
 }
 
 
 bx_vga_c::~bx_vga_c(void)
 {
-  // nothing for now
+#if BX_SUPPORT_VBE
+  if (s.vbe_memory != NULL) {
+    delete [] s.vbe_memory;
+  }
+#endif
 }
 
 
@@ -293,6 +300,10 @@ bx_vga_c::init(void)
     DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                  theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
                                  VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
+
+    if (BX_VGA_THIS s.vbe_memory == NULL)
+      BX_VGA_THIS s.vbe_memory = new Bit8u[VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES];
+    memset(BX_VGA_THIS s.vbe_memory, 0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES);
     BX_VGA_THIS s.vbe_cur_dispi=VBE_DISPI_ID0;
     BX_VGA_THIS s.vbe_xres=640;
     BX_VGA_THIS s.vbe_yres=480;
