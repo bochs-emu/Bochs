@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.94 2005-10-22 08:07:53 vruppert Exp $
+// $Id: x.cc,v 1.95 2005-10-28 17:17:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1963,7 +1963,7 @@ void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
 
 int x11_ask_dialog(BxEvent *event)
 {
-  const int button_x[3] = { 18, 103, 188 };
+  const int button_x[3] = { 81, 166, 251 };
   const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
                             BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
                             BX_LOG_ASK_CHOICE_DIE };
@@ -1972,9 +1972,9 @@ int x11_ask_dialog(BxEvent *event)
   XEvent xevent;
   GC gc, gc_inv;
   KeySym key;
-  int done, i, level;
+  int done, i, level, cpos;
   int retcode = -1;
-  int valid = 0, control = 0, oldctrl = -1;
+  int valid = 0, control = 2, oldctrl = -1;
   unsigned long black_pixel, white_pixel;
   char name[16], text[10], device[16], message[512];
 
@@ -1985,8 +1985,8 @@ int x11_ask_dialog(BxEvent *event)
   hint.flags = PPosition | PSize | PMinSize | PMaxSize;
   hint.x = 100;
   hint.y = 100;
-  hint.width = hint.min_width = hint.max_width = 300;
-  hint.height = hint.min_height = hint.max_height = 100;
+  hint.width = hint.min_width = hint.max_width = 400;
+  hint.height = hint.min_height = hint.max_height = 115;
   black_pixel = BlackPixel(bx_x_display, bx_x_screen_num);
   white_pixel = WhitePixel(bx_x_display, bx_x_screen_num);
   dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
@@ -2016,29 +2016,38 @@ int x11_ask_dialog(BxEvent *event)
       case Expose:
         if (xevent.xexpose.count == 0) {
           XDrawImageString(xevent.xexpose.display, dialog,
-                           gc, 20, 20, device, strlen(device));
-          XDrawImageString(xevent.xexpose.display, dialog,
-                           gc, 20, 40, message, strlen(message));
+                           gc, 20, 25, device, strlen(device));
+          if (strlen(message) > 62) {
+            cpos = 62;
+            while ((cpos > 0) && (!isspace(message[cpos]))) cpos--;
+            XDrawImageString(xevent.xexpose.display, dialog,
+                             gc, 20, 45, message, cpos);
+            XDrawImageString(xevent.xexpose.display, dialog,
+                             gc, 74, 63, message+cpos+1, strlen(message)-cpos-1);
+          } else {
+            XDrawImageString(xevent.xexpose.display, dialog,
+                             gc, 20, 45, message, strlen(message));
+          }
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 20, 60, 65, 20, "Continue");
+                            gc, 83, 80, 65, 20, "Continue");
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 105, 60, 65, 20, "Alwayscont");
+                            gc, 168, 80, 65, 20, "Alwayscont");
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 190, 60, 65, 20, "Quit");
+                            gc, 253, 80, 65, 20, "Quit");
           oldctrl = control - 1;
           if (oldctrl < 0) oldctrl = 1;
         }
         break;
       case ButtonPress:
         if (xevent.xbutton.button == Button1) {
-          if ((xevent.xbutton.y > 60) && (xevent.xbutton.y < 80)) {
-            if ((xevent.xbutton.x > 20) && (xevent.xbutton.x < 85)) {
+          if ((xevent.xbutton.y > 80) && (xevent.xbutton.y < 100)) {
+            if ((xevent.xbutton.x > 83) && (xevent.xbutton.x < 148)) {
               control = 0;
               valid = 1;
-            } else if ((xevent.xbutton.x > 105) && (xevent.xbutton.x < 170)) {
+            } else if ((xevent.xbutton.x > 168) && (xevent.xbutton.x < 233)) {
               control = 1;
               valid = 1;
-            } else if ((xevent.xbutton.x > 190) && (xevent.xbutton.x < 255)) {
+            } else if ((xevent.xbutton.x > 253) && (xevent.xbutton.x < 318)) {
               control = 2;
               valid = 1;
             }
@@ -2064,8 +2073,8 @@ int x11_ask_dialog(BxEvent *event)
         break;
     }
     if (control != oldctrl) {
-      XDrawRectangle(bx_x_display, dialog, gc_inv, button_x[oldctrl], 58, 69, 24);
-      XDrawRectangle(bx_x_display, dialog, gc, button_x[control], 58, 69, 24);
+      XDrawRectangle(bx_x_display, dialog, gc_inv, button_x[oldctrl], 78, 69, 24);
+      XDrawRectangle(bx_x_display, dialog, gc, button_x[control], 78, 69, 24);
       oldctrl = control;
     }
   }
