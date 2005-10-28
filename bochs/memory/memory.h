@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.25 2005-10-12 17:11:44 vruppert Exp $
+// $Id: memory.h,v 1.26 2005-10-28 00:12:27 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,6 +87,7 @@ public:
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, Bit32u addr,
                                        unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    load_ROM(const char *path, Bit32u romaddress, Bit8u type);
+  BX_MEM_SMF void    load_RAM(const char *path, Bit32u romaddress, Bit8u type);
   BX_MEM_SMF Bit32u  get_memory_in_k(void);
   BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);

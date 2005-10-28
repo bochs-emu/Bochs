@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.144 2005-10-15 10:43:55 vruppert Exp $
+// $Id: siminterface.h,v 1.145 2005-10-28 00:12:27 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -141,6 +141,14 @@ typedef enum {
   BXP_OPTROM3_ADDRESS,
   BXP_OPTROM4_ADDRESS,
   BXP_OPTROM_LIST,
+  BXP_OPTRAM1_PATH,
+  BXP_OPTRAM2_PATH,
+  BXP_OPTRAM3_PATH,
+  BXP_OPTRAM4_PATH,
+  BXP_OPTRAM1_ADDRESS,
+  BXP_OPTRAM2_ADDRESS,
+  BXP_OPTRAM3_ADDRESS,
+  BXP_OPTRAM4_ADDRESS,
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.296 2005-10-17 14:48:43 sshwarts Exp $
+// $Id: main.cc,v 1.297 2005-10-28 00:12:26 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -868,6 +868,16 @@ int bx_init_hardware()
   if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 2);
 
+  // Then load the optional RAM images
+  if (strcmp(bx_options.optram[0].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr (), bx_options.optram[0].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[1].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr (), bx_options.optram[1].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[2].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr (), bx_options.optram[2].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[3].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
+
   BX_CPU(0)->init (BX_MEM(0));
   BX_CPU(0)->set_cpu_id(0);
 #if BX_SUPPORT_APIC
@@ -894,6 +904,16 @@ int bx_init_hardware()
     bx_mem_array[0]->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get (), 2);
   if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
     bx_mem_array[0]->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 2);
+
+  // Then load the optional RAM images
+  if (strcmp(bx_options.optram[0].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr (), bx_options.optram[0].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[1].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr (), bx_options.optram[1].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[2].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr (), bx_options.optram[2].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[3].Opath->getptr (),"") !=0 )
+    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
 
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C;

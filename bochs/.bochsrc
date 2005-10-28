@@ -108,6 +108,11 @@ megs: 32
 #optromimage3: file=optionalrom.bin, address=0xd2000
 #optromimage4: file=optionalrom.bin, address=0xd3000
 
+#optramimage1: file=/path/file1.img, address=0x0010000
+#optramimage2: file=/path/file2.img, address=0x0020000
+#optramimage3: file=/path/file3.img, address=0x0030000
+#optramimage4: file=/path/file4.img, address=0x0040000
+
 #=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
