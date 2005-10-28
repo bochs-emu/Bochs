@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.52 2005-10-28 06:33:52 vruppert Exp $
+// $Id: config.cc,v 1.53 2005-10-28 13:49:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -134,8 +134,8 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
         switch (val) {
           case BX_ATA_MODE_UNDOABLE:
           case BX_ATA_MODE_VOLATILE:
-          //case BX_ATA_MODE_Z_UNDOABLE:
-          //case BX_ATA_MODE_Z_VOLATILE:
+//        case BX_ATA_MODE_Z_UNDOABLE:
+//        case BX_ATA_MODE_Z_VOLATILE:
             SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (1);
             break;
           default:
@@ -346,10 +346,10 @@ bx_param_enable_handler (bx_param_c *param, int val)
             switch (SIM->get_param_enum ((bx_id)(BXP_ATA0_MASTER_MODE + device))->get()) {
               case BX_ATA_MODE_UNDOABLE:
               case BX_ATA_MODE_VOLATILE:
-              //case BX_ATA_MODE_Z_UNDOABLE:
-              //case BX_ATA_MODE_Z_VOLATILE:
-              return (1);
-              break;
+//            case BX_ATA_MODE_Z_UNDOABLE:
+//            case BX_ATA_MODE_Z_VOLATILE:
+                return (1);
+                break;
             }
           }
         }
@@ -2403,10 +2403,10 @@ parse_line_formatted(char *context, int num_params, char *params[])
         mode = BX_ATA_MODE_GROWING;
       } else if (!strcmp(params[i], "mode=volatile")) {
         mode = BX_ATA_MODE_VOLATILE;
-//      } else if (!strcmp(params[i], "mode=z-undoable")) {
-//        mode = BX_ATA_MODE_Z_UNDOABLE;
-//      } else if (!strcmp(params[i], "mode=z-volatile")) {
-//        mode = BX_ATA_MODE_Z_VOLATILE;
+      } else if (!strcmp(params[i], "mode=z-undoable")) {
+        PARSE_ERR(("%s: ataX-master/slave mode 'z-undoable' not implemented yet", context));
+      } else if (!strcmp(params[i], "mode=z-volatile")) {
+        PARSE_ERR(("%s: ataX-master/slave mode 'z-volatile' not implemented yet", context));
       } else if (!strncmp(params[i], "path=", 5)) {
         bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
       } else if (!strncmp(params[i], "cylinders=", 10)) {
@@ -3339,12 +3339,12 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
         case BX_ATA_MODE_VOLATILE:
           fprintf (fp, ", mode=volatile");
           break;
-//        case BX_ATA_MODE_Z_UNDOABLE:
-//          fprintf (fp, ", mode=z-undoable");
-//          break;
-//        case BX_ATA_MODE_Z_VOLATILE:
-//          fprintf (fp, ", mode=z-volatile");
-//          break;
+//      case BX_ATA_MODE_Z_UNDOABLE:
+//        fprintf (fp, ", mode=z-undoable");
+//        break;
+//      case BX_ATA_MODE_Z_VOLATILE:
+//        fprintf (fp, ", mode=z-volatile");
+//        break;
         }
 
       switch(opt->Otranslation->get()) {
