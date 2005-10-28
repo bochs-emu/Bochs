@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.65 2005-10-28 00:12:27 kevinlawton Exp $
+// $Id: misc_mem.cc,v 1.66 2005-10-28 06:33:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.65 2005-10-28 00:12:27 kevinlawton Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.66 2005-10-28 06:33:53 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -265,8 +265,8 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 void BX_MEM_C::load_RAM(const char *path, Bit32u ramaddress, Bit8u type)
 {
   struct stat stat_buf;
-  int fd, ret, i, start_idx, end_idx;
-  unsigned long size, max_size, offset;
+  int fd, ret;
+  unsigned long size, offset;
 
   if (*path == '\0') {
     BX_PANIC(( "RAM: Optional RAM image undefined"));
@@ -294,7 +294,7 @@ void BX_MEM_C::load_RAM(const char *path, Bit32u ramaddress, Bit8u type)
   while (size > 0) {
     ret = read(fd, (bx_ptr_t) &BX_MEM_THIS vector[offset], size);
     if (ret <= 0) {
-      BX_PANIC(( "RAM: read failed on BIOS image: '%s'",path));
+      BX_PANIC(( "RAM: read failed on RAM image: '%s'",path));
     }
     size -= ret;
     offset += ret;

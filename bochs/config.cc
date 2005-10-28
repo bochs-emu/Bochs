@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.51 2005-10-28 00:12:26 kevinlawton Exp $
+// $Id: config.cc,v 1.52 2005-10-28 06:33:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -850,7 +850,7 @@ void bx_init_options ()
   sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
   bx_options.vgarom.Opath->set_initial_val (name);
 
-  for (i=0; i<4; i++) {
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf (name, "memory.optrom.%d.path", i+1);
     sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
     bx_options.optrom[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTROM1_PATH+i),
@@ -880,18 +880,18 @@ void bx_init_options ()
 #endif
   }
 
-  for (i=0; i<4; i++) {
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf (name, "memory.optram.%d.path", i+1);
-    sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
+    sprintf (descr, "Pathname of optional RAM image #%d to load", i+1);
     bx_options.optram[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTRAM1_PATH+i),
       strdup(name), 
       strdup(descr),
       "", BX_PATHNAME_LEN);
-    sprintf (label, "Name of optional ROM image #%d", i+1);
+    sprintf (label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
     bx_options.optram[i].Opath->set_format (strdup(label));
     sprintf (name, "memory.optram.%d.address", i+1);
-    sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
+    sprintf (descr, "The address at which the optional RAM image #%d should be loaded", i+1);
     bx_options.optram[i].Oaddress = new bx_param_num_c ((bx_id)(BXP_OPTRAM1_ADDRESS+i),
       strdup(name), 
       strdup(descr),
@@ -899,12 +899,12 @@ void bx_init_options ()
       0);
     bx_options.optram[i].Oaddress->set_base (16);
 #if BX_WITH_WX
-    sprintf (label, "Optional ROM image #%d", i+1);
+    sprintf (label, "Optional RAM image #%d", i+1);
     bx_options.optram[i].Opath->set_label (strdup(label));
     bx_options.optram[i].Oaddress->set_label ("Address");
     bx_options.optram[i].Oaddress->set_format ("0x%05x");
 #else
-    sprintf (label, "Optional ROM #%d address:", i+1);
+    sprintf (label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
     bx_options.optram[i].Oaddress->set_format (strdup(label));
 #endif
@@ -1764,22 +1764,14 @@ void bx_reset_options ()
   bx_options.rom.Opath->reset();
   bx_options.rom.Oaddress->reset();
   bx_options.vgarom.Opath->reset();
-  bx_options.optrom[0].Opath->reset();
-  bx_options.optrom[0].Oaddress->reset();
-  bx_options.optrom[1].Opath->reset();
-  bx_options.optrom[1].Oaddress->reset();
-  bx_options.optrom[2].Opath->reset();
-  bx_options.optrom[2].Oaddress->reset();
-  bx_options.optrom[3].Opath->reset();
-  bx_options.optrom[3].Oaddress->reset();
-  bx_options.optram[0].Opath->reset();
-  bx_options.optram[0].Oaddress->reset();
-  bx_options.optram[1].Opath->reset();
-  bx_options.optram[1].Oaddress->reset();
-  bx_options.optram[2].Opath->reset();
-  bx_options.optram[2].Oaddress->reset();
-  bx_options.optram[3].Opath->reset();
-  bx_options.optram[3].Oaddress->reset();
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
+    bx_options.optrom[i].Opath->reset();
+    bx_options.optrom[i].Oaddress->reset();
+  }
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
+    bx_options.optram[i].Opath->reset();
+    bx_options.optram[i].Oaddress->reset();
+  }
 
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -2666,7 +2658,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
   } else if (!strncmp(params[0], "optromimage", 11)) {
     int num = atoi(&params[0][11]);
-    if ((num < 1) || (num > 4)) {
+    if ((num < 1) || (num > BX_N_OPTROM_IMAGES)) {
       PARSE_ERR(("%s: optromimage%d: not supported", context, num));
     }
     if (num_params != 3) {
@@ -2686,7 +2678,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
     }
   } else if (!strncmp(params[0], "optramimage", 11)) {
     int num = atoi(&params[0][11]);
-    if ((num < 1) || (num > 4)) {
+    if ((num < 1) || (num > BX_N_OPTROM_IMAGES)) {
       PARSE_ERR(("%s: ramimage%d: not supported", context, num));
     }
     if (num_params != 3) {
@@ -3635,12 +3627,12 @@ bx_write_configuration (char *rc, int overwrite)
     bx_write_atadevice_options (fp, channel, 0, &bx_options.atadevice[channel][0]);
     bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
     }
-  for (i=0; i<4; i++) {
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     if (strlen (bx_options.optrom[i].Opath->getptr ()) > 0)
       fprintf (fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optrom[i].Opath->getptr(),
                (unsigned int)bx_options.optrom[i].Oaddress->get ());
   }
-  for (i=0; i<4; i++) {
+  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     if (strlen (bx_options.optram[i].Opath->getptr ()) > 0)
       fprintf (fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optram[i].Opath->getptr(),
                (unsigned int)bx_options.optram[i].Oaddress->get ());
