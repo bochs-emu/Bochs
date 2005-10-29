@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.9 2005-01-21 16:07:38 vruppert Exp $
+// $Id: pciusb.h,v 1.10 2005-10-29 09:12:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -37,32 +37,12 @@
 #define BX_USB_MAXDEV   1
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
-#define USB_NUM_PORTS   2 /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    2 // 2 devices.  1 on each port
+#define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
+#define USB_CUR_DEVS    2
 
 #define TOKEN_IN    0x69
 #define TOKEN_OUT   0xE1
 #define TOKEN_SETUP 0x2D
-
-// Bus Line Status States
-#define LO_IDLE  BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
-#define LO_K     BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
-#define LO_J     BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
-#define HI_IDLE  BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
-#define HI_K     BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
-#define HI_J     BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
-#define SE0      BX_USB_THIS hub[0].usb_port[0].line_dminus = 0; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 0;
-#define SE1      BX_USB_THIS hub[0].usb_port[0].line_dminus = 1; \
-                 BX_USB_THIS hub[0].usb_port[0].line_dplus = 1;
-#define LO_SOP   LO_K
-#define LO_EOP   SE0 LO_K LO_IDLE
 
 // device requests
 enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
@@ -114,6 +94,7 @@ struct USB_DEVICE {
   Bit8u   alt_interface;  // which alt interface to use
   Bit8u   endpt;          // which endpt to use
   unsigned state;         // the state the device is in.  DEFAULT, ADDRESS, or CONFIGURED
+  bx_bool low_speed;      // 1 = ls 
   struct {
     Bit8u   direction;
     Bit8u   *in;
@@ -389,11 +370,12 @@ private:
   bx_bool  mouse_connected;
 
   static void  init_device(Bit8u port, char *devname);
-  static void  usb_set_connect_status(int type, bx_bool connected);
+  static void  usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void usb_timer_handler(void *);
   void usb_timer(void);
   void DoTransfer(struct TD *);
+  void dump_packet(Bit8u *data, unsigned size);
   unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
