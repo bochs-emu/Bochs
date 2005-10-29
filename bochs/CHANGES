@@ -24,6 +24,9 @@ Detailed change log :
   - watchpoints in device memory fixed (Nickolai Zeldovich)
 
 - I/O devices (Volker)
+  - general
+    - memory management prepared for large BIOS images (up to 512k)
+    - slowdown timer sleep rate fixed (now using 1 msec on all platforms)
   - serial
     - new serial mode 'socket' connects a network socket (#SF patch by Andrew Backer)
   - hard drive / cdrom
@@ -32,11 +35,14 @@ Detailed change log :
     - geometry autodetection for 'flat' hard disk images added. Works with 
       images created with bximage (heads = 16, sectors per track = 63)
     - ATAPI command 'read cd' partially implemented
+    - cdrom read block function now tries up to 3 times before giving up
+    - IDE busmaster DMA feature for harddisks fixed and enabled
   - floppy
     - fixes for OS/2 (patch by Robin Kay)
     - more accurate timing for read data and format track commands using a motor
       speed of 300 RPM
     - disk change line behaviour fixed (patch by Ben Lunt)
+    - end-of-track (EOT) condition handling implemented
   - cmos
     - RTC 12-hour and binary mode implemented
     - number of CMOS registers changed from 64 to 128
@@ -45,6 +51,10 @@ Detailed change log :
     - simple speaker support for OS X added (patch by brianonn@telus.net)
   - pci
     - BeOS boot failure fix in the PCI IDE code
+  - vga
+    - memory allocation for vga extensions fixed
+  - usb
+    - some bugfixes by Ben Lunt
 
 - display libraries
   - general
@@ -52,11 +62,14 @@ Detailed change log :
   - win32
     - fixed keycode generation for right alt/ctrl/shift keys
     - runtime dialog is now a property sheet
+  - x11
+    - simple dialog boxes for the "ask" and "user shortcut" feature implemented
 
 - System BIOS
   - PCI i/o and memory base address initialization added
   - several keyboard interrupt handler fixes (e.g. patch by japheth)
   - several floppy fixes (e.g. OS/2 works with patch by Robin Kay)
+  - some more APM functions added
 
 - SF patches applied
  [1311170] small APIC bug fix (interrupt sent to the wrong CPU)
