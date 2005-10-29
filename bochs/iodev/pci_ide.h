@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.6 2005-09-05 18:32:23 vruppert Exp $
+// $Id: pci_ide.h,v 1.7 2005-10-29 12:35:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -61,6 +61,9 @@ private:
       Bit32u dtpr;
       Bit32u prd_current;
       int timer_index;
+      Bit8u *buffer;
+      Bit8u *buffer_top;
+      Bit8u *buffer_idx;
     } bmdma[2];
   } s;
 
