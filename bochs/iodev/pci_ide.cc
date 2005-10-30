@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.17 2005-10-30 14:14:03 vruppert Exp $
+// $Id: pci_ide.cc,v 1.18 2005-10-30 19:18:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -232,7 +232,12 @@ bx_pci_ide_c::timer()
     DEV_hd_bmdma_complete(channel);
   } else {
     BX_PIDE_THIS s.bmdma[channel].prd_current += 8;
-    bx_pc_system.activate_timer( BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0 );
+    BX_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 8, (Bit8u *)&prd);
+    size = prd.size & 0xfffe;
+    if (size == 0) {
+      size = 0x10000;
+    }
+    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, (size >> 4) | 0x10, 0);
   }
 }
 
@@ -315,7 +320,7 @@ bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
         BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
         BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
-        bx_pc_system.activate_timer( BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0 );
+        bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
       } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;
         BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;

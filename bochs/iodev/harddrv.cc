@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.146 2005-10-30 14:14:02 vruppert Exp $
+// $Id: harddrv.cc,v 1.147 2005-10-30 19:18:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.146 2005-10-30 14:14:02 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.147 2005-10-30 19:18:59 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1798,7 +1798,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                                           transfer_length * 2048, true);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
-                  ready_to_send_atapi(channel);
+                  if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
+                    ready_to_send_atapi(channel);
+                  }
                 }
                 break;
 
@@ -2647,11 +2649,11 @@ bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[47] = 0;
   BX_SELECTED_DRIVE(channel).id_drive[48] = 1; // 32 bits access
 
-//  if (BX_HD_THIS bmdma_present()) {
-//    BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9) | (1<<8); // LBA and DMA
-//  } else {
+  if (BX_HD_THIS bmdma_present()) {
+    BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9) | (1<<8); // LBA and DMA
+  } else {
     BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9); // LBA only supported
-//  }
+  }
 
   BX_SELECTED_DRIVE(channel).id_drive[50] = 0;
   BX_SELECTED_DRIVE(channel).id_drive[51] = 0;
@@ -3351,7 +3353,6 @@ bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_
     increment_address(channel);
   } else if (BX_SELECTED_CONTROLLER(channel).current_command == 0xA0) {
     if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
-      BX_INFO(("PACKET-DMA active"));
       *sector_size = 2048;
       if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
         BX_PANIC(("Read with CDROM not ready"));
