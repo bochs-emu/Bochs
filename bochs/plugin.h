@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.41 2005-09-05 18:32:22 vruppert Exp $
+// $Id: plugin.h,v 1.42 2005-10-30 14:14:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -131,7 +131,7 @@ extern "C" {
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
 #define DEV_hd_close_harddrive()  bx_devices.pluginHardDrive->close_harddrive()
 #define DEV_hd_present() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
-#define DEV_hd_bmdma_read_sector(a,b) bx_devices.pluginHardDrive->bmdma_read_sector(a,b)
+#define DEV_hd_bmdma_read_sector(a,b,c) bx_devices.pluginHardDrive->bmdma_read_sector(a,b,c)
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)
 #define DEV_hd_bmdma_complete(a) bx_devices.pluginHardDrive->bmdma_complete(a)
 

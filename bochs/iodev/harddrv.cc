@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.145 2005-10-27 17:01:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.146 2005-10-30 14:14:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.145 2005-10-27 17:01:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.146 2005-10-30 14:14:02 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -2304,36 +2304,38 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xa0: // SEND PACKET (atapi)
-	      if (BX_SELECTED_IS_CD(channel)) {
-		    // PACKET
-		    if (BX_SELECTED_CONTROLLER(channel).features & (1 << 0))
-			  BX_PANIC(("PACKET-DMA not supported"));
-		    if (BX_SELECTED_CONTROLLER(channel).features & (1 << 1))
-			  BX_PANIC(("PACKET-overlapped not supported"));
+          if (BX_SELECTED_IS_CD(channel)) {
+            // PACKET
+            BX_SELECTED_CONTROLLER(channel).packet_dma = (BX_SELECTED_CONTROLLER(channel).features & 1);
+            if (BX_SELECTED_CONTROLLER(channel).features & (1 << 1)) {
+              BX_ERROR(("PACKET-overlapped not supported"));
+              command_aborted (channel, 0xa0);
+            } else {
+              // We're already ready!
+              BX_SELECTED_CONTROLLER(channel).sector_count = 1;
+              BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+              BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+              // serv bit??
+              BX_SELECTED_CONTROLLER(channel).status.drq = 1;
+              BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
-		    // We're already ready!
-		    BX_SELECTED_CONTROLLER(channel).sector_count = 1;
-		    BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-		    BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-		    // serv bit??
-		    BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-		    BX_SELECTED_CONTROLLER(channel).status.err = 0;
-
-		    // NOTE: no interrupt here
-		    BX_SELECTED_CONTROLLER(channel).current_command = value;
-		    BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
-	      } else {
-		command_aborted (channel, 0xa0);
-	      }
-	      break;
+              // NOTE: no interrupt here
+              BX_SELECTED_CONTROLLER(channel).current_command = value;
+              BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+            }
+          } else {
+            command_aborted (channel, 0xa0);
+          }
+          break;
 
         case 0xa2: // SERVICE (atapi), optional
-	      if (BX_SELECTED_IS_CD(channel)) {
-		    BX_PANIC(("ATAPI SERVICE not implemented"));
-	      } else {
-		command_aborted (channel, 0xa2);
-	      }
-	      break;
+          if (BX_SELECTED_IS_CD(channel)) {
+            BX_PANIC(("ATAPI SERVICE not implemented"));
+            command_aborted (channel, 0xa2);
+          } else {
+            command_aborted (channel, 0xa2);
+          }
+          break;
 
         // power management
 	case 0xe5: // CHECK POWER MODE
@@ -2645,7 +2647,11 @@ bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[47] = 0;
   BX_SELECTED_DRIVE(channel).id_drive[48] = 1; // 32 bits access
 
-  BX_SELECTED_DRIVE(channel).id_drive[49] = (1 << 9); // LBA supported
+//  if (BX_HD_THIS bmdma_present()) {
+//    BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9) | (1<<8); // LBA and DMA
+//  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[49] = (1<<9); // LBA only supported
+//  }
 
   BX_SELECTED_DRIVE(channel).id_drive[50] = 0;
   BX_SELECTED_DRIVE(channel).id_drive[51] = 0;
@@ -3312,40 +3318,67 @@ bx_hard_drive_c::bmdma_present(void)
 
 #if BX_SUPPORT_PCI
   bx_bool
-bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer)
+bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
 {
   off_t logical_sector;
   off_t ret;
 
-  if (BX_SELECTED_CONTROLLER(channel).current_command != 0xC8) {
-    BX_ERROR(("command 0xC8 (READ DMA) not active"));
+  if (BX_SELECTED_CONTROLLER(channel).current_command == 0xC8) {
+    *sector_size = 512;
+    if (!calculate_logical_address(channel, &logical_sector)) {
+      BX_ERROR(("BM-DMA read sector reached invalid sector %lu, aborting", (unsigned long)logical_sector));
+      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      return 0;
+    }
+    ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
+    if (ret < 0) {
+      BX_ERROR(("could not lseek() hard drive image file"));
+      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      return 0;
+    }
+    /* set status bar conditions for device */
+    if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+      bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+    BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+    bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+    ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) buffer, 512);
+    if (ret < 512) {
+      BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
+      BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
+      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      return 0;
+    }
+    increment_address(channel);
+  } else if (BX_SELECTED_CONTROLLER(channel).current_command == 0xA0) {
+    if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
+      BX_INFO(("PACKET-DMA active"));
+      *sector_size = 2048;
+      if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
+        BX_PANIC(("Read with CDROM not ready"));
+        return 0;
+      } 
+      /* set status bar conditions for device */
+      if (!BX_SELECTED_DRIVE(channel).iolight_counter)
+        bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
+      BX_SELECTED_DRIVE(channel).iolight_counter = 5;
+      bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
+      if (!BX_SELECTED_DRIVE(channel).cdrom.cd->read_block(buffer, BX_SELECTED_DRIVE(channel).cdrom.next_lba))
+      {
+        BX_PANIC(("CDROM: read block failed"));
+        return 0;
+      }
+      BX_SELECTED_DRIVE(channel).cdrom.next_lba++;
+      BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks--;
+    } else {
+      BX_ERROR(("PACKET-DMA not active"));
+      command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
+      return 0;
+    }
+  } else {
+    BX_ERROR(("DMA read not active"));
     command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
     return 0;
   }
-  if (!calculate_logical_address(channel, &logical_sector)) {
-    BX_ERROR(("BM-DMA read sector reached invalid sector %lu, aborting", (unsigned long)logical_sector));
-    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-    return 0;
-  }
-  ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
-  if (ret < 0) {
-    BX_ERROR(("could not lseek() hard drive image file"));
-    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-    return 0;
-  }
-  /* set status bar conditions for device */
-  if (!BX_SELECTED_DRIVE(channel).iolight_counter)
-    bx_gui->statusbar_setitem(BX_SELECTED_DRIVE(channel).statusbar_id, 1);
-  BX_SELECTED_DRIVE(channel).iolight_counter = 5;
-  bx_pc_system.activate_timer( BX_HD_THIS iolight_timer_index, 100000, 0 );
-  ret = BX_SELECTED_DRIVE(channel).hard_drive->read((bx_ptr_t) buffer, 512);
-  if (ret < 512) {
-    BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
-    BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
-    command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-    return 0;
-  }
-  increment_address(channel);
   return 1;
 }
 
@@ -3391,11 +3424,17 @@ bx_hard_drive_c::bmdma_complete(Bit8u channel)
 {
   BX_SELECTED_CONTROLLER(channel).status.busy = 0;
   BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-  BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
   BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
   BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  if (BX_SELECTED_IS_CD(channel)) {
+    BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
+    BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
+    BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
+  } else {
+    BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+    BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
+  }
   raise_interrupt(channel);
 }
 #endif
