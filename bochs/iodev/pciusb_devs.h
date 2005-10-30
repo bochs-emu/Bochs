@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb_devs.h,v 1.3 2005-01-14 18:28:47 vruppert Exp $
+// $Id: pciusb_devs.h,v 1.4 2005-10-30 10:02:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -34,9 +34,10 @@
 
 
 // defines
-#define USB_CYPRESS 1
-#define USB_KEYPAD  1
+#define USB_CYPRESS      1
+#define USB_KEYPAD       1
 
+// don't forget to modify USB_CUR_DEVS to reflect devices
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Cypress USB three button mouse.
@@ -54,6 +55,7 @@
   BX_USB_THIS hub[0].device[0].endpt = 1;
   BX_USB_THIS hub[0].device[0].function.direction = 0;
   BX_USB_THIS hub[0].device[0].function.configs = 1; // only one config in this device
+  BX_USB_THIS hub[0].device[0].low_speed = 1;
 
   // device descriptor
   BX_USB_THIS hub[0].device[0].function.device_descr.len = 18;

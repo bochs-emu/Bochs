@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.10 2005-10-29 09:12:39 vruppert Exp $
+// $Id: pciusb.h,v 1.11 2005-10-30 10:02:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -374,7 +374,7 @@ private:
 
   static void usb_timer_handler(void *);
   void usb_timer(void);
-  void DoTransfer(struct TD *);
+  void DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
   void dump_packet(Bit8u *data, unsigned size);
   unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,

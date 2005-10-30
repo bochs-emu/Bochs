@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.23 2005-10-29 09:12:39 vruppert Exp $
+// $Id: pciusb.cc,v 1.24 2005-10-30 10:02:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -82,9 +82,6 @@ bx_pciusb_c::bx_pciusb_c(void)
 
 bx_pciusb_c::~bx_pciusb_c(void)
 {
-
-  //TODO:  free  BX_USB_THIS device_buffer
-
   // nothing for now
   BX_DEBUG(("Exit."));
 }
@@ -207,6 +204,7 @@ bx_pciusb_c::reset(unsigned type)
       BX_USB_THIS hub[i].usb_port[j].enabled = 0;
       BX_USB_THIS hub[i].usb_port[j].able_changed = 0;
       BX_USB_THIS hub[i].usb_port[j].status = 0;
+      BX_USB_THIS hub[i].usb_port[j].device_num = -1;
     }
   }
 
@@ -383,8 +381,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif // !BX_USE_PCIUSB_SMF
   Bit8u  offset,port;
 
-//  BX_DEBUG(("register write to address 0x%04x - ", (unsigned) address));
-  BX_DEBUG(("register write to  address 0x%04X:  0x%04X  (%i bits)", (unsigned) address, (unsigned) value, io_len * 8));
+  BX_DEBUG(("register write to  address 0x%04X:  0x%08X  (%i bits)", (unsigned) address, (unsigned) value, io_len * 8));
 
   offset = address - BX_USB_THIS hub[0].base_ioaddr;
 
@@ -508,6 +505,9 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x12: // port #2
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
+        // If the ports reset bit is set, don't allow any writes unless the new write will clear the reset bit
+        if (BX_USB_THIS hub[0].usb_port[port].reset & (value & (1<<9)))
+          break;
         if (value & ((1<<5) | (1<<4) | (1<<0)))
           BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
         if (!(value & (1<<7)))
@@ -592,11 +592,11 @@ void bx_pciusb_c::usb_timer(void)
     BX_USB_THIS busy = 1;
     bx_bool fire_int = 0;
     set_irq_level(0);  // make sure it is low
-    bx_bool interrupt = 0, shortpacket = 0;
+    bx_bool interrupt = 0, shortpacket = 0, stalled = 0;
     struct TD td;
     struct HCSTACK stack[USB_STACK_SIZE+1];  // queue stack for this item only
     Bit32s stk = 0;
-    Bit32u item, address, lastvertaddr = 0;
+    Bit32u item, address, lastvertaddr = 0, queue_num = 0;
     Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base + 
                                 (BX_USB_THIS hub[0].usb_frame_num.frame_num << 2);
     BX_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
@@ -615,6 +615,7 @@ void bx_pciusb_c::usb_timer(void)
         if ((stack[stk].d == HC_VERT) && stack[stk].t) { stk--; continue; }
         if ((stack[stk].d == HC_HORZ) && stack[stk].t) break;
         if (stack[stk].q) { // is a queue
+          queue_num++;
           address = stack[stk].next;
           lastvertaddr = address + 4;
           // get HORZ slot
@@ -642,7 +643,7 @@ void bx_pciusb_c::usb_timer(void)
           if (td.dword1 & (1<<24)) interrupt = 1;
           if (td.dword1 & (1<<23)) {  // is it an active TD
             BX_DEBUG(("Frame: %04i", BX_USB_THIS hub[0].usb_frame_num.frame_num));
-            BX_USB_THIS DoTransfer(&td);
+            BX_USB_THIS DoTransfer(address, queue_num, &td);
             
             // issue short packet?
             Bit16u r_actlen = (((td.dword1 & 0x7FF)+1) & 0x7FF);
@@ -652,7 +653,9 @@ void bx_pciusb_c::usb_timer(void)
               shortpacket = 1;
               td.dword1 |= (1<<29);
             }
-            
+
+            if (td.dword1 & (1<<22)) stalled = 1;
+
             BX_MEM_WRITE_PHYSICAL(address+4, 4, &td.dword1);  // write back the status
             // copy pointer for next queue item, in to vert queue head
             if ((stk > 0) && !shortpacket && (stack[stk].d == HC_VERT))
@@ -663,7 +666,10 @@ void bx_pciusb_c::usb_timer(void)
             // if last TD in HORZ queue pointer, then we are done.
             if (stack[stk].t && (stack[stk].d == HC_HORZ)) break;
             // if Breadth first or last item in queue, move to next queue.
-            if (!depthbreadth || stack[stk].t) stk--;
+            if (!depthbreadth || stack[stk].t) {
+              if (stack[stk].d == HC_HORZ) queue_num--;  // <-- really, this should never happen until we
+              stk--;                                     //           support bandwidth reclamation...
+            }
             if (stk < 1) break;
           } else {
             if (stack[stk].t) break;
@@ -686,7 +692,11 @@ void bx_pciusb_c::usb_timer(void)
         fire_int = 1;
         BX_DEBUG((" [IOC] We wan't it to fire here (Frame: %04i)", BX_USB_THIS hub[0].usb_frame_num.frame_num));
       }
-    
+
+      if (stalled && BX_USB_THIS hub[0].usb_enable.timeout_crc) {
+        fire_int = 1;
+        BX_DEBUG((" [stalled] We wan't it to fire here (Frame: %04i)", BX_USB_THIS hub[0].usb_frame_num.frame_num));
+      }
     }
 
     // The Frame Number Register is incremented every 1ms
@@ -695,7 +705,7 @@ void bx_pciusb_c::usb_timer(void)
 
     // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
     if (fire_int) {
-      BX_USB_THIS hub[0].usb_status.interrupt = 1;
+      BX_USB_THIS hub[0].usb_status.interrupt = 1 | ((stalled) ? 2 : 0);
       set_irq_level(1);
     }
 
@@ -708,7 +718,7 @@ void bx_pciusb_c::usb_timer(void)
   //    However, since we don't do anything, let's not.
 }
 
-void bx_pciusb_c::DoTransfer(struct TD *td) {
+void bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
   
   int i, j;
   Bit8u protocol = 0;
@@ -727,7 +737,8 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
     // the '8' above may need to be maxlen (unless maxlen == 0)
   }
 
-  BX_DEBUG(("TD found:  %08x   %08x   %08x   %08x", td->dword0, td->dword1, td->dword2, td->dword3));
+  BX_DEBUG(("QH%03i:TD found at address: 0x%08X", queue_num, address));
+  BX_DEBUG(("  %08X   %08X   %08X   %08X", td->dword0, td->dword1, td->dword2, td->dword3));
 
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal
@@ -750,7 +761,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
     }
   }
   if (!at_least_one) {
-    BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received, but stalled
+    BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
     return;
   }
   if (dev == NULL) {
@@ -759,7 +770,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
       // For now, let it pass through to the code below.
     } else {
       BX_PANIC(("Device not found for addr: %i", addr));
-      BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received, but stalled
+      BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
       return;  // device not found
     }
   }
@@ -918,12 +929,12 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
         case GET_STATUS:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: GET_STATUS returned an error"));
               break;
             case STATE_ADDRESS:
               if (rp->index > 0) {
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: GET_STATUS returned an error"));
                 break;
               } // else fall through
@@ -940,18 +951,18 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
         case CLEAR_FEATURE:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: CLEAR_FEATURE returned an error"));
               break;
             case STATE_ADDRESS:
               if (rp->index > 0) {
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: CLEAR_FEATURE returned an error"));
                 break;
               } // else fall through
             case STATE_CONFIGURED:
               if (rp->length) {
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: CLEAR_FEATURE returned an error:  length > 0"));
                 break;
               }
@@ -968,13 +979,13 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
               if (((rp->index >> 8) == SET_FEATURE_TEST_MODE) && (rp->request_type == 0) && ((rp->index & 0xFF) == 0)) {
                 BX_DEBUG(("Request: SET_FEATURE in TEST MODE"));
               } else {
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_FEATURE returned an error"));
               }
               break;
             case STATE_ADDRESS:
               if ((rp->index & 0xFF) > 0) {
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_FEATURE returned an error"));
                 break;
               } // else fall through
@@ -997,7 +1008,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
           (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
           td->dword3));
           if ((rp->value > 127) || rp->index || rp->length) {
-            BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received, but errored
+            BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
             BX_ERROR(("Request: SET_ADDRESS returned an error"));
           } else {
             switch (dev->state) {
@@ -1018,7 +1029,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007);
                 break;
               case STATE_CONFIGURED:
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received, but errored
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_ADDRESS returned an error"));
             }
           }
@@ -1037,14 +1048,16 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
             case STATE_CONFIGURED:
-              BX_USB_THIS set_status(td, 0, 0, BX_USB_THIS GetDescriptor(dev, rp), 0, 0, 0, 0x007);
+              unsigned ret;
+              ret = BX_USB_THIS GetDescriptor(dev, rp);
+              BX_USB_THIS set_status(td, ret, 0, 0, 0, (ret && pid==TOKEN_SETUP)?1:0, 0, 0x007);
           }
           break;
         case SET_DESCRIPTOR:
           switch (dev->state) {
             case STATE_DEFAULT:
               BX_ERROR(("Request: SET_DESCRIPTOR returned an error"));
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_ADDRESS:
             case STATE_CONFIGURED:
@@ -1070,7 +1083,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
           switch (dev->state) {
             case STATE_DEFAULT:
               BX_ERROR(("Request: GET_CONFIGURATION returned an error"));
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_ADDRESS:
               // must return zero if in the address state
@@ -1087,7 +1100,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
         case SET_CONFIGURATION:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: SET_CONFIGURATION: returned an error"));
               break;
             case STATE_CONFIGURED:
@@ -1109,7 +1122,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
               }
               if (dev->config == 0xFF) {
                 dev->config = 0;
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_CONFIGURATION: returned an error"));
               } else {
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
@@ -1122,13 +1135,13 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
           switch (dev->state) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: GET_INTERFACE returned and error: not in configured state"));
               break;
             case STATE_CONFIGURED:
               if ((unsigned)(rp->index + 1) > dev->function.device_config[dev->config].interfaces) {
                 BX_PANIC(("GET_INTERFACE: wanted interface number is greater than interface count."));
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               }
               // The USB specs say that I can return a STALL if only one interface is used. (ie, no alternate)
               // However, Win98SE doesn't like it at all....
@@ -1142,7 +1155,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
               //} else {
               //  BX_DEBUG(("Request: GET_INTERFACE  %02X  %02X  %02X (Only 1 interface, returning STALL)", rp->value >> 8, rp->value & 0xFF, rp->length));
-              //  BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              //  BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               //}
               break;
           }
@@ -1152,12 +1165,12 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
               BX_ERROR(("Request: SET_INTERFACE returned and error: not in configured state"));
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_CONFIGURED:
               if ((unsigned)(rp->index + 1) > dev->function.device_config[dev->config].interfaces) {
                 BX_PANIC(("SET_INTERFACE: wanted interface number is greater than interface count."));
-                BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               }
               dev->Interface = (Bit8u) rp->index;
               dev->alt_interface = (Bit8u) rp->value;
@@ -1170,7 +1183,7 @@ void bx_pciusb_c::DoTransfer(struct TD *td) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
               BX_ERROR(("Request: SYNCH_FRAME returned and error: not in configured state"));
-              BX_USB_THIS set_status(td, 0, 0, 1, 0, 0, 0, 0x007); // an 8 byte packet was received
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, 1, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_CONFIGURED:
 
