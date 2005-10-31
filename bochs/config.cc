@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.53 2005-10-28 13:49:24 vruppert Exp $
+// $Id: config.cc,v 1.54 2005-10-31 12:53:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -616,26 +616,27 @@ void bx_init_options ()
        BX_ATA_TRANSLATION_AUTO,
        BX_ATA_TRANSLATION_NONE));
 
+      // the menu and all items on it depend on the Opresent flag
       bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
           menu->clone ());
-      // the menu and all items on it depend on the Opresent flag
-      bx_options.atadevice[channel][slave].Opresent->get_dependent_list()->add(menu);
       // the present flag depends on the ATA channel's present flag
       bx_options.ata[channel].Opresent->get_dependent_list()->add (
           bx_options.atadevice[channel][slave].Opresent);
-      }
-
-      // set up top level menu for ATA[i] controller configuration.  This list
-      // controls what will appear on the ATA configure dialog.  It now
-      // requests the USE_TAB_WINDOW display, which is implemented in wx.
-      char buffer[32];
-      sprintf (buffer, "Configure ATA%d", channel);
-      ata_menu[channel] = new bx_list_c ((bx_id)(BXP_ATAx_MENU(channel)), strdup(buffer), "", 4);
-      ata_menu[channel]->add (ata[channel]);
-      ata_menu[channel]->add (bx_options.atadevice[channel][0].Omenu);
-      ata_menu[channel]->add (bx_options.atadevice[channel][1].Omenu);
-      ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
+      // the menu depends on the ATA channel's present flag
+      bx_options.ata[channel].Opresent->get_dependent_list()->add(menu);
     }
+
+    // set up top level menu for ATA[i] controller configuration.  This list
+    // controls what will appear on the ATA configure dialog.  It now
+    // requests the USE_TAB_WINDOW display, which is implemented in wx.
+    char buffer[32];
+    sprintf (buffer, "Configure ATA%d", channel);
+    ata_menu[channel] = new bx_list_c ((bx_id)(BXP_ATAx_MENU(channel)), strdup(buffer), "", 4);
+    ata_menu[channel]->add (ata[channel]);
+    ata_menu[channel]->add (bx_options.atadevice[channel][0].Omenu);
+    ata_menu[channel]->add (bx_options.atadevice[channel][1].Omenu);
+    ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
+  }
 
   // Enable first ata interface by default, disable the others.
   bx_options.ata[0].Opresent->set_initial_val(1);
