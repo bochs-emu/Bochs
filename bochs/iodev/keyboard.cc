@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.104 2005-09-13 19:35:01 vruppert Exp $
+// $Id: keyboard.cc,v 1.105 2005-10-31 15:32:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.104 2005-09-13 19:35:01 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.105 2005-10-31 15:32:18 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -320,8 +320,7 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
 
       DEV_pic_lower_irq(12);
       activate_timer();
-      BX_DEBUG(("READ(%02x) (from mouse) = %02x", (unsigned) address,
-          (unsigned) val));
+      BX_DEBUG(("[mouse] read from 0x%02x returns 0x%02x", address, val));
       return val;
       }
     else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
@@ -937,7 +936,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
   BX_DEBUG(("mouse_enQ(%02x)", (unsigned) mouse_data));
 
   if (BX_KEY_THIS s.mouse_internal_buffer.num_elements >= BX_MOUSE_BUFF_SIZE) {
-    BX_ERROR(("mouse: internal mouse buffer full, ignoring mouse data.(%02x)",
+    BX_ERROR(("[mouse] internal mouse buffer full, ignoring mouse data.(%02x)",
       (unsigned) mouse_data));
     return;
   }
@@ -1012,32 +1011,27 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
   switch (value) {
     case 0x00: // ??? ignore and let OS timeout with no response
       kbd_enQ(0xFA); // send ACK %%%
-      return;
       break;
 
     case 0x05: // ???
       // (mch) trying to get this to work...
       BX_KEY_THIS s.kbd_controller.sysf = 1;
       kbd_enQ_imm(0xfe);
-      return;
       break;
 
     case 0xed: // LED Write
       BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 1;
       kbd_enQ_imm(0xFA); // send ACK %%%
-      return;
       break;
 
     case 0xee: // echo
       kbd_enQ(0xEE); // return same byte (EEh) as echo diagnostic
-      return;
       break;
 
     case 0xf0: // Select alternate scan code set
       BX_KEY_THIS s.kbd_controller.expecting_scancodes_set = 1;
       BX_DEBUG(("Expecting scancode set info..."));
       kbd_enQ(0xFA); // send ACK
-      return;
       break;
 
     case 0xf2:  // identify keyboard
@@ -1057,20 +1051,17 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
             kbd_enQ(0x83);
         }
       }
-      return;
       break;
 
     case 0xf3:  // typematic info
       BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic = 1;
       BX_INFO(("setting typematic info"));
       kbd_enQ(0xFA); // send ACK
-      return;
       break;
 
     case 0xf4:  // enable keyboard
       BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled = 1;
       kbd_enQ(0xFA); // send ACK
-      return;
       break;
 
     case 0xf5:  // reset keyboard to power-up settings and disable scanning
@@ -1078,7 +1069,6 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       kbd_enQ(0xFA); // send ACK
       BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled = 0;
       BX_INFO(("reset-disable command received"));
-      return;
       break;
 
     case 0xf6:  // reset keyboard to power-up settings and enable scanning
@@ -1086,7 +1076,22 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       kbd_enQ(0xFA); // send ACK
       BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled = 1;
       BX_INFO(("reset-enable command received"));
-      return;
+      break;
+
+    case 0xfe:  // resend. aiiee.
+      BX_PANIC( ("got 0xFE (resend)"));
+      break;
+
+    case 0xff:  // reset: internal keyboard reset and afterwards the BAT
+      BX_DEBUG(("reset command received"));
+      resetinternals(1);
+      kbd_enQ(0xFA); // send ACK
+      BX_KEY_THIS s.kbd_controller.bat_in_progress = 1;
+      kbd_enQ(0xAA); // BAT test passed
+      break;
+
+    case 0xd3:
+      kbd_enQ(0xfa);
       break;
 
     case 0xf7:  // PS/2 Set All Keys To Typematic
@@ -1096,39 +1101,9 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
     case 0xfb:  // PS/2 Set Key Type to Typematic
     case 0xfc:  // PS/2 Set Key Type to Make/Break
     case 0xfd:  // PS/2 Set Key Type to Make
-      // Silently ignore and let the OS timeout, for now.
-      // If anyone has code around that makes use of that, I can
-      // provide documentation on their behavior (ask core@ggi-project.org)
-      return;
-      break;
-
-    case 0xfe:  // resend. aiiee.
-      BX_PANIC( ("got 0xFE (resend)"));
-      return;
-      break;
-
-    case 0xff:  // reset: internal keyboard reset and afterwards the BAT
-      BX_DEBUG(("reset command received"));
-      resetinternals(1);
-      kbd_enQ(0xFA); // send ACK
-      BX_KEY_THIS s.kbd_controller.bat_in_progress = 1;
-      kbd_enQ(0xAA); // BAT test passed
-      return;
-      break;
-
-    case 0xd3:
-      kbd_enQ(0xfa);
-      return;
-
     default:
-     /* XXX fix this properly:
-        http://panda.cs.ndsu.nodak.edu/~achapwes/PICmicro/mouse/mouse.html
-        http://sourceforge.net/tracker/index.php?func=detail&aid=422457&group_id=12580&atid=112580
-      */
-      BX_ERROR(("kbd_ctrl_to_kbd(): got value of %02x",
-        (unsigned) value));
-      kbd_enQ(0xFA); /* send ACK ??? */
-      return;
+      BX_ERROR(("kbd_ctrl_to_kbd(): got value of 0x%02x", value));
+      kbd_enQ(0xFE); /* send NACK */
       break;
   }
 }
@@ -1461,8 +1436,11 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
        break;
 
       default:
-        //FEh Resend
-        BX_PANIC(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
+        // If PS/2 mouse present, send NACK for unknown commands, otherwise ignore
+        if (is_ps2) {
+          BX_ERROR(("[mouse] kbd_ctrl_to_mouse(): got value of 0x%02x", value));
+          kbd_enQ(0xFE); /* send NACK */
+        }
     }
   }
 }
