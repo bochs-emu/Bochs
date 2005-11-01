@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.34 2005-10-30 14:14:03 vruppert Exp $
+// $Id: harddrv.h,v 1.35 2005-11-01 19:10:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -601,7 +601,8 @@ typedef struct {
     Bit16u   cylinder_no;
     Bit16u   byte_count;
   };
-  Bit8u    buffer[2048];
+  Bit8u    buffer[2352];
+  Bit32u   buffer_size;
   Bit32u   buffer_index;
   Bit32u   drq_index;
   Bit8u    current_command;

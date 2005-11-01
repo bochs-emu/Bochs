@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.147 2005-10-30 19:18:59 vruppert Exp $
+// $Id: harddrv.cc,v 1.148 2005-11-01 19:10:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.147 2005-10-30 19:18:59 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.148 2005-11-01 19:10:24 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -426,26 +426,28 @@ bx_hard_drive_c::init(void)
 
 	// allocate low level driver
 #ifdef LOWLEVEL_CDROM
-	BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(bx_options.atadevice[channel][device].Opath->getptr ());
+        BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(bx_options.atadevice[channel][device].Opath->getptr ());
         BX_INFO(("CD on ata%d-%d: '%s'",channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
 
-	if (bx_options.atadevice[channel][device].Ostatus->get () == BX_INSERTED) {
-	      if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom()) {
-		    BX_INFO(( "Media present in CD-ROM drive"));
-		    BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
-		    BX_HD_THIS channels[channel].drives[device].cdrom.capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
-	      } else {		    
-		    BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
-		    BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
-		    bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
-	      }
-	} else {
+        if (bx_options.atadevice[channel][device].Ostatus->get () == BX_INSERTED) {
+          if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom()) {
+            BX_INFO(( "Media present in CD-ROM drive"));
+            BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
+            Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
+            BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
+            BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
+          } else {		    
+            BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
+            BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
+            bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
+          }
+        }
+        else
 #endif
-	      BX_INFO(( "Media not present in CD-ROM drive" ));
-	      BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
-#ifdef LOWLEVEL_CDROM
-	}
-#endif
+        {
+          BX_INFO(( "Media not present in CD-ROM drive" ));
+          BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
+        }
       }
     }
   }
@@ -831,9 +833,9 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             unsigned increment = 0;
 
             // Load block if necessary
-            if (index >= 2048) {
-              if (index > 2048)
-                BX_PANIC(("index > 2048 : 0x%x",index));
+            if (index >= BX_SELECTED_CONTROLLER(channel).buffer_size) {
+              if (index > BX_SELECTED_CONTROLLER(channel).buffer_size)
+                BX_PANIC(("index > %d : %d", BX_SELECTED_CONTROLLER(channel).buffer_size, index));
               switch (BX_SELECTED_DRIVE(channel).atapi.command) {
                 case 0x28: // read (10)
                 case 0xa8: // read (12)
@@ -1304,6 +1306,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE) {
             // complete command received
             Bit8u atapi_command = BX_SELECTED_CONTROLLER(channel).buffer[0];
+            BX_SELECTED_CONTROLLER(channel).buffer_size = 2048;
 
             if (bx_dbg.cdrom)
               BX_INFO(("cdrom: ATAPI command 0x%x started", atapi_command));
@@ -1609,8 +1612,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   init_send_atapi_command(channel, atapi_command, 8, 8);
 
                   if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
-                    Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity;
-                    BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
+                    Bit32u capacity = BX_SELECTED_DRIVE(channel).cdrom.capacity - 1;
                     BX_SELECTED_CONTROLLER(channel).buffer[0] = (capacity >> 24) & 0xff;
                     BX_SELECTED_CONTROLLER(channel).buffer[1] = (capacity >> 16) & 0xff;
                     BX_SELECTED_CONTROLLER(channel).buffer[2] = (capacity >> 8) & 0xff;
@@ -1652,8 +1654,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
                         ready_to_send_atapi(channel);
                         break;
+                      case 0xf8:
+                        BX_ERROR(("Read CD (raw) not implemented yet"));
+                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                        raise_interrupt(channel);
+                        break;
                       default:
-                        BX_ERROR(("Read CD (raw) not implemented"));
+                        BX_ERROR(("Read CD: unknown format"));
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
                     }
@@ -1697,15 +1704,18 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         }
                         break;
                       default:
-                        BX_PANIC(("(READ TOC) Format %d not supported", format));
+                        BX_ERROR(("(READ TOC) format %d not supported", format));
+                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                        raise_interrupt(channel);
                     }
 #else
                     BX_PANIC(("LOWLEVEL_CDROM not defined"));
 #endif
 #else  // WIN32
-                    int i;
                     switch (format) {
                       case 0:
+                      case 1:
+                      case 2:
 #ifdef LOWLEVEL_CDROM
                         if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(BX_SELECTED_CONTROLLER(channel).buffer,
                                                                             &toc_length, msf, starting_track, format))) {
@@ -1720,22 +1730,8 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif
                         break;
 
-                      case 1:
-                        // multi session stuff. we ignore this and emulate a single session only
-                        init_send_atapi_command(channel, atapi_command, 12, alloc_length);
-
-                        BX_SELECTED_CONTROLLER(channel).buffer[0] = 0;
-                        BX_SELECTED_CONTROLLER(channel).buffer[1] = 0x0a;
-                        BX_SELECTED_CONTROLLER(channel).buffer[2] = 1;
-                        BX_SELECTED_CONTROLLER(channel).buffer[3] = 1;
-                        for (i = 0; i < 8; i++)
-                          BX_SELECTED_CONTROLLER(channel).buffer[4+i] = 0;
-
-                        ready_to_send_atapi(channel);
-                        break;
-
-                      case 2:
                       default:
+                        BX_ERROR(("(READ TOC) format %d not supported", format));
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
                         break;
@@ -2208,16 +2204,25 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0xef: // SET FEATURES
           switch(BX_SELECTED_CONTROLLER(channel).features) {
+            case 0x03: // Set Transfer Mode
+              BX_INFO(("ata%d-%d: set transfer mode to 0x%02x not supported, but returning success",
+                channel,BX_SLAVE_SELECTED(channel), BX_SELECTED_CONTROLLER(channel).sector_count));
+              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              raise_interrupt(channel);
+              break;
+
             case 0x02: // Enable and
             case 0x82: //  Disable write cache.
             case 0xAA: // Enable and
             case 0x55: //  Disable look-ahead cache.
             case 0xCC: // Enable and
             case 0x66: //  Disable reverting to power-on default
-            case 0x03: // Set Transfer Mode
-              BX_INFO(("ata%d-%d: SET FEATURES subcommand 0x%02x not supported by disk.",
+              BX_INFO(("ata%d-%d: SET FEATURES subcommand 0x%02x not supported, but returning success",
                 channel,BX_SLAVE_SELECTED(channel),(unsigned) BX_SELECTED_CONTROLLER(channel).features));
-              command_aborted(channel, value);
+              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+              raise_interrupt(channel);
               break;
 
             default:
@@ -3106,9 +3111,9 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_l
 
       // no bytes transfered yet
       if (lazy)
-	    BX_SELECTED_CONTROLLER(channel).buffer_index = 2048;
+        BX_SELECTED_CONTROLLER(channel).buffer_index = BX_SELECTED_CONTROLLER(channel).buffer_size;
       else
-	    BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+        BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
       BX_SELECTED_CONTROLLER(channel).drq_index = 0;
 
       if (BX_SELECTED_CONTROLLER(channel).byte_count > req_length)
@@ -3132,9 +3137,9 @@ void
 bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show)
 {
   if (show) {
-    BX_ERROR(("atapi_cmd_error channel=%02x key=%02x asc=%02x", channel, sense_key, asc));
+    BX_ERROR(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
   } else {
-    BX_DEBUG(("atapi_cmd_error channel=%02x key=%02x asc=%02x", channel, sense_key, asc));
+    BX_DEBUG(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
   }
 
   BX_SELECTED_CONTROLLER(channel).error_register = sense_key << 4;
@@ -3281,30 +3286,30 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
       bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
       }
-    }
-  else {
+  } else {
     // insert cdrom
 #ifdef LOWLEVEL_CDROM
     if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom(bx_options.atadevice[channel][device].Opath->getptr())) {
       BX_INFO(( "Media present in CD-ROM drive"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
-      BX_HD_THIS channels[channel].drives[device].cdrom.capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
+      Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
+      BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
+      BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
       bx_options.atadevice[channel][device].Ostatus->set(BX_INSERTED);
       BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;
       BX_SELECTED_DRIVE(channel).sense.asc = 0;
       BX_SELECTED_DRIVE(channel).sense.ascq = 0;
       raise_interrupt(channel);
-      }
-    else {		    
+    }
+    else
 #endif
+    {
       BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
       bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
-#ifdef LOWLEVEL_CDROM
-      }
-#endif
     }
-  return( BX_HD_THIS channels[channel].drives[device].cdrom.ready );
+  }
+  return (BX_HD_THIS channels[channel].drives[device].cdrom.ready);
 }
 
   bx_bool
@@ -3353,7 +3358,7 @@ bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_
     increment_address(channel);
   } else if (BX_SELECTED_CONTROLLER(channel).current_command == 0xA0) {
     if (BX_SELECTED_CONTROLLER(channel).packet_dma) {
-      *sector_size = 2048;
+      *sector_size = BX_SELECTED_CONTROLLER(channel).buffer_size;
       if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
         BX_PANIC(("Read with CDROM not ready"));
         return 0;

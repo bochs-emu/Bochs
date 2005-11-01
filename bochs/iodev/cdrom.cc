@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.81 2005-10-27 17:01:11 vruppert Exp $
+// $Id: cdrom.cc,v 1.82 2005-11-01 19:10:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -527,7 +527,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.81 2005-10-27 17:01:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.82 2005-11-01 19:10:24 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -570,6 +570,7 @@ cdrom_interface::insert_cdrom(char *dev)
       BX_INFO(("Using ASPI for cdrom. Drive letters are unused yet."));
       bUseASPI = TRUE;
     }
+    using_file = 0;
   }
   else
   {
@@ -769,10 +770,11 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
     return 0;
   }
 
+  // This is a hack and works okay if there's one rom track only
 #if defined(WIN32)
-  if (!isWindowsXP || using_file) { // This is a hack and works okay if there's one rom track only
+  if (!isWindowsXP || using_file) {
 #else
-  if (using_file) {
+  if (using_file || (format != 0)) {
 #endif
     Bit32u blocks;
     int len = 4;
@@ -802,7 +804,7 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
             buf[len++] = 0;
             buf[len++] = 0;
             buf[len++] = 0;
-            buf[len++] = 16; // logical sector 0
+            buf[len++] = 0; // logical sector 0
           }
         }
 
@@ -826,10 +828,8 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
           buf[len++] = (blocks >> 8) & 0xff;
           buf[len++] = (blocks >> 0) & 0xff;
         }
-
         buf[0] = ((len-2) >> 8) & 0xff;
         buf[1] = (len-2) & 0xff;
-
         break;
 
       case 1:
@@ -841,6 +841,52 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
         for (i = 0; i < 8; i++)
           buf[4+i] = 0;
         len = 12;
+        break;
+
+      case 2:
+        // raw toc - emulate a single session only (ported from qemu)
+        buf[2] = 1;
+        buf[3] = 1;
+
+        for (i = 0; i < 4; i++) {
+          buf[len++] = 1;
+          buf[len++] = 0x14;
+          buf[len++] = 0;
+          if (i < 3) {
+            buf[len++] = 0xa0 + i;
+          } else {
+            buf[len++] = 1;
+          }
+          buf[len++] = 0;
+          buf[len++] = 0;
+          buf[len++] = 0;
+          if (i < 2) {
+            buf[len++] = 0;
+            buf[len++] = 1;
+            buf[len++] = 0;
+            buf[len++] = 0;
+          } else if (i == 2) {
+            blocks = capacity();
+            if (msf) {
+              buf[len++] = 0; // reserved
+              buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
+              buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
+              buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
+            } else {
+              buf[len++] = (blocks >> 24) & 0xff;
+              buf[len++] = (blocks >> 16) & 0xff;
+              buf[len++] = (blocks >> 8) & 0xff;
+              buf[len++] = (blocks >> 0) & 0xff;
+            }
+          } else {
+            buf[len++] = 0;
+            buf[len++] = 0;
+            buf[len++] = 0;
+            buf[len++] = 0;
+          }
+        }    
+        buf[0] = ((len-2) >> 8) & 0xff;
+        buf[1] = (len-2) & 0xff;
         break;
 
       default:
@@ -1128,11 +1174,10 @@ cdrom_interface::capacity()
     if (ret) {
        BX_PANIC (("fstat on cdrom image returned err: %s", strerror(errno)));
     }
-    BX_INFO (("cdrom size is %lld bytes", stat_buf.st_size));
     if ((stat_buf.st_size % 2048) != 0)  {
       BX_ERROR (("expected cdrom image to be a multiple of 2048 bytes"));
     }
-    return stat_buf.st_size / 2048;
+    return (stat_buf.st_size / 2048) + 150;
   }
 #endif
 
@@ -1265,12 +1310,12 @@ cdrom_interface::capacity()
   }
 #elif defined WIN32
   {
-    if(bUseASPI) {
-      return (GetCDCapacity(hid, tid, lun) / 2352);
-    } else if(using_file) {
+    if (bUseASPI) {
+      return ((GetCDCapacity(hid, tid, lun) / 2352) + 1);
+    } else if (using_file) {
       ULARGE_INTEGER FileSize;
       FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
-      return (Bit32u)(FileSize.QuadPart / 2048);
+      return (Bit32u)((FileSize.QuadPart / 2048) + 150);
     } else {  /* direct device access */
       ULARGE_INTEGER FreeBytesForCaller;
       ULARGE_INTEGER TotalNumOfBytes;
