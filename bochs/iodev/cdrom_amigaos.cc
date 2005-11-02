@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.9 2005-10-27 17:01:11 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.10 2005-11-02 20:26:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -219,7 +219,7 @@ cdrom_interface::capacity()
 }
 
   bx_bool
-cdrom_interface::read_block(Bit8u* buf, int lba)
+cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
 {
   CDIO->iotd_Req.io_Data    = buf;
   CDIO->iotd_Req.io_Command = CMD_READ;

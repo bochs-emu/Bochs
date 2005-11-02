@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.84 2005-11-02 16:44:00 vruppert Exp $
+// $Id: cdrom.cc,v 1.85 2005-11-02 20:26:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -528,7 +528,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.84 2005-11-02 16:44:00 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.85 2005-11-02 20:26:24 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -703,7 +703,7 @@ cdrom_interface::insert_cdrom(char *dev)
 
   // I just see if I can read a sector to verify that a
   // CD is in the drive and readable.
-  return read_block(buffer, 0);
+  return read_block(buffer, 0, 2048);
 }
 
   bx_bool
@@ -904,7 +904,6 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
 #ifdef WIN32
   if (isWindowsXP)
   {
-
     // This only works with WinXP
     CDROM_READ_TOC_EX input;
     memset(&input, 0, sizeof(input));
@@ -917,9 +916,9 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
     unsigned long iBytesReturned;
     DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC_EX, &input, sizeof(input), data, 804, &iBytesReturned, NULL);
     // now copy it to the users buffer and free our buffer
-    memcpy(buf, data, iBytesReturned);
+    *length = data[1] + (data[0] << 8) + 2;
+    memcpy(buf, data, *length);
     VirtualFree(data, 0, MEM_RELEASE);
-    *length = iBytesReturned;
 
     return 1;
   } else {
@@ -1400,8 +1399,8 @@ cdrom_interface::capacity()
 #endif
 }
 
-  bx_bool BX_CPP_AttrRegparmN(2)
-cdrom_interface::read_block(Bit8u* buf, int lba)
+  bx_bool BX_CPP_AttrRegparmN(3)
+cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
 {
   // Read a single block from the CD
 
@@ -1412,11 +1411,24 @@ cdrom_interface::read_block(Bit8u* buf, int lba)
 #endif
   ssize_t n = 0;
   Bit8u try_count = 3;
+  Bit8u* buf1;
 
+  if (blocksize == 2352) {
+    memset(buf, 0, 2352);
+    memset(buf+1, 0xff, 10);
+    int raw_block = lba + 150;
+    buf[12] = (raw_block / 75) / 60;
+    buf[13] = (raw_block / 75) % 60;
+    buf[14] = (raw_block % 75);
+    buf[15] = 0x01;
+    buf1 = buf + 16;
+  } else {
+    buf1 = buf;
+  }
   do {
 #ifdef WIN32
     if(bUseASPI) {
-      ReadCDSector(hid, tid, lun, lba, buf, BX_CD_FRAMESIZE);
+      ReadCDSector(hid, tid, lun, lba, buf1, BX_CD_FRAMESIZE);
       n = BX_CD_FRAMESIZE;
     } else {
       pos.QuadPart = (LONGLONG)lba*BX_CD_FRAMESIZE;
@@ -1424,7 +1436,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba)
       if ((pos.LowPart == 0xffffffff) && (GetLastError() != NO_ERROR)) {
         BX_PANIC(("cdrom: read_block: SetFilePointer returned error."));
       } else {
-        ReadFile(hFile, (void *) buf, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
+        ReadFile(hFile, (void *) buf1, BX_CD_FRAMESIZE, (unsigned long *) &n, NULL);
       }
     }
 #elif defined(__APPLE__)
@@ -1435,7 +1447,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba)
       if (pos < 0) {
         BX_PANIC(("cdrom: read_block: lseek returned error."));
       } else {
-        n = read(fd, buf, BX_CD_FRAMESIZE);
+        n = read(fd, buf1, BX_CD_FRAMESIZE);
       }
     }
     else
@@ -1446,7 +1458,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba)
       if (pos < 0) {
         BX_PANIC(("cdrom: read_block: lseek returned error."));
       } else {
-        n = read(fd, buf, CD_FRAMESIZE);
+        n = read(fd, buf1, CD_FRAMESIZE);
       }
     }
 #else
@@ -1454,7 +1466,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba)
     if (pos < 0) {
       BX_PANIC(("cdrom: read_block: lseek returned error."));
     } else {
-      n = read(fd, (char*) buf, BX_CD_FRAMESIZE);
+      n = read(fd, (char*) buf1, BX_CD_FRAMESIZE);
     }
 #endif
   } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
