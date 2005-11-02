@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.83 2005-11-01 21:43:47 vruppert Exp $
+// $Id: cdrom.cc,v 1.84 2005-11-02 16:44:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -528,7 +528,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.83 2005-11-01 21:43:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.84 2005-11-02 16:44:00 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1329,6 +1329,7 @@ cdrom_interface::capacity()
         ULARGE_INTEGER TotalFreeBytes;
         GetDiskFreeSpaceEx( path, &FreeBytesForCaller, &TotalNumOfBytes, &TotalFreeBytes);
         return (Bit32u)(TotalNumOfBytes.QuadPart / 2048);
+      }
     }
   }
 #elif defined __APPLE__
