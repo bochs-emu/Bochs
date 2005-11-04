@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.121 2005-10-23 21:11:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.122 2005-11-04 15:15:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   }
 
   if (! BX_CPU_THIS_PTR get_IF ()) {
-    BX_PANIC(("WARNING: HLT instruction with IF=0!"));
+    BX_INFO(("WARNING: HLT instruction with IF=0!"));
   }
 
   // stops instruction execution and places the processor in a
