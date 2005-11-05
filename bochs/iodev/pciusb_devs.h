@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb_devs.h,v 1.4 2005-10-30 10:02:51 vruppert Exp $
+// $Id: pciusb_devs.h,v 1.5 2005-11-05 12:57:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -56,6 +56,9 @@
   BX_USB_THIS hub[0].device[0].function.direction = 0;
   BX_USB_THIS hub[0].device[0].function.configs = 1; // only one config in this device
   BX_USB_THIS hub[0].device[0].low_speed = 1;
+
+  BX_USB_THIS hub[0].device[0].in_stall = 0;
+  BX_USB_THIS hub[0].device[0].stall_once = 0;
 
   // device descriptor
   BX_USB_THIS hub[0].device[0].function.device_descr.len = 18;
@@ -191,6 +194,9 @@
   BX_USB_THIS hub[0].device[1].endpt = 1;
   BX_USB_THIS hub[0].device[1].function.direction = 0;
   BX_USB_THIS hub[0].device[1].function.configs = 1; // only one config in this device
+
+  BX_USB_THIS hub[0].device[1].in_stall = 0;
+  BX_USB_THIS hub[0].device[1].stall_once = 0;
 
   // device descriptor
   BX_USB_THIS hub[0].device[1].function.device_descr.len = 18;
