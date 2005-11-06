@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.150 2005-11-04 19:03:46 vruppert Exp $
+// $Id: harddrv.cc,v 1.151 2005-11-06 08:21:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.150 2005-11-04 19:03:46 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.151 2005-11-06 08:21:38 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1676,7 +1676,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 {
                   if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
 #ifdef LOWLEVEL_CDROM
-                    bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
+                    bx_bool msf = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 1) & 1;
                     Bit8u starting_track = BX_SELECTED_CONTROLLER(channel).buffer[6];
                     int toc_length;
 #endif
@@ -1690,7 +1690,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       case 2:
                       case 3:
                       case 4:
-                        if (msf != TRUE)
+                        if (msf != 1)
                           BX_ERROR(("READ_TOC_EX: msf not set for format %i", format));
                       case 0:
                       case 1:
@@ -1792,7 +1792,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
                   // handle command
                   init_send_atapi_command(channel, atapi_command, transfer_length * 2048,
-                                          transfer_length * 2048, true);
+                                          transfer_length * 2048, 1);
                   BX_SELECTED_DRIVE(channel).cdrom.remaining_blocks = transfer_length;
                   BX_SELECTED_DRIVE(channel).cdrom.next_lba = lba;
                   if (!BX_SELECTED_CONTROLLER(channel).packet_dma) {
@@ -1835,13 +1835,13 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x42: // read sub-channel
                 {
-                  bool msf = get_packet_field(channel,1, 1, 1);
-                  bool sub_q = get_packet_field(channel,2, 6, 1);
+                  bx_bool msf = get_packet_field(channel,1, 1, 1);
+                  bx_bool sub_q = get_packet_field(channel,2, 6, 1);
                   Bit8u data_format = get_packet_byte(channel,3);
                   Bit8u track_number = get_packet_byte(channel,6);
                   Bit16u alloc_length = get_packet_word(channel,7);
+                  int ret_len = 4; // header size
                   UNUSED(msf);
-                  UNUSED(data_format);
                   UNUSED(track_number);
 
                   if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
@@ -1853,17 +1853,21 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     BX_SELECTED_CONTROLLER(channel).buffer[2] = 0;
                     BX_SELECTED_CONTROLLER(channel).buffer[3] = 0;
 
-                    int ret_len = 4; // header size
-
                     if (sub_q) { // !sub_q == header only
-                      BX_ERROR(("Read sub-channel with SubQ not implemented"));
-                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
-                        ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                      raise_interrupt(channel);
+                      if (data_format == 2) { // UPC / bar code
+                        ret_len = 24;
+                        BX_SELECTED_CONTROLLER(channel).buffer[4] = 2;
+                        BX_SELECTED_CONTROLLER(channel).buffer[0] = 0; // no UPC
+                      } else {
+                        BX_ERROR(("Read sub-channel with SubQ not implemented (format=%d)", data_format));
+                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST,
+                          ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                        raise_interrupt(channel);
+                        break;
+                      }
                     }
-
                     init_send_atapi_command(channel, atapi_command, ret_len, alloc_length);
-                     ready_to_send_atapi(channel);
+                    ready_to_send_atapi(channel);
                   }
                 }
                 break;
@@ -2565,56 +2569,56 @@ bx_hard_drive_c::close_harddrive(void)
   bx_bool BX_CPP_AttrRegparmN(2)
 bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
 {
-      off_t logical_sector;
+  off_t logical_sector;
 
-      if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-        logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
-          ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
-          (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
-      } else
-        logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
-          BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
-          (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
-          (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
+  if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
+    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
+      ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
+      (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
+  } else {
+    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
+      BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
+      (Bit32u)(BX_SELECTED_CONTROLLER(channel).head_no * BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
+      (BX_SELECTED_CONTROLLER(channel).sector_no - 1);
+  }
+  Bit32u sector_count= 
+    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders * 
+    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->heads * 
+    (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->sectors;
 
-      Bit32u sector_count= 
-           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->cylinders * 
-           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->heads * 
-           (Bit32u)BX_SELECTED_DRIVE(channel).hard_drive->sectors;
-
-      if (logical_sector >= sector_count) {
-            BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
-            return false;
-      }
-      *sector = logical_sector;
-      return true;
+  if (logical_sector >= sector_count) {
+    BX_ERROR (("calc_log_addr: out of bounds (%d/%d)", (Bit32u)logical_sector, sector_count));
+    return 0;
+  }
+  *sector = logical_sector;
+  return 1;
 }
 
   void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::increment_address(Bit8u channel)
 {
-      BX_SELECTED_CONTROLLER(channel).sector_count--;
+  BX_SELECTED_CONTROLLER(channel).sector_count--;
 
-      if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-	    off_t current_address;
-	    calculate_logical_address(channel, &current_address);
-	    current_address++;
-	    BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
-	    BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
-	    BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
-      } else {
-            BX_SELECTED_CONTROLLER(channel).sector_no++;
-            if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
-		  BX_SELECTED_CONTROLLER(channel).sector_no = 1;
-		  BX_SELECTED_CONTROLLER(channel).head_no++;
-		  if (BX_SELECTED_CONTROLLER(channel).head_no >= BX_SELECTED_DRIVE(channel).hard_drive->heads) {
-			BX_SELECTED_CONTROLLER(channel).head_no = 0;
-			BX_SELECTED_CONTROLLER(channel).cylinder_no++;
-			if (BX_SELECTED_CONTROLLER(channel).cylinder_no >= BX_SELECTED_DRIVE(channel).hard_drive->cylinders)
-			      BX_SELECTED_CONTROLLER(channel).cylinder_no = BX_SELECTED_DRIVE(channel).hard_drive->cylinders - 1;
-		  }
-	    }
+  if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
+    off_t current_address;
+    calculate_logical_address(channel, &current_address);
+    current_address++;
+    BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
+    BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
+    BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+  } else {
+    BX_SELECTED_CONTROLLER(channel).sector_no++;
+    if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
+      BX_SELECTED_CONTROLLER(channel).sector_no = 1;
+      BX_SELECTED_CONTROLLER(channel).head_no++;
+      if (BX_SELECTED_CONTROLLER(channel).head_no >= BX_SELECTED_DRIVE(channel).hard_drive->heads) {
+        BX_SELECTED_CONTROLLER(channel).head_no = 0;
+        BX_SELECTED_CONTROLLER(channel).cylinder_no++;
+        if (BX_SELECTED_CONTROLLER(channel).cylinder_no >= BX_SELECTED_DRIVE(channel).hard_drive->cylinders)
+          BX_SELECTED_CONTROLLER(channel).cylinder_no = BX_SELECTED_DRIVE(channel).hard_drive->cylinders - 1;
       }
+    }
+  }
 }
 
   void
@@ -3081,7 +3085,7 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
 }
 
   void BX_CPP_AttrRegparmN(3)
-bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bool lazy)
+bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy)
 {
       // BX_SELECTED_CONTROLLER(channel).byte_count is a union of BX_SELECTED_CONTROLLER(channel).cylinder_no;
       // lazy is used to force a data read in the buffer at the next read.
@@ -3739,7 +3743,7 @@ void sparse_image_t::read_header()
  data_start = 0;
  while (data_start < preamble_size) data_start += pagesize;
 
- bool did_mmap = false;
+ bx_bool did_mmap = 0;
 
 #ifdef _POSIX_MAPPED_FILES
 // Try to memory map from the beginning of the file (0 is trivially a page multiple)
@@ -3752,7 +3756,7 @@ void sparse_image_t::read_header()
  else
  {
    mmap_length = preamble_size;
-   did_mmap = true;
+   did_mmap = 1;
    pagetable = ((Bit32u *) (((Bit8u *) mmap_header) + sizeof(header)));
 
 //   system_pagesize = getpagesize();
@@ -4156,7 +4160,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
  if (update_pagetable_count != 0)
  {
-   bool done = false;
+   bx_bool done = 0;
    off_t pagetable_write_from = sizeof(header) + (sizeof(Bit32u) * update_pagetable_start);
    size_t  write_bytecount = update_pagetable_count * sizeof(Bit32u);
 
@@ -4172,7 +4176,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      if (ret != 0)
        panic(strerror(errno));
 
-     done = true;
+     done = 1;
    }
 #endif
 
