@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.151 2005-11-06 08:21:38 vruppert Exp $
+// $Id: harddrv.cc,v 1.152 2005-11-06 11:07:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,6 +36,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "hdimage.h"
 #include "vmware3.h"
 #include "cdrom.h"
 
@@ -149,7 +150,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.151 2005-11-06 08:21:38 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.152 2005-11-06 11:07:01 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {

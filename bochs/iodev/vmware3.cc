@@ -28,6 +28,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "hdimage.h"
 #include "vmware3.h"
 
 const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
