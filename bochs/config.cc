@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.54 2005-10-31 12:53:11 vruppert Exp $
+// $Id: config.cc,v 1.55 2005-11-06 09:11:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -408,10 +408,12 @@ void bx_init_options ()
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppya.Opath->set_format ("%s");
+  bx_options.floppya.Opath->set_runtime_param (1);
   bx_options.floppya.Otype->set_format ("size=%s");
+  bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppya.Ostatus->set_format ("%s");
+  bx_options.floppya.Ostatus->set_runtime_param (1);
   bx_param_c *floppya_init_list[] = {
     // if the order "path,type,status" changes, corresponding changes must
     // be made in gui/wxmain.cc, MyFrame::editFloppyConfig.
@@ -452,10 +454,12 @@ void bx_init_options ()
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppyb.Opath->set_format ("%s");
+  bx_options.floppyb.Opath->set_runtime_param (1);
   bx_options.floppyb.Otype->set_format ("size=%s");
+  bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppyb.Ostatus->set_format ("%s");
+  bx_options.floppyb.Ostatus->set_runtime_param (1);
   bx_param_c *floppyb_init_list[] = {
     bx_options.floppyb.Opath,
     bx_options.floppyb.Otype,
