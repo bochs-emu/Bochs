@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.55 2005-11-06 09:11:09 vruppert Exp $
+// $Id: config.cc,v 1.56 2005-11-06 16:48:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -588,17 +588,17 @@ void bx_init_options ()
       menu->add (bx_options.atadevice[channel][slave].Ocylinders = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_CYLINDERS(channel,slave)),
           "ata-device:cylinders",
           "Number of cylinders",
-          0, 65535,
+          0, 262143,
           0));
       menu->add (bx_options.atadevice[channel][slave].Oheads = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_HEADS(channel,slave)),
           "ata-device:heads",
           "Number of heads",
-          0, 65535,
+          0, 255,
           0));
       menu->add (bx_options.atadevice[channel][slave].Ospt = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_SPT(channel,slave)),
           "ata-device:spt",
           "Number of sectors per track",
-          0, 65535,
+          0, 255,
           0));
       
       menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATAx_DEVICE_MODEL(channel,slave)),

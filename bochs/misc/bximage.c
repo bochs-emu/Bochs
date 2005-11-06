@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bximage.c,v 1.29 2005-11-06 11:07:01 vruppert Exp $
+ * $Id: bximage.c,v 1.30 2005-11-06 16:48:53 vruppert Exp $
  *
  * Create empty hard disk or floppy disk images for bochs.
  *
@@ -41,7 +41,7 @@ typedef int (*WRITE_IMAGE_WIN32)(HANDLE, Bit64u);
 #endif
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bximage.c,v 1.29 2005-11-06 11:07:01 vruppert Exp $";
+char *rcsid = "$Id: bximage.c,v 1.30 2005-11-06 16:48:53 vruppert Exp $";
 char *divider = "========================================================================";
 
 /* menu data for choosing floppy/hard disk */
@@ -633,20 +633,21 @@ int main (int argc, char *argv[])
       fatal (EOF_ERR);
   }
   if (bx_hdimage) {
-    int hdsize, cyl, heads=16, spt=63;
+    unsigned int cyl;
+    int hdsize, heads=16, spt=63;
     int mode;
 
     if (bx_interactive) {
       if (ask_menu (hdmode_menu, hdmode_n_choices, hdmode_choices, bx_hdimagemode, &mode) < 0)
         fatal (EOF_ERR);
-      if (ask_int ("\nEnter the hard disk size in megabytes, between 1 and 32255\n", 1, 32255, bx_hdsize, &hdsize) < 0)
+      if (ask_int ("\nEnter the hard disk size in megabytes, between 1 and 129023\n", 1, 129023, bx_hdsize, &hdsize) < 0)
         fatal (EOF_ERR);
     } else {
       mode = bx_hdimagemode;
       hdsize = bx_hdsize;
     }
-    cyl = (int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
-    assert (cyl < 65536);
+    cyl = (unsigned int) (hdsize*1024.0*1024.0/16.0/63.0/512.0);
+    assert (cyl < 262144);
     sectors = cyl*heads*spt;
     printf ("\nI will create a '%s' hard disk image with\n", hdmode_choices[mode]);
     printf ("  cyl=%d\n", cyl);
