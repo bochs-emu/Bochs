@@ -34,9 +34,11 @@ Detailed change log :
       problems with Linux kernels 2.6.x: "ignoring undecoded slave")
     - geometry autodetection for 'flat' hard disk images added. Works with 
       images created with bximage (heads = 16, sectors per track = 63)
-    - ATAPI command 'read cd' partially implemented
+    - ATAPI command 'read cd' implemented, some other commands improved
     - cdrom read block function now tries up to 3 times before giving up
-    - IDE busmaster DMA feature for harddisks fixed and enabled
+    - emulation of raw cdrom reads added, some other lowlevel cdrom fixes
+    - IDE busmaster DMA feature for harddisks and cdroms completed and enabled
+    - disk image size limit changed from 32 to 127 GB
   - floppy
     - fixes for OS/2 (patch by Robin Kay)
     - more accurate timing for read data and format track commands using a motor
@@ -54,7 +56,7 @@ Detailed change log :
   - vga
     - memory allocation for vga extensions fixed
   - usb
-    - some bugfixes by Ben Lunt
+    - some bugfixes by Ben Lunt (mouse and keypad are usable now)
 
 - display libraries
   - general
