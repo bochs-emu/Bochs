@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.71 2005-07-01 14:05:57 sshwarts Exp $
+// $Id: init.cc,v 1.72 2005-11-07 22:45:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.71 2005-07-01 14:05:57 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.72 2005-11-07 22:45:25 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -519,6 +519,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl = 0;
 #endif
 
@@ -546,6 +549,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl = 0;
 #endif
 
@@ -573,6 +579,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
 #endif
 
@@ -600,6 +609,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl = 0;
 #endif
 
@@ -648,6 +660,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.avl = 0;
 #endif
 

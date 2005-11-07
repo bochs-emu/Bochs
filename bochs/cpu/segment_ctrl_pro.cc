@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.48 2005-11-05 11:39:26 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.49 2005-11-07 22:45:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,42 +33,6 @@
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 {
-#if BX_CPU_LEVEL >= 3
-  if (v8086_mode()) {
-    /* ??? don't need to set all these fields */
-    seg->selector.value = new_value;
-    seg->selector.rpl   = 3;
-    seg->cache.valid    = 1;
-    seg->cache.p        = 1;
-    seg->cache.dpl      = 3;
-    seg->cache.segment  = 1; /* regular segment */
-    if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
-      seg->cache.u.segment.executable = 1; /* code segment */
-#if BX_SUPPORT_ICACHE
-      BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
-#endif
-      invalidate_prefetch_q();
-    }
-    else
-      seg->cache.u.segment.executable = 0; /* data segment */
-    seg->cache.u.segment.c_ed = 0; /* expand up */
-    seg->cache.u.segment.r_w = 1; /* writeable */
-    seg->cache.u.segment.a = 1; /* accessed */
-    seg->cache.u.segment.base = new_value << 4;
-    seg->cache.u.segment.limit        = 0xffff;
-    seg->cache.u.segment.limit_scaled = 0xffff;
-    seg->cache.u.segment.g     = 0; /* byte granular */
-    seg->cache.u.segment.d_b   = 0; /* default 16bit size */
-#if BX_SUPPORT_X86_64
-    seg->cache.u.segment.l     = 0; /* default 16bit size */
-#endif
-    seg->cache.u.segment.avl   = 0;
-
-    return;
-  }
-#endif
-
-#if BX_CPU_LEVEL >= 2
   if (protected_mode())
   {
     if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
@@ -233,7 +197,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     }
   }
 
-  /* real mode */
+  /* real or v8086 mode */
 
   /* www.x86.org:
     According  to  Intel, each time any segment register is loaded in real
@@ -248,53 +212,45 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
     rights and segment size limit attributes from any previous setting are
     honored. */
 
-  /* ??? */
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = new_value;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1; /* regular segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable = 1; /* code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed = 0; /* expand up */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a = 1; /* accessed */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = new_value << 4;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xffff;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xffff;
-#if BX_CPU_LEVEL >= 3
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g     = 0; /* byte granular */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b   = 0; /* default 16bit size */
-#if BX_SUPPORT_X86_64
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l     = 0; /* default 16bit size */
-#endif
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl   = 0;
-#endif
+  seg->selector.value = new_value;
+  seg->selector.rpl = real_mode() ? 0 : 3;
+  seg->cache.valid = 1;
+  seg->cache.u.segment.base = new_value << 4;
+  seg->cache.segment = 1; /* regular segment */
+  seg->cache.p = 1; /* present */
 
+  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
+    seg->cache.u.segment.executable = 1; /* code segment */
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
     invalidate_prefetch_q();
   }
-  else { /* SS, DS, ES, FS, GS */
-    seg->selector.value = new_value;
-    seg->cache.valid = 1;
-    seg->cache.p = 1; // set this???
-    seg->cache.u.segment.base = new_value << 4;
-    seg->cache.segment = 1; /* regular segment */
-    seg->cache.u.segment.a = 1; /* accessed */
-    /* set G, D_B, AVL bits here ??? */
+  else {
+    seg->cache.u.segment.executable = 0; /* data segment */
   }
-#else /* 8086 */
 
-  seg->selector.value = new_value;
-  seg->cache.u.segment.base = new_value << 4;
+  /* Do not modify segment limit and AR bytes when in real mode */
+  if (real_mode()) return;
+
+  seg->cache.dpl = 3; /* we are in v8086 mode */
+  seg->cache.u.segment.c_ed = 0; /* expand up */
+  seg->cache.u.segment.r_w = 1; /* writeable */
+  seg->cache.u.segment.a = 1; /* accessed */
+  seg->cache.u.segment.limit        = 0xffff;
+  seg->cache.u.segment.limit_scaled = 0xffff;
+#if BX_CPU_LEVEL >= 3
+  seg->cache.u.segment.g     = 0; /* byte granular */
+  seg->cache.u.segment.d_b   = 0; /* default 16bit size */
+#if BX_SUPPORT_X86_64
+  seg->cache.u.segment.l     = 0; /* default 16bit size */
+#endif
+  seg->cache.u.segment.avl   = 0;
 #endif
 }
 
 #if BX_SUPPORT_X86_64
-  void
-BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
+void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
                             unsigned dpl)
 {
   bx_segment_reg_t *seg = & BX_CPU_THIS_PTR sregs[segI];
