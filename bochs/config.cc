@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.56 2005-11-06 16:48:49 vruppert Exp $
+// $Id: config.cc,v 1.57 2005-11-07 19:06:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1041,22 +1041,38 @@ void bx_init_options ()
                 "port #1 device", 
                 "Device connected to USB port #1",
                 "", BX_PATHNAME_LEN);
+        bx_options.usb[i].Ooption1 = new bx_param_string_c (
+                BXP_USBx_OPTION1(i+1), 
+                "port #1 device options", 
+                "Options for device on USB port #1",
+                "", BX_PATHNAME_LEN);
         bx_options.usb[i].Oport2 = new bx_param_string_c (
                 BXP_USBx_PORT2(i+1), 
                 "port #2 device", 
                 "Device connected to USB port #2",
                 "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 2);
+        bx_options.usb[i].Ooption2 = new bx_param_string_c (
+                BXP_USBx_OPTION2(i+1), 
+                "port #2 device options", 
+                "Options for device on USB port #2",
+                "", BX_PATHNAME_LEN);
+        deplist = new bx_list_c (BXP_NULL, 4);
         deplist->add (bx_options.usb[i].Oport1);
+        deplist->add (bx_options.usb[i].Ooption1);
         deplist->add (bx_options.usb[i].Oport2);
+        deplist->add (bx_options.usb[i].Ooption2);
         bx_options.usb[i].Oenabled->set_dependent_list (deplist);
         // add to menu
         *par_ser_ptr++ = bx_options.usb[i].Oenabled;
         *par_ser_ptr++ = bx_options.usb[i].Oport1;
+        *par_ser_ptr++ = bx_options.usb[i].Ooption1;
         *par_ser_ptr++ = bx_options.usb[i].Oport2;
+        *par_ser_ptr++ = bx_options.usb[i].Ooption2;
 
         bx_options.usb[i].Oport1->set_group (strdup(group));
+        bx_options.usb[i].Ooption1->set_group (strdup(group));
         bx_options.usb[i].Oport2->set_group (strdup(group));
+        bx_options.usb[i].Ooption2->set_group (strdup(group));
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -1791,7 +1807,9 @@ void bx_reset_options ()
   for (i=0; i<BX_N_USB_HUBS; i++) {
     bx_options.usb[i].Oenabled->reset();
     bx_options.usb[i].Oport1->reset();
+    bx_options.usb[i].Ooption1->reset();
     bx_options.usb[i].Oport2->reset();
+    bx_options.usb[i].Ooption2->reset();
   }
 
   // interface
@@ -2898,8 +2916,12 @@ parse_line_formatted(char *context, int num_params, char *params[])
         bx_options.usb[idx].Oenabled->set (atol(&params[i][8]));
       } else if (!strncmp(params[i], "port1=", 6)) {
         bx_options.usb[idx].Oport1->set (strdup(&params[i][6]));
+      } else if (!strncmp(params[i], "option1=", 6)) {
+        bx_options.usb[idx].Ooption1->set (strdup(&params[i][6]));
       } else if (!strncmp(params[i], "port2=", 6)) {
         bx_options.usb[idx].Oport2->set (strdup(&params[i][6]));
+      } else if (!strncmp(params[i], "option2=", 6)) {
+        bx_options.usb[idx].Ooption2->set (strdup(&params[i][6]));
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
         PARSE_WARN(("%s: usb ioaddr is now deprecated (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
@@ -3433,7 +3455,8 @@ bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
 {
   fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, ", port1=%s, port2=%s", opt->Oport1->getptr (), opt->Oport2->getptr ());
+    fprintf (fp, ", port1=%s, option1=%s", opt->Oport1->getptr (), opt->Ooption1->getptr ());
+    fprintf (fp, ", port2=%s, option2=%s", opt->Oport2->getptr (), opt->Ooption2->getptr ());
   }
   fprintf (fp, "\n");
   return 0;

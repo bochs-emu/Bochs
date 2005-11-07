@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.12 2005-11-05 12:57:18 vruppert Exp $
+// $Id: pciusb.h,v 1.13 2005-11-07 19:06:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    2
+#define USB_CUR_DEVS    3
 
 #define TOKEN_IN    0x69
 #define TOKEN_OUT   0xE1
@@ -82,6 +82,7 @@ struct KEYPAD {
 #define USB_DEV_TYPE_NONE    0
 #define USB_DEV_TYPE_MOUSE   1
 #define USB_DEV_TYPE_KEYPAD  2
+#define USB_DEV_TYPE_FLASH   3
 
 // set it to 1 (align on byte) and save so we can pop it
 #pragma pack(push, 1)
@@ -95,6 +96,8 @@ struct USB_DEVICE {
   Bit8u   endpt;          // which endpt to use
   unsigned state;         // the state the device is in.  DEFAULT, ADDRESS, or CONFIGURED
   bx_bool low_speed;      // 1 = ls 
+  Bit32u  scratch;        // 32-bit scratch area
+  int     fd;             // if this device accesses a file, this is the handle.
   bx_bool in_stall;       // is this device in a stall state?
   Bit8u   stall_once;     // some devices stall on the first setup packet after powerup
   struct {
@@ -370,6 +373,7 @@ private:
   bx_bool  last_connect;
   bx_bool  keyboard_connected;
   bx_bool  mouse_connected;
+  bx_bool  flash_connected;
 
   static void  init_device(Bit8u port, char *devname);
   static void  usb_set_connect_status(Bit8u port, int type, bx_bool connected);
@@ -378,6 +382,7 @@ private:
   void usb_timer(void);
   bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
   void dump_packet(Bit8u *data, unsigned size);
+  bx_bool flash_stick(Bit8u *packet, Bit16u size, bx_bool out);
   unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);

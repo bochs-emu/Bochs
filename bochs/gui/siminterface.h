@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.146 2005-10-28 13:49:24 vruppert Exp $
+// $Id: siminterface.h,v 1.147 2005-11-07 19:06:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -340,10 +340,12 @@ typedef enum {
   BXP_COM4_ENABLED,
   BXP_COM4_MODE,
   BXP_COM4_PATH,
-#define BXP_PARAMS_PER_USB_HUB 3
+#define BXP_PARAMS_PER_USB_HUB 5
   BXP_USB1_ENABLED,
   BXP_USB1_PORT1,
+  BXP_USB1_OPTION1,
   BXP_USB1_PORT2,
+  BXP_USB1_OPTION2,
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
@@ -522,8 +524,12 @@ typedef enum {
    (bx_id)(BXP_USB1_ENABLED + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
 #define BXP_USBx_PORT1(x) \
    (bx_id)(BXP_USB1_PORT1 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
+#define BXP_USBx_OPTION1(x) \
+   (bx_id)(BXP_USB1_OPTION1 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
 #define BXP_USBx_PORT2(x) \
    (bx_id)(BXP_USB1_PORT2 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
+#define BXP_USBx_OPTION2(x) \
+   (bx_id)(BXP_USB1_OPTION2 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
 
 // use x=1,2
 #define BXP_PARPORTx_ENABLED(x) \
@@ -1354,7 +1360,9 @@ typedef struct {
 typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_string_c *Oport1;
+  bx_param_string_c *Ooption1;
   bx_param_string_c *Oport2;
+  bx_param_string_c *Ooption2;
 } bx_usb_options;
 
 typedef struct {

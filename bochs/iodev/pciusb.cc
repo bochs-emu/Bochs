@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.25 2005-11-05 12:57:17 vruppert Exp $
+// $Id: pciusb.cc,v 1.26 2005-11-07 19:06:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -212,10 +212,12 @@ bx_pciusb_c::reset(unsigned type)
   for (i=0; i<BX_USB_CONFDEV; i++)
     for (j=0; j<USB_CUR_DEVS; j++) {
       memset(&BX_USB_THIS hub[i].device[j], 0, sizeof(USB_DEVICE));
+      BX_USB_THIS hub[i].device[j].fd = -1;
     }
 
   BX_USB_THIS keyboard_connected = 0;
   BX_USB_THIS mouse_connected = 0;
+  BX_USB_THIS flash_connected = 0;
 
   // include the device(s) initialize code
   #include "pciusb_devs.h"
@@ -245,6 +247,10 @@ bx_pciusb_c::init_device(Bit8u port, char *devname)
     type = USB_DEV_TYPE_KEYPAD;
     connected = 1;
     BX_USB_THIS keyboard_connected = 1;
+//} else if (!strcmp(devname, "flash")) {
+//  type = USB_DEV_TYPE_FLASH;
+//  connected = 1;
+//  BX_USB_THIS flash_connected = 1;
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
     return;
@@ -586,7 +592,7 @@ void bx_pciusb_c::usb_timer(void)
   //  *** This assumes that we can complete the frame within the 1ms time allowed ***
   // Actually, not complete, but reach the end of the frame.  This means that there may still 
   //  be TDs and QHs that were BREADTH defined and will be executed on the next cycle/iteration.
-  
+
   // *** Does Bochs interrupt this timer, or does it wait for the return before it fires the next timer????
 
   if (BX_USB_THIS busy) {
@@ -594,6 +600,7 @@ void bx_pciusb_c::usb_timer(void)
     BX_USB_THIS busy = 0;
   }
   if (BX_USB_THIS hub[0].usb_command.schedule) {
+    struct USB_DEVICE *dev = NULL;
     BX_USB_THIS busy = 1;
     bx_bool fire_int = 0;
     set_irq_level(0);  // make sure it is low
@@ -655,7 +662,7 @@ void bx_pciusb_c::usb_timer(void)
               // issue short packet?
               Bit16u r_actlen = (((td.dword1 & 0x7FF)+1) & 0x7FF);
               Bit16u r_maxlen = (((td.dword2>>21)+1) & 0x7FF);
-              BX_INFO((" r_actlen = 0x%04X r_maxlen = 0x%04X", r_actlen, r_maxlen));
+              BX_DEBUG((" r_actlen = 0x%04X r_maxlen = 0x%04X", r_actlen, r_maxlen));
               if (((td.dword2 & 0xFF) == TOKEN_IN) && spd && stk && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
                 shortpacket = 1;
                 td.dword1 |= (1<<29);
@@ -681,7 +688,7 @@ void bx_pciusb_c::usb_timer(void)
           } else {
             if (stack[stk].t) break;
           }
-          
+
         }
       }
 
@@ -718,7 +725,7 @@ void bx_pciusb_c::usb_timer(void)
 
     BX_USB_THIS busy = 0;  // ready to do next frame item
   }  // end run schedule
-  
+
   // if host turned off the schedule, set the halted bit in the status register
   // Note: Can not use an else from the if() above since the host can changed this bit
   //  while we are processing a frame.
@@ -821,7 +828,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           cnt = dev->function.device_config[dev->config].Interface[dev->Interface].endpts[0].max_size;
           switch (protocol) {
             case 1:  // keypad
-             
+
               memcpy(device_buffer, BX_USB_THIS key_pad_packet, 8);
 
               BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
@@ -843,6 +850,15 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS mouse_z = 0;
               BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
+              break;
+
+            case 0x50: // USB Mass Storage ????
+              Bit8u bulk_int_packet[1024];
+              if (flash_stick(bulk_int_packet, maxlen, 0)) {
+
+              } else {
+
+              }
               break;
 
             default:
@@ -915,6 +931,14 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_PANIC(("Mouse received and OUT packet!"));
               break;
 
+            case 0x50: // USB Mass Storage ????
+              if (flash_stick(bulk_int_packet, maxlen, 1)) {
+
+              } else {
+
+              }
+              break;
+              
             default:
               BX_PANIC(("Unknown/unsupported endpt protocol issued an Interrupt Out / Bulk packet.  protocol %i", protocol));
           }       
@@ -1072,7 +1096,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           (td->dword1 & 0x20000000)?1:0, (td->dword1 & 0x18000000)>>27, (td->dword1 & 0x04000000)?1:0, (td->dword1 & 0x02000000)?1:0, (td->dword1 & 0x01000000)?1:0, (td->dword1 & 0x00FF0000)>>16, td->dword1 & 0x000007FF,
           (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
           td->dword3));
-          
+
           switch (dev->state) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
@@ -1221,6 +1245,17 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_DEBUG(("Request: SYNCH_FRAME"));
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           }
+          break;
+        case 0xFE:
+          // The Kingston driver sends the control packet.
+          // At the moment, I haven't a clue to what it is.
+          //   are we ready.???
+          
+          dev->scratch = 0;
+          dev->function.in = (Bit8u *) &dev->scratch;
+          dev->function.in_cnt = 1;
+          
+          BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
           break;
         default:
           BX_PANIC((" **** illegal or unknown REQUEST sent to Host Controller:  %02x", data[1]));
@@ -1567,11 +1602,31 @@ bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
         if (BX_USB_THIS hub[0].usb_command.suspend) {
           BX_USB_THIS hub[0].usb_port[port].resume = 1;
           BX_USB_THIS hub[0].usb_status.resume = 1;
-          if( BX_USB_THIS hub[0].usb_enable.resume) {
+          if (BX_USB_THIS hub[0].usb_enable.resume) {
             BX_USB_THIS hub[0].usb_status.interrupt = 1;
             set_irq_level(1);
           }
         }
+
+        // If the type is a flash stick, we need to close, then re open the file connected with it.
+        // **** We current assume the flash stick is on port1 ****
+        /*
+        if (type == USB_DEV_TYPE_FLASH) {
+          if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd > -1) 
+            ::close(BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd);
+          BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd = 
+            ::open(bx_options.usb[0].Opath1->getptr(), O_RDWR | O_BINARY);
+          if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd < 0)
+            BX_PANIC(("Could not open file for USB flash stick: %s", bx_options.usb[0].Opath1->getptr()));
+        
+          // look at size of image file to calculate disk geometry
+          struct stat stat_buf;
+          int ret = fstat(BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd, &stat_buf);
+          if (ret) BX_PANIC(("fstat() returns error!"));
+          if (stat_buf.st_size != (USB_FLASH_SIZE * 0x00100000))
+            BX_PANIC(("size of disk image must be %i Megs", USB_FLASH_SIZE));
+        }
+        */
       } else {
         BX_USB_THIS hub[0].usb_port[port].status = 0;
         BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
@@ -1736,6 +1791,36 @@ bx_pciusb_c::dump_packet(Bit8u *data, unsigned size) {
   }
   if (strlen(the_packet))
     BX_DEBUG(("%s", the_packet));
+}
+
+// usb flash stick support
+// packet is the data coming in/going out
+// size is the size of the data
+// out = 1 if Host to Device, 0 it Device to Host
+  bx_bool 
+bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out) {
+  
+  // packet contains the SCSI interface command
+  dump_packet(packet, size);
+  
+  if (out) {
+
+      // TODO:
+
+      // From this point on, it is simply a SCSI command interface.
+      // We could set up the image so that we could use the existing
+      //  harddrv.cc and cdrom.cc code and our flash.img file.
+  
+      // At this point, I don't have the time to do this, but if someone
+      //  else would like to, please do.
+
+  } else {
+    
+    // For now, I will not implement the write part.
+    
+  }
+  
+  return 1;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
