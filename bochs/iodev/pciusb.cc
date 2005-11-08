@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.26 2005-11-07 19:06:05 vruppert Exp $
+// $Id: pciusb.cc,v 1.27 2005-11-08 18:49:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -82,7 +82,13 @@ bx_pciusb_c::bx_pciusb_c(void)
 
 bx_pciusb_c::~bx_pciusb_c(void)
 {
-  // nothing for now
+  //TODO:  free  BX_USB_THIS device_buffer
+
+  // close any open handles
+  for (int i=0; i<USB_CUR_DEVS; i++)
+    if (BX_USB_THIS hub[0].device[i].fd > -1) 
+      ::close(BX_USB_THIS hub[0].device[i].fd);
+
   BX_DEBUG(("Exit."));
 }
 
@@ -118,6 +124,9 @@ bx_pciusb_c::init(void)
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB");
+
+  //HACK: Turn on debug messages from the start
+  //BX_USB_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
 }
 
   void
@@ -455,7 +464,8 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value & 0xFFC0)
         BX_DEBUG(("write to status register with bits 15:6 not zero: 0x%04x", value));
 
-      BX_USB_THIS hub[0].usb_status.host_halted = (value & 0x20) ? 0: BX_USB_THIS hub[0].usb_status.host_halted;
+      // host_halted, even though not specified in the specs, is read only
+      //BX_USB_THIS hub[0].usb_status.host_halted = (value & 0x20) ? 0: BX_USB_THIS hub[0].usb_status.host_halted;
       BX_USB_THIS hub[0].usb_status.host_error = (value & 0x10) ? 0: BX_USB_THIS hub[0].usb_status.host_error;
       BX_USB_THIS hub[0].usb_status.pci_error = (value & 0x08) ? 0: BX_USB_THIS hub[0].usb_status.pci_error;
       BX_USB_THIS hub[0].usb_status.resume = (value & 0x04) ? 0: BX_USB_THIS hub[0].usb_status.resume;
@@ -543,6 +553,9 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // for now, reset the one and only
         // TODO: descriptors, etc....
         if (BX_USB_THIS hub[0].usb_port[port].reset) {
+          BX_USB_THIS hub[0].usb_port[port].suspend = 0;
+          BX_USB_THIS hub[0].usb_port[port].resume = 0;
+          BX_USB_THIS hub[0].usb_port[port].enabled = 0;
           // are we are currently connected/disconnected
           if (BX_USB_THIS hub[0].usb_port[port].status) {
             BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].connect_status = 0;
@@ -592,8 +605,6 @@ void bx_pciusb_c::usb_timer(void)
   //  *** This assumes that we can complete the frame within the 1ms time allowed ***
   // Actually, not complete, but reach the end of the frame.  This means that there may still 
   //  be TDs and QHs that were BREADTH defined and will be executed on the next cycle/iteration.
-
-  // *** Does Bochs interrupt this timer, or does it wait for the return before it fires the next timer????
 
   if (BX_USB_THIS busy) {
     BX_PANIC(("Did not complete last frame before the 1ms was over. Starting next frame."));
