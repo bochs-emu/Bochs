@@ -9,6 +9,8 @@ Detailed change log :
   - added virtual 8086 mode extensions (VME) implementation, to enable
     configure with --enable-vme (Stanislav)
   - flush caches and TLBs when executing WBINVD and INVD instructions
+  - do not modify segment limit and AR bytes when modifying segment
+    register in real mode (support for unreal mode).
 
 - CPU (x86-64) (Stanislav)
   - implemented call_far/ret_far/jmp_far instructions in long mode
