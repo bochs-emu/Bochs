@@ -26,8 +26,6 @@ TODO (know issues in CPU model):
 [!] Some of APIC functionality (like spurious interrupt vector) still
     not implemented
 
-[!] No support for Big Real Mode segmentation
-
 [!] No support of AC flag (aligment checking) and #AC exception
 
 [!] REP NOP is PAUSE (on P4/XEON)
