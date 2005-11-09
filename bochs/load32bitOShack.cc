@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.16 2005-01-19 18:20:44 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.17 2005-11-09 17:17:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,6 +40,10 @@ static Bit32u bx_load_kernel_image(char *path, Bit32u paddr);
   void
 bx_load32bitOSimagehack(void)
 {
+  if ( bx_options.load32bitOSImage.Oiolog 
+       && (bx_options.load32bitOSImage.Oiolog->getptr ()[0] != '\0')
+      ) {
+
   // Replay IO from log to initialize IO devices to
   // a reasonable state needed for the OS.  This is done
   // in lieu of running the 16-bit BIOS to init things,
@@ -75,6 +79,7 @@ bx_load32bitOSimagehack(void)
       }
     if (feof(fp)) break;
     }
+  }//if iolog file to load
 
   // Invoke proper hack depending on which OS image we're loading
   switch (bx_options.load32bitOSImage.OwhichOS->get ()) {
@@ -183,10 +188,11 @@ bx_load_linux_hack(void)
   bx_load_kernel_image( bx_options.load32bitOSImage.Opath->getptr (), 0x100000 );
 
   // Load initial ramdisk image if requested
-  if ( bx_options.load32bitOSImage.Oinitrd->getptr () )
+  char * tmpPtr = bx_options.load32bitOSImage.Oinitrd->getptr ();
+  if ( tmpPtr && tmpPtr[0] ) /* The initial value is "" and not NULL */
   {
     initrd_start = 0x00800000;  /* FIXME: load at top of memory */
-    initrd_size  = bx_load_kernel_image( bx_options.load32bitOSImage.Oinitrd->getptr (), initrd_start );
+    initrd_size  = bx_load_kernel_image( tmpPtr, initrd_start );
   }
 
   // Setup Linux startup parameters buffer

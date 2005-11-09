@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.23 2005-06-09 20:08:17 vruppert Exp $
+// $Id: dbg_main.cc,v 1.24 2005-11-09 17:17:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -410,6 +410,11 @@ process_sim2:
   bx_gui->init_signal_handlers ();
   bx_pc_system.start_timers();
 
+  // Just like in main.cc before set_init_done()
+  if (bx_options.load32bitOSImage.OwhichOS->get ()) {
+    void bx_load32bitOSimagehack(void);
+    bx_load32bitOSimagehack();
+  }
   SIM->set_init_done (1);
 
   // update headerbar buttons since drive status can change during init
