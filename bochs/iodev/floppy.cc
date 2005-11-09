@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.84 2005-10-27 07:37:46 vruppert Exp $
+// $Id: floppy.cc,v 1.85 2005-11-09 19:13:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.84 2005-10-27 07:37:46 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.85 2005-11-09 19:13:32 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -510,7 +510,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
       if (prev_normal_operation==0 && normal_operation) {
         // transition from RESET to NORMAL
-        bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index, 250, 0 );
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, 250, 0);
       } else if (prev_normal_operation && normal_operation==0) {
         // transition from NORMAL to RESET
         BX_FD_THIS s.main_status_reg = 0;
@@ -720,8 +720,8 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.DOR |= 0x10; // turn on MOTA
       else
         BX_FD_THIS s.DOR |= 0x20; // turn on MOTB
-      bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
-        bx_options.Ofloppy_command_delay->get (), 0 );
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+        bx_options.Ofloppy_command_delay->get (), 0);
       /* command head to track 0
        * controller set to non-busy
        * error condition noted in Status reg 0's equipment check bit
@@ -771,8 +771,8 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
       BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.command[2];
       /* ??? should also check cylinder validity */
-      bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
-        bx_options.Ofloppy_command_delay->get (), 0 );
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+        bx_options.Ofloppy_command_delay->get (), 0);
       /* data reg not ready, drive busy */
       BX_FD_THIS s.main_status_reg = (1 << drive);
       return;
@@ -808,8 +808,9 @@ bx_floppy_ctrl_c::floppy_command(void)
         return; // Hang controller
         }
       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive]<<2) | drive;
-      bx_pc_system.activate_timer( BX_FD_THIS s.floppy_timer_index,
-        bx_options.Ofloppy_command_delay->get (), 0 );
+      // time to read one sector at 300 rpm
+      sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, sector_time, 0);
       /* data reg not ready, controller busy */
       BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
       return;
@@ -1136,6 +1137,8 @@ bx_floppy_ctrl_c::timer()
     case 0x66:
     case 0xc6:
     case 0xe6:
+    case 0x45: /* write normal data */
+    case 0xc5:
       // transfer next sector
       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
       break;
@@ -1305,6 +1308,12 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
 
         DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
         enter_result_phase();
+      } else { // more data to transfer
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+        // time to read one sector at 300 rpm
+        sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+                                    sector_time , 0);
       }
     }
   }
