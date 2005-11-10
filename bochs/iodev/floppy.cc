@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.85 2005-11-09 19:13:32 vruppert Exp $
+// $Id: floppy.cc,v 1.86 2005-11-10 18:56:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.85 2005-11-09 19:13:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.86 2005-11-10 18:56:45 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1133,12 +1133,33 @@ bx_floppy_ctrl_c::timer()
       enter_result_phase();
       break;
 
+    case 0x45: /* write normal data */
+    case 0xc5:
+      if (BX_FD_THIS s.TC) { // Terminal Count line, done
+        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
+        BX_FD_THIS s.status_reg1 = 0;
+        BX_FD_THIS s.status_reg2 = 0;
+
+        if (bx_dbg.floppy) {
+          BX_INFO(("<<WRITE DONE>>"));
+          BX_INFO(("AFTER"));
+          BX_INFO(("  drive    = %u", (unsigned) drive));
+          BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
+          BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
+          BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
+        }
+
+        enter_result_phase();
+      } else {
+        // transfer next sector
+        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
+      }
+      break;
+
     case 0x46: /* read normal data */
     case 0x66:
     case 0xc6:
     case 0xe6:
-    case 0x45: /* write normal data */
-    case 0xc5:
       // transfer next sector
       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 1);
       break;
@@ -1292,29 +1313,12 @@ bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                   512, TO_FLOPPY);
       increment_sector(); // increment to next sector after writing current one
       BX_FD_THIS s.floppy_buffer_index = 0;
-      if (DEV_dma_get_tc()) { // Terminal Count line, done
-        BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
-        BX_FD_THIS s.status_reg1 = 0;
-        BX_FD_THIS s.status_reg2 = 0;
-
-        if (bx_dbg.floppy) {
-          BX_INFO(("<<WRITE DONE>>"));
-          BX_INFO(("AFTER"));
-          BX_INFO(("  drive    = %u", (unsigned) drive));
-          BX_INFO(("  head     = %u", (unsigned) BX_FD_THIS s.head[drive]));
-          BX_INFO(("  cylinder = %u", (unsigned) BX_FD_THIS s.cylinder[drive]));
-          BX_INFO(("  sector   = %u", (unsigned) BX_FD_THIS s.sector[drive]));
-        }
-
-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
-        enter_result_phase();
-      } else { // more data to transfer
-        DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
-        // time to read one sector at 300 rpm
-        sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
-        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
-                                    sector_time , 0);
-      }
+      BX_FD_THIS s.TC = DEV_dma_get_tc();
+      DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
+      // time to write one sector at 300 rpm
+      sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
+                                  sector_time , 0);
     }
   }
 }
