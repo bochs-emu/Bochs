@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.24 2005-11-09 17:17:06 vruppert Exp $
+// $Id: dbg_main.cc,v 1.25 2005-11-10 18:14:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1799,7 +1799,7 @@ one_more:
   bx_guard.special_unwind_stack = 0;
   int stop = 0;
   int which = -1;
-  while (!stop) {
+  while (!stop && !bx_guard.interrupt_requested) {
     // the quantum is an arbitrary number of cycles to run in each
     // processor.  In SMP mode, when this limit is reached, the
     // cpu_loop exits so that another processor can be simulated
