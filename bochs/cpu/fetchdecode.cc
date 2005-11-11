@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.86 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.87 2005-11-11 21:09:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -693,12 +693,15 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
   /* 0F 0B */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F 0C */  { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
+  /* 0F 0D */  { BxAnother, &BX_CPU_C::NOP },     // 3DNow! PREFETCH on AMD, NOP on Intel
+#else
+  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
+#endif
 #if BX_SUPPORT_3DNOW
-  /* 0F 0D */  { BxAnother, &BX_CPU_C::NOP   },   // 3DNow! PREFETCH
   /* 0F 0E */  { 0, &BX_CPU_C::EMMS },            // 3DNow! FEMMS
   /* 0F 0F */  { BxAnother | BxImmediate_Ib, NULL, Bx3DNowOpcodeInfo },
 #else
-  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
   /* 0F 0E */  { 0, &BX_CPU_C::BxError },
   /* 0F 0F */  { 0, &BX_CPU_C::BxError },
 #endif
@@ -1236,12 +1239,15 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 0A */  { 0, &BX_CPU_C::BxError },
   /* 0F 0B */  { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F 0C */  { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_X86_64 || BX_SUPPORT_3DNOW
+  /* 0F 0D */  { BxAnother, &BX_CPU_C::NOP },     // 3DNow! PREFETCH on AMD, NOP on Intel
+#else
+  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
+#endif
 #if BX_SUPPORT_3DNOW
-  /* 0F 0D */  { BxAnother, &BX_CPU_C::NOP   },   // 3DNow! PREFETCH
   /* 0F 0E */  { 0, &BX_CPU_C::EMMS },            // 3DNow! FEMMS
   /* 0F 0F */  { BxAnother | BxImmediate_Ib, NULL, Bx3DNowOpcodeInfo },
 #else
-  /* 0F 0D */  { 0, &BX_CPU_C::BxError },
   /* 0F 0E */  { 0, &BX_CPU_C::BxError },
   /* 0F 0F */  { 0, &BX_CPU_C::BxError },
 #endif
@@ -1979,7 +1985,7 @@ modrm_done:
   void
 BX_CPU_C::BxError(bxInstruction_c *i)
 {
-  BX_INFO(("BxError: instruction with op1=0x%x", i->b1()));
+  BX_INFO(("BxError: instruction with opcode=0x%x", i->b1()));
   BX_INFO(("mod was %x, nnn was %u, rm was %u", i->mod(), i->nnn(), i->rm()));
 
   BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction)"));
