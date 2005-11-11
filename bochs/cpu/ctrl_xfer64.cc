@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.39 2005-08-04 19:38:51 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.40 2005-11-11 22:02:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
 
 void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
 {
-  Bit64u new_RIP = RIP + (Bit32s) i->Id();;
+  Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
   //invalidate_prefetch_q();
 
