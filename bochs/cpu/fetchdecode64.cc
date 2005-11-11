@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.84 2005-11-11 21:09:02 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.85 2005-11-11 21:34:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -522,12 +522,12 @@ static BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {
   /* 7 */  { 0, &BX_CPU_C::BxError }
   };
 
-// 512 entries for 16bit mode
-// 512 entries for 32bit mode
-// 512 entries for 64bit mode
+// 512 entries for 16bit operand size
+// 512 entries for 32bit operand size
+// 512 entries for 64bit operand size
 
 static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
-  // 512 entries for 16bit mode
+  // 512 entries for 16bit operand size
   /* 00 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EwGw },
   /* 02 */  { BxAnother, &BX_CPU_C::ADD_GbEb },
@@ -1048,7 +1048,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FE */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffe }, 
   /* 0F FF */  { 0, &BX_CPU_C::BxError },
 
-  // 512 entries for 32bit mode
+  // 512 entries for 32bit operand size
   /* 00 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EdGd },
   /* 02 */  { BxAnother, &BX_CPU_C::ADD_GbEb },
@@ -1569,7 +1569,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F FE */  { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffe }, 
   /* 0F FF */  { 0, &BX_CPU_C::BxError },
 
-  // 512 entries for 64bit mode
+  // 512 entries for 64bit operand size
   /* 00 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EbGb },
   /* 01 */  { BxAnother | BxLockable, &BX_CPU_C::ADD_EqGq },
   /* 02 */  { BxAnother, &BX_CPU_C::ADD_GbEb },
@@ -2205,31 +2205,10 @@ another_byte:
           return(0);
 
         case 0x2e: // CS:
-          /* instruction->setSeg(BX_SEG_REG_CS); */
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
         case 0x26: // ES:
-          /* instruction->setSeg(BX_SEG_REG_ES); */
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
         case 0x36: // SS:
-          /* instruction->setSeg(BX_SEG_REG_SS); */
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
         case 0x3e: // DS:
-          /* instruction->setSeg(BX_SEG_REG_DS); */
+          /* ignore segment override prefix */
           if (ilen < remain) {
             ilen++;
             goto fetch_b1;
