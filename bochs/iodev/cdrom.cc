@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.85 2005-11-02 20:26:24 vruppert Exp $
+// $Id: cdrom.cc,v 1.86 2005-11-11 22:52:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -203,7 +203,9 @@ static HINSTANCE hASPI = NULL;
 
 #define IOCTL_CDROM_BASE              FILE_DEVICE_CD_ROM
 #define IOCTL_CDROM_READ_TOC_EX       CTL_CODE(IOCTL_CDROM_BASE, 0x0015, METHOD_BUFFERED, FILE_READ_ACCESS)
+#ifndef IOCTL_DISK_GET_LENGTH_INFO
 #define IOCTL_DISK_GET_LENGTH_INFO    CTL_CODE(IOCTL_DISK_BASE, 0x0017, METHOD_BUFFERED, FILE_READ_ACCESS)
+#endif
 
 typedef struct _CDROM_READ_TOC_EX {
     UCHAR Format    : 4;
@@ -528,7 +530,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.85 2005-11-02 20:26:24 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.86 2005-11-11 22:52:57 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
