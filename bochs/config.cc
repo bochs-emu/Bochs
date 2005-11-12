@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.57 2005-11-07 19:06:05 vruppert Exp $
+// $Id: config.cc,v 1.58 2005-11-12 10:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1623,11 +1623,6 @@ void bx_init_options ()
       100000);
   bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
   bx_options.Okeyboard_paste_delay->set_runtime_param (1);
-  bx_options.Ofloppy_command_delay = new bx_param_num_c (BXP_FLOPPY_CMD_DELAY,
-      "Floppy command delay",
-      "Time in microseconds to wait before completing some floppy commands such as read/write/seek/etc, which normally have a delay associated.  This used to be hardwired to 50,000 before.",
-      1, BX_MAX_BIT32U,
-      500);
   bx_options.cmosimage.Oenabled = new bx_param_bool_c (BXP_CMOSIMAGE_ENABLED,
       "Use a CMOS image",
       "Controls the usage of a CMOS image",
@@ -1693,7 +1688,6 @@ void bx_init_options ()
   menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_param_c *other_init_list[] = {
-      bx_options.Ofloppy_command_delay,
       bx_options.cmosimage.Oenabled,
       bx_options.cmosimage.Opath,
       bx_options.cmosimage.Ortc_init,
@@ -1713,7 +1707,6 @@ void bx_init_options ()
       bx_options.log.Oprefix,
       bx_options.Omouse_enabled,
       bx_options.Omouse_type,
-      bx_options.Ofloppy_command_delay,
       bx_options.Oprivate_colormap,
 #if BX_WITH_AMIGAOS
       bx_options.Ofullscreen,
@@ -1879,7 +1872,6 @@ void bx_reset_options ()
   bx_options.clock.Osync->reset();
 
   // other
-  bx_options.Ofloppy_command_delay->reset();
   bx_options.Oi440FXSupport->reset();
   bx_options.cmosimage.Oenabled->reset();
   bx_options.cmosimage.Opath->reset();
@@ -2751,13 +2743,7 @@ parse_line_formatted(char *context, int num_params, char *params[])
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
   } else if (!strcmp(params[0], "floppy_command_delay")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: floppy_command_delay directive: wrong # args.", context));
-    }
-    bx_options.Ofloppy_command_delay->set (atol(params[1]));
-    if (bx_options.Ofloppy_command_delay->get () < 100) {
-      PARSE_ERR(("%s: floppy_command_delay not big enough!", context));
-    }
+    PARSE_WARN(("%s: floppy_command_delay is deprecated (now using hardware timing).", context));
   } else if (!strcmp(params[0], "ips")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
@@ -3690,7 +3676,6 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
-  fprintf (fp, "floppy_command_delay: %u\n", bx_options.Ofloppy_command_delay->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());

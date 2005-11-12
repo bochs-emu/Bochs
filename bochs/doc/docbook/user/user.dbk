@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.186 2005-10-23 07:16:59 vruppert Exp $
+$Id: user.dbk,v 1.187 2005-11-12 10:38:51 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3713,18 +3713,6 @@ guest os to deal with the flow of characters.  The ideal setting
 depends on how your operating system processes characters.  The
 default of 100000 usec (.1 seconds) was chosen because it works
 consistently in Windows.
-</para>
-</section>
-
-<section><title>floppy_command_delay</title>
-<para>
-Examples:
-<screen>
-  floppy_command_delay: 50000
-</screen>
-Time in microseconds to wait before completing some  floppy  commands  such  as
-read,  write, seek,  etc.,   which  normally  have  a  delay associated.  This
-was  once  hardwired  to 50000 but now you can adjust it.
 </para>
 </section>
 
@@ -8273,7 +8261,6 @@ debug: action=ignore
 vga_update_interval: 300000
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-floppy_command_delay: 500
 ips: 1000000
 mouse: enabled=0
 private_colormap: enabled=0
@@ -8588,7 +8575,6 @@ Setup your <filename>bochsrc</filename> file. For example:
   log: ./bochs.out
   vga_update_interval: 300000
   keyboard_serial_delay: 200
-  floppy_command_delay: 500
 </programlisting>
 
 <para>
@@ -10497,7 +10483,6 @@ floppy_bootsig_check: disabled=0
 vga_update_interval: 300000
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-floppy_command_delay: 500
 ips: 3000000
 clock: sync=realtime, time0=0
 text_snapshot_check: 0

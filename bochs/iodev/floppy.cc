@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.86 2005-11-10 18:56:45 vruppert Exp $
+// $Id: floppy.cc,v 1.87 2005-11-12 10:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -97,6 +97,10 @@ static floppy_type_t floppy_type[8] = {
   {BX_FLOPPY_2_88, 80, 2, 36, 5760}
 };
 
+static Bit16u drate_in_k[4] = {
+  500, 300, 250, 1000
+};
+
 
   int
 libfloppy_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -132,7 +136,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.86 2005-11-10 18:56:45 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.87 2005-11-12 10:38:51 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -293,19 +297,14 @@ bx_floppy_ctrl_c::init(void)
   if (BX_FD_THIS s.num_supported_floppies > 0) {
     DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e) |
                           ((BX_FD_THIS s.num_supported_floppies-1) << 6) | 1);
-  }
-  else
+  } else {
     DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
-
+  }
 
   if (BX_FD_THIS s.floppy_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_FD_THIS s.floppy_timer_index =
-      bx_pc_system.register_timer( this, timer_handler,
-      bx_options.Ofloppy_command_delay->get (), 0,0, "floppy");
+      bx_pc_system.register_timer( this, timer_handler, 250, 0, 0, "floppy");
   }
-
-  BX_DEBUG(("bx_options.Ofloppy_command_delay = %u",
-    (unsigned) bx_options.Ofloppy_command_delay->get ()));
 }
 
 
@@ -338,6 +337,7 @@ bx_floppy_ctrl_c::reset(unsigned type)
       }
     BX_FD_THIS s.data_rate = 0; /* 500 Kbps */
     BX_FD_THIS s.non_dma = 0;
+    BX_FD_THIS s.SRT = 0;
   } else {
     BX_INFO(("controller reset in software"));
   }
@@ -346,7 +346,7 @@ bx_floppy_ctrl_c::reset(unsigned type)
     BX_FD_THIS s.cylinder[i] = 0;
     BX_FD_THIS s.head[i] = 0;
     BX_FD_THIS s.sector[i] = 0;
-    }
+  }
 
   DEV_pic_lower_irq(6);
   DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
@@ -656,13 +656,12 @@ bx_floppy_ctrl_c::floppy_command(void)
            " external environment"));
 #else
   unsigned i, no_cl_reset = 0;
-  Bit8u step_rate_time;
   Bit8u head_unload_time;
   Bit8u head_load_time;
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
   Bit8u sector_size, data_length;
-  Bit32u logical_sector, sector_time;
+  Bit32u logical_sector, sector_time, step_delay;
   
   // on hardware I checked, the FDC does not reset the change line on some commands (ben lunt)
   if ((BX_FD_THIS s.command[0] == 0x04) || (BX_FD_THIS s.command[0] == 0x4A)) no_cl_reset = 1;
@@ -685,7 +684,7 @@ bx_floppy_ctrl_c::floppy_command(void)
     case 0x03: // specify
       // execution: specified parameters are loaded
       // result: no result bytes, no interrupt
-      step_rate_time = BX_FD_THIS s.command[1] >> 4;
+      BX_FD_THIS s.SRT = BX_FD_THIS s.command[1] >> 4;
       head_unload_time = BX_FD_THIS s.command[1] & 0x0f;
       head_load_time = BX_FD_THIS s.command[2] >> 1;
       BX_FD_THIS s.non_dma = BX_FD_THIS s.command[2] & 0x01;
@@ -720,8 +719,8 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.DOR |= 0x10; // turn on MOTA
       else
         BX_FD_THIS s.DOR |= 0x20; // turn on MOTB
-      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
-        bx_options.Ofloppy_command_delay->get (), 0);
+      step_delay = calculate_step_delay(drive, 0);
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, step_delay, 0);
       /* command head to track 0
        * controller set to non-busy
        * error condition noted in Status reg 0's equipment check bit
@@ -769,10 +768,10 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.DOR |= drive;
 
       BX_FD_THIS s.head[drive] = (BX_FD_THIS s.command[1] >> 2) & 0x01;
-      BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.command[2];
+      step_delay = calculate_step_delay(drive, BX_FD_THIS s.command[2]);
+      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, step_delay, 0);
       /* ??? should also check cylinder validity */
-      bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index,
-        bx_options.Ofloppy_command_delay->get (), 0);
+      BX_FD_THIS s.cylinder[drive] = BX_FD_THIS s.command[2];
       /* data reg not ready, drive busy */
       BX_FD_THIS s.main_status_reg = (1 << drive);
       return;
@@ -1778,3 +1777,16 @@ bx_floppy_ctrl_c::enter_idle_phase(void)
   BX_FD_THIS s.floppy_buffer_index = 0;
 }
 
+Bit32u bx_floppy_ctrl_c::calculate_step_delay(Bit8u drive, Bit8u new_cylinder)
+{
+  Bit8u steps;
+  Bit32u one_step_delay;
+
+  if (new_cylinder == BX_FD_THIS s.cylinder[drive]) {
+    steps = 1;
+  } else {
+    steps = abs(new_cylinder - BX_FD_THIS s.cylinder[drive]);
+  }
+  one_step_delay = ((BX_FD_THIS s.SRT ^ 0x0f) + 1) * 500000 / drate_in_k[BX_FD_THIS s.data_rate];
+  return (steps * one_step_delay);
+}

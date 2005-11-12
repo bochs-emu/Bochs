@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.147 2005-11-07 19:06:05 vruppert Exp $
+// $Id: siminterface.h,v 1.148 2005-11-12 10:38:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -152,7 +152,6 @@ typedef enum {
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,
-  BXP_FLOPPY_CMD_DELAY,
   BXP_FLOPPYA_DEVTYPE,
   BXP_FLOPPYA_PATH,
   BXP_FLOPPYA_TYPE,
