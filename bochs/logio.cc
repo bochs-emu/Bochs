@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.49 2004-12-13 19:10:31 vruppert Exp $
+// $Id: logio.cc,v 1.50 2005-11-12 12:27:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -250,7 +250,7 @@ int logfunctions::default_onoff[N_LOGLEV] = {
   ACT_IGNORE,  // ignore debug
   ACT_REPORT,  // report info
   ACT_REPORT,  // report error
-#if BX_WITH_WX
+#if BX_WITH_WX || BX_WITH_WIN32 || BX_WITH_X11
   ACT_ASK,      // on panic, ask user what to do
 #else
   ACT_FATAL,    // on panic, quit
