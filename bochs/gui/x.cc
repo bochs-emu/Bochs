@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.95 2005-10-28 17:17:34 vruppert Exp $
+// $Id: x.cc,v 1.96 2005-11-12 16:09:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -640,7 +640,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     }
 
   new_gfx_api = 1;
-  user_dialog = 1;
+  dialog_caps |= BX_GUI_DLG_USER;
 }
 
   void

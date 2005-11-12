@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.48 2005-10-21 18:00:17 vruppert Exp $
+// $Id: gui.h,v 1.49 2005-11-12 16:09:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,13 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 #define BX_MAX_STATUSITEMS 10
+
+#define BX_GUI_DLG_FLOPPY   0x01
+#define BX_GUI_DLG_CDROM    0x02
+#define BX_GUI_DLG_SNAPSHOT 0x04
+#define BX_GUI_DLG_RUNTIME  0x08
+#define BX_GUI_DLG_USER     0x10
+#define BX_GUI_DLG_ALL      0x1F
 
 typedef struct {
   Bit16u  start_address;
@@ -165,7 +172,7 @@ protected:
   Bit16u host_pitch;
   Bit8u host_bpp;
   Bit8u *framebuffer;
-  bx_bool user_dialog;
+  Bit32u dialog_caps;
 };
 
 

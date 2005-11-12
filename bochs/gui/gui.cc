@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.86 2005-10-22 08:07:53 vruppert Exp $
+// $Id: gui.cc,v 1.87 2005-11-12 16:09:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,7 +116,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS host_xres = 640;
   BX_GUI_THIS host_yres = 480;
   BX_GUI_THIS host_bpp = 8;
-  BX_GUI_THIS user_dialog = 0;
+  BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME;
 
   specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
@@ -275,9 +275,7 @@ bx_gui_c::floppyA_handler(void)
 {
   if (bx_options.floppya.Odevtype->get() == BX_FLOPPY_NONE)
     return; // no primary floppy device present
-#ifdef WIN32
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up
     // a dialog asking what disk image you want to switch to.
     int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
@@ -286,7 +284,6 @@ bx_gui_c::floppyA_handler(void)
     }
     return;
   }
-#endif
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
   DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
   BX_GUI_THIS update_drive_status_buttons ();
@@ -297,9 +294,7 @@ bx_gui_c::floppyB_handler(void)
 {
   if (bx_options.floppyb.Odevtype->get() == BX_FLOPPY_NONE)
     return; // no secondary floppy device present
-#ifdef WIN32
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up
     // a dialog asking what disk image you want to switch to.
     int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
@@ -308,7 +303,6 @@ bx_gui_c::floppyB_handler(void)
     }
     return;
   }
-#endif
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
   BX_GUI_THIS update_drive_status_buttons ();
@@ -318,9 +312,7 @@ bx_gui_c::floppyB_handler(void)
 bx_gui_c::cdromD_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
-#ifdef WIN32
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_CDROM) {
     // instead of just toggling the status, call win32dialog to bring up 
     // a dialog asking what disk image you want to switch to.
     // This code handles the first cdrom only. The cdrom drives #2, #3 and
@@ -334,7 +326,6 @@ bx_gui_c::cdromD_handler(void)
     }
     return;
   }
-#endif
   BX_GUI_THIS cdromD_status =
     DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
   BX_GUI_THIS update_drive_status_buttons ();
@@ -470,13 +461,7 @@ bx_gui_c::snapshot_handler(void)
   }
   //FIXME
   char filename[BX_PATHNAME_LEN];
-#ifdef WIN32
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
-#else
-  if (!strcmp(bx_options.Osel_config->get_choice(bx_options.Osel_config->get()),
-              "wx")) {
-#endif
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SNAPSHOT) {
     int ret = SIM->ask_filename (filename, sizeof(filename),
                                  "Save snapshot as...", "snapshot.txt",
                                  bx_param_string_c::SAVE_FILE_DIALOG);
@@ -516,8 +501,7 @@ bx_gui_c::paste_handler(void)
   void
 bx_gui_c::config_handler(void)
 {
-  if (strcmp(bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()),
-              "rfb")) {
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_RUNTIME) {
     SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
   }
 }
@@ -551,7 +535,7 @@ bx_gui_c::userbutton_handler(void)
   char *ptr;
   int i, len = 0, ret = 1;
 
-  if (BX_GUI_THIS user_dialog) {
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER) {
     ret = SIM->ask_param (BXP_USER_SHORTCUT);
   }
   strcpy(user_shortcut, bx_options.Ouser_shortcut->getptr());

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.44 2005-06-09 20:08:17 vruppert Exp $
+// $Id: rfb.cc,v 1.45 2005-11-12 16:09:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -282,6 +282,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   if (timeout < 0) BX_PANIC(("timeout! no client present"));
 
   new_gfx_api = 1;
+  dialog_caps = 0;
 }
 
 void rfbSetStatusText(int element, const char *text, bx_bool active)

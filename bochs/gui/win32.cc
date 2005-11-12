@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.98 2005-10-22 11:00:00 vruppert Exp $
+// $Id: win32.cc,v 1.99 2005-11-12 16:09:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -682,7 +682,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   }
 
   win32_init_notify_callback();
-  user_dialog = 1;
+  dialog_caps = BX_GUI_DLG_ALL;
 }
 
 void resize_main_window()
