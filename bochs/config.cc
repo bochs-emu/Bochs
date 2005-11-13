@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.58 2005-11-12 10:38:51 vruppert Exp $
+// $Id: config.cc,v 1.59 2005-11-13 14:26:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1095,7 +1095,7 @@ void bx_init_options ()
   bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
       "Enable i440FX PCI Support",
       "Controls whether to emulate the i440FX PCI chipset",
-      0);
+      BX_SUPPORT_PCI);
   *pci_conf_ptr++ = bx_options.Oi440FXSupport;
   // pci slots
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
@@ -1137,7 +1137,7 @@ void bx_init_options ()
       "VGA Update Interval",
       "Number of microseconds between VGA updates",
       1, BX_MAX_BIT32U,
-      25000);
+      40000);
   bx_options.Ovga_update_interval->set_handler (bx_param_handler);
   bx_options.Ovga_update_interval->set_runtime_param (1);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
@@ -1834,10 +1834,6 @@ void bx_reset_options ()
   bx_options.pnic.Oethdev->reset();
   bx_options.pnic.Oscript->reset();
 
-  // pcidev
-  bx_options.pcidev.Ovendor->reset();
-  bx_options.pcidev.Odevice->reset();
-  
   // SB16
   bx_options.sb16.Oenabled->reset();
   bx_options.sb16.Omidifile->reset();
@@ -1871,8 +1867,18 @@ void bx_reset_options ()
   bx_options.clock.Otime0->reset();
   bx_options.clock.Osync->reset();
 
-  // other
+  // PCI
   bx_options.Oi440FXSupport->reset();
+  for (i=0; i<BX_N_PCI_SLOTS; i++) {
+    bx_options.pcislot[i].Oused->reset();
+    bx_options.pcislot[i].Odevname->reset();
+  }
+
+  // pcidev
+  bx_options.pcidev.Ovendor->reset();
+  bx_options.pcidev.Odevice->reset();
+
+  // other
   bx_options.cmosimage.Oenabled->reset();
   bx_options.cmosimage.Opath->reset();
   bx_options.cmosimage.Ortc_init->reset();
@@ -2917,38 +2923,22 @@ parse_line_formatted(char *context, int num_params, char *params[])
       }
     }
   } else if (!strcmp(params[0], "i440fxsupport")) {
-    if (num_params < 2) {
-      PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
-      }
-    if (strncmp(params[1], "enabled=", 8)) {
-      PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
-      }
-    if (params[1][8] == '0')
-      bx_options.Oi440FXSupport->set (0);
-    else if (params[1][8] == '1')
-      bx_options.Oi440FXSupport->set (1);
-    else {
-      PARSE_ERR(("%s: i440FXSupport directive malformed.", context));
-      }
-    if (num_params > 2) {
-      for (i=2; i<num_params; i++) {
-        if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
-          slot = atol(&params[i][4]) - 1;
-          if ((slot >= 0) && (slot < 5)) {
-            bx_options.pcislot[slot].Odevname->set (strdup(&params[i][6]));
-            bx_options.pcislot[slot].Oused->set (strlen(params[i]) > 6);
-            }
-          else {
-            BX_ERROR(("%s: unknown pci slot number ignored.", context));
-            }
-          }
-        else {
-          BX_ERROR(("%s: unknown parameter for pci slot ignored.", context));
-          }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "enabled=", 8)) {
+        bx_options.Oi440FXSupport->set (atol(&params[i][8]));
+      } else if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
+        slot = atol(&params[i][4]) - 1;
+        if ((slot >= 0) && (slot < 5)) {
+          bx_options.pcislot[slot].Odevname->set (strdup(&params[i][6]));
+          bx_options.pcislot[slot].Oused->set (strlen(params[i]) > 6);
+        } else {
+          BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
+      } else {
+        PARSE_ERR(("%s: i440fxsupport: unknown parameter '%s'.", context, params[i]));
       }
     }
-  else if (!strcmp(params[0], "pcidev")) {
+  } else if (!strcmp(params[0], "pcidev")) {
     if (num_params != 3) {
       PARSE_ERR(("%s: pcidev directive malformed.", context));
     }

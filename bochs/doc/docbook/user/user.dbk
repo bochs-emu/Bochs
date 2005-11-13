@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.187 2005-11-12 10:38:51 vruppert Exp $
+$Id: user.dbk,v 1.188 2005-11-13 14:26:02 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -373,8 +373,8 @@ currently work with.
   <row>
     <entry>Enhanced BIOS</entry>
     <entry>Yes</entry>
-    <entry>Implements ElTorito, EDD v3.0, basic PCIBIOS features and the
-    PCI interrupt routing table.
+    <entry>Implements ElTorito, EDD v3.0, basic APM features, basic PCIBIOS features
+    and the PCI interrupt routing table.
     </entry>
   </row>
   <row>
@@ -488,11 +488,10 @@ currently work with.
   </row>
   <row>
     <entry>PCI</entry>
-    <entry>incomplete</entry>
+    <entry>Yes</entry>
     <entry>Emulates most of the i440FX PCI chipset. The Host-to-PCI bridge
     (PMC/DBX), the PCI-to-ISA bridge and the PCI IDE controller (PIIX3) are
-    available. For PCI cards there are 5 PCI slots supported. PCI IDE currently
-    does not support Busmaster-DMA.
+    available. For PCI cards there are 5 PCI slots supported.
     </entry>
   </row>
   <row>
@@ -1291,7 +1290,7 @@ you are a Bochs expert.
 If you choose the ZIP package you need a tool like WinZip to unpack the archive.
 Note that you have to create a registry key for Bochs if you want to use the
 environment variable $BXSHARE in your config file. The name of the key is
-<varname>HKEY_LOCAL_MACHINE\Software\Bochs 2.2.pre3</varname> (the Bochs version may differ).
+<varname>HKEY_LOCAL_MACHINE\Software\Bochs 2.2.1</varname> (the Bochs version may differ).
 Edit the default value of this key and enter the path to your Bochs installation.
 For more information on environment variables see the section <link
 linkend="bochsrc">bochsrc</link>.
@@ -2306,8 +2305,9 @@ turn it off.
     <row>
       <entry>--enable-usb</entry>
       <entry>no</entry>
-      <entry>Enable limited i440FX PCI USB support. This is not complete.
-          Don't use this option yet.</entry>
+      <entry>
+        Enable limited i440FX PCI USB support. This is not yet complete.
+      </entry>
     </row>
     <row>
       <entry>--enable-4meg-pages</entry>
@@ -3680,11 +3680,11 @@ are in the usual "property=value" format.
 <para>
 Examples:
 <screen>
+  vga_update_interval: 40000 # default
   vga_update_interval: 250000
 </screen>
 Video memory is scanned for updates and screen updated every so many virtual
-seconds. The default is 300000, about 3Hz. This is generally plenty.
-Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
+seconds. Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
 to be as close to the number of emulated instructions-per-second your workstation
 can do, for this to be accurate.
 </para>
@@ -3694,7 +3694,7 @@ can do, for this to be accurate.
 <para>
 Example:
 <screen>
-  keyboard_serial_delay: 200
+  keyboard_serial_delay: 250 # default
 </screen>
 Approximate time in microseconds that it takes one character to be
 transfered from the keyboard to controller over the serial path.
@@ -3705,7 +3705,7 @@ transfered from the keyboard to controller over the serial path.
 <para>
 Example:
 <screen>
-  keyboard_paste_delay: 100000
+  keyboard_paste_delay: 100000 # default
 </screen>
 Approximate time in microseconds between attempts to paste
 characters to the keyboard controller. This leaves time for the
@@ -3720,7 +3720,8 @@ consistently in Windows.
 <para>
 Examples:
 <screen>
-  ips: 1000000
+  ips: 2000000 # default
+  ips: 10000000
 </screen>
 Emulated Instructions Per Second.  This is the number of IPS that Bochs is
 capable of running on your machine.  You can recompile Bochs with
@@ -3840,7 +3841,7 @@ turns on this feature and 0 turns it off.
 <para>
 Examples:
 <screen>
-  i440fxsupport: enabled=1
+  i440fxsupport: enabled=1 # default if compiled with PCI support
   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 </screen>
 This option controls the presence of the i440FX PCI chipset. You can also
@@ -3882,8 +3883,8 @@ Example:
 <screen>
   usb1: enabled=1, port1=mouse, port2=keypad
 </screen>
-This option controls the presence of the USB root hub which is a part of the i440FX PCI
-chipset.
+This option controls the presence of the USB root hub which is a part of the
+i440FX PCI chipset.
 </para>
 <para>
 With the port<replaceable>X</replaceable> option you can connect devices
@@ -3929,7 +3930,8 @@ ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 
 ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
-are IRQ conflicts.
+are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
+a PCI slot.
 
 mac: The MAC address MUST NOT match the address of any machine on the net.
 Also, the first byte must be an even number (bit 0 set means a multicast

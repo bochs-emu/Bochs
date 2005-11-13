@@ -475,10 +475,10 @@ parport1: enabled=1, file="parport.out"
 #=======================================================================
 # VGA_UPDATE_INTERVAL:
 # Video memory is scanned for updates and screen updated every so many
-# virtual seconds.  The default is 300000, about 3Hz.  This is generally
-# plenty.  Keep in mind that you must tweak the 'ips:' directive
-# to be as close to the number of emulated instructions-per-second
-# your workstation can do, for this to be accurate.
+# virtual seconds.  The default is 40000, about 25Hz. Keep in mind that
+# you must tweak the 'ips:' directive to be as close to the number of
+# emulated instructions-per-second your workstation can do, for this
+# to be accurate.
 #
 # Examples:
 #   vga_update_interval: 250000

@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "23 Oct 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "13 Nov 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -485,14 +485,12 @@ one line in the actual bochsrc file.
 
 .TP
 .I "vga_update_interval:"
-Video memory is scanned for updates and screen
-updated  every so many virtual  seconds.   The
-default  is  300000,   about  3Hz.    This  is
-generally plenty.  Keep in mind that you  must
-tweak  the 'ips:' directive to be as close  to
-the number of emulated instructions-per-second
-your  workstation  can  do,  for  this  to  be
-accurate.
+Video memory is scanned for updates and screen updated
+every so many virtual seconds. The default value is
+40000, about 25Hz. Keep in mind that you  must tweak
+the 'ips:' directive to be as close  to the number of
+emulated instructions-per-second your  workstation can
+do, for this to be accurate.
 
 Example:
   vga_update_interval: 250000
@@ -647,6 +645,7 @@ Defines the characteristics of an attached ne2000 isa card :
 
 ioaddr, irq:
 You probably won't need to change ioaddr and irq, unless there are IRQ conflicts.
+These parameters are ignored if the NE2000 is assigned to a PCI slot.
 
 mac:
 The MAC address MUST NOT match the address of any machine on the net.
@@ -668,9 +667,11 @@ If you don't want to make connections to any physical networks,
 you can use the following 'ethmod's to simulate a virtual network.
  - null   : All packets are discarded, but logged to a few files
  - arpback: ARP is simulated (disabled by default)
- - vnet   : ARP, ICMP-echo(ping) and DHCP are simulated
+ - vnet   : ARP, ICMP-echo(ping), DHCP and TFTP are simulated
             The virtual host uses 192.168.10.1
             DHCP assignes 192.168.10.2 to the guest
+            The TFTP server use ethdev for the root directory and doesn't
+            overwrite files
 
 ethdev:
 The ethdev value is the name of the network interface on your host
@@ -693,6 +694,7 @@ Examples:
   ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
   ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
   ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 
 .TP
 .I "keyboard_mapping:"
