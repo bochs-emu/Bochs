@@ -43,10 +43,12 @@ Detailed change log :
     - disk image size limit changed from 32 to 127 GB
   - floppy
     - fixes for OS/2 (patch by Robin Kay)
-    - more accurate timing for read data and format track commands using a motor
-      speed of 300 RPM
     - disk change line behaviour fixed (patch by Ben Lunt)
     - end-of-track (EOT) condition handling implemented
+    - more accurate timing for read/write data and format track commands using
+      a motor speed of 300 RPM
+    - timing of recalibrate and seek commands now depends on the step rate,
+      date rate and the steps to do
   - cmos
     - RTC 12-hour and binary mode implemented
     - number of CMOS registers changed from 64 to 128
@@ -68,6 +70,11 @@ Detailed change log :
     - runtime dialog is now a property sheet
   - x11
     - simple dialog boxes for the "ask" and "user shortcut" feature implemented
+
+- configuration interface
+  - ask dialog is now enabled by default for win32, wx and x display libraries
+  - bochsrc option floppy_command_delay is obsolete now (floppy timing now based
+    on hardware specs)
 
 - System BIOS
   - PCI i/o and memory base address initialization added
