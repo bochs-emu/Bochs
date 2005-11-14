@@ -133,7 +133,11 @@ struct BxDisasmOpcodeInfo_t
 class disassembler {
 public:
   disassembler() { set_syntax_intel(); }
-  unsigned disasm(bx_bool is_32, bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
+
+  unsigned disasm16(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
+  unsigned disasm32(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
+
+  unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
 
   void set_syntax_intel();
   void set_syntax_att  ();

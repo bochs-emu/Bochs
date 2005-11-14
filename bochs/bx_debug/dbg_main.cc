@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.25 2005-11-10 18:14:18 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.26 2005-11-14 18:09:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1943,7 +1943,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
      Base=BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value<<4;
     }
 
-    ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+    ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code, 0 /* is_64 */,
       Base, BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
     // Note: it would be nice to display only the modified registers here, the easy
@@ -3283,7 +3283,7 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
 	  dis_size = 32;
       }
       BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
-      ilen = bx_disassemble.disasm(dis_size==32,
+      ilen = bx_disassemble.disasm(dis_size==32, dis_size==32
         0, (Bit32u)range.from, bx_disasm_ibuf, bx_disasm_tbuf);
 
       char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)range.from, 0);
@@ -3295,14 +3295,14 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
       for (unsigned j=0; j<ilen; j++)
         dbg_printf ( "%02x", (unsigned) bx_disasm_ibuf[j]);
       dbg_printf ( "\n");
-      }
+    }
     else {
       dbg_printf ( "??? (physical address not available)\n");
       ilen = 0; // keep compiler happy
       range.from = range.to; // bail out
-      }
-      range.from += ilen;
-    } while ((range.from < range.to) && numlines > 0);
+    }
+    range.from += ilen;
+  } while ((range.from < range.to) && numlines > 0);
 }
 
 void bx_dbg_instrument_command(const char *comm)

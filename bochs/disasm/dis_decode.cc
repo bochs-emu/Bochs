@@ -5,10 +5,6 @@
 #include "disasm.h"
 #include "dis_tables.h"
 
-/* ******************** */
-// INSTRUCTION PREFIXES //
-/* ******************** */
-
 static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f          */
   /*       -------------------------------          */
@@ -50,35 +46,17 @@ static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
 };
 
-/*
- * Group 1:
- * 
- *      F0h - LOCK
- *      F2h - REPNE/REPZ (used only with string instructions)
- *      F3h - REP or REPE/REPZ (used only with string instructions)
- * 
- * Group 2 :
- *
- *      - segment override prefixes
- *              2Eh - CS segment override
- *              36h - SS segment override
- *              3Eh - DS segment override
- *              26h - ES segment override
- *              64h - FS segment override
- *              65h - GS segment override
- *
- *      - branch hints
- *              2Eh - branch not taken (branch hint for Jcc instructions only)
- *              3Eh - branch taken (branch hint for Jcc instructions only)
- *
- * Group 3:
- *
- *      66h - operand size override prefix
- *      67h - address size override prefix
- */
+unsigned disassembler::disasm16(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+{
+  return disasm(0, 0, base, ip, instr, disbuf);
+}
 
-unsigned disassembler::disasm(bx_bool is_32, 
-        bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+unsigned disassembler::disasm32(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+{
+  return disasm(1, 0, base, ip, instr, disbuf);
+}
+
+unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
 {
   os_32 = is_32;
   as_32 = is_32;
