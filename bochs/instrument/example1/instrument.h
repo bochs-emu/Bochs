@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.12 2005-07-07 18:40:35 sshwarts Exp $
+// $Id: instrument.h,v 1.13 2005-11-14 18:25:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ public:
   unsigned opcode_size;
   unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
-  bx_bool  is32;
+  bx_bool  is32, is64;
 
   /* memory accesses */
   unsigned num_data_accesses;
@@ -102,7 +102,7 @@ public:
   void bx_instr_ucnear_branch(unsigned what, bx_address new_eip);
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
-  void bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32);
+  void bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
   void bx_instr_fetch_decode_completed(const bxInstruction_c *i);
 
   void bx_instr_prefix(Bit8u prefix);
@@ -139,8 +139,8 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip) icpu[cpu_id].bx_instr_far_branch(what, new_cs, new_eip)
 
 /* decoding completed */
-#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32) \
-                       icpu[cpu_id].bx_instr_opcode(opcode, len, is32)
+#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) \
+                       icpu[cpu_id].bx_instr_opcode(opcode, len, is32, is64)
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i) \
                        icpu[cpu_id].bx_instr_fetch_decode_completed(i)
      
@@ -204,7 +204,7 @@ extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
 #  define BX_INSTR_FAR_BRANCH(cpu_id, what, new_cs, new_eip)
 
 /* decoding completed */
-#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32) 
+#  define BX_INSTR_OPCODE(cpu_id, opcode, len, is32, is64) 
 #  define BX_INSTR_FETCH_DECODE_COMPLETED(cpu_id, i)
      
 /* prefix byte decoded */

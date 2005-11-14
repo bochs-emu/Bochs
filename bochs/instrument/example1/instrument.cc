@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.8 2005-04-29 21:28:43 sshwarts Exp $
+// $Id: instrument.cc,v 1.9 2005-11-14 18:25:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,7 @@
 
 bxInstrumentation icpu[BX_SMP_PROCESSORS];
 
+static disassembler bx_disassembler;
 
 void bxInstrumentation::bx_instr_reset()
 {
@@ -48,7 +49,7 @@ void bxInstrumentation::bx_instr_new_instruction()
   {
     char disasm_tbuf[512];	// buffer for instruction disassembly
     unsigned length = opcode_size, n;
-    bx_disassemble.disasm(is32, 0, 0, opcode, disasm_tbuf);
+    bx_disassemble.disasm(is32, is64, 0, 0, opcode, disasm_tbuf);
     if(length != 0)	
     {
       fprintf(stderr, "----------------------------------------------------------\n");
@@ -120,7 +121,7 @@ void bxInstrumentation::bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_add
   branch_taken(new_eip);
 }
 
-void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32)
+void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64)
 {
   if (!active) 
   {
@@ -133,6 +134,7 @@ void bxInstrumentation::bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is3
   }
   
   is32 = is32;
+  is64 = is64;
   opcode_size = len;
 }
 

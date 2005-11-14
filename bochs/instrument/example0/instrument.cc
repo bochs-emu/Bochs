@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.12 2005-04-29 21:28:43 sshwarts Exp $
+// $Id: instrument.cc,v 1.13 2005-11-14 18:25:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,13 +39,14 @@
 // start this at 1 instead of 0.
 static bx_bool active = 1;
 
+static disassembler bx_disassembler;
 
 static struct instruction_t {
   bx_bool  valid;        // is current instruction valid
   unsigned opcode_size;
   unsigned nprefixes;
   Bit8u    opcode[MAX_OPCODE_SIZE];
-  bx_bool  is32;
+  bx_bool  is32, is64;
   unsigned num_data_accesses;
   struct {
     bx_address laddr; // linear address
@@ -84,7 +85,7 @@ void bx_instr_new_instruction(unsigned cpu)
     char disasm_tbuf[512];	// buffer for instruction disassembly
     unsigned length = i->opcode_size, n;
 
-    bx_disassemble.disasm(i->is32, 0, 0, i->opcode, disasm_tbuf);
+    bx_disassembler.disasm(i->is32, i->is64, 0, 0, i->opcode, disasm_tbuf);
  
     if(length != 0)	
     {
@@ -169,7 +170,7 @@ void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u new_cs, bx_address 
   branch_taken(cpu, new_eip);
 }
 
-void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32)
+void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64)
 {
   if (!active) 
   {
@@ -182,6 +183,7 @@ void bx_instr_opcode(unsigned cpu, Bit8u *opcode, unsigned len, bx_bool is32)
   }
   
   instruction[cpu].is32 = is32;
+  instruction[cpu].is64 = is64;
   instruction[cpu].opcode_size = len;
 }
 
