@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.17 2004-08-06 15:49:54 vruppert Exp $
+// $Id: iodebug.cc,v 1.18 2005-11-14 19:03:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 
@@ -162,10 +162,6 @@ void bx_iodebug_c::write( Bit32u addr, Bit32u dvalue, unsigned int io_len )
 // Static function
 void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
-  Bit32u data32;
-  Bit16u data16;
-  Bit8u  data8;
-
   unsigned int area;
   if( !bx_iodebug_s.enabled ) return;
 
@@ -175,8 +171,8 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
   {
     area--;
 #if BX_DEBUGGER
-  fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
-  bx_guard.interrupt_requested=1;
+    fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
+    bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
              "IODEBUG write to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
@@ -186,9 +182,9 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
 
-    data32 = * (Bit32u *)data;
-    data16 = (Bit16u)data32;
-    data8  = (Bit8u)data32;
+    Bit32u data32 = * (Bit32u *)data;
+    Bit16u data16 = (Bit16u)data32;
+    Bit8u  data8  = (Bit8u)data32;
 
     switch(len)
     {
@@ -213,10 +209,6 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
 
 void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
-  Bit32u data32;
-  Bit16u data16;
-  Bit8u  data8;
-
   unsigned int area;
   if( !bx_iodebug_s.enabled ) return;
 
@@ -226,8 +218,8 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   {
     area--;
 #if BX_DEBUGGER
-  fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
-  bx_guard.interrupt_requested=1;
+    fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
+    bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
              "IODEBUG read to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
@@ -236,9 +228,10 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
-    data32 = * (Bit32u *)data;
-    data16 = (Bit16u)data32;
-    data8  = (Bit8u)data32;
+
+    Bit32u data32 = * (Bit32u *)data;
+    Bit16u data16 = (Bit16u)data32;
+    Bit8u  data8  = (Bit8u)data32;
 
     switch(len)
     {
