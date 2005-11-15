@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.27 2005-11-08 18:49:45 vruppert Exp $
+// $Id: pciusb.cc,v 1.28 2005-11-15 17:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1551,6 +1551,8 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x20:
           value8 = (value8 & 0xfc) | 0x01;
         case 0x21:
+        case 0x22:
+        case 0x23:
           baseaddr_change |= (value8 != oldval);
         default:
           BX_USB_THIS hub[0].pci_conf[address+i] = value8;
@@ -1560,11 +1562,12 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       strcat(szTmp, szTmp2);
     }
     if (baseaddr_change) {
-      DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
-                          &BX_USB_THIS hub[0].base_ioaddr,
-                          &BX_USB_THIS hub[0].pci_conf[0x20],
-                          32, &usb_iomask[0], "USB Hub #1");
-      BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
+      if (DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
+                             &BX_USB_THIS hub[0].base_ioaddr,
+                             &BX_USB_THIS hub[0].pci_conf[0x20],
+                             32, &usb_iomask[0], "USB Hub #1")) {
+         BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
+      }
     }
   }
   strrev(szTmp);

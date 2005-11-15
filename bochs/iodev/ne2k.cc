@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.76 2005-09-23 19:31:12 vruppert Exp $
+// $Id: ne2k.cc,v 1.77 2005-11-15 17:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1293,7 +1293,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.76 2005-09-23 19:31:12 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.77 2005-11-15 17:19:28 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
@@ -1494,7 +1494,7 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
 
-  if ((address > 0x11) && (address < 0x34))
+  if ((address > 0x13) && (address < 0x34))
     return;
   if (io_len <= 4) {
     for (unsigned i=0; i<io_len; i++) {
@@ -1517,6 +1517,8 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x10:
           value8 = (value8 & 0xfc) | 0x01;
         case 0x11:
+        case 0x12:
+        case 0x13:
           baseaddr_change |= (value8 != oldval);
         default:
           BX_NE2K_THIS s.pci_conf[address+i] = value8;
@@ -1525,11 +1527,12 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       }
     }
     if (baseaddr_change) {
-      DEV_pci_set_base_io(BX_NE2K_THIS_PTR, read_handler, write_handler,
-                          &BX_NE2K_THIS s.base_address,
-                          &BX_NE2K_THIS s.pci_conf[0x10],
-                          32, &ne2k_iomask[0], "NE2000 PCI NIC");
-      BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
+      if (DEV_pci_set_base_io(BX_NE2K_THIS_PTR, read_handler, write_handler,
+                              &BX_NE2K_THIS s.base_address,
+                              &BX_NE2K_THIS s.pci_conf[0x10],
+                              32, &ne2k_iomask[0], "NE2000 PCI NIC")) {
+        BX_INFO(("new base address: 0x%04x", BX_NE2K_THIS s.base_address));
+      }
     }
   }
 }

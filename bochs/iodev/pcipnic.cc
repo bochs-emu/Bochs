@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.14 2005-09-22 21:12:26 vruppert Exp $
+// $Id: pcipnic.cc,v 1.15 2005-11-15 17:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -409,6 +409,8 @@ bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x20:
           value8 = (value8 & 0xfc) | 0x01;
         case 0x21:
+        case 0x22:
+        case 0x23:
           baseaddr_change = (value8 != oldval);
         default:
           BX_PNIC_THIS s.pci_conf[address+i] = value8;
@@ -418,11 +420,12 @@ bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       strcat(szTmp, szTmp2);
     }
     if (baseaddr_change) {
-      DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
-                          &BX_PNIC_THIS s.base_ioaddr,
-                          &BX_PNIC_THIS s.pci_conf[0x20],
-                          16, &pnic_iomask[0], "PNIC");
-      BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+      if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
+                              &BX_PNIC_THIS s.base_ioaddr,
+                              &BX_PNIC_THIS s.pci_conf[0x20],
+                              16, &pnic_iomask[0], "PNIC")) {
+        BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+      }
     }
   }
   strrev(szTmp);

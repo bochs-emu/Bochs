@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.18 2005-10-30 19:18:59 vruppert Exp $
+// $Id: pci_ide.cc,v 1.19 2005-11-15 17:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -397,7 +397,7 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
   bx_bool bmdma_change = 0;
 
   if (((address >= 0x10) && (address < 0x20)) ||
-      ((address > 0x21) && (address < 0x40)))
+      ((address > 0x23) && (address < 0x40)))
     return;
   if (io_len <= 4) {
     for (unsigned i=0; i<io_len; i++) {
@@ -413,6 +413,8 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
         case 0x20:
           value8 = (value8 & 0xfc) | 0x01;
         case 0x21:
+        case 0x22:
+        case 0x23:
           bmdma_change |= (value8 != oldval);
         default:
           BX_PIDE_THIS s.pci_conf[address+i] = value8;
@@ -421,10 +423,11 @@ bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       }
     }
     if (bmdma_change) {
-      DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
-                          &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
-                          16, &bmdma_iomask[0], "PIIX3 PCI IDE controller");
-      BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
+      if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
+                              &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
+                              16, &bmdma_iomask[0], "PIIX3 PCI IDE controller")) {
+        BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
+      }
     }
   }
 }

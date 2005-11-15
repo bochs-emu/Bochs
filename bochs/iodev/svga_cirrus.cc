@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.24 2005-10-27 09:32:02 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.25 2005-11-15 17:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -210,11 +210,8 @@
 // PCI 0x3c: 0x3c=int-line, 0x3d=int-pin, 0x3e=min-gnt, 0x3f=maax-lat
 // PCI 0x40-0xff: device dependent fields
 
-// default PnP memory address
-#define CIRRUS_PNPMEM_BASE_ADDRESS  0xe0000000
+// default PnP memory and memory-mapped I/O sizes
 #define CIRRUS_PNPMEM_SIZE          CIRRUS_VIDEO_MEMORY_BYTES
-// default PnP memory-mapped I/O address
-#define CIRRUS_PNPMMIO_BASE_ADDRESS (CIRRUS_PNPMEM_BASE_ADDRESS + CIRRUS_PNPMEM_SIZE)
 #define CIRRUS_PNPMMIO_SIZE         0x1000
 
 #define BX_MAX(a,b) ((a) > (b) ? (a) : (b))
@@ -2270,9 +2267,6 @@ bx_svga_cirrus_c::svga_init_pcihandlers(void)
 {
   int i;
 
-  // addresses
-  BX_CIRRUS_THIS pci_memaddr = CIRRUS_PNPMEM_BASE_ADDRESS;
-  BX_CIRRUS_THIS pci_mmioaddr = CIRRUS_PNPMMIO_BASE_ADDRESS;
   Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
      pci_read_handler, pci_write_handler,
@@ -2298,6 +2292,9 @@ bx_svga_cirrus_c::svga_init_pcihandlers(void)
   BX_CIRRUS_THIS pci_conf[0x0a] = PCI_CLASS_SUB_VGA;
   BX_CIRRUS_THIS pci_conf[0x0b] = PCI_CLASS_BASE_DISPLAY;
   BX_CIRRUS_THIS pci_conf[0x0e] = PCI_CLASS_HEADERTYPE_00h;
+
+  BX_CIRRUS_THIS pci_memaddr = 0;
+  BX_CIRRUS_THIS pci_mmioaddr = 0;
 }
 
   Bit32u
@@ -2403,20 +2400,22 @@ bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       value >>= 8;
     }
     if (baseaddr0_change) {
-      DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                           cirrus_mem_write_handler,
-                           &BX_CIRRUS_THIS pci_memaddr,
-                           &BX_CIRRUS_THIS pci_conf[0x10],
-                           CIRRUS_PNPMEM_SIZE);
-      BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
+      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                               cirrus_mem_write_handler,
+                               &BX_CIRRUS_THIS pci_memaddr,
+                               &BX_CIRRUS_THIS pci_conf[0x10],
+                               CIRRUS_PNPMEM_SIZE)) {
+        BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
+      }
     }
     if (baseaddr1_change) {
-      DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
-                           cirrus_mem_write_handler,
-                           &BX_CIRRUS_THIS pci_mmioaddr,
-                           &BX_CIRRUS_THIS pci_conf[0x14],
-                           CIRRUS_PNPMMIO_SIZE);
-      BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_mmioaddr));
+      if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
+                               cirrus_mem_write_handler,
+                               &BX_CIRRUS_THIS pci_mmioaddr,
+                               &BX_CIRRUS_THIS pci_conf[0x14],
+                               CIRRUS_PNPMMIO_SIZE)) {
+        BX_INFO(("new pci_mmioaddr = 0x%08x", BX_CIRRUS_THIS pci_mmioaddr));
+      }
     }
   }
 }
