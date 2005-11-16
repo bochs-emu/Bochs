@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.23 2005-11-12 10:38:51 vruppert Exp $
+// $Id: floppy.h,v 1.24 2005-11-16 21:21:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,8 +120,15 @@ private:
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
-    bx_bool  non_dma;
-    Bit8u    SRT; // step rate time
+    bx_bool  non_dma;   // non-DMA mode
+    bx_bool  lock;      // FDC lock status
+    Bit8u    SRT;       // step rate time
+    Bit8u    HUT;       // head unload time
+    Bit8u    HLT;       // head load time
+    Bit8u    config;    // configure byte #1
+    Bit8u    pretrk;    // precompensation track
+    Bit8u    perp_mode; // perpendicular mode
+
     int      statusbar_id[2]; // IDs of the status LEDs
   } s;  // state information
 

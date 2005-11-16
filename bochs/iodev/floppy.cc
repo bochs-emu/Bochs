@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.87 2005-11-12 10:38:51 vruppert Exp $
+// $Id: floppy.cc,v 1.88 2005-11-16 21:21:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.87 2005-11-12 10:38:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.88 2005-11-16 21:21:35 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -305,6 +305,11 @@ bx_floppy_ctrl_c::init(void)
     BX_FD_THIS s.floppy_timer_index =
       bx_pc_system.register_timer( this, timer_handler, 250, 0, 0, "floppy");
   }
+  /* these registers are not cleared by reset */
+  BX_FD_THIS s.SRT = 0;
+  BX_FD_THIS s.HUT = 0;
+  BX_FD_THIS s.HLT = 0;
+  BX_FD_THIS s.non_dma = 0;
 }
 
 
@@ -335,12 +340,16 @@ bx_floppy_ctrl_c::reset(unsigned type)
     for (i=0; i<4; i++) {
       BX_FD_THIS s.DIR[i] |= 0x80; // disk changed
       }
-    BX_FD_THIS s.data_rate = 0; /* 500 Kbps */
-    BX_FD_THIS s.non_dma = 0;
-    BX_FD_THIS s.SRT = 0;
+    BX_FD_THIS s.data_rate = 2; /* 250 Kbps */
+    BX_FD_THIS s.lock = 0;
   } else {
     BX_INFO(("controller reset in software"));
   }
+  if (BX_FD_THIS s.lock == 0) {
+    BX_FD_THIS s.config = 0;
+    BX_FD_THIS s.pretrk = 0;
+  }
+  BX_FD_THIS s.perp_mode = 0;
 
   for (i=0; i<4; i++) {
     BX_FD_THIS s.cylinder[i] = 0;
@@ -531,7 +540,15 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       break;
 
     case 0x3f4: /* diskette controller data rate select register */
-      BX_ERROR(("io_write: data rate select register unsupported"));
+      BX_FD_THIS s.data_rate = value & 0x03;
+      if (value & 0x80) {
+        BX_FD_THIS s.main_status_reg = 0;
+        BX_FD_THIS s.pending_command = 0xfe; // RESET pending
+        bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, 250, 0);
+      }
+      if ((value & 0x7c) > 0) {
+        BX_ERROR(("write to data rate select register: unsupported bits set"));
+      }
       break;
 
     case 0x3F5: /* diskette controller data */
@@ -579,12 +596,21 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_FD_THIS s.command_size = 9;
             break;
 
+          case 0x0e: // dump registers (Enhanced drives)
+          case 0x10: // Version command, enhanced controller returns 0x90
+          case 0x14: // Unlock command (Enhanced)
+          case 0x94: // Lock command (Enhanced)
+            BX_FD_THIS s.command_size = 0;
+            BX_FD_THIS s.pending_command = value;
+            enter_result_phase();
+            break;
+          case 0x12: // Perpendicular mode (Enhanced)
+            BX_FD_THIS s.command_size = 2;
+            break;
           case 0x13: // Configure command (Enhanced)
             BX_FD_THIS s.command_size = 4;
             break;
 
-          case 0x0e: // dump registers (Enhanced drives)
-          case 0x10: // Version command, standard controller returns 80h
           case 0x18: // National Semiconductor version command; return 80h
             // These commands are not implemented on the standard
             // controller and return an error.  They are available on
@@ -603,18 +629,17 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_FD_THIS s.status_reg0 = 0x80; // status: invalid command
             enter_result_phase();
             break;
-          }
         }
-      else {
+      } else {
         BX_FD_THIS s.command[BX_FD_THIS s.command_index++] =
           value;
-        }
+      }
       if (BX_FD_THIS s.command_index ==
         BX_FD_THIS s.command_size) {
         /* read/write command not in progress any more */
         floppy_command();
         BX_FD_THIS s.command_complete = 1;
-        }
+      }
       BX_DEBUG(("io_write: diskette controller data"));
       return;
       break;
@@ -656,8 +681,6 @@ bx_floppy_ctrl_c::floppy_command(void)
            " external environment"));
 #else
   unsigned i, no_cl_reset = 0;
-  Bit8u head_unload_time;
-  Bit8u head_load_time;
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
   Bit8u sector_size, data_length;
@@ -685,8 +708,8 @@ bx_floppy_ctrl_c::floppy_command(void)
       // execution: specified parameters are loaded
       // result: no result bytes, no interrupt
       BX_FD_THIS s.SRT = BX_FD_THIS s.command[1] >> 4;
-      head_unload_time = BX_FD_THIS s.command[1] & 0x0f;
-      head_load_time = BX_FD_THIS s.command[2] >> 1;
+      BX_FD_THIS s.HUT = BX_FD_THIS s.command[1] & 0x0f;
+      BX_FD_THIS s.HLT = BX_FD_THIS s.command[2] >> 1;
       BX_FD_THIS s.non_dma = BX_FD_THIS s.command[2] & 0x01;
       if (BX_FD_THIS s.non_dma)
         BX_ERROR(("non DMA mode not implemented yet"));
@@ -783,6 +806,8 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_DEBUG(("configure (no poll = 0x%02x)", BX_FD_THIS s.command[2] & 0x10 ));
       BX_DEBUG(("configure (fifothr = 0x%02x)", BX_FD_THIS s.command[2] & 0x0f ));
       BX_DEBUG(("configure (pretrk  = 0x%02x)", BX_FD_THIS s.command[3] ));
+      BX_FD_THIS s.config = BX_FD_THIS s.command[2];
+      BX_FD_THIS s.pretrk = BX_FD_THIS s.command[3];
       enter_idle_phase();
       return;
       break;
@@ -979,6 +1004,12 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_PANIC(("floppy_command(): unknown read/write command"));
         return;
       }
+      break;
+
+    case 0x12: // Perpendicular mode
+      BX_FD_THIS s.perp_mode = BX_FD_THIS s.command[1];
+      BX_INFO(("perpendicular mode: config=0x%02x", BX_FD_THIS s.perp_mode));
+      enter_idle_phase();
       break;
 
     default: // invalid or unsupported command; these are captured in write() above
@@ -1706,8 +1737,8 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 void
 bx_floppy_ctrl_c::enter_result_phase(void)
 {
-
   Bit8u drive;
+  unsigned i;
 
   drive = BX_FD_THIS s.DOR & 0x03;
 
@@ -1724,37 +1755,58 @@ bx_floppy_ctrl_c::enter_result_phase(void)
   } 
 
   switch (BX_FD_THIS s.pending_command) {
-  case 0x04: // get status
-    BX_FD_THIS s.result_size = 1;
-    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg3;
-    break;
-  case 0x08: // sense interrupt
-    BX_FD_THIS s.result_size = 2;
-    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
-    BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
-    break;
-  case 0x4a: // read ID
-  case 0x4d: // format track
-  case 0x46: // read normal data
-  case 0x66:
-  case 0xc6:
-  case 0xe6:
-  case 0x45: // write normal data
-  case 0xc5:
-    BX_FD_THIS s.result_size = 7;
-    BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;    
-    BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
-    BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
-    BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
-    BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
-    BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
-    BX_FD_THIS s.result[6] = 2; /* sector size code */
-    BX_FD_THIS raise_interrupt();
-    break;
+    case 0x04: // get status
+      BX_FD_THIS s.result_size = 1;
+      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg3;
+      break;
+    case 0x08: // sense interrupt
+      BX_FD_THIS s.result_size = 2;
+      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
+      BX_FD_THIS s.result[1] = BX_FD_THIS s.cylinder[drive];
+      break;
+    case 0x0e: // dump registers
+      BX_FD_THIS s.result_size = 10;
+      for (i = 0; i < 4; i++) {
+        BX_FD_THIS s.result[i] = BX_FD_THIS s.cylinder[i];
+      }
+      BX_FD_THIS s.result[4] = (BX_FD_THIS s.SRT << 4) | BX_FD_THIS s.HUT;
+      BX_FD_THIS s.result[5] = (BX_FD_THIS s.HLT << 1) | BX_FD_THIS s.non_dma;
+      BX_FD_THIS s.result[6] = BX_FD_THIS s.eot[drive];
+      BX_FD_THIS s.result[7] = (BX_FD_THIS s.lock << 7) | (BX_FD_THIS s.perp_mode & 0x7f);
+      BX_FD_THIS s.result[8] = BX_FD_THIS s.config;
+      BX_FD_THIS s.result[9] = BX_FD_THIS s.pretrk;
+      break;
+    case 0x10: // version
+      BX_FD_THIS s.result_size = 1;
+      BX_FD_THIS s.result[0] = 0x90;
+      break;
+    case 0x14: // unlock
+    case 0x94: // lock
+      BX_FD_THIS s.lock = (BX_FD_THIS s.pending_command >> 7);
+      BX_FD_THIS s.result_size = 1;
+      BX_FD_THIS s.result[0] = (BX_FD_THIS s.lock << 4);
+      break;
+    case 0x4a: // read ID
+    case 0x4d: // format track
+    case 0x46: // read normal data
+    case 0x66:
+    case 0xc6:
+    case 0xe6:
+    case 0x45: // write normal data
+    case 0xc5:
+      BX_FD_THIS s.result_size = 7;
+      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;    
+      BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
+      BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
+      BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];
+      BX_FD_THIS s.result[4] = BX_FD_THIS s.head[drive];
+      BX_FD_THIS s.result[5] = BX_FD_THIS s.sector[drive];
+      BX_FD_THIS s.result[6] = 2; /* sector size code */
+      BX_FD_THIS raise_interrupt();
+      break;
   }
 
   // Print command result
-  unsigned i;
   char buf[8+(7*5)+1], *p = buf;
   p += sprintf(p, "RESULT: ");
   for (i=0; i<BX_FD_THIS s.result_size; i++) {
