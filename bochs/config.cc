@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.59 2005-11-13 14:26:02 vruppert Exp $
+// $Id: config.cc,v 1.60 2005-11-17 20:35:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -425,7 +425,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
   menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppya.Opath->set_handler (bx_param_string_handler);
-  bx_options.floppya.Opath->set ("none");
+  bx_options.floppya.Opath->set_initial_val ("none");
   bx_options.floppya.Otype->set_handler (bx_param_handler);
   bx_options.floppya.Ostatus->set_handler (bx_param_handler);
 
@@ -469,7 +469,7 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
   menu->get_options ()->set (menu->SERIES_ASK);
   bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
-  bx_options.floppyb.Opath->set ("none");
+  bx_options.floppyb.Opath->set_initial_val ("none");
   bx_options.floppyb.Otype->set_handler (bx_param_handler);
   bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
 
@@ -1147,9 +1147,9 @@ void bx_init_options ()
                 "Name of the VGA extension",
                 "none", BX_PATHNAME_LEN);
 #if BX_SUPPORT_VBE
-  bx_options.Ovga_extension->set("vbe");
+  bx_options.Ovga_extension->set_initial_val("vbe");
 #elif BX_SUPPORT_CLGD54XX
-  bx_options.Ovga_extension->set("cirrus");
+  bx_options.Ovga_extension->set_initial_val("cirrus");
 #endif
 
   bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
@@ -2186,8 +2186,40 @@ int get_floppy_type_from_image(const char *filename)
   }
 }
 
-  static Bit32s
-parse_line_formatted(char *context, int num_params, char *params[])
+static Bit32s parse_log_options(char *context, char *loglev, char *param1)
+{
+  int level;
+
+  if (!strcmp(loglev, "panic")) {
+    level = LOGLEV_PANIC;
+  } else if (!strcmp(loglev, "pass")) {
+    level = LOGLEV_PASS;
+  } else if (!strcmp(loglev, "error")) {
+    level = LOGLEV_ERROR;
+  } else if (!strcmp(loglev, "info")) {
+    level = LOGLEV_INFO;
+  } else { /* debug */
+    level = LOGLEV_DEBUG;
+  }
+  if (strncmp(param1, "action=", 7)) {
+    PARSE_ERR(("%s: %s directive malformed.", context, loglev));
+  }
+  char *action = param1 + 7;
+  if (!strcmp(action, "fatal"))
+    SIM->set_default_log_action (level, ACT_FATAL);
+  else if (!strcmp (action, "report"))
+    SIM->set_default_log_action (level, ACT_REPORT);
+  else if (!strcmp (action, "ignore"))
+    SIM->set_default_log_action (level, ACT_IGNORE);
+  else if (!strcmp (action, "ask"))
+    SIM->set_default_log_action (level, ACT_ASK);
+  else {
+    PARSE_ERR(("%s: %s directive malformed.", context, loglev));
+  }
+  return 0;
+}
+
+static Bit32s parse_line_formatted(char *context, int num_params, char *params[])
 {
   int i, slot, t;
   Bit8u idx;
@@ -2555,96 +2587,36 @@ parse_line_formatted(char *context, int num_params, char *params[])
     if (num_params != 2) {
       PARSE_ERR(("%s: panic directive malformed.", context));
     }
-    if (strncmp(params[1], "action=", 7)) {
-      PARSE_ERR(("%s: panic directive malformed.", context));
-    }
-    char *action = 7 + params[1];
-    if (!strcmp(action, "fatal"))
-      SIM->set_default_log_action (LOGLEV_PANIC, ACT_FATAL);
-    else if (!strcmp (action, "report"))
-      SIM->set_default_log_action (LOGLEV_PANIC, ACT_REPORT);
-    else if (!strcmp (action, "ignore"))
-      SIM->set_default_log_action (LOGLEV_PANIC, ACT_IGNORE);
-    else if (!strcmp (action, "ask"))
-      SIM->set_default_log_action (LOGLEV_PANIC, ACT_ASK);
-    else {
-      PARSE_ERR(("%s: panic directive malformed.", context));
+    if (parse_log_options(context, params[0], params[1]) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "pass")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: pass directive malformed.", context));
     }
-    if (strncmp(params[1], "action=", 7)) {
-      PARSE_ERR(("%s: pass directive malformed.", context));
-    }
-    char *action = 7 + params[1];
-    if (!strcmp(action, "fatal"))
-      SIM->set_default_log_action (LOGLEV_PASS, ACT_FATAL);
-    else if (!strcmp (action, "report"))
-      SIM->set_default_log_action (LOGLEV_PASS, ACT_REPORT);
-    else if (!strcmp (action, "ignore"))
-      SIM->set_default_log_action (LOGLEV_PASS, ACT_IGNORE);
-    else if (!strcmp (action, "ask"))
-      SIM->set_default_log_action (LOGLEV_PASS, ACT_ASK);
-    else {
-      PARSE_ERR(("%s: pass directive malformed.", context));
+    if (parse_log_options(context, params[0], params[1]) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "error")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: error directive malformed.", context));
     }
-    if (strncmp(params[1], "action=", 7)) {
-      PARSE_ERR(("%s: error directive malformed.", context));
-    }
-    char *action = 7 + params[1];
-    if (!strcmp(action, "fatal"))
-      SIM->set_default_log_action (LOGLEV_ERROR, ACT_FATAL);
-    else if (!strcmp (action, "report"))
-      SIM->set_default_log_action (LOGLEV_ERROR, ACT_REPORT);
-    else if (!strcmp (action, "ignore"))
-      SIM->set_default_log_action (LOGLEV_ERROR, ACT_IGNORE);
-    else if (!strcmp (action, "ask"))
-      SIM->set_default_log_action (LOGLEV_ERROR, ACT_ASK);
-    else {
-      PARSE_ERR(("%s: error directive malformed.", context));
+    if (parse_log_options(context, params[0], params[1]) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "info")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: info directive malformed.", context));
     }
-    if (strncmp(params[1], "action=", 7)) {
-      PARSE_ERR(("%s: info directive malformed.", context));
-    }
-    char *action = 7 + params[1];
-    if (!strcmp(action, "fatal"))
-      SIM->set_default_log_action (LOGLEV_INFO, ACT_FATAL);
-    else if (!strcmp (action, "report"))
-      SIM->set_default_log_action (LOGLEV_INFO, ACT_REPORT);
-    else if (!strcmp (action, "ignore"))
-      SIM->set_default_log_action (LOGLEV_INFO, ACT_IGNORE);
-    else if (!strcmp (action, "ask"))
-      SIM->set_default_log_action (LOGLEV_INFO, ACT_ASK);
-    else {
-      PARSE_ERR(("%s: info directive malformed.", context));
+    if (parse_log_options(context, params[0], params[1]) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "debug")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: debug directive malformed.", context));
     }
-    if (strncmp(params[1], "action=", 7)) {
-      PARSE_ERR(("%s: debug directive malformed.", context));
-    }
-    char *action = 7 + params[1];
-    if (!strcmp(action, "fatal"))
-      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_FATAL);
-    else if (!strcmp (action, "report"))
-      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_REPORT);
-    else if (!strcmp (action, "ignore"))
-      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_IGNORE);
-    else if (!strcmp (action, "ask"))
-      SIM->set_default_log_action (LOGLEV_DEBUG, ACT_ASK);
-    else {
-      PARSE_ERR(("%s: debug directive malformed.", context));
+    if (parse_log_options(context, params[0], params[1]) < 0) {
+      return -1;
     }
   } else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
