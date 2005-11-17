@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.61 2005-08-05 12:47:31 sshwarts Exp $
+// $Id: paging.cc,v 1.62 2005-11-17 17:52:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1127,6 +1127,7 @@ void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *vali
   }
 #endif
 
+#if BX_SupportPAE
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit64u pt_address;
     int levels = 3;
@@ -1149,9 +1150,11 @@ void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *vali
       }
     }
     paddress = pt_address + (laddr & offset_mask);
-  } else { // not PAE
-    Bit32u pt_address;
-    pt_address = BX_CPU_THIS_PTR cr3_masked;
+  } 
+  else   // not PAE
+#endif
+  {
+    Bit32u pt_address = BX_CPU_THIS_PTR cr3_masked;
     Bit32u offset_mask = 0xfff;
     for (int level = 1; level >= 0; --level) {
       Bit32u pte;
