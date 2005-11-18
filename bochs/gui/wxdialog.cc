@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.76 2005-05-17 18:05:49 vruppert Exp $
+// $Id: wxdialog.cc,v 1.77 2005-11-18 23:29:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1161,6 +1161,7 @@ void ParamDialog::AddParam (
           txtctrl->SetValue (buffer);
         } else {
           txtctrl->SetValue (param->getptr ());
+          txtctrl->SetMaxLength (param->get_maxsize ());
         }
 	sizer->Add (txtctrl, 0, wxALL, 2);
 	if (!plain) {
