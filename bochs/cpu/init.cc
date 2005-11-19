@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.73 2005-11-19 18:27:15 sshwarts Exp $
+// $Id: init.cc,v 1.74 2005-11-19 19:38:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.73 2005-11-19 18:27:15 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.74 2005-11-19 19:38:45 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -505,8 +505,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -536,7 +536,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write/access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -550,7 +550,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l   = 0; /* 16bit default size */
 #endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl = 0;
 #endif
@@ -566,7 +566,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type     = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type     = 3; /* read/write/access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -580,7 +580,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.l   = 0; /* 16bit default size */
 #endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
 #endif
@@ -596,7 +596,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type     = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type     = 3; /* read/write/access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -610,7 +610,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.l   = 0; /* 16bit default size */
 #endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl = 0;
 #endif
@@ -626,7 +626,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p       = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl     = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type    = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type    = 3; /* read/write/access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -637,6 +637,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.d_b = 0; /* 16bit default size */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.l   = 0; /* 16bit default size */
+#endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.avl = 0;
 
   /* GS and descriptor cache */
@@ -649,7 +652,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl      = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type     = 3; /* read/write access */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type     = 3; /* read/write/access */
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.executable   = 0; /* data/stack segment */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.c_ed         = 0; /* normal expand up */
@@ -661,19 +664,19 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   = 0; /* 16bit default size */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.l   = 0; /* 16bit default size */
 #endif
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.avl = 0;
 #endif
 
 #if BX_CPU_LEVEL >= 2
   /* GDTR (Global Descriptor Table Register) */
-  BX_CPU_THIS_PTR gdtr.base         = 0x00000000;
-  BX_CPU_THIS_PTR gdtr.limit        =     0xFFFF;
+  BX_CPU_THIS_PTR gdtr.base  = 0x00000000;
+  BX_CPU_THIS_PTR gdtr.limit =     0xFFFF;
 
   /* IDTR (Interrupt Descriptor Table Register) */
-  BX_CPU_THIS_PTR idtr.base         = 0x00000000;
-  BX_CPU_THIS_PTR idtr.limit        =     0xFFFF; /* always byte granular */
+  BX_CPU_THIS_PTR idtr.base  = 0x00000000;
+  BX_CPU_THIS_PTR idtr.limit =     0xFFFF; /* always byte granular */
 
   /* LDTR (Local Descriptor Table Register) */
   BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;
@@ -700,9 +703,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
-  BX_CPU_THIS_PTR tr.cache.type     = 2; /* invalid */
-  BX_CPU_THIS_PTR tr.cache.u.tss286.base   = 0x00000000;
-  BX_CPU_THIS_PTR tr.cache.u.tss286.limit  =     0xFFFF;
+  BX_CPU_THIS_PTR tr.cache.type     = 3; /* busy 16-bit TSS */
+  BX_CPU_THIS_PTR tr.cache.u.tss286.base  = 0x00000000;
+  BX_CPU_THIS_PTR tr.cache.u.tss286.limit =     0xFFFF;
 #endif
 
   // DR0 - DR7 (Debug Registers)
