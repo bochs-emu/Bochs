@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.72 2005-11-07 22:45:25 sshwarts Exp $
+// $Id: init.cc,v 1.73 2005-11-19 18:27:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 
 void BX_CPU_C::init(BX_MEM_C *addrspace)
 {
-  BX_DEBUG(( "Init $Id: init.cc,v 1.72 2005-11-07 22:45:25 sshwarts Exp $"));
+  BX_DEBUG(( "Init $Id: init.cc,v 1.73 2005-11-19 18:27:15 sshwarts Exp $"));
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
 #if BX_SUPPORT_APIC
@@ -681,8 +681,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR ldtr.cache.valid    = 0; /* not valid */
-  BX_CPU_THIS_PTR ldtr.cache.p        = 0; /* not present */
+  BX_CPU_THIS_PTR ldtr.cache.valid    = 1; /* valid */
+  BX_CPU_THIS_PTR ldtr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR ldtr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR ldtr.cache.type     = 2; /* LDT descriptor */
@@ -696,13 +696,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.selector.ti    = 0;
   BX_CPU_THIS_PTR tr.selector.rpl   = 0;
 
-  BX_CPU_THIS_PTR tr.cache.valid    = 0;
-  BX_CPU_THIS_PTR tr.cache.p        = 0;
+  BX_CPU_THIS_PTR tr.cache.valid    = 1; /* valid */
+  BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
-  BX_CPU_THIS_PTR tr.cache.segment  = 0;
-  BX_CPU_THIS_PTR tr.cache.type     = 0; /* invalid */
-  BX_CPU_THIS_PTR tr.cache.u.tss286.base     = 0x00000000; /* undefined */
-  BX_CPU_THIS_PTR tr.cache.u.tss286.limit    =     0x0000; /* undefined */
+  BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
+  BX_CPU_THIS_PTR tr.cache.type     = 2; /* invalid */
+  BX_CPU_THIS_PTR tr.cache.u.tss286.base   = 0x00000000;
+  BX_CPU_THIS_PTR tr.cache.u.tss286.limit  =     0xFFFF;
 #endif
 
   // DR0 - DR7 (Debug Registers)
