@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.24 2005-11-16 21:21:35 vruppert Exp $
+// $Id: floppy.h,v 1.25 2005-11-20 14:15:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,6 +147,7 @@ private:
   BX_FD_SMF void   enter_idle_phase(void);
   BX_FD_SMF void   enter_result_phase(void);
   BX_FD_SMF Bit32u calculate_step_delay(Bit8u drive, Bit8u new_cylinder);
+  BX_FD_SMF void   reset_changeline(void);
   static void      timer_handler(void *);
 
 public:

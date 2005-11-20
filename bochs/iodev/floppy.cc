@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.88 2005-11-16 21:21:35 vruppert Exp $
+// $Id: floppy.cc,v 1.89 2005-11-20 14:15:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,7 +136,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.88 2005-11-16 21:21:35 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.89 2005-11-20 14:15:28 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -680,15 +680,12 @@ bx_floppy_ctrl_c::floppy_command(void)
   BX_PANIC(("floppy_command(): uses DMA: not supported for"
            " external environment"));
 #else
-  unsigned i, no_cl_reset = 0;
+  unsigned i;
   Bit8u motor_on;
   Bit8u head, drive, cylinder, sector, eot;
   Bit8u sector_size, data_length;
   Bit32u logical_sector, sector_time, step_delay;
-  
-  // on hardware I checked, the FDC does not reset the change line on some commands (ben lunt)
-  if ((BX_FD_THIS s.command[0] == 0x04) || (BX_FD_THIS s.command[0] == 0x4A)) no_cl_reset = 1;
-  
+
   // Print command
   char buf[9+(9*5)+1], *p = buf;
   p += sprintf(p, "COMMAND: ");
@@ -696,11 +693,6 @@ bx_floppy_ctrl_c::floppy_command(void)
     p += sprintf(p, "[%02x] ", (unsigned) BX_FD_THIS s.command[i]);
   }
   BX_DEBUG((buf));
-
-  /* reset changeline */
-  drive = BX_FD_THIS s.DOR & 0x03;
-  if (BX_FD_THIS s.media_present[drive] && !no_cl_reset)
-    BX_FD_THIS s.DIR[drive] &= ~0x80;
 
   BX_FD_THIS s.pending_command = BX_FD_THIS s.command[0];
   switch (BX_FD_THIS s.pending_command) {
@@ -968,8 +960,10 @@ bx_floppy_ctrl_c::floppy_command(void)
         return;
       }
 
-      if (cylinder != BX_FD_THIS s.cylinder[drive])
+      if (cylinder != BX_FD_THIS s.cylinder[drive]) {
         BX_DEBUG(("io: cylinder request != current cylinder"));
+        reset_changeline();
+      }
 
       logical_sector = (cylinder * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (head * BX_FD_THIS s.media[drive].sectors_per_track) +
@@ -1389,9 +1383,11 @@ bx_floppy_ctrl_c::increment_sector(void)
       if (BX_FD_THIS s.head[drive] > 1) {
         BX_FD_THIS s.head[drive] = 0;
         BX_FD_THIS s.cylinder[drive] ++;
+        reset_changeline();
       }
     } else {
       BX_FD_THIS s.cylinder[drive] ++;
+      reset_changeline();
     }
     if (BX_FD_THIS s.cylinder[drive] >= BX_FD_THIS s.media[drive].tracks) {
       // Set to 1 past last possible cylinder value.
@@ -1432,15 +1428,13 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     }
     BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
     return(0);
-    }
-  else {
+  } else {
     // insert floppy
     if (drive == 0) {
       path = bx_options.floppya.Opath->getptr ();
-      }
-    else {
+    } else {
       path = bx_options.floppyb.Opath->getptr ();
-      }
+    }
     if (!strcmp(path, "none"))
       return(0);
     if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
@@ -1458,10 +1452,8 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
 #undef MED
         bx_options.floppyb.Ostatus->set(BX_INSERTED);
       }
-      BX_FD_THIS s.DIR[drive] |= 0x80; // disk changed line
       return(1);
-      }
-    else {
+    } else {
       BX_FD_THIS s.media_present[drive] = 0;
       if (drive == 0) {
         bx_options.floppya.Ostatus->set(BX_EJECTED);
@@ -1469,8 +1461,8 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
         bx_options.floppyb.Ostatus->set(BX_EJECTED);
       }
       return(0);
-      }
     }
+  }
 }
 
   unsigned
@@ -1838,7 +1830,15 @@ Bit32u bx_floppy_ctrl_c::calculate_step_delay(Bit8u drive, Bit8u new_cylinder)
     steps = 1;
   } else {
     steps = abs(new_cylinder - BX_FD_THIS s.cylinder[drive]);
+    reset_changeline();
   }
   one_step_delay = ((BX_FD_THIS s.SRT ^ 0x0f) + 1) * 500000 / drate_in_k[BX_FD_THIS s.data_rate];
   return (steps * one_step_delay);
+}
+
+void bx_floppy_ctrl_c::reset_changeline(void)
+{
+  Bit8u drive = BX_FD_THIS s.DOR & 0x03;
+  if (BX_FD_THIS s.media_present[drive])
+    BX_FD_THIS s.DIR[drive] &= ~0x80;
 }
