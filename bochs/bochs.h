@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.162 2005-11-12 10:38:51 vruppert Exp $
+// $Id: bochs.h,v 1.163 2005-11-20 20:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -405,6 +405,10 @@ BOCHSAPI extern logfunc_t *genlog;
 #define FMT_ADDRX "%08x"
 #endif
 
+#if BX_DISASM
+#  include "disasm/disasm.h"
+#endif
+
 #if BX_PROVIDE_CPU_MEMORY==1
 #  include "cpu/cpu.h"
 #endif
@@ -426,10 +430,6 @@ int bx_gdbstub_check(unsigned int eip);
 // BX_CPU(n)->dword.eip, etc.
 #endif
 
-#endif
-
-#if BX_DISASM
-#  include "disasm/disasm.h"
 #endif
 
 typedef struct {
