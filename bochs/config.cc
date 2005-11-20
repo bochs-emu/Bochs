@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.60 2005-11-17 20:35:38 vruppert Exp $
+// $Id: config.cc,v 1.61 2005-11-20 17:22:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ static char *get_builtin_variable(char *varname);
 static Bit32s parse_line_unformatted(char *context, char *line);
 static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
 static int parse_bochsrc(char *rcfile);
+static int get_floppy_type_from_image(const char *filename);
 
 static Bit64s
 bx_param_handler (bx_param_c *param, int set, Bit64s val)
@@ -94,8 +95,13 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       }
       break;
     case BXP_FLOPPYA_TYPE:
-      if ((set) && (!SIM->get_init_done ())) {
-        bx_options.floppya.Odevtype->set (val);
+      if (set) {
+        if (val == BX_FLOPPY_AUTO) {
+          val = get_floppy_type_from_image(bx_options.floppya.Opath->getptr());
+          bx_options.floppya.Otype->set (val);
+        } else if (!SIM->get_init_done ()) {
+          bx_options.floppya.Odevtype->set (val);
+        }
       }
       break;
     case BXP_FLOPPYA_STATUS:
@@ -105,8 +111,13 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
       }
       break;
     case BXP_FLOPPYB_TYPE:
-      if ((set) && (!SIM->get_init_done ())) {
-        bx_options.floppyb.Odevtype->set (val);
+      if (set) {
+        if (val == BX_FLOPPY_AUTO) {
+          val = get_floppy_type_from_image(bx_options.floppyb.Opath->getptr());
+          bx_options.floppyb.Otype->set (val);
+        } else if (!SIM->get_init_done ()) {
+          bx_options.floppyb.Odevtype->set (val);
+        }
       }
       break;
     case BXP_FLOPPYB_STATUS:
@@ -401,7 +412,7 @@ void bx_init_options ()
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppya.Otype->set_ask_format ("What type of floppy disk? [%s] ");
+  bx_options.floppya.Otype->set_ask_format ("What type of floppy disk? (auto=detect) [%s] ");
   bx_options.floppya.Ostatus = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
       "Is floppya inserted",
       "Inserted or ejected",
@@ -411,6 +422,7 @@ void bx_init_options ()
   bx_options.floppya.Opath->set_format ("%s");
   bx_options.floppya.Opath->set_runtime_param (1);
   bx_options.floppya.Otype->set_format ("size=%s");
+  bx_options.floppya.Otype->set_runtime_param (1);
   bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppya.Ostatus->set_format ("%s");
   bx_options.floppya.Ostatus->set_runtime_param (1);
@@ -457,6 +469,7 @@ void bx_init_options ()
   bx_options.floppyb.Opath->set_format ("%s");
   bx_options.floppyb.Opath->set_runtime_param (1);
   bx_options.floppyb.Otype->set_format ("size=%s");
+  bx_options.floppyb.Otype->set_runtime_param (1);
   bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
   bx_options.floppyb.Ostatus->set_format ("%s");
   bx_options.floppyb.Ostatus->set_runtime_param (1);
@@ -2176,6 +2189,7 @@ int get_floppy_type_from_image(const char *filename)
     case 1474560:
     case 1720320:
     case 1763328:
+    case 1884160:
       return BX_FLOPPY_1_44;
 
     case 2949120:

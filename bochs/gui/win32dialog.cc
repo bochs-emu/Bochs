@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.28 2005-10-26 22:26:02 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.29 2005-11-20 17:22:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -135,25 +135,34 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 {
   static bx_param_filename_c *param;
   static bx_param_enum_c *status;
-  static bx_param_enum_c *disktype;
+  static bx_param_enum_c *devtype;
+  static bx_param_enum_c *mediatype;
   static char origpath[MAX_PATH];
   char mesg[MAX_PATH];
   char path[MAX_PATH];
   char *title;
-  int cap;
+  int i, cap;
 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_filename_c *)lParam;
       if (param->get_id() == BXP_FLOPPYA_PATH) {
         status = SIM->get_param_enum(BXP_FLOPPYA_STATUS);
-        disktype = SIM->get_param_enum(BXP_FLOPPYA_DEVTYPE);
+        devtype = SIM->get_param_enum(BXP_FLOPPYA_DEVTYPE);
+        mediatype = SIM->get_param_enum(BXP_FLOPPYA_TYPE);
       } else {
         status = SIM->get_param_enum(BXP_FLOPPYB_STATUS);
-        disktype = SIM->get_param_enum(BXP_FLOPPYB_DEVTYPE);
+        devtype = SIM->get_param_enum(BXP_FLOPPYB_DEVTYPE);
+        mediatype = SIM->get_param_enum(BXP_FLOPPYB_TYPE);
       }
-      cap = disktype->get() - (int)disktype->get_min();
+      cap = devtype->get() - (int)devtype->get_min();
       SetWindowText(GetDlgItem(hDlg, IDDEVTYPE), floppy_type_names[cap]);
+      for (i = 0; i < n_floppy_type_names; i++) {
+        SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_ADDSTRING, 0, (LPARAM)floppy_type_names[i]);
+        SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETITEMDATA, i, (LPARAM)(mediatype->get_min() + i));
+      }
+      cap = mediatype->get() - (int)mediatype->get_min();
+      SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SETCURSEL, cap, 0);
       if (status->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
       }
@@ -186,19 +195,22 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           return TRUE;
           break;
         case IDOK:
+          status->set(BX_EJECTED);
           if (SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_GETCHECK, 0, 0) == BST_CHECKED) {
             GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-            if (lstrlen(path)) {
-              status->set(BX_INSERTED);
-            } else {
-              status->set(BX_EJECTED);
+            if (lstrlen(path) == 0) {
               lstrcpy(path, "none");
             }
           } else {
-            status->set(BX_EJECTED);
             lstrcpy(path, "none");
           }
           param->set(path);
+          i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
+          cap = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETITEMDATA, i, 0);
+          mediatype->set(cap);
+          if (lstrcmp(path, "none")) {
+            status->set(BX_INSERTED);
+          }
           EndDialog(hDlg, 1);
           return TRUE;
           break;
@@ -210,11 +222,17 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           EndDialog(hDlg, -1);
           return TRUE;
           break;
+        case IDMEDIATYPE:
+          if (HIWORD(wParam) == CBN_SELCHANGE) {
+            i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
+            EnableWindow(GetDlgItem(hDlg, IDCREATE), (floppy_type_n_sectors[i] > 0));
+          }
+          break;
         case IDCREATE:
           GetDlgItemText(hDlg, IDPATH, path, MAX_PATH);
-          cap = disktype->get() - (int)disktype->get_min();
-          if (CreateImage(hDlg, floppy_type_n_sectors[cap], path)) {
-            wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[cap], path);
+          i = SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_GETCURSEL, 0, 0);
+          if (CreateImage(hDlg, floppy_type_n_sectors[i], path)) {
+            wsprintf(mesg, "Created a %s disk image called %s", floppy_type_names[i], path);
             MessageBox(hDlg, mesg, "Image created", MB_OK);
           }
           return TRUE;

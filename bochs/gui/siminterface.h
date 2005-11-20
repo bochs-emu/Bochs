@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.148 2005-11-12 10:38:51 vruppert Exp $
+// $Id: siminterface.h,v 1.149 2005-11-20 17:22:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1262,6 +1262,7 @@ enum {
 #define BX_FLOPPY_320K   18 // 320K  5.25"
 #define BX_FLOPPY_LAST   18 // last legal value of floppy type
 
+#define BX_FLOPPY_AUTO     19 // autodetect image size
 #define BX_FLOPPY_UNKNOWN  20 // image size doesn't match one of the types above
 
 #define BX_ATA_DEVICE_DISK      0
