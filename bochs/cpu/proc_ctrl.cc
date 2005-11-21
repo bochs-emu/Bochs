@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.122 2005-11-04 15:15:02 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.123 2005-11-21 21:10:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1306,6 +1306,12 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   BX_CPU_THIS_PTR cr0.cd = cd;
 #endif
   BX_CPU_THIS_PTR cr0.pg = pg;
+
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr0.am) {
+    BX_ERROR(("WARNING: Aligment check enabled but not implemented !"));
+  }
+#endif
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3

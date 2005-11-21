@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.21 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.22 2005-11-21 21:10:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,10 +33,13 @@
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
 {
   // VM flag could not be set from long mode
+#if BX_SUPPORT_X86_64
   if (IsLongMode()) {
     if (get_VM()) BX_PANIC(("VM is set in long mode !"));
     val &= ~EFlagsVMMask;
   }
+#endif
+
   BX_CPU_THIS_PTR eflags.val32 = val;
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
   set_VM(val & EFlagsVMMask);
@@ -129,12 +132,10 @@ Bit32u BX_CPU_C::read_eflags(void)
 {
   Bit32u flags32 = BX_CPU_THIS_PTR force_flags();
 
-#if 0
   /*
    * 386+: real-mode: bit15 cleared, bits 14..12 are last loaded value
    *       protected-mode: bit 15 clear, bit 14 = last loaded, IOPL?
    */
-#endif
 
   return(flags32);
 }

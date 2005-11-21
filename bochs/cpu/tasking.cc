@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.26 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: tasking.cc,v 1.27 2005-11-21 21:10:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,17 +35,6 @@
 
 // Notes:
 // ======
-// Step 2: TSS descriptor is not busy TS (for IRET); GP (for JMP, CALL, INT)
-//   returns error code (Task's backlink TSS)???
-
-// *   TSS selector must map to GDT
-// *   TSS is stored in linear address space
-// * what to do with I/O Map Base
-// * what to do with T flag
-// * where to set CR3 and flush paging cache
-// * what happens when fault occurs, with some seg regs having valid bit cleared?
-// * should check validity of current TR(TSS) before writing into it
-//
 
   // ======================
   // 286 Task State Segment
@@ -125,7 +114,6 @@
   //       exactly the same behaviour as above.  There seems to
   //       be some misprints in the Intel docs.
 
-
 void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
                  bx_descriptor_t *tss_descriptor, unsigned source,
                  Bit32u dword1, Bit32u dword2)
@@ -142,7 +130,9 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   Bit32u old_TSS_max, new_TSS_max, old_TSS_limit, new_TSS_limit;
   Bit32u newEAX, newECX, newEDX, newEBX;
   Bit32u newESP, newEBP, newESI, newEDI;
-  Bit32u newEFLAGS, oldEFLAGS, newEIP;
+  Bit32u newEFLAGS, newEIP;
+  unsigned exception_no = 256; // no exception
+  Bit16u error_code = 0;
 
   BX_DEBUG(( "TASKING: ENTER" ));
 
@@ -153,24 +143,27 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-  // The following checks are made before calling task_switch(), for
-  // JMP & CALL only.  These checks are NOT made for exceptions,
-  // interrupts, & IRET.
+  // STEP 1: The following checks are made before calling task_switch(),
+  //         for JMP & CALL only. These checks are NOT made for exceptions,
+  //         interrupts & IRET.
   //
   //   1) TSS DPL must be >= CPL
   //   2) TSS DPL must be >= TSS selector RPL
   //   3) TSS descriptor is not busy.  TS(for IRET); GP(for JMP, CALL, INT)
 
-  // Privilege and busy checks done in CALL, JUMP, INT, IRET
+  // TSS must be present, else #NP(TSS selector)
+  if (tss_descriptor->p==0) {
+    BX_ERROR(("task_switch: TSS descriptor is not present !"));
+    exception(BX_NP_EXCEPTION, tss_selector->value & 0xfffc, 0);
+  }
 
-  unsigned exception_no = 256; // no exception
-  Bit16u error_code = 0;
-  oldEFLAGS = read_eflags();
+  // STEP 2: The processor performs limit-checking on the target TSS
+  //         to verify that the TSS limit is greater than or equal
+  //         to 67h (2Bh for 16-bit TSS).
 
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
     // sanity check type: cannot have busy bit
-    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
     obase32 = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
     old_TSS_max   = 43;
     old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
@@ -193,22 +186,11 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     new_TSS_limit = tss_descriptor->u.tss386.limit_scaled;
   }
 
-  if (obase32 == nbase32)
-  {
-    BX_PANIC(("Task switching to the same TSS might be not implemented correctly !"));
-  }
-
-  // Task State Seg must be present, else #NP(TSS selector)
-  if (tss_descriptor->p==0) {
-    BX_ERROR(("task_switch: TSS.p == 0"));
-    exception(BX_NP_EXCEPTION, tss_selector->value & 0xfffc, 0);
-  }
-
   // TSS must have valid limit, else #TS(TSS selector)
   if (tss_selector->ti || tss_descriptor->valid==0 ||
       new_TSS_limit < new_TSS_max)
   {
-    BX_ERROR(("task_switch(): TR not valid"));
+    BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
   }
 
@@ -219,11 +201,11 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   {
     // Old TSS
     (void) dtranslate_linear(obase32, 0, BX_WRITE);
-    (void) dtranslate_linear(obase32+old_TSS_max, 0, BX_WRITE);
+    (void) dtranslate_linear(obase32 + old_TSS_max, 0, BX_WRITE);
 
     // New TSS
     (void) dtranslate_linear(nbase32, 0, BX_READ);
-    (void) dtranslate_linear(nbase32+new_TSS_max, 0, BX_READ);
+    (void) dtranslate_linear(nbase32 + new_TSS_max, 0, BX_READ);
 
     // ??? Humm, we check the new TSS region with READ above,
     // but sometimes we need to write the link field in that
@@ -231,13 +213,86 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // we need to WRITE check them here also, so that we keep
     // the written state consistent (ie, we don't encounter a
     // page fault in the middle).
-    //
-    // ??? fix RW above
-    // ??? touch old/new TSS descriptors here when necessary.
+
+    if (source==BX_TASK_FROM_CALL_OR_INT)
+    {
+      (void) dtranslate_linear(nbase32,     0, BX_WRITE);
+      (void) dtranslate_linear(nbase32 + 2, 0, BX_WRITE);
+    }
   }
 #endif // BX_SUPPORT_PAGING
 
-  // Need to fetch all new registers and temporarily store them.
+  // Privilege and busy checks done in CALL, JUMP, INT, IRET
+
+  // STEP 3: Save the current task state in the TSS. Up to this point, 
+  //         any exception that occurs aborts the task switch without 
+  //         changing the processor state.
+
+  /* save current machine state in old task's TSS */
+
+  Bit32u oldEFLAGS = read_eflags();
+
+  /* if moving to busy task, clear NT bit */
+  if (tss_descriptor->type == BX_SYS_SEGMENT_BUSY_286_TSS ||
+      tss_descriptor->type == BX_SYS_SEGMENT_BUSY_386_TSS)
+  {
+    oldEFLAGS &= ~EFlagsNTMask;
+  }
+
+  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    temp16 = IP; access_linear(obase32 + 14, 2, 0, BX_WRITE, &temp16);
+    temp16 = oldEFLAGS; access_linear(obase32 + 16, 2, 0, BX_WRITE, &temp16);
+    temp16 = AX; access_linear(obase32 + 18, 2, 0, BX_WRITE, &temp16);
+    temp16 = CX; access_linear(obase32 + 20, 2, 0, BX_WRITE, &temp16);
+    temp16 = DX; access_linear(obase32 + 22, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX; access_linear(obase32 + 24, 2, 0, BX_WRITE, &temp16);
+    temp16 = SP; access_linear(obase32 + 26, 2, 0, BX_WRITE, &temp16);
+    temp16 = BP; access_linear(obase32 + 28, 2, 0, BX_WRITE, &temp16);
+    temp16 = SI; access_linear(obase32 + 30, 2, 0, BX_WRITE, &temp16);
+    temp16 = DI; access_linear(obase32 + 32, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
+                 access_linear(obase32 + 34, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+                 access_linear(obase32 + 36, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+                 access_linear(obase32 + 38, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
+                 access_linear(obase32 + 40, 2, 0, BX_WRITE, &temp16);
+  }
+  else {
+    temp32 = EIP; access_linear(obase32 + 0x20, 4, 0, BX_WRITE, &temp32);
+    temp32 = oldEFLAGS; access_linear(obase32 + 0x24, 4, 0, BX_WRITE, &temp32);
+    temp32 = EAX; access_linear(obase32 + 0x28, 4, 0, BX_WRITE, &temp32);
+    temp32 = ECX; access_linear(obase32 + 0x2c, 4, 0, BX_WRITE, &temp32);
+    temp32 = EDX; access_linear(obase32 + 0x30, 4, 0, BX_WRITE, &temp32);
+    temp32 = EBX; access_linear(obase32 + 0x34, 4, 0, BX_WRITE, &temp32);
+    temp32 = ESP; access_linear(obase32 + 0x38, 4, 0, BX_WRITE, &temp32);
+    temp32 = EBP; access_linear(obase32 + 0x3c, 4, 0, BX_WRITE, &temp32);
+    temp32 = ESI; access_linear(obase32 + 0x40, 4, 0, BX_WRITE, &temp32);
+    temp32 = EDI; access_linear(obase32 + 0x44, 4, 0, BX_WRITE, &temp32);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
+                  access_linear(obase32 + 0x48, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+                  access_linear(obase32 + 0x4c, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+                  access_linear(obase32 + 0x50, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
+                  access_linear(obase32 + 0x54, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
+                  access_linear(obase32 + 0x58, 2, 0, BX_WRITE, &temp16);
+    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
+                  access_linear(obase32 + 0x5c, 2, 0, BX_WRITE, &temp16);
+  }
+
+  // effect on link field of new task
+  if (source == BX_TASK_FROM_CALL_OR_INT)
+  {
+    // set to selector of old task's TSS
+    temp16 = BX_CPU_THIS_PTR tr.selector.value;
+    access_linear(nbase32, 2, 0, BX_WRITE, &temp16);
+  }
+
+  // STEP 4: The new-task state is loaded from the TSS
 
   if (tss_descriptor->type <= 3) {
     access_linear(nbase32 + 14, 2, 0, BX_READ, &temp16);
@@ -302,83 +357,31 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     access_linear(nbase32 + 0x5c, 2, 0, BX_READ, &raw_gs_selector);
     access_linear(nbase32 + 0x60, 2, 0, BX_READ, &raw_ldt_selector);
     access_linear(nbase32 + 0x64, 2, 0, BX_READ, &trap_word);
-    // I/O Map Base Address ???
   }
 
-  //
+  // Step 5: If CALL, interrupt, or JMP, set busy flag in new task's
+  //         TSS descriptor.  If IRET, leave set.
+
+  if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_CALL_OR_INT)
+  {
+    // set the new task's busy bit
+    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
+    access_linear(laddr, 4, 0, BX_READ,  &dword2);
+    dword2 |= 0x00000200;
+    access_linear(laddr, 4, 0, BX_WRITE, &dword2);
+  }
+
   // Step 6: If JMP or IRET, clear busy bit in old task TSS descriptor,
   //         otherwise leave set.
-  //
 
   // effect on Busy bit of old task
-  if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_IRET) ) {
+  if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
     Bit32u laddr = BX_CPU_THIS_PTR gdtr.base +
             (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_linear(laddr, 4, 0, BX_READ, &temp32);
+    access_linear(laddr, 4, 0, BX_READ,  &temp32);
     temp32 &= ~0x00000200;
     access_linear(laddr, 4, 0, BX_WRITE, &temp32);
-  }
-
-  //
-  // Step 7: If IRET, clear NT flag in temp image of EFLAGS, otherwise
-  //         leave alone.
-  //
-
-  if (source == BX_TASK_FROM_IRET) {
-    // NT flags in old task is cleared with an IRET
-    oldEFLAGS &= ~0x00004000;
-  }
-
-  //
-  // Step 8: Save dynamic state of old task.
-  //
-
-  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    // sanity check: tr.cache.type cannot have busy bit
-    BX_ASSERT ((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
-    temp16 = IP; access_linear(obase32 + 14, 2, 0, BX_WRITE, &temp16);
-    temp16 = oldEFLAGS; access_linear(obase32 + 16, 2, 0, BX_WRITE, &temp16);
-    temp16 = AX; access_linear(obase32 + 18, 2, 0, BX_WRITE, &temp16);
-    temp16 = CX; access_linear(obase32 + 20, 2, 0, BX_WRITE, &temp16);
-    temp16 = DX; access_linear(obase32 + 22, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX; access_linear(obase32 + 24, 2, 0, BX_WRITE, &temp16);
-    temp16 = SP; access_linear(obase32 + 26, 2, 0, BX_WRITE, &temp16);
-    temp16 = BP; access_linear(obase32 + 28, 2, 0, BX_WRITE, &temp16);
-    temp16 = SI; access_linear(obase32 + 30, 2, 0, BX_WRITE, &temp16);
-    temp16 = DI; access_linear(obase32 + 32, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-                 access_linear(obase32 + 34, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-                 access_linear(obase32 + 36, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-                 access_linear(obase32 + 38, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-                 access_linear(obase32 + 40, 2, 0, BX_WRITE, &temp16);
-  }
-  else {
-    temp32 = EIP; access_linear(obase32 + 0x20, 4, 0, BX_WRITE, &temp32);
-    temp32 = oldEFLAGS; access_linear(obase32 + 0x24, 4, 0, BX_WRITE, &temp32);
-    temp32 = EAX; access_linear(obase32 + 0x28, 4, 0, BX_WRITE, &temp32);
-    temp32 = ECX; access_linear(obase32 + 0x2c, 4, 0, BX_WRITE, &temp32);
-    temp32 = EDX; access_linear(obase32 + 0x30, 4, 0, BX_WRITE, &temp32);
-    temp32 = EBX; access_linear(obase32 + 0x34, 4, 0, BX_WRITE, &temp32);
-    temp32 = ESP; access_linear(obase32 + 0x38, 4, 0, BX_WRITE, &temp32);
-    temp32 = EBP; access_linear(obase32 + 0x3c, 4, 0, BX_WRITE, &temp32);
-    temp32 = ESI; access_linear(obase32 + 0x40, 4, 0, BX_WRITE, &temp32);
-    temp32 = EDI; access_linear(obase32 + 0x44, 4, 0, BX_WRITE, &temp32);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-                  access_linear(obase32 + 0x48, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-                  access_linear(obase32 + 0x4c, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-                  access_linear(obase32 + 0x50, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-                  access_linear(obase32 + 0x54, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-                  access_linear(obase32 + 0x58, 2, 0, BX_WRITE, &temp16);
-    temp16 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-                  access_linear(obase32 + 0x5c, 2, 0, BX_WRITE, &temp16);
   }
 
   //
@@ -390,77 +393,50 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // execution of the new task.
   //
 
-  // Task switch clears LE/L3/L2/L1/L0 in DR7
-  BX_CPU_THIS_PTR dr7 &= ~0x00000155;
-
-  // effect on link field of new task
-  if ( source==BX_TASK_FROM_CALL_OR_INT )
-  {
-    // set to selector of old task's TSS
-    temp16 = BX_CPU_THIS_PTR tr.selector.value;
-    access_linear(nbase32 + 0, 2, 0, BX_WRITE, &temp16);
-  }
-
-  //
-  // Step 9: If call or interrupt, set the NT flag in the eflags
-  //         image stored in new task's TSS.  If IRET or JMP,
-  //         NT is restored from new TSS eflags image. (no change)
-  //
-
-  // effect on NT flag of new task
-  if ( source==BX_TASK_FROM_CALL_OR_INT ) {
-    newEFLAGS |= 0x4000; // flag is set
-  }
-
-  //
-  // Step 10: If CALL, interrupt, or JMP, set busy flag in new task's
-  //          TSS descriptor.  If IRET, leave set.
-  //
-
-  if ( (source==BX_TASK_FROM_JUMP) || (source==BX_TASK_FROM_CALL_OR_INT) ) {
-    // set the new task's busy bit
-    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
-    access_linear(laddr, 4, 0, BX_READ, &dword2);
-    dword2 |= 0x00000200;
-    access_linear(laddr, 4, 0, BX_WRITE, &dword2);
-  }
-
-  //
-  // Step 11: Set TS flag in the CR0 image stored in the new task TSS.
-  //
-
-  // set TS bit in CR0 register
-  BX_CPU_THIS_PTR cr0.ts = 1;
-  BX_CPU_THIS_PTR cr0.val32 |= 0x00000008;
-
-  //
-  // Step 12: Load the task register with the segment selector and
-  //          descriptor for the new task TSS.
-  //
+  // Step 7: Load the task register with the segment selector and
+  //        descriptor for the new task TSS.
 
   BX_CPU_THIS_PTR tr.selector = *tss_selector;
   BX_CPU_THIS_PTR tr.cache    = *tss_descriptor;
   // Reset the busy-flag, because all functions expect non-busy types in
-  // tr.cache.  From Peter Lammich <peterl@sourceforge.net>.
+  // tr.cache. From Peter Lammich <peterl@sourceforge.net>.
   BX_CPU_THIS_PTR tr.cache.type &= ~2;
 
-  //
-  // Step 13: Load the new task (dynamic) state from new TSS.
+  // Step 8: Set TS flag in the CR0 image stored in the new task TSS.
+
+  BX_CPU_THIS_PTR cr0.ts = 1;
+  BX_CPU_THIS_PTR cr0.val32 |= 0x00000008;
+
+  // Task switch clears LE/L3/L2/L1/L0 in DR7
+  BX_CPU_THIS_PTR dr7 &= ~0x00000155;
+
+  // Step 9: If call or interrupt, set the NT flag in the eflags
+  //         image stored in new task's TSS.  If IRET or JMP,
+  //         NT is restored from new TSS eflags image. (no change)
+
+  // effect on NT flag of new task
+  if (source == BX_TASK_FROM_CALL_OR_INT) {
+    newEFLAGS |= EFlagsNTMask; // NT flag is set
+  }
+
+  // Step 10: Load the new task (dynamic) state from new TSS.
   //          Any errors associated with loading and qualification of
   //          segment descriptors in this step occur in the new task's
   //          context.  State loaded here includes LDTR, CR3,
   //          EFLAGS, EIP, general purpose registers, and segment
   //          descriptor parts of the segment registers.
-  //
 
-  if ( (tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
-    CR3_change(newCR3); // Tell paging unit about new cr3 value
-    BX_DEBUG (("task_switch changing CR3 to 0x%08x", newCR3));
-    BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
+  if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
+    // change CR3 only if it actually modified
+    if (newCR3 != BX_CPU_THIS_PTR cr3) {
+      CR3_change(newCR3); // Tell paging unit about new cr3 value
+      BX_DEBUG (("task_switch changing CR3 to 0x%08x", newCR3));
+      BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_TASKSWITCH, newCR3);
+    }
   }
 
   BX_CPU_THIS_PTR prev_eip = EIP = newEIP;
-  writeEFlags(newEFLAGS, EFlagsValidMask);
+
   EAX = newEAX;
   ECX = newECX;
   EDX = newEDX;
@@ -470,38 +446,36 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   ESI = newESI;
   EDI = newEDI;
 
+  writeEFlags(newEFLAGS, EFlagsValidMask);
+
   // Fill in selectors for all segment registers.  If errors
   // occur later, the selectors will at least be loaded.
-  parse_selector(raw_es_selector, &es_selector);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector = es_selector;
   parse_selector(raw_cs_selector, &cs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = cs_selector;
-  parse_selector(raw_ss_selector, &ss_selector);
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = ss_selector;
   parse_selector(raw_ds_selector, &ds_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector = ds_selector;
+  parse_selector(raw_es_selector, &es_selector);
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector = es_selector;
+  parse_selector(raw_ss_selector, &ss_selector);
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector = ss_selector;
   parse_selector(raw_fs_selector, &fs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector = fs_selector;
   parse_selector(raw_gs_selector, &gs_selector);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector = gs_selector;
+
   parse_selector(raw_ldt_selector, &ldt_selector);
-  BX_CPU_THIS_PTR ldtr.selector                 = ldt_selector;
+  BX_CPU_THIS_PTR ldtr.selector = ldt_selector;
 
   // Start out with invalid descriptor caches, fill in
   // with values only as they are validated.
   BX_CPU_THIS_PTR ldtr.cache.valid = 0;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
-
-
-  // need to test valid bit in fetch_raw_descriptor?()
-  // or set limit to 0 instead when LDT is loaded with
-  // null. ??? +++
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
 
   // LDTR
   if (ldt_selector.ti) {
@@ -512,7 +486,6 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     goto post_exception;
   }
 
-  // ??? is LDT loaded in v8086 mode
   if ( (raw_ldt_selector & 0xfffc) != 0 ) {
     bx_bool good = fetch_raw_descriptor2(&ldt_selector, &dword1, &dword2);
     if (!good) {
@@ -705,7 +678,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   if ((tss_descriptor->type>=9) && (trap_word & 0x0001)) {
     BX_CPU_THIS_PTR debug_trap |= 0x00008000; // BT flag in DR6
     BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
-    BX_INFO(("task_switch: T bit set in new TSS."));
+    BX_INFO(("task_switch: T bit set in new TSS"));
   }
 
   //
