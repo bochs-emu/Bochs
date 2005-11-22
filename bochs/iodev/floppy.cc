@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.89 2005-11-20 14:15:28 vruppert Exp $
+// $Id: floppy.cc,v 1.90 2005-11-22 18:34:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,23 +78,31 @@ bx_floppy_ctrl_c *theFloppyController;
 
 #define FLOPPY_DMA_CHAN 2
 
+#define FDRIVE_NONE  0x00
+#define FDRIVE_525DD 0x01
+#define FDRIVE_350DD 0x02
+#define FDRIVE_525HD 0x04
+#define FDRIVE_350HD 0x08
+#define FDRIVE_350ED 0x10
+
 typedef struct {
   unsigned id;
   Bit8u trk;
   Bit8u hd;
   Bit8u spt;
   unsigned sectors;
+  Bit8u drive_mask;
 } floppy_type_t;
 
 static floppy_type_t floppy_type[8] = {
-  {BX_FLOPPY_160K, 40, 1, 8, 320},
-  {BX_FLOPPY_180K, 40, 1, 9, 360},
-  {BX_FLOPPY_320K, 40, 2, 8, 640},
-  {BX_FLOPPY_360K, 40, 2, 9, 720},
-  {BX_FLOPPY_720K, 80, 2, 9, 1440},
-  {BX_FLOPPY_1_2,  80, 2, 15, 2400},
-  {BX_FLOPPY_1_44, 80, 2, 18, 2880},
-  {BX_FLOPPY_2_88, 80, 2, 36, 5760}
+  {BX_FLOPPY_160K, 40, 1, 8, 320, 0x01},
+  {BX_FLOPPY_180K, 40, 1, 9, 360, 0x01},
+  {BX_FLOPPY_320K, 40, 2, 8, 640, 0x01},
+  {BX_FLOPPY_360K, 40, 2, 9, 720, 0x05},
+  {BX_FLOPPY_720K, 80, 2, 9, 1440, 0x1c},
+  {BX_FLOPPY_1_2,  80, 2, 15, 2400, 0x04},
+  {BX_FLOPPY_1_44, 80, 2, 18, 2880, 0x18},
+  {BX_FLOPPY_2_88, 80, 2, 36, 5760, 0x10}
 };
 
 static Bit16u drate_in_k[4] = {
@@ -136,7 +144,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.89 2005-11-20 14:15:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.90 2005-11-22 18:34:50 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -152,8 +160,8 @@ bx_floppy_ctrl_c::init(void)
   for (i=0; i<4; i++) {
     BX_FD_THIS s.media[i].type = BX_FLOPPY_NONE;
     BX_FD_THIS s.media_present[i] = 0;
-    BX_FD_THIS s.device_type[i] = BX_FLOPPY_NONE;
-    }
+    BX_FD_THIS s.device_type[i] = FDRIVE_NONE;
+  }
 
   //
   // Floppy A setup
@@ -163,46 +171,54 @@ bx_floppy_ctrl_c::init(void)
   BX_FD_THIS s.media[0].heads             = 0;
   BX_FD_THIS s.media[0].sectors           = 0;
   BX_FD_THIS s.media[0].fd = -1;
-  BX_FD_THIS s.device_type[0] = bx_options.floppya.Odevtype->get ();
 
-  switch (BX_FD_THIS s.device_type[0]) {
+  switch (bx_options.floppya.Odevtype->get ()) {
     case BX_FLOPPY_NONE:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x00);
+      BX_FD_THIS s.device_type[0] = FDRIVE_NONE;
       break;
     case BX_FLOPPY_360K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x10);
+      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_1_2:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x20);
+      BX_FD_THIS s.device_type[0] = FDRIVE_525HD;
       break;
     case BX_FLOPPY_720K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x30);
+      BX_FD_THIS s.device_type[0] = FDRIVE_350DD;
       break;
     case BX_FLOPPY_1_44:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x40);
+      BX_FD_THIS s.device_type[0] = FDRIVE_350HD;
       break;
     case BX_FLOPPY_2_88:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x50);
+      BX_FD_THIS s.device_type[0] = FDRIVE_350ED;
       break;
 
     // use CMOS reserved types
     case BX_FLOPPY_160K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x60);
       BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 6"));
+      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_180K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x70);
       BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 7"));
+      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_320K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0x0f) | 0x80);
       BX_INFO(("WARNING: 1st floppy uses of reserved CMOS floppy drive type 8"));
+      BX_FD_THIS s.device_type[0] = FDRIVE_525DD;
       break;
 
     default:
       BX_PANIC(("unknown floppya type"));
     }
-  if (BX_FD_THIS s.device_type[0] != BX_FLOPPY_NONE) {
+  if (BX_FD_THIS s.device_type[0] != FDRIVE_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
     BX_FD_THIS s.statusbar_id[0] = bx_gui->register_statusitem(" A: ");
   } else {
@@ -211,18 +227,18 @@ bx_floppy_ctrl_c::init(void)
 
   if (bx_options.floppya.Otype->get () != BX_FLOPPY_NONE) {
     if ( bx_options.floppya.Ostatus->get () == BX_INSERTED) {
-      if (evaluate_media(bx_options.floppya.Otype->get (), bx_options.floppya.Opath->getptr (),
-                   & BX_FD_THIS s.media[0]))
+      if (evaluate_media(BX_FD_THIS s.device_type[0], bx_options.floppya.Otype->get (),
+                         bx_options.floppya.Opath->getptr (), & BX_FD_THIS s.media[0])) {
         BX_FD_THIS s.media_present[0] = 1;
-      else
-        bx_options.floppya.Ostatus->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[0])
         BX_INFO(("fd0: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppya.Opath->getptr(),
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
+      } else {
+        bx_options.floppya.Ostatus->set(BX_EJECTED);
       }
     }
-
+  }
 
   //
   // Floppy B setup
@@ -232,46 +248,54 @@ bx_floppy_ctrl_c::init(void)
   BX_FD_THIS s.media[1].heads             = 0;
   BX_FD_THIS s.media[1].sectors           = 0;
   BX_FD_THIS s.media[1].fd = -1;
-  BX_FD_THIS s.device_type[1] = bx_options.floppyb.Odevtype->get ();
 
-  switch (BX_FD_THIS s.device_type[1]) {
+  switch (bx_options.floppyb.Odevtype->get ()) {
     case BX_FLOPPY_NONE:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x00);
+      BX_FD_THIS s.device_type[1] = FDRIVE_NONE;
       break;
     case BX_FLOPPY_360K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x01);
+      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_1_2:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x02);
+      BX_FD_THIS s.device_type[1] = FDRIVE_525HD;
       break;
     case BX_FLOPPY_720K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x03);
+      BX_FD_THIS s.device_type[1] = FDRIVE_350DD;
       break;
     case BX_FLOPPY_1_44:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x04);
+      BX_FD_THIS s.device_type[1] = FDRIVE_350HD;
       break;
     case BX_FLOPPY_2_88:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x05);
+      BX_FD_THIS s.device_type[1] = FDRIVE_350ED;
       break;
 
     // use CMOS reserved types
     case BX_FLOPPY_160K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x06);
       BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 6"));
+      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_180K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x07);
       BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 7"));
+      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
       break;
     case BX_FLOPPY_320K:
       DEV_cmos_set_reg(0x10, (DEV_cmos_get_reg(0x10) & 0xf0) | 0x08);
       BX_INFO(("WARNING: 2nd floppy uses of reserved CMOS floppy drive type 8"));
+      BX_FD_THIS s.device_type[1] = FDRIVE_525DD;
       break;
 
     default:
       BX_PANIC(("unknown floppyb type"));
     }
-  if (BX_FD_THIS s.device_type[1] != BX_FLOPPY_NONE) {
+  if (BX_FD_THIS s.device_type[1] != FDRIVE_NONE) {
     BX_FD_THIS s.num_supported_floppies++;
     BX_FD_THIS s.statusbar_id[1] = bx_gui->register_statusitem(" B: ");
   } else {
@@ -280,18 +304,18 @@ bx_floppy_ctrl_c::init(void)
 
   if (bx_options.floppyb.Otype->get () != BX_FLOPPY_NONE) {
     if ( bx_options.floppyb.Ostatus->get () == BX_INSERTED) {
-      if (evaluate_media(bx_options.floppyb.Otype->get (), bx_options.floppyb.Opath->getptr (),
-                   & BX_FD_THIS s.media[1]))
+      if (evaluate_media(BX_FD_THIS s.device_type[1], bx_options.floppyb.Otype->get (),
+                         bx_options.floppyb.Opath->getptr (), & BX_FD_THIS s.media[1])) {
         BX_FD_THIS s.media_present[1] = 1;
-      else
-        bx_options.floppyb.Ostatus->set(BX_EJECTED);
 #define MED (BX_FD_THIS s.media[1])
         BX_INFO(("fd1: '%s' ro=%d, h=%d,t=%d,spt=%d", bx_options.floppyb.Opath->getptr(),
         MED.write_protected, MED.heads, MED.tracks, MED.sectors_per_track));
 #undef MED
+      } else {
+        bx_options.floppyb.Ostatus->set(BX_EJECTED);
       }
     }
-
+  }
 
   /* CMOS Equipment Byte register */
   if (BX_FD_THIS s.num_supported_floppies > 0) {
@@ -1419,7 +1443,7 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     if (BX_FD_THIS s.media[drive].fd >= 0) {
       close( BX_FD_THIS s.media[drive].fd );
       BX_FD_THIS s.media[drive].fd = -1;
-      }
+    }
     BX_FD_THIS s.media_present[drive] = 0;
     if (drive == 0) {
       bx_options.floppya.Ostatus->set(BX_EJECTED);
@@ -1437,7 +1461,7 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
     }
     if (!strcmp(path, "none"))
       return(0);
-    if (evaluate_media(type, path, & BX_FD_THIS s.media[drive])) {
+    if (evaluate_media(BX_FD_THIS s.device_type[drive], type, path, & BX_FD_THIS s.media[drive])) {
       BX_FD_THIS s.media_present[drive] = 1;
       if (drive == 0) {
 #define MED (BX_FD_THIS s.media[0])
@@ -1457,8 +1481,10 @@ bx_floppy_ctrl_c::set_media_status(unsigned drive, unsigned status)
       BX_FD_THIS s.media_present[drive] = 0;
       if (drive == 0) {
         bx_options.floppya.Ostatus->set(BX_EJECTED);
+        bx_options.floppya.Otype->set(BX_FLOPPY_NONE);
       } else {
         bx_options.floppyb.Ostatus->set(BX_EJECTED);
+        bx_options.floppyb.Otype->set(BX_FLOPPY_NONE);
       }
       return(0);
     }
@@ -1480,11 +1506,11 @@ bx_floppy_ctrl_c::get_media_status(unsigned drive)
 #endif
 
   bx_bool
-bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
+bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, floppy_t *media)
 {
   struct stat stat_buf;
   int i, ret;
-  int idx = -1;
+  int type_idx = -1;
 #ifdef __linux__
   struct floppy_struct floppy_geom;
 #endif
@@ -1497,13 +1523,26 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
   unsigned tracks, heads, spt;
 #endif
 
-  if (type == BX_FLOPPY_NONE)
-    return(0);
-
   //If media file is already open, close it before reopening.
   if(media->fd >=0) {
     close(media->fd);
     media->fd=-1;
+  }
+
+  // check media type
+  if (type == BX_FLOPPY_NONE) {
+    return 0;
+  }
+  for (i = 0; i < 8; i++) {
+    if (type == floppy_type[i].id) type_idx = i;
+  }
+  if (type_idx == -1) {
+    BX_ERROR(("evaluate_media: unknown media type %d", type));
+    return 0;
+  }
+  if ((floppy_type[type_idx].drive_mask & devtype) == 0) {
+    BX_ERROR(("evaluate_media: media type %d not valid for this floppy drive", type));
+    return 0;
   }
 
   // open media file (image file or device)
@@ -1620,13 +1659,6 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     return(0);
     }
 
-  for (i = 0; i < 8; i++) {
-    if (type == floppy_type[i].id) idx = i;
-  }
-  if (idx == -1 ) {
-    BX_PANIC(("evaluate_media: unknown media type"));
-    return(0);
-  }
   if ( S_ISREG(stat_buf.st_mode) ) {
     // regular file
     switch (type) {
@@ -1640,43 +1672,47 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
       case BX_FLOPPY_1_2: // 1.2M 5.25"
       case BX_FLOPPY_2_88: // 2.88M 3.5"
         media->type              = type;
-        media->tracks            = floppy_type[idx].trk;
-        media->heads             = floppy_type[idx].hd;
-        media->sectors_per_track = floppy_type[idx].spt;
-        media->sectors           = floppy_type[idx].sectors;
+        media->tracks            = floppy_type[type_idx].trk;
+        media->heads             = floppy_type[type_idx].hd;
+        media->sectors_per_track = floppy_type[type_idx].spt;
+        media->sectors           = floppy_type[type_idx].sectors;
         if (stat_buf.st_size > (media->sectors * 512)) {
-          BX_INFO(("evaluate_media: size of file '%s' (%lu) too large for selected type",
+          BX_ERROR(("evaluate_media: size of file '%s' (%lu) too large for selected type",
                    path, (unsigned long) stat_buf.st_size));
-          return(0);
+          return 0;
         }
         break;
       default: // 1.44M 3.5"
         media->type              = type;
         if (stat_buf.st_size <= 1474560) {
-          media->tracks            = floppy_type[idx].trk;
-          media->heads             = floppy_type[idx].hd;
-          media->sectors_per_track = floppy_type[idx].spt;
-          }
-        else if (stat_buf.st_size == 1720320) {
+          media->tracks            = floppy_type[type_idx].trk;
+          media->heads             = floppy_type[type_idx].hd;
+          media->sectors_per_track = floppy_type[type_idx].spt;
+        }
+        else if (stat_buf.st_size == 1720320)
+        {
           media->sectors_per_track = 21;
           media->tracks            = 80;
           media->heads             = 2;
-          }
-        else if (stat_buf.st_size == 1763328) {
+        }
+        else if (stat_buf.st_size == 1763328)
+        {
           media->sectors_per_track = 21;
           media->tracks            = 82;
           media->heads             = 2;
-          }
-        else if (stat_buf.st_size == 1884160) {
+        }
+        else if (stat_buf.st_size == 1884160)
+        {
           media->sectors_per_track = 23;
           media->tracks            = 80;
           media->heads             = 2;
-          }
-        else {
-          BX_INFO(("evaluate_media: file '%s' of unknown size %lu",
+        }
+        else
+        {
+          BX_ERROR(("evaluate_media: file '%s' of unknown size %lu",
             path, (unsigned long) stat_buf.st_size));
-          return(0);
-          }
+          return 0;
+        }
         media->sectors = media->heads * media->tracks * media->sectors_per_track;
       }
     return(1); // success
@@ -1695,11 +1731,11 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
 #ifdef __linux__
     if (ioctl(media->fd, FDGETPRM, &floppy_geom) < 0) {
       BX_ERROR(("cannot determine media geometry, trying to use defaults"));
-      media->tracks            = floppy_type[idx].trk;
-      media->heads             = floppy_type[idx].hd;
-      media->sectors_per_track = floppy_type[idx].spt;
-      media->sectors           = floppy_type[idx].sectors;
-      return(1);
+      media->tracks            = floppy_type[type_idx].trk;
+      media->heads             = floppy_type[type_idx].hd;
+      media->sectors_per_track = floppy_type[type_idx].spt;
+      media->sectors           = floppy_type[type_idx].sectors;
+      return 1;
     }
     media->tracks            = floppy_geom.track;
     media->heads             = floppy_geom.head;
@@ -1711,18 +1747,17 @@ bx_floppy_ctrl_c::evaluate_media(unsigned type, char *path, floppy_t *media)
     media->sectors_per_track = spt;
     media->sectors = media->heads * media->tracks * media->sectors_per_track;
 #else
-    media->tracks            = floppy_type[idx].trk;
-    media->heads             = floppy_type[idx].hd;
-    media->sectors_per_track = floppy_type[idx].spt;
-    media->sectors           = floppy_type[idx].sectors;
+    media->tracks            = floppy_type[type_idx].trk;
+    media->heads             = floppy_type[type_idx].hd;
+    media->sectors_per_track = floppy_type[type_idx].spt;
+    media->sectors           = floppy_type[type_idx].sectors;
 #endif
-    return(1); // success
-    }
-  else {
+    return 1; // success
+  } else {
     // unknown file type
-    BX_INFO(("unknown mode type"));
-    return(0);
-    }
+    BX_ERROR(("unknown mode type"));
+    return 0;
+  }
 }
 
 
