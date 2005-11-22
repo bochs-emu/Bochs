@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.60 2005-11-21 21:10:59 sshwarts Exp $
+// $Id: apic.cc,v 1.61 2005-11-22 17:41:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -449,6 +449,7 @@ void bx_local_apic_c::init ()
 
 void bx_local_apic_c::set_id (Bit8u newid)
 {
+  local_apic_index[id] = NULL;
   bx_generic_apic_c::set_id (newid);
   local_apic_index[id] = this;
   sprintf (cpu->name, "CPU apicid=%02x", (Bit32u)id);
