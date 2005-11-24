@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.46 2004-10-03 09:11:28 vruppert Exp $
+// $Id: wxmain.h,v 1.47 2005-11-24 18:51:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -87,12 +87,11 @@ enum
   ID_Filename,
   ID_FilenameText,
   ID_Browse,
-  ID_Browse2,
+  ID_Capacity,
   ID_Create,
-  // dialog box: NetConfigDialog
-  ID_Enable,
   // dialog box: LogOptions
   ID_Advanced,
+  ID_Browse2,
   // dialog box: CpuRegistersDialog
   ID_Debug_Continue,
   ID_Debug_Stop,

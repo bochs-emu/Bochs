@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.54 2004-10-03 09:11:28 vruppert Exp $
+// $Id: wxdialog.h,v 1.55 2005-11-24 18:51:55 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -181,6 +181,7 @@ private:
   wxRadioButton *rbtn[FLOPPY_MAX_RBTNS];
   wxString equivalentFilename[FLOPPY_MAX_RBTNS];
   int n_rbtns;
+  wxButton *CreateBtn;
   wxRadioButton *diskImageRadioBtn;
   wxTextCtrl *filename;
   wxChoice *capacity;
@@ -197,7 +198,7 @@ public:
   // Use char* instead of wxString because the array we use is already
   // expressed as a char *[].
   void SetCapacityChoices (int n, char *choices[]);
-  void SetCapacity (int cap) { capacity->SetSelection (cap); }
+  void SetCapacity (int cap);
   int GetRadio ();
   int GetCapacity () { return capacity->GetSelection (); }
   wxString GetFilename ();

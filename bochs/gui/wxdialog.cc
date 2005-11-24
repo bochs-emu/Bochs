@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.77 2005-11-18 23:29:41 vruppert Exp $
+// $Id: wxdialog.cc,v 1.78 2005-11-24 18:51:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -184,6 +184,7 @@ void LogMsgAskDialog::ShowHelp ()
 BEGIN_EVENT_TABLE(FloppyConfigDialog, wxDialog)
   EVT_BUTTON(-1, FloppyConfigDialog::OnEvent)
   EVT_TEXT(-1, FloppyConfigDialog::OnEvent)
+  EVT_CHOICE(-1, FloppyConfigDialog::OnEvent)
 END_EVENT_TABLE()
 
 
@@ -211,7 +212,7 @@ FloppyConfigDialog::FloppyConfigDialog(
   vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 30);
   // contents of capacitySizer
   wxStaticText *captext = new wxStaticText (this, -1, FLOPPY_CONFIG_CAP);
-  capacity = new wxChoice (this, -1);
+  capacity = new wxChoice (this, ID_Capacity);
   capacitySizer->Add (captext, 0, wxALL, 5);
   capacitySizer->Add (capacity, 0, wxALL|wxADJUST_MINSIZE, 5);
   // contents of buttonSizer
@@ -220,8 +221,8 @@ FloppyConfigDialog::FloppyConfigDialog(
   // use wxID_CANCEL because pressing ESC produces this same code
   btn = new wxButton (this, wxID_CANCEL, "Cancel");
   buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, ID_Create, "Create Image");
-  buttonSizer->Add (btn, 0, wxALL, 5);
+  CreateBtn = new wxButton (this, ID_Create, "Create Image");
+  buttonSizer->Add (CreateBtn, 0, wxALL, 5);
   btn = new wxButton (this, wxID_OK, "Ok");
   buttonSizer->Add (btn, 0, wxALL, 5);
   // create filename and diskImageRadioBtn so that we can tweak them before
@@ -260,6 +261,12 @@ void FloppyConfigDialog::SetCapacityChoices (int n, char *choices[])
 {
   for (int i=0; i<n; i++)
     capacity->Append (wxString (choices[i]));
+}
+
+void FloppyConfigDialog::SetCapacity (int cap)
+{
+  capacity->SetSelection(cap);
+  CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
 }
 
 void FloppyConfigDialog::Init()
@@ -337,6 +344,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       // when you type into the filename field, ensure that the radio
       // button associated with that field is chosen.
       diskImageRadioBtn->SetValue (TRUE);
+      capacity->SetSelection(capacity->FindString("auto"));
       break;
     case wxID_OK:
       // probably should validate before allowing ok
@@ -347,14 +355,15 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
     case ID_Browse:
       BrowseTextCtrl (filename);
       break;
+    case ID_Capacity:
+      {
+	int cap = capacity->GetSelection();
+        CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
+      }
+      break;
     case ID_Create:
       {
 	int cap = capacity->GetSelection ();
-	if (capacity->GetString (cap).Cmp ("none") == 0
-	    || !(cap>=0 && cap<n_floppy_type_names)) {
-	  wxMessageBox("You must choose a valid capacity for the new disk image", "Bad Capacity", wxOK | wxICON_ERROR, this );
-	  return;
-	}
 	char name[1024];
 	strncpy (name, filename->GetValue ().c_str (), sizeof(name));
         if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
@@ -2011,7 +2020,7 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
 bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
   wxConfigBase::Get() -> Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
-  wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), wxString(), style);
+  wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), "*.*", style);
   if (fdialog->ShowModal () == wxID_OK)
     text->SetValue (fdialog->GetPath ());
   delete fdialog;
