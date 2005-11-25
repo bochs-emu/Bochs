@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.78 2005-11-24 18:51:55 vruppert Exp $
+// $Id: wxdialog.cc,v 1.79 2005-11-25 16:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -338,13 +338,11 @@ FloppyConfigDialog::GetFilename ()
 void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  wxLogMessage ("you pressed button id=%d", id);
   switch (id) {
     case ID_FilenameText:
       // when you type into the filename field, ensure that the radio
       // button associated with that field is chosen.
       diskImageRadioBtn->SetValue (TRUE);
-      capacity->SetSelection(capacity->FindString("auto"));
       break;
     case wxID_OK:
       // probably should validate before allowing ok
@@ -357,22 +355,23 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case ID_Capacity:
       {
-	int cap = capacity->GetSelection();
+        int cap = capacity->GetSelection();
         CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
       }
       break;
     case ID_Create:
       {
-	int cap = capacity->GetSelection ();
-	char name[1024];
-	strncpy (name, filename->GetValue ().c_str (), sizeof(name));
+        int cap = capacity->GetSelection ();
+        char name[1024];
+        strncpy (name, filename->GetValue ().c_str (), sizeof(name));
         if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
-	  wxString msg;
-	  msg.Printf ("Created a %s disk image called '%s'.",
-	      capacity->GetString (cap).c_str (), 
-	      filename->GetValue ().c_str ());
-	  wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION, this);
-	}
+          wxString msg;
+          msg.Printf ("Created a %s disk image called '%s'.",
+            capacity->GetString (cap).c_str (), 
+            filename->GetValue ().c_str ());
+          wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION, this);
+          capacity->SetSelection(capacity->FindString("auto"));
+        }
       }
       break;
     case wxID_CANCEL:
