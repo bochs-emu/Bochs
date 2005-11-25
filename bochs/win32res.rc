@@ -42,9 +42,9 @@ BEGIN
     EDITTEXT        IDPATH, 50, 30, 120, 14, ES_AUTOHSCROLL
     PUSHBUTTON      "Browse...", IDBROWSE, 180, 30, 50, 14
     LTEXT           "Media Type", IDMEDIATX, 5, 52, 45, 14
-    COMBOBOX        IDMEDIATYPE, 50, 50, 40, 14, CBS_DROPDOWNLIST
+    COMBOBOX        IDMEDIATYPE, 50, 50, 40, 14, CBS_DROPDOWNLIST | WS_TABSTOP
     AUTOCHECKBOX    "Inserted", IDSTATUS, 50, 70, 50, 14
-    LTEXT           "Clicking OK signals a media change for this drive...",
+    LTEXT           "Clicking OK signals a media change for this drive.",
                     IDCHANGETX, 35, 90, 185, 8
     PUSHBUTTON      "Create Image", IDCREATE, 35, 105, 50, 14
     DEFPUSHBUTTON   "OK", IDOK, 95, 105, 50, 14
