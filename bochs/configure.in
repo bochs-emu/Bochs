@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.300 2005-10-20 17:24:47 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.301 2005-11-25 11:52:06 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -899,17 +899,21 @@ AC_ARG_ENABLE(4meg-pages,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
+    support_4M_pages=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
+    support_4M_pages=0
    fi],
   [
     if test "$bx_cpu_level" -gt 4; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
+      support_4M_pages=1
     else
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
+      support_4M_pages=0
     fi
     ]
   )
@@ -921,21 +925,62 @@ AC_ARG_ENABLE(pae,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SupportPAE, 1)
+    support_pae=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SupportPAE, 0)
+    support_pae=0
    fi],
   [
     if test "$bx_cpu_level" -gt 5; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SupportPAE, 1)
+      support_pae=1
     else
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_SupportPAE, 0)
+      support_pae=0
     fi
     ]
   )
 
+AC_MSG_CHECKING(for global pages support)
+AC_ARG_ENABLE(global-pages,
+  [  --enable-global-pages             support for global pages in PDE/PTE],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SupportGlobalPages, 1)
+    support_global_pages=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SupportGlobalPages, 0)
+    support_global_pages=0
+   fi],
+  [
+    if test "$bx_cpu_level" -gt 5; then
+      # enable by default
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SupportGlobalPages, 1)
+      support_global_pages=1
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SupportGlobalPages, 0)
+      support_global_pages=0
+    fi
+    ]
+  )
+
+if test "$bx_cpu_level" -lt 4 -a "$support_4M_pages" = 1; then
+  AC_MSG_ERROR([for 4M paging support the CPU level must be >= 4])
+fi
+
+if test "$bx_cpu_level" -lt 5 -a "$support_pae" = 1; then
+  AC_MSG_ERROR([for PAE support the CPU level must be >= 5])
+fi
+
+if test "$bx_cpu_level" -lt 5 -a "$support_global_pages" = 1; then
+  AC_MSG_ERROR([for Global Pages support the CPU level must be >= 5])
+fi
 
 AC_MSG_CHECKING(for guest to host TLB support)
 AC_ARG_ENABLE(guest2host-tlb,
@@ -998,28 +1043,6 @@ AC_ARG_ENABLE(fast-function-calls,
   [
     AC_MSG_RESULT(no)
     speedup_fastcall=0
-    ]
-  )
-
-AC_MSG_CHECKING(for global pages support)
-AC_ARG_ENABLE(global-pages,
-  [  --enable-global-pages             support for global pages in PDE/PTE],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportGlobalPages, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGlobalPages, 0)
-   fi],
-  [
-    if test "$bx_cpu_level" -gt 5; then
-      # enable by default
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SupportGlobalPages, 1)
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SupportGlobalPages, 0)
-    fi
     ]
   )
 
