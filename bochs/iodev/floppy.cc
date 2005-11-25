@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.90 2005-11-22 18:34:50 vruppert Exp $
+// $Id: floppy.cc,v 1.91 2005-11-25 22:29:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.90 2005-11-22 18:34:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.91 2005-11-25 22:29:20 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1833,8 +1833,8 @@ bx_floppy_ctrl_c::enter_result_phase(void)
       break;
   }
 
-  // Print command result
-  char buf[8+(7*5)+1], *p = buf;
+  // Print command result (max. 10 bytes)
+  char buf[8+(10*5)+1], *p = buf;
   p += sprintf(p, "RESULT: ");
   for (i=0; i<BX_FD_THIS s.result_size; i++) {
     p += sprintf(p, "[%02x] ", (unsigned) BX_FD_THIS s.result[i]);
