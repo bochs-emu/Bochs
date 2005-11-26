@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.79 2005-11-25 16:24:47 vruppert Exp $
+// $Id: wxdialog.cc,v 1.80 2005-11-26 09:22:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -351,7 +351,9 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       EndModal (wxID_OK);
       break;
     case ID_Browse:
-      BrowseTextCtrl (filename);
+      if (BrowseTextCtrl(filename)) {
+        capacity->SetSelection(capacity->FindString("auto"));
+      }
       break;
     case ID_Capacity:
       {
@@ -370,7 +372,6 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
             capacity->GetString (cap).c_str (), 
             filename->GetValue ().c_str ());
           wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION, this);
-          capacity->SetSelection(capacity->FindString("auto"));
         }
       }
       break;
@@ -2020,10 +2021,11 @@ bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
   wxConfigBase::Get() -> Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), "*.*", style);
-  if (fdialog->ShowModal () == wxID_OK)
+  int result = fdialog->ShowModal();
+  if (result == wxID_OK)
     text->SetValue (fdialog->GetPath ());
   delete fdialog;
-  return true;
+  return (result == wxID_OK);
 }
 
 wxChoice *makeLogOptionChoiceBox (wxWindow *parent,

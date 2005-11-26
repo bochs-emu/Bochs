@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.110 2005-11-24 18:51:55 vruppert Exp $
+// $Id: wxmain.cc,v 1.111 2005-11-26 09:22:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -651,6 +651,7 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_SERIAL_PARALLEL);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
+  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
@@ -925,7 +926,6 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable( ID_Edit_PCI, canConfigure);
   menuEdit->Enable( ID_Edit_Timing, canConfigure);
   menuEdit->Enable( ID_Edit_Network, canConfigure);
-  menuEdit->Enable( ID_Edit_Serial_Parallel, canConfigure);
   menuEdit->Enable( ID_Edit_LoadHack, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
@@ -1240,9 +1240,9 @@ void MyFrame::editFloppyConfig (int drive)
   dlg.SetFilename (fname->getptr ());
   dlg.SetValidateFunc (editFloppyValidate);
   if (disktype->get() == BX_FLOPPY_NONE) {
-    dlg.SetRadio (0);
-  } else if (!strcmp ("none", fname->getptr ())) {
-    dlg.SetRadio (sim_thread == NULL);
+    dlg.SetRadio(0);
+  } else if ((status->get() == BX_EJECTED) || (!strcmp("none", fname->getptr ()))) {
+    dlg.SetRadio((sim_thread == NULL)?1:0);
   } else {
     // otherwise the SetFilename() should have done the right thing.
   }
@@ -1256,8 +1256,15 @@ void MyFrame::editFloppyConfig (int drive)
     wxLogMessage ("capacity = %d (%s)", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
     fname->set (filename);
     disktype->set (disktype->get_min () + dlg.GetCapacity ());
-    if (dlg.GetRadio () == 0)
-      disktype->set (BX_FLOPPY_NONE);
+    if (sim_thread == NULL) {
+      if (dlg.GetRadio() == 0) {
+        disktype->set (BX_FLOPPY_NONE);
+      }
+    } else {
+      if (dlg.GetRadio() > 0) {
+        status->set(BX_INSERTED);
+      }
+    }
   }
 }
 
