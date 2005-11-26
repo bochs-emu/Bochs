@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.301 2005-11-25 11:52:06 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.302 2005-11-26 21:36:50 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -924,21 +924,21 @@ AC_ARG_ENABLE(pae,
   [  --enable-pae                      support Physical Address Extensions],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportPAE, 1)
+    AC_DEFINE(BX_SUPPORT_PAE, 1)
     support_pae=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportPAE, 0)
+    AC_DEFINE(BX_SUPPORT_PAE, 0)
     support_pae=0
    fi],
   [
     if test "$bx_cpu_level" -gt 5; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SupportPAE, 1)
+      AC_DEFINE(BX_SUPPORT_PAE, 1)
       support_pae=1
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SupportPAE, 0)
+      AC_DEFINE(BX_SUPPORT_PAE, 0)
       support_pae=0
     fi
     ]
@@ -949,22 +949,22 @@ AC_ARG_ENABLE(global-pages,
   [  --enable-global-pages             support for global pages in PDE/PTE],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SupportGlobalPages, 1)
+    AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 1)
     support_global_pages=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SupportGlobalPages, 0)
+    AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 0)
     support_global_pages=0
    fi],
   [
     if test "$bx_cpu_level" -gt 5; then
       # enable by default
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SupportGlobalPages, 1)
+      AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 1)
       support_global_pages=1
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SupportGlobalPages, 0)
+      AC_DEFINE(BX_SUPPORT_GLOBAL_PAGES, 0)
       support_global_pages=0
     fi
     ]

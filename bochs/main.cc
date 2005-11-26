@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.297 2005-10-28 00:12:26 kevinlawton Exp $
+// $Id: main.cc,v 1.298 2005-11-26 21:36:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -816,8 +816,8 @@ int bx_init_hardware()
   BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
   BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
-  BX_INFO(("  PAE support: %s",BX_SupportPAE?"yes":"no"));
-  BX_INFO(("  PGE support: %s",BX_SupportGlobalPages?"yes":"no"));
+  BX_INFO(("  PAE support: %s",BX_SUPPORT_PAE?"yes":"no"));
+  BX_INFO(("  PGE support: %s",BX_SUPPORT_GLOBAL_PAGES?"yes":"no"));
   BX_INFO(("  PSE support: %s",BX_SUPPORT_4MEG_PAGES?"yes":"no"));
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
   BX_INFO(("  SEP support: %s",BX_SUPPORT_SEP?"yes":"no"));
@@ -878,8 +878,7 @@ int bx_init_hardware()
   if (strcmp(bx_options.optram[3].Opath->getptr (),"") !=0 )
     BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
 
-  BX_CPU(0)->init (BX_MEM(0));
-  BX_CPU(0)->set_cpu_id(0);
+  BX_CPU(0)->initialize(BX_MEM(0));
 #if BX_SUPPORT_APIC
   BX_CPU(0)->local_apic.set_id (0);
 #endif
@@ -916,11 +915,10 @@ int bx_init_hardware()
     BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
 
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i) = new BX_CPU_C;
-    BX_CPU(i)->init (bx_mem_array[0]);
+    BX_CPU(i) = new BX_CPU_C(i);
+    BX_CPU(i)->initialize(bx_mem_array[0]);
     // assign apic ID from the index of this loop
     // if !BX_SUPPORT_APIC, this will not compile.
-    BX_CPU(i)->set_cpu_id(i);
     BX_CPU(i)->local_apic.set_id(i);
     BX_CPU(i)->sanity_checks();
     BX_INSTR_INIT(i);

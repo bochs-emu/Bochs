@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.114 2005-11-14 18:25:40 sshwarts Exp $
+// $Id: cpu.cc,v 1.115 2005-11-26 21:36:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -784,54 +784,54 @@ void BX_CPU_C::prefetch(void)
 
 void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)
 {
-    unsigned j;
-    Bit8u fetchBuffer[16]; // Really only need 15
-    unsigned ret;
+  unsigned j;
+  Bit8u fetchBuffer[16]; // Really only need 15
+  unsigned ret;
 
-    if (remainingInPage >= 15) {
-      BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (remainingInPage >= 15) {
+    BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
-    // Read all leftover bytes in current page up to boundary.
-    for (j=0; j<remainingInPage; j++) {
-      fetchBuffer[j] = *fetchPtr++;
-    }
+  // Read all leftover bytes in current page up to boundary.
+  for (j=0; j<remainingInPage; j++) {
+    fetchBuffer[j] = *fetchPtr++;
+  }
 
-    // The 2nd chunk of the instruction is on the next page.
-    // Set RIP to the 0th byte of the 2nd page, and force a
-    // prefetch so direct access of that physical page is possible, and
-    // all the associated info is updated.
-    RIP += remainingInPage;
-    prefetch();
-    if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
-      BX_PANIC(("fetch_decode: small window size after prefetch"));
-    }
+  // The 2nd chunk of the instruction is on the next page.
+  // Set RIP to the 0th byte of the 2nd page, and force a
+  // prefetch so direct access of that physical page is possible, and
+  // all the associated info is updated.
+  RIP += remainingInPage;
+  prefetch();
+  if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {
+    BX_PANIC(("fetch_decode: small window size after prefetch"));
+  }
 
-    // We can fetch straight from the 0th byte, which is eipFetchPtr;
-    fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
+  // We can fetch straight from the 0th byte, which is eipFetchPtr;
+  fetchPtr = BX_CPU_THIS_PTR eipFetchPtr;
 
-    // read leftover bytes in next page
-    for (; j<15; j++) {
-      fetchBuffer[j] = *fetchPtr++;
-    }
+  // read leftover bytes in next page
+  for (; j<15; j++) {
+    fetchBuffer[j] = *fetchPtr++;
+  }
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      ret = fetchDecode64(fetchBuffer, i, 15);
-    }
-    else
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    ret = fetchDecode64(fetchBuffer, i, 15);
+  }
+  else
 #endif
-    {
-      ret = fetchDecode(fetchBuffer, i, 15);
-    }
+  {
+    ret = fetchDecode(fetchBuffer, i, 15);
+  }
 
-    if (ret==0) {
-      BX_INFO(("fetchDecode #GP(0): cross boundary"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (ret==0) {
+    BX_INFO(("fetchDecode #GP(0): cross boundary"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
-    // Restore EIP since we fudged it to start at the 2nd page boundary.
-    RIP = BX_CPU_THIS_PTR prev_eip;
+  // Restore EIP since we fudged it to start at the 2nd page boundary.
+  RIP = BX_CPU_THIS_PTR prev_eip;
 
 // Since we cross an instruction boundary, note that we need a prefetch()
 // again on the next instruction.  Perhaps we can optimize this to

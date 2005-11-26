@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.42 2005-11-21 22:29:02 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.43 2005-11-26 21:36:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,7 +49,7 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("SS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
 #if BX_SUPPORT_X86_64
-  BX_INFO(("EFER   = 0x%08x", get_EFER()));
+  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR get_EFER()));
 
   BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
@@ -200,7 +200,7 @@ void BX_CPU_C::debug(bx_address offset)
 
   static disassembler bx_disassemble;
 
-  if (BX_CPU_THIS_PTR protected_mode()) { // 16bit & 32bit protected mode
+  if (protected_mode()) { // 16bit & 32bit protected mode
     Base=BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS);
   }
   else {
@@ -325,7 +325,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
       return(0);
   }
 
-  if (BX_CPU_THIS_PTR real_mode()) {
+  if (real_mode()) {
     seg->selector.value = val;
     seg->cache.valid = 1;
     seg->cache.p = 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.22 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.23 2005-11-26 21:36:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -71,6 +71,8 @@ static float32_compare_method compare32[4] = {
   float32_unordered
 };
 
+#if BX_SUPPORT_SSE >= 2
+
 /* Comparison predicate for CMPSD/CMPPD instructions */
 static float64_compare_method compare64[4] = {
   float64_eq, 
@@ -78,6 +80,8 @@ static float64_compare_method compare64[4] = {
   float64_le, 
   float64_unordered
 };
+
+#endif /* BX_SUPPORT_SSE >= 2 */
 
 #endif
 
@@ -640,8 +644,8 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
   Float32 r1 = (Float32)(op >> 32);
 
   if (MXCSR.get_DAZ()) {
-     r0 = handleDAZ(r0);
-     r1 = handleDAZ(r1);
+    r0 = handleDAZ(r0);
+    r1 = handleDAZ(r1);
   }
 
   result.xmm32u(0) = 
@@ -686,8 +690,8 @@ void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op.xmm64u(0) = handleDAZ(op.xmm64u(0));
-	op.xmm64u(0) = handleDAZ(op.xmm64u(1));
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(0) = handleDAZ(op.xmm64u(1));
   }
 
   result.xmm32u(0) = 
@@ -1045,8 +1049,8 @@ void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float32_compare_quiet(op1, op2, status_word);
@@ -1084,8 +1088,8 @@ void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float64_compare_quiet(op1, op2, status_word);
@@ -1123,8 +1127,8 @@ void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float32_compare(op1, op2, status_word);
@@ -1162,8 +1166,8 @@ void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float64_compare(op1, op2, status_word);
@@ -1201,10 +1205,10 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op.xmm32u(0) = handleDAZ(op.xmm32u(0));
-     op.xmm32u(1) = handleDAZ(op.xmm32u(1));
-     op.xmm32u(2) = handleDAZ(op.xmm32u(2));
-     op.xmm32u(3) = handleDAZ(op.xmm32u(3));
+    op.xmm32u(0) = handleDAZ(op.xmm32u(0));
+    op.xmm32u(1) = handleDAZ(op.xmm32u(1));
+    op.xmm32u(2) = handleDAZ(op.xmm32u(2));
+    op.xmm32u(3) = handleDAZ(op.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -1251,8 +1255,8 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op.xmm64u(0) = handleDAZ(op.xmm64u(0));
-     op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -1362,15 +1366,15 @@ void BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -1417,11 +1421,10 @@ void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -1464,8 +1467,8 @@ void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float64_add(op1, op2, status_word);
@@ -1504,8 +1507,8 @@ void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float32_add(op1, op2, status_word);
@@ -1543,15 +1546,15 @@ void BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -1598,11 +1601,10 @@ void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -1645,8 +1647,8 @@ void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float64_mul(op1, op2, status_word);
@@ -1685,8 +1687,8 @@ void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float32_mul(op1, op2, status_word);
@@ -1724,15 +1726,15 @@ void BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -1779,11 +1781,10 @@ void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -1826,8 +1827,8 @@ void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float64_sub(op1, op2, status_word);
@@ -1866,8 +1867,8 @@ void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float32_sub(op1, op2, status_word);
@@ -1906,15 +1907,15 @@ void BX_CPU_C::MINPS_VpsWps(bxInstruction_c *i)
   int rc;
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   rc = float32_compare(op1.xmm32u(0), op2.xmm32u(0), status_word);
@@ -1966,11 +1967,10 @@ void BX_CPU_C::MINPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   rc = float64_compare(op1.xmm64u(0), op2.xmm64u(0), status_word);
@@ -2015,8 +2015,8 @@ void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float64_compare(op1, op2, status_word);
@@ -2056,8 +2056,8 @@ void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float32_compare(op1, op2, status_word);
@@ -2096,15 +2096,15 @@ void BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -2151,11 +2151,10 @@ void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -2198,8 +2197,8 @@ void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float64_div(op1, op2, status_word);
@@ -2238,8 +2237,8 @@ void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   result = float32_div(op1, op2, status_word);
@@ -2278,15 +2277,15 @@ void BX_CPU_C::MAXPS_VpsWps(bxInstruction_c *i)
   int rc;
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   rc = float32_compare(op1.xmm32u(0), op2.xmm32u(0), status_word);
@@ -2338,11 +2337,10 @@ void BX_CPU_C::MAXPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   rc = float64_compare(op1.xmm64u(0), op2.xmm64u(0), status_word);
@@ -2387,8 +2385,8 @@ void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-     op1 = handleDAZ(op1);
-     op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float64_compare(op1, op2, status_word);
@@ -2428,8 +2426,8 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   int rc = float32_compare(op1, op2, status_word);
@@ -2469,11 +2467,10 @@ void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -2515,15 +2512,15 @@ void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -2570,11 +2567,10 @@ void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -2616,15 +2612,15 @@ void BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 
@@ -2671,15 +2667,15 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
   int ib = i->Ib();
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   if(ib < 4) 
@@ -2746,11 +2742,10 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   if(ib < 4) 
@@ -2809,8 +2804,8 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   if(ib < 4) {
@@ -2865,8 +2860,8 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1 = handleDAZ(op1);
-	op2 = handleDAZ(op2);
+    op1 = handleDAZ(op1);
+    op2 = handleDAZ(op2);
   }
 
   if(ib < 4) {
@@ -2920,11 +2915,10 @@ void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
 
   if (MXCSR.get_DAZ()) 
   {
-	op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
-	op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
-
-	op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
-	op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
   result.xmm64u(0) = 
@@ -2966,15 +2960,15 @@ void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
   if (MXCSR.get_DAZ()) {
-	op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
-	op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
-	op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
-	op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
 
-	op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
-	op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
-	op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
-	op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
   result.xmm32u(0) = 

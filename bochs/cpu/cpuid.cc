@@ -178,10 +178,10 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 #if BX_SUPPORT_4MEG_PAGES
       features |= (1<< 3);  // Support Page-Size Extension (4M pages)
 #endif
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       features |= (1<<13);  // Support Global pages
 #endif
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
       features |= (1<<6);   // Support PAE
 #endif
 

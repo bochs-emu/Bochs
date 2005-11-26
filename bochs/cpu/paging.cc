@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.62 2005-11-17 17:52:00 sshwarts Exp $
+// $Id: paging.cc,v 1.63 2005-11-26 21:36:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -445,7 +445,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
   if (bx_dbg.paging)
     BX_INFO(("pagingCR4Changed(0x%x -> 0x%x):", oldCR4, newCR4));
 
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
   if ( (oldCR4 & 0x00000020) != (newCR4 & 0x00000020) ) {
     if (BX_CPU_THIS_PTR cr4.get_PAE())
       BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
@@ -466,7 +466,7 @@ BX_CPU_C::CR3_change(bx_address value)
   // flush TLB even if value does not change
   TLB_flush(0); // 0 = Don't flush Global entries.
   BX_CPU_THIS_PTR cr3 = value;
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
     BX_CPU_THIS_PTR cr3_masked = value & 0xffffffe0;
   else
@@ -549,7 +549,7 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
     // write to (invalidate) entries which need it.
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[i];
     if (tlbEntry->lpf != BX_INVALID_TLB_ENTRY) {
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       if ( invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage) )
 #endif
       {
@@ -656,7 +656,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
 
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
     bx_address pde, pdp;
@@ -772,7 +772,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       // Make up the physical page frame address.
       ppf = (pde & 0xffe00000) | (laddr & 0x001ff000);
 
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
         combined_access |= (pde & TLB_GlobalPage);  // G
       }
@@ -823,7 +823,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       // Make up the physical page frame address.
       ppf = pte & 0xfffff000;
 
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
         combined_access |= (pte & TLB_GlobalPage);  // G
       }
@@ -854,7 +854,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     }
   }
   else
-#endif  // #if BX_SupportPAE
+#endif  // #if BX_SUPPORT_PAE
   {
     // CR4.PAE==0 (and MSR.LMA==0)
 
@@ -907,7 +907,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       // make up the physical frame number
       ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
 
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
         combined_access |= pde & TLB_GlobalPage;    // {G}
       }
@@ -959,7 +959,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       combined_access |= (pde & pte) & 0x02; // R/W
 #else // 486+
       combined_access  = (pde & pte) & 0x06; // U/S and R/W
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) {
         combined_access |= (pte & TLB_GlobalPage); // G
       }
@@ -1027,7 +1027,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       accessBits |= TLB_WriteSysOK; // write from {sys} OK.
     }
   }
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
   accessBits |= combined_access & TLB_GlobalPage; // Global bit
 #endif
 #if BX_USE_TLB
@@ -1127,7 +1127,7 @@ void BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, Bit32u *phy, bx_bool *vali
   }
 #endif
 
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
     Bit64u pt_address;
     int levels = 3;

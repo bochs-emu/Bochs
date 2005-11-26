@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.123 2005-11-21 21:10:59 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.124 2005-11-26 21:36:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1413,7 +1413,7 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   allowMask |= (1<<4);
 #endif
 
-#if BX_SupportPAE
+#if BX_SUPPORT_PAE
   allowMask |= (1<<5);
 #endif
 
@@ -1422,7 +1422,7 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
   allowMask |= (1<<6);   /* MCE */
 #endif
 
-#if BX_SupportGlobalPages
+#if BX_SUPPORT_GLOBAL_PAGES
   allowMask |= (1<<7);
 #endif
 
@@ -1625,7 +1625,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      RAX = (Bit64u) get_EFER();
+      RAX = (Bit64u) BX_CPU_THIS_PTR get_EFER();
       RDX = 0;
       return;
 
