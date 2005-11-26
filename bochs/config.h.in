@@ -798,6 +798,16 @@ typedef
 #error "SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6 !"
 #endif
 
+#if (BX_CPU_LEVEL<5 && BX_SUPPORT_PAE)
+#error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 5 !"
+#endif
+#if (BX_CPU_LEVEL<5 && BX_SUPPORT_GLOBAL_PAGES)
+#error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 5 !"
+#endif
+#if (BX_CPU_LEVEL<4 && BX_SUPPORT_4MEG_PAGES)
+#error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 4 !"
+#endif
+
 #if BX_SUPPORT_X86_64
 // Sanity checks to ensure that you cannot accidently use conflicting options.
 
