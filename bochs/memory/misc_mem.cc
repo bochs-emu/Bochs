@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.66 2005-10-28 06:33:53 vruppert Exp $
+// $Id: misc_mem.cc,v 1.67 2005-11-27 19:40:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,17 +85,17 @@ BX_MEM_C::~BX_MEM_C(void)
     vector = NULL;
     delete [] memory_handlers;
     memory_handlers = NULL;
-    }
+  }
   else {
     BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
-    }
+  }
 }
 
 void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.66 2005-10-28 06:33:53 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.67 2005-11-27 19:40:56 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -115,13 +115,13 @@ void BX_MEM_C::init_memory(int memsize)
     for (idx = 0; idx < 65; idx++)
       BX_MEM_THIS rom_present[idx] = 0;
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
-    }
+  }
 
 #if BX_DEBUGGER
   if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
     BX_INFO(("Error: memory larger than dirty page table can handle"));
     BX_PANIC(("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS"));
-    }
+  }
 #endif
 
 }
@@ -142,15 +142,15 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   if (*path == '\0') {
     if (type == 2) {
       BX_PANIC(( "ROM: Optional ROM image undefined"));
-      }
+    }
     else if (type == 1) {
       BX_PANIC(( "ROM: VGA BIOS image undefined"));
-      }
+    }
     else {
       BX_PANIC(( "ROM: System BIOS image undefined"));
-      }
-    return;
     }
+    return;
+  }
   // read in ROM BIOS image file
   fd = open(path, O_RDONLY
 #ifdef O_BINARY
@@ -160,22 +160,22 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   if (fd < 0) {
     if (type < 2) {
       BX_PANIC(( "ROM: couldn't open ROM image file '%s'.", path));
-      }
+    }
     else {
       BX_ERROR(( "ROM: couldn't open ROM image file '%s'.", path));
-      }
-    return;
     }
+    return;
+  }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     if (type < 2) {
       BX_PANIC(( "ROM: couldn't stat ROM image file '%s'.", path));
-      }
+    }
     else {
       BX_ERROR(( "ROM: couldn't stat ROM image file '%s'.", path));
-      }
-    return;
     }
+    return;
+  }
 
   size = (unsigned long)stat_buf.st_size;
 
@@ -281,12 +281,12 @@ void BX_MEM_C::load_RAM(const char *path, Bit32u ramaddress, Bit8u type)
   if (fd < 0) {
     BX_PANIC(( "RAM: couldn't open RAM image file '%s'.", path));
     return;
-    }
+  }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     BX_PANIC(( "RAM: couldn't stat RAM image file '%s'.", path));
     return;
-    }
+  }
 
   size = (unsigned long)stat_buf.st_size;
 
@@ -376,7 +376,7 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
   if ( (addr + len) > this->len ) {
     return(0); // error, beyond limits of memory
-    }
+  }
   for (; len>0; len--) {
     if ( (addr & 0xfffe0000) == 0x000a0000 )
       DEV_vga_mem_write(addr, *buf);
@@ -410,17 +410,15 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc)
 {
-  unsigned len;
-
   *crc = 0;
   if (addr1 > addr2)
     return(0);
 
   if (addr2 >= this->len) {
     return(0); // error, specified address past last phy mem addr
-    }
+  }
   
-  len = 1 + addr2 - addr1;
+  unsigned len = 1 + addr2 - addr1;
   *crc = f(vector + addr1, len);
 
   return(1);
@@ -559,55 +557,56 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
  * XXX: maybe we should check for overlapping memory handlers
  */
   bx_bool 
-BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param, 
-		memory_handler_t write_handler, void *write_param, 
+BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param,
+		memory_handler_t write_handler, void *write_param,
 		unsigned long begin_addr, unsigned long end_addr)
 {
-	if (end_addr < begin_addr)
-		return false;
-	if (!read_handler)
-		return false;
-	if (!write_handler)
-		return false;
-	for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
-		struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
-		memory_handler->next = memory_handlers[page_idx];
-		memory_handlers[page_idx] = memory_handler;
-		memory_handler->read_handler = read_handler;
-		memory_handler->write_handler = write_handler;
-		memory_handler->read_param = read_param;
-		memory_handler->write_param = write_param;
-		memory_handler->begin = begin_addr;
-		memory_handler->end = end_addr;
-	}
-	return true;
+  if (end_addr < begin_addr)
+    return false;
+  if (!read_handler)
+    return false;
+  if (!write_handler)
+    return false;
+  for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+    struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
+    memory_handler->next = memory_handlers[page_idx];
+    memory_handlers[page_idx] = memory_handler;
+    memory_handler->read_handler = read_handler;
+    memory_handler->write_handler = write_handler;
+    memory_handler->read_param = read_param;
+    memory_handler->write_param = write_param;
+    memory_handler->begin = begin_addr;
+    memory_handler->end = end_addr;
+  }
+  return true;
 }
 
   bx_bool 
-BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 
+BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		unsigned long begin_addr, unsigned long end_addr)
 {
-	bx_bool ret = true;
-	for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
-		struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
-		struct memory_handler_struct *prev = NULL;
-		while (memory_handler && 
-				memory_handler->read_handler != read_handler &&
-			       	memory_handler->write_handler != write_handler && 
-				memory_handler->begin != begin_addr && 
-				memory_handler->end != end_addr) {
-			prev = memory_handler;
-			memory_handler = memory_handler->next;
-		}
-		if (!memory_handler) {
-			ret = false; // we should have found it
-			continue; // anyway, try the other pages
-		}
-		if (prev)
-			prev->next = memory_handler->next;
-		else
-			memory_handlers[page_idx] = memory_handler->next;
-		delete memory_handler;
-	}
-	return ret;
+   bx_bool ret = true;
+   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+     struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
+     struct memory_handler_struct *prev = NULL;
+     while (memory_handler && 
+         memory_handler->read_handler != read_handler &&
+         memory_handler->write_handler != write_handler && 
+         memory_handler->begin != begin_addr && 
+         memory_handler->end != end_addr)
+     {
+       prev = memory_handler;
+       memory_handler = memory_handler->next;
+     }
+     if (!memory_handler) {
+       ret = false; // we should have found it
+       continue; // anyway, try the other pages
+     }
+     if (prev)
+       prev->next = memory_handler->next;
+     else
+       memory_handlers[page_idx] = memory_handler->next;
+     delete memory_handler;
+   }  
+   return ret;
 }
