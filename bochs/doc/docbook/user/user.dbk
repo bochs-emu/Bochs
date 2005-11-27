@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.188 2005-11-13 14:26:02 vruppert Exp $
+$Id: user.dbk,v 1.189 2005-11-27 09:42:31 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -392,10 +392,17 @@ currently work with.
     </entry>
   </row>
   <row>
+    <entry>Cirrus Logic video card</entry>
+    <entry>&NEEDHELP;</entry>
+    <entry>Cirrus Logic CL-GD5430 ISA or CL-GD5446 PCI video card support.
+      For more information see <xref linkend="cirrus-notes">.</entry>
+  </row>
+  <row>
     <entry>Floppy disk</entry>
     <entry>Yes</entry>
-    <entry>Supports floppy disk images on all platforms: 2.88M 3.5", 1.44M 3.5", 1.2M 5.25", and 720K 3.5".  
-    On Unix and Windows XP/NT/2000, Bochs can access the physical floppy drive.
+    <entry>Supports floppy disk images on all platforms: 2.88M 3.5", 1.44M 3.5", 1.2M 5.25",
+    720K 3.5" and 360K 5.25". On Unix and Windows 9x/NT/2000/XP, Bochs can access the
+    physical floppy drive.
     </entry>
   </row>
   <row>
@@ -412,7 +419,7 @@ currently work with.
     <entry>Yes</entry>
     <entry>Emulates ATA-2/IDE hard drives via image files.  Physical
     hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.  
-    Hard disk up to 32GB are supported, on any platform that support large files access. 
+    Hard disk up to 127GB are supported, on any platform that support large files access. 
     </entry>
   </row>
   <row>
@@ -3063,7 +3070,7 @@ ROM images should not overwrite the rombios (located at
 F0000-FFFFF) and the videobios (located at C0000-C7FFF).
 </para>
 <para>
-Those ROM images will be initialized by the bios if they contain
+Those ROM images will be initialized by the BIOS if they contain
 the right signature (0x55AA).
 </para>
 <para>
@@ -3153,7 +3160,7 @@ ata3: enabled=1, ioaddr1=0x168, ioaddr2=0x360, irq=9
 
 These options enables up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
-ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0 and ata1 areenabled by default, with the values shown above.
 
 </para>
 </section>
@@ -3196,7 +3203,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> <entry> spt </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> status </entry> <entry> only valid for cdroms </entry> <entry> [inserted | ejected] </entry> </row>
 <row> <entry> biosdetect </entry> <entry> type of biosdetection </entry> <entry> [none | auto], only for disks on ata0 [cmos] </entry> </row>
-<row> <entry> translation </entry> <entry> type of translation done by the bios (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
+<row> <entry> translation </entry> <entry> type of translation done by the BIOS (legacy int13), only for disks </entry> <entry> [none | lba | large | rechs | auto] </entry> </row>
 <row> <entry> model </entry> <entry> string returned by identify device ATA command </entry> </row>
 </tbody>
 </tgroup>
@@ -3222,15 +3229,17 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
-The path, cylinders, heads, and spt are mandatory for type=disk
+For flat hard disk images created with bximage geometry autodetection can
+be used (cylinders are calculated using heads=16 and spt=63). For other
+hard disk images and modes the cylinders, heads, and spt are mandatory.
 </para>
 <para>
-The path is mandatory for type=cdrom
+The path is mandatory for type=cdrom.
 </para>
 
 <para>
 The disk translation scheme 
-(implemented in legacy int13 bios functions, and used by
+(implemented in legacy int13 BIOS functions, and used by
 older operating systems like MS-DOS), can be defined as:
 <itemizedlist>
 <listitem><para>
@@ -3684,7 +3693,7 @@ Examples:
   vga_update_interval: 250000
 </screen>
 Video memory is scanned for updates and screen updated every so many virtual
-seconds. Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
+microseconds. Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
 to be as close to the number of emulated instructions-per-second your workstation
 can do, for this to be accurate.
 </para>
@@ -4765,6 +4774,8 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>
   Press this button if you want to send the keyboard shortcut defined with the
   <link linkend="bochsopt-user-shortcut">user_shortcut option</link> to the guest.
+  Depending on the used <link linkend="bochsopt-displaylibrary">display_library option</link>,
+  it may even be possible to edit the shortcut before sending it.
 </para>
 </listitem>
 <listitem>
@@ -6785,7 +6796,7 @@ in the "<command>ataX-xxxx: ..., translation='algorithm'</command>" section.
     multiplying/dividing the cylinder/head count by a power of 2
     (2, 4 or 8).
     (a factor of 16 could not be used because the
-    head count would become 256, and MS-Dos thought this was 0)
+    head count would become 256, and MS-DOS thought this was 0)
     Note that the number of sectors per track is not changed, so
     a lower spt value will lead to a lower maximum disk size.
     </entry>
@@ -6877,7 +6888,7 @@ Upward compatibility will be maintained.
 
 <note>
 <para>
-This translation applies only to int13h bios disk accesses. Older OSes (ie MS-Dos)
+This translation applies only to int13h BIOS disk accesses. Older OSes (e.g. MS-DOS)
 tend to use them a lot.  On modern OSes, disk accesses through BIOS int13h are 
 limited to boot loaders.
 The usual rules and tricks of the installed OS still apply (ie 1024 cylinders boot limit).
@@ -6898,12 +6909,14 @@ move your mouse cursor outside of the Bochs window.  Release them, move
 the cursor back in the Bochs window and press <keycap>delete</keycap>.
 </para>
 <para>
-This should work for any key combination. 
+This should work for any key combination.
 </para>
 <para>
 If you need one key combination frequently, set it up as <link linkend="bochsopt-user-shortcut">user key combination</link>
 in your configuration file.  This key combination is sent to the guest OS
 when you press the user button in the <link linkend="headerbar">headerbar</link>.
+Depending on the used <link linkend="bochsopt-displaylibrary">display_library option</link>,
+it may even be possible to edit the shortcut before sending it.
 </para>
 </section>
 
@@ -6947,7 +6960,7 @@ Current limitations:
 <para>
 Interesting Facts:
 <itemizedlist>
-	<listitem> <para> You need a display driver capable of using the VESA bios for this to work 
+	<listitem> <para> You need a display driver capable of using the VESA BIOS for this to work 
 	                  (a recent XFree86 will do, Windows 9x/NT/2K/XP probably will not work 'out of the box'. </para> </listitem>
 	<listitem> <para> Currently the VBE2 extension should be supported ok </para> </listitem>
 </itemizedlist>
@@ -7867,10 +7880,10 @@ Known problems
     <title>Getting Knoppix</title>
 
     <para>
-      Knoppix is a live CD (700M) based on Debian GNU/Linux, with lots of ready-to-run programs
-      (web browser, office suite, a few games, and more), using <abbrev>KDE</abbrev> as desktop
-      environment. It can be booted directly from CD, without any installation needed. You can
-      download it from <ulink url="http://www.knoppix.org/">knoppix.org</ulink>.
+      Knoppix is a live CD (700M) or live DVD (3.2G) based on Debian GNU/Linux, with lots of
+      ready-to-run programs (web browser, office suite, a few games, and more), using
+      <abbrev>KDE</abbrev> as desktop environment. It can be booted directly from CD, without
+      any installation needed. You can download it from <ulink url="http://www.knoppix.org/">knoppix.org</ulink>.
     </para>
   </section>
 
@@ -7878,7 +7891,7 @@ Known problems
     <title>Preparing Bochs</title>
 
     <para>
-      As Knoppix runs completely from CD, you don't need to setup a hard disk. You just need to set up
+      As Knoppix runs completely from CD/DVD, you don't need to setup a hard disk. You just need to set up
       the location of the downloaded ISO image in your <filename>bochsrc</filename>, and make Bochs boot
       from it. Because Knoppix contains a graphical user interface, and has no other storage space but
       the emulated RAM, it needs at least 128MB of it, see

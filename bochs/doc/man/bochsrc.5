@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "13 Nov 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "27 Nov 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -180,7 +180,7 @@ Example:
 
 These options enables up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
-ata0 is enabled by default, with ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+ata0 and ata1 are enabled by default, with the values shown below.
 
 Examples:
    ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
@@ -213,8 +213,10 @@ works with it.
 In UNIX it is possible to use a raw device as a Bochs hard disk, 
 but WE DON'T RECOMMEND IT.
 
-The path, cylinders, heads, and spt are mandatory for type=disk
-The path is mandatory for type=cdrom
+For flat hard disk images created with bximage geometry autodetection can
+be used (cylinders are calculated using heads=16 and spt=63). For other
+hard disk images and modes the cylinders, heads, and spt are mandatory.
+The path is mandatory for type=cdrom.
 
 The mode option defines how the disk image is handled. Disks can be defined as:
   - flat : one file flat layout
