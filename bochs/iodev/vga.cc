@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.122 2005-10-27 17:53:39 vruppert Exp $
+// $Id: vga.cc,v 1.123 2005-11-27 17:49:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -270,7 +270,7 @@ bx_vga_c::init(void)
   }
 
 #if !BX_SUPPORT_CLGD54XX
-  BX_VGA_THIS init_systemtimer(timer_handler);
+  BX_VGA_THIS init_systemtimer(timer_handler, vga_param_handler);
 #endif // !BX_SUPPORT_CLGD54XX
 
   /* video card with BIOS ROM */
@@ -376,12 +376,14 @@ bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
 }
 
   void
-bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer)
+bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
   BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
        bx_options.Ovga_update_interval->get (), 1, 1, "vga");
+    bx_options.Ovga_update_interval->set_handler (f_param);
+    bx_options.Ovga_update_interval->set_runtime_param (1);
   }
 }
 
@@ -1371,12 +1373,15 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
   }
 }
 
-void 
-bx_vga_c::set_update_interval (unsigned interval)
+Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  BX_INFO (("Changing timer interval to %d\n", interval));
-  BX_VGA_THIS timer_handler (theVga);
-  bx_pc_system.activate_timer (BX_VGA_THIS timer_id, interval, 1);
+  // handler for runtime parameter 'vga_update_interval'
+  if (set) {
+    BX_INFO (("Changing timer interval to %d", (Bit32u)val));
+    BX_VGA_THIS timer_handler (theVga);
+    bx_pc_system.activate_timer (BX_VGA_THIS timer_id, (Bit32u)val, 1);
+  }
+  return val;
 }
 
   void

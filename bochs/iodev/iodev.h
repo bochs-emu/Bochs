@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.64 2005-11-15 17:19:28 vruppert Exp $
+// $Id: iodev.h,v 1.65 2005-11-27 17:49:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -256,9 +256,6 @@ class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
   }
   virtual void trigger_timer(void *this_ptr) {
     STUBFUNC(vga, trigger_timer); 
-  }
-  virtual void set_update_interval (unsigned interval) {
-    STUBFUNC(vga, set_update_interval); 
   }
   virtual Bit8u get_actl_palette_idx(Bit8u index) {
     return 0;

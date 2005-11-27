@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.62 2005-11-27 09:00:20 vruppert Exp $
+// $Id: config.cc,v 1.63 2005-11-27 17:49:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,11 +59,6 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   switch (id) {
-    case BXP_VGA_UPDATE_INTERVAL:
-      // if after init, notify the vga device to change its timer.
-      if (set && SIM->get_init_done ())
-        DEV_vga_set_update_interval ((unsigned int)val);
-      break;
     case BXP_MOUSE_ENABLED:
       // if after init, notify the GUI
       if (set && SIM->get_init_done ()) {
@@ -1155,8 +1150,6 @@ void bx_init_options ()
       "Number of microseconds between VGA updates",
       1, BX_MAX_BIT32U,
       40000);
-  bx_options.Ovga_update_interval->set_handler (bx_param_handler);
-  bx_options.Ovga_update_interval->set_runtime_param (1);
   bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
 
   bx_options.Ovga_extension = new bx_param_string_c (BXP_VGA_EXTENSION,
