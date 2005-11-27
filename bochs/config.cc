@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.61 2005-11-20 17:22:42 vruppert Exp $
+// $Id: config.cc,v 1.62 2005-11-27 09:00:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -655,13 +655,13 @@ void bx_init_options ()
     ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
   }
 
-  // Enable first ata interface by default, disable the others.
-  bx_options.ata[0].Opresent->set_initial_val(1);
-
-  // now that the dependence relationships are established, call set() on
+  // Enable two ATA interfaces by default, disable the others.
+  // Now that the dependence relationships are established, call set() on
   // the ata device present params to set all enables correctly.
-  for (i=0; i<BX_MAX_ATA_CHANNEL; i++)
-    bx_options.ata[i].Opresent->set (i==0);
+  for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
+    bx_options.ata[i].Opresent->set_initial_val(i<2);
+    bx_options.ata[i].Opresent->set(i<2);
+  }
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
 
@@ -1083,9 +1083,13 @@ void bx_init_options ()
         *par_ser_ptr++ = bx_options.usb[i].Ooption2;
 
         bx_options.usb[i].Oport1->set_group (strdup(group));
+        bx_options.usb[i].Oport1->set_runtime_param (1);
         bx_options.usb[i].Ooption1->set_group (strdup(group));
+        bx_options.usb[i].Ooption1->set_runtime_param (1);
         bx_options.usb[i].Oport2->set_group (strdup(group));
+        bx_options.usb[i].Oport2->set_runtime_param (1);
         bx_options.usb[i].Ooption2->set_group (strdup(group));
+        bx_options.usb[i].Ooption2->set_runtime_param (1);
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
@@ -1739,6 +1743,10 @@ void bx_init_options ()
       bx_options.Ouser_shortcut,
       bx_options.sb16.Odmatimer,
       bx_options.sb16.Ologlevel,
+      bx_options.usb[0].Oport1,
+      bx_options.usb[0].Ooption1,
+      bx_options.usb[0].Oport2,
+      bx_options.usb[0].Ooption2,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
