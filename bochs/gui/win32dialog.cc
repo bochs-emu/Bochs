@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.30 2005-11-25 22:44:18 vruppert Exp $
+// $Id: win32dialog.cc,v 1.31 2005-11-27 14:15:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -191,7 +191,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           if (AskFilename(hDlg, param, "img") > 0) {
             SetWindowText(GetDlgItem(hDlg, IDPATH), param->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS), BM_SETCHECK, BST_CHECKED, 0);
-            SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, -1, (LPARAM)"auto");
+            SendMessage(GetDlgItem(hDlg, IDMEDIATYPE), CB_SELECTSTRING, (WPARAM)-1, (LPARAM)"auto");
             EnableWindow(GetDlgItem(hDlg, IDCREATE), FALSE);
           }
           return TRUE;
