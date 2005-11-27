@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.28 2005-11-21 22:26:58 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.29 2005-11-27 18:25:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1057,8 +1057,8 @@ void bx_dbg_where_command()
     dbg_printf ("non-zero stack base\n");
     return;
   }
-  Bit32u bp = BX_CPU(dbg_cpu)->get_EBP ();
-  Bit32u ip = BX_CPU(dbg_cpu)->get_EIP ();
+  Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
+  Bit32u ip = BX_CPU(dbg_cpu)->get_ip();
   dbg_printf ( "(%d) 0x%08x\n", 0, ip);
   for (int i = 1; i < 50; i++) {
     // Up
@@ -1298,7 +1298,8 @@ void bx_dbg_print_stack_command(int nwords)
   // Get linear address for stack top
   bx_bool UseESP=BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
   Bit32u linear_sp = BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_SS)+
-    (UseESP?BX_CPU(dbg_cpu)->get_ESP():BX_CPU(dbg_cpu)->get_SP());
+    (UseESP ? BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP)
+            : BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP));
   Bit8u buf[8];
 
   for (int i = 0; i < nwords; i++) {
@@ -1955,14 +1956,14 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     if( BX_CPU(dbg_cpu)->trace_reg )
       dbg_printf (
     "eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
-    BX_CPU(which_cpu)->get_EAX (),
-    BX_CPU(which_cpu)->get_ECX (),
-    BX_CPU(which_cpu)->get_EDX (),
-    BX_CPU(which_cpu)->get_EBX (),
-    BX_CPU(which_cpu)->get_ESP (),
-    BX_CPU(which_cpu)->get_EBP (),
-    BX_CPU(which_cpu)->get_ESI (),
-    BX_CPU(which_cpu)->get_EDI (),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ECX),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDX),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBX),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESP),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBP),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESI),
+    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDI),
     BX_CPU(which_cpu)->getB_CF(),
     BX_CPU(which_cpu)->getB_AF(),
     BX_CPU(which_cpu)->getB_ZF(),
@@ -3253,7 +3254,7 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
   int numlines = INT_MAX;
 
   if (range.from == EMPTY_ARG) {
-    range.from = bx_dbg_get_laddr(bx_dbg_get_selector_value(1), BX_CPU(dbg_cpu)->get_EIP());
+    range.from = bx_dbg_get_laddr(bx_dbg_get_selector_value(1), BX_CPU(dbg_cpu)->get_ip());
     range.to = range.from;
   }
 
@@ -4535,59 +4536,61 @@ Bit32u bx_dbg_get_reg_value(Regs reg)
  switch(reg)
  {
   case rAL:
-   return BX_CPU(dbg_cpu)->get_AL();
+   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_AL);
   case rBL:
-   return BX_CPU(dbg_cpu)->get_BL();
+   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_BL);
   case rCL:
-   return BX_CPU(dbg_cpu)->get_CL();
+   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_CL);
   case rDL:
-   return BX_CPU(dbg_cpu)->get_DL();
+   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_DL);
   case rAH:
-   return BX_CPU(dbg_cpu)->get_AH();
+   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_AH);
   case rBH:
-   return BX_CPU(dbg_cpu)->get_BH();
+   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_BH);
   case rCH:
-   return BX_CPU(dbg_cpu)->get_CH();
+   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_CH);
   case rDH:
-   return BX_CPU(dbg_cpu)->get_DH();
+   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_DH);
+
   case rAX:
-   return BX_CPU(dbg_cpu)->get_AX();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_AX);
   case rBX:
-   return BX_CPU(dbg_cpu)->get_BX();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BX);
   case rCX:
-   return BX_CPU(dbg_cpu)->get_CX();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_CX);
   case rDX:
-   return BX_CPU(dbg_cpu)->get_DX();
-  case rEAX:
-   return BX_CPU(dbg_cpu)->get_EAX();
-  case rEBX:
-   return BX_CPU(dbg_cpu)->get_EBX();
-  case rECX:
-   return BX_CPU(dbg_cpu)->get_ECX();
-  case rEDX:
-   return BX_CPU(dbg_cpu)->get_EDX();
-
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_DX);
   case rSI:
-   return BX_CPU(dbg_cpu)->get_SI();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SI);
   case rDI:
-   return BX_CPU(dbg_cpu)->get_DI();
-  case rESI:
-   return BX_CPU(dbg_cpu)->get_ESI();
-  case rEDI:
-   return BX_CPU(dbg_cpu)->get_EDI();
-
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_DI);
   case rBP:
-   return BX_CPU(dbg_cpu)->get_BP();
-  case rEBP:
-   return BX_CPU(dbg_cpu)->get_EBP();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
   case rSP:
-   return BX_CPU(dbg_cpu)->get_SP();
+   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP);
+
+  case rEAX:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EAX);
+  case rEBX:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBX);
+  case rECX:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ECX);
+  case rEDX:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDX);
+  case rESI:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESI);
+  case rEDI:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDI);
+  case rEBP:
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
   case rESP:
-   return BX_CPU(dbg_cpu)->get_ESP();
+   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+
   case rIP:
-   return (Bit16u)BX_CPU(dbg_cpu)->get_EIP();
+   return (Bit16u) BX_CPU(dbg_cpu)->get_ip();
   case rEIP:
-   return BX_CPU(dbg_cpu)->get_EIP();
+   return (Bit32u) BX_CPU(dbg_cpu)->get_ip();
+
   default:
     fprintf(stderr, "unknown register ??? (BUG!!!)\n");
    return 0;
@@ -4599,78 +4602,78 @@ void bx_dbg_set_reg_value (Regs reg, Bit32u value)
  switch(reg)
  {
   case rAL:
-   BX_CPU(dbg_cpu)->set_AL(value);
+   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_AL, value);
    break;
   case rBL:
-   BX_CPU(dbg_cpu)->set_BL(value);
+   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_BL, value);
    break;
   case rCL:
-   BX_CPU(dbg_cpu)->set_CL(value);
+   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_CL, value);
    break;
   case rDL:
-   BX_CPU(dbg_cpu)->set_DL(value);
+   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_DL, value);
    break;
   case rAH:
-   BX_CPU(dbg_cpu)->set_AH(value>>8);
+   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_AH, value>>8);
    break;
   case rBH:
-   BX_CPU(dbg_cpu)->set_BH(value>>8);
+   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_BH, value>>8);
    break;
   case rCH:
-   BX_CPU(dbg_cpu)->set_CH(value>>8);
+   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_CH, value>>8);
    break;
   case rDH:
-   BX_CPU(dbg_cpu)->set_DH(value>>8);
+   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_DH, value>>8);
    break;
+
   case rAX:
-   BX_CPU(dbg_cpu)->set_AX(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_AX, value);
    break;
   case rBX:
-   BX_CPU(dbg_cpu)->set_BX(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_BX, value);
    break;
   case rCX:
-   BX_CPU(dbg_cpu)->set_CX(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_CX, value);
    break;
   case rDX:
-   BX_CPU(dbg_cpu)->set_DX(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_DX, value);
    break;
-  case rEAX:
-   BX_CPU(dbg_cpu)->set_EAX(value);
-   break;
-  case rEBX:
-   BX_CPU(dbg_cpu)->set_EBX(value);
-   break;
-  case rECX:
-   BX_CPU(dbg_cpu)->set_ECX(value);
-   break;
-  case rEDX:
-   BX_CPU(dbg_cpu)->set_EDX(value);
-   break;
-
   case rSI:
-   BX_CPU(dbg_cpu)->set_SI(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_SI, value);
    break;
   case rDI:
-   BX_CPU(dbg_cpu)->set_DI(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_DI, value);
    break;
-  case rESI:
-   BX_CPU(dbg_cpu)->set_ESI(value);
-   break;
-  case rEDI:
-   BX_CPU(dbg_cpu)->set_EDI(value);
-   break;
-
   case rBP:
-   BX_CPU(dbg_cpu)->set_BP(value);
-   break;
-  case rEBP:
-   BX_CPU(dbg_cpu)->set_EBP(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_BP, value);
    break;
   case rSP:
-   BX_CPU(dbg_cpu)->set_SP(value);
+   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_SP, value);
+   break;
+
+  case rEAX:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EAX, value);
+   break;
+  case rEBX:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBX, value);
+   break;
+  case rECX:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ECX, value);
+   break;
+  case rEDX:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDX, value);
+   break;
+  case rESI:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESI, value);
+   break;
+  case rEDI:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDI, value);
+   break;
+  case rEBP:
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBP, value);
    break;
   case rESP:
-   BX_CPU(dbg_cpu)->set_ESP(value);
+   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESP, value);
    break;
 /*
   case rIP:
@@ -4780,7 +4783,7 @@ void bx_dbg_step_over_command ()
   bxInstruction_c iStorage BX_CPP_AlignN (32);
   bxInstruction_c *i = &iStorage;
   Bit32u Laddr = BX_CPU (dbg_cpu)->get_segment_base(BX_SEG_REG_CS) +
-                 BX_CPU (dbg_cpu)->get_EIP ();
+                 BX_CPU (dbg_cpu)->get_ip ();
   Bit32u Paddr;
   bx_bool paddr_valid;
   bx_address remainingInPage;
