@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.43 2005-11-26 21:36:51 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.44 2005-11-27 18:36:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -170,42 +170,14 @@ void BX_CPU_C::debug(bx_address offset)
 #endif // BX_SUPPORT_X86_64
 
 
-#if 0
-  /* (mch) Hack to display the area round EIP and prev_EIP */
-  char buf[100];
-  sprintf(buf, "%04x:%08x  ", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
-  for (int i = 0; i < 8; i++) {
-    Bit8u data;
-    BX_CPU_THIS_PTR read_virtual_byte(BX_SEG_REG_CS, EIP + i, &data);
-    sprintf(buf+strlen(buf), "%02x ", data);
-  }
-  BX_INFO((buf));
-
-  sprintf(buf, "%04x:%08x  ", BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, BX_CPU_THIS_PTR prev_eip);
-  for (int i = 0; i < 8; i++) {
-    Bit8u data;
-    BX_CPU_THIS_PTR read_virtual_byte(BX_SEG_REG_CS, BX_CPU_THIS_PTR prev_eip + i, &data);
-    sprintf(buf+strlen(buf), "%02x ", data);
-  }
-  BX_INFO((buf));
-#endif
-
-
 #if BX_DISASM
   bx_bool valid;
-  Bit32u  phy_addr, Base;
+  Bit32u  phy_addr;
   Bit8u   instr_buf[32];
   char    char_buf[256];
   unsigned isize;
 
   static disassembler bx_disassemble;
-
-  if (protected_mode()) { // 16bit & 32bit protected mode
-    Base=BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS);
-  }
-  else {
-    Base=BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value<<4;
-  }
 
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
                        &phy_addr, &valid);
@@ -214,7 +186,8 @@ void BX_CPU_C::debug(bx_address offset)
     isize = bx_disassemble.disasm(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
-        Base, EIP, instr_buf, char_buf);
+        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
+        instr_buf, char_buf);
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) isize = 16;
 #endif
