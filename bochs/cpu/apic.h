@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.18 2005-04-29 18:38:35 sshwarts Exp $
+// $Id: apic.h,v 1.19 2005-11-28 22:19:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,21 +91,24 @@ public:
 
 class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c 
 {
+  Bit32u  spurious_vector;
+  bx_bool software_enabled;
+  bx_bool focus_disable;
+
   Bit32u task_priority;         // Task priority (TPR)
   Bit32u arb_id;                // Arbitration priority (APR)
   Bit32u log_dest;              // Logical destination (LDR)
   Bit32u dest_format;           // Destination format (DFR)
-  Bit32u spurious_vector;       // Spurious interrupt vector register
 
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
   // bit in ISR is set.
   Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
-  // and set for level-triggered interrupts.  If set, local APIC must send
-  // EOI message to all other APICs.  EOI's are not implemented.
+  // and set for level-triggered interrupts. If set, local APIC must send
+  // EOI message to all other APICs.
   Bit8u tmr[BX_LOCAL_APIC_MAX_INTS];
-  // IRR=interrupt request register.  When an interrupt is triggered by
-  // the I/O APIC or another processor, it sets a bit in irr.  The bit is
+  // IRR=interrupt request register. When an interrupt is triggered by
+  // the I/O APIC or another processor, it sets a bit in irr. The bit is
   // cleared when the interrupt is acknowledged by the processor.
   Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
 
@@ -161,8 +164,8 @@ public:
   bx_bool bypass_irr_isr;
   bx_local_apic_c(BX_CPU_C *cpu);
   virtual ~bx_local_apic_c(void) { }
-  virtual void reset ();
-  virtual void init ();
+  virtual void reset (void);
+  virtual void init (void);
   BX_CPU_C *get_cpu () { return cpu; }
   void set_id (Bit8u newid);   // redefine to set cpu->name
   virtual char *get_name();
@@ -174,21 +177,22 @@ public:
   // with the cpu-specific INTR signals.
   void trigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
   void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
-  Bit8u acknowledge_int ();  // only the local CPU should call this
+  Bit8u acknowledge_int (void);  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
   void receive_EOI(Bit32u value);
-  void service_local_apic ();
-  void print_status ();
+  void write_spurious_interrupt_register(Bit32u value);
+  void service_local_apic(void);
+  void print_status(void);
   virtual bx_bool match_logical_addr (Bit8u address);
-  virtual bx_bool is_local_apic () const { return 1; }
-  virtual bx_apic_type_t get_type () { return APIC_TYPE_LOCAL_APIC; }
+  virtual bx_bool is_local_apic(void) const { return 1; }
+  virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
-  Bit8u get_ppr ();
-  Bit8u get_tpr ();
+  Bit8u get_ppr (void);
+  Bit8u get_tpr (void);
   void  set_tpr (Bit8u tpr);
-  Bit8u get_apr ();
-  Bit8u get_apr_lowpri();
+  Bit8u get_apr (void);
+  Bit8u get_apr_lowpri(void);
   bx_bool is_focus(Bit32u vector);
   void adjust_arb_id(int winning_id);	// adjust the arbitration id after a bus arbitration
   static void periodic_smf(void *); // KPL
