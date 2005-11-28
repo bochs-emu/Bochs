@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.63 2005-11-28 22:35:43 sshwarts Exp $
+// $Id: apic.cc,v 1.64 2005-11-28 22:42:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -499,12 +499,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       id = (value>>24) & APIC_ID_MASK;
       break;
     case 0x80: // task priority
-      {
-        Bit32u curr_task_priority = task_priority;
-        task_priority = value & 0xff;
-        if (task_priority < curr_task_priority)
-          service_local_apic();
-      }
+      set_tpr(value & 0xff);
       break;
     case 0xb0: // EOI
       receive_EOI(value);
@@ -727,7 +722,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
       Bit32u value = 0, mask = 1;
       for (int i=0;i<32;i++) {
         if (isr[index+i]) value |= mask;
-        value <<= 1;
+        mask <<= 1;
       }
       *data = value;
     }
@@ -741,7 +736,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
       Bit32u value = 0, mask = 1;
       for (int i=0;i<32;i++) {
         if (tmr[index+i]) value |= mask;
-        value <<= 1;
+        mask <<= 1;
       }
       *data = value;
     }
@@ -755,7 +750,7 @@ void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
       Bit32u value = 0, mask = 1;
       for (int i=0;i<32;i++) {
         if (irr[index+i]) value |= mask;
-        value <<= 1;
+        mask <<= 1;
       }
       *data = value;
     }
