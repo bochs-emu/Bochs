@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.153 2005-11-11 22:52:57 vruppert Exp $
+// $Id: harddrv.cc,v 1.154 2005-11-29 18:03:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -150,7 +150,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.153 2005-11-11 22:52:57 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.154 2005-11-29 18:03:39 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3909,7 +3909,7 @@ off_t sparse_image_t::lseek (off_t offset, int whence)
 inline off_t sparse_image_t::get_physical_offset()
 {
  off_t physical_offset = data_start;
- physical_offset += (position_physical_page << pagesize_shift);
+ physical_offset += ((off_t)position_physical_page << pagesize_shift);
  physical_offset += position_page_offset;
 
  return physical_offset;
@@ -4048,17 +4048,17 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      // We just add on another page at the end of the file
      // Reclamation, compaction etc should currently be done off-line
 
-     size_t  data_size = (size_t)(underlying_filesize - data_start);
+     off_t  data_size = underlying_filesize - data_start;
      BX_ASSERT((data_size % pagesize) == 0);
 
 
-     Bit32u  data_size_pages = data_size / pagesize;
+     Bit32u  data_size_pages = (Bit32u)(data_size / pagesize);
      Bit32u  next_data_page = data_size_pages;
 
      pagetable[position_virtual_page] = htod32(next_data_page);
      position_physical_page = next_data_page;
 
-     off_t page_file_start = data_start + (position_physical_page << pagesize_shift);
+     off_t page_file_start = data_start + ((off_t)position_physical_page << pagesize_shift);
 
      if (parent_image != NULL)
      {
