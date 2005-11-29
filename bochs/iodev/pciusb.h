@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.13 2005-11-07 19:06:05 vruppert Exp $
+// $Id: pciusb.h,v 1.14 2005-11-29 20:46:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -344,6 +344,7 @@ public:
   virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual bx_bool usb_keyboard_connected();
   virtual bx_bool usb_mouse_connected();
+  static char  *usb_param_handler(bx_param_string_c *param, int set, char *val, int maxlen);
 
 private:
 

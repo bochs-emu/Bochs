@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.28 2005-11-15 17:19:28 vruppert Exp $
+// $Id: pciusb.cc,v 1.29 2005-11-29 20:46:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -124,6 +124,15 @@ bx_pciusb_c::init(void)
 
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB");
+
+  bx_options.usb[0].Oport1->set_handler(usb_param_handler);
+  bx_options.usb[0].Oport1->set_runtime_param(1);
+  bx_options.usb[0].Ooption1->set_handler(usb_param_handler);
+  bx_options.usb[0].Ooption1->set_runtime_param(1);
+  bx_options.usb[0].Oport2->set_handler(usb_param_handler);
+  bx_options.usb[0].Oport2->set_runtime_param(1);
+  bx_options.usb[0].Ooption2->set_handler(usb_param_handler);
+  bx_options.usb[0].Ooption2->set_runtime_param(1);
 
   //HACK: Turn on debug messages from the start
   //BX_USB_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -1835,6 +1844,31 @@ bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out) {
   }
   
   return 1;
+}
+
+char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, char *val, int maxlen)
+{
+  // handler for USB runtime parameters
+  if (set) {
+    bx_id id = param->get_id ();
+    switch (id) {
+      case BXP_USB1_PORT1:
+        BX_ERROR(("USB port #1 device change not implemented yet"));
+        break;
+      case BXP_USB1_OPTION1:
+        BX_ERROR(("USB port #1 option change not implemented yet"));
+        break;
+      case BXP_USB1_PORT2:
+        BX_ERROR(("USB port #2 device change not implemented yet"));
+        break;
+      case BXP_USB1_OPTION2:
+        BX_ERROR(("USB port #2 option change not implemented yet"));
+        break;
+      default:
+        BX_PANIC(("usb_param_handler called with unexpected parameter %d", id));
+    }
+  }
+  return val;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

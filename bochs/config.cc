@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.63 2005-11-27 17:49:58 vruppert Exp $
+// $Id: config.cc,v 1.64 2005-11-29 20:46:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1078,13 +1078,9 @@ void bx_init_options ()
         *par_ser_ptr++ = bx_options.usb[i].Ooption2;
 
         bx_options.usb[i].Oport1->set_group (strdup(group));
-        bx_options.usb[i].Oport1->set_runtime_param (1);
         bx_options.usb[i].Ooption1->set_group (strdup(group));
-        bx_options.usb[i].Ooption1->set_runtime_param (1);
         bx_options.usb[i].Oport2->set_group (strdup(group));
-        bx_options.usb[i].Oport2->set_runtime_param (1);
         bx_options.usb[i].Ooption2->set_group (strdup(group));
-        bx_options.usb[i].Ooption2->set_runtime_param (1);
   }
   // add final NULL at the end, and build the menu
   *par_ser_ptr = NULL;
