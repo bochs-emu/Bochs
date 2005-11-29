@@ -10,20 +10,36 @@ Detailed change log :
     configure with --enable-vme (Stanislav)
   - flush caches and TLBs when executing WBINVD and INVD instructions
   - do not modify segment limit and AR bytes when modifying segment
-    register in real mode (support for unreal mode).
+    register in real mode (support for unreal mode)
+  - fixed init/reset values for LDTR and TR registers
+  - reimplemented hardware task switching mechanism (Stanislav)
 
-- CPU (x86-64) (Stanislav)
+- CPU (x86-64) (Stanislav Shwartsman)
   - implemented call_far/ret_far/jmp_far instructions in long mode
   - fixed IRET operation in long mode
   - fixed bug prevented setting of NXE/FFXSR bits in MSR.EFER register
   - implemented RDTSCP instruction
   - do not check CS.limit when prefetching instructions in long mode
   - fixed masked write instructions (MASKMOVQ/MASKMOVDQU) in long mode
+  - fetchdecode fixes for x86-64
+
+- APIC
+  - Fixed bug in changing local APIC id (Stanislav)
+  - Fixed reading of IRR/ISR/TMR registers (patch by wmrieker)
+  - Implemented spurious interrupt register (Stanislav, patch by wmrieker)
+  - Fixed interrupt delivery bug (#SF patch)
 
 - Bochs debugger
   - Fixed bug in bochs debugger caused breakpoints doesn't fire sometimes
     (Alexander Krisak)
   - watchpoints in device memory fixed (Nickolai Zeldovich)
+  - new debug interface to access Bochs CPU general purpose registers
+    with support for x86-64
+
+- Disassembler (Stanislav Shwartsman)
+  - Fixed disassembly for FCOMI/FUCOMI instructions
+  - Getting ready for x86-64 support in disassembler. The disassembler
+    module fully supporting x86-64 available for testing in #SF patch #1359162
 
 - I/O devices (Volker)
   - general
@@ -83,6 +99,9 @@ Detailed change log :
   - some more APM functions added
 
 - SF patches applied
+  [857235] task priority and other APIC bugs, etc by wmrieker 
+ [1359011] build breaks for 386 + debugger + disasm by shirokuma 
+ [1352761] Infinite loop when trying to debug a triple exception  
  [1311170] small APIC bug fix (interrupt sent to the wrong CPU)
  [1309763] Watchpoints don't work in device memory by Nickolai Zeldovich
  [1294930] change line status on floppy by Ben Lunt
@@ -91,6 +110,78 @@ Detailed change log :
  [1214886] No more pageWriteStamp / unified icache by H. Johansson
  [1107945] com->socket redirection support by Andrew Backer
 
+- these S.F. bugs were closed
+ [1368239] broken grater than 4GB size of sparse type hd image
+ [1365830] i386 compile breaks on paging
+  [427550] Incomplete IRETD implementation
+ [1215081] MSVC workspace STILL not fixed
+  [736279] Jump to Task
+ [1356488] FD change fail & occur error
+  [957615] [CPU ] prefetch: RIP > CS.limit
+ [1353866] not booting linux-2.6.14
+ [1351667] load32bitOSImage does not work with --enable-x86-debugger
+ [1217476] Incorrect (?) handling of segment registers in real mode
+ [1184711] OS2 DOS crash [2.2.pre2]
+  [624330] support for disks > 32GiB
+ [1348368] bochs 2.2.1 bximage error
+ [1342081] Configuration Menu option failed
+ [1138616] OS/2 Warp 4 hangs when booting
+ [1049840] mouse and video conflict
+ [1164570] Unable to perform Fedora Core 4 test 1 installation
+ [1183201] Windows 2000 (MSDN build 2150?) does not completely install
+ [1194284] Can't boot from CD-ROM (Windows NT)
+  [962969] Windows NT crashes while trying to intall them.
+ [1054594] WinXP install halts (redo)
+ [1153107] Windows XP fails with BSOD on 'vga'
+  [938518] Win XP installation fails
+  [645420] getHostMemAddr vetoed direct read
+ [1179985] MS XENIX: >>PANIC<< VGABIOS panic at vgabios.c, line 0
+ [1329600] WBINVD and INVD should flush caches and TLB
+  [638924] eliminate BX_USE_CONFIG_INTERFACE
+ [1048711] Funny behaviour with CTRL
+ [1288450] keyboard BIOS error
+ [1310706] Keyboard - about key SHIFT
+ [1295981] Ubuntu 5.04 Live-CD won't boot in Bochs
+  [879047] APIC timer behavior different before reset and after
+ [1188506] I still can't install the german Windows XP!
+ [1301847] Windows XP dosn't boot - FXRSTOR problem ?
+  [661259] does not boot QNX under WinX
+  [924412] Keyboard lock states all whacked
+  [681127] MIPSpro compiler (IRIX) is allergic to ^M
+ [1285923] BIOS keyboard handler
+  [516639] ATA controller revisited...
+  [657918] does not boot BeOS under WinX
+  [649245] BeOS CD locks halfway on boot
+ [1094385] Attachment for bug 1090339 (beos failure)
+ [1183196] BeOS 4.5 developer CD does not install
+ [1090339] BeOS fails to boot
+  [639484] panics when int 13 is called
+  [711701] divide by zero
+  [704295] ATAPI/BIOS call missing
+  [682856] hard drive problems
+  [627691] Cursor keys problem
+  [588011] keyboard not working  
+  [542260] os/2 warp crashes with floppy handling
+ [1273878] SB16 doesn't work in pure DOS
+  [542254] OS/2 FDC driver dies
+ [1099610] Windows 98 SE Does not install
+  [875479] cr3 problem on task switch
+  [731423] NE2000 causing PANIC on Win2K detection
+ [1156155] bochs fails to boot plan9 iso
+ [1251979] --enable-cpu-level=3 should assume --without-fpu
+ [1257538] Interupt 15h 83h - set wait event interval
+  [658396] Panic for DR DOS emm386
+  [679339] /? doesn't divulge Bochs command-line syntax
+ [1167016] call/jump/return_protected doesn't support x86-64
+ [1252432] Mac OS X compile bug
+  [881442] Bochs 2.1 PANIC when loading DOS Turbo Pascal protected mode
+ [1249324] Boch2.2.1 Buffer Overfollow in void bx_local_apic_c::init ()
+ [1197144] 'make install' has dependency on wget
+ [1079595] LTR:386TSS: loading tr.limit < 103
+ [1244070] Compilation Error in gui/rfb.cc
+  [761707] CPU error when trying to start Privateer
+  [517281] Crash running Privateer in DOS...  
+ 
 -------------------------------------------------------------------------
 Changes in 2.2.1 (July 8, 2005):
 
