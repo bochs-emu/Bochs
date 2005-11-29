@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.18 2005-11-14 19:03:12 sshwarts Exp $
+// $Id: iodebug.cc,v 1.19 2005-11-29 17:38:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 
@@ -171,13 +171,13 @@ void bx_iodebug_c::mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *da
   {
     area--;
 #if BX_DEBUGGER
-    fprintf( stdout, "%s @ eip: %08X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
+    fprintf( stdout, "%s @ eip: " FMT_ADDRX " wrote at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
     bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
-             "IODEBUG write to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
+             "IODEBUG write to monitored memory area: %2i\tby EIP:\t\t" FMT_ADDRX "\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     area,
-	     cpu->get_EIP(),
+	     cpu->get_ip(),
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
@@ -218,13 +218,13 @@ void bx_iodebug_c::mem_read( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   {
     area--;
 #if BX_DEBUGGER
-    fprintf( stdout, "%s @ eip: %8X wrote at monitored memory location %8X\n", cpu->name, cpu->get_EIP(), addr);
+    fprintf( stdout, "%s @ eip: " FMT_ADDRX " wrote at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
     bx_guard.interrupt_requested=1;
 #else
     fprintf( stderr,
-             "IODEBUG read to monitored memory area: %2i\tby EIP:\t\t%08X\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
+             "IODEBUG read to monitored memory area: %2i\tby EIP:\t\t" FMT_ADDRX "\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     area,
-	     cpu->get_EIP(),
+	     cpu->get_ip(),
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned int)addr);
