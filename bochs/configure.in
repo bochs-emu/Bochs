@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.302 2005-11-26 21:36:50 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.303 2005-11-29 19:27:42 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -859,8 +859,9 @@ if test "$networking" = yes; then
     ])
 
     if test "$use_ethertap" = yes; then
-      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o"
+      NETLOW_OBJS="$NETLOW_OBJS eth_tap.o eth_vde.o"
       AC_DEFINE(HAVE_ETHERTAP, 1)
+      AC_DEFINE(HAVE_VDE, 1)
     fi
 
     AC_CHECK_HEADER(net/if_tun.h, [

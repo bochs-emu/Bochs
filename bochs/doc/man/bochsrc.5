@@ -1,5 +1,5 @@
 .\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "27 Nov 2005" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "29 Nov 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -669,6 +669,7 @@ If you don't want to make connections to any physical networks,
 you can use the following 'ethmod's to simulate a virtual network.
  - null   : All packets are discarded, but logged to a few files
  - arpback: ARP is simulated (disabled by default)
+ - vde    : Virtual Distributed Ethernet
  - vnet   : ARP, ICMP-echo(ping), DHCP and TFTP are simulated
             The virtual host uses 192.168.10.1
             DHCP assignes 192.168.10.2 to the guest
@@ -696,6 +697,7 @@ Examples:
   ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=MYCARD
   ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
   ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
+  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
   ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
 
 .TP

@@ -937,7 +937,7 @@ typedef
 // this enables TUN/TAP packet mover; determined by configure script
 #define HAVE_TUNTAP 0
 
-// this enables VDE packet mover; TODO: configure check
+// this enables VDE packet mover; determined by configure script
 #define HAVE_VDE 0
 
 
