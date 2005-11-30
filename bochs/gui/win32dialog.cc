@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.31 2005-11-27 14:15:11 vruppert Exp $
+// $Id: win32dialog.cc,v 1.32 2005-11-30 18:06:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -481,6 +481,61 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
   return FALSE;
 }
 
+static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static BOOL changed;
+  long noticode;
+  char buffer[MAX_PATH];
+  PSHNOTIFY *psn;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXP_USB1_PORT1)->getptr());
+      SetDlgItemText(hDlg, IDUSBOPT1, SIM->get_param_string(BXP_USB1_OPTION1)->getptr());
+      SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXP_USB1_PORT2)->getptr());
+      SetDlgItemText(hDlg, IDUSBOPT2, SIM->get_param_string(BXP_USB1_OPTION2)->getptr());
+      changed = FALSE;
+      return TRUE;
+    case WM_NOTIFY:
+      psn = (PSHNOTIFY *)lParam;
+      switch(psn->hdr.code) {
+        case PSN_APPLY:
+          if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
+            GetDlgItemText(hDlg, IDUSBDEV1, buffer, sizeof(buffer));
+            SIM->get_param_string(BXP_USB1_PORT1)->set(buffer);
+            GetDlgItemText(hDlg, IDUSBOPT1, buffer, sizeof(buffer));
+            SIM->get_param_string(BXP_USB1_OPTION1)->set(buffer);
+            GetDlgItemText(hDlg, IDUSBDEV2, buffer, sizeof(buffer));
+            SIM->get_param_string(BXP_USB1_PORT2)->set(buffer);
+            GetDlgItemText(hDlg, IDUSBOPT2, buffer, sizeof(buffer));
+            SIM->get_param_string(BXP_USB1_OPTION2)->set(buffer);
+          }
+          return PSNRET_NOERROR;
+        case PSN_QUERYCANCEL:
+          retcode = BX_CI_RT_QUIT;
+          return TRUE;
+      }
+      break;
+    case WM_COMMAND:
+      noticode = HIWORD(wParam);
+      switch(noticode) {
+        case EN_CHANGE:
+          switch (LOWORD(wParam)) {
+            case IDUSBDEV1:
+            case IDUSBOPT1:
+            case IDUSBDEV2:
+            case IDUSBOPT2:
+              changed = TRUE;
+              SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              break;
+          }
+          break;
+      }
+      break;
+  }
+  return FALSE;
+}
+
 static BOOL CALLBACK RTLogOptDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static BOOL advanced;
@@ -744,22 +799,24 @@ int Cdrom1Dialog()
 
 int RuntimeOptionsDialog()
 {
-  PROPSHEETPAGE psp[3];
+  PROPSHEETPAGE psp[4];
   PROPSHEETHEADER psh;
   int i;
 
   memset(psp,0,sizeof(psp));
-  for (i = 0; i < 3; i++) {
+  for (i = 0; i < 4; i++) {
     psp[i].dwSize = sizeof(PROPSHEETPAGE);
     psp[i].dwFlags = PSP_DEFAULT;
     psp[i].hInstance = NULL;
   }
   psp[0].pszTemplate = MAKEINTRESOURCE(RT_CDROM_DLG);
   psp[0].pfnDlgProc = RTCdromDlgProc;
-  psp[1].pszTemplate = MAKEINTRESOURCE(RT_LOGOPT_DLG);
-  psp[1].pfnDlgProc = RTLogOptDlgProc;
-  psp[2].pszTemplate = MAKEINTRESOURCE(RT_MISC_DLG);
-  psp[2].pfnDlgProc = RTMiscDlgProc;
+  psp[1].pszTemplate = MAKEINTRESOURCE(RT_USBDEV_DLG);
+  psp[1].pfnDlgProc = RTUSBdevDlgProc;
+  psp[2].pszTemplate = MAKEINTRESOURCE(RT_LOGOPT_DLG);
+  psp[2].pfnDlgProc = RTLogOptDlgProc;
+  psp[3].pszTemplate = MAKEINTRESOURCE(RT_MISC_DLG);
+  psp[3].pfnDlgProc = RTMiscDlgProc;
 
   memset(&psh,0,sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
@@ -767,7 +824,7 @@ int RuntimeOptionsDialog()
   psh.hwndParent = GetBochsWindow();
   psh.hInstance = NULL;
   psh.pszCaption = "Runtime Options";
-  psh.nPages = 3;
+  psh.nPages = 4;
   psh.ppsp = (LPCPROPSHEETPAGE)&psp;
 
   PropertySheet(&psh);
