@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.29 2005-11-29 20:46:17 vruppert Exp $
+// $Id: pciusb.cc,v 1.30 2005-11-30 18:34:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1500,7 +1500,7 @@ bx_pciusb_c::pci_read(Bit8u address, unsigned io_len)
     strcat(szTmp, szTmp2);
   }
   strrev(szTmp);
-  BX_DEBUG(("USB PCI read register 0x%02x %svalue 0x%s", address, pszName, szTmp));
+  BX_DEBUG(("USB PCI read  register 0x%02x %svalue 0x%s", address, pszName, szTmp));
   return value;
 }
 
@@ -1543,9 +1543,12 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
       switch (address+i) {
         case 0x04:
           value8 &= 0x05;
+          BX_USB_THIS hub[0].pci_conf[address+i] = value8;
           sprintf(szTmp2, "%02x", value8);
           break;
         case 0x3d: //
+        case 0x3e: //
+        case 0x3f: //
         case 0x05: // disallowing write to command hi-byte
         case 0x06: // disallowing write to status lo-byte (is that expected?)
           strcpy(szTmp2, "..");
@@ -1580,7 +1583,7 @@ bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
   strrev(szTmp);
-  BX_DEBUG(("USB PCI write register 0x%02x value 0x%s", address, szTmp));
+  BX_DEBUG(("USB PCI write register 0x%02x                   value 0x%s", address, szTmp));
 }
 
   void
