@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.105 2005-10-31 15:32:18 vruppert Exp $
+// $Id: keyboard.cc,v 1.106 2005-12-02 17:27:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.105 2005-10-31 15:32:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.106 2005-12-02 17:27:19 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -199,7 +199,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS pastebuf = NULL;
   BX_KEY_THIS pastebuf_len = 0;
   BX_KEY_THIS pastebuf_ptr = 0;
-  BX_KEY_THIS paste_delay_changed ();
+  BX_KEY_THIS paste_delay_changed(bx_options.Okeyboard_paste_delay->get());
   BX_KEY_THIS stop_paste = 0;
 
   // mouse port installed on system board
@@ -251,6 +251,12 @@ bx_keyb_c::init(void)
 	&BX_KEY_THIS s.kbd_controller.outb));
   }
 #endif
+
+  // init runtime parameters
+  bx_options.Omouse_enabled->set_handler(kbd_param_handler);
+  bx_options.Omouse_enabled->set_runtime_param(1);
+  bx_options.Okeyboard_paste_delay->set_handler(kbd_param_handler);
+  bx_options.Okeyboard_paste_delay->set_runtime_param(1);
 }
 
   void
@@ -261,10 +267,29 @@ bx_keyb_c::reset(unsigned type)
   }
 }
 
-  void
-bx_keyb_c::paste_delay_changed()
+Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  BX_KEY_THIS pastedelay = bx_options.Okeyboard_paste_delay->get()/BX_IODEV_HANDLER_PERIOD;
+  if (set) {
+    bx_id id = param->get_id ();
+    switch (id) {
+      case BXP_MOUSE_ENABLED:
+        bx_gui->mouse_enabled_changed(val!=0);
+        BX_KEY_THIS mouse_enabled_changed(val!=0);
+        break;
+      case BXP_KBD_PASTE_DELAY:
+        BX_KEY_THIS paste_delay_changed(val);
+        break;
+      default:
+        BX_PANIC(("kbd_param_handler called with unexpected parameter %d", id));
+    }
+  }
+  return val;
+}
+
+  void
+bx_keyb_c::paste_delay_changed(Bit32u value)
+{
+  BX_KEY_THIS pastedelay = value / BX_IODEV_HANDLER_PERIOD;
   BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
 }
 
@@ -1512,7 +1537,7 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 
 
 void
-bx_keyb_c::mouse_enabled_changed(bool enabled)
+bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
 {
 #if BX_SUPPORT_PCIUSB
   // if type == usb, connect or disconnect the USB mouse
@@ -1526,9 +1551,9 @@ bx_keyb_c::mouse_enabled_changed(bool enabled)
       BX_KEY_THIS s.mouse.delayed_dz) {
     create_mouse_packet(1);
   }
-  s.mouse.delayed_dx=0;
-  s.mouse.delayed_dy=0;
-  s.mouse.delayed_dz=0;
+  BX_KEY_THIS s.mouse.delayed_dx=0;
+  BX_KEY_THIS s.mouse.delayed_dy=0;
+  BX_KEY_THIS s.mouse.delayed_dz=0;
   BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 

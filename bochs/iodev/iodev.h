@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.65 2005-11-27 17:49:58 vruppert Exp $
+// $Id: iodev.h,v 1.66 2005-12-02 17:27:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,12 +108,6 @@ class BOCHSAPI bx_keyb_stub_c : public bx_devmodel_c {
   }
   virtual void paste_bytes(Bit8u *data, Bit32s length) {
     STUBFUNC(keyboard, paste_bytes);
-  }
-  virtual void paste_delay_changed () {
-    STUBFUNC(keyboard, paste_delay_changed);
-  }
-  virtual void mouse_enabled_changed(bool enabled) {
-    STUBFUNC(keyboard, mouse_enabled_changed);
   }
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.30 2005-09-13 19:35:01 vruppert Exp $
+// $Id: keyboard.h,v 1.31 2005-12-02 17:27:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 #  define BX_KEY_THIS theKeyboard->
 #else
 #  define BX_KEY_SMF
-#  define BX_KEY_THIS 
+#  define BX_KEY_THIS this->
 #endif
 
 #define MOUSE_MODE_RESET  10
@@ -58,9 +58,10 @@ public:
   virtual void     paste_bytes(Bit8u *data, Bit32s length);
   virtual void     mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
-  // update the paste delay based on bx_options.Okeyboard_paste_delay
-  virtual void     paste_delay_changed ();
-  virtual void     mouse_enabled_changed(bool enabled);
+  // runtime options
+  static     Bit64s   kbd_param_handler(bx_param_c *param, int set, Bit64s val);
+  BX_KEY_SMF void     paste_delay_changed(Bit32u value);
+  BX_KEY_SMF void     mouse_enabled_changed(bx_bool enabled);
 
 private:
   BX_KEY_SMF Bit8u    get_kbd_enable(void);

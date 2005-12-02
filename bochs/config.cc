@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.64 2005-11-29 20:46:17 vruppert Exp $
+// $Id: config.cc,v 1.65 2005-12-02 17:27:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,13 +59,6 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   switch (id) {
-    case BXP_MOUSE_ENABLED:
-      // if after init, notify the GUI
-      if (set && SIM->get_init_done ()) {
-        bx_gui->mouse_enabled_changed (val!=0);
-        DEV_mouse_enabled_changed (val!=0);
-      }
-      break;
     case BXP_LOAD32BITOS_WHICH:
       if (set) {
         int enable = (val != Load32bitOSNone);
@@ -120,11 +113,6 @@ bx_param_handler (bx_param_c *param, int set, Bit64s val)
         DEV_floppy_set_media_status(1, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons ();
       }
-      break;
-    case BXP_KBD_PASTE_DELAY:
-      if ((set) && (SIM->get_init_done ())) {
-        DEV_kbd_paste_delay_changed ();
-        }
       break;
 
     case BXP_ATA0_MASTER_MODE:
@@ -1162,8 +1150,6 @@ void bx_init_options ()
       "Enable the mouse",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
       0);
-  bx_options.Omouse_enabled->set_handler (bx_param_handler);
-  bx_options.Omouse_enabled->set_runtime_param (1);
 
   static char *mouse_type_list[] = {
     "none",
@@ -1627,8 +1613,6 @@ void bx_init_options ()
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
       1000, BX_MAX_BIT32U,
       100000);
-  bx_options.Okeyboard_paste_delay->set_handler (bx_param_handler);
-  bx_options.Okeyboard_paste_delay->set_runtime_param (1);
   bx_options.cmosimage.Oenabled = new bx_param_bool_c (BXP_CMOSIMAGE_ENABLED,
       "Use a CMOS image",
       "Controls the usage of a CMOS image",
