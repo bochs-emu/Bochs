@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.91 2005-11-25 22:29:20 vruppert Exp $
+// $Id: floppy.cc,v 1.92 2005-12-03 18:22:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,11 +95,11 @@ typedef struct {
 } floppy_type_t;
 
 static floppy_type_t floppy_type[8] = {
-  {BX_FLOPPY_160K, 40, 1, 8, 320, 0x01},
-  {BX_FLOPPY_180K, 40, 1, 9, 360, 0x01},
-  {BX_FLOPPY_320K, 40, 2, 8, 640, 0x01},
+  {BX_FLOPPY_160K, 40, 1, 8, 320, 0x05},
+  {BX_FLOPPY_180K, 40, 1, 9, 360, 0x05},
+  {BX_FLOPPY_320K, 40, 2, 8, 640, 0x05},
   {BX_FLOPPY_360K, 40, 2, 9, 720, 0x05},
-  {BX_FLOPPY_720K, 80, 2, 9, 1440, 0x1c},
+  {BX_FLOPPY_720K, 80, 2, 9, 1440, 0x1f},
   {BX_FLOPPY_1_2,  80, 2, 15, 2400, 0x04},
   {BX_FLOPPY_1_44, 80, 2, 18, 2880, 0x18},
   {BX_FLOPPY_2_88, 80, 2, 36, 5760, 0x10}
@@ -144,7 +144,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.91 2005-11-25 22:29:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.92 2005-12-03 18:22:18 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -968,17 +968,12 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_INFO(("attempt to read/write sector %u past last sector %u",
                      (unsigned) sector,
                      (unsigned) BX_FD_THIS s.media[drive].sectors_per_track));
-        // set controller to where drive would have left off
-        // after it discovered the sector was past EOT
         BX_FD_THIS s.cylinder[drive] = cylinder;
         BX_FD_THIS s.head[drive]     = head;
-        BX_FD_THIS s.sector[drive]   = BX_FD_THIS s.media[drive].sectors_per_track;
+        BX_FD_THIS s.sector[drive]   = sector;
 
-        // 0100 0HDD abnormal termination
         BX_FD_THIS s.status_reg0 = 0x40 | (BX_FD_THIS s.head[drive]<<2) | drive;
-        // 1000 0101 end of cyl/NDAT/NID
-        BX_FD_THIS s.status_reg1 = 0x85;
-        // 0000 0000
+        BX_FD_THIS s.status_reg1 = 0x04;
         BX_FD_THIS s.status_reg2 = 0x00;
         enter_result_phase();
         return;
