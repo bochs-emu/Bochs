@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.17 2005-09-12 18:34:25 vruppert Exp $
+$Id: development.dbk,v 1.18 2005-12-03 09:56:05 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -1267,7 +1267,7 @@ Each position is a Bit32u entity.
 <title>Parameters
 </title>
 <para>
-The following tables shows what paremeters are used when creating redologs or creating égrowing" images :
+The following tables shows what paremeters are used when creating redologs or creating "growing" images :
 <table>   
 <title>
         How number of entries in the catalog and number of blocks by extents are computed
