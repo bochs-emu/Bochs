@@ -45,6 +45,7 @@ Detailed change log :
   - general
     - memory management prepared for large BIOS images (up to 512k)
     - slowdown timer sleep rate fixed (now using 1 msec on all platforms)
+    - some device specific parameter handlers moved into the device code
   - serial
     - new serial mode 'socket' connects a network socket (#SF patch by Andrew Backer)
   - hard drive / cdrom
@@ -59,24 +60,29 @@ Detailed change log :
     - disk image size limit changed from 32 to 127 GB
   - floppy
     - fixes for OS/2 (patch by Robin Kay)
-    - disk change line behaviour fixed (patch by Ben Lunt)
+    - disk change line behaviour fixed (initial patch by Ben Lunt)
     - end-of-track (EOT) condition handling implemented
     - more accurate timing for read/write data and format track commands using
       a motor speed of 300 RPM
     - timing of recalibrate and seek commands now depends on the step rate,
       date rate and the steps to do
+    - floppy controller type changed to 82077AA
   - cmos
     - RTC 12-hour and binary mode implemented
     - number of CMOS registers changed from 64 to 128
     - bochsrc option 'cmosimage' improved
+    - save cmos image on exit if enabled
   - speaker
     - simple speaker support for OS X added (patch by brianonn@telus.net)
   - pci
     - BeOS boot failure fix in the PCI IDE code
+    - don't register i/o and memory regions during PCI probe
   - vga
     - memory allocation for vga extensions fixed
   - usb
     - some bugfixes by Ben Lunt (mouse and keypad are usable now)
+  - networking modules
+    - VDE networking module now enabled on Linux
 
 - display libraries
   - general
@@ -91,6 +97,8 @@ Detailed change log :
   - ask dialog is now enabled by default for win32, wx and x display libraries
   - bochsrc option floppy_command_delay is obsolete now (floppy timing now based
     on hardware specs)
+  - floppy image size detection now available in the whole config interface
+  - some device specific parameter handlers moved into the device code
 
 - System BIOS
   - PCI i/o and memory base address initialization added
