@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.66 2005-12-02 17:27:19 vruppert Exp $
+// $Id: iodev.h,v 1.67 2005-12-04 17:43:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -173,11 +173,13 @@ class BOCHSAPI bx_cmos_stub_c : public bx_devmodel_c {
     STUBFUNC(cmos, set_reg);
   }
   virtual time_t get_timeval() {
-    // STUBFUNC(cmos, get_timeval); 
     return 0;
   }
   virtual void checksum_cmos(void) {
     STUBFUNC(cmos, checksum);
+  }
+  virtual void save_image(void) {
+    STUBFUNC(cmos, save_image);
   }
 };
 

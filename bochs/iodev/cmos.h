@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.12 2005-09-11 20:03:56 vruppert Exp $
+// $Id: cmos.h,v 1.13 2005-12-04 17:43:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,6 +42,7 @@ public:
   virtual void init(void);
   virtual void checksum_cmos(void);
   virtual void reset(unsigned type);
+  virtual void save_image(void);
 
   virtual Bit32u get_reg(unsigned reg) {
     return s.reg[reg];
