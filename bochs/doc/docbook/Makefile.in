@@ -1,6 +1,6 @@
 ###################################################################
 # doc/docbook/Makefile
-# $Id: Makefile.in,v 1.19 2005-07-30 15:02:41 vruppert Exp $
+# $Id: Makefile.in,v 1.20 2005-12-06 22:15:50 vruppert Exp $
 #
 # Builds documentation in various formats from SGML source, and
 # allows easy update to the Bochs web site.
@@ -19,7 +19,7 @@ DESTDIR=
 
 # name of the major documentation sections
 SECTIONS=user documentation development
-SECTION_HTML=$(SECTIONS:%=%/book1.html)
+SECTION_HTML=$(SECTIONS:%=%/index.html)
 
 # these files get installed in addition to the sections
 EXTRAS=index.html images
@@ -40,26 +40,17 @@ SSH=ssh -x
 
 all: $(SECTION_HTML)
 
-user/book1.html: $(srcdir)/user/user.dbk
+user/index.html: $(srcdir)/user/user.dbk
 	-mkdir -p user
 	$(DOCBOOK2HTML) -o user $(srcdir)/user/user.dbk
-	if [ -f $(srcdir)/user/index.html ]; \
-		then mv $(srcdir)/user/index.html $(srcdir)/user/book1.html; \
-	fi
 
-documentation/book1.html: $(srcdir)/documentation/documentation.dbk
+documentation/index.html: $(srcdir)/documentation/documentation.dbk
 	-mkdir -p documentation
 	$(DOCBOOK2HTML) -o documentation $(srcdir)/documentation/documentation.dbk 
-	if [ -f $(srcdir)/documentation/index.html ]; \
-		then mv $(srcdir)/documentation/index.html $(srcdir)/documentation/book1.html; \
-	fi
 
-development/book1.html: $(srcdir)/development/development.dbk
+development/index.html: $(srcdir)/development/development.dbk
 	-mkdir -p development
 	$(DOCBOOK2HTML) -o development $(srcdir)/development/development.dbk
-	if [ -f $(srcdir)/development/index.html ]; \
-		then mv $(srcdir)/development/index.html $(srcdir)/development/book1.html; \
-	fi
 
 fixperm::
 	# fix permissions locally so that tar will install things right
@@ -103,7 +94,7 @@ dl_docs::
 	touch */*.html
 
 clean:
-	#remove generated files
+	# remove generated files
 	for S in $(SECTIONS); do \
 	  rm -f $$S/*.html $$S/*.htm $$S/*.ps $$S/*.pdf $$S/*.out; \
 	done
