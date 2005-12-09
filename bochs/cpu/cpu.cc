@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.115 2005-11-26 21:36:51 sshwarts Exp $
+// $Id: cpu.cc,v 1.116 2005-12-09 21:21:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -285,6 +285,14 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     }
   }
 
+  bx_address next_RIP = RIP + i->ilen();
+  if (! Is64BitMode()) {
+    if (((Bit32u) next_RIP) > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+      BX_ERROR(("GP(0): instruction cross segment boundary !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+  }
+
   BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
   BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
   if (resolveModRM)
@@ -304,120 +312,122 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // decoding instruction compeleted -> continue with execution
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
 
-    if ( !(i->repUsedL() && i->repeatableL()) ) {
-      // non repeating instruction
-      RIP += i->ilen();
-      BX_CPU_CALL_METHOD(execute, (i));
-      BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-      BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+  if ( !(i->repUsedL() && i->repeatableL()) ) {
+    // non repeating instruction
+    RIP = next_RIP;
+    BX_CPU_CALL_METHOD(execute, (i));
+    BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
+    BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
 
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-    }
-    else {
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_TICK1_IF_SINGLE_PROCESSOR();
+  }
+  else {
 
 repeat_loop:
-      if (i->repeatableZFL()) {
+
+    if (i->repeatableZFL()) {
 #if BX_SUPPORT_X86_64
-        if (i->as64L()) {
-          if (RCX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            RCX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-          if (RCX == 0) goto repeat_done;
-          goto repeat_not_done;
+      if (i->as64L()) {
+        if (RCX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          RCX --;
         }
-        else
-#endif
-        if (i->as32L()) {
-          if (ECX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            ECX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-          if (ECX == 0) goto repeat_done;
-          goto repeat_not_done;
-        }
-        else {
-          if (CX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            CX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-          if (CX == 0) goto repeat_done;
-          goto repeat_not_done;
-        }
+        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+        if (RCX == 0) goto repeat_done;
+        goto repeat_not_done;
       }
-      else { // normal repeat, no concern for ZF
+      else
+#endif
+      if (i->as32L()) {
+        if (ECX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          ECX --;
+        }
+        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+        if (ECX == 0) goto repeat_done;
+        goto repeat_not_done;
+      }
+      else {
+        if (CX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          CX --;
+        }
+        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+        if (CX == 0) goto repeat_done;
+        goto repeat_not_done;
+      }
+    }
+    else { // normal repeat, no concern for ZF
 #if BX_SUPPORT_X86_64
-        if (i->as64L()) {
-          if (RCX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            RCX --;
-          }
-          if (RCX == 0) goto repeat_done;
-          goto repeat_not_done;
+      if (i->as64L()) {
+        if (RCX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          RCX --;
         }
-        else
-#endif
-        if (i->as32L()) {
-          if (ECX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            ECX --;
-          }
-          if (ECX == 0) goto repeat_done;
-          goto repeat_not_done;
-        }
-        else { // 16bit addrsize
-          if (CX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            CX --;
-          }
-          if (CX == 0) goto repeat_done;
-          goto repeat_not_done;
-        }
+        if (RCX == 0) goto repeat_done;
+        goto repeat_not_done;
       }
-      // shouldn't get here from above
+      else
+#endif
+      if (i->as32L()) {
+        if (ECX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          ECX --;
+        }
+        if (ECX == 0) goto repeat_done;
+        goto repeat_not_done;
+      }
+      else { // 16bit addrsize
+        if (CX != 0) {
+          BX_CPU_CALL_METHOD(execute, (i));
+          CX --;
+        }
+        if (CX == 0) goto repeat_done;
+        goto repeat_not_done;
+      }
+    }
+
+    // shouldn't get here from above
 repeat_not_done:
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-      BX_TICK1_IF_SINGLE_PROCESSOR();
+    BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+    BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
-      if (BX_CPU_THIS_PTR async_event) {
-        invalidate_prefetch_q();
-        goto debugger_check;
-      }
-      goto repeat_loop;
-#else  /* if BX_DEBUGGER == 1 */
+    if (BX_CPU_THIS_PTR async_event) {
       invalidate_prefetch_q();
       goto debugger_check;
+    }
+    goto repeat_loop;
+#else  /* if BX_DEBUGGER == 1 */
+    invalidate_prefetch_q();
+    goto debugger_check;
 #endif
 
 repeat_done:
-      RIP += i->ilen();
-      BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-      BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-    }
+    RIP = next_RIP;
+    BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
+    BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+    BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_TICK1_IF_SINGLE_PROCESSOR();
+  }
 
 debugger_check:
-    // inform instrumentation about new instruction
-    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
+  // inform instrumentation about new instruction
+  BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
 #if (BX_SMP_PROCESSORS>1 && BX_DEBUGGER==0)
-    // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
-    // instructions and then return so that the other processors have a chance
-    // to run.  This is used only when simulating multiple processors.  If only
-    // one processor, don't waste any cycles on it!  Also, it is not needed
-    // with the debugger because its guard mechanism provides the same
-    // functionality.
-    CHECK_MAX_INSTRUCTIONS(max_instr_count);
+  // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
+  // instructions and then return so that the other processors have a chance
+  // to run.  This is used only when simulating multiple processors.  If only
+  // one processor, don't waste any cycles on it!  Also, it is not needed
+  // with the debugger because its guard mechanism provides the same
+  // functionality.
+  CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #endif
 
 #if BX_DEBUGGER
@@ -719,16 +729,13 @@ void BX_CPU_C::prefetch(void)
   bx_address temp_rip = RIP;
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
 
-  if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64) {
+  if (! Is64BitMode()) {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
 
     if (((Bit32u) temp_rip) > temp_limit) {
       BX_PANIC(("prefetch: RIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-
-    // check if segment boundary comes into play
-    // if ((temp_limit - (Bit32u)temp_rip) < 4096) ...
   }
 
 #if BX_SUPPORT_PAGING
