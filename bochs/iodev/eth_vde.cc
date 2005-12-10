@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.10 2005-11-29 19:27:42 vruppert Exp $
+// $Id: eth_vde.cc,v 1.11 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -26,7 +26,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_NETWORKING && defined(HAVE_VDE)
 
 #include "eth.h"

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.22 2005-07-24 07:25:02 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.23 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_NETWORKING && defined(HAVE_TUNTAP)
 
 #include "eth.h"

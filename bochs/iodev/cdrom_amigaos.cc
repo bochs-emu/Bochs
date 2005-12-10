@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.10 2005-11-02 20:26:24 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.11 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 // for your OS if it is not supported yet.
 
 
-#include "iodev.h"
+#include "bochs.h"
 #include "scsi_commands.h"
 #include "cdrom.h"
 

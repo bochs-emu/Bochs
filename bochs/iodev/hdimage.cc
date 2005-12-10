@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.1 2005-12-10 15:02:26 vruppert Exp $
+// $Id: hdimage.cc,v 1.2 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,6 +30,7 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #include "hdimage.h"
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.5 2004-09-05 10:30:19 vruppert Exp $
+// $Id: soundosx.cc,v 1.6 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -10,12 +10,16 @@
 #define Float32 KLUDGE_Float32
 #define Float64 KLUDGE_Float64
 #endif
+
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+#include "sb16.h"
 #undef Float32
 #undef Float64
 
 #if defined(macintosh) && BX_SUPPORT_SB16
-#define LOG_THIS bx_sb16.
+
+#define LOG_THIS bx_devices.pluginSB16Device->
 
 #include "soundosx.h"
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.31 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.32 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,7 +53,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_NETWORKING && defined(ETH_FBSD)
 
 #include "eth.h"

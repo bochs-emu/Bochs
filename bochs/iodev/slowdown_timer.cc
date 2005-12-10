@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.22 2005-10-22 17:31:02 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.23 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,7 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
 
-#include "iodev.h"
+#include "bochs.h"
+#include "slowdown_timer.h"
+
 #include <errno.h>
 
 //These need to stay printfs because they are useless in the log file.

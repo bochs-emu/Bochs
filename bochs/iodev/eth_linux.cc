@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.21 2005-06-05 07:24:43 vruppert Exp $
+// $Id: eth_linux.cc,v 1.22 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,9 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
  
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
+
 #if BX_NETWORKING && defined (ETH_LINUX)
 
 #include "eth.h"

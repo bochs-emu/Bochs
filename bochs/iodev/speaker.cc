@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.7 2005-07-27 19:17:29 vruppert Exp $
+// $Id: speaker.cc,v 1.8 2005-12-10 18:37:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -20,6 +20,7 @@
 
 #define BX_PLUGGABLE
 
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #include "speaker.h"
 
