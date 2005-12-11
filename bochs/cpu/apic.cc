@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.65 2005-12-09 21:21:28 sshwarts Exp $
+// $Id: apic.cc,v 1.66 2005-12-11 20:01:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -174,24 +174,34 @@ void bx_generic_apic_c::arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u
   local_apic_index[winner]->trigger_irq(vector, winner, trigger_mode);
 }
 
+#ifdef XAPIC
+  #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0xff
+#else
+  #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0x0f
+#endif
+
 Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
 {
-  int mask = 0;
+  Bit32u mask = 0;
   if (dest_mode == 0) {
     // physical 
     if (dest < APIC_MAX_ID)
-      mask = 1<<dest;
-    else if (dest == 0xff) {
-      // physical destination 0xff means everybody. only local APICs can
-      // send this.
-      BX_ASSERT (get_type() == APIC_TYPE_LOCAL_APIC);
-      mask = LOCAL_APIC_ALL_MASK; 
-    } else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
+      mask = 1 << dest;
+    else {
+      if (dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
+      {
+        // physical destination 0xff means everybody. only local APICs can
+        // send this.
+        BX_ASSERT (get_type() == APIC_TYPE_LOCAL_APIC);
+        mask = LOCAL_APIC_ALL_MASK; 
+      } 
+      else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
+    }
   } else {
     // logical destination. call match_logical_addr for each local APIC.
     if (dest == 0) return 0;
     for (int i=0; i<BX_LOCAL_APIC_NUM; i++) {
-      if (local_apic_index[i]->match_logical_addr(dest))
+      if (local_apic_index[i] && local_apic_index[i]->match_logical_addr(dest))
         mask |= (1<<i);
     }
   }
@@ -208,15 +218,22 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
   // arbitrate by default
   int arbitrate = 1;
-  int broadcast = (dest == LOCAL_APIC_ALL_MASK); // all local apics
+  int broadcast = (deliver_bitmask == LOCAL_APIC_ALL_MASK); // all local apics
   bx_bool once = 0;
   int i;
+
+  // prune nonexistents apics from list
+  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+  {
+    if (!local_apic_index[bit]) deliver_bitmask &= ~(1<<bit);
+  }
 
   // mask must include ONLY local APICs, or we will have problems.
   if (!deliver_bitmask) {
     BX_PANIC(("deliver failed for vector %02x: no APICs in destination bitmask", vector));
     return 0;
   }
+
   switch (delivery_mode) {
     case APIC_DM_LOWPRI:
       /* fall through, we've already done low priority arbitration */
@@ -337,10 +354,12 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
     dest = is_focus(vector) ? get_id() : 0;
     if (dest) break;
     for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
-      if (local_apic_index[i]->is_focus(vector)) {
-        found_focus = 1;
-        dest = i;
-        break;	// stop scanning
+      if (local_apic_index[i]) {
+        if (local_apic_index[i]->is_focus(vector)) {
+          found_focus = 1;
+          dest = i;
+          break;	// stop scanning
+        }
       }
     }
     if (!found_focus) dest = apic_bus_arbitrate_lowpri(0xff);
@@ -357,7 +376,8 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
       // and Intel Xeon processors.
       BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
       for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
-        local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
+        if (local_apic_index[bit])
+          local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
       return 1;
     }
     break; // we'll fall through to generic_deliver:case INIT
@@ -412,7 +432,7 @@ void bx_local_apic_c::init()
   // default address for a local APIC, can be moved
   base_addr = APIC_BASE_ADDR;
   bypass_irr_isr = 0;
-  error_status = 0;
+  error_status = shadow_error_status = 0;
   log_dest = 0;
   dest_format = 0xf;
   icr_hi = 0;
@@ -509,9 +529,8 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       // The ESR is a read/write register and is reset after being written to
       // by the processor. A write to the ESR must be done just prior to
       // reading the ESR to allow the register to be updated.
-      // This doesn't seem clear.  If the write clears the register, then
-      // wouldn't you always read zero?  Otherwise, what does the write do?
-      error_status = 0;
+      error_status = shadow_error_status;
+      shadow_error_status = 0;
       break;
     case 0x300: // interrupt command reg 0-31
       {
@@ -529,7 +548,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
         bx_bool accepted = deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
         if (!accepted) {
           BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
-          error_status |= APIC_ERR_TX_ACCEPT_ERR;
+          shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
         }
       }
       break;
@@ -608,7 +627,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       BX_INFO(("warning: write to read-only APIC register 0x%02x", addr));
       break;
     default:
-      error_status |= APIC_ERR_ILLEGAL_ADDR;
+      shadow_error_status |= APIC_ERR_ILLEGAL_ADDR;
       // but for now I want to know about it in case I missed some.
       BX_PANIC(("APIC register %08x not implemented", addr));
   }
@@ -810,7 +829,7 @@ void bx_local_apic_c::service_local_apic(void)
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   if (first_isr >= 0 && first_irr >= first_isr) {
     BX_DEBUG(("local apic (%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
-    // error_status |= APIC_ERR_TX_ACCEPT_ERR;
+    // shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
   if ((first_irr & 0xf0) <= (task_priority & 0xf0)) {
@@ -832,7 +851,7 @@ void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trig
   BX_ASSERT(from == id);
   
   if (vector > BX_APIC_LAST_VECTOR || vector < BX_APIC_FIRST_VECTOR) {
-    error_status |= APIC_ERR_RX_ILLEGAL_VEC;
+    shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
     BX_INFO(("bogus vector %#x, ignoring ...", vector));
     return;
   }

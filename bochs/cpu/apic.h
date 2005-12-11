@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.20 2005-12-09 21:21:28 sshwarts Exp $
+// $Id: apic.h,v 1.21 2005-12-11 20:01:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -119,7 +119,9 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 #define APIC_ERR_RX_CHECKSUM     0x02
 #define APIC_ERR_TX_CHECKSUM     0x01
 
-  Bit32u error_status;          // Error status Register (ESR)
+  // Error status Register (ESR)
+  Bit32u error_status, shadow_error_status;
+
   Bit32u icr_hi;                // Interrupt command register (ICR)
   Bit32u icr_lo;
 
