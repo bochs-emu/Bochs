@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.44 2005-11-27 18:36:19 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.45 2005-12-11 21:58:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,16 +69,18 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
           (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
 #endif
-  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s",
-    BX_CPU_THIS_PTR get_IOPL (),
-    BX_CPU_THIS_PTR get_OF()          ? "OF" : "of",
-    BX_CPU_THIS_PTR get_DF()   ? "DF" : "df",
-    BX_CPU_THIS_PTR get_IF()   ? "IF" : "if",
-    BX_CPU_THIS_PTR get_SF()          ? "SF" : "sf",
-    BX_CPU_THIS_PTR get_ZF()          ? "ZF" : "zf",
-    BX_CPU_THIS_PTR get_AF()          ? "AF" : "af",
-    BX_CPU_THIS_PTR get_PF()          ? "PF" : "pf",
-    BX_CPU_THIS_PTR get_CF()          ? "CF" : "cf"));
+  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s",
+    BX_CPU_THIS_PTR get_IOPL(),
+    BX_CPU_THIS_PTR get_AC() ? "AC" : "ac",
+    BX_CPU_THIS_PTR get_OF() ? "OF" : "of",
+    BX_CPU_THIS_PTR get_DF() ? "DF" : "df",
+    BX_CPU_THIS_PTR get_IF() ? "IF" : "if",
+    BX_CPU_THIS_PTR get_SF() ? "SF" : "sf",
+    BX_CPU_THIS_PTR get_ZF() ? "ZF" : "zf",
+    BX_CPU_THIS_PTR get_AF() ? "AF" : "af",
+    BX_CPU_THIS_PTR get_PF() ? "PF" : "pf",
+    BX_CPU_THIS_PTR get_CF() ? "CF" : "cf"));
+
   BX_INFO(("| SEG selector     base    limit G D"));
   BX_INFO(("| SEG sltr(index|ti|rpl)     base    limit G D"));
   BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",

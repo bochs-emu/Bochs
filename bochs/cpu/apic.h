@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.21 2005-12-11 20:01:54 sshwarts Exp $
+// $Id: apic.h,v 1.22 2005-12-11 21:58:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,8 +94,10 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
   bx_bool software_enabled;
   bx_bool focus_disable;
 
+  // APIC arbiration ID (not supported by XAPIC)
+  Bit32u arb_id;
+
   Bit32u task_priority;         // Task priority (TPR)
-  Bit32u arb_id;                // Arbitration priority (APR)
   Bit32u log_dest;              // Logical destination (LDR)
   Bit32u dest_format;           // Destination format (DFR)
 
@@ -188,17 +190,17 @@ public:
   virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
   virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
   virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
-  Bit8u get_ppr (void);
   Bit8u get_tpr (void);
   void  set_tpr (Bit8u tpr);
+  Bit8u get_ppr (void);
   Bit8u get_apr (void);
-  Bit8u get_apr_lowpri(void);
   bx_bool is_focus(Bit32u vector);
   void adjust_arb_id(int winning_id);	// adjust the arbitration id after a bus arbitration
   static void periodic_smf(void *); // KPL
   void periodic(void); // KPL
   void set_divide_configuration (Bit32u value);
-  void set_arb_id (int newid);
+  Bit32u get_arb_id (void);
+  void   set_arb_id (Bit32u newid);
 };
 
 // For P6 and Pentium family processors the local APIC ID feild is 4 bits.

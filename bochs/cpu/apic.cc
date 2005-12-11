@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.66 2005-12-11 20:01:54 sshwarts Exp $
+// $Id: apic.cc,v 1.67 2005-12-11 21:58:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -117,12 +117,12 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
 /* apic_mask is the bitmask of apics allowed to arbitrate here */
 int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
 {
-  int winning_apr = -1, winning_id = -1, __apr, i;
+  int winning_arb_id = -1, winning_id = -1, __arb_id, i;
   for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (apic_mask & (1<<i)) {
-      __apr = local_apic_index[i]->get_apr();
-      if (__apr > winning_apr) {
-        winning_apr = __apr;
+      __arb_id = local_apic_index[i]->get_arb_id();
+      if (__arb_id > winning_arb_id) {
+        winning_arb_id = __arb_id;
 	winning_id = i;
       }
     }
@@ -138,7 +138,7 @@ int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
   int winning_apr = APIC_MAX_ID, winning_id = 0, __apr, i;
   for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (apic_mask & (1<<i)) {
-      __apr = local_apic_index[i]->get_apr_lowpri();
+      __apr = local_apic_index[i]->get_apr();
       if (__apr < winning_apr) {
 	winning_apr = __apr;
 	winning_id = i;
@@ -174,7 +174,7 @@ void bx_generic_apic_c::arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u
   local_apic_index[winner]->trigger_irq(vector, winner, trigger_mode);
 }
 
-#ifdef XAPIC
+#ifdef BX_IMPLEMENT_XAPIC
   #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0xff
 #else
   #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0x0f
@@ -404,7 +404,12 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   INTR = 0;
 }
 
-void bx_local_apic_c::set_arb_id (int new_arb_id)
+Bit32u bx_local_apic_c::get_arb_id (void)
+{
+  return arb_id;
+}
+
+void bx_local_apic_c::set_arb_id (Bit32u new_arb_id)
 {
   BX_DEBUG (("set arbitration ID to %d", new_arb_id));
   arb_id = new_arb_id;
@@ -505,7 +510,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
   Bit32u value = *data;
   switch (addr) {
     case 0x20: // local APIC id
-      id = (value>>24) & APIC_ID_MASK;
+      set_id((value>>24) & APIC_ID_MASK);
       break;
     case 0x80: // task priority
       set_tpr(value & 0xff);
@@ -637,7 +642,7 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
 {
   BX_DEBUG(("write %08x to spurious interrupt register", value));
 
-#ifdef XAPIC
+#ifdef BX_IMPLEMENT_XAPIC
   spurious_vector = value & 0xff;
 #else
   // bits 0-3 of the spurious vector hardwired to '1
@@ -968,27 +973,27 @@ void  bx_local_apic_c::set_tpr (Bit8u priority)
   }
 }
 
-Bit8u bx_local_apic_c::get_apr (void)
+Bit8u bx_local_apic_c::get_apr(void)
 {
-  return arb_id;
-}
-
-Bit8u bx_local_apic_c::get_apr_lowpri(void)
-{
-  Bit32u tpr = (task_priority >> 4) & 0xf;
+  Bit32u tpr  = (task_priority >> 4) & 0xf;
   Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;
   Bit32u irrv = (highest_priority_int(irr) >> 4) & 0xf;
+  Bit8u  apr;
+
+  if (isrv < 0) isrv = 0;
+  if (irrv < 0) irrv = 0;
 
   if ((tpr >= irrv) && (tpr > isrv)) {
-    arb_id = task_priority & 0xff;
+    apr = task_priority & 0xff;
   }
   else {
-    arb_id = ((tpr & isrv) > irrv) ? (tpr & isrv) : irrv;
-    arb_id <<= 4;
+    apr = ((tpr & isrv) > irrv) ? (tpr & isrv) : irrv;
+    apr <<= 4;
   }
 
-  BX_INFO(("apr = %d\n", arb_id));
-  return (Bit8u)arb_id;
+  BX_DEBUG(("apr = %d\n", apr));
+
+  return (Bit8u) apr;
 }
 
 bx_bool bx_local_apic_c::is_focus(Bit32u vector)
@@ -998,17 +1003,17 @@ bx_bool bx_local_apic_c::is_focus(Bit32u vector)
 
 void bx_local_apic_c::adjust_arb_id(int winning_id)
 {
-  int __apr, __win_apr;
+  int __arb_id, __win_arb_id;
   // adjust arbitration priorities
   for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
     if (i != winning_id) {
-      __apr = local_apic_index[i]->get_apr();
-      if (__apr == 15) {
-        __win_apr = local_apic_index[winning_id]->get_apr();
-        local_apic_index[i]->set_arb_id(__win_apr+1);
+      __arb_id = local_apic_index[i]->get_arb_id();
+      if (__arb_id == APIC_MAX_ID) {
+        __win_arb_id = local_apic_index[winning_id]->get_arb_id();
+        local_apic_index[i]->set_arb_id(__win_arb_id+1);
       } 
       else
-        local_apic_index[i]->set_arb_id(__apr+1);
+        local_apic_index[i]->set_arb_id(__arb_id+1);
     } else // the winner drops to lowest
       local_apic_index[winning_id]->set_arb_id(0);
   }
