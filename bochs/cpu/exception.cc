@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.67 2005-12-12 19:54:48 sshwarts Exp $
+// $Id: exception.cc,v 1.68 2005-12-12 22:01:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -355,7 +355,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     }
 
     // index must be within GDT limits, else #TS(TSS selector)
-    fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
+    fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
     parse_descriptor(dword1, dword2, &tss_descriptor);
 
@@ -610,7 +610,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         push_32(old_CS);
         push_32(old_EIP);
 
-        if ( is_error_code )
+        if (is_error_code)
           push_32(error_code);
       }
       else {                          // 286 int/trap gate
@@ -625,7 +625,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         push_16(old_CS);
         push_16(old_EIP); // ignores upper 16bits
 
-        if ( is_error_code )
+        if (is_error_code)
           push_16(error_code);
       }
 
@@ -811,7 +811,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 {
   bx_bool  push_error;
   Bit8u    exception_type;
-  unsigned prev_errno;
 
   invalidate_prefetch_q();
   UNUSED(is_INT);
@@ -981,7 +980,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     case 17: // alignment check
       BX_PANIC(("exception(): alignment-check, vector 17 unimplemented"));
       push_error = 0;     // keep compiler happy for now
-      exception_type = 0; // keep compiler happy for now
+      exception_type = BX_ET_BENIGN;
       BX_CPU_THIS_PTR assert_RF ();
       break;
 #endif
@@ -989,7 +988,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     case 18: // machine check
       BX_PANIC(("exception(): machine-check, vector 18 unimplemented"));
       push_error = 0;     // keep compiler happy for now
-      exception_type = 0; // keep compiler happy for now
+      exception_type = BX_ET_BENIGN;
       break;
 #endif
     default:
@@ -1020,10 +1019,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     BX_CPU_THIS_PTR curr_exception[0] = exception_type;
   }
 
-
 #if BX_CPU_LEVEL >= 2
   if (!real_mode()) {
-    prev_errno = BX_CPU_THIS_PTR errorno;
     BX_CPU_THIS_PTR interrupt(vector, 0, push_error, error_code);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop

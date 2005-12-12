@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.9 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: iret.cc,v 1.10 2005-12-12 22:01:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,6 +43,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   bx_selector_t cs_selector, ss_selector;
   Bit32u dword1, dword2;
   bx_descriptor_t cs_descriptor, ss_descriptor;
+
+  BX_DEBUG(("IRET PROTECTED"));
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma)

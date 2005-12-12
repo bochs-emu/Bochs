@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.27 2005-11-21 21:10:59 sshwarts Exp $
+// $Id: tasking.cc,v 1.28 2005-12-12 22:01:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,7 +149,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //
   //   1) TSS DPL must be >= CPL
   //   2) TSS DPL must be >= TSS selector RPL
-  //   3) TSS descriptor is not busy.  TS(for IRET); GP(for JMP, CALL, INT)
+  //   3) TSS descriptor is not busy.
 
   // TSS must be present, else #NP(TSS selector)
   if (tss_descriptor->p==0) {
@@ -192,6 +192,10 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   {
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc, 0);
+  }
+
+  if (obase32 == nbase32) {
+    BX_INFO(("TASK SWITCH: switching to the same TSS !"));
   }
 
 #if BX_SUPPORT_PAGING

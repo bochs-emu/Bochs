@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.67 2005-12-11 21:58:53 sshwarts Exp $
+// $Id: apic.cc,v 1.68 2005-12-12 22:01:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -998,6 +998,7 @@ Bit8u bx_local_apic_c::get_apr(void)
 
 bx_bool bx_local_apic_c::is_focus(Bit32u vector)
 {
+  if (focus_disable) return 0;
   return (irr[vector] || isr[vector]) ? 1 : 0;
 }
 
