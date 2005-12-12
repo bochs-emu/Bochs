@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.6 2005-08-04 19:38:49 sshwarts Exp $
+// $Id: call_far.cc,v 1.7 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,25 +157,26 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // must specify global in the local/global bit else #TS(TSS selector)
         raw_tss_selector = gate_descriptor.u.taskgate.tss_selector;
         parse_selector(raw_tss_selector, &tss_selector);
+
         if (tss_selector.ti) {
           BX_ERROR(("call_protected: tss_selector.ti=1"));
-          exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
+          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
 
         // index must be within GDT limits else #TS(TSS selector)
-        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
+        fetch_raw_descriptor(&tss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
-        // descriptor AR byte must specify available TSS
-        //   else #TS(TSS selector)
         parse_descriptor(dword1, dword2, &tss_descriptor);
 
+        // descriptor AR byte must specify available TSS
+        //   else #GP(TSS selector)
         if (tss_descriptor.valid==0 || tss_descriptor.segment) {
           BX_ERROR(("call_protected: TSS selector points to bad TSS"));
-          exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
+          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
         if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
           BX_ERROR(("call_protected: TSS selector points to bad TSS"));
-          exception(BX_TS_EXCEPTION, raw_tss_selector & 0xfffc, 0);
+          exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
 
         // task state segment must be present, else #NP(tss selector)

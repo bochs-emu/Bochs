@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.247 2005-11-26 21:36:51 sshwarts Exp $
+// $Id: cpu.h,v 1.248 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1179,7 +1179,6 @@ public: // for now...
   Bit8u magic_break;
 #endif
   Bit8u stop_reason;
-  Bit8u trace;
   Bit8u trace_reg;
   Bit8u mode_break; /* BW */
   bx_bool debug_vm; /* BW contains current mode*/
@@ -1187,6 +1186,7 @@ public: // for now...
   Bit8u show_flag;  /* BW shows instr class executed */
   bx_guard_found_t guard_found;
 #endif
+  Bit8u trace;
 
 #if BX_GDBSTUB
   Bit8u ispanic;
@@ -2795,13 +2795,13 @@ public: // for now...
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
-                         Bit32u *dword1, Bit32u *dword2, Bit8u exception) BX_CPP_AttrRegparmN(3);
+                         Bit32u *dword1, Bit32u *dword2, unsigned exception) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool fetch_raw_descriptor2(bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
   BX_SMF  void   fetch_raw_descriptor64(bx_selector_t *selector,
-                         Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, Bit8u exception_no);
+                         Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
 #endif

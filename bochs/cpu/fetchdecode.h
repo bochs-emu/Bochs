@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.18 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.19 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -159,7 +159,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDB[8] = {
   /* 0 */  { 0,  &BX_CPU_C::FILD_DWORD_INTEGER  },
   /* 1 */  { 0,  &BX_CPU_C::FISTTP32            },
   /* 2 */  { 0,  &BX_CPU_C::FIST_DWORD_INTEGER  },
-  /* 3 */  { 0,  &BX_CPU_C::FIST_DWORD_INTEGER  },	// FISTP
+  /* 3 */  { 0,  &BX_CPU_C::FIST_DWORD_INTEGER  },	// FISTP_DWORD_INTEGER
   /* 4 */  { 0,  &BX_CPU_C::BxError             },
   /* 5 */  { 0,  &BX_CPU_C::FLD_EXTENDED_REAL   },
   /* 6 */  { 0,  &BX_CPU_C::BxError             },
@@ -195,7 +195,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDE[8] = {
   /* 0 */  { 0,  &BX_CPU_C::FIADD_WORD_INTEGER  },
   /* 1 */  { 0,  &BX_CPU_C::FIMUL_WORD_INTEGER  },
   /* 2 */  { 0,  &BX_CPU_C::FICOM_WORD_INTEGER  },
-  /* 3 */  { 0,  &BX_CPU_C::FICOM_WORD_INTEGER  },	// FISTP_WORD_INTEGER
+  /* 3 */  { 0,  &BX_CPU_C::FICOM_WORD_INTEGER  },	// FICOMP_WORD_INTEGER
   /* 4 */  { 0,  &BX_CPU_C::FISUB_WORD_INTEGER  },
   /* 5 */  { 0,  &BX_CPU_C::FISUBR_WORD_INTEGER },
   /* 6 */  { 0,  &BX_CPU_C::FIDIV_WORD_INTEGER  },
@@ -207,7 +207,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDF[8] = {
   /* 0 */  { 0,  &BX_CPU_C::FILD_WORD_INTEGER   },
   /* 1 */  { 0,  &BX_CPU_C::FISTTP16            },
   /* 2 */  { 0,  &BX_CPU_C::FIST_WORD_INTEGER   },
-  /* 3 */  { 0,  &BX_CPU_C::FIST_WORD_INTEGER  	},	// FISTP
+  /* 3 */  { 0,  &BX_CPU_C::FIST_WORD_INTEGER  	},	// FISTP_WORD_INTEGER
   /* 4 */  { 0,  &BX_CPU_C::FBLD_PACKED_BCD     },
   /* 5 */  { 0,  &BX_CPU_C::FILD_QWORD_INTEGER  },
   /* 6 */  { 0,  &BX_CPU_C::FBSTP_PACKED_BCD    },

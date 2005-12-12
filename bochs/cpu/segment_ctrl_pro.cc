@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.49 2005-11-07 22:45:25 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.50 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -476,7 +476,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 #if BX_CPU_LEVEL >= 2
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
-                        Bit32u *dword1, Bit32u *dword2, Bit8u exception_no)
+                        Bit32u *dword1, Bit32u *dword2, unsigned exception_no)
 {
   if (selector->ti == 0) { /* GDT */
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
@@ -509,8 +509,7 @@ BX_CPU_C::fetch_raw_descriptor(bx_selector_t *selector,
 }
 
   bx_bool BX_CPP_AttrRegparmN(3)
-BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
-                        Bit32u *dword1, Bit32u *dword2)
+BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector, Bit32u *dword1, Bit32u *dword2)
 {
   if (selector->ti == 0) { /* GDT */
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
@@ -538,7 +537,7 @@ BX_CPU_C::fetch_raw_descriptor2(bx_selector_t *selector,
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::fetch_raw_descriptor64(bx_selector_t *selector,
-           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, Bit8u exception_no)
+           Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no)
 {
   if (selector->ti == 0) { /* GDT */
     if ((selector->index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {

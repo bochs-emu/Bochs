@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.125 2005-11-27 18:36:19 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.126 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,6 +47,12 @@ void BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 void BX_CPU_C::NOP(bxInstruction_c *i)
 {
   // No operation.
+/*
+  if (i->repUsedL()) {
+//  BX_CPU_THIS_PTR trace = 1;
+    BX_TICKN(128);
+  }
+*/
 }
 
 void BX_CPU_C::PREFETCH(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.22 2005-12-11 21:58:53 sshwarts Exp $
+// $Id: apic.h,v 1.23 2005-12-12 19:44:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,6 @@
 #  define BX_CPU_APIC_H 1
 
 typedef enum {
-  APIC_TYPE_NONE,
   APIC_TYPE_IOAPIC,
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
