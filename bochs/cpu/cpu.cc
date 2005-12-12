@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.117 2005-12-12 19:44:06 sshwarts Exp $
+// $Id: cpu.cc,v 1.118 2005-12-12 19:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -302,13 +302,12 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // or the boundary fetch (across pages), by this point.
   BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
-//#if BX_DEBUGGER
+#if BX_DEBUGGER
   if (BX_CPU_THIS_PTR trace) {
     // print the instruction that is about to be executed.
-    debug(BX_CPU_THIS_PTR prev_eip);
-//    bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
+    bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
   }
-//#endif
+#endif
 
   // decoding instruction compeleted -> continue with execution
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.66 2005-12-12 19:44:06 sshwarts Exp $
+// $Id: exception.cc,v 1.67 2005-12-12 19:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,6 +31,11 @@
 #include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier merging cpu64 & cpu code.
+#define RIP EIP
+#define RSP ESP
+#endif
 
 /* Exception classes.  These are used as indexes into the 'is_exception_OK'
  * array below, and are stored in the 'exception' array also
@@ -782,13 +787,8 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 
   BX_CPU_THIS_PTR save_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
   BX_CPU_THIS_PTR save_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
-#if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR save_eip = RIP;
   BX_CPU_THIS_PTR save_esp = RSP;
-#else
-  BX_CPU_THIS_PTR save_eip = EIP;
-  BX_CPU_THIS_PTR save_esp = ESP;
-#endif
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
@@ -836,13 +836,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if (BX_CPU_THIS_PTR errorno) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR save_cs;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR save_ss;
-#if BX_SUPPORT_X86_64
     RIP = BX_CPU_THIS_PTR save_eip;
     RSP = BX_CPU_THIS_PTR save_esp;
-#else
-    EIP = BX_CPU_THIS_PTR save_eip;
-    ESP = BX_CPU_THIS_PTR save_esp;
-#endif
   }
 
   BX_CPU_THIS_PTR errorno++;
@@ -883,8 +878,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   /* ??? this is not totally correct, should be done depending on
    * vector */
   /* backup IP to value before error occurred */
-  EIP = BX_CPU_THIS_PTR prev_eip;
-  ESP = BX_CPU_THIS_PTR prev_esp;
+  RIP = BX_CPU_THIS_PTR prev_eip;
+  RSP = BX_CPU_THIS_PTR prev_esp;
 
   // note: fault-class exceptions _except_ #DB set RF in
   //       eflags image.
