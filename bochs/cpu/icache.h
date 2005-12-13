@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.9 2005-10-18 18:07:52 sshwarts Exp $
+// $Id: icache.h,v 1.10 2005-12-13 14:18:34 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,20 +143,20 @@ public:
 };
 
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
-{
-    for (unsigned i=0; i<BxICacheEntries; i++) {
-      entry[i].writeStamp = ICacheWriteStampInvalid;
+{   bxICacheEntry_c* e = entry;
+    for (unsigned i=0; i<BxICacheEntries; i++, e++) {
+      e->writeStamp = ICacheWriteStampInvalid;
     }
 }
 
 BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
-{
+{ bxICacheEntry_c* e = entry;
+    
   // Since the write stamps may overflow if we always simply decrese them,
   // this function has to be called often enough that we can reset them
   // (without invalidating the cache).
-  for (unsigned i=0;i<BxICacheEntries;i++)
+  for (unsigned i=0;i<BxICacheEntries;i++, e++)
   {
-    bxICacheEntry_c *e = &entry[i];
     Bit32u pageWriteStamp = pageWriteStampTable.getPageWriteStamp(e->pAddr);
     if (e->writeStamp != pageWriteStamp)
       e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
