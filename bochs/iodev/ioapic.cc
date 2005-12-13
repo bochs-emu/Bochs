@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.19 2005-06-04 17:44:58 vruppert Exp $
+// $Id: ioapic.cc,v 1.20 2005-12-13 20:27:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -12,16 +12,16 @@ class bx_ioapic_c bx_ioapic;
 
 void bx_io_redirect_entry_t::parse_value ()
 {
-  dest = (Bit8u)((value >> 56) & APIC_ID_MASK);
-  masked = (Bit8u)((value >> 16) & 1);
-  trig_mode = (Bit8u)((value >> 15) & 1);
-  remote_irr = (Bit8u)((value >> 14) & 1);
-  polarity = (Bit8u)((value >> 13) & 1);
-  //delivery_status = (value >> 12) & 1;
+  dest = (Bit8u)((hi >> 24) & APIC_ID_MASK);
+  masked = (Bit8u)((lo >> 16) & 1);
+  trig_mode = (Bit8u)((lo >> 15) & 1);
+  remote_irr = (Bit8u)((lo >> 14) & 1);
+  polarity = (Bit8u)((lo >> 13) & 1);
+  //delivery_status = (lo >> 12) & 1;
   delivery_status = 0;  // we'll change this later...
-  dest_mode = (Bit8u)((value >> 11) & 1);
-  delivery_mode = (Bit8u)((value >> 8) & 7);
-  vector = (Bit8u)(value & 0xff);
+  dest_mode = (Bit8u)((lo >> 11) & 1);
+  delivery_mode = (Bit8u)((lo >> 8) & 7);
+  vector = (Bit8u)(lo & 0xff);
 }
 
 void bx_io_redirect_entry_t::sprintf_self (char *buf)
@@ -75,8 +75,7 @@ void bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
     *data = ((id & APIC_ID_MASK) << 24);
     return;
   case 0x01:  // version
-    *data = (((BX_IOAPIC_NUM_PINS-1) & 0xff) << 16) 
-            | (BX_IOAPIC_VERSION_ID & 0x0f);
+    *data = BX_IOAPIC_VERSION_ID;
     return;
   case 0x02:
     BX_INFO(("IOAPIC: arbitration ID unsupported, returned 0"));
@@ -162,7 +161,7 @@ void bx_ioapic_c::service_ioapic ()
     if (irr & (1<<bit)) {
       bx_io_redirect_entry_t *entry = ioredtbl + bit;
       entry->parse_value();
-      if (!entry->masked) {
+      if (! entry->masked) {
 	// clear irr bit and deliver
 	bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
 	if (done) {
