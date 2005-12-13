@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.68 2005-12-12 22:01:22 sshwarts Exp $
+// $Id: apic.cc,v 1.69 2005-12-13 20:42:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -510,7 +510,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
   Bit32u value = *data;
   switch (addr) {
     case 0x20: // local APIC id
-      set_id((value>>24) & APIC_ID_MASK);
+      id = (value>>24) & APIC_ID_MASK;
       break;
     case 0x80: // task priority
       set_tpr(value & 0xff);
