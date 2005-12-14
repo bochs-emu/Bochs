@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.248 2005-12-12 19:44:06 sshwarts Exp $
+// $Id: cpu.h,v 1.249 2005-12-14 20:05:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2878,6 +2878,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
+  BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
 
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
@@ -3048,6 +3049,11 @@ BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
 BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_IA32_PROTECTED);
+}
+
+BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
+{
+  return (BX_CPU_THIS_PTR cpu_mode);
 }
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];
