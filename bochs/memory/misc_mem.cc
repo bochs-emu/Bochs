@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.67 2005-11-27 19:40:56 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.68 2005-12-19 20:48:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.67 2005-11-27 19:40:56 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.68 2005-12-19 20:48:51 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -138,6 +138,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
   unsigned long size, max_size, offset;
+  bx_bool is_bochs_bios = 0;
 
   if (*path == '\0') {
     if (type == 2) {
@@ -199,6 +200,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     if (romaddress < 0xf0000 ) {
       BX_MEM_THIS rom_present[64] = 1;
     }
+    is_bochs_bios = (strstr(path, "BIOS-bochs-latest") != NULL);
   } else {
     if ((size % 512) != 0) {
       close(fd);
@@ -242,7 +244,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     offset += ret;
   }
   close(fd);
-  offset -= stat_buf.st_size;
+  offset -= (unsigned long)stat_buf.st_size;
   if ((romaddress != 0xe0000) || ((rom[offset] == 0x55) && (rom[offset] == 0xaa))) {
     Bit8u checksum = 0;
     for (i = 0; i < stat_buf.st_size; i++) {
@@ -251,11 +253,16 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     if (checksum != 0) {
       if (type == 1) {
         BX_PANIC(( "ROM: checksum error in VGABIOS image: '%s'", path));
-      } else {
+      } else if (is_bochs_bios) {
         BX_ERROR(( "ROM: checksum error in BIOS image: '%s'", path));
       }
     }
   }
+#if BX_SMP_PROCESSORS > 1
+  if (is_bochs_bios) {
+    // TODO: dynamicly create SMP tables at F000:B000
+  }
+#endif
   BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
