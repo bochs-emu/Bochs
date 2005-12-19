@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.249 2005-12-14 20:05:40 sshwarts Exp $
+// $Id: cpu.h,v 1.250 2005-12-19 17:58:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2817,6 +2817,9 @@ public: // for now...
   BX_SMF void    sanity_checks(void);
 
   BX_SMF void    debug(bx_address offset);
+#if BX_DISASM
+  BX_SMF void    debug_disasm_instruction(bx_address offset);
+#endif
 
 #if BX_EXTERNAL_DEBUGGER
   BX_SMF void    trap_debugger(bx_bool callnow);

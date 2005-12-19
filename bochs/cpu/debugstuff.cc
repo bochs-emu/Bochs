@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.46 2005-12-14 20:05:40 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.47 2005-12-19 17:58:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,11 +25,42 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_DISASM
+void BX_CPU_C::debug_disasm_instruction(bx_address offset)
+{
+  bx_bool valid;
+  Bit32u  phy_addr;
+  Bit8u   instr_buf[16];
+  char    char_buf[256];
+  unsigned isize;
+
+  static disassembler bx_disassemble;
+
+  dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
+                       &phy_addr, &valid);
+  if (valid && BX_CPU_THIS_PTR mem!=NULL) {
+    BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
+    isize = bx_disassemble.disasm(
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+        BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
+        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
+        instr_buf, char_buf);
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) isize = 16;
+#endif
+    for (unsigned j=0; j<isize; j++)
+      BX_INFO((">> %02x", (unsigned) instr_buf[j]));
+    BX_INFO((">> : %s", char_buf));
+  }
+  else {
+    BX_INFO(("(instruction unavailable) page not present"));
+  }
+}
+#endif  // #if BX_DISASM
 
 
 void BX_CPU_C::debug(bx_address offset)
@@ -177,35 +208,7 @@ void BX_CPU_C::debug(bx_address offset)
 
 
 #if BX_DISASM
-  bx_bool valid;
-  Bit32u  phy_addr;
-  Bit8u   instr_buf[32];
-  char    char_buf[256];
-  unsigned isize;
-
-  static disassembler bx_disassemble;
-
-  dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
-                       &phy_addr, &valid);
-  if (valid && BX_CPU_THIS_PTR mem!=NULL) {
-    BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
-    isize = bx_disassemble.disasm(
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-        BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
-        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
-        instr_buf, char_buf);
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) isize = 16;
-#endif
-    for (unsigned j=0; j<isize; j++)
-      BX_INFO((">> %02x", (unsigned) instr_buf[j]));
-    BX_INFO((">> : %s", char_buf));
-  }
-  else {
-    BX_INFO(("(instruction unavailable) page not present"));
-  }
-#else
-  UNUSED(offset);
+  debug_disasm_instruction(offset);
 #endif  // #if BX_DISASM
 }
 
