@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.92 2005-12-03 18:22:18 vruppert Exp $
+// $Id: floppy.cc,v 1.93 2005-12-23 12:21:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.92 2005-12-03 18:22:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.93 2005-12-23 12:21:09 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -558,7 +558,7 @@ bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         (unsigned) normal_operation));
       BX_DEBUG(("  drive_select=%02x",
         (unsigned) drive_select));
-      if (BX_FD_THIS s.device_type[drive_select] == BX_FLOPPY_NONE) {
+      if (BX_FD_THIS s.device_type[drive_select] == FDRIVE_NONE) {
         BX_DEBUG(("WARNING: not existing drive selected"));
       }
       break;
@@ -749,15 +749,6 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_FD_THIS s.DOR |= drive;
       BX_DEBUG(("floppy_command(): recalibrate drive %u",
         (unsigned) drive));
-      motor_on = ( (BX_FD_THIS s.DOR>>(drive+4))
-                     & 0x01 );
-      if (motor_on == 0) {
-        BX_INFO(("floppy_command(): recal drive with motor off"));
-        }
-      if (drive==0)
-        BX_FD_THIS s.DOR |= 0x10; // turn on MOTA
-      else
-        BX_FD_THIS s.DOR |= 0x20; // turn on MOTB
       step_delay = calculate_step_delay(drive, 0);
       bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, step_delay, 0);
       /* command head to track 0
@@ -840,7 +831,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         return;
         }
-      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
+      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) {
         BX_PANIC(("floppy_command(): read ID: bad drive #%d", drive));
         }
       if (BX_FD_THIS s.media_present[drive] == 0) {
@@ -868,7 +859,7 @@ bx_floppy_ctrl_c::floppy_command(void)
         sector_size = BX_FD_THIS s.command[2];
         BX_FD_THIS s.format_count = BX_FD_THIS s.command[3];
         BX_FD_THIS s.format_fillbyte = BX_FD_THIS s.command[5];
-        if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
+        if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
           BX_PANIC(("floppy_command(): format track: bad drive #%d", drive));
 
         if (sector_size != 0x02) { // 512 bytes
@@ -932,7 +923,7 @@ bx_floppy_ctrl_c::floppy_command(void)
       BX_DEBUG(("  cylinder = %u", (unsigned) cylinder));
       BX_DEBUG(("  sector   = %u", (unsigned) sector));
       BX_DEBUG(("  eot      = %u", (unsigned) eot));
-      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
+      if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
         BX_PANIC(("floppy_command(): read/write: bad drive #%d", drive));
 
       // check that head number in command[1] bit two matches the head
@@ -1038,7 +1029,7 @@ bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
 {
   int ret = 0;
 
-  if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE)
+  if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE)
     BX_PANIC(("floppy_xfer: bad drive #%d", drive));
 
   if (bx_dbg.floppy) {
@@ -1157,17 +1148,17 @@ bx_floppy_ctrl_c::timer_handler(void *this_ptr)
   void
 bx_floppy_ctrl_c::timer()
 {
-  Bit8u drive;
+  Bit8u drive, motor_on;
 
   drive = BX_FD_THIS s.DOR & 0x03;
   switch ( BX_FD_THIS s.pending_command ) {
     case 0x07: // recal
     case 0x0f: // seek
       BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
-      if (BX_FD_THIS s.device_type[drive] == BX_FLOPPY_NONE) {
+      motor_on = ((BX_FD_THIS s.DOR>>(drive+4)) & 0x01);
+      if ((BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) || (motor_on == 0)) {
         BX_FD_THIS s.status_reg0 |= 0x50;
-        }
-
+      }
       enter_idle_phase();
       BX_FD_THIS raise_interrupt();
       break;
@@ -1232,8 +1223,7 @@ bx_floppy_ctrl_c::timer()
     default:
       BX_PANIC(("floppy:timer(): unknown case %02x",
         (unsigned) BX_FD_THIS s.pending_command));
-    }
-  return;
+  }
 }
 
   void
