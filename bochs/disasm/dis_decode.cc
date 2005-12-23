@@ -5,6 +5,9 @@
 #include "disasm.h"
 #include "dis_tables.h"
 
+#define OPCODE(entry) ((BxDisasmOpcodeInfo_t*) entry->OpcodeInfo)
+#define OPCODE_TABLE(entry) ((BxDisasmOpcodeTable_t*) entry->OpcodeInfo)
+
 static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f          */
   /*       -------------------------------          */
@@ -56,19 +59,21 @@ unsigned disassembler::disasm32(bx_address base, bx_address ip, Bit8u *instr, ch
   return disasm(1, 0, base, ip, instr, disbuf);
 }
 
+unsigned disassembler::disasm64(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+{
+  return disasm(1, 1, base, ip, instr, disbuf);
+}
+
 unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
 {
-  os_32 = is_32;
-  as_32 = is_32;
+  x86_insn insn(is_32, is_64);
+  Bit8u *instruction_begin = instruction = instr;
+  resolve_modrm = NULL;
+  unsigned n_prefixes = 0;
+
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
-  Bit8u *instruction_begin = instruction = instr;
-  displacement.displ32 = 0;
 
-  resolve_modrm = NULL;
-  seg_override = NULL;
-
-  n_prefixes = 0;
   disbufptr = disbuf; // start sprintf()'ing into beginning of buffer
 
 #define SSE_PREFIX_NONE 0
@@ -78,71 +83,127 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   static int sse_prefix_index[8] = { 0, 1, 2, -1, 3, -1, -1, -1 };
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
-  int b1;
-  const BxDisasmOpcodeInfo_t *entry;
-
   for(;;)
   {
-    b1 = fetch_byte();
-    entry = &BxDisasmOpcodes[b1];
+    insn.b1 = fetch_byte();
+    n_prefixes++;
 
-    if (entry->Attr == _PREFIX)
-    {
-      switch(b1) {
-        case 0xf3:
-          sse_prefix |= SSE_PREFIX_F3;
-          break;
+    switch(insn.b1) {
+      case 0xf3:     // rep
+        sse_prefix |= SSE_PREFIX_F3;
+        continue;
 
-        case 0xf2:
-          sse_prefix |= SSE_PREFIX_F2;
-          break;
+      case 0xf2:     // repne
+        sse_prefix |= SSE_PREFIX_F2;
+        continue;
 
-        case 0x2e:
-        case 0x36:
-        case 0x3e:
-        case 0x26:
-        case 0x64:
-        case 0x65:
-          seg_override = entry->Opcode;
-          break;
+      case 0x40:     // rex
+      case 0x41:
+      case 0x42:
+      case 0x43:
+      case 0x44:
+      case 0x45:
+      case 0x46:
+      case 0x47:
+      case 0x48:
+      case 0x49:
+      case 0x4A:
+      case 0x4B:
+      case 0x4C:
+      case 0x4D:
+      case 0x4E:
+      case 0x4F:
+        if (! is_64) break;
+        insn.extend8b = 1;
+        if (insn.b1 & 0x8) {
+          insn.os_64 = 1;
+          insn.os_32 = 1;
+        }
+        if (insn.b1 & 0x4) insn.rex_r = 8;
+        if (insn.b1 & 0x2) insn.rex_x = 8;
+        if (insn.b1 & 0x1) insn.rex_b = 8;
+        continue;
 
-        case 0x66:
-          os_32 = !is_32;
-          sse_prefix |= SSE_PREFIX_66;
-          break;
+      case 0x26:     // ES:
+        if (! is_64) insn.seg_override = ES_REG;
+        continue;
 
-        case 0x67:
-          as_32 = !is_32;
-          break;
+      case 0x2e:     // CS:
+        if (! is_64) insn.seg_override = CS_REG;
+        continue;
 
-        case 0xf0:      // lock
-          break;
+      case 0x36:     // SS:
+        if (! is_64) insn.seg_override = SS_REG;
+        continue;
 
-         default:
-          printf("Internal disassembler error !\n");
-          return 0;
-      }
+      case 0x3e:     // DS:
+        if (! is_64) insn.seg_override = DS_REG;
+        continue;
 
-      n_prefixes++;
+      case 0x64:     // FS:
+        insn.seg_override = FS_REG;
+        continue;
+
+      case 0x65:     // GS:
+        insn.seg_override = GS_REG;
+        continue;
+
+      case 0x66:     // operand size override
+        if (!insn.os_64) insn.os_32 = !is_32;
+        sse_prefix |= SSE_PREFIX_66;
+        continue;
+
+      case 0x67:     // address size override
+        if (!is_64) insn.as_32 = !is_32;
+        insn.as_64 = 0;
+        continue;
+
+      case 0xf0:     // lock
+        continue;
+
+      // no more prefixes
+      default:
+        break;
     }
-    else break;
+
+    n_prefixes--;
+    break;
   }
 
-  if (b1 == 0x0f)
+  if (insn.b1 == 0x0f)
   {
-    b1 = 0x100 | fetch_byte();
-    entry = &BxDisasmOpcodes[b1];
+    insn.b1 = 0x100 | fetch_byte();
   }
 
-  if (instruction_has_modrm[b1])
-    decode_modrm();
+  const BxDisasmOpcodeTable_t *opcode_table, *entry;
+
+  if (is_64) {
+    if (insn.os_64)
+      opcode_table = BxDisasmOpcodes64q;
+    else if (insn.os_32)
+      opcode_table = BxDisasmOpcodes64d;
+    else
+      opcode_table = BxDisasmOpcodes64w;
+  } else {
+    if (insn.os_32)
+      opcode_table = BxDisasmOpcodes32;
+    else
+      opcode_table = BxDisasmOpcodes16;
+  }
+
+  entry = opcode_table + insn.b1;
+
+  if (instruction_has_modrm[insn.b1])
+  {
+    decode_modrm(&insn);
+  }
 
   int attr = entry->Attr;
   while(attr) 
   {
     switch(attr) {
        case _GROUPN:
-         entry = &(entry->AnotherArray[nnn]);
+         entry = &(OPCODE_TABLE(entry)[insn.nnn]);
          break;
 
        case _GRPSSE:
@@ -152,20 +213,24 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
                   with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
             int op = sse_prefix_index[sse_prefix];
             if (op < 0) return 0;
-            entry = &(entry->AnotherArray[op]);
+            entry = &(OPCODE_TABLE(entry)[op]);
          }
          break;
 
        case _SPLIT11B:
-         entry = &(entry->AnotherArray[mod==3]);
+         entry = &(OPCODE_TABLE(entry)[insn.mod != 3]); /* REG/MEM */
+         break;
+
+       case _GRPRM:
+         entry = &(OPCODE_TABLE(entry)[insn.rm]);
          break;
 
        case _GRPFP:
-         if(mod != 3)
+         if(insn.mod != 3)
          {
-             entry = &(entry->AnotherArray[nnn]);
+             entry = &(OPCODE_TABLE(entry)[insn.nnn]);
          } else {
-             int index = (b1-0xD8)*64 + (0x3f & modrm);
+             int index = (insn.b1-0xD8)*64 + (insn.modrm & 0x3f);
              entry = &(BxDisasmOpcodeInfoFP[index]);
          }
          break;
@@ -175,7 +240,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          break;
 
        default:
-         printf("Internal disassembler error !\n");
+         printf("Internal disassembler error - unknown attribute !\n");
          return 0;
     }
 
@@ -183,26 +248,51 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     attr = entry->Attr;
   }
 
+#define BRANCH_NOT_TAKEN 0x2E
+#define BRANCH_TAKEN     0x3E
+
+  unsigned branch_hint = 0;
+
   // print prefixes
   for(unsigned i=0;i<n_prefixes;i++)
   {
-    if (*(instr+i) == 0xF3 || *(instr+i) == 0xF2 || *(instr+i) == 0xF0) 
-      dis_sprintf("%s ", BxDisasmOpcodes[*(instr+i)].Opcode);
+    Bit8u prefix_byte = *(instr+i);
 
-    if (entry->Op3Attr == BRANCH_HINT)
+    if (prefix_byte == 0xF3 || prefix_byte == 0xF2 || prefix_byte == 0xF0) 
     {
-      if (*(instr+i) == 0x2E) 
-        dis_sprintf("not taken ");
-      if (*(instr+i) == 0x3E) 
-        dis_sprintf("taken ");
+      const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
+      dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
+    }
+
+    // branch hint for jcc instructions
+    if ((insn.b1 >= 0x070 && insn.b1 <= 0x07F) ||
+        (insn.b1 >= 0x180 && insn.b1 <= 0x18F))
+    {
+      if (prefix_byte == BRANCH_NOT_TAKEN || prefix_byte == BRANCH_TAKEN) 
+        branch_hint = prefix_byte;
     }
   }
 
+  const BxDisasmOpcodeInfo_t *opcode = OPCODE(entry);
+
+  // patch jecx opcode
+  if (insn.b1 == 0xE3 && insn.as_32 && !insn.as_64)
+    opcode = &Ia_jecxz_Jb;
+
   // print instruction disassembly
   if (intel_mode)
-    print_disassembly_intel(entry);
+    print_disassembly_intel(&insn, opcode);
   else
-    print_disassembly_att  (entry);
+    print_disassembly_att  (&insn, opcode);
+
+  if (branch_hint == BRANCH_NOT_TAKEN)
+  {
+    dis_sprintf(", not taken");
+  }
+  else if (branch_hint == BRANCH_TAKEN)
+  {
+    dis_sprintf(", taken");
+  }
  
   return(instruction - instruction_begin);
 }

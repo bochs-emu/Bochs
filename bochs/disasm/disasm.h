@@ -10,9 +10,9 @@
 }
 
 #define BX_DECODE_SIB(sib_byte, scale, index, base) { \
-  scale =  sib >> 6;          \
-  index = (sib >> 3) & 0x07;  \
-  base  =  sib & 0x07;        \
+  scale =  sib_byte >> 6;          \
+  index = (sib_byte >> 3) & 0x07;  \
+  base  =  sib_byte & 0x07;        \
 }
 
 // will be used in future
@@ -41,40 +41,7 @@
 #define IF_SSE2       0x00000000        /* SSE2 instruction */
 #define IF_PNI        0x00000000        /* Prescott new instruction */
 
-enum {
-	AL_REG,
-	CL_REG,
-	DL_REG,
-	BL_REG,
-	AH_REG,
-	CH_REG,
-	DH_REG,
-	BH_REG
-};
-
-enum {
-	AX_REG,
-	CX_REG,
-	DX_REG,
-	BX_REG,
-	SP_REG,
-	BP_REG,
-	SI_REG,
-	DI_REG
-};
-
-enum {
-	eAX_REG,
-	eCX_REG,
-	eDX_REG,
-	eBX_REG,
-	eSP_REG,
-	eBP_REG,
-	eSI_REG,
-	eDI_REG
-};
-
-#if BX_DISASM_SUPPORT_X86_64
+/* general purpose bit register */
 enum {
 	rAX_REG,
 	rCX_REG,
@@ -85,33 +52,38 @@ enum {
 	rSI_REG,
 	rDI_REG
 };
-#endif
 
+/* segment register */
 enum {
 	ES_REG,
 	CS_REG,
 	SS_REG,
 	DS_REG,
 	FS_REG,
-	GS_REG
+	GS_REG,
+        INVALID_SEG1,
+        INVALID_SEG2
 };
 
 class disassembler;
+class x86_insn;
 
-typedef void (disassembler::*BxDisasmPtr_t) (unsigned attr);
-typedef void (disassembler::*BxDisasmResolveModrmPtr_t) (unsigned attr);
+typedef void (disassembler::*BxDisasmPtr_t)(const x86_insn *insn);
+typedef void (disassembler::*BxDisasmResolveModrmPtr_t)(const x86_insn *insn, unsigned attr);
 
 struct BxDisasmOpcodeInfo_t
 {
-    const char *Opcode;
-    unsigned Attr;
+    const char *IntelOpcode;
+    const char *AttOpcode;
     BxDisasmPtr_t Operand1;
-    unsigned Op1Attr;
     BxDisasmPtr_t Operand2;
-    unsigned Op2Attr;
     BxDisasmPtr_t Operand3;
-    unsigned Op3Attr;
-    struct BxDisasmOpcodeInfo_t *AnotherArray;
+};
+
+struct BxDisasmOpcodeTable_t
+{
+    Bit32u Attr;
+    const void *OpcodeInfo;
 };
 
 // datasize attributes
@@ -119,23 +91,73 @@ struct BxDisasmOpcodeInfo_t
 #define B_SIZE      0x0100
 #define W_SIZE      0x0200
 #define D_SIZE      0x0300
-#define V_SIZE      0x0400
-#define Q_SIZE      0x0500
-#define Z_SIZE      0x0600
+#define Q_SIZE      0x0400
+#define Z_SIZE      0x0500
+#define V_SIZE      0x0600
 #define O_SIZE      0x0700
 #define T_SIZE      0x0800
 #define P_SIZE      0x0900
-#define S_SIZE      0x0A00
 
-// branch hint attribute 
+// branch hint attribute
 #define BRANCH_HINT 0x1000
+
+struct x86_insn 
+{
+public:
+  x86_insn(bx_bool is32, bx_bool is64);
+
+public:
+  bx_bool is_32, is_64;
+  bx_bool as_32, as_64;
+  bx_bool os_32, os_64;
+
+  Bit8u extend8b;
+  Bit8u rex_r, rex_x, rex_b;
+  Bit8u seg_override;
+  unsigned b1;
+
+  Bit8u modrm, mod, nnn, rm;
+  Bit8u sib, scale, index, base;
+  union {
+     Bit16u displ16;
+     Bit32u displ32;
+  } displacement;
+};
+
+BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
+{
+  is_32 = is32;
+  is_64 = is64;
+
+  if (is_64) {
+    os_64 = 0;
+    as_64 = 1;
+    os_32 = 1;
+    as_32 = 1;
+  }
+  else {
+    os_64 = 0;
+    as_64 = 0;
+    os_32 = is_32;
+    as_32 = is_32;
+  }
+
+  extend8b = 0;
+  rex_r = rex_b = rex_x = 0;
+  seg_override = 0;
+  b1 = 0;
+
+  modrm = mod = nnn = rm = 0;
+  sib = scale = index = base = 0;
+  displacement.displ32 = 0;
+}
 
 class disassembler {
 public:
   disassembler() { set_syntax_intel(); }
-
   unsigned disasm16(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
   unsigned disasm32(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
+  unsigned disasm64(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
 
   unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
 
@@ -148,10 +170,8 @@ private:
   const char **general_16bit_regname;
   const char **general_8bit_regname;
   const char **general_32bit_regname;
-#if BX_DISASM_SUPPORT_X86_64
   const char **general_8bit_regname_rex;
   const char **general_64bit_regname;
-#endif
 
   const char **segment_name;
   const char **index16;
@@ -164,28 +184,9 @@ private:
 
 private:
 
-  bx_bool os_32;
-  bx_bool as_32;
-#if BX_DISASM_SUPPORT_X86_64
-  bx_bool os_64;
-  bx_bool as_64;
-#endif
-
-  Bit8u  modrm, mod, nnn, rm;
-  Bit8u  sib, scale, sib_index, sib_base;
-
-  union {
-     Bit16u displ16;
-     Bit32u displ32;
-  } displacement;
-
   bx_address db_eip, db_base;
 
-  unsigned n_prefixes;
-
   Bit8u *instruction;        // for fetching of next byte of instruction
-
-  const char *seg_override;
 
   char *disbufptr;
 
@@ -218,27 +219,31 @@ private:
     return(ret32);
   };
 
-#if BX_DISASM_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u fetch_qword() {
     Bit64u d0 = fetch_dword();
     Bit64u d1 = fetch_dword();
     Bit64u ret64 = (d1<<32) | d0;
     return(ret64);
   };
-#endif
 
   void dis_putc(char symbol);
   void dis_sprintf(char *fmt, ...);
-  void decode_modrm();
+  void decode_modrm(x86_insn *insn);
 
-  void resolve16_mod0    (unsigned mode);
-  void resolve16_mod1or2 (unsigned mode);
+  void resolve16_mod0   (const x86_insn *insn, unsigned mode);
+  void resolve16_mod1or2(const x86_insn *insn, unsigned mode);
 
-  void resolve32_mod0    (unsigned mode);
-  void resolve32_mod1or2 (unsigned mode);
+  void resolve32_mod0   (const x86_insn *insn, unsigned mode);
+  void resolve32_mod1or2(const x86_insn *insn, unsigned mode);
 
-  void resolve32_mod0_rm4    (unsigned mode);
-  void resolve32_mod1or2_rm4 (unsigned mode);
+  void resolve32_mod0_rm4   (const x86_insn *insn, unsigned mode);
+  void resolve32_mod1or2_rm4(const x86_insn *insn, unsigned mode);
+
+  void resolve64_mod0   (const x86_insn *insn, unsigned mode);
+  void resolve64_mod1or2(const x86_insn *insn, unsigned mode);
+
+  void resolve64_mod0_rm4   (const x86_insn *insn, unsigned mode);
+  void resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode);
 
   void initialize_modrm_segregs();
 
@@ -246,11 +251,11 @@ private:
 
   void print_memory_access16(int datasize,
           const char *seg, const char *index, Bit16u disp);
-  void print_memory_access32(int datasize,
+  void print_memory_access  (int datasize,
           const char *seg, const char *base, const char *index, int scale, Bit32u disp);
 
-  void print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry);
-  void print_disassembly_att  (const BxDisasmOpcodeInfo_t *entry);
+  void print_disassembly_intel(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
+  void print_disassembly_att  (const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry);
 
 public:
 
@@ -317,78 +322,158 @@ public:
  * ss - Scalar element of a 128-bit packed single-precision floating data.
  * sd - Scalar element of a 128-bit packed double-precision floating data.
  * v  - Word, doubleword or quadword, depending on operand-size attribute.
- * w  - Word, regardless of operand-size attribute.
- * z  - A word if the effective operand size is 16 bits, or a doubleword 
- *      if the effective operand size is 32 or 64 bits.
+ * w  - Word, regardless of operand-size attr.
  */
 
- // fpu
- void ST0 (unsigned attribute);
- void STj (unsigned attribute);
+  // far call/jmp
+  void Apw(const x86_insn *insn);
+  void Apd(const x86_insn *insn);
 
- // general/segment register
- void  Rw (unsigned attribute);
- void  Rd (unsigned attribute);
- void  Sw (unsigned attribute);
+  // 8-bit general purpose registers
+  void AL(const x86_insn *insn);
+  void CL(const x86_insn *insn);
 
- // control/debug register
- void  Cd (unsigned attribute);
- void  Dd (unsigned attribute);
- void  Td (unsigned attribute);
+  // 16-bit general purpose registers
+  void AX(const x86_insn *insn);
+  void DX(const x86_insn *insn);
 
- // segment register
- void OP_SEG (unsigned attribute);
+  // 32-bit general purpose registers
+  void EAX(const x86_insn *insn);
 
- // memory only
- void OP_MEM (unsigned attribute);
+  // 64-bit general purpose registers
+  void RAX(const x86_insn *insn);
 
- // general purpose register 
- void REG16 (unsigned attribute);
- void REG8  (unsigned attribute);
- void REG32 (unsigned attribute);
+  // segment registers
+  void CS(const x86_insn *insn);
+  void DS(const x86_insn *insn);
+  void ES(const x86_insn *insn);
+  void SS(const x86_insn *insn);
+  void FS(const x86_insn *insn);
+  void GS(const x86_insn *insn);
 
- // string instructions
- void OP_X (unsigned attribute);
- void OP_Y (unsigned attribute);
+  // segment registers
+  void Sw(const x86_insn *insn);
 
- // mmx/xmm
- void OP_P (unsigned attribute);
- void OP_Q (unsigned attribute);
- void OP_W (unsigned attribute);
- void OP_V (unsigned attribute);
+  // test registers
+  void Td(const x86_insn *insn);
 
- // mov
- void OP_O (unsigned attribute);
+  // control register
+  void Cd(const x86_insn *insn);
+  void Cq(const x86_insn *insn);
 
- // immediate
- void sIb (unsigned attribute);
- void  I1 (unsigned attribute);
- void  Ib (unsigned attribute);
- void  Iw (unsigned attribute); 
- void  Id (unsigned attribute);
- void  Iv (unsigned attribute);
-#if BX_DISASM_SUPPORT_X86_64
- void  Iz (unsigned attribute);
- void  Iq (unsigned attribute);
-#endif
+  // debug register
+  void Dd(const x86_insn *insn);
+  void Dq(const x86_insn *insn);
 
- // general purpose register or memory
- void  Eb (unsigned attribute);
- void  Ew (unsigned attribute);
- void  Ed (unsigned attribute);
- void  Ev (unsigned attribute);
+  //  8-bit general purpose register
+  void R8(const x86_insn *insn);
 
- // general purpose register
- void  Gb (unsigned attribute);
- void  Gv (unsigned attribute);
- void  Gd (unsigned attribute);
+  // 16-bit general purpose register
+  void RX(const x86_insn *insn);
 
- // call/jump
- void  Jb (unsigned attribute);
- void  Jv (unsigned attribute);
+  // 32-bit general purpose register
+  void ERX(const x86_insn *insn);
 
- // call/jmp far
- void  Ap (unsigned attribute);
+  // 64-bit general purpose register
+  void RRX(const x86_insn *insn);
+
+  // general purpose register or memory operand
+  void Eb(const x86_insn *insn);
+  void Ew(const x86_insn *insn);
+  void Ed(const x86_insn *insn);
+  void Eq(const x86_insn *insn);
+
+  // general purpose register
+  void Gb(const x86_insn *insn);
+  void Gw(const x86_insn *insn);
+  void Gd(const x86_insn *insn);
+  void Gq(const x86_insn *insn);
+
+  // immediate
+  void I1(const x86_insn *insn);
+  void Ib(const x86_insn *insn);
+  void Iw(const x86_insn *insn);
+  void Id(const x86_insn *insn);
+  void Iq(const x86_insn *insn);
+
+  // sign extended immediate
+  void sIbw(const x86_insn *insn);
+  void sIbd(const x86_insn *insn);
+  void sIbq(const x86_insn *insn);
+  void sIdq(const x86_insn *insn);
+
+  // floating point
+  void ST0(const x86_insn *insn);
+  void STi(const x86_insn *insn);
+
+  // general purpose register
+  void Rw(const x86_insn *insn);
+  void Rd(const x86_insn *insn);
+  void Rq(const x86_insn *insn);
+
+  // mmx register
+  void Pq(const x86_insn *insn);
+
+  // mmx register or memory operand
+  void Qd(const x86_insn *insn);
+  void Qq(const x86_insn *insn);
+  void Vq(const x86_insn *insn);
+
+  // xmm register
+  void Vdq(const x86_insn *insn);
+  void Vss(const x86_insn *insn);
+  void Vsd(const x86_insn *insn);
+  void Vps(const x86_insn *insn);
+  void Vpd(const x86_insn *insn);
+
+  // xmm register or memory operand
+  void Wq(const x86_insn *insn);
+  void Wdq(const x86_insn *insn);
+  void Wss(const x86_insn *insn);
+  void Wsd(const x86_insn *insn);
+  void Wps(const x86_insn *insn);
+  void Wpd(const x86_insn *insn);
+
+  // direct memory access
+  void OP_O(const x86_insn *insn, unsigned size);
+  void Ob(const x86_insn *insn);
+  void Ow(const x86_insn *insn);
+  void Od(const x86_insn *insn);
+  void Oq(const x86_insn *insn);
+
+  // memory operand
+  void OP_M(const x86_insn *insn, unsigned size);
+  void Ma(const x86_insn *insn);
+  void Mp(const x86_insn *insn);
+  void Ms(const x86_insn *insn);
+  void Mx(const x86_insn *insn);
+  void Mb(const x86_insn *insn);
+  void Mw(const x86_insn *insn);
+  void Md(const x86_insn *insn);
+  void Mq(const x86_insn *insn);
+  void Mt(const x86_insn *insn);
+  void Mdq(const x86_insn *insn);
+  void Mps(const x86_insn *insn);
+  void Mpd(const x86_insn *insn);
+
+  // string instructions
+  void OP_X(const x86_insn *insn, unsigned size);
+  void Xb(const x86_insn *insn);
+  void Xw(const x86_insn *insn);
+  void Xd(const x86_insn *insn);
+  void Xq(const x86_insn *insn);
+
+  // string instructions
+  void OP_Y(const x86_insn *insn, unsigned size);
+  void Yb(const x86_insn *insn);
+  void Yw(const x86_insn *insn);
+  void Yd(const x86_insn *insn);
+  void Yq(const x86_insn *insn);
+
+  // jump offset
+  void Jb(const x86_insn *insn);
+  void Jw(const x86_insn *insn);
+  void Jd(const x86_insn *insn);
 };
 
 #endif

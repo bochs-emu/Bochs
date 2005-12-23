@@ -5,7 +5,9 @@
 // Intel STYLE
 //////////////////
 
-#if BX_DISASM_SUPPORT_X86_64
+#define BX_DISASM_SUPPORT_X86_64
+
+#ifdef BX_DISASM_SUPPORT_X86_64
 
 static const char *intel_general_16bit_regname[16] = {
     "ax",  "cx",  "dx",   "bx",   "sp",   "bp",   "si",   "di",
@@ -63,7 +65,7 @@ static const char *intel_index16[8] = {
 // AT&T STYLE
 //////////////////
 
-#if BX_DISASM_SUPPORT_X86_64
+#ifdef BX_DISASM_SUPPORT_X86_64
 
 static const char *att_general_16bit_regname[16] = {
     "%ax",  "%cx",  "%dx",   "%bx",   "%sp",   "%bp",   "%si",   "%di",
@@ -177,10 +179,8 @@ void disassembler::set_syntax_intel()
   general_16bit_regname = intel_general_16bit_regname;
   general_8bit_regname = intel_general_8bit_regname;
   general_32bit_regname = intel_general_32bit_regname;
-#if BX_DISASM_SUPPORT_X86_64
   general_8bit_regname_rex = intel_general_8bit_regname_rex;
   general_64bit_regname = intel_general_64bit_regname;
-#endif
 
   segment_name = intel_segment_name;
   index16 = intel_index16;
@@ -188,56 +188,21 @@ void disassembler::set_syntax_intel()
   initialize_modrm_segregs();
 }
 
-void disassembler::print_disassembly_intel(const BxDisasmOpcodeInfo_t *entry)
+void disassembler::print_disassembly_intel(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry)
 {
   // print opcode
-  dis_sprintf("%s", entry->Opcode);
-
-  // patch opcode
-  disbufptr --;
-
-  switch(*disbufptr) {
-  case 'B':
-  case 'W':
-  case 'V':
-  case 'L':
-  case 'Q':
-  case 'T':
-    break;
-
-  case 'X':  // movsx or movzx
-    dis_putc('x');
-    break;
-
-  case 'S':  // string
-    if (os_32)
-      dis_putc('d');
-    else
-      dis_putc('w');
-    break;
-
-  case 'D':
-    if (os_32)
-      dis_putc('d');
-    break;
-
-  default:
-    disbufptr ++;
-    break;
-  }
-
-  dis_putc(' ');
+  dis_sprintf("%s ", entry->IntelOpcode);
 
   if (entry->Operand1) {
-    (this->*entry->Operand1)(entry->Op1Attr);
+    (this->*entry->Operand1)(insn);
   }
   if (entry->Operand2) {
     dis_sprintf(", ");
-    (this->*entry->Operand2)(entry->Op2Attr);
+    (this->*entry->Operand2)(insn);
   }
   if (entry->Operand3) {
     dis_sprintf(", ");
-    (this->*entry->Operand3)(entry->Op3Attr);
+    (this->*entry->Operand3)(insn);
   }
 }
 
@@ -252,10 +217,8 @@ void disassembler::set_syntax_att()
   general_16bit_regname = att_general_16bit_regname;
   general_8bit_regname = att_general_8bit_regname;
   general_32bit_regname = att_general_32bit_regname;
-#if BX_DISASM_SUPPORT_X86_64
   general_8bit_regname_rex = att_general_8bit_regname_rex;
   general_64bit_regname = att_general_64bit_regname;
-#endif
 
   segment_name = att_segment_name;
   index16 = att_index16;
@@ -263,91 +226,20 @@ void disassembler::set_syntax_att()
   initialize_modrm_segregs();
 }
 
-void disassembler::print_disassembly_att(const BxDisasmOpcodeInfo_t *entry)
+void disassembler::print_disassembly_att(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry)
 {
   // print opcode
-  dis_sprintf("%s", entry->Opcode);
-
-  // patch opcode
-  disbufptr --;
-
-  switch(*disbufptr) {
-  case 'B':
-    dis_putc('b');
-    break;
-
-  case 'W':
-    dis_putc('w');
-    break;
-
-  case 'S':
-  case 'V':
-    if (os_32)
-      dis_putc('l');
-    else
-      dis_putc('w');
-    break;
-
-  case 'L':
-    dis_putc('l');
-    break;
-
-  case 'Q':
-    dis_putc('q');
-    break;
-
-  case 'T':
-    dis_putc('t');
-    break;
-
-  case 'X':
-    if (entry->Op2Attr == B_SIZE)
-      dis_putc('b');
-    else if (entry->Op2Attr == W_SIZE)
-      dis_putc('w');
-    else if (entry->Op2Attr == D_SIZE)
-      dis_putc('l');
-    else
-      printf("Internal disassembler error !\n");
-
-    if (entry->Op1Attr == W_SIZE)
-      dis_putc('w');
-    else if (entry->Op1Attr == D_SIZE)
-      dis_putc('l');
-    else if (entry->Op1Attr == Q_SIZE)
-      dis_putc('q');
-    else if (entry->Op1Attr == V_SIZE)
-    {
-      if (os_32)
-        dis_putc('l');
-      else
-        dis_putc('w');
-    }
-    else
-      printf("Internal disassembler error !\n");
-    break;
-
-  case 'D':
-    if (os_32)
-      dis_putc('l');
-    break;
-
-  default:
-    disbufptr ++;
-    break;
-  }
-
-  dis_putc(' ');
+  dis_sprintf("%s ", entry->AttOpcode);
 
   if (entry->Operand3) {                                         
-    (this->*entry->Operand3)(entry->Op3Attr);
+    (this->*entry->Operand3)(insn);
     dis_sprintf(", ");
   }
   if (entry->Operand2) {
-    (this->*entry->Operand2)(entry->Op2Attr);
+    (this->*entry->Operand2)(insn);
     dis_sprintf(", ");
   }
   if (entry->Operand1) {
-    (this->*entry->Operand1)(entry->Op1Attr);
+    (this->*entry->Operand1)(insn);
   }
 }
