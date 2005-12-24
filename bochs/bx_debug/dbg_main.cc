@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.30 2005-12-14 20:05:40 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.31 2005-12-24 16:07:47 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,7 @@ static unsigned doit = 0;
 
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
+
 Bit32u dbg_cpu = 0;
 
 bx_param_bool_c *sim_running;
