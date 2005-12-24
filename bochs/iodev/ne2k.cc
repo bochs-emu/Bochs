@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.77 2005-11-15 17:19:28 vruppert Exp $
+// $Id: ne2k.cc,v 1.78 2005-12-24 22:35:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -489,14 +489,22 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
     return (BX_NE2K_THIS s.remote_dma >> 8);
     break;
 
-  case 0xa:  // reserved
-    BX_INFO(("reserved read - page 0, 0xa"));
-    return (0xff);
+  case 0xa:  // reserved / RTL8029ID0
+    if (BX_NE2K_THIS s.pci_enabled) {
+      return (0x50);
+    } else {
+      BX_INFO(("reserved read - page 0, 0xa"));
+      return (0xff);
+    }
     break;
 
-  case 0xb:  // reserved
-    BX_INFO(("reserved read - page 0, 0xb"));
-    return (0xff);
+  case 0xb:  // reserved / RTL8029ID1
+    if (BX_NE2K_THIS s.pci_enabled) {
+      return (0x43);
+    } else {
+      BX_INFO(("reserved read - page 0, 0xb"));
+      return (0xff);
+    }
     break;
     
   case 0xc:  // RSR
@@ -968,8 +976,22 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page3_read(Bit32u offset, unsigned int io_len)
 {
-  BX_ERROR(("page 3 read register 0x%02x attempted", offset));
-  return (0);
+  if (BX_NE2K_THIS s.pci_enabled) {
+    switch (offset) {
+      case 0x3:  // CONFIG0
+        return (0);
+      case 0x5:  // CONFIG2
+        return (0x40);
+      case 0x6:  // CONFIG3
+        return (0x40);
+      default:
+        BX_ERROR(("page 3 read register 0x%02x attempted", offset));
+        return (0);
+    }
+  } else {
+    BX_ERROR(("page 3 read register 0x%02x attempted", offset));
+    return (0);
+  }
 }
 
 void
@@ -1293,7 +1315,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.77 2005-11-15 17:19:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.78 2005-12-24 22:35:04 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
