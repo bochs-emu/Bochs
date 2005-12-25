@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.93 2005-12-23 12:21:09 vruppert Exp $
+// $Id: floppy.cc,v 1.94 2005-12-25 12:03:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.93 2005-12-23 12:21:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.94 2005-12-25 12:03:14 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -827,17 +827,20 @@ bx_floppy_ctrl_c::floppy_command(void)
 
       motor_on = (BX_FD_THIS s.DOR>>(drive+4)) & 0x01;
       if (motor_on == 0) {
-        BX_ERROR(("floppy_command(): 0x4a: motor not on"));
+        BX_ERROR(("floppy_command(): read ID: motor not on"));
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
-        return;
-        }
+        return; // Hang controller
+      }
       if (BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) {
-        BX_PANIC(("floppy_command(): read ID: bad drive #%d", drive));
-        }
+        BX_ERROR(("floppy_command(): read ID: bad drive #%d", drive));
+        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
+        return; // Hang controller
+      }
       if (BX_FD_THIS s.media_present[drive] == 0) {
         BX_INFO(("attempt to read sector ID with media not present"));
+        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         return; // Hang controller
-        }
+      }
       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive]<<2) | drive;
       // time to read one sector at 300 rpm
       sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
@@ -1153,12 +1156,17 @@ bx_floppy_ctrl_c::timer()
   drive = BX_FD_THIS s.DOR & 0x03;
   switch ( BX_FD_THIS s.pending_command ) {
     case 0x07: // recal
-    case 0x0f: // seek
-      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
+      BX_FD_THIS s.status_reg0 = 0x20 | drive;
       motor_on = ((BX_FD_THIS s.DOR>>(drive+4)) & 0x01);
       if ((BX_FD_THIS s.device_type[drive] == FDRIVE_NONE) || (motor_on == 0)) {
         BX_FD_THIS s.status_reg0 |= 0x50;
       }
+      enter_idle_phase();
+      BX_FD_THIS raise_interrupt();
+      break;
+
+    case 0x0f: // seek
+      BX_FD_THIS s.status_reg0 = 0x20 | (BX_FD_THIS s.head[drive]<<2) | drive;
       enter_idle_phase();
       BX_FD_THIS raise_interrupt();
       break;
