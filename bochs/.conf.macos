@@ -27,6 +27,7 @@ export CXXFLAGS
             --enable-sse=1 \
             --enable-pci \
             --enable-clgd54xx \
+            --enable-usb \
             --enable-plugins \
             --with-macos \
             ${CONFIGURE_ARGS}

@@ -12,6 +12,7 @@ set echo
             --enable-sse=1 \
             --enable-pci \
             --enable-clgd54xx \
+            --enable-usb \
             --disable-readline \
             --without-x \
             --enable-cpp \

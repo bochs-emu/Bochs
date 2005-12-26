@@ -26,6 +26,7 @@ export CXXFLAGS
 	    --enable-cpu-level=6 \
 	    --enable-sse=1 \
 	    --enable-pci \
-	    --enable-clgd54xx 
+	    --enable-clgd54xx \
+	    --enable-usb 
 
 unset echo

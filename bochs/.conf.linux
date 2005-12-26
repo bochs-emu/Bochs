@@ -35,6 +35,7 @@ case $which_config in
                 --enable-sse=1 \
                 --enable-pci \
                 --enable-clgd54xx \
+                --enable-usb \
                 ${CONFIGURE_ARGS}
     ;;
 
@@ -52,6 +53,7 @@ case $which_config in
                 --enable-sse=1 \
                 --enable-pci \
                 --enable-clgd54xx \
+                --enable-usb \
                 --enable-plugins \
                 --with-all-libs \
                 ${CONFIGURE_ARGS}
