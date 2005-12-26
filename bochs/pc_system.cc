@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.45 2005-12-04 17:43:08 vruppert Exp $
+// $Id: pc_system.cc,v 1.46 2005-12-26 17:16:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -221,7 +221,8 @@ Bit8u bx_pc_system_c::IAC(void)
 
 void bx_pc_system_c::exit(void)
 {
-  DEV_cmos_save_image();
+  if (DEV_cmos_present())
+    DEV_cmos_save_image();
   if (DEV_hd_present())
     DEV_hd_close_harddrive();
 

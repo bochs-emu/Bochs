@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.45 2005-12-04 17:43:09 vruppert Exp $
+// $Id: plugin.h,v 1.46 2005-12-26 17:16:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -102,6 +102,7 @@ extern "C" {
 #define DEV_cmos_checksum() (bx_devices.pluginCmosDevice->checksum_cmos())
 #define DEV_cmos_get_timeval() (bx_devices.pluginCmosDevice->get_timeval())
 #define DEV_cmos_save_image() (bx_devices.pluginCmosDevice->save_image())
+#define DEV_cmos_present() (bx_devices.pluginCmosDevice != &bx_devices.stubCmos)
 
 ///////// keyboard macros
 #define DEV_mouse_motion(dx, dy, state) \
