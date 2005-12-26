@@ -13,6 +13,7 @@ Detailed change log :
     register in real mode (support for unreal mode)
   - fixed init/reset values for LDTR and TR registers
   - reimplemented hardware task switching mechanism (Stanislav)
+  - generate #GP(0) when fetching instruction cross segment boundary
 
 - CPU (x86-64) (Stanislav Shwartsman)
   - implemented call_far/ret_far/jmp_far instructions in long mode
@@ -27,7 +28,8 @@ Detailed change log :
   - Fixed bug in changing local APIC id (Stanislav)
   - Fixed reading of IRR/ISR/TMR registers (patch by wmrieker)
   - Implemented spurious interrupt register (Stanislav, patch by wmrieker)
-  - Fixed interrupt delivery bug (#SF patch)
+  - Fixed interrupt delivery bug (anonymous #SF patch)
+  - Correctly implemented ESR APIC register (Stanislav)
 
 - Bochs debugger
   - Fixed bug in bochs debugger caused breakpoints doesn't fire sometimes
@@ -38,8 +40,9 @@ Detailed change log :
 
 - Disassembler (Stanislav Shwartsman)
   - Fixed disassembly for FCOMI/FUCOMI instructions
-  - Getting ready for x86-64 support in disassembler. The disassembler
-    module fully supporting x86-64 available for testing in #SF patch #1359162
+  - Full x86-64 support in disassembler. The disassembler module extended
+    for supportting x86-64 extensions. Still limited by Bochs debugger
+    still not supporting x86-64 ;(
 
 - I/O devices (Volker)
   - general
@@ -107,9 +110,11 @@ Detailed change log :
   - some more APM functions added
 
 - SF patches applied
-  [857235] task priority and other APIC bugs, etc by wmrieker 
- [1359011] build breaks for 386 + debugger + disasm by shirokuma 
- [1352761] Infinite loop when trying to debug a triple exception  
+ [1389776] Disk sizes over 64 Gbytes by Andrzej Zaborowski
+ [1359162] disasm support for x86-64 by Stanislav Shwartsman
+  [857235] task priority and other APIC bugs, etc by wmrieker
+ [1359011] build breaks for 386 + debugger + disasm by shirokuma
+ [1352761] Infinite loop when trying to debug a triple exception
  [1311170] small APIC bug fix (interrupt sent to the wrong CPU)
  [1309763] Watchpoints don't work in device memory by Nickolai Zeldovich
  [1294930] change line status on floppy by Ben Lunt
@@ -119,6 +124,13 @@ Detailed change log :
  [1107945] com->socket redirection support by Andrew Backer
 
 - these S.F. bugs were closed
+ [1378204] error: bochs-2.2.1, --enable-sb16, --disable-gameport
+ [1368412] VDE problems in BOCHS
+  [533446] CPU and APIC devices appear twice
+ [1000796] bximage fails to create image of specified size
+ [1170793] Quarterdeck QEMM doesn't work
+  [923704] Multiple opcode prefixes don't reflect Trap 13
+ [1166392] DocBook/documentation issues
  [1368239] broken grater than 4GB size of sparse type hd image
  [1365830] i386 compile breaks on paging
   [427550] Incomplete IRETD implementation
