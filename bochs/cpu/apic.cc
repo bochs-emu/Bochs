@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.69 2005-12-13 20:42:22 sshwarts Exp $
+// $Id: apic.cc,v 1.70 2005-12-26 19:42:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,9 +32,9 @@
 #define LOG_THIS this->
 
 bx_generic_apic_c *apic_index[APIC_MAX_ID];
-bx_local_apic_c *local_apic_index[BX_LOCAL_APIC_NUM];
+bx_local_apic_c *local_apic_index[BX_NUM_LOCAL_APICS];
 
-#define LOCAL_APIC_ALL_MASK ((1<<BX_LOCAL_APIC_NUM) - 1)
+#define LOCAL_APIC_ALL_MASK ((1<<BX_NUM_LOCAL_APICS) - 1)
 
 bx_generic_apic_c::bx_generic_apic_c()
 {
@@ -42,9 +42,6 @@ bx_generic_apic_c::bx_generic_apic_c()
   put("APIC?");
   settype(APICLOG);
 }
-
-// init is called during RESET and when an INIT message is delivered.
-void bx_generic_apic_c::init(void) { }
 
 void bx_generic_apic_c::set_base (bx_address newbase)
 {
@@ -118,7 +115,7 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
 int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
 {
   int winning_arb_id = -1, winning_id = -1, __arb_id, i;
-  for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
     if (apic_mask & (1<<i)) {
       __arb_id = local_apic_index[i]->get_arb_id();
       if (__arb_id > winning_arb_id) {
@@ -136,7 +133,7 @@ int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
 {
   // XXX initial winning_apr value, the datasheets say 15
   int winning_apr = APIC_MAX_ID, winning_id = 0, __apr, i;
-  for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
     if (apic_mask & (1<<i)) {
       __apr = local_apic_index[i]->get_apr();
       if (__apr < winning_apr) {
@@ -150,10 +147,10 @@ int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
 
 void bx_generic_apic_c::arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode)
 {
-  int trigger_order[BX_LOCAL_APIC_NUM], winner, i, j = 0;
+  int trigger_order[BX_NUM_LOCAL_APICS], winner, i, j = 0;
 
   /* bus arbitrate ... */
-  for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
     if (deliver_bitmask & (1<<i)) {
       winner = apic_bus_arbitrate(deliver_bitmask);
       local_apic_index[winner]->adjust_arb_id(winner);
@@ -200,7 +197,7 @@ Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
   } else {
     // logical destination. call match_logical_addr for each local APIC.
     if (dest == 0) return 0;
-    for (int i=0; i<BX_LOCAL_APIC_NUM; i++) {
+    for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
       if (local_apic_index[i] && local_apic_index[i]->match_logical_addr(dest))
         mask |= (1<<i);
     }
@@ -223,7 +220,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
   int i;
 
   // prune nonexistents apics from list
-  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+  for (int bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
   {
     if (!local_apic_index[bit]) deliver_bitmask &= ~(1<<bit);
   }
@@ -249,13 +246,13 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
       // bx_local_apic_c::deliver
 
       // normal INIT IPI sent to processors
-      for (i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+      for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
         if (deliver_bitmask & (1<<i)) local_apic_index[i]->init();
       }
       return 1;
     
     case APIC_DM_EXTINT:
-      for (i = 0; i < BX_LOCAL_APIC_NUM; i++)
+      for (i = 0; i < BX_NUM_LOCAL_APICS; i++)
         if (deliver_bitmask & (1<<i))
 	  local_apic_index[i]->bypass_irr_isr = 1;
        break;
@@ -280,7 +277,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
     if (arbitrate)
       arbitrate_and_trigger_one(deliver_bitmask, vector, trig_mode);
     else {
-      for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+      for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
         if (deliver_bitmask & (1<<i)) {
           local_apic_index[i]->trigger_irq(vector, i, trig_mode);
           break;
@@ -291,7 +288,7 @@ bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_
     if (arbitrate && !broadcast)
       arbitrate_and_trigger(deliver_bitmask, vector, trig_mode);
     else {
-      for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+      for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
         if (deliver_bitmask & (1<<i))
           local_apic_index[i]->trigger_irq(vector, i, trig_mode);
       }
@@ -325,7 +322,7 @@ Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
   }
 
   // prune nonexistents apics from list
-  for (int bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+  for (int bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
   {
     if (!local_apic_index[bit]) mask &= ~(1<<bit);
   }
@@ -353,7 +350,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
     // look for the focus processor.
     dest = is_focus(vector) ? get_id() : 0;
     if (dest) break;
-    for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+    for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
       if (local_apic_index[i]) {
         if (local_apic_index[i]->is_focus(vector)) {
           found_focus = 1;
@@ -375,7 +372,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
       // arbitration ID to their APIC ID. Not supported by Pentium 4
       // and Intel Xeon processors.
       BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
-      for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++)
+      for (bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
         if (local_apic_index[bit])
           local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
       return 1;
@@ -383,7 +380,7 @@ bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mo
     break; // we'll fall through to generic_deliver:case INIT
 
   case APIC_DM_SIPI:  // Start Up (SIPI, local apic only)
-    for (bit=0; bit<BX_LOCAL_APIC_NUM; bit++) {
+    for (bit=0; bit<BX_NUM_LOCAL_APICS; bit++) {
       if (deliver_bitmask & (1<<bit))
         local_apic_index[bit]->startup_msg(vector);
     }
@@ -401,6 +398,11 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : bx_generic_apic_c(), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
   reset();
+
+  // KPL: Register a non-active timer for use when the timer is started.
+  timer_handle = bx_pc_system.register_timer_ticks(this,
+            BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
+	
   INTR = 0;
 }
 
@@ -453,7 +455,11 @@ void bx_local_apic_c::init()
   timer_divide_factor = 1;
   timer_initial = 0;
   timer_current = 0;
-  timer_active = 0;
+
+  if (timer_active) {
+    bx_pc_system.deactivate_timer(timer_handle);
+    timer_active = 0;
+  }
 
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
     lvt[i] = 0x10000;	// all LVT are masked
@@ -462,10 +468,6 @@ void bx_local_apic_c::init()
   spurious_vector  = 0xff;   // software disabled (bit 8)
   software_enabled = 0;
   focus_disable    = 0;
-
-  // KPL: Register a non-active timer for use when the timer is started.
-  timer_handle = bx_pc_system.register_timer_ticks(this,
-            BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
 }
 
 void bx_local_apic_c::set_id (Bit8u newid)
@@ -585,28 +587,7 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       if (! software_enabled) lvt[APIC_LVT_ERROR] |= 0x10000;
       break;
     case 0x380: // initial count for timer
-      {
-        // If active before, deactive the current timer before changing it.
-        if (timer_active) {
-          bx_pc_system.deactivate_timer(timer_handle);
-          timer_active = 0;
-        }
-        timer_initial = value;
-        timer_current = 0;
-        if (timer_initial != 0)  // terminate the counting if timer_initial = 0
-        {
-          // This should trigger the counter to start.  If already started,
-          // restart from the new start value.
-          BX_DEBUG(("APIC: Initial Timer Count Register = %u\n", value));
-          timer_current = timer_initial;
-          timer_active = 1;
-          Bit32u timervec = lvt[APIC_LVT_TIMER];
-          bx_bool continuous = (timervec & 0x20000) > 0;
-          ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
-          bx_pc_system.activate_timer_ticks(timer_handle,
-            Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
-        }
-      }
+      set_initial_timer_count(value);
       break;
     case 0x3e0: // timer divide configuration
       // only bits 3, 1, and 0 are writable
@@ -649,14 +630,14 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
   spurious_vector = (value & 0xf0) | 0xf;
 #endif
 
-   software_enabled = (value >> 8) & 1;
-   focus_disable    = (value >> 9) & 1;
+  software_enabled = (value >> 8) & 1;
+  focus_disable    = (value >> 9) & 1;
 
-   if (! software_enabled) {
-     for (unsigned i=0; i<APIC_LVT_ENTRIES; i++) {
-       lvt[i] |= 0x10000;	// all LVT are masked
-     }
-   }
+  if (! software_enabled) {
+    for (unsigned i=0; i<APIC_LVT_ENTRIES; i++) {
+      lvt[i] |= 0x10000;	// all LVT are masked
+    }
+  }
 }
 
 void bx_local_apic_c::receive_EOI(Bit32u value)
@@ -996,7 +977,7 @@ Bit8u bx_local_apic_c::get_apr(void)
   return (Bit8u) apr;
 }
 
-bx_bool bx_local_apic_c::is_focus(Bit32u vector)
+bx_bool bx_local_apic_c::is_focus(Bit8u vector)
 {
   if (focus_disable) return 0;
   return (irr[vector] || isr[vector]) ? 1 : 0;
@@ -1006,7 +987,7 @@ void bx_local_apic_c::adjust_arb_id(int winning_id)
 {
   int __arb_id, __win_arb_id;
   // adjust arbitration priorities
-  for (int i = 0; i < BX_LOCAL_APIC_NUM; i++) {
+  for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
     if (i != winning_id) {
       __arb_id = local_apic_index[i]->get_arb_id();
       if (__arb_id == APIC_MAX_ID) {
@@ -1056,6 +1037,32 @@ void bx_local_apic_c::periodic(void)
     timer_active = 0;
     BX_DEBUG (("%s: local apic timer (one-shot) triggered int", cpu->name));
     bx_pc_system.deactivate_timer(timer_handle);
+  }
+}
+
+void bx_local_apic_c::set_initial_timer_count(Bit32u value)
+{
+  // If active before, deactive the current timer before changing it.
+  if (timer_active) {
+    bx_pc_system.deactivate_timer(timer_handle);
+    timer_active = 0;
+  }
+
+  timer_initial = value;
+  timer_current = 0;
+
+  if (timer_initial != 0)  // terminate the counting if timer_initial = 0
+  {
+    // This should trigger the counter to start.  If already started,
+    // restart from the new start value.
+    BX_DEBUG(("APIC: Initial Timer Count Register = %u\n", value));
+    timer_current = timer_initial;
+    timer_active = 1;
+    Bit32u timervec = lvt[APIC_LVT_TIMER];
+    bx_bool continuous = (timervec & 0x20000) > 0;
+    ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
+    bx_pc_system.activate_timer_ticks(timer_handle,
+            Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
   }
 }
 
