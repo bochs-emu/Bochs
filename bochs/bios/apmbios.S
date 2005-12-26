@@ -217,7 +217,15 @@ APMSYM(03):
 ; APM interface disconnect
 APMSYM(04):
   cmp al, #0x04
+  jne APMSYM(05)
+  jmp APMSYM(ok)
+
+;-----------------
+; APM cpu idle
+APMSYM(05):
+  cmp al, #0x05
   jne APMSYM(07)
+  hlt
   jmp APMSYM(ok)
 
 ;-----------------

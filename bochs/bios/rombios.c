@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.157 2005-12-25 09:11:06 vruppert Exp $
+// $Id: rombios.c,v 1.158 2005-12-26 10:35:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -885,8 +885,6 @@ static void           int1a_function();
 static void           int70_function();
 static void           int74_function();
 static Bit16u         get_CS();
-//static Bit16u         get_DS();
-//static void           set_DS();
 static Bit16u         get_SS();
 static unsigned int   enqueue_key();
 static unsigned int   dequeue_key();
@@ -939,7 +937,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.157 $ $Date: 2005-12-25 09:11:06 $";
+static char bios_cvs_version_string[] = "$Revision: 1.158 $ $Date: 2005-12-26 10:35:51 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1392,31 +1390,6 @@ ASM_START
   mov  ax, cs
 ASM_END
 }
-
-//  Bit16u
-//get_DS()
-//{
-//ASM_START
-//  mov  ax, ds
-//ASM_END
-//}
-//
-//  void
-//set_DS(ds_selector)
-//  Bit16u ds_selector;
-//{
-//ASM_START
-//  push bp
-//  mov  bp, sp
-//
-//    push ax
-//    mov  ax, 4[bp] ; ds_selector
-//    mov  ds, ax
-//    pop  ax
-//
-//  pop  bp
-//ASM_END
-//}
 
   Bit16u
 get_SS()
@@ -4663,9 +4636,6 @@ enqueue_key(scan_code, ascii_code)
 {
   Bit16u buffer_start, buffer_end, buffer_head, buffer_tail, temp_tail;
 
-  //BX_INFO("KBD:   enqueue_key() called scan:%02x, ascii:%02x\n",
-  //    scan_code, ascii_code);
-
 #if BX_CPU < 2
   buffer_start = 0x001E;
   buffer_end   = 0x003E;
@@ -4715,9 +4685,8 @@ BX_DEBUG_INT74("int74: read byte %02x\n", in_byte);
   mouse_flags_2 = read_byte(ebda_seg, 0x0027);
 
   if ( (mouse_flags_2 & 0x80) != 0x80 ) {
-      //    BX_PANIC("int74_function:\n");
       return;
-    }
+  }
 
   package_count = mouse_flags_2 & 0x07;
   index = mouse_flags_1 & 0x07;
@@ -5150,7 +5119,6 @@ int13_cdrom(EHBX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u count, segment, offset, i, size;
 
   BX_DEBUG_INT13_CD("int13_cdrom: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // BX_DEBUG_INT13_CD("int13_cdrom: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), DS, ES, DI, SI);
   
   SET_DISK_RET_STATUS(0x00);
 
@@ -5577,7 +5545,6 @@ int13_cdemu(DS, ES, DI, SI, BP, SP, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit8u  atacmd[12];
 
   BX_DEBUG_INT13_ET("int13_cdemu: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  //BX_DEBUG_INT13_ET("int13_cdemu: SS=%04x ES=%04x DI=%04x SI=%04x\n", get_SS(), ES, DI, SI);
   
   /* at this point, we are emulating a floppy/harddisk */
   
@@ -6679,7 +6646,6 @@ int13_diskette_function(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u es, last_addr;
 
   BX_DEBUG_INT13_FL("int13_diskette: AX=%04x BX=%04x CX=%04x DX=%04x ES=%04x\n", AX, BX, CX, DX, ES);
-  // BX_DEBUG_INT13_FL("int13_diskette: SS=%04x DS=%04x ES=%04x DI=%04x SI=%04x\n",get_SS(), get_DS(), ES, DI, SI);
 
   ah = GET_AH();
 
@@ -9804,7 +9770,6 @@ post_default_ints:
 #endif // BX_ELTORITO_BOOT
  
   int  #0x19
-  //JMP_EP(0x0064) ; INT 19h location
 
 
 .org 0xe2c3 ; NMI Handler Entry Point
