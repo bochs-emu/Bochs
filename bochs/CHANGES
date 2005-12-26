@@ -41,8 +41,8 @@ Detailed change log :
 - Disassembler (Stanislav Shwartsman)
   - Fixed disassembly for FCOMI/FUCOMI instructions
   - Full x86-64 support in disassembler. The disassembler module extended
-    for supportting x86-64 extensions. Still limited by Bochs debugger
-    still not supporting x86-64 ;(
+    to support x86-64 extensions. Still limited by Bochs debugger which 
+    is not supporting x86-64 at all ;(
 
 - I/O devices (Volker)
   - general
