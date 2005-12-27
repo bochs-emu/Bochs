@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.65 2005-12-02 17:27:18 vruppert Exp $
+// $Id: config.cc,v 1.66 2005-12-27 16:59:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -830,7 +830,7 @@ void bx_init_options ()
       "memory.rom.addr",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U, 
-      0xf0000);
+      0);
   bx_options.rom.Oaddress->set_base (16);
 #if BX_WITH_WX
   bx_options.rom.Opath->set_label ("ROM BIOS image");
@@ -2619,20 +2619,25 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
     bx_options.memory.Osize->set (atol(params[1]));
   } else if (!strcmp(params[0], "romimage")) {
-    if (num_params != 3) {
+    if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "file=", 5)) {
-        bx_options.rom.Opath->set (&params[i][5]);
-      } else if (!strncmp(params[i], "address=", 8)) {
-        if ((params[i][8] == '0') && (params[2][9] == 'x'))
-          bx_options.rom.Oaddress->set (strtoul (&params[i][8], NULL, 16));
+    if (!strncmp(params[1], "file=", 5)) {
+      bx_options.rom.Opath->set (&params[1][5]);
+    } else {
+      PARSE_ERR(("%s: romimage directive malformed.", context));
+    }
+    if (num_params == 3) {
+      if (!strncmp(params[2], "address=", 8)) {
+        if ((params[2][8] == '0') && (params[2][9] == 'x'))
+          bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 16));
         else
-          bx_options.rom.Oaddress->set (strtoul (&params[i][8], NULL, 10));
+          bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
+    } else {
+      bx_options.rom.Oaddress->set (0);
     }
   } else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {

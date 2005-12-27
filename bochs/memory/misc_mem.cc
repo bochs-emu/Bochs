@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.69 2005-12-25 19:30:48 vruppert Exp $
+// $Id: misc_mem.cc,v 1.70 2005-12-27 16:59:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.69 2005-12-25 19:30:48 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.70 2005-12-27 16:59:27 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -234,13 +234,17 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     return;
   }
   if (type == 0) {
-    if ( (romaddress + size) != 0x100000 && (romaddress + size) ) {
-      close(fd);
-      BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
-      return;
+    if (romaddress > 0) {
+      if ((romaddress + size) != 0x100000 && (romaddress + size)) {
+        close(fd);
+        BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
+        return;
+      }
+    } else {
+      romaddress = (Bit32u)-size;
     }
     offset = romaddress & BIOS_MASK;
-    if (romaddress < 0xf0000 ) {
+    if ((romaddress & 0xf0000) < 0xf0000) {
       BX_MEM_THIS rom_present[64] = 1;
     }
     is_bochs_bios = (strstr(path, "BIOS-bochs-latest") != NULL);

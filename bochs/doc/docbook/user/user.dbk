@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.190 2005-11-29 19:27:42 vruppert Exp $
+$Id: user.dbk,v 1.191 2005-12-27 16:59:27 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3043,6 +3043,7 @@ Example:
   romimage: file=bios/BIOS-bochs-latest, address=0xf0000
   romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
   romimage: file=mybios.bin, address=0xfff80000
+  romimage: file=mybios.bin
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
 can use a precompiled BIOS in the source or binary distribution called
@@ -3051,6 +3052,7 @@ starting at address 0xf0000, and it is exactly 64k long.
 You can also use the environment variable $BXSHARE to specify the location of the BIOS.
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
+Now the start address can be calculated from image size.
 </para>
 </section>
 
