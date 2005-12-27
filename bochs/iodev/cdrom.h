@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.18 2005-11-02 20:26:24 vruppert Exp $
+// $Id: cdrom.h,v 1.19 2005-12-27 13:21:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,23 +34,26 @@ public:
   ~cdrom_interface(void);
   void init(void);
 
-  // Load CD-ROM. Returns false if CD is not ready.
+  // Load CD-ROM. Returns 0 if CD is not ready.
   bx_bool insert_cdrom(char *dev = NULL);
 
   // Logically eject the CD.
   void eject_cdrom();
 
-  // Read CD TOC. Returns false if start track is out of bounds.
+  // Read CD TOC. Returns 0 if start track is out of bounds.
   bx_bool read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format);
 
   // Return CD-ROM capacity (in 2048 byte frames)
   Bit32u capacity();
 
-  // Read a single block from the CD
+  // Read a single block from the CD. Returns 0 on failure.
   bx_bool read_block(Bit8u* buf, int lba, int blocksize) BX_CPP_AttrRegparmN(3);
 
   // Start (spin up) the CD.
   bx_bool start_cdrom();
+
+  // Seek for new block address.
+  void seek(int lba);
 
 private:
   int fd;

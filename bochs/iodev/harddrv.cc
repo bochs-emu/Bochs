@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.155 2005-12-10 15:02:25 vruppert Exp $
+// $Id: harddrv.cc,v 1.156 2005-12-27 13:21:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.155 2005-12-10 15:02:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.156 2005-12-27 13:21:25 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1810,7 +1810,11 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   }
-                  BX_INFO(("cdrom: SEEK (ignored)"));
+#ifdef LOWLEVEL_CDROM
+                  BX_SELECTED_DRIVE(channel).cdrom.cd->seek(lba);
+#else
+                  BX_PANIC(("Seek with no LOWLEVEL_CDROM"));
+#endif
                   atapi_cmd_nop(channel);
                   raise_interrupt(channel);
                 }

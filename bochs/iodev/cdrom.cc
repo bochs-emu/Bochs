@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.86 2005-11-11 22:52:57 vruppert Exp $
+// $Id: cdrom.cc,v 1.87 2005-12-27 13:21:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -530,7 +530,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.86 2005-11-11 22:52:57 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.87 2005-12-27 13:21:25 vruppert Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1474,6 +1474,13 @@ cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
   } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
 
   return (n == BX_CD_FRAMESIZE);
+}
+
+void cdrom_interface::seek(int lba)
+{
+  unsigned char buffer[BX_CD_FRAMESIZE];
+
+  read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
 
 #endif /* if BX_SUPPORT_CDROM */

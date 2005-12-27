@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.11 2005-12-10 18:37:35 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.12 2005-12-27 13:21:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -272,4 +272,11 @@ int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
   }
 
   return CDIO->iotd_Req.io_Error;
+}
+
+void cdrom_interface::seek(int lba)
+{
+  unsigned char buffer[BX_CD_FRAMESIZE];
+
+  read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
