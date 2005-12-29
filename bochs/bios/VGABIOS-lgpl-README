@@ -90,6 +90,12 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.5d : Dec 29 2005
+  - Volker
+    . Bochs VBE protected mode interface added (based on a patch by malc@pulsesoft.com)
+    . biossums utility now supports VGABIOS sizes up to 64 kBytes
+    . VGA mode 0x11: all color planes must be enabled in this 2-color VGA mode
+
 vgabios-0.5c : Jul 07 2005
   - Volker
     . BIOS configuration word usually reports initial mode 80x25 color text
