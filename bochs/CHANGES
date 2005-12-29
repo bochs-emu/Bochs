@@ -1,4 +1,12 @@
-Changes after 2.2.1:
+Changes in 2.2.5 (December ??, 2005):
+
+Brief summary :
+- added virtual 8086 mode extensions (VME) implementation
+- several fixes/improvements in x86-64 emulation, debugger and disassembler
+- new serial mode 'socket' connects a network socket
+- IDE busmaster DMA feature for harddisks and cdroms completed and enabled
+- many improvements in Bochs emulated I/O devices (e.g. floppy, cdrom)
+- Updated LGPL'd VGABIOS to version 0.5d
 
 Detailed change log :
 
@@ -61,6 +69,7 @@ Detailed change log :
     - emulation of raw cdrom reads added, some other lowlevel cdrom fixes
     - IDE busmaster DMA feature for harddisks and cdroms completed and enabled
     - disk image size limit changed from 32 to 127 GB
+    - split ATA/ATAPI emulation code and image handling code
   - floppy
     - fixes for OS/2 (patch by Robin Kay)
     - disk change line behaviour fixed (initial patch by Ben Lunt)
@@ -95,6 +104,7 @@ Detailed change log :
     - runtime dialog is now a property sheet
   - x11
     - simple dialog boxes for the "ask" and "user shortcut" feature implemented
+    - Slovenian keymap added (contributed by Mitja Ursic)
 
 - configuration interface
   - ask dialog is now enabled by default for win32, wx and x display libraries
@@ -102,12 +112,15 @@ Detailed change log :
     on hardware specs)
   - floppy image size detection now available in the whole config interface
   - some device specific parameter handlers moved into the device code
+  - calculate BIOS ROM start address from image if not specified
 
-- System BIOS
+- System BIOS (Volker)
   - PCI i/o and memory base address initialization added
   - several keyboard interrupt handler fixes (e.g. patch by japheth)
   - several floppy fixes (e.g. OS/2 works with patch by Robin Kay)
   - some more APM functions added
+  - Updated LGPL'd VGABIOS to version 0.5d
+  - generate SMP specific tables dynamicly by the Bochs memory init code
 
 - SF patches applied
  [1389776] Disk sizes over 64 Gbytes by Andrzej Zaborowski
@@ -124,6 +137,9 @@ Detailed change log :
  [1107945] com->socket redirection support by Andrew Backer
 
 - these S.F. bugs were closed
+  [669180] win95 install : unknown SET FEATURES subcommand 0x03
+ [1346692] bochs 2.2.1 VGA BIOS error
+ [1354963] floppy in KolibriOS
  [1378204] error: bochs-2.2.1, --enable-sb16, --disable-gameport
  [1368412] VDE problems in BOCHS
   [533446] CPU and APIC devices appear twice
