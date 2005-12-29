@@ -1,5 +1,5 @@
-.\Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com
-.TH bochsrc 5 "29 Nov 2005" "bochsrc" "The Bochs Project"
+.\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
+.TH bochsrc 5 "29 Dec 2005" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -177,6 +177,9 @@ Example:
 360K  5.25" Floppy:
   floppya: 360k=path, status=inserted
 
+Autodetect Floppy type:
+  floppya: image=path, status=inserted
+
 .TP
 .I "ata0: \fP, \fIata1: \fP, \fIata2: \fPor \fIata3:"
 
@@ -215,10 +218,10 @@ works with it.
 In UNIX it is possible to use a raw device as a Bochs hard disk, 
 but WE DON'T RECOMMEND IT.
 
-For flat hard disk images created with bximage geometry autodetection can
-be used (cylinders are calculated using heads=16 and spt=63). For other
-hard disk images and modes the cylinders, heads, and spt are mandatory.
-The path is mandatory for type=cdrom.
+The path is always mandatory. For flat hard disk images created with bximage
+geometry autodetection can be used (cylinders=0 -> cylinders are calculated
+using heads=16 and spt=63). For other hard disk images and modes the cylinders,
+heads, and spt are mandatory.
 
 The mode option defines how the disk image is handled. Disks can be defined as:
   - flat : one file flat layout

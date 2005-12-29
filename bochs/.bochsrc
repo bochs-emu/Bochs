@@ -219,10 +219,10 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # access the "first" cdrom in the system.  On MacOSX, use path="drive"
 # to access the physical drive.
 #
-# For flat hard disk images created with bximage geometry autodetection can
-# be used (cylinders are calculated using heads=16 and spt=63). For other
-# hard disk images and modes the cylinders, heads, and spt are mandatory.
-# The path is mandatory for type=cdrom.
+# The path is always mandatory. For flat hard disk images created with
+# bximage geometry autodetection can be used (cylinders=0 -> cylinders are
+# calculated using heads=16 and spt=63). For other hard disk images and modes
+# the cylinders, heads, and spt are mandatory.
 #
 # Default values are:
 #   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
