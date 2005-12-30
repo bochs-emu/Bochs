@@ -1,6 +1,6 @@
 Bochs x86 Pentium+ Emulator
-Updated: Fri Jul  8 09:27:20 CEST 2005
-Version: 2.2.1
+Updated: Fri Dec 30 09:33:00 CET 2005
+Version: 2.2.5
 
 WHAT IS BOCHS?
 
@@ -11,7 +11,7 @@ BIOS.  Currently, Bochs can be compiled to emulate a 386, 486,
 Pentium, Pentium Pro or AMD64 CPU, including optional MMX, SSE, 
 SSE2 and 3DNow! instructions.  Bochs is capable of running most 
 Operating Systems inside the emulation including Linux, DOS,
-Windows 95/98 and Windows NT/2000.  
+Windows 95/98 and Windows NT/2000/XP.
 Bochs was written by Kevin Lawton and is currently maintained by 
 the Bochs project at "http://bochs.sourceforge.net".
 
