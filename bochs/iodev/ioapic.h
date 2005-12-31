@@ -1,10 +1,15 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.11 2005-12-26 19:42:09 sshwarts Exp $
+// $Id: ioapic.h,v 1.12 2005-12-31 14:46:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 extern class bx_ioapic_c bx_ioapic;
 
 #define BX_IOAPIC_NUM_PINS   (0x18)
+#define BX_IOAPIC_INT_FROM_ISA 0
+#define BX_IOAPIC_INT_FROM_PIC 1
+#define BX_IOAPIC_INT_FROM_PCI 2
+#define BX_IOAPIC_INT_FROM_MB  3
+#define BX_IOAPIC_INT_FROM_SMI 4
 
 // use the same version as 82093 IOAPIC (0x00170011)
 #define BX_IOAPIC_VERSION_ID (((BX_IOAPIC_NUM_PINS - 1) << 16) | 0x11)
@@ -51,8 +56,8 @@ public:
   virtual void reset (unsigned type);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void write(Bit32u address, Bit32u *value, unsigned len);
-  void raise_irq (unsigned num, unsigned from);
-  void lower_irq (unsigned num, unsigned from);
+  void raise_irq(unsigned num, unsigned from);
+  void lower_irq(unsigned num, unsigned from);
   void service_ioapic ();
   virtual bx_apic_type_t get_type () { return APIC_TYPE_IOAPIC; }
 };

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.20 2005-12-13 20:27:23 sshwarts Exp $
+// $Id: ioapic.cc,v 1.21 2005-12-31 14:46:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -133,10 +133,16 @@ void bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
   }
 }
 
-void bx_ioapic_c::raise_irq (unsigned vector, unsigned from) 
+void bx_ioapic_c::raise_irq(unsigned num, unsigned from) 
 {
+  unsigned vector;
+
+  if (from == BX_IOAPIC_INT_FROM_ISA) {
+    if ((num == 0) || (num == 2) || (num == 13)) return;
+  }
+  vector = num;
   BX_DEBUG(("IOAPIC: received vector %d", vector));
-  if ((vector >= 0) && (vector <= BX_APIC_LAST_VECTOR)) {
+  if (vector <= BX_APIC_LAST_VECTOR) {
     Bit32u bit = 1<<vector;
     if ((irr & bit) == 0) {
       irr |= bit;
@@ -149,7 +155,21 @@ void bx_ioapic_c::raise_irq (unsigned vector, unsigned from)
 
 void bx_ioapic_c::lower_irq (unsigned num, unsigned from) 
 {
+  unsigned vector;
+
+  if (from == BX_IOAPIC_INT_FROM_ISA) {
+    if ((num == 0) || (num == 2) || (num == 13)) return;
+  }
   BX_DEBUG(("IOAPIC: interrupt %d went away", num));
+  vector = num;
+  if (vector <= BX_APIC_LAST_VECTOR) {
+    Bit32u bit = 1<<vector;
+    if ((irr & bit) != 0) {
+      irr &= ~bit;
+    }
+  } else {
+    BX_PANIC(("IOAPIC: vector %d out of range", vector));
+  }
 }
 
 void bx_ioapic_c::service_ioapic ()
