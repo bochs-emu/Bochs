@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.70 2005-12-26 19:42:09 sshwarts Exp $
+// $Id: apic.cc,v 1.71 2006-01-01 11:33:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -645,7 +645,7 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
   BX_DEBUG(("%s: Wrote 0x%x to EOI", cpu->name, value));
   int vec = highest_priority_int (isr);
   if (vec < 0) {
-      BX_INFO(("EOI written without any bit in ISR"));
+    BX_DEBUG(("EOI written without any bit in ISR"));
   } else {
       if (vec != (int) spurious_vector) {
         BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
@@ -818,7 +818,7 @@ void bx_local_apic_c::service_local_apic(void)
     // shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
-  if ((first_irr & 0xf0) <= (task_priority & 0xf0)) {
+  if ((first_irr & 0xf0) <= (int)(task_priority & 0xf0)) {
     BX_DEBUG(("local apic (%s): not delivering int%02X because task_priority is %X", cpu->name, first_irr, task_priority));
     return;
   }

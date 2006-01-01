@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.21 2005-12-31 14:46:21 vruppert Exp $
+// $Id: ioapic.cc,v 1.22 2006-01-01 11:33:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -133,42 +133,28 @@ void bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
   }
 }
 
-void bx_ioapic_c::raise_irq(unsigned num, unsigned from) 
+void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
 {
-  unsigned vector;
-
-  if (from == BX_IOAPIC_INT_FROM_ISA) {
-    if ((num == 0) || (num == 2) || (num == 13)) return;
-  }
-  vector = num;
-  BX_DEBUG(("IOAPIC: received vector %d", vector));
-  if (vector <= BX_APIC_LAST_VECTOR) {
-    Bit32u bit = 1<<vector;
-    if ((irr & bit) == 0) {
-      irr |= bit;
-      service_ioapic ();
+  BX_DEBUG(("set_irq_level(): INTIN%d: level=%d", int_in, level));
+  if (int_in < BX_IOAPIC_NUM_PINS) {
+    Bit32u bit = 1<<int_in;
+    bx_io_redirect_entry_t *entry = ioredtbl + int_in;
+    entry->parse_value();
+    if (entry->trig_mode) {
+      // level triggered
+      if (level) {
+        irr |= bit;
+        service_ioapic ();
+      } else {
+        irr &= ~bit;
+      }
+    } else {
+      // edge triggered
+      if (level) {
+        irr |= bit;
+        service_ioapic ();
+      }
     }
-  } else {
-    BX_PANIC(("IOAPIC: vector %d out of range", vector));
-  }
-}
-
-void bx_ioapic_c::lower_irq (unsigned num, unsigned from) 
-{
-  unsigned vector;
-
-  if (from == BX_IOAPIC_INT_FROM_ISA) {
-    if ((num == 0) || (num == 2) || (num == 13)) return;
-  }
-  BX_DEBUG(("IOAPIC: interrupt %d went away", num));
-  vector = num;
-  if (vector <= BX_APIC_LAST_VECTOR) {
-    Bit32u bit = 1<<vector;
-    if ((irr & bit) != 0) {
-      irr &= ~bit;
-    }
-  } else {
-    BX_PANIC(("IOAPIC: vector %d out of range", vector));
   }
 }
 
@@ -178,22 +164,27 @@ void bx_ioapic_c::service_ioapic ()
   // look in IRR and deliver any interrupts that are not masked.
   BX_DEBUG(("IOAPIC: servicing"));
   for (unsigned bit=0; bit < BX_IOAPIC_NUM_PINS; bit++) {
-    if (irr & (1<<bit)) {
+    Bit32u mask = 1<<bit;
+    if (irr & mask) {
       bx_io_redirect_entry_t *entry = ioredtbl + bit;
       entry->parse_value();
       if (! entry->masked) {
-	// clear irr bit and deliver
-	bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
-	if (done) {
-	  irr &= ~(1<<bit);
-	  entry->delivery_status = 0;
-	  stuck = 0;
-	} else {
-	  entry->delivery_status = 1;
-	  stuck++;
-	  if (stuck > 5)
-	    BX_INFO(("vector %#x stuck?\n", entry->vector));
-	}
+        // clear irr bit and deliver
+        if (entry->delivery_mode == 7) {
+          BX_PANIC(("ExtINT not implemented yet"));
+        }
+        bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
+        if (done) {
+          if (! entry->trig_mode)
+            irr &= ~mask;
+          entry->delivery_status = 0;
+          stuck = 0;
+        } else {
+          entry->delivery_status = 1;
+          stuck++;
+          if (stuck > 5)
+            BX_INFO(("vector %#x stuck?\n", entry->vector));
+        }
       }
     }
   }
