@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.24 2005-09-23 19:31:12 vruppert Exp $
+// $Id: pci2isa.cc,v 1.25 2006-01-02 22:26:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -277,7 +277,7 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value != BX_P2I_THIS s.elcr1) {
         BX_P2I_THIS s.elcr1 = value;
         BX_INFO(("write: ELCR1 = 0x%02x", BX_P2I_THIS s.elcr1));
-        DEV_pic_set_mode(0, BX_P2I_THIS s.elcr1);
+        DEV_pic_set_mode(1, BX_P2I_THIS s.elcr1); // master PIC
       }
       break;
     case 0x04d1:
@@ -285,7 +285,7 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value != BX_P2I_THIS s.elcr2) {
         BX_P2I_THIS s.elcr2 = value;
         BX_INFO(("write: ELCR2 = 0x%02x", BX_P2I_THIS s.elcr2));
-        DEV_pic_set_mode(1, BX_P2I_THIS s.elcr2);
+        DEV_pic_set_mode(0, BX_P2I_THIS s.elcr2); // slave PIC
       }
       break;
     case 0x0cf9:
