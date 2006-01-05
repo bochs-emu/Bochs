@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.127 2005-12-12 19:54:48 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.128 2006-01-05 21:40:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1309,7 +1309,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 
 #if BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR cr0.am) {
-    BX_ERROR(("WARNING: Aligment check enabled but not implemented !"));
+    BX_DEBUG(("WARNING: Alignment check enabled but not implemented !"));
   }
 #endif
 

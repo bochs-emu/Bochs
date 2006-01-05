@@ -26,7 +26,7 @@ TODO (know issues in CPU model):
 [!] Some of APIC functionality (like spurious interrupt vector) still
     not implemented
 
-[!] No support of AC flag (aligment checking) and #AC exception
+[!] No support of AC flag (alignment checking) and #AC exception
 
     #AC exception should be generated if trying to do unaligned memory 
     access when 
