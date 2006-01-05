@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.38 2006-01-01 11:33:06 vruppert Exp $
+// $Id: pic.cc,v 1.39 2006-01-05 21:57:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,6 +103,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.master_pic.polled = 0;
   BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
   BX_PIC_THIS s.master_pic.edge_level = 0;
+  BX_PIC_THIS s.master_pic.IRQ_in = 0;
 
   BX_PIC_THIS s.slave_pic.single_PIC = 0;
   BX_PIC_THIS s.slave_pic.interrupt_offset = 0x70; /* IRQ8 = INT 0x70 */
@@ -125,11 +126,7 @@ bx_pic_c::init(void)
   BX_PIC_THIS s.slave_pic.polled = 0;
   BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
   BX_PIC_THIS s.slave_pic.edge_level = 0;
-
-  for (unsigned i=0; i<8; i++) { /* all IRQ lines low */
-    BX_PIC_THIS s.master_pic.IRQ_line[i] = 0;
-    BX_PIC_THIS s.slave_pic.IRQ_line[i] = 0;
-  }
+  BX_PIC_THIS s.slave_pic.IRQ_in = 0;
 }
 
   void
@@ -340,7 +337,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x65: /* specific EOI 5 */
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
-          check_irq_level(& BX_PIC_THIS s.master_pic);
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0x60));
           service_master_pic();
           break;
@@ -366,7 +362,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xE5: // specific EOI and rotate 5
         case 0xE6: // specific EOI and rotate 6
         case 0xE7: // specific EOI and rotate 7
-          check_irq_level(& BX_PIC_THIS s.master_pic);
           BX_PIC_THIS s.master_pic.isr &= ~(1 << (value-0xE0));
           BX_PIC_THIS s.master_pic.lowest_priority = (value - 0xE0);
           service_master_pic();
@@ -519,7 +514,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x65: /* specific EOI 5 */
         case 0x66: /* specific EOI 6 */
         case 0x67: /* specific EOI 7 */
-          check_irq_level(& BX_PIC_THIS s.slave_pic);
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0x60));
           service_slave_pic();
           break;
@@ -545,7 +539,6 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xE5: // specific EOI and rotate 5
         case 0xE6: // specific EOI and rotate 6
         case 0xE7: // specific EOI and rotate 7
-          check_irq_level(& BX_PIC_THIS s.slave_pic);
           BX_PIC_THIS s.slave_pic.isr &= ~(1 << (value-0xE0));
           BX_PIC_THIS s.slave_pic.lowest_priority = (value - 0xE0);
           service_slave_pic();
@@ -613,8 +606,7 @@ bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 // new IRQ signal handling routines
 
-  void
-bx_pic_c::lower_irq(unsigned irq_no)
+void bx_pic_c::lower_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
@@ -623,28 +615,20 @@ bx_pic_c::lower_irq(unsigned irq_no)
   }
 #endif
 
-  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+  Bit8u mask = (1 << (irq_no & 7));
+  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
     BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
-    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 0;
-    BX_PIC_THIS s.master_pic.irr &= ~(1 << irq_no);
-    if ((BX_PIC_THIS s.master_pic.irr & ~BX_PIC_THIS s.master_pic.imr) == 0) {
-      BX_SET_INTR(0);
-      BX_PIC_THIS s.master_pic.INT = 0;
-    }
+    BX_PIC_THIS s.master_pic.IRQ_in &= ~(mask);
+    BX_PIC_THIS s.master_pic.irr &= ~(mask);
   } else if ((irq_no > 7) && (irq_no <= 15) &&
-             (BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+             (BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
     BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
-    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 0;
-    BX_PIC_THIS s.slave_pic.irr &= ~(1 << (irq_no - 8));
-    if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
-      BX_PIC_THIS s.slave_pic.INT = 0;
-      lower_irq(2);
-    }
+    BX_PIC_THIS s.slave_pic.IRQ_in &= ~(mask);
+    BX_PIC_THIS s.slave_pic.irr &= ~(mask);
   }
 }
 
-  void
-bx_pic_c::raise_irq(unsigned irq_no)
+void bx_pic_c::raise_irq(unsigned irq_no)
 {
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
@@ -653,22 +637,22 @@ bx_pic_c::raise_irq(unsigned irq_no)
   }
 #endif
 
-  if ((irq_no <= 7) && (!BX_PIC_THIS s.master_pic.IRQ_line[irq_no])) {
+  Bit8u mask = (1 << (irq_no & 7));
+  if ((irq_no <= 7) && !(BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
     BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
-    BX_PIC_THIS s.master_pic.IRQ_line[irq_no] = 1;
-    BX_PIC_THIS s.master_pic.irr |= (1 << irq_no);
+    BX_PIC_THIS s.master_pic.IRQ_in |= mask;
+    BX_PIC_THIS s.master_pic.irr |= mask;
     service_master_pic();
   } else if ((irq_no > 7) && (irq_no <= 15) &&
-             (!BX_PIC_THIS s.slave_pic.IRQ_line[irq_no-8])) {
+             !(BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
     BX_DEBUG(("IRQ line %d now high", (unsigned) irq_no));
-    BX_PIC_THIS s.slave_pic.IRQ_line[irq_no - 8] = 1;
-    BX_PIC_THIS s.slave_pic.irr |= (1 << (irq_no - 8));
+    BX_PIC_THIS s.slave_pic.IRQ_in |= mask;
+    BX_PIC_THIS s.slave_pic.irr |= mask;
     service_slave_pic();
   }
 }
 
-  void
-bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
+void bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
 {
   if (ma_sl) {
     BX_PIC_THIS s.master_pic.edge_level = mode;
@@ -677,26 +661,7 @@ bx_pic_c::set_mode(bx_bool ma_sl, Bit8u mode)
   }
 }
 
-  void
-bx_pic_c::check_irq_level(bx_pic_t *pic)
-{
-  int irq;
-
-  if ((pic->edge_level) > 0) {
-    for (irq = 0; irq < 8; irq++) {
-      if (pic->IRQ_line[irq] && (pic->edge_level & (1 << irq))) {
-        pic->irr |= (1 << irq);
-        if (pic->master_slave) {
-          service_master_pic();
-        } else {
-          service_slave_pic();
-        }
-      }
-    }
-  }
-}
-
-void  bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
+void bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
 {
   int irq;
   int lowest_priority;
@@ -719,10 +684,7 @@ void  bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
     if(irq > 7)
       irq = 0;
   } while(irq != highest_priority);
-
-  check_irq_level(pic);
 }
-
 
   void
 bx_pic_c::service_master_pic(void)
@@ -774,11 +736,11 @@ bx_pic_c::service_master_pic(void)
         if (unmasked_requests & (1 << irq)) {
           BX_DEBUG(("signalling IRQ(%u)", (unsigned) irq));
           BX_PIC_THIS s.master_pic.INT = 1;
-          BX_SET_INTR(1);
           BX_PIC_THIS s.master_pic.irq = irq;
+          BX_SET_INTR(1);
           return;
-          } /* if (unmasked_requests & ... */
-        } 
+        } /* if (unmasked_requests & ... */
+      } 
 
       irq ++;
       if(irq > 7)
@@ -862,31 +824,34 @@ bx_pic_c::IAC(void)
 
   BX_SET_INTR(0);
   BX_PIC_THIS s.master_pic.INT = 0;
-  BX_PIC_THIS s.master_pic.irr &= ~(1 << BX_PIC_THIS s.master_pic.irq);
+  // In level sensitive mode don't clear the irr bit.
+  if (!(BX_PIC_THIS s.master_pic.edge_level & (1 << BX_PIC_THIS s.master_pic.irq)))
+    BX_PIC_THIS s.master_pic.irr &= ~(1 << BX_PIC_THIS s.master_pic.irq);
   // In autoeoi mode don't set the isr bit.
-  if(!BX_PIC_THIS s.master_pic.auto_eoi)
+  if (!BX_PIC_THIS s.master_pic.auto_eoi)
     BX_PIC_THIS s.master_pic.isr |= (1 << BX_PIC_THIS s.master_pic.irq);
-  else if(BX_PIC_THIS s.master_pic.rotate_on_autoeoi)
+  else if (BX_PIC_THIS s.master_pic.rotate_on_autoeoi)
     BX_PIC_THIS s.master_pic.lowest_priority = BX_PIC_THIS s.master_pic.irq;
 
   if (BX_PIC_THIS s.master_pic.irq != 2) {
     irq    = BX_PIC_THIS s.master_pic.irq;
     vector = irq + BX_PIC_THIS s.master_pic.interrupt_offset;
-    }
-  else { /* IRQ2 = slave pic IRQ8..15 */
+  } else { /* IRQ2 = slave pic IRQ8..15 */
     BX_PIC_THIS s.slave_pic.INT = 0;
-    BX_PIC_THIS s.master_pic.IRQ_line[2] = 0;
+    BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
     irq    = BX_PIC_THIS s.slave_pic.irq;
     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
-    BX_PIC_THIS s.slave_pic.irr &= ~(1 << BX_PIC_THIS s.slave_pic.irq);
+    // In level sensitive mode don't clear the irr bit.
+    if (!(BX_PIC_THIS s.slave_pic.edge_level & (1 << BX_PIC_THIS s.slave_pic.irq)))
+      BX_PIC_THIS s.slave_pic.irr &= ~(1 << BX_PIC_THIS s.slave_pic.irq);
     // In autoeoi mode don't set the isr bit.
-    if(!BX_PIC_THIS s.slave_pic.auto_eoi)
+    if (!BX_PIC_THIS s.slave_pic.auto_eoi)
       BX_PIC_THIS s.slave_pic.isr |= (1 << BX_PIC_THIS s.slave_pic.irq);
-    else if(BX_PIC_THIS s.slave_pic.rotate_on_autoeoi)
+    else if (BX_PIC_THIS s.slave_pic.rotate_on_autoeoi)
       BX_PIC_THIS s.slave_pic.lowest_priority = BX_PIC_THIS s.slave_pic.irq;
     service_slave_pic();
     irq += 8; // for debug printing purposes
-    }
+  }
 
   service_master_pic();
 
