@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.298 2005-11-26 21:36:50 sshwarts Exp $
+// $Id: main.cc,v 1.299 2006-01-05 21:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,8 +75,6 @@ void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
 void   bx_close_harddrive(void);
 #endif
 
-
-
 void bx_init_bx_dbg (void);
 static char *divider = "========================================================================";
 static logfunctions thePluginLog;
@@ -94,6 +92,16 @@ bx_pc_system_c bx_pc_system;
 #endif
 
 bx_debug_t bx_dbg;
+
+#if BX_SMP_PROCESSORS==1
+// single processor simulation, so there's one of everything
+BOCHSAPI BX_CPU_C    bx_cpu;
+BOCHSAPI BX_MEM_C    bx_mem;
+#else
+// multiprocessor simulation, we need an array of cpus and memories
+BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
+BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+#endif
 
 char *bochsrc_filename = NULL;
 

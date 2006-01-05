@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.119 2005-12-28 19:18:50 sshwarts Exp $
+// $Id: cpu.cc,v 1.120 2006-01-05 21:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,16 +30,6 @@
 #include "bochs.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SMP_PROCESSORS==1
-// single processor simulation, so there's one of everything
-BOCHSAPI BX_CPU_C    bx_cpu;
-BOCHSAPI BX_MEM_C    bx_mem;
-#else
-// multiprocessor simulation, we need an array of cpus and memories
-BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
-BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
-#endif
 
 #if BX_SUPPORT_ICACHE
 
