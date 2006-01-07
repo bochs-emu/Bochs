@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.39 2006-01-05 21:57:58 vruppert Exp $
+// $Id: pic.cc,v 1.40 2006-01-07 18:02:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -824,6 +824,10 @@ bx_pic_c::IAC(void)
 
   BX_SET_INTR(0);
   BX_PIC_THIS s.master_pic.INT = 0;
+  // Check for spurious interrupt
+  if (BX_PIC_THIS s.master_pic.irr == 0) {
+    return (BX_PIC_THIS s.master_pic.interrupt_offset + 7);
+  }
   // In level sensitive mode don't clear the irr bit.
   if (!(BX_PIC_THIS s.master_pic.edge_level & (1 << BX_PIC_THIS s.master_pic.irq)))
     BX_PIC_THIS s.master_pic.irr &= ~(1 << BX_PIC_THIS s.master_pic.irq);
@@ -839,6 +843,10 @@ bx_pic_c::IAC(void)
   } else { /* IRQ2 = slave pic IRQ8..15 */
     BX_PIC_THIS s.slave_pic.INT = 0;
     BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
+    // Check for spurious interrupt
+    if (BX_PIC_THIS s.slave_pic.irr == 0) {
+      return (BX_PIC_THIS s.slave_pic.interrupt_offset + 7);
+    }
     irq    = BX_PIC_THIS s.slave_pic.irq;
     vector = irq + BX_PIC_THIS s.slave_pic.interrupt_offset;
     // In level sensitive mode don't clear the irr bit.
