@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.49 2005-11-27 17:49:59 vruppert Exp $
+// $Id: vga.h,v 1.50 2006-01-07 12:10:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -262,6 +262,7 @@ protected:
       bx_bool chain_four;
       } sequencer;
 
+    bx_bool  vga_enabled;
     bx_bool  vga_mem_updated;
     unsigned x_tilesize;
     unsigned y_tilesize;

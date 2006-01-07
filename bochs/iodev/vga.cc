@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.123 2005-11-27 17:49:59 vruppert Exp $
+// $Id: vga.cc,v 1.124 2006-01-07 12:10:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -150,6 +150,7 @@ bx_vga_c::init(void)
   DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
                                theVga, 0xa0000, 0xbffff);
 
+  BX_VGA_THIS s.vga_enabled = 1;
   BX_VGA_THIS s.misc_output.color_emulation  = 1;
   BX_VGA_THIS s.misc_output.enable_ram  = 1;
   BX_VGA_THIS s.misc_output.clock_select     = 0;
@@ -621,7 +622,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
       break;
 
     case 0x03c3: /* VGA Enable Register */
-      RETURN(1);
+      RETURN(BX_VGA_THIS s.vga_enabled);
       break;
 
     case 0x03c4: /* Sequencer Index Register */
@@ -1033,9 +1034,9 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 
     case 0x03c3: // VGA enable
       // bit0: enables VGA display if set
+      BX_VGA_THIS s.vga_enabled = value & 0x01;
 #if !defined(VGA_TRACE_FEATURE)
-      BX_DEBUG(("io write 3c3: (ignoring) VGA enable = %u",
-                  (unsigned) (value & 0x01) ));
+      BX_DEBUG(("io write 0x03c3: VGA enable = %u", BX_VGA_THIS s.vga_enabled));
 #endif
       break;
 
@@ -1422,9 +1423,9 @@ bx_vga_c::update(void)
   if (BX_VGA_THIS s.vga_mem_updated==0)
     return;
 
-  /* skip screen update when the sequencer is in reset mode or video is disabled */
-  if (!BX_VGA_THIS s.sequencer.reset1 || !BX_VGA_THIS s.sequencer.reset2
-      || !BX_VGA_THIS s.attribute_ctrl.video_enabled)
+  /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
+  if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
+      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1)
     return;
 
   /* skip screen update if the vertical retrace is in progress
@@ -2622,31 +2623,35 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
     } else {
       if (BX_VGA_THIS s.line_compare < BX_VGA_THIS s.vertical_display_end) {
-        if (BX_VGA_THIS s.x_dotclockdiv2) {
-          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-        } else {
-          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        if (BX_VGA_THIS s.line_offset > 0) {
+          if (BX_VGA_THIS s.x_dotclockdiv2) {
+            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+          } else {
+            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+          }
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+          } else {
+            y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED (x_tileno, y_tileno, 1);
         }
-        if (BX_VGA_THIS s.y_doublescan) {
-          y_tileno = ((offset / BX_VGA_THIS s.line_offset) * 2 + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
-        } else {
-          y_tileno = ((offset / BX_VGA_THIS s.line_offset) + BX_VGA_THIS s.line_compare + 1) / Y_TILESIZE;
-        }
-        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
       }
       if (offset >= start_addr) {
         offset -= start_addr;
-        if (BX_VGA_THIS s.x_dotclockdiv2) {
-          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
-        } else {
-          x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+        if (BX_VGA_THIS s.line_offset > 0) {
+          if (BX_VGA_THIS s.x_dotclockdiv2) {
+            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 16);
+          } else {
+            x_tileno = (offset % BX_VGA_THIS s.line_offset) / (X_TILESIZE / 8);
+          }
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
+          } else {
+            y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED (x_tileno, y_tileno, 1);
         }
-        if (BX_VGA_THIS s.y_doublescan) {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / (Y_TILESIZE / 2);
-        } else {
-          y_tileno = (offset / BX_VGA_THIS s.line_offset) / Y_TILESIZE;
-        }
-        SET_TILE_UPDATED (x_tileno, y_tileno, 1);
       }
     }
   }
