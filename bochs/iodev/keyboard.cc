@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.106 2005-12-02 17:27:19 vruppert Exp $
+// $Id: keyboard.cc,v 1.107 2006-01-08 15:23:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.106 2005-12-02 17:27:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.107 2006-01-08 15:23:24 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -277,7 +277,7 @@ Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
         BX_KEY_THIS mouse_enabled_changed(val!=0);
         break;
       case BXP_KBD_PASTE_DELAY:
-        BX_KEY_THIS paste_delay_changed(val);
+        BX_KEY_THIS paste_delay_changed((Bit32u)val);
         break;
       default:
         BX_PANIC(("kbd_param_handler called with unexpected parameter %d", id));

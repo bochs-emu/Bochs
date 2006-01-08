@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.18 2005-12-10 18:37:35 vruppert Exp $
+// $Id: serial_raw.cc,v 1.19 2006-01-08 15:23:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -47,7 +47,9 @@ serial_raw::serial_raw (char *devname)
 {
 #ifdef WIN32
   char portstr[MAX_PATH];
+#ifdef WIN32_RECEIVE_RAW
   DWORD threadID;
+#endif
 #endif
 
   put ("SERR");
