@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.20 2004-12-13 19:10:38 vruppert Exp $
+// $Id: pit_wrap.h,v 1.21 2006-01-08 20:39:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ private:
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
 
-  BX_PIT_SMF void  second_update_data(void);
+  BX_PIT_SMF void  irq_handler(bx_bool value);
 };
 
 extern bx_pit_c bx_pit;

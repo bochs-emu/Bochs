@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.25 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: pit82c54.cc,v 1.26 2006-01-08 20:39:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -89,98 +89,101 @@ void pit_82C54::print_cnum(Bit8u cnum) {
     }
   }
 
-  void pit_82C54::set_OUT (counter_type & thisctr, bool data) {
-    //This will probably have a callback, so I put it here.
-    thisctr.OUTpin=data;
+void pit_82C54::set_OUT (counter_type & thisctr, bx_bool data) {
+  if (thisctr.OUTpin != data) {
+    thisctr.OUTpin = data;
+    if (thisctr.out_handler != NULL) {
+      thisctr.out_handler(data);
+    }
   }
+}
 
   void  BX_CPP_AttrRegparmN(2)
 pit_82C54::set_count (counter_type & thisctr, Bit32u data) {
-    thisctr.count=data & 0xFFFF;
-    set_binary_to_count(thisctr);
-  }
+  thisctr.count=data & 0xFFFF;
+  set_binary_to_count(thisctr);
+}
 
   void  BX_CPP_AttrRegparmN(1)
 pit_82C54::set_count_to_binary(counter_type & thisctr) {
-    if(thisctr.bcd_mode) {
-      thisctr.count=
-	(((thisctr.count_binary/1)%10)<<0) |
-	(((thisctr.count_binary/10)%10)<<4) |
-	(((thisctr.count_binary/100)%10)<<8) |
-	(((thisctr.count_binary/1000)%10)<<12)
-	;
-    } else {
-      thisctr.count=thisctr.count_binary;
-    }
+  if(thisctr.bcd_mode) {
+    thisctr.count=
+      (((thisctr.count_binary/1)%10)<<0) |
+      (((thisctr.count_binary/10)%10)<<4) |
+      (((thisctr.count_binary/100)%10)<<8) |
+      (((thisctr.count_binary/1000)%10)<<12);
+  } else {
+    thisctr.count=thisctr.count_binary;
   }
+}
 
   void  BX_CPP_AttrRegparmN(1)
 pit_82C54::set_binary_to_count(counter_type & thisctr) {
-    if(thisctr.bcd_mode) {
-      thisctr.count_binary=
-	(1*((thisctr.count>>0)&0xF)) +
-	(10*((thisctr.count>>4)&0xF)) +
-	(100*((thisctr.count>>8)&0xF)) +
-	(1000*((thisctr.count>>12)&0xF))
-	;
-    } else {
-      thisctr.count_binary=thisctr.count;
-    }
+  if(thisctr.bcd_mode) {
+    thisctr.count_binary=
+      (1*((thisctr.count>>0)&0xF)) +
+      (10*((thisctr.count>>4)&0xF)) +
+      (100*((thisctr.count>>8)&0xF)) +
+      (1000*((thisctr.count>>12)&0xF));
+  } else {
+    thisctr.count_binary=thisctr.count;
   }
+}
 
   void  BX_CPP_AttrRegparmN(1)
 pit_82C54::decrement (counter_type & thisctr) {
-    if(!thisctr.count) {
-      if(thisctr.bcd_mode) {
-	thisctr.count=0x9999;
-	thisctr.count_binary=9999;
-      } else {
-	thisctr.count=0xFFFF;
-	thisctr.count_binary=0xFFFF;
-      }
+  if(!thisctr.count) {
+    if(thisctr.bcd_mode) {
+      thisctr.count=0x9999;
+      thisctr.count_binary=9999;
     } else {
-      thisctr.count_binary--;
-      set_count_to_binary(thisctr);
+      thisctr.count=0xFFFF;
+      thisctr.count_binary=0xFFFF;
     }
+  } else {
+    thisctr.count_binary--;
+    set_count_to_binary(thisctr);
   }
+}
 
-  void pit_82C54::init (void) {
-    Bit8u i;
+void pit_82C54::init (void) {
+  Bit8u i;
 
-    put("PIT81");
-    settype(PIT81LOG);
+  put("PIT81");
+  settype(PIT81LOG);
 
-    for(i=0;i<3;i++) {
-      BX_DEBUG(("Setting read_state to LSB"));
-      counter[i].read_state=LSByte;
-      counter[i].write_state=LSByte;
-      counter[i].GATE=1;
-      counter[i].OUTpin=1;
-      counter[i].triggerGATE=0;
-      counter[i].mode=4;
-      counter[i].first_pass=0;
-      counter[i].bcd_mode=0;
-      counter[i].count=0;
-      counter[i].count_binary=0;
-      counter[i].state_bit_1=0;
-      counter[i].state_bit_2=0;
-      counter[i].null_count=0;
-      counter[i].rw_mode=1;
-      counter[i].count_written=1;
-      counter[i].count_LSB_latched=0;
-      counter[i].count_MSB_latched=0;
-      counter[i].status_latched=0;
-      counter[i].next_change_time=0;
-    }
-    seen_problems=0;
+  for(i=0;i<3;i++) {
+    BX_DEBUG(("Setting read_state to LSB"));
+    counter[i].read_state=LSByte;
+    counter[i].write_state=LSByte;
+    counter[i].GATE=1;
+    counter[i].OUTpin=1;
+    counter[i].triggerGATE=0;
+    counter[i].mode=4;
+    counter[i].first_pass=0;
+    counter[i].bcd_mode=0;
+    counter[i].count=0;
+    counter[i].count_binary=0;
+    counter[i].state_bit_1=0;
+    counter[i].state_bit_2=0;
+    counter[i].null_count=0;
+    counter[i].rw_mode=1;
+    counter[i].count_written=1;
+    counter[i].count_LSB_latched=0;
+    counter[i].count_MSB_latched=0;
+    counter[i].status_latched=0;
+    counter[i].next_change_time=0;
+    counter[i].out_handler=NULL;
   }
+  seen_problems=0;
+}
 
-  pit_82C54::pit_82C54 (void) {
-    init();
-  }
+pit_82C54::pit_82C54 (void) {
+  init();
+}
 
-  void pit_82C54::reset (unsigned type) {
-  }
+void pit_82C54::reset (unsigned type) {
+}
 
 void  BX_CPP_AttrRegparmN(2)
 pit_82C54::decrement_multiple(counter_type & thisctr, Bit32u cycles) {
@@ -753,18 +756,18 @@ pit_82C54::clock(Bit8u cnum) {
     }
   }
 
-  void pit_82C54::set_GATE(Bit8u cnum, bool data) {
-    if(cnum>MAX_COUNTER) {
-      BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
-    } else {
-      counter_type & thisctr = counter[cnum];
-      if(!( (thisctr.GATE&&data) || (!(thisctr.GATE||data)) )) {
-        BX_INFO(("Changing GATE %d to: %d",cnum,data));
-	thisctr.GATE=data;
-	if(thisctr.GATE) {
-	  thisctr.triggerGATE=1;
-	}
-	switch(thisctr.mode) {
+void pit_82C54::set_GATE(Bit8u cnum, bx_bool data) {
+  if(cnum>MAX_COUNTER) {
+    BX_ERROR(("Counter number incorrect in 82C54 set_GATE"));
+  } else {
+    counter_type & thisctr = counter[cnum];
+    if (!((thisctr.GATE&&data) || (!(thisctr.GATE||data)))) {
+      BX_INFO(("Changing GATE %d to: %d",cnum,data));
+      thisctr.GATE=data;
+      if (thisctr.GATE) {
+        thisctr.triggerGATE=1;
+      }
+      switch(thisctr.mode) {
 	case 0:
 	  if(data && thisctr.count_written) {
 	    if(thisctr.null_count) {
@@ -845,29 +848,29 @@ pit_82C54::clock(Bit8u cnum) {
 	  }
 	  break;
 	default:
-	  break;
-	}
+          break;
       }
     }
   }
+}
 
-  bool pit_82C54::read_OUT(Bit8u cnum) {
-    if(cnum>MAX_COUNTER) {
-      BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
-      return 0;
-    } else {
-      return counter[cnum].OUTpin;
-    }
+bx_bool pit_82C54::read_OUT(Bit8u cnum) {
+  if(cnum>MAX_COUNTER) {
+    BX_ERROR(("Counter number incorrect in 82C54 read_OUT"));
+    return 0;
+  } else {
+    return counter[cnum].OUTpin;
   }
+}
 
-  bool pit_82C54::read_GATE(Bit8u cnum) {
-    if(cnum>MAX_COUNTER) {
-      BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
-      return 0;
-    } else {
-      return counter[cnum].GATE;
-    }
+bx_bool pit_82C54::read_GATE(Bit8u cnum) {
+  if(cnum>MAX_COUNTER) {
+    BX_ERROR(("Counter number incorrect in 82C54 read_GATE"));
+    return 0;
+  } else {
+    return counter[cnum].GATE;
   }
+}
 
 Bit32u pit_82C54::get_clock_event_time(Bit8u cnum) {
   if(cnum>MAX_COUNTER) {
@@ -893,5 +896,11 @@ Bit32u pit_82C54::get_next_event_time(void) {
 }
 
 Bit16u pit_82C54::get_inlatch(int counternum) {
-    return counter[counternum].inlatch;
+  return counter[counternum].inlatch;
 }
+
+void pit_82C54::set_OUT_handler(Bit8u counternum, out_handler_t outh)
+{
+  counter[counternum].out_handler = outh;
+}
+

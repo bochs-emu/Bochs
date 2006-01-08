@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.59 2005-06-04 17:44:58 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.60 2006-01-08 20:39:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,6 +120,7 @@ bx_pit_c::init( void )
   BX_PIT_THIS s.refresh_clock_div2 = 0;
 
   BX_PIT_THIS s.timer.init();
+  BX_PIT_THIS s.timer.set_OUT_handler(0, irq_handler);
 
   Bit64u my_time_usec = bx_virt_timer.time_usec();
 
@@ -154,6 +155,7 @@ bx_pit_c::init( void )
   void
 bx_pit_c::reset(unsigned type)
 {
+  BX_PIT_THIS s.timer.reset(type);
 }
 
 void
@@ -317,23 +319,13 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       } else {
 	  DEV_speaker_beep_off();
       }
-/*??? only on AT+ */
+      /* ??? only on AT+ */
       BX_PIT_THIS s.timer.set_GATE(2, value & 0x01);
-#if BX_CPU_LEVEL < 2
-      /* ??? XT: */
-      bx_kbd_port61h_write(value);
-#endif
       break;
 
     default:
       BX_PANIC(("pit: unsupported io write to port %04x = %02x",
         (unsigned) address, (unsigned) value));
-  }
-
-  if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-    DEV_pic_raise_irq(0);
-  } else {
-    DEV_pic_lower_irq(0);
   }
 
   if(time_passed ||
@@ -359,21 +351,8 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
 }
 
 
-#if 0
-  void
-bx_kbd_port61h_write(Bit8u   value)
+bx_bool bx_pit_c::periodic(Bit32u usec_delta)
 {
-//  PcError("KBD_PORT61H_WRITE(): not implemented yet");
-  UNUSED( value );
-}
-#endif
-
-
-  bx_bool
-bx_pit_c::periodic( Bit32u   usec_delta )
-{
-  bx_bool prev_timer0_out = BX_PIT_THIS s.timer.read_OUT(0);
-  bx_bool want_interrupt = 0;
   Bit32u ticks_delta = 0;
 
 #ifdef BX_SCHEDULED_DIE_TIME
@@ -399,22 +378,19 @@ bx_pit_c::periodic( Bit32u   usec_delta )
       timedelta=ticks_delta;
     }
     BX_PIT_THIS s.timer.clock_all(timedelta);
-    if ( (prev_timer0_out==0) ) {
-      if ((BX_PIT_THIS s.timer.read_OUT(0))==1) {
-	DEV_pic_raise_irq(0);
-        prev_timer0_out=1;
-      }
-    } else {
-      if ((BX_PIT_THIS s.timer.read_OUT(0))==0) {
-	DEV_pic_lower_irq(0);
-        prev_timer0_out=0;
-      }
-    }
-    prev_timer0_out=BX_PIT_THIS s.timer.read_OUT(0);
     ticks_delta-=timedelta;
   }
 
-  return(want_interrupt);
+  return 0;
+}
+
+void bx_pit_c::irq_handler(bx_bool value)
+{
+  if (value == 1) {
+    DEV_pic_raise_irq(0);
+  } else {
+    DEV_pic_lower_irq(0);
+  }
 }
 
 #endif // #if BX_USE_NEW_PIT
