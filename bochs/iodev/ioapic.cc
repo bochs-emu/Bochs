@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.22 2006-01-01 11:33:06 vruppert Exp $
+// $Id: ioapic.cc,v 1.23 2006-01-08 12:01:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -50,6 +50,7 @@ void bx_ioapic_c::init ()
     ioredtbl[i].set_even_word (0x00010000);
     ioredtbl[i].set_odd_word  (0x00000000);
   }
+  intin = 0;
   irr = 0;
 }
 
@@ -138,21 +139,28 @@ void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
   BX_DEBUG(("set_irq_level(): INTIN%d: level=%d", int_in, level));
   if (int_in < BX_IOAPIC_NUM_PINS) {
     Bit32u bit = 1<<int_in;
-    bx_io_redirect_entry_t *entry = ioredtbl + int_in;
-    entry->parse_value();
-    if (entry->trig_mode) {
-      // level triggered
-      if (level) {
-        irr |= bit;
-        service_ioapic ();
+    if ((level<<int_in) != (intin & bit)) {
+      bx_io_redirect_entry_t *entry = ioredtbl + int_in;
+      entry->parse_value();
+      if (entry->trig_mode) {
+        // level triggered
+        if (level) {
+          intin |= bit;
+          irr |= bit;
+          service_ioapic ();
+        } else {
+          intin &= ~bit;
+          irr &= ~bit;
+        }
       } else {
-        irr &= ~bit;
-      }
-    } else {
-      // edge triggered
-      if (level) {
-        irr |= bit;
-        service_ioapic ();
+        // edge triggered
+        if (level) {
+          intin |= bit;
+          irr |= bit;
+          service_ioapic ();
+        } else {
+          intin &= ~bit;
+        }
       }
     }
   }
