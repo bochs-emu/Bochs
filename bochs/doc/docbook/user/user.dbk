@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.193 2006-01-08 17:16:30 vruppert Exp $
+$Id: user.dbk,v 1.194 2006-01-08 19:15:56 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1321,7 +1321,7 @@ DLX Linux screenshot.
 </thead>
 <tbody>
 
-<row><entry>BIOS-bochs-latest </entry> <entry> ROM BIOS image for Bochs </row>
+<row><entry>BIOS-bochs-latest </entry> <entry> ROM BIOS image for Bochs </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
@@ -5668,10 +5668,11 @@ has been tested so far.)
 </para></listitem>
 <listitem><para> implement RDTSC feature (read time stamp counter)
 </para></listitem>
-<listitem><para> modifications to rombios.c to add a data structure called the Intel
-Multiprocessor Configuration.  An SMP-aware operating system 
-probes BIOS memory to find the structure, which contains information about
-how many processors, their IDs, interrupt sources, etc.
+<listitem><para> a data structure called the Intel Multiprocessor Configuration
+must be present in BIOS memory space. An SMP-aware operating system probes BIOS
+memory to find the structure, which contains information about how many
+processors, their IDs, interrupt sources, etc. Starting with Bochs 2.2.5 these
+structures are dynamicly created by Bochs.
 </para></listitem>
 </itemizedlist>
 </para>
@@ -5681,9 +5682,8 @@ What needs to be done to improve SMP support?
 
 <itemizedlist>
 <listitem><para>
-still needs work on rombios.c to allow you to configure the number of
-processors in the .bochsrc.  Presently you have to choose the number
-of processors at compile time.
+still needs work to allow you to configure the number of processors in the
+.bochsrc. Presently you have to choose the number of processors at compile time.
 </para></listitem>
 
 <listitem><para>
