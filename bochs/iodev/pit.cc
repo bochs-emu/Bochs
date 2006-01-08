@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.20 2004-12-13 19:10:38 vruppert Exp $
+// $Id: pit.cc,v 1.21 2006-01-08 09:45:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -286,16 +286,15 @@ bx_pit_c::write_handler(void *this_ptr, Bit32u address, Bit32u dvalue, unsigned 
 }
 
   void
-bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
-                unsigned int io_len )
+bx_pit_c::write( Bit32u address, Bit32u dvalue, unsigned int io_len )
 {
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_PIT_SMF
-  Bit8u    command, mode, bcd_mode;
-  Bit8u   value;
+  Bit8u command, mode, bcd_mode;
+  Bit8u value;
 
-  value = (Bit8u  ) dvalue;
+  value = (Bit8u)dvalue;
 
   if (bx_dbg.pit)
     BX_INFO(("pit: write to port %04x = %02x",
@@ -322,10 +321,9 @@ bx_pit_c::write( Bit32u   address, Bit32u   dvalue,
       command  = value >> 4;
       mode     = (value >> 1) & 0x07;
       bcd_mode = value & 0x01;
-#if 0
-BX_INFO(("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u",
-  (unsigned) command, (unsigned) mode, (unsigned) bcd_mode));
-#endif
+
+      BX_DEBUG(("timer 0-2 mode control: cmd=0x%02x mode=0x%02x bcd_mode=%u",
+        command, mode, bcd_mode));
 
       if ( (mode > 5) || (command > 0x0e) )
         BX_PANIC(("pit: outp(43h)=%02xh out of range", (unsigned) value));
@@ -423,12 +421,8 @@ BX_INFO(("timer 0-2 mode control: comm:%02x mode:%02x bcd_mode:%u",
         DEV_speaker_beep_on(440.0);
       else
         DEV_speaker_beep_off();
-/*??? only on AT+ */
+      /* ??? only on AT+ */
       set_GATE(2, value & 0x01);
-#if BX_CPU_LEVEL < 2
-      /* ??? XT: */
-      bx_kbd_port61h_write(value);
-#endif
       break;
 
     default:
@@ -681,15 +675,14 @@ bx_pit_c::set_GATE(unsigned pit_id, unsigned value)
   void
 bx_pit_c::start(unsigned timerid)
 {
-  unsigned long period_hz;
+  double period_hz;
 
   if (BX_PIT_THIS s.timer[timerid].counter_max == 0x0000) {
-    period_hz   = 1193182 / 65536;
-    }
-  else {
+    period_hz   = 1193182.0 / 65536.0;
+  } else {
     period_hz = 1193182 / BX_PIT_THIS s.timer[timerid].counter_max;
-    }
-  BX_INFO(("timer%u period set to %lu hz", timerid, period_hz));
+  }
+  BX_INFO(("timer%u period set to %.1f Hz", timerid, period_hz));
 
 
   switch (BX_PIT_THIS s.timer[timerid].mode) {
@@ -716,16 +709,6 @@ bx_pit_c::start(unsigned timerid)
                (unsigned) BX_PIT_THIS s.timer[timerid].mode));
     }
 }
-
-
-#if 0
-  void
-bx_kbd_port61h_write(Bit8u   value)
-{
-//  PcError("KBD_PORT61H_WRITE(): not implemented yet");
-  UNUSED( value );
-}
-#endif
 
 
   bx_bool
