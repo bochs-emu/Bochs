@@ -75,8 +75,6 @@
 # Bochs. Now the start address can be calculated from image size.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
-#romimage: file=bios/BIOS-bochs-2-processors, address=0xf0000
-#romimage: file=bios/BIOS-bochs-4-processors, address=0xf0000
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 #romimage: file=mybios.bin # calculate start address from image size
 
