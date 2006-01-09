@@ -644,9 +644,9 @@ keyboard_mapping: enabled=0, map=
 # syntax (without the '-') still works for the key combinations supported
 # in Bochs 2.2.1.
 # Valid key names:
-# "alt", "bksp", "ctrl", "del", "down", "end", "enter", "esc", "f1", ... "f12",
-# "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus", "right",
-# "shift", "space", "tab", "up", and "win".
+# "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+# "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
+# "plus", "right", "shift", "space", "tab", "up", and "win".
 #
 # Example:
 #   user_shortcut: keys=ctrl-alt-del

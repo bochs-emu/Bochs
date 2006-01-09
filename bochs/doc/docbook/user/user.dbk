@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.194 2006-01-08 19:15:56 vruppert Exp $
+$Id: user.dbk,v 1.195 2006-01-09 18:37:28 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4119,9 +4119,9 @@ supported in Bochs 2.2.1.
 Valid key names:
 </para>
 <para>
-"alt", "bksp", "ctrl", "del", "down", "end", "enter", "esc", "f1", ... "f12",
-"home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus", "right",
-"shift", "space", "tab", "up", and "win".
+"alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
+"f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
+"right", "shift", "space", "tab", "up", and "win".
 </para>
 </section>
 
