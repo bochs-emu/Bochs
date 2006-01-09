@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.50 2005-12-12 19:44:06 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.51 2006-01-09 19:34:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -268,10 +268,8 @@ void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address ba
 }
 #endif
 
-void BX_CPU_C::validate_seg_regs(void)
+void BX_CPU_C::validate_seg_reg(unsigned seg)
 {
-  Bit8u cs_dpl = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl;
-
   /*
      FOR (seg = ES, DS, FS, GS)
      DO
@@ -283,26 +281,26 @@ void BX_CPU_C::validate_seg_regs(void)
      END
   */
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl < cs_dpl)
+  bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[seg];
+
+  if (segment->cache.dpl < CPL)
   {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
+    // invalidate if data or non-conforming code segment
+    if ((segment->cache.valid==0) || (segment->cache.segment==0) ||
+        (segment->cache.u.segment.executable==0) || (segment->cache.u.segment.c_ed==0))
+    {
+      segment->selector.value = 0;
+      segment->cache.valid = 0;
+    }
   }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl< cs_dpl)
-  {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl < cs_dpl)
-  {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl < cs_dpl)
-  {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
-  }
+}
+
+void BX_CPU_C::validate_seg_regs(void)
+{
+  validate_seg_reg(BX_SEG_REG_ES);
+  validate_seg_reg(BX_SEG_REG_DS);
+  validate_seg_reg(BX_SEG_REG_FS);
+  validate_seg_reg(BX_SEG_REG_GS);
 }
 
 #if BX_CPU_LEVEL >= 2
