@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.14 2006-01-08 12:01:25 vruppert Exp $
+// $Id: ioapic.h,v 1.15 2006-01-10 06:13:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 extern class bx_ioapic_c bx_ioapic;
@@ -53,6 +53,7 @@ public:
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void write(Bit32u address, Bit32u *value, unsigned len);
   void set_irq_level(Bit8u int_in, bx_bool level);
+  void receive_eoi(Bit8u vector);
   void service_ioapic ();
   virtual bx_apic_type_t get_type () { return APIC_TYPE_IOAPIC; }
 };

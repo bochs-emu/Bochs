@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.71 2006-01-01 11:33:06 vruppert Exp $
+// $Id: apic.cc,v 1.72 2006-01-10 06:13:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,14 +27,127 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "iodev/iodev.h"
+
 #if BX_SUPPORT_APIC
 
 #define LOG_THIS this->
 
-bx_generic_apic_c *apic_index[APIC_MAX_ID];
-bx_local_apic_c *local_apic_index[BX_NUM_LOCAL_APICS];
+#define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE (APIC_MAX_ID)
 
-#define LOCAL_APIC_ALL_MASK ((1<<BX_NUM_LOCAL_APICS) - 1)
+///////////// APIC BUS /////////////
+
+int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bit8u dest_mode, bx_bool level, bx_bool trig_mode)
+{
+  if (delivery_mode == APIC_DM_LOWPRI)
+  {
+     if (dest_mode == 0) {
+       // I/O subsytem initiated interrupt with lowest priority delivery
+       // mode is not supported in physical destination mode
+//     BX_ERROR(("Ignoring lowest priority interrupt in physical dest mode !"));
+       return 0;
+     }
+     else {
+       return apic_bus_deliver_lowest_priority(vector, dest, trig_mode, 0);
+     }
+  }
+
+  // determine destination local apics and deliver
+  if (dest_mode == 0) {
+    if (dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
+    {
+       return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
+    }
+    else {
+       // the destination is single agent
+       for (unsigned i=0;i<BX_NUM_LOCAL_APICS;i++)
+       {
+         if(BX_CPU_APIC(i)->get_id() == dest) {
+           BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
+           return 1;
+         }
+       }
+
+       return 0;
+    }
+  } 
+  else {
+    // logical destination mode
+    if (dest == 0) return 0;
+
+    bx_bool interrupt_delivered = 0;
+
+    for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+      if (BX_CPU_APIC(i)->match_logical_addr(dest)) {
+        BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
+        interrupt_delivered = 1;
+      }
+    }
+
+    return interrupt_delivered;
+  }
+}
+
+int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast)
+{
+#ifndef BX_IMPLEMENT_XAPIC
+  // search for if focus processor exists
+  for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+    if (BX_CPU_APIC(i)->is_focus(vector)) {
+      BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
+      return 1;
+    }
+  }
+#endif
+
+  // focus processor not found, looking for lowest priority agent
+  int lowest_priority_agent = -1, lowest_priority = 0x100;
+
+  for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+    if (broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
+#ifndef BX_IMPLEMENT_XAPIC
+      int priority = BX_CPU_APIC(i)->get_apr();
+#else
+      int priority = BX_CPU_APIC(i)->get_tpr();
+#endif
+      if (priority < lowest_priority) {
+        lowest_priority = priority;
+        lowest_priority_agent = i;
+      }
+    }
+  }
+
+  if (lowest_priority_agent >= 0)
+  {
+    BX_CPU_APIC(lowest_priority_agent)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
+    return 1;
+  }
+
+  return 0;
+}
+
+int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu)
+{
+  if (delivery_mode == APIC_DM_LOWPRI)
+  {
+    return apic_bus_deliver_lowest_priority(vector, 0 /* doesn't matter */, trig_mode, 1);
+  }
+
+  // deliver to all bus agents except 'exclude_cpu'
+  for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+    if (i == exclude_cpu) continue;
+    BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
+  }
+
+  return 1;
+}
+
+static void apic_bus_broadcast_eoi(Bit8u vector)
+{
+  bx_devices.ioapic->receive_eoi(vector);
+}
+
+////////////////////////////////////
 
 bx_generic_apic_c::bx_generic_apic_c()
 {
@@ -52,28 +165,8 @@ void bx_generic_apic_c::set_base (bx_address newbase)
 
 void bx_generic_apic_c::set_id (Bit8u newid) 
 {
-  // update apic_index
-  if (id != APIC_UNKNOWN_ID) {
-    BX_ASSERT (id < APIC_MAX_ID);
-    if (apic_index[id] != this)
-      BX_PANIC(("inconsistent APIC id table"));
-    apic_index[id] = NULL;
-  }
   BX_INFO (("set APIC ID to %d", newid));
   id = newid;
-  if (id != APIC_UNKNOWN_ID) {
-    if (apic_index[id] != NULL)
-      BX_PANIC(("duplicate APIC id assigned"));
-    apic_index[id] = this;
-  }
-}
-
-void bx_generic_apic_c::reset_all_ids(void)
-{
-  for (int i=0; i<APIC_MAX_ID; i++) {
-    if (apic_index[i]) 
-      apic_index[i]->set_id (APIC_UNKNOWN_ID);
-  }
 }
 
 bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
@@ -111,289 +204,6 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   }
 }
 
-/* apic_mask is the bitmask of apics allowed to arbitrate here */
-int bx_generic_apic_c::apic_bus_arbitrate(Bit32u apic_mask)
-{
-  int winning_arb_id = -1, winning_id = -1, __arb_id, i;
-  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-    if (apic_mask & (1<<i)) {
-      __arb_id = local_apic_index[i]->get_arb_id();
-      if (__arb_id > winning_arb_id) {
-        winning_arb_id = __arb_id;
-	winning_id = i;
-      }
-    }
-  }
-  BX_ASSERT(winning_id >= 0);
-  return winning_id;
-}
- 
-/* get the CPU with the lowest arbitration ID */
-int bx_generic_apic_c::apic_bus_arbitrate_lowpri(Bit32u apic_mask)
-{
-  // XXX initial winning_apr value, the datasheets say 15
-  int winning_apr = APIC_MAX_ID, winning_id = 0, __apr, i;
-  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-    if (apic_mask & (1<<i)) {
-      __apr = local_apic_index[i]->get_apr();
-      if (__apr < winning_apr) {
-	winning_apr = __apr;
-	winning_id = i;
-      }
-    }
-  }
-  return winning_id;
-}
-
-void bx_generic_apic_c::arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode)
-{
-  int trigger_order[BX_NUM_LOCAL_APICS], winner, i, j = 0;
-
-  /* bus arbitrate ... */
-  for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-    if (deliver_bitmask & (1<<i)) {
-      winner = apic_bus_arbitrate(deliver_bitmask);
-      local_apic_index[winner]->adjust_arb_id(winner);
-      trigger_order[j++] = winner;
-      deliver_bitmask &= ~(1<<i);
-    }
-  }
-
-  for (i = 0; i < j; i++) {
-    local_apic_index[trigger_order[i]]->trigger_irq(vector, trigger_order[i], trigger_mode);
-  }
-}
- 
-void bx_generic_apic_c::arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode)
-{
-  int winner = apic_bus_arbitrate(deliver_bitmask);
-  local_apic_index[winner]->adjust_arb_id(winner);
-  local_apic_index[winner]->trigger_irq(vector, winner, trigger_mode);
-}
-
-#ifdef BX_IMPLEMENT_XAPIC
-  #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0xff
-#else
-  #define APIC_BROADCAST_PHYSICAL_DESTINATION_MODE 0x0f
-#endif
-
-Bit32u bx_generic_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
-{
-  Bit32u mask = 0;
-  if (dest_mode == 0) {
-    // physical 
-    if (dest < APIC_MAX_ID)
-      mask = 1 << dest;
-    else {
-      if (dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
-      {
-        // physical destination 0xff means everybody. only local APICs can
-        // send this.
-        BX_ASSERT (get_type() == APIC_TYPE_LOCAL_APIC);
-        mask = LOCAL_APIC_ALL_MASK; 
-      } 
-      else BX_PANIC(("bx_generic_apic_c::deliver: illegal physical destination %02x", dest));
-    }
-  } else {
-    // logical destination. call match_logical_addr for each local APIC.
-    if (dest == 0) return 0;
-    for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
-      if (local_apic_index[i] && local_apic_index[i]->match_logical_addr(dest))
-        mask |= (1<<i);
-    }
-  }
-  if (bx_dbg.apic)
-    BX_INFO(("generic::get_delivery_bitmask returning 0x%04x", mask));
-  return mask;
-}
-
-bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector,
-			    Bit8u level, Bit8u trig_mode)
-{
-  // return false if we can't deliver for any reason, so that the caller
-  // knows not to clear its IRR.
-  Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
-  // arbitrate by default
-  int arbitrate = 1;
-  int broadcast = (deliver_bitmask == LOCAL_APIC_ALL_MASK); // all local apics
-  bx_bool once = 0;
-  int i;
-
-  // prune nonexistents apics from list
-  for (int bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
-  {
-    if (!local_apic_index[bit]) deliver_bitmask &= ~(1<<bit);
-  }
-
-  // mask must include ONLY local APICs, or we will have problems.
-  if (!deliver_bitmask) {
-    BX_PANIC(("deliver failed for vector %02x: no APICs in destination bitmask", vector));
-    return 0;
-  }
-
-  switch (delivery_mode) {
-    case APIC_DM_LOWPRI:
-      /* fall through, we've already done low priority arbitration */
-      BX_DEBUG (("low priority interrupt received with deliver_bitmask=%u", deliver_bitmask));
-      arbitrate = 0;
-    case APIC_DM_FIXED:
-      /* once = false */
-      break;
-    case APIC_DM_INIT:
-      BX_DEBUG (("INIT received with deliver_bitmask=%u", deliver_bitmask));
-
-      // NOTE: special behavior of local apics is handled in
-      // bx_local_apic_c::deliver
-
-      // normal INIT IPI sent to processors
-      for (i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-        if (deliver_bitmask & (1<<i)) local_apic_index[i]->init();
-      }
-      return 1;
-    
-    case APIC_DM_EXTINT:
-      for (i = 0; i < BX_NUM_LOCAL_APICS; i++)
-        if (deliver_bitmask & (1<<i))
-	  local_apic_index[i]->bypass_irr_isr = 1;
-       break;
-    case APIC_DM_SMI:
-      BX_INFO(("APIC delivery mode SMI is not implemented"));
-      break;
-    case APIC_DM_NMI:
-      BX_INFO(("APIC delivery mode NMI is not implemented"));
-      break;
-    case 3:  // reserved
-      break;
-    default:
-      BX_PANIC(("APIC delivery mode %d not implemented", delivery_mode));
-      return 0;
-  }
-  // Fixed delivery mode
-  if (bx_dbg.apic)
-    BX_INFO(("delivered vector=0x%02x to bitmask=%04x", (int)vector, deliver_bitmask));
-
-  // delivery only to one APIC
-  if (once) {
-    if (arbitrate)
-      arbitrate_and_trigger_one(deliver_bitmask, vector, trig_mode);
-    else {
-      for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-        if (deliver_bitmask & (1<<i)) {
-          local_apic_index[i]->trigger_irq(vector, i, trig_mode);
-          break;
-        }
-      }
-    }
-  } else {
-    if (arbitrate && !broadcast)
-      arbitrate_and_trigger(deliver_bitmask, vector, trig_mode);
-    else {
-      for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-        if (deliver_bitmask & (1<<i))
-          local_apic_index[i]->trigger_irq(vector, i, trig_mode);
-      }
-    }
-  }
-
-  return 1;
-}
-
-Bit32u bx_local_apic_c::get_delivery_bitmask (Bit8u dest, Bit8u dest_mode)
-{
-  int dest_shorthand = (icr_lo >> 18) & 3;
-
-  Bit32u mask = 0; /* stop compiler warnings */
-
-  switch (dest_shorthand) {
-  case 0:  // no shorthand, use real destination value
-    mask = bx_generic_apic_c::get_delivery_bitmask (dest, dest_mode);
-    break;
-  case 1:  // self
-    mask = (1<<id);
-    break;
-  case 2:  // all including self
-    mask = (LOCAL_APIC_ALL_MASK);
-    break;
-  case 3:  // all but self
-    mask = (LOCAL_APIC_ALL_MASK) & ~(1<<id);
-    break;
-  default:
-    BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
-  }
-
-  // prune nonexistents apics from list
-  for (int bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
-  {
-    if (!local_apic_index[bit]) mask &= ~(1<<bit);
-  }
-
-  BX_DEBUG (("local::get_delivery_bitmask returning 0x%04x shorthand=%#x", mask, dest_shorthand));
-  if (mask == 0)
-    BX_INFO((">>WARNING<< returning a mask of 0x0, dest=%#x dest_mode=%#x", dest, dest_mode));
-
-  return mask;
-}
-
-bx_bool bx_local_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode,
-				  Bit8u vector, Bit8u level, Bit8u trig_mode)
-{
-  // In this function, implement only the behavior that is specific to
-  // the local apic.  For general behavior of all apics, just send it to
-  // the base class.
-  Bit32u deliver_bitmask = get_delivery_bitmask (dest, dest_mode);
-  int found_focus = 0;
-  int bit;
-
-  switch (delivery_mode) {
-  case APIC_DM_LOWPRI: // lowest priority of destinations
-    // if we're focus processor, handle it, otherwise
-    // look for the focus processor.
-    dest = is_focus(vector) ? get_id() : 0;
-    if (dest) break;
-    for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-      if (local_apic_index[i]) {
-        if (local_apic_index[i]->is_focus(vector)) {
-          found_focus = 1;
-          dest = i;
-          break;	// stop scanning
-        }
-      }
-    }
-    if (!found_focus) dest = apic_bus_arbitrate_lowpri(0xff);
-    else return 0;
-    break;
-
-  case APIC_DM_INIT:
-    if (level == 0 && trig_mode == 1)
-    {
-      // special mode in local apic.  See "INIT Level Deassert" in the
-      // Intel Soft. Devel. Guide Vol 3, page 7-34.  This magic code
-      // causes all APICs (regardless of dest address) to set their
-      // arbitration ID to their APIC ID. Not supported by Pentium 4
-      // and Intel Xeon processors.
-      BX_INFO (("INIT with Level&Deassert: synchronize arbitration IDs"));
-      for (bit=0; bit<BX_NUM_LOCAL_APICS; bit++)
-        if (local_apic_index[bit])
-          local_apic_index[bit]->set_arb_id(local_apic_index[bit]->get_id());
-      return 1;
-    }
-    break; // we'll fall through to generic_deliver:case INIT
-
-  case APIC_DM_SIPI:  // Start Up (SIPI, local apic only)
-    for (bit=0; bit<BX_NUM_LOCAL_APICS; bit++) {
-      if (deliver_bitmask & (1<<bit))
-        local_apic_index[bit]->startup_msg(vector);
-    }
-    return 1;
-
-  default:
-    break;
-  }
-
-  // not any special case behavior, just use generic apic code.
-  return bx_generic_apic_c::deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
-}
-
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : bx_generic_apic_c(), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
@@ -406,6 +216,7 @@ bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   INTR = 0;
 }
 
+/*
 Bit32u bx_local_apic_c::get_arb_id (void)
 {
   return arb_id;
@@ -416,12 +227,13 @@ void bx_local_apic_c::set_arb_id (Bit32u new_arb_id)
   BX_DEBUG (("set arbitration ID to %d", new_arb_id));
   arb_id = new_arb_id;
 }
+*/
 
 void bx_local_apic_c::reset() 
 {
   /* same as INIT but also sets arbitration ID and APIC ID */
   init();
-  arb_id = id;
+//arb_id = id;
 }
 
 void bx_local_apic_c::init()
@@ -432,9 +244,6 @@ void bx_local_apic_c::init()
 
   BX_INFO(("local apic in %s initializing",
       (cpu && cpu->name) ? cpu->name : "?"));
-
-  if (id!=APIC_UNKNOWN_ID)
-      local_apic_index[id] = this;
 
   // default address for a local APIC, can be moved
   base_addr = APIC_BASE_ADDR;
@@ -472,9 +281,7 @@ void bx_local_apic_c::init()
 
 void bx_local_apic_c::set_id (Bit8u newid)
 {
-  local_apic_index[id] = NULL;
   bx_generic_apic_c::set_id (newid);
-  local_apic_index[id] = this;
   sprintf (cpu->name, "CPU apicid=%02x", (Bit32u)id);
   if (id < APIC_MAX_ID) {
     char buffer[16];
@@ -540,24 +347,8 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
       shadow_error_status = 0;
       break;
     case 0x300: // interrupt command reg 0-31
-      {
-        icr_lo = value & ~(1<<12);  // force delivery status bit = 0 (idle)
-        int dest = (icr_hi >> 24) & 0xff;
-        int trig_mode = (icr_lo >> 15) & 1;
-        int level = (icr_lo >> 14) & 1;
-        int dest_mode = (icr_lo >> 11) & 1;
-        int delivery_mode = (icr_lo >> 8) & 7;
-        int vector = (icr_lo & 0xff);
-        // deliver will call get_delivery_bitmask to decide who to send to.
-        // This local_apic class redefines get_delivery_bitmask to 
-        // implement the destination shorthand field, which doesn't exist
-        // for all APICs.
-        bx_bool accepted = deliver (dest, dest_mode, delivery_mode, vector, level, trig_mode);
-        if (!accepted) {
-          BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
-          shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
-        }
-      }
+      icr_lo = value & ~(1<<12);  // force delivery status bit = 0 (idle)
+      send_ipi();
       break;
     case 0x310: // interrupt command reg 31-63
       icr_hi = value & 0xff000000;
@@ -619,6 +410,53 @@ void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
   }
 }
 
+void bx_local_apic_c::send_ipi(void)
+{
+  int dest = (icr_hi >> 24) & 0xff;
+  int dest_shorthand = (icr_lo >> 18) & 3;
+  int trig_mode = (icr_lo >> 15) & 1;
+  int level = (icr_lo >> 14) & 1;
+  int dest_mode = (icr_lo >> 11) & 1;
+  int delivery_mode = (icr_lo >> 8) & 7;
+  int vector = (icr_lo & 0xff);
+  int accepted = 0;
+
+  if (delivery_mode == APIC_DM_INIT)
+  {
+    if (level == 0 && trig_mode == 1) {
+      // special mode in local apic.  See "INIT Level Deassert" in the
+      // Intel Soft. Devel. Guide Vol 3, page 7-34.  This magic code
+      // causes all APICs (regardless of dest address) to set their
+      // arbitration ID to their APIC ID. Not supported by Pentium 4
+      // and Intel Xeon processors.
+      return; // we not model APIC bus arbitration ID anyway
+    }
+  }
+
+  switch (dest_shorthand) {
+  case 0:  // no shorthand, use real destination value
+    accepted = apic_bus_deliver_interrupt(vector, dest, delivery_mode, dest_mode, level, trig_mode);
+    break;
+  case 1:  // self
+    trigger_irq(vector, trig_mode);
+    accepted = 1;
+    break;
+  case 2:  // all including self
+    accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
+    break;
+  case 3:  // all but self
+    accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, get_id());
+    break;
+  default:
+    BX_PANIC(("Invalid desination shorthand %#x\n", dest_shorthand));
+  }
+
+  if (! accepted) {
+    BX_DEBUG(("An IPI wasn't accepted, raise APIC_ERR_TX_ACCEPT_ERR"));
+    shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
+  }
+}
+
 void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
 {
   BX_DEBUG(("write %08x to spurious interrupt register", value));
@@ -650,6 +488,10 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
       if (vec != (int) spurious_vector) {
         BX_DEBUG(("%s: local apic received EOI, hopefully for vector 0x%02x", cpu->name, vec));
         isr[vec] = 0; 
+        if (tmr[vec]) {
+            apic_bus_broadcast_eoi(vec);
+            tmr[vec] = 0;
+        }
         service_local_apic();
       }
   }
@@ -815,7 +657,6 @@ void bx_local_apic_c::service_local_apic(void)
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   if (first_isr >= 0 && first_irr >= first_isr) {
     BX_DEBUG(("local apic (%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
-    // shadow_error_status |= APIC_ERR_TX_ACCEPT_ERR;
     return;
   }
   if ((first_irr & 0xf0) <= (int)(task_priority & 0xf0)) {
@@ -830,11 +671,43 @@ void bx_local_apic_c::service_local_apic(void)
   cpu->async_event = 1;
 }
 
-void bx_local_apic_c::trigger_irq (unsigned vector, unsigned from, unsigned trigger_mode)
+bx_bool bx_local_apic_c::deliver (Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode)
+{
+  switch (delivery_mode) {
+  case APIC_DM_FIXED:
+  case APIC_DM_LOWPRI:
+    BX_DEBUG(("Deliver lowest priority of fixed interrupt vector %02x", vector));
+    trigger_irq(vector, trig_mode);
+    break;
+  case APIC_DM_SMI:
+    BX_PANIC(("Delivery if SMI still not implemented !"));
+    return 0;
+  case APIC_DM_NMI:
+    BX_PANIC(("Delivery if SMI still not implemented !"));
+    return 0;
+  case APIC_DM_INIT:
+    BX_DEBUG(("Deliver INIT IPI"));
+    init();
+    break;
+  case APIC_DM_SIPI:
+    BX_DEBUG(("Deliver Start Up IPI"));
+    startup_msg(vector);
+    break;
+  case APIC_DM_EXTINT:
+    BX_DEBUG(("Deliver EXTINT vector %02x", vector));
+    bypass_irr_isr = 1;
+    trigger_irq(vector, trig_mode);
+    break;
+  default:
+    break;
+  }
+
+  return 1;
+}
+
+void bx_local_apic_c::trigger_irq (unsigned vector, unsigned trigger_mode)
 {
   BX_DEBUG(("Local apic on %s: trigger interrupt vector=0x%x", cpu->name, vector));
-  /* check for local/apic_index usage */
-  BX_ASSERT(from == id);
   
   if (vector > BX_APIC_LAST_VECTOR || vector < BX_APIC_FIRST_VECTOR) {
     shadow_error_status |= APIC_ERR_RX_ILLEGAL_VEC;
@@ -860,7 +733,7 @@ service_vector:
   service_local_apic();
 }
 
-void bx_local_apic_c::untrigger_irq (unsigned vector, unsigned from, unsigned trigger_mode)
+void bx_local_apic_c::untrigger_irq (unsigned vector, unsigned trigger_mode)
 {
   BX_DEBUG(("Local apic on %s: untrigger interrupt vector=0x%x", cpu->name, vector));
   // hardware says "no more".  clear the bit.  If the CPU hasn't yet
@@ -983,24 +856,6 @@ bx_bool bx_local_apic_c::is_focus(Bit8u vector)
   return (irr[vector] || isr[vector]) ? 1 : 0;
 }
 
-void bx_local_apic_c::adjust_arb_id(int winning_id)
-{
-  int __arb_id, __win_arb_id;
-  // adjust arbitration priorities
-  for (int i = 0; i < BX_NUM_LOCAL_APICS; i++) {
-    if (i != winning_id) {
-      __arb_id = local_apic_index[i]->get_arb_id();
-      if (__arb_id == APIC_MAX_ID) {
-        __win_arb_id = local_apic_index[winning_id]->get_arb_id();
-        local_apic_index[i]->set_arb_id(__win_arb_id+1);
-      } 
-      else
-        local_apic_index[i]->set_arb_id(__arb_id+1);
-    } else // the winner drops to lowest
-      local_apic_index[winning_id]->set_arb_id(0);
-  }
-}
-
 void bx_local_apic_c::periodic_smf(void *this_ptr)
 {
   bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
@@ -1020,7 +875,7 @@ void bx_local_apic_c::periodic(void)
     // Periodic mode.
     // If timer is not masked, trigger interrupt.
     if ((timervec & 0x10000)==0) {
-      trigger_irq (timervec & 0xff, id, APIC_EDGE_TRIGGERED);
+      trigger_irq (timervec & 0xff, APIC_EDGE_TRIGGERED);
     }
     // Reload timer values.
     timer_current = timer_initial;
@@ -1032,7 +887,7 @@ void bx_local_apic_c::periodic(void)
     timer_current = 0;
     // If timer is not masked, trigger interrupt.
     if ((timervec & 0x10000)==0) {
-      trigger_irq (timervec & 0xff, id, APIC_EDGE_TRIGGERED);
+      trigger_irq (timervec & 0xff, APIC_EDGE_TRIGGERED);
     }
     timer_active = 0;
     BX_DEBUG (("%s: local apic timer (one-shot) triggered int", cpu->name));

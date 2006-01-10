@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.24 2005-12-26 19:42:09 sshwarts Exp $
+// $Id: apic.h,v 1.25 2006-01-10 06:13:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,19 +31,19 @@
 
 #define APIC_BASE_ADDR    0xfee00000  // default APIC address
 
-// todo: Pentium APIC_VERSION_ID (Pentium has 3 LVT entries)
-/*
 #if BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2
+  #define BX_IMPLEMENT_XAPIC 1
+#endif
+
+#ifdef BX_IMPLEMENT_XAPIC
 #  define APIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
 #else
 #  define APIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries
 #endif
-*/
-
-// Currenly support only P6 Local APIC
-#define APIC_VERSION_ID 0x00040010    // P6 has 4 LVT entries
 
 #if BX_SUPPORT_APIC
+
+#define BX_CPU_APIC(i) (&(BX_CPU(i)->local_apic))
 
 typedef enum {
   APIC_TYPE_IOAPIC,
@@ -67,18 +67,11 @@ public:
   void set_base (bx_address newbase);
   void set_id (Bit8u newid);
   Bit8u get_id () const { return id; }
-  static void reset_all_ids ();
   bx_bool is_selected (bx_address addr, Bit32u len);
   void read (Bit32u addr, void *data, unsigned len);
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
   virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
-  virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual bx_bool deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
   virtual bx_apic_type_t get_type () = 0;
-  int apic_bus_arbitrate(Bit32u apic_mask);
-  int apic_bus_arbitrate_lowpri(Bit32u apic_mask);
-  void arbitrate_and_trigger(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode);
-  void arbitrate_and_trigger_one(Bit32u deliver_bitmask, Bit32u vector, Bit8u trigger_mode);
 };
 
 #define BX_APIC_FIRST_VECTOR	0x10
@@ -93,9 +86,6 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
   Bit32u  spurious_vector;
   bx_bool software_enabled;
   bx_bool focus_disable;
-
-  // APIC arbiration ID (not supported by XAPIC)
-  Bit32u arb_id;
 
   Bit32u task_priority;         // Task priority (TPR)
   Bit32u log_dest;              // Logical destination (LDR)
@@ -161,10 +151,10 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 
   // corresponding BX_CPU_ID for the local APIC
   unsigned cpu_id;
+  bx_bool bypass_irr_isr;
 
 public:
   bx_bool INTR;
-  bx_bool bypass_irr_isr;
   bx_local_apic_c(BX_CPU_C *cpu);
   virtual ~bx_local_apic_c(void) { }
   virtual void reset (void);
@@ -177,30 +167,31 @@ public:
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
-  void untrigger_irq (unsigned num, unsigned from, unsigned trigger_mode);
+  void trigger_irq (unsigned num, unsigned trigger_mode);
+  void untrigger_irq (unsigned num, unsigned trigger_mode);
   Bit8u acknowledge_int (void);  // only the local CPU should call this
   int highest_priority_int (Bit8u *array);
   void receive_EOI(Bit32u value);
+  void send_ipi(void);
   void write_spurious_interrupt_register(Bit32u value);
   void service_local_apic(void);
   void print_status(void);
-  virtual bx_bool match_logical_addr (Bit8u address);
+  bx_bool match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
-  virtual Bit32u get_delivery_bitmask (Bit8u dest, Bit8u dest_mode);
-  virtual bx_bool deliver (Bit8u destination, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u level, Bit8u trig_mode);
+  virtual bx_bool deliver (Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr (void);
   void  set_tpr (Bit8u tpr);
   Bit8u get_ppr (void);
   Bit8u get_apr (void);
   bx_bool is_focus(Bit8u vector);
-  void adjust_arb_id(int winning_id);	// adjust the arbitration id after a bus arbitration
   static void periodic_smf(void *);
   void periodic(void);
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
+/*
   Bit32u get_arb_id (void);
   void   set_arb_id (Bit32u newid);
+*/
 };
 
 // For P6 and Pentium family processors the local APIC ID feild is 4 bits.
@@ -212,8 +203,9 @@ public:
   #define APIC_ID_MASK 0x0f
 #endif
 
-extern bx_generic_apic_c *apic_index[APIC_MAX_ID];
-extern bx_local_apic_c *local_apic_index[BX_NUM_LOCAL_APICS];
+int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast);
+int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bit8u dest_mode, bx_bool level, bx_bool trig_mode);
+int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu);
 
 #endif // if BX_SUPPORT_APIC
 

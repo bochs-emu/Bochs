@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.23 2006-01-08 12:01:24 vruppert Exp $
+// $Id: ioapic.cc,v 1.24 2006-01-10 06:13:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -54,9 +54,7 @@ void bx_ioapic_c::init ()
   irr = 0;
 }
 
-void bx_ioapic_c::reset (unsigned type) 
-{
-}
+void bx_ioapic_c::reset (unsigned type) { }
 
 void bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
 {
@@ -166,6 +164,11 @@ void bx_ioapic_c::set_irq_level(Bit8u int_in, bx_bool level)
   }
 }
 
+void bx_ioapic_c::receive_eoi(Bit8u vector)
+{
+  BX_DEBUG(("IOAPIC: received EOI for vector %d", vector));
+}
+
 void bx_ioapic_c::service_ioapic ()
 {
   static unsigned int stuck = 0;
@@ -181,7 +184,7 @@ void bx_ioapic_c::service_ioapic ()
         if (entry->delivery_mode == 7) {
           BX_PANIC(("ExtINT not implemented yet"));
         }
-        bx_bool done = deliver (entry->dest, entry->dest_mode, entry->delivery_mode, entry->vector, entry->polarity, entry->trig_mode);
+        bx_bool done = apic_bus_deliver_interrupt(entry->vector, entry->dest, entry->delivery_mode, entry->dest_mode, entry->polarity, entry->trig_mode);
         if (done) {
           if (! entry->trig_mode)
             irr &= ~mask;

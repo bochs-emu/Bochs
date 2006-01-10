@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.31 2005-12-24 16:07:47 akrisak Exp $
+// $Id: dbg_main.cc,v 1.32 2006-01-10 06:13:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2945,9 +2945,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   }
   else if ( !strcmp(symbol, "cpu") ) {
 #if ((BX_SMP_PROCESSORS>1) && (BX_SUPPORT_APIC))
-      if ((val > BX_SMP_PROCESSORS) 
-    || (val >= APIC_MAX_ID) 
-    || (apic_index[val] == NULL)) {
+      if (val > BX_SMP_PROCESSORS) {
         dbg_printf ("invalid cpu id number %d\n", val);
         return;
       }

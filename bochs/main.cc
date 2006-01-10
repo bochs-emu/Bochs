@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.299 2006-01-05 21:39:11 sshwarts Exp $
+// $Id: main.cc,v 1.300 2006-01-10 06:13:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -843,16 +843,12 @@ int bx_init_hardware()
   BX_INFO(("  VGA extension support: %s %s",BX_SUPPORT_VBE?"vbe":"",
            BX_SUPPORT_CLGD54XX?"cirrus":""));
 
-  // set up memory and CPU objects
-#if BX_SUPPORT_APIC
-  bx_generic_apic_c::reset_all_ids ();
-#endif
-
   // Check if there is a romimage
   if (strcmp(bx_options.rom.Opath->getptr (),"") == 0) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
   }
 
+  // set up memory and CPU objects
   Bit32u memSize = bx_options.memory.Osize->get ()*1024*1024;
 
 #if BX_SUPPORT_ICACHE
