@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.30 2005-11-30 18:34:59 vruppert Exp $
+// $Id: pciusb.cc,v 1.31 2006-01-11 21:39:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -56,8 +56,8 @@
 
 bx_pciusb_c* theUSBDevice = NULL;
 
-const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 1, 4, 0, 0, 0, 1, 0, 0, 0,
-                              2, 1, 2, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
+                              3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   int
 libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -165,6 +165,7 @@ bx_pciusb_c::reset(unsigned type)
       { 0x22, 0x00 }, { 0x23, 0x00 },
       { 0x3c, 0x00 },                 // IRQ
       { 0x3d, BX_PCI_INTD },          // INT
+      { 0x60, 0x10 },                 // USB revision 1.0
       { 0x6a, 0x01 },                 // USB clock
       { 0xc1, 0x20 }                  // PIRQ enable
 
@@ -358,7 +359,9 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
       break;
 
     case 0x10: // port #1
+    case 0x11:
     case 0x12: // port #2
+    case 0x13:
       port = (offset & 0x0F) >> 1;
       if (port < USB_NUM_PORTS) {
         val = BX_USB_THIS hub[0].usb_port[port].suspend << 12
@@ -373,11 +376,12 @@ bx_pciusb_c::read(Bit32u address, unsigned io_len)
               | BX_USB_THIS hub[0].usb_port[port].enabled << 2
               | BX_USB_THIS hub[0].usb_port[port].connect_changed << 1
               | BX_USB_THIS hub[0].usb_port[port].status;
+        if (offset & 1) val >>= 8;
         break;
       } // else fall through to default
     default:
       val = 0xFF7F; // keep compiler happy
-      BX_PANIC(("unsupported io read from address=0x%04x!", (unsigned) address));
+      BX_ERROR(("unsupported io read from address=0x%04x!", (unsigned) address));
       break;
   }
 
@@ -534,7 +538,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x10: // port #1
     case 0x12: // port #2
       port = (offset & 0x0F) >> 1;
-      if (port < USB_NUM_PORTS) {
+      if ((port < USB_NUM_PORTS) && (io_len == 2)) {
         // If the ports reset bit is set, don't allow any writes unless the new write will clear the reset bit
         if (BX_USB_THIS hub[0].usb_port[port].reset & (value & (1<<9)))
           break;
@@ -576,7 +580,7 @@ bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
       // else fall through to default
     default:
-      BX_PANIC(("unsupported io write to address=0x%04x!", (unsigned) address));
+      BX_ERROR(("unsupported io write to address=0x%04x!", (unsigned) address));
       break;
   }
 }
