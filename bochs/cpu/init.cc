@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.76 2005-12-12 19:54:48 sshwarts Exp $
+// $Id: init.cc,v 1.77 2006-01-11 18:22:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -162,9 +162,12 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 {
   // BX_CPU_C constructor
   BX_CPU_THIS_PTR set_INTR (0);
+
 #if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR local_apic.init ();
+  BX_CPU_THIS_PTR local_apic.set_id(BX_CPU_ID);
+  BX_CPU_THIS_PTR local_apic.init();
 #endif
+
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
 
@@ -282,7 +285,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 // <TAG-INIT-CPU-END>
 
   mem = addrspace;
-  sprintf (name, "CPU %d", which_cpu());
+  sprintf (name, "CPU %d", BX_CPU_ID);
 
 #if BX_WITH_WX
   static bx_bool first_time = 1;
@@ -299,7 +302,6 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     bx_list_c *list = new bx_list_c (BXP_CPU_PARAMETERS, "CPU State", "", 60);
 #define DEFPARAM_NORMAL(name,field) \
     list->add (new bx_shadow_num_c (BXP_CPU_##name, #name, "", &(field)))
-
 
       DEFPARAM_NORMAL (EAX, EAX);
       DEFPARAM_NORMAL (EBX, EBX);
@@ -408,7 +410,6 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     DEFPARAM_LAZY_EFLAG(AF);
     DEFPARAM_LAZY_EFLAG(PF);
     DEFPARAM_LAZY_EFLAG(CF);
-
 
     // restore defaults
     bx_param_num_c::set_default_base (oldbase);

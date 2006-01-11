@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.300 2006-01-10 06:13:25 sshwarts Exp $
+// $Id: main.cc,v 1.301 2006-01-11 18:22:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -199,7 +199,7 @@ int bxmain () {
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
-    char *ci_name = ci_param->get_choice (ci_param->get ());
+    char *ci_name = ci_param->get_choice (ci_param->get());
     if (!strcmp(ci_name, "textconfig")) {
 #if BX_USE_TEXTCONFIG
       init_text_config_interface ();   // in textconfig.h
@@ -640,9 +640,9 @@ bx_bool load_and_init_display_lib ()
   }
   BX_ASSERT (bx_gui == NULL);
   bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
-  char *ci_name = ci_param->get_choice (ci_param->get ());
+  char *ci_name = ci_param->get_choice (ci_param->get());
   bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
-  char *gui_name = gui_param->get_choice (gui_param->get ());
+  char *gui_name = gui_param->get_choice (gui_param->get());
   if (!strcmp(ci_name, "wx")) {
     BX_ERROR(("change of the config interface to wx not implemented yet"));
   }
@@ -652,7 +652,7 @@ bx_bool load_and_init_display_lib ()
     BX_ERROR (("wxWidgets was not used as the configuration interface, so it cannot be used as the display library"));
     // choose another, hopefully different!
     gui_param->set (0);
-    gui_name = gui_param->get_choice (gui_param->get ());
+    gui_name = gui_param->get_choice (gui_param->get());
     if (!strcmp (gui_name, "wx")) {
       BX_PANIC (("no alternative display libraries are available"));
       return false;
@@ -740,7 +740,7 @@ bx_begin_simulation (int argc, char *argv[])
   {
     bx_init_hardware();
 
-    if (bx_options.load32bitOSImage.OwhichOS->get ()) {
+    if (bx_options.load32bitOSImage.OwhichOS->get()) {
       void bx_load32bitOSimagehack(void);
       bx_load32bitOSimagehack();
     }
@@ -756,7 +756,7 @@ bx_begin_simulation (int argc, char *argv[])
     // until init_done is set.  This forces the set handler to be called,
     // which sets up the mouse enabled GUI-specific stuff correctly.
     // Not a great solution but it works. BBD
-    bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get ());
+    bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get());
 
     if (BX_SMP_PROCESSORS == 1) {
       // only one processor, run as fast as possible by not messing with
@@ -791,18 +791,18 @@ int bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  if (SIM->get_param_enum(BXP_BOCHS_START)->get ()==BX_QUICK_START) {
+  if (SIM->get_param_enum(BXP_BOCHS_START)->get()==BX_QUICK_START) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = SIM->get_default_log_action (level);
       io->set_log_action (level, action);
     }
   }
 
-  bx_pc_system.init_ips(bx_options.Oips->get ());
+  bx_pc_system.init_ips(bx_options.Oips->get());
 
   if(bx_options.log.Ofilename->getptr()[0]!='-') {
-    BX_INFO (("using log file %s", bx_options.log.Ofilename->getptr ()));
-    io->init_log(bx_options.log.Ofilename->getptr ());
+    BX_INFO (("using log file %s", bx_options.log.Ofilename->getptr()));
+    io->init_log(bx_options.log.Ofilename->getptr());
   }
 
   io->set_log_prefix(bx_options.log.Oprefix->getptr());
@@ -844,86 +844,58 @@ int bx_init_hardware()
            BX_SUPPORT_CLGD54XX?"cirrus":""));
 
   // Check if there is a romimage
-  if (strcmp(bx_options.rom.Opath->getptr (),"") == 0) {
+  if (strcmp(bx_options.rom.Opath->getptr(),"") == 0) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
   }
 
   // set up memory and CPU objects
-  Bit32u memSize = bx_options.memory.Osize->get ()*1024*1024;
+  Bit32u memSize = bx_options.memory.Osize->get()*1024*1024;
 
 #if BX_SUPPORT_ICACHE
   pageWriteStampTable.alloc(memSize);
 #endif
 
-#if BX_SMP_PROCESSORS==1
+#if BX_SMP_PROCESSORS == 1
+  // the memory object is static in single CPU configuration
+#else
+  BX_MEM(0) = new BX_MEM_C ();
+#endif
+
   BX_MEM(0)->init_memory(memSize);
 
   // First load the BIOS and VGABIOS
-  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get (), 0);
-  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000, 1);
+  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr(), bx_options.rom.Oaddress->get(), 0);
+  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr(), 0xc0000, 1);
 
   // Then load the optional ROM images
-  if (strcmp(bx_options.optrom[0].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[1].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[2].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 2);
+  if (strcmp(bx_options.optrom[0].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr(), bx_options.optrom[0].Oaddress->get(), 2);
+  if (strcmp(bx_options.optrom[1].Opath->getptr(), "") !=0 )
+    BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr(), bx_options.optrom[1].Oaddress->get(), 2);
+  if (strcmp(bx_options.optrom[2].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr(), bx_options.optrom[2].Oaddress->get(), 2);
+  if (strcmp(bx_options.optrom[3].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr(), bx_options.optrom[3].Oaddress->get(), 2);
 
   // Then load the optional RAM images
-  if (strcmp(bx_options.optram[0].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr (), bx_options.optram[0].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[1].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr (), bx_options.optram[1].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[2].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr (), bx_options.optram[2].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[3].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
+  if (strcmp(bx_options.optram[0].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr(), bx_options.optram[0].Oaddress->get(), 2);
+  if (strcmp(bx_options.optram[1].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr(), bx_options.optram[1].Oaddress->get(), 2);
+  if (strcmp(bx_options.optram[2].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr(), bx_options.optram[2].Oaddress->get(), 2);
+  if (strcmp(bx_options.optram[3].Opath->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr(), bx_options.optram[3].Oaddress->get(), 2);
 
+#if BX_SMP_PROCESSORS == 1
   BX_CPU(0)->initialize(BX_MEM(0));
-#if BX_SUPPORT_APIC
-  BX_CPU(0)->local_apic.set_id (0);
-#endif
   BX_CPU(0)->sanity_checks();
   BX_INSTR_INIT(0);
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
-  // SMP initialization
-  bx_mem_array[0] = new BX_MEM_C ();
-  bx_mem_array[0]->init_memory(memSize);
-
-  // First load the BIOS and VGABIOS
-  bx_mem_array[0]->load_ROM(bx_options.rom.Opath->getptr (), bx_options.rom.Oaddress->get (), 0);
-  bx_mem_array[0]->load_ROM(bx_options.vgarom.Opath->getptr (), 0xc0000, 1);
-
-  // Then load the optional ROM images
-  if (strcmp(bx_options.optrom[0].Opath->getptr (),"") !=0 )
-    bx_mem_array[0]->load_ROM(bx_options.optrom[0].Opath->getptr (), bx_options.optrom[0].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[1].Opath->getptr (),"") !=0 )
-    bx_mem_array[0]->load_ROM(bx_options.optrom[1].Opath->getptr (), bx_options.optrom[1].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[2].Opath->getptr (),"") !=0 )
-    bx_mem_array[0]->load_ROM(bx_options.optrom[2].Opath->getptr (), bx_options.optrom[2].Oaddress->get (), 2);
-  if (strcmp(bx_options.optrom[3].Opath->getptr (),"") !=0 )
-    bx_mem_array[0]->load_ROM(bx_options.optrom[3].Opath->getptr (), bx_options.optrom[3].Oaddress->get (), 2);
-
-  // Then load the optional RAM images
-  if (strcmp(bx_options.optram[0].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr (), bx_options.optram[0].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[1].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr (), bx_options.optram[1].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[2].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr (), bx_options.optram[2].Oaddress->get (), 2);
-  if (strcmp(bx_options.optram[3].Opath->getptr (),"") !=0 )
-    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr (), bx_options.optram[3].Oaddress->get (), 2);
-
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C(i);
-    BX_CPU(i)->initialize(bx_mem_array[0]);
-    // assign apic ID from the index of this loop
-    // if !BX_SUPPORT_APIC, this will not compile.
-    BX_CPU(i)->local_apic.set_id(i);
+    BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();
     BX_INSTR_INIT(i);
     BX_CPU(i)->reset(BX_RESET_HARDWARE);
@@ -1012,7 +984,7 @@ int bx_atexit(void)
 
 #if BX_SUPPORT_PCI
   if (SIM && SIM->get_init_done ()) {
-    if (bx_options.Oi440FXSupport->get ()) {
+    if (bx_options.Oi440FXSupport->get()) {
       bx_devices.pluginPciBridge->print_i440fx_state();
     }
   }

@@ -23,8 +23,11 @@ TODO (know issues in CPU model):
 
 [!] CPUID does not report 3DNow! instruction set
 
-[!] Some of APIC functionality (like spurious interrupt vector) still
-    not implemented
+[!] Some of APIC functionality still not implemented, for example
+
+    - Globally disabled APIC
+    - NMI, SMI, INIT signals, LVT pins handling 
+    - Filter interrupts according processor priority (PPR)
 
 [!] No support of AC flag (alignment checking) and #AC exception
 
