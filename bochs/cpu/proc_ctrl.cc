@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.128 2006-01-05 21:40:06 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.129 2006-01-13 11:11:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1427,6 +1427,7 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
 #endif
 
 #if BX_CPU_LEVEL >= 6
+  allowMask |= (1<<8);   /* PCE */
   allowMask |= (1<<9);   /* OSFXSR */
 #endif
 
