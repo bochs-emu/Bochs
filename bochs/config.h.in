@@ -754,8 +754,8 @@ typedef
 // if 1, don't do gpf on MSRs that we don't implement
 #define BX_IGNORE_BAD_MSR 0
 
-#if (BX_SUPPORT_VME && BX_CPU_LEVEL < 4)
-#error With CPU level < 4, you must disable v8086 mode extensions !
+#if (BX_SUPPORT_VME && BX_CPU_LEVEL < 5)
+#error With CPU level < 5, you must disable v8086 mode extensions !
 #endif
 
 #if (BX_SUPPORT_VME && !BX_SUPPORT_V8086_MODE)
@@ -798,20 +798,20 @@ typedef
 #error "SYSENTER/SYSEXIT only supported with CPU_LEVEL >= 6 !"
 #endif
 
-#if (BX_CPU_LEVEL<5 && BX_SUPPORT_PAE)
-#error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 5 !"
+#if (BX_CPU_LEVEL<6 && BX_SUPPORT_PAE)
+#error "Physical Address Extensions (PAE) only supported with CPU_LEVEL >= 6 !"
 #endif
-#if (BX_CPU_LEVEL<5 && BX_SUPPORT_GLOBAL_PAGES)
-#error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 5 !"
+#if (BX_CPU_LEVEL<6 && BX_SUPPORT_GLOBAL_PAGES)
+#error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 6 !"
 #endif
-#if (BX_CPU_LEVEL<4 && BX_SUPPORT_4MEG_PAGES)
-#error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 4 !"
+#if (BX_CPU_LEVEL<5 && BX_SUPPORT_4MEG_PAGES)
+#error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 5 !"
 #endif
 
 #if BX_SUPPORT_X86_64
 // Sanity checks to ensure that you cannot accidently use conflicting options.
 
-#if BX_CPU_LEVEL < 5
+#if BX_CPU_LEVEL < 6
 #error "X86-64 requires cpu level 6 or greater !"
 #endif
 #if (BX_SUPPORT_SSE<2)
