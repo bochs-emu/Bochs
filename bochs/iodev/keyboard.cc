@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.107 2006-01-08 15:23:24 vruppert Exp $
+// $Id: keyboard.cc,v 1.108 2006-01-14 12:34:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.107 2006-01-08 15:23:24 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.108 2006-01-14 12:34:14 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -510,8 +510,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         /* pass byte to keyboard */
         /* ??? should conditionally pass to mouse device here ??? */
         if (BX_KEY_THIS s.kbd_controller.kbd_clock_enabled==0) {
-          BX_ERROR(("keyboard disabled & send of byte %02x to kbd",
-            (unsigned) value));
+          set_kbd_clock_enable(1);
         }
         kbd_ctrl_to_kbd(value);
       }
