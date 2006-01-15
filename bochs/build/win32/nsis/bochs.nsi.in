@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.12 2006-01-08 17:16:30 vruppert Exp $
+; $Id: bochs.nsi.in,v 1.13 2006-01-15 21:00:50 vruppert Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -8,7 +8,7 @@
 ;
 ; Based on Example Script by Joost Verburg
 ; also original BOCHS script by Robert (segra)
-; updated for NSIS 2.03 by Volker Ruppert
+; updated for NSIS 2.12 by Volker Ruppert
 ;
 ;---------------------
 ;Include Modern UI
@@ -44,6 +44,7 @@
 
   ;Folder-select dialog
   InstallDir $PROGRAMFILES\Bochs-${VERSION}
+  InstallDirRegKey HKLM "Software\${NAME}" ""
 
 ;--------------------------------
 ;Interface Settings
@@ -202,7 +203,11 @@ Section -post
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "DisplayVersion" "${VERSION}"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "Publisher" "The Bochs Project"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "URLInfoAbout" "http://bochs.sourceforge.net"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "Readme" '$INSTDIR\Readme.txt'
+  WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoModify" "1"
+  WriteRegDWord HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "NoRepair" "1"
+  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "InstallLocation" '$INSTDIR\'
+  WriteRegExpandStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${NAME}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
 
   ; Write the uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
