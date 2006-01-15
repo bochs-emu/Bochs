@@ -1,14 +1,14 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.18 2005-12-03 09:56:05 vruppert Exp $
+$Id: development.dbk,v 1.19 2006-01-15 12:04:02 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
 -->
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.1//EN" [
 
-<!-- include definitions that are common to all bochs documentation -->
+<!-- include definitions that are common to all Bochs documentation -->
 <!ENTITY % bochsdefs SYSTEM "../include/defs.sgm">
 %bochsdefs;
 
@@ -103,7 +103,7 @@ that the CVS_RSH setting will be there every time you log in.
 
 <section><title>cvs checkout</title>
 <para>
-Finally, you should be able to do the checkout!  If you already have a bochs
+Finally, you should be able to do the checkout!  If you already have a Bochs
 subdirectory directory, move it out of the way because the checkout will
 overwrite it.
 </para>
@@ -119,7 +119,7 @@ In the CVSROOT variable, replace <replaceable>sfusername</replaceable> with your
 no need to add CVSROOT to your rc files because CVS will remember it
 after the checkout.  The -z3 (optional) just adds some compression to make 
 the checkout go faster.  Once all the files have been downloaded, you will
-have a bochs directory which is checked out with write access!
+have a Bochs directory which is checked out with write access!
 </para>
 </section> <!-- end cvs checkout -->
 
@@ -129,7 +129,7 @@ have a bochs directory which is checked out with write access!
 
 <section><title>Checking in files</title>
 <para>
-Once you have a bochs directory with cvs write access, you can compile the
+Once you have a Bochs directory with cvs write access, you can compile the
 files, edit them, test them, etc.  See the documentation section, "Tracking
 the source code with CVS" for more info on CVS, in the User Manual.
 (FIXME: add cross reference) But what's new and different is that you can now
@@ -200,7 +200,6 @@ And here is an aborted one:
 Ideas:
 - how to browse code with cvsweb
 - how to find an identifier, variable, or specific text in the code
-- write access CVS (must be an official developer on SF)
 - how to make patches with CVS
 </screen>
 </para>
@@ -209,6 +208,53 @@ Ideas:
 </chapter>
 
 <chapter id="about-the-code"><title>About the code</title>
+
+<section id="code-overview"><title>Overview</title>
+<para>
+The initial versions of some sections in this chapter are based on a document
+written by Peter "Firefly" Lund. It was added and updated in January 2006.
+</para>
+<para>
+The Bochs virtual PC consists of many pieces of hardware. At a bare minimum
+there are always a CPU, a PIT (Programmable Interval Timer), a PIC
+(Programmable Interrupt Controller), a DMA controller, some memory (this
+includes both RAM and BIOS ROMs), a video card (usually VGA), a keyboard port
+(also handles the mouse), an RTC with battery backed NVRAM, and some extra
+motherboard circuitry.
+</para>
+<para>
+There might also be a NE2K ethernet card, a PCI controller, a Sound Blaster 16,
+an IDE controller (+ harddisks/CDROM), a SCSI controller (+ harddisks), a
+floppy controller, an APIC ..
+</para>
+<para>
+There may also be more than one CPU.
+</para>
+<para>
+Most of these pieces of hardware have their own C++ class - and if Bochs is
+configured to have more than one piece of a type of hardware, each will have
+its own object.
+</para>
+<para>
+The pieces of hardware communicates over a couple of buses with each other -
+some of the things that the buses carry are reads and writes in memory space,
+reads and writes in I/O space, interrupt requests, interrupt acknowledges, DMA
+requests, DMA acknowledges, and NMI request/acknowledge. How that is simulated
+is explained later.&FIXME;
+</para>
+<para>
+Other important pieces of the puzzle are: the options object (reads/writes
+configuration files, can be written to and queried while Bochs is running) and
+the GUI object. There are many different but compatible implementations of the
+GUI object, depending on whether you compile for X (Unix/Linux), Win32,
+Macintosh (two versions: one for Mac OS X and one for older OS's), BeOS, Amiga,
+etc.
+</para>
+<para>
+And then there is the supporting cast: debugger, config menu, panic handler,
+disassembler, tracer, instrumentation.
+</para>
+</section>
 
 <section id="directory-structure"><title>Directory Structure</title>
 <para>
@@ -250,6 +296,124 @@ Ideas:
 </para>
 </section>
 
+<section id="emulator-objects"><title>Emulator Objects</title>
+<section><title>Weird macros and other mysteries</title>
+<para>
+Bochs has many macros with inscrutable names. One might even go as far as to
+say that Bochs is macro infested.
+Some of them are gross speed hacks, to cover up the slow speed that C++ causes.
+Others paper over differences between the simulated PC configurations.
+Many of the macros exhibit the same problem as C++ does: too much stuff happens
+behind the programmer's back. More explicitness would be a big win.
+</para>
+</section>
+<section id="static-methods-hack"><title>Static methods hack</title>
+<para>
+C++ methods have an invisible parameter called the this pointer - otherwise the
+method wouldn't know which object to operate on. In many cases in Bochs, there
+will only ever be one object - so this flexibility is unnecessary. There is a
+hack that can be enabled by #defining BX_USE_CPU_SMF to 1 in <filename>config.h
+</filename> that makes most methods static, which means they have a "special
+relationship" with the class they are declared in but apart from that are
+normal C functions with no hidden parameters. Of course they still need access
+to the internals of an object, so the single object of their class has a globally
+visible name that these functions use. It is all hidden with macros.
+</para>
+<para>
+Declaration of a class, from iodev/pic.h:
+</para>
+<screen>
+...
+#if BX_USE_PIC_SMF
+#  define BX_PIC_SMF  static
+#  define BX_PIC_THIS thePic->
+#else
+#  define BX_PIC_SMF
+#  define BX_PIC_THIS this->
+#endif
+...
+class bx_pic_c : public bx_pic_stub_c {
+
+public:
+  bx_pic_c(void);
+  ~bx_pic_c(void);
+  virtual void   init(void);
+  virtual void   reset(unsigned type);
+  virtual void   lower_irq(unsigned irq_no);
+  virtual void   raise_irq(unsigned irq_no);
+...
+  };
+</screen>
+<para>
+And iodev/pic.cc:
+</para>
+<screen>
+...
+#define LOG_THIS thePic->
+...
+bx_pic_c *thePic = NULL;
+...
+void bx_pic_c::lower_irq(unsigned irq_no)
+{
+#if BX_SUPPORT_APIC
+  // forward this function call to the ioapic too
+  if (DEV_ioapic_present() && (irq_no != 2)) {
+    bx_devices.ioapic->set_irq_level(irq_no, 0);
+  }
+#endif
+
+  Bit8u mask = (1 << (irq_no & 7));
+  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.master_pic.IRQ_in &= ~(mask);
+    BX_PIC_THIS s.master_pic.irr &= ~(mask);
+  } else if ((irq_no > 7) && (irq_no <= 15) &&
+             (BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
+    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
+    BX_PIC_THIS s.slave_pic.IRQ_in &= ~(mask);
+    BX_PIC_THIS s.slave_pic.irr &= ~(mask);
+  }
+}
+...
+</screen>
+<para>
+Ugly, isn't it? If we use static methods, methods prefixed with BX_PIC_SMF are
+declared static and references to fields inside the object, which are prefixed
+with BX_PIC_THIS, will use the globally visible object, thePic->. If we don't
+use static methods, BX_PIC_SMF evaluates to nothing and BX_PIC_THIS becomes this->.
+Making it evaluate to nothing would be a lot cleaner, but then the scoping rules
+would change slightly between the two Bochs configurations, which would be a load
+of bugs just waiting to happen. Some classes use BX_SMF, others have their own
+version of the macro, like BX_PIC_SMF above.
+</para>
+</section>
+<section id="cpu-mem-objects"><title>CPU und memory objects in UP/SMP configurations</title>
+<para>
+The CPU class is a special case of the above: if Bochs is simulating a uni-
+processor machine then there is obviously only one bx_cpu_c object and the
+static methods trick can be used. If, on the other hand, Bochs is simulating an
+smp machine then we can't use the trick. The same seems to be true for memory:
+for some reason, we have a memory object for each CPU object. This might become
+relevant for NUMA machines, but they are not all that common -- and even the
+existing IA-32 NUMA machines bend over backwards to hide that fact: it should
+only be visible in slightly worse timing for non-local memory and non-local
+peripherals. Other than that, the memory map and device map presented to each
+CPU will be identical.
+</para>
+<para>
+In a UP configuration, the CPU object is declared as bx_cpu. In an SMP
+configuration it will be an array of pointers to CPU objects (bx_cpu_array[]).
+For memory that would be bx_mem and bx_mem_array[], respectively.
+Each CPU object contains a pointer to its associated memory object.
+Access of a CPU object often goes through the BX_CPU(x) macro, which either
+ignores the parameter and evaluates to &amp;bx_cpu, or evaluates to bx_cpu_array
+[n], so the result will always be a pointer. The same goes for BX_MEM(x).
+If static methods are used then BX_CPU_THIS_PTR evaluates to BX_CPU(0)->. Ugly,
+isn't it?
+</para>
+</section>
+</section>
+
      <section id="configure-scripting"><title>Configure Scripting</title>
       <para>
       &FIXME;
@@ -261,13 +425,6 @@ Ideas:
       <para>
       &FIXME;
       log functions: what is a panic, what is an error, etc.
-      </para>
-      </section>
-
-      <section id="emulator-objects"><title>Emulator Objects</title>
-       <para>
-      &FIXME;
-      objects that do all the work (cpu, mem)
       </para>
       </section>
 
@@ -286,7 +443,7 @@ shows all CMOS registers and their meaning.
 <para>
 <screen>
 Legend:
-S	- set by the emulator (bochs)
+S	- set by the emulator (Bochs)
 B	- set by the bios
 U	- unused by the bios
 
@@ -473,7 +630,7 @@ Optionally, you can use a software midi interpreter, such as the midid program f
 </para>
 </section>
 
-<section><title>Configuring bochs</title>
+<section><title>Configuring Bochs</title>
 
 <para>
 There are a few values in config.h that are relevant to the sound functions.
@@ -1267,7 +1424,7 @@ Each position is a Bit32u entity.
 <title>Parameters
 </title>
 <para>
-The following tables shows what paremeters are used when creating redologs or creating "growing" images :
+The following tables shows what parameters are used when creating redologs or creating "growing" images :
 <table>   
 <title>
         How number of entries in the catalog and number of blocks by extents are computed
@@ -1842,7 +1999,7 @@ lines in config.h to turn on the debugger.
 #define BX_DEBUGGER 1
 #define BX_DISASM 1
 </screen>
-VC++ will rebuild bochs with debugger and overwrite bochs.exe.  To avoid
+VC++ will rebuild Bochs with debugger and overwrite bochs.exe.  To avoid
 trashing the non-debug version, move it out of the way while the debugger
 version is being built.  Then rename the debugger version to bochsdbg.exe.
 <screen>
