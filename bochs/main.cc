@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.301 2006-01-11 18:22:12 sshwarts Exp $
+// $Id: main.cc,v 1.302 2006-01-15 17:56:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -733,8 +733,9 @@ bx_begin_simulation (int argc, char *argv[])
 #if BX_GDBSTUB
   // If using gdbstub, it will take control and call
   // bx_init_hardware() and cpu_loop()
-  if (bx_dbg.gdbstub_enabled)
+  if (bx_dbg.gdbstub_enabled) {
     bx_gdbstub_init (argc, argv);
+  }
   else
 #endif
   {
@@ -758,28 +759,28 @@ bx_begin_simulation (int argc, char *argv[])
     // Not a great solution but it works. BBD
     bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get());
 
-    if (BX_SMP_PROCESSORS == 1) {
-      // only one processor, run as fast as possible by not messing with
-      // quantums and loops.
-      BX_CPU(0)->cpu_loop(1);
-      // for one processor, the only reason for cpu_loop to return is
-      // that kill_bochs_request was set by the GUI interface.
-    } else {
-      // SMP simulation: do a few instructions on each processor, then switch
-      // to another.  Increasing quantum speeds up overall performance, but
-      // reduces granularity of synchronization between processors.
-      int processor = 0;
-      int quantum = 5;
-      while (1) {
-        // do some instructions in each processor
-        BX_CPU(processor)->cpu_loop(quantum);
-        processor = (processor+1) % BX_SMP_PROCESSORS;
-        if (BX_CPU(0)->kill_bochs_request) 
-          break;
-        if (processor == 0) 
-          BX_TICKN(quantum);
-      }
+#if BX_SMP_PROCESSORS == 1
+    // only one processor, run as fast as possible by not messing with
+    // quantums and loops.
+    BX_CPU(0)->cpu_loop(1);
+    // for one processor, the only reason for cpu_loop to return is
+    // that kill_bochs_request was set by the GUI interface.
+#else
+    // SMP simulation: do a few instructions on each processor, then switch
+    // to another.  Increasing quantum speeds up overall performance, but
+    // reduces granularity of synchronization between processors.
+    int processor = 0;
+    int quantum = 5;
+    while (1) {
+      // do some instructions in each processor
+      BX_CPU(processor)->cpu_loop(quantum);
+      processor = (processor+1) % BX_SMP_PROCESSORS;
+      if (BX_CPU(0)->kill_bochs_request) 
+        break;
+      if (processor == 0) 
+        BX_TICKN(quantum);
     }
+#endif
   }
 #endif /* ! BX_DEBUGGER */
   BX_INFO (("cpu loop quit, shutting down simulator"));
