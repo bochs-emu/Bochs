@@ -1,15 +1,42 @@
+////////////////////////////////////////////////////////////////////////
+// $Id: virt_timer.h,v 1.7 2006-01-15 19:34:03 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_VIRT_TIMER_H
 #define _BX_VIRT_TIMER_H
-
 
 #define BX_MAX_VIRTUAL_TIMERS (15+BX_SMP_PROCESSORS)
 #define BX_NULL_VIRTUAL_TIMER_HANDLE 10000
 
 #define BX_MAX_VIRTUAL_TIME (0x7fffffff)
 
-class bx_virt_timer_c : public logfunctions {
- private:
+class bx_virt_timer_c : public logfunctions
+{
+
+private:
 
   struct {
     bx_bool inUse;      // Timer slot is in-use (currently registered).
@@ -68,10 +95,8 @@ class bx_virt_timer_c : public logfunctions {
   static const Bit64u NullTimerInterval;
   static void nullTimer(void* this_ptr);
 
-
   //Step the given number of cycles, optionally calling any timer handlers.
   void periodic(Bit64u time_passed);
-
 
   //Called when next_event_time changes.
   void next_event_time_update(void);
@@ -80,8 +105,10 @@ class bx_virt_timer_c : public logfunctions {
   // calls periodic as needed.
   void advance_virtual_time(Bit64u time_passed);
 
- public:
+public:
 
+  bx_virt_timer_c(void);
+ ~bx_virt_timer_c(void);
 
   //Get the current virtual time.
   //  This may return the same value on subsequent calls.
@@ -119,12 +146,7 @@ class bx_virt_timer_c : public logfunctions {
 
   //Initialization
   void init(void);
-  bx_virt_timer_c(void);
-  ~bx_virt_timer_c(void);
-
 };
-
-
 
 extern bx_virt_timer_c bx_virt_timer;
 
