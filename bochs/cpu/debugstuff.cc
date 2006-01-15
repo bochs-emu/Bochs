@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.48 2005-12-23 14:24:47 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.49 2006-01-15 18:14:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,7 +78,6 @@ void BX_CPU_C::debug(bx_address offset)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16));
 #if BX_SUPPORT_X86_64
   BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR get_EFER()));
-
   BX_INFO(("| RAX=%08x%08x  RBX=%08x%08x",
           (unsigned) (RAX >> 32), (unsigned) EAX,
           (unsigned) (RBX >> 32), (unsigned) EBX));
@@ -91,6 +90,18 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("| RSI=%08x%08x  RDI=%08x%08x",
           (unsigned) (RSI >> 32), (unsigned) ESI,
           (unsigned) (RDI >> 32), (unsigned) EDI));
+  BX_INFO(("|  R8=%08x%08x   R9=%08x%08x",
+          (unsigned) (R8  >> 32), (unsigned) (R8  & 0xFFFFFFFF),
+          (unsigned) (R9  >> 32), (unsigned) (R9  & 0xFFFFFFFF)));
+  BX_INFO(("| R10=%08x%08x  R11=%08x%08x",
+          (unsigned) (R10 >> 32), (unsigned) (R10 & 0xFFFFFFFF),
+          (unsigned) (R11 >> 32), (unsigned) (R11 & 0xFFFFFFFF)));
+  BX_INFO(("| R12=%08x%08x  R13=%08x%08x",
+          (unsigned) (R12 >> 32), (unsigned) (R12 & 0xFFFFFFFF),
+          (unsigned) (R13 >> 32), (unsigned) (R13 & 0xFFFFFFFF)));
+  BX_INFO(("| R14=%08x%08x  R15=%08x%08x",
+          (unsigned) (R14 >> 32), (unsigned) (R14 & 0xFFFFFFFF),
+          (unsigned) (R15 >> 32), (unsigned) (R15 & 0xFFFFFFFF)));
 #else
   BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x",
           (unsigned) EAX, (unsigned) EBX, (unsigned) ECX, (unsigned) EDX));
