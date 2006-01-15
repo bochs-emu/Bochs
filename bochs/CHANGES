@@ -1,11 +1,15 @@
+-------------------------------------------------------------------------
 Changes in 2.2.6 (not yet released):
 
-- APIC timer bug fixed
-- several APIC and I/O APIC fixes make SMP Bochs booting Windows NT4.0
+- critical APIC timer bug fixed
+- several APIC and I/O APIC fixes make SMP Bochs booting Windows NT4.0 in
+  SMP configuration
 - several fixes in the hard drive, keyboard, timer, usb and vga code
-- obsolete SMP BIOS images removed (MP tables created dynamicly)
+- obsolete SMP BIOS images removed (MP tables created dynamicaly)
 - new userbutton shortcut "bksl" (backslash)
 - development documentation improved
+- enabled #PCE bit in CR4 register, previosly setting of this bit 
+  generated #GP(0) fault
 
 -------------------------------------------------------------------------
 Changes in 2.2.5 (December 30, 2005):
