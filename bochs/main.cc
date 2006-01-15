@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.302 2006-01-15 17:56:36 sshwarts Exp $
+// $Id: main.cc,v 1.303 2006-01-15 19:35:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,12 +95,16 @@ bx_debug_t bx_dbg;
 
 #if BX_SMP_PROCESSORS==1
 // single processor simulation, so there's one of everything
-BOCHSAPI BX_CPU_C    bx_cpu;
-BOCHSAPI BX_MEM_C    bx_mem;
+BOCHSAPI BX_CPU_C  bx_cpu;
 #else
 // multiprocessor simulation, we need an array of cpus and memories
-BOCHSAPI BX_CPU_C    *bx_cpu_array[BX_SMP_PROCESSORS];
-BOCHSAPI BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
+BOCHSAPI BX_CPU_C *bx_cpu_array[BX_SMP_PROCESSORS];
+#endif
+
+#if BX_ADDRESS_SPACES==1
+BOCHSAPI BX_MEM_C  bx_mem;
+#else
+BOCHSAPI BX_MEM_C  bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
 char *bochsrc_filename = NULL;
@@ -854,12 +858,6 @@ int bx_init_hardware()
 
 #if BX_SUPPORT_ICACHE
   pageWriteStampTable.alloc(memSize);
-#endif
-
-#if BX_SMP_PROCESSORS == 1
-  // the memory object is static in single CPU configuration
-#else
-  BX_MEM(0) = new BX_MEM_C ();
 #endif
 
   BX_MEM(0)->init_memory(memSize);

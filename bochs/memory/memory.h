@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.26 2005-10-28 00:12:27 kevinlawton Exp $
+// $Id: memory.h,v 1.27 2006-01-15 19:35:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,11 +104,11 @@ public:
 
 #if BX_PROVIDE_CPU_MEMORY==1
 
-#if BX_SMP_PROCESSORS==1
-BOCHSAPI extern BX_MEM_C    bx_mem;
+#if BX_ADDRESS_SPACES==1
+BOCHSAPI extern BX_MEM_C bx_mem;
 #else
-BOCHSAPI extern BX_MEM_C    *bx_mem_array[BX_ADDRESS_SPACES];
-#endif  /* BX_SMP_PROCESSORS */
+BOCHSAPI extern BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
+#endif  /* BX_ADDRESS_SPACES */
 
 #endif  /* BX_PROVIDE_CPU_MEMORY==1 */
 

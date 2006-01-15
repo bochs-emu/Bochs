@@ -58,30 +58,34 @@
 // one space for each processor to have an ID, starting with 0.
 #define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
-#define BX_ADDRESS_SPACES 1
 // controls how many instances of BX_MEM_C are created.  For
 // SMP, use several processors with one shared memory space.
 // For cosimulation, you could use two processors and two address
 // spaces.
+#define BX_ADDRESS_SPACES 1
 
-#define BX_SUPPORT_APIC 0
+#if BX_ADDRESS_SPACES != 1
+#error "Support for several address spaces still not implemented"
+#endif
+
 // include in APIC models, required for a multiprocessor system.
+#define BX_SUPPORT_APIC 0
 
 #if (BX_SMP_PROCESSORS>1 && !BX_SUPPORT_APIC)
 #error For multiprocessor simulation, BX_SUPPORT_APIC is required.
 #endif
 
-#define BX_DEBUG_LINUX 0
 // if simulating Linux, this provides a few more debugging options
 // such as tracing all system calls.
+#define BX_DEBUG_LINUX 0
 
-#define HAVE_LIBREADLINE 0
-#define HAVE_READLINE_HISTORY_H 0
 // adds support for the GNU readline library in the debugger command 
 // prompt.
+#define HAVE_LIBREADLINE 0
+#define HAVE_READLINE_HISTORY_H 0
 
-#define HAVE_LOCALE_H 0
 // Define to 1 if you have <locale.h>
+#define HAVE_LOCALE_H 0
 
 // I rebuilt the code which provides timers to IO devices.
 // Setting this to 1 will introduce a little code which
@@ -220,7 +224,6 @@
 // members of the C++ CPU class to be static.
 // This defaults to 1 since it should improve performance, but when
 // SMP mode is enabled, it will be turned off by configure.
-
 #define BX_USE_CPU_SMF 1
 
 // Use static member functions in IO DEVice emulation modules.
@@ -963,6 +966,5 @@ typedef
 // in bx_pit_c::periodic that will cause Bochs to exit() after a certain number
 // of instructions.
 //#define BX_SCHEDULED_DIE_TIME 1162230000   // end of redhat6.0 boot
-
 
 #endif  // _BX_CONFIG_H
