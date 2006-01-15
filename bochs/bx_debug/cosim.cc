@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cosim.cc,v 1.1 2005-04-10 18:03:15 sshwarts Exp $
+// $Id: cosim.cc,v 1.2 2006-01-15 17:55:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -834,3 +834,146 @@ void bx_dbg_set_INTR(bx_bool b)
 }
 
 #endif
+
+void bx_dbg_diff_memory(void)
+{
+#if BX_NUM_SIMULATORS < 2
+  printf("diff-memory supported only in cosimulation mode\n");
+#else
+  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
+  for (int i = 0; i < num_pages; i++) {
+    BX_CPU(dbg_cpu)->dbg_dirty_pages[i] = 1;
+  }
+  if (bx_dbg_compare_sim_memory())
+    printf("[diff-memory] Diff detected\n");
+  else
+    printf("[diff-memory] No diff detected\n");
+#endif /* NUM_SIMULATORS < 2 */
+}
+
+void bx_dbg_sync_memory(bx_bool set)
+{
+#if BX_NUM_SIMULATORS < 2
+  printf("sync-memory supported only in cosimulation mode\n");
+#else
+  bx_debugger.compare_at_sync.memory = set;
+  printf("Memory sync %s\n", (set) ? "enabled" : "disabled");
+#endif
+}
+
+void bx_dbg_sync_cpu(bx_bool set)
+{
+#if BX_NUM_SIMULATORS < 2
+  printf("sync-cpu supported only in cosimulation mode\n");
+#else
+  bx_debugger.compare_at_sync.cpu = set;
+  printf("Register file sync %s\n", (set) ? "enabled" : "disabled");
+#endif
+}
+
+void bx_dbg_fast_forward(Bit32u num)
+{
+#if BX_NUM_SIMULATORS < 2
+  printf("fast-forward supported only in cosimulation mode\n");
+#else
+  printf("Entering fast-forward mode\n");
+
+  // Bit32u save_icount_quantum = bx_debugger.icount_quantum;
+  // bx_debugger.icount_quantum = num;
+
+  bx_guard.interrupt_requested = 0;
+
+  bx_debugger.fast_forward_mode = 1;
+  for (Bit32u e = 0; e < num; e += bx_debugger.icount_quantum)
+    if (!bx_dbg_cosimulateN(bx_debugger.icount_quantum))
+      break;
+  bx_debugger.fast_forward_mode = 0;
+  // bx_debugger.icount_quantum = save_icount_quantum;
+
+  DEV_vga_refresh();
+
+  printf("Copying CPU...\n");
+  bx_dbg_cpu_t cpu;
+  if (!BX_CPU(0)->dbg_get_cpu(&cpu) || !BX_CPU(1)->dbg_set_cpu(&cpu))
+    printf("Error copying CPU data!\n");
+
+  printf("Copying memory...\n");
+  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
+  for (int i = 0; i < num_pages; i++) {
+    if (BX_CPU(0)->dbg_dirty_pages[i]) {
+      Bit32u page_start = i * 1024 * 4;
+      printf("Copying page %08x\n", page_start);
+      extern Bit8u* SIM1_GET_PHYS_PTR(Bit32u page_start);
+      Bit8u* sim0_page_vec = bx_mem0.vector + page_start;
+      Bit8u* sim1_page_vec = SIM1_GET_PHYS_PTR(page_start);
+      memcpy(sim1_page_vec, sim0_page_vec, 1024 * 4);
+    }
+  }
+
+  printf("Taking async events...\n");
+
+  printf("Exiting fast-forward mode\n");
+#endif
+}
+
+extern Bit32u conv_4xBit8u_to_Bit32u(const Bit8u* buf);
+
+/*
+  (mch) Print various info for logical address.
+*/
+void bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset)
+{
+#if BX_NUM_SIMULATORS < 2
+  printf("addr-info only supported in cosim configuration.\n");
+#else
+  for (int sim = 0; sim < 2; sim++) 
+  {
+    /* Find page table base address */
+    bx_dbg_cpu_t regs;
+    BX_CPU(sim)->dbg_get_cpu(&regs);
+    Bit32u base = regs.cr3 & ~0xfff;
+
+    Bit8u buf[4];
+    Bit32u directory_addr = base + (offset >> 22) * 4;
+    Bit32u directory;
+    if (BX_CPU(sim)->mem->dbg_fetch_mem(directory_addr, 4, buf)) {
+      directory = conv_4xBit8u_to_Bit32u(buf);
+      Bit32u table_addr = (directory & ~0xfff) + ((offset >> 12) & 0x3ff) * 4;
+      Bit32u table;
+
+      printf("[%s] ", SIM_NAME(sim));
+      printf("PDE: %08x (", directory);
+      printf("%s,  %s, %s, %s, %s)",
+             (directory & 1) ? "Present" : "Not present",
+             (directory & 2) ? "Read/Write" : "Read-only",
+             (directory & 4) ? "User" : "Supervisor",
+             (directory & (1 << 5)) ? "Accessed" : "-",
+             (directory & (1 << 6)) ? "Dirty" : "-");
+
+      if (directory & 1) {
+        if (BX_CPU(sim)->mem->dbg_fetch_mem(table_addr, 4, buf)) {
+          table = conv_4xBit8u_to_Bit32u(buf);
+
+          printf(", PTE: %08x (", table);
+          printf("%s,  %s, %s, %s, %s)\n",
+                 (table & 1) ? "Present" : "Not present",
+                 (table & 2) ? "Read/Write" : "Read-only",
+                 (table & 4) ? "User" : "Supervisor",
+                 (table & (1 << 5)) ? "Accessed" : "-",
+                 (table & (1 << 6)) ? "Dirty" : "-");
+        } else {
+          printf("[%s] Could not read from physical address %08x\n",
+                 SIM_NAME(sim), directory_addr);
+          return;
+        }
+      } else {
+        printf("\n");
+      }
+    } else {
+      printf("[%s] Could not read from physical address %08x\n",
+             SIM_NAME(sim), directory_addr);
+      return;
+    }
+  }
+#endif
+}

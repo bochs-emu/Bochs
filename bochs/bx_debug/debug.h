@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.5 2005-08-15 05:32:36 akrisak Exp $
+// $Id: debug.h,v 1.6 2006-01-15 17:55:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -468,6 +468,14 @@ void    bx_dbg_set_INTR(bx_bool b);
 void bx_dbg_disassemble_current (int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */
+
+char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
+char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
+void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
+void bx_dbg_info_symbols_command(char *Symbol);
+int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
+Bit32u bx_dbg_get_symbol_value(char *Symbol);
+char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 
 #endif // #ifdef __cplusplus
 

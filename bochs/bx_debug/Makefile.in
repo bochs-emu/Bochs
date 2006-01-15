@@ -55,6 +55,7 @@ YACC   = yacc
 
 BX_OBJS = \
   dbg_main.o \
+  symbols.o \
   cosim.o \
   linux.o \
   crc.o
@@ -142,6 +143,13 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/unmapped.h ../iodev/ne2k.h ../iodev/guest2host.h \
   ../iodev/slowdown_timer.h ../iodev/extfpuirq.h ../iodev/gameport.h
 linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
+  ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
+  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
+  ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h
+symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
   ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
