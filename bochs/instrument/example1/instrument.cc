@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.10 2006-01-16 19:47:18 sshwarts Exp $
+// $Id: instrument.cc,v 1.11 2006-01-16 19:53:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ void bxInstrumentation::branch_taken(bx_address new_eip)
   if (!active || !valid) return;
 
   // find linear address
-  Bit32u laddr = BX_CPU(cpu_id)->get_segment_base(BX_SEG_REG_CS) + new_eip;
+  bx_address laddr = BX_CPU(cpu_id)->get_segment_base(BX_SEG_REG_CS) + new_eip;
 
   is_branch = 1;
   is_taken = 1;
