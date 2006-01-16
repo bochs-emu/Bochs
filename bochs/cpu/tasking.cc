@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.28 2005-12-12 22:01:22 sshwarts Exp $
+// $Id: tasking.cc,v 1.29 2006-01-16 19:22:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -606,6 +606,10 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       error_code   = raw_cs_selector & 0xfffc;
       goto post_exception;
     }
+
+#if BX_SUPPORT_ICACHE  // update instruction cache
+    BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+#endif
 
     // SS
     if ( (raw_ss_selector & 0xfffc) != 0 )

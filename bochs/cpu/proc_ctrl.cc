@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.129 2006-01-13 11:11:29 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.130 2006-01-16 19:22:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1164,6 +1164,10 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_PANIC(("loadall: CS invalid"));
   }
 
+#if BX_SUPPORT_ICACHE
+  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+#endif
+
   /* ES */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x824, 2, &es_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = es_raw;
@@ -1872,6 +1876,10 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
 
+#if BX_SUPPORT_ICACHE
+  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+#endif
+
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 2) & 1;
@@ -1886,8 +1894,6 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;          // 4k granularity
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
-
-  // BX_INFO (("sysenter: old eip %X, esp %x, new eip %x, esp %X, edx %X", BX_CPU_THIS_PTR prev_eip, ESP, BX_CPU_THIS_PTR sysenter_eip_msr, BX_CPU_THIS_PTR sysenter_esp_msr, EDX));
 
   ESP = BX_CPU_THIS_PTR sysenter_esp_msr;
   EIP = BX_CPU_THIS_PTR sysenter_eip_msr;
@@ -1930,6 +1936,10 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 1;           // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
 
+#if BX_SUPPORT_ICACHE
+  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+#endif
+
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 2) & 1;
@@ -1944,8 +1954,6 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;           // 4k granularity
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;           // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;           // available for use by system
-
-  // BX_INFO (("sysexit: old eip %X, esp %x, new eip %x, esp %X, eax %X", BX_CPU_THIS_PTR prev_eip, ESP, EDX, ECX, EAX));
 
   ESP = ECX;
   EIP = EDX;

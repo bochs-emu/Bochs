@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.10 2005-12-13 14:18:34 akrisak Exp $
+// $Id: icache.h,v 1.11 2006-01-16 19:22:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -129,7 +129,7 @@ public:
     for (unsigned i=0; i<BxICacheEntries; i++) {
       entry[i].writeStamp = ICacheWriteStampInvalid;
     }
-    fetchModeMask = 0; // CS is 16-bit, Long Mode disabled, Data page
+    fetchModeMask = iCachePageDataMask; // CS is 16-bit, Long Mode disabled
   }
 
   BX_CPP_INLINE unsigned hash(Bit32u pAddr) const

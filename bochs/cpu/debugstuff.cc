@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.49 2006-01-15 18:14:16 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.50 2006-01-16 19:22:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -180,6 +180,12 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
+#if BX_SUPPORT_X86_64
+  BX_INFO(("|  MSR_FS_BASE:%08x%08x",
+    (unsigned) (MSR_FSBASE >> 32), (unsigned) (MSR_FSBASE & 0xFFFFFFFF)));
+  BX_INFO(("|  MSR_GS_BASE:%08x%08x",
+    (unsigned) (MSR_GSBASE >> 32), (unsigned) (MSR_GSBASE & 0xFFFFFFFF)));
+#endif
 
 #if BX_SUPPORT_X86_64
   BX_INFO(("| RIP=%08x%08x (%08x%08x)", 
@@ -721,6 +727,9 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit;
 
+#if BX_SUPPORT_ICACHE
+  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+#endif
 
   // SS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = cpu->ss.sel;
