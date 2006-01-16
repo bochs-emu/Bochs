@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.15 2005-11-14 18:25:41 sshwarts Exp $
+// $Id: instrument.h,v 1.16 2006-01-16 19:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,6 +53,7 @@ class bxInstruction_c;
 
 // called from the CPU core
 
+void bx_instr_init(unsigned cpu);
 void bx_instr_reset(unsigned cpu);
 void bx_instr_new_instruction(unsigned cpu);
 
@@ -73,7 +74,7 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
 void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw);
 
 /* simulation init, shutdown, reset */
-#  define BX_INSTR_INIT(cpu_id)
+#  define BX_INSTR_INIT(cpu_id)            bx_instr_init(cpu_id)
 #  define BX_INSTR_SHUTDOWN(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           bx_instr_reset(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)
@@ -98,7 +99,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
                        bx_instr_fetch_decode_completed(cpu_id, i)
      
 /* prefix byte decoded */
-#  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix_as(cpu_id, prefix)
+#  define BX_INSTR_PREFIX(cpu_id, prefix)  bx_instr_prefix(cpu_id, prefix)
 
 /* exceptional case and interrupt */
 #  define BX_INSTR_EXCEPTION(cpu_id, vector)            bx_instr_exception(cpu_id, vector)

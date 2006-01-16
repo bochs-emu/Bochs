@@ -228,3 +228,6 @@ Feature requests:
    'not taken' new_EIP parameter.
 
 2. X86-64 support
+
+3. BX_INSTR_SMI, BX_INSTR_NMI, BX_INSTR_SIPI and other external events
+   callbacks

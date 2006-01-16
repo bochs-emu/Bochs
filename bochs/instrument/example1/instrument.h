@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.13 2005-11-14 18:25:41 sshwarts Exp $
+// $Id: instrument.h,v 1.14 2006-01-16 19:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ public:
   unsigned num_data_accesses;
   struct {
     bx_address laddr; // linear address
-    bx_address paddr; // physical address
+    Bit32u paddr;     // physical address
     unsigned op;      // BX_READ, BX_WRITE or BX_RW
     unsigned size;    // 1 .. 8
   } data_access[MAX_DATA_ACCESSES];
@@ -91,7 +91,7 @@ public:
  
   void activate() { active = 1; }
   void deactivate() { active = 0; }
-  bx_bool toggle_active() { active = !active; }
+  void toggle_active() { active = !active; }
   bx_bool is_active() const { return active; } 
 
   void bx_instr_reset();
@@ -117,10 +117,12 @@ private:
   void branch_taken(bx_address new_eip);
 };
 
-extern bxInstrumentation icpu[BX_SMP_PROCESSORS];
+void bx_instr_init(unsigned cpu);
+
+extern bxInstrumentation *icpu;
 
 /* simulation init, shutdown, reset */
-#  define BX_INSTR_INIT(cpu_id)	           icpu[cpu_id].set_cpu_id(cpu_id)
+#  define BX_INSTR_INIT(cpu_id)	           bx_instr_init(cpu_id);
 #  define BX_INSTR_SHUTDOWN(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           icpu[cpu_id].bx_instr_reset()
 #  define BX_INSTR_HLT(cpu_id)
