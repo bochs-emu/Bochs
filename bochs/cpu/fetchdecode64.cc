@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.86 2005-11-11 22:02:42 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.87 2006-01-17 19:50:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -686,8 +686,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9B */  { 0, &BX_CPU_C::FWAIT },
   /* 9C */  { 0, &BX_CPU_C::PUSHF_Fw },
   /* 9D */  { 0, &BX_CPU_C::POPF_Fw },
-  /* 9E */  { 0, &BX_CPU_C::BxError },
-  /* 9F */  { 0, &BX_CPU_C::BxError },
+  /* 9E */  { 0, &BX_CPU_C::SAHF },
+  /* 9F */  { 0, &BX_CPU_C::LAHF },
   /* A0 */  { BxImmediate_O, &BX_CPU_C::MOV_ALOq },
   /* A1 */  { BxImmediate_O, &BX_CPU_C::MOV_AXOq },
   /* A2 */  { BxImmediate_O, &BX_CPU_C::MOV_OqAL },
@@ -1207,8 +1207,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9B */  { 0, &BX_CPU_C::FWAIT },
   /* 9C */  { 0, &BX_CPU_C::PUSHF_Fq },
   /* 9D */  { 0, &BX_CPU_C::POPF_Fq },
-  /* 9E */  { 0, &BX_CPU_C::BxError },
-  /* 9F */  { 0, &BX_CPU_C::BxError },
+  /* 9E */  { 0, &BX_CPU_C::SAHF },
+  /* 9F */  { 0, &BX_CPU_C::LAHF },
   /* A0 */  { BxImmediate_O, &BX_CPU_C::MOV_ALOq },
   /* A1 */  { BxImmediate_O, &BX_CPU_C::MOV_EAXOq },
   /* A2 */  { BxImmediate_O, &BX_CPU_C::MOV_OqAL },
@@ -1728,8 +1728,8 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 9B */  { 0, &BX_CPU_C::FWAIT },
   /* 9C */  { 0, &BX_CPU_C::PUSHF_Fq },
   /* 9D */  { 0, &BX_CPU_C::POPF_Fq },
-  /* 9E */  { 0, &BX_CPU_C::BxError },
-  /* 9F */  { 0, &BX_CPU_C::BxError },
+  /* 9E */  { 0, &BX_CPU_C::SAHF },
+  /* 9F */  { 0, &BX_CPU_C::LAHF },
   /* A0 */  { BxImmediate_O, &BX_CPU_C::MOV_ALOq },
   /* A1 */  { BxImmediate_O, &BX_CPU_C::MOV_RAXOq },
   /* A2 */  { BxImmediate_O, &BX_CPU_C::MOV_OqAL },

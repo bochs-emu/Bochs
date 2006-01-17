@@ -340,7 +340,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RDX = features | (1 << 29) | (1 << 27) | (1 << 25) | 
                        (1 << 22) | (1 << 20) | (1 << 11);
       RBX = 0;
-      RCX = 0;
+
+      // RCX:
+      //     [0:0]   LAHF/SAHF available in 64-bit mode
+      //     [1:31]  Reserved
+      RCX = 1;
       break;
 
     // Processor Brand String, use the value given 
