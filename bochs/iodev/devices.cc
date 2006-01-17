@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.85 2005-10-27 08:20:16 vruppert Exp $
+// $Id: devices.cc,v 1.86 2006-01-17 20:16:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -71,9 +71,6 @@ bx_devices_c::bx_devices_c(void)
 #endif
   pit = NULL;
   pluginKeyboard = &stubKeyboard;
-#if BX_SUPPORT_BUSMOUSE
-  pluginBusMouse = &stubBusMouse;
-#endif
   pluginDmaDevice = &stubDma;
   pluginFloppyDevice = &stubFloppy;
   pluginBiosDevice = NULL;
@@ -89,9 +86,14 @@ bx_devices_c::bx_devices_c(void)
   pluginExtFpuIrq = NULL;
   pluginGameport = NULL;
   pluginSpeaker = &stubSpeaker;
-  g2h = NULL;
+#if BX_SUPPORT_BUSMOUSE
+  pluginBusMouse = &stubBusMouse;
+#endif
 #if BX_SUPPORT_IODEBUG
   iodebug = NULL;
+#endif
+#if 0
+  g2h = NULL;
 #endif
 }
 
@@ -109,7 +111,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.85 2005-10-27 08:20:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.86 2006-01-17 20:16:59 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

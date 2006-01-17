@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.68 2005-12-10 18:37:35 vruppert Exp $
+// $Id: iodev.h,v 1.69 2006-01-17 20:16:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,14 +47,14 @@
 
 
 class bx_pit_c;
-class bx_keyb_c;
-#if BX_SUPPORT_BUSMOUSE
-class bx_busm_c;
-#endif
+#if BX_SUPPORT_APIC
 class bx_ioapic_c;
-class bx_g2h_c;
+#endif
 #if BX_SUPPORT_IODEBUG
 class bx_iodebug_c;
+#endif
+#if 0
+class bx_g2h_c;
 #endif
 
 
@@ -399,7 +399,9 @@ public:
   void timer(void);
 
   bx_devmodel_c     *pluginBiosDevice;
+#if BX_SUPPORT_APIC
   bx_ioapic_c       *ioapic;
+#endif
   bx_pci_stub_c     *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
@@ -408,9 +410,6 @@ public:
   bx_devmodel_c     *pluginPciPNicAdapter;
   bx_pit_c          *pit;
   bx_keyb_stub_c    *pluginKeyboard;
-#if BX_SUPPORT_BUSMOUSE
-  bx_busm_stub_c    *pluginBusMouse;
-#endif
   bx_dma_stub_c     *pluginDmaDevice;
   bx_floppy_stub_c  *pluginFloppyDevice;
   bx_cmos_stub_c    *pluginCmosDevice;
@@ -425,12 +424,17 @@ public:
   bx_hard_drive_stub_c *pluginHardDrive;
   bx_devmodel_c     *pluginSB16Device;
   bx_ne2k_stub_c    *pluginNE2kDevice;
-  bx_g2h_c          *g2h;
   bx_devmodel_c     *pluginExtFpuIrq;
   bx_devmodel_c     *pluginGameport;
   bx_speaker_stub_c *pluginSpeaker;
+#if BX_SUPPORT_BUSMOUSE
+  bx_busm_stub_c    *pluginBusMouse;
+#endif
 #if BX_SUPPORT_IODEBUG
   bx_iodebug_c	    *iodebug;
+#endif
+#if 0
+  bx_g2h_c          *g2h;
 #endif
 
   // stub classes that the pointers (above) can point to until a plugin is
