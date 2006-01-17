@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.11 2006-01-16 19:53:11 sshwarts Exp $
+// $Id: instrument.cc,v 1.12 2006-01-17 18:17:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,34 +64,25 @@ void bxInstrumentation::bx_instr_new_instruction()
     {
       fprintf(stderr, "----------------------------------------------------------\n");
       fprintf(stderr, "CPU: %d: %s\n", cpu_id, disasm_tbuf);
-      fprintf(stderr, "LEN: %d\tPREFIX: %d\tBYTES: ", length, nprefixes);
+      fprintf(stderr, "LEN: %d\tPREFIXES: %d\tBYTES: ", length, nprefixes);
       for(n=0;n<length;n++) fprintf(stderr, "%02x", opcode[n]);
       if(is_branch) 
       {
         fprintf(stderr, "\tBRANCH ");
 
         if(is_taken) 
-          fprintf(stderr, "TARGET %08x (TAKEN)", target_linear);
+          fprintf(stderr, "TARGET " FMT_ADDRX " (TAKEN)", target_linear);
         else
           fprintf(stderr, "(NOT TAKEN)");
       }   
-      fprintf(stderr, "\nMEMORY ACCESSES: %u\n", num_data_accesses);
+      fprintf(stderr, "\n");
       for(n=0;n < num_data_accesses;n++)
       {
-#if BX_SUPPORT_X86_64
-        fprintf(stderr, "MEM ACCESS %u: %08x%08x (linear) %08x (physical) %s SIZE: %d\n", n,
-                      (Bit32u)(data_access[n].laddr >> 32),
-                      (Bit32u)(data_access[n].laddr & 0xffffffff),
+        fprintf(stderr, "MEM ACCESS[%u]: " FMT_ADDRX " (linear) 0x%08x (physical) %s SIZE: %d\n", n,
+                      data_access[n].laddr, 
                       data_access[n].paddr,
                       data_access[n].op == BX_READ ? "RD":"WR",
                       data_access[n].size);
-#else
-        fprintf(stderr, "MEM ACCESS %u: %08x (linear) %08x (physical) %s SIZE: %d\n", n,
-                      i->data_access[n].laddr, 
-                      i->data_access[n].paddr,
-                      i->data_access[n].op == BX_READ ? "RD":"WR",
-                      i->data_access[n].size);
-#endif
       }
       fprintf(stderr, "\n");
     }

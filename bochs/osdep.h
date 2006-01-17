@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.23 2004-09-19 18:38:09 vruppert Exp $
+// $Id: osdep.h,v 1.24 2006-01-17 18:17:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,19 @@ extern "C" {
 #  define ssize_t long
 
 #ifndef __MINGW32__
-#define FMT_LL "%I64"
-#define FMT_TICK "%011I64u"
 
 // Definitions that are needed for WIN32 compilers EXCEPT FOR
 // cygwin compiling with -mno-cygwin.  e.g. VC++.
+
+#if !defined(_MSC_VER)		// gcc without -mno-cygwin
+#define FMT_LL "%ll"
+#define FMT_TICK "%011llu"
+#define FMT_ADDRX64 "0x%016llx"
+#else
+#define FMT_LL "%I64"
+#define FMT_TICK "%011I64u"
+#define FMT_ADDRX64 "0x%016I64x"
+#endif
 
 // always return regular file.
 #  define S_ISREG(m)      (((m) & S_IFMT) == S_IFREG)
@@ -77,18 +85,23 @@ extern "C" {
 #define stat  _stati64
 #endif
 
-#else   /* ifndef __MINGW32__ */
-#define FMT_LL "%ll"
-#define FMT_TICK "%011llu"
+#else   /* __MINGW32__ defined */
+// Definitions for cygwin compiled with -mno-cygwin
+#define FMT_LL "%I64"
+#define FMT_TICK "%011I64u"
+#define FMT_ADDRX64 "0x%016I64x"
 
 #define off_t __int64
 #define lseek _lseeki64
+#endif  /* __MINGW32__ defined */
 
-#endif  /* ifndef __MINGW32__ */
-#else    /* WIN32 */
+#else    /* not WIN32 definitions */
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
-#endif   /* WIN32 */
+#define FMT_ADDRX64 "0x%016llx"
+#endif   /* not WIN32 definitions */
+
+#define FMT_ADDRX32 "0x%08x"
 
 // Missing defines for open
 #ifndef S_IRUSR
