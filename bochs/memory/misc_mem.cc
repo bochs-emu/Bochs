@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.71 2006-01-10 18:33:27 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.72 2006-01-17 18:15:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.71 2006-01-10 18:33:27 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.72 2006-01-17 18:15:49 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -124,7 +124,6 @@ void BX_MEM_C::init_memory(int memsize)
 
 }
 
-#if BX_SMP_PROCESSORS > 1
 void put_8bit(Bit8u **pp, Bit8u value)
 {
   Bit8u *p = *pp;
@@ -165,7 +164,6 @@ Bit8u mp_checksum(const Bit8u *p, int len)
     sum += p[i];
   return (Bit8u)(-sum);
 }
-#endif
 
 //
 // Values for type:
@@ -173,7 +171,6 @@ Bit8u mp_checksum(const Bit8u *p, int len)
 //   1 : VGA Bios
 //   2 : Optional ROM Bios
 //
-
 void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
 {
   struct stat stat_buf;
@@ -303,7 +300,6 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       }
     }
   }
-#if BX_SMP_PROCESSORS > 1
   if (is_bochs_bios) {
     Bit8u* pcmp_ptr = &BX_MEM_THIS rom[0xFB000 & BIOS_MASK];
     Bit8u* p = pcmp_ptr;
@@ -373,7 +369,6 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     put_8bit(&p, 0);
     fl_mp_ptr[10] = mp_checksum(fl_mp_ptr, (int)(p - fl_mp_ptr));
   }
-#endif
   BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
