@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.96 2005-11-12 16:09:55 vruppert Exp $
+// $Id: x.cc,v 1.97 2006-01-17 17:15:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,7 +128,7 @@ static bx_bool x_init_done = false;
 
 static Pixmap vgafont[256];
 
-struct {
+static struct {
   Pixmap bmap;
   unsigned xdim;
   unsigned ydim;

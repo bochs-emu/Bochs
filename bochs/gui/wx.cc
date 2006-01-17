@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.76 2005-11-12 16:09:55 vruppert Exp $
+// $Id: wx.cc,v 1.77 2006-01-17 17:15:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -101,7 +101,7 @@ static unsigned int text_rows=25, text_cols=80;
 static Bit8u h_panning = 0, v_panning = 0;
 static Bit16u line_compare = 1023;
 static unsigned vga_bpp=8;
-struct {
+static struct {
   unsigned char red;
   unsigned char green;
   unsigned char blue;
