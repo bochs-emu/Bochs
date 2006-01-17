@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.120 2006-01-05 21:39:11 sshwarts Exp $
+// $Id: cpu.cc,v 1.121 2006-01-17 07:58:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,16 @@
 #include "bochs.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_PROVIDE_CPU_MEMORY==1
+
+#if BX_ADDRESS_SPACES==1
+BOCHSAPI BX_MEM_C bx_mem;
+#else
+BOCHSAPI BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
+#endif
+
+#endif
 
 #if BX_SUPPORT_ICACHE
 

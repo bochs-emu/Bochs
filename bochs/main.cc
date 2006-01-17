@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.303 2006-01-15 19:35:38 sshwarts Exp $
+// $Id: main.cc,v 1.304 2006-01-17 07:58:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -99,12 +99,6 @@ BOCHSAPI BX_CPU_C  bx_cpu;
 #else
 // multiprocessor simulation, we need an array of cpus and memories
 BOCHSAPI BX_CPU_C *bx_cpu_array[BX_SMP_PROCESSORS];
-#endif
-
-#if BX_ADDRESS_SPACES==1
-BOCHSAPI BX_MEM_C  bx_mem;
-#else
-BOCHSAPI BX_MEM_C  bx_mem_array[BX_ADDRESS_SPACES];
 #endif
 
 char *bochsrc_filename = NULL;
