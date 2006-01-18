@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.34 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: sse.cc,v 1.35 2006-01-18 18:39:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1525,7 +1525,7 @@ void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
   }
 
   result.xmm64u(0) = Bit64u(op1.xmm32u(0)) * Bit64u(op2.xmm32u(0));
-  result.xmm64u(1) = Bit64u(op1.xmm32u(3)) * Bit64u(op2.xmm32u(3));
+  result.xmm64u(1) = Bit64u(op1.xmm32u(2)) * Bit64u(op2.xmm32u(2));
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
