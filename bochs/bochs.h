@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.164 2006-01-15 19:35:38 sshwarts Exp $
+// $Id: bochs.h,v 1.165 2006-01-18 18:35:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -119,6 +119,7 @@ void bx_reset_options (void);
 //
 
 #if ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
+
 // =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
 #define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
 #define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
@@ -168,10 +169,10 @@ void bx_reset_options (void);
 #define BX_MEM_WRITE_PHYSICAL(phy_addr, len, ptr) \
   BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 
-#if BX_SMP_PROCESSORS==1
-#define BX_CPU(x)                   (&bx_cpu)
-#else
+#if BX_SUPPORT_SMP
 #define BX_CPU(x)                   (bx_cpu_array[x])
+#else
+#define BX_CPU(x)                   (&bx_cpu)
 #endif
 
 #if BX_ADDRESS_SPACES==1
@@ -186,7 +187,7 @@ void bx_reset_options (void);
 #endif
 
 #if BX_SUPPORT_A20
-#  define A20ADDR(x)               ( (x) & bx_pc_system.a20_mask )
+#  define A20ADDR(x)                ((x) & bx_pc_system.a20_mask)
 #else
 #  define A20ADDR(x)                (x)
 #endif
@@ -194,8 +195,8 @@ void bx_reset_options (void);
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
-#if (BX_SMP_PROCESSORS>1)
-#  if (BX_USE_CPU_SMF!=0)
+#if BX_SUPPORT_SMP
+#  if BX_USE_CPU_SMF
 #    error For SMP simulation, BX_USE_CPU_SMF must be 0.
 #  endif
 #endif
@@ -427,13 +428,12 @@ void bx_gdbstub_init(int argc, char* argv[]);
 int bx_gdbstub_check(unsigned int eip);
 #define GDBSTUB_STOP_NO_REASON   (0xac0)
 
-#if BX_SMP_PROCESSORS!=1
+#if BX_SUPPORT_SMP
 #error GDB stub was written for single processor support.  If multiprocessor support is added, then we can remove this check.
 // The big problem is knowing which CPU gdb is referring to.  In other words,
 // what should we put for "n" in BX_CPU(n)->dbg_xlate_linear2phy() and
 // BX_CPU(n)->dword.eip, etc.
 #endif
-
 #endif
 
 typedef struct {
@@ -645,6 +645,7 @@ typedef struct BOCHSAPI {
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;
   bx_param_enum_c   *Okeyboard_type;
+  bx_param_num_c    *Ocpu_count;
   bx_param_num_c    *Oips;
   bx_param_bool_c   *Orealtime_pit;
   bx_param_bool_c   *Otext_snapshot_check;
@@ -672,17 +673,21 @@ typedef struct BOCHSAPI {
 
 BOCHSAPI extern bx_options_t bx_options;
 
+#if BX_SUPPORT_SMP
+  #define BX_SMP_PROCESSORS (bx_cpu_count)
+#else
+  #define BX_SMP_PROCESSORS 1
+#endif
+
 void bx_init_options();
 
 void bx_center_print (FILE *file, char *line, int maxwidth);
-
 
 #define BX_USE_PS2_MOUSE 1
 
 int bx_init_hardware ();
 
 #include "instrument.h"
-
 
 // These are some convenience macros which abstract out accesses between
 // a variable in native byte ordering to/from guest (x86) memory, which is

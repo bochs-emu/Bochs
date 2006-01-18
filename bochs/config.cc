@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.66 2005-12-27 16:59:27 vruppert Exp $
+// $Id: config.cc,v 1.67 2006-01-18 18:35:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -355,8 +355,6 @@ bx_param_enable_handler (bx_param_c *param, int val)
   }
   return val;
 }
-
-
 
 void bx_init_options ()
 {
@@ -1180,11 +1178,24 @@ void bx_init_options ()
       BX_MOUSE_TYPE_NONE);
   bx_options.Omouse_type->set_ask_format ("Choose the type of mouse [%s] ");
 
+#if BX_SUPPORT_SMP
+  #define BX_CPU_COUNT_LIMIT 8
+#else
+  #define BX_CPU_COUNT_LIMIT 1
+#endif
+
+  bx_options.Ocpu_count = new bx_param_num_c (BXP_CPU_COUNT,
+      "Number of CPUs in SMP mode",
+      "Sets the number of CPUs for multiprocessor emulation",
+      1, BX_CPU_COUNT_LIMIT,
+      1);
+
   bx_options.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
       2000000);
+
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
@@ -1279,6 +1290,7 @@ void bx_init_options ()
     "",
     BX_PATHNAME_LEN);
   bx_param_c *interface_init_list[] = {
+    bx_options.Ocpu_count,
     bx_options.Osel_config,
     bx_options.Osel_displaylib,
     bx_options.Odisplaylib_options,
@@ -1805,6 +1817,7 @@ void bx_reset_options ()
   bx_options.Ovga_extension->reset();
   bx_options.Omouse_enabled->reset();
   bx_options.Omouse_type->reset();
+  bx_options.Ocpu_count->reset();
   bx_options.Oips->reset();
   bx_options.Oprivate_colormap->reset();
 #if BX_WITH_AMIGAOS
@@ -2612,6 +2625,17 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
     if (parse_log_options(context, params[0], params[1]) < 0) {
       return -1;
+    }
+  } else if (!strcmp(params[0], "cpu")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: cpu directive malformed.", context));
+    }
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "count=", 6)) {
+        bx_options.Ocpu_count->set (strtoul (&params[i][6], NULL, 10));
+      } else {
+        PARSE_ERR(("%s: cpu directive malformed.", context));
+      }
     }
   } else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
@@ -3638,6 +3662,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
+  fprintf (fp, "cpu: count=%d\n", bx_options.Ocpu_count->get ());
   fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());

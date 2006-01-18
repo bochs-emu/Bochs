@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.121 2006-01-17 07:58:11 sshwarts Exp $
+// $Id: cpu.cc,v 1.122 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,11 +47,11 @@ bxPageWriteStampTable pageWriteStampTable;
 
 void purgeICaches(void)
 {
-#if BX_SMP_PROCESSORS == 1
-  BX_CPU(0)->iCache.purgeICacheEntries();
-#else
+#if BX_SUPPORT_SMP
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->iCache.purgeICacheEntries();
+#else
+  BX_CPU(0)->iCache.purgeICacheEntries();
 #endif
 
   pageWriteStampTable.resetWriteStamps();
@@ -59,11 +59,11 @@ void purgeICaches(void)
 
 void flushICaches(void)
 {
-#if BX_SMP_PROCESSORS == 1
-  BX_CPU(0)->iCache.flushICacheEntries();
-#else
+#if BX_SUPPORT_SMP
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->iCache.flushICacheEntries();
+#else
+  BX_CPU(0)->iCache.flushICacheEntries();
 #endif
 
   pageWriteStampTable.resetWriteStamps();
@@ -108,10 +108,10 @@ static unsigned iCacheMisses=0;
     count--; if (count == 0) return;  \
   }
 
-#if BX_SMP_PROCESSORS==1
-#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
-#else
+#if BX_SUPPORT_SMP
 #  define BX_TICK1_IF_SINGLE_PROCESSOR()
+#else
+#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
 #endif
 
 // Make code more tidy with a few macros.
@@ -420,7 +420,7 @@ debugger_check:
   // inform instrumentation about new instruction
   BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
-#if (BX_SMP_PROCESSORS>1 && BX_DEBUGGER==0)
+#if (BX_SUPPORT_SMP && BX_DEBUGGER==0)
   // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
   // instructions and then return so that the other processors have a chance
   // to run.  This is used only when simulating multiple processors.  If only
@@ -502,7 +502,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
   if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
     // I made up the bitmask above to mean HALT state.
-#if BX_SMP_PROCESSORS==1
+#if BX_SUPPORT_SMP == 0
     BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
     BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // for one processor, pass the time as quickly as possible until
@@ -522,7 +522,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
       }
       BX_TICK1();
     }
-#else      /* BX_SMP_PROCESSORS != 1 */
+#else   /* BX_SUPPORT_SMP */
     // for multiprocessor simulation, even if this CPU is halted we still
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from

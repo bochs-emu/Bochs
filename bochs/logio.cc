@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.50 2005-11-12 12:27:40 vruppert Exp $
+// $Id: logio.cc,v 1.51 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,7 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #include "iodev/iodev.h"
 #include <assert.h>
 
@@ -39,18 +38,17 @@
 
 // Just for the iofunctions
 
+static int Allocio=0;
 
-int Allocio=0;
-
-void
-iofunctions::flush(void) {
+void iofunctions::flush(void)
+{
 	if(logfd && magic == MAGIC_LOGNUM) {
 		fflush(logfd);
 	}
 }
 
-void
-iofunctions::init(void) {
+void iofunctions::init(void)
+{
 	// iofunctions methods must not be called before this magic
 	// number is set.
 	magic=MAGIC_LOGNUM;
@@ -65,22 +63,19 @@ iofunctions::init(void) {
 	log->ldebug ("Init(log file: '%s').",logfn);
 }
 
-void
-iofunctions::add_logfn (logfunc_t *fn)
+void iofunctions::add_logfn (logfunc_t *fn)
 {
   assert (n_logfn < MAX_LOGFNS);
   logfn_list[n_logfn++] = fn;
 }
 
-void
-iofunctions::set_log_action (int loglevel, int action)
+void iofunctions::set_log_action (int loglevel, int action)
 {
   for (int i=0; i<n_logfn; i++)
     logfn_list[i]->setonoff(loglevel, action);
 }
 
-void
-iofunctions::init_log(const char *fn)
+void iofunctions::init_log(const char *fn)
 {
 	assert (magic==MAGIC_LOGNUM);
 	// use newfd/newfn so that we can log the message to the OLD log
@@ -102,8 +97,7 @@ iofunctions::init_log(const char *fn)
 	logfn = newfn;
 }
 
-void
-iofunctions::init_log(FILE *fs)
+void iofunctions::init_log(FILE *fs)
 {
 	assert (magic==MAGIC_LOGNUM);
 	logfd = fs;
@@ -115,11 +109,9 @@ iofunctions::init_log(FILE *fs)
 	} else {
 		logfn = "(unknown)";
 	}
-
 }
 
-void
-iofunctions::init_log(int fd)
+void iofunctions::init_log(int fd)
 {
 	assert (magic==MAGIC_LOGNUM);
 	FILE *tmpfd;
@@ -129,7 +121,6 @@ iofunctions::init_log(int fd)
 	}
 
 	init_log(tmpfd);
-	return;
 };
 
 // all other functions may use genlog safely.
@@ -147,8 +138,7 @@ iofunctions::set_log_prefix(const char* prefix) {
 //  DO NOT nest out() from ::info() and the like.
 //    fmt and ap retained for direct printinf from iofunctions only!
 
-void
-iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
+void iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 {
 	char c=' ', *s;
 	assert (magic==MAGIC_LOGNUM);
@@ -172,7 +162,7 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	while(*s) {
 	  switch(*s) {
 	    case '%':
-	      if(*(s+1))s++;
+	      if(*(s+1)) s++;
 	      else break;
 	      switch(*s) {
 		case 'd':
@@ -182,7 +172,9 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
                   fprintf(logfd, FMT_TICK, bx_pc_system.time_ticks());
 		  break;
 		case 'i':
-                  fprintf(logfd, "%08x", BX_CPU(0)==NULL?0:BX_CPU(0)->dword.eip);
+#if BX_SUPPORT_SMP == 0
+                  fprintf(logfd, "%08x", BX_CPU(0)->dword.eip);
+#endif
 		  break;
 		case 'e':
                   fprintf(logfd, "%c", c);
@@ -192,13 +184,13 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 		  break;
 		default:
                   fprintf(logfd,"%%%c",*s);
-	        }
+	      }
               break;
 	    default :
               fprintf(logfd,"%c",*s);
-	    }
+	  }
 	  s++;
-          }
+        }
 
         fprintf(logfd," ");
 
@@ -210,8 +202,6 @@ iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list ap)
 	vfprintf(logfd, fmt, ap);
 	fprintf(logfd, "\n");
 	fflush(logfd);
-
-	return;
 }
 
 iofunctions::iofunctions(FILE *fs)
@@ -246,7 +236,8 @@ iofunctions::~iofunctions(void)
 
 #define LOG_THIS genlog->
 
-int logfunctions::default_onoff[N_LOGLEV] = {
+int logfunctions::default_onoff[N_LOGLEV] =
+{
   ACT_IGNORE,  // ignore debug
   ACT_REPORT,  // report info
   ACT_REPORT,  // report error
@@ -295,8 +286,7 @@ logfunctions::~logfunctions(void)
     }
 }
 
-void
-logfunctions::setio(iofunc_t *i)
+void logfunctions::setio(iofunc_t *i)
 {
   	// add pointer to iofunction object to use
 	this->logio = i;
@@ -304,20 +294,18 @@ logfunctions::setio(iofunc_t *i)
 	i->add_logfn (this);
 }
 
-void
-logfunctions::put(char *p)
+void logfunctions::put(char *p)
 {
-	char *tmpbuf;
-	tmpbuf=strdup("[     ]");// if we ever have more than 32 chars,
-						   //  we need to rethink this
+	char * tmpbuf=strdup("[     ]");   // if we ever have more than 32 chars,
+				           // we need to rethink this
 
-	if ( tmpbuf == NULL)
+	if (tmpbuf == NULL)
 	{
-	    return ;                        /* allocation not successful */
+	    return;                        /* allocation not successful */
 	}
-	if ( this->prefix != NULL )
+	if (this->prefix != NULL)
 	{
-	    free(this->prefix);             /* free previously allocated memory */
+	    free(this->prefix);            /* free previously allocated memory */
 	    this->prefix = NULL;
 	}
 	int len=strlen(p);
@@ -336,14 +324,12 @@ logfunctions::put(char *p)
 	this->prefix=tmpbuf;
 }
 
-void
-logfunctions::settype(int t)
+void logfunctions::settype(int t)
 {
 	type=t;
 }
 
-void
-logfunctions::info(const char *fmt, ...)
+void logfunctions::info(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -362,8 +348,7 @@ logfunctions::info(const char *fmt, ...)
 
 }
 
-void
-logfunctions::error(const char *fmt, ...)
+void logfunctions::error(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -381,8 +366,7 @@ logfunctions::error(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-logfunctions::panic(const char *fmt, ...)
+void logfunctions::panic(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -407,8 +391,7 @@ logfunctions::panic(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-logfunctions::pass(const char *fmt, ...)
+void logfunctions::pass(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -433,8 +416,7 @@ logfunctions::pass(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-logfunctions::ldebug(const char *fmt, ...)
+void logfunctions::ldebug(const char *fmt, ...)
 {
 	va_list ap;
 
@@ -452,8 +434,7 @@ logfunctions::ldebug(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
+void logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
 {
   // Guard against reentry on ask() function.  The danger is that some
   // function that's called within ask() could trigger another
@@ -502,7 +483,7 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // do something highly illegal that should kill the process.
       // Hey, this is fun!
       {
-      char *crashptr = (char *)0; char c = *crashptr;
+        char *crashptr = (char *)0; char c = *crashptr;
       }
       fprintf (stderr, "Sorry, I couldn't find your abort() function.  Exiting.");
       exit (0);
@@ -514,28 +495,6 @@ logfunctions::ask (int level, const char *prefix, const char *fmt, va_list ap)
       // instruction, it should notice the user interrupt and return to
       // the debugger.
       bx_guard.interrupt_requested = 1;
-/*
-      // Russ Cox's CPU panic debug patch from Oct 2003 -> 
-      //       caused compilation errors when BX_DEBUGGER enabled
-
-      // actually, if this is a panic, it's very likely the caller will
-      // not be able to cope gracefully if we return and try to keep
-      // executing.  so longjmp back to the cpu loop immediately.
-      if (level == LOGLEV_PANIC) {
-      BX_CPU_THIS_PTR stop_reason = STOP_CPU_PANIC;
-        bx_guard.special_unwind_stack = 1;
-        in_ask_already = 0;
-        longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-      }
-      break;
-#endif
-#if BX_GDBSTUB
-    case BX_LOG_ASK_CHOICE_ENTER_DEBUG:
-      // user chose debugger (we're using gdb)
-      in_ask_already = 0;
-      BX_CPU_THIS_PTR ispanic = 1;
-      longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-*/
       break;
 #endif
     default:
@@ -589,8 +548,7 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 }
 #endif
 
-void
-logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_status)
+void logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
   bx_atexit();
 #if BX_WITH_CARBON
@@ -628,7 +586,7 @@ logfunctions::fatal (const char *prefix, const char *fmt, va_list ap, int exit_s
   if (dbg_exit_called == 0) {
     dbg_exit_called = 1;
     bx_dbg_exit(exit_status);
-    }
+  }
 #endif
   // not safe to use BX_* log functions in here.
   fprintf (stderr, "fatal() should never return, but it just did\n");
@@ -647,5 +605,3 @@ void bx_center_print (FILE *file, char *line, int maxwidth)
   for (int i=0; i<imax; i++) fputc (' ', file);
   fputs (line, file);
 }
-
-

@@ -1,4 +1,3 @@
--------------------------------------------------------------------------
 Changes in 2.2.6 (not yet released):
 
 - critical APIC timer bug fixed (Volker Ruppert)
@@ -10,6 +9,11 @@ Changes in 2.2.6 (not yet released):
 - development documentation improved
 - enabled #PCE bit in CR4 register, previosly setting of this bit 
   generated #GP(0) fault (Stanislav Shwartsman)
+- enabled LAHF/SAHF instructions in x86-64 mode (Stanislav Shwartsman)
+- determine number of processors in SMP configuration through .bochsrc file
+  - new .bochsrc option to choose number of processors to emulate
+  - new to configure option --enable-smp to configure Bochs for SMP support,
+    the old --enable-processors=N option is deprecated
 - updated Bochs instrumentation examples (Stanislav Shwartsman)
 
 -------------------------------------------------------------------------

@@ -79,6 +79,14 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #romimage: file=mybios.bin # calculate start address from image size
 
 #=======================================================================
+# CPU
+# Set the number of processors when Bochs is compiled for SMP emulation.
+# Bochs currently supports up to 8 processors. If Bochs is compiled
+# without SMP support, it won't accept values different from 1.
+#=======================================================================
+cpu: count=1
+
+#=======================================================================
 # MEGS
 # Set the number of Megabytes of physical memory you want to emulate. 
 # The default is 32MB, most OS's won't need more than that.
@@ -344,7 +352,7 @@ log: bochsout.txt
 # This handles the format of the string prepended to each log line.
 # You may use those special tokens :
 #   %t : 11 decimal digits timer tick
-#   %i : 8 hexadecimal digits of cpu0 current eip
+#   %i : 8 hexadecimal digits of cpu current eip (ignored in SMP configuration)
 #   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
 #   %d : 5 characters string of the device, between brackets
 # 

@@ -1036,8 +1036,8 @@ Optional Features:
   --enable-new-pit                  use Greg Alexander's new PIT model
   --enable-idle-hack                use Roland Mainz's idle hack
   --enable-plugins                  enable plugins
-  --enable-processors               select number of processors (1,2,4,8)
   --enable-x86-64                   compile in support for x86-64 instructions
+  --enable-smp                      compile in support for SMP configurations
   --enable-cpu-level                select cpu level (3,4,5,6)
   --enable-apic                     enable APIC support
   --enable-compressed-hd            allows compressed (zlib) hard disk image (not implemented yet)
@@ -1091,6 +1091,7 @@ Optional Features:
   --enable-config-interface         turns on/off configuration interface (deprecated)
   --enable-control-panel            turns on/off contol panel (deprecated)
   --enable-vga                      use VGA emulation (deprecated)
+  --enable-processors               select number of processors (deprecated)
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -3664,7 +3665,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 3667 "configure"' > conftest.$ac_ext
+  echo '#line 3668 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -4772,7 +4773,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4775:" \
+echo "$as_me:4776:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -5810,11 +5811,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:5813: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:5814: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:5817: \$? = $ac_status" >&5
+   echo "$as_me:5818: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6043,11 +6044,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6046: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6047: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:6050: \$? = $ac_status" >&5
+   echo "$as_me:6051: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -6110,11 +6111,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:6113: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:6114: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:6117: \$? = $ac_status" >&5
+   echo "$as_me:6118: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -8276,7 +8277,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8279 "configure"
+#line 8280 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8374,7 +8375,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8377 "configure"
+#line 8378 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10553,11 +10554,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:10556: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:10557: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:10560: \$? = $ac_status" >&5
+   echo "$as_me:10561: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -10620,11 +10621,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:10623: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:10624: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:10627: \$? = $ac_status" >&5
+   echo "$as_me:10628: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11963,7 +11964,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 11966 "configure"
+#line 11967 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12061,7 +12062,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 12064 "configure"
+#line 12065 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12884,11 +12885,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12887: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12888: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12891: \$? = $ac_status" >&5
+   echo "$as_me:12892: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12951,11 +12952,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12954: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12955: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12958: \$? = $ac_status" >&5
+   echo "$as_me:12959: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -14967,11 +14968,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14970: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14971: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14974: \$? = $ac_status" >&5
+   echo "$as_me:14975: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15200,11 +15201,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15203: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15204: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:15207: \$? = $ac_status" >&5
+   echo "$as_me:15208: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -15267,11 +15268,11 @@ else
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:15270: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:15271: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:15274: \$? = $ac_status" >&5
+   echo "$as_me:15275: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -17433,7 +17434,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17436 "configure"
+#line 17437 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -17531,7 +17532,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 17534 "configure"
+#line 17535 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19850,7 +19851,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19853 "configure"
+#line 19854 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -33095,143 +33096,6 @@ echo "${ECHO_T}yes" >&6
   fi
 fi
 
-
-
-echo "$as_me:$LINENO: checking for number of processors" >&5
-echo $ECHO_N "checking for number of processors... $ECHO_C" >&6
-# Check whether --enable-processors or --disable-processors was given.
-if test "${enable_processors+set}" = set; then
-  enableval="$enable_processors"
-  case "$enableval" in
-     1)
-       echo "$as_me:$LINENO: result: 1" >&5
-echo "${ECHO_T}1" >&6
-       cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS 1
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 1
-_ACEOF
-
-       ;;
-     2)
-       echo "$as_me:$LINENO: result: 2" >&5
-echo "${ECHO_T}2" >&6
-       cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS 2
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 2
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CPU_SMF 0
-_ACEOF
-
-       ;;
-     4)
-       echo "$as_me:$LINENO: result: 4" >&5
-echo "${ECHO_T}4" >&6
-       cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS 4
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 4
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CPU_SMF 0
-_ACEOF
-
-       ;;
-     8)
-       echo "$as_me:$LINENO: result: 8" >&5
-echo "${ECHO_T}8" >&6
-       cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS 8
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 8
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CPU_SMF 0
-_ACEOF
-
-       ;;
-     yes|no)
-       echo "$as_me:$LINENO: result: $enableval" >&5
-echo "${ECHO_T}$enableval" >&6
-       { { echo "$as_me:$LINENO: error: --enable-processors=??? (valid number required)" >&5
-echo "$as_me: error: --enable-processors=??? (valid number required)" >&2;}
-   { (exit 1); exit 1; }; }
-       ;;
-     *)
-       echo " "
-       echo "WARNING: processors != 1,2,4,8 can work, but you need to modify rombios.c manually"
-       echo "$as_me:$LINENO: result: $enableval" >&5
-echo "${ECHO_T}$enableval" >&6
-       cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS $enableval
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID $enableval
-_ACEOF
-
-       cat >>confdefs.h <<\_ACEOF
-#define BX_USE_CPU_SMF 0
-_ACEOF
-
-       ;;
-   esac
-   bx_procs="$enableval"
-
-else
-
-     echo "$as_me:$LINENO: result: 1" >&5
-echo "${ECHO_T}1" >&6
-     cat >>confdefs.h <<\_ACEOF
-#define BX_SMP_PROCESSORS 1
-_ACEOF
-
-     cat >>confdefs.h <<\_ACEOF
-#define BX_BOOTSTRAP_PROCESSOR 0
-_ACEOF
-
-     cat >>confdefs.h <<\_ACEOF
-#define BX_IOAPIC_DEFAULT_ID 1
-_ACEOF
-
-     bx_procs=1
-
-
-fi;
-
 echo "$as_me:$LINENO: checking if compiler allows blank labels" >&5
 echo $ECHO_N "checking if compiler allows blank labels... $ECHO_C" >&6
 cat >conftest.$ac_ext <<_ACEOF
@@ -33383,6 +33247,45 @@ _ACEOF
 fi;
 
 
+use_smp=0
+echo "$as_me:$LINENO: checking for SMP support" >&5
+echo $ECHO_N "checking for SMP support... $ECHO_C" >&6
+# Check whether --enable-smp or --disable-smp was given.
+if test "${enable_smp+set}" = set; then
+  enableval="$enable_smp"
+  if test "$enableval" = yes; then
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SMP 1
+_ACEOF
+
+    cat >>confdefs.h <<\_ACEOF
+#define BX_USE_CPU_SMF 0
+_ACEOF
+
+    use_smp=1
+   else
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SMP 0
+_ACEOF
+
+   fi
+
+else
+
+    echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SMP 0
+_ACEOF
+
+
+
+fi;
+
 echo "$as_me:$LINENO: checking for cpu level" >&5
 echo $ECHO_N "checking for cpu level... $ECHO_C" >&6
 # Check whether --enable-cpu-level or --disable-cpu-level was given.
@@ -33444,15 +33347,15 @@ _ACEOF
        ;;
    esac
    bx_cpu_level=$enableval
-   if test "$bx_procs" -gt 1 -a "$enableval" -lt 6; then
+   if test "$use_smp" = 1 -a "$enableval" -lt 6; then
      echo "ERROR: with >1 processor, use --enable-cpu-level=6"
      exit 1
    fi
 
 else
 
-    # for multiprocessors, cpu level must be 6
-    if test "$bx_procs" -gt 1 -o "$use_x86_64" = 1; then
+    # for multiprocessors or x86-64, cpu level must be 6
+    if test "$use_smp" = 1 -o "$use_x86_64" = 1; then
       echo "$as_me:$LINENO: result: 6" >&5
 echo "${ECHO_T}6" >&6
       cat >>confdefs.h <<\_ACEOF
@@ -33499,9 +33402,8 @@ _ACEOF
    else
     echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
-    if test "$bx_procs" -gt 1; then
-      echo "Number of processors = $bx_procs"
-      echo "ERROR: With processors > 1 you must use --enable-apic"
+    if test "$use_smp" = 1; then
+      echo "ERROR: With SMP configuration you must use --enable-apic"
       exit 1
     fi
     cat >>confdefs.h <<\_ACEOF
@@ -33514,8 +33416,8 @@ _ACEOF
 
 else
 
-    if test "$bx_procs" -gt 1 -o "$bx_cpu_level" -gt 5; then
-      # enable APIC by default, if processors>1 or if cpulevel>5
+    if test "$use_smp" = 1 -o "$bx_cpu_level" -gt 5; then
+      # enable APIC by default, if SMP configuration or if cpulevel>5
       echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
       cat >>confdefs.h <<\_ACEOF
@@ -39324,6 +39226,24 @@ if test "${enable_vga+set}" = set; then
 echo "${ECHO_T}$enableval" >&6
    { { echo "$as_me:$LINENO: error: deprecated option - standard VGA emulation is always enabled" >&5
 echo "$as_me: error: deprecated option - standard VGA emulation is always enabled" >&2;}
+   { (exit 1); exit 1; }; }
+
+else
+
+   echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+
+fi;
+
+echo "$as_me:$LINENO: checking for number of processors (deprecated)" >&5
+echo $ECHO_N "checking for number of processors (deprecated)... $ECHO_C" >&6
+# Check whether --enable-processors or --disable-processors was given.
+if test "${enable_processors+set}" = set; then
+  enableval="$enable_processors"
+  echo "$as_me:$LINENO: result: $enableval" >&5
+echo "${ECHO_T}$enableval" >&6
+   { { echo "$as_me:$LINENO: error: deprecated - use option --enable-smp instead" >&5
+echo "$as_me: error: deprecated - use option --enable-smp instead" >&2;}
    { (exit 1); exit 1; }; }
 
 else

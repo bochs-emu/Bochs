@@ -48,15 +48,12 @@
 #define BX_EXIT(x)  ::exit(x)
 #endif
 
-// I have tested the following combinations:
+// We have tested the following combinations:
 //  * processors=1, bootstrap=0, ioapic_id=1   (uniprocessor system)
 //  * processors=2, bootstrap=0, ioapic_id=2
 //  * processors=4, bootstrap=0, ioapic_id=4
-#define BX_SMP_PROCESSORS 1
+#define BX_SUPPORT_SMP 0
 #define BX_BOOTSTRAP_PROCESSOR 0
-// choose IOAPIC id to be equal to the number of processors.  This leaves
-// one space for each processor to have an ID, starting with 0.
-#define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
 // controls how many instances of BX_MEM_C are created.  For
 // SMP, use several processors with one shared memory space.
@@ -71,7 +68,7 @@
 // include in APIC models, required for a multiprocessor system.
 #define BX_SUPPORT_APIC 0
 
-#if (BX_SMP_PROCESSORS>1 && !BX_SUPPORT_APIC)
+#if (BX_SUPPORT_SMP && !BX_SUPPORT_APIC)
 #error For multiprocessor simulation, BX_SUPPORT_APIC is required.
 #endif
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.7 2006-01-15 19:34:03 sshwarts Exp $
+// $Id: virt_timer.h,v 1.8 2006-01-18 18:35:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,8 @@
 #ifndef _BX_VIRT_TIMER_H
 #define _BX_VIRT_TIMER_H
 
-#define BX_MAX_VIRTUAL_TIMERS (15+BX_SMP_PROCESSORS)
+// should be adjusted if want to support more SMP processors
+#define BX_MAX_VIRTUAL_TIMERS (32)
 #define BX_NULL_VIRTUAL_TIMER_HANDLE 10000
 
 #define BX_MAX_VIRTUAL_TIME (0x7fffffff)

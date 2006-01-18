@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.33 2006-01-15 17:55:25 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.34 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1303,7 +1303,7 @@ one_more:
       // cpus set stop, too bad.
     }
     // increment time tick only after all processors have had their chance.
-#if BX_SMP_PROCESSORS==1
+#if BX_SUPPORT_SMP == 0
     // all ticks are handled inside the cpu loop
 #else
     // We must tick by the number of instructions that were
@@ -1311,7 +1311,7 @@ one_more:
     // execute.  Even this is tricky with SMP because one might
     // have hit a breakpoint, while others executed the whole
     // quantum.
-      int max_executed = 0;
+    int max_executed = 0;
     for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
       if (BX_CPU(cpu)->guard_found.icount > max_executed)
       max_executed = BX_CPU(cpu)->guard_found.icount;
@@ -1323,7 +1323,7 @@ one_more:
     if (max_executed < 1) max_executed=1;
 
     BX_TICKN(max_executed);
-#endif /* BX_SMP_PROCESSORS>1 */
+#endif /* BX_SUPPORT_SMP */
   }
 #endif /* BX_NUM_SIMULATORS */
 
@@ -1371,7 +1371,7 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
       BX_CPU(cpu)->guard_found.icount = 0;
       BX_CPU(cpu)->cpu_loop(-1);
     }
-#if BX_SMP_PROCESSORS==1
+#if BX_SUPPORT_SMP == 0
     // ticks are handled inside the cpu loop
 #else
     BX_TICK1 ();
@@ -1471,8 +1471,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 
 void bx_dbg_print_guard_results(void)
 {
-  unsigned i;
-  unsigned sim;
+  unsigned sim, i;
 
 for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
   unsigned long found = BX_CPU(sim)->guard_found.guard_found;
@@ -1892,7 +1891,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       memset(&cpu, 0, sizeof(cpu));
       BX_CPU(i)->dbg_get_cpu(&cpu);
 
-#if (BX_SMP_PROCESSORS >= 2)
+#if BX_SUPPORT_SMP
       dbg_printf ("%s:\n", BX_CPU(i)->name, i);
 #endif
       reg = cpu.eax;
@@ -1952,10 +1951,10 @@ void bx_dbg_dump_cpu_command(void)
 {
   bx_dbg_cpu_t cpu;
 
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++ ) {
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->dbg_get_cpu(&cpu);
 
-#if (BX_SMP_PROCESSORS >= 2)
+#if BX_SUPPORT_SMP
     dbg_printf ("CPU#%u\n", i);
 #endif
     dbg_printf ("eax:0x%08x, ebx:0x%08x, ecx:0x%08x, edx:0x%08x\n", 
@@ -2412,7 +2411,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
   }
   else if ( !strcmp(symbol, "cpu") ) {
-#if ((BX_SMP_PROCESSORS>1) && (BX_SUPPORT_APIC))
+#if BX_SUPPORT_SMP
       if (val > BX_SMP_PROCESSORS) {
         dbg_printf ("invalid cpu id number %d\n", val);
         return;

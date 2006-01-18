@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.149 2005-11-20 17:22:44 vruppert Exp $
+// $Id: siminterface.h,v 1.150 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -121,6 +121,7 @@ typedef enum {
 // it's only important that they all be different from each other.
 typedef enum {
   BXP_NULL = 301,
+  BXP_CPU_COUNT,
   BXP_IPS,
   BXP_REALTIME_PIT,
   BXP_TEXT_SNAPSHOT_CHECK,
@@ -1551,3 +1552,4 @@ typedef struct BOCHSAPI {
 
 BOCHSAPI extern bx_startup_flags_t bx_startup_flags;
 BOCHSAPI extern bx_bool bx_user_quit;
+BOCHSAPI extern Bit8u bx_cpu_count;

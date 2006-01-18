@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.24 2006-01-10 06:13:26 sshwarts Exp $
+// $Id: ioapic.cc,v 1.25 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -37,6 +37,8 @@ bx_ioapic_c::bx_ioapic_c ()
 }
 
 bx_ioapic_c::~bx_ioapic_c () {}
+
+#define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
 void bx_ioapic_c::init () 
 {

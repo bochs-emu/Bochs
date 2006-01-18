@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.305 2006-01-17 08:02:25 sshwarts Exp $
+// $Id: main.cc,v 1.306 2006-01-18 18:35:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,6 +82,7 @@ logfunctions *pluginlog = &thePluginLog;
 
 bx_startup_flags_t bx_startup_flags;
 bx_bool bx_user_quit;
+Bit8u bx_cpu_count;
 
 /* typedefs */
 
@@ -93,15 +94,14 @@ bx_pc_system_c bx_pc_system;
 
 bx_debug_t bx_dbg;
 
-// We have to define BX_CPU_C objects AFTER bx_pc_system_c is defined
-// BX_CPU_C::local_apic object defines it own timer in constructor
-// and pc_system_c constructor might overwrite it !
-#if BX_SMP_PROCESSORS==1
-// single processor simulation, so there's one of everything
-BOCHSAPI BX_CPU_C  bx_cpu;
+typedef BX_CPU_C *BX_CPU_C_PTR;
+
+#if BX_SUPPORT_SMP
+// multiprocessor simulation, we need an array of cpus
+BOCHSAPI BX_CPU_C_PTR *bx_cpu_array = NULL;
 #else
-// multiprocessor simulation, we need an array of cpus and memories
-BOCHSAPI BX_CPU_C *bx_cpu_array[BX_SMP_PROCESSORS];
+// single processor simulation, so there's one of everything
+BOCHSAPI BX_CPU_C bx_cpu;
 #endif
 
 char *bochsrc_filename = NULL;
@@ -726,6 +726,7 @@ bx_begin_simulation (int argc, char *argv[])
     BX_PANIC (("no gui module was loaded"));
     return 0;
   }
+  bx_cpu_count = bx_options.Ocpu_count->get();
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
@@ -760,7 +761,7 @@ bx_begin_simulation (int argc, char *argv[])
     // Not a great solution but it works. BBD
     bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get());
 
-#if BX_SMP_PROCESSORS == 1
+#if BX_SUPPORT_SMP == 0
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
     BX_CPU(0)->cpu_loop(1);
@@ -883,13 +884,15 @@ int bx_init_hardware()
   if (strcmp(bx_options.optram[3].Opath->getptr(), "") !=0)
     BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr(), bx_options.optram[3].Oaddress->get(), 2);
 
-#if BX_SMP_PROCESSORS == 1
+#if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize(BX_MEM(0));
   BX_CPU(0)->sanity_checks();
   BX_INSTR_INIT(0);
   BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
-  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
+  bx_cpu_array = new BX_CPU_C_PTR[BX_SMP_PROCESSORS];
+
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i) = new BX_CPU_C(i);
     BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();

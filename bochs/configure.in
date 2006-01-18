@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.306 2006-01-04 18:55:43 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.307 2006-01-18 18:35:36 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -480,64 +480,6 @@ if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
   fi
 fi
 
-
-
-AC_MSG_CHECKING(for number of processors)
-AC_ARG_ENABLE(processors,
-  [  --enable-processors               select number of processors (1,2,4,8)],
-  [case "$enableval" in
-     1)
-       AC_MSG_RESULT(1)
-       AC_DEFINE(BX_SMP_PROCESSORS, 1)
-       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 1)
-       ;;
-     2)
-       AC_MSG_RESULT(2)
-       AC_DEFINE(BX_SMP_PROCESSORS, 2)
-       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 2)
-       AC_DEFINE(BX_USE_CPU_SMF, 0)
-       ;;
-     4)
-       AC_MSG_RESULT(4)
-       AC_DEFINE(BX_SMP_PROCESSORS, 4)
-       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 4)
-       AC_DEFINE(BX_USE_CPU_SMF, 0)
-       ;;
-     8)
-       AC_MSG_RESULT(8)
-       AC_DEFINE(BX_SMP_PROCESSORS, 8)
-       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 8)
-       AC_DEFINE(BX_USE_CPU_SMF, 0)
-       ;;
-     yes|no)
-       AC_MSG_RESULT($enableval)
-       AC_MSG_ERROR([--enable-processors=??? (valid number required)])
-       ;;
-     *)
-       echo " "
-       echo "WARNING: processors != [1,2,4,8] can work, but you need to modify rombios.c manually"
-       AC_MSG_RESULT($enableval)
-       AC_DEFINE(BX_SMP_PROCESSORS, $enableval)
-       AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-       AC_DEFINE(BX_IOAPIC_DEFAULT_ID, $enableval)
-       AC_DEFINE(BX_USE_CPU_SMF, 0)
-       ;;
-   esac
-   bx_procs="$enableval"
-  ],
-  [
-     AC_MSG_RESULT(1)
-     AC_DEFINE(BX_SMP_PROCESSORS, 1)
-     AC_DEFINE(BX_BOOTSTRAP_PROCESSOR, 0)
-     AC_DEFINE(BX_IOAPIC_DEFAULT_ID, 1)
-     bx_procs=1
-  ]
-  )
-
 AC_MSG_CHECKING(if compiler allows blank labels)
 AC_TRY_COMPILE([], [ { label1: } ],
     AC_MSG_RESULT(yes),
@@ -577,6 +519,26 @@ AC_ARG_ENABLE(x86-64,
   )
 AC_SUBST(OBJS64)
 
+use_smp=0
+AC_MSG_CHECKING(for SMP support)
+AC_ARG_ENABLE(smp,
+  [  --enable-smp                      compile in support for SMP configurations],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_SMP, 1)
+    AC_DEFINE(BX_USE_CPU_SMF, 0)
+    use_smp=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_SMP, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_SMP, 0)
+    ]
+  )
+
 AC_MSG_CHECKING(for cpu level)
 AC_ARG_ENABLE(cpu-level,
   [  --enable-cpu-level                select cpu level (3,4,5,6)],
@@ -608,14 +570,14 @@ AC_ARG_ENABLE(cpu-level,
        ;;
    esac
    bx_cpu_level=$enableval
-   if test "$bx_procs" -gt 1 -a "$enableval" -lt 6; then
+   if test "$use_smp" = 1 -a "$enableval" -lt 6; then
      echo "ERROR: with >1 processor, use --enable-cpu-level=6"
      exit 1
    fi
   ],
   [
-    # for multiprocessors, cpu level must be 6
-    if test "$bx_procs" -gt 1 -o "$use_x86_64" = 1; then
+    # for multiprocessors or x86-64, cpu level must be 6
+    if test "$use_smp" = 1 -o "$use_x86_64" = 1; then
       AC_MSG_RESULT(6)
       AC_DEFINE(BX_CPU_LEVEL, 6)
       AC_DEFINE(BX_CPU_LEVEL_HACKED, 6)
@@ -640,9 +602,8 @@ AC_ARG_ENABLE(apic,
     APIC_OBJS='apic.o'
    else
     AC_MSG_RESULT(no)
-    if test "$bx_procs" -gt 1; then
-      echo "Number of processors = $bx_procs"
-      echo "ERROR: With processors > 1 you must use --enable-apic"
+    if test "$use_smp" = 1; then
+      echo "ERROR: With SMP configuration you must use --enable-apic"
       exit 1
     fi
     AC_DEFINE(BX_SUPPORT_APIC, 0)
@@ -651,8 +612,8 @@ AC_ARG_ENABLE(apic,
    fi
    ],
   [
-    if test "$bx_procs" -gt 1 -o "$bx_cpu_level" -gt 5; then
-      # enable APIC by default, if processors>1 or if cpulevel>5
+    if test "$use_smp" = 1 -o "$bx_cpu_level" -gt 5; then
+      # enable APIC by default, if SMP configuration or if cpulevel>5
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_APIC, 1)
       IOAPIC_OBJS='ioapic.o'
@@ -2801,6 +2762,16 @@ AC_ARG_ENABLE(vga,
   [  --enable-vga                      use VGA emulation (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([deprecated option - standard VGA emulation is always enabled])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for number of processors (deprecated))
+AC_ARG_ENABLE(processors,
+  [  --enable-processors               select number of processors (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([deprecated - use option --enable-smp instead])
   ],
   [
    AC_MSG_RESULT(no)

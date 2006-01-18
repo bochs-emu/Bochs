@@ -3,17 +3,15 @@
 # more things than you actually want.
 
 ./configure \
-  --enable-processors=2  \
+  --enable-smp \
+  --enable-apic \
   --enable-x86-64 \
+  --enable-all-optimizations \
   --enable-ne2000 \
   --enable-pci \
   --enable-4meg-pages \
   --enable-pae \
-  --enable-guest2host-tlb \
-  --enable-repeat-speedups \
-  --enable-icache \
   --enable-global-pages \
-  --enable-host-specific-asms \
   --enable-ignore-bad-msr \
   --enable-port-e9-hack \
   --enable-debugger \
