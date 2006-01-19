@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.19 2006-01-15 12:04:02 vruppert Exp $
+$Id: development.dbk,v 1.20 2006-01-19 21:17:45 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -337,11 +337,10 @@ class bx_pic_c : public bx_pic_stub_c {
 public:
   bx_pic_c(void);
   ~bx_pic_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
-  virtual void   lower_irq(unsigned irq_no);
-  virtual void   raise_irq(unsigned irq_no);
 ...
+  BX_PIC_SMF void   service_master_pic(void);
+  BX_PIC_SMF void   service_slave_pic(void);
+  BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
   };
 </screen>
 <para>
@@ -353,26 +352,30 @@ And iodev/pic.cc:
 ...
 bx_pic_c *thePic = NULL;
 ...
-void bx_pic_c::lower_irq(unsigned irq_no)
+  void
+bx_pic_c::service_master_pic(void)
 {
-#if BX_SUPPORT_APIC
-  // forward this function call to the ioapic too
-  if (DEV_ioapic_present() && (irq_no != 2)) {
-    bx_devices.ioapic->set_irq_level(irq_no, 0);
-  }
-#endif
+  Bit8u unmasked_requests;
+  int irq;
+  Bit8u isr, max_irq;
+  Bit8u highest_priority = BX_PIC_THIS s.master_pic.lowest_priority + 1;
+  if(highest_priority > 7)
+    highest_priority = 0;
 
-  Bit8u mask = (1 << (irq_no & 7));
-  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
-    BX_PIC_THIS s.master_pic.IRQ_in &= ~(mask);
-    BX_PIC_THIS s.master_pic.irr &= ~(mask);
-  } else if ((irq_no > 7) && (irq_no <= 15) &&
-             (BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now low", (unsigned) irq_no));
-    BX_PIC_THIS s.slave_pic.IRQ_in &= ~(mask);
-    BX_PIC_THIS s.slave_pic.irr &= ~(mask);
-  }
+  if (BX_PIC_THIS s.master_pic.INT) { /* last interrupt still not acknowleged */
+    return;
+    }
+
+  if (BX_PIC_THIS s.master_pic.special_mask) {
+    /* all priorities may be enabled.  check all IRR bits except ones
+     * which have corresponding ISR bits set
+     */
+    max_irq = highest_priority;
+    }
+  else { /* normal mode */
+    /* Find the highest priority IRQ that is enabled due to current ISR */
+    isr = BX_PIC_THIS s.master_pic.isr;
+...
 }
 ...
 </screen>
@@ -1919,11 +1922,35 @@ as an example.
 </chapter>
 
 <chapter id="coding"><title>Coding</title>
-      <section><title>coding conventions</title>
-      <para>
-      &FIXME;
-      </para>
-      </section>
+<section><title>Coding guidelines</title>
+<para>
+<itemizedlist>
+<listitem><para><command>Don't make use of any external C++ classes.</command></para>
+<para>They are not offered on all platforms and this would make bochs non-portable.
+There is use of such classes in the optional debugger. I plan on removing this use.
+</para></listitem>
+<listitem><para><command>Don't use fancy C++ features.</command></para>
+<para>Bochs is incredibly performance sensitive, and will be increasingly so as
+more speed enhancements are added. There's a time and place for most everything
+and this is not it. Some advanced features create overhead in the generated code
+that you don't see. They also convolute the code, and sometimes occlude that is
+really going on.
+<itemizedlist>
+<listitem><para>Don't use templates</para></listitem>
+<listitem><para>Don't use virtual functions if not strictly required</para></listitem>
+<listitem><para>Don't use C++ exceptions</para></listitem>
+<listitem><para>Don't use overloading of any kind</para></listitem>
+</itemizedlist></para></listitem>
+<listitem><para><command>Use soft tabs.</command></para>
+<para>At least when you submit code, convert all hard tabs to spaces.
+There is no uniform way to handle tabs properly.</para></listitem>
+<listitem><para><command>Please do compile with all warnings turned on.</command></para>
+<para>It's really difficult to spot interesting warnings when a compile is littered
+with non-interesting ones.</para></listitem>
+<listitem><para><command>Don't use signed ints where unsigned will do.</command></para></listitem>
+</itemizedlist>
+</para>
+</section>
       <section id="patches"><title>patches:</title>
       <para>
       &FIXME;
