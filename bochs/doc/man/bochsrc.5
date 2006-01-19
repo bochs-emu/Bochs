@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "09 Jan 2006" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "19 Jan 2006" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -104,6 +104,14 @@ Examples:
   romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
   romimage: file=mybios.bin, address=0xfff80000
   romimage: file=mybios.bin
+
+.I "cpu:"
+Set the number of processors when Bochs is compiled for SMP emulation.
+Bochs currently supports up to 8 processors. If Bochs is compiled
+without SMP support, it won't accept values different from 1.
+
+Example:
+  cpu: count=2
 
 .TP
 .I "megs:"
@@ -310,7 +318,7 @@ Example:
 .TP
 .I "log:"
 Give the path of the log file you'd like Bochs
-debug and misc. verbage to be written to.   If
+debug and misc. verbiage to be written to.   If
 you really don't want it, make it /dev/null.
 
 Example:
@@ -677,7 +685,7 @@ you can use the following 'ethmod's to simulate a virtual network.
  - vde    : Virtual Distributed Ethernet
  - vnet   : ARP, ICMP-echo(ping), DHCP and TFTP are simulated
             The virtual host uses 192.168.10.1
-            DHCP assignes 192.168.10.2 to the guest
+            DHCP assigns 192.168.10.2 to the guest
             The TFTP server use ethdev for the root directory and doesn't
             overwrite files
 

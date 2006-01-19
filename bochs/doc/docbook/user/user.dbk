@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.195 2006-01-09 18:37:28 vruppert Exp $
+$Id: user.dbk,v 1.196 2006-01-19 18:13:27 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -546,7 +546,7 @@ currently work with.
   <row>
     <entry>Simulate a Multiprocessor</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to simulate up to 15 processors.  This
+    <entry>Bochs can be configured to simulate up to 8 processors.  This
     feature is still experimental, but it can boot Linux 2.2 kernels with SMP
     support.  Please note that this does NOT mean that Bochs can run
     faster on a physical SMP machine.
@@ -2339,17 +2339,17 @@ turn it off.
           this option, you don't.</entry>
     </row>
     <row>
-      <entry>--enable-processors={<option>1,2,3,...,15</option>}</entry>
-      <entry>1</entry>
+      <entry>--enable-smp</entry>
+      <entry>no</entry>
       <entry>
-      By changing to more than 1 processor, you enable SMP simulation.  This
-      allows you to boot Linux and maybe other OSes in SMP mode, and bochs will
-      simulate all the different CPUs and communication between them.  Do not
-      expect this option to speed up your simulation!  On the contrary, it has
-      to spend extra time simulating the different CPUs (even if they're mostly
-      idle) and the communication between them.  Use it to try out an SMP OS if
-      you don't have an SMP machine, or to debug SMP OS drivers. Refer to
-      <xref linkend="SMP"> for more details on SMP in Bochs.
+      Compile in support for SMP simulation.  This allows you to boot Linux and
+      maybe other OSes in SMP mode, and bochs will simulate all the different
+      CPUs and communication between them.  Do not expect this option to speed
+      up your simulation!  On the contrary, it has to spend extra time simulating
+      the different CPUs (even if they're mostly idle) and the communication
+      between them. Use it to try out an SMP OS if you don't have an SMP machine,
+      or to debug SMP OS drivers. Refer to <xref linkend="SMP"> for more details
+      on SMP in Bochs.
       </entry>
     </row>
     <row>
@@ -3037,6 +3037,19 @@ Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most 
 </para></note>
 </section>
 
+<section id="bochsopt-cpu-count"><title>cpu</title>
+<para>
+Examples:
+<screen>
+  cpu: count=2
+</screen>
+Set the number of processors when Bochs is compiled for SMP emulation.
+Bochs currently supports up to 8 processors. If Bochs is compiled
+without SMP support, it won't accept values different from 1.
+For more information on SMP see <xref linkend="SMP">.
+</para>
+</section>
+
 <section><title>romimage</title>
 <para>
 Example:
@@ -3476,7 +3489,7 @@ Examples:
   log: /dev/null              (Unix only)
   log: nul                    (win32 only)
 </screen>
-Give the path of the log file you'd like Bochs debug and misc. verbage to be
+Give the path of the log file you'd like Bochs debug and misc. verbiage to be
 to be written to. If you don't use this option or set the filename to '-'
 the output is written to the console. If you really don't want it,
 make it "/dev/null" (Unix) or "nul" (win32). :^(
@@ -5642,18 +5655,22 @@ md7
 
 <section id="SMP"><title>Simulating a Symmetric Multiprocessor (SMP) Machine</title>
 <para>
-Bochs can now simulate an SMP machine when you use "--enable-processors=N" 
-in the configure command.  SMP support was added by Bryce Denney, who
+Bochs can now simulate an SMP machine when you use "--enable-smp" in the
+configure command.  SMP support was added by Bryce Denney, who
 was very interested in watching a multiprocessor operating system work 
 at a low level.  It should also be helpful to operating system developers
 who are writing SMP drivers, or just for users who want to test drive
 an SMP machine to see what it looks like.
 </para>
-
 <para>
-It is important to understand that configuring bochs for 4 processors will NOT make
-your single-threaded applications run faster in general!  On the contrary, it
-has to spend time simulating idle processors as well as the ones doing your
+Starting with Bochs 2.2.6 you can set up the number of processors in the
+<filename>bochsrc</filename>. See <xref linkend="bochsopt-cpu-count"> how to
+set up the number of processors.
+</para>
+<para>
+It is important to understand that configuring bochs for 4 processors will NOT
+make your single-threaded applications run faster in general!  On the contrary,
+it has to spend time simulating idle processors as well as the ones doing your
 task.  The point is to simulate an SMP system, not to speed up a uniprocessor
 application.
 </para>
@@ -5682,17 +5699,12 @@ What needs to be done to improve SMP support?
 
 <itemizedlist>
 <listitem><para>
-still needs work to allow you to configure the number of processors in the
-.bochsrc. Presently you have to choose the number of processors at compile time.
-</para></listitem>
-
-<listitem><para>
 debugger support is still limited.  For example, you can set breakpoints,
 but you can't specify which processor you want to set the breakpoint for.
 </para></listitem>
 
 <listitem><para>
- test on SMP systems other than linux 2.2.14
+test on SMP systems other than linux 2.2.14
 </para></listitem>
 
 <listitem><para>
@@ -5710,9 +5722,8 @@ in parallel.  This is a great idea, but it's not done at present.
 </para></listitem>
 </itemizedlist>
 </para>
-
-
 </section>
+
 <section id="dlxlinux-networking"><title>Setting Up Networking in DLX Linux</title>
 <para>
 All Bochs binaries come with a working version of DLX Linux.  This section

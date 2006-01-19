@@ -335,7 +335,7 @@ floppy_bootsig_check: disabled=0
 
 #=======================================================================
 # LOG:
-# Give the path of the log file you'd like Bochs debug and misc. verbage
+# Give the path of the log file you'd like Bochs debug and misc. verbiage
 # to be written to. If you don't use this option or set the filename to
 # '-' the output is written to the console. If you really don't want it,
 # make it "/dev/null" (Unix) or "nul" (win32). :^(
@@ -606,7 +606,7 @@ private_colormap: enabled=0
 #   vde:  Virtual Distributed Ethernet
 #   vnet: ARP, ICMP-echo(ping), DHCP and read/write TFTP are simulated.
 #         The virtual host uses 192.168.10.1.
-#         DHCP assignes 192.168.10.2 to the guest.
+#         DHCP assigns 192.168.10.2 to the guest.
 #         TFTP uses the ethdev value for the root directory and doesn't
 #         overwrite files.
 #
