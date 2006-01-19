@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.196 2006-01-19 18:13:27 vruppert Exp $
+$Id: user.dbk,v 1.197 2006-01-19 19:13:30 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -344,24 +344,32 @@ currently work with.
   <row>
     <entry>386,486,Pentium Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as the Time Stamp Counter.</entry>
+    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as SMM or Time Stamp Counter.</entry>
   </row>
   <row>
-    <entry>Pentium Pro Emulation</entry>
-    <entry>Incomplete</entry>
-    <entry>A few Pentium Pro features are incomplete, such as an on-chip APIC for SMP simulation.
+    <entry>P6 and later CPU Emulation</entry>
+    <entry>Yes</entry>
+    <entry>Bochs can be configured to emulate any P6 family processor including optional MMX and SSE instructions.
     </entry>
   </row>
   <row>
-    <entry>AMD x86-64 Emulation</entry>
+    <entry>Pentium 4 Emulation</entry>
     <entry>Incomplete</entry>
-    <entry>The AMD x86-64 support is about 90% complete and is still experimental.</entry>
+    <entry>A few Pentium 4 features are incomplete, such as an on-chip APIC extensions (XAPIC) for SMP simulation.
+    </entry>
+  </row>
+  <row>
+    <entry>x86-64 Extensions Emulation</entry>
+    <entry>Yes</entry>
+    <entry>Bochs can be configured to emulate x86-64 with all Intel (CMPXCHG16B instruction) or AMD (RDTSCP instruction) extensions.</entry>
   </row>
   <row>
     <entry>Command Line Debugger</entry>
     <entry>Yes</entry>
     <entry>Powerful command line debugger (optional) that lets you stop
-    execution and examine registers and memory, set breakpoints, etc.
+    execution and examine registers and memory, set breakpoints, etc. Unfortunatelly
+    the debugger still lacks x86-64 support and almost unusable for debugging 
+    x86-64 workloads.
     </entry>
   </row>
   <row>
@@ -380,7 +388,7 @@ currently work with.
   <row>
     <entry>VGA</entry>
     <entry>Yes</entry>
-    <entry>VGA color graphics emulation in a window
+    <entry>VGA color graphics emulation in a window.
     </entry>
   </row>
   <row>
@@ -522,7 +530,7 @@ currently work with.
   <row>
     <entry>v8086/paging</entry>
     <entry>Yes</entry>
-    <entry>Virtual-8086 mode and paging</entry>
+    <entry>Virtual-8086 mode including optional v8086 mode extensions (VME) and paging</entry>
   </row>
   <row>
     <entry>PIC</entry>
