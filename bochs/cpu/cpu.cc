@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.122 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: cpu.cc,v 1.123 2006-01-19 18:32:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -179,12 +179,13 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 
 #if BX_DEBUGGER
   {
-  Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
-  if ( dbg_is_begin_instr_bpoint(
+  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+  if (dbg_is_begin_instr_bpoint(
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
          debug_eip,
          BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) )
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+         Is64BitMode()))
     {
       return;
     }
@@ -471,12 +472,14 @@ debugger_check:
 
     {
       // check for icount or control-C.  If found, set guard reg and return.
-      Bit32u debug_eip = BX_CPU_THIS_PTR prev_eip;
-      if ( dbg_is_end_instr_bpoint(
+      bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+      if (dbg_is_end_instr_bpoint(
            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
            debug_eip,
            BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b) ) {
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+           Is64BitMode()))
+      {
         return;
       }
     }
@@ -875,15 +878,15 @@ void BX_CPU_C::trap_debugger (bx_bool callnow)
 #if BX_DEBUGGER
 extern unsigned int dbg_show_mask;
 
-bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr, Bit32u is_32)
+bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
 { 
   Bit64u tt = bx_pc_system.time_ticks();
 
-  //fprintf (stderr, "begin_instr_bp: checking cs:eip %04x:%08x\n", cs, eip);
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = eip;
   BX_CPU_THIS_PTR guard_found.laddr = laddr;
   BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
+  BX_CPU_THIS_PTR guard_found.is_64bit_code = is_64;
 
   // BW mode switch breakpoint
   // instruction which generate exceptions never reach the end of the
@@ -914,7 +917,8 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
           if ( bx_guard.iaddr.vir[i].enabled &&
                (bx_guard.iaddr.vir[i].cs  == cs) &&
-               (bx_guard.iaddr.vir[i].eip == eip) ) {
+               (bx_guard.iaddr.vir[i].eip == eip) )
+          {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
 	    BX_CPU_THIS_PTR guard_found.time_tick = tt;
@@ -931,7 +935,8 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
       {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
           if (bx_guard.iaddr.lin[i].enabled && 
-              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) ) {
+              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) )
+          {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
 	    BX_CPU_THIS_PTR guard_found.time_tick = tt;
@@ -971,9 +976,7 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
   return(0); // not on a breakpoint
 }
 
-  bx_bool
-BX_CPU_C::dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
-                                  Bit32u is_32)
+bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
 {
   //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
   BX_CPU_THIS_PTR guard_found.icount++;

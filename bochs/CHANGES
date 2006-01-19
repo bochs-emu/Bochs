@@ -12,7 +12,7 @@ Changes in 2.2.6 (not yet released):
 - enabled LAHF/SAHF instructions in x86-64 mode (Stanislav Shwartsman)
 - determine number of processors in SMP configuration through .bochsrc file
   - new .bochsrc option to choose number of processors to emulate
-  - new to configure option --enable-smp to configure Bochs for SMP support,
+  - new configure option --enable-smp to configure Bochs for SMP support,
     the old --enable-processors=N option is deprecated
 - updated Bochs instrumentation examples (Stanislav Shwartsman)
 - fixed bug in PMULUDQ SSE2 instruction (Kevin Lawton)

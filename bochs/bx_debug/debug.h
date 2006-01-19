@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.6 2006-01-15 17:55:25 sshwarts Exp $
+// $Id: debug.h,v 1.7 2006-01-19 18:32:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,7 +194,7 @@ extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
       STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT,
-      STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT, UNUSED_STOP_TRACE,
+      STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT,
       STOP_MODE_BREAK_POINT, STOP_CPU_HALTED, STOP_CPU_PANIC
 } stop_reason_t;
 
@@ -219,11 +219,8 @@ typedef enum {
 #define BX_DBG_REG_FS           24
 #define BX_DBG_REG_GS           25
 
-
 #define BX_DBG_PENDING_DMA 1
 #define BX_DBG_PENDING_IRQ 2
-
-
 
 void bx_debug_break ();
 
@@ -259,7 +256,6 @@ void dbg_printf (const char *fmt, ...);
 
 #define BX_DBG_GUARD_ICOUNT        0x0400
 #define BX_DBG_GUARD_CTRL_C        0x0800
-
 
 typedef struct {
   unsigned long guard_for;
@@ -351,16 +347,16 @@ typedef struct bx_guard_found_t {
   unsigned long guard_found;
   unsigned iaddr_index;
   bx_dbg_icount_t icount; // number of completed instructions
-  Bit32u   cs;     // cs:eip and linear addr of instruction at guard point
-  Bit32u   eip;
-  Bit32u   laddr;
-  bx_bool  is_32bit_code; // CS seg size at guard point
-  bx_bool  ctrl_c; // simulator stopped due to Ctrl-C request
-  
-  Bit64u   time_tick; //time tick when guard reached
+  Bit32u  cs; // cs:eip and linear addr of instruction at guard point
+  bx_address eip;
+  bx_address laddr;
+  bx_bool is_32bit_code; // CS seg size at guard point
+  bx_bool is_64bit_code;
+  bx_bool ctrl_c; // simulator stopped due to Ctrl-C request
+  Bit64u  time_tick; // time tick when guard reached
 } bx_guard_found_t;
 
-extern bx_guard_t        bx_guard;
+extern bx_guard_t bx_guard;
 
 
 int  bx_dbg_main(int argc, char *argv[]);

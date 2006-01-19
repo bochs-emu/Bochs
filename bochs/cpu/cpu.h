@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.252 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: cpu.h,v 1.253 2006-01-19 18:32:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1182,7 +1182,7 @@ public: // for now...
   Bit8u trace_reg;
   Bit8u mode_break; /* BW */
   bx_bool debug_vm; /* BW contains current mode*/
-  Bit8u show_eip;   /* BW record eip at special instr f.ex eip */
+  bx_address show_eip;   /* BW record eip at special instr f.ex eip */
   Bit8u show_flag;  /* BW shows instr class executed */
   bx_guard_found_t guard_found;
 #endif
@@ -2607,10 +2607,8 @@ public: // for now...
   BX_SMF Bit32u   dbg_get_descriptor_l(bx_descriptor_t *);
   BX_SMF Bit32u   dbg_get_descriptor_h(bx_descriptor_t *);
   BX_SMF Bit32u   dbg_get_eflags(void);
-  BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit32u cs, Bit32u eip, Bit32u laddr,
-                                            Bit32u is_32);
-  BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit32u cs, Bit32u eip,
-                                          Bit32u laddr, Bit32u is_32);
+  BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
+  BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF void     dbg_xlate_linear2phy(bx_address linear, Bit32u *phy, bx_bool *valid);

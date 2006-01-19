@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.34 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.35 2006-01-19 18:32:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -444,9 +444,11 @@ process_sim2:
     BX_CPU(i)->guard_found.cs = BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
     BX_CPU(i)->guard_found.eip = BX_CPU(i)->prev_eip;
     BX_CPU(i)->guard_found.laddr =
-      BX_CPU(i)->get_segment_base(BX_SEG_REG_CS) + BX_CPU(i)->prev_eip;
+      (BX_CPU(i)->get_segment_base(BX_SEG_REG_CS) + BX_CPU(i)->prev_eip);
     BX_CPU(i)->guard_found.is_32bit_code =
-      BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+      (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b);
+    BX_CPU(i)->guard_found.is_64bit_code =
+      (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64);
   }
   // finally, call the usual function to print the disassembly
   dbg_printf ("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
@@ -1099,7 +1101,7 @@ void bx_dbg_show_command(char* arg)
   last_pe = BX_CPU(dbg_cpu)->cr0.pe;
   last_vm = BX_CPU(dbg_cpu)->getB_VM ();
 
-  dbg_printf (FMT_TICK ": address %04x:%08x %08x\n\n", 
+  dbg_printf (FMT_TICK ": address %04x:" FMT_ADDRX " " FMT_ADDRX "\n\n", 
     bx_pc_system.time_ticks(),
     BX_CPU(dbg_cpu)->guard_found.cs,
     BX_CPU(dbg_cpu)->guard_found.eip,
@@ -1314,7 +1316,7 @@ one_more:
     int max_executed = 0;
     for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
       if (BX_CPU(cpu)->guard_found.icount > max_executed)
-      max_executed = BX_CPU(cpu)->guard_found.icount;
+        max_executed = BX_CPU(cpu)->guard_found.icount;
     }
     // potential deadlock if all processors are halted.  Then 
     // max_executed will be 0, tick will be incremented by zero, and
@@ -1405,10 +1407,8 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
 
     BX_CPU(which_cpu)->mem->dbg_fetch_mem(phy, 16, bx_disasm_ibuf);
 
-    unsigned cpu_mode = BX_CPU(which_cpu)->get_cpu_mode();
-
     ilen = bx_disassemble.disasm(BX_CPU(which_cpu)->guard_found.is_32bit_code, 
-      cpu_mode == BX_MODE_LONG_64 /* is_64 */,
+      BX_CPU(which_cpu)->guard_found.is_64bit_code,
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), 
       BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
@@ -1446,19 +1446,17 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     else
       dbg_printf ("(%u) ", which_cpu);
     if (BX_CPU(which_cpu)->get_cpu_mode() == BX_MODE_IA32_PROTECTED) { // 16bit & 32bit protected mode
-      dbg_printf ("[0x%08x] %04x:%08x (%s): ", 
-	phy,
-        (unsigned) BX_CPU(which_cpu)->guard_found.cs,
-        (unsigned) BX_CPU(which_cpu)->guard_found.eip,
+      dbg_printf ("[0x%08x] %04x:" FMT_ADDRX " (%s): ", 
+	phy, BX_CPU(which_cpu)->guard_found.cs,
+        BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
-      }
+    }
     else { // Real & V86 mode
       dbg_printf ("[0x%08x] %04x:%04x (%s): ", 
-	phy,
-        (unsigned) BX_CPU(which_cpu)->guard_found.cs,
+	phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
         bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
-      }
+    }
     dbg_printf ("%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++)
       dbg_printf ("%02x", (unsigned) bx_disasm_ibuf[j]);
@@ -1482,7 +1480,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 #if BX_DBG_SUPPORT_VIR_BPOINT
   else if (found & BX_DBG_GUARD_IADDR_VIR) {
     i = BX_CPU(sim)->guard_found.iaddr_index;
-    dbg_printf ("(%u) Breakpoint %u, 0x%x (0x%x:0x%x)\n",
+    dbg_printf ("(%u) Breakpoint %u, " FMT_ADDRX " (0x%04x:" FMT_ADDRX ")\n",
             sim,
             bx_guard.iaddr.vir[i].bpoint_id,
             BX_CPU(sim)->guard_found.laddr,
@@ -1494,7 +1492,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
   else if (found & BX_DBG_GUARD_IADDR_LIN) {
     i = BX_CPU(sim)->guard_found.iaddr_index;
     if (bx_guard.iaddr.lin[i].bpoint_id != 0)
-    dbg_printf ("(%u) Breakpoint %u, 0x%x in ?? ()\n",
+    dbg_printf ("(%u) Breakpoint %u, 0x" FMT_ADDRX " in ?? ()\n",
             sim,
             bx_guard.iaddr.lin[i].bpoint_id,
             BX_CPU(sim)->guard_found.laddr);
@@ -1503,7 +1501,7 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
 #if BX_DBG_SUPPORT_PHY_BPOINT
   else if (found & BX_DBG_GUARD_IADDR_PHY) {
     i = BX_CPU(sim)->guard_found.iaddr_index;
-    dbg_printf ("(%u) Breakpoint %u, 0x%x in ?? ()\n",
+    dbg_printf ("(%u) Breakpoint %u, 0x" FMT_ADDRX " in ?? ()\n",
             sim,
             bx_guard.iaddr.phy[i].bpoint_id,
             BX_CPU(sim)->guard_found.laddr);
@@ -3409,21 +3407,21 @@ int bx_dbg_symbolic_output(void)
   /* interrupts */
   if (dbg_show_mask & 0x40) {
     if(BX_CPU(dbg_cpu)->show_flag & 0x4) {
-      dbg_printf (FMT_TICK ":  softint %04x:%08x %08x\n", 
+      dbg_printf (FMT_TICK ":  softint %04x:" FMT_ADDRX " " FMT_ADDRX "\n", 
         bx_pc_system.time_ticks(),
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
     }
     if((BX_CPU(dbg_cpu)->show_flag & 0x10) && !(BX_CPU(dbg_cpu)->show_flag & 0x4)) {
-      dbg_printf ("\n" FMT_TICK ":  exception (not softint) %04x:%08x %08x\n", 
+      dbg_printf (FMT_TICK ": exception (not softint) %04x:" FMT_ADDRX " " FMT_ADDRX "\n", 
         bx_pc_system.time_ticks(),
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
     }
     if(BX_CPU(dbg_cpu)->show_flag & 0x8) {
-      dbg_printf (FMT_TICK ":  iret %04x:%08x %08x (from %08x)\n\n", 
+      dbg_printf (FMT_TICK ": iret %04x:" FMT_ADDRX " " FMT_ADDRX "(from " FMT_ADDRX ")\n", 
         bx_pc_system.time_ticks(),
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
@@ -3441,10 +3439,8 @@ int bx_dbg_symbolic_output(void)
       BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr,
                &phy, &valid);
 
-      // mingw doesn't like %ll and %*s in one statement
-      dbg_printf (FMT_TICK ":", bx_pc_system.time_ticks());
-      dbg_printf ("%*s call %04x:%08x 0x%08x (%08x) %s",
-        symbol_level+1," ",
+      dbg_printf (FMT_TICK ": %*s call %04x:" FMT_ADDRX " 0x" FMT_ADDRX " (%08x) %s",
+        bx_pc_system.time_ticks(), symbol_level+1," ",
         BX_CPU(dbg_cpu)->guard_found.cs,
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr,
@@ -4373,7 +4369,7 @@ void bx_dbg_info_flags(void)
  if(BX_CPU(dbg_cpu)->getB_PF())
   dbg_printf ("PF ");
  if(BX_CPU(dbg_cpu)->getB_CF())
-  dbg_printf ("CF");
+  dbg_printf ("CF ");
  dbg_printf ("\n");
 }
 
