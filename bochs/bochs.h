@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.166 2006-01-19 18:32:39 sshwarts Exp $
+// $Id: bochs.h,v 1.167 2006-01-20 19:12:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -493,19 +493,12 @@ BOCHSAPI extern bx_debug_t bx_dbg;
 #define DATA_ACCESS     0
 #define CODE_ACCESS     1
 
-
 #include "memory/memory.h"
-
-
-enum PCS_OP { PCS_CLEAR, PCS_SET, PCS_TOGGLE };
-
 #include "pc_system.h"
 #include "plugin.h"
 #include "gui/gui.h"
 #include "gui/textconfig.h"
 #include "gui/keymap.h"
-
-
 
 /* --- EXTERNS --- */
 
@@ -647,7 +640,6 @@ typedef struct BOCHSAPI {
   bx_param_enum_c   *Okeyboard_type;
   bx_param_num_c    *Ocpu_count;
   bx_param_num_c    *Oips;
-  bx_param_bool_c   *Orealtime_pit;
   bx_param_bool_c   *Otext_snapshot_check;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_enum_c   *Omouse_type;

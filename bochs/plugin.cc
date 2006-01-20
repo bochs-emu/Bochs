@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.13 2004-08-11 11:05:10 vruppert Exp $
+// $Id: plugin.cc,v 1.14 2006-01-20 19:12:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -507,7 +507,6 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
     BX_ASSERT (devmodel != NULL);
     device->devmodel = devmodel;
     device->plugin = plugin;  // this can be NULL
-    device->use_devmodel_interface = 1;
     device->device_init_mem = NULL;  // maybe should use 1 to detect any use?
     device->device_init_dev = NULL;
     device->device_reset = NULL;
@@ -587,28 +586,14 @@ void bx_init_plugins()
     // two loops
     for (device = devices; device; device = device->next)
     {
-      if (!device->use_devmodel_interface) {
-        if (device->device_init_mem != NULL) {
-            pluginlog->info("init_mem of '%s' plugin device by function pointer",device->name);
-            device->device_init_mem(BX_MEM(0));
-        }
-      } else {
-        pluginlog->info("init_mem of '%s' plugin device by virtual method",device->name);
-        device->devmodel->init_mem (BX_MEM(0));
-      }
+      pluginlog->info("init_mem of '%s' plugin device by virtual method",device->name);
+      device->devmodel->init_mem(BX_MEM(0));
     }
 
     for (device = devices; device; device = device->next)
     {
-      if (!device->use_devmodel_interface) {
-        if (device->device_init_dev != NULL) {
-            pluginlog->info("init_dev of '%s' plugin device by function pointer",device->name);
-            device->device_init_dev();
-        }
-      } else {
-        pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
-        device->devmodel->init ();
-      }
+      pluginlog->info("init_dev of '%s' plugin device by virtual method",device->name);
+      device->devmodel->init();
     } 
 }
 
@@ -621,15 +606,8 @@ void bx_reset_plugins(unsigned signal)
     device_t *device;
     for (device = devices; device; device = device->next)
     {
-      if (!device->use_devmodel_interface) {
-        if (device->device_reset != NULL) {
-            pluginlog->info("reset of '%s' plugin device by function pointer",device->name);
-            device->device_reset(signal);
-        }
-      } else {
-        pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
-        device->devmodel->reset (signal);
-      }
+      pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
+      device->devmodel->reset(signal);
     }
 }
 

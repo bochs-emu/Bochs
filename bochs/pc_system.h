@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.33 2005-07-04 18:02:37 sshwarts Exp $
+// $Id: pc_system.h,v 1.34 2006-01-20 19:12:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -144,30 +144,26 @@ public:
   // ===========================
 
   bx_bool HRQ;     // Hold Request
-  //bx_bool INTR;    // Interrupt
 
-
-    // Address line 20 control:
-    //   1 = enabled: extended memory is accessible
-    //   0 = disabled: A20 address line is forced low to simulate
-    //       an 8088 address map
+  // Address line 20 control:
+  //   1 = enabled: extended memory is accessible
+  //   0 = disabled: A20 address line is forced low to simulate
+  //       an 8088 address map
   bx_bool enable_a20;
 
-    // start out masking physical memory addresses to:
-    //   8086:      20 bits
-    //    286:      24 bits
-    //    386:      32 bits
-    // when A20 line is disabled, mask physical memory addresses to:
-    //    286:      20 bits
-    //    386:      20 bits
-    //
+  // start out masking physical memory addresses to:
+  //   8086:      20 bits
+  //    286:      24 bits
+  //    386:      32 bits
+  // when A20 line is disabled, mask physical memory addresses to:
+  //    286:      20 bits
+  //    386:      20 bits
+  //
   Bit32u  a20_mask;
 
   void set_HRQ(bx_bool val);  // set the Hold ReQuest line
   void set_INTR(bx_bool value); // set the INTR line to value
 
-  int IntEnabled( void );
-  int InterruptSignal( PCS_OP operation );
   // Cpu and System Reset
   int Reset( unsigned type );
   Bit8u  IAC(void);

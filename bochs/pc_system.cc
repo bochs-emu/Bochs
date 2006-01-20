@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.46 2005-12-26 17:16:32 vruppert Exp $
+// $Id: pc_system.cc,v 1.47 2006-01-20 19:12:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,7 +82,6 @@ void bx_pc_system_c::init_ips(Bit32u ips)
   HRQ = 0;
 
   enable_a20 = 1;
-  //set_INTR (0);
 
 #if BX_CPU_LEVEL < 2
   a20_mask   =    0xfffff;
@@ -111,7 +110,6 @@ void bx_pc_system_c::set_INTR(bx_bool value)
 {
   if (bx_dbg.interrupts)
     BX_INFO(("pc_system: Setting INTR=%d on bootstrap processor %d", (int)value, BX_BOOTSTRAP_PROCESSOR));
-  //INTR = value;
   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->set_INTR(value);
 }
 #endif
