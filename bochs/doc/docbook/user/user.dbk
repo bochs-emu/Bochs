@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.197 2006-01-19 19:13:30 sshwarts Exp $
+$Id: user.dbk,v 1.198 2006-01-21 12:10:13 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -344,7 +344,7 @@ currently work with.
   <row>
     <entry>386,486,Pentium Emulation</entry>
     <entry>Yes</entry>
-    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as SMM or Time Stamp Counter.</entry>
+    <entry>Bochs can be configured to emulate one of several families of Intel hardware. Some Pentium features are unsupported, such as MTRR or SMM (System Management Mode).</entry>
   </row>
   <row>
     <entry>P6 and later CPU Emulation</entry>
