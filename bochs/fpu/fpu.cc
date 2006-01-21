@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.15 2005-08-13 17:40:41 sshwarts Exp $
+// $Id: fpu.cc,v 1.16 2006-01-21 00:05:30 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -501,6 +501,7 @@ void BX_CPU_C::print_state_FPU()
   fprintf(stderr, "control word: 0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.get_status_word();
   fprintf(stderr, "status word:  0x%04x\n", reg);
+  fprintf(stderr, "        TOP:  %d\n", FPU_TOS&7);
   reg = BX_CPU_THIS_PTR the_i387.get_tag_word();
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
@@ -515,6 +516,7 @@ void BX_CPU_C::print_state_FPU()
   fprintf(stderr, "fds:          0x%04x\n", reg);
 
   // print stack too
+  int tos = FPU_TOS & 7;
   for (int i=0; i<8; i++) {
     const floatx80 &fp = BX_FPU_REG(i);
     double f = pow(2.0, ((0x7fff & fp.exp) - 0x3fff));
@@ -524,7 +526,10 @@ void BX_CPU_C::print_state_FPU()
 #else
     f *= fp.fraction*scale_factor;
 #endif
-    fprintf(stderr, "st(%d):        %.10f (raw 0x%04x:%08x%08x)\n", i, 
+    fprintf(stderr, "%sFPR%d(%c):        %.10f (raw 0x%04x:%08x%08x)\n",
+          i==tos?"=>":"  ",
+          i, 
+          "v0s?"[BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7)],
           f, fp.exp & 0xffff, fp.fraction >> 32, fp.fraction & 0xffffffff);
   }
 }
