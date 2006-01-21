@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.20 2006-01-19 21:17:45 vruppert Exp $
+$Id: development.dbk,v 1.21 2006-01-21 12:51:54 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -1948,6 +1948,7 @@ There is no uniform way to handle tabs properly.</para></listitem>
 <para>It's really difficult to spot interesting warnings when a compile is littered
 with non-interesting ones.</para></listitem>
 <listitem><para><command>Don't use signed ints where unsigned will do.</command></para></listitem>
+<listitem><para><command>Make sure that contributed code / patches are LGPL compatible.</command></para></listitem>
 </itemizedlist>
 </para>
 </section>
