@@ -13,7 +13,6 @@ Date: 27 June 2002
   - can write task_priority
   - scan priorities from high to low
 
-
 2nd detailed description:
   more complete apic stuff
   fixed a couple things:
@@ -21,13 +20,10 @@ Date: 27 June 2002
   - it works on win32 vc 6. vc 6 apparently doesn't
     zero mem on a 'new bx_cpu_c' and apic init
     functions depended on that
-
   - don't consider apic on a cpu that hasn't been
     started yet for a destination bitmask bit
-
   - fix some compile errors in vc 6 complaining
     about 'int bit=0'
-
   - implement reading IRR,TMR,ISR registers
 
 Patch was created with:
@@ -37,6 +33,13 @@ Apply patch to what version:
 Instructions:
   To patch, go to main bochs directory.
   Type "patch -p0 < THIS_PATCH_FILE".
+
+Status:
+  Most of changes introduced in the patch already committed to CVS.
+  The not committed parts are PPR and interprocessor NMI's, the
+  patch could be considered as example of implementation of these 
+  features.
+
 ----------------------------------------------------------------------
 Index: cpu/apic.cc
 ===================================================================
@@ -45,16 +48,6 @@ retrieving revision 1.14
 diff -u -r1.14 apic.cc
 --- cpu/apic.cc	27 Mar 2002 16:04:04 -0000	1.14
 +++ cpu/apic.cc	27 Jun 2002 19:36:17 -0000
-@@ -6,6 +6,9 @@
- #include "bochs.h"
- #include <assert.h>
- 
-+#ifdef LOG_THIS
-+#undef LOG_THIS
-+#endif
- #define LOG_THIS this->
- 
- bx_generic_apic_c *apic_index[APIC_MAX_ID];
 @@ -169,32 +178,51 @@
  
  bx_bool bx_generic_apic_c::deliver (Bit8u dest, Bit8u dest_mode, Bit8u delivery_mode, Bit8u vector, Bit8u polarity, Bit8u trig_mode)
