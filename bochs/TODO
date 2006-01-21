@@ -16,47 +16,23 @@ Should we accept donations ? What could we do with the money ?
 - bounties for somebody write optimized win9x/NT/XFree/linux/*BSD 
   drivers for our vga/net/ide cards
 - other ?
-Status in Bochs 2.2:
+Status in Bochs 2.2.5:
 No decisions about this yet.
 
-1. GPL source file in Bochs
-Daniel Gimpelevich pointed out that rfbproto.h is released 
-under the GPL.  This is incompatible with our license, so 
-we need to rewrite/find a replacement this.
-Also, we should make sure that contributed code / patches
-are LGPL compatible.
+1. Speed
+Speed (well lack of) is one of the biggest criticism made by users
+who'd like to see Bochs run as fast as Virtual PC.
+Paths we can explore to get more speed :
+4.1 virtualization : plex86
+4.2 dynamic translation : qemu, patch from h.johansson
+4.3 optimizations of instructions path / host asm (Conn Clark has been
+working on this, and an anonymous patch for win32 
+http://sourceforge.net/tracker/index.php?func=detail&aid=867044&group_id=12580&atid=312580
+)
 Status:
-The GPL'd file has been removed (rfb works with limited features).
+Not done yet.
 
-2. PCI
-2.1 I'd like to implement a PCI framework, that would take care 
-of handling pci config regs (mmio enables/remaps, port io 
-enables/remaps), offer entry points for the simulated pci chipset
-(for example pci irq routing), handle embedded bios, and so on. 
-I guess it will also need to take over the ISA I/O and
-memory management. Ideally, it would be keeping compatibility
-when pci is not compiled in.
-(see http://marc.theaimsgroup.com/?l=bochs-dev&m=107165515315420&w=2)
-Status:
-PCI memory and i/o plug & play, irq routing and an improved PCI device
-register mechanism is present.
-
-2.2 The System BIOS will also be impacted. Although it has
-basic BIOS32 service directory functions, we will also have to 
-identify and initialize the connected cards, including optional
-roms (copy to main memory and initialize), and build the correct 
-PIR table in memory.
-Status:
-The PIR table and the PCI irq initialization is present in the system BIOS.
-The initialization of i/o and memory is still to do.
-
-2.3 configuration file for pci
-It would be nice to have a generic way to set the bus/device numbers
-of pci devices in the configuration file.
-Status:
-The i440fxsupport option now supports assigning devices to max. 5 slots.
-
-2.4 host<->guest pci proxy
+2. PCI host<->guest proxy
 Being able to use a real pci device from inside Bochs would be a 
 great feature of Bochs. It would ease reverse engineering of non
 documented cards, or one could even use a real spare vga card.
@@ -64,10 +40,6 @@ Frank Cornellis has done a great job on this subject, and we began
 integrating his changes. 
 Status:
 The pcidev device is present in CVS, but the status is unknown.
-
-2.5 existing PCI device will need a slight rework to use the framework
-Status:
-This is almost done (pcidev untested)
 
 3. Subdirectories in iodev
 The iodev directory contains the various implemented iodevice.
@@ -81,20 +53,7 @@ be manageable.
 Status:
 Not done yet.
 
-4. Speed
-Speed (well lack of) is one of the biggest criticism made by users
-who'd like to see Bochs run as fast as Virtual PC.
-Paths we can explore to get more speed :
-4.1 virtualization : plex86
-4.2 dynamic translation : qemu, patch from h.johansson
-4.3 optimizations of instructions path / host asm (Conn Clark has been
-working on this, and an anonymous patch for win32 
-http://sourceforge.net/tracker/index.php?func=detail&aid=867044&group_id=12580&atid=312580
-)
-Status:
-Not done yet.
-
-4.4 multithreading. Conn Clark wrote :
+4 multithreading. Conn Clark wrote :
 Threading might be nice too, for those of us who have SMP/SMT machines. 
 I have a patch from Mathis (who hangs out on the IRC channel all the 
 time) that puts the video card interface in its own thread. It has 
@@ -137,37 +96,24 @@ Status:
 Not done yet.
 
 6. VGA
-Several thigs we could use to improve SVGA emulation :
-6.1 framebuffer by Christopher Nelson
-6.2 S3 emulation in qemu / patch by tld 
-6.3 Look at Trident emulation of dosemu 
-6.4 patch for PCI CirrusLogic CLGD54xx by m-suzu
-6.5 voodoo3 (specs http://v3tv.sourceforge.net/docs.php )
+For SVGA emulation we have Bochs VBE and the Cirrus adapter. We should have
+a look at the voodoo3 (specs http://v3tv.sourceforge.net/docs.php).
 Status:
-The Cirrus SVGA adapter is present in Bochs now.
+Not done yet.
 
 7. Random thoughts on disk emulation improvements :
-7.0 IDE-Busmaster support (needs pci)
-Status:
-Some code to support it is present in Bochs, but disabled. Linux worked with it,
-but the Win98 guest failed to boot.
-
 7.1 lba48 support
-7.2 >32GiB disks
-7.3 autodetection of disk size / geometry
-7.4 uml cow disk image support
-7.5 compressed disk image support
-7.6 extend redolog-disk specification to add coherency check of the flat 
+7.2 autodetection of disk size / geometry
+7.3 uml cow disk image support
+7.4 compressed disk image support
+7.5 extend redolog-disk specification to add coherency check of the flat 
 image file, by storing its fstat-mtime field in the redolog.
 Status:
-These items are not done yet.
+Autodetection works for flat type image created with bximage.
+The other items are not done yet.
 
 8. net
-8.1 New devices ? are specs available anywhere ?
-Status:
-The NE2000 adapter now can be assigned to a PCI slot.
-
-8.2 bootable ethernet rom ? 
+8.1 bootable ethernet rom ? 
 see etherboot, Micheal Brown wrote :
 This already works; you can build an Etherboot rom image with the pnic 
 driver, specify it as an option ROM in bochsrc and it will boot.  I'm 
@@ -180,38 +126,19 @@ The pnic device is present in CVS, but the status is unknown.
 
 9. Bios
 9.1 our bios is quite heavy on stack space (notably during int13 functions).
-This should be fixed. A partial patch exists 
-see
-http://sourceforge.net/tracker/index.php?func=detail&aid=832330&group_id=12580&atid=312580
 Some parts can be rewritten in assembler, to save stack space and 
-make code smaller.
-We could define a reserved area in the BIOS where we can fill in PCI and SMP
-specific data before starting the simulation or during POST. The same could
-be done in the VGABIOS with the VBE mode list.
+make code smaller. A new BIOS project for Bochs has been started at
+http://bcos.hopto.org/bios.html.
 Status:
-Some work to save stack space has been done.
+Unter construction.
 
-9.2 with pci and smp support we'll need to include several tables in the bios. 
-We have two possibilities : dynamically build them during POST 
-or statically build a collection of bioses, which can be selected 
-at run time.
-9.3 add "jump table placeholder" and log missing function calls in the bios. 
+9.2 add "jump table placeholder" and log missing function calls in the bios. 
 Check completness with Ralf Brown interrupt list.
 Status:
-Both items are not done yet.
+Not done yet.
 
 10. LGPL VGABios
-10.1 Stack space
-As for the system bios, the vgabios is heavy on stack space, and 
-should be fixed. Some parts can be rewritten in assembler, to save 
-stack space and make code smaller. The size of the debug version 
-of the VGABIOS is currently 30k and it will exceed 32k if we 
-fill in some of the unimplemented features.
-Status:
-A lot of vgabios functions have been rewritten in assembler. The debug
-version of the vgabios is still very large (nearly 32k).
-
-10.2 Video parameters table
+10.1 Video parameters table
 There is a very nice parameter table in 3dfx banshee document 
 http://www2.lm-sensors.nu/~lm78/pdfs/Banshee_2d_spec.PDF
 see also http://www.xyzzy.claranet.de/dos/vgacrt.c
@@ -238,7 +165,7 @@ Bochs VGA plugin for example will be real plugin. I mean that replacement
 of plugin dll in already compiled Bochs will replace Bochs VGA card and 
 the new card will be detected automatically.
 This will allow for example developing of plugins separately from Bochs.
-12.3 Michael Brow wrote :
+12.3 Michael Brown wrote :
 If the configuration interface is to be reworked, could we also make it so 
 that plugins are self-contained, rather than needing to pollute main.cc 
 with code for defining and parsing plugin-specific options
@@ -256,33 +183,11 @@ Status:
 Not done yet.
 
 14. USB support
-Ben Lunt has been working on USB support. We should check with him
-what is the current state of his work and if we can merge his code.
-How can we add USB device, for example a mouse ?
-The current version of Bochs supports only a PS/2 mouse. If the 
-USB support is more complete the user should be able to select 
-the mouse type (ps2, serial, usb).
-Ben Lunt wrote :
-I have, but it is not complete yet.  Currently, my goal and the
-way it is coded, you simply have to increment the "number of devices"
-and add a new USB_DEVICE struct.  Then you fill in the struct
-with the values needed for that device: 18 bytes of descriptor, 255
-bytes of config, strings, interface, etc.  One of the members of
-this struct will be a pointer to a driver for that device.
-I have two structs filled in.  One is a USB mouse.  Win98SE, as
-a guest, recognizes the mouse, but does random movement and
-clicks.  I haven't tracked this down yet.
-The other device is a USB numpad.  Win98SE also detects the 
-USB Composite Device under USB devices, two HID's, and 
-a System Control and User Control device under HID's.  However,
-there is a yellow mark on the HID's.  I think it has to do
-with my config binary data.  I am still working on it.
-However, the USB stack, command phase, data IO phase, and
-status phase is complete.  You can successfully retrieve
-the descriptor(s) and string(s), and set the devices address.
+Ben Lunt has been working on USB support. The USB mouse and keypad code
+is present in Bochs and almost stable. USB flash disk support has been
+started and the runtime device change support should be completed.
 Status:
-The USB mouse and keypad code is present in Bochs, but there is
-some more work needed to make it stable.
+Unter construction.
 
 15. Patches / Bug reports
 There are dozens of patches floating around. Some are outdated,
@@ -291,33 +196,15 @@ some clean-up, and keep only relevent ones.
 We should also clean up the SF bug tracker. Some bugreports are 
 very old and we asked for more information with no response.
 Status:
-There is still a lot of work to do.
+There is some progress, but still a lot of work to do.
 
-16. Small others things
-16.1 add support for multiple boot devices 
-Status:
-Done.
-
-16.2 add keyboard leds to GUIs
-Status:
-Done in rfb, sdl, win32, wx and x. Win3.x and Win9x guest cannot control
-the leds (not a gui problem).
-
-16.3 add activity leds (net, disks, floppies) to GUIs
-Volker added a status bar to the win32 simulation window.
-It can be used to display leds. The status bar still needs
-to be implemented by other display libraries.
-Status:
-This depends on the display library (see above). The indicators for floppy,
-cdrom, hard drive and usb are present, networking is still to do.
-
-17. Positions
+16. Positions
 If you want to help without coding, here are available positions :
-17.1 Webmaster : update website (Jan Bruun Andersen offered to help)
-17.2 patch coordonator : look at incoming patches (sourceforge and 
+16.1 Webmaster : update website (Jan Bruun Andersen offered to help)
+16.2 patch coordonator : look at incoming patches (sourceforge and 
 mailing list) and upload / update in the cvs patches directory.
-17.3 platform maintainers for macos / win32 
-17.4 disk image maintainer : create and maintain our collection
+16.3 platform maintainers for macos / win32 
+16.4 disk image maintainer : create and maintain our collection
 of disk images. Usually, only the configuration file needs to be
 updated, and old bios files have to be removed.  Some packages 
 still contain very old bios files, they should definitely have
@@ -325,7 +212,7 @@ to be removed.
 Status:
 More active developers are needed to do the things described above.
 
-18. Bochs demo cd/dvd
+17. Bochs demo cd/dvd
 With version 2.1, it is now technically possible to use disk images 
 on a read-only media, with a journal files on a read/write media. 
 It would be great to create a demo cd/dvd with executables for 
@@ -335,7 +222,7 @@ directory on the harddisk.
 Status:
 Not done yet.
 
-19. Other CPU architectures : arm, ppc 
+18. Other CPU architectures : arm, ppc 
 This has been asked in the mailing list. I'm not really
 interested, but other people might be. Should we propose to 
 host the new CPUs code in our source tree, or should we let 
@@ -343,8 +230,8 @@ people fork ?
 Status:
 Not done yet.
 
-20. Config file and dynamic menu
-20.1 Benjamen R. Meyer wrote :
+19. Config file and dynamic menu
+19.1 Benjamen R. Meyer wrote :
 I think we should rework the .bochsrc file to be more standard across all
 devices. I like how the USB configuration is done in it, and think we should
 put something similar together for everything else. In otherwords, create
@@ -356,14 +243,14 @@ something that is based on a standard approach to the configuration.
 The result should be something that would be able to easily auto-configured
 by another program (a configuration editor?) with minimal changes necessary
 when new devices/features are added.
-20.2  Franck Cornelis wrote : the config system needs some work... 
+19.2  Franck Cornelis wrote : the config system needs some work... 
 e.g. the main menu is static while it could be generated at run-time...
 the main menu text lives somewhere in a file... while it should be generated 
 at run-time by iterating the main menu objects
 Status:
 Not done yet.
 
-21. APIC and windows NT SMP.  Stanislav wrote :
+20. APIC and windows NT SMP.  Stanislav wrote :
 Current Bochs SMP is almost unusable. I not succeed to boot any SMP OS I
 have due to APIC problems. Bochs APIC implementation should be reviewed. 
 In the patches folder we already have at least 3 patches for APIC, I hope 
@@ -374,23 +261,18 @@ The APIC functionality was improved from last release. But the modern OSes
 require ACPI APIC tables in BIOS in additional to the regular MP tables so 
 Bochs still not able to boot WinNT SMP.
 
-22. add to the roadmap that we should find some ideas to check 
+21. add to the roadmap that we should find some ideas to check 
 correctness of instructions emulation, especially system instructions.  
 arithmetic instructions could be validated with simply random testing
 Status:
 Not done yet.
 
-23. lowlevel serial support for Windows.
+22. lowlevel serial support for Windows.
 Volker is currently working on this.
 Status:
 Not yet complete (transmit works, receive is losing data).
 
-24. runtime configuration dialog box for Windows
-Volker is currently working on this.
-Status:
-Done.
-
-25. Parallel port
+23. Parallel port
 Conn Clark wrote :
 I would like to see better parallel port support so I can use a dongle. 
 This is something I would find very useful as it would mean I wouldn't 
