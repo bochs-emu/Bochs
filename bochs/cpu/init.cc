@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.79 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: init.cc,v 1.80 2006-01-21 12:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -801,6 +801,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
 #endif
+  BX_CPU_THIS_PTR set_TSC(0);
 #endif
 
   BX_CPU_THIS_PTR EXT = 0;

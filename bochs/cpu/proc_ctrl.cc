@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.130 2006-01-16 19:22:28 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.131 2006-01-21 12:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1519,13 +1519,31 @@ void BX_CPU_C::RDPMC(bxInstruction_c *i)
 #endif
 }
 
+#if BX_CPU_LEVEL >= 5
+Bit64u BX_CPU_C::get_TSC ()
+{
+  return bx_pc_system.time_ticks() - BX_CPU_THIS_PTR msr.tsc_last_reset;
+}
+
+void BX_CPU_C::set_TSC (Bit32u newval)
+{
+  // compute the correct setting of tsc_last_reset so that a get_TSC()
+  // will return newval
+  BX_CPU_THIS_PTR msr.tsc_last_reset = 
+            bx_pc_system.time_ticks() - (Bit64u) newval;
+
+  // verify
+  BX_ASSERT (get_TSC() == (Bit64u) newval);
+}
+#endif
+
 void BX_CPU_C::RDTSC(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   bx_bool tsd = BX_CPU_THIS_PTR cr4.get_TSD();
   if ((tsd==0) || (tsd==1 && CPL==0)) {
     // return ticks
-    Bit64u ticks = bx_pc_system.time_ticks ();
+    Bit64u ticks = BX_CPU_THIS_PTR get_TSC();
     RAX = (Bit32u) (ticks & 0xffffffff);
     RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
   } else {
@@ -1606,11 +1624,8 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       goto do_exception;
 #endif  /* BX_CPU_LEVEL == 5 */
 
-    case BX_MSR_TSC: {
-        Bit64u ticks = bx_pc_system.time_ticks ();
-        RAX = (Bit32u) (ticks & 0xffffffff);
-        RDX = (Bit32u) ((ticks >> 32) & 0xffffffff);
-      }
+    case BX_MSR_TSC:
+      RDTSC(i);
       return;
 
     /* MSR_APICBASE
@@ -1752,7 +1767,8 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
-      BX_INFO(("WRMSR: writing to BX_MSR_TSC still not implemented"));
+      BX_CPU_THIS_PTR set_TSC(EAX); /* ignore the high 32bits */
+      BX_INFO(("WRMSR: wrote 0x%08x to MSR_TSC", EAX));
       return;
 
     /* MSR_APICBASE

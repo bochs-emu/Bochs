@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.253 2006-01-19 18:32:39 sshwarts Exp $
+// $Id: cpu.h,v 1.254 2006-01-21 12:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -615,6 +615,13 @@ typedef struct {
   Bit32u tsc_aux;
 #endif
 
+  // TSC: Time Stamp Counter
+  // Instead of storing a counter and incrementing it every instruction, we
+  // remember the time in ticks that it was reset to zero.  With a little
+  // algebra, we can also support setting it to something other than zero.
+  // Don't read this directly; use get_TSC and set_TSC to access the TSC.
+  Bit64u tsc_last_reset;
+
   /* TODO finish of the others */
 } bx_regs_msr_t;
 #endif
@@ -906,7 +913,7 @@ typedef struct {
   union {
     struct {
       Bit32u dword_filler;
-      Bit16u word_filler;
+      Bit16u  word_filler;
       union {
         Bit16u rx;
         struct {
@@ -918,7 +925,7 @@ typedef struct {
     Bit64u rrx;
     struct {
       Bit32u hrx;  // hi 32 bits
-      Bit32u erx;  // low 32 bits
+      Bit32u erx;  // lo 32 bits
     } dword;
   };
 } bx_gen_reg_t;
@@ -933,12 +940,12 @@ typedef struct {
           Bit8u rh;
         } byte;
       };
-      Bit16u word_filler;
+      Bit16u  word_filler;
       Bit32u dword_filler;
     } word;
     Bit64u rrx;
     struct {
-      Bit32u erx;  // low 32 bits
+      Bit32u erx;  // lo 32 bits
       Bit32u hrx;  // hi 32 bits
     } dword;
   };
@@ -1020,7 +1027,7 @@ public: // for now...
   // esi: source index
   // edi: destination index
   // esp: stack pointer
-  bx_gen_reg_t  gen_reg[BX_GENERAL_REGISTERS];
+  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS];
 
   // instruction pointer
 #if BX_SUPPORT_X86_64
@@ -1074,7 +1081,6 @@ public: // for now...
   bx_segment_reg_t        ldtr; /* local descriptor table register */
   bx_segment_reg_t        tr;   /* task register */
 
-
   /* debug registers 0-7 (unimplemented) */
 #if BX_CPU_LEVEL >= 3
   Bit32u dr0;
@@ -1115,6 +1121,10 @@ public: // for now...
 
   // pointer to the address space that this processor uses.
   BX_MEM_C *mem;
+
+#if BX_SUPPORT_APIC
+  bx_local_apic_c local_apic;
+#endif
 
   bx_bool EXT; /* 1 if processing external interrupt or exception
                 * or if not related to current instruction,
@@ -2882,6 +2892,11 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
 
+#if BX_CPU_LEVEL >= 5
+  BX_SMF Bit64u get_TSC();
+  BX_SMF void   set_TSC(Bit32u tsc);
+#endif
+
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
   BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1, bx_bool = 1);
@@ -2910,10 +2925,6 @@ public: // for now...
   BX_SMF void SetCR0(Bit32u val_32);
 #if BX_CPU_LEVEL >= 4
   BX_SMF void SetCR4(Bit32u val_32);
-#endif
-
-#if BX_SUPPORT_APIC
-  bx_local_apic_c local_apic;
 #endif
 
 };
