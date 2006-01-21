@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.47 2006-01-20 19:12:03 vruppert Exp $
+// $Id: plugin.h,v 1.48 2006-01-21 09:28:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -240,11 +240,6 @@ typedef struct _device_t
 {
     const char *name;
     plugin_t *plugin;
-    void (*device_init_mem)(BX_MEM_C *);
-    void (*device_init_dev)();
-    void (*device_reset)(unsigned);
-    void (*device_load_state)();
-    void (*device_save_state)();
 
     class bx_devmodel_c *devmodel;  // BBD hack
 
