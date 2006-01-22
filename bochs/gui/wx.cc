@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.77 2006-01-17 17:15:29 vruppert Exp $
+// $Id: wx.cc,v 1.78 2006-01-22 16:30:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -67,7 +67,8 @@ public:
   bx_wx_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
-  virtual void statusbar_setitem(int element, bx_bool active);
+  void statusbar_setitem(int element, bx_bool active);
+  void show_ips(Bit32u ips_count);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1624,6 +1625,15 @@ bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
   }
   wxMutexGuiLeave ();
   return ret;
+}
+
+void bx_wx_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  char ips_text[40];
+  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  theFrame->SetStatusText(ips_text, 0);
+#endif
 }
 
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)

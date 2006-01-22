@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.62 2005-11-12 16:09:55 vruppert Exp $
+// $Id: sdl.cc,v 1.63 2006-01-22 16:30:48 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,6 +53,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode (disp_mode_t newmode);
   virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void show_ips(Bit32u ips_count);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -323,9 +324,12 @@ void sdl_set_status_text(int element, const char *text, bx_bool active)
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 1) * disp + xleft;
   rowsleft = statusbar_height - 2;
   fgcolor = active?headerbar_fg:status_gray_text;
-  bgcolor = active?status_led_green:headerbar_bg;
-  do
-  {
+  if (element > 0) {
+    bgcolor = active?status_led_green:headerbar_bg;
+  } else {
+    bgcolor = headerbar_bg;
+  }
+  do {
     colsleft = xsize;
     buf_row = buf;
     do
@@ -334,10 +338,10 @@ void sdl_set_status_text(int element, const char *text, bx_bool active)
     } while( --colsleft );
     buf = buf_row + disp;
   } while( --rowsleft );
-  if (strlen(text) < 4) {
-    textlen = strlen(text);
-  } else {
+  if ((element > 0) && (strlen(text) > 4)) {
     textlen = 4;
+  } else {
+    textlen = strlen(text);
   }
   buf = (Uint32 *)sdl_screen->pixels + (res_y + headerbar_height + 5) * disp + xleft;
   x = 0;
@@ -1537,6 +1541,15 @@ bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
 	break;
     }
   }
+}
+
+void bx_sdl_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  char ips_text[40];
+  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  sdl_set_status_text(0, ips_text, 1);
+#endif
 }
 
 #endif /* if BX_WITH_SDL */
