@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.98 2006-01-22 12:31:16 vruppert Exp $
+// $Id: x.cc,v 1.99 2006-01-22 18:15:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,7 +67,9 @@ public:
   virtual void beep_off();
   virtual void statusbar_setitem(int element, bx_bool active);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+#if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1933,36 +1935,31 @@ void bx_x_gui_c::sim_is_idle () {
 }
 #endif /* BX_USE_IDLE_HACK */  
 
-
-  void
-bx_x_gui_c::beep_on(float frequency)
+void bx_x_gui_c::beep_on(float frequency)
 {
   BX_INFO(( "X11 Beep ON (frequency=%.2f)",frequency));
 }
 
-  void
-bx_x_gui_c::beep_off()
+void bx_x_gui_c::beep_off()
 {
   BX_INFO(( "X11 Beep OFF"));
 }
 
-  void
-bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
   *xres = 1024;
   *yres = 768;
   *bpp = 32;
 }
 
-
+#if BX_SHOW_IPS
 void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
-#if BX_SHOW_IPS
   char ips_text[40];
-  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  sprintf(ips_text, "IPS: %u", ips_count);
   set_status_text(0, ips_text, 0);
-#endif
 }
+#endif
 
 void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
                        unsigned int width, unsigned int height, char *text)

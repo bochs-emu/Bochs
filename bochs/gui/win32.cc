@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.100 2006-01-22 12:31:16 vruppert Exp $
+// $Id: win32.cc,v 1.101 2006-01-22 18:15:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,9 +48,11 @@
 class bx_win32_gui_c : public bx_gui_c {
 public:
   bx_win32_gui_c (void) {}
-  DECLARE_GUI_VIRTUAL_METHODS()
+  DECLARE_GUI_VIRTUAL_METHODS();
   virtual void statusbar_setitem(int element, bx_bool active);
+#if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -2045,8 +2047,7 @@ void alarm(int time)
 #endif
 #endif
 
-  void
-bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   if ((val != mouseCaptureMode) && !mouseToggleReq) {
     mouseToggleReq = TRUE;
@@ -2054,14 +2055,14 @@ bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
   }
 }
 
+#if BX_SHOW_IPS
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
-#if BX_SHOW_IPS
   char ips_text[40];
-  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  sprintf(ips_text, "IPS: %u", ips_count);
   SetStatusText(0, ips_text, 0);
-#endif
 }
+#endif
 
 #if BX_USE_WINDOWS_FONTS
 
@@ -2131,7 +2132,6 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
 void InitFont(void)
 {
   LOGFONT lf;
-  int i;
 
   lf.lfWidth = 8;
   lf.lfEscapement = 0;
@@ -2147,7 +2147,7 @@ void InitFont(void)
   lf.lfPitchAndFamily=FIXED_PITCH | FF_DONTCARE;
   wsprintf(lf.lfFaceName, "Lucida Console");
 
-  for (i=0; i < 3; i++)
+  for (int i=0; i < 3; i++)
   {
     lf.lfHeight = 12 + i * 2;
     hFont[i]=CreateFontIndirect(&lf);
@@ -2156,8 +2156,7 @@ void InitFont(void)
 
 void DestroyFont(void)
 {
-  int i;
-  for(i = 0; i < 3; i++)
+  for(int i = 0; i < 3; i++)
   {
     DeleteObject(hFont[i]);
   }

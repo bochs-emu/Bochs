@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.63 2006-01-22 16:30:48 vruppert Exp $
+// $Id: sdl.cc,v 1.64 2006-01-22 18:15:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,9 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void set_display_mode (disp_mode_t newmode);
   virtual void statusbar_setitem(int element, bx_bool active);
+#if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1543,13 +1545,13 @@ bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
   }
 }
 
+#if BX_SHOW_IPS
 void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 {
-#if BX_SHOW_IPS
   char ips_text[40];
-  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  sprintf(ips_text, "IPS: %u", ips_count);
   sdl_set_status_text(0, ips_text, 1);
-#endif
 }
+#endif
 
 #endif /* if BX_WITH_SDL */
