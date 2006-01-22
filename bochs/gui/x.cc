@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.97 2006-01-17 17:15:29 vruppert Exp $
+// $Id: x.cc,v 1.98 2006-01-22 12:31:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,6 +67,7 @@ public:
   virtual void beep_off();
   virtual void statusbar_setitem(int element, bx_bool active);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
+  virtual void show_ips(Bit32u ips_count);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -1953,6 +1954,15 @@ bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
   *bpp = 32;
 }
 
+
+void bx_x_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  char ips_text[40];
+  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  set_status_text(0, ips_text, 0);
+#endif
+}
 
 void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
                        unsigned int width, unsigned int height, char *text)

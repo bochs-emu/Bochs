@@ -113,7 +113,7 @@
 #define BX_SHOW_IPS         0
 
 
-#if (BX_SHOW_IPS) && defined(__MINGW32__)
+#if (BX_SHOW_IPS) && (defined(__MINGW32__) || defined(_MSC_VER))
 #define        SIGALRM         14
 #endif
 

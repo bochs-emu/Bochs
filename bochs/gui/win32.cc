@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.99 2005-11-12 16:09:55 vruppert Exp $
+// $Id: win32.cc,v 1.100 2006-01-22 12:31:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ public:
   bx_win32_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
   virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void show_ips(Bit32u ips_count);
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -456,7 +457,7 @@ Bit32u win32_to_bx_key[2][0x100] =
 
 /* Macro to convert WM_ button state to BX button state */
 
-#ifdef __MINGW32__
+#if  defined(__MINGW32__) || defined(_MSC_VER)
   VOID CALLBACK MyTimer(HWND,UINT,UINT,DWORD);
   void alarm(int);
   void bx_signal_handler(int);
@@ -2029,16 +2030,16 @@ void headerbar_click(int x)
   }
 }
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
 #if BX_SHOW_IPS
 VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)
 {
   bx_signal_handler(SIGALRM);
 }
 
-void alarm (int time)
+void alarm(int time)
 {
-  UINT idTimer;
+  UINT idTimer = 2;
   SetTimer(stInfo.simWnd,idTimer,time*1000,MyTimer);
 }
 #endif
@@ -2051,6 +2052,15 @@ bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
     mouseToggleReq = TRUE;
     mouseCaptureNew = val;
   }
+}
+
+void bx_win32_gui_c::show_ips(Bit32u ips_count)
+{
+#if BX_SHOW_IPS
+  char ips_text[40];
+  sprintf(ips_text, "mIPS: %.3f", (float)ips_count / 1000000.0);
+  SetStatusText(0, ips_text, 0);
+#endif
 }
 
 #if BX_USE_WINDOWS_FONTS

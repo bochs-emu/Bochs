@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.306 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: main.cc,v 1.307 2006-01-22 12:31:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,7 @@ extern "C" {
 #include <signal.h>
 }
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(_MSC_VER)
 void alarm(int);
 #endif
 
@@ -914,7 +914,7 @@ int bx_init_hardware()
 #endif
 
 #if BX_SHOW_IPS
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
   signal(SIGALRM, bx_signal_handler);
 #endif
   alarm( 1 );
@@ -1037,7 +1037,7 @@ void bx_signal_handler(int signum)
       bx_gui->show_ips((Bit32u) ips_count);
       ticks_count = bx_pc_system.time_ticks();
     }
-#ifndef __MINGW32__
+#if !defined(__MINGW32__) && !defined(_MSC_VER)
     signal(SIGALRM, bx_signal_handler);
     alarm( 1 );
 #endif
