@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.28 2005-10-13 20:21:35 sshwarts Exp $
+// $Id: shift16.cc,v 1.29 2006-01-22 18:17:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,6 +160,7 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     if ( count & 0x10 ) {
       unsigned bit0 = op1_16 & 1;
       set_CF(bit0);
+      set_OF(bit0 ^ (op1_16 >> 15))
     }
     return;
   }
@@ -207,8 +208,10 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 
   if ( (count & 0x0f) == 0 ) {
     if ( count & 0x10 ) {
-      unsigned MSB = op1_16 >> 15;
-      set_CF(MSB);
+      unsigned bit14 = (op1_16 >> 14) & 1;
+      unsigned bit15 = (op1_16 >> 15);
+      set_CF(bit15);
+      set_OF(bit15 ^ bit14);
     }
     return;
   }
