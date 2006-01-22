@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.67 2006-01-18 18:35:30 sshwarts Exp $
+// $Id: config.cc,v 1.68 2006-01-22 10:03:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2633,6 +2633,11 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "count=", 6)) {
         bx_options.Ocpu_count->set (strtoul (&params[i][6], NULL, 10));
+      } else if (!strncmp(params[i], "ips=", 4)) {
+        bx_options.Oips->set (atol(&params[i][4]));
+        if (bx_options.Oips->get () < BX_MIN_IPS) {
+          PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
+        }
       } else {
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
@@ -2752,7 +2757,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
     bx_options.Oips->set (atol(params[1]));
     if (bx_options.Oips->get () < BX_MIN_IPS) {
-      BX_ERROR(("%s: WARNING: ips is AWFULLY low!", context));
+      PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
   } else if (!strcmp(params[0], "max_ips")) {
     if (num_params != 2) {
@@ -3662,8 +3667,7 @@ bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr ());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
-  fprintf (fp, "cpu: count=%d\n", bx_options.Ocpu_count->get ());
-  fprintf (fp, "ips: %u\n", bx_options.Oips->get ());
+  fprintf (fp, "cpu: count=%d, ips=%u\n", bx_options.Ocpu_count->get(), bx_options.Oips->get());
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());

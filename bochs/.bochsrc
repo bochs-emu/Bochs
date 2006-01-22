@@ -79,12 +79,19 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #romimage: file=mybios.bin # calculate start address from image size
 
 #=======================================================================
-# CPU
-# Set the number of processors when Bochs is compiled for SMP emulation.
-# Bochs currently supports up to 8 processors. If Bochs is compiled
-# without SMP support, it won't accept values different from 1.
+# CPU:
+# This defines cpu-related parameters inside Bochs:
+#
+#  COUNT:
+#  Set the number of processors when Bochs is compiled for SMP emulation.
+#  Bochs currently supports up to 8 processors. If Bochs is compiled
+#  without SMP support, it won't accept values different from 1.
+#
+#  IPS:
+#  Emulated Instructions Per Second. See description under option IPS:
+#  more below.
 #=======================================================================
-cpu: count=1
+cpu: count=1, ips=10000000
 
 #=======================================================================
 # MEGS
@@ -270,12 +277,13 @@ boot: disk
 #=======================================================================
 # IPS:
 # Emulated Instructions Per Second.  This is the number of IPS that bochs
-# is capable of running on your machine.  Read the note in config.h
-# on how to find this.  Make sure to recompile after.
+# is capable of running on your machine. You can recompile Bochs with
+# --enable-show-ips option enabled, to find your workstation's capability.
+# Measured IPS value will then be logged into your log file.
 #
 # IPS is used to calibrate many time-dependent events within the bochs 
 # simulation.  For example, changing IPS affects the frequency of VGA
-# updates, the duration of time before a key starts to autorepeat, and 
+# updates, the duration of time before a key starts to autorepeat, and
 # the measurement of BogoMips and other benchmarks.
 #
 # Examples:

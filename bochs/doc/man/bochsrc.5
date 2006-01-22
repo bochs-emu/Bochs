@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "19 Jan 2006" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "22 Jan 2006" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -105,13 +105,23 @@ Examples:
   romimage: file=mybios.bin, address=0xfff80000
   romimage: file=mybios.bin
 
+.TP
 .I "cpu:"
+This defines cpu-related parameters inside Bochs:
+
+count:
+
 Set the number of processors when Bochs is compiled for SMP emulation.
 Bochs currently supports up to 8 processors. If Bochs is compiled
 without SMP support, it won't accept values different from 1.
 
+ips:
+
+Emulated Instructions Per Second. See description under option 'ips:'
+more below.
+
 Example:
-  cpu: count=2
+  cpu: count=2, ips=10000000
 
 .TP
 .I "megs:"
@@ -538,11 +548,11 @@ Example:
 .TP
 .I "ips:"
 Emulated Instructions Per Second.  This is the
-number of IPS that bochs is capable of running
-on your  machine.  You  can  recompile  Bochs,
-using  instructions  included in  config.h (in
-the source code),  to find  your workstation's
-capability.
+number of IPS that Bochs is capable of running
+on your machine.  You can recompile Bochs with
+--enable-show-ips option enabled, to find your
+workstation's capability.  Measured IPS value
+will then be logged into your log file.
 
 IPS is used to calibrate  many  time-dependent
 events   within   the  bochs  simulation.  For
@@ -554,12 +564,13 @@ BogoMips and other benchmarks.
 Example Specifications[1]
    Machine                           Mips
  ---------------------------------------------------
+ 1.6Ghz Intel P4 with Win2000/g++ 3.3  5 to 7 Mips
  650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
  400Mhz Pentium II with Linux 2.0.x    1 to 1.8
  166Mhz 64bit Sparc with Solaris 2.x       0.75
  200Mhz Pentium with Linux 2.x              0.5
 
- [1]  Mips  are  dependant on  OS and compiler
+ [1]  IPS measurements depend on OS and compiler
 configuration  in addition  to processor clock
 speed.
 
