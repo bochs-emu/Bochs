@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.3 2004-08-24 10:15:55 vruppert Exp $
+// $Id: parser.y,v 1.4 2006-01-23 21:44:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -169,7 +169,7 @@
 
 %%
 commands:
-      comamnds command
+      commands command
     | command
 ;
 
@@ -308,14 +308,9 @@ playback_command:
     ;
 
 modebp_command:
-	BX_TOKEN_MODEBP BX_TOKEN_STRING '\n'
+	BX_TOKEN_MODEBP '\n'
           {
-          bx_dbg_modebp_command($2);
-          free($1); free($2);
-          }
-	| BX_TOKEN_MODEBP '\n'
-          {
-          bx_dbg_modebp_command(0);
+          bx_dbg_modebp_command();
           free($1);
           }
     ;

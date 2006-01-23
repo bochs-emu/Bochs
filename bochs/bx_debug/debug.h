@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.7 2006-01-19 18:32:39 sshwarts Exp $
+// $Id: debug.h,v 1.8 2006-01-23 21:44:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ extern Bit64u timebp_queue[MAX_CONCURRENT_BPS];
 extern int timebp_queue_size;
 void bx_dbg_record_command(char*);
 void bx_dbg_playback_command(char*);
-void bx_dbg_modebp_command(char*); /* BW */
+void bx_dbg_modebp_command(void);
 void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(Bit32u addr);
 void bx_dbg_show_command(char*); /* BW */

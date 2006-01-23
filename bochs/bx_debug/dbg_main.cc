@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.35 2006-01-19 18:32:39 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.36 2006-01-23 21:44:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -893,13 +893,12 @@ void bx_dbg_playback_command(char* path_quoted)
   }
 }
 
-// BW added. toggles vm86 mode switch breakpoint
-//dummy not used and may be null
-void bx_dbg_modebp_command(char* dummy)
+//toggles vm86 mode switch breakpoint
+void bx_dbg_modebp_command()
 {
   BX_CPU(dbg_cpu)->debug_vm = BX_CPU(dbg_cpu)->getB_VM ();
   BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
-  dbg_printf (" mode switch break %s\n", 
+  dbg_printf ("mode switch break %s\n", 
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
@@ -987,8 +986,7 @@ void bx_dbg_print_string_command(Bit32u start_addr)
 }
 
 static bx_address last_cr3;
-static bx_bool last_pe = 0;
-static bx_bool last_vm = 0;
+static bx_bool last_cpu_mode = 0;
 
 unsigned int dbg_show_mask = 0;
 // 0x80 print mode
@@ -1095,11 +1093,10 @@ void bx_dbg_show_command(char* arg)
   if(dbg_show_mask & 0xe0)
     dbg_show_mask |= 0x1f;
   
-  dbg_printf (" show mask is 0x%x, cleared show_flag\n", dbg_show_mask);
+  dbg_printf ("show mask is 0x%x, cleared show_flag\n", dbg_show_mask);
   BX_CPU(dbg_cpu)->show_flag = 0;
   last_cr3 = BX_CPU(dbg_cpu)->cr3;
-  last_pe = BX_CPU(dbg_cpu)->cr0.pe;
-  last_vm = BX_CPU(dbg_cpu)->getB_VM ();
+  last_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
 
   dbg_printf (FMT_TICK ": address %04x:" FMT_ADDRX " " FMT_ADDRX "\n\n", 
     bx_pc_system.time_ticks(),
@@ -1902,32 +1899,31 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       dbg_printf ("ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
       reg = cpu.esp;
-      dbg_printf ("esp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      dbg_printf ("esp            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
       reg = cpu.ebp;
-      dbg_printf ("ebp            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
+      dbg_printf ("ebp            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
       reg = cpu.esi;
       dbg_printf ("esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
       reg = cpu.edi;
       dbg_printf ("edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
 
       reg = cpu.eip;
-      dbg_printf ("eip            0x%-8x\t0x%-8x\n", (unsigned) reg, (int) reg);
-
+      dbg_printf ("eip            0x%-8x\n", (unsigned) reg);
       reg = cpu.eflags;
-      dbg_printf ("eflags         0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("eflags         0x%-8x\n", (unsigned) reg);
 
       reg = cpu.cs.sel;
-      dbg_printf ("cs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("cs             0x%-8x\n", (unsigned) reg);
       reg = cpu.ss.sel;
-      dbg_printf ("ss             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("ss             0x%-8x\n", (unsigned) reg);
       reg = cpu.ds.sel;
-      dbg_printf ("ds             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("ds             0x%-8x\n", (unsigned) reg);
       reg = cpu.es.sel;
-      dbg_printf ("es             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("es             0x%-8x\n", (unsigned) reg);
       reg = cpu.fs.sel;
-      dbg_printf ("fs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("fs             0x%-8x\n", (unsigned) reg);
       reg = cpu.gs.sel;
-      dbg_printf ("gs             0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf ("gs             0x%-8x\n", (unsigned) reg);
     }
 #if BX_SUPPORT_FPU
     if (which_regs_mask & BX_INFO_FPU_REGS) {
@@ -2735,6 +2731,8 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
           dis_size = 16; 		// until otherwise proven
           if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
             dis_size = 32;
+          if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64)
+            dis_size = 64;
         }
         BX_MEM(0)->dbg_fetch_mem(paddr, 16, bx_disasm_ibuf);
         ilen = bx_disassemble.disasm(dis_size==32, dis_size==64,
@@ -3184,7 +3182,7 @@ void bx_dbg_info_ne2k(int page, int reg)
  */
 void bx_dbg_info_pic()
 {
- DEV_pic_show_pic_state();
+  DEV_pic_show_pic_state();
 }
 
 /*
@@ -3193,7 +3191,7 @@ void bx_dbg_info_pic()
  */
 void bx_dbg_info_vga()
 {
- DEV_vga_dump_status();
+  DEV_vga_dump_status();
 }
 
 //
@@ -3363,7 +3361,7 @@ void bx_dbg_post_dma_reports(void)
         dbg_printf ("event icount=%u DMA addr=0x%x size=%u op=%s val=0x%x",
                          (unsigned) bx_dbg_batch_dma.Q[i].icount,
                          addr, len, (what==BX_READ) ? "read" : "write",
-                         val );
+                         val);
         print_header = 0;
       }
       else {
@@ -3379,25 +3377,19 @@ void bx_dbg_post_dma_reports(void)
   bx_dbg_batch_dma.Qsize = 0;
 }
 
-
-// BW added. return non zero to cause a stop
-static int symbol_level = 0;
+extern const char* cpu_mode_string(unsigned cpu_mode);
 
 int bx_dbg_symbolic_output(void) 
 {
-  /* modes & address spaces */
-  if(BX_CPU(dbg_cpu)->cr0.pe != last_pe) {
-    dbg_printf (FMT_TICK ": Switched %s protected mode\n", 
-      bx_pc_system.time_ticks(),
-      last_pe ? "from" : "to");
-    last_pe = !last_pe;
-  }
+  // BW added. return non zero to cause a stop
+  static int symbol_level = 0;
 
-  if(last_vm != BX_CPU(dbg_cpu)->getB_VM ()) {
-    dbg_printf (FMT_TICK ": %s V86 mode\n", 
-      bx_pc_system.time_ticks(), 
-      last_vm ? "Exited" : "Entered");
-    last_vm = !last_vm;
+  /* modes & address spaces */
+  if(BX_CPU(dbg_cpu)->get_cpu_mode() != last_cpu_mode) {
+    dbg_printf (FMT_TICK ": switched from %s to %s since last trigger\n", 
+      bx_pc_system.time_ticks(),
+      cpu_mode_string(last_cpu_mode),
+      cpu_mode_string(BX_CPU(dbg_cpu)->get_cpu_mode()));
   }
 
   if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
@@ -3755,7 +3747,7 @@ void bx_dbg_help_command(char* command)
         (strcmp(p, "pb") == 0) ||
         (strcmp(p, "b") == 0))
     {
-       dbg_printf("%s [*] addr - set a physical address instruction preakpoint\n", p);
+       dbg_printf("%s [*] addr - set a physical address instruction breakpoint\n", p);
     }
     else
     if ((strcmp(p, "delete") == 0) ||
@@ -3822,7 +3814,7 @@ nuf_help:
       dbg_printf("%s break - show information about current breakpoint status\n", p);
       dbg_printf("%s dirty - show physical pages dirtied (written to) since last display\n", p);
       dbg_printf("%s program - execution status of the program\n", p);
-      dbg_printf("%s r|reg|registers - list of CPU integer registers and their contents\n", p);
+      dbg_printf("%s r|reg|regs|registers - list of CPU integer registers and their contents\n", p);
       dbg_printf("%s cpu - list of CPU registers and their contents\n", p);
       dbg_printf("%s fpu - list of FPU registers and their contents\n", p);
       dbg_printf("%s idt - show interrupt descriptor table\n", p);
@@ -3915,7 +3907,7 @@ nuf_help:
     if (strcmp(p, "watch") == 0)
     {
       dbg_printf("%s - print current watch point status\n", p);
-      dbg_printf("%s stop - stop simulation whena watchpoint is encountred\n", p);
+      dbg_printf("%s stop - stop simulation when a watchpoint is encountred\n", p);
       dbg_printf("%s continue - do not stop the simulation when watch point is encountred\n", p);
       dbg_printf("%s read addr - insert a read watch point at physical address addr\n", p);
       dbg_printf("%s write addr - insert a write watch point at physical address addr\n", p);

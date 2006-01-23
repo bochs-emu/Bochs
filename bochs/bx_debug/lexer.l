@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.5 2005-04-16 21:43:06 sshwarts Exp $
+// $Id: lexer.l,v 1.6 2006-01-23 21:44:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -53,6 +53,7 @@ creg		|
 cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
 r		|
 reg		|
+regs		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
 fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
 cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }

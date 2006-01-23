@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.50 2006-01-16 19:22:28 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.51 2006-01-23 21:44:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,19 +59,24 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 }
 #endif  // #if BX_DISASM
 
-
-void BX_CPU_C::debug(bx_address offset)
+const char* cpu_mode_string(unsigned cpu_mode)
 {
   static const char *cpu_mode_name[] = {
      "real mode",
      "v8086 mode",
      "protected mode",
      "compatibility mode",
-     "long mode"
+     "long mode",
+     "unknown mode"
   };
 
-  if (BX_CPU_THIS_PTR cpu_mode < 5)
-    BX_INFO(("%s", cpu_mode_name[BX_CPU_THIS_PTR cpu_mode]));
+  if(cpu_mode >= 5) cpu_mode = 5;
+  return cpu_mode_name[cpu_mode];
+}
+
+void BX_CPU_C::debug(bx_address offset)
+{
+  BX_INFO(("%s", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",
