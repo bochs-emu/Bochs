@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.102 2006-01-23 18:34:47 vruppert Exp $
+// $Id: win32.cc,v 1.103 2006-01-23 21:53:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,6 +135,11 @@ static unsigned bx_hb_separator;
 long SB_Edges[BX_MAX_STATUSITEMS+2];
 char SB_Text[BX_MAX_STATUSITEMS][10];
 bx_bool SB_Active[BX_MAX_STATUSITEMS];
+#if BX_SHOW_IPS
+static BOOL ipsUpdate = FALSE;
+static char ipsText[20];
+static Bit8u mouseMsgCounter = 0;
+#endif
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -965,6 +970,9 @@ void SetMouseCapture()
     SetStatusText(0, szMouseDisable, TRUE);
   else
     SetStatusText(0, szMouseEnable, TRUE);
+#if BX_SHOW_IPS
+  mouseMsgCounter = 3;
+#endif
 }
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -1291,6 +1299,12 @@ void bx_win32_gui_c::handle_events(void) {
       DEV_kbd_gen_scancode(key_event);
     }
   }
+#if BX_SHOW_IPS
+  if (ipsUpdate) {
+    ipsUpdate = FALSE;
+    SetStatusText(0, ipsText, 1);
+  }
+#endif
   LeaveCriticalSection(&stInfo.keyCS);
 }
 
@@ -2058,9 +2072,14 @@ void bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
 #if BX_SHOW_IPS
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
-  char ips_text[40];
-  sprintf(ips_text, "IPS: %9u", ips_count);
-  SetStatusText(0, ips_text, 0);
+  if (mouseMsgCounter == 0) {
+    if (!ipsUpdate) {
+      sprintf(ipsText, "IPS: %9u", ips_count);
+      ipsUpdate = TRUE;
+    }
+  } else {
+    mouseMsgCounter--;
+  }
 }
 #endif
 
