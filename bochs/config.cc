@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.68 2006-01-22 10:03:37 vruppert Exp $
+// $Id: config.cc,v 1.69 2006-01-23 18:39:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,8 +54,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 static int parse_bochsrc(char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
-static Bit64s
-bx_param_handler (bx_param_c *param, int set, Bit64s val)
+static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   switch (id) {
@@ -299,8 +298,7 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
   return val;
 }
 
-static int
-bx_param_enable_handler (bx_param_c *param, int val)
+static int bx_param_enable_handler (bx_param_c *param, int val)
 {
   bx_id id = param->get_id ();
   switch (id) {
@@ -740,9 +738,8 @@ void bx_init_options ()
       // Set the enable_hanlders
       bx_options.atadevice[channel][slave].Ojournal->set_enable_handler (bx_param_enable_handler);
       bx_options.atadevice[channel][slave].Ostatus->set_enable_handler (bx_param_enable_handler);
-
-      }
     }
+  }
 
   // boot sequence
   for (i=0; i<3; i++) {
@@ -1752,13 +1749,13 @@ void bx_reset_options ()
   bx_options.floppyb.Otype->reset();
   bx_options.floppyb.Ostatus->reset();
 
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     bx_options.ata[channel].Opresent->reset();
     bx_options.ata[channel].Oioaddr1->reset();
     bx_options.ata[channel].Oioaddr2->reset();
     bx_options.ata[channel].Oirq->reset();
 
-    for (Bit8u slave=0; slave<2; slave++) {
+    for (unsigned slave=0; slave<2; slave++) {
       bx_options.atadevice[channel][slave].Opresent->reset();
       bx_options.atadevice[channel][slave].Otype->reset();
       bx_options.atadevice[channel][slave].Omode->reset();
@@ -1892,8 +1889,7 @@ void bx_reset_options ()
   bx_options.Otext_snapshot_check->reset();
 }
 
-int
-bx_read_configuration (char *rcfile)
+int bx_read_configuration (char *rcfile)
 {
   // parse rcfile first, then parse arguments in order.
   BX_INFO (("reading configuration from %s", rcfile));
@@ -1927,8 +1923,7 @@ int bx_parse_cmdline (int arg, int argc, char *argv[])
 }
 
 #if BX_PROVIDE_MAIN
-char *
-bx_find_bochsrc ()
+char *bx_find_bochsrc ()
 {
   FILE *fd = NULL;
   char rcfile[512];
@@ -1946,11 +1941,11 @@ bx_find_bochsrc ()
       // only try this on unix
     case 3:
       {
-      char *ptr = getenv("HOME");
-      if (ptr) snprintf (rcfile, sizeof(rcfile), "%s/.bochsrc", ptr);
+        char *ptr = getenv("HOME");
+        if (ptr) snprintf (rcfile, sizeof(rcfile), "%s/.bochsrc", ptr);
       }
       break;
-     case 4: strcpy (rcfile, "/etc/bochsrc"); break;
+    case 4: strcpy (rcfile, "/etc/bochsrc"); break;
 #endif
     default:
       return NULL;
@@ -1966,8 +1961,7 @@ bx_find_bochsrc ()
   return strdup (rcfile);
 }
 
-  static int
-parse_bochsrc(char *rcfile)
+static int parse_bochsrc(char *rcfile)
 {
   FILE *fd = NULL;
   char *ret;
@@ -1999,8 +1993,7 @@ parse_bochsrc(char *rcfile)
   return retval;
 }
 
-  static char *
-get_builtin_variable(char *varname)
+static char *get_builtin_variable(char *varname)
 {
 #ifdef WIN32
   int code;
@@ -2039,8 +2032,7 @@ get_builtin_variable(char *varname)
   }
 }
 
-  static Bit32s
-parse_line_unformatted(char *context, char *line)
+static Bit32s parse_line_unformatted(char *context, char *line)
 {
 #define MAX_PARAMS_LEN 40
   char *ptr;
@@ -2240,50 +2232,50 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   if (!strcmp(params[0], "#include")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: ignoring malformed #include directive.", context));
-      }
+    }
     if (!strcmp(params[1], context)) {
       PARSE_ERR(("%s: cannot include this file again.", context));
-      }
+    }
     if (bochsrc_include_count == 2) {
       PARSE_ERR(("%s: include directive in an included file not supported yet.", context));
-      }
-    bx_read_configuration(params[1]);
     }
+    bx_read_configuration(params[1]);
+  }
   else if (!strcmp(params[0], "floppya")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_2_88);
-        }
+      }
       else if (!strncmp(params[i], "1_44=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_1_44);
-        }
+      }
       else if (!strncmp(params[i], "1_2=", 4)) {
         bx_options.floppya.Opath->set (&params[i][4]);
         bx_options.floppya.Otype->set (BX_FLOPPY_1_2);
-        }
+      }
       else if (!strncmp(params[i], "720k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_720K);
-        }
+      }
       else if (!strncmp(params[i], "360k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_360K);
-        }
+      }
       // use CMOS reserved types?
       else if (!strncmp(params[i], "160k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_160K);
-        }
+      }
       else if (!strncmp(params[i], "180k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_180K);
-        }
+      }
       else if (!strncmp(params[i], "320k=", 5)) {
         bx_options.floppya.Opath->set (&params[i][5]);
         bx_options.floppya.Otype->set (BX_FLOPPY_320K);
-        }
+      }
       else if (!strncmp(params[i], "image=", 6)) {
         /* "image=" means we should get floppy type from image */
         bx_options.floppya.Opath->set (&params[i][6]);
@@ -2292,55 +2284,55 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
           bx_options.floppya.Otype->set (t);
         else
           PARSE_ERR(("%s: floppya image size doesn't match one of the supported types.", context));
-        }
+      }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppya.Ostatus->set (BX_EJECTED);
-        }
+      }
       else if (!strncmp(params[i], "status=inserted", 15)) {
         bx_options.floppya.Ostatus->set (BX_INSERTED);
-        }
+      }
       else {
         PARSE_ERR(("%s: floppya attribute '%s' not understood.", context,
           params[i]));
-        }
       }
     }
+  }
 
   else if (!strcmp(params[0], "floppyb")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "2_88=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_2_88);
-        }
+      }
       else if (!strncmp(params[i], "1_44=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_1_44);
-        }
+      }
       else if (!strncmp(params[i], "1_2=", 4)) {
         bx_options.floppyb.Opath->set (&params[i][4]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_1_2);
-        }
+      }
       else if (!strncmp(params[i], "720k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_720K);
-        }
+      }
       else if (!strncmp(params[i], "360k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_360K);
-        }
+      }
       // use CMOS reserved types?
       else if (!strncmp(params[i], "160k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_160K);
-        }
+      }
       else if (!strncmp(params[i], "180k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_180K);
-        }
+      }
       else if (!strncmp(params[i], "320k=", 5)) {
         bx_options.floppyb.Opath->set (&params[i][5]);
         bx_options.floppyb.Otype->set (BX_FLOPPY_320K);
-        }
+      }
       else if (!strncmp(params[i], "image=", 6)) {
         /* "image=" means we should get floppy type from image */
         bx_options.floppyb.Opath->set (&params[i][6]);
@@ -2349,75 +2341,75 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
           bx_options.floppyb.Otype->set (t);
         else
           PARSE_ERR(("%s: floppyb image size doesn't match one of the supported types.", context));
-        }
+      }
       else if (!strncmp(params[i], "status=ejected", 14)) {
         bx_options.floppyb.Ostatus->set (BX_EJECTED);
-        }
+      }
       else if (!strncmp(params[i], "status=inserted", 15)) {
         bx_options.floppyb.Ostatus->set (BX_INSERTED);
-        }
+      }
       else {
         PARSE_ERR(("%s: floppyb attribute '%s' not understood.", context,
           params[i]));
-        }
       }
     }
+  }
 
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
     Bit8u channel = params[0][3];
 
     if ((channel < '0') || (channel > '9')) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
+    }
     channel-='0';
     if (channel >= BX_MAX_ATA_CHANNEL) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
+    }
 
     if ((num_params < 2) || (num_params > 5)) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
+    }
 
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
-      }
+    }
     else {
       bx_options.ata[channel].Opresent->set (atol(&params[1][8]));
-      }
+    }
 
     if (num_params > 2) {
       if (strncmp(params[2], "ioaddr1=", 8)) {
         PARSE_ERR(("%s: ataX directive malformed.", context));
-        }
+      }
       else {
         if ( (params[2][8] == '0') && (params[2][9] == 'x') )
           bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 16));
         else
           bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 10));
-        }
       }
+    }
 
     if (num_params > 3) {
       if (strncmp(params[3], "ioaddr2=", 8)) {
         PARSE_ERR(("%s: ataX directive malformed.", context));
-        }
+      }
       else {
         if ( (params[3][8] == '0') && (params[3][9] == 'x') )
           bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 16));
         else
           bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 10));
-        }
       }
+    }
 
     if (num_params > 4) {
       if (strncmp(params[4], "irq=", 4)) {
         PARSE_ERR(("%s: ataX directive malformed.", context));
-        }
+      }
       else {
         bx_options.ata[channel].Oirq->set (atol(&params[4][4]));
-        }
       }
     }
+  }
 
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
@@ -2426,20 +2418,20 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 
     if ((channel < '0') || (channel > '9')) {
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
-      }
+    }
     channel-='0';
     if (channel >= BX_MAX_ATA_CHANNEL) {
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
-      }
+    }
 
     if ((strcmp(&params[0][4], "-slave")) &&
         (strcmp(&params[0][4], "-master"))) {
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
-      }
+    }
 
     if (!strcmp(&params[0][4], "-slave")) {
       slave = 1;
-      }
+    }
 
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "type=disk")) {
@@ -2752,6 +2744,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   } else if (!strcmp(params[0], "floppy_command_delay")) {
     PARSE_WARN(("%s: floppy_command_delay is deprecated (now using hardware timing).", context));
   } else if (!strcmp(params[0], "ips")) {
+    PARSE_WARN(("%s: ips directive is deprecated (use cpu directive parameter 'ips').", context));
     if (num_params != 2) {
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
     }
@@ -2759,11 +2752,6 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (bx_options.Oips->get () < BX_MIN_IPS) {
       PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
-  } else if (!strcmp(params[0], "max_ips")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: max_ips directive: wrong # args.", context));
-    }
-    BX_INFO(("WARNING: max_ips not implemented"));
   } else if (!strcmp(params[0], "text_snapshot_check")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: text_snapshot_check directive: wrong # args.", context));
@@ -2980,81 +2968,81 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "sync=", 5)) {
         bx_options.clock.Osync->set_by_name (&params[i][5]);
-        }
+      }
       else if (!strcmp(params[i], "time0=local")) {
         bx_options.clock.Otime0->set (BX_CLOCK_TIME0_LOCAL);
-        }
+      }
       else if (!strcmp(params[i], "time0=utc")) {
         bx_options.clock.Otime0->set (BX_CLOCK_TIME0_UTC);
-        }
+      }
       else if (!strncmp(params[i], "time0=", 6)) {
         bx_options.clock.Otime0->set (atoi(&params[i][6]));
-        }
+      }
       else {
         BX_ERROR(("%s: unknown parameter for clock ignored.", context));
-        }
       }
     }
+  }
   else if (!strcmp(params[0], "gdbstub")) {
 #if BX_GDBSTUB
     if (num_params < 2) {
       PARSE_ERR(("%s: gdbstub directive: wrong # args.", context));
-      }
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (params[i][8] == '0') {
           BX_INFO(("Disabled gdbstub"));
           bx_dbg.gdbstub_enabled = 0;
-          }
+        }
         else if (params[i][8] == '1') {
           BX_INFO(("Enabled gdbstub"));
           bx_dbg.gdbstub_enabled = 1;
-          }
+        }
         else {
           PARSE_ERR(("%s: gdbstub directive malformed.", context));
-          }
-        }
-      else if (!strncmp(params[i], "port=", 5)) {
-        bx_options.gdbstub.port = atoi(&params[i][5]);
-        }
-      else if (!strncmp(params[i], "text_base=", 10)) {
-        bx_options.gdbstub.text_base = atoi(&params[i][10]);
-        }
-      else if (!strncmp(params[i], "data_base=", 10)) {
-        bx_options.gdbstub.data_base = atoi(&params[i][10]);
-        }
-      else if (!strncmp(params[i], "bss_base=", 9)) {
-        bx_options.gdbstub.bss_base = atoi(&params[i][9]);
-        }
-      else {
-        PARSE_ERR(("%s: gdbstub directive malformed.", context));
         }
       }
+      else if (!strncmp(params[i], "port=", 5)) {
+        bx_options.gdbstub.port = atoi(&params[i][5]);
+      }
+      else if (!strncmp(params[i], "text_base=", 10)) {
+        bx_options.gdbstub.text_base = atoi(&params[i][10]);
+      }
+      else if (!strncmp(params[i], "data_base=", 10)) {
+        bx_options.gdbstub.data_base = atoi(&params[i][10]);
+      }
+      else if (!strncmp(params[i], "bss_base=", 9)) {
+        bx_options.gdbstub.bss_base = atoi(&params[i][9]);
+      }
+      else {
+        PARSE_ERR(("%s: gdbstub directive malformed.", context));
+      }
+    }
 #else
     PARSE_ERR(("%s: Bochs is not compiled with gdbstub support", context));
 #endif
-    }
+  }
 
 #if BX_MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: magic_break directive: wrong # args.", context));
-      }
+    }
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
-      }
+    }
     if (params[1][8] == '0') {
       BX_INFO(("Ignoring magic break points"));
       bx_dbg.magic_break_enabled = 0;
-      }
+    }
     else if (params[1][8] == '1') {
       BX_INFO(("Stopping on magic break points"));
       bx_dbg.magic_break_enabled = 1;
-      }
+    }
     else {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
-      }
     }
+  }
 #endif
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
@@ -3063,19 +3051,19 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     int n;
     if (!bx_options.ne2k.Oenabled->get ()) {
       bx_options.ne2k.Oethmod->set_by_name ("null");
-      }
+    }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (atol(&params[i][8]) == 0) valid |= 0x80;
-        }
+      }
       else if (!strncmp(params[i], "ioaddr=", 7)) {
         bx_options.ne2k.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
-        }
+      }
       else if (!strncmp(params[i], "irq=", 4)) {
         bx_options.ne2k.Oirq->set (atol(&params[i][4]));
         valid |= 0x02;
-        }
+      }
       else if (!strncmp(params[i], "mac=", 4)) {
         n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
                    &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
@@ -3086,29 +3074,29 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
           tmpchar[n] = (unsigned char)tmp[n];
         bx_options.ne2k.Omacaddr->set (tmpchar);
         valid |= 0x04;
-        }
+      }
       else if (!strncmp(params[i], "ethmod=", 7)) {
         if (!bx_options.ne2k.Oethmod->set_by_name (strdup(&params[i][7])))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
-        }
+      }
       else if (!strncmp(params[i], "ethdev=", 7)) {
         bx_options.ne2k.Oethdev->set (strdup(&params[i][7]));
-        }
+      }
       else if (!strncmp(params[i], "script=", 7)) {
         bx_options.ne2k.Oscript->set (strdup(&params[i][7]));
-        }
+      }
       else {
         PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
-        }
+      }
     }
     if (!bx_options.ne2k.Oenabled->get ()) {
       if (valid == 0x07) {
         bx_options.ne2k.Oenabled->set (1);
-        }
+      }
       else if (valid < 0x80) {
         PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
-        }
       }
+    }
     else {
       if (valid & 0x80) {
         bx_options.ne2k.Oenabled->set (0);
@@ -3164,63 +3152,63 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     if ( (num_params!=4) && (num_params!=5) ) {
       PARSE_ERR(("%s: load32bitOSImage directive: wrong # args.", context));
-      }
+    }
     if (strncmp(params[1], "os=", 3)) {
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
-      }
+    }
     if (!strcmp(&params[1][3], "nullkernel")) {
       bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNullKernel);
-      }
+    }
     else if (!strcmp(&params[1][3], "linux")) {
       bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSLinux);
-      }
+    }
     else {
       PARSE_ERR(("%s: load32bitOSImage: unsupported OS.", context));
-      }
+    }
     if (strncmp(params[2], "path=", 5)) {
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
-      }
+    }
     if (strncmp(params[3], "iolog=", 6)) {
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
-      }
+    }
     bx_options.load32bitOSImage.Opath->set (strdup(&params[2][5]));
     bx_options.load32bitOSImage.Oiolog->set (strdup(&params[3][6]));
     if (num_params == 5) {
       if (strncmp(params[4], "initrd=", 7)) {
         PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
-        }
-      bx_options.load32bitOSImage.Oinitrd->set (strdup(&params[4][7]));
       }
+      bx_options.load32bitOSImage.Oinitrd->set (strdup(&params[4][7]));
     }
+  }
   else if (!strcmp(params[0], "keyboard_type")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_type directive: wrong # args.", context));
-      }
+    }
     if(strcmp(params[1],"xt")==0){
       bx_options.Okeyboard_type->set (BX_KBD_XT_TYPE);
-      }
+    }
     else if(strcmp(params[1],"at")==0){
       bx_options.Okeyboard_type->set (BX_KBD_AT_TYPE);
-      }
+    }
     else if(strcmp(params[1],"mf")==0){
       bx_options.Okeyboard_type->set (BX_KBD_MF_TYPE);
-      }
+    }
     else{
       PARSE_ERR(("%s: keyboard_type directive: wrong arg %s.", context,params[1]));
-      }
     }
+  }
 
   else if (!strcmp(params[0], "keyboard_mapping")
          ||!strcmp(params[0], "keyboardmapping")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.keyboard.OuseMapping->set (atol(&params[i][8]));
-        }
+      }
       else if (!strncmp(params[i], "map=", 4)) {
         bx_options.keyboard.Okeymap->set (strdup(&params[i][4]));
-        }
       }
     }
+  }
   else if (!strcmp(params[0], "user_shortcut"))
   {
     if (num_params != 2) {
@@ -3275,8 +3263,7 @@ static char *fdtypes[] = {
 };
 
 
-int 
-bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
+int bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
 {
   BX_ASSERT (drive==0 || drive==1);
   if (opt->Otype->get () == BX_FLOPPY_NONE) {
@@ -3292,8 +3279,7 @@ bx_write_floppy_options (FILE *fp, int drive, bx_floppy_options *opt)
   return 0;
 }
 
-int 
-bx_write_ata_options (FILE *fp, Bit8u channel, bx_ata_options *opt)
+int bx_write_ata_options (FILE *fp, Bit8u channel, bx_ata_options *opt)
 {
   fprintf (fp, "ata%d: enabled=%d", channel, opt->Opresent->get());
 
@@ -3306,8 +3292,7 @@ bx_write_ata_options (FILE *fp, Bit8u channel, bx_ata_options *opt)
   return 0;
 }
 
-int 
-bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_options *opt)
+int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_options *opt)
 {
   if (opt->Opresent->get()) {
     fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
@@ -3404,8 +3389,7 @@ bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_o
   return 0;
 }
 
-int
-bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
+int bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
 {
   fprintf (fp, "parport%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3415,8 +3399,7 @@ bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
   return 0;
 }
 
-int
-bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
+int bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
 {
   fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3427,8 +3410,7 @@ bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
   return 0;
 }
 
-int
-bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
+int bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
 {
   fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3439,8 +3421,7 @@ bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
   return 0;
 }
 
-int
-bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
+int bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
 {
   fprintf (fp, "pnic: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3460,8 +3441,7 @@ bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
   return 0;
 }
 
-int
-bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
+int bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
 {
   fprintf (fp, "ne2k: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3483,8 +3463,7 @@ bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
   return 0;
 }
 
-int
-bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
+int bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
 {
   fprintf (fp, "sb16: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3501,8 +3480,7 @@ bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
   return 0;
 }
 
-int
-bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
+int bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
 {
   if (opt->OwhichOS->get () == 0) {
     fprintf (fp, "# no loader\n");
@@ -3517,8 +3495,7 @@ bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
   return 0;
 }
 
-int
-bx_write_clock_options (FILE *fp, bx_clock_options *opt)
+int bx_write_clock_options (FILE *fp, bx_clock_options *opt)
 {
   fprintf (fp, "clock: ");
 
@@ -3555,8 +3532,7 @@ bx_write_clock_options (FILE *fp, bx_clock_options *opt)
   return 0;
 }
 
-int
-bx_write_log_options (FILE *fp, bx_log_options *opt)
+int bx_write_log_options (FILE *fp, bx_log_options *opt)
 {
   fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
   fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
@@ -3574,8 +3550,7 @@ bx_write_log_options (FILE *fp, bx_log_options *opt)
   return 0;
 }
 
-int
-bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
+int bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
 {
   fprintf (fp, "keyboard_mapping: enabled=%d, map=%s\n", opt->OuseMapping->get(), opt->Okeymap->getptr());
   return 0;
@@ -3585,8 +3560,7 @@ bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
 //   0: written ok
 //  -1: failed
 //  -2: already exists, and overwrite was off
-int
-bx_write_configuration (char *rc, int overwrite)
+int bx_write_configuration (char *rc, int overwrite)
 {
   int i;
 
@@ -3631,7 +3605,7 @@ bx_write_configuration (char *rc, int overwrite)
     bx_write_ata_options (fp, channel, &bx_options.ata[channel]);
     bx_write_atadevice_options (fp, channel, 0, &bx_options.atadevice[channel][0]);
     bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
-    }
+  }
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     if (strlen (bx_options.optrom[i].Opath->getptr ()) > 0)
       fprintf (fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optrom[i].Opath->getptr(),
@@ -3693,5 +3667,5 @@ bx_write_configuration (char *rc, int overwrite)
   fclose (fp);
   return 0;
 }
-#endif // #if BX_PROVIDE_MAIN
 
+#endif // #if BX_PROVIDE_MAIN
