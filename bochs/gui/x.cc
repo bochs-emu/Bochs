@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.99 2006-01-22 18:15:48 sshwarts Exp $
+// $Id: x.cc,v 1.100 2006-01-23 18:34:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -159,6 +159,11 @@ static unsigned bx_statusitem_pos[12] = {
 static bx_bool bx_statusitem_active[12];
 static long bx_status_led_green, bx_status_graytext;
 static char bx_status_info_text[34];
+#if BX_SHOW_IPS
+static bx_bool x11_ips_update = 0;
+static char x11_ips_text[20];
+static Bit8u x11_mouse_msg_counter = 0;
+#endif
 
 static void headerbar_click(int x, int y);
 static void send_keyboard_mouse_status(void);
@@ -712,6 +717,9 @@ bx_x_gui_c::mouse_enabled_changed_specific (bx_bool val)
     enable_cursor();
     warp_cursor(mouse_enable_x-current_x, mouse_enable_y-current_y);
   }
+#if BX_SHOW_IPS
+  x11_mouse_msg_counter = 3;
+#endif
 }
 
   void
@@ -927,7 +935,13 @@ bx_x_gui_c::handle_events(void)
   if (mouse_update) {
     BX_DEBUG(("handle_events(): send mouse status"));
     send_keyboard_mouse_status();
-    }
+  }
+#if BX_SHOW_IPS
+  if (x11_ips_update) {
+    x11_ips_update = 0;
+    set_status_text(0, x11_ips_text, 1);
+  }
+#endif
 }
 
 
@@ -1955,11 +1969,18 @@ void bx_x_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 #if BX_SHOW_IPS
 void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
-  char ips_text[40];
-  sprintf(ips_text, "IPS: %u", ips_count);
-  set_status_text(0, ips_text, 0);
+  if (x11_mouse_msg_counter == 0) {
+    if (!x11_ips_update) {
+      sprintf(x11_ips_text, "IPS: %9u", ips_count);
+      x11_ips_update = 1;
+    }
+  } else {
+    x11_mouse_msg_counter--;
+  }
 }
 #endif
+
+// X11 dialog box functions
 
 void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
                        unsigned int width, unsigned int height, char *text)

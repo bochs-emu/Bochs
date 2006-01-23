@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.101 2006-01-22 18:15:48 sshwarts Exp $
+// $Id: win32.cc,v 1.102 2006-01-23 18:34:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2059,7 +2059,7 @@ void bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
-  sprintf(ips_text, "IPS: %u", ips_count);
+  sprintf(ips_text, "IPS: %9u", ips_count);
   SetStatusText(0, ips_text, 0);
 }
 #endif

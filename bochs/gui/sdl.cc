@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.64 2006-01-22 18:15:48 sshwarts Exp $
+// $Id: sdl.cc,v 1.65 2006-01-23 18:34:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,6 +122,10 @@ static unsigned statusitem_pos[12] = {
   0, 170, 210, 250, 290, 330, 370, 410, 450, 490, 530, 570
 };
 static bx_bool statusitem_active[12];
+#if BX_SHOW_IPS
+static bx_bool sdl_ips_update = 0;
+static char sdl_ips_text[20];
+#endif
 
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 #define SWAP16(X)    (X)
@@ -1082,6 +1086,12 @@ void bx_sdl_gui_c::handle_events(void)
 	BX_PANIC (("User requested shutdown."));
     }
   }
+#if BX_SHOW_IPS
+  if (sdl_ips_update) {
+    sdl_ips_update = 0;
+    sdl_set_status_text(0, sdl_ips_text, 1);
+  }
+#endif
 }
 
 
@@ -1548,9 +1558,10 @@ bx_sdl_gui_c::set_display_mode (disp_mode_t newmode)
 #if BX_SHOW_IPS
 void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 {
-  char ips_text[40];
-  sprintf(ips_text, "IPS: %u", ips_count);
-  sdl_set_status_text(0, ips_text, 1);
+  if (!sdl_ips_update) {
+    sprintf(sdl_ips_text, "IPS: %9u", ips_count);
+    sdl_ips_update = 1;
+  }
 }
 #endif
 
