@@ -164,6 +164,8 @@ public:
   void set_syntax_intel();
   void set_syntax_att  ();
 
+  void toggle_syntax_mode();
+
 private:
   bx_bool intel_mode;
 

@@ -226,6 +226,12 @@ void disassembler::set_syntax_att()
   initialize_modrm_segregs();
 }
 
+void disassembler::toggle_syntax_mode()
+{
+  if (intel_mode) set_syntax_att();
+  else set_syntax_intel();
+}
+
 void disassembler::print_disassembly_att(const x86_insn *insn, const BxDisasmOpcodeInfo_t *entry)
 {
   // print opcode
