@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.198 2006-01-21 12:10:13 sshwarts Exp $
+$Id: user.dbk,v 1.199 2006-01-24 22:00:07 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6069,15 +6069,19 @@ From here, you may use the following commands:
 <title>Execution Control</title>
 <para>
 <screen>
-  c                           Continue executing
-  stepi [count]               execute count instructions, default is 1
-  si    [count]               execute count instructions, default is 1
-  step  [count]               execute count instructions, default is 1
+  c                           continue executing
+  continue
+
   s     [count]               execute count instructions, default is 1
+  step  [count]
+  stepi [count]
+
   Ctrl-C                      stop execution, and return to command line prompt
   Ctrl-D                      if at empty line on command line, exit
-  quit                        quit debugger and execution
+
   q                           quit debugger and execution
+  quit
+  exit
 </screen>
 </para>
 </section>
@@ -6105,9 +6109,12 @@ From here, you may use the following commands:
   b      [*] addr
 
   info break                  Display state of all current breakpoints
+  bpe    n                    Enable a breakpoint
+  bpd    n                    Disable a breakpoint
   delete n                    Delete a breakpoint
   del    n
   d      n
+
 </screen>
 </para>
 </section>
@@ -6143,7 +6150,7 @@ From here, you may use the following commands:
   setpmem addr datasize val    Set physical memory location of size
                                datasize to value val.
 
-  crc  addr1  addr2            Show CRC for physical memory range addr1..addr2
+  crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
   info dirty                   Show physical pages dirtied (written to) since last display
                                Values displayed are the top 20 bits only (page addresses)
 
@@ -6155,9 +6162,13 @@ From here, you may use the following commands:
 <title>Info commands</title>
 <para>
 <screen>
-  info program      Execution status of the program
-  info registers    List of CPU integer registers and their contents
-  info break        Information about current breakpoint status
+  info r|reg|regs|registers    List of CPU integer registers and their contents
+  info cpu                     List of all CPU registers and their contents
+  info fpu                     List of all FPU registers and their contents
+  info sse                     List of all SSE registers and their contents
+  info cr                      Show CR0-4 registers and their contents
+  info eflags                  Show decoded EFLAGS register
+  info break                   Information about current breakpoint status
 </screen>
 </para>
 </section>
@@ -6168,11 +6179,15 @@ From here, you may use the following commands:
 <screen>
   set $reg = val    Change a CPU register to value val.  Registers may be one of:
                       eax, ecx, edx, ebx, esp, ebp, esi, edi.
+  set  reg = expr   Change a CPU register to value of expression. Registers may be one of:
+                      eax, ecx, edx, ebx, esp, ebp, esi, edi.
                     Currently, you may not change:
                       eflags, cs, ss, ds, es, fs, gs.
 
     Examples: set $eax = 0x01234567
               set $edx = 25
+              set  eax = 2+2/2
+              set  esi = 2*2
 
   info registers    See Info section
   dump_cpu          Dump complete CPU state
@@ -6246,7 +6261,11 @@ From here, you may use the following commands:
                               debugger desired segment size.  Use a value for
                               end of less than start (or zero) if you only
                               want the first instruction disassembled.
-  set $disassemble_size = n   Tell debugger what segment size to use when
+
+  disassemble switch-mode     Switch between Intel and AT&T disassebly styles
+                              for debugger disassembler.
+
+  disassemble size = n        Tell debugger what segment size to use when
                               the "disassemble" command is used.  Use values
                               of 0, 16 or 32 for n.  Value of 0 means
 			      "use segment size specified by current CS
@@ -6255,8 +6274,11 @@ From here, you may use the following commands:
   set $auto_disassemble = n   Cause debugger to disassemble current instruction
                               every time execution stops if n=1.  Default is 0.
                               Segment size of current CPU context is used for
-                              disassembly, so variable "$disassemble_size" is
+                              disassembly, so the "disassemble size" variable is
                               ignored.
+
+  set disassemble on          The same as 'set $auto_disassemble = 1'
+  set disassemble off         The same as 'set $auto_disassemble = 0'
 </screen>
 </para>
 </section>
@@ -6316,8 +6338,7 @@ Disable tracing.
 
 <screen>ptime</screen>
 
-Print the current time (number of ticks since start of simulation
-(modulo 2^32)).
+Print the current time (number of ticks since start of simulation).
 
 <screen>sb <varname>delta</varname></screen>
 
@@ -6381,9 +6402,9 @@ Remove read watch point from physical address <varname>address</varname>.
 
 Remove write watch point from physical address <varname>address</varname>.
 
-<screen>modebp [<varname>string</varname>]</screen>
+<screen>modebp</screen>
 
-Toggles vm86 mode switch breakpoint.
+Toggles CPU mode switch breakpoint.
 
 <screen>load-symbols [global] <varname>filename</varname> [<varname>offset</varname>]</screen>
 
