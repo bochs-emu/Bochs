@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.9 2006-01-24 19:03:53 sshwarts Exp $
+// $Id: debug.h,v 1.10 2006-01-24 21:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,7 +130,9 @@ void bx_dbg_watch(int read, Bit32u address);
 void bx_dbg_unwatch(int read, Bit32u address);
 void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(bx_dbg_icount_t count);
-void bx_dbg_set_command(char *p1, char *p2, char *p3);
+void bx_dbg_set_auto_disassemble(bx_bool enable);
+void bx_dbg_disassemble_switch_mode(void);
+void bx_dbg_set_disassemble_size(unsigned size);
 void bx_dbg_del_breakpoint_command(unsigned handle);
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable);
 bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable);

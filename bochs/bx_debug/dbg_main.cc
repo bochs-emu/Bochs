@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.38 2006-01-24 19:23:42 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.39 2006-01-24 21:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1838,10 +1838,23 @@ void bx_dbg_info_bpoints_command(void)
 #endif
 }
 
-void bx_dbg_set_command(char *p1, char *p2, char *p3)
+void bx_dbg_set_auto_disassemble(bx_bool enable)
 {
-  dbg_printf("Error: %s %s %s: command 'set' not implemented yet.\n",
-    p1, p2, p3);
+  bx_debugger.auto_disassemble = enable;
+}
+
+void bx_dbg_set_disassemble_size(unsigned size)
+{
+  if ( (size!=16) && (size!=32) && (size!=64) && (size!=0) ) {
+    dbg_printf("Error: disassemble size must be 16/32 or 64.\n");
+    return;
+  }
+  bx_debugger.disassemble_size = size;
+}
+
+void bx_dbg_disassemble_switch_mode()
+{
+  bx_disassemble.toggle_syntax_mode();
 }
 
 void bx_dbg_take_command(char *what, unsigned n)
@@ -2425,15 +2438,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     return;
   }
   else if ( !strcmp(symbol, "auto_disassemble") ) {
-    bx_debugger.auto_disassemble = (val > 0);
-    return;
-  }
-  else if ( !strcmp(symbol, "disassemble_size") ) {
-    if ( (val!=16) && (val!=32) && (val!=0) ) {
-      dbg_printf("Error: disassemble_size must be 16 or 32.\n");
-      return;
-    }
-    bx_debugger.disassemble_size = val;
+    bx_dbg_set_auto_disassemble(val != 0);
     return;
   }
   else {
@@ -2756,16 +2761,16 @@ void bx_dbg_instrument_command(const char *comm)
 {
 #if BX_INSTRUMENTATION
   if ( !strcmp(comm, "start") ) {
-    BX_INSTR_START ();
+    BX_INSTR_START();
   }
   else if ( !strcmp(comm, "stop") ) {
-    BX_INSTR_STOP ();
+    BX_INSTR_STOP();
   }
   else if ( !strcmp(comm, "reset") ) {
-    BX_INSTR_RESET (dbg_cpu);
+    BX_INSTR_RESET(dbg_cpu);
   }
   else if ( !strcmp(comm, "print") ) {
-    BX_INSTR_PRINT ();
+    BX_INSTR_PRINT();
   }
   else {
     dbg_printf("Error: command instrument %s not implemented.\n", comm);
@@ -3663,8 +3668,8 @@ void bx_dbg_info_ivt_command(bx_num_range r)
 
 void bx_dbg_print_help(void)
 { 
-  dbg_printf("help - show list of debugger commands\n");
-  dbg_printf("help command - show short command description\n");
+  dbg_printf("h|help - show list of debugger commands\n");
+  dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace-on, trace-off,\n");
   dbg_printf("    trace-reg-on, trace-reg-off, record, playback,\n");
@@ -3676,7 +3681,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    bpe, bpd, d|del|delete\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, u|disasm|disassemble, r|reg|regs|registers, setpmem, crc, info,\n");
-  dbg_printf("    dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+  dbg_printf("    set, dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
 }
 
 void bx_dbg_calc_command(Bit64u value)

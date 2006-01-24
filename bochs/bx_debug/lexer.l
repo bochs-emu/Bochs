@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.7 2006-01-24 19:03:54 sshwarts Exp $
+// $Id: lexer.l,v 1.8 2006-01-24 21:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -25,7 +25,6 @@ static unsigned lex_input_size = 0;
 %%
 <*>[ \t]+       ; // eat up whitespace
 set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
-dis             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIS); }
 on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
 off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
 crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
@@ -99,6 +98,8 @@ trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
 trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
 trace-reg-on	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGON); }
 trace-reg-off	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGOFF); }
+switch-mode	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SWITCH_MODE); }
+size		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SIZE); }
 ptime           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PTIME); }
 sb              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP); }
 sba             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TIMEBP_ABSOLUTE); }
@@ -162,7 +163,7 @@ fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
 gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
 flags|eflags    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
 force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
-help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
+h|help          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
 \?              |
 calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 <EXAMINE>\/[0-9]+                 { BEGIN(INITIAL); bxlval.sval = strdup(bxtext); return(BX_TOKEN_XFORMAT); }

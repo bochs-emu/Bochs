@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.5 2006-01-24 19:03:54 sshwarts Exp $
+// $Id: parser.y,v 1.6 2006-01-24 21:37:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -95,7 +95,6 @@
 %token <sval> BX_TOKEN_IRQ
 %token <sval> BX_TOKEN_DUMP_CPU
 %token <sval> BX_TOKEN_SET_CPU
-%token <sval> BX_TOKEN_DIS
 %token <sval> BX_TOKEN_ON
 %token <sval> BX_TOKEN_OFF
 %token <sval> BX_TOKEN_DISASSEMBLE
@@ -110,6 +109,8 @@
 %token <sval> BX_TOKEN_CRC
 %token <sval> BX_TOKEN_TRACEON
 %token <sval> BX_TOKEN_TRACEOFF
+%token <sval> BX_TOKEN_SWITCH_MODE
+%token <sval> BX_TOKEN_SIZE
 %token <sval> BX_TOKEN_PTIME
 %token <sval> BX_TOKEN_TIMEBP_ABSOLUTE
 %token <sval> BX_TOKEN_TIMEBP
@@ -178,9 +179,9 @@ command:
     | stepN_command
     | step_over_command
     | set_command
-    | set_reg_command
     | breakpoint_command
     | info_command
+    | regs_command
     | blist_command
     | slist_command
     | dump_cpu_command
@@ -474,20 +475,24 @@ step_over_command:
     ;
 
 set_command:
-      BX_TOKEN_SET BX_TOKEN_DIS BX_TOKEN_ON '\n'
+      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_ON '\n'
         {
-        bx_dbg_set_command($1, $2, $3);
+        bx_dbg_set_auto_disassemble(1);
         free($1); free($2); free($3);
         }
-    | BX_TOKEN_SET BX_TOKEN_DIS BX_TOKEN_OFF '\n'
+    | BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_OFF '\n'
         {
-        bx_dbg_set_command($1, $2, $3);
+        bx_dbg_set_auto_disassemble(0);
         free($1); free($2); free($3);
         }
     | BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' BX_TOKEN_NUMERIC '\n'
         {
         bx_dbg_set_symbol_command($2, $4);
         free($1); free($2);
+        }
+    | BX_TOKEN_SET BX_TOKEN_NONSEG_REG '=' expression '\n'
+        { 
+        bx_dbg_set_reg_value($2, $4);
         }
     ;
 
@@ -687,6 +692,13 @@ numeric_range :
     $$ = make_num_range ($1, $2);
   };
    
+regs_command:
+    BX_TOKEN_REGISTERS '\n'
+        {
+        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
+        free($1);
+        }
+    ;
 
 dump_cpu_command:
       BX_TOKEN_DUMP_CPU '\n'
@@ -826,24 +838,22 @@ disassemble_command:
         bx_dbg_disassemble_command($2, $3);
 	free($1); free($2);
         }
+    | BX_TOKEN_DISASSEMBLE BX_TOKEN_SWITCH_MODE '\n'
+        {
+        bx_dbg_disassemble_switch_mode();
+	free($1); free($2);
+        }
+    | BX_TOKEN_DISASSEMBLE BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'
+        {
+        bx_dbg_set_disassemble_size($4);
+	free($1); free($2);
+        }
     ;
 
 instrument_command:
       BX_TOKEN_INSTRUMENT BX_TOKEN_START '\n'
-        {
-        bx_dbg_instrument_command($2);
-        free($1); free($2);
-        }
-    | BX_TOKEN_INSTRUMENT BX_TOKEN_STOP '\n'
-        {
-        bx_dbg_instrument_command($2);
-        free($1); free($2);
-        }
+    | BX_TOKEN_INSTRUMENT BX_TOKEN_STOP  '\n'
     | BX_TOKEN_INSTRUMENT BX_TOKEN_RESET '\n'
-        {
-        bx_dbg_instrument_command($2);
-        free($1); free($2);
-        }
     | BX_TOKEN_INSTRUMENT BX_TOKEN_PRINT '\n'
         {
         bx_dbg_instrument_command($2);
@@ -904,7 +914,7 @@ help_command:
          }
        | BX_TOKEN_HELP BX_TOKEN_STEPN '\n'
          {
-         dbg_printf("s|step|stepi [count] - execute #count instructions (default is 1 instruction)\n");
+         dbg_printf("s|step|stepi [count] - execute #count instructions (default is one instruction)\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_STEP_OVER '\n'
@@ -1024,7 +1034,7 @@ help_command:
          }
        | BX_TOKEN_HELP BX_TOKEN_REGISTERS '\n'
          {
-         dbg_printf("r|reg|regs|registers $reg = <expr> - set register value to expression\n");
+         dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info cpu')\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
@@ -1036,6 +1046,9 @@ help_command:
          {
          dbg_printf("u|disasm|disassemble [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
+         dbg_printf("u|disasm|disassemble switch-mode - switch between Intel and AT&T disassembler syntax\n");
+         dbg_printf("u|disasm|disassemble size = n - tell debugger what segment size [16|32|64] to use\n");
+         dbg_printf("       when \"disassemble\" command is used.\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_WATCH '\n'
@@ -1077,11 +1090,12 @@ help_command:
          }
        | BX_TOKEN_HELP BX_TOKEN_SET '\n'
          {
-         dbg_printf("set $reg = val - change CPU register to value val\n");
-         dbg_printf("set $disassemble_size = n - tell debugger what segment size [16|32|64] to use\n");
-         dbg_printf("       when \"disassemble\" command is used. Default is 32\n");
-         dbg_printf("set $auto_disassemble = n - cause debugger to disassemble current instruction\n");
-         dbg_printf("       every time execution stops if n = 1. Default is 0\n");
+         dbg_printf("set <regname> = <expr> - set register value to expression\n");
+         dbg_printf("set $reg = val - set CPU register to value val\n");
+         dbg_printf("set $auto_disassemble = 1 - cause debugger to disassemble current instruction\n");
+         dbg_printf("       every time execution stops\n");
+         dbg_printf("set u|disasm|disassemble on  - same as 'set $auto_disassemble = 1'\n");
+         dbg_printf("set u|disasm|disassemble off - same as 'set $auto_disassemble = 0'\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_INFO '\n'
@@ -1241,8 +1255,4 @@ expression:
    | '(' expression ')'              { $$ = $2; }
 ;
 
-set_reg_command: 
-     BX_TOKEN_REGISTERS BX_TOKEN_NONSEG_REG '=' expression '\n'
-     { bx_dbg_set_reg_value($2, $4); }
-;
 %%
