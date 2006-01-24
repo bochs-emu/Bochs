@@ -1,9 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.1 2003-11-28 15:07:25 danielg4 Exp $
+// $Id: linux.cc,v 1.2 2006-01-24 18:21:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
 #include "bochs.h"
+
 #if BX_DEBUGGER
 
 #define LOG_THIS genlog->
@@ -13,8 +14,7 @@
 #define KERNEL_CS 0x10
 #define USER_CS 0x18
 
-  void
-bx_dbg_info_linux_command (void)
+void bx_dbg_info_linux_command (void)
 {
   BX_INFO (("Info linux"));
   bx_dbg_cpu_t cpu;
@@ -123,8 +123,7 @@ public:
   char *get_name (int num);
 };
 
-void
-syscall_names_t::init ()
+void syscall_names_t::init ()
 {
   for (int i=0; i<MAX_SYSCALLS; i++) {
     syscall_names_linux[i] = "<unknown syscall>";
@@ -142,8 +141,7 @@ syscall_names_t::init ()
 #endif
 }
 
-char *
-syscall_names_t::get_name (int n) 
+char *syscall_names_t::get_name (int n) 
 {
   static char buf[64];
   if (n < 0 || n > N_SYSCALLS) {
@@ -161,4 +159,5 @@ void bx_dbg_linux_syscall () {
   char *name = syscall_names.get_name (cpu.eax);
   fprintf (stderr, "linux system call %s (#%d)\n", name, cpu.eax);
 }
+
 #endif /* if BX_DEBUGGER */
