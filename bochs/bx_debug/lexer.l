@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.6 2006-01-23 21:44:44 sshwarts Exp $
+// $Id: lexer.l,v 1.7 2006-01-24 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -30,7 +30,8 @@ on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
 off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
 crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
 c               |
-cont            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
+cont            |
+continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
 stepi           |
 step            |
 s               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STEPN); }
@@ -47,7 +48,6 @@ b               |
 pb              |
 pbreak          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PBREAKPOINT); }
 info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
-program         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PROGRAM); }
 cr		|
 creg		|
 cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
@@ -56,6 +56,7 @@ reg		|
 regs		|
 registers       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_REGISTERS); }
 fpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FPU); }
+sse             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SSE); }
 cpu             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CPU); }
 all             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALL); }
 idt		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_IDT); }
@@ -85,7 +86,7 @@ irq             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_IRQ); }
 pic             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PIC); }
 set_cpu         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET_CPU); }
 u               |
-disas           |
+disasm          |
 disassemble     { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
 instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
 start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
@@ -111,7 +112,7 @@ read            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_READ); }
 write           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
 continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
-load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOL); }
+load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
 symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }
 slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
@@ -159,7 +160,7 @@ ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }
 ds              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DS); }
 fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
 gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
-flags           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
+flags|eflags    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
 force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
 help            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
 \?              |

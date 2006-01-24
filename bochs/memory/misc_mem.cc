@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.73 2006-01-18 19:11:05 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.74 2006-01-24 19:03:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.73 2006-01-18 19:11:05 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.74 2006-01-24 19:03:55 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -524,7 +524,7 @@ BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 #endif
 
   bx_bool
-BX_MEM_C::dbg_crc32(unsigned long (*f)(unsigned char *buf, int len),
+BX_MEM_C::dbg_crc32(Bit32u (*f)(const Bit8u *buf, int len),
     Bit32u addr1, Bit32u addr2, Bit32u *crc)
 {
   *crc = 0;

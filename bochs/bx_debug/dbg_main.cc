@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.36 2006-01-23 21:44:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.37 2006-01-24 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -893,12 +893,12 @@ void bx_dbg_playback_command(char* path_quoted)
   }
 }
 
-//toggles vm86 mode switch breakpoint
+// toggles vm86 mode switch breakpoint
 void bx_dbg_modebp_command()
 {
-  BX_CPU(dbg_cpu)->debug_vm = BX_CPU(dbg_cpu)->getB_VM ();
+  BX_CPU(dbg_cpu)->dbg_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
   BX_CPU(dbg_cpu)->mode_break = !BX_CPU(dbg_cpu)->mode_break;
-  dbg_printf ("mode switch break %s\n", 
+  dbg_printf (" mode switch break %s\n", 
     BX_CPU(dbg_cpu)->mode_break ? "enabled" : "disabled");
 }
 
@@ -993,6 +993,8 @@ unsigned int dbg_show_mask = 0;
 // 0x40 print interrupts
 // 0x20 print calls
 
+extern const char* cpu_mode_string(unsigned cpu_mode);
+
 //BW added. toggles show symbolic info (calls to begin with)
 // 0x1 call
 // 0x2 return
@@ -1085,7 +1087,7 @@ void bx_dbg_show_command(char* arg)
       return;
     }
   } else {
-    dbg_printf (" show mask is 0x%x\n", dbg_show_mask);
+    dbg_printf ("show mask is 0x%x\n", dbg_show_mask);
     return;
   }
 
@@ -1288,6 +1290,7 @@ one_more:
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
+      fprintf(stderr, "stop reason %d\n", (unsigned) reason);
       if (found == BX_DBG_GUARD_ICOUNT) {
         // I expected this guard, don't stop
       } else if (found!=0) {
@@ -1360,10 +1363,8 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
   // for now, step each CPU one BX_DBG_DEFAULT_ICOUNT_QUANTUM at a time
-  //BX_INFO(("Stepping each CPU a total of %d cycles", count));
   for (unsigned cycle=0; cycle < count; cycle++) {
     for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-      //BX_INFO(("Stepping %s", BX_CPU(cpu)->name));
       bx_guard.icount = 1;
       bx_guard.interrupt_requested = 0;
       BX_CPU(cpu)->guard_found.guard_found = 0;
@@ -1376,7 +1377,6 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
     BX_TICK1 ();
 #endif
   }
-  //BX_INFO(("Stepped each CPU a total of %d cycles", count));
 #endif
 
   BX_INSTR_DEBUG_PROMPT();
@@ -1512,8 +1512,8 @@ for (sim=0; sim<BX_SMP_PROCESSORS; sim++) {
   } else if (BX_CPU(sim)->stop_reason == STOP_TIME_BREAK_POINT) {
     dbg_printf ("(%u) Caught time breakpoint\n", sim);
   } else if (BX_CPU(sim)->stop_reason == STOP_MODE_BREAK_POINT) {
-    dbg_printf ("(%u) Caught vm mode switch breakpoint to %s mode\n",
-      sim, BX_CPU(sim)->get_VM () ? "virtual 86" : "protected");
+    dbg_printf ("(%u) Caught mode switch breakpoint switching to '%s'\n",
+      sim, cpu_mode_string(BX_CPU(sim)->get_cpu_mode()));
   } else if (BX_CPU(sim)->stop_reason == STOP_READ_WATCH_POINT) {
     dbg_printf ("(%u) Caught read watch point at %08X\n", sim, BX_CPU(sim)->watchpoint);
   } else if (BX_CPU(sim)->stop_reason == STOP_WRITE_WATCH_POINT) {
@@ -1887,7 +1887,7 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       BX_CPU(i)->dbg_get_cpu(&cpu);
 
 #if BX_SUPPORT_SMP
-      dbg_printf ("%s:\n", BX_CPU(i)->name, i);
+      dbg_printf ("%s:\n", BX_CPU(i)->name);
 #endif
       reg = cpu.eax;
       dbg_printf ("eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
@@ -1897,7 +1897,6 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       dbg_printf ("edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
       reg = cpu.ebx;
       dbg_printf ("ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-
       reg = cpu.esp;
       dbg_printf ("esp            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
       reg = cpu.ebp;
@@ -1930,16 +1929,13 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       BX_CPU(i)->print_state_FPU ();
     }
 #endif
+#if BX_SUPPORT_SSE
+    if (which_regs_mask & BX_INFO_SSE_REGS) {
+      BX_CPU(i)->print_state_SSE ();
+    }
+#endif
   }
 }
-
-void bx_dbg_info_program_command(void)
-{
-  dbg_printf ("        Using the running image of child process -1.\n");
-  dbg_printf ("Program stopped at 0x0.\n");
-  dbg_printf ("It stopped at breakpoint 0.\n");
-}
-
 
 void bx_dbg_dump_cpu_command(void)
 {
@@ -2703,7 +2699,7 @@ scanf_error:
 void bx_dbg_disassemble_command(const char *format, bx_num_range range)
 {
   bx_bool paddr_valid;
-  Bit32u  paddr/*, Base */;
+  Bit32u  paddr;
   unsigned ilen;
   int numlines = INT_MAX;
 
@@ -3154,7 +3150,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf ("    PCE=performance-monitor counter enable=%d\n", (cr4>>8) & 1);
   dbg_printf ("    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
   dbg_printf ("    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
-#endif   /* BX_CPU_LEVEL >= 4*/
+#endif   /* BX_CPU_LEVEL >= 4 */
 #else
   /* BX_CPU_LEVEL < 2 */
   dbg_printf ("CR0-4 register do not exist in cpu level %d", BX_CPU_LEVEL);
@@ -3360,8 +3356,7 @@ void bx_dbg_post_dma_reports(void)
         // need to output the event header
         dbg_printf ("event icount=%u DMA addr=0x%x size=%u op=%s val=0x%x",
                          (unsigned) bx_dbg_batch_dma.Q[i].icount,
-                         addr, len, (what==BX_READ) ? "read" : "write",
-                         val);
+                         addr, len, (what==BX_READ) ? "read" : "write", val);
         print_header = 0;
       }
       else {
@@ -3376,8 +3371,6 @@ void bx_dbg_post_dma_reports(void)
   // empty Q, regardless of whether reports are printed
   bx_dbg_batch_dma.Qsize = 0;
 }
-
-extern const char* cpu_mode_string(unsigned cpu_mode);
 
 int bx_dbg_symbolic_output(void) 
 {
@@ -3669,302 +3662,22 @@ void bx_dbg_info_ivt_command(bx_num_range r)
     dbg_printf("cpu in protected mode, use info idt\n");
 }
 
-void bx_dbg_help_command(char* command)
+void bx_dbg_print_help(void)
 { 
-  char* p;
-
-  if (command == NULL)
-  {
-    dbg_printf("help - show list of debugger commands\n");
-    dbg_printf("help \'command\'- show short command description\n");
-    dbg_printf("-*- Debugger control -*-\n");
-    dbg_printf("    help, q|quit|exit, set, instrument, show, trace-on, trace-off,\n");
-    dbg_printf("    record, playback, load-symbols, slist\n");
-    dbg_printf("-*- Execution control -*-\n");
-    dbg_printf("    c|cont, s|step|stepi, p|n|next, modebp\n");
-    dbg_printf("-*- Breakpoint management -*-\n");
-    dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
-    dbg_printf("    bpe, bpd, d|del|delete\n");
-    dbg_printf("-*- CPU and memory contents -*-\n");
-    dbg_printf("    x, xp, u|disas|disassemble, r|reg|registers, setpmem, crc, info, dump_cpu,\n");
-    dbg_printf("    set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
-  }
-  else
-  {
-    p = command;
-    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
-    for (; *p != 0 && *p != '\"' && *p != '\''; p++); *p = 0;
-    p = command;
-    for (; *p != 0 && *p != '\"' && *p != '\''; p++); p++;
-
-    dbg_printf("help %s\n", p);
-
-    if (strcmp(p, "help") == 0)
-    { 
-      bx_dbg_help_command(NULL);
-    }
-    else
-    if ((strcmp(p, "quit") == 0) ||
-        (strcmp(p, "q") == 0))
-    {
-      dbg_printf("%s - quit debugger and execution\n", p);
-    }
-    else
-    if ((strcmp(p, "c") == 0) ||
-        (strcmp(p, "cont") == 0))
-    {
-      dbg_printf("%s - continue executing\n", p);
-    }
-    else
-    if ((strcmp(p, "stepi") == 0) ||
-        (strcmp(p, "step") == 0) ||
-        (strcmp(p, "s") == 0))
-    {
-      dbg_printf("%s [count] - execute count instructions, default is 1\n", p);
-    }
-    else
-    if ((strcmp(p, "next") == 0) ||
-        (strcmp(p, "n") == 0) ||
-        (strcmp(p, "p") == 0))
-    {
-      dbg_printf("%s - execute instructions, stepping over subroutines\n", p);
-    }
-    else
-    if ((strcmp(p, "vbreak") == 0) ||
-        (strcmp(p, "vb") == 0))
-    {
-      dbg_printf("%s seg:off - set a virtual address instruction breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "lbreak") == 0) ||
-        (strcmp(p, "lb") == 0))
-    {
-      dbg_printf("%s addr - set a linear address instruction breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "pbreak") == 0) ||
-        (strcmp(p, "break") == 0) ||
-        (strcmp(p, "pb") == 0) ||
-        (strcmp(p, "b") == 0))
-    {
-       dbg_printf("%s [*] addr - set a physical address instruction breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "delete") == 0) ||
-        (strcmp(p, "del") == 0) ||
-        (strcmp(p, "d") == 0))
-    {
-      dbg_printf("%s n - delete a breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "bpe") == 0))
-    {
-      dbg_printf("%s n - enable a breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "bpd") == 0))
-    {
-      dbg_printf("%s n - disable a breakpoint\n", p);
-    }
-    else
-    if ((strcmp(p, "blist") == 0))
-    {
-      dbg_printf("%s - list all breakpoints (same as 'info break')\n", p);
-    }
-    else
-    if (strcmp(p, "xp") == 0)
-    {
-      dbg_printf("%s /nuf addr - examine memory at physical address\n", p);
-      goto nuf_help;
-    }
-    else
-    if (strcmp(p, "x") == 0)
-    {
-      dbg_printf("%s /nuf addr - examine memory at linear address\n", p);
-nuf_help:
-      dbg_printf("    nuf is a sequence of numbers (how much values\n");
-      dbg_printf("    to display) and one or more of the [mxduotcsibhwg]\n");
-      dbg_printf("    format specificators:\n");
-      dbg_printf("    x,d,u,o,t,c,s,i select the format of the output (they stand for\n");
-      dbg_printf("        hex, decimal, unsigned, octal, binary, char, asciiz, instr)\n");
-      dbg_printf("    b,h,w,g select the size of a data element (for byte, half-word,\n");
-      dbg_printf("        word and giant word)\n");
-      dbg_printf("    m selects an alternative output format (memory dump)\n");
-    }
-    else
-    if ((strcmp(p, "r") == 0)||
-        (strcmp(p, "reg") == 0)||
-        (strcmp(p, "registers") == 0))
-    {
-      dbg_printf("%s = expression - set register value to expression\n", p);
-    }
-    else
-    if (strcmp(p, "setpmem") == 0)
-    {
-      dbg_printf("%s addr datasize val - set physical memory location of size datasize to value val\n", p);
-    }
-    else
-    if (strcmp(p, "crc") == 0)
-    {
-      dbg_printf("%s addr1 addr2 - show CRC for physical memory range addr1..addr2\n", p);
-    }
-    else
-    if (strcmp(p, "info") == 0)
-    {
-      dbg_printf("%s break - show information about current breakpoint status\n", p);
-      dbg_printf("%s dirty - show physical pages dirtied (written to) since last display\n", p);
-      dbg_printf("%s program - execution status of the program\n", p);
-      dbg_printf("%s r|reg|regs|registers - list of CPU integer registers and their contents\n", p);
-      dbg_printf("%s cpu - list of CPU registers and their contents\n", p);
-      dbg_printf("%s fpu - list of FPU registers and their contents\n", p);
-      dbg_printf("%s idt - show interrupt descriptor table\n", p);
-      dbg_printf("%s ivt - show interrupt vector table\n", p);
-      dbg_printf("%s gdt - show global descriptor table\n", p);
-      dbg_printf("%s tss - show current task state segment\n", p);
-      dbg_printf("%s cr - show CR0-4 registers\n", p);
-      dbg_printf("%s flags - show decoded EFLAGS register\n", p);
-      dbg_printf("%s symbols [string] - list symbols whose prefix is string\n", p);
-      dbg_printf("%s pic - show PICs registers\n", p);
-      dbg_printf("%s ne2000 - show NE2000 registers\n", p);
-      dbg_printf("%s vga - show vga registers\n", p);
-    }
-    else
-    if (strcmp(p, "set") == 0)
-    {
-      dbg_printf("%s $reg = val - change CPU register to value val\n", p);
-      dbg_printf("%s $disassemble_size = n - tell debugger what segment size [16|32] to use\n", p);
-      dbg_printf("when \"disassemble\" command is used. Default is 32\n");
-      dbg_printf("%s $auto_disassemble = n - cause debugger to disassemble current instruction\n", p);
-      dbg_printf("every time execution stops if n = 1. Default is 0\n");
-    }
-    else
-    if (strcmp(p, "dump_cpu") == 0)
-    {
-      dbg_printf("%s - dump complete cpu state\n", p);
-    }
-    else
-    if (strcmp(p, "set_cpu") == 0)
-    {
-      dbg_printf("%s - set complete cpu state\n", p);
-    }
-    else
-    if ((strcmp(p, "disassemble") == 0) ||
-        (strcmp(p, "disas") == 0) ||
-	(strcmp(p, "u") == 0))
-    {
-      dbg_printf("%s [/count] start end - disassemble instructions for given linear adress\n", p);
-      dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
-    }
-    else
-    if (strcmp(p, "instrument") == 0)
-    {
-      dbg_printf("%s start - calls bx_instr_start()\n", p);
-      dbg_printf("%s stop  - calls bx_instr_stop()\n", p);
-      dbg_printf("%s reset - calls bx_instr_reset()\n", p);
-      dbg_printf("%s print - calls bx_instr_print()\n", p);
-    }
-    else
-    if (strcmp(p, "trace-on") == 0)
-    {
-      dbg_printf("%s - disassemble every executed instruction\n", p);
-    }
-    else
-    if (strcmp(p, "trace-off") == 0)
-    {
-      dbg_printf("%s - disable tracing\n", p);
-    }
-    else
-    if (strcmp(p, "ptime") == 0)
-    {
-      dbg_printf("%s - print current time (number of ticks since start of simulation)\n", p);
-    }
-    else
-    if (strcmp(p, "sb") == 0)
-    {
-      dbg_printf("%s delta - insert a time breakpoint delta instruction into the future\n", p);
-    }
-    else
-    if (strcmp(p, "sba") == 0)
-    {
-      dbg_printf("%s time - insert a time breakpoint at time\n", p);
-    }
-    else
-    if (strcmp(p, "record") == 0)
-    {
-      dbg_printf("%s filename - record console input to file filename\n", p);
-    }
-    else
-    if (strcmp(p, "playback") == 0)
-    {
-      dbg_printf("%s filename - playbackconsole input from file filename\n", p);
-    }
-    else
-    if (strcmp(p, "print-stack") == 0)
-    {
-      dbg_printf("%s [num_words] - print the num_words top 16 bit words on the stack\n", p);
-    }
-    else
-    if (strcmp(p, "watch") == 0)
-    {
-      dbg_printf("%s - print current watch point status\n", p);
-      dbg_printf("%s stop - stop simulation when a watchpoint is encountred\n", p);
-      dbg_printf("%s continue - do not stop the simulation when watch point is encountred\n", p);
-      dbg_printf("%s read addr - insert a read watch point at physical address addr\n", p);
-      dbg_printf("%s write addr - insert a write watch point at physical address addr\n", p);
-    }
-    else
-    if (strcmp(p, "unwatch") == 0)
-    {
-      dbg_printf("%s - remove all watch points\n", p);
-      dbg_printf("%s read addr - remove a read watch point at physical address addr\n", p);
-      dbg_printf("%s write addr - remove a write watch point at physical address addr\n", p);
-    }
-    else
-    if (strcmp(p, "load-symbols") == 0)
-    {
-      dbg_printf("%s [global] filename [offset] - load symbols from file filename\n", p);
-    }
-    else
-    if ((strcmp(p, "slist") == 0))
-    {
-      dbg_printf("%s [string] - list symbols whose preffix is string (same as 'info symbols')\n", p);
-    }
-    else
-    if (strcmp(p, "modebp") == 0)
-    {
-      dbg_printf("%s - toggles vm86 mode switch breakpoint\n", p);
-    }
-    else
-    if (strcmp(p, "show") == 0)
-    {
-      dbg_printf("%s [string] - toggles show symbolic info (calls to begin with)\n", p);
-      dbg_printf("%s - shows current show mode\n", p);
-      dbg_printf("%s \"mode\" - show, when processor switch mode\n", p);
-      dbg_printf("%s \"int\" - show, when interrupt is happens\n", p);
-      dbg_printf("%s \"call\" - show, when call is happens\n", p);
-      dbg_printf("%s \"ret\" - show, when iret is happens\n", p);
-      dbg_printf("%s \"off\" - toggles off symbolic info\n", p);
-      dbg_printf("%s \"dbg-all\" - turn on all show flags\n", p);
-      dbg_printf("%s \"none\" - turn off all show flags\n", p);
-      dbg_printf("%s \"tab\" - show page tables\n", p);
-    }
-    else
-    if ((strcmp(p, "calc") == 0) ||
-        (strcmp(p, "?") == 0))
-    {
-      dbg_printf("%s expr - calculate a expression and display the result.\n", p);
-      dbg_printf("    'expr' can reference any general-purpose and segment\n");
-      dbg_printf("    registers, use any arithmetic and logic operations, and\n");
-      dbg_printf("    also the special ':' operator which computes the linear\n");
-      dbg_printf("    address for a segment:offset (in real and v86 mode) or\n");
-      dbg_printf("    of a selector:offset (in protected mode) pair.\n");
-    }
-    else
-    {
-      dbg_printf("%s - unknow command, try help\n", p);
-    }
-  }
-  return;
+  dbg_printf("help - show list of debugger commands\n");
+  dbg_printf("help command - show short command description\n");
+  dbg_printf("-*- Debugger control -*-\n");
+  dbg_printf("    help, q|quit|exit, set, instrument, show, trace-on, trace-off,\n");
+  dbg_printf("    trace-reg-on, trace-reg-off, record, playback,\n");
+  dbg_printf("    load-symbols, slist\n");
+  dbg_printf("-*- Execution control -*-\n");
+  dbg_printf("    c|cont|continue, s|step|stepi, p|n|next, modebp\n");
+  dbg_printf("-*- Breakpoint management -*-\n");
+  dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
+  dbg_printf("    bpe, bpd, d|del|delete\n");
+  dbg_printf("-*- CPU and memory contents -*-\n");
+  dbg_printf("    x, xp, u|disasm|disassemble, r|reg|regs|registers, setpmem, crc, info,\n");
+  dbg_printf("    dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
 }
 
 void bx_dbg_calc_command(Bit64u value)

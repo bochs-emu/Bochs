@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.254 2006-01-21 12:06:03 sshwarts Exp $
+// $Id: cpu.h,v 1.255 2006-01-24 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -334,6 +334,8 @@
 #define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
 #define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
+
+const char* cpu_mode_string(unsigned cpu_mode);
 
 #define BX_CANONICAL_BITS   (48)
 
@@ -1190,10 +1192,10 @@ public: // for now...
 #endif
   Bit8u stop_reason;
   Bit8u trace_reg;
-  Bit8u mode_break; /* BW */
-  bx_bool debug_vm; /* BW contains current mode*/
-  bx_address show_eip;   /* BW record eip at special instr f.ex eip */
-  Bit8u show_flag;  /* BW shows instr class executed */
+  Bit8u mode_break;
+  bx_bool dbg_cpu_mode; /* contains current mode */
+  bx_address show_eip;   /* record eip at special instr f.ex eip */
+  Bit8u show_flag;  /* shows instr class executed */
   bx_guard_found_t guard_found;
 #endif
   Bit8u trace;
@@ -2915,6 +2917,7 @@ public: // for now...
 #if BX_SUPPORT_SSE
   BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
+  BX_SMF void print_state_SSE(void);
 #endif
 
 #if BX_SUPPORT_FPU

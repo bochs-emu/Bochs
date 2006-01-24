@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.8 2006-01-23 21:44:44 sshwarts Exp $
+// $Id: debug.h,v 1.9 2006-01-24 19:03:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 
 extern Bit32u dbg_cpu;
 
-unsigned long crc32(unsigned char *buf, int len);
+Bit32u crc32(const Bit8u *buf, int len);
 
 #if BX_DEBUGGER
 
@@ -55,6 +55,8 @@ unsigned long crc32(unsigned char *buf, int len);
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+void dbg_printf (const char *fmt, ...);
 
 typedef enum 
 {
@@ -143,9 +145,9 @@ int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
-void bx_dbg_info_program_command(void);
-#define BX_INFO_CPU_REGS 1   /* choices for bx_dbg_info_registers_command */
+#define BX_INFO_CPU_REGS 1   /* bitmasks - choices for bx_dbg_info_registers_command */
 #define BX_INFO_FPU_REGS 2
+#define BX_INFO_SSE_REGS 4
 void bx_dbg_info_registers_command(int); 
 void bx_dbg_info_dirty_command(void);
 void bx_dbg_info_idt_command(bx_num_range);
@@ -174,7 +176,7 @@ void bx_dbg_linux_syscall (void);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
 void bx_dbg_info_vga(void);
-void bx_dbg_help_command(char* command);
+void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);
 #ifdef __cplusplus
@@ -230,8 +232,6 @@ void bx_dbg_exit(int code);
 #else
 #define bx_dbg_extensions(command) 0
 #endif
-
-void dbg_printf (const char *fmt, ...);
 
 //
 // code for guards...
@@ -434,7 +434,7 @@ typedef struct {
 #if BX_USE_LOADER
   void    (*loader)(char *path, bx_loader_misc_t *misc_ptr);
 #endif
-  bx_bool (*crc32)(unsigned long (*f)(unsigned char *buf, int len),
+  bx_bool (*crc32)(Bit32u (*f)(const Bit8u *buf, int len),
                    Bit32u addr1, Bit32u addr2, Bit32u *crc);
 } bx_dbg_callback_t;
 
@@ -464,7 +464,6 @@ void    bx_dbg_set_INTR(bx_bool b);
 void bx_dbg_disassemble_current (int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */
-
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
 void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);

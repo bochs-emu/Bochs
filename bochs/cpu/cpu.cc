@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.123 2006-01-19 18:32:39 sshwarts Exp $
+// $Id: cpu.cc,v 1.124 2006-01-24 19:03:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,6 +187,7 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
          Is64BitMode()))
     {
+      fprintf(stderr, "back to debugger !!!\n");
       return;
     }
   }
@@ -888,23 +889,26 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
   BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = is_64;
 
-  // BW mode switch breakpoint
+  // mode switch breakpoint
   // instruction which generate exceptions never reach the end of the
   // loop due to a long jump. Thats why we check at start of instr.
   // Downside is that we show the instruction about to be executed
   // (not the one generating the mode switch).
   if (BX_CPU_THIS_PTR mode_break && 
-      (BX_CPU_THIS_PTR debug_vm != BX_CPU_THIS_PTR getB_VM ())) {
-    BX_INFO(("Caught vm mode switch breakpoint"));
-    BX_CPU_THIS_PTR debug_vm = BX_CPU_THIS_PTR getB_VM ();
+     (BX_CPU_THIS_PTR dbg_cpu_mode != BX_CPU_THIS_PTR get_cpu_mode()))
+  {
+    BX_INFO(("[" FMT_LL "d] Caught mode switch breakpoint, switching from '%s' to '%s'",
+        bx_pc_system.time_ticks(), cpu_mode_string(BX_CPU_THIS_PTR dbg_cpu_mode),
+        cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode())));
+    BX_CPU_THIS_PTR dbg_cpu_mode = BX_CPU_THIS_PTR get_cpu_mode();
     BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
-    return 1;
+    return(1);
   }
 
   if( (BX_CPU_THIS_PTR show_flag) & (dbg_show_mask)) {
     int rv;
     if((rv = bx_dbg_symbolic_output()))
-      return rv;
+      return(rv);
   }
 
   // see if debugger is looking for iaddr breakpoint of any type
