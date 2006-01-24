@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.124 2006-01-24 19:03:54 sshwarts Exp $
+// $Id: cpu.cc,v 1.125 2006-01-24 19:07:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -187,7 +187,6 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
          BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
          Is64BitMode()))
     {
-      fprintf(stderr, "back to debugger !!!\n");
       return;
     }
   }
