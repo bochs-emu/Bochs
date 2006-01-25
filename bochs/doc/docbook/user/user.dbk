@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.200 2006-01-25 20:07:35 vruppert Exp $
+$Id: user.dbk,v 1.201 2006-01-25 22:46:09 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6190,19 +6190,19 @@ From here, you may use the following commands:
 <title>Manipulating CPU Registers</title>
 <para>
 <screen>
-  set $reg = val    Change a CPU register to value val.  Registers may be one of:
-                      eax, ecx, edx, ebx, esp, ebp, esi, edi.
-  set  reg = expr   Change a CPU register to value of expression. Registers may be one of:
-                      eax, ecx, edx, ebx, esp, ebp, esi, edi.
-                    Currently, you may not change:
-                      eflags, cs, ss, ds, es, fs, gs.
+  set reg = expr    Change a CPU register to value of expression.
+                    Currently only general purpose registers are supported,
+                    you may not change:
+                      eflags, eip, cs, ss, ds, es, fs, gs.
 
-    Examples: set $eax = 0x01234567
-              set $edx = 25
-              set  eax = 2+2/2
-              set  esi = 2*2
+    Examples: set eax = 2+2/2
+              set esi = 2*eax+ebx
 
-  info registers    See Info section
+  registers         List of CPU registers and their contents
+  regs
+  reg
+  r
+
   dump_cpu          Dump complete CPU state
   set_cpu           Set  complete CPU state
 
