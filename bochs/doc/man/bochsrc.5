@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "22 Jan 2006" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "25 Jan 2006" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -117,8 +117,33 @@ without SMP support, it won't accept values different from 1.
 
 ips:
 
-Emulated Instructions Per Second. See description under option 'ips:'
-more below.
+Emulated Instructions Per Second.  This is the
+number of IPS that Bochs is capable of running
+on your machine.  You can recompile Bochs with
+--enable-show-ips option enabled, to find your
+workstation's capability.  Measured IPS value
+will then be logged into your log file.
+
+IPS is used to calibrate  many  time-dependent
+events   within   the  bochs  simulation.  For
+example, changing IPS affects the frequency of
+VGA updates, the duration of time before a key
+starts to autorepeat,  and the measurement  of
+BogoMips and other benchmarks.
+
+Example Specifications[1]
+  Machine                                Mips
+ ---------------------------------------------------
+ 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4 12 to 15
+ 1.6Ghz Intel P4 with Win2000/g++ 3.3     5 to  7
+ 650Mhz Athlon K-7 with Linux 2.4.x       2 to  2.5
+ 400Mhz Pentium II with Linux 2.0.x       1 to 1.8
+ 166Mhz 64bit Sparc with Solaris 2.x      approx 0.75
+ 200Mhz Pentium with Linux 2.x            approx 0.5
+
+ [1]  IPS measurements depend on OS and compiler
+configuration  in addition  to processor clock
+speed.
 
 Example:
   cpu: count=2, ips=10000000
@@ -491,12 +516,11 @@ It is possible to change the loglevel at runtime.
 
 dmatimer:
 
-Microseconds per second for a DMA cycle.  Make
-it smaller to fix non-continuous sound.  750000
-is  usually  a  good  value.    This  needs  a
-reasonably  correct   setting  for  IPS   (see
-below). It is possible to adjust the dmatimer
-at runtime.
+Microseconds per second for a DMA cycle.  Make it smaller
+to fix non-continuous sound.  750000 is  usually  a  good
+value.  This  needs  a reasonably  correct   setting  for
+the  IPS  parameter of the CPU option.  It is possible to
+adjust the dmatimer at runtime.
 
 Example:
   sb16: midimode=1, midi=/dev/midi00,
@@ -513,7 +537,7 @@ one line in the actual bochsrc file.
 Video memory is scanned for updates and screen updated
 every so many virtual seconds. The default value is
 40000, about 25Hz. Keep in mind that you  must tweak
-the 'ips:' directive to be as close  to the number of
+the 'cpu: ips=N' directive to be as close  to the number of
 emulated instructions-per-second your  workstation can
 do, for this to be accurate.
 
@@ -547,35 +571,8 @@ Example:
 
 .TP
 .I "ips:"
-Emulated Instructions Per Second.  This is the
-number of IPS that Bochs is capable of running
-on your machine.  You can recompile Bochs with
---enable-show-ips option enabled, to find your
-workstation's capability.  Measured IPS value
-will then be logged into your log file.
-
-IPS is used to calibrate  many  time-dependent
-events   within   the  bochs  simulation.  For
-example, changing IPS affects the frequency of
-VGA updates, the duration of time before a key
-starts to autorepeat,  and the measurement  of
-BogoMips and other benchmarks.
-
-Example Specifications[1]
-   Machine                           Mips
- ---------------------------------------------------
- 1.6Ghz Intel P4 with Win2000/g++ 3.3  5 to 7 Mips
- 650Mhz Athlon K-7 with Linux 2.4.x    2 to 2.5
- 400Mhz Pentium II with Linux 2.0.x    1 to 1.8
- 166Mhz 64bit Sparc with Solaris 2.x       0.75
- 200Mhz Pentium with Linux 2.x              0.5
-
- [1]  IPS measurements depend on OS and compiler
-configuration  in addition  to processor clock
-speed.
-
-Example:
-  ips: 1000000
+Emulated Instructions Per Second.  This option is deprecated.
+Use the CPU paramter IPS instead (cpu: ips=N).
 
 .TP
 .I "clock:"

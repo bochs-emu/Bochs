@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.199 2006-01-24 22:00:07 sshwarts Exp $
+$Id: user.dbk,v 1.200 2006-01-25 20:07:35 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2419,7 +2419,8 @@ turn it off.
       <entry>--enable-show-ips</entry>
       <entry>no</entry>
       <entry>
-      Enables logging of measured IPS, see <link linkend="bochsopt-ips">ips option</link>.
+      Enables logging of measured IPS, see the <command>ips</command> parameter
+      of the <link linkend="bochsopt-cpu">cpu option</link>.
       </entry>
     </row>
     <row>
@@ -3045,17 +3046,58 @@ Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most 
 </para></note>
 </section>
 
-<section id="bochsopt-cpu-count"><title>cpu</title>
+<section id="bochsopt-cpu"><title>cpu</title>
 <para>
 Examples:
 <screen>
-  cpu: count=2
+  cpu: count=2, ips=10000000
 </screen>
+This defines the parameters of the cpu inside Bochs:
+</para>
+<para><command>count</command></para>
+<para>
 Set the number of processors when Bochs is compiled for SMP emulation.
 Bochs currently supports up to 8 processors. If Bochs is compiled
 without SMP support, it won't accept values different from 1.
 For more information on SMP see <xref linkend="SMP">.
 </para>
+<para><command>ips</command></para>
+<para>
+Emulated Instructions Per Second.  This is the number of IPS that Bochs is
+capable of running on your machine.  You can recompile Bochs with
+<option>--enable-show-ips</option> option enabled, to find your workstation's capability.
+Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>.
+</para>
+
+<para>
+IPS is used to calibrate many time-dependent events within the Bochs
+simulation.  For example, changing IPS affects the frequency of VGA updates,
+the duration of time before a key starts to autorepeat, and the measurement
+of BogoMips and other benchmarks.  The table below lists some typical
+IPS settings for different machines<footnote><para>IPS measurements depend on
+OS and compiler configuration in addition to processor clock
+speed.</para></footnote>.
+</para>
+
+<table><title>Example IPS Settings</title>
+  <tgroup cols="3" align="left" colsep="1" rowsep="1">
+<thead>
+  <row>
+    <entry>Speed</entry>
+    <entry>Machine</entry>
+    <entry>Typical IPS</entry>
+  </row>
+</thead>
+  <tbody>
+<row><entry>2.1Ghz</entry><entry>Athlon XP with Linux 2.6/g++ 3.4 </entry><entry> 12 to 15 million</entry></row>
+<row><entry>1.6Ghz</entry><entry>Intel P4 with Win2000/g++ 3.3 </entry><entry> 5 to  7 million</entry></row>
+<row><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
+<row><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
+<row><entry>166MHz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
+<row><entry>200MHz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
+</tbody>
+</tgroup>
+</table>
 </section>
 
 <section><title>romimage</title>
@@ -3702,8 +3744,9 @@ are in the usual "property=value" format.
    <listitem><para>
    dmatimer: Microseconds per second for a DMA cycle. Make it smaller to fix
    non-continuous sound. 750000 is usually a good value. This needs a reasonably
-   correct setting for the <link linkend="bochsopt-ips">ips option</link>. It is
-   possible to adjust the dmatimer value at runtime.
+   correct setting for the <command>ips</command> paramter of the
+   <link linkend="bochsopt-cpu">cpu option</link>. It is possible to adjust the
+   dmatimer value at runtime.
    </para></listitem>
  </itemizedlist>
 </para>
@@ -3717,9 +3760,10 @@ Examples:
   vga_update_interval: 250000
 </screen>
 Video memory is scanned for updates and screen updated every so many virtual
-microseconds. Keep in mind that you must tweak the <link linkend="bochsopt-ips">ips option</link>
-to be as close to the number of emulated instructions-per-second your workstation
-can do, for this to be accurate.
+microseconds. Keep in mind that you must tweak the <command>ips</command>
+parameter of the <link linkend="bochsopt-cpu">cpu option</link> to be as close
+to the number of emulated instructions-per-second your workstation can do,
+for this to be accurate.
 </para>
 </section>
 
@@ -3749,47 +3793,16 @@ consistently in Windows.
 </para>
 </section>
 
-<section id="bochsopt-ips"><title>ips</title>
+<section><title>ips</title>
 <para>
 Examples:
 <screen>
   ips: 2000000 # default
   ips: 10000000
 </screen>
-Emulated Instructions Per Second.  This is the number of IPS that Bochs is
-capable of running on your machine.  You can recompile Bochs with
-<option>--enable-show-ips</option> option enabled, to find your workstation's capability.
-Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>.
+Emulated Instructions Per Second.  This option is deprecated. Use the <command>ips</command>
+parameter of the <link linkend="bochsopt-cpu">cpu option</link> instead.
 </para>
-
-<para>
-IPS is used to calibrate many time-dependent events within the Bochs
-simulation.  For example, changing IPS affects the frequency of VGA updates,
-the duration of time before a key starts to autorepeat, and the measurement
-of BogoMips and other benchmarks.  The table below lists some typical
-IPS settings for different machines<footnote><para>IPS measurements depend on
-OS and compiler configuration in addition to processor clock
-speed.</para></footnote>.
-</para>
-
-<table><title>Example IPS Settings</title>
-  <tgroup cols="3" align="left" colsep="1" rowsep="1">
-<thead>
-  <row>
-    <entry>Speed</entry>
-    <entry>Machine</entry>
-    <entry>Typical IPS</entry>
-  </row>
-</thead>
-  <tbody>
-<row><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
-<row><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
-<row><entry>166MHz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
-<row><entry>200MHz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
-</tbody>
-</tgroup>
-</table>
-
 </section>
 
 <section id="bochsopt-clock"><title>clock</title>
@@ -5549,8 +5562,8 @@ shift or control) to restore the screen.
 
 <para>
 There are two strategies to fix this problem.  One is to increase the
-<link linkend="bochsopt-ips">ips setting</link> in your configuration file.
-This will cause the simulation time
+<command>ips</command> parameter of the <link linkend="bochsopt-cpu">cpu option</link>
+in your configuration file. This will cause the simulation time
 to pass more slowly.  The other strategy is to enable the experimental
 realtime PIT, which tries to keep Bochs in sync with real time. See the <filename>bochsrc</filename>
 option <link linkend="bochsopt-clock">clock</link>.
@@ -5672,7 +5685,7 @@ an SMP machine to see what it looks like.
 </para>
 <para>
 Starting with Bochs 2.2.6 you can set up the number of processors in the
-<filename>bochsrc</filename>. See <xref linkend="bochsopt-cpu-count"> how to
+<filename>bochsrc</filename>. See <xref linkend="bochsopt-cpu"> how to
 set up the number of processors.
 </para>
 <para>
@@ -6262,7 +6275,7 @@ From here, you may use the following commands:
                               end of less than start (or zero) if you only
                               want the first instruction disassembled.
 
-  disassemble switch-mode     Switch between Intel and AT&T disassebly styles
+  disassemble switch-mode     Switch between Intel and AT&amp;T disassebly styles
                               for debugger disassembler.
 
   disassemble size = n        Tell debugger what segment size to use when
@@ -8320,7 +8333,7 @@ debug: action=ignore
 vga_update_interval: 300000
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-ips: 1000000
+cpu: ips=1000000
 mouse: enabled=0
 private_colormap: enabled=0
 fullscreen: enabled=0
@@ -9900,7 +9913,7 @@ add the following line to your <filename>.bochsrc</filename>:
 </para>
 
 <programlisting>
-ips: 1000000
+cpu: ips=1000000
 </programlisting>
 
 <para>
@@ -10075,9 +10088,9 @@ D:\WIN98>
 </programlisting>
 
 <para>
-It is now time to comment out the "ips: 1000000" line in your ~/win98/.bochsrc file.  Close Bochs
-by clicking the Bochs power button with your mouse.
-Open up ~/win98/.bochsrc with your favorite editor and put a hash (#) mark in front of the ips line.
+It is now time to comment out the "cpu: ips=1000000" line in your ~/win98/.bochsrc file.
+Close Bochs by clicking the Bochs power button with your mouse. Open up ~/win98/.bochsrc
+with your favorite editor and put a hash (#) mark in front of the cpu line.
 </para>
 
 <para>
@@ -10298,7 +10311,7 @@ Parts/Attachments:
    value in bochsrc.txt. I raised the IPS value until setup stop
    complaining. In my machine (P3 @ 450MHz), I achieved this with
 
-      ips: 500000000
+      cpu: ips=500000000
 
    This this IPS value, the keyboard and mouse are updated each
    100 seconds. This makes very difficult to type the CD-KEY numbers,
@@ -10542,7 +10555,7 @@ floppy_bootsig_check: disabled=0
 vga_update_interval: 300000
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-ips: 3000000
+cpu: ips=3000000
 clock: sync=realtime, time0=0
 text_snapshot_check: 0
 mouse: enabled=0

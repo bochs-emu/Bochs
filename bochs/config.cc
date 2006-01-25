@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.69 2006-01-23 18:39:10 sshwarts Exp $
+// $Id: config.cc,v 1.70 2006-01-25 20:07:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2742,9 +2742,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
   } else if (!strcmp(params[0], "floppy_command_delay")) {
-    PARSE_WARN(("%s: floppy_command_delay is deprecated (now using hardware timing).", context));
+    PARSE_WARN(("%s: floppy_command_delay is DEPRECATED (now using hardware timing).", context));
   } else if (!strcmp(params[0], "ips")) {
-    PARSE_WARN(("%s: ips directive is deprecated (use cpu directive parameter 'ips').", context));
+    PARSE_WARN(("%s: ips directive is DEPRECATED (use cpu directive parameter 'ips').", context));
     if (num_params != 2) {
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
     }
@@ -2904,9 +2904,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       } else if (!strncmp(params[i], "option2=", 6)) {
         bx_options.usb[idx].Ooption2->set (strdup(&params[i][6]));
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
-        PARSE_WARN(("%s: usb ioaddr is now deprecated (assigned by BIOS).", context));
+        PARSE_WARN(("%s: usb ioaddr is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
-        PARSE_WARN(("%s: usb irq is now deprecated (assigned by BIOS).", context));
+        PARSE_WARN(("%s: usb irq is now DEPRECATED (assigned by BIOS).", context));
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for usb%d ignored.", context, params[i], idx+1));
       }
@@ -3114,9 +3114,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       if (!strncmp(params[i], "enabled=", 8)) {
         if (atol(&params[i][8]) == 0) valid |= 0x80;
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
-        PARSE_WARN(("%s: pnic ioaddr is now deprecated (assigned by BIOS).", context));
+        PARSE_WARN(("%s: pnic ioaddr is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
-        PARSE_WARN(("%s: pnic irq is now deprecated (assigned by BIOS).", context));
+        PARSE_WARN(("%s: pnic irq is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "mac=", 4)) {
         n = sscanf(&params[i][4], "%x:%x:%x:%x:%x:%x",
                    &tmp[0],&tmp[1],&tmp[2],&tmp[3],&tmp[4],&tmp[5]);
@@ -3245,11 +3245,11 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   // Old timing options have been replaced by the 'clock' option
   else if (!strcmp(params[0], "pit")) // Deprecated
   {
-    PARSE_ERR(("WARNING: pit directive is deprecated, use clock: instead"));
+    PARSE_ERR(("ERROR: pit directive is DEPRECATED, use clock: instead"));
   }
   else if (!strcmp(params[0], "time0")) // Deprectated
   {
-    PARSE_ERR(("WARNING: time0 directive is deprecated, use clock: instead"));
+    PARSE_ERR(("ERROR: time0 directive is DEPRECATED, use clock: instead"));
   }
   else
   {

@@ -88,8 +88,25 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  without SMP support, it won't accept values different from 1.
 #
 #  IPS:
-#  Emulated Instructions Per Second. See description under option IPS:
-#  more below.
+#  Emulated Instructions Per Second.  This is the number of IPS that bochs
+#  is capable of running on your machine. You can recompile Bochs with
+#  --enable-show-ips option enabled, to find your workstation's capability.
+#  Measured IPS value will then be logged into your log file.
+#
+#  IPS is used to calibrate many time-dependent events within the bochs 
+#  simulation.  For example, changing IPS affects the frequency of VGA
+#  updates, the duration of time before a key starts to autorepeat, and
+#  the measurement of BogoMips and other benchmarks.
+#
+#  Examples:
+#  Machine                                         Mips
+# ________________________________________________________________
+#  2.1Ghz Athlon XP with Linux 2.6/g++ 3.4         12 to 15 Mips
+#  1.6Ghz Intel P4 with Win2000/g++ 3.3             5 to  7 Mips
+#  650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66  2 to  2.5 Mips
+#  400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3   1 to  1.8 Mips
+#  166Mhz 64bit Sparc with Solaris 2.x              approx 0.75 Mips
+#  200Mhz Pentium with Linux 2.x                    approx 0.5 Mips
 #=======================================================================
 cpu: count=1, ips=10000000
 
@@ -275,30 +292,6 @@ ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, sp
 boot: disk
 
 #=======================================================================
-# IPS:
-# Emulated Instructions Per Second.  This is the number of IPS that bochs
-# is capable of running on your machine. You can recompile Bochs with
-# --enable-show-ips option enabled, to find your workstation's capability.
-# Measured IPS value will then be logged into your log file.
-#
-# IPS is used to calibrate many time-dependent events within the bochs 
-# simulation.  For example, changing IPS affects the frequency of VGA
-# updates, the duration of time before a key starts to autorepeat, and
-# the measurement of BogoMips and other benchmarks.
-#
-# Examples:
-# Machine                                         Mips
-# ________________________________________________________________
-# 1.6Ghz Intel P4 with Win2000/g++ 3.3            5 to 7 Mips
-# 650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66 2 to 2.5 Mips
-# 400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3  1 to 1.8 Mips
-# 166Mhz 64bit Sparc with Solaris 2.x             approx 0.75 Mips
-# 200Mhz Pentium with Linux 2.x                   approx 0.5 Mips
-#
-#=======================================================================
-ips: 10000000
-
-#=======================================================================
 # CLOCK:
 # This defines the parameters of the clock inside Bochs:
 #
@@ -482,7 +475,7 @@ parport1: enabled=1, file="parport.out"
 # dmatimer:
 #      microseconds per second for a DMA cycle.  Make it smaller to fix
 #      non-continuous sound.  750000 is usually a good value.  This needs a
-#      reasonably correct setting for IPS.
+#      reasonably correct setting for the IPS parameter of the CPU option.
 #
 # For an example look at the next line:
 #=======================================================================
@@ -493,8 +486,8 @@ parport1: enabled=1, file="parport.out"
 # VGA_UPDATE_INTERVAL:
 # Video memory is scanned for updates and screen updated every so many
 # virtual seconds.  The default is 40000, about 25Hz. Keep in mind that
-# you must tweak the 'ips:' directive to be as close to the number of
-# emulated instructions-per-second your workstation can do, for this
+# you must tweak the 'cpu: ips=N' directive to be as close to the number
+# of emulated instructions-per-second your workstation can do, for this
 # to be accurate.
 #
 # Examples:
@@ -726,6 +719,13 @@ keyboard_mapping: enabled=0, map=
 # Default value is enabled=0.
 #=======================================================================
 #gdbstub: enabled=0, port=1234, text_base=0, data_base=0, bss_base=0
+
+#=======================================================================
+# IPS:
+# The IPS directive is DEPRECATED. Use the parameter IPS of the CPU
+# directive instead.
+#=======================================================================
+#ips: 10000000
 
 #=======================================================================
 # for Macintosh, use the style of pathnames in the following
