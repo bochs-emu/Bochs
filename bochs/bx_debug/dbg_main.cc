@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.40 2006-01-25 18:13:44 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.41 2006-01-25 21:38:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,8 +428,7 @@ process_sim2:
   // running (continue command) or waiting for user response.  This affects
   // some parts of the GUI.
   sim_running = new bx_param_bool_c (BXP_DEBUG_RUNNING, 
-      "Simulation is running", "",
-      0);
+      "Simulation is running", "", 0);
 
   // setup Ctrl-C handler
   if (!SIM->is_wx_selected ()) {
@@ -870,6 +869,50 @@ static playback_entry_t playback_entry;
 static Bit64u last_playback_time = 0;
 static int playback_timer_index = -1;
 
+void playback_function(void* this_ptr)
+{
+  ((playback_entry_t*)this_ptr)->trigger();
+}
+
+static void enter_playback_entry()
+{
+  static const int playback_buf_size = 100;
+  char playback_buf[playback_buf_size];
+  if (!fgets(playback_buf, playback_buf_size, playback_file))
+    return;
+
+  Bit64u time;
+  if (sscanf(playback_buf, "%s " FMT_LL "d %x", playback_entry.command, &time, &playback_entry.argument) != 3) {
+    dbg_printf("Parse error in playback string '%s'\n", playback_buf);
+    return;
+  }
+
+  Bit64u diff = time - last_playback_time;
+  last_playback_time = time;
+
+  if (time < last_playback_time) {
+    BX_PANIC(("Negative diff in playback"));
+  } else if (diff == 0) {
+    playback_entry.trigger();
+  } else {
+    if (playback_timer_index >= 0)
+      bx_pc_system.activate_timer_ticks(playback_timer_index, diff, 0);
+    else
+      playback_timer_index = bx_pc_system.register_timer_ticks(&playback_entry, playback_function, diff, 0, 1, "debug.playback");
+  }
+}
+
+void playback_entry_t::trigger ()
+{
+  if (!strcmp("gen_scancode", command)) {
+    DEV_kbd_gen_scancode(argument);
+  } else {
+    dbg_printf("Unknown playback command '%s'\n", command);
+    return;
+  }
+  enter_playback_entry();
+}
+
 void bx_dbg_playback_command(char* path_quoted)
 {
   // skip beginning double quote
@@ -1105,50 +1148,6 @@ void bx_dbg_show_command(char* arg)
     BX_CPU(dbg_cpu)->guard_found.cs,
     BX_CPU(dbg_cpu)->guard_found.eip,
     BX_CPU(dbg_cpu)->guard_found.laddr);
-}
-
-void playback_function(void* this_ptr)
-{
-  ((playback_entry_t*)this_ptr)->trigger();
-}
-
-void enter_playback_entry()
-{
-  static const int playback_buf_size = 100;
-  char playback_buf[playback_buf_size];
-  if (!fgets(playback_buf, playback_buf_size, playback_file))
-    return;
-
-  Bit64u time;
-  if (sscanf(playback_buf, "%s " FMT_LL "d %x", playback_entry.command, &time, &playback_entry.argument) != 3) {
-    dbg_printf("Parse error in playback string '%s'\n", playback_buf);
-    return;
-  }
-
-  Bit64u diff = time - last_playback_time;
-  last_playback_time = time;
-
-  if (time < last_playback_time) {
-    BX_PANIC(("Negative diff in playback"));
-  } else if (diff == 0) {
-    playback_entry.trigger();
-  } else {
-    if (playback_timer_index >= 0)
-      bx_pc_system.activate_timer_ticks(playback_timer_index, diff, 0);
-    else
-      playback_timer_index = bx_pc_system.register_timer_ticks(&playback_entry, playback_function, diff, 0, 1, "debug.playback");
-  }
-}
-
-void playback_entry_t::trigger ()
-{
-  if (!strcmp("gen_scancode", command)) {
-    DEV_kbd_gen_scancode(argument);
-  } else {
-    dbg_printf("Unknown playback command '%s'\n", command);
-    return;
-  }
-  enter_playback_entry();
 }
 
 void bx_dbg_print_stack_command(int nwords)
