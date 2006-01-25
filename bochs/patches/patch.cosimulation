@@ -24,12 +24,16 @@ without any conflicts, but do not think it will work or even compile !
 The patch is more FYI s.t. you will be able to look on some cosimulation
 implementation during developing a new one ;)
 
+And just to be sure ... 
+I marked the patch root in CVS with tag bochs-cosimulation-patch-root
+so you always could find some Bochs version to apply it ;)
+
 Patch was created with:
   cvs diff -ubBwNp
 
 Instructions:
   To patch, apply patch to main bochs directory:
-    > patch -p0 < cosim-patch
+    > patch -p1 < cosim-patch
   I skipped automatically generated files from this patch to 
   reduce its absolute size.
   To regenerate configure file:
@@ -153,7 +157,7 @@ diff -uBbwNpr bochs-nocosim/bx_debug/cosim.cc bochs/bx_debug/cosim.cc
 +++ bochs/bx_debug/cosim.cc	2006-01-15 19:55:25.000000000 +0200
 @@ -0,0 +1,979 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++// $Id: patch.cosimulation,v 1.2 2006-01-25 22:30:07 sshwarts Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1854,7 +1858,7 @@ diff -uBbwNpr bochs-nocosim/bx_debug/loader_misc.h bochs/bx_debug/loader_misc.h
 +++ bochs/bx_debug/loader_misc.h	2003-11-28 17:07:25.000000000 +0200
 @@ -0,0 +1,36 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++// $Id: patch.cosimulation,v 1.2 2006-01-25 22:30:07 sshwarts Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2053,7 +2057,7 @@ diff -uBbwNpr bochs-nocosim/bx_debug/sim2.cc bochs/bx_debug/sim2.cc
 +++ bochs/bx_debug/sim2.cc	2005-04-10 20:03:16.000000000 +0200
 @@ -0,0 +1,199 @@
 +/////////////////////////////////////////////////////////////////////////
-+// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++// $Id: patch.cosimulation,v 1.2 2006-01-25 22:30:07 sshwarts Exp $
 +/////////////////////////////////////////////////////////////////////////
 +//
 +//  Copyright (C) 2001  MandrakeSoft S.A.
