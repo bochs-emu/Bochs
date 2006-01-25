@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.68 2005-12-12 22:01:22 sshwarts Exp $
+// $Id: exception.cc,v 1.69 2006-01-25 22:20:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -769,7 +769,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
 #if BX_DEBUG_LINUX
   if (bx_dbg.linux_syscall) {
-    if (vector == 0x80) bx_dbg_linux_syscall ();
+    if (vector == 0x80) bx_dbg_linux_syscall(BX_CPU_ID);
   }
 #endif
 #endif

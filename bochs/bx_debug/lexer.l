@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.9 2006-01-25 18:13:44 sshwarts Exp $
+// $Id: lexer.l,v 1.10 2006-01-25 22:19:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -92,7 +92,6 @@ start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
 stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
 reset           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESET); }
 print           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT); }
-loader          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADER); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
 trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
 trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
@@ -119,12 +118,6 @@ slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
 where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
 print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
-diff-memory     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIFF_MEMORY); }
-sync-memory     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYNC_MEMORY); }
-sync-cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYNC_CPU); }
-fast-forward    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FAST_FORWARD); }
-phy2log         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PHY_2_LOG); }
-addr-info       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO_ADDRESS); }
 ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
@@ -162,7 +155,6 @@ ds              { bxlval.uval = BX_DBG_SREG_DS; return(BX_TOKEN_DS); }
 fs              { bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
 gs              { bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
 flags|eflags    { bxlval.uval = 0; return (BX_TOKEN_FLAGS); }
-force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
 h|help          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
 \?              |
 calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }

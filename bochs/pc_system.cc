@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.47 2006-01-20 19:12:03 vruppert Exp $
+// $Id: pc_system.cc,v 1.48 2006-01-25 22:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -104,15 +104,12 @@ void bx_pc_system_c::set_HRQ(bx_bool val)
     BX_CPU(0)->async_event = 1;
 }
 
-
-#if (BX_NUM_SIMULATORS < 2)
 void bx_pc_system_c::set_INTR(bx_bool value)
 {
   if (bx_dbg.interrupts)
     BX_INFO(("pc_system: Setting INTR=%d on bootstrap processor %d", (int)value, BX_BOOTSTRAP_PROCESSOR));
   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->set_INTR(value);
 }
-#endif
 
 //
 // Read from the IO memory address space

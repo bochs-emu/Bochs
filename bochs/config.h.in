@@ -55,10 +55,8 @@
 #define BX_SUPPORT_SMP 0
 #define BX_BOOTSTRAP_PROCESSOR 0
 
-// controls how many instances of BX_MEM_C are created.  For
+// Controls how many instances of BX_MEM_C are created. For
 // SMP, use several processors with one shared memory space.
-// For cosimulation, you could use two processors and two address
-// spaces.
 #define BX_ADDRESS_SPACES 1
 
 #if BX_ADDRESS_SPACES != 1
@@ -686,14 +684,6 @@ typedef
 #define BX_PROVIDE_MAIN       1
 
 #define BX_INSTRUMENTATION    0
-
-#define BX_USE_LOADER    0
-
-// for debugger, CPU simulator handle ID
-//   0 is the default, for using only one CPU simulator
-//   1 is for the 2nd CPU simulator
-#define BX_SIM_ID    0
-#define BX_NUM_SIMULATORS 1
 
 // limited i440FX PCI support
 #define BX_SUPPORT_PCI 0

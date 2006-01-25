@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.29 2005-10-20 17:33:36 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.30 2006-01-25 22:20:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,7 +30,6 @@
 #include "bochs.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SIM_ID == 0   // only need to define once
 // This array defines a look-up table for the even parity-ness
 // of an 8bit quantity, for optimal assignment of the parity bit
 // in the EFLAGS register
@@ -52,7 +51,6 @@ const bx_bool bx_parity_lookup[256] = {
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
-#endif
 
 bx_bool BX_CPU_C::get_CFLazy(void)
 {

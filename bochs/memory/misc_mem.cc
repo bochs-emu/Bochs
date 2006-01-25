@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.74 2006-01-24 19:03:55 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.75 2006-01-25 22:20:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ Bit32u BX_MEM_C::get_memory_in_k(void)
 BX_MEM_C::BX_MEM_C(void)
 {
   char mem[6];
-  snprintf(mem, 6, "MEM%d", BX_SIM_ID);
+  snprintf(mem, 6, "MEM0");
   put(mem);
   settype(MEMLOG);
 
@@ -85,7 +85,7 @@ BX_MEM_C::~BX_MEM_C(void)
     memory_handlers = NULL;
   }
   else {
-    BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
+    BX_DEBUG(("Memory not freed as it wasn't allocated !"));
   }
 }
 
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.74 2006-01-24 19:03:55 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.75 2006-01-25 22:20:00 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.81 2006-01-24 19:03:54 sshwarts Exp $
+// $Id: init.cc,v 1.82 2006-01-25 22:20:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -942,7 +942,7 @@ void BX_CPU_C::sanity_checks(void)
   if (sizeof(Bit64u) != 8  ||  sizeof(Bit64s) != 8)
     BX_PANIC(("data type Bit64u or Bit64u is not of length 8 bytes!"));
 
-  BX_DEBUG(( "#(%u)all sanity checks passed!", BX_SIM_ID ));
+  BX_DEBUG(("#(%u)all sanity checks passed!", BX_CPU_ID));
 }
 
 

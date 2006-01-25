@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.167 2006-01-20 19:12:03 vruppert Exp $
+// $Id: bochs.h,v 1.168 2006-01-25 22:19:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,37 +118,6 @@ void bx_reset_options (void);
 // needed.
 //
 
-#if ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
-
-// =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
-#define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
-#define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
-
-#define BX_INP(addr, len)           bx_dbg_inp(addr, len)
-#define BX_OUTP(addr, val, len)     bx_dbg_outp(addr, val, len)
-#define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_RAISE_HLDA()             bx_dbg_raise_HLDA()
-#define BX_TICK1()
-#define BX_INTR                     bx_pc_system.INTR
-#define BX_SET_INTR(b)              bx_dbg_set_INTR(b)
-#if BX_SIM_ID == 0
-#  define BX_CPU_C                  bx_cpu0_c
-#  define BX_CPU                    bx_cpu0
-#  define BX_MEM_C                  bx_mem0_c
-#  define BX_MEM                    bx_mem0
-#else
-#  define BX_CPU_C                  bx_cpu1_c
-#  define BX_CPU                    bx_cpu1
-#  define BX_MEM_C                  bx_mem1_c
-#  define BX_MEM                    bx_mem1
-#endif
-#define BX_SET_ENABLE_A20(enabled)  bx_dbg_async_pin_request(BX_DBG_ASYNC_PENDING_A20, \
-                                      enabled)
-#define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
-#error FIXME: cosim mode not fixed yet
-
-#else
-
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // some pc_systems functions just redirect to the IO devices so optimize
 // by eliminating call here
@@ -184,14 +153,11 @@ void bx_reset_options (void);
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
-#endif
-
 #if BX_SUPPORT_A20
 #  define A20ADDR(x)                ((x) & bx_pc_system.a20_mask)
 #else
 #  define A20ADDR(x)                (x)
 #endif
-
 
 // you can't use static member functions on the CPU, if there are going
 // to be 2 cpus.  Check this early on.
@@ -210,21 +176,6 @@ void bx_reset_options (void);
 #if BX_DEBUGGER
 #  define BX_DBG_ASYNC_INTR bx_guard.async.irq
 #  define BX_DBG_ASYNC_DMA  bx_guard.async.dma
-#if (BX_NUM_SIMULATORS > 1)
-// for multiple simulators, we always need this info, since we're
-// going to replay it.
-#  define BX_DBG_DMA_REPORT(addr, len, what, val) \
-        bx_dbg_dma_report(addr, len, what, val)
-#  define BX_DBG_IAC_REPORT(vector, irq) \
-        bx_dbg_iac_report(vector, irq)
-#  define BX_DBG_A20_REPORT(val) \
-        bx_dbg_a20_report(val)
-#  define BX_DBG_IO_REPORT(addr, size, op, val) \
-        bx_dbg_io_report(addr, size, op, val)
-#  define BX_DBG_UCMEM_REPORT(addr, size, op, val)
-#else
-// for a single simulator debug environment, we can optimize a little
-// by conditionally calling, as per requested.
 
 #  define BX_DBG_DMA_REPORT(addr, len, what, val) \
         if (bx_guard.report.dma) bx_dbg_dma_report(addr, len, what, val)
@@ -236,8 +187,6 @@ void bx_reset_options (void);
         if (bx_guard.report.io) bx_dbg_io_report(addr, size, op, val)
 #  define BX_DBG_UCMEM_REPORT(addr, size, op, val) \
         if (bx_guard.report.ucmem) bx_dbg_ucmem_report(addr, size, op, val)
-#endif  // #if (BX_NUM_SIMULATORS > 1)
-
 #else  // #if BX_DEBUGGER
 // debugger not compiled in, use empty stubs
 #  define BX_DBG_ASYNC_INTR 1

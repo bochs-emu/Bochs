@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.125 2006-01-24 19:07:45 sshwarts Exp $
+// $Id: cpu.cc,v 1.126 2006-01-25 22:19:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1004,17 +1004,6 @@ bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address 
     }
   }
 
-#if (BX_NUM_SIMULATORS >= 2)
-  // if async event pending, acknowlege them
-  if (bx_guard.async_changes_pending.which) {
-    if (bx_guard.async_changes_pending.which & BX_DBG_ASYNC_PENDING_A20)
-      bx_dbg_async_pin_ack(BX_DBG_ASYNC_PENDING_A20,
-                           bx_guard.async_changes_pending.a20);
-    if (bx_guard.async_changes_pending.which) {
-      BX_PANIC(("decode: async pending unrecognized."));
-    }
-  }
-#endif
   return(0); // no breakpoint
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.17 2005-11-09 17:17:06 vruppert Exp $
+// $Id: load32bitOShack.cc,v 1.18 2006-01-25 22:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -309,10 +309,8 @@ bx_load_kernel_image(char *path, Bit32u paddr)
     offset += ret;
     }
   close(fd);
-  BX_INFO(( "#(%u) load_kernel_image: '%s', size=%u read into memory at %08x",
-          BX_SIM_ID, path,
-          (unsigned) stat_buf.st_size,
-          (unsigned) paddr ));
+  BX_INFO(("load_kernel_image: '%s', size=%u read into memory at %08x",
+       path, (unsigned) stat_buf.st_size, (unsigned) paddr));
 
   return page_size;
 }

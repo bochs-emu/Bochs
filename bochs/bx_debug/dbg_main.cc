@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.41 2006-01-25 21:38:31 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.42 2006-01-25 22:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,18 +45,8 @@ extern "C" {
 }
 #endif
 
-
-static unsigned doit = 0;
-
-#define SIM_NAME0 "bochs"
-#ifndef SIM_NAME1_STR
-#define SIM_NAME1_STR "sim1"
-#endif
-#define SIM_NAME(x) ((x == 0) ? SIM_NAME0 : SIM_NAME1_STR)
-
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
-
 Bit32u dbg_cpu = 0;
 
 bx_param_bool_c *sim_running;
@@ -68,87 +58,9 @@ static char tmp_buf_prev[512];
 static char *tmp_buf_ptr;
 static char *argv0 = NULL;
 
-#if BX_NUM_SIMULATORS >= 2
-#define BX_DBG_IO_JOURNAL_SIZE        1024
-#define BX_DBG_UCMEM_JOURNAL_SIZE     1024
-#define BX_DBG_ASYNC_JOURNAL_SIZE     1024
-#define BX_DBG_MASTER_MODE              10
-#define BX_DBG_SLAVE_MODE               11
-// #define BX_DBG_DEFAULT_ICOUNT_QUANTUM   50
-#define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
-
-static unsigned bx_dbg_cosimulateN(bx_dbg_icount_t count);
-static int      bx_dbg_compare_sim_iaddr(void);
-static bx_bool  bx_dbg_compare_sim_cpu(void);
-static bx_bool  bx_dbg_compare_sim_memory(void);
-static void     bx_dbg_journal_a20_event(unsigned val);
-#endif
-
 static FILE *debugger_log = NULL;
 
 static struct {
-#if BX_NUM_SIMULATORS >= 2
-  // some fields used only for cosimulation
-  unsigned icount_quantum;
-  unsigned master_slave_mode;
-  unsigned master, slave;
-  struct {
-    struct {
-      Bit8u    op;
-      Bit8u    len;
-      Bit16u   addr;
-      Bit32u   value;
-    } element[BX_DBG_IO_JOURNAL_SIZE];
-    unsigned size;
-    unsigned head, tail;
-  } IO_journal;
-
-  struct {
-    struct {
-      Bit8u    op;
-      Bit8u    len;
-      Bit32u   addr;
-      Bit32u   value;
-    } element[BX_DBG_UCMEM_JOURNAL_SIZE];
-    unsigned size;
-    unsigned head, tail;
-  } UCmem_journal;
-
-// need to handle DMA stuff in here...
-
-#define BX_DBG_ASYNC_JOURNAL_NONE   0
-#define BX_DBG_ASYNC_JOURNAL_A20    1
-#define BX_DBG_ASYNC_JOURNAL_IAC    2
-#define BX_DBG_ASYNC_JOURNAL_NMI    3
-#define BX_DBG_ASYNC_JOURNAL_RESET  4
-
-  // Asynchronous events at the boundaries they are *taken* by the master simulator.
-  // These are replayed back to the slave at the same boundaries.
-  struct {
-    struct {
-      unsigned        what; // A20, INTR, NMI, RESET, IAC, ...
-      bx_dbg_icount_t icount;
-      union {
-        struct {
-          unsigned val;
-        } a20, nmi, reset, iac;
-        // perhaps other more complex types here
-      } u;
-    } element[BX_DBG_ASYNC_JOURNAL_SIZE];
-    unsigned size;
-    unsigned head, tail;
-  } async_journal;
-
-  struct {
-    bx_bool iaddr;
-    bx_bool cpu;
-    bx_bool memory;
-  } compare_at_sync;
-
-  bx_bool fast_forward_mode;
-
-#endif  // #if BX_NUM_SIMULATORS >= 2
-
   // some fields used for single CPU debugger
   bx_bool  auto_disassemble;
   unsigned disassemble_size;
@@ -165,19 +77,7 @@ static struct {
 #endif
 } bx_debugger;
 
-
-
-// cosim commands for handling of comparison of simulator
-// environments when both simulators have reached a common
-// point (synchronized).
-
-// cosim compare_at_sync iaddr  (default is on)
-// cosim compare_at_sync cpu    (default is off)
-// cosim compare_at_sync memory (default is off)
-// cosim compare iaddr
-// cosim compare cpu
-// cosim compare memory
-
+#define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
 
 typedef struct {
   FILE    *fp;
@@ -197,9 +97,7 @@ static void bx_get_command(void);
 static void bx_dbg_print_guard_results();
 static void bx_dbg_breakpoint_changed(void);
 
-bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
 bx_guard_t        bx_guard;
-
 
 // DMA stuff
 void bx_dbg_post_dma_reports(void);
@@ -240,10 +138,8 @@ void dbg_printf (const char *fmt, ...)
 
 int bx_dbg_main(int argc, char *argv[])
 {
-  int i, bochs_argc=0, sim1_argc=0, sim2_argc=0;
+  int i, bochs_argc=0;
   char **bochs_argv = NULL;
-  char **sim1_argv = NULL;
-  char **sim2_argv = NULL;
   argc = 1;
   
   setbuf (stdout, NULL);
@@ -252,29 +148,11 @@ int bx_dbg_main(int argc, char *argv[])
   bx_dbg_batch_dma.this_many = 1;
   bx_dbg_batch_dma.Qsize     = 0;
 
-  // initialize callback functions, and guard environment
-  memset(bx_dbg_callback, 0, sizeof(bx_dbg_callback));
   memset(&bx_guard, 0, sizeof(bx_guard));
   bx_guard.async.irq = 1;
   bx_guard.async.dma = 1;
 
   memset(&bx_debugger, 0, sizeof(bx_debugger));
-#if BX_NUM_SIMULATORS >= 2
-  bx_debugger.icount_quantum = BX_DBG_DEFAULT_ICOUNT_QUANTUM;
-  bx_debugger.IO_journal.size = 0;
-  bx_debugger.IO_journal.head = 0;
-  bx_debugger.IO_journal.tail = 0;
-  bx_debugger.UCmem_journal.size = 0;
-  bx_debugger.UCmem_journal.head = 0;
-  bx_debugger.UCmem_journal.tail = 0;
-  bx_debugger.async_journal.size = 0;
-  bx_debugger.async_journal.head = 0;
-  bx_debugger.async_journal.tail = 0;
-  bx_debugger.master = 0;
-  bx_debugger.slave  = 1;
-  bx_debugger.compare_at_sync.iaddr  = 1;
-  bx_debugger.fast_forward_mode = 0;
-#endif
   bx_debugger.auto_disassemble = 1;
   bx_debugger.disassemble_size = 0;
   bx_debugger.default_display_format = 'x';
@@ -283,17 +161,12 @@ int bx_dbg_main(int argc, char *argv[])
   bx_debugger.next_bpoint_id = 1;
   bx_debugger.last_sync_icount = 0;
 
-
   argv0 = strdup(argv[0]);
 
   bx_debug_rc_fname[0] = '\0';
 
   bochs_argv = (char **) &argv[0];
-  sim1_argv = bochs_argv;  // start out with something reasonable
-  sim2_argv = bochs_argv;  // start out with something reasonable
   bochs_argc = 1;
-  sim1_argc = 1;
-  sim2_argc = 1;
 
   // process "-rc pathname" option, if it exists
   i = 1;
@@ -307,41 +180,6 @@ int bx_dbg_main(int argc, char *argv[])
     strncpy(bx_debug_rc_fname, argv[2], BX_MAX_PATH-1);
     i += 2; // skip past "-rc" and filename
     bochs_argv = (char **) &argv[2];
-  }
-
-  // process options to bochs framework
-  for (; i<argc; i++) {
-    if (strcmp(argv[i], "-sim1") == 0) {
-      break;
-    }
-    else if (strcmp(argv[i], "-sim2") == 0) {
-      break;
-    }
-    bochs_argc++;
-  }
-
-  if (i<argc) {  // more args to process
-    // process options to each CPU simulator
-    if (strcmp(argv[i], "-sim1") == 0) {
-process_sim1:
-      sim1_argv = (char **) &argv[i];
-      i++;
-      for (; i<argc; i++) {
-        if (strcmp(argv[i], "-sim2") == 0)
-          goto process_sim2;
-        sim1_argc++;
-      }
-    }
-    else if (strcmp(argv[i], "-sim2") == 0) {
-process_sim2:
-      sim2_argv = (char **) &argv[i];
-      i++;
-      for (; i<argc; i++) {
-        if (strcmp(argv[i], "-sim1") == 0)
-          goto process_sim1;
-        sim2_argc++;
-      }
-    }
   }
 
   bx_infile_stack_index = 0;
@@ -377,36 +215,13 @@ process_sim2:
   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
 #endif
 
-  BX_SIM1_INIT(&bx_dbg_callback[0], sim1_argc, sim1_argv);
-#if BX_NUM_SIMULATORS >= 2
-  BX_SIM2_INIT(&bx_dbg_callback[1], sim2_argc, sim2_argv);
-#endif
-
   // parse any remaining args in the usual way
   bx_parse_cmdline (1, bochs_argc, bochs_argv);
 
   // initialize hardware
   bx_init_hardware();
 
-#if BX_NUM_SIMULATORS >= 2
-  bx_debugger.compare_at_sync.cpu    = 0;
-  bx_debugger.compare_at_sync.memory = 0;
-#endif
-
-  // call init routines for each CPU+mem simulator
-  // initialize for SMP. one memory, multiple processors.
-
-#if BX_NUM_SIMULATORS > 1
-#error cosimulation not supported until SMP stuff settles
-  BX_MEM(1) = new BX_MEM_C ();
-  BX_CPU(1) = new BX_CPU_C (BX_MEM(1));
-  BX_CPU(1)->reset(BX_RESET_HARDWARE);
-  BX_MEM(1)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
-  BX_MEM(1)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get (), 1);
-  BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000, 2);
-#endif
-
-  // (mch) Moved from main.cc
+  // Moved from main.cc
   DEV_init_devices();
   DEV_reset_devices(BX_RESET_HARDWARE);
   bx_gui->init_signal_handlers ();
@@ -709,20 +524,14 @@ void  bx_debug_break ()
 
 void bx_dbg_exit(int code)
 {
-  BX_DEBUG(("dbg: before sim1_exit" ));
+  BX_DEBUG(("dbg: before exit" ));
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
   }
 
-#if BX_NUM_SIMULATORS >= 2
-  dbg_printf("before sim2_exit\n");
-  if (BX_CPU(1)) BX_CPU(1)->atexit();
-#endif
-
   bx_atexit();
   BX_EXIT(code);
 }
-
 
 //
 // commands invoked from parser
@@ -761,17 +570,6 @@ void bx_dbg_trace_reg_off_command(void)
 void bx_dbg_ptime_command(void)
 {
   dbg_printf("ptime: " FMT_LL "d\n", bx_pc_system.time_ticks());
-#if BX_NUM_SIMULATORS >= 2
-  dbg_printf (
-#if BX_DBG_ICOUNT_SIZE == 32
-    "Last synchronized icount was %lu\n",
-    (unsigned long) bx_debugger.last_sync_icount
-#else  // BX_DBG_ICOUNT_SIZE == 64
-    "Last synchronized icount was %Lu\n",
-    (unsigned long long) bx_debugger.last_sync_icount
-#endif /* BX_DBG_ICOUNT_SIZE == 32 */
-  );
-#endif /* BX_NUM_SIMULATORS >= 2 */
 }
 
 int timebp_timer = -1;
@@ -1243,14 +1041,6 @@ void bx_dbg_continue_command(void)
 
 one_more:
 
-#if BX_NUM_SIMULATORS >= 2
-  bx_guard.interrupt_requested = 0;
-  bx_guard.special_unwind_stack = 0;
-  while (1) {
-    if ( !bx_dbg_cosimulateN(bx_debugger.icount_quantum) )
-      break;
-    }
-#else
   bx_guard.icount = 0;
   // I must guard for ICOUNT or one CPU could run forever without giving
   // the others a chance.
@@ -1325,7 +1115,6 @@ one_more:
     BX_TICKN(max_executed);
 #endif /* BX_SUPPORT_SMP */
   }
-#endif /* BX_NUM_SIMULATORS */
 
   sim_running->set (0);
   SIM->refresh_ci ();
@@ -1352,11 +1141,6 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
   // is printed, we will return to config mode.
   SIM->set_display_mode (DISP_MODE_SIM);
 
-#if BX_NUM_SIMULATORS >= 2
-  bx_guard.interrupt_requested = 0;
-  bx_guard.special_unwind_stack = 0;
-  bx_dbg_cosimulateN(count);
-#else
   // single CPU
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
@@ -1375,7 +1159,6 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
     BX_TICK1 ();
 #endif
   }
-#endif
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
@@ -2039,7 +1822,7 @@ void dbg_printf_binary (char *format, Bit32u data, int bits)
 }
 
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
-               Bit32u addr, bx_bool addr_passed, int simulator)
+               Bit32u addr, bx_bool addr_passed)
 {
   unsigned repeat_count, i;
   char ch, display_format, unit_size;
@@ -2054,10 +1837,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   bx_bool is_linear;
   unsigned char databuf[8];
 
-  if (simulator == 0)
-    printf("[%s]:\n", SIM_NAME0);
-  else
-    printf("[%s]:\n", SIM_NAME1_STR);
+  printf("[bochs]:\n");
 
   // If command was the extended "xp" command, meaning eXamine Physical memory,
   // then flag memory address as physical, rather than linear.
@@ -2154,10 +1934,6 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     bx_debugger.default_unit_size      = unit_size;
   }
 
-  //dbg_printf("  repeat count was %u\n", repeat_count);
-  //dbg_printf("  display_format = '%c'\n", display_format);
-  //dbg_printf("  unit_size      = '%c'\n", unit_size);
-
   if ( (display_format == 'i') || (display_format == 's') ) {
     dbg_printf("error: dbg_examine: 'i' and 's' formats not supported.\n");
     return;
@@ -2220,7 +1996,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
       dbg_printf(" ");
 
     if (is_linear) {
-      BX_CPU(simulator)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
+      BX_CPU(0)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
       if (!paddr_valid) {
         dbg_printf("error: examine memory: no tranlation for linear-to-phy mem available.\n");
         return;
@@ -2230,7 +2006,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
       paddr = addr;  // address is already physical address
     }
 
-    BX_MEM(simulator)->dbg_fetch_mem(paddr, data_size, databuf);
+    BX_MEM(0)->dbg_fetch_mem(paddr, data_size, databuf);
     //FIXME HanishKVC The char display for data to be properly integrated
     //      so that repeat_count, columns, etc. can be set or used properly.
     //      Also for data_size of 2 and 4 how to display the individual
@@ -2788,42 +2564,6 @@ void bx_dbg_instrument_command(const char *comm)
 #endif
 }
 
-void bx_dbg_loader_command(char *path_quoted)
-{
-  size_t len;
-
-  // skip beginning double quote
-  if (path_quoted[0] == '"')
-    path_quoted++;
-
-  // null out ending quote
-  len = strlen(path_quoted);
-  if (path_quoted[len - 1] == '"')
-    path_quoted[len - 1] = '\0';
-
-#if BX_USE_LOADER
-  {
-    bx_loader_misc_t loader_misc;
-    bx_dbg_callback[0].loader(path_quoted, &loader_misc);
-#if 0
-    dbg_printf("dr0: 0x%08x\n", loader_misc.dr0);
-    dbg_printf("dr1: 0x%08x\n", loader_misc.dr1);
-    dbg_printf("dr2: 0x%08x\n", loader_misc.dr2);
-    dbg_printf("dr3: 0x%08x\n", loader_misc.dr3);
-    dbg_printf("dr6: 0x%08x\n", loader_misc.dr6);
-    dbg_printf("dr7: 0x%08x\n", loader_misc.dr7);
-#endif
-    bx_cpu.dr0 = loader_misc.dr0;
-    bx_cpu.dr1 = loader_misc.dr1;
-    bx_cpu.dr2 = loader_misc.dr2;
-    bx_cpu.dr3 = loader_misc.dr3;
-    bx_cpu.dr7 = loader_misc.dr7;
-  }
-#else
-  dbg_printf("Error: loader not implemented.\n");
-#endif
-}
-
 void bx_dbg_doit_command(unsigned n)
 {
   // generic command to add temporary hacks to
@@ -2844,24 +2584,10 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
   }
 
   if (!BX_MEM(0)->dbg_crc32(crc32, addr1, addr2, &crc1)) {
-    dbg_printf("sim0: could not CRC memory\n");
+    dbg_printf("could not CRC memory\n");
     return;
   }
-#if BX_NUM_SIMULATORS == 1
   dbg_printf("0x%lx\n", crc1);
-#else
-  if (!BX_MEM(1)->dbg_crc32(crc32, addr1, addr2, &crc2)) {
-    dbg_printf("sim1: could not CRC memory\n");
-    return;
-  }
-  if (crc1 == crc2) {
-    dbg_printf("CRC same: 0x%x\n", (unsigned) crc1);
-  }
-  else {
-    dbg_printf("CRC different: sim0=0x%x, sim1=0x%x\n",
-            (unsigned) crc1, (unsigned) crc2);
-  }
-#endif
 }
 
 void bx_dbg_info_dirty_command(void)
@@ -3205,51 +2931,10 @@ void bx_dbg_info_vga()
 
 void bx_dbg_iac_report(unsigned vector, unsigned irq)
 {
-#if BX_NUM_SIMULATORS > 1
-  unsigned tail, master;
-#endif
-
-if (doit) dbg_printf("iac report: vector=%u\n", vector);
-
   if (bx_guard.report.irq) {
     dbg_printf("event icount=%u IRQ irq=%u vec=%x\n",
       (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, irq, vector);
   }
-
-#if BX_NUM_SIMULATORS > 1
-  if (bx_debugger.master_slave_mode == BX_DBG_SLAVE_MODE ) {
-    dbg_printf("Error: iac_report: in slave mode.\n");
-    bx_dbg_exit(1);
-  }
-
-  // Master simulator mode
-  if (bx_debugger.async_journal.size >= BX_DBG_ASYNC_JOURNAL_SIZE) {
-    dbg_printf("Error: iac: async journal full.\n");
-    bx_dbg_exit(1);
-  }
-
-  if (bx_debugger.async_journal.size == 0) {
-    // start off point head & tail at same element
-    bx_debugger.async_journal.head = 0;
-    tail = bx_debugger.async_journal.tail = 0;
-  }
-  else {
-    tail = bx_debugger.async_journal.tail + 1;
-  }
-  if (tail >= BX_DBG_ASYNC_JOURNAL_SIZE) {
-    dbg_printf("Error: iac_report: journal wrapped.\n");
-    bx_dbg_exit(0);
-  }
-
-  master = bx_debugger.master;
-  bx_debugger.async_journal.element[tail].what = BX_DBG_ASYNC_JOURNAL_IAC;
-  bx_debugger.async_journal.element[tail].icount = bx_guard_found[master].icount;
-  bx_debugger.async_journal.element[tail].u.iac.val = vector;
-
-  if (bx_debugger.async_journal.size)
-    bx_debugger.async_journal.tail++;
-  bx_debugger.async_journal.size++;
-#endif
 }
 
 void bx_dbg_a20_report(unsigned val)
@@ -3270,8 +2955,6 @@ void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
       (op==BX_READ) ? "read" : "write",
       (unsigned) val);
   }
-
-  // nothing else to do.  bx_dbg_inp() and bx_dbg_outp() do the journaling.
 }
 
 void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
@@ -3284,8 +2967,6 @@ void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
       (op==BX_READ) ? "read" : "write",
       (unsigned) val);
   }
-  // nothing else to do.  bx_dbg_ucmem_read() and bx_dbg_ucmem_write()
-  // do the journaling.
 }
 
 void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val)

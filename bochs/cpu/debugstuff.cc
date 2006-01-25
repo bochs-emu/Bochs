@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.53 2006-01-25 18:13:44 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.54 2006-01-25 22:20:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -985,70 +985,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR async_event = 1;
 
   return(1);
-}
-
-#if BX_SIM_ID == 0
-#  define BX_DBG_NULL_CALLBACK bx_dbg_null_callback0
-#else
-#  define BX_DBG_NULL_CALLBACK bx_dbg_null_callback1
-#endif
-void BX_DBG_NULL_CALLBACK(unsigned val)
-{
-  // bochs uses the pc_system variables, so this function is
-  // a stub for notification by the debugger, that a change
-  // occurred.
-  UNUSED(val);
-}
-
-  void
-#if BX_SIM_ID == 0
-bx_dbg_init_cpu_mem_env0(bx_dbg_callback_t *callback, int argc, char *argv[])
-#else
-bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
-#endif
-{
-  UNUSED(argc);
-  UNUSED(argv);
-
-#if 0
-#ifdef __GNUC__
-#warning hardcoding BX_CPU_THIS_PTR mem[0] and cpu[0]
-#endif
-  callback->setphymem           = BX_MEM(0)->dbg_set_mem;
-  callback->getphymem           = BX_MEM(0)->dbg_fetch_mem;
-  callback->xlate_linear2phy    = BX_CPU(0)->dbg_xlate_linear2phy;
-  callback->set_reg             = BX_CPU(0)->dbg_set_reg;
-  callback->get_reg             = BX_CPU(0)->dbg_get_reg;
-  callback->get_sreg            = BX_CPU(0)->dbg_get_sreg;
-  callback->get_cpu             = BX_CPU(0)->dbg_get_cpu;
-  callback->set_cpu             = BX_CPU(0)->dbg_set_cpu;
-  callback->dirty_page_tbl_size = sizeof(BX_MEM(0)->dbg_dirty_pages);
-  callback->dirty_page_tbl      = BX_MEM(0)->dbg_dirty_pages;
-  callback->atexit              = BX_CPU(0)->atexit;
-  callback->query_pending       = BX_CPU(0)->dbg_query_pending;
-  callback->execute             = BX_CPU(0)->cpu_loop;
-  callback->take_irq            = BX_CPU(0)->dbg_take_irq;
-  callback->take_dma            = BX_CPU(0)->dbg_take_dma;
-  callback->reset_cpu           = BX_CPU(0)->reset;
-  callback->init_mem            = BX_MEM(0)->init_memory;
-  callback->load_ROM            = BX_MEM(0)->load_ROM;
-  callback->set_A20             = NULL;
-  callback->set_NMI             = BX_DBG_NULL_CALLBACK;
-  callback->set_RESET           = BX_DBG_NULL_CALLBACK;
-  callback->set_INTR            = BX_CPU(0)->set_INTR;
-  callback->force_interrupt     = BX_CPU(0)->dbg_force_interrupt;
-
-#if BX_INSTRUMENTATION
-  callback->instr_start         = bx_instr_start;
-  callback->instr_stop          = bx_instr_stop;
-  callback->instr_reset         = bx_instr_reset;
-  callback->instr_print         = bx_instr_print;
-#endif
-#if BX_USE_LOADER
-  callback->loader              = bx_dbg_loader;
-#endif
-  callback->crc32               = BX_MEM(0)->dbg_crc32;
-#endif
 }
 
 #endif  // #if BX_DEBUGGER

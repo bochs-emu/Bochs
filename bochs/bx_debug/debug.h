@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.12 2006-01-25 21:38:31 sshwarts Exp $
+// $Id: debug.h,v 1.13 2006-01-25 22:19:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,11 +28,6 @@
 // if including from C parser, need basic types etc
 #include "config.h"
 #include "osdep.h"
-
-#if BX_USE_LOADER
-#include "loader_misc.h"
-void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
-#endif
 
 #if BX_DBG_ICOUNT_SIZE == 32
   typedef Bit32u bx_dbg_icount_t;
@@ -148,12 +143,6 @@ void bx_dbg_trace_reg_on_command(void);
 void bx_dbg_trace_reg_off_command(void);
 void bx_dbg_ptime_command(void);
 void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
-void bx_dbg_diff_memory(void);
-void bx_dbg_always_check(Bit32u page_start, bx_bool on);
-void bx_dbg_sync_memory(bx_bool set);
-void bx_dbg_sync_cpu(bx_bool set);
-void bx_dbg_fast_forward(Bit32u num);
-void bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset);
 #define MAX_CONCURRENT_BPS 5
 extern int timebp_timer;
 extern Bit64u timebp_queue[MAX_CONCURRENT_BPS];
@@ -200,7 +189,7 @@ void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_info_symbols_command(char *Symbol);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
-                    Bit32u addr, bx_bool addr_passed, int simulator);
+                    Bit32u addr, bx_bool addr_passed);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
 void bx_dbg_query_command(char *);
@@ -209,11 +198,10 @@ void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
 void bx_dbg_disassemble_command(const char *,bx_num_range);
 void bx_dbg_instrument_command(const char *);
-void bx_dbg_loader_command(char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
 extern bx_bool watchpoint_continue;
-void bx_dbg_linux_syscall (void);
+void bx_dbg_linux_syscall (unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
 void bx_dbg_info_vga(void);
@@ -399,11 +387,9 @@ typedef struct bx_guard_found_t {
 
 extern bx_guard_t bx_guard;
 
-
 int  bx_dbg_main(int argc, char *argv[]);
 void bx_dbg_user_input_loop(void);
 void bx_dbg_interpret_line (char *cmd);
-
 
 typedef struct {
   Bit16u sel;
@@ -437,72 +423,13 @@ typedef struct {
     unsigned inhibit_mask;
 } bx_dbg_cpu_t;
 
-
-typedef struct {
-  // call back functions specific to each simulator
-  bx_bool (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-  bx_bool (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
-  void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, bx_bool *valid);
-  bx_bool (*set_reg)(unsigned reg, Bit32u val);
-  Bit32u  (*get_reg)(unsigned reg);
-  bx_bool (*get_sreg)(bx_dbg_sreg_t *sreg, unsigned sreg_no);
-  bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);
-  bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);
-  unsigned       dirty_page_tbl_size;
-  unsigned char *dirty_page_tbl;
-  void    (*atexit)(void);
-  unsigned (*query_pending)(void);
-  void     (*execute)(void);
-  void     (*take_irq)(void);
-  void     (*take_dma)(void);
-  void     (*reset_cpu)(unsigned source);
-  void     (*init_mem)(int size_in_bytes);
-  void     (*load_ROM)(const char *path, Bit32u romaddress, Bit8u type);
-
-  // for asynchronous environment handling
-  void     (*set_A20)(unsigned val);
-  void     (*set_NMI)(unsigned val);
-  void     (*set_RESET)(unsigned val);
-  void     (*set_INTR)(unsigned val);
-  void     (*force_interrupt)(unsigned vector);
-
-#if BX_INSTRUMENTATION
-  void    (*instr_start)(void);
-  void    (*instr_stop)(void);
-  void    (*instr_reset)(void);
-  void    (*instr_print)(void);
-#endif
-#if BX_USE_LOADER
-  void    (*loader)(char *path, bx_loader_misc_t *misc_ptr);
-#endif
-  bx_bool (*crc32)(Bit32u (*f)(const Bit8u *buf, int len),
-                   Bit32u addr1, Bit32u addr2, Bit32u *crc);
-} bx_dbg_callback_t;
-
-extern bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
-
-void BX_SIM1_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
-#ifdef BX_SIM2_INIT
-void BX_SIM2_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
-#endif
-
-
 void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val);
 void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 
-Bit8u   bx_dbg_ucmem_read(Bit32u addr);
-void    bx_dbg_ucmem_write(Bit32u addr, Bit8u value);
-void    bx_dbg_async_pin_request(unsigned what, bx_bool val);
-void    bx_dbg_async_pin_ack(unsigned what, bx_bool val);
-Bit32u  bx_dbg_inp(Bit16u addr, unsigned len);
-void    bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len);
-void    bx_dbg_raise_HLDA(void);
-Bit8u   bx_dbg_IAC(void);
-void    bx_dbg_set_INTR(bx_bool b);
-void bx_dbg_disassemble_current (int which_cpu, int print_time);
+void bx_dbg_disassemble_current(int which_cpu, int print_time);
 
 int bx_dbg_symbolic_output(void); /* BW */
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);

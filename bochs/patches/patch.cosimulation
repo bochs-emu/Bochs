@@ -1,0 +1,2515 @@
+----------------------------------------------------------------------
+Patch name: Cosimulation support
+Date: 25 Jan 2006
+Status: Cosimulation not working yet.
+
+Detailed description:
+
+The cosimulation feature doesn't work since Bochs 2.0 release (or may be 
+even earlier).
+
+According to my opinion it should be redefined and implemented in totally
+different way; for example two Bochs simulators compiled with cosimulation
+could connect through pipe or TCP/IP and run together comparing the arch 
+automatically state or on demand.
+Let's assume we have dynamic translation support in Bochs, so we could
+compile it with cosimulation and run two Bochs binaries compiled with 
+dynamic translation and without and compare between them automatically 
+to assure emulation correctness. The same for any other performance feature. 
+This cosimulation approach should reach the same goals but do it in same 
+strange way ...
+
+OK, I assume the patch could be automatically applied to Bochs 2.2.6 release
+without any conflicts, but do not think it will work or even compile !
+The patch is more FYI s.t. you will be able to look on some cosimulation
+implementation during developing a new one ;)
+
+Patch was created with:
+  cvs diff -ubBwNp
+
+Instructions:
+  To patch, apply patch to main bochs directory:
+    > patch -p0 < cosim-patch
+  I skipped automatically generated files from this patch to 
+  reduce its absolute size.
+  To regenerate configure file:
+    > autoconf configure.in > configure
+  To regenerate lexer.c, parser.c and parser.h
+    > cd bx_debug; rm -f lexer.c parser.c parser.h; make
+----------------------------------------------------------------------
+
+diff -uBbwNpr bochs-nocosim/bochs.h bochs/bochs.h
+--- bochs-nocosim/bochs.h	2006-01-25 22:50:48.078125000 +0200
++++ bochs/bochs.h	2006-01-20 21:12:03.000000000 +0200
+@@ -118,6 +118,37 @@ void bx_reset_options (void);
+ // needed.
+ //
+ 
++#if ((BX_DEBUGGER == 1) && (BX_NUM_SIMULATORS >= 2))
++
++// =-=-=-=-=-=-=- Redirected to cosimulation debugger -=-=-=-=-=-=-=
++#define DEV_vga_mem_read(addr)       bx_dbg_ucmem_read(addr)
++#define DEV_vga_mem_write(addr, val) bx_dbg_ucmem_write(addr, val)
++
++#define BX_INP(addr, len)           bx_dbg_inp(addr, len)
++#define BX_OUTP(addr, val, len)     bx_dbg_outp(addr, val, len)
++#define BX_HRQ                      (bx_pc_system.HRQ)
++#define BX_RAISE_HLDA()             bx_dbg_raise_HLDA()
++#define BX_TICK1()
++#define BX_INTR                     bx_pc_system.INTR
++#define BX_SET_INTR(b)              bx_dbg_set_INTR(b)
++#if BX_SIM_ID == 0
++#  define BX_CPU_C                  bx_cpu0_c
++#  define BX_CPU                    bx_cpu0
++#  define BX_MEM_C                  bx_mem0_c
++#  define BX_MEM                    bx_mem0
++#else
++#  define BX_CPU_C                  bx_cpu1_c
++#  define BX_CPU                    bx_cpu1
++#  define BX_MEM_C                  bx_mem1_c
++#  define BX_MEM                    bx_mem1
++#endif
++#define BX_SET_ENABLE_A20(enabled)  bx_dbg_async_pin_request(BX_DBG_ASYNC_PENDING_A20, \
++                                      enabled)
++#define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
++#error FIXME: cosim mode not fixed yet
++
++#else
++
+ // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
+ // some pc_systems functions just redirect to the IO devices so optimize
+ // by eliminating call here
+@@ -153,6 +184,8 @@ void bx_reset_options (void);
+ #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
+ #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
+ 
++#endif
++
+ #if BX_SUPPORT_A20
+ #  define A20ADDR(x)                ((x) & bx_pc_system.a20_mask)
+ #else
+@@ -176,6 +210,21 @@ void bx_reset_options (void);
+ #if BX_DEBUGGER
+ #  define BX_DBG_ASYNC_INTR bx_guard.async.irq
+ #  define BX_DBG_ASYNC_DMA  bx_guard.async.dma
++#if (BX_NUM_SIMULATORS > 1)
++// for multiple simulators, we always need this info, since we're
++// going to replay it.
++#  define BX_DBG_DMA_REPORT(addr, len, what, val) \
++        bx_dbg_dma_report(addr, len, what, val)
++#  define BX_DBG_IAC_REPORT(vector, irq) \
++        bx_dbg_iac_report(vector, irq)
++#  define BX_DBG_A20_REPORT(val) \
++        bx_dbg_a20_report(val)
++#  define BX_DBG_IO_REPORT(addr, size, op, val) \
++        bx_dbg_io_report(addr, size, op, val)
++#  define BX_DBG_UCMEM_REPORT(addr, size, op, val)
++#else
++// for a single simulator debug environment, we can optimize a little
++// by conditionally calling, as per requested.
+ 
+ #  define BX_DBG_DMA_REPORT(addr, len, what, val) \
+         if (bx_guard.report.dma) bx_dbg_dma_report(addr, len, what, val)
+@@ -187,6 +236,8 @@ void bx_reset_options (void);
+         if (bx_guard.report.io) bx_dbg_io_report(addr, size, op, val)
+ #  define BX_DBG_UCMEM_REPORT(addr, size, op, val) \
+         if (bx_guard.report.ucmem) bx_dbg_ucmem_report(addr, size, op, val)
++#endif  // #if (BX_NUM_SIMULATORS > 1)
++
+ #else  // #if BX_DEBUGGER
+ // debugger not compiled in, use empty stubs
+ #  define BX_DBG_ASYNC_INTR 1
+diff -uBbwNpr bochs-nocosim/bx_debug/Makefile.in bochs/bx_debug/Makefile.in
+--- bochs-nocosim/bx_debug/Makefile.in	2006-01-25 22:46:16.062500000 +0200
++++ bochs/bx_debug/Makefile.in	2006-01-24 21:03:53.000000000 +0200
+@@ -56,6 +56,7 @@ YACC   = yacc
+ BX_OBJS = \
+   dbg_main.o \
+   symbols.o \
++  cosim.o \
+   linux.o \
+ 
+ BX_PARSER_OBJS = \
+@@ -147,3 +148,17 @@ symbols.o: symbols.@CPP_SUFFIX@ ../bochs
+   ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
+   ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
+   ../gui/keymap.h ../instrument/stubs/instrument.h
++cosim.o: cosim.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
++  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
++  ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
++  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
++  ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
++  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
++  ../gui/keymap.h ../instrument/stubs/instrument.h
++sim2.o: sim2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
++  ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/lazy_flags.h \
++  ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
++  ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
++  ../cpu/xmm.h ../memory/memory.h ../pc_system.h ../plugin.h \
++  ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
++  ../gui/keymap.h ../instrument/stubs/instrument.h
+diff -uBbwNpr bochs-nocosim/bx_debug/cosim.cc bochs/bx_debug/cosim.cc
+--- bochs-nocosim/bx_debug/cosim.cc	1970-01-01 02:00:00.000000000 +0200
++++ bochs/bx_debug/cosim.cc	2006-01-15 19:55:25.000000000 +0200
+@@ -0,0 +1,979 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  MandrakeSoft S.A.
++//
++//    MandrakeSoft S.A.
++//    43, rue d'Aboukir
++//    75002 Paris - France
++//    http://www.linux-mandrake.com/
++//    http://www.mandrakesoft.com/
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++//
++
++#include "bochs.h"
++
++#if BX_NUM_SIMULATORS >= 2
++
++unsigned bx_dbg_cosimulateN(bx_dbg_icount_t count)
++{
++  // execute both master & slave for count instructions,
++  // handling asynchronous events, etc.
++  // returns 0 = didn't get through all count instructions
++  //             either a guard was hit, or a divergence occurred
++  //         1 = got through all count instructions
++
++  unsigned master, slave;
++  bx_dbg_icount_t master_icount, slave_icount;
++  bx_bool bail_out = 0;
++  unsigned ret = 0;
++  bx_bool save_INTR;
++  bx_bool pre_A20, post_A20;
++  unsigned async_head;
++  bx_dbg_icount_t async_icount, curr_icount;
++
++  if (count == 0) {
++    dbg_printf ( "Error: cosimulateN: count=0\n");
++    bx_dbg_exit(1);
++  }
++
++  bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT;  // stop at icount
++  bx_guard.guard_for &= ~BX_DBG_GUARD_CTRL_C; // ignore Ctrl-C
++
++one_time_slice:
++  // take minimum of requested count and maximum count quantum
++  if (count > bx_debugger.icount_quantum)
++    bx_guard.icount = bx_debugger.icount_quantum;
++  else
++    bx_guard.icount = count;
++
++  // for now, assume...
++  master = bx_debugger.master;
++  slave  = bx_debugger.slave;
++
++  // run master simulator
++  bx_debugger.master_slave_mode = BX_DBG_MASTER_MODE;
++  if (bx_guard.interrupt_requested) {
++    bail_out = 1;
++    dbg_printf ("ctrlc typed\n");
++  }
++  bx_guard_found[master].guard_found = 0;
++  bx_guard_found[master].icount = 0;
++  if (doit) dbg_printf ("requesting run of master for %u\n",
++    (unsigned) bx_guard.icount);
++  // save A20 value before master run
++  pre_A20 = bx_pc_system.get_enable_a20();
++
++  BX_MEM(master)->cpu_loop(-1);
++  post_A20  = bx_pc_system.get_enable_a20(); // A20 after master run
++  master_icount = bx_guard_found[master].icount;
++  slave_icount = 0;
++  if (master_icount)
++    bx_pc_system.tickn(master_icount);
++  save_INTR = bx_pc_system.INTR; // value after master run
++  bx_pc_system.INTR = 0; // in case slave uses directly
++  // Change A20 for slave run to model what it was at beginning of
++  // master run, only if it needs to be changed.
++  if (pre_A20 != post_A20) {
++    bx_pc_system.set_enable_a20(pre_A20);
++    if (BX_MEM(slave)->set_A20)
++      BX_MEM(slave)->set_A20(pre_A20);
++    }
++
++  // if guard was anything except for icount, we should terminate
++  // after synchronizing slave to master
++  if (bx_guard_found[master].guard_found & ~BX_DBG_GUARD_ICOUNT)
++    bail_out = 1;
++
++  // Synchronize slave to master.  Account for Ctrl-C's typed during execution of
++  // slave.
++  bx_debugger.master_slave_mode = BX_DBG_SLAVE_MODE;
++  do {
++    // run slave for remaining instructions to catch up to master
++    curr_icount = master_icount - slave_icount;
++    if (bx_debugger.async_journal.size) {
++      // If there were asynchronous events which occurred while the
++      // master was running, have to run the slave up to each of these
++      // points individually, and force it to take them on exactly the
++      // same boundaries.
++      async_head   = bx_debugger.async_journal.head;
++      async_icount = bx_debugger.async_journal.element[async_head].icount;
++      curr_icount  = async_icount;  // only run to next async event
++      }
++    else {
++      async_head   = 0; // keep compiler happy
++      async_icount = 0; // keep compiler happy
++      }
++
++    bx_guard_found[slave].guard_found = 0;
++    bx_guard_found[slave].icount = 0;
++    bx_guard.icount = curr_icount;
++
++    if (curr_icount) {
++      // Async event may be before completion of any instructions,
++      // for example taking of interrupt.
++      if (doit) dbg_printf ( "requesting run of slave for %u\n",
++        (unsigned) bx_guard.icount);
++      if (bx_debugger.fast_forward_mode) {
++        bx_guard_found[slave].icount = curr_icount;
++        bx_guard_found[slave].guard_found = BX_DBG_GUARD_ICOUNT;
++      } else {
++        BX_MEM(slave)->cpu_loop(-1);
++      }
++    }
++    slave_icount += bx_guard_found[slave].icount;
++    if (bx_guard_found[slave].guard_found & ~BX_DBG_GUARD_ICOUNT) {
++      bail_out = 1;
++      // If user type Ctrl-C we're done after synchronizing.  If not,
++      // then we have reached a true guard, and it's time to bail.
++      if (bx_guard_found[slave].guard_found &
++          ~(BX_DBG_GUARD_ICOUNT | BX_DBG_GUARD_CTRL_C))
++        break;
++    }
++    if (bx_debugger.async_journal.size) {
++      // sanity check: slave should be at async point
++      if (bx_guard_found[slave].icount != async_icount) {
++        dbg_printf ( "Error: comsimulateN: async: slave not at sync point.\n");
++        bx_dbg_exit(1);
++      }
++      switch (bx_debugger.async_journal.element[async_head].what) {
++        case BX_DBG_ASYNC_JOURNAL_IAC:
++         if (!bx_debugger.fast_forward_mode) {
++            if (doit)
++              dbg_printf ("slave: forcing interrupt %u\n",
++                bx_debugger.async_journal.element[async_head].u.iac.val);
++
++            BX_MEM(slave)->dbg_force_interrupt(
++              bx_debugger.async_journal.element[async_head].u.iac.val);
++          }
++          break;
++        case BX_DBG_ASYNC_JOURNAL_A20:
++          bx_pc_system.set_enable_a20(
++            bx_debugger.async_journal.element[async_head].u.a20.val);
++          if (BX_MEM(slave)->set_A20)
++            BX_MEM(slave)->set_A20(
++              bx_debugger.async_journal.element[async_head].u.a20.val);
++          break;
++        case BX_DBG_ASYNC_JOURNAL_NMI:
++        case BX_DBG_ASYNC_JOURNAL_RESET:
++        default:
++          dbg_printf ( "Error: cosimulateN: unimplemented async event.\n");
++      }
++      // async event processed, dequeue it
++      bx_debugger.async_journal.size--;
++      bx_debugger.async_journal.head++;
++    }
++  } while (slave_icount < master_icount);
++
++  bx_pc_system.INTR = save_INTR; // restore INTR to value after master run
++
++  // At this point, both simulators should be at the same point.  Either
++  // they have finished executing for the desired count, or at least for
++  // a time quantum.  Check to see if the environments are in sync.
++  int iaddr_res;
++  if (!bx_debugger.fast_forward_mode) {
++    if (bx_debugger.compare_at_sync.iaddr && (iaddr_res = bx_dbg_compare_sim_iaddr())) {
++      if (iaddr_res == 1)
++        bail_out = 1;
++    } else if (bx_debugger.compare_at_sync.cpu && bx_dbg_compare_sim_cpu())
++      bail_out = 1;
++    else if (bx_debugger.compare_at_sync.memory && bx_dbg_compare_sim_memory())
++      bail_out = 1;
++  }
++
++  if (bail_out) {
++#ifdef DEBUGGER_ERROR
++    extern void DEBUGGER_ERROR(void);
++    DEBUGGER_ERROR();
++#endif
++
++    ret = 0; // didn't complete, stopped
++  }
++  else {
++    count -= master_icount;
++    // last icount known to be in sync
++    bx_debugger.last_sync_icount += master_icount;
++    if (count)
++      goto one_time_slice;
++    ret = 1; // completed OK
++  }
++
++  bx_guard.guard_for &= ~BX_DBG_GUARD_ICOUNT;
++  return(ret);
++}
++
++int bx_dbg_compare_sim_iaddr(void)
++{
++  // returns 0 = same, 1 = different, 2 = false diff
++  if (BX_CPU(dbg_cpu)->guard_found.laddr != bx_guard_found[1].laddr) {
++
++#ifdef FALSE_DIFF_DETECT
++    extern int FALSE_DIFF_DETECT();
++    if (FALSE_DIFF_DETECT())
++      return 2;
++#endif
++
++    dbg_printf (
++#if BX_DBG_ICOUNT_SIZE == 32
++      "*** Iaddr divergence ***: last know synchronized icount was %lu\n",
++      (unsigned long) bx_debugger.last_sync_icount
++#else  // BX_DBG_ICOUNT_SIZE == 64
++      "*** Iaddr divergence ***: last know synchronized icount was %Lu\n",
++      (unsigned long long) bx_debugger.last_sync_icount
++#endif
++      );
++
++//    dbg_printf ( "Divergence: sim[0].laddr=%x, sim[1].laddr=%x\n",
++//      (unsigned) BX_CPU(dbg_cpu)->guard_found.laddr,
++//      (unsigned) bx_guard_found[1].laddr);
++    return(1); // different
++  }
++  return(0); // same
++}
++
++bx_bool bx_dbg_compare_sim_cpu(void)
++{
++  // (mch) Get cpu structures from both simulators
++
++  // Compare the structures (except the descriptor parts of the
++  // segment registers
++  bx_dbg_cpu_t regs[2];
++
++  BX_MEM(0)->dbg_get_cpu(regs + 0);
++  BX_MEM(1)->dbg_get_cpu(regs + 1);
++
++  bx_bool ret = 0;
++  bx_bool warn = 0;
++
++  // (mch) Yes I know these are macros. The would have been
++  // inner functions if g++ had supported it.
++#define TEST_REG(reg, reg_name) \
++  do { \
++    if (regs[0].reg != regs[1].reg) { \
++      printf("COSIM ERROR: [%s] %s: 0x%08x  %s: 0x%08x\n", reg_name, SIM_NAME0, regs[0].reg, SIM_NAME1_STR, regs[1].reg); \
++      ret = 1; \
++    } \
++  } while(0)
++
++#define TEST_REG_WARN(reg, reg_name, mask) \
++  do { \
++    if ((regs[0].reg & mask) != (regs[1].reg & mask)) { \
++      printf("COSIM WARNING: [%s] %s: 0x%08x  %s: 0x%08x\n", reg_name, SIM_NAME0, (regs[0].reg & mask), SIM_NAME1_STR, (regs[1].reg & mask)); \
++      warn = 1; \
++    } \
++  } while(0)
++
++  TEST_REG(eax, "eax");
++  TEST_REG(ebx, "ebx");
++  TEST_REG(ecx, "ecx");
++  TEST_REG(edx, "edx");
++  TEST_REG(ebp, "ebp");
++  TEST_REG(esi, "esi");
++  TEST_REG(edi, "edi");
++  TEST_REG(esp, "esp");
++        TEST_REG_WARN(eflags, "eflags & CF", 0x1);
++#define EFLAGS_MASK (~((1 << 11) | (1 << 7) | (1 << 6) | (1 << 4) | (1 << 2) | (1 << 0)))
++  regs[0].eflags &= EFLAGS_MASK;
++  regs[1].eflags &= EFLAGS_MASK;
++  TEST_REG(eflags, "eflags");
++  TEST_REG(eip, "eip");
++
++#define TEST_SEG_REG(reg, reg_name) \
++  do { \
++    if (regs[0].reg.sel != regs[1].reg.sel || regs[0].reg.valid != regs[1].reg.valid) { \
++      printf("COSIM ERROR: [%s] %s: 0x%04x (%d)  %s: 0x%04x (%d)\n", reg_name, SIM_NAME0, regs[0].reg.sel, regs[0].reg.valid, SIM_NAME1_STR, regs[1].reg.sel, regs[1].reg.valid); \
++      ret = 1; \
++    } \
++  } while(0)
++
++  TEST_SEG_REG(cs, "cs");
++  TEST_SEG_REG(ss, "ss");
++  TEST_SEG_REG(ds, "ds");
++  TEST_SEG_REG(es, "es");
++  TEST_SEG_REG(fs, "fs");
++  TEST_SEG_REG(gs, "gs");
++  TEST_SEG_REG(ldtr, "ldtr");
++  TEST_SEG_REG(tr, "tr");
++
++  if (regs[0].gdtr.base != regs[1].gdtr.base || regs[0].gdtr.limit != regs[1].gdtr.limit) {
++    printf("COSIM ERROR: [gdtr] %s: 0x%08x:0x%04x  %s 0x%08x:0x%04x\n",
++           SIM_NAME0, regs[0].gdtr.base, regs[0].gdtr.limit, SIM_NAME1_STR, regs[1].gdtr.base, regs[1].gdtr.limit);
++    ret = 1;
++  }
++  if (regs[0].idtr.base != regs[1].idtr.base || regs[0].idtr.limit != regs[1].idtr.limit) {
++    printf("COSIM ERROR: [idtr] %s: 0x%08x:0x%04x  %s 0x%08x:0x%04x\n",
++           SIM_NAME0, regs[0].idtr.base, regs[0].idtr.limit, SIM_NAME1_STR, regs[1].idtr.base, regs[1].idtr.limit);
++    ret = 1;
++  }
++
++  // drX ignored
++  // trX ignored
++
++  TEST_REG(cr0, "cr0");
++  TEST_REG(cr1, "cr1");
++  TEST_REG(cr2, "cr2");
++  TEST_REG(cr3, "cr3");
++  TEST_REG(cr4, "cr4");
++
++  if (regs[0].inhibit_mask != regs[1].inhibit_mask) {
++    printf("COSIM ERROR [inhibit_mask] %s: %d  %s: %d\n",
++           SIM_NAME0, regs[0].inhibit_mask, SIM_NAME1_STR, regs[1].inhibit_mask);
++    ret = 1;
++  }
++
++  if (ret) {
++    dbg_printf (
++#if BX_DBG_ICOUNT_SIZE == 32
++      "*** CPU divergence ***: last know synchronized icount was %lu\n",
++      (unsigned long) bx_debugger.last_sync_icount
++#else  // BX_DBG_ICOUNT_SIZE == 64
++      "*** CPU divergence ***: last know synchronized icount was %Lu\n",
++      (unsigned long long) bx_debugger.last_sync_icount
++#endif
++      );
++  } else if (warn) {
++    dbg_printf (
++#if BX_DBG_ICOUNT_SIZE == 32
++      "=== CPU divergence ===: last know synchronized icount was %lu\n",
++      (unsigned long) bx_debugger.last_sync_icount
++#else  // BX_DBG_ICOUNT_SIZE == 64
++      "=== CPU divergence ===: last know synchronized icount was %Lu\n",
++      (unsigned long long) bx_debugger.last_sync_icount
++#endif
++      );
++#ifdef DEBUGGER_ERROR
++    extern void DEBUGGER_ERROR(void);
++    DEBUGGER_ERROR();
++#endif
++  }
++
++  return ret;
++}
++
++void clear_dirty_bits (void)
++{
++  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
++  for (int i = 0; i < num_pages; i++) {
++    BX_MEM(0)->dbg_dirty_pages[i] = 0;
++    BX_MEM(1)->dbg_dirty_pages[i] = 0;
++  }
++}
++
++bx_bool always_check_page[128 * 1024 / 4];
++
++void bx_dbg_always_check(Bit32u page_start, bx_bool on)
++{
++  always_check_page[page_start / (4 * 1024)] = on;
++  printf("Forced check on page %08x %s\n",
++         page_start, on ? "enabled" : "disabled");
++}
++
++bx_bool bx_dbg_compare_sim_memory(void)
++{
++  bx_bool ret = 0;
++  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
++
++  for (int i = 0; i < num_pages; i++) {
++    bx_bool sim0_dirty = BX_MEM(0)->dbg_dirty_pages[i];
++    bx_bool sim1_dirty = BX_MEM(1)->dbg_dirty_pages[i];
++    Bit32u page_start = i * 1024 * 4;
++
++    if ((sim0_dirty != sim1_dirty) || sim0_dirty || always_check_page[i]) {
++      // Page has been written, compare
++      // (mch) I'm quite aware of how hackish this is. I don't care.
++      extern Bit8u* SIM1_GET_PHYS_PTR(Bit32u page_start);
++      Bit8u* sim0_page_vec = bx_mem0.vector + page_start;
++      Bit8u* sim1_page_vec = SIM1_GET_PHYS_PTR(page_start);
++
++      if (memcmp(sim0_page_vec, sim1_page_vec, 1024 * 4)) {
++        printf("COSIM ERROR  Physical page %08x differs in content\n", page_start);
++        for (int j = 0; j < 1024 * 4; j++) {
++          if (sim0_page_vec[j] != sim1_page_vec[j]) {
++            printf("%08x   %s: %02x  %s: %02x\n",
++                   page_start+j, SIM_NAME0, sim0_page_vec[j], SIM_NAME1_STR, sim1_page_vec[j]);
++          }
++        }
++        ret = 1;
++      }
++    }
++  }
++
++  if (ret) {
++    dbg_printf (
++#if BX_DBG_ICOUNT_SIZE == 32
++      "*** Memory divergence ***: last know synchronized icount was %lu\n",
++      (unsigned long) bx_debugger.last_sync_icount
++#else  // BX_DBG_ICOUNT_SIZE == 64
++      "*** Memory divergence ***: last know synchronized icount was %Lu\n",
++      (unsigned long long) bx_debugger.last_sync_icount
++#endif
++      );
++  }
++
++  clear_dirty_bits();
++
++  return ret;
++}
++
++void bx_dbg_journal_a20_event(unsigned val)
++{
++  unsigned tail, master;
++
++  if (bx_debugger.master_slave_mode == BX_DBG_SLAVE_MODE ) {
++    dbg_printf ( "Error: a20_report: in slave mode.\n");
++    bx_dbg_exit(1);
++  }
++
++  // Master simulator mode
++  if (bx_debugger.async_journal.size >= BX_DBG_ASYNC_JOURNAL_SIZE) {
++    dbg_printf ( "Error: async journal full.\n");
++    bx_dbg_exit(1);
++  }
++
++  if (bx_debugger.async_journal.size == 0) {
++    // start off point head & tail at same element
++    bx_debugger.async_journal.head = 0;
++    tail = bx_debugger.async_journal.tail = 0;
++  }
++  else {
++    tail = bx_debugger.async_journal.tail + 1;
++  }
++  if (tail >= BX_DBG_ASYNC_JOURNAL_SIZE) {
++    dbg_printf ( "Error: a20_report: journal wrapped.\n");
++    bx_dbg_exit(0);
++  }
++
++  master = bx_debugger.master;
++  bx_debugger.async_journal.element[tail].what = BX_DBG_ASYNC_JOURNAL_A20;
++  bx_debugger.async_journal.element[tail].icount = bx_guard_found[master].icount;
++  bx_debugger.async_journal.element[tail].u.a20.val = val;
++
++  if (bx_debugger.async_journal.size)
++    bx_debugger.async_journal.tail++;
++  bx_debugger.async_journal.size++;
++}
++
++Bit8u bx_dbg_ucmem_read(Bit32u addr)
++{
++  Bit8u value;
++  unsigned head, tail;
++
++  if ( bx_debugger.master_slave_mode == BX_DBG_MASTER_MODE ) {
++    if (!bx_debugger.fast_forward_mode) {
++      if (bx_debugger.UCmem_journal.size >= BX_DBG_UCMEM_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_ucmem_read: journal full.\n");
++        bx_dbg_exit(0);
++      }
++
++      if (bx_debugger.UCmem_journal.size == 0) {
++        // start off point head & tail at same element
++        bx_debugger.UCmem_journal.head = 0;
++        tail = bx_debugger.UCmem_journal.tail = 0;
++      }
++      else {
++        tail = bx_debugger.UCmem_journal.tail + 1;
++      }
++      if (tail >= BX_DBG_UCMEM_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_ucmem_read: journal wrapped.\n");
++        bx_dbg_exit(0);
++      }
++
++      value = DEV_vga_mem_read(addr);
++      bx_dbg_ucmem_report(addr, 1, BX_READ, value);
++      bx_debugger.UCmem_journal.element[tail].op    = BX_READ;
++      bx_debugger.UCmem_journal.element[tail].len   = 1;
++      bx_debugger.UCmem_journal.element[tail].addr  = addr;
++      bx_debugger.UCmem_journal.element[tail].value = value;
++      if (bx_debugger.UCmem_journal.size)
++        bx_debugger.UCmem_journal.tail++;
++      bx_debugger.UCmem_journal.size++;
++
++      if (doit)
++        dbg_printf ( "MASTER UCR: head:%u tail%u size:%u\n",
++          bx_debugger.UCmem_journal.head,
++          bx_debugger.UCmem_journal.tail,
++          bx_debugger.UCmem_journal.size);
++
++      return(value);
++    } else {
++      value = DEV_vga_mem_read(addr);
++      return(value);
++    }
++  }
++  else {
++    if (bx_debugger.UCmem_journal.size == 0) {
++      dbg_printf ( "Error: ucmem_read: journal empty.\n");
++      return(0xff);
++    }
++    head = bx_debugger.UCmem_journal.head;
++    value = bx_debugger.UCmem_journal.element[head].value;
++
++    if ((bx_debugger.UCmem_journal.element[head].op != BX_READ) ||
++        (bx_debugger.UCmem_journal.element[head].len != 1) ||
++        (bx_debugger.UCmem_journal.element[head].addr != addr))
++    {
++      dbg_printf ( "Error: ucmem_read: out of sync with journal.\n");
++      dbg_printf ( "Error: master: op=%1s len=%u addr=0x%x val=0x%x\n",
++        (bx_debugger.UCmem_journal.element[head].op==BX_READ) ? "W" : "R",
++        (unsigned) bx_debugger.UCmem_journal.element[head].len,
++        (unsigned) bx_debugger.UCmem_journal.element[head].addr,
++        (unsigned) bx_debugger.UCmem_journal.element[head].value);
++      dbg_printf ( "Error: slave:  op=W len=%u addr=0x%x val=0x%x\n",
++        (unsigned) 1, (unsigned) addr, (unsigned) value);
++      return(0xff);
++    }
++    // slave UCmem op in sync with journaled master op, delete this entry
++    bx_debugger.UCmem_journal.head++;
++    bx_debugger.UCmem_journal.size--;
++    return(value);
++  }
++}
++
++void bx_dbg_ucmem_write(Bit32u addr, Bit8u value)
++{
++  unsigned tail, head;
++
++  if ( bx_debugger.master_slave_mode == BX_DBG_MASTER_MODE ) {
++    if (!bx_debugger.fast_forward_mode) {
++      if (bx_debugger.UCmem_journal.size >= BX_DBG_UCMEM_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_ucmem_write: journal full.\n");
++        bx_dbg_exit(0);
++      }
++
++      if (bx_debugger.UCmem_journal.size == 0) {
++        // start off point head & tail at same element
++        bx_debugger.UCmem_journal.head = 0;
++        tail = bx_debugger.UCmem_journal.tail = 0;
++      }
++      else {
++        tail = bx_debugger.UCmem_journal.tail + 1;
++      }
++      if (tail >= BX_DBG_UCMEM_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_ucmem_write: journal wrapped.\n");
++        bx_dbg_exit(0);
++      }
++
++      bx_debugger.UCmem_journal.element[tail].op    = BX_WRITE;
++      bx_debugger.UCmem_journal.element[tail].len   = 1;
++      bx_debugger.UCmem_journal.element[tail].addr  = addr;
++      bx_debugger.UCmem_journal.element[tail].value = value;
++
++      if (bx_debugger.UCmem_journal.size)
++        bx_debugger.UCmem_journal.tail++;
++      bx_debugger.UCmem_journal.size++;
++      DEV_vga_mem_write(addr, value);
++      bx_dbg_ucmem_report(addr, 1, BX_WRITE, value);
++    } else {
++      DEV_vga_mem_write(addr, value);
++    }
++  }
++  else {
++    if (bx_debugger.UCmem_journal.size == 0) {
++      dbg_printf ( "Error: ucmem_write: journal empty.\n");
++      return;
++    }
++    head = bx_debugger.UCmem_journal.head;
++
++    if ((bx_debugger.UCmem_journal.element[head].op != BX_WRITE) ||
++        (bx_debugger.UCmem_journal.element[head].len != 1) ||
++        (bx_debugger.UCmem_journal.element[head].addr != addr) ||
++        (bx_debugger.UCmem_journal.element[head].value != value) )
++    {
++      dbg_printf ( "Error: ucmem_write: out of sync with journal.\n");
++      dbg_printf ( "Error: master: op=%1s len=%u addr=0x%x val=0x%x\n",
++        (bx_debugger.UCmem_journal.element[head].op==BX_WRITE) ? "W" : "R",
++        (unsigned) bx_debugger.UCmem_journal.element[head].len,
++        (unsigned) bx_debugger.UCmem_journal.element[head].addr,
++        (unsigned) bx_debugger.UCmem_journal.element[head].value);
++      dbg_printf ( "Error: slave:  op=W len=%u addr=0x%x val=0x%x\n",
++        (unsigned) 1, (unsigned) addr, (unsigned) value);
++      return;
++    }
++    // slave UCmem op in sync with journaled master op, delete this entry
++    bx_debugger.UCmem_journal.head++;
++    bx_debugger.UCmem_journal.size--;
++  }
++}
++
++void bx_dbg_async_pin_request(unsigned what, bx_bool val)
++{
++  // Request from IO devices for change in pin external to CPU.
++  // This is pended until CPU ack's with bx_dbg_async_pin_ack().
++
++  if (bx_debugger.master_slave_mode != BX_DBG_MASTER_MODE) {
++    dbg_printf ( "Error: dbg_async_pin_request not in master mode.\n");
++    bx_dbg_exit(1);
++  }
++
++  switch (what) {
++    case BX_DBG_ASYNC_PENDING_A20:
++      // Q pending status
++      bx_guard.async_changes_pending.which |= BX_DBG_ASYNC_PENDING_A20;
++      bx_guard.async_changes_pending.a20    = val;
++      return;
++
++    case BX_DBG_ASYNC_PENDING_RESET:
++    case BX_DBG_ASYNC_PENDING_NMI:
++    default:
++      dbg_printf ( "Error: set_async_pin: unhandled case.\n");
++      bx_dbg_exit(1);
++  }
++}
++
++
++void bx_dbg_async_pin_ack(unsigned what, bx_bool val)
++{
++  // Acknowledgement from master simulator for pending change in pin
++  // external to CPU.
++
++  if (bx_debugger.master_slave_mode != BX_DBG_MASTER_MODE) {
++    dbg_printf ( "Error: dbg_async_pin_ack: not master mode.\n");
++    bx_dbg_exit(1);
++  }
++
++  switch (what) {
++    case BX_DBG_ASYNC_PENDING_A20:
++      // get rid of pending status
++      bx_guard.async_changes_pending.which &= ~BX_DBG_ASYNC_PENDING_A20;
++      // notify pc_system of change
++      bx_pc_system.set_enable_a20(val);
++      if (BX_CPU(bx_debugger.master)->set_A20)
++        BX_CPU(bx_debugger.master)->set_A20(val);
++      bx_dbg_journal_a20_event(val);
++      return;
++
++    case BX_DBG_ASYNC_PENDING_RESET:
++    case BX_DBG_ASYNC_PENDING_NMI:
++    default:
++      dbg_printf ( "Error: set_async_pin: unhandled case.\n");
++      bx_dbg_exit(1);
++  }
++}
++
++Bit32u bx_dbg_inp(Bit16u addr, unsigned len)
++{
++  Bit32u value;
++  unsigned tail, head;
++
++  if ( bx_debugger.master_slave_mode == BX_DBG_MASTER_MODE ) {
++    if (!bx_debugger.fast_forward_mode) {
++      if (bx_debugger.IO_journal.size >= BX_DBG_IO_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_inp: journal full.\n");
++        bx_dbg_exit(0);
++      }
++
++      if (bx_debugger.IO_journal.size == 0) {
++        // start off point head & tail at same element
++        bx_debugger.IO_journal.head = 0;
++        tail = bx_debugger.IO_journal.tail = 0;
++      }
++      else {
++        tail = bx_debugger.IO_journal.tail + 1;
++      }
++      if (tail >= BX_DBG_IO_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_inp: journal wrapped.\n");
++        bx_dbg_exit(0);
++      }
++
++      value = bx_pc_system.inp(addr, len);
++      bx_debugger.IO_journal.element[tail].op    = BX_READ;
++      bx_debugger.IO_journal.element[tail].len   = (Bit8u) len;
++      bx_debugger.IO_journal.element[tail].addr  = addr;
++      bx_debugger.IO_journal.element[tail].value = value;
++      if (bx_debugger.IO_journal.size)
++        bx_debugger.IO_journal.tail++;
++      bx_debugger.IO_journal.size++;
++//dbg_printf ( "MASTER IN: head:%u tail%u size:%u\n",
++//  bx_debugger.IO_journal.head,
++//  bx_debugger.IO_journal.tail,
++//  bx_debugger.IO_journal.size);
++      return(value);
++    } else {
++      value = bx_pc_system.inp(addr, len);
++      return(value);
++    }
++  }
++  else {
++    if (bx_debugger.IO_journal.size == 0) {
++      dbg_printf ( "Error: dbg_inp: journal empty.\n");
++      return(0xffffffff);
++    }
++    head = bx_debugger.IO_journal.head;
++    value = bx_debugger.IO_journal.element[head].value;
++
++    if ((bx_debugger.IO_journal.element[head].op != BX_READ) ||
++        (bx_debugger.IO_journal.element[head].len != len) ||
++        (bx_debugger.IO_journal.element[head].addr != addr) ) {
++      dbg_printf ( "Error: dbg_inp: out of sync with journal.\n");
++      dbg_printf ( "Error: master: op=%3s len=%u addr=0x%x\n",
++        (bx_debugger.IO_journal.element[head].op==BX_WRITE) ? "OUT" : "IN",
++        (unsigned) bx_debugger.IO_journal.element[head].len,
++        (unsigned) bx_debugger.IO_journal.element[head].addr);
++      dbg_printf ( "Error: slave:  op=OUT len=%u addr=0x%x\n",
++        (unsigned) len, (unsigned) addr);
++      return(0xffffffff);
++    }
++    // slave IO op in sync with journaled master op, delete this entry
++    bx_debugger.IO_journal.head++;
++    bx_debugger.IO_journal.size--;
++// dbg_printf ( "SLAVE   IN: head:%u tail%u size:%u\n",
++//   bx_debugger.IO_journal.head,
++//   bx_debugger.IO_journal.tail,
++//   bx_debugger.IO_journal.size);
++    return(value);
++  }
++}
++
++void bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len)
++{
++  unsigned tail, head;
++
++  if ( bx_debugger.master_slave_mode == BX_DBG_MASTER_MODE ) {
++    if (!bx_debugger.fast_forward_mode) {
++      if (bx_debugger.IO_journal.size >= BX_DBG_IO_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_outp: IO journal full.\n");
++        bx_dbg_exit(0);
++      }
++
++      if (bx_debugger.IO_journal.size == 0) {
++        // start off point head & tail at same element
++        bx_debugger.IO_journal.head = 0;
++        tail = bx_debugger.IO_journal.tail = 0;
++      }
++      else {
++        tail = bx_debugger.IO_journal.tail + 1;
++      }
++      if (tail >= BX_DBG_IO_JOURNAL_SIZE) {
++        dbg_printf ( "dbg_outp: IO journal wrapped.\n");
++        bx_dbg_exit(0);
++      }
++
++      bx_debugger.IO_journal.element[tail].op    = BX_WRITE;
++      bx_debugger.IO_journal.element[tail].len   = (Bit8u) len;
++      bx_debugger.IO_journal.element[tail].addr  = addr;
++      bx_debugger.IO_journal.element[tail].value = value;
++      if (bx_debugger.IO_journal.size)
++        bx_debugger.IO_journal.tail++;
++      bx_debugger.IO_journal.size++;
++      bx_pc_system.outp(addr, value, len);
++      if (doit)
++        dbg_printf ( "master: IO journal size now %u\n", bx_debugger.IO_journal.size);
++    } else {
++      bx_pc_system.outp(addr, value, len);
++    }
++  }
++  else {
++    if (bx_debugger.IO_journal.size == 0) {
++      dbg_printf ( "Error: dbg_outp: journal empty.\n");
++      return;
++    }
++    head = bx_debugger.IO_journal.head;
++
++    if ((bx_debugger.IO_journal.element[head].op != BX_WRITE) ||
++        (bx_debugger.IO_journal.element[head].len != len) ||
++        (bx_debugger.IO_journal.element[head].addr != addr) ||
++        (bx_debugger.IO_journal.element[head].value != value) ) {
++      dbg_printf ( "Error: dbg_outp: out of sync with journal.\n");
++      dbg_printf ( "Error: master: op=%3s len=%u addr=0x%x val=0x%x\n",
++        (bx_debugger.IO_journal.element[head].op==BX_WRITE) ? "OUT" : "IN",
++        (unsigned) bx_debugger.IO_journal.element[head].len,
++        (unsigned) bx_debugger.IO_journal.element[head].addr,
++        (unsigned) bx_debugger.IO_journal.element[head].value);
++      dbg_printf ( "Error: slave:  op=OUT len=%u addr=0x%x val=0x%x\n",
++        (unsigned) len, (unsigned) addr, (unsigned) value);
++      return;
++    }
++    // slave IO op in sync with journaled master op, delete this entry
++    bx_debugger.IO_journal.head++;
++    bx_debugger.IO_journal.size--;
++    if (doit)
++      dbg_printf ( "slave: IO journal size now %u\n", bx_debugger.IO_journal.size);
++  }
++}
++
++void bx_dbg_raise_HLDA(void)
++{
++  dbg_printf ( "dbg_HLDA called\n");
++  bx_dbg_exit(0);
++}
++
++Bit8u bx_dbg_IAC(void)
++{
++  // Convience routine.  bochs skips this, and calls the PIC code
++  // directly.  This is for other simulators to interface to the
++  // the PIC code.
++  unsigned iac;
++
++  iac = BX_PIC_AIC ();
++  return(iac);
++}
++
++void bx_dbg_set_INTR(bx_bool b)
++{
++  if ( bx_debugger.master_slave_mode == BX_DBG_SLAVE_MODE ) {
++    dbg_printf ( "Error: set_INTR in slave mode.\n");
++    bx_dbg_exit(1);
++  }
++
++  bx_pc_system.INTR = b;
++  BX_CPU(bx_debugger.master)->set_INTR(b);
++}
++
++#endif
++
++void bx_dbg_diff_memory(void)
++{
++#if BX_NUM_SIMULATORS < 2
++  printf("diff-memory supported only in cosimulation mode\n");
++#else
++  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
++  for (int i = 0; i < num_pages; i++) {
++    BX_CPU(dbg_cpu)->dbg_dirty_pages[i] = 1;
++  }
++  if (bx_dbg_compare_sim_memory())
++    printf("[diff-memory] Diff detected\n");
++  else
++    printf("[diff-memory] No diff detected\n");
++#endif /* NUM_SIMULATORS < 2 */
++}
++
++void bx_dbg_sync_memory(bx_bool set)
++{
++#if BX_NUM_SIMULATORS < 2
++  printf("sync-memory supported only in cosimulation mode\n");
++#else
++  bx_debugger.compare_at_sync.memory = set;
++  printf("Memory sync %s\n", (set) ? "enabled" : "disabled");
++#endif
++}
++
++void bx_dbg_sync_cpu(bx_bool set)
++{
++#if BX_NUM_SIMULATORS < 2
++  printf("sync-cpu supported only in cosimulation mode\n");
++#else
++  bx_debugger.compare_at_sync.cpu = set;
++  printf("Register file sync %s\n", (set) ? "enabled" : "disabled");
++#endif
++}
++
++void bx_dbg_fast_forward(Bit32u num)
++{
++#if BX_NUM_SIMULATORS < 2
++  printf("fast-forward supported only in cosimulation mode\n");
++#else
++  printf("Entering fast-forward mode\n");
++
++  // Bit32u save_icount_quantum = bx_debugger.icount_quantum;
++  // bx_debugger.icount_quantum = num;
++
++  bx_guard.interrupt_requested = 0;
++
++  bx_debugger.fast_forward_mode = 1;
++  for (Bit32u e = 0; e < num; e += bx_debugger.icount_quantum)
++    if (!bx_dbg_cosimulateN(bx_debugger.icount_quantum))
++      break;
++  bx_debugger.fast_forward_mode = 0;
++  // bx_debugger.icount_quantum = save_icount_quantum;
++
++  DEV_vga_refresh();
++
++  printf("Copying CPU...\n");
++  bx_dbg_cpu_t cpu;
++  if (!BX_CPU(0)->dbg_get_cpu(&cpu) || !BX_CPU(1)->dbg_set_cpu(&cpu))
++    printf("Error copying CPU data!\n");
++
++  printf("Copying memory...\n");
++  int num_pages = bx_options.memory.Osize->get () * 1024 / 4;
++  for (int i = 0; i < num_pages; i++) {
++    if (BX_CPU(0)->dbg_dirty_pages[i]) {
++      Bit32u page_start = i * 1024 * 4;
++      printf("Copying page %08x\n", page_start);
++      extern Bit8u* SIM1_GET_PHYS_PTR(Bit32u page_start);
++      Bit8u* sim0_page_vec = bx_mem0.vector + page_start;
++      Bit8u* sim1_page_vec = SIM1_GET_PHYS_PTR(page_start);
++      memcpy(sim1_page_vec, sim0_page_vec, 1024 * 4);
++    }
++  }
++
++  printf("Taking async events...\n");
++
++  printf("Exiting fast-forward mode\n");
++#endif
++}
++
++extern Bit32u conv_4xBit8u_to_Bit32u(const Bit8u* buf);
++
++/*
++  (mch) Print various info for logical address.
++*/
++void bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset)
++{
++#if BX_NUM_SIMULATORS < 2
++  printf("addr-info only supported in cosim configuration.\n");
++#else
++  for (int sim = 0; sim < 2; sim++) 
++  {
++    /* Find page table base address */
++    bx_dbg_cpu_t regs;
++    BX_CPU(sim)->dbg_get_cpu(&regs);
++    Bit32u base = regs.cr3 & ~0xfff;
++
++    Bit8u buf[4];
++    Bit32u directory_addr = base + (offset >> 22) * 4;
++    Bit32u directory;
++    if (BX_CPU(sim)->mem->dbg_fetch_mem(directory_addr, 4, buf)) {
++      directory = conv_4xBit8u_to_Bit32u(buf);
++      Bit32u table_addr = (directory & ~0xfff) + ((offset >> 12) & 0x3ff) * 4;
++      Bit32u table;
++
++      printf("[%s] ", SIM_NAME(sim));
++      printf("PDE: %08x (", directory);
++      printf("%s,  %s, %s, %s, %s)",
++             (directory & 1) ? "Present" : "Not present",
++             (directory & 2) ? "Read/Write" : "Read-only",
++             (directory & 4) ? "User" : "Supervisor",
++             (directory & (1 << 5)) ? "Accessed" : "-",
++             (directory & (1 << 6)) ? "Dirty" : "-");
++
++      if (directory & 1) {
++        if (BX_CPU(sim)->mem->dbg_fetch_mem(table_addr, 4, buf)) {
++          table = conv_4xBit8u_to_Bit32u(buf);
++
++          printf(", PTE: %08x (", table);
++          printf("%s,  %s, %s, %s, %s)\n",
++                 (table & 1) ? "Present" : "Not present",
++                 (table & 2) ? "Read/Write" : "Read-only",
++                 (table & 4) ? "User" : "Supervisor",
++                 (table & (1 << 5)) ? "Accessed" : "-",
++                 (table & (1 << 6)) ? "Dirty" : "-");
++        } else {
++          printf("[%s] Could not read from physical address %08x\n",
++                 SIM_NAME(sim), directory_addr);
++          return;
++        }
++      } else {
++        printf("\n");
++      }
++    } else {
++      printf("[%s] Could not read from physical address %08x\n",
++             SIM_NAME(sim), directory_addr);
++      return;
++    }
++  }
++#endif
++}
+diff -uBbwNpr bochs-nocosim/bx_debug/dbg_main.cc bochs/bx_debug/dbg_main.cc
+--- bochs-nocosim/bx_debug/dbg_main.cc	2006-01-25 22:57:42.921875000 +0200
++++ bochs/bx_debug/dbg_main.cc	2006-01-25 23:39:08.937500000 +0200
+@@ -45,8 +45,18 @@ extern "C" {
+ }
+ #endif
+ 
++
++static unsigned doit = 0;
++
++#define SIM_NAME0 "bochs"
++#ifndef SIM_NAME1_STR
++#define SIM_NAME1_STR "sim1"
++#endif
++#define SIM_NAME(x) ((x == 0) ? SIM_NAME0 : SIM_NAME1_STR)
++
+ // default CPU in the debugger.  For commands like "dump_cpu" it will
+ // use the default instead of always dumping all cpus.
++
+ Bit32u dbg_cpu = 0;
+ 
+ bx_param_bool_c *sim_running;
+@@ -58,9 +68,87 @@ static char tmp_buf_prev[512];
+ static char *tmp_buf_ptr;
+ static char *argv0 = NULL;
+ 
++#if BX_NUM_SIMULATORS >= 2
++#define BX_DBG_IO_JOURNAL_SIZE        1024
++#define BX_DBG_UCMEM_JOURNAL_SIZE     1024
++#define BX_DBG_ASYNC_JOURNAL_SIZE     1024
++#define BX_DBG_MASTER_MODE              10
++#define BX_DBG_SLAVE_MODE               11
++// #define BX_DBG_DEFAULT_ICOUNT_QUANTUM   50
++#define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
++
++static unsigned bx_dbg_cosimulateN(bx_dbg_icount_t count);
++static int      bx_dbg_compare_sim_iaddr(void);
++static bx_bool  bx_dbg_compare_sim_cpu(void);
++static bx_bool  bx_dbg_compare_sim_memory(void);
++static void     bx_dbg_journal_a20_event(unsigned val);
++#endif
++
+ static FILE *debugger_log = NULL;
+ 
+ static struct {
++#if BX_NUM_SIMULATORS >= 2
++  // some fields used only for cosimulation
++  unsigned icount_quantum;
++  unsigned master_slave_mode;
++  unsigned master, slave;
++  struct {
++    struct {
++      Bit8u    op;
++      Bit8u    len;
++      Bit16u   addr;
++      Bit32u   value;
++    } element[BX_DBG_IO_JOURNAL_SIZE];
++    unsigned size;
++    unsigned head, tail;
++  } IO_journal;
++
++  struct {
++    struct {
++      Bit8u    op;
++      Bit8u    len;
++      Bit32u   addr;
++      Bit32u   value;
++    } element[BX_DBG_UCMEM_JOURNAL_SIZE];
++    unsigned size;
++    unsigned head, tail;
++  } UCmem_journal;
++
++// need to handle DMA stuff in here...
++
++#define BX_DBG_ASYNC_JOURNAL_NONE   0
++#define BX_DBG_ASYNC_JOURNAL_A20    1
++#define BX_DBG_ASYNC_JOURNAL_IAC    2
++#define BX_DBG_ASYNC_JOURNAL_NMI    3
++#define BX_DBG_ASYNC_JOURNAL_RESET  4
++
++  // Asynchronous events at the boundaries they are *taken* by the master simulator.
++  // These are replayed back to the slave at the same boundaries.
++  struct {
++    struct {
++      unsigned        what; // A20, INTR, NMI, RESET, IAC, ...
++      bx_dbg_icount_t icount;
++      union {
++        struct {
++          unsigned val;
++        } a20, nmi, reset, iac;
++        // perhaps other more complex types here
++      } u;
++    } element[BX_DBG_ASYNC_JOURNAL_SIZE];
++    unsigned size;
++    unsigned head, tail;
++  } async_journal;
++
++  struct {
++    bx_bool iaddr;
++    bx_bool cpu;
++    bx_bool memory;
++  } compare_at_sync;
++
++  bx_bool fast_forward_mode;
++
++#endif  // #if BX_NUM_SIMULATORS >= 2
++
+   // some fields used for single CPU debugger
+   bx_bool  auto_disassemble;
+   unsigned disassemble_size;
+@@ -77,7 +165,19 @@ static struct {
+ #endif
+ } bx_debugger;
+ 
+-#define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
++
++
++// cosim commands for handling of comparison of simulator
++// environments when both simulators have reached a common
++// point (synchronized).
++
++// cosim compare_at_sync iaddr  (default is on)
++// cosim compare_at_sync cpu    (default is off)
++// cosim compare_at_sync memory (default is off)
++// cosim compare iaddr
++// cosim compare cpu
++// cosim compare memory
++
+ 
+ typedef struct {
+   FILE    *fp;
+@@ -97,8 +197,10 @@ static void bx_get_command(void);
+ static void bx_dbg_print_guard_results();
+ static void bx_dbg_breakpoint_changed(void);
+ 
++bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
+ bx_guard_t        bx_guard;
+ 
++
+ // DMA stuff
+ void bx_dbg_post_dma_reports(void);
+ #define BX_BATCH_DMA_BUFSIZE 512
+@@ -138,8 +240,10 @@ void dbg_printf (const char *fmt, ...)
+ 
+ int bx_dbg_main(int argc, char *argv[])
+ {
+-  int i, bochs_argc=0;
++  int i, bochs_argc=0, sim1_argc=0, sim2_argc=0;
+   char **bochs_argv = NULL;
++  char **sim1_argv = NULL;
++  char **sim2_argv = NULL;
+   argc = 1;
+   
+   setbuf (stdout, NULL);
+@@ -148,11 +252,29 @@ int bx_dbg_main(int argc, char *argv[])
+   bx_dbg_batch_dma.this_many = 1;
+   bx_dbg_batch_dma.Qsize     = 0;
+ 
++  // initialize callback functions, and guard environment
++  memset(bx_dbg_callback, 0, sizeof(bx_dbg_callback));
+   memset(&bx_guard, 0, sizeof(bx_guard));
+   bx_guard.async.irq = 1;
+   bx_guard.async.dma = 1;
+ 
+   memset(&bx_debugger, 0, sizeof(bx_debugger));
++#if BX_NUM_SIMULATORS >= 2
++  bx_debugger.icount_quantum = BX_DBG_DEFAULT_ICOUNT_QUANTUM;
++  bx_debugger.IO_journal.size = 0;
++  bx_debugger.IO_journal.head = 0;
++  bx_debugger.IO_journal.tail = 0;
++  bx_debugger.UCmem_journal.size = 0;
++  bx_debugger.UCmem_journal.head = 0;
++  bx_debugger.UCmem_journal.tail = 0;
++  bx_debugger.async_journal.size = 0;
++  bx_debugger.async_journal.head = 0;
++  bx_debugger.async_journal.tail = 0;
++  bx_debugger.master = 0;
++  bx_debugger.slave  = 1;
++  bx_debugger.compare_at_sync.iaddr  = 1;
++  bx_debugger.fast_forward_mode = 0;
++#endif
+   bx_debugger.auto_disassemble = 1;
+   bx_debugger.disassemble_size = 0;
+   bx_debugger.default_display_format = 'x';
+@@ -166,7 +289,11 @@ int bx_dbg_main(int argc, char *argv[])
+   bx_debug_rc_fname[0] = '\0';
+ 
+   bochs_argv = (char **) &argv[0];
++  sim1_argv = bochs_argv;  // start out with something reasonable
++  sim2_argv = bochs_argv;  // start out with something reasonable
+   bochs_argc = 1;
++  sim1_argc = 1;
++  sim2_argc = 1;
+ 
+   // process "-rc pathname" option, if it exists
+   i = 1;
+@@ -182,6 +309,41 @@ int bx_dbg_main(int argc, char *argv[])
+     bochs_argv = (char **) &argv[2];
+   }
+ 
++  // process options to bochs framework
++  for (; i<argc; i++) {
++    if (strcmp(argv[i], "-sim1") == 0) {
++      break;
++    }
++    else if (strcmp(argv[i], "-sim2") == 0) {
++      break;
++    }
++    bochs_argc++;
++  }
++
++  if (i<argc) {  // more args to process
++    // process options to each CPU simulator
++    if (strcmp(argv[i], "-sim1") == 0) {
++process_sim1:
++      sim1_argv = (char **) &argv[i];
++      i++;
++      for (; i<argc; i++) {
++        if (strcmp(argv[i], "-sim2") == 0)
++          goto process_sim2;
++        sim1_argc++;
++      }
++    }
++    else if (strcmp(argv[i], "-sim2") == 0) {
++process_sim2:
++      sim2_argv = (char **) &argv[i];
++      i++;
++      for (; i<argc; i++) {
++        if (strcmp(argv[i], "-sim1") == 0)
++          goto process_sim1;
++        sim2_argc++;
++      }
++    }
++  }
++
+   bx_infile_stack_index = 0;
+   bx_infile_stack[0].fp = stdin;
+   strncpy(bx_infile_stack[0].fname, argv[0], BX_MAX_PATH);
+@@ -215,13 +377,36 @@ int bx_dbg_main(int argc, char *argv[])
+   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
+ #endif
+ 
++  BX_SIM1_INIT(&bx_dbg_callback[0], sim1_argc, sim1_argv);
++#if BX_NUM_SIMULATORS >= 2
++  BX_SIM2_INIT(&bx_dbg_callback[1], sim2_argc, sim2_argv);
++#endif
++
+   // parse any remaining args in the usual way
+   bx_parse_cmdline (1, bochs_argc, bochs_argv);
+ 
+   // initialize hardware
+   bx_init_hardware();
+ 
+-  // Moved from main.cc
++#if BX_NUM_SIMULATORS >= 2
++  bx_debugger.compare_at_sync.cpu    = 0;
++  bx_debugger.compare_at_sync.memory = 0;
++#endif
++
++  // call init routines for each CPU+mem simulator
++  // initialize for SMP. one memory, multiple processors.
++
++#if BX_NUM_SIMULATORS > 1
++#error cosimulation not supported until SMP stuff settles
++  BX_MEM(1) = new BX_MEM_C ();
++  BX_CPU(1) = new BX_CPU_C (BX_MEM(1));
++  BX_CPU(1)->reset(BX_RESET_HARDWARE);
++  BX_MEM(1)->init_memory(bx_options.memory.Osize->get () * 1024*1024);
++  BX_MEM(1)->load_ROM(bx_options.rom.path->getptr (), bx_options.rom.address->get (), 1);
++  BX_MEM(1)->load_ROM(bx_options.vgarom.path->getptr (), 0xc0000, 2);
++#endif
++
++  // (mch) Moved from main.cc
+   DEV_init_devices();
+   DEV_reset_devices(BX_RESET_HARDWARE);
+   bx_gui->init_signal_handlers ();
+@@ -524,11 +709,16 @@ void  bx_debug_break ()
+ 
+ void bx_dbg_exit(int code)
+ {
+-  BX_DEBUG(("dbg: before exit" ));
++  BX_DEBUG(("dbg: before sim1_exit" ));
+   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
+   }
+ 
++#if BX_NUM_SIMULATORS >= 2
++  dbg_printf("before sim2_exit\n");
++  if (BX_CPU(1)) BX_CPU(1)->atexit();
++#endif
++
+   bx_atexit();
+   BX_EXIT(code);
+ }
+@@ -570,6 +761,17 @@ void bx_dbg_trace_reg_off_command(void)
+ void bx_dbg_ptime_command(void)
+ {
+   dbg_printf("ptime: " FMT_LL "d\n", bx_pc_system.time_ticks());
++#if BX_NUM_SIMULATORS >= 2
++  dbg_printf (
++#if BX_DBG_ICOUNT_SIZE == 32
++    "Last synchronized icount was %lu\n",
++    (unsigned long) bx_debugger.last_sync_icount
++#else  // BX_DBG_ICOUNT_SIZE == 64
++    "Last synchronized icount was %Lu\n",
++    (unsigned long long) bx_debugger.last_sync_icount
++#endif /* BX_DBG_ICOUNT_SIZE == 32 */
++  );
++#endif /* BX_NUM_SIMULATORS >= 2 */
+ }
+ 
+ int timebp_timer = -1;
+@@ -1041,6 +1243,14 @@ void bx_dbg_continue_command(void)
+ 
+ one_more:
+ 
++#if BX_NUM_SIMULATORS >= 2
++  bx_guard.interrupt_requested = 0;
++  bx_guard.special_unwind_stack = 0;
++  while (1) {
++    if ( !bx_dbg_cosimulateN(bx_debugger.icount_quantum) )
++      break;
++    }
++#else
+   bx_guard.icount = 0;
+   // I must guard for ICOUNT or one CPU could run forever without giving
+   // the others a chance.
+@@ -1115,6 +1325,7 @@ one_more:
+     BX_TICKN(max_executed);
+ #endif /* BX_SUPPORT_SMP */
+   }
++#endif /* BX_NUM_SIMULATORS */
+ 
+   sim_running->set (0);
+   SIM->refresh_ci ();
+@@ -1141,6 +1352,11 @@ void bx_dbg_stepN_command(bx_dbg_icount_
+   // is printed, we will return to config mode.
+   SIM->set_display_mode (DISP_MODE_SIM);
+ 
++#if BX_NUM_SIMULATORS >= 2
++  bx_guard.interrupt_requested = 0;
++  bx_guard.special_unwind_stack = 0;
++  bx_dbg_cosimulateN(count);
++#else
+   // single CPU
+   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
+   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
+@@ -1159,6 +1375,7 @@ void bx_dbg_stepN_command(bx_dbg_icount_
+     BX_TICK1 ();
+ #endif
+   }
++#endif
+ 
+   BX_INSTR_DEBUG_PROMPT();
+   bx_dbg_print_guard_results();
+@@ -1822,7 +2039,7 @@ void dbg_printf_binary (char *format, Bi
+ }
+ 
+ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+-               Bit32u addr, bx_bool addr_passed)
++               Bit32u addr, bx_bool addr_passed, int simulator)
+ {
+   unsigned repeat_count, i;
+   char ch, display_format, unit_size;
+@@ -1837,7 +2054,10 @@ void bx_dbg_examine_command(char *comman
+   bx_bool is_linear;
+   unsigned char databuf[8];
+ 
+-  printf("[bochs]:\n");
++  if (simulator == 0)
++    printf("[%s]:\n", SIM_NAME0);
++  else
++    printf("[%s]:\n", SIM_NAME1_STR);
+ 
+   // If command was the extended "xp" command, meaning eXamine Physical memory,
+   // then flag memory address as physical, rather than linear.
+@@ -1934,6 +2154,10 @@ void bx_dbg_examine_command(char *comman
+     bx_debugger.default_unit_size      = unit_size;
+   }
+ 
++  //dbg_printf("  repeat count was %u\n", repeat_count);
++  //dbg_printf("  display_format = '%c'\n", display_format);
++  //dbg_printf("  unit_size      = '%c'\n", unit_size);
++
+   if ( (display_format == 'i') || (display_format == 's') ) {
+     dbg_printf("error: dbg_examine: 'i' and 's' formats not supported.\n");
+     return;
+@@ -1996,7 +2220,7 @@ void bx_dbg_examine_command(char *comman
+       dbg_printf(" ");
+ 
+     if (is_linear) {
+-      BX_CPU(0)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
++      BX_CPU(simulator)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
+       if (!paddr_valid) {
+         dbg_printf("error: examine memory: no tranlation for linear-to-phy mem available.\n");
+         return;
+@@ -2006,7 +2230,7 @@ void bx_dbg_examine_command(char *comman
+       paddr = addr;  // address is already physical address
+     }
+ 
+-    BX_MEM(0)->dbg_fetch_mem(paddr, data_size, databuf);
++    BX_MEM(simulator)->dbg_fetch_mem(paddr, data_size, databuf);
+     //FIXME HanishKVC The char display for data to be properly integrated
+     //      so that repeat_count, columns, etc. can be set or used properly.
+     //      Also for data_size of 2 and 4 how to display the individual
+@@ -2564,6 +2788,42 @@ void bx_dbg_instrument_command(const cha
+ #endif
+ }
+ 
++void bx_dbg_loader_command(char *path_quoted)
++{
++  size_t len;
++
++  // skip beginning double quote
++  if (path_quoted[0] == '"')
++    path_quoted++;
++
++  // null out ending quote
++  len = strlen(path_quoted);
++  if (path_quoted[len - 1] == '"')
++    path_quoted[len - 1] = '\0';
++
++#if BX_USE_LOADER
++  {
++    bx_loader_misc_t loader_misc;
++    bx_dbg_callback[0].loader(path_quoted, &loader_misc);
++#if 0
++    dbg_printf("dr0: 0x%08x\n", loader_misc.dr0);
++    dbg_printf("dr1: 0x%08x\n", loader_misc.dr1);
++    dbg_printf("dr2: 0x%08x\n", loader_misc.dr2);
++    dbg_printf("dr3: 0x%08x\n", loader_misc.dr3);
++    dbg_printf("dr6: 0x%08x\n", loader_misc.dr6);
++    dbg_printf("dr7: 0x%08x\n", loader_misc.dr7);
++#endif
++    bx_cpu.dr0 = loader_misc.dr0;
++    bx_cpu.dr1 = loader_misc.dr1;
++    bx_cpu.dr2 = loader_misc.dr2;
++    bx_cpu.dr3 = loader_misc.dr3;
++    bx_cpu.dr7 = loader_misc.dr7;
++  }
++#else
++  dbg_printf("Error: loader not implemented.\n");
++#endif
++}
++
+ void bx_dbg_doit_command(unsigned n)
+ {
+   // generic command to add temporary hacks to
+@@ -2584,10 +2844,24 @@ void bx_dbg_crc_command(Bit32u addr1, Bi
+   }
+ 
+   if (!BX_MEM(0)->dbg_crc32(crc32, addr1, addr2, &crc1)) {
+-    dbg_printf("could not CRC memory\n");
++    dbg_printf("sim0: could not CRC memory\n");
+     return;
+   }
++#if BX_NUM_SIMULATORS == 1
+   dbg_printf("0x%lx\n", crc1);
++#else
++  if (!BX_MEM(1)->dbg_crc32(crc32, addr1, addr2, &crc2)) {
++    dbg_printf("sim1: could not CRC memory\n");
++    return;
++  }
++  if (crc1 == crc2) {
++    dbg_printf("CRC same: 0x%x\n", (unsigned) crc1);
++  }
++  else {
++    dbg_printf("CRC different: sim0=0x%x, sim1=0x%x\n",
++            (unsigned) crc1, (unsigned) crc2);
++  }
++#endif
+ }
+ 
+ void bx_dbg_info_dirty_command(void)
+@@ -2931,10 +3205,51 @@ void bx_dbg_info_vga()
+ 
+ void bx_dbg_iac_report(unsigned vector, unsigned irq)
+ {
++#if BX_NUM_SIMULATORS > 1
++  unsigned tail, master;
++#endif
++
++if (doit) dbg_printf("iac report: vector=%u\n", vector);
++
+   if (bx_guard.report.irq) {
+     dbg_printf("event icount=%u IRQ irq=%u vec=%x\n",
+       (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, irq, vector);
+   }
++
++#if BX_NUM_SIMULATORS > 1
++  if (bx_debugger.master_slave_mode == BX_DBG_SLAVE_MODE ) {
++    dbg_printf("Error: iac_report: in slave mode.\n");
++    bx_dbg_exit(1);
++  }
++
++  // Master simulator mode
++  if (bx_debugger.async_journal.size >= BX_DBG_ASYNC_JOURNAL_SIZE) {
++    dbg_printf("Error: iac: async journal full.\n");
++    bx_dbg_exit(1);
++  }
++
++  if (bx_debugger.async_journal.size == 0) {
++    // start off point head & tail at same element
++    bx_debugger.async_journal.head = 0;
++    tail = bx_debugger.async_journal.tail = 0;
++  }
++  else {
++    tail = bx_debugger.async_journal.tail + 1;
++  }
++  if (tail >= BX_DBG_ASYNC_JOURNAL_SIZE) {
++    dbg_printf("Error: iac_report: journal wrapped.\n");
++    bx_dbg_exit(0);
++  }
++
++  master = bx_debugger.master;
++  bx_debugger.async_journal.element[tail].what = BX_DBG_ASYNC_JOURNAL_IAC;
++  bx_debugger.async_journal.element[tail].icount = bx_guard_found[master].icount;
++  bx_debugger.async_journal.element[tail].u.iac.val = vector;
++
++  if (bx_debugger.async_journal.size)
++    bx_debugger.async_journal.tail++;
++  bx_debugger.async_journal.size++;
++#endif
+ }
+ 
+ void bx_dbg_a20_report(unsigned val)
+@@ -2955,6 +3270,8 @@ void bx_dbg_io_report(Bit32u addr, unsig
+       (op==BX_READ) ? "read" : "write",
+       (unsigned) val);
+   }
++
++  // nothing else to do.  bx_dbg_inp() and bx_dbg_outp() do the journaling.
+ }
+ 
+ void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
+@@ -2967,6 +3284,8 @@ void bx_dbg_ucmem_report(Bit32u addr, un
+       (op==BX_READ) ? "read" : "write",
+       (unsigned) val);
+   }
++  // nothing else to do.  bx_dbg_ucmem_read() and bx_dbg_ucmem_write()
++  // do the journaling.
+ }
+ 
+ void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val)
+diff -uBbwNpr bochs-nocosim/bx_debug/debug.h bochs/bx_debug/debug.h
+--- bochs-nocosim/bx_debug/debug.h	2006-01-25 22:58:39.187500000 +0200
++++ bochs/bx_debug/debug.h	2006-01-25 23:35:58.671875000 +0200
+@@ -29,6 +29,11 @@
+ #include "config.h"
+ #include "osdep.h"
+ 
++#if BX_USE_LOADER
++#include "loader_misc.h"
++void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
++#endif
++
+ #if BX_DBG_ICOUNT_SIZE == 32
+   typedef Bit32u bx_dbg_icount_t;
+ #elif BX_DBG_ICOUNT_SIZE == 64
+@@ -143,6 +148,12 @@ void bx_dbg_trace_reg_on_command(void);
+ void bx_dbg_trace_reg_off_command(void);
+ void bx_dbg_ptime_command(void);
+ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
++void bx_dbg_diff_memory(void);
++void bx_dbg_always_check(Bit32u page_start, bx_bool on);
++void bx_dbg_sync_memory(bx_bool set);
++void bx_dbg_sync_cpu(bx_bool set);
++void bx_dbg_fast_forward(Bit32u num);
++void bx_dbg_info_address(Bit32u seg_reg_num, Bit32u offset);
+ #define MAX_CONCURRENT_BPS 5
+ extern int timebp_timer;
+ extern Bit64u timebp_queue[MAX_CONCURRENT_BPS];
+@@ -189,7 +200,7 @@ void bx_dbg_info_flags(void);
+ void bx_dbg_info_linux_command(void);
+ void bx_dbg_info_symbols_command(char *Symbol);
+ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
+-                    Bit32u addr, bx_bool addr_passed);
++                    Bit32u addr, bx_bool addr_passed, int simulator);
+ void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
+ void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
+ void bx_dbg_query_command(char *);
+@@ -198,10 +209,11 @@ void bx_dbg_dump_cpu_command(void);
+ void bx_dbg_set_cpu_command(void);
+ void bx_dbg_disassemble_command(const char *,bx_num_range);
+ void bx_dbg_instrument_command(const char *);
++void bx_dbg_loader_command(char *);
+ void bx_dbg_doit_command(unsigned);
+ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
+ extern bx_bool watchpoint_continue;
+-void bx_dbg_linux_syscall (unsigned which_cpu);
++void bx_dbg_linux_syscall (void);
+ void bx_dbg_info_ne2k(int page, int reg);
+ void bx_dbg_info_pic(void);
+ void bx_dbg_info_vga(void);
+@@ -423,12 +437,71 @@ typedef struct {
+     unsigned inhibit_mask;
+ } bx_dbg_cpu_t;
+ 
++
++typedef struct {
++  // call back functions specific to each simulator
++  bx_bool (*setphymem)(Bit32u addr, unsigned len, Bit8u *buf);
++  bx_bool (*getphymem)(Bit32u addr, unsigned len, Bit8u *buf);
++  void    (*xlate_linear2phy)(Bit32u linear, Bit32u *phy, bx_bool *valid);
++  bx_bool (*set_reg)(unsigned reg, Bit32u val);
++  Bit32u  (*get_reg)(unsigned reg);
++  bx_bool (*get_sreg)(bx_dbg_sreg_t *sreg, unsigned sreg_no);
++  bx_bool (*set_cpu)(bx_dbg_cpu_t *cpu);
++  bx_bool (*get_cpu)(bx_dbg_cpu_t *cpu);
++  unsigned       dirty_page_tbl_size;
++  unsigned char *dirty_page_tbl;
++  void    (*atexit)(void);
++  unsigned (*query_pending)(void);
++  void     (*execute)(void);
++  void     (*take_irq)(void);
++  void     (*take_dma)(void);
++  void     (*reset_cpu)(unsigned source);
++  void     (*init_mem)(int size_in_bytes);
++  void     (*load_ROM)(const char *path, Bit32u romaddress, Bit8u type);
++
++  // for asynchronous environment handling
++  void     (*set_A20)(unsigned val);
++  void     (*set_NMI)(unsigned val);
++  void     (*set_RESET)(unsigned val);
++  void     (*set_INTR)(unsigned val);
++  void     (*force_interrupt)(unsigned vector);
++
++#if BX_INSTRUMENTATION
++  void    (*instr_start)(void);
++  void    (*instr_stop)(void);
++  void    (*instr_reset)(void);
++  void    (*instr_print)(void);
++#endif
++#if BX_USE_LOADER
++  void    (*loader)(char *path, bx_loader_misc_t *misc_ptr);
++#endif
++  bx_bool (*crc32)(Bit32u (*f)(const Bit8u *buf, int len),
++                   Bit32u addr1, Bit32u addr2, Bit32u *crc);
++} bx_dbg_callback_t;
++
++extern bx_dbg_callback_t bx_dbg_callback[BX_NUM_SIMULATORS];
++
++void BX_SIM1_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
++#ifdef BX_SIM2_INIT
++void BX_SIM2_INIT(bx_dbg_callback_t *, int argc, char *argv[]);
++#endif
++
++
+ void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val);
+ void bx_dbg_iac_report(unsigned vector, unsigned irq);
+ void bx_dbg_a20_report(unsigned val);
+ void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
+ void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
+ 
++Bit8u   bx_dbg_ucmem_read(Bit32u addr);
++void    bx_dbg_ucmem_write(Bit32u addr, Bit8u value);
++void    bx_dbg_async_pin_request(unsigned what, bx_bool val);
++void    bx_dbg_async_pin_ack(unsigned what, bx_bool val);
++Bit32u  bx_dbg_inp(Bit16u addr, unsigned len);
++void    bx_dbg_outp(Bit16u addr, Bit32u value, unsigned len);
++void    bx_dbg_raise_HLDA(void);
++Bit8u   bx_dbg_IAC(void);
++void    bx_dbg_set_INTR(bx_bool b);
+ void bx_dbg_disassemble_current(int which_cpu, int print_time);
+ 
+ int bx_dbg_symbolic_output(void); /* BW */
+diff -uBbwNpr bochs-nocosim/bx_debug/lexer.l bochs/bx_debug/lexer.l
+--- bochs-nocosim/bx_debug/lexer.l	2006-01-25 23:07:59.828125000 +0200
++++ bochs/bx_debug/lexer.l	2006-01-25 20:13:44.000000000 +0200
+@@ -92,6 +92,7 @@ start           { bxlval.sval = strdup(b
+ stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
+ reset           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESET); }
+ print           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT); }
++loader          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOADER); }
+ doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
+ trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
+ trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
+@@ -118,6 +119,12 @@ slist           { bxlval.sval = strdup(b
+ global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
+ where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
+ print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
++diff-memory     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIFF_MEMORY); }
++sync-memory     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYNC_MEMORY); }
++sync-cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYNC_CPU); }
++fast-forward    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FAST_FORWARD); }
++phy2log         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PHY_2_LOG); }
++addr-info       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO_ADDRESS); }
+ ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
+@@ -155,6 +162,7 @@ ds              { bxlval.uval = BX_DBG_S
+ fs              { bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
+ gs              { bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
+ flags|eflags    { bxlval.uval = 0; return (BX_TOKEN_FLAGS); }
++force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
+ h|help          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
+ \?              |
+ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
+diff -uBbwNpr bochs-nocosim/bx_debug/linux.cc bochs/bx_debug/linux.cc
+--- bochs-nocosim/bx_debug/linux.cc	2006-01-25 22:34:23.281250000 +0200
++++ bochs/bx_debug/linux.cc	2006-01-24 20:21:22.000000000 +0200
+@@ -153,11 +153,11 @@ char *syscall_names_t::get_name (int n) 
+ 
+ syscall_names_t syscall_names;
+ 
+-void bx_dbg_linux_syscall (unsigned which_cpu)
+-{
+-  Bit32u eax = BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX);
+-  char *name = syscall_names.get_name (eax);
+-  fprintf (stderr, "linux system call %s (#%d)\n", name, eax);
++void bx_dbg_linux_syscall () {
++  bx_dbg_cpu_t cpu;
++  bx_dbg_callback[0].get_cpu(&cpu);
++  char *name = syscall_names.get_name (cpu.eax);
++  fprintf (stderr, "linux system call %s (#%d)\n", name, cpu.eax);
+ }
+ 
+ #endif /* if BX_DEBUGGER */
+diff -uBbwNpr bochs-nocosim/bx_debug/loader_misc.h bochs/bx_debug/loader_misc.h
+--- bochs-nocosim/bx_debug/loader_misc.h	1970-01-01 02:00:00.000000000 +0200
++++ bochs/bx_debug/loader_misc.h	2003-11-28 17:07:25.000000000 +0200
+@@ -0,0 +1,36 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  MandrakeSoft S.A.
++//
++//    MandrakeSoft S.A.
++//    43, rue d'Aboukir
++//    75002 Paris - France
++//    http://www.linux-mandrake.com/
++//    http://www.mandrakesoft.com/
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++
++typedef struct {
++  unsigned long dr0;
++  unsigned long dr1;
++  unsigned long dr2;
++  unsigned long dr3;
++  unsigned long dr6;
++  unsigned long dr7;
++  } bx_loader_misc_t;
++
++extern bx_loader_misc_t *bx_loader_misc_ptr;
+diff -uBbwNpr bochs-nocosim/bx_debug/parser.y bochs/bx_debug/parser.y
+--- bochs-nocosim/bx_debug/parser.y	2006-01-25 22:41:46.546875000 +0200
++++ bochs/bx_debug/parser.y	2006-01-25 20:13:44.000000000 +0200
+@@ -113,6 +113,7 @@
+ %token <sval> BX_TOKEN_STOP
+ %token <sval> BX_TOKEN_RESET
+ %token <sval> BX_TOKEN_PRINT
++%token <sval> BX_TOKEN_LOADER
+ %token <sval> BX_TOKEN_STRING
+ %token <sval> BX_TOKEN_DOIT
+ %token <sval> BX_TOKEN_CRC
+@@ -138,11 +139,18 @@
+ %token <sval> BX_TOKEN_GLOBAL
+ %token <sval> BX_TOKEN_WHERE
+ %token <sval> BX_TOKEN_PRINT_STRING
++%token <sval> BX_TOKEN_DIFF_MEMORY
++%token <sval> BX_TOKEN_SYNC_MEMORY
++%token <sval> BX_TOKEN_SYNC_CPU
++%token <sval> BX_TOKEN_FAST_FORWARD
++%token <sval> BX_TOKEN_PHY_2_LOG
+ %token <uval> BX_TOKEN_NUMERIC
+ %token <ulval> BX_TOKEN_LONG_NUMERIC
++%token <sval> BX_TOKEN_INFO_ADDRESS
+ %token <sval> BX_TOKEN_NE2000
+ %token <sval> BX_TOKEN_PIC
+ %token <sval> BX_TOKEN_PAGE
++%token <sval> BX_TOKEN_ALWAYS_CHECK
+ %token <sval> BX_TOKEN_TRACEREGON
+ %token <sval> BX_TOKEN_TRACEREGOFF
+ %token <sval> BX_TOKEN_HELP
+@@ -190,6 +198,7 @@ command:
+     | set_cpu_command
+     | disassemble_command
+     | instrument_command
++    | loader_command
+     | doit_command
+     | crc_command
+     | trace_on_command
+@@ -205,6 +214,7 @@ command:
+     | symbol_command
+     | where_command
+     | print_string_command
++    | cosim_commands
+     | trace_reg_on_command
+     | trace_reg_off_command
+     | help_command
+@@ -215,6 +225,48 @@ command:
+       }
+     ;
+ 
++cosim_commands:
++      BX_TOKEN_DIFF_MEMORY '\n'
++        {
++		bx_dbg_diff_memory();
++		free($1);
++	}
++    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_ON  '\n'
++    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_OFF '\n'
++        {
++		bx_dbg_sync_memory($2);
++		free($1);
++	}
++    | BX_TOKEN_SYNC_CPU BX_TOKEN_ON  '\n'
++    | BX_TOKEN_SYNC_CPU BX_TOKEN_OFF '\n'
++        {
++		bx_dbg_sync_cpu($2);
++		free($1);
++	}
++    | BX_TOKEN_FAST_FORWARD BX_TOKEN_NUMERIC '\n'
++        {
++		free($1);
++		bx_dbg_fast_forward($2);
++	}
++    | BX_TOKEN_PHY_2_LOG BX_TOKEN_NUMERIC '\n'
++        {
++		free($1);
++	}
++    | BX_TOKEN_INFO_ADDRESS BX_TOKEN_SEGREG ':' BX_TOKEN_NUMERIC '\n'
++        {
++		free($1);
++		bx_dbg_info_address($2, $4);
++        }
++    | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_ON '\n'
++        {
++		free($1);
++        }
++    | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_OFF '\n'
++        {
++		free($1);
++        }
++    ;
++
+ BX_TOKEN_SEGREG:
+       BX_TOKEN_CS
+     | BX_TOKEN_ES
+@@ -695,22 +747,44 @@ quit_command:
+ examine_command:
+       BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
+         {
+-        bx_dbg_examine_command($1, $2,1, $3, 1);
++        bx_dbg_examine_command($1, $2,1, $3,1, 0);
++#if BX_NUM_SIMULATORS >= 2
++        bx_dbg_examine_command($1, $2,1, $3,1, 1);
++#endif
+         free($1); free($2);
+         }
+     | BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT '\n'
+         {
+-        bx_dbg_examine_command($1, $2,1, 0, 0);
++        bx_dbg_examine_command($1, $2,1, 0,0, 0);
++#if BX_NUM_SIMULATORS >= 2
++        bx_dbg_examine_command($1, $2,1, 0,0, 1);
++#endif
+         free($1); free($2);
+         }
+     | BX_TOKEN_EXAMINE expression '\n'
+         {
+-        bx_dbg_examine_command($1, NULL,0, $2, 1);
++        //FIXME HanishKVC This method of hunting thro all the 
++        //      simulators may be better than using 2 calls if 
++        //      BX_NUM_SIMULATORS greater than or equal to 2 as 
++        //      done for other cases of BX_TOKEN_EXAMINE
++        int iCurSim; 
++        for(iCurSim = 0; iCurSim < BX_NUM_SIMULATORS; iCurSim++)
++        {
++          bx_dbg_examine_command($1, NULL,0, $2,1, iCurSim);
++        }
+         free($1);
+         }
+     | BX_TOKEN_EXAMINE '\n'
+         {
+-        bx_dbg_examine_command($1, NULL,0, 0, 0);
++        //FIXME HanishKVC This method of hunting thro all the 
++        //      simulators may be better than using 2 calls if 
++        //      BX_NUM_SIMULATORS greater than or equal to 2 as 
++        //      done for other cases of BX_TOKEN_EXAMINE
++        int iCurSim; 
++        for(iCurSim = 0; iCurSim < BX_NUM_SIMULATORS; iCurSim++)
++        {
++          bx_dbg_examine_command($1, NULL,0, 0,0, iCurSim);
++        }
+         free($1);
+         }
+     ;
+@@ -791,6 +865,14 @@ instrument_command:
+         }
+     ;
+ 
++loader_command:
++      BX_TOKEN_LOADER BX_TOKEN_STRING '\n'
++        {
++        bx_dbg_loader_command($2);
++        free($1); free($2);
++        }
++    ;
++
+ doit_command:
+       BX_TOKEN_DOIT BX_TOKEN_NUMERIC '\n'
+         {
+diff -uBbwNpr bochs-nocosim/bx_debug/sim2.cc bochs/bx_debug/sim2.cc
+--- bochs-nocosim/bx_debug/sim2.cc	1970-01-01 02:00:00.000000000 +0200
++++ bochs/bx_debug/sim2.cc	2005-04-10 20:03:16.000000000 +0200
+@@ -0,0 +1,199 @@
++/////////////////////////////////////////////////////////////////////////
++// $Id: patch.cosimulation,v 1.1 2006-01-25 22:20:00 sshwarts Exp $
++/////////////////////////////////////////////////////////////////////////
++//
++//  Copyright (C) 2001  MandrakeSoft S.A.
++//
++//    MandrakeSoft S.A.
++//    43, rue d'Aboukir
++//    75002 Paris - France
++//    http://www.linux-mandrake.com/
++//    http://www.mandrakesoft.com/
++//
++//  This library is free software; you can redistribute it and/or
++//  modify it under the terms of the GNU Lesser General Public
++//  License as published by the Free Software Foundation; either
++//  version 2 of the License, or (at your option) any later version.
++//
++//  This library is distributed in the hope that it will be useful,
++//  but WITHOUT ANY WARRANTY; without even the implied warranty of
++//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++//  Lesser General Public License for more details.
++//
++//  You should have received a copy of the GNU Lesser General Public
++//  License along with this library; if not, write to the Free Software
++//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
++//
++/////////////////////////////////////////////////////////////////////////
++
++
++#include "bochs.h"
++
++
++// NOTE:  This file contains only stubs for a second CPU simulator
++//        to demonstrate use with the bochs debugger.  The goal is to
++//        be able to run multiple simulators in a co-simulation environment.
++//        Each simulator has it's own CPU and memory space.  There is only
++//        one set of device models, managed by the debugger.
++
++
++bx_bool  sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
++bx_bool  sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
++void     sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid);
++bx_bool  sim2_set_reg(unsigned reg, Bit32u val);
++Bit32u   sim2_get_reg(unsigned reg);
++bx_bool  sim2_set_cpu(bx_dbg_cpu_t *cpu);
++bx_bool  sim2_get_cpu(bx_dbg_cpu_t *cpu);
++unsigned       dirty_page_tbl_size;
++unsigned char sim2_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
++void     sim2_atexit(void);
++unsigned sim2_query_pending(void);
++void     sim2_cpu_loop(void);
++void     sim2_take_irq(void);
++void     sim2_take_dma(void);
++void     sim2_reset_cpu(void);
++void     sim2_init_mem(int size_in_bytes);
++void     sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type);
++
++void     sim2_set_A20(unsigned val);
++void     sim2_set_NMI(unsigned val);
++void     sim2_set_RESET(unsigned val);
++void     sim2_set_INTR(unsigned val);
++void     sim2_force_interrupt(unsigned vector);
++
++#if BX_INSTRUMENTATION
++void     sim2_instr_start(void);
++void     sim2_instr_stop(void);
++void     sim2_instr_reset(void);
++void     sim2_instr_print(void);
++#endif
++#if BX_USE_LOADER
++void    sim2_loader(char *path);
++#endif
++
++
++#if BX_DBG_EXTENSIONS
++// return 0 if command not handled by extensions, bochs will handle
++// return 1 if command handled by extensions, bochs will ignore
++int bx_dbg_extensions(char *command)
++{
++  UNUSED(command);
++  return(0); // no extensions for now
++}
++#endif
++
++
++void sim2_init(bx_dbg_callback_t *callback, int argc, char *argv[])
++{
++  callback->setphymem           = sim2_set_mem;
++  callback->getphymem           = sim2_fetch_mem;
++  callback->xlate_linear2phy    = sim2_xlate_linear2phy;
++  callback->set_reg             = sim2_set_reg;
++  callback->get_reg             = sim2_get_reg;
++  callback->get_cpu             = sim2_get_cpu;
++  callback->set_cpu             = sim2_set_cpu;
++  callback->dirty_page_tbl_size = sizeof(sim2_dirty_pages);
++  callback->dirty_page_tbl      = sim2_dirty_pages;
++  callback->atexit              = sim2_atexit;
++  callback->query_pending       = sim2_query_pending;
++  callback->execute             = sim2_cpu_loop;
++  callback->take_irq            = sim2_take_irq;
++  callback->take_dma            = sim2_take_dma;
++  callback->reset_cpu           = sim2_reset_cpu;
++  callback->init_mem            = sim2_init_mem;
++  callback->load_ROM            = sim2_load_ROM;
++
++  // You may set this to NULL and use values in bx_pc_system as per
++  // docs-html/cosimulation.html
++  callback->set_A20             = sim2_set_A20;
++
++  callback->set_NMI             = sim2_set_NMI;
++  callback->set_RESET           = sim2_set_RESET;
++  callback->set_INTR            = sim2_set_INTR;
++  callback->force_interrupt     = sim2_force_interrupt;
++
++#if BX_INSTRUMENTATION
++  callback->instr_start         = sim2_instr_start;
++  callback->instr_stop          = sim2_instr_stop;
++  callback->instr_reset         = sim2_instr_reset;
++  callback->instr_print         = sim2_instr_print;
++#endif
++#if BX_USE_LOADER
++  callback->loader              = sim2_loader;
++#endif
++}
++
++bx_bool sim2_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
++{
++  return(0);
++}
++
++bx_bool sim2_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
++{
++  return(0);
++}
++
++void sim2_xlate_linear2phy(Bit32u linear, Bit32u *phy, bx_bool *valid) { }
++
++bx_bool sim2_set_reg(unsigned reg, Bit32u val)
++{
++  return(0);
++}
++
++Bit32u sim2_get_reg(unsigned reg)
++{
++  return(0);
++}
++
++bx_bool sim2_set_cpu(bx_dbg_cpu_t *cpu)
++{
++  return(0);
++}
++
++bx_bool sim2_get_cpu(bx_dbg_cpu_t *cpu)
++{
++  return(0);
++}
++
++void sim2_atexit(void) { }
++
++unsigned sim2_query_pending(void)
++{
++  return(0);
++}
++
++void sim2_cpu_loop(void) { }
++
++void sim2_take_irq(void) { }
++
++void sim2_take_dma(void) { }
++
++void sim2_reset_cpu(void) { }
++
++void sim2_init_mem(int size_in_bytes) { }
++
++void sim2_load_ROM(const char *path, Bit32u romaddress, Bit8u type) { }
++
++void sim2_set_A20(unsigned val) { }
++
++void sim2_set_NMI(unsigned val) { }
++
++void sim2_set_RESET(unsigned val) { }
++
++void sim2_set_INTR(unsigned val) { }
++
++void sim2_force_interrupt(unsigned vector) { }
++
++#if BX_INSTRUMENTATION
++void sim2_instr_start(void) { }
++
++void sim2_instr_stop(void) { }
++
++void sim2_instr_reset(void) { }
++
++void sim2_instr_print(void) { }
++#endif
++
++#if BX_USE_LOADER
++void sim2_loader(char *path) { }
++#endif
+diff -uBbwNpr bochs-nocosim/config.h.in bochs/config.h.in
+--- bochs-nocosim/config.h.in	2006-01-25 22:46:50.765625000 +0200
++++ bochs/config.h.in	2006-01-22 14:31:15.000000000 +0200
+@@ -55,8 +55,10 @@
+ #define BX_SUPPORT_SMP 0
+ #define BX_BOOTSTRAP_PROCESSOR 0
+ 
+-// Controls how many instances of BX_MEM_C are created. For
++// controls how many instances of BX_MEM_C are created.  For
+ // SMP, use several processors with one shared memory space.
++// For cosimulation, you could use two processors and two address
++// spaces.
+ #define BX_ADDRESS_SPACES 1
+ 
+ #if BX_ADDRESS_SPACES != 1
+@@ -685,6 +687,14 @@ typedef
+ 
+ #define BX_INSTRUMENTATION    0
+ 
++#define BX_USE_LOADER    0
++
++// for debugger, CPU simulator handle ID
++//   0 is the default, for using only one CPU simulator
++//   1 is for the 2nd CPU simulator
++#define BX_SIM_ID    0
++#define BX_NUM_SIMULATORS 1
++
+ // limited i440FX PCI support
+ #define BX_SUPPORT_PCI 0
+ 
+diff -uBbwNpr bochs-nocosim/configure.in bochs/configure.in
+--- bochs-nocosim/configure.in	2006-01-25 22:37:48.781250000 +0200
++++ bochs/configure.in	2006-01-18 20:35:36.000000000 +0200
+@@ -1392,6 +1392,34 @@ AC_ARG_ENABLE(instrumentation,
+ AC_SUBST(INSTRUMENT_DIR)
+ AC_SUBST(INSTRUMENT_VAR)
+ 
++AC_ARG_ENABLE(simid,
++  [  --enable-simid=0 or 1             CPU simulator ID if using more than one],
++  [if test "$enableval" = yes; then
++    AC_DEFINE(BX_SIM_ID, 0)
++   elif test "$enableval" = no; then
++    AC_DEFINE(BX_SIM_ID, 0)
++   else
++    AC_DEFINE_UNQUOTED(BX_SIM_ID, $enableval)
++   fi],
++  [
++    AC_DEFINE(BX_SIM_ID, 0)
++    ]
++  )
++
++AC_ARG_ENABLE(num-sim,
++  [  --enable-num-sim=1 or 2           number of CPU simulators],
++  [if test "$enableval" = yes; then
++    AC_DEFINE(BX_NUM_SIMULATORS, 1)
++   elif test "$enableval" = no; then
++    AC_DEFINE(BX_NUM_SIMULATORS, 1)
++   else
++    AC_DEFINE_UNQUOTED(BX_NUM_SIMULATORS, $enableval)
++   fi],
++  [
++    AC_DEFINE(BX_NUM_SIMULATORS, 1)
++    ]
++  )
++
+ dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
+ if test "$bx_plugins" = 0; then
+   case $target in
+diff -uBbwNpr bochs-nocosim/cpu/cpu.cc bochs/cpu/cpu.cc
+--- bochs-nocosim/cpu/cpu.cc	2006-01-25 22:49:53.500000000 +0200
++++ bochs/cpu/cpu.cc	2006-01-24 21:07:45.000000000 +0200
+@@ -1004,6 +1004,17 @@ bx_bool BX_CPU_C::dbg_is_end_instr_bpoin
+     }
+   }
+ 
++#if (BX_NUM_SIMULATORS >= 2)
++  // if async event pending, acknowlege them
++  if (bx_guard.async_changes_pending.which) {
++    if (bx_guard.async_changes_pending.which & BX_DBG_ASYNC_PENDING_A20)
++      bx_dbg_async_pin_ack(BX_DBG_ASYNC_PENDING_A20,
++                           bx_guard.async_changes_pending.a20);
++    if (bx_guard.async_changes_pending.which) {
++      BX_PANIC(("decode: async pending unrecognized."));
++    }
++  }
++#endif
+   return(0); // no breakpoint
+ }
+ 
+diff -uBbwNpr bochs-nocosim/cpu/debugstuff.cc bochs/cpu/debugstuff.cc
+--- bochs-nocosim/cpu/debugstuff.cc	2006-01-25 22:42:58.750000000 +0200
++++ bochs/cpu/debugstuff.cc	2006-01-25 20:13:44.000000000 +0200
+@@ -987,6 +987,70 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu
+   return(1);
+ }
+ 
++#if BX_SIM_ID == 0
++#  define BX_DBG_NULL_CALLBACK bx_dbg_null_callback0
++#else
++#  define BX_DBG_NULL_CALLBACK bx_dbg_null_callback1
++#endif
++void BX_DBG_NULL_CALLBACK(unsigned val)
++{
++  // bochs uses the pc_system variables, so this function is
++  // a stub for notification by the debugger, that a change
++  // occurred.
++  UNUSED(val);
++}
++
++  void
++#if BX_SIM_ID == 0
++bx_dbg_init_cpu_mem_env0(bx_dbg_callback_t *callback, int argc, char *argv[])
++#else
++bx_dbg_init_cpu_mem_env1(bx_dbg_callback_t *callback, int argc, char *argv[])
++#endif
++{
++  UNUSED(argc);
++  UNUSED(argv);
++
++#if 0
++#ifdef __GNUC__
++#warning hardcoding BX_CPU_THIS_PTR mem[0] and cpu[0]
++#endif
++  callback->setphymem           = BX_MEM(0)->dbg_set_mem;
++  callback->getphymem           = BX_MEM(0)->dbg_fetch_mem;
++  callback->xlate_linear2phy    = BX_CPU(0)->dbg_xlate_linear2phy;
++  callback->set_reg             = BX_CPU(0)->dbg_set_reg;
++  callback->get_reg             = BX_CPU(0)->dbg_get_reg;
++  callback->get_sreg            = BX_CPU(0)->dbg_get_sreg;
++  callback->get_cpu             = BX_CPU(0)->dbg_get_cpu;
++  callback->set_cpu             = BX_CPU(0)->dbg_set_cpu;
++  callback->dirty_page_tbl_size = sizeof(BX_MEM(0)->dbg_dirty_pages);
++  callback->dirty_page_tbl      = BX_MEM(0)->dbg_dirty_pages;
++  callback->atexit              = BX_CPU(0)->atexit;
++  callback->query_pending       = BX_CPU(0)->dbg_query_pending;
++  callback->execute             = BX_CPU(0)->cpu_loop;
++  callback->take_irq            = BX_CPU(0)->dbg_take_irq;
++  callback->take_dma            = BX_CPU(0)->dbg_take_dma;
++  callback->reset_cpu           = BX_CPU(0)->reset;
++  callback->init_mem            = BX_MEM(0)->init_memory;
++  callback->load_ROM            = BX_MEM(0)->load_ROM;
++  callback->set_A20             = NULL;
++  callback->set_NMI             = BX_DBG_NULL_CALLBACK;
++  callback->set_RESET           = BX_DBG_NULL_CALLBACK;
++  callback->set_INTR            = BX_CPU(0)->set_INTR;
++  callback->force_interrupt     = BX_CPU(0)->dbg_force_interrupt;
++
++#if BX_INSTRUMENTATION
++  callback->instr_start         = bx_instr_start;
++  callback->instr_stop          = bx_instr_stop;
++  callback->instr_reset         = bx_instr_reset;
++  callback->instr_print         = bx_instr_print;
++#endif
++#if BX_USE_LOADER
++  callback->loader              = bx_dbg_loader;
++#endif
++  callback->crc32               = BX_MEM(0)->dbg_crc32;
++#endif
++}
++
+ #endif  // #if BX_DEBUGGER
+ 
+ void BX_CPU_C::atexit(void)
+diff -uBbwNpr bochs-nocosim/cpu/exception.cc bochs/cpu/exception.cc
+--- bochs-nocosim/cpu/exception.cc	2006-01-25 22:34:50.328125000 +0200
++++ bochs/cpu/exception.cc	2005-12-13 00:01:22.000000000 +0200
+@@ -769,7 +769,7 @@ void BX_CPU_C::interrupt(Bit8u vector, b
+   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
+ #if BX_DEBUG_LINUX
+   if (bx_dbg.linux_syscall) {
+-    if (vector == 0x80) bx_dbg_linux_syscall(BX_CPU_ID);
++    if (vector == 0x80) bx_dbg_linux_syscall ();
+   }
+ #endif
+ #endif
+diff -uBbwNpr bochs-nocosim/cpu/init.cc bochs/cpu/init.cc
+--- bochs-nocosim/cpu/init.cc	2006-01-25 22:43:37.546875000 +0200
++++ bochs/cpu/init.cc	2006-01-24 21:03:54.000000000 +0200
+@@ -942,7 +942,7 @@ void BX_CPU_C::sanity_checks(void)
+   if (sizeof(Bit64u) != 8  ||  sizeof(Bit64s) != 8)
+     BX_PANIC(("data type Bit64u or Bit64u is not of length 8 bytes!"));
+ 
+-  BX_DEBUG(("#(%u)all sanity checks passed!", BX_CPU_ID));
++  BX_DEBUG(( "#(%u)all sanity checks passed!", BX_SIM_ID ));
+ }
+ 
+ 
+diff -uBbwNpr bochs-nocosim/cpu/lazy_flags.cc bochs/cpu/lazy_flags.cc
+--- bochs-nocosim/cpu/lazy_flags.cc	2006-01-25 22:43:53.859375000 +0200
++++ bochs/cpu/lazy_flags.cc	2005-10-20 19:33:36.000000000 +0200
+@@ -30,6 +30,7 @@
+ #include "bochs.h"
+ #define LOG_THIS BX_CPU_THIS_PTR
+ 
++#if BX_SIM_ID == 0   // only need to define once
+ // This array defines a look-up table for the even parity-ness
+ // of an 8bit quantity, for optimal assignment of the parity bit
+ // in the EFLAGS register
+@@ -51,6 +52,7 @@ const bx_bool bx_parity_lookup[256] = {
+   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
+ };
++#endif
+ 
+ bx_bool BX_CPU_C::get_CFLazy(void)
+ {
+diff -uBbwNpr bochs-nocosim/load32bitOShack.cc bochs/load32bitOShack.cc
+--- bochs-nocosim/load32bitOShack.cc	2006-01-25 22:44:29.515625000 +0200
++++ bochs/load32bitOShack.cc	2005-11-09 19:17:06.000000000 +0200
+@@ -309,8 +309,10 @@ bx_load_kernel_image(char *path, Bit32u 
+     offset += ret;
+     }
+   close(fd);
+-  BX_INFO(("load_kernel_image: '%s', size=%u read into memory at %08x",
+-       path, (unsigned) stat_buf.st_size, (unsigned) paddr));
++  BX_INFO(( "#(%u) load_kernel_image: '%s', size=%u read into memory at %08x",
++          BX_SIM_ID, path,
++          (unsigned) stat_buf.st_size,
++          (unsigned) paddr ));
+ 
+   return page_size;
+ }
+diff -uBbwNpr bochs-nocosim/memory/misc_mem.cc bochs/memory/misc_mem.cc
+--- bochs-nocosim/memory/misc_mem.cc	2006-01-25 22:45:37.656250000 +0200
++++ bochs/memory/misc_mem.cc	2006-01-24 21:03:55.000000000 +0200
+@@ -40,7 +40,7 @@ Bit32u BX_MEM_C::get_memory_in_k(void)
+ BX_MEM_C::BX_MEM_C(void)
+ {
+   char mem[6];
+-  snprintf(mem, 6, "MEM0");
++  snprintf(mem, 6, "MEM%d", BX_SIM_ID);
+   put(mem);
+   settype(MEMLOG);
+ 
+@@ -85,7 +85,7 @@ BX_MEM_C::~BX_MEM_C(void)
+     memory_handlers = NULL;
+   }
+   else {
+-    BX_DEBUG(("Memory not freed as it wasn't allocated !"));
++    BX_DEBUG(("(%u)   memory not freed as it wasn't allocated!", BX_SIM_ID));
+   }
+ }
+ 
+diff -uBbwNpr bochs-nocosim/pc_system.cc bochs/pc_system.cc
+--- bochs-nocosim/pc_system.cc	2006-01-25 22:50:16.625000000 +0200
++++ bochs/pc_system.cc	2006-01-20 21:12:03.000000000 +0200
+@@ -104,12 +104,15 @@ void bx_pc_system_c::set_HRQ(bx_bool val
+     BX_CPU(0)->async_event = 1;
+ }
+ 
++
++#if (BX_NUM_SIMULATORS < 2)
+ void bx_pc_system_c::set_INTR(bx_bool value)
+ {
+   if (bx_dbg.interrupts)
+     BX_INFO(("pc_system: Setting INTR=%d on bootstrap processor %d", (int)value, BX_BOOTSTRAP_PROCESSOR));
+   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->set_INTR(value);
+ }
++#endif
+ 
+ //
+ // Read from the IO memory address space

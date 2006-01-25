@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.307 2006-01-18 18:35:36 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.308 2006-01-25 22:19:57 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1391,34 +1391,6 @@ AC_ARG_ENABLE(instrumentation,
   )
 AC_SUBST(INSTRUMENT_DIR)
 AC_SUBST(INSTRUMENT_VAR)
-
-AC_ARG_ENABLE(simid,
-  [  --enable-simid=0 or 1             CPU simulator ID if using more than one],
-  [if test "$enableval" = yes; then
-    AC_DEFINE(BX_SIM_ID, 0)
-   elif test "$enableval" = no; then
-    AC_DEFINE(BX_SIM_ID, 0)
-   else
-    AC_DEFINE_UNQUOTED(BX_SIM_ID, $enableval)
-   fi],
-  [
-    AC_DEFINE(BX_SIM_ID, 0)
-    ]
-  )
-
-AC_ARG_ENABLE(num-sim,
-  [  --enable-num-sim=1 or 2           number of CPU simulators],
-  [if test "$enableval" = yes; then
-    AC_DEFINE(BX_NUM_SIMULATORS, 1)
-   elif test "$enableval" = no; then
-    AC_DEFINE(BX_NUM_SIMULATORS, 1)
-   else
-    AC_DEFINE_UNQUOTED(BX_NUM_SIMULATORS, $enableval)
-   fi],
-  [
-    AC_DEFINE(BX_NUM_SIMULATORS, 1)
-    ]
-  )
 
 dnl // serial mode 'socket' needs wsock32.dll in non-plugin mode
 if test "$bx_plugins" = 0; then

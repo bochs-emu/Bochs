@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.7 2006-01-25 18:13:44 sshwarts Exp $
+// $Id: parser.y,v 1.8 2006-01-25 22:19:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -113,7 +113,6 @@
 %token <sval> BX_TOKEN_STOP
 %token <sval> BX_TOKEN_RESET
 %token <sval> BX_TOKEN_PRINT
-%token <sval> BX_TOKEN_LOADER
 %token <sval> BX_TOKEN_STRING
 %token <sval> BX_TOKEN_DOIT
 %token <sval> BX_TOKEN_CRC
@@ -139,18 +138,11 @@
 %token <sval> BX_TOKEN_GLOBAL
 %token <sval> BX_TOKEN_WHERE
 %token <sval> BX_TOKEN_PRINT_STRING
-%token <sval> BX_TOKEN_DIFF_MEMORY
-%token <sval> BX_TOKEN_SYNC_MEMORY
-%token <sval> BX_TOKEN_SYNC_CPU
-%token <sval> BX_TOKEN_FAST_FORWARD
-%token <sval> BX_TOKEN_PHY_2_LOG
 %token <uval> BX_TOKEN_NUMERIC
 %token <ulval> BX_TOKEN_LONG_NUMERIC
-%token <sval> BX_TOKEN_INFO_ADDRESS
 %token <sval> BX_TOKEN_NE2000
 %token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
-%token <sval> BX_TOKEN_ALWAYS_CHECK
 %token <sval> BX_TOKEN_TRACEREGON
 %token <sval> BX_TOKEN_TRACEREGOFF
 %token <sval> BX_TOKEN_HELP
@@ -198,7 +190,6 @@ command:
     | set_cpu_command
     | disassemble_command
     | instrument_command
-    | loader_command
     | doit_command
     | crc_command
     | trace_on_command
@@ -214,7 +205,6 @@ command:
     | symbol_command
     | where_command
     | print_string_command
-    | cosim_commands
     | trace_reg_on_command
     | trace_reg_off_command
     | help_command
@@ -223,48 +213,6 @@ command:
     | '\n'
       {
       }
-    ;
-
-cosim_commands:
-      BX_TOKEN_DIFF_MEMORY '\n'
-        {
-		bx_dbg_diff_memory();
-		free($1);
-	}
-    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_ON  '\n'
-    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_OFF '\n'
-        {
-		bx_dbg_sync_memory($2);
-		free($1);
-	}
-    | BX_TOKEN_SYNC_CPU BX_TOKEN_ON  '\n'
-    | BX_TOKEN_SYNC_CPU BX_TOKEN_OFF '\n'
-        {
-		bx_dbg_sync_cpu($2);
-		free($1);
-	}
-    | BX_TOKEN_FAST_FORWARD BX_TOKEN_NUMERIC '\n'
-        {
-		free($1);
-		bx_dbg_fast_forward($2);
-	}
-    | BX_TOKEN_PHY_2_LOG BX_TOKEN_NUMERIC '\n'
-        {
-		free($1);
-	}
-    | BX_TOKEN_INFO_ADDRESS BX_TOKEN_SEGREG ':' BX_TOKEN_NUMERIC '\n'
-        {
-		free($1);
-		bx_dbg_info_address($2, $4);
-        }
-    | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_ON '\n'
-        {
-		free($1);
-        }
-    | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_OFF '\n'
-        {
-		free($1);
-        }
     ;
 
 BX_TOKEN_SEGREG:
@@ -747,44 +695,22 @@ quit_command:
 examine_command:
       BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
         {
-        bx_dbg_examine_command($1, $2,1, $3,1, 0);
-#if BX_NUM_SIMULATORS >= 2
-        bx_dbg_examine_command($1, $2,1, $3,1, 1);
-#endif
+        bx_dbg_examine_command($1, $2,1, $3, 1);
         free($1); free($2);
         }
     | BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT '\n'
         {
-        bx_dbg_examine_command($1, $2,1, 0,0, 0);
-#if BX_NUM_SIMULATORS >= 2
-        bx_dbg_examine_command($1, $2,1, 0,0, 1);
-#endif
+        bx_dbg_examine_command($1, $2,1, 0, 0);
         free($1); free($2);
         }
     | BX_TOKEN_EXAMINE expression '\n'
         {
-        //FIXME HanishKVC This method of hunting thro all the 
-        //      simulators may be better than using 2 calls if 
-        //      BX_NUM_SIMULATORS greater than or equal to 2 as 
-        //      done for other cases of BX_TOKEN_EXAMINE
-        int iCurSim; 
-        for(iCurSim = 0; iCurSim < BX_NUM_SIMULATORS; iCurSim++)
-        {
-          bx_dbg_examine_command($1, NULL,0, $2,1, iCurSim);
-        }
+        bx_dbg_examine_command($1, NULL,0, $2, 1);
         free($1);
         }
     | BX_TOKEN_EXAMINE '\n'
         {
-        //FIXME HanishKVC This method of hunting thro all the 
-        //      simulators may be better than using 2 calls if 
-        //      BX_NUM_SIMULATORS greater than or equal to 2 as 
-        //      done for other cases of BX_TOKEN_EXAMINE
-        int iCurSim; 
-        for(iCurSim = 0; iCurSim < BX_NUM_SIMULATORS; iCurSim++)
-        {
-          bx_dbg_examine_command($1, NULL,0, 0,0, iCurSim);
-        }
+        bx_dbg_examine_command($1, NULL,0, 0, 0);
         free($1);
         }
     ;
@@ -861,14 +787,6 @@ instrument_command:
     | BX_TOKEN_INSTRUMENT BX_TOKEN_PRINT '\n'
         {
         bx_dbg_instrument_command($2);
-        free($1); free($2);
-        }
-    ;
-
-loader_command:
-      BX_TOKEN_LOADER BX_TOKEN_STRING '\n'
-        {
-        bx_dbg_loader_command($2);
         free($1); free($2);
         }
     ;
