@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.8 2006-01-24 21:37:37 sshwarts Exp $
+// $Id: lexer.l,v 1.9 2006-01-25 18:13:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -25,8 +25,8 @@ static unsigned lex_input_size = 0;
 %%
 <*>[ \t]+       ; // eat up whitespace
 set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
-on              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ON); }
-off             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_OFF); }
+on              { bxlval.bval = 1; return(BX_TOKEN_ON); }
+off             { bxlval.bval = 0; return(BX_TOKEN_OFF); }
 crc             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CRC); }
 c               |
 cont            |
@@ -129,39 +129,39 @@ ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
-al              { bxlval.reg=rAL; return (BX_TOKEN_REG_AL);}
-bl              { bxlval.reg=rBL; return (BX_TOKEN_REG_BL);}
-cl              { bxlval.reg=rCL; return (BX_TOKEN_REG_CL);}
-dl              { bxlval.reg=rDL; return (BX_TOKEN_REG_DL);}
-ah              { bxlval.reg=rAH; return (BX_TOKEN_REG_AH);}
-bh              { bxlval.reg=rBH; return (BX_TOKEN_REG_BH);}
-ch              { bxlval.reg=rCH; return (BX_TOKEN_REG_CH);}
-dh              { bxlval.reg=rDH; return (BX_TOKEN_REG_DH);}
-ax              { bxlval.reg=rAX; return (BX_TOKEN_REG_AX);}
-bx              { bxlval.reg=rBX; return (BX_TOKEN_REG_BX);}
-cx              { bxlval.reg=rCX; return (BX_TOKEN_REG_CX);}
-dx              { bxlval.reg=rDX; return (BX_TOKEN_REG_DX);}
-eax             { bxlval.reg=rEAX; return (BX_TOKEN_REG_EAX);}
-ebx             { bxlval.reg=rEBX; return (BX_TOKEN_REG_EBX);}
-ecx             { bxlval.reg=rECX; return (BX_TOKEN_REG_ECX);}
-edx             { bxlval.reg=rEDX; return (BX_TOKEN_REG_EDX);}
-si              { bxlval.reg=rSI; return (BX_TOKEN_REG_SI);}
-di              { bxlval.reg=rDI; return (BX_TOKEN_REG_DI);}
-bp              { bxlval.reg=rBP; return (BX_TOKEN_REG_BP);}
-sp              { bxlval.reg=rSP; return (BX_TOKEN_REG_SP);}
-ip              { bxlval.reg=rIP; return (BX_TOKEN_REG_IP);}
-esi             { bxlval.reg=rESI; return (BX_TOKEN_REG_ESI);}
-edi             { bxlval.reg=rEDI; return (BX_TOKEN_REG_EDI);}
-ebp             { bxlval.reg=rEBP; return (BX_TOKEN_REG_EBP);}
-esp             { bxlval.reg=rESP; return (BX_TOKEN_REG_ESP);}
-eip             { bxlval.reg=rEIP; return (BX_TOKEN_REG_EIP);}
-cs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CS); }
-es              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ES); }
-ss              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SS); }
-ds              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DS); }
-fs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FS); }
-gs              { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GS); }
-flags|eflags    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_FLAGS); }
+al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_REG_AL);}
+bl              { bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_REG_BL);}
+cl              { bxlval.uval = BX_DBG_REG8L_CL; return(BX_TOKEN_REG_CL);}
+dl              { bxlval.uval = BX_DBG_REG8L_DL; return(BX_TOKEN_REG_DL);}
+ah              { bxlval.uval = BX_DBG_REG8H_AH; return(BX_TOKEN_REG_AH);}
+bh              { bxlval.uval = BX_DBG_REG8H_BH; return(BX_TOKEN_REG_BH);}
+ch              { bxlval.uval = BX_DBG_REG8H_CH; return(BX_TOKEN_REG_CH);}
+dh              { bxlval.uval = BX_DBG_REG8H_DH; return(BX_TOKEN_REG_DH);}
+ax              { bxlval.uval = BX_DBG_REG16_AX; return(BX_TOKEN_REG_AX);}
+bx              { bxlval.uval = BX_DBG_REG16_BX; return(BX_TOKEN_REG_BX);}
+cx              { bxlval.uval = BX_DBG_REG16_CX; return(BX_TOKEN_REG_CX);}
+dx              { bxlval.uval = BX_DBG_REG16_DX; return(BX_TOKEN_REG_DX);}
+si              { bxlval.uval = BX_DBG_REG16_SI; return(BX_TOKEN_REG_SI);}
+di              { bxlval.uval = BX_DBG_REG16_DI; return(BX_TOKEN_REG_DI);}
+bp              { bxlval.uval = BX_DBG_REG16_BP; return(BX_TOKEN_REG_BP);}
+sp              { bxlval.uval = BX_DBG_REG16_SP; return(BX_TOKEN_REG_SP);}
+ip              { bxlval.uval = BX_DBG_REG16_IP; return(BX_TOKEN_REG_IP);}
+eax             { bxlval.uval = BX_DBG_REG32_EAX; return(BX_TOKEN_REG_EAX);}
+ebx             { bxlval.uval = BX_DBG_REG32_EBX; return(BX_TOKEN_REG_EBX);}
+ecx             { bxlval.uval = BX_DBG_REG32_ECX; return(BX_TOKEN_REG_ECX);}
+edx             { bxlval.uval = BX_DBG_REG32_EDX; return(BX_TOKEN_REG_EDX);}
+esi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_REG_ESI);}
+edi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_REG_EDI);}
+ebp             { bxlval.uval = BX_DBG_REG32_EBP; return(BX_TOKEN_REG_EBP);}
+esp             { bxlval.uval = BX_DBG_REG32_ESP; return(BX_TOKEN_REG_ESP);}
+eip             { bxlval.uval = BX_DBG_REG32_EIP; return(BX_TOKEN_REG_EIP);}
+cs              { bxlval.uval = BX_DBG_SREG_CS; return(BX_TOKEN_CS); }
+es              { bxlval.uval = BX_DBG_SREG_ES; return(BX_TOKEN_ES); }
+ss              { bxlval.uval = BX_DBG_SREG_SS; return(BX_TOKEN_SS); }
+ds              { bxlval.uval = BX_DBG_SREG_DS; return(BX_TOKEN_DS); }
+fs              { bxlval.uval = BX_DBG_SREG_FS; return(BX_TOKEN_FS); }
+gs              { bxlval.uval = BX_DBG_SREG_GS; return(BX_TOKEN_GS); }
+flags|eflags    { bxlval.uval = 0; return (BX_TOKEN_FLAGS); }
 force-check     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_ALWAYS_CHECK); }
 h|help          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_HELP); }
 \?              |

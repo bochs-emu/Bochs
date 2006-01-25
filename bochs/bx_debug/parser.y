@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.6 2006-01-24 21:37:37 sshwarts Exp $
+// $Id: parser.y,v 1.7 2006-01-25 18:13:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -20,42 +20,54 @@
   char    *sval;
   Bit32u   uval;
   Bit64u   ulval;
-  bx_num_range   uval_range;
-  Regs     reg;
-  }
+  bx_bool  bval;
+  bx_num_range uval_range;
+}
 
 // Common registers
-%type<reg> BX_TOKEN_COMMON_REG
-%type<reg> BX_TOKEN_INDEX_REG
-%type<reg> BX_TOKEN_PTR_REG
-%type<reg> BX_TOKEN_NONSEG_REG
-%token<reg> BX_TOKEN_REG_AL
-%token<reg> BX_TOKEN_REG_BL
-%token<reg> BX_TOKEN_REG_CL
-%token<reg> BX_TOKEN_REG_DL
-%token<reg> BX_TOKEN_REG_AH
-%token<reg> BX_TOKEN_REG_BH
-%token<reg> BX_TOKEN_REG_CH
-%token<reg> BX_TOKEN_REG_DH
-%token<reg> BX_TOKEN_REG_AX
-%token<reg> BX_TOKEN_REG_BX
-%token<reg> BX_TOKEN_REG_CX
-%token<reg> BX_TOKEN_REG_DX
-%token<reg> BX_TOKEN_REG_EAX
-%token<reg> BX_TOKEN_REG_EBX
-%token<reg> BX_TOKEN_REG_ECX
-%token<reg> BX_TOKEN_REG_EDX
-%token<reg> BX_TOKEN_REG_SI
-%token<reg> BX_TOKEN_REG_DI
-%token<reg> BX_TOKEN_REG_BP
-%token<reg> BX_TOKEN_REG_SP
-%token<reg> BX_TOKEN_REG_IP
-%token<reg> BX_TOKEN_REG_ESI
-%token<reg> BX_TOKEN_REG_EDI
-%token<reg> BX_TOKEN_REG_EBP
-%token<reg> BX_TOKEN_REG_ESP
-%token<reg> BX_TOKEN_REG_EIP
+%type <uval> BX_TOKEN_8BH_REG
+%type <uval> BX_TOKEN_8BL_REG
+%type <uval> BX_TOKEN_16B_REG
+%type <uval> BX_TOKEN_32B_REG
+%type <uval> BX_TOKEN_NONSEG_REG
+%type <uval> BX_TOKEN_SEGREG
 
+%token <uval> BX_TOKEN_REG_AL
+%token <uval> BX_TOKEN_REG_BL
+%token <uval> BX_TOKEN_REG_CL
+%token <uval> BX_TOKEN_REG_DL
+%token <uval> BX_TOKEN_REG_AH
+%token <uval> BX_TOKEN_REG_BH
+%token <uval> BX_TOKEN_REG_CH
+%token <uval> BX_TOKEN_REG_DH
+%token <uval> BX_TOKEN_REG_AX
+%token <uval> BX_TOKEN_REG_BX
+%token <uval> BX_TOKEN_REG_CX
+%token <uval> BX_TOKEN_REG_DX
+%token <uval> BX_TOKEN_REG_EAX
+%token <uval> BX_TOKEN_REG_EBX
+%token <uval> BX_TOKEN_REG_ECX
+%token <uval> BX_TOKEN_REG_EDX
+%token <uval> BX_TOKEN_REG_SI
+%token <uval> BX_TOKEN_REG_DI
+%token <uval> BX_TOKEN_REG_BP
+%token <uval> BX_TOKEN_REG_SP
+%token <uval> BX_TOKEN_REG_IP
+%token <uval> BX_TOKEN_REG_ESI
+%token <uval> BX_TOKEN_REG_EDI
+%token <uval> BX_TOKEN_REG_EBP
+%token <uval> BX_TOKEN_REG_ESP
+%token <uval> BX_TOKEN_REG_EIP
+%token <uval> BX_TOKEN_CS
+%token <uval> BX_TOKEN_ES
+%token <uval> BX_TOKEN_SS
+%token <uval> BX_TOKEN_DS
+%token <uval> BX_TOKEN_FS
+%token <uval> BX_TOKEN_GS
+%token <uval> BX_TOKEN_FLAGS
+
+%token <bval> BX_TOKEN_ON
+%token <bval> BX_TOKEN_OFF
 %token <sval> BX_TOKEN_CONTINUE
 %token <sval> BX_TOKEN_STEPN
 %token <sval> BX_TOKEN_STEP_OVER
@@ -95,8 +107,6 @@
 %token <sval> BX_TOKEN_IRQ
 %token <sval> BX_TOKEN_DUMP_CPU
 %token <sval> BX_TOKEN_SET_CPU
-%token <sval> BX_TOKEN_ON
-%token <sval> BX_TOKEN_OFF
 %token <sval> BX_TOKEN_DISASSEMBLE
 %token <sval> BX_TOKEN_INSTRUMENT
 %token <sval> BX_TOKEN_START
@@ -140,13 +150,6 @@
 %token <sval> BX_TOKEN_NE2000
 %token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
-%token <sval> BX_TOKEN_CS
-%token <sval> BX_TOKEN_ES
-%token <sval> BX_TOKEN_SS
-%token <sval> BX_TOKEN_DS
-%token <sval> BX_TOKEN_FS
-%token <sval> BX_TOKEN_GS
-%token <sval> BX_TOKEN_FLAGS
 %token <sval> BX_TOKEN_ALWAYS_CHECK
 %token <sval> BX_TOKEN_TRACEREGON
 %token <sval> BX_TOKEN_TRACEREGOFF
@@ -156,7 +159,6 @@
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
 %token <sval> BX_TOKEN_IVT
-%type <uval> segment_register
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
 %type <ulval> vexpression
@@ -229,25 +231,17 @@ cosim_commands:
 		bx_dbg_diff_memory();
 		free($1);
 	}
-    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_ON '\n'
-        {
-		bx_dbg_sync_memory(1);
-		free($1); free($2);
-	}
+    | BX_TOKEN_SYNC_MEMORY BX_TOKEN_ON  '\n'
     | BX_TOKEN_SYNC_MEMORY BX_TOKEN_OFF '\n'
         {
-		bx_dbg_sync_memory(0);
-		free($1); free($2);
+		bx_dbg_sync_memory($2);
+		free($1);
 	}
-    | BX_TOKEN_SYNC_CPU BX_TOKEN_ON '\n'
-        {
-		bx_dbg_sync_cpu(1);
-		free($1); free($2);
-	}
+    | BX_TOKEN_SYNC_CPU BX_TOKEN_ON  '\n'
     | BX_TOKEN_SYNC_CPU BX_TOKEN_OFF '\n'
         {
-		bx_dbg_sync_cpu(0);
-		free($1); free($2);
+		bx_dbg_sync_cpu($2);
+		free($1);
 	}
     | BX_TOKEN_FAST_FORWARD BX_TOKEN_NUMERIC '\n'
         {
@@ -256,28 +250,32 @@ cosim_commands:
 	}
     | BX_TOKEN_PHY_2_LOG BX_TOKEN_NUMERIC '\n'
         {
+		free($1);
 	}
-    | BX_TOKEN_INFO_ADDRESS segment_register ':' BX_TOKEN_NUMERIC '\n'
+    | BX_TOKEN_INFO_ADDRESS BX_TOKEN_SEGREG ':' BX_TOKEN_NUMERIC '\n'
         {
 		free($1);
 		bx_dbg_info_address($2, $4);
         }
     | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_ON '\n'
         {
+		free($1);
         }
     | BX_TOKEN_ALWAYS_CHECK BX_TOKEN_NUMERIC BX_TOKEN_OFF '\n'
         {
+		free($1);
         }
     ;
 
-segment_register:
-      BX_TOKEN_CS { $$ = 1; }
-    | BX_TOKEN_ES { $$ = 0; }
-    | BX_TOKEN_SS { $$ = 2; }
-    | BX_TOKEN_DS { $$ = 3; }
-    | BX_TOKEN_FS { $$ = 4; }
-    | BX_TOKEN_GS { $$ = 5; }
-    ;
+BX_TOKEN_SEGREG:
+      BX_TOKEN_CS
+    | BX_TOKEN_ES
+    | BX_TOKEN_SS
+    | BX_TOKEN_DS
+    | BX_TOKEN_FS
+    | BX_TOKEN_GS
+    { $$=$1; }
+;
 
 timebp_command:
       BX_TOKEN_TIMEBP BX_TOKEN_LONG_NUMERIC '\n'
@@ -370,13 +368,13 @@ watch_point_command:
 	BX_TOKEN_WATCH BX_TOKEN_STOP '\n'
           {
           watchpoint_continue = 0;
-	  fprintf(stderr, "Will stop on watch points\n");
+	  dbg_printf("Will stop on watch points\n");
           free($1); free($2);
           }
     |   BX_TOKEN_WATCH BX_TOKEN_CONTINUE '\n'
           {
           watchpoint_continue = 1;
-          fprintf(stderr, "Will not stop on watch points (they will still be logged)\n");
+          dbg_printf("Will not stop on watch points (they will still be logged)\n");
           free($1); free($2);
           }
     |   BX_TOKEN_WATCH '\n'
@@ -475,24 +473,32 @@ step_over_command:
     ;
 
 set_command:
-      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_ON '\n'
-        {
-        bx_dbg_set_auto_disassemble(1);
-        free($1); free($2); free($3);
-        }
+      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_ON  '\n'
     | BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_OFF '\n'
         {
-        bx_dbg_set_auto_disassemble(0);
-        free($1); free($2); free($3);
+        bx_dbg_set_auto_disassemble($3);
+        free($1); free($2);
         }
     | BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' BX_TOKEN_NUMERIC '\n'
         {
         bx_dbg_set_symbol_command($2, $4);
         free($1); free($2);
         }
-    | BX_TOKEN_SET BX_TOKEN_NONSEG_REG '=' expression '\n'
+    | BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'
         { 
-        bx_dbg_set_reg_value($2, $4);
+        bx_dbg_set_reg8l_value($2, $4);
+        }
+    | BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'
+        { 
+        bx_dbg_set_reg8h_value($2, $4);
+        }
+    | BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'
+        { 
+        bx_dbg_set_reg16_value($2, $4);
+        }
+    | BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'
+        { 
+        bx_dbg_set_reg32_value($2, $4);
         }
     ;
 
@@ -624,7 +630,7 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'
         {
         bx_dbg_info_flags();
-        free($1); free($2);
+        free($1);
         }
     | BX_TOKEN_INFO BX_TOKEN_LINUX '\n'
         {
@@ -678,19 +684,18 @@ optional_numeric :
    | BX_TOKEN_NUMERIC;
 
 optional_numeric_range:
-  /* empty */ { $$ = make_num_range (EMPTY_ARG, EMPTY_ARG); }
-  | numeric_range;
+   /* empty */ { $$ = make_num_range (EMPTY_ARG, EMPTY_ARG); }
+   | numeric_range;
 
 numeric_range :
-  expression
-  {
-    $$ = make_num_range ($1, $1);
-  }
-  | 
-  expression expression
-  {
-    $$ = make_num_range ($1, $2);
-  };
+    expression
+    {
+      $$ = make_num_range ($1, $1);
+    }
+  | expression expression
+    {
+      $$ = make_num_range ($1, $2);
+    };
    
 regs_command:
     BX_TOKEN_REGISTERS '\n'
@@ -738,7 +743,6 @@ quit_command:
 	  free($1);
         }
     ;
-
 
 examine_command:
       BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
@@ -1034,7 +1038,7 @@ help_command:
          }
        | BX_TOKEN_HELP BX_TOKEN_REGISTERS '\n'
          {
-         dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info cpu')\n");
+         dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info registers')\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'
@@ -1147,12 +1151,6 @@ help_command:
          bx_dbg_print_help();
          free($1);free($2);
          }
-       | BX_TOKEN_HELP BX_TOKEN_STRING '\n'
-         {
-         dbg_printf("unknown command '%s', help is not available\n", $2);
-         bx_dbg_print_help();
-         free($1);free($2);
-         }
        | BX_TOKEN_HELP '\n'
          {
          bx_dbg_print_help();
@@ -1168,48 +1166,51 @@ calc_command:
      }
 ;
 
-BX_TOKEN_COMMON_REG:
+BX_TOKEN_8BH_REG:
+     BX_TOKEN_REG_AH
+   | BX_TOKEN_REG_BH
+   | BX_TOKEN_REG_CH
+   | BX_TOKEN_REG_DH
+   { $$=$1; }
+;
+
+BX_TOKEN_8BL_REG:
      BX_TOKEN_REG_AL
    | BX_TOKEN_REG_BL
    | BX_TOKEN_REG_CL
    | BX_TOKEN_REG_DL
-   | BX_TOKEN_REG_AH
-   | BX_TOKEN_REG_BH
-   | BX_TOKEN_REG_CH
-   | BX_TOKEN_REG_DH
-   | BX_TOKEN_REG_AX
+   { $$=$1; }
+;
+
+BX_TOKEN_16B_REG:
+     BX_TOKEN_REG_AX
    | BX_TOKEN_REG_BX
    | BX_TOKEN_REG_CX
    | BX_TOKEN_REG_DX
-   | BX_TOKEN_REG_EAX
+   | BX_TOKEN_REG_SI
+   | BX_TOKEN_REG_DI
+   | BX_TOKEN_REG_BP
+   | BX_TOKEN_REG_SP
+   { $$=$1; }
+;
+
+BX_TOKEN_32B_REG:
+     BX_TOKEN_REG_EAX
    | BX_TOKEN_REG_EBX
    | BX_TOKEN_REG_ECX
    | BX_TOKEN_REG_EDX
-   { $$=$1; }
-;
-
-BX_TOKEN_INDEX_REG:
-     BX_TOKEN_REG_SI
-   | BX_TOKEN_REG_DI
    | BX_TOKEN_REG_ESI
    | BX_TOKEN_REG_EDI
-   { $$=$1; }
-;
-
-BX_TOKEN_PTR_REG:
-     BX_TOKEN_REG_BP
-   | BX_TOKEN_REG_SP
-   | BX_TOKEN_REG_IP
    | BX_TOKEN_REG_EBP
    | BX_TOKEN_REG_ESP
-   | BX_TOKEN_REG_EIP
    { $$=$1; }
 ;
 
 BX_TOKEN_NONSEG_REG:
-     BX_TOKEN_COMMON_REG
-   | BX_TOKEN_INDEX_REG
-   | BX_TOKEN_PTR_REG
+     BX_TOKEN_8BL_REG
+   | BX_TOKEN_8BH_REG
+   | BX_TOKEN_16B_REG
+   | BX_TOKEN_32B_REG
    { $$=$1; }
 ;
 
@@ -1217,8 +1218,11 @@ BX_TOKEN_NONSEG_REG:
 vexpression:
      BX_TOKEN_NUMERIC                { $$ = $1; }
    | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
-   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1); }
-   | segment_register                { $$ = bx_dbg_get_selector_value($1); }
+   | BX_TOKEN_8BL_REG                { $$ = bx_dbg_get_reg8l_value($1); }
+   | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
+   | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
+   | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
+   | BX_TOKEN_SEGREG                { $$ = bx_dbg_get_selector_value($1); }
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
@@ -1238,8 +1242,11 @@ expression:
      BX_TOKEN_NUMERIC                { $$ = $1; }
    | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
    | BX_TOKEN_STRING                 { $$ = bx_dbg_get_symbol_value($1); free($1);}
-   | BX_TOKEN_NONSEG_REG             { $$ = bx_dbg_get_reg_value($1);}
-   | segment_register                { $$ = bx_dbg_get_selector_value($1);}
+   | BX_TOKEN_8BL_REG                { $$ = bx_dbg_get_reg8l_value($1); }
+   | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
+   | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
+   | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
+   | BX_TOKEN_SEGREG                { $$ = bx_dbg_get_selector_value($1);}
    | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }

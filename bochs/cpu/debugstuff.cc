@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.52 2006-01-24 21:37:37 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.53 2006-01-25 18:13:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,11 +113,14 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x",
           (unsigned) ESP, (unsigned) EBP, (unsigned) ESI, (unsigned) EDI));
 #endif
-  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s",
+  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
     BX_CPU_THIS_PTR get_IOPL(),
+    BX_CPU_THIS_PTR get_ID() ? "ID" : "id",
+    BX_CPU_THIS_PTR get_VIP() ? "VIP" : "vip",
+    BX_CPU_THIS_PTR get_VIF() ? "VIF" : "vif",
+    BX_CPU_THIS_PTR get_AC() ? "AC" : "ac",
     BX_CPU_THIS_PTR get_VM() ? "VM" : "vm",
     BX_CPU_THIS_PTR get_RF() ? "RF" : "rf",
-    BX_CPU_THIS_PTR get_AC() ? "AC" : "ac",
     BX_CPU_THIS_PTR get_NT() ? "NT" : "nt",
     BX_CPU_THIS_PTR get_OF() ? "OF" : "of",
     BX_CPU_THIS_PTR get_DF() ? "DF" : "df",
@@ -388,27 +391,28 @@ Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
   }
   else {
     switch (d->type) {
-      case 0: // Reserved (not yet defined)
-        BX_ERROR(( "#get_descriptor_l(): type %d not finished", d->type ));
+      case 0: // Reserved (not defined)
+        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
         return(0);
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
         val = ((d->u.tss286.base & 0xffff) << 16) |
                (d->u.tss286.limit & 0xffff);
         return(val);
 
       case BX_SYS_SEGMENT_LDT:
-        val = ((d->u.ldt.base & 0xffff) << 16) |
-              d->u.ldt.limit;
+        val = ((d->u.ldt.base & 0xffff) << 16) | d->u.ldt.limit;
         return(val);
 
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
         val = ((d->u.tss386.base & 0xffff) << 16) |
                (d->u.tss386.limit & 0xffff);
         return(val);
 
       default:
-        BX_ERROR(( "#get_descriptor_l(): type %d not finished", d->type ));
+        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
         return(0);
     }
   }
@@ -441,10 +445,11 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
   else {
     switch (d->type) {
       case 0: // Reserved (not yet defined)
-        BX_ERROR(( "#get_descriptor_h(): type %d not finished", d->type ));
+        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
         return(0);
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
         val = ((d->u.tss286.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
@@ -460,6 +465,7 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
         return(val);
 
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
         val = ((d->u.tss386.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
@@ -471,7 +477,7 @@ Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
         return(val);
 
       default:
-        BX_ERROR(( "#get_descriptor_h(): type %d not finished", d->type ));
+        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
         return(0);
     }
   }

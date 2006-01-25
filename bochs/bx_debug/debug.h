@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.10 2006-01-24 21:37:37 sshwarts Exp $
+// $Id: debug.h,v 1.11 2006-01-25 18:13:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,6 @@ void bx_dbg_loader(char *path, bx_loader_misc_t *misc_ptr);
 #  error "BX_DBG_ICOUNT_SIZE incorrect."
 #endif
 
-
 #define BX_DBG_NO_HANDLE 1000
 
 extern Bit32u dbg_cpu;
@@ -58,16 +57,51 @@ extern "C" {
 
 void dbg_printf (const char *fmt, ...);
 
-typedef enum 
-{
- rAL, rBL, rCL, rDL, 
- rAH, rBH, rCH, rDH, 
- rAX, rBX, rCX, rDX, 
- rEAX, rEBX, rECX, rEDX, 
- rSI, rDI, rESI, rEDI, 
- rBP, rEBP, rSP, rESP, 
- rIP, rEIP
-} Regs;
+typedef enum {
+  BX_DBG_SREG_ES,
+  BX_DBG_SREG_CS,
+  BX_DBG_SREG_SS,
+  BX_DBG_SREG_DS,
+  BX_DBG_SREG_FS,
+  BX_DBG_SREG_GS
+} SRegs;
+
+typedef enum {
+  BX_DBG_REG8L_AL,
+  BX_DBG_REG8L_CL,
+  BX_DBG_REG8L_DL,
+  BX_DBG_REG8L_BL,
+  BX_DBG_REG8H_AH,
+  BX_DBG_REG8H_CH,
+  BX_DBG_REG8H_DH,
+  BX_DBG_REG8H_BH
+} Regs8;
+
+#define BX_DBG_REG16_IP 0
+
+typedef enum {
+  BX_DBG_REG16_AX,
+  BX_DBG_REG16_CX,
+  BX_DBG_REG16_DX,
+  BX_DBG_REG16_BX,
+  BX_DBG_REG16_SP,
+  BX_DBG_REG16_BP,
+  BX_DBG_REG16_SI,
+  BX_DBG_REG16_DI
+} Regs16;
+
+#define BX_DBG_REG32_EIP 0
+
+typedef enum {
+  BX_DBG_REG32_EAX,
+  BX_DBG_REG32_ECX,
+  BX_DBG_REG32_EDX,
+  BX_DBG_REG32_EBX,
+  BX_DBG_REG32_ESP,
+  BX_DBG_REG32_EBP,
+  BX_DBG_REG32_ESI,
+  BX_DBG_REG32_EDI
+} Regs32;
 
 typedef enum
 {
@@ -93,8 +127,14 @@ typedef struct {
 #define EMPTY_ARG (-1)
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
-Bit32u bx_dbg_get_reg_value(Regs reg);
-void bx_dbg_set_reg_value (Regs reg, Bit32u value);
+Bit8u bx_dbg_get_reg8l_value(unsigned reg);
+Bit8u bx_dbg_get_reg8h_value(unsigned reg);
+Bit16u bx_dbg_get_reg16_value(unsigned reg);
+Bit32u bx_dbg_get_reg32_value(unsigned reg);
+void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value);
+void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value);
+void bx_dbg_set_reg16_value(unsigned reg, Bit16u value);
+void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
 bx_num_range make_num_range (Bit64s from, Bit64s to);
@@ -123,7 +163,7 @@ void bx_dbg_playback_command(char*);
 void bx_dbg_modebp_command(void);
 void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(Bit32u addr);
-void bx_dbg_show_command(char*); /* BW */
+void bx_dbg_show_command(char*);
 void enter_playback_entry(void);
 void bx_dbg_print_stack_command(int nwords);
 void bx_dbg_watch(int read, Bit32u address);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.39 2006-01-24 21:37:36 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.40 2006-01-25 18:13:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1902,39 +1902,37 @@ void bx_dbg_info_registers_command(int which_regs_mask)
       dbg_printf("%s:\n", BX_CPU(i)->name);
 #endif
       reg = cpu.eax;
-      dbg_printf("eax            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("eax: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.ecx;
-      dbg_printf("ecx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("ecx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.edx;
-      dbg_printf("edx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("edx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.ebx;
-      dbg_printf("ebx            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("ebx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.esp;
-      dbg_printf("esp            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("esp: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.ebp;
-      dbg_printf("ebp            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("ebp: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.esi;
-      dbg_printf("esi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
+      dbg_printf("esi: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.edi;
-      dbg_printf("edi            0x%-8x\t%d\n", (unsigned) reg, (int) reg);
-
+      dbg_printf("edi: 0x%-8x %d\n", (unsigned) reg, (int) reg);
       reg = cpu.eip;
-      dbg_printf("eip            0x%-8x\n", (unsigned) reg);
+      dbg_printf("eip: 0x%-8x\n", (unsigned) reg);
       reg = cpu.eflags;
-      dbg_printf("eflags         0x%-8x\n", (unsigned) reg);
-
+      dbg_printf("eflags 0x%-8x\n", (unsigned) reg);
       reg = cpu.cs.sel;
-      dbg_printf("cs             0x%-8x\n", (unsigned) reg);
+      dbg_printf("cs:  0x%-8x\n", (unsigned) reg);
       reg = cpu.ss.sel;
-      dbg_printf("ss             0x%-8x\n", (unsigned) reg);
+      dbg_printf("ss:  0x%-8x\n", (unsigned) reg);
       reg = cpu.ds.sel;
-      dbg_printf("ds             0x%-8x\n", (unsigned) reg);
+      dbg_printf("ds:  0x%-8x\n", (unsigned) reg);
       reg = cpu.es.sel;
-      dbg_printf("es             0x%-8x\n", (unsigned) reg);
+      dbg_printf("es:  0x%-8x\n", (unsigned) reg);
       reg = cpu.fs.sel;
-      dbg_printf("fs             0x%-8x\n", (unsigned) reg);
+      dbg_printf("fs:  0x%-8x\n", (unsigned) reg);
       reg = cpu.gs.sel;
-      dbg_printf("gs             0x%-8x\n", (unsigned) reg);
+      dbg_printf("gs:  0x%-8x\n", (unsigned) reg);
     }
 #if BX_SUPPORT_FPU
     if (which_regs_mask & BX_INFO_FPU_REGS) {
@@ -2365,28 +2363,36 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   symbol++; // get past '$'
 
   if ( !strcmp(symbol, "eax") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EAX, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EAX, val);
+    return;
   }
   else if ( !strcmp(symbol, "ecx") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ECX, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ECX, val);
+    return;
   }
   else if ( !strcmp(symbol, "edx") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EDX, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDX, val);
+    return;
   }
   else if ( !strcmp(symbol, "ebx") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EBX, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBX, val);
+    return;
   }
   else if ( !strcmp(symbol, "esp") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ESP, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESP, val);
+    return;
   }
   else if ( !strcmp(symbol, "ebp") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EBP, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBP, val);
+    return;
   }
   else if ( !strcmp(symbol, "esi") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_ESI, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESI, val);
+    return;
   }
   else if ( !strcmp(symbol, "edi") ) {
-    is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EDI, val);
+    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDI, val);
+    return;
   }
   else if ( !strcmp(symbol, "eip") ) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EIP, val);
@@ -2773,7 +2779,7 @@ void bx_dbg_instrument_command(const char *comm)
     BX_INSTR_PRINT();
   }
   else {
-    dbg_printf("Error: command instrument %s not implemented.\n", comm);
+    dbg_printf("Error: command 'instrument %s' not implemented.\n", comm);
     bx_dbg_exit(1);
   }
 #else
@@ -3689,161 +3695,72 @@ void bx_dbg_calc_command(Bit64u value)
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", value, value);
 }
 
-Bit32u bx_dbg_get_reg_value(Regs reg)
+Bit8u bx_dbg_get_reg8l_value(unsigned reg)
 {
- switch(reg)
- {
-  case rAL:
-   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_AL);
-  case rBL:
-   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_BL);
-  case rCL:
-   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_CL);
-  case rDL:
-   return BX_CPU(dbg_cpu)->get_reg8l(BX_8BIT_REG_DL);
-  case rAH:
-   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_AH);
-  case rBH:
-   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_BH);
-  case rCH:
-   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_CH);
-  case rDH:
-   return BX_CPU(dbg_cpu)->get_reg8h(BX_8BIT_REG_DH);
+  if (reg < BX_GENERAL_REGISTERS)
+    return BX_CPU(dbg_cpu)->get_reg8l(reg);
 
-  case rAX:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_AX);
-  case rBX:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BX);
-  case rCX:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_CX);
-  case rDX:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_DX);
-  case rSI:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SI);
-  case rDI:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_DI);
-  case rBP:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
-  case rSP:
-   return BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP);
-
-  case rEAX:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EAX);
-  case rEBX:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBX);
-  case rECX:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ECX);
-  case rEDX:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDX);
-  case rESI:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESI);
-  case rEDI:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDI);
-  case rEBP:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
-  case rESP:
-   return BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
-
-  case rIP:
-   return (Bit16u) BX_CPU(dbg_cpu)->get_ip();
-  case rEIP:
-   return (Bit32u) BX_CPU(dbg_cpu)->get_ip();
-
-  default:
-   fprintf(stderr, "unknown register ??? (BUG!!!)\n");
-   return 0;
- }
+  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  return 0;
 }
 
-void bx_dbg_set_reg_value (Regs reg, Bit32u value)
+Bit8u bx_dbg_get_reg8h_value(unsigned reg)
 {
- switch(reg)
- {
-  case rAL:
-   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_AL, value);
-   break;
-  case rBL:
-   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_BL, value);
-   break;
-  case rCL:
-   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_CL, value);
-   break;
-  case rDL:
-   BX_CPU(dbg_cpu)->set_reg8l(BX_8BIT_REG_DL, value);
-   break;
-  case rAH:
-   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_AH, value>>8);
-   break;
-  case rBH:
-   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_BH, value>>8);
-   break;
-  case rCH:
-   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_CH, value>>8);
-   break;
-  case rDH:
-   BX_CPU(dbg_cpu)->set_reg8h(BX_8BIT_REG_DH, value>>8);
-   break;
+  if (reg < BX_GENERAL_REGISTERS)
+    return BX_CPU(dbg_cpu)->get_reg8h(reg);
 
-  case rAX:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_AX, value);
-   break;
-  case rBX:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_BX, value);
-   break;
-  case rCX:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_CX, value);
-   break;
-  case rDX:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_DX, value);
-   break;
-  case rSI:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_SI, value);
-   break;
-  case rDI:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_DI, value);
-   break;
-  case rBP:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_BP, value);
-   break;
-  case rSP:
-   BX_CPU(dbg_cpu)->set_reg16(BX_16BIT_REG_SP, value);
-   break;
+  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  return 0;
+}
 
-  case rEAX:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EAX, value);
-   break;
-  case rEBX:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBX, value);
-   break;
-  case rECX:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ECX, value);
-   break;
-  case rEDX:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDX, value);
-   break;
-  case rESI:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESI, value);
-   break;
-  case rEDI:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDI, value);
-   break;
-  case rEBP:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBP, value);
-   break;
-  case rESP:
-   BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESP, value);
-   break;
-/*
-  case rIP:
-   BX_CPU(dbg_cpu)->set_IP(value);
-   break;
-  case rEIP:
-   BX_CPU(dbg_cpu)->set_EIP(value);
-   break;
-*/
-  default:
-    fprintf(stderr, "unknown register ??? (BUG!!!)\n");
- }
+Bit16u bx_dbg_get_reg16_value(unsigned reg)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    return BX_CPU(dbg_cpu)->get_reg16(reg);
+
+  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  return 0;
+}
+
+Bit32u bx_dbg_get_reg32_value(unsigned reg)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    return BX_CPU(dbg_cpu)->get_reg32(reg);
+
+  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  return 0;
+}
+
+void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    BX_CPU(dbg_cpu)->set_reg8l(reg, value);
+  else
+    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+}
+
+void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    BX_CPU(dbg_cpu)->set_reg8h(reg, value);
+  else
+    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+}
+
+void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    BX_CPU(dbg_cpu)->set_reg16(reg, value);
+  else
+    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+}
+
+void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
+{
+  if (reg < BX_GENERAL_REGISTERS)
+    BX_CPU(dbg_cpu)->set_reg32(reg, value);
+  else
+    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
 }
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no)
