@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.88 2006-01-09 18:37:29 vruppert Exp $
+// $Id: gui.cc,v 1.89 2006-01-25 17:37:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -160,6 +160,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   else
     BX_GUI_THIS floppyA_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyA_eject_bmap_id,
                           BX_GRAVITY_LEFT, floppyA_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyA_hbar_id, "Change floppy A: media");
 
   // Floppy B:
   BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1);
@@ -169,23 +170,14 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   else
     BX_GUI_THIS floppyB_hbar_id = headerbar_bitmap(BX_GUI_THIS floppyB_eject_bmap_id,
                           BX_GRAVITY_LEFT, floppyB_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS floppyB_hbar_id, "Change floppy B: media");
 
   // CDROM, 
-  // valgrinds says that the harddrive object is not be initialised yet, 
+  // the harddrive object is not initialised yet,
   // so we just set the bitmap to ejected for now
-#if 0
-  if (DEV_hd_present()) {
-    Bit32u handle = DEV_hd_get_first_cd_handle();
-    BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
-  }
-
-  if (BX_GUI_THIS cdromD_status)
-    BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_bmap_id,
+  BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_eject_bmap_id,
                           BX_GRAVITY_LEFT, cdromD_handler);
-  else
-#endif
-    BX_GUI_THIS cdromD_hbar_id = headerbar_bitmap(BX_GUI_THIS cdromD_eject_bmap_id,
-                          BX_GRAVITY_LEFT, cdromD_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS cdromD_hbar_id, "Change first CDROM media");
 
   // Mouse button
   if (bx_options.Omouse_enabled->get ())
@@ -194,6 +186,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   else
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS nomouse_bmap_id,
                           BX_GRAVITY_LEFT, toggle_mouse_enable);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS mouse_hbar_id, "Enable mouse capture");
 
   // These are the buttons on the right side.  They are created in order
   // of right to left.
@@ -201,24 +194,31 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   // Power button
   BX_GUI_THIS power_hbar_id = headerbar_bitmap(BX_GUI_THIS power_bmap_id,
                           BX_GRAVITY_RIGHT, power_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS power_hbar_id, "Turn power off");
   // Reset button
   BX_GUI_THIS reset_hbar_id = headerbar_bitmap(BX_GUI_THIS reset_bmap_id,
                           BX_GRAVITY_RIGHT, reset_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS reset_hbar_id, "Reset the system");
   // Configure button
   BX_GUI_THIS config_hbar_id = headerbar_bitmap(BX_GUI_THIS config_bmap_id,
                           BX_GRAVITY_RIGHT, config_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS config_hbar_id, "Runtime config dialog");
   // Snapshot button
   BX_GUI_THIS snapshot_hbar_id = headerbar_bitmap(BX_GUI_THIS snapshot_bmap_id,
                           BX_GRAVITY_RIGHT, snapshot_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS snapshot_hbar_id, "Save snapshot of the text mode screen");
   // Paste button
   BX_GUI_THIS paste_hbar_id = headerbar_bitmap(BX_GUI_THIS paste_bmap_id,
                           BX_GRAVITY_RIGHT, paste_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS paste_hbar_id, "Paste clipboard text as emulated keystrokes");
   // Copy button
   BX_GUI_THIS copy_hbar_id = headerbar_bitmap(BX_GUI_THIS copy_bmap_id,
                           BX_GRAVITY_RIGHT, copy_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS copy_hbar_id, "Copy text mode screen to the clipboard");
   // User button
   BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
                           BX_GRAVITY_RIGHT, userbutton_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
 
   if(bx_options.Otext_snapshot_check->get()) {
     bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 1000000, 1, 1, "snap_chk");
@@ -789,10 +789,14 @@ bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
   }
 }
 
-  void 
-bx_gui_c::show_ips(Bit32u ips_count)
+void bx_gui_c::show_ips(Bit32u ips_count)
 {
 #if BX_SHOW_IPS
   BX_INFO(("ips = %u", ips_count));
 #endif
+}
+
+Bit8u bx_gui_c::get_mouse_headerbar_id()
+{
+  return BX_GUI_THIS mouse_hbar_id;
 }

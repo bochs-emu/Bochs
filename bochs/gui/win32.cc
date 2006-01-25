@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.103 2006-01-23 21:53:57 vruppert Exp $
+// $Id: win32.cc,v 1.104 2006-01-25 17:37:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ public:
   bx_win32_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS();
   virtual void statusbar_setitem(int element, bx_bool active);
+  virtual void set_tooltip(unsigned hbar_id, const char *tip);
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
@@ -124,6 +125,7 @@ struct {
 static struct {
   unsigned bmap_id;
   void (*f)(void);
+  const char *tooltip;
 } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
 
 static int bx_headerbar_entries;
@@ -163,6 +165,7 @@ static int FontId = 2;
 
 static char *szMouseEnable = "CTRL + 3rd button enables mouse ";
 static char *szMouseDisable = "CTRL + 3rd button disables mouse";
+static char *szMouseTooltip = "Enable mouse capture\nUse CTRL + 3rd button to release";
 
 static char szAppName[] = "Bochs for Windows";
 static char szWindowName[] = "Bochs for Windows - Display";
@@ -614,6 +617,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   if (mouse_buttons == 2) {
     szMouseEnable = "CTRL + Lbutton + Rbutton enables mouse ";
     szMouseDisable = "CTRL + Lbutton + Rbutton disables mouse";
+    szMouseTooltip = "Enable mouse capture\nUse CTRL + Lbutton + Rbutton to release";
   }
   
   // parse win32 specific options
@@ -631,6 +635,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   if (legacyF12) {
     szMouseEnable = "Press F12 to enable mouse ";
     szMouseDisable = "Press F12 to disable mouse";
+    szMouseTooltip = "Enable mouse capture\nUse F12 to release";
   }
   
   stInfo.hInstance = GetModuleHandle(NULL);
@@ -777,7 +782,7 @@ VOID UIThread(PVOID pvoid) {
 
     InitCommonControls();
     hwndTB = CreateWindowEx(0, TOOLBARCLASSNAME, (LPSTR) NULL,
-               WS_CHILD | TBSTYLE_FLAT, 0, 0, 0, 0, stInfo.mainWnd,
+               WS_CHILD | TBSTYLE_TOOLTIPS | TBSTYLE_FLAT, 0, 0, 0, 0, stInfo.mainWnd,
                (HMENU) 100, stInfo.hInstance, NULL);
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
@@ -890,6 +895,9 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
   DRAWITEMSTRUCT *lpdis;
   char *sbtext;
+  NMHDR *lpnmh;
+  TOOLTIPTEXT *lpttt;
+  int idTT, hbar_id;
 
   switch (iMsg) {
   case WM_CREATE:
@@ -945,6 +953,20 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       DrawText(lpdis->hDC, sbtext+1, lstrlen(sbtext)-1, &lpdis->rcItem, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
       return TRUE;
     }
+    break;
+
+  case WM_NOTIFY:
+    lpnmh = (LPNMHDR)lParam;
+    if ((int)lpnmh->code == TTN_NEEDTEXT) {
+      lpttt = (LPTOOLTIPTEXT)lParam;
+      idTT = (int)wParam;
+      hbar_id = idTT - 101;
+      if ((SendMessage(hwndTB, TB_GETSTATE, idTT, 0)) &&
+          (bx_headerbar_entry[hbar_id].tooltip != NULL)) {
+          lstrcpy(lpttt->szText, bx_headerbar_entry[hbar_id].tooltip);
+      }
+    }
+    return FALSE;
     break;
 
   }
@@ -1872,6 +1894,7 @@ unsigned bx_win32_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
 
   bx_headerbar_entry[hb_index].bmap_id = bmap_id;
   bx_headerbar_entry[hb_index].f = f;
+  bx_headerbar_entry[hb_index].tooltip = NULL;
 
   return(hb_index);
 }
@@ -1888,6 +1911,7 @@ void bx_win32_gui_c::show_headerbar(void)
     SendMessage(hwndTB, TB_AUTOSIZE, 0, 0);
     ShowWindow(hwndTB, SW_SHOW);
     resize_main_window();
+    bx_gui->set_tooltip(bx_gui->get_mouse_headerbar_id(), szMouseTooltip);
   }
 }
 
@@ -2067,6 +2091,11 @@ void bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
     mouseToggleReq = TRUE;
     mouseCaptureNew = val;
   }
+}
+
+void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
+{
+  bx_headerbar_entry[hbar_id].tooltip = tip;
 }
 
 #if BX_SHOW_IPS

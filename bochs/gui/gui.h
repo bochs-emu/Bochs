@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.49 2005-11-12 16:09:55 vruppert Exp $
+// $Id: gui.h,v 1.50 2006-01-25 17:37:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -91,6 +91,7 @@ public:
   virtual int set_clipboard_text(char *snapshot, Bit32u len) = 0;
   virtual void mouse_enabled_changed_specific (bx_bool val) = 0;
   virtual void statusbar_setitem(int element, bx_bool active) {}
+  virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
   virtual void exit(void) = 0;
   // set_display_mode() changes the mode between the configuration interface
   // and the simulation.  This is primarily intended for display libraries
@@ -120,6 +121,7 @@ public:
   static void key_event(Bit32u key);
   static void set_text_charmap(Bit8u *fbuffer);
   static void set_text_charbyte(Bit16u address, Bit8u data);
+  static Bit8u get_mouse_headerbar_id();
 
   void init(int argc, char **argv,
                  unsigned x_tilesize, unsigned y_tilesize);
