@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.159 2006-01-13 17:36:27 vruppert Exp $
+// $Id: rombios.c,v 1.160 2006-01-25 17:51:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -932,7 +932,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.159 $ $Date: 2006-01-13 17:36:27 $";
+static char bios_cvs_version_string[] = "$Revision: 1.160 $ $Date: 2006-01-25 17:51:49 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -7780,7 +7780,7 @@ int1a_function(regs, ds, iret_addr)
       } else if (regs.u.r8.bl == 0x83) {
         BX_INFO("bad PCI vendor ID %04x\n", regs.u.r16.dx);
       } else if (regs.u.r8.bl == 0x86) {
-        BX_INFO("PCI device %04x:%04x not found\n", regs.u.r16.dx, regs.u.r16.cx);
+        BX_INFO("PCI device %04x:%04x not found at index %d\n", regs.u.r16.dx, regs.u.r16.cx, regs.u.r16.si);
       }
       regs.u.r8.ah = regs.u.r8.bl;
       SetCF(iret_addr.flags);
