@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.65 2006-01-23 18:34:47 vruppert Exp $
+// $Id: sdl.cc,v 1.66 2006-01-26 22:13:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,6 +137,14 @@ static char sdl_ips_text[20];
 
 static void headerbar_click(int x);
 
+#if BX_SHOW_IPS
+#if  defined(__MINGW32__) || defined(_MSC_VER)
+  Uint32 SDLCALL sdlTimer(Uint32 interval);
+  void alarm(int);
+  void bx_signal_handler(int);
+#endif
+#endif
+
 
 void switch_to_windowed(void)
 {
@@ -222,6 +230,21 @@ void switch_to_fullscreen(void)
   sdl_grab = 1;
 }
 
+#if BX_SHOW_IPS
+#if defined(__MINGW32__) || defined(_MSC_VER)
+Uint32 SDLCALL sdlTimer(Uint32 interval)
+{
+  bx_signal_handler(SIGALRM);
+  return interval;
+}
+
+void alarm(int time)
+{
+  SDL_SetTimer(time*1000, sdlTimer);
+}
+#endif
+#endif
+
 bx_sdl_gui_c::bx_sdl_gui_c ()
 {
 }
@@ -242,6 +265,7 @@ void bx_sdl_gui_c::specific_init(
     unsigned header_bar_y)
 {
   int i,j;
+  Uint32 flags;
 
   put("SDL");
 
@@ -268,8 +292,13 @@ void bx_sdl_gui_c::specific_init(
   }
   #endif
   
-  if( SDL_Init(SDL_INIT_VIDEO) < 0 )
-  {
+  flags = SDL_INIT_VIDEO;
+#if BX_SHOW_IPS
+#if  defined(__MINGW32__) || defined(_MSC_VER)
+  flags |= SDL_INIT_TIMER;
+#endif
+#endif
+  if (SDL_Init(flags) < 0) {
     LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
     BX_PANIC (("Unable to initialize SDL libraries"));
     return;
