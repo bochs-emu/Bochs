@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.54 2006-01-25 22:20:00 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.55 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -241,14 +241,6 @@ Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
   Bit32u return_val32;
 
   switch (reg) {
-    case BX_DBG_REG_EAX: return(EAX);
-    case BX_DBG_REG_ECX: return(ECX);
-    case BX_DBG_REG_EDX: return(EDX);
-    case BX_DBG_REG_EBX: return(EBX);
-    case BX_DBG_REG_ESP: return(ESP);
-    case BX_DBG_REG_EBP: return(EBP);
-    case BX_DBG_REG_ESI: return(ESI);
-    case BX_DBG_REG_EDI: return(EDI);
     case BX_DBG_REG_EIP: return(EIP);
     case BX_DBG_REG_EFLAGS:
       return_val32 = dbg_get_eflags();
@@ -272,14 +264,6 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
   Bit32u current_sys_bits;
 
   switch (reg) {
-    case BX_DBG_REG_EAX: EAX = val; return(1);
-    case BX_DBG_REG_ECX: ECX = val; return(1);
-    case BX_DBG_REG_EDX: EDX = val; return(1);
-    case BX_DBG_REG_EBX: EBX = val; return(1);
-    case BX_DBG_REG_ESP: ESP = val; return(1);
-    case BX_DBG_REG_EBP: EBP = val; return(1);
-    case BX_DBG_REG_ESI: ESI = val; return(1);
-    case BX_DBG_REG_EDI: EDI = val; return(1);
     case BX_DBG_REG_EIP: EIP = val; return(1);
     case BX_DBG_REG_EFLAGS:
       BX_INFO(("dbg_set_reg: can not handle eflags yet."));

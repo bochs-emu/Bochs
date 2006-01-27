@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.25 2006-01-10 06:13:26 sshwarts Exp $
+// $Id: apic.h,v 1.26 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,7 +178,7 @@ public:
   void print_status(void);
   bx_bool match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
-  virtual bx_bool deliver (Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
+  bx_bool deliver (Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr (void);
   void  set_tpr (Bit8u tpr);
   Bit8u get_ppr (void);

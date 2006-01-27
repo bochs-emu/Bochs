@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.10 2006-01-25 22:19:59 sshwarts Exp $
+// $Id: lexer.l,v 1.11 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -110,7 +110,6 @@ watch           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WATCH); }
 unwatch         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_UNWATCH); }
 read            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_READ); }
 write           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
-continue        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTINUE); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
 load-symbols    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
 symbols         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLS); }
@@ -118,8 +117,7 @@ slist           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LIST_SYMBOLS); }
 global          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_GLOBAL); }
 where           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WHERE); }
 print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
-ne2k            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
-ne2000          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
+ne2k|ne2000     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
 al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_REG_AL);}

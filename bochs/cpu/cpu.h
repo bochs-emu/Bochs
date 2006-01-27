@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.255 2006-01-24 19:03:54 sshwarts Exp $
+// $Id: cpu.h,v 1.256 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,15 +57,6 @@
 #define BX_REG16_OFFSET 2
 #endif // ifdef BX_LITTLE_ENDIAN
 
-#define BX_8BIT_REG_AL  0
-#define BX_8BIT_REG_CL  1
-#define BX_8BIT_REG_DL  2
-#define BX_8BIT_REG_BL  3
-#define BX_8BIT_REG_AH  4
-#define BX_8BIT_REG_CH  5
-#define BX_8BIT_REG_DH  6
-#define BX_8BIT_REG_BH  7
-
 #define BX_16BIT_REG_AX 0
 #define BX_16BIT_REG_CX 1
 #define BX_16BIT_REG_DX 2
@@ -111,7 +102,6 @@
 #define CH (BX_CPU_THIS_PTR gen_reg[1].word.byte.rh)
 #define DH (BX_CPU_THIS_PTR gen_reg[2].word.byte.rh)
 #define BH (BX_CPU_THIS_PTR gen_reg[3].word.byte.rh)
-
 
 // access to 16 bit general registers
 #define AX (BX_CPU_THIS_PTR gen_reg[0].word.rx)

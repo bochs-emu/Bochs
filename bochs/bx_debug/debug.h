@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.13 2006-01-25 22:19:59 sshwarts Exp $
+// $Id: debug.h,v 1.14 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,18 +61,104 @@ typedef enum {
   BX_DBG_SREG_GS
 } SRegs;
 
+#define BX_DBG_REG16_IP  0
+#define BX_DBG_REG32_EIP 0
+
+typedef enum {
+  BX_DBG_REG8H_AH,
+  BX_DBG_REG8H_CH,
+  BX_DBG_REG8H_DH,
+  BX_DBG_REG8H_BH,
+} Regs8H;
+
+#if BX_SUPPORT_X86_64
+
 typedef enum {
   BX_DBG_REG8L_AL,
   BX_DBG_REG8L_CL,
   BX_DBG_REG8L_DL,
   BX_DBG_REG8L_BL,
-  BX_DBG_REG8H_AH,
-  BX_DBG_REG8H_CH,
-  BX_DBG_REG8H_DH,
-  BX_DBG_REG8H_BH
-} Regs8;
+  BX_DBG_REG8L_SPL,
+  BX_DBG_REG8L_BPL,
+  BX_DBG_REG8L_SIL,
+  BX_DBG_REG8L_DIL,
+  BX_DBG_REG8L_R8,
+  BX_DBG_REG8L_R9,
+  BX_DBG_REG8L_R10,
+  BX_DBG_REG8L_R11,
+  BX_DBG_REG8L_R12,
+  BX_DBG_REG8L_R13,
+  BX_DBG_REG8L_R14,
+  BX_DBG_REG8L_R15
+} Regs8L;
 
-#define BX_DBG_REG16_IP 0
+typedef enum {
+  BX_DBG_REG16_AX,
+  BX_DBG_REG16_CX,
+  BX_DBG_REG16_DX,
+  BX_DBG_REG16_BX,
+  BX_DBG_REG16_SP,
+  BX_DBG_REG16_BP,
+  BX_DBG_REG16_SI,
+  BX_DBG_REG16_DI,
+  BX_DBG_REG16_R8,
+  BX_DBG_REG16_R9,
+  BX_DBG_REG16_R10,
+  BX_DBG_REG16_R11,
+  BX_DBG_REG16_R12,
+  BX_DBG_REG16_R13,
+  BX_DBG_REG16_R14,
+  BX_DBG_REG16_R15
+} Regs16;
+
+typedef enum {
+  BX_DBG_REG32_EAX,
+  BX_DBG_REG32_ECX,
+  BX_DBG_REG32_EDX,
+  BX_DBG_REG32_EBX,
+  BX_DBG_REG32_ESP,
+  BX_DBG_REG32_EBP,
+  BX_DBG_REG32_ESI,
+  BX_DBG_REG32_EDI,
+  BX_DBG_REG32_R8,
+  BX_DBG_REG32_R9,
+  BX_DBG_REG32_R10,
+  BX_DBG_REG32_R11,
+  BX_DBG_REG32_R12,
+  BX_DBG_REG32_R13,
+  BX_DBG_REG32_R14,
+  BX_DBG_REG32_R15
+} Regs32;
+
+typedef enum {
+  BX_DBG_REG64_RAX,
+  BX_DBG_REG64_RCX,
+  BX_DBG_REG64_RDX,
+  BX_DBG_REG64_RBX,
+  BX_DBG_REG64_RSP,
+  BX_DBG_REG64_RBP,
+  BX_DBG_REG64_RSI,
+  BX_DBG_REG64_RDI,
+  BX_DBG_REG64_R8,
+  BX_DBG_REG64_R9,
+  BX_DBG_REG64_R10,
+  BX_DBG_REG64_R11,
+  BX_DBG_REG64_R12,
+  BX_DBG_REG64_R13,
+  BX_DBG_REG64_R14,
+  BX_DBG_REG64_R15
+} Regs64;
+
+#define BX_DBG_REG64_RIP 0
+
+#else
+
+typedef enum {
+  BX_DBG_REG8L_AL,
+  BX_DBG_REG8L_CL,
+  BX_DBG_REG8L_DL,
+  BX_DBG_REG8L_BL
+} Regs8L;
 
 typedef enum {
   BX_DBG_REG16_AX,
@@ -85,8 +171,6 @@ typedef enum {
   BX_DBG_REG16_DI
 } Regs16;
 
-#define BX_DBG_REG32_EIP 0
-
 typedef enum {
   BX_DBG_REG32_EAX,
   BX_DBG_REG32_ECX,
@@ -97,6 +181,8 @@ typedef enum {
   BX_DBG_REG32_ESI,
   BX_DBG_REG32_EDI
 } Regs32;
+
+#endif
 
 typedef enum
 {
@@ -201,7 +287,7 @@ void bx_dbg_instrument_command(const char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
 extern bx_bool watchpoint_continue;
-void bx_dbg_linux_syscall (unsigned which_cpu);
+void bx_dbg_linux_syscall(unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
 void bx_dbg_info_vga(void);
@@ -233,16 +319,8 @@ typedef enum {
       BREAK_POINT_MAGIC, BREAK_POINT_READ, BREAK_POINT_WRITE, BREAK_POINT_TIME
 } break_point_t;
 
-#define BX_DBG_REG_EAX          10
-#define BX_DBG_REG_ECX          11
-#define BX_DBG_REG_EDX          12
-#define BX_DBG_REG_EBX          13
-#define BX_DBG_REG_ESP          14
-#define BX_DBG_REG_EBP          15
-#define BX_DBG_REG_ESI          16
-#define BX_DBG_REG_EDI          17
-#define BX_DBG_REG_EIP          18
-#define BX_DBG_REG_EFLAGS       19
+#define BX_DBG_REG_EIP          10
+#define BX_DBG_REG_EFLAGS       11
 #define BX_DBG_REG_CS           20
 #define BX_DBG_REG_SS           21
 #define BX_DBG_REG_DS           22

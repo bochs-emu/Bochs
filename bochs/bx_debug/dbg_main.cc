@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.42 2006-01-25 22:19:57 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.43 2006-01-27 19:50:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,7 @@ extern "C" {
 
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
-Bit32u dbg_cpu = 0;
+unsigned dbg_cpu = 0;
 
 bx_param_bool_c *sim_running;
 
@@ -1194,30 +1194,19 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
     // from here. (eks)
-    if( BX_CPU(dbg_cpu)->trace_reg )
+    if(BX_CPU(dbg_cpu)->trace_reg) {
       dbg_printf (
-    "eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\tesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\ncf=%u af=%u zf=%u sf=%u of=%u pf=%u tf=%u if=%u df=%u iopl=%u nt=%u rf=%u vm=%u\n",
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ECX),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDX),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBX),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESP),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBP),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESI),
-    BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDI),
-    BX_CPU(which_cpu)->getB_CF(),
-    BX_CPU(which_cpu)->getB_AF(),
-    BX_CPU(which_cpu)->getB_ZF(),
-    BX_CPU(which_cpu)->getB_SF(),
-    BX_CPU(which_cpu)->getB_OF(),
-    BX_CPU(which_cpu)->getB_PF(),
-    BX_CPU(which_cpu)->getB_TF (),
-    BX_CPU(which_cpu)->getB_IF (),
-    BX_CPU(which_cpu)->getB_DF (),
-    BX_CPU(which_cpu)->get_IOPL (),
-    BX_CPU(which_cpu)->getB_NT (),
-    BX_CPU(which_cpu)->getB_RF (),
-    BX_CPU(which_cpu)->getB_VM ());
+        "eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\nesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\n",
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ECX),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDX),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBX),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESP),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBP),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESI),
+        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDI));
+      dbg_printf("eflags: "); bx_dbg_info_flags();
+    }
 
     if (print_time)
       dbg_printf("(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
@@ -1603,8 +1592,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("lbreakpoint    ");
     dbg_printf("keep ");
     dbg_printf ( bx_guard.iaddr.lin[i].enabled?"y   ":"n   ");
-    dbg_printf("0x%08x\n",
-                  bx_guard.iaddr.lin[i].addr);
+    dbg_printf("0x%08x\n", bx_guard.iaddr.lin[i].addr);
   }
 #endif
 
@@ -1614,8 +1602,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("pbreakpoint    ");
     dbg_printf("keep ");
     dbg_printf ( bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
-    dbg_printf("0x%08x\n",
-                  bx_guard.iaddr.phy[i].addr);
+    dbg_printf("0x%08x\n", bx_guard.iaddr.phy[i].addr);
   }
 #endif
 }
@@ -2112,8 +2099,8 @@ void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val)
       buf[0] = (Bit8u) val;
       break;
     case 2:
-      buf[0] = val & 0xff;
-      buf[1] = (val>>8) & 0xff;
+      buf[0] = val & 0xff; val >>= 8;
+      buf[1] = val & 0xff;
       break;
     case 4:
       buf[0] = val & 0xff; val >>= 8;
@@ -2137,39 +2124,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   bx_bool is_OK = false;
   symbol++; // get past '$'
 
-  if ( !strcmp(symbol, "eax") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EAX, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "ecx") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ECX, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "edx") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDX, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "ebx") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBX, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "esp") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESP, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "ebp") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EBP, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "esi") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_ESI, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "edi") ) {
-    BX_CPU(dbg_cpu)->set_reg32(BX_32BIT_REG_EDI, val);
-    return;
-  }
-  else if ( !strcmp(symbol, "eip") ) {
+  if ( !strcmp(symbol, "eip") ) {
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_EIP, val);
   }
   else if ( !strcmp(symbol, "eflags") ) {
@@ -2195,11 +2150,11 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   }
   else if ( !strcmp(symbol, "cpu") ) {
 #if BX_SUPPORT_SMP
-      if (val > BX_SMP_PROCESSORS) {
-        dbg_printf("invalid cpu id number %d\n", val);
-        return;
-      }
-      dbg_cpu = val;
+    if (val > BX_SMP_PROCESSORS) {
+      dbg_printf("invalid cpu id number %d\n", val);
+      return;
+    }
+    dbg_cpu = val;
 #endif
   }
   else if ( !strcmp(symbol, "synchronous_dma") ) {
@@ -2812,7 +2767,8 @@ static void bx_dbg_print_tss (unsigned char *tss, int len)
   dbg_printf("i/o map: 0x%04x\n", *(Bit16u*)(tss+0x66));
 }
 
-void bx_dbg_info_tss_command(bx_num_range range) {
+void bx_dbg_info_tss_command(bx_num_range range)
+{
   bx_dbg_cpu_t cpu;
   BX_CPU(0)->dbg_get_cpu(&cpu);
 
@@ -2893,7 +2849,7 @@ void bx_dbg_info_control_regs_command(void)
 }
 
 /*
- * this implements the info ne2k commands in the debugger.
+ * this function implements the info ne2k commands in the debugger
  * info ne2k - shows all registers
  * info ne2k page N - shows all registers in a page
  * info ne2k page N reg M - shows just one register
@@ -2903,7 +2859,7 @@ void bx_dbg_info_ne2k(int page, int reg)
 #if BX_SUPPORT_NE2K
   DEV_ne2k_print_info (stderr, page, reg, 0);
 #else
-  dbg_printf("NE2000 support is not compiled in.\n");
+  dbg_printf ("NE2000 support is not compiled in.\n");
 #endif
 }
 
