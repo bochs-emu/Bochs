@@ -17,6 +17,8 @@ Changes in 2.2.6 (not yet released):
     the old --enable-processors=N option is deprecated
 - updated Bochs instrumentation examples (Stanislav Shwartsman)
 - fixed bug in PMULUDQ SSE2 instruction (Kevin Lawton)
+- enable VME (virtual 8086 mode extensions) by default if cpu-level >= 5
+- enable Bochs disassembler by default for all configurations (Stanislav)
 
 -------------------------------------------------------------------------
 Changes in 2.2.5 (December 30, 2005):
