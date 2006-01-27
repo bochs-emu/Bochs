@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.24 2006-01-17 18:17:01 sshwarts Exp $
+// $Id: osdep.h,v 1.25 2006-01-27 21:35:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,11 +59,11 @@ extern "C" {
 #if !defined(_MSC_VER)		// gcc without -mno-cygwin
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
-#define FMT_ADDRX64 "0x%016llx"
+#define FMT_ADDRX64 "%016llx"
 #else
 #define FMT_LL "%I64"
 #define FMT_TICK "%011I64u"
-#define FMT_ADDRX64 "0x%016I64x"
+#define FMT_ADDRX64 "%016I64x"
 #endif
 
 // always return regular file.
