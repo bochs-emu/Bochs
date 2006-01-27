@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.104 2006-01-25 17:37:22 vruppert Exp $
+// $Id: win32.cc,v 1.105 2006-01-27 18:04:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,16 +132,19 @@ static int bx_headerbar_entries;
 static unsigned bx_hb_separator;
 
 // Status Bar stuff
-#define SIZE_OF_SB_ELEMENT        40
-#define SIZE_OF_SB_FIRST_ELEMENT 200 /* 160 */
-long SB_Edges[BX_MAX_STATUSITEMS+2];
-char SB_Text[BX_MAX_STATUSITEMS][10];
-bx_bool SB_Active[BX_MAX_STATUSITEMS];
 #if BX_SHOW_IPS
 static BOOL ipsUpdate = FALSE;
 static char ipsText[20];
-static Bit8u mouseMsgCounter = 0;
+#define BX_SB_TEXT_ELEMENTS 2
+#else
+#define BX_SB_TEXT_ELEMENTS 1
 #endif
+#define SIZE_OF_SB_ELEMENT        40
+#define SIZE_OF_SB_MOUSE_MESSAGE 170
+#define SIZE_OF_SB_IPS_MESSAGE 90
+long SB_Edges[BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1];
+char SB_Text[BX_MAX_STATUSITEMS][10];
+bx_bool SB_Active[BX_MAX_STATUSITEMS];
 
 // Misc stuff
 static unsigned dimension_x, dimension_y, current_bpp;
@@ -791,11 +794,14 @@ VOID UIThread(PVOID pvoid) {
                                 stInfo.mainWnd, 0x7712);
     if (hwndSB) {
       int elements;
-      SB_Edges[0] = SIZE_OF_SB_FIRST_ELEMENT + SIZE_OF_SB_ELEMENT;   // Mouse info
-      for (elements = 1; elements < (BX_MAX_STATUSITEMS+1); elements++)
+      SB_Edges[0] = SIZE_OF_SB_MOUSE_MESSAGE + SIZE_OF_SB_ELEMENT;
+#if BX_SHOW_IPS
+      SB_Edges[1] = SB_Edges[0] + SIZE_OF_SB_IPS_MESSAGE;
+#endif
+      for (elements = BX_SB_TEXT_ELEMENTS; elements < (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS); elements++)
         SB_Edges[elements] = SB_Edges[elements-1] + SIZE_OF_SB_ELEMENT;
       SB_Edges[elements] = -1;
-      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+2, (long)&SB_Edges);
+      SendMessage(hwndSB, SB_SETPARTS, BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS+1, (long)&SB_Edges);
     }
     SetStatusText(0, szMouseEnable, TRUE);
 
@@ -863,18 +869,16 @@ void SetStatusText(int Num, const char *Text, bx_bool active)
 {
   char StatText[MAX_PATH];
 
-  if ((Num < 1) || (Num > BX_MAX_STATUSITEMS)) {
-    StatText[0] = ' ';  // Add space to text in first and last item
-  } else {
-    StatText[0] = 9;  // Center the rest
-  }
-  lstrcpy(StatText+1, Text);
-  if ((Num < 1) || (Num > BX_MAX_STATUSITEMS)) {
+  if ((Num < BX_SB_TEXT_ELEMENTS) || (Num > (BX_MAX_STATUSITEMS+BX_SB_TEXT_ELEMENTS))) {
+    StatText[0] = ' ';  // Add space to text in 1st and last items
+    lstrcpy(StatText+1, Text);
     SendMessage(hwndSB, SB_SETTEXT, Num, (long)StatText);
   } else {
-    lstrcpy(SB_Text[Num-1], StatText);
-    SB_Active[Num-1] = active;
-    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num-1]);
+    StatText[0] = 9;  // Center the rest
+    lstrcpy(StatText+1, Text);
+    lstrcpy(SB_Text[Num-BX_SB_TEXT_ELEMENTS], StatText);
+    SB_Active[Num-BX_SB_TEXT_ELEMENTS] = active;
+    SendMessage(hwndSB, SB_SETTEXT, Num | SBT_OWNERDRAW, (long)SB_Text[Num-BX_SB_TEXT_ELEMENTS]);
   }
   UpdateWindow(hwndSB);
 }
@@ -884,10 +888,10 @@ bx_win32_gui_c::statusbar_setitem(int element, bx_bool active)
 {
   if (element < 0) {
     for (int i = 0; i < (int)statusitem_count; i++) {
-      SetStatusText(i+1, statusitem_text[i], active);
+      SetStatusText(i+BX_SB_TEXT_ELEMENTS, statusitem_text[i], active);
     }
   } else if (element < (int)statusitem_count) {
-    SetStatusText(element+1, statusitem_text[element], active);
+    SetStatusText(element+BX_SB_TEXT_ELEMENTS, statusitem_text[element], active);
   }
 }
 
@@ -944,7 +948,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     lpdis = (DRAWITEMSTRUCT *)lParam;
     if (lpdis->hwndItem == hwndSB) {
       sbtext = (char *)lpdis->itemData;
-      if (SB_Active[lpdis->itemID-1]) {
+      if (SB_Active[lpdis->itemID-BX_SB_TEXT_ELEMENTS]) {
         SetBkColor(lpdis->hDC, 0x0000FF00);
       } else {
         SetBkMode(lpdis->hDC, TRANSPARENT);
@@ -992,9 +996,6 @@ void SetMouseCapture()
     SetStatusText(0, szMouseDisable, TRUE);
   else
     SetStatusText(0, szMouseEnable, TRUE);
-#if BX_SHOW_IPS
-  mouseMsgCounter = 3;
-#endif
 }
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
@@ -1323,8 +1324,8 @@ void bx_win32_gui_c::handle_events(void) {
   }
 #if BX_SHOW_IPS
   if (ipsUpdate) {
+    SetStatusText(1, ipsText, 1);
     ipsUpdate = FALSE;
-    SetStatusText(0, ipsText, 1);
   }
 #endif
   LeaveCriticalSection(&stInfo.keyCS);
@@ -2101,13 +2102,9 @@ void bx_win32_gui_c::set_tooltip(unsigned hbar_id, const char *tip)
 #if BX_SHOW_IPS
 void bx_win32_gui_c::show_ips(Bit32u ips_count)
 {
-  if (mouseMsgCounter == 0) {
-    if (!ipsUpdate) {
-      sprintf(ipsText, "IPS: %9u", ips_count);
-      ipsUpdate = TRUE;
-    }
-  } else {
-    mouseMsgCounter--;
+  if (!ipsUpdate) {
+    sprintf(ipsText, "IPS: %9u", ips_count);
+    ipsUpdate = TRUE;
   }
 }
 #endif
