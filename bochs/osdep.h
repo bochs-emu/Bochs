@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.25 2006-01-27 21:35:45 sshwarts Exp $
+// $Id: osdep.h,v 1.26 2006-01-28 15:10:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ extern "C" {
 #else    /* not WIN32 definitions */
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
-#define FMT_ADDRX64 "0x%016llx"
+#define FMT_ADDRX64 "%016llx"
 #endif   /* not WIN32 definitions */
 
 #define FMT_ADDRX32 "0x%08x"

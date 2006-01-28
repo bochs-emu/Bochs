@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.43 2006-01-27 19:50:00 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.44 2006-01-28 15:10:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3100,120 +3100,48 @@ int bx_dbg_symbolic_output(void)
   return 0;
 }
 
-// BW added to dump page table
-static void dbg_lin2phys(BX_CPU_C *cpu, Bit32u laddress, Bit32u *phy, bx_bool *valid, Bit32u *tlb_phy, bx_bool *tlb_valid)
-{
-  Bit32u   lpf, ppf, poffset, TLB_index, paddress;
-  Bit32u   pde, pde_addr;
-  Bit32u   pte, pte_addr;
-  
-  *tlb_valid = 0;
-
-  if (cpu->cr0.pg == 0) {
-    *phy = laddress;
-    *valid = 1;
-    return;
-  }
-
-  lpf       = laddress & 0xfffff000; // linear page frame
-  poffset   = laddress & 0x00000fff; // physical offset
-  TLB_index = BX_TLB_INDEX_OF(lpf);
-
-  // see if page is in the TLB first
-#if BX_USE_QUICK_TLB_INVALIDATE
-  if (cpu->TLB.entry[TLB_index].lpf == (lpf | cpu->TLB.tlb_invalidate)) {
-#else
-  if (cpu->TLB.entry[TLB_index].lpf == (lpf)) {
-#endif
-    *tlb_phy        = cpu->TLB.entry[TLB_index].ppf | poffset;
-    *tlb_valid = 1;
-  }
-
-  // Get page dir entry
-  pde_addr = (cpu->cr3 & 0xfffff000) |
-             ((laddress & 0xffc00000) >> 20);
-  BX_MEM(0)->readPhysicalPage(cpu, pde_addr, 4, &pde);
-  if ( !(pde & 0x01) ) {
-    // Page Directory Entry NOT present
-    goto page_fault;
-  }
-
-  // Get page table entry
-  pte_addr = (pde & 0xfffff000) | ((laddress & 0x003ff000) >> 10);
-  BX_MEM(0)->readPhysicalPage(cpu, pte_addr, 4, &pte);
-  if ( !(pte & 0x01) ) {
-    // Page Table Entry NOT present
-    goto page_fault;
-  }
-
-  ppf = pte & 0xfffff000;
-  paddress = ppf | poffset;
-
-  *phy = paddress;
-  *valid = 1;
-  return;
-
-page_fault:
-  *phy = 0;
-  *valid = 0;
-  return;
-}
-
 static void dbg_dump_table(bx_bool all) 
 {
-  Bit32u   lina;
-  Bit32u phy, tlb_phy;
-  bx_bool valid, tlb_valid;
+  bx_address lin;
+  Bit32u phy;
+  bx_bool valid;
 
-  Bit32u start_lina, start_phy;  // start of a valid translation interval
+  Bit32u start_lin, start_phy;  // start of a valid translation interval
 
   if (BX_CPU(dbg_cpu)->cr0.pg == 0) {
     printf("paging off\n");
     return;
   }
 
-  printf("cr3: %08x \n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: " FMT_ADDRX "\n", BX_CPU(dbg_cpu)->cr3);
 
-  lina = 0; 
-  start_lina = 1;
+  lin = 0; 
+  start_lin = 1;
   start_phy = 2;
   while(1) {
-  dbg_lin2phys(BX_CPU(dbg_cpu), lina, &phy, &valid, &tlb_phy, &tlb_valid);
-  if(valid) {
-      if( (lina - start_lina != phy - start_phy) || tlb_valid) {
-      if(all && (start_lina != 1))
-        printf("%08x - %08x: %8x - %8x\n",
-         start_lina, lina - 0x1000, start_phy, start_phy + (lina-0x1000-start_lina));
-        start_lina = lina;
+    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy, &valid);
+    if(valid) {
+      if((lin - start_lin) != (phy - start_phy)) {
+        if(all && (start_lin != 1))
+          dbg_printf("%08x - %08x: %8x - %8x\n",
+            start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
+        start_lin = lin;
         start_phy = phy;
       }
-      if(tlb_valid) {
-        if(all && tlb_phy == phy)
-          printf("%08x           : %8x (%8x) in TLB\n", lina, phy, tlb_phy);
-        if(tlb_phy != phy)
-          printf("%08x           : %8x (%8x) in TLB Phys differs!!!\n", lina, phy, tlb_phy);
-        start_lina = 1;
-        start_phy = 2;
-      }        
-  } else {
-      if(all && start_lina != 1)
-        printf("%08x - %08x: %8x - %8x\n",
-           start_lina, lina - 0x1000, start_phy, start_phy + (lina-0x1000-start_lina));
-      if(tlb_valid) {
-        printf("%08x           :          (%8x) in TLB  Table not valid!!!\n",
-           lina, tlb_phy);
-      }
-      start_lina = 1;
+    } else {
+      if(all && start_lin != 1)
+        dbg_printf("%08x - %08x: %8x - %8x\n",
+          start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
+      start_lin = 1;
       start_phy = 2;
-  }
+    }
 
-  if(lina == 0xfffff000)
-      break;
-      lina += 0x1000;
+    if(lin == 0xfffff000) break;
+    lin += 0x1000;
   }
-  if(all && start_lina != 1)
-  printf("%08x - %08x: %8x - %8x\n",
-         start_lina, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lina));
+  if(all && start_lin != 1)
+    dbg_printf("%08x - %08x: %8x - %8x\n",
+         start_lin, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lin));
 }
 
 /*form RB list*/
