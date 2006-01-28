@@ -66,7 +66,7 @@ enum {
 };
 
 class disassembler;
-class x86_insn;
+struct x86_insn;
 
 typedef void (disassembler::*BxDisasmPtr_t)(const x86_insn *insn);
 typedef void (disassembler::*BxDisasmResolveModrmPtr_t)(const x86_insn *insn, unsigned attr);
