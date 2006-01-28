@@ -74,10 +74,11 @@ class vmware3_image_t : public device_image_t
           Bit8u    PAD2[8];
           Bit32u   vmware_version;
           Bit8u    PAD3[364];
-      } COW_Header
+      }
 #if !defined(_MSC_VER)
         GCC_ATTRIBUTE((packed))
 #endif
+      COW_Header
       ;
 #if defined(_MSC_VER) && (_MSC_VER<1300)
 #pragma pack(pop)
