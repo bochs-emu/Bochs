@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.16 2006-01-21 00:05:30 kevinlawton Exp $
+// $Id: fpu.cc,v 1.17 2006-01-28 20:52:08 kevinlawton Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -443,8 +443,8 @@ void BX_CPU_C::FNINIT(bxInstruction_c *i)
 void BX_CPU_C::FLDENV(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
   fpu_load_environment(i);
+  BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
 #else
   BX_INFO(("FLDENV: required FPU, configure --enable-fpu"));
 #endif
