@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.26 2005-11-27 17:49:59 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.27 2006-01-28 10:28:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -801,6 +801,16 @@ bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
       break;
 
     case 0x03c4: /* VGA: Sequencer Index Register */
+      if (BX_CIRRUS_THIS is_unlocked()) {
+        Bit32u value = BX_CIRRUS_THIS sequencer.index;
+        if ((value & 0x1e) == 0x10) { /* SR10-F0, SR11-F1 */
+          if (value & 1)
+            value = ((BX_CIRRUS_THIS hw_cursor.y & 7) << 5) | 0x11;
+          else
+            value = ((BX_CIRRUS_THIS hw_cursor.x & 7) << 5) | 0x10;
+        }
+        return value;
+      }
       return BX_CIRRUS_THIS sequencer.index;
     case 0x03c5: /* VGA: Sequencer Registers */
       if ((BX_CIRRUS_THIS sequencer.index == 0x06) ||
