@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.44 2006-01-28 15:10:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.45 2006-01-28 16:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2538,7 +2538,7 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
     return;
   }
 
-  if (!BX_MEM(0)->dbg_crc32(crc32, addr1, addr2, &crc1)) {
+  if (!BX_MEM(0)->dbg_crc32(addr1, addr2, &crc1)) {
     dbg_printf("could not CRC memory\n");
     return;
   }

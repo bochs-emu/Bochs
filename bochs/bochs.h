@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.168 2006-01-25 22:19:47 sshwarts Exp $
+// $Id: bochs.h,v 1.169 2006-01-28 16:16:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,6 +111,7 @@ int bx_parse_cmdline (int arg, int argc, char *argv[]);
 int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
 void bx_reset_options (void);
+Bit32u crc32(const Bit8u *buf, int len);
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -166,7 +167,6 @@ void bx_reset_options (void);
 #    error For SMP simulation, BX_USE_CPU_SMF must be 0.
 #  endif
 #endif
-
 
 //
 // Ways for the the external environment to report back information
