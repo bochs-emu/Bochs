@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.78 2005-12-24 22:35:04 vruppert Exp $
+// $Id: ne2k.cc,v 1.79 2006-01-28 20:18:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ bx_ne2k_c::reset(unsigned type)
   
   // Set power-up conditions
   BX_NE2K_THIS s.CR.stop      = 1;
-    BX_NE2K_THIS s.CR.rdma_cmd  = 4;
+  BX_NE2K_THIS s.CR.rdma_cmd  = 4;
   BX_NE2K_THIS s.ISR.reset    = 1;
   BX_NE2K_THIS s.DCR.longaddr = 1;
 
@@ -138,7 +138,7 @@ bx_ne2k_c::read_cr(void)
 	  (BX_NE2K_THIS s.CR.tx_packet << 2) |
 	  (BX_NE2K_THIS s.CR.start     << 1) |
 	  (BX_NE2K_THIS s.CR.stop));
-  BX_DEBUG(("read CR returns 0x%08x", val));
+  BX_DEBUG(("read CR returns 0x%02x", val));
   return val;
 }
 
@@ -191,7 +191,7 @@ bx_ne2k_c::write_cr(Bit32u value)
                 BX_NE2K_THIS s.tx_bytes);
     }
   } else if (value & 0x04) {
-    if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start) {
+    if (BX_NE2K_THIS s.CR.stop || (!BX_NE2K_THIS s.CR.start && !BX_NE2K_THIS s.pci_enabled)) {
       if (BX_NE2K_THIS s.tx_bytes == 0) /* njh@bandsman.co.uk */
         return; /* Solaris9 probe */
       BX_PANIC(("CR write - tx start, dev in reset"));
@@ -201,6 +201,7 @@ bx_ne2k_c::write_cr(Bit32u value)
       BX_PANIC(("CR write - tx start, tx bytes == 0"));
 
     // Send the packet to the system driver
+    BX_NE2K_THIS s.CR.tx_packet = 1;
     BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART], BX_NE2K_THIS s.tx_bytes);
 
     // some more debug
@@ -428,122 +429,119 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 {
-  BX_DEBUG(("page 0 read from port %04x, len=%u", (unsigned) offset,
-	   (unsigned) io_len));
-  if (io_len > 1) {
-    BX_ERROR(("bad length! page 0 read from port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len)); /* encountered with win98 hardware probe */
-	return 0;
-  }
+  Bit8u value = 0;
 
+  if (io_len > 1) {
+    BX_ERROR(("bad length! page 0 read from register 0x%02x, len=%u", offset,
+              io_len)); /* encountered with win98 hardware probe */
+    return value;
+  }
 
   switch (offset) {
   case 0x1:  // CLDA0
-    return (BX_NE2K_THIS s.local_dma & 0xff);
+    value = (BX_NE2K_THIS s.local_dma & 0xff);
     break;
 
   case 0x2:  // CLDA1
-    return (BX_NE2K_THIS s.local_dma >> 8);
+    value = (BX_NE2K_THIS s.local_dma >> 8);
     break;
 
   case 0x3:  // BNRY
-    return (BX_NE2K_THIS s.bound_ptr);
+    value = BX_NE2K_THIS s.bound_ptr;
     break;
 
   case 0x4:  // TSR
-    return ((BX_NE2K_THIS s.TSR.ow_coll    << 7) |
-	    (BX_NE2K_THIS s.TSR.cd_hbeat   << 6) |
-	    (BX_NE2K_THIS s.TSR.fifo_ur    << 5) |
-	    (BX_NE2K_THIS s.TSR.no_carrier << 4) |
-	    (BX_NE2K_THIS s.TSR.aborted    << 3) |
-	    (BX_NE2K_THIS s.TSR.collided   << 2) |
-	    (BX_NE2K_THIS s.TSR.tx_ok));
+    value = ((BX_NE2K_THIS s.TSR.ow_coll    << 7) |
+             (BX_NE2K_THIS s.TSR.cd_hbeat   << 6) |
+             (BX_NE2K_THIS s.TSR.fifo_ur    << 5) |
+             (BX_NE2K_THIS s.TSR.no_carrier << 4) |
+             (BX_NE2K_THIS s.TSR.aborted    << 3) |
+             (BX_NE2K_THIS s.TSR.collided   << 2) |
+             (BX_NE2K_THIS s.TSR.tx_ok));
     break;
 
   case 0x5:  // NCR
-    return (BX_NE2K_THIS s.num_coll);
+    value = BX_NE2K_THIS s.num_coll;
     break;
-    
+
   case 0x6:  // FIFO
     // reading FIFO is only valid in loopback mode
     BX_ERROR(("reading FIFO not supported yet"));
-    return (BX_NE2K_THIS s.fifo);
+    value = BX_NE2K_THIS s.fifo;
     break;
 
   case 0x7:  // ISR
-    return ((BX_NE2K_THIS s.ISR.reset     << 7) |
-	    (BX_NE2K_THIS s.ISR.rdma_done << 6) |
-	    (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
-	    (BX_NE2K_THIS s.ISR.overwrite << 4) |
-	    (BX_NE2K_THIS s.ISR.tx_err    << 3) |
-	    (BX_NE2K_THIS s.ISR.rx_err    << 2) |
-	    (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
-	    (BX_NE2K_THIS s.ISR.pkt_rx));
+    value = ((BX_NE2K_THIS s.ISR.reset     << 7) |
+             (BX_NE2K_THIS s.ISR.rdma_done << 6) |
+             (BX_NE2K_THIS s.ISR.cnt_oflow << 5) |
+             (BX_NE2K_THIS s.ISR.overwrite << 4) |
+             (BX_NE2K_THIS s.ISR.tx_err    << 3) |
+             (BX_NE2K_THIS s.ISR.rx_err    << 2) |
+             (BX_NE2K_THIS s.ISR.pkt_tx    << 1) |
+             (BX_NE2K_THIS s.ISR.pkt_rx));
     break;
-    
+
   case 0x8:  // CRDA0
-    return (BX_NE2K_THIS s.remote_dma & 0xff);
+    value = (BX_NE2K_THIS s.remote_dma & 0xff);
     break;
 
   case 0x9:  // CRDA1
-    return (BX_NE2K_THIS s.remote_dma >> 8);
+    value = (BX_NE2K_THIS s.remote_dma >> 8);
     break;
 
   case 0xa:  // reserved / RTL8029ID0
     if (BX_NE2K_THIS s.pci_enabled) {
-      return (0x50);
+      value = 0x50;
     } else {
       BX_INFO(("reserved read - page 0, 0xa"));
-      return (0xff);
+      value = 0xff;
     }
     break;
 
   case 0xb:  // reserved / RTL8029ID1
     if (BX_NE2K_THIS s.pci_enabled) {
-      return (0x43);
+      value = 0x43;
     } else {
       BX_INFO(("reserved read - page 0, 0xb"));
-      return (0xff);
+      value = 0xff;
     }
     break;
-    
+
   case 0xc:  // RSR
-    return ((BX_NE2K_THIS s.RSR.deferred    << 7) |
-	    (BX_NE2K_THIS s.RSR.rx_disabled << 6) |
-	    (BX_NE2K_THIS s.RSR.rx_mbit     << 5) |
-	    (BX_NE2K_THIS s.RSR.rx_missed   << 4) |
-	    (BX_NE2K_THIS s.RSR.fifo_or     << 3) |
-	    (BX_NE2K_THIS s.RSR.bad_falign  << 2) |
-	    (BX_NE2K_THIS s.RSR.bad_crc     << 1) |
-	    (BX_NE2K_THIS s.RSR.rx_ok));
+    value = ((BX_NE2K_THIS s.RSR.deferred    << 7) |
+             (BX_NE2K_THIS s.RSR.rx_disabled << 6) |
+             (BX_NE2K_THIS s.RSR.rx_mbit     << 5) |
+             (BX_NE2K_THIS s.RSR.rx_missed   << 4) |
+             (BX_NE2K_THIS s.RSR.fifo_or     << 3) |
+             (BX_NE2K_THIS s.RSR.bad_falign  << 2) |
+             (BX_NE2K_THIS s.RSR.bad_crc     << 1) |
+             (BX_NE2K_THIS s.RSR.rx_ok));
     break;
-    
+
   case 0xd:  // CNTR0
-    return (BX_NE2K_THIS s.tallycnt_0);
+    value = BX_NE2K_THIS s.tallycnt_0;
     break;
 
   case 0xe:  // CNTR1
-    return (BX_NE2K_THIS s.tallycnt_1);
+    value = BX_NE2K_THIS s.tallycnt_1;
     break;
 
   case 0xf:  // CNTR2
-    return (BX_NE2K_THIS s.tallycnt_2);
+    value = BX_NE2K_THIS s.tallycnt_2;
     break;
 
   default:
-    BX_PANIC(("page 0 offset %04x out of range", (unsigned) offset));
+    BX_PANIC(("page 0 register 0x%02x out of range", offset));
   }
 
-  return(0);
+  BX_DEBUG(("page 0 read from register 0x%02x, value=0x%02x", offset, value));
+  return value;
 }
 
 void
 bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   Bit8u value2;
-
-  BX_DEBUG(("page 0 write to port %04x, len=%u", (unsigned) offset,
-	   (unsigned) io_len));
 
   // It appears to be a common practice to use outw on page0 regs...
 
@@ -555,6 +553,8 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     }
     return;
   }
+
+  BX_DEBUG(("page 0 write to register 0x%02x, value=0x%02x", offset, value));
 
   switch (offset) {
   case 0x1:  // PSTART
@@ -731,7 +731,7 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   default:
-    BX_PANIC(("page 0 write, bad offset %0x", offset));
+    BX_PANIC(("page 0 write, bad register 0x%02x", offset));
   }
 }
 
@@ -743,11 +743,10 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 {
-  BX_DEBUG(("page 1 read from port %04x, len=%u", (unsigned) offset,
-	   (unsigned) io_len));
+  BX_DEBUG(("page 1 read from register 0x%02x, len=%u", offset, io_len));
+
   if (io_len > 1)
-    BX_PANIC(("bad length! page 1 read from port %04x, len=%u", (unsigned) offset,
-             (unsigned) io_len));
+    BX_PANIC(("bad length! page 1 read from register 0x%02x, len=%u", offset, io_len));
 
   switch (offset) {
   case 0x1:  // PAR0-5
@@ -760,7 +759,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
     break;
 
   case 0x7:  // CURR
-      BX_DEBUG(("returning current page: %02x", (BX_NE2K_THIS s.curr_page)));
+    BX_DEBUG(("returning current page: 0x%02x", (BX_NE2K_THIS s.curr_page)));
     return (BX_NE2K_THIS s.curr_page);
 
   case 0x8:  // MAR0-7
@@ -775,7 +774,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_PANIC(("page 1 r offset %04x out of range", (unsigned) offset));
+    BX_PANIC(("page 1 read register 0x%02x out of range", offset));
   }
 
   return (0);
@@ -784,7 +783,9 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 void
 bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
-  BX_DEBUG(("page 1 w offset %04x", (unsigned) offset));
+  BX_DEBUG(("page 1 write to register 0x%02x, len=%u, value=0x%04x", offset,
+            io_len, value));
+
   switch (offset) {
   case 0x1:  // PAR0-5
   case 0x2:
@@ -811,7 +812,7 @@ bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   default:
-    BX_PANIC(("page 1 w offset %04x out of range", (unsigned) offset));
+    BX_PANIC(("page 1 write register 0x%02x out of range", offset));
   }  
 }
 
@@ -823,10 +824,10 @@ bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 Bit32u
 bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 {
-  BX_DEBUG(("page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len));
+  BX_DEBUG(("page 2 read from register 0x%02x, len=%u", offset, io_len));
 
   if (io_len > 1)
-    BX_PANIC(("bad length!  page 2 read from port %04x, len=%u", (unsigned) offset, (unsigned) io_len));
+    BX_PANIC(("bad length!  page 2 read from register 0x%02x, len=%u", offset, io_len));
 
   switch (offset) {
   case 0x1:  // PSTART
@@ -861,7 +862,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   case 0x9:
   case 0xa:
   case 0xb:
-    BX_ERROR(("reserved read - page 2, 0x%02x", (unsigned) offset));
+    BX_ERROR(("reserved read - page 2, register 0x%02x", offset));
     return (0xff);
     break;
 
@@ -901,7 +902,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
     break;
 
   default:
-    BX_PANIC(("page 2 offset %04x out of range", (unsigned) offset));
+    BX_PANIC(("page 2 register 0x%02x out of range", offset));
   }
 
   return (0);
@@ -913,8 +914,8 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   // Maybe all writes here should be BX_PANIC()'d, since they
   // affect internal operation, but let them through for now
   // and print a warning.
-  if (offset != 0)
-    BX_ERROR(("page 2 write ?"));
+  BX_ERROR(("page 2 write to register 0x%02x, len=%u, value=0x%04x", offset,
+            io_len, value));
 
   switch (offset) {
   case 0x1:  // CLDA0
@@ -934,7 +935,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0x4:
-    BX_PANIC(("page 2 write to reserved offset 4"));
+    BX_PANIC(("page 2 write to reserved register 0x04"));
     break;
 
   case 0x5:  // Local Next-packet pointer
@@ -961,11 +962,11 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xd:
   case 0xe:
   case 0xf:
-    BX_PANIC(("page 2 write to reserved offset %0x", offset));
+    BX_PANIC(("page 2 write to reserved register 0x%02x", offset));
     break;
    
   default:
-    BX_PANIC(("page 2 write, illegal offset %0x", offset));
+    BX_PANIC(("page 2 write, illegal register 0x%02x", offset));
     break;
   }
 }
@@ -1015,6 +1016,7 @@ void
 bx_ne2k_c::tx_timer(void)
 {
   BX_DEBUG(("tx_timer"));
+  BX_NE2K_THIS s.CR.tx_packet = 0;
   BX_NE2K_THIS s.TSR.tx_ok = 1;
   // Generate an interrupt if not masked and not one in progress
   if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
@@ -1315,7 +1317,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.78 2005-12-24 22:35:04 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.79 2006-01-28 20:18:18 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
