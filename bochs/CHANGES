@@ -1,4 +1,4 @@
-Changes in 2.2.6 (not yet released):
+Changes in 2.2.6 (January 29, 2006):
 
 - several APIC and I/O APIC fixes make SMP Bochs booting Windows NT4.0 in
   SMP configuration (Volker, Stanislav)
