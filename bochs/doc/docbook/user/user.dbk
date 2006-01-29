@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.201 2006-01-25 22:46:09 sshwarts Exp $
+$Id: user.dbk,v 1.202 2006-01-29 08:44:12 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1167,6 +1167,14 @@ The tag tells which release you want, and it can be one of the following:
     </thead>
     <tbody>
       <row>
+        <entry>2.2.6 (intermediate2)</entry>
+        <entry>REL_2_2_6_FINAL</entry>
+      </row>
+      <row>
+        <entry>2.2.5 (intermediate1)</entry>
+        <entry>REL_2_2_5_FINAL</entry>
+      </row>
+      <row>
         <entry>2.2.1 (bugfix1)</entry>
         <entry>REL_2_2_1_FINAL</entry>
       </row>
@@ -1294,22 +1302,15 @@ is different on different platforms.
 
 <section><title>Windows</title>
 <para>
-The Bochs binaries for Windows are distributed in two different package types:
-EXE and ZIP. Both package types contain all files you need to run Bochs. The EXE
-version can be started like any other Windows program and it brings up the
-installation wizard. Here you can select the destination folder and the
+The Bochs binaries for Windows are distributed in an EXE installer package.
+The Bochs installer can be started like any other Windows program and it brings
+up the installation wizard. Here you can select the destination folder and the
 installation options. The wizard installs the files and creates the registry
-keys, start menu and desktop links. We recommend to use the EXE package unless
-you are a Bochs expert.
+keys, start menu and desktop links.
 </para>
 <para>
-If you choose the ZIP package you need a tool like WinZip to unpack the archive.
-Note that you have to create a registry key for Bochs if you want to use the
-environment variable $BXSHARE in your config file. The name of the key is
-<varname>HKEY_LOCAL_MACHINE\Software\Bochs 2.2.1</varname> (the Bochs version may differ).
-Edit the default value of this key and enter the path to your Bochs installation.
-For more information on environment variables see the section <link
-linkend="bochsrc">bochsrc</link>.
+Previous releases of Bochs were distributed as ZIP packages, too. These packages
+contained the same set of files as the installer package from the same version.
 </para>
 <para>
 If you are new to Bochs you should try out the DLX Linux demo distributed with
@@ -1339,6 +1340,7 @@ DLX Linux screenshot.
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
 <row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>TODO.txt </entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>niclist.exe </entry> <entry> tool to find out the network interface name </entry> </row>
 <row><entry>penguin.ico </entry> <entry> the Linux logo (used for the DLX link in start menu) </entry> </row>
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
@@ -1513,9 +1515,10 @@ description of each one.
 </thead>
 <tbody>
 
-<row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
 <row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
 <row><entry>/usr/bin/bochs </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>/usr/bin/bximage </entry> <entry> tool for making new disk images </entry> </row>
 <row><entry>/usr/bin/bxcommit </entry> <entry> tool for committing redologs to flat disk images </entry> </row>
@@ -3048,7 +3051,7 @@ Due to limitations in the host OS, Bochs fails to allocated even 1024MB on most 
 
 <section id="bochsopt-cpu"><title>cpu</title>
 <para>
-Examples:
+Example:
 <screen>
   cpu: count=2, ips=10000000
 </screen>
@@ -3066,7 +3069,8 @@ For more information on SMP see <xref linkend="SMP">.
 Emulated Instructions Per Second.  This is the number of IPS that Bochs is
 capable of running on your machine.  You can recompile Bochs with
 <option>--enable-show-ips</option> option enabled, to find your workstation's capability.
-Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>.
+Measured IPS value will then be logged into your <link linkend="bochsopt-log">log file</link>
+or in the status bar (if supported by the gui).
 </para>
 
 <para>
@@ -3102,7 +3106,7 @@ speed.</para></footnote>.
 
 <section><title>romimage</title>
 <para>
-Example:
+Examples:
 <screen>
   romimage: file=bios/BIOS-bochs-latest, address=0xf0000
   romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
