@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.202 2006-01-29 08:44:12 vruppert Exp $
+$Id: user.dbk,v 1.203 2006-01-29 21:02:55 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2215,12 +2215,17 @@ turn it off.
     <row>
       <entry>--enable-pni</entry>
       <entry>no</entry>
-      <entry>PNI support</entry>
+      <entry>Add support for PNI (SSE3) instructions</entry>
     </row>
     <row>
       <entry>--enable-sep</entry>
       <entry>no</entry>
       <entry>SYSENTER/SYSEXIT support</entry>
+    </row>
+    <row>
+      <entry>--enable-vme</entry>
+      <entry>no (yes for <link linkend="configure-enable-cpu-level">CPU</link> >= 5)</entry>
+      <entry>Add support for VME (v8086 mode extensions)</entry>
     </row>
     <row>
       <entry>--enable-compressed-hd</entry>
@@ -2253,12 +2258,12 @@ turn it off.
     </row>
     <row>
       <entry>--enable-disasm</entry>
-      <entry>no</entry>
+      <entry>yes</entry>
       <entry>Compile in support for built-in disassembler.  Bochs has
           a built-in disassembler, which is useful if you either
           run the built-in debugger (--enable-debugger), or want
           disassembly of the current instruction when there is a
-          panic in bochs.  You don't need this option.</entry>
+          panic in bochs.</entry>
     </row>
     <row>
       <entry>--enable-cpp</entry>
@@ -3097,8 +3102,6 @@ speed.</para></footnote>.
 <row><entry>1.6Ghz</entry><entry>Intel P4 with Win2000/g++ 3.3 </entry><entry> 5 to  7 million</entry></row>
 <row><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
 <row><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
-<row><entry>166MHz</entry><entry>64bit Sparc with Solaris 2.x  </entry><entry>    0.75 million</entry></row>
-<row><entry>200MHz</entry><entry>Pentium with Linux 2.x        </entry><entry>          0.5 million</entry></row>
 </tbody>
 </tgroup>
 </table>
@@ -3561,7 +3564,7 @@ This handles the format of the string prepended to each log line.
 You may use those special tokens :
   <screen>
   %t : 11 decimal digits timer tick
-  %i : 8 hexadecimal digits of cpu0 current eip
+  %i : 8 hexadecimal digits of current cpu eip (ignored in SMP configuration)
   %e : 1 character event type ('i'nfo, 'd'ebug, 'p'anic, 'e'rror)
   %d : 5 characters string of the device, between brackets
   </screen>
@@ -5701,20 +5704,24 @@ application.
 </para>
 
 <para>
-What was required to make SMP work in Bochs?  (Note that only Linux 2.2
-has been tested so far.)
+What was required to make SMP work in Bochs?
+
 <itemizedlist>
 <listitem><para> local APIC on each processor with timer
 </para></listitem>
 <listitem><para> one I/O APIC model
 </para></listitem>
-<listitem><para> implement RDTSC feature (read time stamp counter)
+<listitem><para> implement RDTSC (read time stamp counter)
 </para></listitem>
 <listitem><para> a data structure called the Intel Multiprocessor Configuration
 must be present in BIOS memory space. An SMP-aware operating system probes BIOS
 memory to find the structure, which contains information about how many
 processors, their IDs, interrupt sources, etc. Starting with Bochs 2.2.5 these
 structures are dynamicly created by Bochs.
+</para></listitem>
+<listitem><para> ACPI support is required to boot SMP system in most of modern
+operating systems. For example WinXP 64 bit require ACPI support even for 
+single processor configuration. Still not supported by Bochs.
 </para></listitem>
 </itemizedlist>
 </para>
@@ -5729,15 +5736,14 @@ but you can't specify which processor you want to set the breakpoint for.
 </para></listitem>
 
 <listitem><para>
-test on SMP systems other than linux 2.2.14
+test on any possible SMP operating systems. Currently success reported for
+Knoppix 4.0.2 and WinNT 4.0 SMP.
 </para></listitem>
 
 <listitem><para>
-several parts of the APIC model which weren't needed for linux 2.2.14
-are not implemented yet and cause a panic.  If you boot linux 2.4.3 for 
-example, it says "panic: cluster model addressing not implemented".   See
-<ulink url="http://sourceforge.net/tracker/index.php?func=detail&amp;aid=421938&amp;group_id=12580&amp;atid=362580">bug report #421938</ulink> for tips on getting linux 2.4 to boot.
-(The apic is not the only problem!)
+several parts of the APIC model which weren't needed before are not 
+implemented yet and cause a panic.  If you boot linux 2.4.3 for 
+example, it says "panic: cluster model addressing not implemented".
 </para></listitem>
 
 <listitem><para>
