@@ -93,10 +93,10 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2b[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2c[4] = {
-  /* -- */  { 0, &Ia_cvtps2pi_Pq_Wps },
-  /* 66 */  { 0, &Ia_cvtpd2pi_Pq_Wpd },
-  /* F2 */  { 0, &Ia_cvtsd2si_Gd_Wsd },
-  /* F3 */  { 0, &Ia_cvtss2ss_Gd_Wss }
+  /* -- */  { 0, &Ia_cvttps2pi_Pq_Wps },
+  /* 66 */  { 0, &Ia_cvttpd2pi_Pq_Wpd },
+  /* F2 */  { 0, &Ia_cvttsd2si_Gd_Wsd },
+  /* F3 */  { 0, &Ia_cvttss2si_Gd_Wss }
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2d[4] = {
@@ -2314,9 +2314,9 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
   /* 66 */  { 0, &Ia_prefix_osize }, // OSIZE:
   /* 67 */  { 0, &Ia_prefix_asize }, // ASIZE:
   /* 68 */  { 0, &Ia_pushw_Iw   },
-  /* 69 */  { 0, &Ia_imulw_Gw_Ew_Iw },
-  /* 6A */  { 0, &Ia_pushw_Iw   },
-  /* 6B */  { 0, &Ia_imulw_Gw_Ew_Iw },
+  /* 69 */  { 0, &Ia_imulw_Gw_Ew_Iw  },
+  /* 6A */  { 0, &Ia_pushw_sIb   },
+  /* 6B */  { 0, &Ia_imulw_Gw_Ew_sIb },
   /* 6C */  { 0, &Ia_insb_Yb_DX  },
   /* 6D */  { 0, &Ia_insw_Yw_DX  },
   /* 6E */  { 0, &Ia_outsb_DX_Xb },
@@ -3355,10 +3355,10 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
   /* 65 */  { 0, &Ia_prefix_gs  },   // GS:
   /* 66 */  { 0, &Ia_prefix_osize }, // OSIZE:
   /* 67 */  { 0, &Ia_prefix_asize }, // ASIZE:
-  /* 68 */  { 0, &Ia_pushw_Iw   },
-  /* 69 */  { 0, &Ia_imulw_Gw_Ew_Iw },
-  /* 6A */  { 0, &Ia_pushw_Iw   },
-  /* 6B */  { 0, &Ia_imulw_Gw_Ew_Iw },
+  /* 68 */  { 0, &Ia_pushw_Iw    },
+  /* 69 */  { 0, &Ia_imulw_Gw_Ew_Iw  },
+  /* 6A */  { 0, &Ia_pushw_sIb   },
+  /* 6B */  { 0, &Ia_imulw_Gw_Ew_sIb },
   /* 6C */  { 0, &Ia_insb_Yb_DX  },
   /* 6D */  { 0, &Ia_insw_Yw_DX  },
   /* 6E */  { 0, &Ia_outsb_DX_Xb },
