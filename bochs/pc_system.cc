@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.48 2006-01-25 22:19:57 sshwarts Exp $
+// $Id: pc_system.cc,v 1.49 2006-01-31 20:43:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,8 @@ const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
 bx_pc_system_c::bx_pc_system_c(void)
 {
   this->put("SYS");
+
+  BX_ASSERT(numTimers == 0);
 
   // Timer[0] is the null timer.  It is initialized as a special
   // case here.  It should never be turned off or modified, and its
