@@ -86,6 +86,9 @@ struct BxDisasmOpcodeTable_t
     const void *OpcodeInfo;
 };
 
+// segment override not used
+#define NO_SEG_OVERRIDE 0xFF
+
 // datasize attributes
 #define X_SIZE      0x0000
 #define B_SIZE      0x0100
@@ -105,6 +108,10 @@ struct x86_insn
 {
 public:
   x86_insn(bx_bool is32, bx_bool is64);
+
+  bx_bool is_seg_override() const { 
+     return (seg_override != NO_SEG_OVERRIDE);
+ }
 
 public:
   bx_bool is_32, is_64;
@@ -144,7 +151,7 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
 
   extend8b = 0;
   rex_r = rex_b = rex_x = 0;
-  seg_override = 0;
+  seg_override = NO_SEG_OVERRIDE;
   b1 = 0;
 
   modrm = mod = nnn = rm = 0;

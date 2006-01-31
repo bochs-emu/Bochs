@@ -131,7 +131,7 @@ void disassembler::resolve16_mod0(const x86_insn *insn, unsigned mode)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod00_rm16[insn->rm];
@@ -146,7 +146,7 @@ void disassembler::resolve16_mod1or2(const x86_insn *insn, unsigned mode)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod01or10_rm16[insn->rm];
@@ -158,7 +158,7 @@ void disassembler::resolve32_mod0(const x86_insn *insn, unsigned mode)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = segment_name[DS_REG];
@@ -173,7 +173,7 @@ void disassembler::resolve32_mod1or2(const x86_insn *insn, unsigned mode)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod01or10_rm32[insn->rm];
@@ -187,7 +187,7 @@ void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned mode)
   const char *seg, *base = NULL, *index = NULL;
   Bit32u disp32 = 0;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod00_base32[insn->base];
@@ -209,7 +209,7 @@ void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned mode)
 {
   const char *seg, *index = NULL;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod01or10_base32[insn->base];
@@ -227,7 +227,7 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned mode)
 {
   const char *seg, *rip_regname;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = segment_name[DS_REG];
@@ -245,7 +245,7 @@ void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod01or10_rm32[insn->rm];
@@ -259,7 +259,7 @@ void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
   const char *seg, *base = NULL, *index = NULL;
   Bit32u disp32 = 0;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod00_base32[insn->base];
@@ -281,7 +281,7 @@ void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
 {
   const char *seg, *index = NULL;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = sreg_mod01or10_base32[insn->base];

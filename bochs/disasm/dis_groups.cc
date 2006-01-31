@@ -366,7 +366,7 @@ void disassembler::OP_O(const x86_insn *insn, unsigned size)
 {
   const char *seg;
 
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = segment_name[DS_REG];
@@ -427,7 +427,7 @@ void disassembler::OP_X(const x86_insn *insn, unsigned size)
       rsi = general_16bit_regname[rSI_REG];
   }
   
-  if (insn->seg_override)
+  if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
   else
     seg = segment_name[DS_REG];
