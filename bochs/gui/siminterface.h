@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.150 2006-01-18 18:35:37 sshwarts Exp $
+// $Id: siminterface.h,v 1.151 2006-01-31 19:37:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -798,7 +798,8 @@ enum {
   BX_LOG_ASK_CHOICE_DIE,
   BX_LOG_ASK_CHOICE_DUMP_CORE,
   BX_LOG_ASK_CHOICE_ENTER_DEBUG,
-  BX_LOG_ASK_N_CHOICES
+  BX_LOG_ASK_N_CHOICES,
+  BX_LOG_NOTIFY_FAILED
 };
 
 // Event type: BX_SYNC_EVT_GET_DBG_COMMAND
