@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.203 2006-01-29 21:02:55 sshwarts Exp $
+$Id: user.dbk,v 1.204 2006-01-31 19:45:34 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6245,11 +6245,6 @@ From here, you may use the following commands:
     "dr5:0x%x\n"
     "dr6:0x%x\n"
     "dr7:0x%x\n"
-    "tr3:0x%x\n"
-    "tr4:0x%x\n"
-    "tr5:0x%x\n"
-    "tr6:0x%x\n"
-    "tr7:0x%x\n"
     "cr0:0x%x\n"
     "cr1:0x%x\n"
     "cr2:0x%x\n"
@@ -6307,6 +6302,19 @@ From here, you may use the following commands:
 </section>
 
 <section>
+<title>Instruction tracing</title>
+<para>
+<screen>
+  trace on                    Disassemble every executed instruction. Note
+                              that instructions which caused exceptions are
+                              not really executed, and therefore not traced.
+
+  trace off                   Disable instruction tracing.
+</screen>
+</para>
+</section>
+
+<section>
 <title>Instrumentation</title>
 <para>
 
@@ -6344,20 +6352,6 @@ the "instrument/stubs" directory to it, then customize it.  Use:
 </screen>
 </para>
 </section>
-
-
-<section>
-<title>New Commands</title>
-<para>
-
-<screen>trace-on</screen>
-
-Disassemble every executed instruction. Note that instructions that
-cause exceptions are not really executed, and therefore not traced.
-
-<screen>trace-off</screen>
-
-Disable tracing.
 
 <screen>ptime</screen>
 

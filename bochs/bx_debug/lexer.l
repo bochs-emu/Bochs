@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.11 2006-01-27 19:50:00 sshwarts Exp $
+// $Id: lexer.l,v 1.12 2006-01-31 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -93,10 +93,8 @@ stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
 reset           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESET); }
 print           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
-trace-on        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEON); }
-trace-off       { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEOFF); }
-trace-reg-on	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGON); }
-trace-reg-off	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREGOFF); }
+trace           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACE); }
+trace-reg   	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREG); }
 switch-mode	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SWITCH_MODE); }
 size		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SIZE); }
 ptime           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PTIME); }
@@ -136,7 +134,7 @@ si              { bxlval.uval = BX_DBG_REG16_SI; return(BX_TOKEN_REG_SI);}
 di              { bxlval.uval = BX_DBG_REG16_DI; return(BX_TOKEN_REG_DI);}
 bp              { bxlval.uval = BX_DBG_REG16_BP; return(BX_TOKEN_REG_BP);}
 sp              { bxlval.uval = BX_DBG_REG16_SP; return(BX_TOKEN_REG_SP);}
-ip              { bxlval.uval = BX_DBG_REG16_IP; return(BX_TOKEN_REG_IP);}
+ip              { bxlval.uval = BX_DBG_GEN_REGISTERS; return(BX_TOKEN_REG_IP);}
 eax             { bxlval.uval = BX_DBG_REG32_EAX; return(BX_TOKEN_REG_EAX);}
 ebx             { bxlval.uval = BX_DBG_REG32_EBX; return(BX_TOKEN_REG_EBX);}
 ecx             { bxlval.uval = BX_DBG_REG32_ECX; return(BX_TOKEN_REG_ECX);}
@@ -145,7 +143,7 @@ esi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_REG_ESI);}
 edi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_REG_EDI);}
 ebp             { bxlval.uval = BX_DBG_REG32_EBP; return(BX_TOKEN_REG_EBP);}
 esp             { bxlval.uval = BX_DBG_REG32_ESP; return(BX_TOKEN_REG_ESP);}
-eip             { bxlval.uval = BX_DBG_REG32_EIP; return(BX_TOKEN_REG_EIP);}
+eip             { bxlval.uval = BX_DBG_GEN_REGISTERS; return(BX_TOKEN_REG_EIP);}
 cs              { bxlval.uval = BX_DBG_SREG_CS; return(BX_TOKEN_CS); }
 es              { bxlval.uval = BX_DBG_SREG_ES; return(BX_TOKEN_ES); }
 ss              { bxlval.uval = BX_DBG_SREG_SS; return(BX_TOKEN_SS); }

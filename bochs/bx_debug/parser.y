@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.8 2006-01-25 22:19:59 sshwarts Exp $
+// $Id: parser.y,v 1.9 2006-01-31 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -65,7 +65,6 @@
 %token <uval> BX_TOKEN_FS
 %token <uval> BX_TOKEN_GS
 %token <uval> BX_TOKEN_FLAGS
-
 %token <bval> BX_TOKEN_ON
 %token <bval> BX_TOKEN_OFF
 %token <sval> BX_TOKEN_CONTINUE
@@ -116,8 +115,8 @@
 %token <sval> BX_TOKEN_STRING
 %token <sval> BX_TOKEN_DOIT
 %token <sval> BX_TOKEN_CRC
-%token <sval> BX_TOKEN_TRACEON
-%token <sval> BX_TOKEN_TRACEOFF
+%token <sval> BX_TOKEN_TRACE
+%token <sval> BX_TOKEN_TRACEREG
 %token <sval> BX_TOKEN_SWITCH_MODE
 %token <sval> BX_TOKEN_SIZE
 %token <sval> BX_TOKEN_PTIME
@@ -143,8 +142,6 @@
 %token <sval> BX_TOKEN_NE2000
 %token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
-%token <sval> BX_TOKEN_TRACEREGON
-%token <sval> BX_TOKEN_TRACEREGOFF
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_VGA
@@ -192,8 +189,8 @@ command:
     | instrument_command
     | doit_command
     | crc_command
-    | trace_on_command
-    | trace_off_command
+    | trace_command
+    | trace_reg_command
     | ptime_command
     | timebp_command
     | record_command
@@ -205,8 +202,6 @@ command:
     | symbol_command
     | where_command
     | print_string_command
-    | trace_reg_on_command
-    | trace_reg_off_command
     | help_command
     | calc_command
     | 
@@ -283,19 +278,29 @@ ptime_command:
 	}
     ;
 
-trace_on_command:
-      BX_TOKEN_TRACEON '\n'
+trace_command:
+      BX_TOKEN_TRACE BX_TOKEN_ON  '\n'
         {
-        bx_dbg_trace_on_command();
+        bx_dbg_trace_command($2);
+        free($1);
+	}
+    | BX_TOKEN_TRACE BX_TOKEN_OFF '\n'
+        {
+        bx_dbg_trace_command($2);
         free($1);
 	}
     ;
 
-trace_off_command:
-      BX_TOKEN_TRACEOFF '\n'
+trace_reg_command:
+      BX_TOKEN_TRACEREG BX_TOKEN_ON  '\n'
         {
-        bx_dbg_trace_off_command();
-        free($1);
+	bx_dbg_trace_reg_command($2);
+	free($1);
+	}
+    | BX_TOKEN_TRACEREG BX_TOKEN_OFF '\n'
+        {
+	bx_dbg_trace_reg_command($2);
+	free($1);
 	}
     ;
 
@@ -422,6 +427,10 @@ step_over_command:
 
 set_command:
       BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_ON  '\n'
+        {
+        bx_dbg_set_auto_disassemble($3);
+        free($1); free($2);
+        }
     | BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_OFF '\n'
         {
         bx_dbg_set_auto_disassemble($3);
@@ -807,22 +816,6 @@ crc_command:
         }
     ;
 
-trace_reg_on_command:
-      BX_TOKEN_TRACEREGON '\n'
-        {
-	bx_dbg_trace_reg_on_command();
-	free($1);
-	}
-    ;
-
-trace_reg_off_command:
-      BX_TOKEN_TRACEREGOFF '\n'
-        {
-	bx_dbg_trace_reg_off_command();
-	free($1);
-	}
-    ;
-
 help_command:
        BX_TOKEN_HELP BX_TOKEN_QUIT '\n'
          {
@@ -884,24 +877,16 @@ help_command:
          dbg_printf("crc <addr1> <addr2> - show CRC32 for physical memory range addr1..addr2\n");
          free($1);free($2);
          }
-       | BX_TOKEN_HELP BX_TOKEN_TRACEON '\n'
+       | BX_TOKEN_HELP BX_TOKEN_TRACE '\n'
          {
-         dbg_printf("trace-on - disassemble every executed instruction\n");
+         dbg_printf("trace on  - print disassembly for every executed instruction\n");
+         dbg_printf("trace off - disable instruction tracing\n");
          free($1);free($2);
          }
-       | BX_TOKEN_HELP BX_TOKEN_TRACEOFF '\n'
+       | BX_TOKEN_HELP BX_TOKEN_TRACEREG '\n'
          {
-         dbg_printf("trace-off - disable instruction tracing\n");
-         free($1);free($2);
-         }
-       | BX_TOKEN_HELP BX_TOKEN_TRACEREGON '\n'
-         {
-         dbg_printf("trace-reg-on - print all registers every executed instruction\n");
-         free($1);free($2);
-         }
-       | BX_TOKEN_HELP BX_TOKEN_TRACEREGOFF '\n'
-         {
-         dbg_printf("trace-reg-off - disable registers state tracing\n");
+         dbg_printf("trace-reg on  - print all registers before every executed instruction\n");
+         dbg_printf("trace-reg off - disable registers state tracing\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_DUMP_CPU '\n'
@@ -1140,7 +1125,9 @@ vexpression:
    | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
-   | BX_TOKEN_SEGREG                { $$ = bx_dbg_get_selector_value($1); }
+   | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
+   | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
+   | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
@@ -1164,7 +1151,9 @@ expression:
    | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
-   | BX_TOKEN_SEGREG                { $$ = bx_dbg_get_selector_value($1);}
+   | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
+   | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
+   | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }

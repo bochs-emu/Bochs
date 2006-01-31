@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.14 2006-01-27 19:50:00 sshwarts Exp $
+// $Id: debug.h,v 1.15 2006-01-31 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -61,8 +61,11 @@ typedef enum {
   BX_DBG_SREG_GS
 } SRegs;
 
-#define BX_DBG_REG16_IP  0
-#define BX_DBG_REG32_EIP 0
+#if BX_SUPPORT_X86_64
+# define BX_DBG_GEN_REGISTERS 16
+#else
+# define BX_DBG_GEN_REGISTERS 8
+#endif
 
 typedef enum {
   BX_DBG_REG8H_AH,
@@ -149,8 +152,6 @@ typedef enum {
   BX_DBG_REG64_R15
 } Regs64;
 
-#define BX_DBG_REG64_RIP 0
-
 #else
 
 typedef enum {
@@ -208,6 +209,9 @@ typedef struct {
 #define EMPTY_ARG (-1)
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
+Bit16u bx_dbg_get_ip (void);
+Bit32u bx_dbg_get_eip(void);
+bx_address bx_dbg_get_intruction_pointer(void);
 Bit8u bx_dbg_get_reg8l_value(unsigned reg);
 Bit8u bx_dbg_get_reg8h_value(unsigned reg);
 Bit16u bx_dbg_get_reg16_value(unsigned reg);
@@ -223,10 +227,8 @@ char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 Bit32u bx_dbg_get_symbol_value(char *Symbol);
 void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
-void bx_dbg_trace_on_command(void);
-void bx_dbg_trace_off_command(void);
-void bx_dbg_trace_reg_on_command(void);
-void bx_dbg_trace_reg_off_command(void);
+void bx_dbg_trace_command(bx_bool enable);
+void bx_dbg_trace_reg_command(bx_bool enable);
 void bx_dbg_ptime_command(void);
 void bx_dbg_timebp_command(bx_bool absolute, Bit64u time);
 #define MAX_CONCURRENT_BPS 5
@@ -496,7 +498,6 @@ typedef struct {
     struct { Bit32u base, limit; } gdtr;
     struct { Bit32u base, limit; } idtr;
     Bit32u dr0, dr1, dr2, dr3, dr6, dr7;
-    Bit32u tr3, tr4, tr5, tr6, tr7;
     Bit32u cr0, cr1, cr2, cr3, cr4;
     unsigned inhibit_mask;
 } bx_dbg_cpu_t;

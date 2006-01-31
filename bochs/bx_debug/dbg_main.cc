@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.45 2006-01-28 16:16:02 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.46 2006-01-31 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -543,28 +543,18 @@ void bx_dbg_quit_command(void)
   bx_dbg_exit(0);
 }
 
-void bx_dbg_trace_on_command(void)
+void bx_dbg_trace_command(bx_bool enable)
 {
-  BX_CPU(dbg_cpu)->trace = 1;
-  dbg_printf("Tracing enabled for %s\n", BX_CPU(dbg_cpu)->name);
+  BX_CPU(dbg_cpu)->trace = enable;
+  dbg_printf("Tracing %s for %s\n", enable ? "enabled" : "disabled", 
+     BX_CPU(dbg_cpu)->name);
 }
 
-void bx_dbg_trace_off_command(void)
+void bx_dbg_trace_reg_command(bx_bool enable)
 {
-  BX_CPU(dbg_cpu)->trace = 0;
-  dbg_printf("Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
-}
-
-void bx_dbg_trace_reg_on_command(void)
-{
-  BX_CPU(dbg_cpu)->trace_reg = 1;
-  dbg_printf("Register-Tracing enabled for %s\n", BX_CPU(dbg_cpu)->name);
-}
-
-void bx_dbg_trace_reg_off_command(void)
-{
-  BX_CPU(dbg_cpu)->trace_reg = 0;
-  dbg_printf("Register-Tracing disabled for %s\n", BX_CPU(dbg_cpu)->name);
+  BX_CPU(dbg_cpu)->trace_reg = enable;
+  dbg_printf("Register-Tracing %s for %s\n", enable ? "enabled" : "disabled", 
+     BX_CPU(dbg_cpu)->name);
 }
 
 void bx_dbg_ptime_command(void)
@@ -2373,26 +2363,6 @@ void bx_dbg_set_cpu_command(void)
   if (reti != 1) goto scanf_error;
 
   rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr3:0x%lx", &ul1); cpu.tr3 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr4:0x%lx", &ul1); cpu.tr4 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr5:0x%lx", &ul1); cpu.tr5 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr6:0x%lx", &ul1); cpu.tr6 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr7:0x%lx", &ul1); cpu.tr7 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
   reti = sscanf(tmp_buf, "cr0:0x%lx", &ul1); cpu.cr0 = ul1;
   if (reti != 1) goto scanf_error;
 
@@ -3241,9 +3211,8 @@ void bx_dbg_print_help(void)
   dbg_printf("h|help - show list of debugger commands\n");
   dbg_printf("h|help command - show short command description\n");
   dbg_printf("-*- Debugger control -*-\n");
-  dbg_printf("    help, q|quit|exit, set, instrument, show, trace-on, trace-off,\n");
-  dbg_printf("    trace-reg-on, trace-reg-off, record, playback,\n");
-  dbg_printf("    load-symbols, slist\n");
+  dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
+  dbg_printf("    record, playback, load-symbols, slist\n");
   dbg_printf("-*- Execution control -*-\n");
   dbg_printf("    c|cont|continue, s|step|stepi, p|n|next, modebp\n");
   dbg_printf("-*- Breakpoint management -*-\n");
@@ -3341,6 +3310,21 @@ Bit16u bx_dbg_get_selector_value(unsigned int seg_no)
     return 0;
   }
   return sreg.sel;
+}
+
+Bit16u bx_dbg_get_ip(void)
+{
+  return (BX_CPU(dbg_cpu)->get_ip() & 0xffff);
+}
+
+Bit32u bx_dbg_get_eip(void)
+{
+  return (BX_CPU(dbg_cpu)->get_ip() & 0xffffffff);
+}
+
+bx_address bx_dbg_get_instruction_pointer(void)
+{
+  return BX_CPU(dbg_cpu)->get_ip();
 }
 
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)

@@ -112,8 +112,8 @@
      BX_TOKEN_STRING = 338,
      BX_TOKEN_DOIT = 339,
      BX_TOKEN_CRC = 340,
-     BX_TOKEN_TRACEON = 341,
-     BX_TOKEN_TRACEOFF = 342,
+     BX_TOKEN_TRACE = 341,
+     BX_TOKEN_TRACEREG = 342,
      BX_TOKEN_SWITCH_MODE = 343,
      BX_TOKEN_SIZE = 344,
      BX_TOKEN_PTIME = 345,
@@ -139,16 +139,14 @@
      BX_TOKEN_NE2000 = 365,
      BX_TOKEN_PIC = 366,
      BX_TOKEN_PAGE = 367,
-     BX_TOKEN_TRACEREGON = 368,
-     BX_TOKEN_TRACEREGOFF = 369,
-     BX_TOKEN_HELP = 370,
-     BX_TOKEN_CALC = 371,
-     BX_TOKEN_VGA = 372,
-     BX_TOKEN_RSHIFT = 373,
-     BX_TOKEN_LSHIFT = 374,
-     BX_TOKEN_IVT = 375,
-     NEG = 376,
-     NOT = 377
+     BX_TOKEN_HELP = 368,
+     BX_TOKEN_CALC = 369,
+     BX_TOKEN_VGA = 370,
+     BX_TOKEN_RSHIFT = 371,
+     BX_TOKEN_LSHIFT = 372,
+     BX_TOKEN_IVT = 373,
+     NEG = 374,
+     NOT = 375
    };
 #endif
 #define BX_TOKEN_REG_AL 258
@@ -234,8 +232,8 @@
 #define BX_TOKEN_STRING 338
 #define BX_TOKEN_DOIT 339
 #define BX_TOKEN_CRC 340
-#define BX_TOKEN_TRACEON 341
-#define BX_TOKEN_TRACEOFF 342
+#define BX_TOKEN_TRACE 341
+#define BX_TOKEN_TRACEREG 342
 #define BX_TOKEN_SWITCH_MODE 343
 #define BX_TOKEN_SIZE 344
 #define BX_TOKEN_PTIME 345
@@ -261,16 +259,14 @@
 #define BX_TOKEN_NE2000 365
 #define BX_TOKEN_PIC 366
 #define BX_TOKEN_PAGE 367
-#define BX_TOKEN_TRACEREGON 368
-#define BX_TOKEN_TRACEREGOFF 369
-#define BX_TOKEN_HELP 370
-#define BX_TOKEN_CALC 371
-#define BX_TOKEN_VGA 372
-#define BX_TOKEN_RSHIFT 373
-#define BX_TOKEN_LSHIFT 374
-#define BX_TOKEN_IVT 375
-#define NEG 376
-#define NOT 377
+#define BX_TOKEN_HELP 368
+#define BX_TOKEN_CALC 369
+#define BX_TOKEN_VGA 370
+#define BX_TOKEN_RSHIFT 371
+#define BX_TOKEN_LSHIFT 372
+#define BX_TOKEN_IVT 373
+#define NEG 374
+#define NOT 375
 
 
 
@@ -285,7 +281,7 @@ typedef union YYSTYPE {
   bx_num_range uval_range;
 } YYSTYPE;
 /* Line 1252 of yacc.c.  */
-#line 289 "y.tab.h"
+#line 285 "y.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

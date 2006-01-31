@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.256 2006-01-27 19:50:00 sshwarts Exp $
+// $Id: cpu.h,v 1.257 2006-01-31 19:45:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,6 +126,9 @@
 #define ESI BX_CPU_THIS_PTR gen_reg[6].dword.erx
 #define EDI BX_CPU_THIS_PTR gen_reg[7].dword.erx
 
+// access to 32 bit instruction pointer
+#define EIP BX_CPU_THIS_PTR dword.eip
+
 #if BX_SUPPORT_X86_64
 // accesss to 64 bit general registers
 #define RAX BX_CPU_THIS_PTR gen_reg[0].rrx
@@ -144,12 +147,7 @@
 #define R13 BX_CPU_THIS_PTR gen_reg[13].rrx
 #define R14 BX_CPU_THIS_PTR gen_reg[14].rrx
 #define R15 BX_CPU_THIS_PTR gen_reg[15].rrx
-#endif
 
-// access to 32 bit instruction pointer
-#define EIP BX_CPU_THIS_PTR dword.eip
-
-#if BX_SUPPORT_X86_64
 // access to 64 bit instruction pointer
 #define RIP BX_CPU_THIS_PTR rip
 
@@ -162,7 +160,6 @@
 #define MSR_FMASK   (BX_CPU_THIS_PTR msr.fmask)
 #define MSR_KERNELGSBASE   (BX_CPU_THIS_PTR msr.kernelgsbase)
 #define MSR_TSC_AUX (BX_CPU_THIS_PTR msr.tsc_aux)
-
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -2842,23 +2839,22 @@ public: // for now...
   BX_CPP_INLINE Bit8u get_CPL(void) { return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl); }
 
   BX_CPP_INLINE Bit8u get_reg8l(unsigned reg);
-  BX_CPP_INLINE Bit8u set_reg8l(unsigned reg, Bit8u val);
-
   BX_CPP_INLINE Bit8u get_reg8h(unsigned reg);
-  BX_CPP_INLINE Bit8u set_reg8h(unsigned reg, Bit8u val);
+  BX_CPP_INLINE void  set_reg8l(unsigned reg, Bit8u val);
+  BX_CPP_INLINE void  set_reg8h(unsigned reg, Bit8u val);
 
   BX_CPP_INLINE bx_address get_ip(void);
+  BX_CPP_INLINE void       set_ip(bx_address ip);
   BX_CPP_INLINE bx_address get_linear_ip(void);
 
   BX_CPP_INLINE Bit16u get_reg16(unsigned reg);
-  BX_CPP_INLINE Bit16u set_reg16(unsigned reg, Bit16u val);
-
   BX_CPP_INLINE Bit32u get_reg32(unsigned reg);
-  BX_CPP_INLINE Bit32u set_reg32(unsigned reg, Bit32u val);
+  BX_CPP_INLINE void   set_reg16(unsigned reg, Bit16u val);
+  BX_CPP_INLINE void   set_reg32(unsigned reg, Bit32u val);
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
-  BX_CPP_INLINE Bit64u set_reg64(unsigned reg, Bit64u val);
+  BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
 #endif
 
   BX_CPP_INLINE bx_address get_segment_base(unsigned seg);
@@ -2961,7 +2957,7 @@ BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
    return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl);
 }
 
-BX_CPP_INLINE Bit8u BX_CPU_C::set_reg8l(unsigned reg, Bit8u val)
+BX_CPP_INLINE void BX_CPU_C::set_reg8l(unsigned reg, Bit8u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].word.byte.rl = val;
@@ -2973,20 +2969,33 @@ BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8h(unsigned reg)
    return (BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh);
 }
 
-BX_CPP_INLINE Bit8u BX_CPU_C::set_reg8h(unsigned reg, Bit8u val)
+BX_CPP_INLINE void BX_CPU_C::set_reg8h(unsigned reg, Bit8u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].word.byte.rh = val;
 }
 
+#if BX_SUPPORT_X86_64
 BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
 {
-#if BX_SUPPORT_X86_64
    return (BX_CPU_THIS_PTR rip);
-#else
-   return (BX_CPU_THIS_PTR dword.eip); 
-#endif
 }
+
+BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
+{
+   BX_CPU_THIS_PTR rip = ip;
+}
+#else
+BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
+{
+   return (BX_CPU_THIS_PTR dword.eip);
+}
+
+BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
+{
+   BX_CPU_THIS_PTR dword.eip = ip;
+}
+#endif
 
 BX_CPP_INLINE bx_address BX_CPU_C::get_linear_ip(void)
 {
@@ -2999,7 +3008,7 @@ BX_CPP_INLINE Bit16u BX_CPU_C::get_reg16(unsigned reg)
    return (BX_CPU_THIS_PTR gen_reg[reg].word.rx);
 }
 
-BX_CPP_INLINE Bit16u BX_CPU_C::set_reg16(unsigned reg, Bit16u val)
+BX_CPP_INLINE void BX_CPU_C::set_reg16(unsigned reg, Bit16u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].word.rx = val;
@@ -3011,7 +3020,7 @@ BX_CPP_INLINE Bit32u BX_CPU_C::get_reg32(unsigned reg)
    return (BX_CPU_THIS_PTR gen_reg[reg].dword.erx);
 }
 
-BX_CPP_INLINE Bit32u BX_CPU_C::set_reg32(unsigned reg, Bit32u val)
+BX_CPP_INLINE void BX_CPU_C::set_reg32(unsigned reg, Bit32u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].dword.erx = val;
@@ -3024,7 +3033,7 @@ BX_CPP_INLINE Bit64u BX_CPU_C::get_reg64(unsigned reg)
    return (BX_CPU_THIS_PTR gen_reg[reg].rrx);
 }
 
-BX_CPP_INLINE Bit64u BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
+BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
 {
    assert(reg < BX_GENERAL_REGISTERS);
    BX_CPU_THIS_PTR gen_reg[reg].rrx = val;
