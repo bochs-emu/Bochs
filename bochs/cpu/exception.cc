@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.69 2006-01-25 22:20:00 sshwarts Exp $
+// $Id: exception.cc,v 1.70 2006-01-31 17:41:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -884,78 +884,74 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   //       eflags image.
 
   switch (vector) {
-    case  0: // DIV by 0
+    case BX_DE_EXCEPTION: // DIV by 0
       push_error = 0;
       exception_type = BX_ET_CONTRIBUTORY;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case  1: // debug exceptions
+    case BX_DB_EXCEPTION: // debug exceptions
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       break;
-    case  2: // NMI
+    case 2:               // NMI
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       break;
-    case  3: // breakpoint
+    case BX_BP_EXCEPTION: // breakpoint
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       break;
-    case  4: // overflow
+    case BX_OF_EXCEPTION: // overflow
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       break;
-    case  5: // bounds check
-      push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
-      break;
-    case  6: // invalid opcode
+    case BX_BR_EXCEPTION: // bounds check
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case  7: // device not available
+    case BX_UD_EXCEPTION: // invalid opcode
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case  8: // double fault
+    case BX_NM_EXCEPTION: // device not available
+      push_error = 0;
+      exception_type = BX_ET_BENIGN;
+      BX_CPU_THIS_PTR assert_RF ();
+      break;
+    case BX_DF_EXCEPTION: // double fault
       push_error = 1;
       exception_type = BX_ET_DOUBLE_FAULT;
       break;
-    case  9: // coprocessor segment overrun (286,386 only)
+    case 9:               // coprocessor segment overrun (286,386 only)
       push_error = 0;
       exception_type = BX_ET_CONTRIBUTORY;
       BX_CPU_THIS_PTR assert_RF ();
       BX_PANIC(("exception(9): unfinished"));
       break;
-    case 10: // invalid TSS
+    case BX_TS_EXCEPTION: // invalid TSS
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
-      error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case 11: // segment not present
+    case BX_NP_EXCEPTION: // segment not present
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
-      error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case 12: // stack fault
+    case BX_SS_EXCEPTION: // stack fault
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
-      error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case 13: // general protection
+    case BX_GP_EXCEPTION: // general protection
       push_error = 1;
       exception_type = BX_ET_CONTRIBUTORY;
-      error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case 14: // page fault
-      if (BX_CPU_THIS_PTR except_chk) // Help with OS/2
+    case BX_PF_EXCEPTION: // page fault
+      if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
       {
             BX_CPU_THIS_PTR except_chk = 0;
             BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR except_cs;
@@ -963,33 +959,39 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       }
       push_error = 1;
       exception_type = BX_ET_PAGE_FAULT;
-      // ??? special format error returned
       BX_CPU_THIS_PTR assert_RF ();
       break;
-    case 15: // reserved
+    case 15:              // reserved
       BX_PANIC(("exception(15): reserved"));
-      push_error = 0;     // keep compiler happy for now
-      exception_type = 0; // keep compiler happy for now
+      push_error = 0;
+      exception_type = 0;
       break;
-    case 16: // floating-point error
+    case BX_MF_EXCEPTION: // floating-point error
       push_error = 0;
       exception_type = BX_ET_BENIGN;
       BX_CPU_THIS_PTR assert_RF ();
       break;
 #if BX_CPU_LEVEL >= 4
-    case 17: // alignment check
+    case BX_AC_EXCEPTION: // alignment check
       BX_PANIC(("exception(): alignment-check, vector 17 unimplemented"));
-      push_error = 0;     // keep compiler happy for now
+      push_error = 0;
       exception_type = BX_ET_BENIGN;
       BX_CPU_THIS_PTR assert_RF ();
       break;
 #endif
 #if BX_CPU_LEVEL >= 5
-    case 18: // machine check
+    case BX_MC_EXCEPTION: // machine check
       BX_PANIC(("exception(): machine-check, vector 18 unimplemented"));
-      push_error = 0;     // keep compiler happy for now
+      push_error = 0;
       exception_type = BX_ET_BENIGN;
       break;
+#if BX_SUPPORT_SSE
+    case BX_XM_EXCEPTION: // SIMD Floating-Point exception
+      push_error = 0;
+      exception_type = BX_ET_BENIGN;
+      BX_CPU_THIS_PTR assert_RF ();
+      break;
+#endif
 #endif
     default:
       BX_PANIC(("exception(%u): bad vector", (unsigned) vector));
@@ -1002,6 +1004,9 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     // Page faults have different format
     error_code = (error_code & 0xfffe) | BX_CPU_THIS_PTR EXT;
   }
+  else {
+    // FIXME: special format error returned for page faults ?
+  }
   BX_CPU_THIS_PTR EXT = 1;
 
   /* if we've already had 1st exception, see if 2nd causes a
@@ -1012,7 +1017,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       BX_CPU_THIS_PTR curr_exception[1] = exception_type;
     else {
       BX_CPU_THIS_PTR curr_exception[1] = BX_ET_DOUBLE_FAULT;
-      vector = 8;
+      vector = BX_DF_EXCEPTION;
     }
   }
   else {
