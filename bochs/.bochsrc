@@ -87,6 +87,11 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  Bochs currently supports up to 8 processors. If Bochs is compiled
 #  without SMP support, it won't accept values different from 1.
 #
+#  RESET_ON_TRIPLE_FAULT:
+#  Reset the CPU when triple fault occur (highly recommended) rather than
+#  PANIC. Remember that if you trying to continue after triple fault the 
+#  simulation will be completely bogus !
+#
 #  IPS:
 #  Emulated Instructions Per Second.  This is the number of IPS that bochs
 #  is capable of running on your machine. You can recompile Bochs with
@@ -107,7 +112,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66  2 to  2.5 Mips
 #  400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3   1 to  1.8 Mips
 #=======================================================================
-cpu: count=1, ips=10000000
+cpu: count=1, ips=10000000, reset_on_triple_fault=1
 
 #=======================================================================
 # MEGS

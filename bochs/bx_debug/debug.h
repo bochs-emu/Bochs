@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.15 2006-01-31 19:45:33 sshwarts Exp $
+// $Id: debug.h,v 1.16 2006-02-01 18:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,8 +257,8 @@ bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable);
 bx_bool bx_dbg_del_pbreak(unsigned handle);
 bx_bool bx_dbg_del_lbreak (unsigned handle);
 bx_bool bx_dbg_del_vbreak (unsigned handle);
-int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip);
-int bx_dbg_lbreakpoint_command(BreakpointKind bk, Bit32u laddress);
+int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip);
+int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
 int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
@@ -346,25 +346,15 @@ void bx_dbg_exit(int code);
 // code for guards...
 //
 
-#define BX_DBG_GUARD_INSTR_BEGIN   0x0001
-#define BX_DBG_GUARD_INSTR_END     0x0002
-#define BX_DBG_GUARD_EXCEP_BEGIN   0x0004
-#define BX_DBG_GUARD_EXCEP_END     0x0008
-#define BX_DBG_GUARD_INTER_BEGIN   0x0010
-#define BX_DBG_GUARD_INTER_END     0x0020
-#define BX_DBG_GUARD_INSTR_MAP     0x0040
-
-// following 3 go along with BX_DBG_GUARD_INSTR_BEGIN
-// to provide breakpointing
-#define BX_DBG_GUARD_IADDR_VIR     0x0080
-#define BX_DBG_GUARD_IADDR_LIN     0x0100
-#define BX_DBG_GUARD_IADDR_PHY     0x0200
+#define BX_DBG_GUARD_IADDR_VIR     0x0001
+#define BX_DBG_GUARD_IADDR_LIN     0x0002
+#define BX_DBG_GUARD_IADDR_PHY     0x0004
 #define BX_DBG_GUARD_IADDR_ALL (BX_DBG_GUARD_IADDR_VIR | \
                                 BX_DBG_GUARD_IADDR_LIN | \
                                 BX_DBG_GUARD_IADDR_PHY)
 
-#define BX_DBG_GUARD_ICOUNT        0x0400
-#define BX_DBG_GUARD_CTRL_C        0x0800
+#define BX_DBG_GUARD_ICOUNT        0x0100
+#define BX_DBG_GUARD_CTRL_C        0x0200
 
 typedef struct {
   unsigned long guard_for;
@@ -375,7 +365,7 @@ typedef struct {
     unsigned num_virtual;
     struct {
       Bit32u cs;  // only use 16 bits
-      Bit32u eip;
+      bx_address eip;
       unsigned bpoint_id;
       bx_bool enabled;
     } vir[BX_DBG_MAX_VIR_BPOINTS];
@@ -384,7 +374,7 @@ typedef struct {
 #if BX_DBG_SUPPORT_LIN_BPOINT
     unsigned num_linear;
     struct {
-      Bit32u addr;
+      bx_address addr;
       unsigned bpoint_id;
       bx_bool enabled;
     } lin[BX_DBG_MAX_LIN_BPOINTS];
@@ -393,7 +383,7 @@ typedef struct {
 #if BX_DBG_SUPPORT_PHY_BPOINT
     unsigned num_physical;
     struct {
-      Bit32u addr;
+      Bit32u addr; // physical address in 32 bits only
       unsigned bpoint_id;
       bx_bool enabled;
     } phy[BX_DBG_MAX_PHY_BPOINTS];

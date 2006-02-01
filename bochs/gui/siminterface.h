@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.151 2006-01-31 19:37:56 vruppert Exp $
+// $Id: siminterface.h,v 1.152 2006-02-01 18:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -123,6 +123,7 @@ typedef enum {
   BXP_NULL = 301,
   BXP_CPU_COUNT,
   BXP_IPS,
+  BXP_RESET_ON_TRIPLE_FAULT,
   BXP_REALTIME_PIT,
   BXP_TEXT_SNAPSHOT_CHECK,
   BXP_VGA_EXTENSION,

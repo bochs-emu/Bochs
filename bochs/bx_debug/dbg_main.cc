@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.46 2006-01-31 19:45:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.47 2006-02-01 18:12:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,6 @@ unsigned dbg_cpu = 0;
 
 bx_param_bool_c *sim_running;
 
-static void bx_dbg_usage(void);
 static char bx_debug_rc_fname[BX_MAX_PATH];
 static char tmp_buf[512];
 static char tmp_buf_prev[512];
@@ -172,9 +171,8 @@ int bx_dbg_main(int argc, char *argv[])
   i = 1;
   if ( (argc >= 2) && !strcmp(argv[1], "-rc") ) {
     if ( argc == 2 ) {
-      BX_ERROR(("%s: -rc option used, but no path specified.",
-        argv[0] ));
-      bx_dbg_usage();
+      BX_ERROR(("%s: -rc option used, but no path specified.", argv[0]));
+      dbg_printf("usage: %s [-rc path]\n", argv0);
       BX_EXIT(1);
     }
     strncpy(bx_debug_rc_fname, argv[2], BX_MAX_PATH-1);
@@ -275,11 +273,6 @@ int bx_dbg_main(int argc, char *argv[])
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
-}
-
-void bx_dbg_usage(void)
-{
-  dbg_printf("usage: %s [-rc path] [-sim1 ... ] [-sim2 ... ]\n", argv0);
 }
 
 void bx_dbg_interpret_line (char *cmd)
@@ -724,7 +717,7 @@ void bx_dbg_playback_command(char* path_quoted)
   }
 }
 
-// toggles vm86 mode switch breakpoint
+// toggles mode switch breakpoint
 void bx_dbg_modebp_command()
 {
   BX_CPU(dbg_cpu)->dbg_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
@@ -1064,8 +1057,6 @@ one_more:
       BX_CPU(cpu)->guard_found.icount = 0;
       bx_guard.icount = quantum;
       BX_CPU(cpu)->cpu_loop (-1);
-      /// check out BX_CPU(cpu)->guard_found.icount
-      //dbg_printf("dbg_cont: after cpu_loop guard_found.icount=%d\n", BX_CPU(cpu)->guard_found.icount);
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
@@ -1202,17 +1193,21 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
       dbg_printf("(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
     else
       dbg_printf("(%u) ", which_cpu);
-    if (BX_CPU(which_cpu)->get_cpu_mode() == BX_MODE_IA32_PROTECTED) { // 16bit & 32bit protected mode
+
+    if (BX_CPU(which_cpu)->protected_mode()) {
       dbg_printf("[0x%08x] %04x:" FMT_ADDRX " (%s): ", 
 	phy, BX_CPU(which_cpu)->guard_found.cs,
         BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
+        bx_dbg_symbolic_address((BX_CPU(which_cpu)->cr3) >> 12, 
+           BX_CPU(which_cpu)->guard_found.eip, 
+           BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     else { // Real & V86 mode
       dbg_printf("[0x%08x] %04x:%04x (%s): ", 
 	phy, BX_CPU(which_cpu)->guard_found.cs,
         (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
+        bx_dbg_symbolic_address_16bit(BX_CPU(which_cpu)->guard_found.eip, 
+          BX_CPU(which_cpu)->sregs[BX_SEG_REG_CS].selector.value));
     }
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++)
@@ -1470,7 +1465,7 @@ bx_bool bx_dbg_del_vbreak (unsigned handle)
   return 0;
 }
 
-int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip)
+int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
   if (bk != bkRegular) {
@@ -1500,7 +1495,7 @@ int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, Bit32u eip)
 #endif
 }
 
-int bx_dbg_lbreakpoint_command(BreakpointKind bk, Bit32u laddress)
+int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress)
 {
 #if BX_DBG_SUPPORT_LIN_BPOINT
   if (bk == bkAtIP) {
@@ -1570,7 +1565,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("vbreakpoint    ");
     dbg_printf("keep ");
     dbg_printf ( bx_guard.iaddr.vir[i].enabled?"y   ":"n   ");
-    dbg_printf("0x%04x:0x%08x\n",
+    dbg_printf("0x%04x:" FMT_ADDRX "\n",
                   bx_guard.iaddr.vir[i].cs,
                   bx_guard.iaddr.vir[i].eip);
   }
@@ -1581,8 +1576,8 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("%3u ", bx_guard.iaddr.lin[i].bpoint_id);
     dbg_printf("lbreakpoint    ");
     dbg_printf("keep ");
-    dbg_printf ( bx_guard.iaddr.lin[i].enabled?"y   ":"n   ");
-    dbg_printf("0x%08x\n", bx_guard.iaddr.lin[i].addr);
+    dbg_printf(bx_guard.iaddr.lin[i].enabled?"y   ":"n   ");
+    dbg_printf("0x" FMT_ADDRX "\n", bx_guard.iaddr.lin[i].addr);
   }
 #endif
 
@@ -1604,7 +1599,8 @@ void bx_dbg_set_auto_disassemble(bx_bool enable)
 
 void bx_dbg_set_disassemble_size(unsigned size)
 {
-  if ( (size!=16) && (size!=32) && (size!=64) && (size!=0) ) {
+  if ((size!=16) && (size!=32) && (size!=64) && (size!=0))
+  {
     dbg_printf("Error: disassemble size must be 16/32 or 64.\n");
     return;
   }
@@ -1619,7 +1615,6 @@ void bx_dbg_disassemble_switch_mode()
 void bx_dbg_take_command(char *what, unsigned n)
 {
   if ( !strcmp(what, "dma") ) {
-    unsigned i;
     if (n == 0) {
       dbg_printf("Error: take what n=0.\n");
       return;
@@ -1627,7 +1622,7 @@ void bx_dbg_take_command(char *what, unsigned n)
     bx_dbg_post_dma_reports(); // in case there's some pending reports
     bx_dbg_batch_dma.this_many = n;
 
-    for (i=0; i<n; i++) {
+    for (unsigned i=0; i<n; i++) {
       BX_CPU(0)->dbg_take_dma();
     }
 
@@ -3093,14 +3088,14 @@ static void dbg_dump_table(bx_bool all)
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(all && (start_lin != 1))
-          dbg_printf("%08x - %08x: %8x - %8x\n",
+          dbg_printf("%08x - %08x: %08x - %08x\n",
             start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
         start_lin = lin;
         start_phy = phy;
       }
     } else {
       if(all && start_lin != 1)
-        dbg_printf("%08x - %08x: %8x - %8x\n",
+        dbg_printf("%08x - %08x: %08x - %08x\n",
           start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
       start_lin = 1;
       start_phy = 2;
@@ -3110,13 +3105,14 @@ static void dbg_dump_table(bx_bool all)
     lin += 0x1000;
   }
   if(all && start_lin != 1)
-    dbg_printf("%08x - %08x: %8x - %8x\n",
+    dbg_printf("%08x - %08x: %08x - %08x\n",
          start_lin, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lin));
 }
 
 /*form RB list*/
 static char* bx_dbg_ivt_desc(int intnum)
-{ char* ret = "";
+{ 
+  char* ret = "";
   switch (intnum)
   { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
     case 0x01 : ret = "SINGLE STEP"                         ; break;
@@ -3164,7 +3160,8 @@ static char* bx_dbg_ivt_desc(int intnum)
 }
 
 void bx_dbg_info_ivt_command(bx_num_range r)
-{ bx_dbg_cpu_t cpu;
+{ 
+  bx_dbg_cpu_t cpu;
   int i;
   unsigned char buff[4];
   Bit16u seg;

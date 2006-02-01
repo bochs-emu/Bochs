@@ -1057,7 +1057,6 @@ Optional Features:
   --enable-ignore-bad-msr           ignore bad MSR references
   --enable-port-e9-hack             writes to port e9 go to console
   --enable-show-ips                 show IPS in Bochs log file
-  --enable-reset-on-triple-fault    reset when cpu detects a triple fault
   --enable-cpp                      use .cpp as C++ suffix
   --enable-debugger                 compile in support for Bochs internal debugger
   --enable-external-debugger        enable external debugger support (win32 only)
@@ -1090,6 +1089,7 @@ Optional Features:
   --enable-control-panel            turns on/off contol panel (deprecated)
   --enable-vga                      use VGA emulation (deprecated)
   --enable-processors               select number of processors (deprecated)
+  --enable-reset-on-triple-fault    reset when cpu detects a triple fault
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -34853,39 +34853,6 @@ _ACEOF
 
 fi;
 
-echo "$as_me:$LINENO: checking whether to reset on triple fault" >&5
-echo $ECHO_N "checking whether to reset on triple fault... $ECHO_C" >&6
-# Check whether --enable-reset-on-triple-fault or --disable-reset-on-triple-fault was given.
-if test "${enable_reset_on_triple_fault+set}" = set; then
-  enableval="$enable_reset_on_triple_fault"
-  if test "$enableval" = yes; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_RESET_ON_TRIPLE_FAULT 1
-_ACEOF
-
-   else
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_RESET_ON_TRIPLE_FAULT 0
-_ACEOF
-
-   fi
-else
-
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_RESET_ON_TRIPLE_FAULT 1
-_ACEOF
-
-
-
-fi;
-
-
 echo "$as_me:$LINENO: checking for use of .cpp as suffix" >&5
 echo $ECHO_N "checking for use of .cpp as suffix... $ECHO_C" >&6
 # Check whether --enable-cpp or --disable-cpp was given.
@@ -39185,6 +39152,24 @@ if test "${enable_processors+set}" = set; then
 echo "${ECHO_T}$enableval" >&6
    { { echo "$as_me:$LINENO: error: deprecated - use option --enable-smp instead" >&5
 echo "$as_me: error: deprecated - use option --enable-smp instead" >&2;}
+   { (exit 1); exit 1; }; }
+
+else
+
+   echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+
+fi;
+
+echo "$as_me:$LINENO: checking whether to reset on triple fault" >&5
+echo $ECHO_N "checking whether to reset on triple fault... $ECHO_C" >&6
+# Check whether --enable-reset-on-triple-fault or --disable-reset-on-triple-fault was given.
+if test "${enable_reset_on_triple_fault+set}" = set; then
+  enableval="$enable_reset_on_triple_fault"
+  echo "$as_me:$LINENO: result: $enableval" >&5
+echo "${ECHO_T}$enableval" >&6
+   { { echo "$as_me:$LINENO: error: deprecated - could be configured directly from .bochsrc instead" >&5
+echo "$as_me: error: deprecated - could be configured directly from .bochsrc instead" >&2;}
    { (exit 1); exit 1; }; }
 
 else

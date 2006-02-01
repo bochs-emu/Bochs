@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.9 2006-01-31 19:45:33 sshwarts Exp $
+// $Id: parser.y,v 1.10 2006-02-01 18:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -31,6 +31,8 @@
 %type <uval> BX_TOKEN_32B_REG
 %type <uval> BX_TOKEN_NONSEG_REG
 %type <uval> BX_TOKEN_SEGREG
+%type <bval> BX_TOKEN_TOGGLE_ON_OFF
+%type <sval> BX_TOKEN_INSTRUMENT_COMMAND
 
 %token <uval> BX_TOKEN_REG_AL
 %token <uval> BX_TOKEN_REG_BL
@@ -210,6 +212,20 @@ command:
       }
     ;
 
+BX_TOKEN_TOGGLE_ON_OFF:
+      BX_TOKEN_ON
+    | BX_TOKEN_OFF
+    { $$=$1; }
+;
+
+BX_TOKEN_INSTRUMENT_COMMAND:
+      BX_TOKEN_START
+    | BX_TOKEN_STOP
+    | BX_TOKEN_RESET
+    | BX_TOKEN_PRINT
+    { $$=$1; }
+;
+
 BX_TOKEN_SEGREG:
       BX_TOKEN_CS
     | BX_TOKEN_ES
@@ -279,12 +295,7 @@ ptime_command:
     ;
 
 trace_command:
-      BX_TOKEN_TRACE BX_TOKEN_ON  '\n'
-        {
-        bx_dbg_trace_command($2);
-        free($1);
-	}
-    | BX_TOKEN_TRACE BX_TOKEN_OFF '\n'
+      BX_TOKEN_TRACE BX_TOKEN_TOGGLE_ON_OFF '\n'
         {
         bx_dbg_trace_command($2);
         free($1);
@@ -292,12 +303,7 @@ trace_command:
     ;
 
 trace_reg_command:
-      BX_TOKEN_TRACEREG BX_TOKEN_ON  '\n'
-        {
-	bx_dbg_trace_reg_command($2);
-	free($1);
-	}
-    | BX_TOKEN_TRACEREG BX_TOKEN_OFF '\n'
+      BX_TOKEN_TRACEREG BX_TOKEN_TOGGLE_ON_OFF '\n'
         {
 	bx_dbg_trace_reg_command($2);
 	free($1);
@@ -426,12 +432,7 @@ step_over_command:
     ;
 
 set_command:
-      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_ON  '\n'
-        {
-        bx_dbg_set_auto_disassemble($3);
-        free($1); free($2);
-        }
-    | BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_OFF '\n'
+      BX_TOKEN_SET BX_TOKEN_DISASSEMBLE BX_TOKEN_TOGGLE_ON_OFF '\n'
         {
         bx_dbg_set_auto_disassemble($3);
         free($1); free($2);
@@ -790,10 +791,7 @@ disassemble_command:
     ;
 
 instrument_command:
-      BX_TOKEN_INSTRUMENT BX_TOKEN_START '\n'
-    | BX_TOKEN_INSTRUMENT BX_TOKEN_STOP  '\n'
-    | BX_TOKEN_INSTRUMENT BX_TOKEN_RESET '\n'
-    | BX_TOKEN_INSTRUMENT BX_TOKEN_PRINT '\n'
+      BX_TOKEN_INSTRUMENT BX_TOKEN_INSTRUMENT_COMMAND '\n'
         {
         bx_dbg_instrument_command($2);
         free($1); free($2);

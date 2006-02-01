@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.169 2006-01-28 16:16:02 sshwarts Exp $
+// $Id: bochs.h,v 1.170 2006-02-01 18:11:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -467,20 +467,26 @@ typedef struct {
   bx_param_num_c *Oioaddr1;
   bx_param_num_c *Oioaddr2;
   bx_param_num_c *Oirq;
-  } bx_ata_options;
+} bx_ata_options;
 
 typedef struct {
   bx_param_string_c *Opath;
   bx_param_num_c *Oaddress;
-  } bx_rom_options;
+} bx_rom_options;
 
 typedef struct {
   bx_param_string_c *Opath;
-  } bx_vgarom_options;
+} bx_vgarom_options;
+
+typedef struct {
+  bx_param_num_c    *Ocpu_count;
+  bx_param_num_c    *Oips;
+  bx_param_bool_c   *Oreset_on_triple_fault;
+} bx_cpu_options;
 
 typedef struct {
   bx_param_num_c *Osize;
-  } bx_mem_options;
+} bx_mem_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
@@ -496,7 +502,7 @@ typedef struct {
 typedef struct {
   bx_param_num_c   *Otime0;
   bx_param_enum_c  *Osync;
-  } bx_clock_options;
+} bx_clock_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;
@@ -506,12 +512,12 @@ typedef struct {
   bx_param_enum_c *Oethmod;
   bx_param_string_c *Oethdev;
   bx_param_string_c *Oscript;
-  } bx_ne2k_options;
+} bx_ne2k_options;
 
 typedef struct {
   bx_param_num_c *Ovendor;
   bx_param_num_c *Odevice;
-  } bx_pcidev_options;
+} bx_pcidev_options;
 
 typedef struct {
 // These options are used for a special hack to load a
@@ -523,7 +529,7 @@ typedef struct {
   bx_param_string_c *Opath;
   bx_param_string_c *Oiolog;
   bx_param_string_c *Oinitrd;
-  } bx_load32bitOSImage_t;
+} bx_load32bitOSImage_t;
 
 typedef struct {
   bx_param_string_c *Ofilename;
@@ -540,19 +546,19 @@ typedef struct {
   bx_param_num_c *Owavemode;
   bx_param_num_c *Ologlevel;
   bx_param_num_c *Odmatimer;
-  } bx_sb16_options;
+} bx_sb16_options;
 
 typedef struct {
   unsigned int port;
   unsigned int text_base;
   unsigned int data_base;
   unsigned int bss_base;
-  } bx_gdbstub_t;
+} bx_gdbstub_t;
 
 typedef struct {
   bx_param_bool_c *OuseMapping;
   bx_param_string_c *Okeymap;
-  } bx_keyboard_options;
+} bx_keyboard_options;
 
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
@@ -577,6 +583,7 @@ typedef struct BOCHSAPI {
   bx_vgarom_options vgarom;
   bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 
   bx_rom_options    optram[BX_N_OPTROM_IMAGES]; // Optional ram images 
+  bx_cpu_options    cpu;
   bx_mem_options    memory;
   bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
@@ -587,8 +594,6 @@ typedef struct BOCHSAPI {
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;
   bx_param_enum_c   *Okeyboard_type;
-  bx_param_num_c    *Ocpu_count;
-  bx_param_num_c    *Oips;
   bx_param_bool_c   *Otext_snapshot_check;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_enum_c   *Omouse_type;

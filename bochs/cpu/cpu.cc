@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.126 2006-01-25 22:19:59 sshwarts Exp $
+// $Id: cpu.cc,v 1.127 2006-02-01 18:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ debugger_check:
 #endif
 
 #if BX_DEBUGGER
-    // BW vm mode switch support is in dbg_is_begin_instr_bpoint
+    // Mode switch support is in dbg_is_begin_instr_bpoint
     // note instr generating exceptions never reach this point.
 
     // (mch) Read/write, time break point support
@@ -607,10 +607,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // if no local APIC, always acknowledge the PIC.
     vector = DEV_pic_iac(); // may set INTR with next interrupt
 #endif
-    //BX_DEBUG(("decode: interrupt %u",
-    //                                   (unsigned) vector));
+    //BX_DEBUG(("decode: interrupt %u", (unsigned) vector));
     BX_CPU_THIS_PTR errorno = 0;
-    BX_CPU_THIS_PTR EXT   = 1; /* external event */
+    BX_CPU_THIS_PTR EXT = 1; /* external event */
     interrupt(vector, 0, 0, 0);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
@@ -653,7 +652,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Data page fault
   //   Alignment check
   // (handled by rest of the code)
-
 
   if (BX_CPU_THIS_PTR get_TF ())
   {
@@ -953,8 +951,7 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       Bit32u phy;
       bx_bool valid;
-      dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr,
-                              &phy, &valid);
+      dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy, &valid);
       // The "guard_found.icount!=0" condition allows you to step or
       // continue beyond a breakpoint.  Bryce tried removing it once,
       // and once you get to a breakpoint you are stuck there forever.
@@ -981,7 +978,6 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
 
 bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
 {
-  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
   BX_CPU_THIS_PTR guard_found.icount++;
 
   // convenient point to see if user typed Ctrl-C

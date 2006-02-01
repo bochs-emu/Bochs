@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.70 2006-01-31 17:41:08 sshwarts Exp $
+// $Id: exception.cc,v 1.71 2006-02-01 18:12:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -840,34 +840,20 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   }
 
   BX_CPU_THIS_PTR errorno++;
-  if (BX_CPU_THIS_PTR errorno >= 3) {
-#if BX_RESET_ON_TRIPLE_FAULT
-    BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
-    debug(BX_CPU_THIS_PTR prev_eip);
-    bx_pc_system.Reset(BX_RESET_SOFTWARE);
-#else
-    BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
-    BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
-#endif
-#if BX_DEBUGGER
-    bx_guard.special_unwind_stack = true;
-#endif
-    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-  }
 
-  /* careful not to get here with curr_exception[1]==DOUBLE_FAULT */
-  /* ...index on DOUBLE_FAULT below, will be out of bounds */
-
-  /* if 1st was a double fault (software INT?), then shutdown */
-  if ( (BX_CPU_THIS_PTR errorno==2) && (BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT) ) {
-#if BX_RESET_ON_TRIPLE_FAULT
-    BX_INFO(("exception(): triple fault encountered, shutdown status is %02xh, resetting", DEV_cmos_get_reg(0x0f)));
-    debug(BX_CPU_THIS_PTR prev_eip);
-    bx_pc_system.Reset(BX_RESET_SOFTWARE);
-#else
-    BX_PANIC(("exception(): triple fault encountered"));
-    BX_ERROR(("WARNING: Any simulation after this point is completely bogus."));
-#endif
+  if (BX_CPU_THIS_PTR errorno >= 3 ||
+     // if 1st was a double fault (software INT?), then shutdown
+     (BX_CPU_THIS_PTR errorno == 2 && BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT))
+  {
+    if (bx_options.cpu.Oreset_on_triple_fault->get()) {
+      BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
+      debug(BX_CPU_THIS_PTR prev_eip);
+      bx_pc_system.Reset(BX_RESET_SOFTWARE);
+    }
+    else {
+      BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
+      BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
+    }
 #if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;
 #endif
@@ -1024,17 +1010,14 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     BX_CPU_THIS_PTR curr_exception[0] = exception_type;
   }
 
-#if BX_CPU_LEVEL >= 2
-  if (!real_mode()) {
-    BX_CPU_THIS_PTR interrupt(vector, 0, push_error, error_code);
+  if (real_mode()) {
+    // not INT, no error code pushed
+    BX_CPU_THIS_PTR interrupt(vector, 0, 0, 0);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
-  else // real mode
-#endif
-  {
-    // not INT, no error code pushed
-    BX_CPU_THIS_PTR interrupt(vector, 0, 0, 0);
+  else {
+    BX_CPU_THIS_PTR interrupt(vector, 0, push_error, error_code);
     BX_CPU_THIS_PTR errorno = 0; // error resolved
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }

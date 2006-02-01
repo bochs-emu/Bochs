@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.311 2006-01-29 08:48:50 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.312 2006-02-01 18:12:07 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1071,23 +1071,6 @@ AC_ARG_ENABLE(show-ips,
     AC_DEFINE(BX_SHOW_IPS, 0)
     ]
   )
-
-AC_MSG_CHECKING(whether to reset on triple fault)
-AC_ARG_ENABLE(reset-on-triple-fault,
-  [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 0)
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_RESET_ON_TRIPLE_FAULT, 1)
-    ]
-  )
-
 
 AC_MSG_CHECKING(for use of .cpp as suffix)
 AC_ARG_ENABLE(cpp,
@@ -2743,6 +2726,16 @@ AC_ARG_ENABLE(processors,
   [  --enable-processors               select number of processors (deprecated)],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([deprecated - use option --enable-smp instead])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(whether to reset on triple fault)
+AC_ARG_ENABLE(reset-on-triple-fault,
+  [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([deprecated - could be configured directly from .bochsrc instead])
   ],
   [
    AC_MSG_RESULT(no)

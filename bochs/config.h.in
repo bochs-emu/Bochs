@@ -175,10 +175,6 @@
 //   0 = don't compile in support for v8086 mode.
 #define BX_SUPPORT_V8086_MODE 1
 
-// Defines if the simulation should reset on triple fault
-// if set to 0, the simulation will panic.
-#define BX_RESET_ON_TRIPLE_FAULT 1
-
 // Use Greg Alexander's new PIT model (summer 2001) instead of the original.
 #define BX_USE_NEW_PIT 0
 

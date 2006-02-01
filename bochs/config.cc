@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.70 2006-01-25 20:07:35 vruppert Exp $
+// $Id: config.cc,v 1.71 2006-02-01 18:11:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1181,17 +1181,20 @@ void bx_init_options ()
   #define BX_CPU_COUNT_LIMIT 1
 #endif
 
-  bx_options.Ocpu_count = new bx_param_num_c (BXP_CPU_COUNT,
+  bx_options.cpu.Ocpu_count = new bx_param_num_c (BXP_CPU_COUNT,
       "Number of CPUs in SMP mode",
       "Sets the number of CPUs for multiprocessor emulation",
       1, BX_CPU_COUNT_LIMIT,
       1);
-
-  bx_options.Oips = new bx_param_num_c (BXP_IPS, 
+  bx_options.cpu.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
       2000000);
+  bx_options.cpu.Oreset_on_triple_fault = new bx_param_bool_c (BXP_RESET_ON_TRIPLE_FAULT,
+      "Enable CPU reset if triple fault occured (highly recommended)",
+      "Enable CPU reset if triple fault occured (highly recommended)",
+      1);
 
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
@@ -1287,7 +1290,7 @@ void bx_init_options ()
     "",
     BX_PATHNAME_LEN);
   bx_param_c *interface_init_list[] = {
-    bx_options.Ocpu_count,
+    bx_options.cpu.Ocpu_count,
     bx_options.Osel_config,
     bx_options.Osel_displaylib,
     bx_options.Odisplaylib_options,
@@ -1302,8 +1305,8 @@ void bx_init_options ()
 #endif
     NULL
   };
-  menu = new bx_list_c (BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
+  menu->get_options()->set(menu->SHOW_PARENT);
 
   // pcidev options
   bx_options.pcidev.Ovendor = new bx_param_num_c(BXP_PCIDEV_VENDOR,
@@ -1595,7 +1598,7 @@ void bx_init_options ()
       BX_CLOCK_SYNC_NONE,
       BX_CLOCK_SYNC_NONE);
   bx_param_c *clock_init_list[] = {
-    bx_options.Oips,
+    bx_options.cpu.Oips,
     bx_options.clock.Osync,
     bx_options.clock.Otime0,
     NULL
@@ -1814,13 +1817,16 @@ void bx_reset_options ()
   bx_options.Ovga_extension->reset();
   bx_options.Omouse_enabled->reset();
   bx_options.Omouse_type->reset();
-  bx_options.Ocpu_count->reset();
-  bx_options.Oips->reset();
   bx_options.Oprivate_colormap->reset();
 #if BX_WITH_AMIGAOS
   bx_options.Ofullscreen->reset();
   bx_options.Oscreenmode->reset();
 #endif
+
+  // cpu
+  bx_options.cpu.Ocpu_count->reset();
+  bx_options.cpu.Oips->reset();
+  bx_options.cpu.Oreset_on_triple_fault->reset();
 
   // ne2k
   bx_options.ne2k.Oenabled->reset();
@@ -2624,11 +2630,17 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "count=", 6)) {
-        bx_options.Ocpu_count->set (strtoul (&params[i][6], NULL, 10));
+        bx_options.cpu.Ocpu_count->set (strtoul (&params[i][6], NULL, 10));
       } else if (!strncmp(params[i], "ips=", 4)) {
-        bx_options.Oips->set (atol(&params[i][4]));
-        if (bx_options.Oips->get () < BX_MIN_IPS) {
+        bx_options.cpu.Oips->set (atol(&params[i][4]));
+        if (bx_options.cpu.Oips->get () < BX_MIN_IPS) {
           PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
+        }
+      } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
+        if (params[i][22] == '0' || params[i][22] == '1') {
+          bx_options.cpu.Oreset_on_triple_fault->set (params[i][22] - '0');
+        } else {
+          PARSE_ERR(("%s: cpu directive malformed.", context));
         }
       } else {
         PARSE_ERR(("%s: cpu directive malformed.", context));
@@ -2748,8 +2760,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
     }
-    bx_options.Oips->set (atol(params[1]));
-    if (bx_options.Oips->get () < BX_MIN_IPS) {
+    bx_options.cpu.Oips->set(atol(params[1]));
+    if (bx_options.cpu.Oips->get() < BX_MIN_IPS) {
       PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
   } else if (!strcmp(params[0], "text_snapshot_check")) {
@@ -3636,18 +3648,19 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "\n");
   bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
-  fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get ());
-  fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get ());
-  fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr ());
-  fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get ());
-  fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get ());
-  fprintf (fp, "cpu: count=%d, ips=%u\n", bx_options.Ocpu_count->get(), bx_options.Oips->get());
-  fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get ());
-  fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get ());
-  fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get ());
+  fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get());
+  fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get());
+  fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr());
+  fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get());
+  fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get());
+  fprintf (fp, "cpu: count=%d, ips=%u, reset_on_triple_fault=%d\n", bx_options.cpu.Ocpu_count->get(),
+    bx_options.cpu.Oips->get(), bx_options.cpu.Oreset_on_triple_fault->get());
+  fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
+  fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get());
+  fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get());
 #if BX_WITH_AMIGAOS
-  fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get ());
-  fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr ());
+  fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get());
+  fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr());
 #endif
   bx_write_clock_options (fp, &bx_options.clock);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
@@ -3655,10 +3668,10 @@ int bx_write_configuration (char *rc, int overwrite)
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
   bx_write_keyboard_options (fp, &bx_options.keyboard);
-  fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get ()==BX_KBD_XT_TYPE?"xt":
-                                       bx_options.Okeyboard_type->get ()==BX_KBD_AT_TYPE?"at":"mf");
+  fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get()==BX_KBD_XT_TYPE?"xt":
+                                      bx_options.Okeyboard_type->get()==BX_KBD_AT_TYPE?"at":"mf");
   fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
-  if (strlen (bx_options.cmosimage.Opath->getptr ()) > 0) {
+  if (strlen (bx_options.cmosimage.Opath->getptr()) > 0) {
     fprintf (fp, "cmosimage: file=%s, ", bx_options.cmosimage.Opath->getptr());
     fprintf (fp, "rtc_init=%s", bx_options.cmosimage.Ortc_init->get()?"image":"time0");
   } else {
