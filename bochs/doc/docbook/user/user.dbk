@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.204 2006-01-31 19:45:34 sshwarts Exp $
+$Id: user.dbk,v 1.205 2006-02-01 17:20:04 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6352,6 +6352,10 @@ the "instrument/stubs" directory to it, then customize it.  Use:
 </screen>
 </para>
 </section>
+
+<section>
+<title>Other Commands</title>
+<para>
 
 <screen>ptime</screen>
 
