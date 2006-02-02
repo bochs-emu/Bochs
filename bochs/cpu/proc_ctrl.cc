@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.131 2006-01-21 12:06:03 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.132 2006-02-02 17:55:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2090,7 +2090,6 @@ SYSCALL_LEGACY_MODE:
     // legacy mode
 
     ECX = EIP;
-
     temp_RIP = MSR_STAR & 0xFFFFFFFF;
 
     parse_selector((MSR_STAR >> 32) & 0xFFFC, &cs_selector);
@@ -2183,8 +2182,7 @@ SYSRET_NON_64BIT_MODE:
   
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
-    if (i->os64L()) { // Return to 64-bit mode.
-
+    if (i->os64L()) { // Return to 64-bit mode
       parse_selector(((MSR_STAR >> 48) + 16) | 3, &cs_selector);
       fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
       parse_descriptor(dword1, dword2, &cs_descriptor);
@@ -2192,8 +2190,7 @@ SYSRET_NON_64BIT_MODE:
 
       temp_RIP = RCX;
     }
-    else { // Return to 32-bit compatibility mode.
-
+    else {            // Return to 32-bit compatibility mode
       parse_selector((MSR_STAR >> 48) | 3, &cs_selector);
       fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
       parse_descriptor(dword1, dword2, &cs_descriptor);
@@ -2205,16 +2202,15 @@ SYSRET_NON_64BIT_MODE:
     parse_selector((MSR_STAR >> 48) + 8, &ss_selector);
     fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &ss_descriptor);
+    // SS base, limit, attributes unchanged.
     load_ss(&ss_selector, &ss_descriptor, 0);
 
-    // SS base, limit, attributes unchanged.
     writeEFlags(R11, EFlagsValidMask);
 
     RIP = temp_RIP;
   }
   else { // (!64BIT_MODE)
-
-    parse_selector((MSR_STAR >> 48) + 16, &cs_selector);
+    parse_selector((MSR_STAR >> 48) | 3, &cs_selector);
     fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &cs_descriptor);
     load_cs(&cs_selector, &cs_descriptor, 3);
@@ -2224,6 +2220,7 @@ SYSRET_NON_64BIT_MODE:
     parse_selector((MSR_STAR >> 48) + 8, &ss_selector);
     fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
     parse_descriptor(dword1, dword2, &ss_descriptor);
+    // SS base, limit, attributes unchanged.
     load_ss(&ss_selector, &ss_descriptor, 0);
 
     BX_CPU_THIS_PTR assert_IF ();
