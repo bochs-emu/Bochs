@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.16 2006-02-01 18:12:07 sshwarts Exp $
+// $Id: debug.h,v 1.17 2006-02-02 22:33:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -239,9 +239,9 @@ void bx_dbg_record_command(char*);
 void bx_dbg_playback_command(char*);
 void bx_dbg_modebp_command(void);
 void bx_dbg_where_command(void);
-void bx_dbg_print_string_command(Bit32u addr);
+void bx_dbg_print_string_command(bx_address addr);
 void bx_dbg_show_command(char*);
-void bx_dbg_print_stack_command(int nwords);
+void bx_dbg_print_stack_command(unsigned nwords);
 void bx_dbg_watch(int read, Bit32u address);
 void bx_dbg_unwatch(int read, Bit32u address);
 void bx_dbg_continue_command(void);
