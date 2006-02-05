@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.h,v 1.4 2004-09-05 10:30:19 vruppert Exp $
+// $Id: soundwin.h,v 1.5 2006-02-05 17:13:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,6 +147,13 @@ UINT STDCALL waveOutGetErrorTextA(UINT, LPSTR, UINT);
 
 BOOL STDCALL sndPlaySoundA(LPCSTR, UINT);
 }
+#pragma pack(0)
+
+#endif  // MMSYSERR_NOERROR defined
+
+#ifndef WAVEFILEHEADER
+
+#pragma pack(push, 1)
 
 typedef struct {
   char RIFF[4];
@@ -159,9 +166,9 @@ typedef struct {
   Bit32u chnk2len;
   char data[1];
 } WAVEFILEHEADER, *LPWAVEFILEHEADER;
-#pragma pack(0)
+#pragma pack(pop)
 
-#endif  // MMSYSERR_NOERROR defined
+#endif
 
 class bx_sound_windows_c : public bx_sound_output_c {
 public:
