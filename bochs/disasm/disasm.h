@@ -121,7 +121,8 @@ public:
   Bit8u extend8b;
   Bit8u rex_r, rex_x, rex_b;
   Bit8u seg_override;
-  unsigned b1;
+  unsigned b1, prefixes;
+  unsigned ilen;
 
   Bit8u modrm, mod, nnn, rm;
   Bit8u sib, scale, index, base;
@@ -152,6 +153,8 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
   extend8b = 0;
   rex_r = rex_b = rex_x = 0;
   seg_override = NO_SEG_OVERRIDE;
+  prefixes = 0;
+  ilen = 0;
   b1 = 0;
 
   modrm = mod = nnn = rm = 0;
@@ -162,11 +165,28 @@ BX_CPP_INLINE x86_insn::x86_insn(bx_bool is32, bx_bool is64)
 class disassembler {
 public:
   disassembler() { set_syntax_intel(); }
-  unsigned disasm16(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
-  unsigned disasm32(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
-  unsigned disasm64(bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
 
-  unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf);
+  unsigned disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf);
+
+  unsigned disasm16(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(0, 0, base, ip, instr, disbuf); }
+
+  unsigned disasm32(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(1, 0, base, ip, instr, disbuf); }
+
+  unsigned disasm64(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return disasm(1, 1, base, ip, instr, disbuf); }
+
+  x86_insn decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf);
+
+  x86_insn decode16(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(0, 0, base, ip, instr, disbuf); }
+
+  x86_insn decode32(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(1, 0, base, ip, instr, disbuf); }
+
+  x86_insn decode64(bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
+    { return decode(1, 1, base, ip, instr, disbuf); }
 
   void set_syntax_intel();
   void set_syntax_att  ();
@@ -195,7 +215,7 @@ private:
 
   bx_address db_eip, db_base;
 
-  Bit8u *instruction;        // for fetching of next byte of instruction
+  const Bit8u *instruction;        // for fetching of next byte of instruction
 
   char *disbufptr;
 

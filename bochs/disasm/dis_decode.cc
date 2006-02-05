@@ -49,27 +49,17 @@ static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
 };
 
-unsigned disassembler::disasm16(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
-  return disasm(0, 0, base, ip, instr, disbuf);
+  x86_insn insn = decode(is_32, is_64, base, ip, instr, disbuf);
+  return insn.ilen;
 }
 
-unsigned disassembler::disasm32(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
-{
-  return disasm(1, 0, base, ip, instr, disbuf);
-}
-
-unsigned disassembler::disasm64(bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
-{
-  return disasm(1, 1, base, ip, instr, disbuf);
-}
-
-unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, Bit8u *instr, char *disbuf)
+x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
   x86_insn insn(is_32, is_64);
-  Bit8u *instruction_begin = instruction = instr;
+  const Bit8u *instruction_begin = instruction = instr;
   resolve_modrm = NULL;
-  unsigned n_prefixes = 0;
 
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
@@ -86,7 +76,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   for(;;)
   {
     insn.b1 = fetch_byte();
-    n_prefixes++;
+    insn.prefixes++;
 
     switch(insn.b1) {
       case 0xf3:     // rep
@@ -166,7 +156,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
         break;
     }
 
-    n_prefixes--;
+    insn.prefixes--;
     break;
   }
 
@@ -208,11 +198,14 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
        case _GRPSSE:
          {
-            if(sse_prefix) n_prefixes--;
+            if(sse_prefix) insn.prefixes--;
             /* For SSE opcodes, look into another 4 entries table 
                   with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
             int op = sse_prefix_index[sse_prefix];
-            if (op < 0) return 0;
+            if (op < 0) {
+              printf("disassembler panic - too many sse prefixes !\n");
+              return x86_insn(is_32, is_64);
+            }
             entry = &(OPCODE_TABLE(entry)[op]);
          }
          break;
@@ -241,7 +234,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
        default:
          printf("Internal disassembler error - unknown attribute !\n");
-         return 0;
+         return x86_insn(is_32, is_64);
     }
 
     /* get additional attributes from group table */
@@ -254,7 +247,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   unsigned branch_hint = 0;
 
   // print prefixes
-  for(unsigned i=0;i<n_prefixes;i++)
+  for(unsigned i=0;i<insn.prefixes;i++)
   {
     Bit8u prefix_byte = *(instr+i);
 
@@ -294,7 +287,9 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     dis_sprintf(", taken");
   }
  
-  return(instruction - instruction_begin);
+  insn.ilen = (unsigned)(instruction - instruction_begin);
+
+  return insn;
 }
 
 void disassembler::dis_sprintf(char *fmt, ...)

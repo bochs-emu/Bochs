@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.48 2006-02-02 22:33:32 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.49 2006-02-05 19:48:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -577,31 +577,31 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
   }
   
   if (timebp_timer >= 0) {
-  if (timebp_queue_size == 0 || abs_time < timebp_queue[0]) {
-    /* first in queue */
-    for (int i = timebp_queue_size; i >= 0; i--)
-    timebp_queue[i+1] = timebp_queue[i];
-    timebp_queue[0] = abs_time;
-    timebp_queue_size++;
-    bx_pc_system.activate_timer_ticks(timebp_timer, diff, 1);
-  } else {
-    /* not first, insert at suitable place */
-    for (int i = 1; i < timebp_queue_size; i++) {
-      if (timebp_queue[i] == abs_time) {
-        dbg_printf("Time breakpoint not inserted (duplicate)\n");
-        return;
-      } else if (abs_time < timebp_queue[i]) {
-        for (int j = timebp_queue_size; j >= i; j++)
-        timebp_queue[j+1] = timebp_queue[j];
-        timebp_queue[i] = abs_time;
-        goto inserted;
+    if (timebp_queue_size == 0 || abs_time < timebp_queue[0]) {
+      /* first in queue */
+      for (int i = timebp_queue_size; i >= 0; i--)
+      timebp_queue[i+1] = timebp_queue[i];
+      timebp_queue[0] = abs_time;
+      timebp_queue_size++;
+      bx_pc_system.activate_timer_ticks(timebp_timer, diff, 1);
+    } else {
+      /* not first, insert at suitable place */
+      for (int i = 1; i < timebp_queue_size; i++) {
+        if (timebp_queue[i] == abs_time) {
+          dbg_printf("Time breakpoint not inserted (duplicate)\n");
+          return;
+        } else if (abs_time < timebp_queue[i]) {
+          for (int j = timebp_queue_size; j >= i; j++)
+          timebp_queue[j+1] = timebp_queue[j];
+          timebp_queue[i] = abs_time;
+          goto inserted;
+        }
       }
-    }
-    /* last */
-    timebp_queue[timebp_queue_size] = abs_time;
+      /* last */
+      timebp_queue[timebp_queue_size] = abs_time;
 inserted:
-    timebp_queue_size++;
-  }
+      timebp_queue_size++;
+    }
   } else {
     timebp_queue_size = 1;
     timebp_queue[0] = abs_time;
@@ -2614,8 +2614,8 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
   dbg_printf("P=present=%d\n", present);
 #endif
   /* brief output */
-// 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
-// code segment, base=0000:00cfffff, length=0xffff
+  // 32-bit trap gate, target=0010:c0108ec4, DPL=0, present=1
+  // code segment, base=0000:00cfffff, length=0xffff
   if (s) {
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
@@ -3417,30 +3417,19 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
 
 void bx_dbg_step_over_command ()
 {
-  Bit8u *fetchPtr;
-  bxInstruction_c iStorage BX_CPP_AlignN (32);
-  bxInstruction_c *i = &iStorage;
-  bx_address Laddr = BX_CPU (dbg_cpu)->get_segment_base(BX_SEG_REG_CS) +
-                 BX_CPU (dbg_cpu)->get_ip ();
-  Bit32u Paddr;
-  bx_bool paddr_valid;
-  unsigned remainingInPage;
+  bx_address Laddr = BX_CPU(which_cpu)->guard_found.laddr;
 
-  BX_CPU (dbg_cpu)->dbg_xlate_linear2phy (Laddr, &Paddr, &paddr_valid);
-
-  if(!paddr_valid) {
-    dbg_printf("bx_dbg_step_over_command:: Invalid physical address\n");
+  if (! bx_dbg_read_linear(dbg_cpu, Laddr, 16, bx_disasm_ibuf))
+  {
     return;
   }
-  fetchPtr = BX_CPU (dbg_cpu)->mem->getHostMemAddr (BX_CPU(dbg_cpu), Paddr, BX_READ);
-  unsigned ret = BX_CPU (dbg_cpu)->fetchDecode (fetchPtr, i, 15);
-  remainingInPage = BX_CPU(dbg_cpu)->eipPageWindowSize - 
-	    (BX_CPU(dbg_cpu)->dword.eip + BX_CPU(dbg_cpu)->eipPageBias);
 
-  if (ret == 0)
-    BX_CPU (dbg_cpu)->boundaryFetch (fetchPtr, remainingInPage, i);
+  x86_insn insn = bx_disassemble.decode(BX_CPU(which_cpu)->guard_found.is_32bit_code,
+      BX_CPU(which_cpu)->guard_found.is_64bit_code,
+      BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), 
+      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
-  unsigned b1 = i->b1 ();
+  unsigned b1 = insn.b1;
 
   switch(b1) {
     // Jcc short
@@ -3503,7 +3492,7 @@ void bx_dbg_step_over_command ()
       return;
     // jmp absolute indirect
     case 0xFF:
-      switch (i->nnn ()) {
+      switch (insn.nnn) {
         // near
         case 4:
         // far
@@ -3514,7 +3503,7 @@ void bx_dbg_step_over_command ()
   }
 
   // calls, ints, loops and so on
-  int BpId = bx_dbg_lbreakpoint_command (bkStepOver, Laddr + i->ilen ());
+  int BpId = bx_dbg_lbreakpoint_command (bkStepOver, Laddr + insn.ilen);
   if (BpId == -1) {
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
