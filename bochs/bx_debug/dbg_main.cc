@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.49 2006-02-05 19:48:26 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.50 2006-02-05 20:03:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -990,8 +990,9 @@ void bx_dbg_print_stack_command(unsigned nwords)
         (unsigned) conv_4xBit8u_to_Bit32u(buf+4), 
         (unsigned) conv_4xBit8u_to_Bit32u(buf));
     }
-    else {
+    else
 #endif
+    {
       if (len == 4) {
         dbg_printf(" | STACK 0x%08x [0x%08x]\n", 
           (unsigned) linear_sp, (unsigned) conv_4xBit8u_to_Bit32u(buf));
