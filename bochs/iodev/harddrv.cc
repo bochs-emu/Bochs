@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.157 2006-01-07 12:52:05 vruppert Exp $
+// $Id: harddrv.cc,v 1.158 2006-02-06 21:27:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.157 2006-01-07 12:52:05 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.158 2006-02-06 21:27:34 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -1017,26 +1017,23 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
     case 0x01: // hard disk error register 0x1f1
       BX_SELECTED_CONTROLLER(channel).status.err = 0;
-      value8 = (!BX_SELECTED_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).error_register;
+      // -- WARNING : On real hardware the controller registers are shared between drives.
+      // So we must respond even if the select device is not present. Some OS uses this fact
+      // to detect the disks.... minix2 for example
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).error_register;
       goto return_value8;
       break;
     case 0x02: // hard disk sector count / interrupt reason 0x1f2
-      value8 = (!BX_SELECTED_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_count;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_count;
       goto return_value8;
       break;
     case 0x03: // sector number 0x1f3
-      value8 = (!BX_SELECTED_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_no;
+      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).sector_no;
       goto return_value8;
     case 0x04: // cylinder low 0x1f4  
-               // -- WARNING : On real hardware the controller registers are shared between drives. 
-               // So we must respond even if the select device is not present. Some OS uses this fact 
-               // to detect the disks.... minix2 for example
       value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : (BX_SELECTED_CONTROLLER(channel).cylinder_no & 0x00ff);
       goto return_value8;
     case 0x05: // cylinder high 0x1f5
-               // -- WARNING : On real hardware the controller registers are shared between drives. 
-               // So we must respond even if the select device is not present. Some OS uses this fact 
-               // to detect the disks.... minix2 for example
       value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : BX_SELECTED_CONTROLLER(channel).cylinder_no >> 8;
       goto return_value8;
 
@@ -1058,29 +1055,29 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
     case 0x07: // Hard Disk Status 0x1f7
     case 0x16: // Hard Disk Alternate Status 0x3f6
-      if (!BX_ANY_IS_PRESENT(channel)) {
-	    // (mch) Just return zero for these registers
-	    value8 = 0;
+      if (!BX_SELECTED_IS_PRESENT(channel)) {
+        // (mch) Just return zero for these registers
+        value8 = 0;
       } else {
-      value8 = (
-        (BX_SELECTED_CONTROLLER(channel).status.busy << 7) |
-        (BX_SELECTED_CONTROLLER(channel).status.drive_ready << 6) |
-        (BX_SELECTED_CONTROLLER(channel).status.write_fault << 5) |
-        (BX_SELECTED_CONTROLLER(channel).status.seek_complete << 4) |
-        (BX_SELECTED_CONTROLLER(channel).status.drq << 3) |
-        (BX_SELECTED_CONTROLLER(channel).status.corrected_data << 2) |
-        (BX_SELECTED_CONTROLLER(channel).status.index_pulse << 1) |
-        (BX_SELECTED_CONTROLLER(channel).status.err) );
-      BX_SELECTED_CONTROLLER(channel).status.index_pulse_count++;
-      BX_SELECTED_CONTROLLER(channel).status.index_pulse = 0;
-      if (BX_SELECTED_CONTROLLER(channel).status.index_pulse_count >= INDEX_PULSE_CYCLE) {
-        BX_SELECTED_CONTROLLER(channel).status.index_pulse = 1;
-        BX_SELECTED_CONTROLLER(channel).status.index_pulse_count = 0;
+        value8 = (
+          (BX_SELECTED_CONTROLLER(channel).status.busy << 7) |
+          (BX_SELECTED_CONTROLLER(channel).status.drive_ready << 6) |
+          (BX_SELECTED_CONTROLLER(channel).status.write_fault << 5) |
+          (BX_SELECTED_CONTROLLER(channel).status.seek_complete << 4) |
+          (BX_SELECTED_CONTROLLER(channel).status.drq << 3) |
+          (BX_SELECTED_CONTROLLER(channel).status.corrected_data << 2) |
+          (BX_SELECTED_CONTROLLER(channel).status.index_pulse << 1) |
+          (BX_SELECTED_CONTROLLER(channel).status.err));
+        BX_SELECTED_CONTROLLER(channel).status.index_pulse_count++;
+        BX_SELECTED_CONTROLLER(channel).status.index_pulse = 0;
+        if (BX_SELECTED_CONTROLLER(channel).status.index_pulse_count >= INDEX_PULSE_CYCLE) {
+          BX_SELECTED_CONTROLLER(channel).status.index_pulse = 1;
+          BX_SELECTED_CONTROLLER(channel).status.index_pulse_count = 0;
         }
       }
       if (port == 0x07) {
         DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
-        }
+      }
       goto return_value8;
       break;
 
@@ -2124,7 +2121,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          set_signature(channel);
+          set_signature(channel, BX_SLAVE_SELECTED(channel));
           BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
           BX_SELECTED_CONTROLLER(channel).status.err = 0;
@@ -2188,7 +2185,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           if (BX_SELECTED_IS_CD(channel)) {
-            set_signature(channel);
+            set_signature(channel, BX_SLAVE_SELECTED(channel));
             command_aborted(channel, 0xec);
           } else {
             BX_SELECTED_CONTROLLER(channel).current_command = value;
@@ -2301,7 +2298,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x08: // DEVICE RESET (atapi)
           if (BX_SELECTED_IS_CD(channel)) {
-            set_signature(channel);
+            set_signature(channel, BX_SLAVE_SELECTED(channel));
 
             BX_SELECTED_CONTROLLER(channel).status.busy = 1;
             BX_SELECTED_CONTROLLER(channel).error_register &= ~(1 << 7);
@@ -2542,7 +2539,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_CONTROLLER(channel,id).status.drive_ready    = 1;
           BX_CONTROLLER(channel,id).reset_in_progress     = 0;
 
-          set_signature(channel);
+          set_signature(channel, id);
         }
       }
       BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[0]).controller.control.disable_irq));
@@ -3452,18 +3449,18 @@ bx_hard_drive_c::bmdma_complete(Bit8u channel)
 }
 #endif
 
-void bx_hard_drive_c::set_signature(Bit8u channel)
+void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
 {
   // Device signature
-  BX_SELECTED_CONTROLLER(channel).head_no       = 0;
-  BX_SELECTED_CONTROLLER(channel).sector_count  = 1;
-  BX_SELECTED_CONTROLLER(channel).sector_no     = 1;
-  if (BX_SELECTED_IS_HD(channel)) {
-    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0;
-  } else if (BX_SELECTED_IS_CD(channel)) {
-    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0xeb14;
+  BX_CONTROLLER(channel,id).head_no       = 0;
+  BX_CONTROLLER(channel,id).sector_count  = 1;
+  BX_CONTROLLER(channel,id).sector_no     = 1;
+  if (BX_DRIVE_IS_HD(channel,id)) {
+    BX_CONTROLLER(channel,id).cylinder_no = 0;
+  } else if (BX_DRIVE_IS_CD(channel,id)) {
+    BX_CONTROLLER(channel,id).cylinder_no = 0xeb14;
   } else {
-    BX_SELECTED_CONTROLLER(channel).cylinder_no = 0xffff;
+    BX_CONTROLLER(channel,id).cylinder_no = 0xffff;
   }
 }
 
