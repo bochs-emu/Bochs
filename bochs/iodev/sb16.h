@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.20 2005-02-04 19:50:50 vruppert Exp $
+// $Id: sb16.h,v 1.21 2006-02-09 21:59:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,10 +86,11 @@
 /* Definitions for the output functions */
 #define BX_SOUND_OUTPUT_OK   0
 #define BX_SOUND_OUTPUT_ERR  1
-#define BX_SOUND_OUTPUT_WAVEPACKETSIZE  4096
-             // the is the size of a DMA chunk sent to output
-             // it should not be too large to avoid lag, and not too
-             // small to avoid unnecessary overhead.
+
+// this is the size of a DMA chunk sent to output
+// it should not be too large to avoid lag, and not too
+// small to avoid unnecessary overhead.
+#define BX_SOUND_OUTPUT_WAVEPACKETSIZE  8192
 
 #define BX_SB16_MIX_REG  0x100        // total number of mixer registers
 

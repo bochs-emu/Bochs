@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.45 2005-10-23 07:17:01 vruppert Exp $
+// $Id: sb16.cc,v 1.46 2006-02-09 21:59:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -989,16 +989,21 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 
   DSP.dma.blocklength = length;
   DSP.dma.issigned = (mode >> 4) & 1;
-  DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
   DSP.dma.highspeed = (comp >> 4) & 1;
 
   DSP.dma.chunkindex = 0;
   DSP.dma.chunkcount = 0;
 
   Bit32u sampledatarate = (Bit32u) DSP.dma.samplerate * (Bit32u) DSP.dma.bps;
-  DSP.dma.timer = (Bit32u) bx_options.sb16.Odmatimer->get () / sampledatarate;
+  if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
+    DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
+    DSP.dma.timer = (Bit32u) bx_options.sb16.Odmatimer->get () / (sampledatarate / 2);
+  } else {
+    DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
+    DSP.dma.timer = (Bit32u) bx_options.sb16.Odmatimer->get () / sampledatarate;
+  }
 
-  writelog( WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d us/b",
+  writelog( WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
 	    DSP.dma.bits, DSP.dma.samplerate, (DSP.dma.stereo != 0)?"stereo":"mono",
 	    (DSP.dma.output == 1)?"output":"input", DSP.dma.mode,
 	    (DSP.dma.issigned == 1)?"signed":"unsigned",
@@ -1229,7 +1234,11 @@ void bx_sb16_c::dsp_dmadone()
   //if auto-DMA, reinitialize
   if (DSP.dma.mode == 2)
     {
-      DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
+      if ((DSP.dma.bits == 16) && (BX_SB16_DMAH != 0)) {
+        DSP.dma.count = (DSP.dma.blocklength + 1) * (DSP.dma.bps / 2) - 1;
+      } else {
+        DSP.dma.count = (DSP.dma.blocklength + 1) * DSP.dma.bps - 1;
+      }
       writelog( WAVELOG(4), "auto-DMA reinitializing to length %d", DSP.dma.count);
     }
   else
@@ -1278,7 +1287,7 @@ void bx_sb16_c::dma_read16(Bit16u *data_word)
   DEV_dma_set_drq(BX_SB16_DMAH, 0);  // the timer will raise it again
 
   if (DSP.dma.count % 100 == 0) // otherwise it's just too many lines of log
-    writelog( WAVELOG(5), "Received 16-bit DMA %4x, %d remaining ",
+    writelog( WAVELOG(5), "Received 16-bit DMA %04x, %d remaining ",
 	      *data_word, DSP.dma.count);
 
   DSP.dma.count--;
@@ -1286,7 +1295,7 @@ void bx_sb16_c::dma_read16(Bit16u *data_word)
   dsp_getsamplebyte(*data_word & 0xff);
   dsp_getsamplebyte(*data_word >> 8);
 
-  if (DSP.dma.count == 0xffff) // last byte received
+  if (DSP.dma.count == 0xffff) // last word received
     dsp_dmadone();
 }
 
@@ -1308,7 +1317,7 @@ void bx_sb16_c::dma_write16(Bit16u *data_word)
     writelog( WAVELOG(5), "Sent 16-bit DMA %4x, %d remaining ",
 	      *data_word, DSP.dma.count);
 
-  if (DSP.dma.count == 0xffff) // last byte sent
+  if (DSP.dma.count == 0xffff) // last word sent
     dsp_dmadone();
 }
 
