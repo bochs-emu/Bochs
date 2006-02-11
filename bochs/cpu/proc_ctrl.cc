@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.132 2006-02-02 17:55:48 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.133 2006-02-11 09:08:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -746,7 +746,6 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CqRq: CR2 not implemented yet"));
-      BX_DEBUG(("MOV_CqRq: CR2 = reg"));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
@@ -759,10 +758,8 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     case 4: // CR4
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
-
       BX_INFO(("MOV_CqRq: write to CR4 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-
       SetCR4(val_64);
       break;
 #if BX_SUPPORT_APIC
@@ -824,13 +821,11 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       val_64 = 0;
       break;
     case 2: /* CR2 */
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_RqCq: CR2"));
+      BX_DEBUG(("MOV_RqCq: read of CR2"));
       val_64 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_RqCq: reading CR3"));
+      BX_DEBUG(("MOV_RqCq: read of CR3"));
       val_64 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.71 2006-02-01 18:12:08 sshwarts Exp $
+// $Id: exception.cc,v 1.72 2006-02-11 09:08:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,6 +51,10 @@ static const bx_bool is_exception_OK[3][3] = {
     { 1, 0, 1 }, /* 1st exception is CONTRIBUTORY */
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
 };
+
+#define BX_EXCEPTION_CLASS_TRAP  0
+#define BX_EXCEPTION_CLASS_FAULT 1
+#define BX_EXCEPTION_CLASS_ABORT 2
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
@@ -809,8 +813,8 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 {
-  bx_bool  push_error;
-  Bit8u    exception_type;
+  unsigned exception_type = 0, exception_class = BX_EXCEPTION_CLASS_FAULT;
+  bx_bool push_error = 0;
 
   invalidate_prefetch_q();
   UNUSED(is_INT);
@@ -860,81 +864,86 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 
-  /* ??? this is not totally correct, should be done depending on
-   * vector */
-  /* backup IP to value before error occurred */
-  RIP = BX_CPU_THIS_PTR prev_eip;
-  RSP = BX_CPU_THIS_PTR prev_esp;
-
   // note: fault-class exceptions _except_ #DB set RF in
   //       eflags image.
 
   switch (vector) {
     case BX_DE_EXCEPTION: // DIV by 0
       push_error = 0;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_DB_EXCEPTION: // debug exceptions
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
+      // Instruction fetch breakpoint  - FAULT
+      // Data read or write breakpoint - TRAP
+      // I/O read or write breakpoint  - TRAP
+      // General detect condition      - FAULT
+      // Single-step                   - TRAP
+      // Task-switch                   - TRAP
+      exception_class = BX_EXCEPTION_CLASS_TRAP; // FIXME !
+      exception_type  = BX_ET_BENIGN;
       break;
     case 2:               // NMI
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_BP_EXCEPTION: // breakpoint
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
+      exception_class = BX_EXCEPTION_CLASS_TRAP;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_OF_EXCEPTION: // overflow
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
+      exception_class = BX_EXCEPTION_CLASS_TRAP;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_BR_EXCEPTION: // bounds check
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_UD_EXCEPTION: // invalid opcode
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_NM_EXCEPTION: // device not available
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
     case BX_DF_EXCEPTION: // double fault
       push_error = 1;
-      exception_type = BX_ET_DOUBLE_FAULT;
+      error_code = 0;
+      exception_class = BX_EXCEPTION_CLASS_ABORT;
+      exception_type  = BX_ET_DOUBLE_FAULT;
       break;
     case 9:               // coprocessor segment overrun (286,386 only)
       push_error = 0;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_ABORT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       BX_PANIC(("exception(9): unfinished"));
       break;
     case BX_TS_EXCEPTION: // invalid TSS
       push_error = 1;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_NP_EXCEPTION: // segment not present
       push_error = 1;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_SS_EXCEPTION: // stack fault
       push_error = 1;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_GP_EXCEPTION: // general protection
       push_error = 1;
-      exception_type = BX_ET_CONTRIBUTORY;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_PF_EXCEPTION: // page fault
       if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
@@ -944,8 +953,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
             BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR except_ss;
       }
       push_error = 1;
-      exception_type = BX_ET_PAGE_FAULT;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_PAGE_FAULT;
       break;
     case 15:              // reserved
       BX_PANIC(("exception(15): reserved"));
@@ -954,36 +963,47 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       break;
     case BX_MF_EXCEPTION: // floating-point error
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
 #if BX_CPU_LEVEL >= 4
     case BX_AC_EXCEPTION: // alignment check
-      BX_PANIC(("exception(): alignment-check, vector 17 unimplemented"));
-      push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      BX_PANIC(("exception(): alignment-check, vector 17 not implemented"));
+      push_error = 1;
+      error_code = 0;
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
 #endif
 #if BX_CPU_LEVEL >= 5
     case BX_MC_EXCEPTION: // machine check
-      BX_PANIC(("exception(): machine-check, vector 18 unimplemented"));
+      BX_PANIC(("exception(): machine-check, vector 18 not implemented"));
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
+      exception_class = BX_EXCEPTION_CLASS_ABORT;
+      exception_type  = BX_ET_BENIGN;
       break;
 #if BX_SUPPORT_SSE
     case BX_XM_EXCEPTION: // SIMD Floating-Point exception
       push_error = 0;
-      exception_type = BX_ET_BENIGN;
-      BX_CPU_THIS_PTR assert_RF ();
+      exception_class = BX_EXCEPTION_CLASS_FAULT;
+      exception_type  = BX_ET_BENIGN;
       break;
 #endif
 #endif
     default:
       BX_PANIC(("exception(%u): bad vector", (unsigned) vector));
-      push_error = 0;     // keep compiler happy for now
-      exception_type = 0; // keep compiler happy for now
+      exception_type = BX_ET_BENIGN;
+      push_error = 0;    // keep compiler happy for now
       break;
+  }
+
+  if (exception_class == BX_EXCEPTION_CLASS_FAULT)
+  {
+    // restore RIP/RSP to value before error occurred
+    RIP = BX_CPU_THIS_PTR prev_eip;
+    RSP = BX_CPU_THIS_PTR prev_esp;
+
+    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
 
   if (exception_type != BX_ET_PAGE_FAULT) {

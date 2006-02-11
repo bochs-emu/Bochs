@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.12 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.13 2006-02-11 09:08:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,8 +36,7 @@
 void BX_CPU_C::LES_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    // (BW) NT seems to use this when booting.
-    BX_INFO(("invalid use of LES, must use memory reference!"));
+    BX_DEBUG(("invalid use of LES, must use memory reference!"));
     UndefinedOpcode(i);
   }
 
@@ -70,7 +69,7 @@ void BX_CPU_C::LES_GvMp(bxInstruction_c *i)
 void BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("invalid use of LDS, must use memory reference!"));
+    BX_DEBUG(("invalid use of LDS, must use memory reference!"));
     UndefinedOpcode(i);
   }
 
@@ -105,7 +104,7 @@ void BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
 void BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("invalid use of LFS, must use memory reference!"));
+    BX_DEBUG(("invalid use of LFS, must use memory reference!"));
     UndefinedOpcode(i);
   }
 
@@ -136,7 +135,7 @@ void BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
 void BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("invalid use of LGS, must use memory reference!"));
+    BX_DEBUG(("invalid use of LGS, must use memory reference!"));
     UndefinedOpcode(i);
   }
 
@@ -167,7 +166,7 @@ void BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
 void BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_INFO(("invalid use of LSS, must use memory reference!"));
+    BX_DEBUG(("invalid use of LSS, must use memory reference!"));
     UndefinedOpcode(i);
   }
 
