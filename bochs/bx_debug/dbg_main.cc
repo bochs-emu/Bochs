@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.51 2006-02-11 19:46:03 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.52 2006-02-11 20:47:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -849,8 +849,6 @@ unsigned int dbg_show_mask = 0;
 // 0x8 iret
 // 0x10 interrupts (includes iret)
 
-static void dbg_dump_table(bx_bool);
-
 void bx_dbg_show_command(char* arg)
 {
   if(arg) {
@@ -864,12 +862,6 @@ void bx_dbg_show_command(char* arg)
       dbg_show_mask = 0xe0;
     } else if(!strcmp(arg,"\"off\"")){
       dbg_show_mask = 0x0;
-    } else if(!strcmp(arg,"\"tab\"")){
-      dbg_dump_table(1);
-      return;
-    } else if(!strcmp(arg,"\"c\"")){
-      dbg_dump_table(0);
-      return;
     } else if(!strcmp(arg,"\"dbg-all\"")){
       bx_dbg.floppy = 1;
       bx_dbg.keyboard = 1;
@@ -930,7 +922,7 @@ void bx_dbg_show_command(char* arg)
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s (\"mode\" \"int\" \"call\" \"ret\" \"off\" \"tab\" \"c\" \"dbg-all\" \"none\" are valid)\n",arg);
+      printf("Unrecognized arg: %s (\"mode\" \"int\" \"call\" \"ret\" \"off\" \"dbg-all\" \"none\" are valid)\n",arg);
       return;
     }
   } else {
@@ -3087,13 +3079,12 @@ int bx_dbg_symbolic_output(void)
   return 0;
 }
 
-static void dbg_dump_table(bx_bool all) 
+void bx_dbg_dump_table(void)
 {
-  bx_address lin;
+  Bit32u lin; // show only low 32 bit
   Bit32u phy;
-  bx_bool valid;
-
   Bit32u start_lin, start_phy;  // start of a valid translation interval
+  bx_bool valid;
 
   if (BX_CPU(dbg_cpu)->cr0.pg == 0) {
     printf("paging off\n");
@@ -3103,22 +3094,24 @@ static void dbg_dump_table(bx_bool all)
   printf("cr3: " FMT_ADDRX "\n", BX_CPU(dbg_cpu)->cr3);
 
   lin = 0; 
+  phy = 0; 
+
   start_lin = 1;
   start_phy = 2;
   while(1) {
     BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy, &valid);
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
-        if(all && (start_lin != 1))
-          dbg_printf("%08x - %08x: %08x - %08x\n",
-            start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
+        if(start_lin != 1)
+          dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+            start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
         start_lin = lin;
         start_phy = phy;
       }
     } else {
-      if(all && start_lin != 1)
-        dbg_printf("%08x - %08x: %08x - %08x\n",
-          start_lin, lin - 0x1000, start_phy, start_phy + (lin-0x1000-start_lin));
+      if(start_lin != 1)
+        dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+          start_lin, lin - 1, start_phy, start_phy + (lin-1-start_lin));
       start_lin = 1;
       start_phy = 2;
     }
@@ -3126,9 +3119,9 @@ static void dbg_dump_table(bx_bool all)
     if(lin == 0xfffff000) break;
     lin += 0x1000;
   }
-  if(all && start_lin != 1)
-    dbg_printf("%08x - %08x: %08x - %08x\n",
-         start_lin, 0xfffff000, start_phy, start_phy + (0xfffff000-start_lin));
+  if(start_lin != 1)
+    dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
+         start_lin, 0xffffffff, start_phy, start_phy + (0xffffffff-start_lin));
 }
 
 /*form RB list*/

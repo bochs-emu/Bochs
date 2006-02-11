@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.17 2006-02-02 22:33:32 sshwarts Exp $
+// $Id: debug.h,v 1.18 2006-02-11 20:47:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -296,6 +296,7 @@ void bx_dbg_info_vga(void);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);
+void bx_dbg_dump_table(void);
 #ifdef __cplusplus
 }
 #endif

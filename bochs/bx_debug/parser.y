@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.10 2006-02-01 18:12:08 sshwarts Exp $
+// $Id: parser.y,v 1.11 2006-02-11 20:47:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -90,9 +90,11 @@
 %token <sval> BX_TOKEN_SSE
 %token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
+%token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
 %token <sval> BX_TOKEN_LDT
 %token <sval> BX_TOKEN_TSS
+%token <sval> BX_TOKEN_TAB
 %token <sval> BX_TOKEN_DIRTY
 %token <sval> BX_TOKEN_LINUX
 %token <sval> BX_TOKEN_CONTROL_REGS
@@ -149,7 +151,6 @@
 %token <sval> BX_TOKEN_VGA
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
-%token <sval> BX_TOKEN_IVT
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
 %type <ulval> vexpression
@@ -585,6 +586,11 @@ info_command:
         bx_dbg_info_tss_command($3);
         free($1); free($2);
         }
+    | BX_TOKEN_INFO BX_TOKEN_TAB '\n'
+        {
+        bx_dbg_dump_table();
+        free($1); free($2);
+        }
     | BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'
         {
         bx_dbg_info_flags();
@@ -1015,6 +1021,7 @@ help_command:
          dbg_printf("info ivt - show interrupt vector table\n");
          dbg_printf("info gdt - show global descriptor table\n");
          dbg_printf("info tss - show current task state segment\n");
+         dbg_printf("info tab - show page tables\n");
          dbg_printf("info cr - show CR0-4 registers\n");
          dbg_printf("info eflags - show decoded EFLAGS register\n");
          dbg_printf("info symbols [string] - list symbols whose prefix is string\n");
@@ -1034,7 +1041,6 @@ help_command:
          dbg_printf("show \"off\" - toggles off symbolic info\n");
          dbg_printf("show \"dbg-all\" - turn on all show flags\n");
          dbg_printf("show \"none\" - turn off all show flags\n");
-         dbg_printf("show \"tab\" - show page tables\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_CALC '\n'

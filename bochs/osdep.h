@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: osdep.h,v 1.26 2006-01-28 15:10:32 sshwarts Exp $
+// $Id: osdep.h,v 1.27 2006-02-11 20:47:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ extern "C" {
 // Definitions for cygwin compiled with -mno-cygwin
 #define FMT_LL "%I64"
 #define FMT_TICK "%011I64u"
-#define FMT_ADDRX64 "0x%016I64x"
+#define FMT_ADDRX64 "%016I64x"
 
 #define off_t __int64
 #define lseek _lseeki64
@@ -101,7 +101,7 @@ extern "C" {
 #define FMT_ADDRX64 "%016llx"
 #endif   /* not WIN32 definitions */
 
-#define FMT_ADDRX32 "0x%08x"
+#define FMT_ADDRX32 "%08x"
 
 // Missing defines for open
 #ifndef S_IRUSR
