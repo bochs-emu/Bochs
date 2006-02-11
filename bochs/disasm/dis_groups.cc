@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include "disasm.h"
 
 /*
@@ -472,6 +473,8 @@ void disassembler::Yw(const x86_insn *insn) { OP_Y(insn, W_SIZE); }
 void disassembler::Yd(const x86_insn *insn) { OP_Y(insn, D_SIZE); }
 void disassembler::Yq(const x86_insn *insn) { OP_Y(insn, Q_SIZE); }
 
+#define BX_JUMP_TARGET_NOT_REQ ((bx_address)(-1))
+
 // jump offset
 void disassembler::Jb(const x86_insn *insn)
 {
@@ -481,36 +484,48 @@ void disassembler::Jb(const x86_insn *insn)
     Bit64u imm64 = (Bit64s) imm8;
     dis_sprintf(".+0x%08x%08x", 
         (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
+
+    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+      bx_address target = db_eip + (Bit64s) imm64; target += db_base;
+      dis_sprintf(" (0x%08x%08x)", 
+        (unsigned)(target>>32), (unsigned)(target & 0xffffffff));
+    }
+
     return;
   }
 
   if (insn->os_32) {
     Bit32u imm32 = (Bit32s) imm8;
     dis_sprintf(".+0x%08x", (unsigned) imm32);
+
+    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit32u target = db_eip + (Bit32s) imm32; target += db_base;
+      dis_sprintf(" (0x%08x)", target);
+    }
   }
   else {
     Bit16u imm16 = (Bit16s) imm8;
     dis_sprintf(".+0x%04x", (unsigned) imm16);
+
+    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+      Bit16u target = (db_eip + (Bit16s) imm16) & 0xffff;
+      dis_sprintf(" (0x%08x)", target + db_base);
+    }
   }
 }
 
 void disassembler::Jw(const x86_insn *insn)
 {
-  Bit16s imm16 = (Bit16s) fetch_word();
+  // Jw supported in 16-bit mode only
+  assert(! insn->is_64);
+  assert(! insn->is_32);
 
-  if (insn->is_64) {
-    Bit64u imm64 = (Bit64s) imm16;
-    dis_sprintf(".+0x%08x%08x", 
-        (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
-    return;
-  }
+  Bit16u imm16 = (Bit16s) fetch_word();
+  dis_sprintf(".+0x%04x", (unsigned) imm16);
 
-  if (insn->os_32) {
-    Bit32u imm32 = (Bit32s) imm16;
-    dis_sprintf(".+0x%08x", (unsigned) imm32);
-  }
-  else {
-    dis_sprintf(".+0x%04x", (unsigned) imm16);
+  if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+    Bit16u target = (db_eip + (Bit16s) imm16) & 0xffff;
+    dis_sprintf(" (0x%08x)", target + db_base);
   }
 }
 
@@ -522,8 +537,20 @@ void disassembler::Jd(const x86_insn *insn)
     Bit64u imm64 = (Bit64s) imm32;
     dis_sprintf(".+0x%08x%08x", 
         (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
+
+    if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+      bx_address target = db_eip + (Bit64s) imm64; target += db_base;
+      dis_sprintf(" (0x%08x%08x)", 
+        (unsigned)(target>>32), (unsigned)(target & 0xffffffff));
+    }
+
     return;
   }
 
   dis_sprintf(".+0x%08x", (unsigned) imm32);
+
+  if (db_base != BX_JUMP_TARGET_NOT_REQ) {
+    Bit32u target = db_eip + (Bit32s) imm32; target += db_base;
+    dis_sprintf(" (0x%08x)", target);
+  }
 }
