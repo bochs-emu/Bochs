@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.76 2006-01-28 16:16:03 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.77 2006-02-11 09:35:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.76 2006-01-28 16:16:03 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.77 2006-02-11 09:35:54 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -257,7 +257,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
       return;
     }
     if ((romaddress < 0xc0000) ||
-        (((romaddress + size) > 0xdffff) && (romaddress != 0xe0000))) {
+        (((romaddress + size - 1) > 0xdffff) && (romaddress != 0xe0000))) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
