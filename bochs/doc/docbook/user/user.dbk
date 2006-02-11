@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.206 2006-02-11 21:39:59 sshwarts Exp $
+$Id: user.dbk,v 1.207 2006-02-11 21:51:50 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -25,7 +25,6 @@ This is the top level file for the Bochs Users Manual.
    <author><firstname>Volker</firstname><surname>Ruppert</surname></author>
    <author><firstname>Christophe</firstname><surname>Bothamy</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
-   <editor><firstname>Stanislav</firstname><surname>Shwartsman</surname></editor>
    </authorgroup>
 </bookinfo>
 
@@ -2432,11 +2431,6 @@ turn it off.
       of the <link linkend="bochsopt-cpu">cpu option</link>.
       </entry>
     </row>
-    <row>
-      <entry>--enable-reset-on-triple-fault</entry>
-      <entry>yes</entry>
-      <entry>reset when cpu detects a triple fault</entry>
-    </row>
   </tbody>
 </tgroup>
 </table>
@@ -3069,6 +3063,12 @@ Set the number of processors when Bochs is compiled for SMP emulation.
 Bochs currently supports up to 8 processors. If Bochs is compiled
 without SMP support, it won't accept values different from 1.
 For more information on SMP see <xref linkend="SMP">.
+</para>
+<para><command>reset-on-triple-fault</command></para>
+<para>
+Reset the CPU when triple fault occur (highly recommended) rather than PANIC.
+Remember that if you are trying to continue after triple fault the simulation 
+will be completely bogus !
 </para>
 <para><command>ips</command></para>
 <para>
@@ -6193,7 +6193,6 @@ From here, you may use the following commands:
   info cr                      Show CR0-4 registers and their contents
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
-  info tab                     Show paging address translation
 </screen>
 </para>
 </section>
@@ -6446,13 +6445,13 @@ The symbol file consists of zero or more lines of the format <screen>"%x %s"</sc
 <screen>
   Toggles show symbolic info (calls to begin with).
   show - shows current show mode
-  show mode     - show, when processor switch mode
-  show int      - show, when interrupt is happens
-  show call     - show, when call is happens
-  show ret      - show, when iret is happens
-  show off      - toggles off symbolic info
-  show dbg-all  - turn on all show flags
-  show dbg-none - turn off all show flags
+  show "mode" - show, when processor switch mode
+  show "int" - show, when interrupt is happens
+  show "call" - show, when call is happens
+  show "ret" - show, when iret is happens
+  show "off" - toggles off symbolic info
+  show "dbg-all" - turn on all show flags
+  show "none" - turn off all show flags
 </screen>
 </para>
 </section>
