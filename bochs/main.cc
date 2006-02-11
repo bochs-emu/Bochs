@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.308 2006-02-01 18:12:07 sshwarts Exp $
+// $Id: main.cc,v 1.309 2006-02-11 15:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -718,15 +718,21 @@ bx_bool load_and_init_display_lib ()
   return true;
 }
 
-int
-bx_begin_simulation (int argc, char *argv[])
+int bx_begin_simulation (int argc, char *argv[])
 {
   // deal with gui selection
   if (!load_and_init_display_lib ()) {
     BX_PANIC (("no gui module was loaded"));
     return 0;
   }
-  bx_cpu_count = bx_options.cpu.Ocpu_count->get();
+
+  bx_cpu_count = bx_options.cpu.Onprocessors->get() *
+                 bx_options.cpu.Oncores->get() *
+                 bx_options.cpu.Onthreads->get();
+
+  BX_ASSERT(bx_cpu_count < BX_MAX_SMP_THREADS_SUPPORTED);
+  BX_ASSERT(bx_cpu_count > 0);
+
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
@@ -815,7 +821,8 @@ int bx_init_hardware()
   BX_INFO(("Bochs x86 Emulator %s", VER_STRING));
   BX_INFO(("  %s", REL_STRING));
   BX_INFO(("System configuration"));
-  BX_INFO(("  processors: %d",BX_SMP_PROCESSORS));
+  BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
+    bx_options.cpu.Oncores->get(), bx_options.cpu.Onthreads->get()));
   BX_INFO(("  A20 line support: %s",BX_SUPPORT_A20?"yes":"no"));
   BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("CPU configuration"));

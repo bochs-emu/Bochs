@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.170 2006-02-01 18:11:56 sshwarts Exp $
+// $Id: bochs.h,v 1.171 2006-02-11 15:28:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -479,7 +479,9 @@ typedef struct {
 } bx_vgarom_options;
 
 typedef struct {
-  bx_param_num_c    *Ocpu_count;
+  bx_param_num_c    *Onprocessors;
+  bx_param_num_c    *Oncores;
+  bx_param_num_c    *Onthreads;
   bx_param_num_c    *Oips;
   bx_param_bool_c   *Oreset_on_triple_fault;
 } bx_cpu_options;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.152 2006-02-01 18:12:08 sshwarts Exp $
+// $Id: siminterface.h,v 1.153 2006-02-11 15:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -121,7 +121,9 @@ typedef enum {
 // it's only important that they all be different from each other.
 typedef enum {
   BXP_NULL = 301,
-  BXP_CPU_COUNT,
+  BXP_CPU_NPROCESSORS,
+  BXP_CPU_NCORES,
+  BXP_CPU_NTHREADS,
   BXP_IPS,
   BXP_RESET_ON_TRIPLE_FAULT,
   BXP_REALTIME_PIT,
@@ -372,6 +374,7 @@ typedef enum {
   BXP_FLOPPYSIGCHECK,
   BXP_BOOT,
   BXP_MENU_MAIN,
+  BXP_MENU_CPU,
   BXP_MENU_MEMORY,
   BXP_MENU_INTERFACE,
   BXP_MENU_DISK,

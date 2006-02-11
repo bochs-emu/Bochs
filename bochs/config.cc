@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.71 2006-02-01 18:11:56 sshwarts Exp $
+// $Id: config.cc,v 1.72 2006-02-11 15:28:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1176,15 +1176,29 @@ void bx_init_options ()
   bx_options.Omouse_type->set_ask_format ("Choose the type of mouse [%s] ");
 
 #if BX_SUPPORT_SMP
-  #define BX_CPU_COUNT_LIMIT 8
+  #define BX_CPU_PROCESSORS_LIMIT 8
+  #define BX_CPU_CORES_LIMIT 4
+  #define BX_CPU_HT_THREADS_LIMIT 4
 #else
-  #define BX_CPU_COUNT_LIMIT 1
+  #define BX_CPU_PROCESSORS_LIMIT 1
+  #define BX_CPU_CORES_LIMIT 1
+  #define BX_CPU_HT_THREADS_LIMIT 1
 #endif
 
-  bx_options.cpu.Ocpu_count = new bx_param_num_c (BXP_CPU_COUNT,
+  bx_options.cpu.Onprocessors = new bx_param_num_c (BXP_CPU_NPROCESSORS,
       "Number of CPUs in SMP mode",
       "Sets the number of CPUs for multiprocessor emulation",
-      1, BX_CPU_COUNT_LIMIT,
+      1, BX_CPU_PROCESSORS_LIMIT,
+      1);
+  bx_options.cpu.Oncores = new bx_param_num_c (BXP_CPU_NCORES,
+      "Number of processor cores in each CPU in SMP mode",
+      "Sets the number of processor cores per CPU for multiprocessor emulation",
+      1, BX_CPU_CORES_LIMIT,
+      1);
+  bx_options.cpu.Onthreads = new bx_param_num_c (BXP_CPU_NTHREADS,
+      "Number of HT threads per each process core in SMP mode",
+      "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
+      1, BX_CPU_HT_THREADS_LIMIT,
       1);
   bx_options.cpu.Oips = new bx_param_num_c (BXP_IPS, 
       "Emulated instructions per second (IPS)",
@@ -1195,6 +1209,17 @@ void bx_init_options ()
       "Enable CPU reset if triple fault occured (highly recommended)",
       "Enable CPU reset if triple fault occured (highly recommended)",
       1);
+  bx_param_c *cpu_init_list[] = {
+#if BX_SUPPORT_SMP
+    bx_options.cpu.Onprocessors,
+    bx_options.cpu.Oncores,
+    bx_options.cpu.Onthreads,
+#endif
+    bx_options.cpu.Oips,
+    NULL
+  };
+  menu = new bx_list_c(BXP_MENU_CPU, "Bochs CPU Menu", "cpumenu", cpu_init_list);
+  menu->get_options()->set(menu->SHOW_PARENT);
 
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
@@ -1290,7 +1315,6 @@ void bx_init_options ()
     "",
     BX_PATHNAME_LEN);
   bx_param_c *interface_init_list[] = {
-    bx_options.cpu.Ocpu_count,
     bx_options.Osel_config,
     bx_options.Osel_displaylib,
     bx_options.Odisplaylib_options,
@@ -1824,7 +1848,9 @@ void bx_reset_options ()
 #endif
 
   // cpu
-  bx_options.cpu.Ocpu_count->reset();
+  bx_options.cpu.Onprocessors->reset();
+  bx_options.cpu.Oncores->reset();
+  bx_options.cpu.Onthreads->reset();
   bx_options.cpu.Oips->reset();
   bx_options.cpu.Oreset_on_triple_fault->reset();
 
@@ -2630,7 +2656,19 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "count=", 6)) {
-        bx_options.cpu.Ocpu_count->set (strtoul (&params[i][6], NULL, 10));
+        unsigned processors = 1, cores = 1, threads = 1;
+        sscanf(&params[i][6], "%u:%u:%u", &processors, &cores, &threads);
+        unsigned smp_threads = cores*threads*processors;
+        if (smp_threads >= BX_MAX_SMP_THREADS_SUPPORTED) {
+          PARSE_ERR(("%s: too many SMP threads defined, only %u threads supported",
+            context, BX_MAX_SMP_THREADS_SUPPORTED));
+        }
+        if (smp_threads < 1) {
+          PARSE_ERR(("%s: at least one CPU thread should be defined, cpu directive malformed", context));
+        }
+        bx_options.cpu.Onprocessors->set(processors);
+        bx_options.cpu.Oncores->set(cores);
+        bx_options.cpu.Onthreads->set(threads);
       } else if (!strncmp(params[i], "ips=", 4)) {
         bx_options.cpu.Oips->set (atol(&params[i][4]));
         if (bx_options.cpu.Oips->get () < BX_MIN_IPS) {
@@ -3653,8 +3691,14 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get());
-  fprintf (fp, "cpu: count=%d, ips=%u, reset_on_triple_fault=%d\n", bx_options.cpu.Ocpu_count->get(),
+#if BX_SUPPORT_SMP
+  fprintf (fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
+    bx_options.cpu.Onprocessors->get(), bx_options.cpu.Oncores->get(), bx_options.cpu.Onthreads->get(),
     bx_options.cpu.Oips->get(), bx_options.cpu.Oreset_on_triple_fault->get());
+#else
+  fprintf (fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
+    bx_options.cpu.Oips->get(), bx_options.cpu.Oreset_on_triple_fault->get());
+#endif
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get());
   fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get());

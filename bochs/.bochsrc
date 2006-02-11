@@ -83,9 +83,11 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 # This defines cpu-related parameters inside Bochs:
 #
 #  COUNT:
-#  Set the number of processors when Bochs is compiled for SMP emulation.
-#  Bochs currently supports up to 8 processors. If Bochs is compiled
-#  without SMP support, it won't accept values different from 1.
+#  Set the number of processors:cores per processor:threads per core 
+#  when Bochs is compiled for SMP emulation.
+#  Bochs currently supports up to 8 threads running simultaniosly. 
+#  If Bochs is compiled without SMP support, it won't accept values 
+#  different from 1.
 #
 #  RESET_ON_TRIPLE_FAULT:
 #  Reset the CPU when triple fault occur (highly recommended) rather than

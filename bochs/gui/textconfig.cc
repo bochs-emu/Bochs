@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.32 2005-11-06 09:11:09 vruppert Exp $
+// $Id: textconfig.cc,v 1.33 2006-02-11 15:28:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -269,15 +269,16 @@ static char *startup_options_prompt =
 "3. Debug log file: %s\n"
 "4. Log options for all devices\n"
 "5. Log options for individual devices\n"
-"6. Memory options\n"
-"7. Interface options\n"
-"8. Disk options\n"
-"9. Serial or Parallel port options\n"
-"10. Sound Blaster 16 options\n"
-"11. Network card options\n"
-"12. Keyboard options\n"
-"13. PCI options\n"
-"14. Other options\n"
+"6. CPU options\n"
+"7. Memory options\n"
+"8. Interface options\n"
+"9. Disk options\n"
+"10. Serial or Parallel port options\n"
+"11. Sound Blaster 16 options\n"
+"12. Network card options\n"
+"13. Keyboard options\n"
+"14. PCI options\n"
+"15. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -446,7 +447,7 @@ int bx_config_interface (int menu)
        double_percent(olddebuggerpath,CI_PATH_LENGTH);
 
        sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
-       if (ask_uint (prompt, 0, 14, 0, &choice, 10) < 0) return -1;
+       if (ask_uint (prompt, 0, 15, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
@@ -454,15 +455,16 @@ int bx_config_interface (int menu)
 	 case 3: askparam (BXP_DEBUGGER_LOG_FILENAME); break;
 	 case 4: bx_log_options (0); break;
 	 case 5: bx_log_options (1); break;
-	 case 6: do_menu (BXP_MENU_MEMORY); break;
-	 case 7: do_menu (BXP_MENU_INTERFACE); break;
-	 case 8: do_menu (BXP_MENU_DISK); break;
-	 case 9: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
-	 case 10: do_menu (BXP_SB16); break;
-	 case 11: do_menu (BXP_NETWORK); break;
-	 case 12: do_menu (BXP_MENU_KEYBOARD); break;
-	 case 13: do_menu (BXP_PCI); break;
-	 case 14: do_menu (BXP_MENU_MISC); break;
+	 case 6: do_menu (BXP_MENU_CPU); break;
+	 case 7: do_menu (BXP_MENU_MEMORY); break;
+	 case 8: do_menu (BXP_MENU_INTERFACE); break;
+	 case 9: do_menu (BXP_MENU_DISK); break;
+	 case 10: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
+	 case 11: do_menu (BXP_SB16); break;
+	 case 12: do_menu (BXP_NETWORK); break;
+	 case 13: do_menu (BXP_MENU_KEYBOARD); break;
+	 case 14: do_menu (BXP_PCI); break;
+	 case 15: do_menu (BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
