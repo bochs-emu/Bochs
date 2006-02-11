@@ -6,8 +6,11 @@ Changes after 2.2.6 release:
 - Fixes in Bochs debugger and disassembler
 - Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
 - Moved configure time --enable-reset-on-triple-fault option to runtime, 
-  the 'cpu' option in .bochsrc is extended and the old configure
-  is deprecated.
+  the 'cpu' option in .bochsrc is extended and the old configure option
+  is deprecated (Stanislav Shwartsman)
+- Support for Dual Core and Intel(R) HyperThreading Technology. Now you
+  could choose amount of cores per processor and amount of HT threads per
+  core from .bochsrc for SMP simulation (Stanislav Shwartsman)
 
 -------------------------------------------------------------------------
 Changes in 2.2.6 (January 29, 2006):
