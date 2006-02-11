@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.207 2006-02-11 21:51:50 sshwarts Exp $
+$Id: user.dbk,v 1.208 2006-02-11 21:57:04 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -25,6 +25,7 @@ This is the top level file for the Bochs Users Manual.
    <author><firstname>Volker</firstname><surname>Ruppert</surname></author>
    <author><firstname>Christophe</firstname><surname>Bothamy</surname></author>
    <editor><firstname>Michael</firstname><surname>Calabrese</surname></editor>
+   <editor><firstname>Stanislav</firstname><surname>Shwartsman</surname></editor>
    </authorgroup>
 </bookinfo>
 
@@ -6193,6 +6194,7 @@ From here, you may use the following commands:
   info cr                      Show CR0-4 registers and their contents
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
+  info tab                     Show paging address translation
 </screen>
 </para>
 </section>
@@ -6445,13 +6447,13 @@ The symbol file consists of zero or more lines of the format <screen>"%x %s"</sc
 <screen>
   Toggles show symbolic info (calls to begin with).
   show - shows current show mode
-  show "mode" - show, when processor switch mode
-  show "int" - show, when interrupt is happens
-  show "call" - show, when call is happens
-  show "ret" - show, when iret is happens
-  show "off" - toggles off symbolic info
-  show "dbg-all" - turn on all show flags
-  show "none" - turn off all show flags
+  show mode     - show, when processor switch mode
+  show int      - show, when interrupt is happens
+  show call     - show, when call is happens
+  show ret      - show, when iret is happens
+  show off      - toggles off symbolic info
+  show dbg-all  - turn on all show flags
+  show dbg-none - turn off all show flags
 </screen>
 </para>
 </section>
