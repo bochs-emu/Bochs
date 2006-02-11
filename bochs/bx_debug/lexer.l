@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.13 2006-02-11 20:47:22 sshwarts Exp $
+// $Id: lexer.l,v 1.14 2006-02-11 21:19:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -89,10 +89,7 @@ u               |
 disasm          |
 disassemble     { BEGIN(DISASM); bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISASSEMBLE); }
 instrument      { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INSTRUMENT); }
-start           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_START); }
 stop            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_STOP); }
-reset           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESET); }
-print           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT); }
 doit            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DOIT); }
 trace           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACE); }
 trace-reg   	{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TRACEREG); }
@@ -176,9 +173,10 @@ calc            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_CALC); }
 0[0-7]+         { bxlval.uval = strtoul(bxtext+1, NULL, 8); return(BX_TOKEN_NUMERIC); }
 [0-9]+L         { bxlval.ulval = strtoull(bxtext, NULL, 10); return(BX_TOKEN_LONG_NUMERIC); }
 [0-9]+          { bxlval.uval = strtoul(bxtext, NULL, 10); return(BX_TOKEN_NUMERIC); }
+[a-z]+          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_COMMAND); }
 $[a-zA-Z_][a-zA-Z0-9_]* { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SYMBOLNAME); }
 <*>";"          { return ('\n'); }
-<*>\n           { return('\n'); }
+<*>\n           { return ('\n'); }
 [#][^\n]*    ; // eat up comments '//'
 .               { return(bxtext[0]); }
 <EXAMINE,DISASM>. { BEGIN(INITIAL); unput(*bxtext); }

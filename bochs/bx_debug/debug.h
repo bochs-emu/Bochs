@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.18 2006-02-11 20:47:22 sshwarts Exp $
+// $Id: debug.h,v 1.19 2006-02-11 21:19:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,10 +223,6 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
 bx_num_range make_num_range (Bit64s from, Bit64s to);
-char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
-Bit32u bx_dbg_get_symbol_value(char *Symbol);
-void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
 void bx_dbg_trace_command(bx_bool enable);
 void bx_dbg_trace_reg_command(bx_bool enable);
 void bx_dbg_ptime_command(void);
@@ -240,7 +236,7 @@ void bx_dbg_playback_command(char*);
 void bx_dbg_modebp_command(void);
 void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(bx_address addr);
-void bx_dbg_show_command(char*);
+void bx_dbg_show_command(const char*);
 void bx_dbg_print_stack_command(unsigned nwords);
 void bx_dbg_watch(int read, Bit32u address);
 void bx_dbg_unwatch(int read, Bit32u address);
@@ -259,7 +255,6 @@ bx_bool bx_dbg_del_lbreak (unsigned handle);
 bx_bool bx_dbg_del_vbreak (unsigned handle);
 int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip);
 int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
-int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
@@ -275,13 +270,11 @@ void bx_dbg_info_tss_command(bx_num_range);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
-void bx_dbg_info_symbols_command(char *Symbol);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
                     Bit32u addr, bx_bool addr_passed);
 void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
-void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
-void bx_dbg_query_command(char *);
-void bx_dbg_take_command(char *, unsigned n);
+void bx_dbg_query_command(const char *);
+void bx_dbg_take_command(const char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
 void bx_dbg_disassemble_command(const char *,bx_num_range);
@@ -297,6 +290,16 @@ void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);
 void bx_dbg_dump_table(void);
+int bx_dbg_symbolic_output(void); /* BW */
+void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
+char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
+char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
+void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
+void bx_dbg_info_symbols_command(char *Symbol);
+int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
+Bit32u bx_dbg_get_symbol_value(char *Symbol);
+char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
+
 #ifdef __cplusplus
 }
 #endif
@@ -498,17 +501,7 @@ void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
-
 void bx_dbg_disassemble_current(int which_cpu, int print_time);
-
-int bx_dbg_symbolic_output(void); /* BW */
-char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
-char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);
-void bx_dbg_symbol_command(char* filename, bx_bool global, Bit32u offset);
-void bx_dbg_info_symbols_command(char *Symbol);
-int bx_dbg_lbreakpoint_symbol_command(char *Symbol);
-Bit32u bx_dbg_get_symbol_value(char *Symbol);
-char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 
 #endif // #ifdef __cplusplus
 

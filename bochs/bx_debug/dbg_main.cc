@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.52 2006-02-11 20:47:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.53 2006-02-11 21:19:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -849,20 +849,20 @@ unsigned int dbg_show_mask = 0;
 // 0x8 iret
 // 0x10 interrupts (includes iret)
 
-void bx_dbg_show_command(char* arg)
+void bx_dbg_show_command(const char* arg)
 {
   if(arg) {
-    if (!strcmp(arg,"\"mode\"")){
+    if (!strcmp(arg,"mode")){
       dbg_show_mask = 0x80;
-    } else if (!strcmp(arg,"\"int\"")){
+    } else if (!strcmp(arg,"int")){
       dbg_show_mask = 0xc0;
-    } else if(!strcmp(arg,"\"call\"")){
+    } else if(!strcmp(arg,"call")){
       dbg_show_mask = 0xe0;
-    } else if(!strcmp(arg,"\"ret\"")){
+    } else if(!strcmp(arg,"ret")){
       dbg_show_mask = 0xe0;
-    } else if(!strcmp(arg,"\"off\"")){
+    } else if(!strcmp(arg,"off")){
       dbg_show_mask = 0x0;
-    } else if(!strcmp(arg,"\"dbg-all\"")){
+    } else if(!strcmp(arg,"dbg-all")){
       bx_dbg.floppy = 1;
       bx_dbg.keyboard = 1;
       bx_dbg.video = 1;
@@ -890,7 +890,7 @@ void bx_dbg_show_command(char* arg)
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
       printf("Turned on all bx_dbg flags\n");
       return;
-    } else if(!strcmp(arg,"\"none\"")){
+    } else if(!strcmp(arg,"dbg-none")){
       bx_dbg.floppy = 0;
       bx_dbg.keyboard = 0;
       bx_dbg.video = 0;
@@ -918,11 +918,11 @@ void bx_dbg_show_command(char* arg)
       /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
       printf("Turned off all bx_dbg flags\n");
       return;
-    } else if(!strcmp(arg,"\"vga\"")){
+    } else if(!strcmp(arg,"vga")){
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s (\"mode\" \"int\" \"call\" \"ret\" \"off\" \"dbg-all\" \"none\" are valid)\n",arg);
+      printf("Unrecognized arg: %s (mode, int, call, ret, off, dbg-all and dbg-none are valid)\n",arg);
       return;
     }
   } else {
@@ -1649,7 +1649,7 @@ void bx_dbg_disassemble_switch_mode()
   bx_disassemble.toggle_syntax_mode();
 }
 
-void bx_dbg_take_command(char *what, unsigned n)
+void bx_dbg_take_command(const char *what, unsigned n)
 {
   if ( !strcmp(what, "dma") ) {
     if (n == 0) {
@@ -2207,7 +2207,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
   }
 }
 
-void bx_dbg_query_command(char *what)
+void bx_dbg_query_command(const char *what)
 {
   unsigned pending;
 
@@ -2500,7 +2500,7 @@ void bx_dbg_instrument_command(const char *comm)
     BX_INSTR_PRINT();
   }
   else {
-    dbg_printf("Error: command 'instrument %s' not implemented.\n", comm);
+    dbg_printf("Error: command 'instrument %s' not recognized\n", comm);
     bx_dbg_exit(1);
   }
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.11 2006-02-11 20:47:22 sshwarts Exp $
+// $Id: parser.y,v 1.12 2006-02-11 21:19:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -32,7 +32,6 @@
 %type <uval> BX_TOKEN_NONSEG_REG
 %type <uval> BX_TOKEN_SEGREG
 %type <bval> BX_TOKEN_TOGGLE_ON_OFF
-%type <sval> BX_TOKEN_INSTRUMENT_COMMAND
 
 %token <uval> BX_TOKEN_REG_AL
 %token <uval> BX_TOKEN_REG_BL
@@ -112,11 +111,8 @@
 %token <sval> BX_TOKEN_SET_CPU
 %token <sval> BX_TOKEN_DISASSEMBLE
 %token <sval> BX_TOKEN_INSTRUMENT
-%token <sval> BX_TOKEN_START
-%token <sval> BX_TOKEN_STOP
-%token <sval> BX_TOKEN_RESET
-%token <sval> BX_TOKEN_PRINT
 %token <sval> BX_TOKEN_STRING
+%token <sval> BX_TOKEN_STOP
 %token <sval> BX_TOKEN_DOIT
 %token <sval> BX_TOKEN_CRC
 %token <sval> BX_TOKEN_TRACE
@@ -149,6 +145,7 @@
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_VGA
+%token <sval> BX_TOKEN_COMMAND
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
 %type <uval> optional_numeric
@@ -219,14 +216,6 @@ BX_TOKEN_TOGGLE_ON_OFF:
     { $$=$1; }
 ;
 
-BX_TOKEN_INSTRUMENT_COMMAND:
-      BX_TOKEN_START
-    | BX_TOKEN_STOP
-    | BX_TOKEN_RESET
-    | BX_TOKEN_PRINT
-    { $$=$1; }
-;
-
 BX_TOKEN_SEGREG:
       BX_TOKEN_CS
     | BX_TOKEN_ES
@@ -275,7 +264,7 @@ modebp_command:
     ;
 
 show_command:
-	BX_TOKEN_SHOW BX_TOKEN_STRING '\n'
+	BX_TOKEN_SHOW BX_TOKEN_COMMAND '\n'
           {
           bx_dbg_show_command($2);
           free($1); free($2);
@@ -797,7 +786,7 @@ disassemble_command:
     ;
 
 instrument_command:
-      BX_TOKEN_INSTRUMENT BX_TOKEN_INSTRUMENT_COMMAND '\n'
+      BX_TOKEN_INSTRUMENT BX_TOKEN_COMMAND '\n'
         {
         bx_dbg_instrument_command($2);
         free($1); free($2);
@@ -994,7 +983,7 @@ help_command:
        | BX_TOKEN_HELP BX_TOKEN_INSTRUMENT '\n'
          {
          dbg_printf("instrument start - calls bx_instr_start() callback\n");
-         dbg_printf("instrument stop  - calls bx_instr_stop() callback\n");
+         dbg_printf("instrument stop  - calls bx_instr_stop () callback\n");
          dbg_printf("instrument reset - calls bx_instr_reset() callback\n");
          dbg_printf("instrument print - calls bx_instr_print() callback\n");
          free($1);free($2);
@@ -1032,15 +1021,15 @@ help_command:
          }
        | BX_TOKEN_HELP BX_TOKEN_SHOW '\n'
          {
-         dbg_printf("show \"string\" - toggles show symbolic info (calls to begin with)\n");
+         dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
          dbg_printf("show - shows current show mode\n");
-         dbg_printf("show \"mode\" - show, when processor switch mode\n");
-         dbg_printf("show \"int\" - show, when interrupt is happens\n");
-         dbg_printf("show \"call\" - show, when call is happens\n");
-         dbg_printf("show \"ret\" - show, when iret is happens\n");
-         dbg_printf("show \"off\" - toggles off symbolic info\n");
-         dbg_printf("show \"dbg-all\" - turn on all show flags\n");
-         dbg_printf("show \"none\" - turn off all show flags\n");
+         dbg_printf("show mode - show, when processor switch mode\n");
+         dbg_printf("show int - show, when interrupt is happens\n");
+         dbg_printf("show call - show, when call is happens\n");
+         dbg_printf("show ret - show, when iret is happens\n");
+         dbg_printf("show off - toggles off symbolic info\n");
+         dbg_printf("show dbg-all - turn on all show flags\n");
+         dbg_printf("show dbg-none - turn off all show flags\n");
          free($1);free($2);
          }
        | BX_TOKEN_HELP BX_TOKEN_CALC '\n'
