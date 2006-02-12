@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.72 2006-02-11 15:28:42 sshwarts Exp $
+// $Id: config.cc,v 1.73 2006-02-12 20:05:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2659,7 +2659,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         unsigned processors = 1, cores = 1, threads = 1;
         sscanf(&params[i][6], "%u:%u:%u", &processors, &cores, &threads);
         unsigned smp_threads = cores*threads*processors;
-        if (smp_threads >= BX_MAX_SMP_THREADS_SUPPORTED) {
+        if (smp_threads > BX_MAX_SMP_THREADS_SUPPORTED) {
           PARSE_ERR(("%s: too many SMP threads defined, only %u threads supported",
             context, BX_MAX_SMP_THREADS_SUPPORTED));
         }
