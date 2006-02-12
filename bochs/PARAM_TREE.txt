@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.1 2003-03-15 17:51:36 bdenney Exp $
+$Id: PARAM_TREE.txt,v 1.2 2006-02-12 20:43:10 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -58,6 +58,13 @@ Notes:
 
 Proposed organizion of parameters into a tree
 
+cpu
+  n_processors          BXP_CPU_NPROCESSORS,
+  n_cores               BXP_CPU_NCORES,
+  n_threads             BXP_CPU_NTHREADS,
+  ips                   BXP_IPS,
+  reset_on_triple_fault BXP_RESET_ON_TRIPLE_FAULT,
+
 memory
   ram
     size              BXP_MEM_SIZE,
@@ -78,17 +85,26 @@ memory
     3
       path              BXP_OPTROM4_PATH,
       addr              BXP_OPTROM4_ADDRESS,
+  optional_ram
+    0
+      path              BXP_OPTRAM1_PATH,
+      addr              BXP_OPTRAM1_ADDRESS,
+    1
+      path              BXP_OPTRAM2_PATH,
+      addr              BXP_OPTRAM2_ADDRESS,
+    2
+      path              BXP_OPTRAM3_PATH,
+      addr              BXP_OPTRAM3_ADDRESS,
+    3
+      path              BXP_OPTRAM4_PATH,
+      addr              BXP_OPTRAM4_ADDRESS,
 
 cmos
-  path              BXP_CMOS_PATH,
-  image             BXP_CMOS_IMAGE,
-  time0             BXP_CMOS_TIME0,
-
-pit                   
-  realtime            BXP_REALTIME_PIT,
+  enabled               BXP_CMOSIMAGE_ENABLED,
+  path                  BXP_CMOSIMAGE_PATH,
+  rtc_init              BXP_CMOSIMAGE_RTC_INIT,
 
 floppy
-  cmd_delay           BXP_FLOPPY_CMD_DELAY,
   0                     BXP_FLOPPYA,
     devtype             BXP_FLOPPYA_DEVTYPE,
     path                BXP_FLOPPYA_PATH,
@@ -101,7 +117,6 @@ floppy
     status              BXP_FLOPPYB_STATUS,
 
 ata
-  new_drive_support    BXP_NEWHARDDRIVESUPPORT,
   0
     menu (for some reason, I had a separate object for menu)
     present             BXP_ATA0_PRESENT,
@@ -112,6 +127,8 @@ ata
       present           BXP_ATA0_MASTER_PRESENT
       type              BXP_ATA0_MASTER_TYPE
       path              BXP_ATA0_MASTER_PATH
+      mode              BXP_ATA0_MASTER_MODE
+      journal           BXP_ATA0_MASTER_JOURNAL
       cylinders         BXP_ATA0_MASTER_CYLINDERS
       heads             BXP_ATA0_MASTER_HEADS
       spt               BXP_ATA0_MASTER_SPT
@@ -131,22 +148,28 @@ ata
 serial
   0
     enabled        BXP_COM1_ENABLED
+    mode           BXP_COM1_MODE
     path           BXP_COM1_PATH
   1
     enabled        BXP_COM2_ENABLED
+    mode           BXP_COM2_MODE
     path           BXP_COM2_PATH
   2
     enabled        BXP_COM3_ENABLED
+    mode           BXP_COM3_MODE
     path           BXP_COM3_PATH
   3
     enabled        BXP_COM4_ENABLED
+    mode           BXP_COM4_MODE
     path           BXP_COM4_PATH
 
 usb
   1
     enabled          BXP_USB1_ENABLED,
-    ioaddr           BXP_USB1_IOADDR,
-    irq              BXP_USB1_IRQ,
+    port1            BXP_USB1_PORT1,
+    option1          BXP_USB1_OPTION1,
+    port2            BXP_USB1_PORT2,
+    option2          BXP_USB1_OPTION2,
 
 parallel
   0
@@ -158,7 +181,7 @@ parallel
 
 ne2k
   0                   BXP_NE2K,
-    present           BXP_NE2K_PRESENT,
+    enabled           BXP_NE2K_ENABLED,
     ioaddr            BXP_NE2K_IOADDR,
     irq               BXP_NE2K_IRQ,
     macaddr           BXP_NE2K_MACADDR,
@@ -166,8 +189,16 @@ ne2k
     ethdev            BXP_NE2K_ETHDEV,
     script            BXP_NE2K_SCRIPT,
 
+pnic
+  0                   BXP_PNIC,
+    enabled           BXP_PNIC_ENABLED,
+    macaddr           BXP_PNIC_MACADDR,
+    ethmod            BXP_PNIC_ETHMOD,
+    ethdev            BXP_PNIC_ETHDEV,
+    script            BXP_PNIC_SCRIPT,
+
 sb16                BXP_SB16,
-  present           BXP_SB16_PRESENT,
+  enabled           BXP_SB16_ENABLED,
   midifile          BXP_SB16_MIDIFILE,
   wavefile          BXP_SB16_WAVEFILE,
   logfile           BXP_SB16_LOGFILE,
@@ -178,92 +209,37 @@ sb16                BXP_SB16,
 
 pci
   i440fx_support        BXP_I440FX_SUPPORT,
+  slots
+    1
+      used              BXP_PCISLOT1_USED,
+      devname           BXP_PCISLOT1_DEVNAME,
+    2
+      (same options as pci.slot.1)
+    3
+      (same options as pci.slot.1)
+    4
+      (same options as pci.slot.1)
+    5
+      (same options as pci.slot.1)
+  pcidev
+    vendor              BXP_PCIDEV_VENDOR,
+    device              BXP_PCIDEV_DEVICE,
 
-# experiment with how to organize the configurable parameters versus
-# the variables in the device itself.  Try putting the configurable
-# parameters into keyboard.conf.*
+vga
+  update_interval     BXP_VGA_UPDATE_INTERVAL,
+  extension           BXP_VGA_EXTENSION,
+
 keyboard              BXP_KEYBOARD,
-  conf
-    type                BXP_KBD_TYPE,
-    serial_delay        BXP_KBD_SERIAL_DELAY,
-    paste_delay         BXP_KBD_PASTE_DELAY,
-    use_mapping         BXP_KEYBOARD_USEMAPPING,
-    map                 BXP_KEYBOARD_MAP,
-    enable_mouse        BXP_MOUSE_ENABLED,
-    user_shortcut       BXP_USER_SHORTCUT,
-  pare                BXP_KBD_PARE,
-  tim                 BXP_KBD_TIM,
-  auxb                BXP_KBD_AUXB,
-  keyl                BXP_KBD_KEYL,
-  c_d                 BXP_KBD_C_D,
-  sysf                BXP_KBD_SYSF,
-  inpb                BXP_KBD_INPB,
-  outb                BXP_KBD_OUTB,
-  timer_pending       BXP_KBD_TIMER_PENDING,
-  irq1_req            BXP_KBD_IRQ1_REQ,
-  irq12_req           BXP_KBD_IRQ12_REQ,
+  type                BXP_KBD_TYPE,
+  serial_delay        BXP_KBD_SERIAL_DELAY,
+  paste_delay         BXP_KBD_PASTE_DELAY,
+  use_mapping         BXP_KEYBOARD_USEMAPPING,
+  map                 BXP_KEYBOARD_MAP,
+  user_shortcut       BXP_USER_SHORTCUT,
 
-cpu
-  0                   BXP_CPU_PARAMETERS,
-    general_regs
-      eax             BXP_CPU_EAX,
-      ebx             BXP_CPU_EBX,
-      ecx             BXP_CPU_ECX,
-      edx             BXP_CPU_EDX,
-      ebp             BXP_CPU_EBP,
-      esi             BXP_CPU_ESI,
-      edi             BXP_CPU_EDI,
-      esp             BXP_CPU_ESP,
-      eip             BXP_CPU_EIP,
-    segment
-      cs              BXP_CPU_SEG_CS,
-      ds              BXP_CPU_SEG_DS,
-      ss              BXP_CPU_SEG_SS,
-      es              BXP_CPU_SEG_ES,
-      fs              BXP_CPU_SEG_FS,
-      gs              BXP_CPU_SEG_GS,
-    memory_management
-      ldtr            BXP_CPU_SEG_LDTR,
-      tr              BXP_CPU_SEG_TR,
-      gdtr
-        base          BXP_CPU_GDTR_BASE,
-        limit         BXP_CPU_GDTR_LIMIT,
-      idtr
-        base          BXP_CPU_IDTR_BASE,
-        limit         BXP_CPU_IDTR_LIMIT,
-    eflags            BXP_CPU_EFLAGS,
-      id              BXP_CPU_EFLAGS_ID,
-      vip             BXP_CPU_EFLAGS_VIP,
-      vif             BXP_CPU_EFLAGS_VIF,
-      ac              BXP_CPU_EFLAGS_AC,
-      vm              BXP_CPU_EFLAGS_VM,
-      rf              BXP_CPU_EFLAGS_RF,
-      nt              BXP_CPU_EFLAGS_NT,
-      iopl            BXP_CPU_EFLAGS_IOPL,
-      of              BXP_CPU_EFLAGS_OF,
-      df              BXP_CPU_EFLAGS_DF,
-      if              BXP_CPU_EFLAGS_IF,
-      tf              BXP_CPU_EFLAGS_TF,
-      sf              BXP_CPU_EFLAGS_SF,
-      zf              BXP_CPU_EFLAGS_ZF,
-      af              BXP_CPU_EFLAGS_AF,
-      pf              BXP_CPU_EFLAGS_PF,
-      cf              BXP_CPU_EFLAGS_CF,
-    debug
-      dr0             BXP_CPU_DR0,
-      dr1             BXP_CPU_DR1,
-      dr2             BXP_CPU_DR2,
-      dr3             BXP_CPU_DR3,
-      dr6             BXP_CPU_DR6,
-      dr7             BXP_CPU_DR7,
-    control
-      cr0             BXP_CPU_CR0,
-      cr1             BXP_CPU_CR1,
-      cr2             BXP_CPU_CR2,
-      cr3             BXP_CPU_CR3,
-      cr4             BXP_CPU_CR4,
-  1
-    (same parameters for cpus 1...15)
+mouse
+  type                BXP_MOUSE_TYPE,
+  enabled             BXP_MOUSE_ENABLED,
 
 config_menus                      
   main                BXP_MENU_MAIN,
@@ -276,7 +252,9 @@ config_menus
   runtime             BXP_MENU_RUNTIME,
 
 boot_params          
-  boot_drive           BXP_BOOTDRIVE,
+  boot_drive1          BXP_BOOTDRIVE1,
+  boot_drive2          BXP_BOOTDRIVE2,
+  boot_drive3          BXP_BOOTDRIVE3,
   floppy_sig_check     BXP_FLOPPYSIGCHECK,
   load32bitos          BXP_LOAD32BITOS,
     which              BXP_LOAD32BITOS_WHICH,
@@ -284,29 +262,27 @@ boot_params
     iolog              BXP_LOAD32BITOS_IOLOG,
     initrd             BXP_LOAD32BITOS_INITRD,
 
-time
-  system_clock_sync   BXP_SYSTEM_CLOCK_SYNC,
-  ips                 BXP_IPS,
-  max_ips             BXP_MAX_IPS,
-  vga_update_interval BXP_VGA_UPDATE_INTERVAL,
+clock
+  sync                BXP_CLOCK_SYNC,
+  time0               BXP_CLOCK_TIME0,
 
 display
-  config_interface     BXP_SEL_CONFIG_INTERFACE,
+  config_interface    BXP_SEL_CONFIG_INTERFACE,
   display_library     BXP_SEL_DISPLAY_LIBRARY,
-  ask_for_pathname    BXP_ASK_FOR_PATHNAME,   // what the heck is this?
-  private_colormap   BXP_PRIVATE_COLORMAP,
-  full_screen        BXP_FULLSCREEN,
-  screen_mode        BXP_SCREENMODE,
+  private_colormap    BXP_PRIVATE_COLORMAP,
+  full_screen         BXP_FULLSCREEN,
+  screen_mode         BXP_SCREENMODE,
 
 general
   start_mode          BXP_BOCHS_START,
   text_snapshot_check BXP_TEXT_SNAPSHOT_CHECK,
 
 log
-  filename               BXP_LOG_FILENAME,
-  prefix                 BXP_LOG_PREFIX,
-  debugger_filename      BXP_DEBUGGER_LOG_FILENAME,
+  filename            BXP_LOG_FILENAME,
+  prefix              BXP_LOG_PREFIX,
+  debugger_filename   BXP_DEBUGGER_LOG_FILENAME,
 
 debugger
   running             BXP_DEBUG_RUNNING,
 
+(updated Feb 12, 2006 by vruppert)

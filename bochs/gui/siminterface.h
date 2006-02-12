@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.153 2006-02-11 15:28:43 sshwarts Exp $
+// $Id: siminterface.h,v 1.154 2006-02-12 20:43:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -126,7 +126,6 @@ typedef enum {
   BXP_CPU_NTHREADS,
   BXP_IPS,
   BXP_RESET_ON_TRIPLE_FAULT,
-  BXP_REALTIME_PIT,
   BXP_TEXT_SNAPSHOT_CHECK,
   BXP_VGA_EXTENSION,
   BXP_VGA_UPDATE_INTERVAL,
@@ -384,7 +383,6 @@ typedef enum {
   BXP_MENU_MISC,
   BXP_MENU_MISC_2,
   BXP_MENU_RUNTIME,
-  BXP_MAX_IPS,
   BXP_NE2K_ENABLED,
   BXP_NE2K_IOADDR,
   BXP_NE2K_IRQ,
@@ -432,7 +430,6 @@ typedef enum {
   BXP_KEYBOARD_MAP,
   BXP_KEYBOARD,
   BXP_USER_SHORTCUT,
-  BXP_ASK_FOR_PATHNAME,   // for general file selection dialog
   BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
   BXP_CPU_PARAMETERS,
