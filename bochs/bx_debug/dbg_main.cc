@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.54 2006-02-12 20:21:36 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.55 2006-02-12 20:43:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -837,6 +837,9 @@ void bx_dbg_print_string_command(bx_address start_addr)
 unsigned dbg_show_mask = 0;
 
 #define BX_DBG_SHOW_CALLRET  (Flag_call|Flag_ret)
+#define BX_DBG_SHOW_SOFTINT  (Flag_softint)
+#define BX_DBG_SHOW_EXTINT   (Flag_intsig)
+#define BX_DBG_SHOW_IRET     (Flag_iret)
 #define BX_DBG_SHOW_INT      (Flag_softint|Flag_iret|Flag_intsig)
 #define BX_DBG_SHOW_MODE     (Flag_mode)
 
@@ -851,13 +854,37 @@ void bx_dbg_show_command(const char* arg)
         dbg_show_mask |= BX_DBG_SHOW_MODE;
         dbg_printf("show mode switch: ON\n");
       }
-    } else if (!strcmp(arg, "int")){
+    } else if (!strcmp(arg, "int")) {
       if (dbg_show_mask & BX_DBG_SHOW_INT) {
         dbg_show_mask &= ~BX_DBG_SHOW_INT;
-        dbg_printf("show interrupts: OFF\n");
+        dbg_printf("show interrupts tracing (extint/softint/iret): OFF\n");
       } else {
         dbg_show_mask |= BX_DBG_SHOW_INT;
-        dbg_printf("show interrupts: ON\n");
+        dbg_printf("show interrupts tracing (extint/softint/iret): ON\n");
+      }
+    } else if (!strcmp(arg, "extint")) {
+      if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
+        dbg_show_mask &= ~BX_DBG_SHOW_EXTINT;
+        dbg_printf("show external interrupts: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_EXTINT;
+        dbg_printf("show external interrupts: ON\n");
+      }
+    } else if (!strcmp(arg, "softint")) {
+      if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
+        dbg_show_mask &= ~BX_DBG_SHOW_SOFTINT;
+        dbg_printf("show software interrupts: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_SOFTINT;
+        dbg_printf("show software interrupts: ON\n");
+      }
+    } else if (!strcmp(arg, "iret")) {
+      if (dbg_show_mask & BX_DBG_SHOW_IRET) {
+        dbg_show_mask &= ~BX_DBG_SHOW_IRET;
+        dbg_printf("show iret: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_IRET;
+        dbg_printf("show iret: ON\n");
       }
     } else if(!strcmp(arg,"call")) {
       if (dbg_show_mask & BX_DBG_SHOW_CALLRET) {
@@ -867,10 +894,10 @@ void bx_dbg_show_command(const char* arg)
         dbg_show_mask |= BX_DBG_SHOW_CALLRET;
         dbg_printf("show calls/returns: ON\n");
       }
-    } else if(!strcmp(arg,"off")){
+    } else if(!strcmp(arg,"off")) {
       dbg_show_mask = 0x0;
       dbg_printf("Disable all show flags\n");
-    } else if(!strcmp(arg,"dbg-all")){
+    } else if(!strcmp(arg,"dbg-all")) {
       bx_dbg.floppy = 1;
       bx_dbg.keyboard = 1;
       bx_dbg.video = 1;
@@ -898,7 +925,7 @@ void bx_dbg_show_command(const char* arg)
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
       dbg_printf("Turned ON all bx_dbg flags\n");
       return;
-    } else if(!strcmp(arg,"dbg-none")){
+    } else if(!strcmp(arg,"dbg-none")) {
       bx_dbg.floppy = 0;
       bx_dbg.keyboard = 0;
       bx_dbg.video = 0;
@@ -930,7 +957,7 @@ void bx_dbg_show_command(const char* arg)
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s (only 'mode', 'int', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
+      printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
       return;
     }
   }
@@ -939,8 +966,12 @@ void bx_dbg_show_command(const char* arg)
     dbg_printf("show mask is:");
     if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
       dbg_printf(" call");
-    if (dbg_show_mask & BX_DBG_SHOW_INT)
-      dbg_printf(" int");
+    if (dbg_show_mask & BX_DBG_SHOW_SOFTINT)
+      dbg_printf(" softint");
+    if (dbg_show_mask & BX_DBG_SHOW_EXTINT)
+      dbg_printf(" extint");
+    if (dbg_show_mask & BX_DBG_SHOW_IRET)
+      dbg_printf(" iret");
     if (dbg_show_mask & BX_DBG_SHOW_MODE)
       dbg_printf(" mode");
     dbg_printf("\n");
@@ -972,7 +1003,7 @@ int bx_dbg_show_symbolic(void)
   }
 
   /* interrupts */
-  if (dbg_show_mask & BX_DBG_SHOW_INT) {
+  if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_softint) {
       dbg_printf (FMT_TICK ": softint 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
         bx_pc_system.time_ticks(),
@@ -980,6 +1011,9 @@ int bx_dbg_show_symbolic(void)
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
     }
+  }
+  
+  if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((BX_CPU(dbg_cpu)->show_flag & Flag_intsig) && !(BX_CPU(dbg_cpu)->show_flag & Flag_softint)) {
       dbg_printf (FMT_TICK ": exception (not softint) 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
         bx_pc_system.time_ticks(),
@@ -987,6 +1021,9 @@ int bx_dbg_show_symbolic(void)
         BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
     }
+  }
+
+  if (dbg_show_mask & BX_DBG_SHOW_IRET) {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_iret) {
       dbg_printf (FMT_TICK ": iret 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
         bx_pc_system.time_ticks(),
