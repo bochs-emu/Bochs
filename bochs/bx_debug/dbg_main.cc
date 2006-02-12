@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.53 2006-02-11 21:19:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.54 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -834,34 +834,42 @@ void bx_dbg_print_string_command(bx_address start_addr)
   dbg_printf("\n");
 }
 
-static bx_address last_cr3;
-static bx_bool last_cpu_mode = 0;
+unsigned dbg_show_mask = 0;
 
-unsigned int dbg_show_mask = 0;
-// 0x80 print mode
-// 0x40 print interrupts
-// 0x20 print calls
-
-//BW added. toggles show symbolic info (calls to begin with)
-// 0x1 call
-// 0x2 return
-// 0x4 int
-// 0x8 iret
-// 0x10 interrupts (includes iret)
+#define BX_DBG_SHOW_CALLRET  (Flag_call|Flag_ret)
+#define BX_DBG_SHOW_INT      (Flag_softint|Flag_iret|Flag_intsig)
+#define BX_DBG_SHOW_MODE     (Flag_mode)
 
 void bx_dbg_show_command(const char* arg)
 {
   if(arg) {
-    if (!strcmp(arg,"mode")){
-      dbg_show_mask = 0x80;
-    } else if (!strcmp(arg,"int")){
-      dbg_show_mask = 0xc0;
-    } else if(!strcmp(arg,"call")){
-      dbg_show_mask = 0xe0;
-    } else if(!strcmp(arg,"ret")){
-      dbg_show_mask = 0xe0;
+    if (!strcmp(arg, "mode")) {
+      if (dbg_show_mask & BX_DBG_SHOW_MODE) {
+        dbg_show_mask &= ~BX_DBG_SHOW_MODE;
+        dbg_printf("show mode switch: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_MODE;
+        dbg_printf("show mode switch: ON\n");
+      }
+    } else if (!strcmp(arg, "int")){
+      if (dbg_show_mask & BX_DBG_SHOW_INT) {
+        dbg_show_mask &= ~BX_DBG_SHOW_INT;
+        dbg_printf("show interrupts: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_INT;
+        dbg_printf("show interrupts: ON\n");
+      }
+    } else if(!strcmp(arg,"call")) {
+      if (dbg_show_mask & BX_DBG_SHOW_CALLRET) {
+        dbg_show_mask &= ~BX_DBG_SHOW_CALLRET;
+        dbg_printf("show calls/returns: OFF\n");
+      } else {
+        dbg_show_mask |= BX_DBG_SHOW_CALLRET;
+        dbg_printf("show calls/returns: ON\n");
+      }
     } else if(!strcmp(arg,"off")){
       dbg_show_mask = 0x0;
+      dbg_printf("Disable all show flags\n");
     } else if(!strcmp(arg,"dbg-all")){
       bx_dbg.floppy = 1;
       bx_dbg.keyboard = 1;
@@ -888,7 +896,7 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.dma = 1;
       bx_dbg.unsupported_io = 1;
       /* bx_dbg.record_io = 1; this is a pointer .. somewhere */
-      printf("Turned on all bx_dbg flags\n");
+      dbg_printf("Turned ON all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"dbg-none")){
       bx_dbg.floppy = 0;
@@ -916,34 +924,105 @@ void bx_dbg_show_command(const char* arg)
       bx_dbg.dma = 0;
       bx_dbg.unsupported_io = 0;
       /* bx_dbg.record_io = 0; this is a pointer .. somewhere */
-      printf("Turned off all bx_dbg flags\n");
+      dbg_printf("Turned OFF all bx_dbg flags\n");
       return;
     } else if(!strcmp(arg,"vga")){
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s (mode, int, call, ret, off, dbg-all and dbg-none are valid)\n",arg);
+      printf("Unrecognized arg: %s (only 'mode', 'int', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
       return;
     }
-  } else {
-    dbg_printf("show mask is 0x%x\n", dbg_show_mask);
-    return;
   }
 
-  // enable trace if any print is active
-  if(dbg_show_mask & 0xe0)
-    dbg_show_mask |= 0x1f;
+  if (dbg_show_mask) {
+    dbg_printf("show mask is:");
+    if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
+      dbg_printf(" call");
+    if (dbg_show_mask & BX_DBG_SHOW_INT)
+      dbg_printf(" int");
+    if (dbg_show_mask & BX_DBG_SHOW_MODE)
+      dbg_printf(" mode");
+    dbg_printf("\n");
+  }
+  else {
+    dbg_printf("show mask is: 0\n");
+  }
+}
+
+
+// return non zero to cause a stop
+int bx_dbg_show_symbolic(void) 
+{
+  static unsigned   last_cpu_mode = 0;
+  static bx_address last_cr3 = 0;
+
+  /* modes & address spaces */
+  if (dbg_show_mask & BX_DBG_SHOW_MODE) {
+    if(BX_CPU(dbg_cpu)->get_cpu_mode() != last_cpu_mode) {
+      dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n", 
+        bx_pc_system.time_ticks(),
+        cpu_mode_string(last_cpu_mode),
+        cpu_mode_string(BX_CPU(dbg_cpu)->get_cpu_mode()));
+    }
+
+    if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
+      dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_ADDRX "\n", 
+        bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
+  }
+
+  /* interrupts */
+  if (dbg_show_mask & BX_DBG_SHOW_INT) {
+    if(BX_CPU(dbg_cpu)->show_flag & Flag_softint) {
+      dbg_printf (FMT_TICK ": softint 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
+        bx_pc_system.time_ticks(),
+        BX_CPU(dbg_cpu)->guard_found.cs,
+        BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr);
+    }
+    if((BX_CPU(dbg_cpu)->show_flag & Flag_intsig) && !(BX_CPU(dbg_cpu)->show_flag & Flag_softint)) {
+      dbg_printf (FMT_TICK ": exception (not softint) 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
+        bx_pc_system.time_ticks(),
+        BX_CPU(dbg_cpu)->guard_found.cs,
+        BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr);
+    }
+    if(BX_CPU(dbg_cpu)->show_flag & Flag_iret) {
+      dbg_printf (FMT_TICK ": iret 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
+        bx_pc_system.time_ticks(),
+        BX_CPU(dbg_cpu)->guard_found.cs,
+        BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr);
+    }
+  }
   
-  dbg_printf("show mask is 0x%x, cleared show_flag\n", dbg_show_mask);
-  BX_CPU(dbg_cpu)->show_flag = 0;
+  /* calls */
+  if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
+  {
+    if(BX_CPU(dbg_cpu)->show_flag & Flag_call) {
+      Bit32u phy = 0;
+      bx_bool valid;
+
+      BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy, &valid);
+      dbg_printf (FMT_TICK ": call 0x%04x:" FMT_ADDRX " 0x" FMT_ADDRX " (%08x) %s",
+        bx_pc_system.time_ticks(),
+        BX_CPU(dbg_cpu)->guard_found.cs,
+        BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr,
+        phy,
+        bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
+              BX_CPU(dbg_cpu)->guard_found.eip,
+              BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip));
+      if(!valid) dbg_printf(" phys not valid");
+      dbg_printf("\n");
+    }
+  }
+
   last_cr3 = BX_CPU(dbg_cpu)->cr3;
   last_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
+  BX_CPU(dbg_cpu)->show_flag = 0;
 
-  dbg_printf (FMT_TICK ": address %04x:" FMT_ADDRX " " FMT_ADDRX "\n\n", 
-    bx_pc_system.time_ticks(),
-    BX_CPU(dbg_cpu)->guard_found.cs,
-    BX_CPU(dbg_cpu)->guard_found.eip,
-    BX_CPU(dbg_cpu)->guard_found.laddr);
+  return 0;
 }
 
 void bx_dbg_print_stack_command(unsigned nwords)
@@ -2995,88 +3074,6 @@ void bx_dbg_post_dma_reports(void)
 
   // empty Q, regardless of whether reports are printed
   bx_dbg_batch_dma.Qsize = 0;
-}
-
-int bx_dbg_symbolic_output(void) 
-{
-  // BW added. return non zero to cause a stop
-  static int symbol_level = 0;
-
-  /* modes & address spaces */
-  if(BX_CPU(dbg_cpu)->get_cpu_mode() != last_cpu_mode) {
-    dbg_printf (FMT_TICK ": switched from %s to %s since last trigger\n", 
-      bx_pc_system.time_ticks(),
-      cpu_mode_string(last_cpu_mode),
-      cpu_mode_string(BX_CPU(dbg_cpu)->get_cpu_mode()));
-  }
-
-  if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-    dbg_printf("\n" FMT_TICK ": Address space switched since last trigger. CR3: 0x%08x\n", 
-      bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
-
-  /* interrupts */
-  if (dbg_show_mask & 0x40) {
-    if(BX_CPU(dbg_cpu)->show_flag & 0x4) {
-      dbg_printf (FMT_TICK ":  softint %04x:" FMT_ADDRX " " FMT_ADDRX "\n", 
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
-    }
-    if((BX_CPU(dbg_cpu)->show_flag & 0x10) && !(BX_CPU(dbg_cpu)->show_flag & 0x4)) {
-      dbg_printf (FMT_TICK ": exception (not softint) %04x:" FMT_ADDRX " " FMT_ADDRX "\n", 
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
-    }
-    if(BX_CPU(dbg_cpu)->show_flag & 0x8) {
-      dbg_printf (FMT_TICK ": iret %04x:" FMT_ADDRX " " FMT_ADDRX "(from " FMT_ADDRX ")\n", 
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr,
-        BX_CPU(dbg_cpu)->show_eip);
-    }
-  }
-  
-  /* calls */
-  if(BX_CPU(dbg_cpu)->show_flag & 0x1) {
-    Bit32u phy = 0;
-    bx_bool valid;
-
-    if (dbg_show_mask & 0x20) {
-      BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr,
-               &phy, &valid);
-
-      dbg_printf (FMT_TICK ": %*s call %04x:" FMT_ADDRX " 0x" FMT_ADDRX " (%08x) %s",
-        bx_pc_system.time_ticks(), symbol_level+1," ",
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr,
-        phy,
-        bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
-              BX_CPU(dbg_cpu)->guard_found.eip,
-              BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip) );
-      if(!valid)
-        dbg_printf(" phys not valid");
-      dbg_printf("\n");
-    }
-
-    symbol_level++;
-    if(symbol_level > 40)
-      symbol_level = 10;
-  }
-
-  if (BX_CPU(dbg_cpu)->show_flag & 0x2) {
-    symbol_level--;
-    if(symbol_level < 0)
-      symbol_level = 0;
-  }
-
-  BX_CPU(dbg_cpu)->show_flag = 0;
-  last_cr3 = BX_CPU(dbg_cpu)->cr3;
-  return 0;
 }
 
 void bx_dbg_dump_table(void)

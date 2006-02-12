@@ -655,14 +655,14 @@ static const unsigned short yyrline[] =
      823,   828,   833,   838,   843,   848,   853,   858,   863,   868,
      873,   879,   885,   890,   895,   900,   905,   910,   915,   920,
      925,   930,   935,   940,   945,   954,   963,   970,   983,   991,
-    1001,  1022,  1035,  1045,  1050,  1058,  1066,  1067,  1068,  1069,
-    1074,  1075,  1076,  1077,  1082,  1083,  1084,  1085,  1086,  1087,
-    1088,  1089,  1094,  1095,  1096,  1097,  1098,  1099,  1100,  1101,
-    1115,  1116,  1117,  1118,  1119,  1120,  1121,  1122,  1123,  1124,
-    1125,  1126,  1127,  1128,  1129,  1130,  1131,  1132,  1133,  1134,
-    1135,  1140,  1141,  1142,  1143,  1144,  1145,  1146,  1147,  1148,
-    1149,  1150,  1151,  1152,  1153,  1154,  1155,  1156,  1157,  1158,
-    1159,  1160,  1161,  1162
+    1001,  1022,  1034,  1044,  1049,  1057,  1065,  1066,  1067,  1068,
+    1073,  1074,  1075,  1076,  1081,  1082,  1083,  1084,  1085,  1086,
+    1087,  1088,  1093,  1094,  1095,  1096,  1097,  1098,  1099,  1100,
+    1114,  1115,  1116,  1117,  1118,  1119,  1120,  1121,  1122,  1123,
+    1124,  1125,  1126,  1127,  1128,  1129,  1130,  1131,  1132,  1133,
+    1134,  1139,  1140,  1141,  1142,  1143,  1144,  1145,  1146,  1147,
+    1148,  1149,  1150,  1151,  1152,  1153,  1154,  1155,  1156,  1157,
+    1158,  1159,  1160,  1161
 };
 #endif
 
@@ -2948,7 +2948,6 @@ yyreduce:
          dbg_printf("show mode - show, when processor switch mode\n");
          dbg_printf("show int - show, when interrupt is happens\n");
          dbg_printf("show call - show, when call is happens\n");
-         dbg_printf("show ret - show, when iret is happens\n");
          dbg_printf("show off - toggles off symbolic info\n");
          dbg_printf("show dbg-all - turn on all show flags\n");
          dbg_printf("show dbg-none - turn off all show flags\n");
@@ -2957,7 +2956,7 @@ yyreduce:
     break;
 
   case 182:
-#line 1036 "parser.y"
+#line 1035 "parser.y"
     {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
          dbg_printf("    'expr' can reference any general-purpose and segment\n");
@@ -2970,7 +2969,7 @@ yyreduce:
     break;
 
   case 183:
-#line 1046 "parser.y"
+#line 1045 "parser.y"
     {
          bx_dbg_print_help();
          free(yyvsp[-2].sval);free(yyvsp[-1].sval);
@@ -2978,7 +2977,7 @@ yyreduce:
     break;
 
   case 184:
-#line 1051 "parser.y"
+#line 1050 "parser.y"
     {
          bx_dbg_print_help();
          free(yyvsp[-1].sval);
@@ -2986,7 +2985,7 @@ yyreduce:
     break;
 
   case 185:
-#line 1059 "parser.y"
+#line 1058 "parser.y"
     {
      bx_dbg_calc_command(yyvsp[-1].ulval);
      free(yyvsp[-2].sval);
@@ -2994,242 +2993,242 @@ yyreduce:
     break;
 
   case 189:
-#line 1070 "parser.y"
+#line 1069 "parser.y"
     { yyval.uval=yyvsp[0].uval; }
     break;
 
   case 193:
-#line 1078 "parser.y"
+#line 1077 "parser.y"
     { yyval.uval=yyvsp[0].uval; }
     break;
 
   case 201:
-#line 1090 "parser.y"
+#line 1089 "parser.y"
     { yyval.uval=yyvsp[0].uval; }
     break;
 
   case 209:
-#line 1102 "parser.y"
+#line 1101 "parser.y"
     { yyval.uval=yyvsp[0].uval; }
     break;
 
   case 210:
-#line 1115 "parser.y"
+#line 1114 "parser.y"
     { yyval.ulval = yyvsp[0].uval; }
     break;
 
   case 211:
-#line 1116 "parser.y"
+#line 1115 "parser.y"
     { yyval.ulval = yyvsp[0].ulval; }
     break;
 
   case 212:
-#line 1117 "parser.y"
+#line 1116 "parser.y"
     { yyval.ulval = bx_dbg_get_reg8l_value(yyvsp[0].uval); }
     break;
 
   case 213:
-#line 1118 "parser.y"
+#line 1117 "parser.y"
     { yyval.ulval = bx_dbg_get_reg8h_value(yyvsp[0].uval); }
     break;
 
   case 214:
-#line 1119 "parser.y"
+#line 1118 "parser.y"
     { yyval.ulval = bx_dbg_get_reg16_value(yyvsp[0].uval); }
     break;
 
   case 215:
-#line 1120 "parser.y"
+#line 1119 "parser.y"
     { yyval.ulval = bx_dbg_get_reg32_value(yyvsp[0].uval); }
     break;
 
   case 216:
-#line 1121 "parser.y"
+#line 1120 "parser.y"
     { yyval.ulval = bx_dbg_get_selector_value(yyvsp[0].uval); }
     break;
 
   case 217:
-#line 1122 "parser.y"
+#line 1121 "parser.y"
     { yyval.ulval = bx_dbg_get_ip (); }
     break;
 
   case 218:
-#line 1123 "parser.y"
+#line 1122 "parser.y"
     { yyval.ulval = bx_dbg_get_eip(); }
     break;
 
   case 219:
-#line 1124 "parser.y"
+#line 1123 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval + yyvsp[0].ulval; }
     break;
 
   case 220:
-#line 1125 "parser.y"
+#line 1124 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval - yyvsp[0].ulval; }
     break;
 
   case 221:
-#line 1126 "parser.y"
+#line 1125 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval * yyvsp[0].ulval; }
     break;
 
   case 222:
-#line 1127 "parser.y"
+#line 1126 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval / yyvsp[0].ulval; }
     break;
 
   case 223:
-#line 1128 "parser.y"
+#line 1127 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval >> yyvsp[0].ulval; }
     break;
 
   case 224:
-#line 1129 "parser.y"
+#line 1128 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval << yyvsp[0].ulval; }
     break;
 
   case 225:
-#line 1130 "parser.y"
+#line 1129 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval | yyvsp[0].ulval; }
     break;
 
   case 226:
-#line 1131 "parser.y"
+#line 1130 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval ^ yyvsp[0].ulval; }
     break;
 
   case 227:
-#line 1132 "parser.y"
+#line 1131 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval & yyvsp[0].ulval; }
     break;
 
   case 228:
-#line 1133 "parser.y"
+#line 1132 "parser.y"
     { yyval.ulval = !yyvsp[0].ulval; }
     break;
 
   case 229:
-#line 1134 "parser.y"
+#line 1133 "parser.y"
     { yyval.ulval = -yyvsp[0].ulval; }
     break;
 
   case 230:
-#line 1135 "parser.y"
+#line 1134 "parser.y"
     { yyval.ulval = yyvsp[-1].ulval; }
     break;
 
   case 231:
-#line 1140 "parser.y"
+#line 1139 "parser.y"
     { yyval.ulval = yyvsp[0].uval; }
     break;
 
   case 232:
-#line 1141 "parser.y"
+#line 1140 "parser.y"
     { yyval.ulval = yyvsp[0].ulval; }
     break;
 
   case 233:
-#line 1142 "parser.y"
+#line 1141 "parser.y"
     { yyval.ulval = bx_dbg_get_symbol_value(yyvsp[0].sval); free(yyvsp[0].sval);}
     break;
 
   case 234:
-#line 1143 "parser.y"
+#line 1142 "parser.y"
     { yyval.ulval = bx_dbg_get_reg8l_value(yyvsp[0].uval); }
     break;
 
   case 235:
-#line 1144 "parser.y"
+#line 1143 "parser.y"
     { yyval.ulval = bx_dbg_get_reg8h_value(yyvsp[0].uval); }
     break;
 
   case 236:
-#line 1145 "parser.y"
+#line 1144 "parser.y"
     { yyval.ulval = bx_dbg_get_reg16_value(yyvsp[0].uval); }
     break;
 
   case 237:
-#line 1146 "parser.y"
+#line 1145 "parser.y"
     { yyval.ulval = bx_dbg_get_reg32_value(yyvsp[0].uval); }
     break;
 
   case 238:
-#line 1147 "parser.y"
+#line 1146 "parser.y"
     { yyval.ulval = bx_dbg_get_selector_value(yyvsp[0].uval); }
     break;
 
   case 239:
-#line 1148 "parser.y"
+#line 1147 "parser.y"
     { yyval.ulval = bx_dbg_get_ip (); }
     break;
 
   case 240:
-#line 1149 "parser.y"
+#line 1148 "parser.y"
     { yyval.ulval = bx_dbg_get_eip(); }
     break;
 
   case 241:
-#line 1150 "parser.y"
+#line 1149 "parser.y"
     { yyval.ulval = bx_dbg_get_laddr (yyvsp[-2].ulval, yyvsp[0].ulval); }
     break;
 
   case 242:
-#line 1151 "parser.y"
+#line 1150 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval + yyvsp[0].ulval; }
     break;
 
   case 243:
-#line 1152 "parser.y"
+#line 1151 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval - yyvsp[0].ulval; }
     break;
 
   case 244:
-#line 1153 "parser.y"
+#line 1152 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval * yyvsp[0].ulval; }
     break;
 
   case 245:
-#line 1154 "parser.y"
+#line 1153 "parser.y"
     { yyval.ulval = (yyvsp[0].ulval != 0) ? yyvsp[-2].ulval / yyvsp[0].ulval : 0; }
     break;
 
   case 246:
-#line 1155 "parser.y"
+#line 1154 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval >> yyvsp[0].ulval; }
     break;
 
   case 247:
-#line 1156 "parser.y"
+#line 1155 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval << yyvsp[0].ulval; }
     break;
 
   case 248:
-#line 1157 "parser.y"
+#line 1156 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval | yyvsp[0].ulval; }
     break;
 
   case 249:
-#line 1158 "parser.y"
+#line 1157 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval ^ yyvsp[0].ulval; }
     break;
 
   case 250:
-#line 1159 "parser.y"
+#line 1158 "parser.y"
     { yyval.ulval = yyvsp[-2].ulval & yyvsp[0].ulval; }
     break;
 
   case 251:
-#line 1160 "parser.y"
+#line 1159 "parser.y"
     { yyval.ulval = !yyvsp[0].ulval; }
     break;
 
   case 252:
-#line 1161 "parser.y"
+#line 1160 "parser.y"
     { yyval.ulval = -yyvsp[0].ulval; }
     break;
 
   case 253:
-#line 1162 "parser.y"
+#line 1161 "parser.y"
     { yyval.ulval = yyvsp[-1].ulval; }
     break;
 
@@ -3237,7 +3236,7 @@ yyreduce:
     }
 
 /* Line 999 of yacc.c.  */
-#line 3241 "y.tab.c"
+#line 3240 "y.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
@@ -3443,7 +3442,7 @@ yyreturn:
 }
 
 
-#line 1165 "parser.y"
+#line 1164 "parser.y"
 
 
 #endif  /* if BX_DEBUGGER */

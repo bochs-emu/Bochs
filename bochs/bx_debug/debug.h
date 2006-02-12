@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.19 2006-02-11 21:19:22 sshwarts Exp $
+// $Id: debug.h,v 1.20 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -192,6 +192,15 @@ typedef enum
   bkStepOver
 } BreakpointKind;
 
+typedef enum _show_flags {
+  Flag_call    = 0x1,
+  Flag_ret     = 0x2,
+  Flag_softint = 0x4,
+  Flag_iret    = 0x8,
+  Flag_intsig  = 0x10,
+  Flag_mode    = 0x20
+} show_flags_t;
+
 // Flex defs
 extern int bxlex(void);
 extern char *bxtext;  // Using the pointer option rather than array
@@ -290,7 +299,7 @@ void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_info_ivt_command(bx_num_range);
 void bx_dbg_dump_table(void);
-int bx_dbg_symbolic_output(void); /* BW */
+int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
 char* bx_dbg_symbolic_address(Bit32u context, Bit32u eip, Bit32u base);
 char* bx_dbg_symbolic_address_16bit(Bit32u eip, Bit32u cs);

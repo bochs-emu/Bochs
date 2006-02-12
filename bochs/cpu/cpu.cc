@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.128 2006-02-05 19:48:28 sshwarts Exp $
+// $Id: cpu.cc,v 1.129 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -874,7 +874,7 @@ void BX_CPU_C::trap_debugger (bx_bool callnow)
 
 
 #if BX_DEBUGGER
-extern unsigned int dbg_show_mask;
+extern unsigned dbg_show_mask;
 
 bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
 { 
@@ -902,10 +902,10 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
     return(1);
   }
 
-  if( (BX_CPU_THIS_PTR show_flag) & (dbg_show_mask)) {
-    int rv;
-    if((rv = bx_dbg_symbolic_output()))
-      return(rv);
+  // support for 'show' command in debugger
+  if(dbg_show_mask) {
+    int rv = bx_dbg_show_symbolic();
+    if (rv) return(rv);
   }
 
   // see if debugger is looking for iaddr breakpoint of any type

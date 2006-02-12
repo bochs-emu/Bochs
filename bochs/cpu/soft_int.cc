@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.26 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: soft_int.cc,v 1.27 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ void BX_CPU_C::INT1(bxInstruction_c *i)
   // which is useful for an ICE system.
 
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_int;
+  BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
@@ -91,7 +91,7 @@ void BX_CPU_C::INT3(bxInstruction_c *i)
   // INT 3 is not IOPL sensitive
 
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_int;
+  BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
   interrupt(3, 1, 0, 0);
@@ -104,7 +104,7 @@ void BX_CPU_C::INT3(bxInstruction_c *i)
 void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_int;
+  BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
   Bit8u vector = i->Ib();
@@ -151,7 +151,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 void BX_CPU_C::INTO(bxInstruction_c *i)
 {
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR show_flag |= Flag_int;
+  BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
   if (get_OF()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.31 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.32 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -399,7 +399,6 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-  BX_CPU_THIS_PTR show_eip = EIP;
 #endif
 
   if (v8086_mode()) {

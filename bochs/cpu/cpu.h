@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.257 2006-01-31 19:45:33 sshwarts Exp $
+// $Id: cpu.h,v 1.258 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1180,9 +1180,8 @@ public: // for now...
   Bit8u stop_reason;
   Bit8u trace_reg;
   Bit8u mode_break;
-  bx_bool dbg_cpu_mode; /* contains current mode */
-  bx_address show_eip;   /* record eip at special instr f.ex eip */
-  Bit8u show_flag;  /* shows instr class executed */
+  bx_bool dbg_cpu_mode;  /* contains current mode */
+  unsigned show_flag;
   bx_guard_found_t guard_found;
 #endif
   Bit8u trace;
@@ -3296,16 +3295,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxGroup15         BxGroupN
 #define BxGroup16         BxGroupN
 // <TAG-DEFINES-DECODE-END>
-
-#if BX_DEBUGGER
-typedef enum _show_flags {
-      Flag_call   = 0x1,
-      Flag_ret    = 0x2,
-      Flag_int    = 0x4,
-      Flag_iret   = 0x8,
-      Flag_intsig = 0x10
-} show_flags_t;
-#endif
 
 // Can be used as LHS or RHS.
 #define RMAddr(i)  (BX_CPU_THIS_PTR address_xlation.rm_addr)

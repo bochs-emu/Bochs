@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.40 2005-11-11 22:02:42 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.41 2006-02-12 20:21:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -306,7 +306,6 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
-  BX_CPU_THIS_PTR show_eip = RIP;
 #endif
 
   BX_ASSERT(protected_mode());
