@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.20 2006-02-12 20:21:36 sshwarts Exp $
+// $Id: debug.h,v 1.21 2006-02-13 18:28:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -220,15 +220,17 @@ typedef struct {
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
 Bit16u bx_dbg_get_ip (void);
 Bit32u bx_dbg_get_eip(void);
-bx_address bx_dbg_get_intruction_pointer(void);
+bx_address bx_dbg_get_instruction_pointer(void);
 Bit8u bx_dbg_get_reg8l_value(unsigned reg);
 Bit8u bx_dbg_get_reg8h_value(unsigned reg);
 Bit16u bx_dbg_get_reg16_value(unsigned reg);
 Bit32u bx_dbg_get_reg32_value(unsigned reg);
+Bit64u bx_dbg_get_reg64_value(unsigned reg);
 void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value);
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value);
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
+void bx_dbg_set_reg64_value(unsigned reg, Bit64u value);
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
 bx_num_range make_num_range (Bit64s from, Bit64s to);

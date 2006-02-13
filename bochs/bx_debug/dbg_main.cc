@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.55 2006-02-12 20:43:01 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.56 2006-02-13 18:28:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -834,6 +834,21 @@ void bx_dbg_print_string_command(bx_address start_addr)
   dbg_printf("\n");
 }
 
+static void dbg_print_guard_found(unsigned cpu_mode, Bit32u cs, bx_address eip, bx_address laddr)
+{
+#if BX_SUPPORT_X86_64
+  if (cpu_mode == BX_MODE_LONG_64) {
+    dbg_printf("0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")", cs, eip, laddr);
+    return;
+  }
+#endif
+
+  if (cpu_mode >= BX_MODE_IA32_PROTECTED)
+    dbg_printf("%04x:%08x (0x%08x)", cs, (unsigned) eip, (unsigned) laddr);
+  else // real or v8086 mode
+    dbg_printf("%04x:%04x (0x%08x)", cs, (unsigned) eip, (unsigned) laddr);
+}
+
 unsigned dbg_show_mask = 0;
 
 #define BX_DBG_SHOW_CALLRET  (Flag_call|Flag_ret)
@@ -1005,34 +1020,34 @@ int bx_dbg_show_symbolic(void)
   /* interrupts */
   if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_softint) {
-      dbg_printf (FMT_TICK ": softint 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
+      dbg_printf(FMT_TICK ": softint ", bx_pc_system.time_ticks());
+      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_printf("\n");
     }
   }
   
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((BX_CPU(dbg_cpu)->show_flag & Flag_intsig) && !(BX_CPU(dbg_cpu)->show_flag & Flag_softint)) {
-      dbg_printf (FMT_TICK ": exception (not softint) 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
+      dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
+      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_printf("\n");
     }
   }
 
   if (dbg_show_mask & BX_DBG_SHOW_IRET) {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_iret) {
-      dbg_printf (FMT_TICK ": iret 0x%04x:" FMT_ADDRX " (0x" FMT_ADDRX ")\n",
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
+      dbg_printf(FMT_TICK ": iret ", bx_pc_system.time_ticks());
+      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
         BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_printf("\n");
     }
   }
-  
+
   /* calls */
   if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
   {
@@ -1041,16 +1056,17 @@ int bx_dbg_show_symbolic(void)
       bx_bool valid;
 
       BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy, &valid);
-      dbg_printf (FMT_TICK ": call 0x%04x:" FMT_ADDRX " 0x" FMT_ADDRX " (%08x) %s",
-        bx_pc_system.time_ticks(),
-        BX_CPU(dbg_cpu)->guard_found.cs,
-        BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr,
-        phy,
-        bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
+      dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
+      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
+        BX_CPU(dbg_cpu)->guard_found.laddr);
+      if (!valid) dbg_printf(" phys not valid");
+      else {
+        dbg_printf(" (phy: 0x%08x) %s", phy,
+          bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3,
               BX_CPU(dbg_cpu)->guard_found.eip,
               BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip));
-      if(!valid) dbg_printf(" phys not valid");
+      }
       dbg_printf("\n");
     }
   }
@@ -1385,12 +1401,11 @@ void bx_dbg_print_guard_results(void)
 #if BX_DBG_SUPPORT_VIR_BPOINT
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
-      dbg_printf("(%u) Breakpoint %u, " FMT_ADDRX " (0x%04x:" FMT_ADDRX ")\n",
-            cpu,
-            bx_guard.iaddr.vir[i].bpoint_id,
-            BX_CPU(cpu)->guard_found.laddr,
-            BX_CPU(cpu)->guard_found.cs,
-            BX_CPU(cpu)->guard_found.eip);
+      dbg_printf("(%u) Breakpoint %u, in ");
+      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+            BX_CPU(cpu)->guard_found.cs, BX_CPU(cpu)->guard_found.eip,
+            BX_CPU(cpu)->guard_found.laddr);
+      dbg_printf("\n");
     }
 #endif
 #if BX_DBG_SUPPORT_LIN_BPOINT
@@ -3279,7 +3294,7 @@ Bit8u bx_dbg_get_reg8l_value(unsigned reg)
   if (reg < BX_GENERAL_REGISTERS)
     return BX_CPU(dbg_cpu)->get_reg8l(reg);
 
-  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
   return 0;
 }
 
@@ -3288,7 +3303,7 @@ Bit8u bx_dbg_get_reg8h_value(unsigned reg)
   if (reg < BX_GENERAL_REGISTERS)
     return BX_CPU(dbg_cpu)->get_reg8h(reg);
 
-  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
   return 0;
 }
 
@@ -3297,7 +3312,7 @@ Bit16u bx_dbg_get_reg16_value(unsigned reg)
   if (reg < BX_GENERAL_REGISTERS)
     return BX_CPU(dbg_cpu)->get_reg16(reg);
 
-  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  dbg_printf("Unknown 16B register [%d] !!!\n", reg);
   return 0;
 }
 
@@ -3306,7 +3321,18 @@ Bit32u bx_dbg_get_reg32_value(unsigned reg)
   if (reg < BX_GENERAL_REGISTERS)
     return BX_CPU(dbg_cpu)->get_reg32(reg);
 
-  fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+  dbg_printf("Unknown 32B register [%d] !!!\n", reg);
+  return 0;
+}
+
+Bit64u bx_dbg_get_reg64_value(unsigned reg)
+{
+#if BX_SUPPORT_X86_64
+  if (reg < BX_GENERAL_REGISTERS)
+    return BX_CPU(dbg_cpu)->get_reg64(reg);
+#endif
+
+  dbg_printf("Unknown 64B register [%d] !!!\n", reg);
   return 0;
 }
 
@@ -3315,7 +3341,7 @@ void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value)
   if (reg < BX_GENERAL_REGISTERS)
     BX_CPU(dbg_cpu)->set_reg8l(reg, value);
   else
-    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+    dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
 }
 
 void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
@@ -3323,7 +3349,7 @@ void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
   if (reg < BX_GENERAL_REGISTERS)
     BX_CPU(dbg_cpu)->set_reg8h(reg, value);
   else
-    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+    dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
 }
 
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
@@ -3331,7 +3357,7 @@ void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
   if (reg < BX_GENERAL_REGISTERS)
     BX_CPU(dbg_cpu)->set_reg16(reg, value);
   else
-    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+    dbg_printf("Unknown 16B register [%d] !!!\n", reg);
 }
 
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
@@ -3339,7 +3365,17 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
   if (reg < BX_GENERAL_REGISTERS)
     BX_CPU(dbg_cpu)->set_reg32(reg, value);
   else
-    fprintf(stderr, "Unknown register [%d] !!!\n", reg);
+    dbg_printf("Unknown 32B register [%d] !!!\n", reg);
+}
+
+void bx_dbg_set_reg64_value(unsigned reg, Bit64u value)
+{
+#if BX_SUPPORT_X86_64
+  if (reg < BX_GENERAL_REGISTERS)
+    BX_CPU(dbg_cpu)->set_reg64(reg, value);
+  else
+#endif
+    dbg_printf("Unknown 64B register [%d] !!!\n", reg);
 }
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no)

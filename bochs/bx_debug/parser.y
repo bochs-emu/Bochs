@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.13 2006-02-12 20:21:36 sshwarts Exp $
+// $Id: parser.y,v 1.14 2006-02-13 18:28:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -18,47 +18,21 @@
 
 %union {
   char    *sval;
-  Bit32u   uval;
-  Bit64u   ulval;
+  Bit64u   uval;
   bx_bool  bval;
   bx_num_range uval_range;
 }
 
 // Common registers
-%type <uval> BX_TOKEN_8BH_REG
-%type <uval> BX_TOKEN_8BL_REG
-%type <uval> BX_TOKEN_16B_REG
-%type <uval> BX_TOKEN_32B_REG
 %type <uval> BX_TOKEN_NONSEG_REG
 %type <uval> BX_TOKEN_SEGREG
 %type <bval> BX_TOKEN_TOGGLE_ON_OFF
 
-%token <uval> BX_TOKEN_REG_AL
-%token <uval> BX_TOKEN_REG_BL
-%token <uval> BX_TOKEN_REG_CL
-%token <uval> BX_TOKEN_REG_DL
-%token <uval> BX_TOKEN_REG_AH
-%token <uval> BX_TOKEN_REG_BH
-%token <uval> BX_TOKEN_REG_CH
-%token <uval> BX_TOKEN_REG_DH
-%token <uval> BX_TOKEN_REG_AX
-%token <uval> BX_TOKEN_REG_BX
-%token <uval> BX_TOKEN_REG_CX
-%token <uval> BX_TOKEN_REG_DX
-%token <uval> BX_TOKEN_REG_EAX
-%token <uval> BX_TOKEN_REG_EBX
-%token <uval> BX_TOKEN_REG_ECX
-%token <uval> BX_TOKEN_REG_EDX
-%token <uval> BX_TOKEN_REG_SI
-%token <uval> BX_TOKEN_REG_DI
-%token <uval> BX_TOKEN_REG_BP
-%token <uval> BX_TOKEN_REG_SP
-%token <uval> BX_TOKEN_REG_IP
-%token <uval> BX_TOKEN_REG_ESI
-%token <uval> BX_TOKEN_REG_EDI
-%token <uval> BX_TOKEN_REG_EBP
-%token <uval> BX_TOKEN_REG_ESP
-%token <uval> BX_TOKEN_REG_EIP
+%token <uval> BX_TOKEN_8BH_REG
+%token <uval> BX_TOKEN_8BL_REG
+%token <uval> BX_TOKEN_16B_REG
+%token <uval> BX_TOKEN_32B_REG
+%token <uval> BX_TOKEN_64B_REG
 %token <uval> BX_TOKEN_CS
 %token <uval> BX_TOKEN_ES
 %token <uval> BX_TOKEN_SS
@@ -138,7 +112,6 @@
 %token <sval> BX_TOKEN_WHERE
 %token <sval> BX_TOKEN_PRINT_STRING
 %token <uval> BX_TOKEN_NUMERIC
-%token <ulval> BX_TOKEN_LONG_NUMERIC
 %token <sval> BX_TOKEN_NE2000
 %token <sval> BX_TOKEN_PIC
 %token <sval> BX_TOKEN_PAGE
@@ -146,12 +119,16 @@
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_VGA
 %token <sval> BX_TOKEN_COMMAND
+%token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_RSHIFT
 %token BX_TOKEN_LSHIFT
+%token BX_TOKEN_REG_IP
+%token BX_TOKEN_REG_EIP
+%token BX_TOKEN_REG_RIP
 %type <uval> optional_numeric
 %type <uval_range> numeric_range optional_numeric_range
-%type <ulval> vexpression
-%type <ulval> expression
+%type <uval> vexpression
+%type <uval> expression
 
 %left '+' '-' '|' '^'
 %left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
@@ -227,12 +204,12 @@ BX_TOKEN_SEGREG:
 ;
 
 timebp_command:
-      BX_TOKEN_TIMEBP BX_TOKEN_LONG_NUMERIC '\n'
+      BX_TOKEN_TIMEBP BX_TOKEN_NUMERIC '\n'
         {
         bx_dbg_timebp_command(0, $2);
 	free($1);
 	}
-    | BX_TOKEN_TIMEBP_ABSOLUTE BX_TOKEN_LONG_NUMERIC '\n'
+    | BX_TOKEN_TIMEBP_ABSOLUTE BX_TOKEN_NUMERIC '\n'
         {
         bx_dbg_timebp_command(1, $2);
 	free($1);
@@ -447,6 +424,10 @@ set_command:
     | BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'
         { 
         bx_dbg_set_reg32_value($2, $4);
+        }
+    | BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'
+        { 
+        bx_dbg_set_reg64_value($2, $4);
         }
     ;
 
@@ -1061,65 +1042,27 @@ calc_command:
      }
 ;
 
-BX_TOKEN_8BH_REG:
-     BX_TOKEN_REG_AH
-   | BX_TOKEN_REG_BH
-   | BX_TOKEN_REG_CH
-   | BX_TOKEN_REG_DH
-   { $$=$1; }
-;
-
-BX_TOKEN_8BL_REG:
-     BX_TOKEN_REG_AL
-   | BX_TOKEN_REG_BL
-   | BX_TOKEN_REG_CL
-   | BX_TOKEN_REG_DL
-   { $$=$1; }
-;
-
-BX_TOKEN_16B_REG:
-     BX_TOKEN_REG_AX
-   | BX_TOKEN_REG_BX
-   | BX_TOKEN_REG_CX
-   | BX_TOKEN_REG_DX
-   | BX_TOKEN_REG_SI
-   | BX_TOKEN_REG_DI
-   | BX_TOKEN_REG_BP
-   | BX_TOKEN_REG_SP
-   { $$=$1; }
-;
-
-BX_TOKEN_32B_REG:
-     BX_TOKEN_REG_EAX
-   | BX_TOKEN_REG_EBX
-   | BX_TOKEN_REG_ECX
-   | BX_TOKEN_REG_EDX
-   | BX_TOKEN_REG_ESI
-   | BX_TOKEN_REG_EDI
-   | BX_TOKEN_REG_EBP
-   | BX_TOKEN_REG_ESP
-   { $$=$1; }
-;
-
 BX_TOKEN_NONSEG_REG:
      BX_TOKEN_8BL_REG
    | BX_TOKEN_8BH_REG
    | BX_TOKEN_16B_REG
    | BX_TOKEN_32B_REG
+   | BX_TOKEN_64B_REG
    { $$=$1; }
 ;
 
 /* Arithmetic expression for vbreak command */
 vexpression:
      BX_TOKEN_NUMERIC                { $$ = $1; }
-   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
    | BX_TOKEN_8BL_REG                { $$ = bx_dbg_get_reg8l_value($1); }
    | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
+   | BX_TOKEN_64B_REG                { $$ = bx_dbg_get_reg64_value($1); }
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
+   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_instruction_pointer(); }
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
@@ -1137,15 +1080,16 @@ vexpression:
 /* Same as vexpression but includes the ':' operator - used in most commands */
 expression:
      BX_TOKEN_NUMERIC                { $$ = $1; }
-   | BX_TOKEN_LONG_NUMERIC           { $$ = $1; }
    | BX_TOKEN_STRING                 { $$ = bx_dbg_get_symbol_value($1); free($1);}
    | BX_TOKEN_8BL_REG                { $$ = bx_dbg_get_reg8l_value($1); }
    | BX_TOKEN_8BH_REG                { $$ = bx_dbg_get_reg8h_value($1); }
    | BX_TOKEN_16B_REG                { $$ = bx_dbg_get_reg16_value($1); }
    | BX_TOKEN_32B_REG                { $$ = bx_dbg_get_reg32_value($1); }
+   | BX_TOKEN_64B_REG                { $$ = bx_dbg_get_reg64_value($1); }
    | BX_TOKEN_SEGREG                 { $$ = bx_dbg_get_selector_value($1); }
    | BX_TOKEN_REG_IP                 { $$ = bx_dbg_get_ip (); }
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
+   | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_instruction_pointer(); }
    | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }
