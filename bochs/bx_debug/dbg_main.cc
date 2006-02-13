@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.56 2006-02-13 18:28:13 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.57 2006-02-13 21:32:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2744,7 +2744,7 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, linearaddr=%08x, len=%05x %s, %s%s%s, %d-bit addrs\n", 
+      dbg_printf("Code segment, linearaddr=%08x, len=%05x %s, %s%s%s, %d-bit\n", 
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
@@ -2788,21 +2788,29 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
   }
 }
 
-void bx_dbg_info_idt_command(bx_num_range range)
+void bx_dbg_info_idt_command(unsigned from, unsigned to)
 {
   bx_dbg_cpu_t cpu;
   BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
-  int n, print_table = 0;
-  if (range.to == EMPTY_ARG) {
-    // show all entries
-    range.from = 0;
-    range.to = (cpu.idtr.limit) / 8;
-    print_table = 1;
+  bx_bool all = 0;
+
+  if (to == (unsigned) EMPTY_ARG) {
+    to = from;
+    if(from == (unsigned) EMPTY_ARG) { from = 0; to = 255; all = 1; }
   }
-  if (print_table)
-    dbg_printf("Interrupt Descriptor Table (0x%08x):\n", cpu.idtr.base);
-  for (n = (int)range.from; n<=(int)range.to; n++) {
-    unsigned char entry[8];
+  if (from > 255 || to > 255) {
+    dbg_printf("IDT entry should be [0-255], 'info idt' command malformed\n");
+    return;
+  }
+  if (from > to) {
+    unsigned temp = from;
+    from = to;
+    to = temp;
+  }
+
+  dbg_printf("Interrupt Descriptor Table (base=0x%08x):\n", cpu.idtr.base);
+  for (unsigned n = from; n<=to; n++) {
+    Bit8u entry[8];
     if (bx_dbg_read_linear(dbg_cpu, cpu.idtr.base + 8*n, 8, entry)) {
       dbg_printf("IDT[0x%02x]=", n);
       bx_dbg_print_descriptor(entry, 0);
@@ -2812,25 +2820,33 @@ void bx_dbg_info_idt_command(bx_num_range range)
         n, cpu.idtr.base);
     }
   }
-  if (print_table) 
-    dbg_printf("You can list individual entries with 'info idt NUM' or groups with 'info idt NUMNUM'\n");
+  if (all)
+    dbg_printf("You can list individual entries with 'info idt [NUM]' or groups with 'info idt [NUM] [NUM]'\n");
 }
 
-void bx_dbg_info_gdt_command(bx_num_range range)
+void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 {
   bx_dbg_cpu_t cpu;
   BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
-  int n, print_table = 0;
-  if (range.to == EMPTY_ARG) {
-    // show all entries
-    range.from = 0;
-    range.to = (cpu.gdtr.limit) / 8;
-    print_table = 1;
+  bx_bool all = 0;
+
+  if (to == (unsigned) EMPTY_ARG) {
+    to = from;
+    if(from == (unsigned) EMPTY_ARG) { from = 0; to = 0xffff; all = 1; }
   }
-  if (print_table)
-    dbg_printf("Global Descriptor Table (0x%08x):\n", cpu.gdtr.base);
-  for (n = (int)range.from; n<=(int)range.to; n++) {
-    unsigned char entry[8];
+  if (from > 0xffff || to > 0xffff) {
+    dbg_printf("IDT entry should be [0-65535], 'info gdt' command malformed\n");
+    return;
+  }
+  if (from > to) {
+    unsigned temp = from;
+    from = to;
+    to = temp;
+  }
+
+  dbg_printf("Global Descriptor Table (base=0x%08x):\n", cpu.gdtr.base);
+  for (unsigned n = from; n<=to; n++) {
+    Bit8u entry[8];
     if (bx_dbg_read_linear(dbg_cpu, cpu.gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
       bx_dbg_print_descriptor (entry, 0);
@@ -2840,18 +2856,115 @@ void bx_dbg_info_gdt_command(bx_num_range range)
         n, cpu.gdtr.base);
     }
   }
-  if (print_table) 
-    dbg_printf("You can list individual entries with 'info gdt NUM'.\n");
+  if (all)
+    dbg_printf("You can list individual entries with 'info gdt [NUM]' or groups with 'info gdt [NUM] [NUM]'\n");
 }
 
-void bx_dbg_info_ldt_command(bx_num_range n)
+void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 {
   bx_dbg_cpu_t cpu;
   BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
   dbg_printf("Local Descriptor Table output not implemented\n");
 }
 
-static void bx_dbg_print_tss (unsigned char *tss, int len)
+/*form RB list*/
+static char* bx_dbg_ivt_desc(int intnum)
+{ 
+  char* ret = "";
+  switch (intnum)
+  { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
+    case 0x01 : ret = "SINGLE STEP"                         ; break;
+    case 0x02 : ret = "NON-MASKABLE INTERRUPT"              ; break;
+    case 0x03 : ret = "BREAKPOINT"                          ; break;
+    case 0x04 : ret = "INT0 DETECTED OVERFLOW"              ; break;
+    case 0x05 : ret = "BOUND RANGE EXCEED"                  ; break;
+    case 0x06 : ret = "INVALID OPCODE"                      ; break;
+    case 0x07 : ret = "PROCESSOR EXTENSION NOT AVAILABLE"   ; break;
+    case 0x08 : ret = "IRQ0 - SYSTEM TIMER"                 ; break;
+    case 0x09 : ret = "IRQ1 - KEYBOARD DATA READY"          ; break;
+    case 0x0a : ret = "IRQ2 - LPT2"                         ; break;
+    case 0x0b : ret = "IRQ3 - COM2"                         ; break;
+    case 0x0c : ret = "IRQ4 - COM1"                         ; break;
+    case 0x0d : ret = "IRQ5 - FIXED DISK"                   ; break;
+    case 0x0e : ret = "IRQ6 - DISKETTE CONTROLLER"          ; break;
+    case 0x0f : ret = "IRQ7 - PARALLEL PRINTER"             ; break;
+    case 0x10 : ret = "VIDEO"                               ; break;
+    case 0x11 : ret = "GET EQUIPMENT LIST"                  ; break;
+    case 0x12 : ret = "GET MEMORY SIZE"                     ; break;
+    case 0x13 : ret = "DISK"                                ; break;
+    case 0x14 : ret = "SERIAL"                              ; break;
+    case 0x15 : ret = "SYSTEM"                              ; break;
+    case 0x16 : ret = "KEYBOARD"                            ; break;
+    case 0x17 : ret = "PRINTER"                             ; break;
+    case 0x18 : ret = "CASETTE BASIC"                       ; break;
+    case 0x19 : ret = "BOOTSTRAP LOADER"                    ; break;
+    case 0x1a : ret = "TIME"                                ; break;
+    case 0x1b : ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
+    case 0x1c : ret = "TIME - SYSTEM TIMER TICK"            ; break;
+    case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
+    case 0x1e : ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
+    case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
+    case 0x70 : ret = "IRQ8 - CMOS REAL-TIME CLOCK"         ; break;
+    case 0x71 : ret = "IRQ9 - REDIRECTED TO INT 0A BY BIOS" ; break;
+    case 0x72 : ret = "IRQ10 - RESERVED"                    ; break;
+    case 0x73 : ret = "IRQ11 - RESERVED"                    ; break;
+    case 0x74 : ret = "IRQ12 - POINTING DEVICE"             ; break;
+    case 0x75 : ret = "IRQ13 - MATH COPROCESSOR EXCEPTION"  ; break;
+    case 0x76 : ret = "IRQ14 - HARD DISK CONTROLLER OPERATION COMPLETE"; break;
+    case 0x77 : ret = "IRQ15 - SECONDARY IDE CONTROLLER OPERATION COMPLETE"; break;
+    default   : ret = ""                                    ; break;
+  }
+  return ret;
+}
+
+void bx_dbg_info_ivt_command(unsigned from, unsigned to)
+{ 
+  bx_dbg_cpu_t cpu;
+  unsigned char buff[4];
+  Bit16u seg;
+  Bit16u off;
+  bx_bool all = 0;
+
+  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  
+  if ((cpu.cr0 & 1) == 0)
+  { 
+    if (to == (unsigned) EMPTY_ARG) {
+      to = from;
+      if(from == (unsigned) EMPTY_ARG) { from = 0; to = 255; all = 1; }
+    }
+    if (from > 255 || to > 255) {
+      dbg_printf("IVT entry should be [0-255], 'info ivt' command malformed\n");
+      return;
+    }
+    if (from > to) {
+      unsigned temp = from;
+      from = to;
+      to = temp;
+    }
+
+    for (unsigned i = from; i <= to; i++)
+    { 
+      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
+#ifdef BX_LITTLE_ENDIAN
+      seg = *(Bit16u*)(&buff[2]);
+      off = *(Bit16u*)(&buff[0]);
+#else
+      seg = (buff[3] << 8) | buff[2];
+      off = (buff[1] << 8) | buff[0];
+#endif
+      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + ((seg << 4) + off), sizeof(buff), buff);
+      dbg_printf("INT# %02x > %04X:%04X (%08X) %s%s\n", i, seg, off, 
+         cpu.idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), 
+         (buff[0] == 0xcf) ? " ; dummy iret" : "");
+    }
+    if (all) dbg_printf("You can list individual entries with 'info ivt [NUM]' or groups with 'info ivt [NUM] [NUM]'\n");
+  }
+  else
+    dbg_printf("cpu in protected mode, use info idt\n");
+}
+
+static void bx_dbg_print_tss(unsigned char *tss, int len)
 {
   if (len<104) {
     dbg_printf("Invalid tss length (limit must be greater then 103)\n");
@@ -2882,32 +2995,24 @@ static void bx_dbg_print_tss (unsigned char *tss, int len)
   dbg_printf("i/o map: 0x%04x\n", *(Bit16u*)(tss+0x66));
 }
 
-void bx_dbg_info_tss_command(bx_num_range range)
+void bx_dbg_info_tss_command(void)
 {
   bx_dbg_cpu_t cpu;
   BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
 
-  int print_table = 0;
-  if (range.to == EMPTY_ARG) {
-    // show all entries
-    Bit32u laddr = (cpu.tr.des_l>>16) |
-                   ((cpu.tr.des_h<<16)&0x00ff0000) |
+  Bit32u laddr = (cpu.tr.des_l>>16) |
+                  ((cpu.tr.des_h<<16)&0x00ff0000) |
                    (cpu.tr.des_h & 0xff000000);
-    Bit32u len = (cpu.tr.des_l & 0xffff) + 1;
+  Bit32u len = (cpu.tr.des_l & 0xffff) + 1;
 
-    dbg_printf("tr:s=0x%x, base=0x%x, valid=%u\n",
+  dbg_printf("tr:s=0x%x, base=0x%x, valid=%u\n",
       (unsigned) cpu.tr.sel, laddr, (unsigned) cpu.tr.valid);
 
-    Bit32u paddr;
-    bx_bool paddr_valid;
-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
+  bx_bool paddr_valid;
+  Bit32u paddr;
+  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
 
-    bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
-
-    range.from = 0;
-    range.to = (cpu.gdtr.limit) / 8;
-    print_table = 1;
-  }
+  bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
 }
 
 bx_num_range make_num_range (Bit64s from, Bit64s to)
@@ -3171,100 +3276,6 @@ void bx_dbg_dump_table(void)
   if(start_lin != 1)
     dbg_printf("0x%08x-0x%08x -> 0x%08x-0x%08x\n",
          start_lin, 0xffffffff, start_phy, start_phy + (0xffffffff-start_lin));
-}
-
-/*form RB list*/
-static char* bx_dbg_ivt_desc(int intnum)
-{ 
-  char* ret = "";
-  switch (intnum)
-  { case 0x00 : ret = "DIVIDE ERROR"                        ; break;
-    case 0x01 : ret = "SINGLE STEP"                         ; break;
-    case 0x02 : ret = "NON-MASKABLE INTERRUPT"              ; break;
-    case 0x03 : ret = "BREAKPOINT"                          ; break;
-    case 0x04 : ret = "INT0 DETECTED OVERFLOW"              ; break;
-    case 0x05 : ret = "BOUND RANGE EXCEED"                  ; break;
-    case 0x06 : ret = "INVALID OPCODE"                      ; break;
-    case 0x07 : ret = "PROCESSOR EXTENSION NOT AVAILABLE"   ; break;
-    case 0x08 : ret = "IRQ0 - SYSTEM TIMER"                 ; break;
-    case 0x09 : ret = "IRQ1 - KEYBOARD DATA READY"          ; break;
-    case 0x0a : ret = "IRQ2 - LPT2"                         ; break;
-    case 0x0b : ret = "IRQ3 - COM2"                         ; break;
-    case 0x0c : ret = "IRQ4 - COM1"                         ; break;
-    case 0x0d : ret = "IRQ5 - FIXED DISK"                   ; break;
-    case 0x0e : ret = "IRQ6 - DISKETTE CONTROLLER"          ; break;
-    case 0x0f : ret = "IRQ7 - PARALLEL PRINTER"             ; break;
-    case 0x10 : ret = "VIDEO"                               ; break;
-    case 0x11 : ret = "GET EQUIPMENT LIST"                  ; break;
-    case 0x12 : ret = "GET MEMORY SIZE"                     ; break;
-    case 0x13 : ret = "DISK"                                ; break;
-    case 0x14 : ret = "SERIAL"                              ; break;
-    case 0x15 : ret = "SYSTEM"                              ; break;
-    case 0x16 : ret = "KEYBOARD"                            ; break;
-    case 0x17 : ret = "PRINTER"                             ; break;
-    case 0x18 : ret = "CASETTE BASIC"                       ; break;
-    case 0x19 : ret = "BOOTSTRAP LOADER"                    ; break;
-    case 0x1a : ret = "TIME"                                ; break;
-    case 0x1b : ret = "KEYBOARD - CONTROL-BREAK HANDLER"    ; break;
-    case 0x1c : ret = "TIME - SYSTEM TIMER TICK"            ; break;
-    case 0x1d : ret = "SYSTEM DATA - VIDEO PARAMETER TABLES"; break;
-    case 0x1e : ret = "SYSTEM DATA - DISKETTE PARAMETERS"   ; break;
-    case 0x1f : ret = "SYSTEM DATA - 8x8 GRAPHICS FONT"     ; break;
-    case 0x70 : ret = "IRQ8 - CMOS REAL-TIME CLOCK"         ; break;
-    case 0x71 : ret = "IRQ9 - REDIRECTED TO INT 0A BY BIOS" ; break;
-    case 0x72 : ret = "IRQ10 - RESERVED"                    ; break;
-    case 0x73 : ret = "IRQ11 - RESERVED"                    ; break;
-    case 0x74 : ret = "IRQ12 - POINTING DEVICE"             ; break;
-    case 0x75 : ret = "IRQ13 - MATH COPROCESSOR EXCEPTION"  ; break;
-    case 0x76 : ret = "IRQ14 - HARD DISK CONTROLLER OPERATION COMPLETE"; break;
-    case 0x77 : ret = "IRQ15 - SECONDARY IDE CONTROLLER OPERATION COMPLETE"; break;
-    default   : ret = ""                                    ; break;
-  }
-  return ret;
-}
-
-void bx_dbg_info_ivt_command(bx_num_range r)
-{ 
-  bx_dbg_cpu_t cpu;
-  int i;
-  unsigned char buff[4];
-  Bit16u seg;
-  Bit16u off;
-  int tail = 0;
-
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
-  
-  if ((cpu.cr0 & 1) == 0)
-  { 
-    if ((r.from == -1L) && (r.to == -1L))
-    { r.from = 0;
-      r.to = 256;
-      tail = 1;
-    } 
-    else if (r.to == r.from)
-    { r.to = r.from + 1L;
-    }
-    if ((r.from > r.to) || (r.from > 256) || (r.to > 256))
-    { dbg_printf("wrong range\n");
-      return;
-    }
-    for (i = (int)r.from; i < r.to; i++)
-    { 
-      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
-#ifdef BX_LITTLE_ENDIAN
-      seg = *(Bit16u*)(&buff[2]);
-      off = *(Bit16u*)(&buff[0]);
-#else
-      seg = (buff[3] << 8) | buff[2];
-      off = (buff[1] << 8) | buff[0];
-#endif
-      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + ((seg << 4) + off), sizeof(buff), buff);
-      dbg_printf("INT# %02x > %04X:%04X (%08X) %s%s\n", i, seg, off, cpu.idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), (buff[0] == 0xcf) ? " ; dummy iret" : "");
-    }
-    if (tail == 1) dbg_printf("You can list individual entries with 'info ivt NUM' or groups with 'info ivt NUM NUM'\n");
-  }
-  else
-    dbg_printf("cpu in protected mode, use info idt\n");
 }
 
 void bx_dbg_print_help(void)

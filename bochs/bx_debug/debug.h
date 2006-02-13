@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.21 2006-02-13 18:28:13 sshwarts Exp $
+// $Id: debug.h,v 1.22 2006-02-13 21:32:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -274,10 +274,11 @@ void bx_dbg_quit_command(void);
 #define BX_INFO_SSE_REGS 4
 void bx_dbg_info_registers_command(int); 
 void bx_dbg_info_dirty_command(void);
-void bx_dbg_info_idt_command(bx_num_range);
-void bx_dbg_info_gdt_command(bx_num_range);
-void bx_dbg_info_ldt_command(bx_num_range);
-void bx_dbg_info_tss_command(bx_num_range);
+void bx_dbg_info_ivt_command(unsigned from, unsigned to);
+void bx_dbg_info_idt_command(unsigned from, unsigned to);
+void bx_dbg_info_gdt_command(unsigned from, unsigned to);
+void bx_dbg_info_ldt_command(unsigned from, unsigned to);
+void bx_dbg_info_tss_command(void);
 void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
@@ -299,7 +300,6 @@ void bx_dbg_info_pic(void);
 void bx_dbg_info_vga(void);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
-void bx_dbg_info_ivt_command(bx_num_range);
 void bx_dbg_dump_table(void);
 int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);
