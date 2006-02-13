@@ -486,7 +486,7 @@ void disassembler::Jb(const x86_insn *insn)
         (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      bx_address target = db_eip + (Bit64s) imm64; target += db_base;
+      Bit64u target = db_eip + (Bit64s) imm64; target += db_base;
       dis_sprintf(" (0x%08x%08x)", 
         (unsigned)(target>>32), (unsigned)(target & 0xffffffff));
     }
@@ -539,7 +539,7 @@ void disassembler::Jd(const x86_insn *insn)
         (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      bx_address target = db_eip + (Bit64s) imm64; target += db_base;
+      Bit64u target = db_eip + (Bit64s) imm64; target += db_base;
       dis_sprintf(" (0x%08x%08x)", 
         (unsigned)(target>>32), (unsigned)(target & 0xffffffff));
     }
