@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.83 2006-02-14 19:00:08 sshwarts Exp $
+// $Id: init.cc,v 1.84 2006-02-14 20:03:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -739,6 +739,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR smi_pending = 0;
   BX_CPU_THIS_PTR nmi_pending = 0;
+  BX_CPU_THIS_PTR in_smm = 0;
 
 #if BX_CPU_LEVEL >= 2
   // MSW (Machine Status Word), so called on 286

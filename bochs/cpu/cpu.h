@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.259 2006-02-14 19:00:08 sshwarts Exp $
+// $Id: cpu.h,v 1.260 2006-02-14 20:03:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,11 +317,10 @@
 #endif
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
-#define BX_MODE_IA32_SMM        0x1   // special system management mode
-#define BX_MODE_IA32_V8086      0x2   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
-#define BX_MODE_IA32_PROTECTED  0x3   // CR0.PE=1, EFLAGS.VM=0   | 
-#define BX_MODE_LONG_COMPAT     0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=0
-#define BX_MODE_LONG_64         0x5   // EFER.LMA = 1, CR0.PE=1, CS.L=1
+#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
+#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
+#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
+#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -1173,6 +1172,7 @@ public: // for now...
   const Bit32u *currPageWriteStampPtr;
 #endif
   unsigned cpu_mode;
+  bx_bool  in_smm;
 
 #if BX_DEBUGGER
   Bit32u watchpoint;
@@ -3059,7 +3059,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void)
 
 BX_CPP_INLINE bx_bool BX_CPU_C::smm_mode(void)
 {
-  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_SMM);
+  return (BX_CPU_THIS_PTR in_smm);
 }
 
 BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
