@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.258 2006-02-12 20:21:36 sshwarts Exp $
+// $Id: cpu.h,v 1.259 2006-02-14 19:00:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,10 +317,11 @@
 #endif
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
-#define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
-#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
-#define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
-#define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
+#define BX_MODE_IA32_SMM        0x1   // special system management mode
+#define BX_MODE_IA32_V8086      0x2   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
+#define BX_MODE_IA32_PROTECTED  0x3   // CR0.PE=1, EFLAGS.VM=0   | 
+#define BX_MODE_LONG_COMPAT     0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=0
+#define BX_MODE_LONG_64         0x5   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -1124,6 +1125,8 @@ public: // for now...
   volatile bx_bool async_event;
   volatile bx_bool INTR;
   volatile bx_bool kill_bochs_request;
+  volatile bx_bool smi_pending;
+  volatile bx_bool nmi_pending;
 
   /* wether this CPU is the BSP always set for UP */
   bx_bool bsp;
@@ -2783,8 +2786,6 @@ public: // for now...
   BX_SMF Bit32u  inp32(Bit16u addr) BX_CPP_AttrRegparmN(1);
   BX_SMF void    outp32(Bit16u addr, Bit32u value) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
-  BX_SMF void    enter_protected_mode(void);
-  BX_SMF void    enter_real_mode(void);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
@@ -2875,6 +2876,7 @@ public: // for now...
   DECLARE_EFLAG_ACCESSOR   (TF,   8)
 
   BX_SMF BX_CPP_INLINE bx_bool real_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool smm_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
@@ -3053,6 +3055,11 @@ BX_CPP_INLINE Bit32u BX_CPU_C::get_EFER(void)
 BX_CPP_INLINE bx_bool BX_CPU_C::real_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_REAL);
+}
+
+BX_CPP_INLINE bx_bool BX_CPU_C::smm_mode(void)
+{
+  return (BX_CPU_THIS_PTR cpu_mode == BX_MODE_IA32_SMM);
 }
 
 BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)

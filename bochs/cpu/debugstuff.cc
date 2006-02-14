@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.56 2006-01-31 19:45:34 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.57 2006-02-14 19:00:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,6 +63,7 @@ const char* cpu_mode_string(unsigned cpu_mode)
 {
   static const char *cpu_mode_name[] = {
      "real mode",
+     "system management mode",
      "v8086 mode",
      "protected mode",
      "compatibility mode",
@@ -70,7 +71,7 @@ const char* cpu_mode_string(unsigned cpu_mode)
      "unknown mode"
   };
 
-  if(cpu_mode >= 5) cpu_mode = 5;
+  if(cpu_mode >= 6) cpu_mode = 6;
   return cpu_mode_name[cpu_mode];
 }
 

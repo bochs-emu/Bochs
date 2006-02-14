@@ -79,7 +79,6 @@ OBJS = \
 	arith8.o \
 	stack16.o \
 	protect_ctrl.o \
-	protect_ctrl_pro.o \
 	mult8.o \
 	data_xfer8.o \
 	vm8086.o \
@@ -93,6 +92,7 @@ OBJS = \
 	exception.o \
 	cpuid.o \
 	proc_ctrl.o \
+	smm.o \
 	lazy_flags.o \
 	stack_pro.o \
 	flag_ctrl_pro.o \
@@ -508,14 +508,14 @@ proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h
-protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+smm.o: smm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \
   ../fpu/control_w.h ../cpu/xmm.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h
-protect_ctrl_pro.o: protect_ctrl_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../bxversion.h ../gui/siminterface.h ../cpu/cpu.h ../cpu/descriptor.h \
   ../cpu/lazy_flags.h ../cpu/hostasm.h ../cpu/icache.h ../cpu/apic.h \
   ../cpu/i387.h ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h \

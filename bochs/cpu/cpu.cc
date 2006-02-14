@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.129 2006-02-12 20:21:36 sshwarts Exp $
+// $Id: cpu.cc,v 1.130 2006-02-14 19:00:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -567,12 +567,17 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   SMI
   //   INIT
   // (bochs doesn't support these)
+  if (BX_CPU_THIS_PTR smi_pending && BX_CPU_THIS_PTR cpu_mode != BX_MODE_IA32_SMM)
+  {
+     BX_PANIC(("SMI: system management mode still not implemented !"));
+     // clear SMI pending flag if accepting SMM !
+  }
 
   // Priority 4: Traps on Previous Instruction
   //   Breakpoints
   //   Debug Trap Exceptions (TF flag set or data/IO breakpoint)
-  if ( BX_CPU_THIS_PTR debug_trap &&
-       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) )
+  if (BX_CPU_THIS_PTR debug_trap &&
+       !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG))
   {
     // A trap may be inhibited on this boundary due to an instruction
     // which loaded SS.  If so we clear the inhibit_mask below
@@ -592,8 +597,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // an opportunity to check interrupts on the next instruction
     // boundary.
   }
-  else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () &&
-           BX_DBG_ASYNC_INTR)
+  else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
     Bit8u vector;
 

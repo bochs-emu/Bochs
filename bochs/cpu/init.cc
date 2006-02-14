@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.82 2006-01-25 22:20:00 sshwarts Exp $
+// $Id: init.cc,v 1.83 2006-02-14 19:00:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -735,16 +735,10 @@ void BX_CPU_C::reset(unsigned source)
 #  error "DR6,7: CPU > 6"
 #endif
 
-#if 0
-  /* test registers 3-7 (unimplemented) */
-  BX_CPU_THIS_PTR tr3 = 0;   /* undefined */
-  BX_CPU_THIS_PTR tr4 = 0;   /* undefined */
-  BX_CPU_THIS_PTR tr5 = 0;   /* undefined */
-  BX_CPU_THIS_PTR tr6 = 0;   /* undefined */
-  BX_CPU_THIS_PTR tr7 = 0;   /* undefined */
-#endif
-
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+
+  BX_CPU_THIS_PTR smi_pending = 0;
+  BX_CPU_THIS_PTR nmi_pending = 0;
 
 #if BX_CPU_LEVEL >= 2
   // MSW (Machine Status Word), so called on 286

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.3 2006-01-25 22:19:59 sshwarts Exp $
+// $Id: linux.cc,v 1.4 2006-02-14 19:00:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -97,12 +97,6 @@ void bx_dbg_info_linux_command (void)
   fprintf(stderr, "dr6:0x%x\n", (unsigned) cpu.dr6);
   fprintf(stderr, "dr7:0x%x\n", (unsigned) cpu.dr7);
 
-  fprintf(stderr, "tr3:0x%x\n", (unsigned) cpu.tr3);
-  fprintf(stderr, "tr4:0x%x\n", (unsigned) cpu.tr4);
-  fprintf(stderr, "tr5:0x%x\n", (unsigned) cpu.tr5);
-  fprintf(stderr, "tr6:0x%x\n", (unsigned) cpu.tr6);
-  fprintf(stderr, "tr7:0x%x\n", (unsigned) cpu.tr7);
-
   fprintf(stderr, "cr0:0x%x\n", (unsigned) cpu.cr0);
   fprintf(stderr, "cr1:0x%x\n", (unsigned) cpu.cr1);
   fprintf(stderr, "cr2:0x%x\n", (unsigned) cpu.cr2);
@@ -111,7 +105,6 @@ void bx_dbg_info_linux_command (void)
 
   fprintf(stderr, "inhibit_mask:%u\n", cpu.inhibit_mask);
 #endif
-
 }
 
 class syscall_names_t {
