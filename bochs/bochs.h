@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.171 2006-02-11 15:28:42 sshwarts Exp $
+// $Id: bochs.h,v 1.172 2006-02-16 21:44:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -112,6 +112,8 @@ int bx_read_configuration (char *rcfile);
 int bx_write_configuration (char *rcfile, int overwrite);
 void bx_reset_options (void);
 Bit32u crc32(const Bit8u *buf, int len);
+// for param-tree testing only
+void print_tree(bx_param_c *node, int level = 0);
 
 //
 // some macros to interface the CPU and memory to external environment
@@ -567,6 +569,7 @@ typedef struct {
 #define BX_KBD_MF_TYPE        2 
 
 #define BX_N_OPTROM_IMAGES 4
+#define BX_N_OPTRAM_IMAGES 4
 #define BX_N_SERIAL_PORTS 4
 #define BX_N_PARALLEL_PORTS 2
 #define BX_N_USB_HUBS 1
@@ -584,7 +587,7 @@ typedef struct BOCHSAPI {
   bx_rom_options    rom;
   bx_vgarom_options vgarom;
   bx_rom_options    optrom[BX_N_OPTROM_IMAGES]; // Optional rom images 
-  bx_rom_options    optram[BX_N_OPTROM_IMAGES]; // Optional ram images 
+  bx_rom_options    optram[BX_N_OPTRAM_IMAGES]; // Optional ram images 
   bx_cpu_options    cpu;
   bx_mem_options    memory;
   bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.73 2006-02-12 20:05:03 sshwarts Exp $
+// $Id: config.cc,v 1.74 2006-02-16 21:44:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -362,6 +362,8 @@ void bx_init_options ()
   char name[1024], descr[1024], group[16], label[1024];
 
   memset (&bx_options, 0, sizeof(bx_options));
+
+  bx_param_c *root_param = SIM->get_param(".");
 
   // quick start option, set by command line arg
   new bx_param_enum_c (BXP_BOCHS_START,
@@ -801,9 +803,18 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_BOOT, "Boot options", "", boot_init_list);
 #endif
 
+  // memory subtree
+  bx_list_c *memory = new bx_list_c (root_param, "memory", "");
+  bx_list_c *stdmem = new bx_list_c (memory, "standard", "");
+  bx_list_c *ram = new bx_list_c (stdmem, "ram", "");
+  bx_list_c *rom = new bx_list_c (stdmem, "rom", "");
+  bx_list_c *vgarom = new bx_list_c (stdmem, "vgarom", "");
+  bx_list_c *optrom = new bx_list_c (memory, "optrom", "");
+  bx_list_c *optram = new bx_list_c (memory, "optram", "");
+
   // memory options (ram & rom)
-  bx_options.memory.Osize = new bx_param_num_c (BXP_MEM_SIZE,
-      "memory.ram.megs",
+  bx_options.memory.Osize = new bx_param_num_c (ram,
+      "size",
       "Amount of RAM in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
@@ -814,15 +825,15 @@ void bx_init_options ()
   bx_options.memory.Osize->set_options (bx_param_num_c::USE_SPIN_CONTROL);
 #endif
 
-  bx_options.rom.Opath = new bx_param_filename_c (BXP_ROM_PATH,
-      "memory.rom.path",
+  bx_options.rom.Opath = new bx_param_filename_c (rom,
+      "path",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
   bx_options.rom.Opath->set_format ("Name of ROM BIOS image: %s");
   sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
   bx_options.rom.Opath->set_initial_val (name);
-  bx_options.rom.Oaddress = new bx_param_num_c (BXP_ROM_ADDRESS,
-      "memory.rom.addr",
+  bx_options.rom.Oaddress = new bx_param_num_c (rom,
+      "addr",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U, 
       0);
@@ -835,8 +846,8 @@ void bx_init_options ()
   bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
 #endif
 
-  bx_options.vgarom.Opath = new bx_param_filename_c (BXP_VGA_ROM_PATH,
-      "memory.vgarom.path",
+  bx_options.vgarom.Opath = new bx_param_filename_c (vgarom,
+      "path",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   bx_options.vgarom.Opath->set_format ("Name of VGA BIOS image: %s");
@@ -847,19 +858,19 @@ void bx_init_options ()
   bx_options.vgarom.Opath->set_initial_val (name);
 
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    sprintf (name, "memory.optrom.%d.path", i+1);
+    sprintf (name, "%d", i+1);
+    bx_list_c *optnum1 = new bx_list_c (optrom, strdup(name), "");
     sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
-    bx_options.optrom[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTROM1_PATH+i),
-      strdup(name), 
+    bx_options.optrom[i].Opath = new bx_param_filename_c (optnum1,
+      "path", 
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf (label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
     bx_options.optrom[i].Opath->set_format (strdup(label));
-    sprintf (name, "memory.optrom.%d.address", i+1);
     sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
-    bx_options.optrom[i].Oaddress = new bx_param_num_c ((bx_id)(BXP_OPTROM1_ADDRESS+i),
-      strdup(name), 
+    bx_options.optrom[i].Oaddress = new bx_param_num_c (optnum1,
+      "addr", 
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
@@ -876,11 +887,12 @@ void bx_init_options ()
 #endif
   }
 
-  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    sprintf (name, "memory.optram.%d.path", i+1);
+  for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
+    sprintf (name, "%d", i+1);
+    bx_list_c *optnum2 = new bx_list_c (optram, strdup(name), "");
     sprintf (descr, "Pathname of optional RAM image #%d to load", i+1);
-    bx_options.optram[i].Opath = new bx_param_filename_c ((bx_id)(BXP_OPTRAM1_PATH+i),
-      strdup(name), 
+    bx_options.optram[i].Opath = new bx_param_filename_c (optnum2,
+      "path", 
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf (label, "Name of optional RAM image #%d", i+1);
@@ -888,8 +900,8 @@ void bx_init_options ()
     bx_options.optram[i].Opath->set_format (strdup(label));
     sprintf (name, "memory.optram.%d.address", i+1);
     sprintf (descr, "The address at which the optional RAM image #%d should be loaded", i+1);
-    bx_options.optram[i].Oaddress = new bx_param_num_c ((bx_id)(BXP_OPTRAM1_ADDRESS+i),
-      strdup(name), 
+    bx_options.optram[i].Oaddress = new bx_param_num_c (optnum2,
+      "addr", 
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
@@ -905,6 +917,11 @@ void bx_init_options ()
     bx_options.optram[i].Oaddress->set_format (strdup(label));
 #endif
   }
+  memory->get_options()->set(bx_list_c::USE_TAB_WINDOW);
+  memory->set_label("Memory Options");
+  stdmem->set_label("Standard Options");
+  optrom->set_label("Optional ROM Images");
+  optram->set_label("Optional RAM Images");
 
   bx_param_c *memory_init_list[] = {
     bx_options.memory.Osize,
@@ -931,10 +948,6 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
-#if BX_WITH_WX
-  menu = new bx_list_c (BXP_OPTROM_LIST, "Optional ROM Images", "optromlist", &memory_init_list[4]);
-  menu->get_options ()->set (menu->USE_BOX_TITLE);
-#endif
 
   // serial and parallel port options
 
@@ -1760,6 +1773,10 @@ void bx_init_options ()
   };
   menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
+
+// param-tree test output
+//printf ("parameter tree:\n");
+//print_tree (root_param, 0);
 }
 
 void bx_reset_options ()
@@ -1804,18 +1821,7 @@ void bx_reset_options ()
   bx_options.OfloppySigCheck->reset();
 
   // memory (ram & rom)
-  bx_options.memory.Osize->reset();
-  bx_options.rom.Opath->reset();
-  bx_options.rom.Oaddress->reset();
-  bx_options.vgarom.Opath->reset();
-  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    bx_options.optrom[i].Opath->reset();
-    bx_options.optrom[i].Oaddress->reset();
-  }
-  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    bx_options.optram[i].Opath->reset();
-    bx_options.optram[i].Oaddress->reset();
-  }
+  SIM->get_param("memory")->reset();
 
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -2688,37 +2694,37 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: megs directive: wrong # args.", context));
     }
-    bx_options.memory.Osize->set (atol(params[1]));
+    SIM->get_param_num("memory.standard.ram.size")->set(atol(params[1]));
   } else if (!strcmp(params[0], "romimage")) {
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
     if (!strncmp(params[1], "file=", 5)) {
-      bx_options.rom.Opath->set (&params[1][5]);
+      SIM->get_param_string("memory.standard.rom.path")->set(&params[1][5]);
     } else {
       PARSE_ERR(("%s: romimage directive malformed.", context));
     }
     if (num_params == 3) {
       if (!strncmp(params[2], "address=", 8)) {
         if ((params[2][8] == '0') && (params[2][9] == 'x'))
-          bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 16));
+          SIM->get_param_num("memory.standard.rom.addr")->set(strtoul (&params[2][8], NULL, 16));
         else
-          bx_options.rom.Oaddress->set (strtoul (&params[2][8], NULL, 10));
+          SIM->get_param_num("memory.standard.rom.addr")->set(strtoul (&params[2][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
     } else {
-      bx_options.rom.Oaddress->set (0);
+      SIM->get_param_num("memory.standard.rom.addr")->set (0);
     }
   } else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: vgaromimage directive: wrong # args.", context));
     }
     if (!strncmp(params[1], "file=", 5)) {
-      bx_options.vgarom.Opath->set (&params[1][5]);
+      SIM->get_param_string("memory.standard.vgarom.path")->set(&params[1][5]);
     } else {
       BX_INFO(("WARNING: syntax has changed, please use 'vgaromimage: file=...' now"));
-      bx_options.vgarom.Opath->set (params[1]);
+      SIM->get_param_string("memory.standard.vgarom.path")->set (params[1]);
     }
   } else if (!strncmp(params[0], "optromimage", 11)) {
     int num = atoi(&params[0][11]);
@@ -2742,7 +2748,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     }
   } else if (!strncmp(params[0], "optramimage", 11)) {
     int num = atoi(&params[0][11]);
-    if ((num < 1) || (num > BX_N_OPTROM_IMAGES)) {
+    if ((num < 1) || (num > BX_N_OPTRAM_IMAGES)) {
       PARSE_ERR(("%s: ramimage%d: not supported", context, num));
     }
     if (num_params != 3) {
@@ -3661,7 +3667,7 @@ int bx_write_configuration (char *rc, int overwrite)
       fprintf (fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optrom[i].Opath->getptr(),
                (unsigned int)bx_options.optrom[i].Oaddress->get ());
   }
-  for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
+  for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
     if (strlen (bx_options.optram[i].Opath->getptr ()) > 0)
       fprintf (fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optram[i].Opath->getptr(),
                (unsigned int)bx_options.optram[i].Oaddress->get ());

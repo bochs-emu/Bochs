@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.154 2006-02-12 20:43:12 vruppert Exp $
+// $Id: siminterface.h,v 1.155 2006-02-16 21:44:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -131,27 +131,6 @@ typedef enum {
   BXP_VGA_UPDATE_INTERVAL,
   BXP_MOUSE_ENABLED,
   BXP_MOUSE_TYPE,
-  BXP_MEM_SIZE,
-  BXP_ROM_PATH,
-  BXP_ROM_ADDRESS,
-  BXP_VGA_ROM_PATH,
-  BXP_OPTROM1_PATH,
-  BXP_OPTROM2_PATH,
-  BXP_OPTROM3_PATH,
-  BXP_OPTROM4_PATH,
-  BXP_OPTROM1_ADDRESS,
-  BXP_OPTROM2_ADDRESS,
-  BXP_OPTROM3_ADDRESS,
-  BXP_OPTROM4_ADDRESS,
-  BXP_OPTROM_LIST,
-  BXP_OPTRAM1_PATH,
-  BXP_OPTRAM2_PATH,
-  BXP_OPTRAM3_PATH,
-  BXP_OPTRAM4_PATH,
-  BXP_OPTRAM1_ADDRESS,
-  BXP_OPTRAM2_ADDRESS,
-  BXP_OPTRAM3_ADDRESS,
-  BXP_OPTRAM4_ADDRESS,
   BXP_KBD_SERIAL_DELAY,
   BXP_KBD_PASTE_DELAY,
   BXP_KBD_TYPE,
@@ -896,6 +875,7 @@ public:
 class BOCHSAPI bx_param_c : public bx_object_c {
   BOCHSAPI_CYGONLY static const char *default_text_format;
 protected:
+  bx_list_c *parent;
   char *name;
   char *description;
   char *label; // label string for text menus and gui dialogs
@@ -906,6 +886,7 @@ protected:
   int enabled;
 public:
   bx_param_c (bx_id id, char *name, char *description);
+  bx_param_c *get_parent () { return (bx_param_c *) parent; }
   void set_format (const char *format) {text_format = format;}
   const char *get_format () {return text_format;}
   void set_ask_format (char *format) {ask_format = format; }
@@ -920,7 +901,7 @@ public:
   char *get_description () { return description; }
   int get_enabled () { return enabled; }
   virtual void set_enabled (int enabled) { this->enabled = enabled; }
-  void reset () {}
+  virtual void reset () {}
   int getint () {return -1;}
   static const char* set_default_format (const char *f);
   static const char *get_default_format () { return default_text_format; }
@@ -966,7 +947,11 @@ public:
       char *name,
       char *description,
       Bit64s min, Bit64s max, Bit64s initial_val);
-  void reset ();
+  bx_param_num_c (bx_param_c *parent,
+      char *name,
+      char *description,
+      Bit64s min, Bit64s max, Bit64s initial_val);
+  virtual void reset ();
   void set_handler (param_event_handler handler);
   void set_enable_handler (param_enable_handler handler);
   virtual bx_list_c *get_dependent_list () { return dependent_list; }
@@ -1051,6 +1036,7 @@ public:
       Bit8u lowbit = 0);
   virtual Bit64s get64 ();
   virtual void set (Bit64s val);
+  virtual void reset ();
 };
 
 class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
@@ -1124,8 +1110,13 @@ public:
       char *description,
       char *initial_val,
       int maxsize=-1);
+  bx_param_string_c (bx_param_c *parent,
+      char *name,
+      char *description,
+      char *initial_val,
+      int maxsize=-1);
   virtual ~bx_param_string_c ();
-  void reset ();
+  virtual void reset ();
   void set_handler (param_string_event_handler handler);
   void set_enable_handler (param_enable_handler handler);
   virtual void set_enabled (int enabled);
@@ -1154,10 +1145,17 @@ public:
       char *description,
       char *initial_val,
       int maxsize=-1);
+  bx_param_filename_c (bx_param_c *parent,
+      char *name,
+      char *description,
+      char *initial_val,
+      int maxsize=-1);
 };
 
+#define BX_DEFAULT_LIST_SIZE 6
+
 class BOCHSAPI bx_list_c : public bx_param_c {
-private:
+protected:
   // just a list of bx_param_c objects.  size tells current number of
   // objects in the list, and maxsize tells how many list items are
   // allocated in the constructor.
@@ -1174,8 +1172,7 @@ private:
   // title of the menu or series
   bx_param_string_c *title;
   // if the menu shows a "return to previous menu" type of choice,
-  // this controls where that choice will go.
-  bx_param_c *parent;
+  // "parent" controls where that choice will go.
   void init ();
 public:
   enum {
@@ -1200,20 +1197,23 @@ public:
     // item (used in the runtime menu).
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
-  bx_list_c (bx_id id, int maxsize);
+  bx_list_c (bx_id id, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list);
-  bx_list_c (bx_id id, char *name, char *description, int maxsize);
+  bx_list_c (bx_id id, char *name, char *description, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c (bx_param_c *parent, char *name, char *description, int maxsize = BX_DEFAULT_LIST_SIZE);
   virtual ~bx_list_c();
   bx_list_c *clone ();
   void add (bx_param_c *param);
   bx_param_c *get (int index);
+  bx_param_c *get_by_name (const char *name);
   int get_size () { return size; }
   bx_param_num_c *get_options () { return options; }
   void set_options (bx_param_num_c *newopt) { options = newopt; }
   bx_param_num_c *get_choice () { return choice; }
   bx_param_string_c *get_title () { return title; }
-  void set_parent (bx_param_c *newparent) { parent = newparent; }
+  void set_parent (bx_param_c *newparent);
   bx_param_c *get_parent () { return parent; }
+  virtual void reset ();
 #if BX_USE_TEXTCONFIG
   virtual void text_print (FILE *);
   virtual int text_ask (FILE *fpin, FILE *fpout);
@@ -1416,10 +1416,19 @@ public:
   virtual int register_param (bx_id id, bx_param_c *it) {return -1;}
   virtual void reset_all_param () {}
   virtual bx_param_c *get_param (bx_id id) {return NULL;}
+  virtual bx_param_c *get_param (const char *pname, bx_param_c *base=NULL) {return NULL;}
+  // deprecated
   virtual bx_param_num_c *get_param_num (bx_id id) {return NULL;}
+  // deprecated
   virtual bx_param_string_c *get_param_string (bx_id id) {return NULL;}
+  // deprecated
   virtual bx_param_bool_c *get_param_bool (bx_id id) {return NULL;}
+  // deprecated
   virtual bx_param_enum_c *get_param_enum (bx_id id) {return NULL;}
+  virtual bx_param_num_c *get_param_num (const char *pname) {return NULL;}
+  virtual bx_param_string_c *get_param_string (const char *pname) {return NULL;}
+  virtual bx_param_bool_c *get_param_bool (const char *pname) {return NULL;}
+  virtual bx_param_enum_c *get_param_enum (const char *pname) {return NULL;}
   virtual int get_n_log_modules () {return -1;}
   virtual char *get_prefix (int mod) {return 0;}
   virtual int get_log_action (int mod, int level) {return -1;}

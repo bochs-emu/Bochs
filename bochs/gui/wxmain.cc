@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.111 2005-11-26 09:22:58 vruppert Exp $
+// $Id: wxmain.cc,v 1.112 2006-02-16 21:44:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -594,8 +594,11 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
-  ConfigMemoryDialog dlg (this, -1);
-  dlg.ShowModal ();
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("memory");
+  dlg.SetTitle(list->get_label());
+  dlg.AddParam(list);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))

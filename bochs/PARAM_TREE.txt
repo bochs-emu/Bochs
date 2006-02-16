@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.2 2006-02-12 20:43:10 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.3 2006-02-16 21:44:15 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -66,13 +66,15 @@ cpu
   reset_on_triple_fault BXP_RESET_ON_TRIPLE_FAULT,
 
 memory
-  ram
-    size              BXP_MEM_SIZE,
-  rom                 
-    address           BXP_ROM_ADDRESS,
-    path              BXP_ROM_PATH,
-    vga_rom_path      BXP_VGA_ROM_PATH,
-  optional_rom
+  standard
+    ram
+      size                BXP_MEM_SIZE,
+    rom
+      path                BXP_ROM_PATH,
+      address             BXP_ROM_ADDRESS,
+    vgarom
+      path                BXP_VGA_ROM_PATH,
+  optrom
     0
       path              BXP_OPTROM1_PATH,
       addr              BXP_OPTROM1_ADDRESS,
@@ -85,7 +87,7 @@ memory
     3
       path              BXP_OPTROM4_PATH,
       addr              BXP_OPTROM4_ADDRESS,
-  optional_ram
+  optram
     0
       path              BXP_OPTRAM1_PATH,
       addr              BXP_OPTRAM1_ADDRESS,

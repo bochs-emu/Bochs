@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.309 2006-02-11 15:28:43 sshwarts Exp $
+// $Id: main.cc,v 1.310 2006-02-16 21:44:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -184,6 +184,43 @@ static void carbonFatalDialog(const char *error, const char *exposition)
   if( cfExposition != NULL ) { CFRelease( cfExposition ); }
 }
 #endif
+
+void print_tree(bx_param_c *node, int level)
+{
+  int i;
+  for (i=0; i<level; i++)
+    printf ("  ");
+  if (node == NULL) {
+      printf ("NULL pointer\n");
+      return;
+  }
+  switch (node->get_type()) {
+    case BXT_PARAM_NUM:
+      if (((bx_param_num_c*)node)->get_base() == 10) {
+        printf ("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+      } else {
+        printf ("%s = 0x%x  (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+      }
+      break;
+    case BXT_PARAM_BOOL:
+      printf ("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
+      break;
+    case BXT_PARAM:
+    case BXT_PARAM_ENUM:
+    case BXT_PARAM_STRING:
+      printf ("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+      break;
+    case BXT_LIST:
+      {
+	printf ("%s = \n", node->get_name ());
+	bx_list_c *list = (bx_list_c*)node;
+	for (i=0; i < list->get_size (); i++) {
+	   print_tree(list->get(i), level+1);
+	}
+	break;
+      }
+  }
+}
 
 int bxmain () {
 #ifdef HAVE_LOCALE_H
@@ -859,7 +896,8 @@ int bx_init_hardware()
   }
 
   // set up memory and CPU objects
-  Bit32u memSize = bx_options.memory.Osize->get()*1024*1024;
+  bx_param_num_c *bxp_memsize = SIM->get_param_num("memory.standard.ram.size");
+  Bit32u memSize = bxp_memsize->get() * 1024*1024;
 
 #if BX_SUPPORT_ICACHE
   pageWriteStampTable.alloc(memSize);

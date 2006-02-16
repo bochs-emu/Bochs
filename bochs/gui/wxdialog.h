@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.56 2005-11-25 16:24:47 vruppert Exp $
+// $Id: wxdialog.h,v 1.57 2006-02-16 21:44:17 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -502,18 +502,6 @@ public:
   virtual void CopyParamToGui ();
   bool IsShowing () { return isShowing; }
   void SetRuntimeFlag(bool val) { runtime = val; }
-DECLARE_EVENT_TABLE()
-};
-
-class ConfigMemoryDialog : public ParamDialog
-{
-#define CONFIG_MEMORY_TITLE "Configure Memory"
-#define CONFIG_MEMORY_BOX1_TITLE "Standard Options"
-#define CONFIG_MEMORY_BOX2_TITLE "Optional ROM Images"
-private:
-  wxFlexGridSizer *box1gridSizer, *box2gridSizer;
-public:
-  ConfigMemoryDialog(wxWindow* parent, wxWindowID id);
 DECLARE_EVENT_TABLE()
 };
 

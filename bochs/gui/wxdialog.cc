@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.80 2005-11-26 09:22:58 vruppert Exp $
+// $Id: wxdialog.cc,v 1.81 2006-02-16 21:44:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1633,85 +1633,6 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
 void ParamDialog::ShowHelp ()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
-}
-
-//////////////////////////////////////////////////////////////////////
-// ConfigMemoryDialog implementation
-//////////////////////////////////////////////////////////////////////
-// Structure:
-//   mainSizer:
-//     box1 = static box "Standard Options"
-//       box1sizer:
-//         box1gridSizer, 3 columns:
-//           "memsize"
-//           megs = textfield
-//           spacer
-//           "biosimg"
-//           biosImage = textfield
-//           browse button
-//           "biosaddr"
-//           biosAddr = textfield
-//           spacer
-//           "vgabiosimg"
-//           vgabios = textfield
-//           browse button
-//           "vgabiosaddr"
-//           "0xc0000"
-//     box2 = static box "Optional ROM images"
-//       box2sizer:
-//         box2gridSizer, 3 columns:
-//           "opt rom 1"
-//           romImage[0] = textfield
-//           browse button
-//           "opt rom 2"
-//           romImage[1] = textfield
-//           browse button
-//           "opt rom 3"
-//           romImage[2] = textfield
-//           browse button
-//           "opt rom 4"
-//           romImage[3] = textfield
-//           browse button
-//     buttonSizer:
-//       help
-//       cancel
-//       ok
-//
-
-// all events go to OnEvent method
-BEGIN_EVENT_TABLE(ConfigMemoryDialog, wxDialog)
-  EVT_BUTTON(-1, ConfigMemoryDialog::OnEvent)
-  EVT_CHECKBOX(-1, ConfigMemoryDialog::OnEvent)
-  EVT_TEXT(-1, ConfigMemoryDialog::OnEvent)
-END_EVENT_TABLE()
-
-ConfigMemoryDialog::ConfigMemoryDialog(
-    wxWindow* parent,
-    wxWindowID id)
-  : ParamDialog (parent, id)
-{
-  bx_id standardList[] = {BXP_MEM_SIZE, BXP_ROM_PATH, BXP_ROM_ADDRESS,
-                          BXP_VGA_ROM_PATH, BXP_NULL};
-  int insideStaticBoxMargin = 15;
-  SetTitle (CONFIG_MEMORY_TITLE);
-
-  // top level objects
-  wxStaticBox *box1 = new wxStaticBox (this, -1, CONFIG_MEMORY_BOX1_TITLE);
-  wxStaticBoxSizer *box1sizer = new wxStaticBoxSizer (box1, wxVERTICAL);
-  mainSizer->Add (box1sizer, 0, wxALL|wxGROW, 10);
-
-  // box1 contents
-  box1gridSizer = new wxFlexGridSizer (3);
-  box1sizer->Add (box1gridSizer, 0, wxALL, insideStaticBoxMargin);
-  AddParamList (standardList, box1gridSizer);
-  wxStaticText *vgabiosaddr1 = new wxStaticText (this, -1, "VGA BIOS address");
-  box1gridSizer->Add (vgabiosaddr1, 0, wxALIGN_RIGHT|wxALL, 2);
-  wxStaticText *vgabiosaddr2 = new wxStaticText (this, -1, "0xC0000");
-  box1gridSizer->Add (vgabiosaddr2, 0, wxALL, 2);
-
-  // box2 contains a list
-  bx_list_c *list = (bx_list_c *) SIM->get_param (BXP_OPTROM_LIST);
-  AddParam (list);
 }
 
 /////////////////////////////////////////////////////////////////
