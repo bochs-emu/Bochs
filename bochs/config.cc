@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.74 2006-02-16 21:44:16 vruppert Exp $
+// $Id: config.cc,v 1.75 2006-02-17 22:27:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -813,108 +813,111 @@ void bx_init_options ()
   bx_list_c *optram = new bx_list_c (memory, "optram", "");
 
   // memory options (ram & rom)
-  bx_options.memory.Osize = new bx_param_num_c (ram,
+  bx_param_num_c *ramsize = new bx_param_num_c(ram,
       "size",
       "Amount of RAM in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
-  bx_options.memory.Osize->set_format ("Memory size in megabytes: %d");
-  bx_options.memory.Osize->set_ask_format ("Enter memory size (MB): [%d] ");
+  ramsize->set_format("Memory size in megabytes: %d");
+  ramsize->set_ask_format("Enter memory size (MB): [%d] ");
 #if BX_WITH_WX
-  bx_options.memory.Osize->set_label ("Memory size (megabytes)");
-  bx_options.memory.Osize->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  ramsize->set_label("Memory size (megabytes)");
+  ramsize->set_options(bx_param_num_c::USE_SPIN_CONTROL);
 #endif
 
-  bx_options.rom.Opath = new bx_param_filename_c (rom,
+  bx_param_filename_c *rompath = new bx_param_filename_c(rom,
       "path",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
-  bx_options.rom.Opath->set_format ("Name of ROM BIOS image: %s");
+  rompath->set_format ("Name of ROM BIOS image: %s");
   sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
-  bx_options.rom.Opath->set_initial_val (name);
-  bx_options.rom.Oaddress = new bx_param_num_c (rom,
+  rompath->set_initial_val(name);
+  bx_param_num_c *romaddr = new bx_param_num_c(rom,
       "addr",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U, 
       0);
-  bx_options.rom.Oaddress->set_base (16);
+  romaddr->set_base(16);
 #if BX_WITH_WX
-  bx_options.rom.Opath->set_label ("ROM BIOS image");
-  bx_options.rom.Oaddress->set_label ("ROM BIOS address");
-  bx_options.rom.Oaddress->set_format ("0x%05x");
+  rompath->set_label("ROM BIOS image");
+  romaddr->set_label("ROM BIOS address");
+  romaddr->set_format("0x%05x");
 #else
-  bx_options.rom.Oaddress->set_format ("ROM BIOS address: 0x%05x");
+  romaddr->set_format("ROM BIOS address: 0x%05x");
 #endif
 
-  bx_options.vgarom.Opath = new bx_param_filename_c (vgarom,
+  bx_param_filename_c *vgarompath = new bx_param_filename_c(vgarom,
       "path",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
-  bx_options.vgarom.Opath->set_format ("Name of VGA BIOS image: %s");
+  vgarompath->set_format("Name of VGA BIOS image: %s");
 #if BX_WITH_WX
-  bx_options.vgarom.Opath->set_label ("VGA BIOS image");
+  vgarompath->set_label("VGA BIOS image");
 #endif
   sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
-  bx_options.vgarom.Opath->set_initial_val (name);
+  vgarompath->set_initial_val(name);
+
+  bx_param_filename_c *optpath;
+  bx_param_num_c *optaddr;
 
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    sprintf (name, "%d", i+1);
-    bx_list_c *optnum1 = new bx_list_c (optrom, strdup(name), "");
-    sprintf (descr, "Pathname of optional ROM image #%d to load", i+1);
-    bx_options.optrom[i].Opath = new bx_param_filename_c (optnum1,
+    sprintf(name, "%d", i+1);
+    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), "");
+    sprintf(descr, "Pathname of optional ROM image #%d to load", i+1);
+    optpath = new bx_param_filename_c(optnum1,
       "path", 
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf (label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
-    bx_options.optrom[i].Opath->set_format (strdup(label));
+    optpath->set_format(strdup(label));
     sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
-    bx_options.optrom[i].Oaddress = new bx_param_num_c (optnum1,
+    optaddr = new bx_param_num_c(optnum1,
       "addr", 
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
-    bx_options.optrom[i].Oaddress->set_base (16);
+    optaddr->set_base(16);
 #if BX_WITH_WX
     sprintf (label, "Optional ROM image #%d", i+1);
-    bx_options.optrom[i].Opath->set_label (strdup(label));
-    bx_options.optrom[i].Oaddress->set_label ("Address");
-    bx_options.optrom[i].Oaddress->set_format ("0x%05x");
+    optpath->set_label(strdup(label));
+    optaddr->set_label("Address");
+    optaddr->set_format("0x%05x");
 #else
     sprintf (label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    bx_options.optrom[i].Oaddress->set_format (strdup(label));
+    optaddr->set_format(strdup(label));
 #endif
   }
 
   for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
-    sprintf (name, "%d", i+1);
-    bx_list_c *optnum2 = new bx_list_c (optram, strdup(name), "");
-    sprintf (descr, "Pathname of optional RAM image #%d to load", i+1);
-    bx_options.optram[i].Opath = new bx_param_filename_c (optnum2,
+    sprintf(name, "%d", i+1);
+    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), "");
+    sprintf(descr, "Pathname of optional RAM image #%d to load", i+1);
+    optpath = new bx_param_filename_c(optnum2,
       "path", 
       strdup(descr),
       "", BX_PATHNAME_LEN);
-    sprintf (label, "Name of optional RAM image #%d", i+1);
+    sprintf(label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
-    bx_options.optram[i].Opath->set_format (strdup(label));
+    optpath->set_format(strdup(label));
     sprintf (name, "memory.optram.%d.address", i+1);
     sprintf (descr, "The address at which the optional RAM image #%d should be loaded", i+1);
-    bx_options.optram[i].Oaddress = new bx_param_num_c (optnum2,
+    optaddr = new bx_param_num_c(optnum2,
       "addr", 
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
-    bx_options.optram[i].Oaddress->set_base (16);
+    optaddr->set_base(16);
 #if BX_WITH_WX
     sprintf (label, "Optional RAM image #%d", i+1);
-    bx_options.optram[i].Opath->set_label (strdup(label));
-    bx_options.optram[i].Oaddress->set_label ("Address");
-    bx_options.optram[i].Oaddress->set_format ("0x%05x");
+    optpath->set_label(strdup(label));
+    optaddr->set_label("Address");
+    optaddr->set_format("0x%05x");
 #else
-    sprintf (label, "Optional RAM #%d address:", i+1);
+    sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    bx_options.optram[i].Oaddress->set_format (strdup(label));
+    optaddr->set_format(strdup(label));
 #endif
   }
   memory->get_options()->set(bx_list_c::USE_TAB_WINDOW);
@@ -924,30 +927,30 @@ void bx_init_options ()
   optram->set_label("Optional RAM Images");
 
   bx_param_c *memory_init_list[] = {
-    bx_options.memory.Osize,
-    bx_options.rom.Opath,
-    bx_options.rom.Oaddress,
-    bx_options.vgarom.Opath,
-    bx_options.optrom[0].Opath,
-    bx_options.optrom[0].Oaddress,
-    bx_options.optrom[1].Opath,
-    bx_options.optrom[1].Oaddress,
-    bx_options.optrom[2].Opath,
-    bx_options.optrom[2].Oaddress,
-    bx_options.optrom[3].Opath,
-    bx_options.optrom[3].Oaddress,
-    bx_options.optram[0].Opath,
-    bx_options.optram[0].Oaddress,
-    bx_options.optram[1].Opath,
-    bx_options.optram[1].Oaddress,
-    bx_options.optram[2].Opath,
-    bx_options.optram[2].Oaddress,
-    bx_options.optram[3].Opath,
-    bx_options.optram[3].Oaddress,
+    SIM->get_param(BXPN_MEM_SIZE),
+    SIM->get_param(BXPN_ROM_PATH),
+    SIM->get_param(BXPN_ROM_ADDRESS),
+    SIM->get_param(BXPN_VGA_ROM_PATH),
+    SIM->get_param(BXPN_OPTROM1_PATH),
+    SIM->get_param(BXPN_OPTROM1_ADDRESS),
+    SIM->get_param(BXPN_OPTROM2_PATH),
+    SIM->get_param(BXPN_OPTROM2_ADDRESS),
+    SIM->get_param(BXPN_OPTROM3_PATH),
+    SIM->get_param(BXPN_OPTROM3_ADDRESS),
+    SIM->get_param(BXPN_OPTROM4_PATH),
+    SIM->get_param(BXPN_OPTROM4_ADDRESS),
+    SIM->get_param(BXPN_OPTRAM1_PATH),
+    SIM->get_param(BXPN_OPTRAM1_ADDRESS),
+    SIM->get_param(BXPN_OPTRAM2_PATH),
+    SIM->get_param(BXPN_OPTRAM2_ADDRESS),
+    SIM->get_param(BXPN_OPTRAM3_PATH),
+    SIM->get_param(BXPN_OPTRAM3_ADDRESS),
+    SIM->get_param(BXPN_OPTRAM4_PATH),
+    SIM->get_param(BXPN_OPTRAM4_ADDRESS),
     NULL
   };
-  menu = new bx_list_c (BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
+  menu->get_options()->set(menu->SHOW_PARENT);
 
   // serial and parallel port options
 
@@ -2694,74 +2697,80 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: megs directive: wrong # args.", context));
     }
-    SIM->get_param_num("memory.standard.ram.size")->set(atol(params[1]));
+    SIM->get_param_num(BXPN_MEM_SIZE)->set(atol(params[1]));
   } else if (!strcmp(params[0], "romimage")) {
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: romimage directive: wrong # args.", context));
     }
     if (!strncmp(params[1], "file=", 5)) {
-      SIM->get_param_string("memory.standard.rom.path")->set(&params[1][5]);
+      SIM->get_param_string(BXPN_ROM_PATH)->set(&params[1][5]);
     } else {
       PARSE_ERR(("%s: romimage directive malformed.", context));
     }
     if (num_params == 3) {
       if (!strncmp(params[2], "address=", 8)) {
         if ((params[2][8] == '0') && (params[2][9] == 'x'))
-          SIM->get_param_num("memory.standard.rom.addr")->set(strtoul (&params[2][8], NULL, 16));
+          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul (&params[2][8], NULL, 16));
         else
-          SIM->get_param_num("memory.standard.rom.addr")->set(strtoul (&params[2][8], NULL, 10));
+          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul (&params[2][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
     } else {
-      SIM->get_param_num("memory.standard.rom.addr")->set (0);
+      SIM->get_param_num(BXPN_ROM_ADDRESS)->set (0);
     }
   } else if (!strcmp(params[0], "vgaromimage")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: vgaromimage directive: wrong # args.", context));
     }
     if (!strncmp(params[1], "file=", 5)) {
-      SIM->get_param_string("memory.standard.vgarom.path")->set(&params[1][5]);
+      SIM->get_param_string(BXPN_VGA_ROM_PATH)->set(&params[1][5]);
     } else {
       BX_INFO(("WARNING: syntax has changed, please use 'vgaromimage: file=...' now"));
-      SIM->get_param_string("memory.standard.vgarom.path")->set (params[1]);
+      SIM->get_param_string(BXPN_VGA_ROM_PATH)->set (params[1]);
     }
   } else if (!strncmp(params[0], "optromimage", 11)) {
     int num = atoi(&params[0][11]);
+    char tmppath[80], tmpaddr[80];
     if ((num < 1) || (num > BX_N_OPTROM_IMAGES)) {
       PARSE_ERR(("%s: optromimage%d: not supported", context, num));
     }
     if (num_params != 3) {
       PARSE_ERR(("%s: optromimage%d directive: wrong # args.", context, num));
     }
+    sprintf(tmppath, "memory.optrom.%d.path", num);
+    sprintf(tmpaddr, "memory.optrom.%d.addr", num);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
-        bx_options.optrom[num-1].Opath->set (&params[i][5]);
+        SIM->get_param_string(tmppath)->set(&params[i][5]);
       } else if (!strncmp(params[i], "address=", 8)) {
         if ((params[i][8] == '0') && (params[2][9] == 'x'))
-          bx_options.optrom[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 16));
+          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 16));
         else
-          bx_options.optrom[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 10));
+          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: optromimage%d directive malformed.", context, num));
       }
     }
   } else if (!strncmp(params[0], "optramimage", 11)) {
     int num = atoi(&params[0][11]);
+    char tmppath[80], tmpaddr[80];
     if ((num < 1) || (num > BX_N_OPTRAM_IMAGES)) {
       PARSE_ERR(("%s: ramimage%d: not supported", context, num));
     }
     if (num_params != 3) {
       PARSE_ERR(("%s: ramimage%d directive: wrong # args.", context, num));
     }
+    sprintf(tmppath, "memory.optram.%d.path", num);
+    sprintf(tmpaddr, "memory.optram.%d.addr", num);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
-        bx_options.optram[num-1].Opath->set (&params[i][5]);
+        SIM->get_param_string(tmppath)->set(&params[i][5]);
       } else if (!strncmp(params[i], "address=", 8)) {
         if ((params[i][8] == '0') && (params[2][9] == 'x'))
-          bx_options.optram[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 16));
+          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 16));
         else
-          bx_options.optram[num-1].Oaddress->set (strtoul (&params[i][8], NULL, 10));
+          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: optram%d directive malformed.", context, num));
       }
@@ -3619,6 +3628,7 @@ int bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
 int bx_write_configuration (char *rc, int overwrite)
 {
   int i;
+  char *strptr, tmppath[80], tmpaddr[80];
 
   BX_INFO (("write configuration to %s\n", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
@@ -3637,13 +3647,15 @@ int bx_write_configuration (char *rc, int overwrite)
     fprintf (fp, ", options=\"%s\"\n", bx_options.Odisplaylib_options->getptr ());
   else
     fprintf (fp, "\n");
-  fprintf (fp, "megs: %d\n", bx_options.memory.Osize->get ());
-  if (strlen (bx_options.rom.Opath->getptr ()) > 0)
-    fprintf (fp, "romimage: file=\"%s\", address=0x%05x\n", bx_options.rom.Opath->getptr(), (unsigned int)bx_options.rom.Oaddress->get ());
+  fprintf (fp, "megs: %d\n", SIM->get_param_num(BXPN_MEM_SIZE)->get());
+  strptr = SIM->get_param_string(BXPN_ROM_PATH)->getptr();
+  if (strlen(strptr) > 0)
+    fprintf (fp, "romimage: file=\"%s\", address=0x%05x\n", strptr, (unsigned int)SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
   else
     fprintf (fp, "# no romimage\n");
-  if (strlen (bx_options.vgarom.Opath->getptr ()) > 0)
-    fprintf (fp, "vgaromimage: file=\"%s\"\n", bx_options.vgarom.Opath->getptr ());
+  strptr = SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr();
+  if (strlen(strptr) > 0)
+    fprintf (fp, "vgaromimage: file=\"%s\"\n", strptr);
   else
     fprintf (fp, "# no vgaromimage\n");
   fprintf (fp, "boot: %s", bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get() - 1));
@@ -3663,14 +3675,20 @@ int bx_write_configuration (char *rc, int overwrite)
     bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
   }
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
-    if (strlen (bx_options.optrom[i].Opath->getptr ()) > 0)
-      fprintf (fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optrom[i].Opath->getptr(),
-               (unsigned int)bx_options.optrom[i].Oaddress->get ());
+    sprintf(tmppath, "memory.optrom.%d.path", i+1);
+    sprintf(tmpaddr, "memory.optrom.%d.addr", i+1);
+    strptr = SIM->get_param_string(tmppath)->getptr();
+    if (strlen(strptr) > 0)
+      fprintf(fp, "optromimage%d: file=\"%s\", address=0x%05x\n", i+1, strptr,
+              (unsigned int)SIM->get_param_num(tmpaddr)->get());
   }
   for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
-    if (strlen (bx_options.optram[i].Opath->getptr ()) > 0)
-      fprintf (fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, bx_options.optram[i].Opath->getptr(),
-               (unsigned int)bx_options.optram[i].Oaddress->get ());
+    sprintf(tmppath, "memory.optram.%d.path", i+1);
+    sprintf(tmpaddr, "memory.optram.%d.addr", i+1);
+    strptr = SIM->get_param_string(tmppath)->getptr();
+    if (strlen(strptr) > 0)
+      fprintf(fp, "optramimage%d: file=\"%s\", address=0x%05x\n", i+1, strptr,
+              (unsigned int)SIM->get_param_num(tmpaddr)->get());
   }
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {

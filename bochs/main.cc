@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.310 2006-02-16 21:44:16 vruppert Exp $
+// $Id: main.cc,v 1.311 2006-02-17 22:27:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -891,12 +891,12 @@ int bx_init_hardware()
            BX_SUPPORT_CLGD54XX?"cirrus":""));
 
   // Check if there is a romimage
-  if (strcmp(bx_options.rom.Opath->getptr(),"") == 0) {
+  if (strcmp(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),"") == 0) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
   }
 
   // set up memory and CPU objects
-  bx_param_num_c *bxp_memsize = SIM->get_param_num("memory.standard.ram.size");
+  bx_param_num_c *bxp_memsize = SIM->get_param_num(BXPN_MEM_SIZE);
   Bit32u memSize = bxp_memsize->get() * 1024*1024;
 
 #if BX_SUPPORT_ICACHE
@@ -906,28 +906,29 @@ int bx_init_hardware()
   BX_MEM(0)->init_memory(memSize);
 
   // First load the BIOS and VGABIOS
-  BX_MEM(0)->load_ROM(bx_options.rom.Opath->getptr(), bx_options.rom.Oaddress->get(), 0);
-  BX_MEM(0)->load_ROM(bx_options.vgarom.Opath->getptr(), 0xc0000, 1);
+  BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),
+                      SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
+  BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
 
   // Then load the optional ROM images
-  if (strcmp(bx_options.optrom[0].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_ROM(bx_options.optrom[0].Opath->getptr(), bx_options.optrom[0].Oaddress->get(), 2);
-  if (strcmp(bx_options.optrom[1].Opath->getptr(), "") !=0 )
-    BX_MEM(0)->load_ROM(bx_options.optrom[1].Opath->getptr(), bx_options.optrom[1].Oaddress->get(), 2);
-  if (strcmp(bx_options.optrom[2].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_ROM(bx_options.optrom[2].Opath->getptr(), bx_options.optrom[2].Oaddress->get(), 2);
-  if (strcmp(bx_options.optrom[3].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_ROM(bx_options.optrom[3].Opath->getptr(), bx_options.optrom[3].Oaddress->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM1_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTROM2_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM2_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTROM3_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM3_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTROM4_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_ROM(SIM->get_param_string(BXPN_OPTROM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTROM4_ADDRESS)->get(), 2);
 
   // Then load the optional RAM images
-  if (strcmp(bx_options.optram[0].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_RAM(bx_options.optram[0].Opath->getptr(), bx_options.optram[0].Oaddress->get(), 2);
-  if (strcmp(bx_options.optram[1].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_RAM(bx_options.optram[1].Opath->getptr(), bx_options.optram[1].Oaddress->get(), 2);
-  if (strcmp(bx_options.optram[2].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_RAM(bx_options.optram[2].Opath->getptr(), bx_options.optram[2].Oaddress->get(), 2);
-  if (strcmp(bx_options.optram[3].Opath->getptr(), "") !=0)
-    BX_MEM(0)->load_RAM(bx_options.optram[3].Opath->getptr(), bx_options.optram[3].Oaddress->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTRAM1_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM1_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM1_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTRAM2_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM2_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM2_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTRAM3_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM3_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM3_ADDRESS)->get(), 2);
+  if (strcmp(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), "") !=0)
+    BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM4_ADDRESS)->get(), 2);
 
 #if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize(BX_MEM(0));

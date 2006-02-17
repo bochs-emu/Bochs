@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.155 2006-02-16 21:44:17 vruppert Exp $
+// $Id: siminterface.h,v 1.156 2006-02-17 22:27:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -81,7 +81,6 @@
 // between the siminterface and the CI.  Search for "event structures" below.
 
 
-
 //////////////////////////////////////////////////////
 // BX_USE_TEXTCONFIG should be set to 1 when the text mode configuration interface
 // is compiled in.  This gives each type of parameter a text_print and text_ask
@@ -116,6 +115,30 @@ typedef enum {
   BXT_PARAM_STRING,
   BXT_LIST
 } bx_objtype;
+
+// define parameter path names.  These names give the location in the
+// parameter tree where each can be found.  The names correspond to
+// the old BXP_* enum values, which have been eliminated.
+#define BXPN_MEM_SIZE                    "memory.standard.ram.size"
+#define BXPN_ROM_PATH                    "memory.standard.rom.path"
+#define BXPN_ROM_ADDRESS                 "memory.standard.rom.addr"
+#define BXPN_VGA_ROM_PATH                "memory.standard.vgarom.path"
+#define BXPN_OPTROM1_PATH                "memory.optrom.1.path"
+#define BXPN_OPTROM1_ADDRESS             "memory.optrom.1.addr"
+#define BXPN_OPTROM2_PATH                "memory.optrom.2.path"
+#define BXPN_OPTROM2_ADDRESS             "memory.optrom.2.addr"
+#define BXPN_OPTROM3_PATH                "memory.optrom.3.path"
+#define BXPN_OPTROM3_ADDRESS             "memory.optrom.3.addr"
+#define BXPN_OPTROM4_PATH                "memory.optrom.4.path"
+#define BXPN_OPTROM4_ADDRESS             "memory.optrom.4.addr"
+#define BXPN_OPTRAM1_PATH                "memory.optram.1.path"
+#define BXPN_OPTRAM1_ADDRESS             "memory.optram.1.addr"
+#define BXPN_OPTRAM2_PATH                "memory.optram.2.path"
+#define BXPN_OPTRAM2_ADDRESS             "memory.optram.2.addr"
+#define BXPN_OPTRAM3_PATH                "memory.optram.3.path"
+#define BXPN_OPTRAM3_ADDRESS             "memory.optram.3.addr"
+#define BXPN_OPTRAM4_PATH                "memory.optram.4.path"
+#define BXPN_OPTRAM4_ADDRESS             "memory.optram.4.addr"
 
 // list if parameter id values.  The actual values are not important;
 // it's only important that they all be different from each other.
