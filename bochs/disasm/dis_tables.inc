@@ -15,9 +15,19 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f11[4] = {
   /* F3 */  { 0, &Ia_movss_Wss_Vss  }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPS[2] = {
+  /* R */  { 0, &Ia_movhlps_Vps_Uq },
+  /* M */  { 0, &Ia_movlps_Vps_Mq  }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupModMOVHLPD[2] = {
+  /* R */  { 0, &Ia_movhlpd_Vpd_Uq },
+  /* M */  { 0, &Ia_movlpd_Vpd_Mq  }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f12[4] = {
-  /* -- */  { 0, &Ia_movlps_Vps_Mq    },
-  /* 66 */  { 0, &Ia_movlpd_Vpd_Mq    },
+  /* -- */  { GRPMOD(MOVHLPS) },
+  /* 66 */  { GRPMOD(MOVHLPD) },
   /* F2 */  { 0, &Ia_movddup_Vdq_Wq   },
   /* F3 */  { 0, &Ia_movsldup_Vdq_Wdq }
 };
@@ -43,10 +53,20 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f15[4] = {
   /* F3 */  { 0, &Ia_Invalid }
 };
 
+static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPS[2] = {
+  /* R */  { 0, &Ia_movlhps_Vps_Uq },
+  /* M */  { 0, &Ia_movhps_Vps_Mq  }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupModMOVLHPD[2] = {
+  /* R */  { 0, &Ia_movlhpd_Vpd_Uq },
+  /* M */  { 0, &Ia_movhpd_Vpd_Mq  }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f16[4] = {
-  /* -- */  { 0, &Ia_movhps_Vps_Mq },
-  /* 66 */  { 0, &Ia_movhpd_Vpd_Mq },
-  /* F2 */  { 0, &Ia_Invalid       },
+  /* -- */  { GRPMOD(MOVLHPS) },
+  /* 66 */  { GRPMOD(MOVLHPD) },
+  /* F2 */  { 0, &Ia_Invalid  },
   /* F3 */  { 0, &Ia_movshdup_Vdq_Wdq },
 };
 
