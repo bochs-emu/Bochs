@@ -308,6 +308,8 @@ public:
  * J  - The instruction contains a relative offset to be added to the 
  *      instruction pointer register.
  * M  - The ModR/M byte may refer only to memory.
+ * N  - The R/M field of the ModR/M byte selects a packed-quadword  MMX 
+        technology register.
  * O  - The instruction has no ModR/M byte; the offset of the operand is 
  *      coded as a word or double word (depending on address size attribute) 
  *      in the instruction. No base register, index register, or scaling 
@@ -321,6 +323,7 @@ public:
  *      index register, a scaling factor, and a displacement.
  * R  - The mod field of the ModR/M byte may refer only to a general register.
  * S  - The reg field of the ModR/M byte selects a segment register.
+ * U  - The R/M field of the ModR/M byte selects a 128-bit XMM register.
  * T  - The reg field of the ModR/M byte selects a test register.
  * V  - The reg field of the ModR/M byte selects a 128-bit XMM register.
  * W  - A ModR/M byte follows the opcode and specifies the operand. The 
@@ -447,8 +450,10 @@ public:
   void Qd(const x86_insn *insn);
   void Qq(const x86_insn *insn);
   void Vq(const x86_insn *insn);
+  void Nq(const x86_insn *insn);
 
   // xmm register
+  void Udq(const x86_insn *insn);
   void Vdq(const x86_insn *insn);
   void Vss(const x86_insn *insn);
   void Vsd(const x86_insn *insn);

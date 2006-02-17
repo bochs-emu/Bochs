@@ -82,6 +82,7 @@
 #define  Pq &disassembler::Pq
 #define  Qd &disassembler::Qd
 #define  Qq &disassembler::Qq
+#define  Nq &disassembler::Nq
 
 #define  Vq &disassembler::Vq
 #define Vdq &disassembler::Vdq
@@ -89,6 +90,7 @@
 #define Vsd &disassembler::Vsd
 #define Vps &disassembler::Vps
 #define Vpd &disassembler::Vpd
+#define Udq &disassembler::Udq
 
 #define  Wq &disassembler::Wq
 #define Wdq &disassembler::Wdq

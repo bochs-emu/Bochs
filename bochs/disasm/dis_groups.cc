@@ -290,6 +290,14 @@ void disassembler::Pq(const x86_insn *insn)
     dis_sprintf("%%mm%d", insn->nnn);
 }
 
+void disassembler::Nq(const x86_insn *insn)
+{
+  if (intel_mode)
+    dis_sprintf  ("mm%d", insn->rm);
+  else
+    dis_sprintf("%%mm%d", insn->rm);
+}
+
 void disassembler::Qd(const x86_insn *insn)
 {
   if (insn->mod == 3)
@@ -317,6 +325,14 @@ void disassembler::Qq(const x86_insn *insn)
 }
 
 // xmm register
+void disassembler::Udq(const x86_insn *insn)
+{
+  if (intel_mode)
+    dis_sprintf  ("xmm%d", insn->rm);
+  else
+    dis_sprintf("%%xmm%d", insn->rm);
+}
+
 void disassembler::Vq(const x86_insn *insn)
 {
   if (intel_mode)
@@ -357,10 +373,23 @@ void disassembler::Wdq(const x86_insn *insn)
     (this->*resolve_modrm)(insn, O_SIZE);
 }
 
-void disassembler::Wss(const x86_insn *insn) { Wdq(insn); }
-void disassembler::Wsd(const x86_insn *insn) { Wdq(insn); }
-void disassembler::Wps(const x86_insn *insn) { Wdq(insn); }
+void disassembler::Wsd(const x86_insn *insn) { Wq(insn); }
+
+void disassembler::Wss(const x86_insn *insn)
+{ 
+  if (insn->mod == 3)
+  {
+    if (intel_mode)
+      dis_sprintf  ("xmm%d", insn->rm);
+    else
+      dis_sprintf("%%xmm%d", insn->rm);
+  }
+  else
+    (this->*resolve_modrm)(insn, D_SIZE);
+}
+
 void disassembler::Wpd(const x86_insn *insn) { Wdq(insn); }
+void disassembler::Wps(const x86_insn *insn) { Wdq(insn); }
 
 // direct memory access
 void disassembler::OP_O(const x86_insn *insn, unsigned size)
