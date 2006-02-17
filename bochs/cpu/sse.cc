@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.35 2006-01-18 18:39:17 sshwarts Exp $
+// $Id: sse.cc,v 1.36 2006-02-17 13:34:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1833,7 +1833,7 @@ void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
 }
 
 /* 66 0F 71 Grp12 010 */
-void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRLW_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1859,13 +1859,13 @@ void BX_CPU_C::PSRLW_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSRLW_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRLW_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 0F 71 Grp12 100 */
-void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRAW_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1873,11 +1873,7 @@ void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
-  if(shift == 0)
-  {
-    BX_WRITE_XMM_REG(i->nnn(), op);
-    return;
-  }
+  if(shift == 0) return;
 
   if(shift > 15) {
     result.xmm16u(0) = (op.xmm16u(0) & 0x8000) ? 0xffff : 0;
@@ -1912,13 +1908,13 @@ void BX_CPU_C::PSRAW_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
 #else
-  BX_INFO(("PSRAW_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRAW_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 71 Grp12 110 */
-void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSLLW_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1944,13 +1940,13 @@ void BX_CPU_C::PSLLW_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSLLW_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSLLW_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 72 Grp13 010 */
-void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRLD_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1972,13 +1968,13 @@ void BX_CPU_C::PSRLD_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSRLD_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRLD_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 0F 72 Grp13 100 */
-void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRAD_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -1986,11 +1982,7 @@ void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
-  if(shift == 0)
-  {
-    BX_WRITE_XMM_REG(i->nnn(), op);
-    return;
-  }
+  if(shift == 0) return;
 
   if(shift > 31) {
     result.xmm32u(0) = (op.xmm32u(0) & 0x80000000) ? 0xffffffff : 0;
@@ -2013,13 +2005,13 @@ void BX_CPU_C::PSRAD_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
 #else
-  BX_INFO(("PSRAD_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRAD_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 72 Grp13 110 */
-void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSLLD_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -2041,13 +2033,13 @@ void BX_CPU_C::PSLLD_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSLLD_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSLLD_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 73 Grp14 010 */
-void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRLQ_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -2067,12 +2059,12 @@ void BX_CPU_C::PSRLQ_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSRLQ_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRLQ_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
-void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSRLDQ_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -2090,13 +2082,13 @@ void BX_CPU_C::PSRLDQ_WdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
 #else
-  BX_INFO(("PSRLDQ_WdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSRLDQ_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 73 Grp14 110 */
-void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSLLQ_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -2116,13 +2108,13 @@ void BX_CPU_C::PSLLQ_PdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), op);
 #else
-  BX_INFO(("PSLLQ_PdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSLLQ_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F 73 Grp14 111 */
-void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
+void BX_CPU_C::PSLLDQ_UdqIb(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
@@ -2140,7 +2132,7 @@ void BX_CPU_C::PSLLDQ_WdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->rm(), result);
 #else
-  BX_INFO(("PSLLDQ_WdqIb: required SSE2, use --enable-sse option"));
+  BX_INFO(("PSLLDQ_UdqIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

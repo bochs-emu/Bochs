@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.49 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: mmx.cc,v 1.50 2006-02-17 13:34:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2233,10 +2233,7 @@ void BX_CPU_C::PSRAW_PqIb(bxInstruction_c *i)
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
-  if(shift == 0) {
-    BX_WRITE_MMX_REG(i->nnn(), op);
-    return;
-  }
+  if(shift == 0) return;
 
   if(shift > 15) {
     MMXUW0(result) = (MMXUW0(op) & 0x8000) ? 0xffff : 0;
@@ -2323,10 +2320,7 @@ void BX_CPU_C::PSRAD_PqIb(bxInstruction_c *i)
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->rm()), result;
   Bit8u shift = i->Ib();
 
-  if(shift == 0) {
-    BX_WRITE_MMX_REG(i->nnn(), op);
-    return;
-  }
+  if(shift == 0) return;
 
   if(shift > 31) {
     MMXUD0(result) = (MMXUD0(op) & 0x80000000) ? 0xffffffff : 0;

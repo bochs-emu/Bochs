@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.260 2006-02-14 20:03:14 sshwarts Exp $
+// $Id: cpu.h,v 1.261 2006-02-17 13:34:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2113,16 +2113,16 @@ public: // for now...
   BX_SMF void PADDB_VdqWdq(bxInstruction_c *i);
   BX_SMF void PADDW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PADDD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRLW_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSRAW_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLW_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLD_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSRAD_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLD_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLQ_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLDQ_WdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLQ_PdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLDQ_WdqIb(bxInstruction_c *i);
+  BX_SMF void PSRLW_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSRAW_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSLLW_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSRLD_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSRAD_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSLLD_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSRLQ_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSRLDQ_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSLLQ_UdqIb(bxInstruction_c *i);
+  BX_SMF void PSLLDQ_UdqIb(bxInstruction_c *i);
   /* SSE2 */
 
   /*** Duplicate SSE/SSE2 instructions ***/
