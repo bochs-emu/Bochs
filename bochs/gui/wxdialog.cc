@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.81 2006-02-16 21:44:17 vruppert Exp $
+// $Id: wxdialog.cc,v 1.82 2006-02-18 16:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1200,7 +1200,7 @@ void ParamDialog::AddParam (
 #endif
 	  // put all items in the list into a separate page of the notebook.
 	  for (int i=0; i<list->get_size (); i++) {
-	    bx_param_c *child = list->get (i);
+	    bx_list_c *child = (bx_list_c*)list->get(i);
 	    wxASSERT (child->get_type() == BXT_LIST);
 	    // the child must be a list!  I could support other things but
 	    // I don't see any reason to.  It wouldn't make sense to devote
@@ -1217,7 +1217,7 @@ void ParamDialog::AddParam (
 	    bx_list_c *childl = (bx_list_c *)child;
 	    for (int j=0; j<childl->get_size(); j++)
 	      AddParam (childl->get(j), plain, &newcontext);
-	    const char *pagename = child->get_label ();
+	    const char *pagename = child->get_title()->getptr();
 	    if (!pagename) pagename = child->get_name ();
 	    panel->SetAutoLayout (TRUE);
 	    panel->SetSizer (boxsz);
@@ -1269,6 +1269,9 @@ void ParamDialog::AddParam (
     default:
       wxLogError ("ParamDialog::AddParam called with unsupported param type id=%d", (int)type);
   }
+  if (pstr->label) pstr->label->Enable(pstr->param->get_enabled());
+  if (pstr->u.window) pstr->u.window->Enable(pstr->param->get_enabled());
+  if (pstr->browseButton) pstr->browseButton->Enable(pstr->param->get_enabled());
 }
 
 bool ParamDialog::CopyGuiToParam ()

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.75 2006-02-17 22:27:38 vruppert Exp $
+// $Id: config.cc,v 1.76 2006-02-18 16:53:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -789,7 +789,7 @@ void bx_init_options ()
     SIM->get_param (BXP_FLOPPYSIGCHECK),
     NULL
   };
-  menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "diskmenu", disk_menu_init_list);
+  menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "", disk_menu_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
 #if BX_WITH_WX
@@ -803,44 +803,87 @@ void bx_init_options ()
   menu = new bx_list_c (BXP_BOOT, "Boot options", "", boot_init_list);
 #endif
 
+#if BX_SUPPORT_SMP
+  #define BX_CPU_PROCESSORS_LIMIT 8
+  #define BX_CPU_CORES_LIMIT 4
+  #define BX_CPU_HT_THREADS_LIMIT 4
+#else
+  #define BX_CPU_PROCESSORS_LIMIT 1
+  #define BX_CPU_CORES_LIMIT 1
+  #define BX_CPU_HT_THREADS_LIMIT 1
+#endif
+
+  // cpu subtree
+  bx_list_c *cpu_param = new bx_list_c(root_param, "cpu", "CPU Options");
+
+  // cpu options
+  bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
+      "n_processors", "Number of CPUs in SMP mode",
+      "Sets the number of CPUs for multiprocessor emulation",
+      1, BX_CPU_PROCESSORS_LIMIT,
+      1);
+  nprocessors->set_enabled(BX_CPU_PROCESSORS_LIMIT > 1);
+  bx_param_num_c *ncores = new bx_param_num_c(cpu_param,
+      "n_cores", "Number of processor cores in each CPU in SMP mode",
+      "Sets the number of processor cores per CPU for multiprocessor emulation",
+      1, BX_CPU_CORES_LIMIT,
+      1);
+  ncores->set_enabled(BX_CPU_CORES_LIMIT > 1);
+  bx_param_num_c *nthreads = new bx_param_num_c(cpu_param,
+      "n_threads", "Number of HT threads per each process core in SMP mode",
+      "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
+      1, BX_CPU_HT_THREADS_LIMIT,
+      1);
+  nthreads->set_enabled(BX_CPU_HT_THREADS_LIMIT > 1);
+  new bx_param_num_c(cpu_param,
+      "ips", "Emulated instructions per second (IPS)",
+      "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
+      1, BX_MAX_BIT32U,
+      2000000);
+  new bx_param_bool_c(cpu_param,
+      "reset_on_triple_fault", "Enable CPU reset on triple fault",
+      "Enable CPU reset if triple fault occured (highly recommended)",
+      1);
+  cpu_param->get_options()->set(menu->SHOW_PARENT);
+
   // memory subtree
-  bx_list_c *memory = new bx_list_c (root_param, "memory", "");
-  bx_list_c *stdmem = new bx_list_c (memory, "standard", "");
-  bx_list_c *ram = new bx_list_c (stdmem, "ram", "");
-  bx_list_c *rom = new bx_list_c (stdmem, "rom", "");
-  bx_list_c *vgarom = new bx_list_c (stdmem, "vgarom", "");
-  bx_list_c *optrom = new bx_list_c (memory, "optrom", "");
-  bx_list_c *optram = new bx_list_c (memory, "optram", "");
+  bx_list_c *memory = new bx_list_c(root_param, "memory", "Memory Options");
+  bx_list_c *stdmem = new bx_list_c(memory, "standard", "Standard Options");
+  bx_list_c *optrom = new bx_list_c(memory, "optrom", "Optional ROM Images");
+  bx_list_c *optram = new bx_list_c(memory, "optram", "Optional RAM Images");
+  bx_list_c *ram = new bx_list_c(stdmem, "ram", "");
+  bx_list_c *rom = new bx_list_c(stdmem, "rom", "");
+  bx_list_c *vgarom = new bx_list_c(stdmem, "vgarom", "");
 
   // memory options (ram & rom)
   bx_param_num_c *ramsize = new bx_param_num_c(ram,
       "size",
+      "Memory size (megabytes)",
       "Amount of RAM in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
   ramsize->set_format("Memory size in megabytes: %d");
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
 #if BX_WITH_WX
-  ramsize->set_label("Memory size (megabytes)");
   ramsize->set_options(bx_param_num_c::USE_SPIN_CONTROL);
 #endif
 
   bx_param_filename_c *rompath = new bx_param_filename_c(rom,
       "path",
+      "ROM BIOS image",
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
-  rompath->set_format ("Name of ROM BIOS image: %s");
+  rompath->set_format("Name of ROM BIOS image: %s");
   sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
   rompath->set_initial_val(name);
   bx_param_num_c *romaddr = new bx_param_num_c(rom,
       "addr",
+      "ROM BIOS address",
       "The address at which the ROM image should be loaded",
       0, BX_MAX_BIT32U, 
       0);
   romaddr->set_base(16);
 #if BX_WITH_WX
-  rompath->set_label("ROM BIOS image");
-  romaddr->set_label("ROM BIOS address");
   romaddr->set_format("0x%05x");
 #else
   romaddr->set_format("ROM BIOS address: 0x%05x");
@@ -848,12 +891,10 @@ void bx_init_options ()
 
   bx_param_filename_c *vgarompath = new bx_param_filename_c(vgarom,
       "path",
+      "VGA BIOS image",
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   vgarompath->set_format("Name of VGA BIOS image: %s");
-#if BX_WITH_WX
-  vgarompath->set_label("VGA BIOS image");
-#endif
   sprintf(name, "%s/VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
   vgarompath->set_initial_val(name);
 
@@ -864,27 +905,27 @@ void bx_init_options ()
     sprintf(name, "%d", i+1);
     bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), "");
     sprintf(descr, "Pathname of optional ROM image #%d to load", i+1);
+    sprintf(label, "Optional ROM image #%d", i+1);
     optpath = new bx_param_filename_c(optnum1,
       "path", 
+      strdup(label),
       strdup(descr),
       "", BX_PATHNAME_LEN);
-    sprintf (label, "Name of optional ROM image #%d", i+1);
+    sprintf(label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
     optpath->set_format(strdup(label));
-    sprintf (descr, "The address at which the optional ROM image #%d should be loaded", i+1);
+    sprintf(descr, "The address at which the optional ROM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum1,
       "addr", 
+      "Address",
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
 #if BX_WITH_WX
-    sprintf (label, "Optional ROM image #%d", i+1);
-    optpath->set_label(strdup(label));
-    optaddr->set_label("Address");
     optaddr->set_format("0x%05x");
 #else
-    sprintf (label, "Optional ROM #%d address:", i+1);
+    sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
     optaddr->set_format(strdup(label));
 #endif
@@ -894,25 +935,24 @@ void bx_init_options ()
     sprintf(name, "%d", i+1);
     bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), "");
     sprintf(descr, "Pathname of optional RAM image #%d to load", i+1);
+    sprintf(label, "Optional RAM image #%d", i+1);
     optpath = new bx_param_filename_c(optnum2,
       "path", 
+      strdup(label),
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
     optpath->set_format(strdup(label));
-    sprintf (name, "memory.optram.%d.address", i+1);
-    sprintf (descr, "The address at which the optional RAM image #%d should be loaded", i+1);
+    sprintf(descr, "The address at which the optional RAM image #%d should be loaded", i+1);
     optaddr = new bx_param_num_c(optnum2,
       "addr", 
+      "Address",
       strdup(descr),
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
 #if BX_WITH_WX
-    sprintf (label, "Optional RAM image #%d", i+1);
-    optpath->set_label(strdup(label));
-    optaddr->set_label("Address");
     optaddr->set_format("0x%05x");
 #else
     sprintf(label, "Optional RAM #%d address:", i+1);
@@ -921,10 +961,6 @@ void bx_init_options ()
 #endif
   }
   memory->get_options()->set(bx_list_c::USE_TAB_WINDOW);
-  memory->set_label("Memory Options");
-  stdmem->set_label("Standard Options");
-  optrom->set_label("Optional ROM Images");
-  optram->set_label("Optional RAM Images");
 
   bx_param_c *memory_init_list[] = {
     SIM->get_param(BXPN_MEM_SIZE),
@@ -949,7 +985,7 @@ void bx_init_options ()
     SIM->get_param(BXPN_OPTRAM4_ADDRESS),
     NULL
   };
-  menu = new bx_list_c(BXP_MENU_MEMORY, "Bochs Memory Options", "memmenu", memory_init_list);
+  menu = new bx_list_c(BXP_MENU_MEMORY, "Bochs Memory Options", "", memory_init_list);
   menu->get_options()->set(menu->SHOW_PARENT);
 
   // serial and parallel port options
@@ -1085,7 +1121,7 @@ void bx_init_options ()
   *par_ser_ptr = NULL;
   menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL,
           "Serial and Parallel Port Options",
-          "serial_parallel_menu",
+          "",
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
   menu->get_options ()->set (menu->SHOW_GROUP_NAME);
@@ -1135,7 +1171,7 @@ void bx_init_options ()
       new bx_list_c (BXP_NULL, "", "", pci_deps_list));
   menu = new bx_list_c (BXP_PCI,
           "PCI Options",
-          "pci_menu",
+          "",
           pci_conf_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
@@ -1190,52 +1226,6 @@ void bx_init_options ()
       BX_MOUSE_TYPE_PS2,
       BX_MOUSE_TYPE_NONE);
   bx_options.Omouse_type->set_ask_format ("Choose the type of mouse [%s] ");
-
-#if BX_SUPPORT_SMP
-  #define BX_CPU_PROCESSORS_LIMIT 8
-  #define BX_CPU_CORES_LIMIT 4
-  #define BX_CPU_HT_THREADS_LIMIT 4
-#else
-  #define BX_CPU_PROCESSORS_LIMIT 1
-  #define BX_CPU_CORES_LIMIT 1
-  #define BX_CPU_HT_THREADS_LIMIT 1
-#endif
-
-  bx_options.cpu.Onprocessors = new bx_param_num_c (BXP_CPU_NPROCESSORS,
-      "Number of CPUs in SMP mode",
-      "Sets the number of CPUs for multiprocessor emulation",
-      1, BX_CPU_PROCESSORS_LIMIT,
-      1);
-  bx_options.cpu.Oncores = new bx_param_num_c (BXP_CPU_NCORES,
-      "Number of processor cores in each CPU in SMP mode",
-      "Sets the number of processor cores per CPU for multiprocessor emulation",
-      1, BX_CPU_CORES_LIMIT,
-      1);
-  bx_options.cpu.Onthreads = new bx_param_num_c (BXP_CPU_NTHREADS,
-      "Number of HT threads per each process core in SMP mode",
-      "Sets the number of HT (Intel(R) HyperThreading Technology) threads per core for multiprocessor emulation",
-      1, BX_CPU_HT_THREADS_LIMIT,
-      1);
-  bx_options.cpu.Oips = new bx_param_num_c (BXP_IPS, 
-      "Emulated instructions per second (IPS)",
-      "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
-      1, BX_MAX_BIT32U,
-      2000000);
-  bx_options.cpu.Oreset_on_triple_fault = new bx_param_bool_c (BXP_RESET_ON_TRIPLE_FAULT,
-      "Enable CPU reset if triple fault occured (highly recommended)",
-      "Enable CPU reset if triple fault occured (highly recommended)",
-      1);
-  bx_param_c *cpu_init_list[] = {
-#if BX_SUPPORT_SMP
-    bx_options.cpu.Onprocessors,
-    bx_options.cpu.Oncores,
-    bx_options.cpu.Onthreads,
-#endif
-    bx_options.cpu.Oips,
-    NULL
-  };
-  menu = new bx_list_c(BXP_MENU_CPU, "Bochs CPU Menu", "cpumenu", cpu_init_list);
-  menu->get_options()->set(menu->SHOW_PARENT);
 
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
@@ -1345,7 +1335,7 @@ void bx_init_options ()
 #endif
     NULL
   };
-  menu = new bx_list_c(BXP_MENU_INTERFACE, "Bochs Interface Menu", "intfmenu", interface_init_list);
+  menu = new bx_list_c(BXP_MENU_INTERFACE, "Bochs Interface Menu", "", interface_init_list);
   menu->get_options()->set(menu->SHOW_PARENT);
 
   // pcidev options
@@ -1638,7 +1628,6 @@ void bx_init_options ()
       BX_CLOCK_SYNC_NONE,
       BX_CLOCK_SYNC_NONE);
   bx_param_c *clock_init_list[] = {
-    bx_options.cpu.Oips,
     bx_options.clock.Osync,
     bx_options.clock.Otime0,
     NULL
@@ -1823,6 +1812,9 @@ void bx_reset_options ()
   }
   bx_options.OfloppySigCheck->reset();
 
+  // cpu
+  SIM->get_param("cpu")->reset();
+
   // memory (ram & rom)
   SIM->get_param("memory")->reset();
 
@@ -1855,13 +1847,6 @@ void bx_reset_options ()
   bx_options.Ofullscreen->reset();
   bx_options.Oscreenmode->reset();
 #endif
-
-  // cpu
-  bx_options.cpu.Onprocessors->reset();
-  bx_options.cpu.Oncores->reset();
-  bx_options.cpu.Onthreads->reset();
-  bx_options.cpu.Oips->reset();
-  bx_options.cpu.Oreset_on_triple_fault->reset();
 
   // ne2k
   bx_options.ne2k.Oenabled->reset();
@@ -2675,17 +2660,17 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         if (smp_threads < 1) {
           PARSE_ERR(("%s: at least one CPU thread should be defined, cpu directive malformed", context));
         }
-        bx_options.cpu.Onprocessors->set(processors);
-        bx_options.cpu.Oncores->set(cores);
-        bx_options.cpu.Onthreads->set(threads);
+        SIM->get_param_num(BXPN_CPU_NPROCESSORS)->set(processors);
+        SIM->get_param_num(BXPN_CPU_NCORES)->set(cores);
+        SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
       } else if (!strncmp(params[i], "ips=", 4)) {
-        bx_options.cpu.Oips->set (atol(&params[i][4]));
-        if (bx_options.cpu.Oips->get () < BX_MIN_IPS) {
+        SIM->get_param_num(BXPN_IPS)->set (atol(&params[i][4]));
+        if (SIM->get_param_num(BXPN_IPS)->get () < BX_MIN_IPS) {
           PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
         }
       } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
         if (params[i][22] == '0' || params[i][22] == '1') {
-          bx_options.cpu.Oreset_on_triple_fault->set (params[i][22] - '0');
+          SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->set (params[i][22] - '0');
         } else {
           PARSE_ERR(("%s: cpu directive malformed.", context));
         }
@@ -2813,8 +2798,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: ips directive: wrong # args.", context));
     }
-    bx_options.cpu.Oips->set(atol(params[1]));
-    if (bx_options.cpu.Oips->get() < BX_MIN_IPS) {
+    SIM->get_param_num(BXPN_IPS)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
       PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
     }
   } else if (!strcmp(params[0], "text_snapshot_check")) {
@@ -3717,11 +3702,12 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get());
 #if BX_SUPPORT_SMP
   fprintf (fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
-    bx_options.cpu.Onprocessors->get(), bx_options.cpu.Oncores->get(), bx_options.cpu.Onthreads->get(),
-    bx_options.cpu.Oips->get(), bx_options.cpu.Oreset_on_triple_fault->get());
+    SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
+    SIM->get_param_num(BXPN_CPU_NTHREADS)->get(), SIM->get_param_num(BXPN_IPS)->get(),
+    SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #else
   fprintf (fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
-    bx_options.cpu.Oips->get(), bx_options.cpu.Oreset_on_triple_fault->get());
+    SIM->get_param_num(BXPN_IPS)->get(), SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #endif
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get());

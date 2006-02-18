@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.112 2006-02-16 21:44:17 vruppert Exp $
+// $Id: wxmain.cc,v 1.113 2006-02-18 16:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -317,6 +317,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA2, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
+  EVT_MENU(ID_Edit_CPU, MyFrame::OnEditCPU)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
@@ -415,66 +416,67 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
 
   // set up the gui
   menuConfiguration = new wxMenu;
-  menuConfiguration->Append( ID_Config_New, "&New Configuration" );
-  menuConfiguration->Append( ID_Config_Read, "&Read Configuration" );
-  menuConfiguration->Append( ID_Config_Save, "&Save Configuration" );
-  menuConfiguration->AppendSeparator ();
+  menuConfiguration->Append(ID_Config_New, "&New Configuration" );
+  menuConfiguration->Append(ID_Config_Read, "&Read Configuration" );
+  menuConfiguration->Append(ID_Config_Save, "&Save Configuration" );
+  menuConfiguration->AppendSeparator();
   menuConfiguration->Append (ID_Quit, "&Quit");
 
   menuEdit = new wxMenu;
-  menuEdit->Append( ID_Edit_FD_0, "Floppy Disk &0..." );
-  menuEdit->Append( ID_Edit_FD_1, "Floppy Disk &1..." );
-  menuEdit->Append( ID_Edit_ATA0, "ATA Channel 0..." );
-  menuEdit->Append( ID_Edit_ATA1, "ATA Channel 1..." );
-  menuEdit->Append( ID_Edit_ATA2, "ATA Channel 2..." );
-  menuEdit->Append( ID_Edit_ATA3, "ATA Channel 3..." );
-  menuEdit->Append( ID_Edit_Boot, "&Boot..." );
-  menuEdit->Append( ID_Edit_Memory, "&Memory..." );
-  menuEdit->Append( ID_Edit_PCI, "&PCI..." );
-  menuEdit->Append( ID_Edit_Sound, "S&ound..." );
-  menuEdit->Append( ID_Edit_Timing, "&Timing..." );
-  menuEdit->Append( ID_Edit_Network, "&Network..." );
-  menuEdit->Append( ID_Edit_Keyboard, "&Keyboard..." );
-  menuEdit->Append( ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
-  menuEdit->Append( ID_Edit_LoadHack, "&Loader Hack..." );
-  menuEdit->Append( ID_Edit_Other, "&Other..." );
+  menuEdit->Append(ID_Edit_FD_0, "Floppy Disk &0..." );
+  menuEdit->Append(ID_Edit_FD_1, "Floppy Disk &1..." );
+  menuEdit->Append(ID_Edit_ATA0, "ATA Channel 0..." );
+  menuEdit->Append(ID_Edit_ATA1, "ATA Channel 1..." );
+  menuEdit->Append(ID_Edit_ATA2, "ATA Channel 2..." );
+  menuEdit->Append(ID_Edit_ATA3, "ATA Channel 3..." );
+  menuEdit->Append(ID_Edit_Boot, "&Boot..." );
+  menuEdit->Append(ID_Edit_CPU, "&CPU..." );
+  menuEdit->Append(ID_Edit_Memory, "&Memory..." );
+  menuEdit->Append(ID_Edit_PCI, "&PCI..." );
+  menuEdit->Append(ID_Edit_Sound, "S&ound..." );
+  menuEdit->Append(ID_Edit_Timing, "&Timing..." );
+  menuEdit->Append(ID_Edit_Network, "&Network..." );
+  menuEdit->Append(ID_Edit_Keyboard, "&Keyboard..." );
+  menuEdit->Append(ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
+  menuEdit->Append(ID_Edit_LoadHack, "&Loader Hack..." );
+  menuEdit->Append(ID_Edit_Other, "&Other..." );
 
   menuSimulate = new wxMenu;
-  menuSimulate->Append( ID_Simulate_Start, "&Start...");
-  menuSimulate->Append( ID_Simulate_PauseResume, "&Pause...");
-  menuSimulate->Append( ID_Simulate_Stop, "S&top...");
-  menuSimulate->AppendSeparator ();
-  menuSimulate->Enable (ID_Simulate_PauseResume, FALSE);
-  menuSimulate->Enable (ID_Simulate_Stop, FALSE);
+  menuSimulate->Append(ID_Simulate_Start, "&Start...");
+  menuSimulate->Append(ID_Simulate_PauseResume, "&Pause...");
+  menuSimulate->Append(ID_Simulate_Stop, "S&top...");
+  menuSimulate->AppendSeparator();
+  menuSimulate->Enable(ID_Simulate_PauseResume, FALSE);
+  menuSimulate->Enable(ID_Simulate_Stop, FALSE);
 
   menuDebug = new wxMenu;
-  menuDebug->Append (ID_Debug_ShowCpu, "Show &CPU");
-  menuDebug->Append (ID_Debug_ShowKeyboard, "Show &Keyboard");
+  menuDebug->Append(ID_Debug_ShowCpu, "Show &CPU");
+  menuDebug->Append(ID_Debug_ShowKeyboard, "Show &Keyboard");
 #if BX_DEBUGGER
-  menuDebug->Append (ID_Debug_Console, "Debug Console");
+  menuDebug->Append(ID_Debug_Console, "Debug Console");
 #endif
-  menuDebug->Append (ID_Debug_ShowMemory, "Show &memory");
+  menuDebug->Append(ID_Debug_ShowMemory, "Show &memory");
 
   menuLog = new wxMenu;
-  menuLog->Append (ID_Log_View, "&View");
-  menuLog->Append (ID_Log_Prefs, "&Preferences...");
-  menuLog->Append (ID_Log_PrefsDevice, "By &Device...");
+  menuLog->Append(ID_Log_View, "&View");
+  menuLog->Append(ID_Log_Prefs, "&Preferences...");
+  menuLog->Append(ID_Log_PrefsDevice, "By &Device...");
 
   menuHelp = new wxMenu;
-  menuHelp->Append( ID_Help_About, "&About..." );
+  menuHelp->Append(ID_Help_About, "&About..." );
 
   wxMenuBar *menuBar = new wxMenuBar;
-  menuBar->Append( menuConfiguration, "&File" );
-  menuBar->Append( menuEdit, "&Edit" );
-  menuBar->Append( menuSimulate, "&Simulate" );
-  menuBar->Append( menuDebug, "&Debug" );
-  menuBar->Append( menuLog, "&Log" );
-  menuBar->Append( menuHelp, "&Help" );
-  SetMenuBar( menuBar );
+  menuBar->Append(menuConfiguration, "&File" );
+  menuBar->Append(menuEdit, "&Edit" );
+  menuBar->Append(menuSimulate, "&Simulate" );
+  menuBar->Append(menuDebug, "&Debug" );
+  menuBar->Append(menuLog, "&Log" );
+  menuBar->Append(menuHelp, "&Help" );
+  SetMenuBar(menuBar);
 
   // disable things that don't work yet
-  menuDebug->Enable (ID_Debug_ShowMemory, FALSE);  // not implemented
-  menuLog->Enable (ID_Log_View, FALSE);  // not implemented
+  menuDebug->Enable(ID_Debug_ShowMemory, FALSE);  // not implemented
+  menuLog->Enable(ID_Log_View, FALSE);  // not implemented
 
   CreateStatusBar();
   wxStatusBar *sb = GetStatusBar();
@@ -592,11 +594,20 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal ();
 }
 
+void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("cpu");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.ShowModal();
+}
+
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("memory");
-  dlg.SetTitle(list->get_label());
+  dlg.SetTitle(list->get_title()->getptr());
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -924,12 +935,13 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
       }
     }
   }
-  menuEdit->Enable( ID_Edit_Boot, canConfigure);
-  menuEdit->Enable( ID_Edit_Memory, canConfigure);
-  menuEdit->Enable( ID_Edit_PCI, canConfigure);
-  menuEdit->Enable( ID_Edit_Timing, canConfigure);
-  menuEdit->Enable( ID_Edit_Network, canConfigure);
-  menuEdit->Enable( ID_Edit_LoadHack, canConfigure);
+  menuEdit->Enable(ID_Edit_Boot, canConfigure);
+  menuEdit->Enable(ID_Edit_CPU, canConfigure);
+  menuEdit->Enable(ID_Edit_Memory, canConfigure);
+  menuEdit->Enable(ID_Edit_PCI, canConfigure);
+  menuEdit->Enable(ID_Edit_Timing, canConfigure);
+  menuEdit->Enable(ID_Edit_Network, canConfigure);
+  menuEdit->Enable(ID_Edit_LoadHack, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.

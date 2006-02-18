@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.173 2006-02-17 22:27:38 vruppert Exp $
+// $Id: bochs.h,v 1.174 2006-02-18 16:53:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -472,14 +472,6 @@ typedef struct {
 } bx_ata_options;
 
 typedef struct {
-  bx_param_num_c    *Onprocessors;
-  bx_param_num_c    *Oncores;
-  bx_param_num_c    *Onthreads;
-  bx_param_num_c    *Oips;
-  bx_param_bool_c   *Oreset_on_triple_fault;
-} bx_cpu_options;
-
-typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_string_c *Ooutfile;
 } bx_parport_options;
@@ -571,7 +563,6 @@ typedef struct BOCHSAPI {
   bx_usb_options    usb[BX_N_USB_HUBS];
   bx_pcislot_options pcislot[BX_N_PCI_SLOTS];
   bx_pnic_options   pnic;
-  bx_cpu_options    cpu;
   bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
   bx_param_enum_c   *Obootdrive[3];  

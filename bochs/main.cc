@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.311 2006-02-17 22:27:38 vruppert Exp $
+// $Id: main.cc,v 1.312 2006-02-18 16:53:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -763,9 +763,9 @@ int bx_begin_simulation (int argc, char *argv[])
     return 0;
   }
 
-  bx_cpu_count = bx_options.cpu.Onprocessors->get() *
-                 bx_options.cpu.Oncores->get() *
-                 bx_options.cpu.Onthreads->get();
+  bx_cpu_count = SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get() *
+                 SIM->get_param_num(BXPN_CPU_NCORES)->get() *
+                 SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
   BX_ASSERT(bx_cpu_count < BX_MAX_SMP_THREADS_SUPPORTED);
   BX_ASSERT(bx_cpu_count > 0);
@@ -844,7 +844,7 @@ int bx_init_hardware()
     }
   }
 
-  bx_pc_system.init_ips(bx_options.cpu.Oips->get());
+  bx_pc_system.init_ips(SIM->get_param_num(BXPN_IPS)->get());
 
   if(bx_options.log.Ofilename->getptr()[0]!='-') {
     BX_INFO (("using log file %s", bx_options.log.Ofilename->getptr()));
@@ -859,7 +859,7 @@ int bx_init_hardware()
   BX_INFO(("  %s", REL_STRING));
   BX_INFO(("System configuration"));
   BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
-    bx_options.cpu.Oncores->get(), bx_options.cpu.Onthreads->get()));
+    SIM->get_param_num(BXPN_CPU_NCORES)->get(), SIM->get_param_num(BXPN_CPU_NTHREADS)->get()));
   BX_INFO(("  A20 line support: %s",BX_SUPPORT_A20?"yes":"no"));
   BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("CPU configuration"));

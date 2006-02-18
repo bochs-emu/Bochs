@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.114 2006-02-16 21:44:16 vruppert Exp $
+// $Id: siminterface.cc,v 1.115 2006-02-18 16:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -52,8 +52,8 @@ public:
   }
   virtual int register_param (bx_id id, bx_param_c *it);
   virtual void reset_all_param ();
+  // deprecated
   virtual bx_param_c *get_param (bx_id id);
-  virtual bx_param_c *get_param (const char *pname, bx_param_c *base=NULL);
   // deprecated
   virtual bx_param_num_c *get_param_num (bx_id id);
   // deprecated
@@ -62,10 +62,12 @@ public:
   virtual bx_param_bool_c *get_param_bool (bx_id id);
   // deprecated
   virtual bx_param_enum_c *get_param_enum (bx_id id);
-  virtual bx_param_num_c *get_param_num (const char *pname);
-  virtual bx_param_string_c *get_param_string (const char *pname);
-  virtual bx_param_bool_c *get_param_bool (const char *pname);
-  virtual bx_param_enum_c *get_param_enum (const char *pname);
+  // new methods
+  virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
+  virtual bx_param_num_c *get_param_num(const char *pname);
+  virtual bx_param_string_c *get_param_string(const char *pname);
+  virtual bx_param_bool_c *get_param_bool(const char *pname);
+  virtual bx_param_enum_c *get_param_enum(const char *pname);
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
   virtual int get_log_action (int mod, int level);
@@ -973,11 +975,13 @@ bx_param_num_c::bx_param_num_c (bx_id id,
 
 bx_param_num_c::bx_param_num_c (bx_param_c *parent,
     char *name,
+    char *label,
     char *description,
     Bit64s min, Bit64s max, Bit64s initial_val)
   : bx_param_c (BXP_NULL, name, description)
 {
   set_type (BXT_PARAM_NUM);
+  this->label = label;
   this->min = min;
   this->max = max;
   this->initial_val = initial_val;
@@ -1279,6 +1283,17 @@ bx_param_bool_c::bx_param_bool_c (bx_id id,
   set (initial_val);
 }
 
+bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
+    char *name,
+    char *label,
+    char *description,
+    Bit64s initial_val)
+  : bx_param_num_c(parent, name, label, description, 0, 1, initial_val)
+{
+  set_type(BXT_PARAM_BOOL);
+  set(initial_val);
+}
+
 bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,
       char *name,
       char *description,
@@ -1380,12 +1395,14 @@ bx_param_string_c::bx_param_string_c (bx_id id,
 
 bx_param_string_c::bx_param_string_c (bx_param_c *parent,
     char *name,
+    char *label,
     char *description,
     char *initial_val,
     int maxsize)
   : bx_param_c (BXP_NULL, name, description)
 {
   set_type (BXT_PARAM_STRING);
+  this->label = label;
   if (maxsize < 0) 
     maxsize = strlen(initial_val) + 1;
   this->val = new char[maxsize];
@@ -1408,19 +1425,20 @@ bx_param_filename_c::bx_param_filename_c (bx_id id,
     char *description,
     char *initial_val,
     int maxsize)
-  : bx_param_string_c (id, name, description, initial_val, maxsize)
+  : bx_param_string_c(id, name, description, initial_val, maxsize)
 {
-  get_options()->set (IS_FILENAME);
+  get_options()->set(IS_FILENAME);
 }
 
 bx_param_filename_c::bx_param_filename_c (bx_param_c *parent,
     char *name,
+    char *label,
     char *description,
     char *initial_val,
     int maxsize)
-  : bx_param_string_c (parent, name, description, initial_val, maxsize)
+  : bx_param_string_c(parent, name, label, description, initial_val, maxsize)
 {
-  get_options()->set (IS_FILENAME);
+  get_options()->set(IS_FILENAME);
 }
 
 bx_param_string_c::~bx_param_string_c ()
@@ -1520,28 +1538,28 @@ void bx_param_string_c::set_initial_val (char *buf) {
 bx_list_c::bx_list_c (bx_id id, int maxsize)
   : bx_param_c (id, "list", "")
 {
-  set_type (BXT_LIST);
+  set_type(BXT_LIST);
   this->size = 0;
   this->maxsize = maxsize;
   this->list = new bx_param_c*  [maxsize];
   this->parent = NULL;
-  init ();
+  init("");
 }
 
-bx_list_c::bx_list_c (bx_id id, char *name, char *description, int maxsize)
-  : bx_param_c (id, name, description)
+bx_list_c::bx_list_c (bx_id id, char *name, char *title, int maxsize)
+  : bx_param_c (id, name, NULL)
 {
-  set_type (BXT_LIST);
+  set_type(BXT_LIST);
   this->size = 0;
   this->maxsize = maxsize;
   this->list = new bx_param_c*  [maxsize];
   this->parent = NULL;
-  init ();
+  init(title);
 }
 
-bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *description, 
+bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *title,
     int maxsize)
-  : bx_param_c (BXP_NULL, name, description)
+  : bx_param_c (BXP_NULL, name, NULL)
 {
   set_type (BXT_LIST);
   this->size = 0;
@@ -1553,13 +1571,13 @@ bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *description,
     this->parent = (bx_list_c *)parent;
     this->parent->add (this);
   }
-  init ();
+  init(title);
 }
 
-bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init_list)
-  : bx_param_c (id, name, description)
+bx_list_c::bx_list_c (bx_id id, char *name, char *title, bx_param_c **init_list)
+  : bx_param_c (id, name, NULL)
 {
-  set_type (BXT_LIST);
+  set_type(BXT_LIST);
   this->size = 0;
   while (init_list[this->size] != NULL)
     this->size++;
@@ -1567,7 +1585,7 @@ bx_list_c::bx_list_c (bx_id id, char *name, char *description, bx_param_c **init
   this->list = new bx_param_c*  [maxsize];
   for (int i=0; i<this->size; i++)
     this->list[i] = init_list[i];
-  init ();
+  init(title);
   this->parent = NULL;
 }
 
@@ -1596,13 +1614,16 @@ bx_list_c::~bx_list_c()
 }
 
 void
-bx_list_c::init ()
+bx_list_c::init(const char *list_title)
 {
   // the title defaults to the name
   this->title = new bx_param_string_c (BXP_NULL,
       "title of list",
       "",
-      get_name (), 80);
+      get_name(), 80);
+  if ((list_title != NULL) && (strlen(list_title) > 0)) {
+    this->title->set(strdup(list_title));
+  }
   this->options = new bx_param_num_c (BXP_NULL,
       "list_option", "", 0, BX_MAX_BIT64S,
       0);

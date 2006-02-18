@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.72 2006-02-11 09:08:02 sshwarts Exp $
+// $Id: exception.cc,v 1.73 2006-02-18 16:53:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -849,7 +849,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
      // if 1st was a double fault (software INT?), then shutdown
      (BX_CPU_THIS_PTR errorno == 2 && BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT))
   {
-    if (bx_options.cpu.Oreset_on_triple_fault->get()) {
+    if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
       BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
       debug(BX_CPU_THIS_PTR prev_eip);
       bx_pc_system.Reset(BX_RESET_SOFTWARE);

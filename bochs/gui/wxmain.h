@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.47 2005-11-24 18:51:55 vruppert Exp $
+// $Id: wxmain.h,v 1.48 2006-02-18 16:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -40,6 +40,7 @@ enum
   ID_Edit_ATA3,
   ID_Edit_Cdrom,  // for toolbar. FIXME: toolbar can't handle >1 cdrom
   ID_Edit_Boot,
+  ID_Edit_CPU,
   ID_Edit_Memory,
   ID_Edit_PCI,
   ID_Edit_Sound,
@@ -174,6 +175,7 @@ public:
   void OnSim2CIEvent(wxCommandEvent& event);
   void OnLogMsg(BxEvent *logMsgEvent);
   void OnEditBoot(wxCommandEvent& event);
+  void OnEditCPU(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
   void OnEditPCI(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);

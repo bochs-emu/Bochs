@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.33 2006-02-11 15:28:43 sshwarts Exp $
+// $Id: textconfig.cc,v 1.34 2006-02-18 16:53:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -370,6 +370,34 @@ int do_menu (bx_id id) {
   }
 }
 
+int do_menu2(const char *pname, bx_param_c *base) {
+  bx_list_c *menu = (bx_list_c *)SIM->get_param(pname, base);
+  while (1) {
+    menu->get_choice()->set(0);
+    int status = menu->text_ask(stdin, stderr);
+    if (status < 0) return status;
+    bx_param_num_c *choice = menu->get_choice();
+    if (choice->get() < 1)
+      return choice->get();
+    else {
+      int index = choice->get() - 1;  // choosing 1 means list[0]
+      bx_param_c *chosen = menu->get(index);
+      assert(chosen != NULL);
+      if (chosen->get_enabled()) {
+        if (chosen->get_type() == BXT_LIST) {
+          if (chosen->get_id() != BXP_NULL) {
+            do_menu(chosen->get_id());
+          } else {
+            do_menu2(chosen->get_name(), menu);
+          }
+        } else {
+          chosen->text_ask(stdin, stderr);
+        }
+      }
+    }
+  }
+}
+
 void askparam (bx_id id)
 {
   bx_param_c *param = SIM->get_param (id);
@@ -455,7 +483,7 @@ int bx_config_interface (int menu)
 	 case 3: askparam (BXP_DEBUGGER_LOG_FILENAME); break;
 	 case 4: bx_log_options (0); break;
 	 case 5: bx_log_options (1); break;
-	 case 6: do_menu (BXP_MENU_CPU); break;
+	 case 6: do_menu2("cpu", NULL); break;
 	 case 7: do_menu (BXP_MENU_MEMORY); break;
 	 case 8: do_menu (BXP_MENU_INTERFACE); break;
 	 case 9: do_menu (BXP_MENU_DISK); break;
@@ -713,38 +741,50 @@ bx_param_num_c::text_print (FILE *fp)
 {
   //fprintf (fp, "number parameter, id=%u, name=%s\n", get_id (), get_name ());
   //fprintf (fp, "value=%u\n", get ());
-  if (get_format ()) {
-    fprintf (fp, get_format (), get ());
+  if (get_format()) {
+    fprintf(fp, get_format(), get());
   } else {
     char *format = "%s: %d"; 
     assert (base==10 || base==16);
     if (base==16) format = "%s: 0x%x";
-    fprintf (fp, format, get_name (), get ());
+    if (get_label()) {
+      fprintf(fp, format, get_label(), get());
+    } else {
+      fprintf(fp, format, get_name(), get());
+    }
   }
 }
 
 void
 bx_param_bool_c::text_print (FILE *fp)
 {
-  if (get_format ()) {
-    fprintf (fp, get_format (), get () ? "yes" : "no");
+  if (get_format()) {
+    fprintf(fp, get_format(), get() ? "yes" : "no");
   } else {
     char *format = "%s: %s"; 
-    fprintf (fp, format, get_name (), get () ? "yes" : "no");
+    if (get_label()) {
+      fprintf(fp, format, get_label(), get() ? "yes" : "no");
+    } else {
+      fprintf(fp, format, get_name(), get() ? "yes" : "no");
+    }
   }
 }
 
 void
 bx_param_enum_c::text_print (FILE *fp)
 {
-  int n = get ();
+  int n = get();
   assert (n >= min && n <= max);
   char *choice = choices[n - min];
-  if (get_format ()) {
-    fprintf (fp, get_format (), choice);
+  if (get_format()) {
+    fprintf(fp, get_format(), choice);
   } else {
     char *format = "%s: %s"; 
-    fprintf (fp, format, get_name (), choice);
+    if (get_label()) {
+      fprintf(fp, format, get_label(), choice);
+    } else {
+      fprintf(fp, format, get_name(), choice);
+    }
   }
 }
 
@@ -769,27 +809,22 @@ bx_param_string_c::text_print (FILE *fp)
     }
     value = buffer;
   }
-  if (get_format ()) {
-    fprintf (fp, get_format (), value);
+  if (get_format()) {
+    fprintf(fp, get_format(), value);
   } else {
-    fprintf (fp, "%s: %s", get_name (), value);
+    if (get_label()) {
+      fprintf(fp, "%s: %s", get_label(), value);
+    } else {
+      fprintf(fp, "%s: %s", get_name(), value);
+    }
   }
 }
 
 void
 bx_list_c::text_print (FILE *fp)
 {
-  //fprintf (fp, "This is a list.\n");
-  //fprintf (fp, "title=%s\n", title->getptr ());
   fprintf (fp, "%s: ", get_name ());
-  /*
-  fprintf (fp, "options=%s%s%s\n", 
-      (options->get () == 0) ? "none" : "",
-      (options->get () & SHOW_PARENT) ? "SHOW_PARENT " : "",
-      (options->get () & SERIES_ASK) ? "SERIES_ASK " : "");
-      */
   for (int i=0; i<size; i++) {
-    //fprintf (fp, "param[%d] = %p\n", i, list[i]);
     assert (list[i] != NULL);
     if (list[i]->get_enabled ()) {
       if ((i>0) && (options->get () & SERIES_ASK))
@@ -827,17 +862,22 @@ bx_param_bool_c::text_ask (FILE *fpin, FILE *fpout)
 {
   fprintf (fpout, "\n");
   int status;
-  char *prompt = get_ask_format ();
+  char *prompt = get_ask_format();
   char buffer[512];
   if (prompt == NULL) {
-    // default prompt, if they didn't set an ask format string
-    sprintf (buffer, "%s? [%%s] ", get_name ());
-    prompt = buffer;
+    if (get_label() != NULL) {
+      sprintf(buffer, "%s? [%%s] ", get_label());
+      prompt = buffer;
+    } else {
+      // default prompt, if they didn't set an ask format or label string
+      sprintf(buffer, "%s? [%%s] ", get_name());
+      prompt = buffer;
+    }
   }
-  Bit32u n = get ();
-  status = ask_yn (prompt, n, &n);
+  Bit32u n = get();
+  status = ask_yn(prompt, n, &n);
   if (status < 0) return status;
-  set (n);
+  set(n);
   return 0;
 }
 
@@ -920,6 +960,8 @@ bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
 int
 bx_list_c::text_ask (FILE *fpin, FILE *fpout)
 {
+  bx_list_c *child;
+
   char *my_title = title->getptr ();
   fprintf (fpout, "\n");
   int i, imax = strlen (my_title);
@@ -943,12 +985,13 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
       fprintf (fpout, "%d. ", i+1);
       if (list[i]->get_enabled ()) {
         if (list[i]->get_type () == BXT_LIST) {
-          fprintf (fpout, "%s\n", list[i]->get_name ());
+          child = (bx_list_c*)list[i];
+          fprintf(fpout, "%s\n", child->get_title()->getptr());
         } else {
-          if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group () != NULL))
-            fprintf (fpout, "%s ", list[i]->get_group ());
+          if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
+            fprintf(fpout, "%s ", list[i]->get_group ());
           list[i]->text_print (fpout);
-          fprintf (fpout, "\n");
+          fprintf(fpout, "\n");
         }
       } else
 	fprintf (fpout, "(disabled)\n");
