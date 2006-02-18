@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id:
+// $Id: cpuid.cc,v 1.32 2006-02-18 17:28:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -191,7 +191,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 #if BX_SUPPORT_SMP
   // Intel(R) HyperThreading Technology
-  if (bx_options.cpu.Onthreads->get() > 1) 
+  if (SIM->get_param_num(BXPN_CPU_NTHREADS)->get() > 1) 
     features |= (1<<28);
 #endif
 
@@ -294,7 +294,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RBX = 0;
 #endif
 #if BX_SUPPORT_SMP
-      n_logical_processors = bx_options.cpu.Oncores->get()*bx_options.cpu.Onthreads->get();
+      n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
       if (n_logical_processors > 1)
           RBX |= (n_logical_processors << 16);
 #endif
