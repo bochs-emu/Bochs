@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.159 2006-02-19 15:43:03 vruppert Exp $
+// $Id: harddrv.cc,v 1.160 2006-02-19 21:35:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.159 2006-02-19 15:43:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.160 2006-02-19 21:35:49 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -3319,7 +3319,7 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
 bx_hard_drive_c::bmdma_present(void)
 {
 #if BX_SUPPORT_PCI
-  if (bx_options.Oi440FXSupport->get()) {
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     return DEV_ide_bmdma_present();
   }
 #endif

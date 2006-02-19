@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.312 2006-02-18 16:53:16 vruppert Exp $
+// $Id: main.cc,v 1.313 2006-02-19 21:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1029,7 +1029,7 @@ int bx_atexit(void)
 
 #if BX_SUPPORT_PCI
   if (SIM && SIM->get_init_done ()) {
-    if (bx_options.Oi440FXSupport->get()) {
+    if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
       bx_devices.pluginPciBridge->print_i440fx_state();
     }
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.43 2005-10-13 16:22:21 sshwarts Exp $
+// $Id: memory.cc,v 1.44 2006-02-19 21:35:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,8 +143,7 @@ inc_one:
     // ignore write to ROM
 #else
     // Write Based on 440fx Programming
-    if ( bx_options.Oi440FXSupport->get () &&
-          ((a20addr & 0xfffc0000) == 0x000c0000) )
+    if (pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_wr_memtype(a20addr & 0xFC000)) {
         case 0x1:   // Writes to ShadowRAM
@@ -282,8 +281,7 @@ inc_one:
 
     // addr in range 00080000 .. 000FFFFF
 #if BX_SUPPORT_PCI
-    if ( bx_options.Oi440FXSupport->get () &&
-          ((a20addr & 0xfffc0000) == 0x000c0000) )
+    if (pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype (a20addr)) {
         case 0x0:  // Read from ROM

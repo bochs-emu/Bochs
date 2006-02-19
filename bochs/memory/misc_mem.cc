@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.77 2006-02-11 09:35:54 vruppert Exp $
+// $Id: misc_mem.cc,v 1.78 2006-02-19 21:35:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.77 2006-02-11 09:35:54 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.78 2006-02-19 21:35:50 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -114,6 +114,7 @@ void BX_MEM_C::init_memory(int memsize)
       BX_MEM_THIS rom_present[idx] = 0;
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
   }
+  BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
 
 #if BX_DEBUGGER
   if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
@@ -434,8 +435,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
     if ( (addr & 0xfffe0000) == 0x000a0000 )
       *buf = DEV_vga_mem_read(addr);
 #if BX_SUPPORT_PCI
-    else if ( bx_options.Oi440FXSupport->get () &&
-          ((addr & 0xfffc0000) == 0x000c0000) )
+    else if (pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype (addr)) {
         case 0x0:  // Read from ROM
@@ -496,8 +496,7 @@ bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
     if ( (addr & 0xfffe0000) == 0x000a0000 )
       DEV_vga_mem_write(addr, *buf);
 #if BX_SUPPORT_PCI
-    else if ( bx_options.Oi440FXSupport->get () &&
-          ((addr & 0xfffc0000) == 0x000c0000) )
+    else if (pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_wr_memtype (addr)) {
         case 0x0:  // Ignore write to ROM
@@ -574,8 +573,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
 #if BX_SUPPORT_PCI
-    else if ( bx_options.Oi440FXSupport->get () &&
-             ((a20Addr & 0xfffc0000) == 0x000c0000) )
+    else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype (a20Addr)) {
         case 0x0:   // Read from ROM
@@ -630,8 +628,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     else if (a20Addr >= (Bit32u)~BIOS_MASK)
       return(NULL); // Vetoed!  ROMs
 #if BX_SUPPORT_PCI
-    else if ( bx_options.Oi440FXSupport->get () &&
-             ((a20Addr & 0xfffc0000) == 0x000c0000) )
+    else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_wr_memtype (a20Addr)) {
         case 0x0:   // Vetoed!  ROMs

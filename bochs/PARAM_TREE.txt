@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.4 2006-02-19 15:43:02 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.5 2006-02-19 21:35:45 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -68,12 +68,12 @@ cpu
 memory
   standard
     ram
-      size                BXP_MEM_SIZE,
+      size              BXP_MEM_SIZE,
     rom
-      path                BXP_ROM_PATH,
-      address             BXP_ROM_ADDRESS,
+      path              BXP_ROM_PATH,
+      address           BXP_ROM_ADDRESS,
     vgarom
-      path                BXP_VGA_ROM_PATH,
+      path              BXP_VGA_ROM_PATH,
   optrom
     0
       path              BXP_OPTROM1_PATH,
@@ -102,12 +102,24 @@ memory
       addr              BXP_OPTRAM4_ADDRESS,
 
 clock_cmos
-  clock_sync          BXP_CLOCK_SYNC,
-  time0               BXP_CLOCK_TIME0,
+  clock_sync            BXP_CLOCK_SYNC,
+  time0                 BXP_CLOCK_TIME0,
   cmosimage
-    enabled               BXP_CMOSIMAGE_ENABLED,
-    path                  BXP_CMOSIMAGE_PATH,
-    rtc_init              BXP_CMOSIMAGE_RTC_INIT,
+    enabled             BXP_CMOSIMAGE_ENABLED,
+    path                BXP_CMOSIMAGE_PATH,
+    rtc_init            BXP_CMOSIMAGE_RTC_INIT,
+
+pci
+  i440fx_support        BXP_I440FX_SUPPORT,
+  slot
+    1                   BXP_PCISLOT1_DEVNAME,
+    2                   BXP_PCISLOT2_DEVNAME,
+    3                   BXP_PCISLOT3_DEVNAME,
+    4                   BXP_PCISLOT4_DEVNAME,
+    5                   BXP_PCISLOT5_DEVNAME,
+  pcidev
+    vendor              BXP_PCIDEV_VENDOR,
+    device              BXP_PCIDEV_DEVICE,
 
 floppy
   0                     BXP_FLOPPYA,
@@ -211,24 +223,6 @@ sb16                BXP_SB16,
   wavemode          BXP_SB16_WAVEMODE,
   loglevel          BXP_SB16_LOGLEVEL,
   dmatimer          BXP_SB16_DMATIMER,
-
-pci
-  i440fx_support        BXP_I440FX_SUPPORT,
-  slots
-    1
-      used              BXP_PCISLOT1_USED,
-      devname           BXP_PCISLOT1_DEVNAME,
-    2
-      (same options as pci.slot.1)
-    3
-      (same options as pci.slot.1)
-    4
-      (same options as pci.slot.1)
-    5
-      (same options as pci.slot.1)
-  pcidev
-    vendor              BXP_PCIDEV_VENDOR,
-    device              BXP_PCIDEV_DEVICE,
 
 vga
   update_interval     BXP_VGA_UPDATE_INTERVAL,

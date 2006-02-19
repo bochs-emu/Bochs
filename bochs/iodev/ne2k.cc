@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.79 2006-01-28 20:18:18 vruppert Exp $
+// $Id: ne2k.cc,v 1.80 2006-02-19 21:35:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1317,7 +1317,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.79 2006-01-28 20:18:18 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.80 2006-02-19 21:35:49 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
@@ -1325,7 +1325,7 @@ bx_ne2k_c::init(void)
   strcpy(devname, "NE2000 NIC");
 
 #if BX_SUPPORT_PCI
-  if ((bx_options.Oi440FXSupport->get()) &&
+  if ((SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) &&
       (DEV_is_pci_device(BX_PLUGIN_NE2K))) {
     BX_NE2K_THIS s.pci_enabled = 1;
     strcpy(devname, "NE2000 PCI NIC");

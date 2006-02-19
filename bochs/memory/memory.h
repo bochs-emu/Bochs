@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.29 2006-01-28 16:16:03 sshwarts Exp $
+// $Id: memory.h,v 1.30 2006-02-19 21:35:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,6 +63,7 @@ class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
   bx_bool rom_present[65];
+  bx_bool pci_enabled;
   
 public:
   Bit8u   *actual_vector;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.57 2006-02-13 21:32:20 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.58 2006-02-19 21:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1932,7 +1932,7 @@ void bx_dbg_dump_cpu_command(void)
   }
 
 #if BX_SUPPORT_PCI
-  if (bx_options.Oi440FXSupport->get ()) {
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     DEV_pci_print_i440fx_state();
   }
 #endif

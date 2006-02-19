@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.158 2006-02-19 15:43:03 vruppert Exp $
+// $Id: siminterface.h,v 1.159 2006-02-19 21:35:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -149,6 +149,7 @@ typedef enum {
 #define BXPN_CMOSIMAGE_ENABLED           "clock_cmos.cmosimage.enabled"
 #define BXPN_CMOSIMAGE_PATH              "clock_cmos.cmosimage.path"
 #define BXPN_CMOSIMAGE_RTC_INIT          "clock_cmos.cmosimage.rtc_init"
+#define BXPN_I440FX_SUPPORT              "pci.i440fx_support"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -361,8 +362,6 @@ typedef enum {
   BXP_PRIVATE_COLORMAP,
   BXP_FULLSCREEN,
   BXP_SCREENMODE,
-  BXP_I440FX_SUPPORT,
-  BXP_PCI,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
@@ -418,17 +417,6 @@ typedef enum {
   BXP_PARPORT1_OUTFILE,
   BXP_PARPORT2_ENABLED,
   BXP_PARPORT2_OUTFILE,
-#define BXP_PARAMS_PER_PCI_SLOT 2
-  BXP_PCI_SLOT1_USED,
-  BXP_PCI_SLOT1_DEVNAME,
-  BXP_PCI_SLOT2_USED,
-  BXP_PCI_SLOT2_DEVNAME,
-  BXP_PCI_SLOT3_USED,
-  BXP_PCI_SLOT3_DEVNAME,
-  BXP_PCI_SLOT4_USED,
-  BXP_PCI_SLOT4_DEVNAME,
-  BXP_PCI_SLOT5_USED,
-  BXP_PCI_SLOT5_DEVNAME,
   BXP_KEYBOARD_USEMAPPING,
   BXP_KEYBOARD_MAP,
   BXP_KEYBOARD,
@@ -540,12 +528,6 @@ typedef enum {
   (bx_id)(BXP_PARPORT1_ENABLED + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
 #define BXP_PARPORTx_OUTFILE(x) \
   (bx_id)(BXP_PARPORT1_OUTFILE + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
-
-// use x=1,2,3,4,5
-#define BXP_PCISLOTx_USED(x) \
-   (bx_id)(BXP_PCI_SLOT1_USED + (((x)-1)*BXP_PARAMS_PER_PCI_SLOT))
-#define BXP_PCISLOTx_DEVNAME(x) \
-   (bx_id)(BXP_PCI_SLOT1_DEVNAME + (((x)-1)*BXP_PARAMS_PER_PCI_SLOT))
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
@@ -1415,11 +1397,6 @@ typedef struct {
   bx_param_string_c *Oethdev;
   bx_param_string_c *Oscript;
 } bx_pnic_options;
-
-typedef struct {
-  bx_param_bool_c *Oused;
-  bx_param_string_c *Odevname;
-} bx_pcislot_options;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

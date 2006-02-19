@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.77 2006-02-19 15:43:02 vruppert Exp $
+// $Id: config.cc,v 1.78 2006-02-19 21:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1010,6 +1010,38 @@ void bx_init_options()
   clock_cmos->get_options()->set(bx_list_c::SHOW_PARENT);
   cmosimage->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // pci subtree
+  bx_list_c *pci = new bx_list_c(root_param, "pci", "PCI Options");
+
+  // pci options
+  bx_param_c *pci_deps_list[1+BX_N_PCI_SLOTS];
+  bx_param_c **pci_deps_ptr = &pci_deps_list[0];
+
+  bx_param_bool_c *i440fx_support = new bx_param_bool_c(pci,
+      "i440fx_support",
+      "Enable i440FX PCI Support",
+      "Controls whether to emulate the i440FX PCI chipset",
+      BX_SUPPORT_PCI);
+  // pci slots
+  bx_list_c *slot = new bx_list_c(pci, "slot", "PCI Slots");
+  for (i=0; i<BX_N_PCI_SLOTS; i++) {
+    sprintf(name, "%d", i+1);
+    sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
+    sprintf (label, "PCI slot #%d device", i+1);
+    bx_param_string_c *devname = new bx_param_string_c(slot,
+        strdup(name), 
+        strdup(label), 
+        strdup(descr),
+        "", BX_PATHNAME_LEN);
+    // add to menus
+    *pci_deps_ptr++ = devname;
+  }
+  // add final NULL at the end, and build the menu
+  *pci_deps_ptr = NULL;
+  i440fx_support->set_dependent_list(new bx_list_c(BXP_NULL, "", "", pci_deps_list));
+  pci->get_options()->set(bx_list_c::SHOW_PARENT);
+  slot->get_options()->set(bx_list_c::SHOW_PARENT);
+
   // serial and parallel port options
 
 #define PAR_SER_INIT_LIST_MAX \
@@ -1147,55 +1179,6 @@ void bx_init_options()
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
   menu->get_options ()->set (menu->SHOW_GROUP_NAME);
-
-  // pci options
-
-#define PCICONF_INIT_LIST_MAX \
-  ((BXP_PARAMS_PER_PCI_SLOT * BX_N_PCI_SLOTS) + 1)
-  bx_param_c *pci_conf_init_list[1+PCICONF_INIT_LIST_MAX];
-  bx_param_c **pci_conf_ptr = &pci_conf_init_list[0];
-  bx_param_c *pci_deps_list[1+BX_N_PCI_SLOTS];
-  bx_param_c **pci_deps_ptr = &pci_deps_list[0];
-
-  bx_options.Oi440FXSupport = new bx_param_bool_c (BXP_I440FX_SUPPORT,
-      "Enable i440FX PCI Support",
-      "Controls whether to emulate the i440FX PCI chipset",
-      BX_SUPPORT_PCI);
-  *pci_conf_ptr++ = bx_options.Oi440FXSupport;
-  // pci slots
-  for (i=0; i<BX_N_PCI_SLOTS; i++) {
-        sprintf (name, "Use PCI slot #%d", i+1);
-        sprintf (descr, "Controls whether PCI slot #%d is used or not", i+1);
-        bx_options.pcislot[i].Oused = new bx_param_bool_c (
-                BXP_PCISLOTx_USED(i+1), 
-                strdup(name), 
-                strdup(descr), 
-                0);
-        sprintf (name, "PCI slot #%d device", i+1);
-        sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
-        bx_options.pcislot[i].Odevname = new bx_param_string_c (
-                BXP_PCISLOTx_DEVNAME(i+1), 
-                strdup(name), 
-                strdup(descr),
-                "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 1);
-        deplist->add (bx_options.pcislot[i].Odevname);
-        bx_options.pcislot[i].Oused->set_dependent_list (deplist);
-        // add to menus
-        *pci_conf_ptr++ = bx_options.pcislot[i].Oused;
-        *pci_conf_ptr++ = bx_options.pcislot[i].Odevname;
-        *pci_deps_ptr++ = bx_options.pcislot[i].Oused;
-  }
-  // add final NULL at the end, and build the menu
-  *pci_conf_ptr = NULL;
-  *pci_deps_ptr = NULL;
-  bx_options.Oi440FXSupport->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", pci_deps_list));
-  menu = new bx_list_c (BXP_PCI,
-          "PCI Options",
-          "",
-          pci_conf_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
 
   // interface
   bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
@@ -1791,6 +1774,9 @@ void bx_reset_options ()
   // clock & cmos
   SIM->get_param("clock_cmos")->reset();
 
+  // pci
+  SIM->get_param("pci")->reset();
+
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     bx_options.com[i].Oenabled->reset();
@@ -1865,13 +1851,6 @@ void bx_reset_options ()
   bx_options.keyboard.Okeymap->reset();
   bx_options.Okeyboard_type->reset();
   bx_options.Ouser_shortcut->reset();
-
-  // PCI
-  bx_options.Oi440FXSupport->reset();
-  for (i=0; i<BX_N_PCI_SLOTS; i++) {
-    bx_options.pcislot[i].Oused->reset();
-    bx_options.pcislot[i].Odevname->reset();
-  }
 
   // pcidev
   bx_options.pcidev.Ovendor->reset();
@@ -2928,14 +2907,15 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       }
     }
   } else if (!strcmp(params[0], "i440fxsupport")) {
+    char tmpdev[80];
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.Oi440FXSupport->set (atol(&params[i][8]));
+        SIM->get_param_bool(BXPN_I440FX_SUPPORT)->set(atol(&params[i][8]));
       } else if ((!strncmp(params[i], "slot", 4)) && (params[i][5] == '=')) {
-        slot = atol(&params[i][4]) - 1;
-        if ((slot >= 0) && (slot < 5)) {
-          bx_options.pcislot[slot].Odevname->set (strdup(&params[i][6]));
-          bx_options.pcislot[slot].Oused->set (strlen(params[i]) > 6);
+        slot = atol(&params[i][4]);
+        if ((slot > 0) && (slot < 6)) {
+          sprintf(tmpdev, "pci.slot.%d", slot);
+          SIM->get_param_string(tmpdev)->set(strdup(&params[i][6]));
         } else {
           BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
@@ -3586,7 +3566,7 @@ int bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
 int bx_write_configuration (char *rc, int overwrite)
 {
   int i;
-  char *strptr, tmppath[80], tmpaddr[80];
+  char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];
 
   BX_INFO (("write configuration to %s\n", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
@@ -3657,11 +3637,14 @@ int bx_write_configuration (char *rc, int overwrite)
     bx_write_serial_options (fp, &bx_options.com[i], i+1);
   }
   // pci
-  fprintf (fp, "i440fxsupport: enabled=%d", bx_options.Oi440FXSupport->get ());
-  if (bx_options.Oi440FXSupport->get ()) {
+  fprintf(fp, "i440fxsupport: enabled=%d",
+          SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     for (i=0; i<BX_N_PCI_SLOTS; i++) {
-      if (bx_options.pcislot[i].Oused->get ()) {
-        fprintf (fp, ", slot%d=%s", i+1, bx_options.pcislot[i].Odevname->getptr ());
+      sprintf(tmpdev, "pci.slot.%d", i+1);
+      strptr = SIM->get_param_string(tmpdev)->getptr();
+      if (strlen(strptr) > 0) {
+        fprintf (fp, ", slot%d=%s", i+1, strptr);
       }
     }
   }
