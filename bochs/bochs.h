@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.174 2006-02-18 16:53:16 vruppert Exp $
+// $Id: bochs.h,v 1.175 2006-02-19 15:43:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -478,17 +478,6 @@ typedef struct {
 
 typedef struct {
   bx_param_bool_c *Oenabled;
-  bx_param_string_c *Opath;
-  bx_param_bool_c *Ortc_init;
-} bx_cmosimage_options;
-
-typedef struct {
-  bx_param_num_c   *Otime0;
-  bx_param_enum_c  *Osync;
-} bx_clock_options;
-
-typedef struct {
-  bx_param_bool_c *Oenabled;
   bx_param_num_c *Oioaddr;
   bx_param_num_c *Oirq;
   bx_param_string_c *Omacaddr;
@@ -582,8 +571,6 @@ typedef struct BOCHSAPI {
 #endif
   bx_param_bool_c   *Oi440FXSupport;
   bx_pcidev_options pcidev;
-  bx_cmosimage_options   cmosimage;
-  bx_clock_options  clock;
   bx_ne2k_options   ne2k;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;

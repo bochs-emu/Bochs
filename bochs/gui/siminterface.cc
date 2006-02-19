@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.115 2006-02-18 16:53:18 vruppert Exp $
+// $Id: siminterface.cc,v 1.116 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -40,6 +40,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   // save context to jump to if we must quit unexpectedly
   jmp_buf *quit_context;
   int exit_code;
+  unsigned param_id;
 public:
   bx_real_sim_c ();
   virtual ~bx_real_sim_c ();
@@ -52,22 +53,19 @@ public:
   }
   virtual int register_param (bx_id id, bx_param_c *it);
   virtual void reset_all_param ();
-  // deprecated
+  // deprecated param methods
   virtual bx_param_c *get_param (bx_id id);
-  // deprecated
   virtual bx_param_num_c *get_param_num (bx_id id);
-  // deprecated
   virtual bx_param_string_c *get_param_string (bx_id id);
-  // deprecated
   virtual bx_param_bool_c *get_param_bool (bx_id id);
-  // deprecated
   virtual bx_param_enum_c *get_param_enum (bx_id id);
-  // new methods
+  // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_num_c *get_param_num(const char *pname);
   virtual bx_param_string_c *get_param_string(const char *pname);
   virtual bx_param_bool_c *get_param_bool(const char *pname);
   virtual bx_param_enum_c *get_param_enum(const char *pname);
+  virtual unsigned gen_param_id();
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
   virtual int get_log_action (int mod, int level);
@@ -314,6 +312,11 @@ bx_real_sim_c::get_param_enum (const char *pname) {
   return NULL;
 }
 
+unsigned bx_real_sim_c::gen_param_id()
+{
+  return param_id++;
+}
+
 void bx_init_siminterface ()
 {
   siminterface_log = new logfunctions ();
@@ -351,6 +354,7 @@ bx_real_sim_c::bx_real_sim_c ()
     param_registry[i] = NULL;
   quit_context = NULL;
   exit_code = 0;
+  param_id = BXP_NEW_PARAM_ID;
 }
 
 // called by constructor of bx_param_c, so that every parameter that is
@@ -368,7 +372,7 @@ bx_real_sim_c::~bx_real_sim_c ()
 int
 bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
 {
-  if (id == BXP_NULL) return 0;
+  if ((id == BXP_NULL) || (id >= BXP_NEW_PARAM_ID)) return 0;
   BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
   if (this->param_registry[index] != NULL) {
@@ -922,6 +926,7 @@ bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   this->name = name;
   this->description = description;
   this->text_format = default_text_format;
+  this->long_text_format = default_text_format;
   this->ask_format = NULL;
   this->label = NULL;
   this->group_name = NULL;
@@ -978,7 +983,7 @@ bx_param_num_c::bx_param_num_c (bx_param_c *parent,
     char *label,
     char *description,
     Bit64s min, Bit64s max, Bit64s initial_val)
-  : bx_param_c (BXP_NULL, name, description)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
 {
   set_type (BXT_PARAM_NUM);
   this->label = label;
@@ -1330,15 +1335,15 @@ bx_shadow_bool_c::set (Bit64s newval)
   }
 }
 
-bx_param_enum_c::bx_param_enum_c (bx_id id, 
+bx_param_enum_c::bx_param_enum_c(bx_id id,
       char *name,
       char *description,
       char **choices,
       Bit64s initial_val,
       Bit64s value_base)
-  : bx_param_num_c (id, name, description, value_base, BX_MAX_BIT64S, initial_val)
+  : bx_param_num_c(id, name, description, value_base, BX_MAX_BIT64S, initial_val)
 {
-  set_type (BXT_PARAM_ENUM);
+  set_type(BXT_PARAM_ENUM);
   this->choices = choices;
   // count number of choices, set max
   char **p = choices;
@@ -1347,7 +1352,28 @@ bx_param_enum_c::bx_param_enum_c (bx_id id,
   // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
   // class constructor with the real max.
   this->max = value_base + (p - choices - 1);
-  set (initial_val);
+  set(initial_val);
+}
+
+bx_param_enum_c::bx_param_enum_c(bx_param_c *parent, 
+      char *name,
+      char *label,
+      char *description,
+      char **choices,
+      Bit64s initial_val,
+      Bit64s value_base)
+  : bx_param_num_c(parent, name, label, description, value_base, BX_MAX_BIT64S, initial_val)
+{
+  set_type(BXT_PARAM_ENUM);
+  this->choices = choices;
+  // count number of choices, set max
+  char **p = choices;
+  while (*p != NULL) p++;
+  this->min = value_base;
+  // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
+  // class constructor with the real max.
+  this->max = value_base + (p - choices - 1);
+  set(initial_val);
 }
 
 int 
@@ -1399,7 +1425,7 @@ bx_param_string_c::bx_param_string_c (bx_param_c *parent,
     char *description,
     char *initial_val,
     int maxsize)
-  : bx_param_c (BXP_NULL, name, description)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
 {
   set_type (BXT_PARAM_STRING);
   this->label = label;

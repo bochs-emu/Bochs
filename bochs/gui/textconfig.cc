@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.34 2006-02-18 16:53:18 vruppert Exp $
+// $Id: textconfig.cc,v 1.35 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -41,11 +41,12 @@ extern "C" {
 
 #define BX_INSERTED 11
 
+int do_menu2(const char *pname, bx_param_c *base);
 /* functions for changing particular options */
-void bx_config_interface_init ();
-int bx_read_rc (char *rc);
-int bx_write_rc (char *rc);
-void bx_log_options (int individual);
+void bx_config_interface_init();
+int bx_read_rc(char *rc);
+int bx_write_rc(char *rc);
+void bx_log_options(int individual);
 
 /******************************************************************/
 /* lots of code stolen from bximage.c */
@@ -271,14 +272,15 @@ static char *startup_options_prompt =
 "5. Log options for individual devices\n"
 "6. CPU options\n"
 "7. Memory options\n"
-"8. Interface options\n"
-"9. Disk options\n"
-"10. Serial or Parallel port options\n"
-"11. Sound Blaster 16 options\n"
-"12. Network card options\n"
-"13. Keyboard options\n"
-"14. PCI options\n"
-"15. Other options\n"
+"8. Clock & CMOS options\n"
+"9. Interface options\n"
+"10. Disk options\n"
+"11. Serial or Parallel port options\n"
+"12. Sound Blaster 16 options\n"
+"13. Network card options\n"
+"14. Keyboard options\n"
+"15. PCI options\n"
+"16. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -361,7 +363,11 @@ int do_menu (bx_id id) {
       assert (chosen != NULL);
       if (chosen->get_enabled ()) {
         if (chosen->get_type () == BXT_LIST) {
-          do_menu(chosen->get_id ());
+          if (chosen->get_id() != BXP_NULL) {
+            do_menu(chosen->get_id());
+          } else {
+            do_menu2(chosen->get_name(), menu);
+          }
         } else {
           chosen->text_ask (stdin, stderr);
         }
@@ -475,7 +481,7 @@ int bx_config_interface (int menu)
        double_percent(olddebuggerpath,CI_PATH_LENGTH);
 
        sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
-       if (ask_uint (prompt, 0, 15, 0, &choice, 10) < 0) return -1;
+       if (ask_uint (prompt, 0, 16, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
 	 case 1: askparam (BXP_LOG_FILENAME); break;
@@ -484,15 +490,16 @@ int bx_config_interface (int menu)
 	 case 4: bx_log_options (0); break;
 	 case 5: bx_log_options (1); break;
 	 case 6: do_menu2("cpu", NULL); break;
-	 case 7: do_menu (BXP_MENU_MEMORY); break;
-	 case 8: do_menu (BXP_MENU_INTERFACE); break;
-	 case 9: do_menu (BXP_MENU_DISK); break;
-	 case 10: do_menu (BXP_MENU_SERIAL_PARALLEL); break;
-	 case 11: do_menu (BXP_SB16); break;
-	 case 12: do_menu (BXP_NETWORK); break;
-	 case 13: do_menu (BXP_MENU_KEYBOARD); break;
-	 case 14: do_menu (BXP_PCI); break;
-	 case 15: do_menu (BXP_MENU_MISC); break;
+	 case 7: do_menu(BXP_MENU_MEMORY); break;
+	 case 8: do_menu2("clock_cmos", NULL); break;
+	 case 9: do_menu(BXP_MENU_INTERFACE); break;
+	 case 10: do_menu(BXP_MENU_DISK); break;
+	 case 11: do_menu(BXP_MENU_SERIAL_PARALLEL); break;
+	 case 12: do_menu(BXP_SB16); break;
+	 case 13: do_menu(BXP_NETWORK); break;
+	 case 14: do_menu(BXP_MENU_KEYBOARD); break;
+	 case 15: do_menu(BXP_PCI); break;
+	 case 16: do_menu(BXP_MENU_MISC); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
@@ -741,8 +748,8 @@ bx_param_num_c::text_print (FILE *fp)
 {
   //fprintf (fp, "number parameter, id=%u, name=%s\n", get_id (), get_name ());
   //fprintf (fp, "value=%u\n", get ());
-  if (get_format()) {
-    fprintf(fp, get_format(), get());
+  if (get_long_format()) {
+    fprintf(fp, get_long_format(), get());
   } else {
     char *format = "%s: %d"; 
     assert (base==10 || base==16);

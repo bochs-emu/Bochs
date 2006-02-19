@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.113 2006-02-18 16:53:18 vruppert Exp $
+// $Id: wxmain.cc,v 1.114 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -319,9 +319,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_CPU, MyFrame::OnEditCPU)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
+  EVT_MENU(ID_Edit_Clock_Cmos, MyFrame::OnEditClockCmos)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
-  EVT_MENU(ID_Edit_Timing, MyFrame::OnEditTiming)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
@@ -432,13 +432,13 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Boot, "&Boot..." );
   menuEdit->Append(ID_Edit_CPU, "&CPU..." );
   menuEdit->Append(ID_Edit_Memory, "&Memory..." );
+  menuEdit->Append(ID_Edit_Clock_Cmos, "C&lock/Cmos..." );
   menuEdit->Append(ID_Edit_PCI, "&PCI..." );
   menuEdit->Append(ID_Edit_Sound, "S&ound..." );
-  menuEdit->Append(ID_Edit_Timing, "&Timing..." );
   menuEdit->Append(ID_Edit_Network, "&Network..." );
   menuEdit->Append(ID_Edit_Keyboard, "&Keyboard..." );
   menuEdit->Append(ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
-  menuEdit->Append(ID_Edit_LoadHack, "&Loader Hack..." );
+  menuEdit->Append(ID_Edit_LoadHack, "Loader &Hack..." );
   menuEdit->Append(ID_Edit_Other, "&Other..." );
 
   menuSimulate = new wxMenu;
@@ -612,6 +612,15 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
+void MyFrame::OnEditClockCmos(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("clock_cmos");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.ShowModal();
+}
+
 void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -628,15 +637,6 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
   dlg.SetRuntimeFlag (sim_thread != NULL);
-  dlg.ShowModal ();
-}
-
-void MyFrame::OnEditTiming(wxCommandEvent& WXUNUSED(event))
-{
-  ParamDialog dlg (this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_CLOCK);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
   dlg.ShowModal ();
 }
 
@@ -938,8 +938,8 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuEdit->Enable(ID_Edit_Boot, canConfigure);
   menuEdit->Enable(ID_Edit_CPU, canConfigure);
   menuEdit->Enable(ID_Edit_Memory, canConfigure);
+  menuEdit->Enable(ID_Edit_Clock_Cmos, canConfigure);
   menuEdit->Enable(ID_Edit_PCI, canConfigure);
-  menuEdit->Enable(ID_Edit_Timing, canConfigure);
   menuEdit->Enable(ID_Edit_Network, canConfigure);
   menuEdit->Enable(ID_Edit_LoadHack, canConfigure);
   // during simulation, certain menu options like the floppy disk

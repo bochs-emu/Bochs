@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.157 2006-02-18 16:53:18 vruppert Exp $
+// $Id: siminterface.h,v 1.158 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -144,6 +144,14 @@ typedef enum {
 #define BXPN_OPTRAM3_ADDRESS             "memory.optram.3.addr"
 #define BXPN_OPTRAM4_PATH                "memory.optram.4.path"
 #define BXPN_OPTRAM4_ADDRESS             "memory.optram.4.addr"
+#define BXPN_CLOCK_SYNC                  "clock_cmos.clock_sync"
+#define BXPN_CLOCK_TIME0                 "clock_cmos.time0"
+#define BXPN_CMOSIMAGE_ENABLED           "clock_cmos.cmosimage.enabled"
+#define BXPN_CMOSIMAGE_PATH              "clock_cmos.cmosimage.path"
+#define BXPN_CMOSIMAGE_RTC_INIT          "clock_cmos.cmosimage.rtc_init"
+
+// base value for generated new parameter id
+#define BXP_NEW_PARAM_ID 1001
 
 // list if parameter id values.  The actual values are not important;
 // it's only important that they all be different from each other.
@@ -358,12 +366,6 @@ typedef enum {
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
-  BXP_CMOSIMAGE_ENABLED,
-  BXP_CMOSIMAGE_PATH,
-  BXP_CMOSIMAGE_RTC_INIT,
-  BXP_CLOCK,
-  BXP_CLOCK_TIME0,
-  BXP_CLOCK_SYNC,
   BXP_LOAD32BITOS_WHICH,
   BXP_LOAD32BITOS_PATH,
   BXP_LOAD32BITOS_IOLOG,
@@ -902,6 +904,7 @@ protected:
   char *description;
   char *label; // label string for text menus and gui dialogs
   const char *text_format;  // printf format string. %d for ints, %s for strings, etc.
+  const char *long_text_format;  // printf format string. %d for ints, %s for strings, etc.
   char *ask_format;  // format string for asking for a new value
   char *group_name;  // name of the group the param belongs to
   int runtime_param;
@@ -911,6 +914,8 @@ public:
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
   void set_format(const char *format) {text_format = format;}
   const char *get_format() {return text_format;}
+  void set_long_format(const char *format) {long_text_format = format;}
+  const char *get_long_format() {return long_text_format;}
   void set_ask_format(char *format) {ask_format = format; }
   char *get_ask_format() {return ask_format;}
   void set_label(char *text) {label = text;}
@@ -1103,6 +1108,13 @@ class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
 public:
   bx_param_enum_c(bx_id id, 
       char *name,
+      char *description,
+      char **choices,
+      Bit64s initial_val,
+      Bit64s value_base = 0);
+  bx_param_enum_c(bx_param_c *parent,
+      char *name,
+      char *label,
       char *description,
       char **choices,
       Bit64s initial_val,
@@ -1443,20 +1455,19 @@ public:
   virtual void get_param_id_range(int *min, int *max) {}
   virtual int register_param(bx_id id, bx_param_c *it) {return -1;}
   virtual void reset_all_param() {}
+  // deprecated param methods
   virtual bx_param_c *get_param(bx_id id) {return NULL;}
-  virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
-  // deprecated
   virtual bx_param_num_c *get_param_num(bx_id id) {return NULL;}
-  // deprecated
   virtual bx_param_string_c *get_param_string(bx_id id) {return NULL;}
-  // deprecated
   virtual bx_param_bool_c *get_param_bool(bx_id id) {return NULL;}
-  // deprecated
   virtual bx_param_enum_c *get_param_enum(bx_id id) {return NULL;}
+  // new param methods
+  virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_num_c *get_param_num(const char *pname) {return NULL;}
   virtual bx_param_string_c *get_param_string(const char *pname) {return NULL;}
   virtual bx_param_bool_c *get_param_bool(const char *pname) {return NULL;}
   virtual bx_param_enum_c *get_param_enum(const char *pname) {return NULL;}
+  virtual unsigned gen_param_id() {return 0;}
   virtual int get_n_log_modules() {return -1;}
   virtual char *get_prefix(int mod) {return 0;}
   virtual int get_log_action(int mod, int level) {return -1;}

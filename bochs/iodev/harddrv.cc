@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.158 2006-02-06 21:27:34 vruppert Exp $
+// $Id: harddrv.cc,v 1.159 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,7 +144,7 @@ bx_hard_drive_c::init(void)
   char  string[5];
   char  sbtext[8];
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.158 2006-02-06 21:27:34 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.159 2006-02-19 15:43:03 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (bx_options.ata[channel].Opresent->get() == 1) {
@@ -448,7 +448,7 @@ bx_hard_drive_c::init(void)
   }
 
   // generate CMOS values for hard drive if not using a CMOS image
-  if (!bx_options.cmosimage.Oenabled->get ()) {
+  if (!SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
     DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {

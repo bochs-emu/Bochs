@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.51 2005-12-04 17:43:09 vruppert Exp $
+// $Id: cmos.cc,v 1.52 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.51 2005-12-04 17:43:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.52 2006-02-19 15:43:03 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -163,10 +163,10 @@ bx_cmos_c::init(void)
         244, 0, 0, "cmos"); // one-shot, not-active
   }
 
-  if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_LOCAL) {
+  if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get() == BX_CLOCK_TIME0_LOCAL) {
     BX_INFO(("Using local time for initial clock"));
     BX_CMOS_THIS s.timeval = time(NULL);
-  } else if (bx_options.clock.Otime0->get () == BX_CLOCK_TIME0_UTC) {
+  } else if (SIM->get_param_num(BXPN_CLOCK_TIME0)->get() == BX_CLOCK_TIME0_UTC) {
     bx_bool utc_ok = 0;
 
     BX_INFO(("Using utc time for initial clock"));
@@ -192,22 +192,22 @@ bx_cmos_c::init(void)
     }
   } else {
     BX_INFO(("Using specified time for initial clock"));
-    BX_CMOS_THIS s.timeval = bx_options.clock.Otime0->get ();
+    BX_CMOS_THIS s.timeval = SIM->get_param_num(BXPN_CLOCK_TIME0)->get();
   }
 
   // load CMOS from image file if requested.
-  if (bx_options.cmosimage.Oenabled->get ()) {
+  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
     int fd, ret;
     struct stat stat_buf;
 
-    fd = open(bx_options.cmosimage.Opath->getptr (), O_RDONLY
+    fd = open(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr(), O_RDONLY
 #ifdef O_BINARY
        | O_BINARY
 #endif
         );
     if (fd < 0) {
       BX_PANIC(("trying to open cmos image file '%s'",
-        bx_options.cmosimage.Opath->getptr ()));
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()));
     }
     ret = fstat(fd, &stat_buf);
     if (ret) {
@@ -223,10 +223,10 @@ bx_cmos_c::init(void)
     }
     close(fd);
     BX_INFO(("successfuly read from image file '%s'.",
-      bx_options.cmosimage.Opath->getptr ()));
+      SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()));
     BX_CMOS_THIS s.rtc_mode_12hour = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x02) == 0);
     BX_CMOS_THIS s.rtc_mode_binary = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x04) != 0);
-    if (bx_options.cmosimage.Ortc_init->get ()) {
+    if (SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->get()) {
       update_timeval();
     } else {
       update_clock();
@@ -281,8 +281,8 @@ void bx_cmos_c::save_image(void)
   int fd, ret;
 
   // save CMOS to image file if requested.
-  if (bx_options.cmosimage.Oenabled->get ()) {
-    fd = open(bx_options.cmosimage.Opath->getptr (), O_WRONLY
+  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+    fd = open(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr(), O_WRONLY
 #ifdef O_BINARY
        | O_BINARY
 #endif

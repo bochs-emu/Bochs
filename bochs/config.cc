@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.76 2006-02-18 16:53:16 vruppert Exp $
+// $Id: config.cc,v 1.77 2006-02-19 15:43:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -354,19 +354,19 @@ static int bx_param_enable_handler (bx_param_c *param, int val)
   return val;
 }
 
-void bx_init_options ()
+void bx_init_options()
 {
   int i;
   bx_list_c *menu;
   bx_list_c *deplist;
   char name[1024], descr[1024], group[16], label[1024];
 
-  memset (&bx_options, 0, sizeof(bx_options));
+  memset(&bx_options, 0, sizeof(bx_options));
 
   bx_param_c *root_param = SIM->get_param(".");
 
   // quick start option, set by command line arg
-  new bx_param_enum_c (BXP_BOCHS_START,
+  new bx_param_enum_c(BXP_BOCHS_START,
       "Bochs start types",
       "Bochs start types",
       bochs_start_names,
@@ -375,38 +375,43 @@ void bx_init_options ()
 
   // floppy options
 
-  bx_options.floppya.Opath = new bx_param_filename_c (BXP_FLOPPYA_PATH,
+  bx_options.floppya.Opath = new bx_param_filename_c(BXP_FLOPPYA_PATH,
       "floppya:path",
       "Pathname of first floppy image file or device.  If you're booting from floppy, this should be a bootable floppy.",
       "", BX_PATHNAME_LEN);
-  bx_options.floppya.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
-  bx_options.floppya.Opath->set_label ("First floppy image/device");
-  bx_options.floppya.Odevtype = new bx_param_enum_c (BXP_FLOPPYA_DEVTYPE,
+  bx_options.floppya.Opath->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  bx_options.floppya.Opath->set_label("First floppy image/device");
+  bx_options.floppya.Opath->set_runtime_param(1);
+
+  bx_options.floppya.Odevtype = new bx_param_enum_c(BXP_FLOPPYA_DEVTYPE,
       "floppya:devtype",
       "Type of floppy drive",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppya.Otype = new bx_param_enum_c (BXP_FLOPPYA_TYPE,
+  bx_options.floppya.Otype = new bx_param_enum_c(BXP_FLOPPYA_TYPE,
       "floppya:type",
       "Type of floppy disk",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppya.Otype->set_ask_format ("What type of floppy disk? (auto=detect) [%s] ");
-  bx_options.floppya.Ostatus = new bx_param_enum_c (BXP_FLOPPYA_STATUS,
+  bx_options.floppya.Otype->set_ask_format("What type of floppy disk? (auto=detect) [%s] ");
+  bx_options.floppya.Otype->set_runtime_param(1);
+
+  bx_options.floppya.Ostatus = new bx_param_enum_c(BXP_FLOPPYA_STATUS,
       "Is floppya inserted",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppya.Opath->set_format ("%s");
-  bx_options.floppya.Opath->set_runtime_param (1);
-  bx_options.floppya.Otype->set_format ("size=%s");
-  bx_options.floppya.Otype->set_runtime_param (1);
-  bx_options.floppya.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
-  bx_options.floppya.Ostatus->set_format ("%s");
-  bx_options.floppya.Ostatus->set_runtime_param (1);
+  bx_options.floppya.Ostatus->set_ask_format("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppya.Ostatus->set_runtime_param(1);
+
+  bx_options.floppya.Opath->set_handler(bx_param_string_handler);
+  bx_options.floppya.Otype->set_handler(bx_param_handler);
+  bx_options.floppya.Ostatus->set_handler(bx_param_handler);
+  bx_options.floppya.Opath->set_initial_val("none");
+
   bx_param_c *floppya_init_list[] = {
     // if the order "path,type,status" changes, corresponding changes must
     // be made in gui/wxmain.cc, MyFrame::editFloppyConfig.
@@ -415,57 +420,54 @@ void bx_init_options ()
     bx_options.floppya.Ostatus,
     NULL
   };
-  menu = new bx_list_c (BXP_FLOPPYA, "Floppy Disk 0", "All options for first floppy disk", floppya_init_list);
-  menu->get_options ()->set (menu->SERIES_ASK);
-  bx_options.floppya.Opath->set_handler (bx_param_string_handler);
-  bx_options.floppya.Opath->set_initial_val ("none");
-  bx_options.floppya.Otype->set_handler (bx_param_handler);
-  bx_options.floppya.Ostatus->set_handler (bx_param_handler);
+  menu = new bx_list_c(BXP_FLOPPYA, "Floppy Disk 0", "", floppya_init_list);
+  menu->get_options()->set(menu->SERIES_ASK);
 
-  bx_options.floppyb.Opath = new bx_param_filename_c (BXP_FLOPPYB_PATH,
+  bx_options.floppyb.Opath = new bx_param_filename_c(BXP_FLOPPYB_PATH,
       "floppyb:path",
       "Pathname of second floppy image file or device.",
       "", BX_PATHNAME_LEN);
-  bx_options.floppyb.Opath->set_ask_format ("Enter new filename, or 'none' for no disk: [%s] ");
-  bx_options.floppyb.Opath->set_label ("Second floppy image/device");
-  bx_options.floppyb.Odevtype = new bx_param_enum_c (BXP_FLOPPYB_DEVTYPE,
+  bx_options.floppyb.Opath->set_ask_format("Enter new filename, or 'none' for no disk: [%s] ");
+  bx_options.floppyb.Opath->set_label("Second floppy image/device");
+  bx_options.floppyb.Opath->set_runtime_param(1);
+
+  bx_options.floppyb.Odevtype = new bx_param_enum_c(BXP_FLOPPYB_DEVTYPE,
       "floppyb:devtype",
       "Type of floppy drive",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppyb.Otype = new bx_param_enum_c (BXP_FLOPPYB_TYPE,
+  bx_options.floppyb.Otype = new bx_param_enum_c(BXP_FLOPPYB_TYPE,
       "floppyb:type",
       "Type of floppy disk",
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
-  bx_options.floppyb.Otype->set_ask_format ("What type of floppy disk? [%s] ");
-  bx_options.floppyb.Ostatus = new bx_param_enum_c (BXP_FLOPPYB_STATUS,
+  bx_options.floppyb.Otype->set_ask_format("What type of floppy disk? [%s] ");
+  bx_options.floppyb.Otype->set_runtime_param(1);
+
+  bx_options.floppyb.Ostatus = new bx_param_enum_c(BXP_FLOPPYB_STATUS,
       "Is floppyb inserted",
       "Inserted or ejected",
       floppy_status_names,
       BX_INSERTED,
       BX_EJECTED);
-  bx_options.floppyb.Opath->set_format ("%s");
-  bx_options.floppyb.Opath->set_runtime_param (1);
-  bx_options.floppyb.Otype->set_format ("size=%s");
-  bx_options.floppyb.Otype->set_runtime_param (1);
-  bx_options.floppyb.Ostatus->set_ask_format ("Is the floppy inserted or ejected? [%s] ");
-  bx_options.floppyb.Ostatus->set_format ("%s");
-  bx_options.floppyb.Ostatus->set_runtime_param (1);
+  bx_options.floppyb.Ostatus->set_ask_format("Is the floppy inserted or ejected? [%s] ");
+  bx_options.floppyb.Ostatus->set_runtime_param(1);
+
+  bx_options.floppyb.Opath->set_handler(bx_param_string_handler);
+  bx_options.floppyb.Otype->set_handler(bx_param_handler);
+  bx_options.floppyb.Ostatus->set_handler(bx_param_handler);
+  bx_options.floppyb.Opath->set_initial_val("none");
+
   bx_param_c *floppyb_init_list[] = {
     bx_options.floppyb.Opath,
     bx_options.floppyb.Otype,
     bx_options.floppyb.Ostatus,
     NULL
   };
-  menu = new bx_list_c (BXP_FLOPPYB, "Floppy Disk 1", "All options for second floppy disk", floppyb_init_list);
-  menu->get_options ()->set (menu->SERIES_ASK);
-  bx_options.floppyb.Opath->set_handler (bx_param_string_handler);
-  bx_options.floppyb.Opath->set_initial_val ("none");
-  bx_options.floppyb.Otype->set_handler (bx_param_handler);
-  bx_options.floppyb.Ostatus->set_handler (bx_param_handler);
+  menu = new bx_list_c(BXP_FLOPPYB, "Floppy Disk 1", "", floppyb_init_list);
+  menu->get_options()->set(menu->SERIES_ASK);
 
   // disk options
 
@@ -862,7 +864,6 @@ void bx_init_options ()
       "Amount of RAM in megabytes",
       1, 2048,
       BX_DEFAULT_MEM_MEGS);
-  ramsize->set_format("Memory size in megabytes: %d");
   ramsize->set_ask_format("Enter memory size (MB): [%d] ");
 #if BX_WITH_WX
   ramsize->set_options(bx_param_num_c::USE_SPIN_CONTROL);
@@ -883,11 +884,8 @@ void bx_init_options ()
       0, BX_MAX_BIT32U, 
       0);
   romaddr->set_base(16);
-#if BX_WITH_WX
   romaddr->set_format("0x%05x");
-#else
-  romaddr->set_format("ROM BIOS address: 0x%05x");
-#endif
+  romaddr->set_long_format("ROM BIOS address: 0x%05x");
 
   bx_param_filename_c *vgarompath = new bx_param_filename_c(vgarom,
       "path",
@@ -903,12 +901,12 @@ void bx_init_options ()
 
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf(name, "%d", i+1);
-    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), "");
     sprintf(descr, "Pathname of optional ROM image #%d to load", i+1);
     sprintf(label, "Optional ROM image #%d", i+1);
+    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), strdup(label));
     optpath = new bx_param_filename_c(optnum1,
       "path", 
-      strdup(label),
+      "Path",
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional ROM image #%d", i+1);
@@ -922,23 +920,22 @@ void bx_init_options ()
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
-#if BX_WITH_WX
     optaddr->set_format("0x%05x");
-#else
     sprintf(label, "Optional ROM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_format(strdup(label));
-#endif
+    optaddr->set_long_format(strdup(label));
+    optnum1->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   }
+  optrom->get_options()->set(bx_list_c::SHOW_PARENT);
 
   for (i=0; i<BX_N_OPTRAM_IMAGES; i++) {
     sprintf(name, "%d", i+1);
-    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), "");
     sprintf(descr, "Pathname of optional RAM image #%d to load", i+1);
     sprintf(label, "Optional RAM image #%d", i+1);
+    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), strdup(label));
     optpath = new bx_param_filename_c(optnum2,
       "path", 
-      strdup(label),
+      "Path",
       strdup(descr),
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional RAM image #%d", i+1);
@@ -952,14 +949,13 @@ void bx_init_options ()
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
-#if BX_WITH_WX
     optaddr->set_format("0x%05x");
-#else
     sprintf(label, "Optional RAM #%d address:", i+1);
     strcat(label, " 0x%05x");
-    optaddr->set_format(strdup(label));
-#endif
+    optaddr->set_long_format(strdup(label));
+    optnum2->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
   }
+  optrom->get_options()->set(bx_list_c::SHOW_PARENT);
   memory->get_options()->set(bx_list_c::USE_TAB_WINDOW);
 
   bx_param_c *memory_init_list[] = {
@@ -967,26 +963,52 @@ void bx_init_options ()
     SIM->get_param(BXPN_ROM_PATH),
     SIM->get_param(BXPN_ROM_ADDRESS),
     SIM->get_param(BXPN_VGA_ROM_PATH),
-    SIM->get_param(BXPN_OPTROM1_PATH),
-    SIM->get_param(BXPN_OPTROM1_ADDRESS),
-    SIM->get_param(BXPN_OPTROM2_PATH),
-    SIM->get_param(BXPN_OPTROM2_ADDRESS),
-    SIM->get_param(BXPN_OPTROM3_PATH),
-    SIM->get_param(BXPN_OPTROM3_ADDRESS),
-    SIM->get_param(BXPN_OPTROM4_PATH),
-    SIM->get_param(BXPN_OPTROM4_ADDRESS),
-    SIM->get_param(BXPN_OPTRAM1_PATH),
-    SIM->get_param(BXPN_OPTRAM1_ADDRESS),
-    SIM->get_param(BXPN_OPTRAM2_PATH),
-    SIM->get_param(BXPN_OPTRAM2_ADDRESS),
-    SIM->get_param(BXPN_OPTRAM3_PATH),
-    SIM->get_param(BXPN_OPTRAM3_ADDRESS),
-    SIM->get_param(BXPN_OPTRAM4_PATH),
-    SIM->get_param(BXPN_OPTRAM4_ADDRESS),
+    SIM->get_param("memory.optrom"),
+    SIM->get_param("memory.optram"),
     NULL
   };
   menu = new bx_list_c(BXP_MENU_MEMORY, "Bochs Memory Options", "", memory_init_list);
-  menu->get_options()->set(menu->SHOW_PARENT);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+
+  // clock & cmos subtree
+  bx_list_c *clock_cmos = new bx_list_c(root_param, "clock_cmos", "Clock & CMOS Options");
+
+  // clock & cmos options
+  bx_param_enum_c *clock_sync = new bx_param_enum_c(clock_cmos,
+      "clock_sync", "Synchronisation method",
+      "Host to guest time synchronization method",
+      clock_sync_names,
+      BX_CLOCK_SYNC_NONE,
+      BX_CLOCK_SYNC_NONE);
+  bx_param_num_c *time0 = new bx_param_num_c(clock_cmos,
+      "time0",
+      "Initial CMOS time for Bochs\n(1:localtime, 2:utc, other:time in seconds)",
+      "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
+      0, BX_MAX_BIT32U,
+      BX_CLOCK_TIME0_LOCAL);
+
+  bx_list_c *cmosimage = new bx_list_c(clock_cmos, "cmosimage", "CMOS Image Options");
+  bx_param_bool_c *use_cmosimage = new bx_param_bool_c(cmosimage,
+      "enabled", "Use a CMOS image",
+      "Controls the usage of a CMOS image",
+      0);
+  bx_param_filename_c  *cmospath = new bx_param_filename_c(cmosimage,
+      "path", "Pathname of CMOS image",
+      "Pathname of CMOS image",
+      "", BX_PATHNAME_LEN);
+  bx_param_bool_c *rtc_init = new bx_param_bool_c(cmosimage,
+      "rtc_init", "Initialize RTC from image",
+      "Controls whether to initialize the RTC with values stored in the image",
+      0);
+  deplist = new bx_list_c(BXP_NULL, 2);
+  deplist->add(cmospath);
+  deplist->add(rtc_init);
+  use_cmosimage->set_dependent_list(deplist);
+
+  time0->set_ask_format("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
+  clock_sync->set_ask_format("Enter Synchronisation method: [%s] ");
+  clock_cmos->get_options()->set(bx_list_c::SHOW_PARENT);
+  cmosimage->get_options()->set(bx_list_c::SHOW_PARENT);
 
   // serial and parallel port options
 
@@ -1615,34 +1637,6 @@ void bx_init_options ()
   bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
-  // clock
-  bx_options.clock.Otime0 = new bx_param_num_c (BXP_CLOCK_TIME0,
-      "Initial CMOS time",
-      "Initial time for Bochs CMOS clock, used if you really want two runs to be identical",
-      0, BX_MAX_BIT32U,
-      BX_CLOCK_TIME0_LOCAL);
-  bx_options.clock.Osync = new bx_param_enum_c (BXP_CLOCK_SYNC,
-      "Synchronisation method",
-      "Host to guest time synchronization method",
-      clock_sync_names,
-      BX_CLOCK_SYNC_NONE,
-      BX_CLOCK_SYNC_NONE);
-  bx_param_c *clock_init_list[] = {
-    bx_options.clock.Osync,
-    bx_options.clock.Otime0,
-    NULL
-  };
-#if !BX_WITH_WX
-  bx_options.clock.Osync->set_format ("sync=%s");
-  bx_options.clock.Otime0->set_format ("initial time=%d");
-#endif
-  bx_options.clock.Otime0->set_ask_format ("Enter Initial CMOS time (1:localtime, 2:utc, other:time in seconds): [%d] ");
-  bx_options.clock.Osync->set_ask_format ("Enter Synchronisation method: [%s] ");
-  bx_options.clock.Otime0->set_label ("Initial CMOS time for Bochs\n(1:localtime, 2:utc, other:time in seconds)");
-  bx_options.clock.Osync->set_label ("Synchronisation method");
-  menu = new bx_list_c (BXP_CLOCK, "Clock parameters", "", clock_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
-
   // other
   bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
       "Keyboard serial delay",
@@ -1654,23 +1648,6 @@ void bx_init_options ()
       "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
       1000, BX_MAX_BIT32U,
       100000);
-  bx_options.cmosimage.Oenabled = new bx_param_bool_c (BXP_CMOSIMAGE_ENABLED,
-      "Use a CMOS image",
-      "Controls the usage of a CMOS image",
-      0);
-  bx_options.cmosimage.Opath = new bx_param_filename_c (BXP_CMOSIMAGE_PATH,
-      "Pathname of CMOS image",
-      "Pathname of CMOS image",
-      "", BX_PATHNAME_LEN);
-  bx_options.cmosimage.Ortc_init = new bx_param_bool_c (BXP_CMOSIMAGE_RTC_INIT,
-      "Initialize RTC from image",
-      "Controls whether to initialize the RTC with values stored in the image",
-      0);
-  deplist = new bx_list_c (BXP_NULL, 2);
-  deplist->add (bx_options.cmosimage.Opath);
-  deplist->add (bx_options.cmosimage.Ortc_init);
-  bx_options.cmosimage.Oenabled->set_dependent_list (deplist);
-
   // Keyboard mapping
   bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
       "Use keyboard mapping",
@@ -1719,11 +1696,7 @@ void bx_init_options ()
   menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_param_c *other_init_list[] = {
-      bx_options.cmosimage.Oenabled,
-      bx_options.cmosimage.Opath,
-      bx_options.cmosimage.Ortc_init,
-      SIM->get_param (BXP_CLOCK),
-      SIM->get_param (BXP_LOAD32BITOS),
+      SIM->get_param(BXP_LOAD32BITOS),
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
@@ -1743,9 +1716,6 @@ void bx_init_options ()
       bx_options.Ofullscreen,
       bx_options.Oscreenmode,
 #endif
-      bx_options.cmosimage.Oenabled,
-      bx_options.cmosimage.Opath,
-      bx_options.cmosimage.Ortc_init,
       NULL
   };
   menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
@@ -1817,6 +1787,9 @@ void bx_reset_options ()
 
   // memory (ram & rom)
   SIM->get_param("memory")->reset();
+
+  // clock & cmos
+  SIM->get_param("clock_cmos")->reset();
 
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -1893,10 +1866,6 @@ void bx_reset_options ()
   bx_options.Okeyboard_type->reset();
   bx_options.Ouser_shortcut->reset();
 
-  // Clock
-  bx_options.clock.Otime0->reset();
-  bx_options.clock.Osync->reset();
-
   // PCI
   bx_options.Oi440FXSupport->reset();
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
@@ -1909,9 +1878,6 @@ void bx_reset_options ()
   bx_options.pcidev.Odevice->reset();
 
   // other
-  bx_options.cmosimage.Oenabled->reset();
-  bx_options.cmosimage.Opath->reset();
-  bx_options.cmosimage.Ortc_init->reset();
   bx_options.Otext_snapshot_check->reset();
 }
 
@@ -3001,32 +2967,32 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   } else if (!strcmp(params[0], "cmosimage")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
-        bx_options.cmosimage.Opath->set (strdup(&params[i][5]));
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(strdup(&params[i][5]));
       } else if (!strcmp(params[i], "rtc_init=time0")) {
-        bx_options.cmosimage.Ortc_init->set (0);
+        SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(0);
       } else if (!strcmp(params[i], "rtc_init=image")) {
-        bx_options.cmosimage.Ortc_init->set (1);
+        SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(1);
       } else {
         // for backward compatiblity
-        bx_options.cmosimage.Opath->set (strdup(params[i]));
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(strdup(params[i]));
       }
     }
-    if (strlen(bx_options.cmosimage.Opath->getptr()) > 0) {
-      bx_options.cmosimage.Oenabled->set (1);
+    if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
+      SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->set(1);
     }
   } else if (!strcmp(params[0], "clock")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "sync=", 5)) {
-        bx_options.clock.Osync->set_by_name (&params[i][5]);
+        SIM->get_param_enum(BXPN_CLOCK_SYNC)->set_by_name(&params[i][5]);
       }
       else if (!strcmp(params[i], "time0=local")) {
-        bx_options.clock.Otime0->set (BX_CLOCK_TIME0_LOCAL);
+        SIM->get_param_num(BXPN_CLOCK_TIME0)->set(BX_CLOCK_TIME0_LOCAL);
       }
       else if (!strcmp(params[i], "time0=utc")) {
-        bx_options.clock.Otime0->set (BX_CLOCK_TIME0_UTC);
+        SIM->get_param_num(BXPN_CLOCK_TIME0)->set(BX_CLOCK_TIME0_UTC);
       }
       else if (!strncmp(params[i], "time0=", 6)) {
-        bx_options.clock.Otime0->set (atoi(&params[i][6]));
+        SIM->get_param_num(BXPN_CLOCK_TIME0)->set(atoi(&params[i][6]));
       }
       else {
         BX_ERROR(("%s: unknown parameter for clock ignored.", context));
@@ -3545,40 +3511,47 @@ int bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
   return 0;
 }
 
-int bx_write_clock_options (FILE *fp, bx_clock_options *opt)
+int bx_write_clock_cmos_options(FILE *fp)
 {
-  fprintf (fp, "clock: ");
+  fprintf(fp, "clock: ");
 
-  switch (opt->Osync->get()) {
+  switch (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()) {
     case BX_CLOCK_SYNC_NONE:
-      fprintf (fp, "sync=none");
+      fprintf(fp, "sync=none");
       break;
     case BX_CLOCK_SYNC_REALTIME:
-      fprintf (fp, "sync=realtime");
+      fprintf(fp, "sync=realtime");
       break;
     case BX_CLOCK_SYNC_SLOWDOWN:
-      fprintf (fp, "sync=slowdown");
+      fprintf(fp, "sync=slowdown");
       break;
     case BX_CLOCK_SYNC_BOTH:
-      fprintf (fp, "sync=both");
+      fprintf(fp, "sync=both");
       break;
     default:
       BX_PANIC(("Unknown value for sync method"));
   }
 
-  switch (opt->Otime0->get()) {
+  switch (SIM->get_param_num(BXPN_CLOCK_TIME0)->get()) {
     case 0: break;
     case BX_CLOCK_TIME0_LOCAL: 
-      fprintf (fp, ", time0=local");
+      fprintf(fp, ", time0=local");
       break;
     case BX_CLOCK_TIME0_UTC: 
-      fprintf (fp, ", time0=utc");
+      fprintf(fp, ", time0=utc");
       break;
     default: 
-      fprintf (fp, ", time0=%u", opt->Otime0->get());
+      fprintf(fp, ", time0=%u", SIM->get_param_num(BXPN_CLOCK_TIME0)->get());
   }
 
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
+
+  if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
+    fprintf(fp, "cmosimage: file=%s, ", SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr());
+    fprintf(fp, "rtc_init=%s", SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->get()?"image":"time0");
+  } else {
+    fprintf(fp, "# no cmosimage\n");
+  }
   return 0;
 }
 
@@ -3716,7 +3689,7 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get());
   fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr());
 #endif
-  bx_write_clock_options (fp, &bx_options.clock);
+  bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options (fp, &bx_options.ne2k);
   bx_write_pnic_options (fp, &bx_options.pnic);
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
@@ -3725,12 +3698,6 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get()==BX_KBD_XT_TYPE?"xt":
                                       bx_options.Okeyboard_type->get()==BX_KBD_AT_TYPE?"at":"mf");
   fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
-  if (strlen (bx_options.cmosimage.Opath->getptr()) > 0) {
-    fprintf (fp, "cmosimage: file=%s, ", bx_options.cmosimage.Opath->getptr());
-    fprintf (fp, "rtc_init=%s", bx_options.cmosimage.Ortc_init->get()?"image":"time0");
-  } else {
-    fprintf (fp, "# no cmosimage\n");
-  }
   fclose (fp);
   return 0;
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.23 2005-12-10 18:37:35 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.24 2006-02-19 15:43:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -63,8 +63,8 @@ void
 bx_slowdown_timer_c::init(void)
 {
   // Return early if slowdown timer not selected
-  if ( (bx_options.clock.Osync->get () != BX_CLOCK_SYNC_SLOWDOWN)
-    && (bx_options.clock.Osync->get () != BX_CLOCK_SYNC_BOTH) )
+  if ((SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() != BX_CLOCK_SYNC_SLOWDOWN) &&
+      (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() != BX_CLOCK_SYNC_BOTH) )
     return;
 
   BX_INFO(("using 'slowdown' timer synchronization method"));
