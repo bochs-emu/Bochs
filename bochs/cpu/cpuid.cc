@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.32 2006-02-18 17:28:18 vruppert Exp $
+// $Id: cpuid.cc,v 1.33 2006-02-20 19:28:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -120,8 +120,8 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
 {
   Bit32u features = 0;
 
-#if BX_SUPPORT_PNI
-    features |= 0x01;     // report PNI
+#if BX_SUPPORT_SSE >= 3
+    features |= 0x01;     // report SSE3 (PNI)
 #endif
 
 #if BX_SUPPORT_X86_64

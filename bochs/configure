@@ -1072,9 +1072,8 @@ Optional Features:
   --enable-vme                      virtual 8086 mode extensions
   --enable-mmx                      MMX support
   --enable-3dnow                    3DNow! support
-  --enable-sse                      SSE/SSE2 support (--enable-sse=no|1|2)
+  --enable-sse                      SSE/SSE2/SSE3 support (--enable-sse=no|1|2|3)
   --enable-daz                      denormals-are-zeroes support
-  --enable-pni                      PNI support
   --enable-sep                      SYSENTER/SYSEXIT support
   --enable-x86-debugger             x86 debugger support
   --enable-cdrom                    CDROM support
@@ -1090,6 +1089,7 @@ Optional Features:
   --enable-vga                      use VGA emulation (deprecated)
   --enable-processors               select number of processors (deprecated)
   --enable-reset-on-triple-fault    reset when cpu detects a triple fault
+  --enable-pni                      PNI support
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -35802,6 +35802,11 @@ echo "${ECHO_T}SSE only" >&6
       echo "$as_me:$LINENO: result: SSE and SSE2" >&5
 echo "${ECHO_T}SSE and SSE2" >&6
       ;;
+    3)
+      support_sse=3
+      echo "$as_me:$LINENO: result: SSE" >&5
+echo "${ECHO_T}SSE" >&6
+      ;;
     *)
       echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=no|1|2"
       exit 1
@@ -35823,8 +35828,8 @@ echo "${ECHO_T}no" >&6
 fi;
 
 if test "$support_sse" -gt 0 -a "$bx_cpu_level" -lt 6; then
-  { { echo "$as_me:$LINENO: error: for SSE or SSE2 support the CPU level must be set to 6" >&5
-echo "$as_me: error: for SSE or SSE2 support the CPU level must be set to 6" >&2;}
+  { { echo "$as_me:$LINENO: error: for SSE support the CPU level must be set to 6" >&5
+echo "$as_me: error: for SSE support the CPU level must be set to 6" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
@@ -35834,7 +35839,12 @@ echo "$as_me: error: x86-64 needs SSE2 support" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-if test "$support_sse" = 2; then
+if test "$support_sse" = 3; then
+  cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SSE 3
+_ACEOF
+
+elif test "$support_sse" = 2; then
   cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SSE 2
 _ACEOF
@@ -35874,7 +35884,7 @@ _ACEOF
 
 else
 
-    if test "$support_sse" = 2; then
+    if test "$support_sse" -ge 2; then
       echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
       cat >>confdefs.h <<\_ACEOF
@@ -35889,44 +35899,6 @@ echo "${ECHO_T}no" >&6
 _ACEOF
 
     fi
-
-
-fi;
-
-echo "$as_me:$LINENO: checking for PNI support" >&5
-echo $ECHO_N "checking for PNI support... $ECHO_C" >&6
-# Check whether --enable-pni or --disable-pni was given.
-if test "${enable_pni+set}" = set; then
-  enableval="$enable_pni"
-  if test "$enableval" = yes; then
-    echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_PNI 1
-_ACEOF
-
-    if test "$support_sse" -lt 2; then
-     { { echo "$as_me:$LINENO: error: PNI needs SSE2 support" >&5
-echo "$as_me: error: PNI needs SSE2 support" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
-   elif test "$enableval" = no; then
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_PNI 0
-_ACEOF
-
-   fi
-
-else
-
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-    cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_PNI 0
-_ACEOF
-
 
 
 fi;
@@ -39179,6 +39151,24 @@ echo "${ECHO_T}no" >&6
 
 fi;
 
+echo "$as_me:$LINENO: checking PNI support" >&5
+echo $ECHO_N "checking PNI support... $ECHO_C" >&6
+# Check whether --enable---enable-pni or --disable---enable-pni was given.
+if test "${enable___enable_pni+set}" = set; then
+  enableval="$enable___enable_pni"
+  echo "$as_me:$LINENO: result: $enableval" >&5
+echo "${ECHO_T}$enableval" >&6
+   { { echo "$as_me:$LINENO: error: deprecated - use --enable-sse=3 instead" >&5
+echo "$as_me: error: deprecated - use --enable-sse=3 instead" >&2;}
+   { (exit 1); exit 1; }; }
+
+else
+
+   echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+
+fi;
+
 # Create some subdirectories for when you run configure from some other
 # directory.
 if test ! -d instrument; then mkdir instrument; fi
@@ -39386,9 +39376,10 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Add them.
-  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
+  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
+  #    will be set to the directory where LIBOBJS objects are built.
+  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 

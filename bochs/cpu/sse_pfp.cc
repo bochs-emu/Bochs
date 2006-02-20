@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.23 2005-11-26 21:36:51 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.24 2006-02-20 19:28:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -2448,7 +2448,7 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
  */
 void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2494,7 +2494,7 @@ void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
  */
 void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2548,7 +2548,7 @@ void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
  */
 void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2594,7 +2594,7 @@ void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
  */
 void BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2896,7 +2896,7 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
  */
 void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -2942,7 +2942,7 @@ void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
  */
 void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
 {
-#if BX_SUPPORT_PNI
+#if BX_SUPPORT_SSE >= 3
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;

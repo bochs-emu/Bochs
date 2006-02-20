@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.313 2006-02-04 09:22:53 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.314 2006-02-20 19:28:57 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1523,7 +1523,7 @@ AC_ARG_ENABLE(3dnow,
 support_sse=0
 AC_MSG_CHECKING(for SSE support)
 AC_ARG_ENABLE(sse,
-  [  --enable-sse                      SSE/SSE2 support (--enable-sse=[no|1|2])],
+  [  --enable-sse                      SSE/SSE2/SSE3 support (--enable-sse=[no|1|2|3])],
   [case "$enableval" in
     no | 0)
       support_sse=0
@@ -1536,6 +1536,10 @@ AC_ARG_ENABLE(sse,
     2)
       support_sse=2
       AC_MSG_RESULT(SSE and SSE2)
+      ;;
+    3)
+      support_sse=3
+      AC_MSG_RESULT(SSE, SSE2 and SSE3)
       ;;
     *)
       echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=[no|1|2]"
@@ -1554,14 +1558,16 @@ AC_ARG_ENABLE(sse,
   )
 
 if test "$support_sse" -gt 0 -a "$bx_cpu_level" -lt 6; then
-  AC_MSG_ERROR([for SSE or SSE2 support the CPU level must be set to 6])
+  AC_MSG_ERROR([for SSE support the CPU level must be set to 6])
 fi
 
 if test "$support_sse" -lt 2 -a "$use_x86_64" = 1; then
   AC_MSG_ERROR([x86-64 needs SSE2 support])
 fi
 
-if test "$support_sse" = 2; then
+if test "$support_sse" = 3; then
+  AC_DEFINE(BX_SUPPORT_SSE,  3)
+elif test "$support_sse" = 2; then
   AC_DEFINE(BX_SUPPORT_SSE,  2)
 elif test "$support_sse" = 1; then
   AC_DEFINE(BX_SUPPORT_SSE,  1)
@@ -1581,33 +1587,13 @@ AC_ARG_ENABLE(daz,
    fi
    ],
   [
-    if test "$support_sse" = 2; then
+    if test "$support_sse" -ge 2; then
       AC_MSG_RESULT(yes)
       AC_DEFINE(BX_SUPPORT_DAZ, 1)
     else
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_SUPPORT_DAZ, 0)
     fi
-    ]
-  )
-
-AC_MSG_CHECKING(for PNI support)
-AC_ARG_ENABLE(pni,
-  [  --enable-pni                      PNI support],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_PNI, 1)
-    if test "$support_sse" -lt 2; then
-     AC_MSG_ERROR([PNI needs SSE2 support])
-    fi
-   elif test "$enableval" = no; then
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PNI, 0)
-   fi
-   ],
-  [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_PNI, 0)
     ]
   )
 
@@ -2736,6 +2722,16 @@ AC_ARG_ENABLE(reset-on-triple-fault,
   [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault],
   [AC_MSG_RESULT($enableval)
    AC_MSG_ERROR([deprecated - could be configured directly from .bochsrc instead])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(PNI support)
+AC_ARG_ENABLE(--enable-pni,
+  [  --enable-pni                      PNI support],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([deprecated - use --enable-sse=3 instead])
   ],
   [
    AC_MSG_RESULT(no)

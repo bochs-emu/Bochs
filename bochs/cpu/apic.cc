@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.74 2006-02-14 19:00:08 sshwarts Exp $
+// $Id: apic.cc,v 1.75 2006-02-20 19:28:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -760,8 +760,6 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   }
   BX_ASSERT (irr[vector] == 1);
   BX_DEBUG(("%s: acknowledge_int returning vector 0x%x", cpu->name, vector));
-  // currently isr never gets cleared, so no point
-  //BX_ASSERT (isr[vector] == 0);
   irr[vector] = 0;
   isr[vector] = 1;
   if (bx_dbg.apic) {
@@ -777,7 +775,6 @@ spurious:
   INTR = 0;
   cpu->async_event = 1;
   return spurious_vector;
-
 }
 
 void bx_local_apic_c::print_status (void)
