@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.12 2005-12-27 13:21:25 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.13 2006-02-20 21:58:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -146,10 +146,7 @@ cdrom_interface::insert_cdrom(char *dev)
   if (CDIO->iotd_Req.io_Error != 0)
     return false;
   else
-  {
-    //bx_options.cdromd.inserted = 1;
     return true;
-  }
 }
 
 
@@ -164,23 +161,25 @@ cdrom_interface::eject_cdrom()
   cdb[4] = 0 | 2;
 
   DoSCSI(0, 0,cdb,sizeof(cdb),SCSIF_READ);
-  //bx_options.cdromd.inserted = 1;
 }
 
 
   bx_bool
-cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track)
+cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track, int format)
 {
   Bit8u cdb[10];
   TOC *toc;
   toc = (TOC*) buf;
 
+  if (format != 0)
+    return false;
+
   memset(cdb,0,sizeof(cdb));
 
   cdb[0] = SCSI_CD_READ_TOC;
 
-  if(msf)
-  	cdb[1] = 2;
+  if (msf)
+    cdb[1] = 2;
   else
     cdb[1] = 0;
 
@@ -202,20 +201,17 @@ cdrom_interface::capacity()
   CAPACITY cap;
   Bit8u cdb[10];
 
-
   memset(cdb,0,sizeof(cdb));
   cdb[0] = SCSI_DA_READ_CAPACITY;
 
   int err;
 
-  if ((err = DoSCSI ((UBYTE *)&cap, sizeof(cap),
-			cdb, sizeof (cdb),
-			(SCSIF_READ | SCSIF_AUTOSENSE))) == 0)
-
-        return(cap.sectors);
-
+  if ((err = DoSCSI((UBYTE *)&cap, sizeof(cap),
+                    cdb, sizeof (cdb),
+                    (SCSIF_READ | SCSIF_AUTOSENSE))) == 0)
+    return(cap.sectors);
   else
-      BX_PANIC (("Couldn't get media capacity"));
+    BX_PANIC (("Couldn't get media capacity"));
 }
 
   bx_bool
@@ -228,7 +224,7 @@ cdrom_interface::read_block(Bit8u* buf, int lba, int blocksize)
   DoIO((struct IORequest *)CDIO);
 
   if (CDIO->iotd_Req.io_Error != 0) {
-    BX_PANIC(("Error %d reading CD data sector: %ld\n", CDIO->iotd_Req.io_Error, lba));
+    BX_PANIC(("Error %d reading CD data sector: %ld", CDIO->iotd_Req.io_Error, lba));
     return 0;
   }
   return 1;
@@ -267,8 +263,7 @@ int DoSCSI(UBYTE *data, int datasize, Bit8u *cmd,int cmdsize, UBYTE direction)
   DoIO((struct IORequest *)CDIO);
 
   if (CDIO->iotd_Req.io_Error != 0) {
-    //BX_PANIC(("DoSCSI: error %d\n", CDIO->iotd_Req.io_Error));
-    //BX_PANIC(("SCSI Status: %d\n", scmd.scsi_Status));
+    BX_PANIC(("DoSCSI: error %d", CDIO->iotd_Req.io_Error));
   }
 
   return CDIO->iotd_Req.io_Error;
