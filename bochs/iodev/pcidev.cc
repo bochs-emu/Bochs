@@ -176,8 +176,8 @@ bx_pcidev_c::init(void)
   }
   BX_PCIDEV_THIS pcidev_fd = fd;
   struct pcidev_find_struct find;
-  unsigned short vendor = bx_options.pcidev.Ovendor->get();
-  unsigned short device = bx_options.pcidev.Odevice->get();
+  unsigned short vendor = SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get();
+  unsigned short device = SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get();
   find.deviceID = device;
   find.vendorID = vendor;
   if (ioctl(fd, PCIDEV_IOCTL_FIND, &find) == -1) {

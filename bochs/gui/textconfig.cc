@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.36 2006-02-19 21:35:49 vruppert Exp $
+// $Id: textconfig.cc,v 1.37 2006-02-20 21:29:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -989,19 +989,25 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
       fprintf (fpout, "0. Return to previous menu\n");
     for (int i=0; i<size; i++) {
       assert (list[i] != NULL);
-      fprintf (fpout, "%d. ", i+1);
-      if (list[i]->get_enabled ()) {
-        if (list[i]->get_type () == BXT_LIST) {
+      fprintf(fpout, "%d. ", i+1);
+      if (list[i]->get_enabled()) {
+        if (list[i]->get_type() == BXT_LIST) {
           child = (bx_list_c*)list[i];
           fprintf(fpout, "%s\n", child->get_title()->getptr());
         } else {
-          if ((options->get () & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
-            fprintf(fpout, "%s ", list[i]->get_group ());
-          list[i]->text_print (fpout);
+          if ((options->get() & SHOW_GROUP_NAME) && (list[i]->get_group() != NULL))
+            fprintf(fpout, "%s ", list[i]->get_group());
+          list[i]->text_print(fpout);
           fprintf(fpout, "\n");
         }
-      } else
-	fprintf (fpout, "(disabled)\n");
+      } else {
+        if (list[i]->get_type() == BXT_LIST) {
+          child = (bx_list_c*)list[i];
+          fprintf(fpout, "%s (disabled)\n", child->get_title()->getptr());
+        } else {
+          fprintf(fpout, "(disabled)\n");
+        }
+      }
     }
     fprintf (fpout, "\n");
     Bit32u n = choice->get ();

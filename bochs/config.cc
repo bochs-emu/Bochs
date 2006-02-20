@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.78 2006-02-19 21:35:46 vruppert Exp $
+// $Id: config.cc,v 1.79 2006-02-20 21:29:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1024,6 +1024,7 @@ void bx_init_options()
       BX_SUPPORT_PCI);
   // pci slots
   bx_list_c *slot = new bx_list_c(pci, "slot", "PCI Slots");
+  *pci_deps_ptr++ = slot;
   for (i=0; i<BX_N_PCI_SLOTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
@@ -1033,14 +1034,46 @@ void bx_init_options()
         strdup(label), 
         strdup(descr),
         "", BX_PATHNAME_LEN);
-    // add to menus
+    // add to deplist
     *pci_deps_ptr++ = devname;
   }
+  // pcidev options
+  bx_list_c *pcidev = new bx_list_c(pci, "pcidev", "Host PCI Device Mapping");
+  *pci_deps_ptr++ = pcidev;
+  bx_param_num_c *pcivid = new bx_param_num_c(pcidev,
+      "vendor",
+      "PCI Vendor ID",
+      "The vendor ID of the host PCI device to map",
+      0, 0xffff,
+      0xffff); // vendor id 0xffff = no pci device present
+  pcivid->set_base(16);
+  pcivid->set_format("0x%04x");
+  pcivid->set_long_format("PCI Vendor ID: 0x%04x");
+#if BX_SUPPORT_PCIDEV
+  *pci_deps_ptr++ = pcivid;
+#else
+  pcivid->set_enabled(0);
+#endif
+  bx_param_num_c *pcidid = new bx_param_num_c(pcidev,
+      "device",
+      "PCI Device ID",
+      "The device ID of the host PCI device to map",
+      0, 0xffff,
+      0x0);
+  pcidid->set_base(16);
+  pcidid->set_format("0x%04x");
+  pcidid->set_long_format("PCI Device ID: 0x%04x");
+#if BX_SUPPORT_PCIDEV
+  *pci_deps_ptr++ = pcidid;
+#else
+  pcidid->set_enabled(0);
+#endif
   // add final NULL at the end, and build the menu
   *pci_deps_ptr = NULL;
   i440fx_support->set_dependent_list(new bx_list_c(BXP_NULL, "", "", pci_deps_list));
   pci->get_options()->set(bx_list_c::SHOW_PARENT);
   slot->get_options()->set(bx_list_c::SHOW_PARENT);
+  pcidev->get_options()->set(bx_list_c::SHOW_PARENT);
 
   // serial and parallel port options
 
@@ -1342,27 +1375,6 @@ void bx_init_options()
   };
   menu = new bx_list_c(BXP_MENU_INTERFACE, "Bochs Interface Menu", "", interface_init_list);
   menu->get_options()->set(menu->SHOW_PARENT);
-
-  // pcidev options
-  bx_options.pcidev.Ovendor = new bx_param_num_c(BXP_PCIDEV_VENDOR,
-      "PCI Vendor ID",
-      "The vendor ID of the host PCI device to map",
-      0, 0xffff,
-      0xffff); // vendor id 0xffff = no pci device present
-  bx_options.pcidev.Odevice = new bx_param_num_c(BXP_PCIDEV_DEVICE,
-      "PCI Device ID",
-      "The device ID of the host PCI device to map",
-      0, 0xffff,
-      0x0);
-  /*
-  bx_param_c *pcidev_init_list[] = {
-    bx_options.pcidev.Ovendor,
-    bx_options.pcidev.Odevice,
-    NULL
-  };
-  menu = new bx_list_c (BXP_PCIDEV, "Host PCI Device Mapping Configuration", "", pcidev_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
-  */
 
   // NE2K options
   bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
@@ -1851,10 +1863,6 @@ void bx_reset_options ()
   bx_options.keyboard.Okeymap->reset();
   bx_options.Okeyboard_type->reset();
   bx_options.Ouser_shortcut->reset();
-
-  // pcidev
-  bx_options.pcidev.Ovendor->reset();
-  bx_options.pcidev.Odevice->reset();
 
   // other
   bx_options.Otext_snapshot_check->reset();
@@ -2930,15 +2938,15 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "vendor=", 7)) {
         if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
-          bx_options.pcidev.Ovendor->set (strtoul (&params[i][7], NULL, 16));
+          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 16));
         else
-          bx_options.pcidev.Ovendor->set (strtoul (&params[i][7], NULL, 10));
+          SIM->get_param_num(BXPN_PCIDEV_VENDOR)->set(strtoul(&params[i][7], NULL, 10));
       }
       else if (!strncmp(params[i], "device=", 7)) {
         if ( (params[i][7] == '0') && (toupper(params[i][8]) == 'X') )
-          bx_options.pcidev.Odevice->set (strtoul (&params[i][7], NULL, 16));
+          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 16));
         else
-          bx_options.pcidev.Odevice->set (strtoul (&params[i][7], NULL, 10));
+          SIM->get_param_num(BXPN_PCIDEV_DEVICE)->set(strtoul(&params[i][7], NULL, 10));
       }
       else {
         BX_ERROR(("%s: unknown parameter for pcidev ignored.", context));
@@ -3649,6 +3657,11 @@ int bx_write_configuration (char *rc, int overwrite)
     }
   }
   fprintf (fp, "\n");
+  if (SIM->get_param_bool(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
+    fprintf(fp, "pcidev: vendor=0x%04x, device=0x%04x\n",
+      SIM->get_param_bool(BXPN_PCIDEV_VENDOR)->get(),
+      SIM->get_param_bool(BXPN_PCIDEV_DEVICE)->get());
+  }
   bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get());

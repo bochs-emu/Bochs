@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.87 2006-02-19 21:35:49 vruppert Exp $
+// $Id: devices.cc,v 1.88 2006-02-20 21:29:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.87 2006-02-19 21:35:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.88 2006-02-20 21:29:13 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -198,7 +198,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_SUPPORT_PCIDEV
-    PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
+    if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
+      PLUG_load_plugin(pcidev, PLUGTYPE_OPTIONAL);
+    }
 #endif
 #if BX_SUPPORT_PCIPNIC
   if (bx_options.pnic.Oenabled->get ()) {
