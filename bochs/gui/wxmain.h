@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.49 2006-02-19 15:43:03 vruppert Exp $
+// $Id: wxmain.h,v 1.50 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -42,9 +42,10 @@ enum
   ID_Edit_Boot,
   ID_Edit_CPU,
   ID_Edit_Memory,
-  ID_Edit_PCI,
-  ID_Edit_Sound,
   ID_Edit_Clock_Cmos,
+  ID_Edit_PCI,
+  ID_Edit_Display,
+  ID_Edit_Sound,
   ID_Edit_Network,
   ID_Edit_Keyboard,
   ID_Edit_Serial_Parallel,
@@ -179,6 +180,7 @@ public:
   void OnEditMemory(wxCommandEvent& event);
   void OnEditClockCmos(wxCommandEvent& event);
   void OnEditPCI(wxCommandEvent& event);
+  void OnEditDisplay(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
   void OnEditKeyboard(wxCommandEvent& event);

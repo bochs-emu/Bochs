@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.124 2006-01-07 12:10:58 vruppert Exp $
+// $Id: vga.cc,v 1.125 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -240,8 +240,8 @@ bx_vga_c::init(void)
   memset(argv, 0, sizeof(argv));
   argc = 1;
   argv[0] = "bochs";
-  if (strlen(bx_options.Odisplaylib_options->getptr())) {
-    ptr = strtok(bx_options.Odisplaylib_options->getptr(), ",");
+  if (strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr())) {
+    ptr = strtok(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr(), ",");
     while (ptr) {
       string_i = 0;
       for (i=0; i<strlen(ptr); i++) {
@@ -287,7 +287,7 @@ bx_vga_c::init(void)
 
   BX_VGA_THIS s.vbe_enabled=0;
   BX_VGA_THIS s.vbe_8bit_dac=0;
-  if (!strcmp(bx_options.Ovga_extension->getptr (), "vbe")) {
+  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe")) {
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
@@ -379,12 +379,13 @@ bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
   void
 bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
-  BX_INFO(("interval=%u", bx_options.Ovga_update_interval->get ()));
+  bx_param_num_c *vga_update_interval = SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL);
+  BX_INFO(("interval=%u", vga_update_interval->get()));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
-       bx_options.Ovga_update_interval->get (), 1, 1, "vga");
-    bx_options.Ovga_update_interval->set_handler (f_param);
-    bx_options.Ovga_update_interval->set_runtime_param (1);
+       vga_update_interval->get (), 1, 1, "vga");
+    vga_update_interval->set_handler (f_param);
+    vga_update_interval->set_runtime_param (1);
   }
 }
 
@@ -392,10 +393,11 @@ bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_par
 bx_vga_c::reset(unsigned type)
 {
   if (!BX_VGA_THIS extension_checked) {
+    char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
     if (!BX_VGA_THIS extension_init &&
-        (strlen(bx_options.Ovga_extension->getptr()) > 0) &&
-        strcmp(bx_options.Ovga_extension->getptr(), "none")) {
-      BX_PANIC(("unknown display extension: %s", bx_options.Ovga_extension->getptr()));
+        (strlen(strptr) > 0) &&
+        strcmp(strptr, "none")) {
+      BX_PANIC(("unknown display extension: %s", strptr));
     }
     BX_VGA_THIS extension_checked = 1;
   }

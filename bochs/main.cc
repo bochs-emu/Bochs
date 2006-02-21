@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.313 2006-02-19 21:35:46 vruppert Exp $
+// $Id: main.cc,v 1.314 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -236,11 +236,11 @@ int bxmain () {
       return 0;
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
-    bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
-    char *ci_name = ci_param->get_choice (ci_param->get());
+    bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
+    char *ci_name = ci_param->get_selected();
     if (!strcmp(ci_name, "textconfig")) {
 #if BX_USE_TEXTCONFIG
-      init_text_config_interface ();   // in textconfig.h
+      init_text_config_interface();   // in textconfig.h
 #else
       BX_PANIC(("configuration interface 'textconfig' not present"));
 #endif
@@ -251,27 +251,28 @@ int bxmain () {
     }
 #endif
     else {
-      BX_PANIC (("unsupported configuration interface '%s'", ci_name));
+      BX_PANIC(("unsupported configuration interface '%s'", ci_name));
     }
-    int status = SIM->configuration_interface (ci_name, CI_START);
+    ci_param->set_enabled(0);
+    int status = SIM->configuration_interface(ci_name, CI_START);
     if (status == CI_ERR_NO_TEXT_CONSOLE)
-      BX_PANIC (("Bochs needed the text console, but it was not usable"));
+      BX_PANIC(("Bochs needed the text console, but it was not usable"));
     // user quit the config interface, so just quit
   } else {
     // quit via longjmp
   }
-  SIM->set_quit_context (NULL);
+  SIM->set_quit_context(NULL);
 #if defined(WIN32)
   if (!bx_user_quit) {
     // ask user to press ENTER before exiting, so that they can read messages
     // before the console window is closed. This isn't necessary after pressing
     // the power button.
-    fprintf (stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
+    fprintf(stderr, "\nBochs is exiting. Press ENTER when you're ready to close this window.\n");
     char buf[16];
-    fgets (buf, sizeof(buf), stdin);
+    fgets(buf, sizeof(buf), stdin);
   }
 #endif
-  return SIM->get_exit_code ();
+  return SIM->get_exit_code();
 }
 
 #if defined(__WXMSW__)
@@ -676,69 +677,69 @@ bx_bool load_and_init_display_lib ()
     // plugin_init will install wxWidgets as the bx_gui.
     return true;
   }
-  BX_ASSERT (bx_gui == NULL);
-  bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
-  char *ci_name = ci_param->get_choice (ci_param->get());
-  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
-  char *gui_name = gui_param->get_choice (gui_param->get());
+  BX_ASSERT(bx_gui == NULL);
+  bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
+  char *ci_name = ci_param->get_selected();
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY);
+  char *gui_name = gui_param->get_selected();
   if (!strcmp(ci_name, "wx")) {
     BX_ERROR(("change of the config interface to wx not implemented yet"));
   }
-  if (!strcmp (gui_name, "wx")) {
+  if (!strcmp(gui_name, "wx")) {
     // they must not have used wx as the configuration interface, or bx_gui
     // would already be initialized.  Sorry, it doesn't work that way.
-    BX_ERROR (("wxWidgets was not used as the configuration interface, so it cannot be used as the display library"));
+    BX_ERROR(("wxWidgets was not used as the configuration interface, so it cannot be used as the display library"));
     // choose another, hopefully different!
     gui_param->set (0);
-    gui_name = gui_param->get_choice (gui_param->get());
+    gui_name = gui_param->get_selected();
     if (!strcmp (gui_name, "wx")) {
-      BX_PANIC (("no alternative display libraries are available"));
+      BX_PANIC(("no alternative display libraries are available"));
       return false;
     }
-    BX_ERROR (("changing display library to '%s' instead", gui_name));
+    BX_ERROR(("changing display library to '%s' instead", gui_name));
   }
 #if BX_WITH_AMIGAOS
-  if (!strcmp (gui_name, "amigaos")) 
+  if (!strcmp(gui_name, "amigaos")) 
     PLUG_load_plugin (amigaos, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_BEOS
-  if (!strcmp (gui_name, "beos")) 
+  if (!strcmp(gui_name, "beos")) 
     PLUG_load_plugin (beos, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_CARBON
-  if (!strcmp (gui_name, "carbon")) 
+  if (!strcmp(gui_name, "carbon")) 
     PLUG_load_plugin (carbon, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_MACOS
-  if (!strcmp (gui_name, "macos")) 
+  if (!strcmp(gui_name, "macos")) 
     PLUG_load_plugin (macintosh, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_NOGUI
-  if (!strcmp (gui_name, "nogui")) 
+  if (!strcmp(gui_name, "nogui")) 
     PLUG_load_plugin (nogui, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_RFB
-  if (!strcmp (gui_name, "rfb")) 
+  if (!strcmp(gui_name, "rfb")) 
     PLUG_load_plugin (rfb, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_SDL
-  if (!strcmp (gui_name, "sdl")) 
+  if (!strcmp(gui_name, "sdl")) 
     PLUG_load_plugin (sdl, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_SVGA
-  if (!strcmp (gui_name, "svga")) 
+  if (!strcmp(gui_name, "svga")) 
     PLUG_load_plugin (svga, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_TERM
-  if (!strcmp (gui_name, "term")) 
+  if (!strcmp(gui_name, "term")) 
     PLUG_load_plugin (term, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_WIN32
-  if (!strcmp (gui_name, "win32")) 
+  if (!strcmp(gui_name, "win32")) 
     PLUG_load_plugin (win32, PLUGTYPE_OPTIONAL);
 #endif
 #if BX_WITH_X11
-  if (!strcmp (gui_name, "x")) 
+  if (!strcmp(gui_name, "x")) 
     PLUG_load_plugin (x, PLUGTYPE_OPTIONAL);
 #endif
 
@@ -746,12 +747,12 @@ bx_bool load_and_init_display_lib ()
   // set the flag for guis requiring a GUI sighandler.
   // useful when guis are compiled as plugins
   // only term for now
-  if (!strcmp (gui_name, "term")) {
+  if (!strcmp(gui_name, "term")) {
     bx_gui_sighandler = 1;
-    }
+  }
 #endif
 
-  BX_ASSERT (bx_gui != NULL);
+  BX_ASSERT(bx_gui != NULL);
   return true;
 }
 

@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.5 2006-02-19 21:35:45 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.6 2006-02-21 21:35:07 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -121,6 +121,39 @@ pci
     vendor              BXP_PCIDEV_VENDOR,
     device              BXP_PCIDEV_DEVICE,
 
+display
+  config_interface      BXP_SEL_CONFIG_INTERFACE,
+  display_library       BXP_SEL_DISPLAY_LIBRARY,
+  displaylib_options    BXP_DISPLAYLIB_OPTIONS,
+  private_colormap      BXP_PRIVATE_COLORMAP,
+  fullscreen            BXP_FULLSCREEN,
+  screenmode            BXP_SCREENMODE,
+  vga_extension         BXP_VGA_EXTENSION,
+  vga_update_interval   BXP_VGA_UPDATE_INTERVAL,
+
+keyboard_mouse
+  keyboard              BXP_KEYBOARD,
+    type                BXP_KBD_TYPE,
+    serial_delay        BXP_KBD_SERIAL_DELAY,
+    paste_delay         BXP_KBD_PASTE_DELAY,
+    use_mapping         BXP_KEYBOARD_USEMAPPING,
+    map                 BXP_KEYBOARD_MAP,
+    user_shortcut       BXP_USER_SHORTCUT,
+  mouse
+    type                BXP_MOUSE_TYPE,
+    enabled             BXP_MOUSE_ENABLED,
+
+boot_params          
+  boot_drive1           BXP_BOOTDRIVE1,
+  boot_drive2           BXP_BOOTDRIVE2,
+  boot_drive3           BXP_BOOTDRIVE3,
+  floppy_sig_check      BXP_FLOPPYSIGCHECK,
+  load32bitos           BXP_LOAD32BITOS,
+    which               BXP_LOAD32BITOS_WHICH,
+    path                BXP_LOAD32BITOS_PATH,
+    iolog               BXP_LOAD32BITOS_IOLOG,
+    initrd              BXP_LOAD32BITOS_INITRD,
+
 floppy
   0                     BXP_FLOPPYA,
     devtype             BXP_FLOPPYA_DEVTYPE,
@@ -162,115 +195,74 @@ ata
   3
     (same options as ata.0)
 
-serial
-  0
-    enabled        BXP_COM1_ENABLED
-    mode           BXP_COM1_MODE
-    path           BXP_COM1_PATH
-  1
-    enabled        BXP_COM2_ENABLED
-    mode           BXP_COM2_MODE
-    path           BXP_COM2_PATH
-  2
-    enabled        BXP_COM3_ENABLED
-    mode           BXP_COM3_MODE
-    path           BXP_COM3_PATH
-  3
-    enabled        BXP_COM4_ENABLED
-    mode           BXP_COM4_MODE
-    path           BXP_COM4_PATH
+ports
+  serial
+    0
+      enabled           BXP_COM1_ENABLED
+      mode              BXP_COM1_MODE
+      path              BXP_COM1_PATH
+    1
+      (same options as ports.serial.0)
+    2
+      (same options as ports.serial.0)
+    3
+      (same options as ports.serial.0)
+  parallel
+    0
+      enabled           BXP_PARPORT1_ENABLED,
+      outfile           BXP_PARPORT1_OUTFILE,
+    1
+      (same options as ports.parallel.0)
+  usb
+    1
+      enabled           BXP_USB1_ENABLED,
+      port1             BXP_USB1_PORT1,
+      option1           BXP_USB1_OPTION1,
+      port2             BXP_USB1_PORT2,
+      option2           BXP_USB1_OPTION2,
 
-usb
-  1
-    enabled          BXP_USB1_ENABLED,
-    port1            BXP_USB1_PORT1,
-    option1          BXP_USB1_OPTION1,
-    port2            BXP_USB1_PORT2,
-    option2          BXP_USB1_OPTION2,
+network
+  ne2k
+    0                   BXP_NE2K,
+      enabled           BXP_NE2K_ENABLED,
+      ioaddr            BXP_NE2K_IOADDR,
+      irq               BXP_NE2K_IRQ,
+      macaddr           BXP_NE2K_MACADDR,
+      ethmod            BXP_NE2K_ETHMOD,
+      ethdev            BXP_NE2K_ETHDEV,
+      script            BXP_NE2K_SCRIPT,
+  pnic
+    0                   BXP_PNIC,
+      enabled           BXP_PNIC_ENABLED,
+      macaddr           BXP_PNIC_MACADDR,
+      ethmod            BXP_PNIC_ETHMOD,
+      ethdev            BXP_PNIC_ETHDEV,
+      script            BXP_PNIC_SCRIPT,
 
-parallel
-  0
-    enabled           BXP_PARPORT1_ENABLED,
-    outfile           BXP_PARPORT1_OUTFILE,
-  1
-    enabled           BXP_PARPORT2_ENABLED,
-    outfile           BXP_PARPORT2_OUTFILE,
-
-ne2k
-  0                   BXP_NE2K,
-    enabled           BXP_NE2K_ENABLED,
-    ioaddr            BXP_NE2K_IOADDR,
-    irq               BXP_NE2K_IRQ,
-    macaddr           BXP_NE2K_MACADDR,
-    ethmod            BXP_NE2K_ETHMOD,
-    ethdev            BXP_NE2K_ETHDEV,
-    script            BXP_NE2K_SCRIPT,
-
-pnic
-  0                   BXP_PNIC,
-    enabled           BXP_PNIC_ENABLED,
-    macaddr           BXP_PNIC_MACADDR,
-    ethmod            BXP_PNIC_ETHMOD,
-    ethdev            BXP_PNIC_ETHDEV,
-    script            BXP_PNIC_SCRIPT,
-
-sb16                BXP_SB16,
-  enabled           BXP_SB16_ENABLED,
-  midifile          BXP_SB16_MIDIFILE,
-  wavefile          BXP_SB16_WAVEFILE,
-  logfile           BXP_SB16_LOGFILE,
-  midimode          BXP_SB16_MIDIMODE,
-  wavemode          BXP_SB16_WAVEMODE,
-  loglevel          BXP_SB16_LOGLEVEL,
-  dmatimer          BXP_SB16_DMATIMER,
-
-vga
-  update_interval     BXP_VGA_UPDATE_INTERVAL,
-  extension           BXP_VGA_EXTENSION,
-
-keyboard              BXP_KEYBOARD,
-  type                BXP_KBD_TYPE,
-  serial_delay        BXP_KBD_SERIAL_DELAY,
-  paste_delay         BXP_KBD_PASTE_DELAY,
-  use_mapping         BXP_KEYBOARD_USEMAPPING,
-  map                 BXP_KEYBOARD_MAP,
-  user_shortcut       BXP_USER_SHORTCUT,
-
-mouse
-  type                BXP_MOUSE_TYPE,
-  enabled             BXP_MOUSE_ENABLED,
+sound
+  sb16                  BXP_SB16,
+    enabled             BXP_SB16_ENABLED,
+    midifile            BXP_SB16_MIDIFILE,
+    wavefile            BXP_SB16_WAVEFILE,
+    logfile             BXP_SB16_LOGFILE,
+    midimode            BXP_SB16_MIDIMODE,
+    wavemode            BXP_SB16_WAVEMODE,
+    loglevel            BXP_SB16_LOGLEVEL,
+    dmatimer            BXP_SB16_DMATIMER,
 
 config_menus                      
-  main                BXP_MENU_MAIN,
-  memory              BXP_MENU_MEMORY,
-  interface           BXP_MENU_INTERFACE,
-  disk                BXP_MENU_DISK,
-  ser_par             BXP_MENU_SERIAL_PARALLEL,
-  sound               BXP_MENU_SOUND,
-  misc                BXP_MENU_MISC,
-  runtime             BXP_MENU_RUNTIME,
-
-boot_params          
-  boot_drive1          BXP_BOOTDRIVE1,
-  boot_drive2          BXP_BOOTDRIVE2,
-  boot_drive3          BXP_BOOTDRIVE3,
-  floppy_sig_check     BXP_FLOPPYSIGCHECK,
-  load32bitos          BXP_LOAD32BITOS,
-    which              BXP_LOAD32BITOS_WHICH,
-    path               BXP_LOAD32BITOS_PATH,
-    iolog              BXP_LOAD32BITOS_IOLOG,
-    initrd             BXP_LOAD32BITOS_INITRD,
-
-display
-  config_interface    BXP_SEL_CONFIG_INTERFACE,
-  display_library     BXP_SEL_DISPLAY_LIBRARY,
-  private_colormap    BXP_PRIVATE_COLORMAP,
-  full_screen         BXP_FULLSCREEN,
-  screen_mode         BXP_SCREENMODE,
+  main                  BXP_MENU_MAIN,
+  memory                BXP_MENU_MEMORY,
+  interface             BXP_MENU_INTERFACE,
+  disk                  BXP_MENU_DISK,
+  ser_par               BXP_MENU_SERIAL_PARALLEL,
+  sound                 BXP_MENU_SOUND,
+  misc                  BXP_MENU_MISC,
+  runtime               BXP_MENU_RUNTIME,
 
 general
-  start_mode          BXP_BOCHS_START,
-  text_snapshot_check BXP_TEXT_SNAPSHOT_CHECK,
+  start_mode            BXP_BOCHS_START,
+  text_snapshot_check   BXP_TEXT_SNAPSHOT_CHECK,
 
 log
   filename            BXP_LOG_FILENAME,
@@ -279,5 +271,10 @@ log
 
 debugger
   running             BXP_DEBUG_RUNNING,
+  gdbstub
+    port
+    text_base
+    data_base
+    bss_base
 
-(updated Feb 12, 2006 by vruppert)
+(updated Feb 21, 2006 by vruppert)

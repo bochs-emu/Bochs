@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.48 2006-01-23 18:34:47 vruppert Exp $
+// $Id: rfb.cc,v 1.49 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -260,8 +260,8 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsi
   Sleep(1000);
   SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
 #endif
-  if (bx_options.Oprivate_colormap->get ()) {
-    BX_ERROR(( "private_colormap option ignored." ));
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+    BX_ERROR(("private_colormap option ignored."));
   }
 
   // parse rfb specific options

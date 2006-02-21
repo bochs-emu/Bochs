@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.22 2005-07-10 09:02:30 vruppert Exp $
+// $Id: nogui.cc,v 1.23 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,9 +87,9 @@ bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigne
 
   UNUSED(bochs_icon_bits);  // global variable
 
-  if (bx_options.Oprivate_colormap->get ()) {
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
-    }
+  }
 }
 
 

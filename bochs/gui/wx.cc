@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.80 2006-01-23 18:34:47 vruppert Exp $
+// $Id: wx.cc,v 1.81 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -875,7 +875,7 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
   unsigned char fc, vc;
 
   put("WX  ");
-  if (bx_options.Oprivate_colormap->get ()) {
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
   }
 

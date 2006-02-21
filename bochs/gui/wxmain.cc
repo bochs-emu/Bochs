@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.115 2006-02-19 21:35:49 vruppert Exp $
+// $Id: wxmain.cc,v 1.116 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -197,6 +197,7 @@ extern "C" int libwx_LTX_plugin_init (plugin_t *plugin, plugintype_t type,
   wxLogDebug ("installing wxWidgets as the configuration interface");
   SIM->register_configuration_interface ("wx", ci_callback, NULL);
   wxLogDebug ("installing %s as the Bochs GUI", "wxWidgets");
+  SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
   MyPanel::OnPluginInit ();
   return 0; // success
 }
@@ -321,6 +322,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Clock_Cmos, MyFrame::OnEditClockCmos)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
+  EVT_MENU(ID_Edit_Display, MyFrame::OnEditDisplay)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
@@ -434,6 +436,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Memory, "&Memory..." );
   menuEdit->Append(ID_Edit_Clock_Cmos, "C&lock/Cmos..." );
   menuEdit->Append(ID_Edit_PCI, "&PCI..." );
+  menuEdit->Append(ID_Edit_Display, "&Display + Interface..." );
   menuEdit->Append(ID_Edit_Sound, "S&ound..." );
   menuEdit->Append(ID_Edit_Network, "&Network..." );
   menuEdit->Append(ID_Edit_Keyboard, "&Keyboard..." );
@@ -630,6 +633,16 @@ void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
+void MyFrame::OnEditDisplay(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("display");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
+}
+
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -680,12 +693,12 @@ void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_MISC_2);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.SetRuntimeFlag (sim_thread != NULL);
-  dlg.ShowModal ();
+//ParamDialog dlg(this, -1);
+//bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_MISC_2);
+//dlg.SetTitle (list->get_name ());
+//dlg.AddParam (list);
+//dlg.SetRuntimeFlag (sim_thread != NULL);
+//dlg.ShowModal ();
 }
 
 void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
@@ -965,9 +978,9 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
   // change it to wx.  It is technically possible to use other vga libraries
   // with the wx config interface, but there are still some significant
   // problems.
-  bx_param_enum_c *gui_param = SIM->get_param_enum(BXP_SEL_DISPLAY_LIBRARY);
-  char *gui_name = gui_param->get_choice (gui_param->get ());
-  if (strcmp (gui_name, "wx") != 0) {
+  bx_param_enum_c *gui_param = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY);
+  char *gui_name = gui_param->get_selected();
+  if (strcmp(gui_name, "wx") != 0) {
     wxMessageBox (
     "The display library was not set to wxWidgets.  When you use the\n"
     "wxWidgets configuration interface, you must also select the wxWidgets\n"

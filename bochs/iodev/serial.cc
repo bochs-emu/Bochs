@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.66 2005-07-11 16:24:47 vruppert Exp $
+// $Id: serial.cc,v 1.67 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -228,7 +228,7 @@ bx_serial_c::init(void)
       }
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
-      char *mode = bx_options.com[i].Omode->get_choice(bx_options.com[i].Omode->get());
+      char *mode = bx_options.com[i].Omode->get_selected();
       if (!strcmp(mode, "file")) {
         if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
           BX_SER_THIS s[i].output = fopen(bx_options.com[i].Odev->getptr (), "wb");

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.33 2005-06-17 18:37:51 vruppert Exp $
+// $Id: term.cc,v 1.34 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -218,9 +218,9 @@ bx_term_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned
 	}
 #endif
 
-	if (bx_options.Oprivate_colormap->get ())
-		BX_ERROR(("WARNING: private_colormap option ignored."));
-	initialized = 1;
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
+    BX_ERROR(("WARNING: private_colormap option ignored."));
+  initialized = 1;
 }
 
 

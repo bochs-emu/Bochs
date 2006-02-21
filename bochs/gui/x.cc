@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.100 2006-01-23 18:34:47 vruppert Exp $
+// $Id: x.cc,v 1.101 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -424,7 +424,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   default_depth  = DefaultDepth(bx_x_display, bx_x_screen_num);
   default_visual = DefaultVisual(bx_x_display, bx_x_screen_num);
 
-  if (!bx_options.Oprivate_colormap->get ()) {
+  if (!SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     default_cmap = DefaultColormap(bx_x_display, bx_x_screen_num);
     // try to use default colormap.  If not enough colors are available,
     // then switch to private colormap despite the user setting.  There
@@ -432,7 +432,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     // draws everything in black on black.
     if (!test_alloc_colors (default_cmap, 16)) {
       BX_ERROR (("I can't even allocate 16 colors!  Switching to a private colormap"));
-      bx_options.Oprivate_colormap->set (1);
+      SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->set(1);
     }
     col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
     col_vals[15] = WhitePixel(bx_x_display, bx_x_screen_num);
@@ -442,7 +442,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
     }
   }
 
-  if (bx_options.Oprivate_colormap->get ()) {
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     default_cmap = XCreateColormap(bx_x_display, DefaultRootWindow(bx_x_display),
                                    default_visual, AllocNone);
     if (XAllocColorCells(bx_x_display, default_cmap, False,
@@ -1609,7 +1609,7 @@ bx_x_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigne
   color.green = green << 8;
   color.blue  = blue << 8;
 
-  if (bx_options.Oprivate_colormap->get ()) {
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     color.pixel = index;
     XStoreColor(bx_x_display, default_cmap, &color);
     return(0); // no screen update needed

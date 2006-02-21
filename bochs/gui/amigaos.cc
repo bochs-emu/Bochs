@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.20 2004-06-19 15:20:08 sshwarts Exp $
+// $Id: amigaos.cc,v 1.21 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -179,9 +179,9 @@ open_screen(void)
 	sprintf (verstr, "Bochs x86 Emulator %s", VER_STRING);
 
 
-	if(bx_options.Ofullscreen->get ())
+	if (SIM->get_param_bool(BXPN_FULLSCREEN)->get())
 	{
-		if((scrmode = bx_options.Oscreenmode->getptr ()))
+		if((scrmode = SIM->get_param_string(BXPN_SCREENMODE)->getptr()))
 		{
 			id = strtoul(scrmode, NULL, 0);
 			if (!IsCyberModeID(id)) id = INVALID_ID;
@@ -361,10 +361,10 @@ bx_amigaos_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsig
 
 	open_screen();
 	setup_inputhandler();
-	/*
-	if (bx_options.private_colormap) {
-	fprintf(stderr, "# WARNING: Amiga: private_colormap option ignored.\n");
-	}*/
+
+	if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+	  BX_ERROR(("Amiga: private_colormap option ignored."));
+	}
 }
 
 

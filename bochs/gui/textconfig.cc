@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.37 2006-02-20 21:29:12 vruppert Exp $
+// $Id: textconfig.cc,v 1.38 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -274,7 +274,7 @@ static char *startup_options_prompt =
 "7. Memory options\n"
 "8. Clock & CMOS options\n"
 "9. PCI options\n"
-"10. Interface options\n"
+"10. Bochs Display & Interface options\n"
 "11. Disk options\n"
 "12. Serial or Parallel port options\n"
 "13. Sound Blaster 16 options\n"
@@ -493,7 +493,7 @@ int bx_config_interface (int menu)
 	 case 7: do_menu(BXP_MENU_MEMORY); break;
 	 case 8: do_menu2("clock_cmos", NULL); break;
 	 case 9: do_menu2("pci", NULL); break;
-	 case 10: do_menu(BXP_MENU_INTERFACE); break;
+	 case 10: do_menu2("display", NULL); break;
 	 case 11: do_menu(BXP_MENU_DISK); break;
 	 case 12: do_menu(BXP_MENU_SERIAL_PARALLEL); break;
 	 case 13: do_menu(BXP_SB16); break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.80 2006-02-19 21:35:49 vruppert Exp $
+// $Id: ne2k.cc,v 1.81 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1317,7 +1317,7 @@ bx_ne2k_c::init(void)
 {
   char devname[16];
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.80 2006-02-19 21:35:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.81 2006-02-21 21:35:09 vruppert Exp $"));
 
   // Read in values from config file
   memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
@@ -1422,7 +1422,7 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
     
   // Attach to the simulated ethernet dev
-  char *ethmod = bx_options.ne2k.Oethmod->get_choice(bx_options.ne2k.Oethmod->get());
+  char *ethmod = bx_options.ne2k.Oethmod->get_selected();
   BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
                                               bx_options.ne2k.Oethdev->getptr (),
                                               (const char *) bx_options.ne2k.Omacaddr->getptr (),

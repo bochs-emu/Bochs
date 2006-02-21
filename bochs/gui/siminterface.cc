@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.116 2006-02-19 15:43:03 vruppert Exp $
+// $Id: siminterface.cc,v 1.117 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -851,24 +851,24 @@ bx_real_sim_c::register_configuration_interface (
 int 
 bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
 {
-  bx_param_enum_c *ci_param = SIM->get_param_enum (BXP_SEL_CONFIG_INTERFACE);
-  char *name = ci_param->get_choice (ci_param->get ());
+  bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
+  char *name = ci_param->get_selected();
   if (!ci_callback) {
-    BX_PANIC (("no configuration interface was loaded"));
+    BX_PANIC(("no configuration interface was loaded"));
     return -1;
   }
-  if (strcmp (name, registered_ci_name) != 0) {
-    BX_PANIC (("siminterface does not support loading one configuration interface and then calling another"));
+  if (strcmp(name, registered_ci_name) != 0) {
+    BX_PANIC(("siminterface does not support loading one configuration interface and then calling another"));
     return -1;
   }
-  if (!strcmp (name, "wx")) 
+  if (!strcmp(name, "wx")) 
     wxsel = true;
   else
     wxsel = false;
   // enter configuration mode, just while running the configuration interface
-  set_display_mode (DISP_MODE_CONFIG);
+  set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);
-  set_display_mode (DISP_MODE_SIM);
+  set_display_mode(DISP_MODE_SIM);
   return retval;
 }
 

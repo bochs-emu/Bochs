@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.15 2005-11-15 17:19:28 vruppert Exp $
+// $Id: pcipnic.cc,v 1.16 2006-02-21 21:35:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -86,7 +86,7 @@ bx_pcipnic_c::init(void)
 
   // This code ripped wholesale from ne2k.cc:
   // Attach to the simulated ethernet dev
-  char *ethmod = bx_options.pnic.Oethmod->get_choice(bx_options.pnic.Oethmod->get());
+  char *ethmod = bx_options.pnic.Oethmod->get_selected();
   BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
                                               bx_options.pnic.Oethdev->getptr (),
                                               (const char *) bx_options.pnic.Omacaddr->getptr (),

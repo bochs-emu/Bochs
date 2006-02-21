@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.160 2006-02-20 21:29:11 vruppert Exp $
+// $Id: siminterface.h,v 1.161 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -152,6 +152,14 @@ typedef enum {
 #define BXPN_I440FX_SUPPORT              "pci.i440fx_support"
 #define BXPN_PCIDEV_VENDOR               "pci.pcidev.vendor"
 #define BXPN_PCIDEV_DEVICE               "pci.pcidev.device"
+#define BXPN_SEL_CONFIG_INTERFACE        "display.config_interface"
+#define BXPN_SEL_DISPLAY_LIBRARY         "display.display_library"
+#define BXPN_DISPLAYLIB_OPTIONS          "display.displaylib_options"
+#define BXPN_PRIVATE_COLORMAP            "display.private_colormap"
+#define BXPN_FULLSCREEN                  "display.fullscreen"
+#define BXPN_SCREENMODE                  "display.screenmode"
+#define BXPN_VGA_EXTENSION               "display.vga_extension"
+#define BXPN_VGA_UPDATE_INTERVAL         "display.vga_update_interval"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -161,8 +169,6 @@ typedef enum {
 typedef enum {
   BXP_NULL = 301,
   BXP_TEXT_SNAPSHOT_CHECK,
-  BXP_VGA_EXTENSION,
-  BXP_VGA_UPDATE_INTERVAL,
   BXP_MOUSE_ENABLED,
   BXP_MOUSE_TYPE,
   BXP_KBD_SERIAL_DELAY,
@@ -361,9 +367,6 @@ typedef enum {
   BXP_USB1_OPTION1,
   BXP_USB1_PORT2,
   BXP_USB1_OPTION2,
-  BXP_PRIVATE_COLORMAP,
-  BXP_FULLSCREEN,
-  BXP_SCREENMODE,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
@@ -496,9 +499,6 @@ typedef enum {
   // This is only modified by debugger code, not by the user.
   BXP_DEBUG_RUNNING,
 #endif
-  BXP_SEL_CONFIG_INTERFACE,
-  BXP_SEL_DISPLAY_LIBRARY,
-  BXP_DISPLAYLIB_OPTIONS,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -1101,6 +1101,7 @@ public:
       Bit64s initial_val,
       Bit64s value_base = 0);
   char *get_choice(int n) { return choices[n]; }
+  char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *string);
   bool set_by_name(const char *string);
 #if BX_USE_TEXTCONFIG

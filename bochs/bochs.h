@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.177 2006-02-20 21:29:11 vruppert Exp $
+// $Id: bochs.h,v 1.178 2006-02-21 21:35:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -550,28 +550,18 @@ typedef struct BOCHSAPI {
   bx_sb16_options   sb16;
   bx_param_enum_c   *Obootdrive[3];  
   bx_param_bool_c   *OfloppySigCheck;
-  bx_param_string_c *Ovga_extension;
-  bx_param_num_c    *Ovga_update_interval;
   bx_param_num_c    *Okeyboard_serial_delay;
   bx_param_num_c    *Okeyboard_paste_delay;
   bx_param_enum_c   *Okeyboard_type;
   bx_param_bool_c   *Otext_snapshot_check;
   bx_param_bool_c   *Omouse_enabled;
   bx_param_enum_c   *Omouse_type;
-  bx_param_bool_c   *Oprivate_colormap;
-#if BX_WITH_AMIGAOS
-  bx_param_bool_c   *Ofullscreen;
-  bx_param_string_c *Oscreenmode;
-#endif
   bx_ne2k_options   ne2k;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
   bx_keyboard_options keyboard;
   bx_param_string_c *Ouser_shortcut;
   bx_gdbstub_t      gdbstub;
-  bx_param_enum_c *Osel_config;
-  bx_param_enum_c *Osel_displaylib;
-  bx_param_string_c *Odisplaylib_options;
 } bx_options_t;
 
 BOCHSAPI extern bx_options_t bx_options;

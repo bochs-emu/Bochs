@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.28 2005-07-24 07:25:02 vruppert Exp $
+// $Id: carbon.cc,v 1.29 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -571,7 +571,7 @@ void CreateTile(void)
   unsigned  long p_f;
   long      theRowBytes = ((((long) ( vga_bpp==24?32:(((vga_bpp+1)>>1)<<1) ) * ((long) (srcTileRect.right-srcTileRect.left)) + 31) >> 5) << 2);
   
-//  if (bx_options.Oprivate_colormap->get ())
+//  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
 //  {
     GetGWorld(&savePort, &saveDevice);
     switch(vga_bpp)
@@ -1156,7 +1156,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   
   screen_state = TEXT_MODE;
   
-/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get ())
   {
     GetGWorld(&savePort, &saveDevice);
 
@@ -1186,7 +1186,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 //      RGBForeColor(&fgColor);
 //      RGBBackColor(&bgColor);
       
-      if (bx_options.Oprivate_colormap->get ())
+      if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
       {
         PmForeColor(new_text[i+1] & 0x0F);
         PmBackColor((new_text[i+1] & 0xF0) >> 4);
@@ -1223,7 +1223,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   previ = cursori;
   
   SetPort(oldPort);
-/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
     SetGWorld(savePort, saveDevice);
 */
   windowUpdatesPending = true;
@@ -1285,7 +1285,7 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
   CGrafPtr  savePort;
   GrafPtr   oldPort;
   
-/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
   {
     GetGWorld(&savePort, &saveDevice);
 
@@ -1307,9 +1307,9 @@ bx_bool bx_carbon_gui_c::palette_change(unsigned index, unsigned red, unsigned g
 
     SetPort(oldPort);
   }
-/*  if (gOffWorld != NULL) //(bx_options.Oprivate_colormap->get ())
+/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
     SetGWorld(savePort, saveDevice);*/
-  if (bx_options.Oprivate_colormap->get ())
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
   {
   
     thePal = NewPalette(index, gCTable, pmTolerant, 0x5000);

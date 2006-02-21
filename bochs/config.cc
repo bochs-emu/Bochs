@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.79 2006-02-20 21:29:11 vruppert Exp $
+// $Id: config.cc,v 1.80 2006-02-21 21:35:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -190,7 +190,8 @@ static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
 
 char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
 {
-  bx_id id = param->get_id ();
+  bx_id id = param->get_id();
+  char *pname = param->get_name();
 
   int empty = 0;
   if ((strlen(val) < 1) || !strcmp ("none", val)) {
@@ -287,13 +288,14 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       }
       break;
     
-    case BXP_SCREENMODE:
-      if (set==1) {
-        BX_INFO (("Screen mode changed to %s", val));
-      }
-      break;
     default:
+      if (!strcmp(pname, "screenmode")) { // FIXME: check full param path
+        if (set==1) {
+          BX_INFO (("Screen mode changed to %s", val));
+        }
+      } else {
         BX_PANIC (("bx_string_handler called with unexpected parameter %d", param->get_id()));
+      }
   }
   return val;
 }
@@ -1075,6 +1077,126 @@ void bx_init_options()
   slot->get_options()->set(bx_list_c::SHOW_PARENT);
   pcidev->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // display subtree
+  bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 8);
+
+  // display & interface options
+  static char *config_interface_list[] = {
+#if BX_USE_TEXTCONFIG
+    "textconfig",
+#endif
+#if BX_WITH_WX
+    "wx",
+#endif
+    NULL
+  };
+  bx_param_enum_c *sel_config = new bx_param_enum_c(display,
+    "config_interface", "Configuration interface",
+    "Select configuration interface",
+    config_interface_list,
+    0,
+    0);
+  sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
+  sel_config->set_ask_format("Choose which configuration interface to use: [%s] ");
+
+  // this is a list of gui libraries that are known to be available at
+  // compile time.  The one that is listed first will be the default,
+  // which is used unless the user overrides it on the command line or
+  // in a configuration file.
+  static char *display_library_list[] = {
+#if BX_WITH_X11
+    "x",
+#endif
+#if BX_WITH_WIN32
+    "win32",
+#endif
+#if BX_WITH_CARBON
+    "carbon",
+#endif
+#if BX_WITH_BEOS
+    "beos",
+#endif
+#if BX_WITH_MACOS
+    "macos",
+#endif
+#if BX_WITH_AMIGAOS
+    "amigaos",
+#endif
+#if BX_WITH_SDL
+    "sdl",
+#endif
+#if BX_WITH_SVGA
+    "svga",
+#endif
+#if BX_WITH_TERM
+    "term",
+#endif
+#if BX_WITH_RFB
+    "rfb",
+#endif
+#if BX_WITH_WX
+    "wx",
+#endif
+#if BX_WITH_NOGUI
+    "nogui",
+#endif
+    NULL
+  };
+  bx_param_enum_c *sel_displaylib = new bx_param_enum_c(display,
+    "display_library", "VGA Display Library",
+    "Select VGA Display Library",
+    display_library_list,
+    0,
+    0);
+  sel_displaylib->set_by_name(BX_DEFAULT_DISPLAY_LIBRARY);
+  sel_displaylib->set_ask_format("Choose which library to use for the Bochs display: [%s] ");
+
+  new bx_param_string_c(display,
+    "displaylib_options", "Display Library options",
+    "Options passed to Display Library",
+    "",
+    BX_PATHNAME_LEN);
+
+  new bx_param_bool_c(display,
+      "private_colormap", "Use a private colormap",
+      "Request that the GUI create and use it's own non-shared colormap. This colormap will be used when in the bochs window. If not enabled, a shared colormap scheme may be used. Not implemented on all GUI's.",
+      0);
+
+  bx_param_bool_c *fullscreen = new bx_param_bool_c(display,
+      "fullscreen", "Use full screen mode",
+      "When enabled, bochs occupies the whole screen instead of just a window.",
+      0);
+  bx_param_string_c *screenmode = new bx_param_string_c(display,
+      "screenmode",
+      "Screen mode name",
+      "Screen mode name",
+      "", BX_PATHNAME_LEN);
+  screenmode->set_handler(bx_param_string_handler);
+#if !BX_WITH_AMIGAOS
+  fullscreen->set_enabled(0);
+  screenmode->set_enabled(0);
+#endif
+
+  bx_param_num_c *vga_update_interval = new bx_param_num_c(display,
+      "vga_update_interval",
+      "VGA Update Interval",
+      "Number of microseconds between VGA updates",
+      1, BX_MAX_BIT32U,
+      40000);
+  vga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
+
+  bx_param_string_c *vga_extension = new bx_param_string_c(display,
+                "vga_extension", 
+                "VGA Extension", 
+                "Name of the VGA extension",
+                "none", BX_PATHNAME_LEN);
+#if BX_SUPPORT_VBE
+  vga_extension->set_initial_val("vbe");
+#elif BX_SUPPORT_CLGD54XX
+  vga_extension->set_initial_val("cirrus");
+#endif
+  display->get_options()->set(bx_list_c::SHOW_PARENT);
+
   // serial and parallel port options
 
 #define PAR_SER_INIT_LIST_MAX \
@@ -1213,24 +1335,6 @@ void bx_init_options()
   menu->get_options ()->set (menu->SHOW_PARENT);
   menu->get_options ()->set (menu->SHOW_GROUP_NAME);
 
-  // interface
-  bx_options.Ovga_update_interval = new bx_param_num_c (BXP_VGA_UPDATE_INTERVAL,
-      "VGA Update Interval",
-      "Number of microseconds between VGA updates",
-      1, BX_MAX_BIT32U,
-      40000);
-  bx_options.Ovga_update_interval->set_ask_format ("Type a new value for VGA update interval: [%d] ");
-
-  bx_options.Ovga_extension = new bx_param_string_c (BXP_VGA_EXTENSION,
-                "VGA Extension", 
-                "Name of the VGA extension",
-                "none", BX_PATHNAME_LEN);
-#if BX_SUPPORT_VBE
-  bx_options.Ovga_extension->set_initial_val("vbe");
-#elif BX_SUPPORT_CLGD54XX
-  bx_options.Ovga_extension->set_initial_val("cirrus");
-#endif
-
   bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
       "Enable the mouse",
       "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
@@ -1269,113 +1373,6 @@ void bx_init_options()
       "Enable panic for use in bochs testing",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
-  bx_options.Oprivate_colormap = new bx_param_bool_c (BXP_PRIVATE_COLORMAP,
-      "Use a private colormap",
-      "Request that the GUI create and use it's own non-shared colormap. This colormap will be used when in the bochs window. If not enabled, a shared colormap scheme may be used. Not implemented on all GUI's.",
-      0);
-#if BX_WITH_AMIGAOS
-  bx_options.Ofullscreen = new bx_param_bool_c (BXP_FULLSCREEN,
-      "Use full screen mode",
-      "When enabled, bochs occupies the whole screen instead of just a window.",
-      0);
-  bx_options.Oscreenmode = new bx_param_string_c (BXP_SCREENMODE,
-      "Screen mode name",
-      "Screen mode name",
-      "", BX_PATHNAME_LEN);
-  bx_options.Oscreenmode->set_handler (bx_param_string_handler);
-#endif
-  static char *config_interface_list[] = {
-#if BX_USE_TEXTCONFIG
-    "textconfig",
-#endif
-#if BX_WITH_WX
-    "wx",
-#endif
-    NULL
-  };
-  bx_options.Osel_config = new bx_param_enum_c (
-    BXP_SEL_CONFIG_INTERFACE,
-    "Configuration interface",
-    "Select configuration interface",
-    config_interface_list,
-    0,
-    0);
-  bx_options.Osel_config->set_by_name (BX_DEFAULT_CONFIG_INTERFACE);
-  bx_options.Osel_config->set_ask_format ("Choose which configuration interface to use: [%s] ");
-  // this is a list of gui libraries that are known to be available at
-  // compile time.  The one that is listed first will be the default,
-  // which is used unless the user overrides it on the command line or
-  // in a configuration file.
-  static char *display_library_list[] = {
-#if BX_WITH_X11
-    "x",
-#endif
-#if BX_WITH_WIN32
-    "win32",
-#endif
-#if BX_WITH_CARBON
-    "carbon",
-#endif
-#if BX_WITH_BEOS
-    "beos",
-#endif
-#if BX_WITH_MACOS
-    "macos",
-#endif
-#if BX_WITH_AMIGAOS
-    "amigaos",
-#endif
-#if BX_WITH_SDL
-    "sdl",
-#endif
-#if BX_WITH_SVGA
-    "svga",
-#endif
-#if BX_WITH_TERM
-    "term",
-#endif
-#if BX_WITH_RFB
-    "rfb",
-#endif
-#if BX_WITH_WX
-    "wx",
-#endif
-#if BX_WITH_NOGUI
-    "nogui",
-#endif
-    NULL
-  };
-  bx_options.Osel_displaylib = new bx_param_enum_c (BXP_SEL_DISPLAY_LIBRARY,
-    "VGA Display Library",
-    "Select VGA Display Library",
-    display_library_list,
-    0,
-    0);
-  bx_options.Osel_displaylib->set_by_name (BX_DEFAULT_DISPLAY_LIBRARY);
-  bx_options.Osel_displaylib->set_ask_format ("Choose which library to use for the Bochs display: [%s] ");
-  bx_options.Odisplaylib_options = new bx_param_string_c (BXP_DISPLAYLIB_OPTIONS,
-    "Display Library options",
-    "Options passed to Display Library",
-    "",
-    BX_PATHNAME_LEN);
-  bx_param_c *interface_init_list[] = {
-    bx_options.Osel_config,
-    bx_options.Osel_displaylib,
-    bx_options.Odisplaylib_options,
-    bx_options.Ovga_update_interval,
-    bx_options.Ovga_extension,
-    bx_options.Omouse_enabled,
-    bx_options.Omouse_type,
-    bx_options.Oprivate_colormap,
-#if BX_WITH_AMIGAOS
-    bx_options.Ofullscreen,
-    bx_options.Oscreenmode,
-#endif
-    NULL
-  };
-  menu = new bx_list_c(BXP_MENU_INTERFACE, "Bochs Interface Menu", "", interface_init_list);
-  menu->get_options()->set(menu->SHOW_PARENT);
-
   // NE2K options
   bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
       "Enable NE2K NIC emulation",
@@ -1697,26 +1694,8 @@ void bx_init_options()
   menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
 
-#if BX_WITH_WX
-  bx_param_c *other_init_list2[] = {
-//    bx_options.Osel_config,
-//    bx_options.Osel_displaylib,
-      bx_options.Ovga_update_interval,
-      bx_options.Ovga_extension,
-      bx_options.log.Oprefix,
-      bx_options.Omouse_enabled,
-      bx_options.Omouse_type,
-      bx_options.Oprivate_colormap,
-#if BX_WITH_AMIGAOS
-      bx_options.Ofullscreen,
-      bx_options.Oscreenmode,
-#endif
-      NULL
-  };
-  menu = new bx_list_c (BXP_MENU_MISC_2, "Other options", "", other_init_list2);
-#endif
   bx_param_c *runtime_init_list[] = {
-      bx_options.Ovga_update_interval,
+      SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
       bx_options.Omouse_enabled,
       bx_options.Okeyboard_paste_delay,
       bx_options.Ouser_shortcut,
@@ -1789,6 +1768,9 @@ void bx_reset_options ()
   // pci
   SIM->get_param("pci")->reset();
 
+  // display & interface
+  SIM->get_param("display")->reset();
+
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     bx_options.com[i].Oenabled->reset();
@@ -1806,18 +1788,6 @@ void bx_reset_options ()
     bx_options.usb[i].Oport2->reset();
     bx_options.usb[i].Ooption2->reset();
   }
-
-  // interface
-  bx_options.Odisplaylib_options->reset();
-  bx_options.Ovga_update_interval->reset();
-  bx_options.Ovga_extension->reset();
-  bx_options.Omouse_enabled->reset();
-  bx_options.Omouse_type->reset();
-  bx_options.Oprivate_colormap->reset();
-#if BX_WITH_AMIGAOS
-  bx_options.Ofullscreen->reset();
-  bx_options.Oscreenmode->reset();
-#endif
 
   // ne2k
   bx_options.ne2k.Oenabled->reset();
@@ -1856,13 +1826,15 @@ void bx_reset_options ()
   bx_options.load32bitOSImage.Oiolog->reset();
   bx_options.load32bitOSImage.Oinitrd->reset();
 
-  // keyboard
+  // keyboard & mouse
   bx_options.Okeyboard_serial_delay->reset();
   bx_options.Okeyboard_paste_delay->reset();
   bx_options.keyboard.OuseMapping->reset();
   bx_options.keyboard.Okeymap->reset();
   bx_options.Okeyboard_type->reset();
   bx_options.Ouser_shortcut->reset();
+  bx_options.Omouse_enabled->reset();
+  bx_options.Omouse_type->reset();
 
   // other
   bx_options.Otext_snapshot_check->reset();
@@ -2717,8 +2689,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: vga_update_interval directive: wrong # args.", context));
     }
-    bx_options.Ovga_update_interval->set (atol(params[1]));
-    if (bx_options.Ovga_update_interval->get () < 50000) {
+    SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get() < 50000) {
       BX_INFO(("%s: vga_update_interval seems awfully small!", context));
     }
   } else if (!strcmp(params[0], "vga")) {
@@ -2726,7 +2698,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: vga directive: wrong # args.", context));
     }
     if (!strncmp(params[1], "extension=", 10)) {
-      bx_options.Ovga_extension->set (&params[1][10]);
+      SIM->get_param_string(BXPN_VGA_EXTENSION)->set(&params[1][10]);
     }
   } else if (!strcmp(params[0], "keyboard_serial_delay")) {
     if (num_params != 2) {
@@ -2789,7 +2761,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: private_colormap directive malformed.", context));
     }
     if (params[1][8] == '0' || params[1][8] == '1')
-      bx_options.Oprivate_colormap->set (params[1][8] - '0');
+      SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->set(params[1][8] - '0');
     else {
       PARSE_ERR(("%s: private_colormap directive malformed.", context));
     }
@@ -2802,7 +2774,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: fullscreen directive malformed.", context));
     }
     if (params[1][8] == '0' || params[1][8] == '1') {
-      bx_options.Ofullscreen->set (params[1][8] - '0');
+      SIM->get_param_bool(BXPN_FULLSCREEN)->set(params[1][8] - '0');
     } else {
       PARSE_ERR(("%s: fullscreen directive malformed.", context));
     }
@@ -2815,7 +2787,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (strncmp(params[1], "name=", 5)) {
       PARSE_ERR(("%s: screenmode directive malformed.", context));
     }
-    bx_options.Oscreenmode->set (strdup(&params[1][5]));
+    SIM->get_param_string(BXPN_SCREENMODE)->set(strdup(&params[1][5]));
 #endif
   } else if (!strcmp(params[0], "sb16")) {
     int enable = 1;
@@ -3231,18 +3203,18 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: config_interface directive: wrong # args.", context));
     }
-    if (!bx_options.Osel_config->set_by_name (params[1]))
+    if (!SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->set_by_name(params[1]))
       PARSE_ERR(("%s: config_interface '%s' not available", context, params[1]));
   }
   else if (!strcmp(params[0], "display_library")) {
     if ((num_params < 2) || (num_params > 3)) {
       PARSE_ERR(("%s: display_library directive: wrong # args.", context));
     }
-    if (!bx_options.Osel_displaylib->set_by_name (params[1]))
+    if (!SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_by_name(params[1]))
       PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
     if (num_params == 3) {
       if (!strncmp(params[2], "options=", 8)) {
-        bx_options.Odisplaylib_options->set (strdup(&params[2][8]));
+        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(strdup(&params[2][8]));
       }
     }
   }
@@ -3407,8 +3379,8 @@ int bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
 {
   fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
-    fprintf (fp, ", mode=%s", opt->Omode->get_choice(opt->Omode->get()));
-    fprintf (fp, ", dev=\"%s\"", opt->Odev->getptr ());
+    fprintf(fp, ", mode=%s", opt->Omode->get_selected());
+    fprintf(fp, ", dev=\"%s\"", opt->Odev->getptr());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3437,9 +3409,9 @@ int bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
       (unsigned int)(0xff & ptr[3]),
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
-      opt->Oethmod->get_choice(opt->Oethmod->get()),
-      opt->Oethdev->getptr (),
-      opt->Oscript->getptr ());
+      opt->Oethmod->get_selected(),
+      opt->Oethdev->getptr(),
+      opt->Oscript->getptr());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3459,9 +3431,9 @@ int bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
       (unsigned int)(0xff & ptr[3]),
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
-      opt->Oethmod->get_choice(opt->Oethmod->get()),
-      opt->Oethdev->getptr (),
-      opt->Oscript->getptr ());
+      opt->Oethmod->get_selected(),
+      opt->Oethdev->getptr(),
+      opt->Oscript->getptr());
   }
   fprintf (fp, "\n");
   return 0;
@@ -3576,38 +3548,39 @@ int bx_write_configuration (char *rc, int overwrite)
   int i;
   char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];
 
-  BX_INFO (("write configuration to %s\n", rc));
+  BX_INFO(("write configuration to %s\n", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
-  FILE *fp = fopen (rc, "r");
+  FILE *fp = fopen(rc, "r");
   if (fp != NULL) {
-    fclose (fp);
+    fclose(fp);
     if (!overwrite) return -2;
   }
-  fp = fopen (rc, "w");
+  fp = fopen(rc, "w");
   if (fp == NULL) return -1;
   // finally it's open and we can start writing.
-  fprintf (fp, "# configuration file generated by Bochs\n");
-  fprintf (fp, "config_interface: %s\n", bx_options.Osel_config->get_choice(bx_options.Osel_config->get()));
-  fprintf (fp, "display_library: %s", bx_options.Osel_displaylib->get_choice(bx_options.Osel_displaylib->get()));
-  if (strlen (bx_options.Odisplaylib_options->getptr ()) > 0)
-    fprintf (fp, ", options=\"%s\"\n", bx_options.Odisplaylib_options->getptr ());
+  fprintf(fp, "# configuration file generated by Bochs\n");
+  fprintf(fp, "config_interface: %s\n", SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected());
+  fprintf(fp, "display_library: %s", SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected());
+  strptr = SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr();
+  if (strlen(strptr) > 0)
+    fprintf(fp, ", options=\"%s\"\n", strptr);
   else
     fprintf (fp, "\n");
   fprintf (fp, "megs: %d\n", SIM->get_param_num(BXPN_MEM_SIZE)->get());
   strptr = SIM->get_param_string(BXPN_ROM_PATH)->getptr();
   if (strlen(strptr) > 0)
-    fprintf (fp, "romimage: file=\"%s\", address=0x%05x\n", strptr, (unsigned int)SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
+    fprintf(fp, "romimage: file=\"%s\", address=0x%05x\n", strptr, (unsigned int)SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
   else
-    fprintf (fp, "# no romimage\n");
+    fprintf(fp, "# no romimage\n");
   strptr = SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr();
   if (strlen(strptr) > 0)
-    fprintf (fp, "vgaromimage: file=\"%s\"\n", strptr);
+    fprintf(fp, "vgaromimage: file=\"%s\"\n", strptr);
   else
-    fprintf (fp, "# no vgaromimage\n");
-  fprintf (fp, "boot: %s", bx_options.Obootdrive[0]->get_choice(bx_options.Obootdrive[0]->get() - 1));
+    fprintf(fp, "# no vgaromimage\n");
+  fprintf(fp, "boot: %s", bx_options.Obootdrive[0]->get_selected());
   for (i=1; i<3; i++) {
     if (bx_options.Obootdrive[i]->get() != BX_BOOT_NONE) {
-      fprintf (fp, ", %s", bx_options.Obootdrive[i]->get_choice(bx_options.Obootdrive[i]->get()));
+      fprintf(fp, ", %s", bx_options.Obootdrive[i]->get_selected());
     }
   }
   fprintf (fp, "\n");
@@ -3665,8 +3638,8 @@ int bx_write_configuration (char *rc, int overwrite)
   bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get());
-  fprintf (fp, "vga_update_interval: %u\n", bx_options.Ovga_update_interval->get());
-  fprintf (fp, "vga: extension=%s\n", bx_options.Ovga_extension->getptr());
+  fprintf (fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
+  fprintf (fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
   fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get());
   fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get());
 #if BX_SUPPORT_SMP
@@ -3680,10 +3653,10 @@ int bx_write_configuration (char *rc, int overwrite)
 #endif
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
   fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get());
-  fprintf (fp, "private_colormap: enabled=%d\n", bx_options.Oprivate_colormap->get());
+  fprintf (fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
-  fprintf (fp, "fullscreen: enabled=%d\n", bx_options.Ofullscreen->get());
-  fprintf (fp, "screenmode: name=\"%s\"\n", bx_options.Oscreenmode->getptr());
+  fprintf (fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());
+  fprintf (fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options (fp, &bx_options.ne2k);

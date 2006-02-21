@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.27 2005-04-29 19:06:24 sshwarts Exp $
+// $Id: beos.cc,v 1.28 2006-02-21 21:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -215,8 +215,8 @@ UNUSED(argv);
 
   put("BGUI");
 
-if (bx_options.Oprivate_colormap->get ()) {
-  BX_INFO(( "BeOS: private_colormap option not handled yet."));
+  if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+    BX_INFO(( "BeOS: private_colormap option not handled yet."));
   }
 
   x_tilesize = tilewidth;
