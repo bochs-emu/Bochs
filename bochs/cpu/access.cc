@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.62 2005-11-19 19:38:45 sshwarts Exp $
+// $Id: access.cc,v 1.63 2006-02-22 20:58:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -245,8 +245,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 BX_CPU_C::strseg(bx_segment_reg_t *seg)
 {
   if (seg == &BX_CPU_THIS_PTR sregs[0]) return("ES");
-  else if (seg == & BX_CPU_THIS_PTR sregs[1]) return("CS");
-  else if (seg == & BX_CPU_THIS_PTR sregs[2]) return("SS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[1]) return("CS");
+  else if (seg == &BX_CPU_THIS_PTR sregs[2]) return("SS");
   else if (seg == &BX_CPU_THIS_PTR sregs[3]) return("DS");
   else if (seg == &BX_CPU_THIS_PTR sregs[4]) return("FS");
   else if (seg == &BX_CPU_THIS_PTR sregs[5]) return("GS");
