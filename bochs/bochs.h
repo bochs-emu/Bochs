@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.178 2006-02-21 21:35:07 vruppert Exp $
+// $Id: bochs.h,v 1.179 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -522,11 +522,6 @@ typedef struct {
   unsigned int bss_base;
 } bx_gdbstub_t;
 
-typedef struct {
-  bx_param_bool_c *OuseMapping;
-  bx_param_string_c *Okeymap;
-} bx_keyboard_options;
-
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
 #define BX_KBD_MF_TYPE        2 
@@ -550,17 +545,10 @@ typedef struct BOCHSAPI {
   bx_sb16_options   sb16;
   bx_param_enum_c   *Obootdrive[3];  
   bx_param_bool_c   *OfloppySigCheck;
-  bx_param_num_c    *Okeyboard_serial_delay;
-  bx_param_num_c    *Okeyboard_paste_delay;
-  bx_param_enum_c   *Okeyboard_type;
   bx_param_bool_c   *Otext_snapshot_check;
-  bx_param_bool_c   *Omouse_enabled;
-  bx_param_enum_c   *Omouse_type;
   bx_ne2k_options   ne2k;
   bx_load32bitOSImage_t load32bitOSImage;
   bx_log_options    log;
-  bx_keyboard_options keyboard;
-  bx_param_string_c *Ouser_shortcut;
   bx_gdbstub_t      gdbstub;
 } bx_options_t;
 

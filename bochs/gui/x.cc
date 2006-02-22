@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.101 2006-02-21 21:35:09 vruppert Exp $
+// $Id: x.cc,v 1.102 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -643,9 +643,9 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   SIM->set_notify_callback (x11_notify_callback, NULL);
 
   // loads keymap for x11
-  if(bx_options.keyboard.OuseMapping->get()) {
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToXKeysym);
-    }
+  }
 
   new_gfx_api = 1;
   dialog_caps |= BX_GUI_DLG_USER;
@@ -1002,7 +1002,7 @@ xkeypress(KeySym keysym, int press_release)
   }
 
   /* Old (no mapping) behavior */
-  if(!bx_options.keyboard.OuseMapping->get()){
+  if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
 
     // this depends on the fact that the X11 keysyms which
     // correspond to the ascii characters space .. tilde
@@ -1798,7 +1798,7 @@ bx_x_gui_c::exit(void)
 
 static void warp_cursor (int dx, int dy)
 {
-      if (bx_options.Omouse_enabled->get () &&
+      if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() &&
 	  (warp_dx || warp_dy || dx || dy)
 	  ) {
 	    warp_dx = dx;

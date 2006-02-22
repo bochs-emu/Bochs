@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.106 2006-02-21 21:35:08 vruppert Exp $
+// $Id: win32.cc,v 1.107 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -693,7 +693,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
     BX_INFO(("private_colormap option ignored."));
 
   // load keymap tables
-  if(bx_options.keyboard.OuseMapping->get()) {
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(NULL);  // I have no function to convert X windows symbols
   }
 
@@ -985,7 +985,7 @@ void SetMouseCapture()
     mouseCaptureMode = mouseCaptureNew;
     mouseToggleReq = FALSE;
   } else {
-    bx_options.Omouse_enabled->set (mouseCaptureMode);
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(mouseCaptureMode);
   }
   ShowCursor(!mouseCaptureMode);
   ShowCursor(!mouseCaptureMode);   // somehow one didn't do the trick (win98)

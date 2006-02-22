@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.89 2006-02-21 21:35:09 vruppert Exp $
+// $Id: devices.cc,v 1.90 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.89 2006-02-21 21:35:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.90 2006-02-22 19:18:28 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -165,7 +165,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(harddrv, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(keyboard, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_BUSMOUSE
-  if (bx_options.Omouse_type->get () == BX_MOUSE_TYPE_BUS) {
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() == BX_MOUSE_TYPE_BUS) {
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif

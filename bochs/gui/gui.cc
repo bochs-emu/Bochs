@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.89 2006-01-25 17:37:22 vruppert Exp $
+// $Id: gui.cc,v 1.90 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -180,7 +180,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   BX_GUI_THIS set_tooltip(BX_GUI_THIS cdromD_hbar_id, "Change first CDROM media");
 
   // Mouse button
-  if (bx_options.Omouse_enabled->get ())
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get())
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS mouse_bmap_id,
                           BX_GRAVITY_LEFT, toggle_mouse_enable);
   else
@@ -510,9 +510,9 @@ bx_gui_c::config_handler(void)
   void
 bx_gui_c::toggle_mouse_enable(void)
 {
-  int old = bx_options.Omouse_enabled->get ();
+  int old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   BX_DEBUG (("toggle mouse_enabled, now %d", !old));
-  bx_options.Omouse_enabled->set (!old);
+  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(!old);
 }
 
 Bit32u get_user_key(char *key)
@@ -537,13 +537,13 @@ bx_gui_c::userbutton_handler(void)
   int i, len = 0, ret = 1;
 
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USER) {
-    ret = SIM->ask_param (BXP_USER_SHORTCUT);
+    ret = SIM->ask_param(BXPN_USER_SHORTCUT);
   }
-  strcpy(user_shortcut, bx_options.Ouser_shortcut->getptr());
+  strcpy(user_shortcut, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
   if ((ret > 0) && user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
     ptr = strtok(user_shortcut, "-");
-    if ((strcmp(ptr, bx_options.Ouser_shortcut->getptr())) ||
-        (strlen(bx_options.Ouser_shortcut->getptr()) < 6)) {
+    if ((strcmp(ptr, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr())) ||
+        (strlen(SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr()) < 6)) {
       while (ptr) {
         symbol = get_user_key(ptr);
         if (symbol == BX_KEY_UNKNOWN) {
@@ -604,7 +604,7 @@ bx_gui_c::mouse_enabled_changed (bx_bool val)
 {
   // This is only called when SIM->get_init_done is 1.  Note that VAL
   // is the new value of mouse_enabled, which may not match the old
-  // value which is still in bx_options.Omouse_enabled->get ().
+  // value which is still in SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get().
   BX_DEBUG (("replacing the mouse bitmaps"));
   if (val)
     BX_GUI_THIS replace_bitmap(BX_GUI_THIS mouse_hbar_id, BX_GUI_THIS mouse_bmap_id);

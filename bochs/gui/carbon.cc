@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.29 2006-02-21 21:35:08 vruppert Exp $
+// $Id: carbon.cc,v 1.30 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -842,7 +842,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, u
   UNUSED(argv);
 
   // loads keymap for x11
-  if(bx_options.keyboard.OuseMapping->get()) {
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(NULL); // I have no function to convert X windows symbols
   }
 }
@@ -1671,7 +1671,7 @@ void UpdateTools()
   GetCurrentScrap( &theScrap );
 
   // If keyboard mapping is on AND there is text on the clipboard enable pasting
-  if(bx_options.keyboard.OuseMapping->get() &&
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get() &&
     (GetScrapFlavorFlags( theScrap, kScrapFlavorTypeText, &theScrapFlags) == noErr))
   {
     EnableMenuItem(GetMenuRef(mEdit), iPaste);

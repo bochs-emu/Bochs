@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.6 2006-02-21 21:35:07 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.7 2006-02-22 19:18:28 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -137,7 +137,7 @@ keyboard_mouse
     serial_delay        BXP_KBD_SERIAL_DELAY,
     paste_delay         BXP_KBD_PASTE_DELAY,
     use_mapping         BXP_KEYBOARD_USEMAPPING,
-    map                 BXP_KEYBOARD_MAP,
+    keymap              BXP_KEYBOARD_MAP,
     user_shortcut       BXP_USER_SHORTCUT,
   mouse
     type                BXP_MOUSE_TYPE,
@@ -252,12 +252,9 @@ sound
 
 config_menus                      
   main                  BXP_MENU_MAIN,
-  memory                BXP_MENU_MEMORY,
-  interface             BXP_MENU_INTERFACE,
   disk                  BXP_MENU_DISK,
   ser_par               BXP_MENU_SERIAL_PARALLEL,
   sound                 BXP_MENU_SOUND,
-  misc                  BXP_MENU_MISC,
   runtime               BXP_MENU_RUNTIME,
 
 general
@@ -265,16 +262,16 @@ general
   text_snapshot_check   BXP_TEXT_SNAPSHOT_CHECK,
 
 log
-  filename            BXP_LOG_FILENAME,
-  prefix              BXP_LOG_PREFIX,
-  debugger_filename   BXP_DEBUGGER_LOG_FILENAME,
+  filename              BXP_LOG_FILENAME,
+  prefix                BXP_LOG_PREFIX,
+  debugger_filename     BXP_DEBUGGER_LOG_FILENAME,
 
 debugger
-  running             BXP_DEBUG_RUNNING,
+  running               BXP_DEBUG_RUNNING,
   gdbstub
     port
     text_base
     data_base
     bss_base
 
-(updated Feb 21, 2006 by vruppert)
+(updated Feb 22, 2006 by vruppert)

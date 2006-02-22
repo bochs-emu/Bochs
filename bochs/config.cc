@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.80 2006-02-21 21:35:07 vruppert Exp $
+// $Id: config.cc,v 1.81 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1197,6 +1197,86 @@ void bx_init_options()
 #endif
   display->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // keyboard & mouse subtree
+  bx_list_c *kbd_mouse = new bx_list_c(root_param, "keyboard_mouse", "Keyboard & Mouse Options");
+  bx_list_c *keyboard = new bx_list_c(kbd_mouse, "keyboard", "Keyboard Options");
+  bx_list_c *mouse = new bx_list_c(kbd_mouse, "mouse", "Mouse Options");
+
+  // keyboard & mouse options
+  bx_param_enum_c *keyboard_type = new bx_param_enum_c(keyboard,
+      "type", "Keyboard type",
+      "Keyboard type reported by the 'identify keyboard' command",
+      keyboard_type_names,
+      BX_KBD_MF_TYPE,
+      BX_KBD_XT_TYPE);
+  keyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
+
+  new bx_param_num_c(keyboard,
+      "serial_delay", "Keyboard serial delay",
+      "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
+      1, BX_MAX_BIT32U,
+      250);
+  new bx_param_num_c(keyboard,
+      "paste_delay", "Keyboard paste delay",
+      "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
+      1000, BX_MAX_BIT32U,
+      100000);
+  bx_param_bool_c *use_kbd_mapping = new bx_param_bool_c(keyboard,
+      "use_mapping", "Use keyboard mapping",
+      "Controls whether to use the keyboard mapping feature",
+      0);
+  bx_param_filename_c *keymap = new bx_param_filename_c(keyboard,
+      "keymap", "Keymap filename",
+      "Pathname of the keymap file used",
+      "", BX_PATHNAME_LEN);
+  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist->add(keymap);
+  use_kbd_mapping->set_dependent_list(deplist);
+
+  bx_param_string_c *user_shortcut = new bx_param_string_c(keyboard,
+      "user_shortcut",
+      "Userbutton shortcut",
+      "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
+      "none", 20);
+  user_shortcut->set_runtime_param(1);
+
+  static char *mouse_type_list[] = {
+    "none",
+    "ps2",
+    "imps2",
+#if BX_SUPPORT_BUSMOUSE
+    "bus",
+#endif
+#if BX_SUPPORT_PCIUSB
+    "usb",
+#endif
+    "serial",
+    "serial_wheel",
+    NULL
+  };
+  bx_param_enum_c *mouse_type = new bx_param_enum_c(mouse,
+      "type", "Mouse type",
+      "The mouse type can be one of these: 'none', 'ps2', 'imps2', 'serial', 'serial_wheel'"
+#if BX_SUPPORT_BUSMOUSE
+      ", 'bus'"
+#endif
+#if BX_SUPPORT_PCIUSB
+      ", 'usb'"
+#endif
+      ,
+      mouse_type_list,
+      BX_MOUSE_TYPE_PS2,
+      BX_MOUSE_TYPE_NONE);
+  mouse_type->set_ask_format("Choose the type of mouse [%s] ");
+
+  new bx_param_bool_c(mouse,
+      "enabled", "Enable the mouse capture",
+      "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
+      0);
+  kbd_mouse->get_options()->set(bx_list_c::SHOW_PARENT);
+  keyboard->get_options()->set(bx_list_c::SHOW_PARENT);
+  mouse->get_options()->set(bx_list_c::SHOW_PARENT);
+
   // serial and parallel port options
 
 #define PAR_SER_INIT_LIST_MAX \
@@ -1334,40 +1414,6 @@ void bx_init_options()
           par_ser_init_list);
   menu->get_options ()->set (menu->SHOW_PARENT);
   menu->get_options ()->set (menu->SHOW_GROUP_NAME);
-
-  bx_options.Omouse_enabled = new bx_param_bool_c (BXP_MOUSE_ENABLED,
-      "Enable the mouse",
-      "Controls whether the mouse sends events to the guest. The hardware emulation is always enabled.",
-      0);
-
-  static char *mouse_type_list[] = {
-    "none",
-    "ps2",
-    "imps2",
-#if BX_SUPPORT_BUSMOUSE
-    "bus",
-#endif
-#if BX_SUPPORT_PCIUSB
-    "usb",
-#endif
-    "serial",
-    "serial_wheel",
-    NULL
-  };
-  bx_options.Omouse_type = new bx_param_enum_c (BXP_MOUSE_TYPE,
-      "Mouse type", 
-      "The mouse type can be one of these: 'none', 'ps2', 'imps2', 'serial', 'serial_wheel'"
-#if BX_SUPPORT_BUSMOUSE
-      ", 'bus'"
-#endif
-#if BX_SUPPORT_PCIUSB
-      ", 'usb'"
-#endif
-      ,
-      mouse_type_list,
-      BX_MOUSE_TYPE_PS2,
-      BX_MOUSE_TYPE_NONE);
-  bx_options.Omouse_type->set_ask_format ("Choose the type of mouse [%s] ");
 
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
@@ -1630,62 +1676,11 @@ void bx_init_options()
   bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
 
   // other
-  bx_options.Okeyboard_serial_delay = new bx_param_num_c (BXP_KBD_SERIAL_DELAY,
-      "Keyboard serial delay",
-      "Approximate time in microseconds that it takes one character to be transfered from the keyboard to controller over the serial path.",
-      1, BX_MAX_BIT32U,
-      250);
-  bx_options.Okeyboard_paste_delay = new bx_param_num_c (BXP_KBD_PASTE_DELAY,
-      "Keyboard paste delay",
-      "Approximate time in microseconds between attemps to paste characters to the keyboard controller.",
-      1000, BX_MAX_BIT32U,
-      100000);
-  // Keyboard mapping
-  bx_options.keyboard.OuseMapping = new bx_param_bool_c(BXP_KEYBOARD_USEMAPPING,
-      "Use keyboard mapping",
-      "Controls whether to use the keyboard mapping feature",
-      0);
-  bx_options.keyboard.Okeymap = new bx_param_filename_c (BXP_KEYBOARD_MAP,
-      "Keymap filename",
-      "Pathname of the keymap file used",
-      "", BX_PATHNAME_LEN);
-  deplist = new bx_list_c (BXP_NULL, 1);
-  deplist->add (bx_options.keyboard.Okeymap);
-  bx_options.keyboard.OuseMapping->set_dependent_list (deplist);
-
- // Keyboard type
-  bx_options.Okeyboard_type = new bx_param_enum_c (BXP_KBD_TYPE,
-      "Keyboard type",
-      "Keyboard type reported by the 'identify keyboard' command",
-      keyboard_type_names,
-      BX_KBD_MF_TYPE,
-      BX_KBD_XT_TYPE);
-  bx_options.Okeyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
-
-  // Userbutton shortcut
-  bx_options.Ouser_shortcut = new bx_param_string_c (BXP_USER_SHORTCUT,
-      "Userbutton shortcut",
-      "Defines the keyboard shortcut to be sent when you press the 'user' button in the headerbar.",
-      "none", 20);
-  bx_options.Ouser_shortcut->set_runtime_param (1);
-
   // GDB stub
   bx_options.gdbstub.port = 1234;
   bx_options.gdbstub.text_base = 0;
   bx_options.gdbstub.data_base = 0;
   bx_options.gdbstub.bss_base = 0;
-
-  bx_param_c *keyboard_init_list[] = {
-      bx_options.Okeyboard_serial_delay,
-      bx_options.Okeyboard_paste_delay,
-      bx_options.keyboard.OuseMapping,
-      bx_options.keyboard.Okeymap,
-      bx_options.Okeyboard_type,
-      bx_options.Ouser_shortcut,
-      NULL
-  };
-  menu = new bx_list_c (BXP_MENU_KEYBOARD, "Configure Keyboard", "", keyboard_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
 
   bx_param_c *other_init_list[] = {
       SIM->get_param(BXP_LOAD32BITOS),
@@ -1696,9 +1691,9 @@ void bx_init_options()
 
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
-      bx_options.Omouse_enabled,
-      bx_options.Okeyboard_paste_delay,
-      bx_options.Ouser_shortcut,
+      SIM->get_param_bool(BXPN_MOUSE_ENABLED),
+      SIM->get_param_num(BXPN_KBD_PASTE_DELAY),
+      SIM->get_param_string(BXPN_USER_SHORTCUT),
       bx_options.sb16.Odmatimer,
       bx_options.sb16.Ologlevel,
       bx_options.usb[0].Oport1,
@@ -1771,6 +1766,9 @@ void bx_reset_options ()
   // display & interface
   SIM->get_param("display")->reset();
 
+  // keyboard & mouse
+  SIM->get_param("keyboard_mouse")->reset();
+
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     bx_options.com[i].Oenabled->reset();
@@ -1825,16 +1823,6 @@ void bx_reset_options ()
   bx_options.load32bitOSImage.Opath->reset();
   bx_options.load32bitOSImage.Oiolog->reset();
   bx_options.load32bitOSImage.Oinitrd->reset();
-
-  // keyboard & mouse
-  bx_options.Okeyboard_serial_delay->reset();
-  bx_options.Okeyboard_paste_delay->reset();
-  bx_options.keyboard.OuseMapping->reset();
-  bx_options.keyboard.Okeymap->reset();
-  bx_options.Okeyboard_type->reset();
-  bx_options.Ouser_shortcut->reset();
-  bx_options.Omouse_enabled->reset();
-  bx_options.Omouse_type->reset();
 
   // other
   bx_options.Otext_snapshot_check->reset();
@@ -2704,16 +2692,16 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_serial_delay directive: wrong # args.", context));
     }
-    bx_options.Okeyboard_serial_delay->set (atol(params[1]));
-    if (bx_options.Okeyboard_serial_delay->get () < 5) {
+    SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get() < 5) {
       PARSE_ERR (("%s: keyboard_serial_delay not big enough!", context));
     }
   } else if (!strcmp(params[0], "keyboard_paste_delay")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_paste_delay directive: wrong # args.", context));
     }
-    bx_options.Okeyboard_paste_delay->set (atol(params[1]));
-    if (bx_options.Okeyboard_paste_delay->get () < 1000) {
+    SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(atol(params[1]));
+    if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
   } else if (!strcmp(params[0], "floppy_command_delay")) {
@@ -2743,11 +2731,11 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (params[i][8] == '0' || params[i][8] == '1')
-          bx_options.Omouse_enabled->set (params[i][8] - '0');
+          SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(params[i][8] - '0');
         else
           PARSE_ERR(("%s: mouse directive malformed.", context));
       } else if (!strncmp(params[i], "type=", 5)) {
-        if (!bx_options.Omouse_type->set_by_name (strdup(&params[i][5])))
+        if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(strdup(&params[i][5])))
           PARSE_ERR(("%s: mouse type '%s' not available", context, strdup(&params[i][5])));
       } else {
         PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -3160,16 +3148,16 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_type directive: wrong # args.", context));
     }
-    if(strcmp(params[1],"xt")==0){
-      bx_options.Okeyboard_type->set (BX_KBD_XT_TYPE);
+    if (!strcmp(params[1],"xt")) {
+      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_XT_TYPE);
     }
-    else if(strcmp(params[1],"at")==0){
-      bx_options.Okeyboard_type->set (BX_KBD_AT_TYPE);
+    else if (!strcmp(params[1],"at")) {
+      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_AT_TYPE);
     }
-    else if(strcmp(params[1],"mf")==0){
-      bx_options.Okeyboard_type->set (BX_KBD_MF_TYPE);
+    else if (!strcmp(params[1],"mf")) {
+      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_MF_TYPE);
     }
-    else{
+    else {
       PARSE_ERR(("%s: keyboard_type directive: wrong arg %s.", context,params[1]));
     }
   }
@@ -3178,10 +3166,10 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
          ||!strcmp(params[0], "keyboardmapping")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.keyboard.OuseMapping->set (atol(&params[i][8]));
+        SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(atol(&params[i][8]));
       }
       else if (!strncmp(params[i], "map=", 4)) {
-        bx_options.keyboard.Okeymap->set (strdup(&params[i][4]));
+        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(strdup(&params[i][4]));
       }
     }
   }
@@ -3191,7 +3179,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: user_shortcut directive: wrong # args.", context));
     }
     if(!strncmp(params[1], "keys=", 4)) {
-      bx_options.Ouser_shortcut->set (strdup(&params[1][5]));
+      SIM->get_param_string(BXPN_USER_SHORTCUT)->set(strdup(&params[1][5]));
       if ((strchr(&params[1][5], '-') == NULL) && (strlen(&params[1][5]) > 5))
         PARSE_WARN(("user_shortcut: old-style syntax detected"));
     } else {
@@ -3533,9 +3521,16 @@ int bx_write_log_options (FILE *fp, bx_log_options *opt)
   return 0;
 }
 
-int bx_write_keyboard_options (FILE *fp, bx_keyboard_options *opt)
+int bx_write_keyboard_options(FILE *fp)
 {
-  fprintf (fp, "keyboard_mapping: enabled=%d, map=%s\n", opt->OuseMapping->get(), opt->Okeymap->getptr());
+  fprintf(fp, "keyboard_type: %s\n", SIM->get_param_enum(BXPN_KBD_TYPE)->get()==BX_KBD_XT_TYPE?"xt":
+                                     SIM->get_param_enum(BXPN_KBD_TYPE)->get()==BX_KBD_AT_TYPE?"at":"mf");
+  fprintf(fp, "keyboard_serial_delay: %u\n", SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get());
+  fprintf(fp, "keyboard_paste_delay: %u\n", SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
+  fprintf(fp, "keyboard_mapping: enabled=%d, map=%s\n",
+    SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get(),
+    SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+  fprintf(fp, "user_shortcut: keys=%s\n", SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
   return 0;
 }
 
@@ -3640,8 +3635,6 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get());
   fprintf (fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf (fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
-  fprintf (fp, "keyboard_serial_delay: %u\n", bx_options.Okeyboard_serial_delay->get());
-  fprintf (fp, "keyboard_paste_delay: %u\n", bx_options.Okeyboard_paste_delay->get());
 #if BX_SUPPORT_SMP
   fprintf (fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
@@ -3652,7 +3645,6 @@ int bx_write_configuration (char *rc, int overwrite)
     SIM->get_param_num(BXPN_IPS)->get(), SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #endif
   fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
-  fprintf (fp, "mouse: enabled=%d\n", bx_options.Omouse_enabled->get());
   fprintf (fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf (fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());
@@ -3663,10 +3655,10 @@ int bx_write_configuration (char *rc, int overwrite)
   bx_write_pnic_options (fp, &bx_options.pnic);
   bx_write_loader_options (fp, &bx_options.load32bitOSImage);
   bx_write_log_options (fp, &bx_options.log);
-  bx_write_keyboard_options (fp, &bx_options.keyboard);
-  fprintf (fp, "keyboard_type: %s\n", bx_options.Okeyboard_type->get()==BX_KBD_XT_TYPE?"xt":
-                                      bx_options.Okeyboard_type->get()==BX_KBD_AT_TYPE?"at":"mf");
-  fprintf (fp, "user_shortcut: keys=%s\n", bx_options.Ouser_shortcut->getptr ());
+  bx_write_keyboard_options (fp);
+  fprintf(fp, "mouse: enabled=%d, type=%s\n",
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
+    SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected());
   fclose (fp);
   return 0;
 }

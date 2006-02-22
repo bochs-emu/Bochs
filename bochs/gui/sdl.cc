@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.66 2006-01-26 22:13:20 vruppert Exp $
+// $Id: sdl.cc,v 1.67 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -319,7 +319,7 @@ void bx_sdl_gui_c::specific_init(
   SDL_WarpMouse(half_res_x, half_res_y);
 
   // load keymap for sdl
-  if(bx_options.keyboard.OuseMapping->get()) {
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     bx_keymap.loadKeymap(convertStringToSDLKey);
   }
 
@@ -1061,7 +1061,7 @@ void bx_sdl_gui_c::handle_events(void)
 
 	// convert sym->bochs code
 	if( sdl_event.key.keysym.sym > SDLK_LAST ) break;
-        if (!bx_options.keyboard.OuseMapping->get()) {
+        if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
 	  key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
 	  BX_DEBUG (("keypress scancode=%d, sym=%d, bx_key = %d", sdl_event.key.keysym.scancode, sdl_event.key.keysym.sym, key_event));
 	} else {
@@ -1089,7 +1089,7 @@ void bx_sdl_gui_c::handle_events(void)
 	    && (sdl_event.key.keysym.sym < SDLK_LAST ))
 	{
 	  // convert sym->bochs code
-          if (!bx_options.keyboard.OuseMapping->get()) {
+          if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
             key_event = sdl_sym_to_bx_key (sdl_event.key.keysym.sym);
           } else {
             /* use mapping */

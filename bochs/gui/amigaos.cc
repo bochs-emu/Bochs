@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.21 2006-02-21 21:35:08 vruppert Exp $
+// $Id: amigaos.cc,v 1.22 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ MyInputHandler(void)
 {
 	struct InputEvent *event = (struct InputEvent *)REG_A0;
 
-	if(bx_options.Omouse_enabled->get ())
+	if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get())
 	{
 		switch(event->ie_Code)
 		{
@@ -288,7 +288,7 @@ open_screen(void)
 
 	vgafont = OpenDiskFont(&vgata);
 
-	if (bx_options.Omouse_enabled->get ())
+	if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get())
 		hide_pointer();
 
 	if(!vgafont)
@@ -410,7 +410,7 @@ bx_amigaos_gui_c::handle_events(void)
 			break;
 
 		case IDCMP_INACTIVEWINDOW:
-			if(bx_options.Omouse_enabled->get ())
+			if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get())
 				toggle_mouse_enable();
 			break;
 

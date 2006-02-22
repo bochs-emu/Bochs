@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.81 2006-02-21 21:35:08 vruppert Exp $
+// $Id: wx.cc,v 1.82 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -181,8 +181,8 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 void MyPanel::ToggleMouse (bool fromToolbar)
 {
   static bool first_enable = true;
-  bx_param_bool_c *enable = SIM->get_param_bool (BXP_MOUSE_ENABLED);
-  bool en = ! enable->get ();
+  bx_param_bool_c *enable = SIM->get_param_bool(BXPN_MOUSE_ENABLED);
+  bool en = ! enable->get();
   bool is_main_thread = wxThread::IsMain ();
   bool needmutex = !is_main_thread && SIM->is_sim_thread ();
   if (needmutex) wxMutexGuiEnter();
@@ -233,7 +233,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
     return;
   }
 
-  if (!SIM->get_param_bool(BXP_MOUSE_ENABLED)->get ()) 
+  if (!SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get()) 
     return;  // mouse disabled, ignore the event
 
   // process buttons and motion together
@@ -571,7 +571,7 @@ MyPanel::fillBxKeyEvent_GTK (wxKeyEvent& wxev, BxKeyEvent& bxev, bx_bool release
   Bit32u key_event = 0;
   // since the GDK_* symbols are very much like the X11 symbols (possibly
   // identical), I'm using code that is copied from gui/x.cc.
-  if(!bx_options.keyboard.OuseMapping->get()) {
+  if(!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     if (keysym >= GDK_space && keysym < GDK_asciitilde) {
       // use nice ASCII conversion table, based on x.cc
       key_event = wxAsciiKey[keysym - GDK_space];
@@ -909,7 +909,7 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
   wxTileY = tileheight;
 
   // load keymap tables
-  if(bx_options.keyboard.OuseMapping->get())
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get())
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
     bx_keymap.loadKeymap(convertStringToGDKKey);
 #else

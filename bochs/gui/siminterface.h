@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.161 2006-02-21 21:35:08 vruppert Exp $
+// $Id: siminterface.h,v 1.162 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -160,6 +160,14 @@ typedef enum {
 #define BXPN_SCREENMODE                  "display.screenmode"
 #define BXPN_VGA_EXTENSION               "display.vga_extension"
 #define BXPN_VGA_UPDATE_INTERVAL         "display.vga_update_interval"
+#define BXPN_KBD_TYPE                    "keyboard_mouse.keyboard.type"
+#define BXPN_KBD_SERIAL_DELAY            "keyboard_mouse.keyboard.serial_delay"
+#define BXPN_KBD_PASTE_DELAY             "keyboard_mouse.keyboard.paste_delay"
+#define BXPN_KBD_USEMAPPING              "keyboard_mouse.keyboard.use_mapping"
+#define BXPN_KBD_KEYMAP                  "keyboard_mouse.keyboard.keymap"
+#define BXPN_USER_SHORTCUT               "keyboard_mouse.keyboard.user_shortcut"
+#define BXPN_MOUSE_TYPE                  "keyboard_mouse.mouse.type"
+#define BXPN_MOUSE_ENABLED               "keyboard_mouse.mouse.enabled"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -169,11 +177,6 @@ typedef enum {
 typedef enum {
   BXP_NULL = 301,
   BXP_TEXT_SNAPSHOT_CHECK,
-  BXP_MOUSE_ENABLED,
-  BXP_MOUSE_TYPE,
-  BXP_KBD_SERIAL_DELAY,
-  BXP_KBD_PASTE_DELAY,
-  BXP_KBD_TYPE,
   BXP_FLOPPYA_DEVTYPE,
   BXP_FLOPPYA_PATH,
   BXP_FLOPPYA_TYPE,
@@ -382,13 +385,10 @@ typedef enum {
   BXP_BOOT,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
-  BXP_MENU_INTERFACE,
   BXP_MENU_DISK,
   BXP_MENU_SERIAL_PARALLEL,
   BXP_MENU_SOUND,
-  BXP_MENU_KEYBOARD,
   BXP_MENU_MISC,
-  BXP_MENU_MISC_2,
   BXP_MENU_RUNTIME,
   BXP_NE2K_ENABLED,
   BXP_NE2K_IOADDR,
@@ -419,10 +419,6 @@ typedef enum {
   BXP_PARPORT1_OUTFILE,
   BXP_PARPORT2_ENABLED,
   BXP_PARPORT2_OUTFILE,
-  BXP_KEYBOARD_USEMAPPING,
-  BXP_KEYBOARD_MAP,
-  BXP_KEYBOARD,
-  BXP_USER_SHORTCUT,
   BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
   BXP_CPU_PARAMETERS,
@@ -1500,6 +1496,7 @@ public:
 
   // tell the CI to ask the user for the value of a parameter.
   virtual int ask_param(bx_id param) {return -1;}
+  virtual int ask_param(const char *pname) {return -1;}
 
   // ask the user for a pathname
   virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}

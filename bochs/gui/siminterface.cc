@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.117 2006-02-21 21:35:08 vruppert Exp $
+// $Id: siminterface.cc,v 1.118 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -97,7 +97,8 @@ public:
   virtual void get_notify_callback (bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
   virtual int log_msg (const char *prefix, int level, const char *msg);
-  virtual int ask_param (bx_id which);
+  virtual int ask_param(bx_id which);
+  virtual int ask_param(const char *pname);
   // ask the user for a pathname
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
@@ -655,6 +656,19 @@ bx_real_sim_c::ask_param (bx_id param)
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = paramptr;
   sim_to_ci_event (&event);
+  return event.retcode;
+}
+
+int 
+bx_real_sim_c::ask_param(const char *pname)
+{
+  bx_param_c *paramptr = SIM->get_param(pname);
+  BX_ASSERT(paramptr != NULL);
+  // create appropriate event
+  BxEvent event;
+  event.type = BX_SYNC_EVT_ASK_PARAM;
+  event.u.param.param = paramptr;
+  sim_to_ci_event(&event);
   return event.retcode;
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.31 2006-01-11 21:39:34 vruppert Exp $
+// $Id: pciusb.cc,v 1.32 2006-02-22 19:18:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -255,8 +255,8 @@ bx_pciusb_c::init_device(Bit8u port, char *devname)
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
-    connected = bx_options.Omouse_enabled->get();
-    if (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_USB) {
+    connected = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
+    if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_USB) {
       BX_USB_THIS mouse_connected = connected;
     } else if (connected) {
       BX_ERROR(("USB mouse connect ignored, since other mouse type is configured"));

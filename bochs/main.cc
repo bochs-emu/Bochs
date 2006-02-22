@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.314 2006-02-21 21:35:08 vruppert Exp $
+// $Id: main.cc,v 1.315 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -803,7 +803,7 @@ int bx_begin_simulation (int argc, char *argv[])
     // until init_done is set.  This forces the set handler to be called,
     // which sets up the mouse enabled GUI-specific stuff correctly.
     // Not a great solution but it works. BBD
-    bx_options.Omouse_enabled->set (bx_options.Omouse_enabled->get());
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get());
 
 #if BX_SUPPORT_SMP == 0
     // only one processor, run as fast as possible by not messing with

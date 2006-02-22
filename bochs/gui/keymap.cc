@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.17 2005-03-27 14:50:07 vruppert Exp $
+// $Id: keymap.cc,v 1.18 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -97,9 +97,9 @@ bx_keymap_c::~bx_keymap_c(void)
     void
 bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*))
 {
-  if(bx_options.keyboard.OuseMapping->get()) {
-    loadKeymap(stringToSymbol,bx_options.keyboard.Okeymap->getptr());
-    }
+  if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
+    loadKeymap(stringToSymbol, SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+  }
 }
 
 

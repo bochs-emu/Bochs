@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.108 2006-01-14 12:34:14 vruppert Exp $
+// $Id: keyboard.cc,v 1.109 2006-02-22 19:18:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.108 2006-01-14 12:34:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.109 2006-02-22 19:18:29 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -140,7 +140,7 @@ bx_keyb_c::init(void)
   DEV_register_iowrite_handler(this, write_handler,
                                       0x0064, "8042 Keyboard controller", 1);
   BX_KEY_THIS timer_handle = bx_pc_system.register_timer( this, timer_handler,
-                                 bx_options.Okeyboard_serial_delay->get(), 1, 1,
+                                 SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get(), 1, 1,
 				 "8042 Keyboard controller");
 
   resetinternals(1);
@@ -178,7 +178,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
-  BX_KEY_THIS s.mouse.type            = bx_options.Omouse_type->get();
+  BX_KEY_THIS s.mouse.type            = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
   BX_KEY_THIS s.mouse.sample_rate     = 100; // reports per second
   BX_KEY_THIS s.mouse.resolution_cpmm = 4;   // 4 counts per millimeter
   BX_KEY_THIS s.mouse.scaling         = 1;   /* 1:1 (default) */
@@ -199,7 +199,7 @@ bx_keyb_c::init(void)
   BX_KEY_THIS pastebuf = NULL;
   BX_KEY_THIS pastebuf_len = 0;
   BX_KEY_THIS pastebuf_ptr = 0;
-  BX_KEY_THIS paste_delay_changed(bx_options.Okeyboard_paste_delay->get());
+  BX_KEY_THIS paste_delay_changed(SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
   BX_KEY_THIS stop_paste = 0;
 
   // mouse port installed on system board
@@ -253,10 +253,10 @@ bx_keyb_c::init(void)
 #endif
 
   // init runtime parameters
-  bx_options.Omouse_enabled->set_handler(kbd_param_handler);
-  bx_options.Omouse_enabled->set_runtime_param(1);
-  bx_options.Okeyboard_paste_delay->set_handler(kbd_param_handler);
-  bx_options.Okeyboard_paste_delay->set_runtime_param(1);
+  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_handler(kbd_param_handler);
+  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_runtime_param(1);
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(kbd_param_handler);
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_runtime_param(1);
 }
 
   void
@@ -270,17 +270,14 @@ bx_keyb_c::reset(unsigned type)
 Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
 {
   if (set) {
-    bx_id id = param->get_id ();
-    switch (id) {
-      case BXP_MOUSE_ENABLED:
-        bx_gui->mouse_enabled_changed(val!=0);
-        BX_KEY_THIS mouse_enabled_changed(val!=0);
-        break;
-      case BXP_KBD_PASTE_DELAY:
-        BX_KEY_THIS paste_delay_changed((Bit32u)val);
-        break;
-      default:
-        BX_PANIC(("kbd_param_handler called with unexpected parameter %d", id));
+    char *pname = param->get_name();
+    if (!strcmp(pname, "enabled")) { // FIXME: check full param path
+      bx_gui->mouse_enabled_changed(val!=0);
+      BX_KEY_THIS mouse_enabled_changed(val!=0);
+    } else if (!strcmp(pname, "paste_delay")) {
+      BX_KEY_THIS paste_delay_changed((Bit32u)val);
+    } else {
+      BX_PANIC(("kbd_param_handler called with unexpected parameter '%s'", pname));
     }
   }
   return val;
@@ -1064,9 +1061,9 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
       // XT sends nothing, AT sends ACK 
       // MFII with translation sends ACK+ABh+41h
       // MFII without translation sends ACK+ABh+83h
-      if (bx_options.Okeyboard_type->get() != BX_KBD_XT_TYPE) {
+      if (SIM->get_param_enum(BXPN_KBD_TYPE)->get() != BX_KBD_XT_TYPE) {
         kbd_enQ(0xFA); 
-        if (bx_options.Okeyboard_type->get() == BX_KBD_MF_TYPE) {
+        if (SIM->get_param_enum(BXPN_KBD_TYPE)->get() == BX_KBD_MF_TYPE) {
           kbd_enQ(0xAB);
           
           if(BX_KEY_THIS s.kbd_controller.scancodes_translate)
@@ -1138,7 +1135,6 @@ bx_keyb_c::timer_handler(void *this_ptr)
   bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
   unsigned retval;
 
-  // retval=class_ptr->periodic( bx_options.Okeyboard_serial_delay->get());
   retval=class_ptr->periodic(1);
 
   if(retval&0x01)
@@ -1237,8 +1233,8 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
   // if we are not using a ps2 mouse, some of the following commands need to return different values
   bx_bool is_ps2 = 0;
-  if ((bx_options.Omouse_type->get() == BX_MOUSE_TYPE_PS2) ||
-      (bx_options.Omouse_type->get() == BX_MOUSE_TYPE_IMPS2)) is_ps2 = 1;
+  if ((SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_PS2) ||
+      (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_IMPS2)) is_ps2 = 1;
 
   BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
   BX_DEBUG(("  enable = %u", (unsigned) BX_KEY_THIS s.mouse.enable));
@@ -1563,7 +1559,7 @@ bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_s
 
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
-  if (bx_options.Omouse_enabled->get () == 0)
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() == 0)
     return;
 
   // if type == serial, redirect mouse data to the serial device

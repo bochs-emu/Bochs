@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.116 2006-02-21 21:35:08 vruppert Exp $
+// $Id: wxmain.cc,v 1.117 2006-02-22 19:18:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -437,9 +437,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Clock_Cmos, "C&lock/Cmos..." );
   menuEdit->Append(ID_Edit_PCI, "&PCI..." );
   menuEdit->Append(ID_Edit_Display, "&Display + Interface..." );
+  menuEdit->Append(ID_Edit_Keyboard, "&Keyboard + Mouse..." );
   menuEdit->Append(ID_Edit_Sound, "S&ound..." );
   menuEdit->Append(ID_Edit_Network, "&Network..." );
-  menuEdit->Append(ID_Edit_Keyboard, "&Keyboard..." );
   menuEdit->Append(ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
   menuEdit->Append(ID_Edit_LoadHack, "Loader &Hack..." );
   menuEdit->Append(ID_Edit_Other, "&Other..." );
@@ -643,6 +643,16 @@ void MyFrame::OnEditDisplay(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
+void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
+{
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("keyboard_mouse");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
+}
+
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -659,16 +669,6 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
   bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_NETWORK);
   dlg.SetTitle (list->get_name ());
   dlg.AddParam (list);
-  dlg.ShowModal ();
-}
-
-void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
-{
-  ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_KEYBOARD);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.SetRuntimeFlag (sim_thread != NULL);
   dlg.ShowModal ();
 }
 
