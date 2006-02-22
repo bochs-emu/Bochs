@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.24 2006-02-20 19:28:57 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.25 2006-02-22 20:20:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -2666,6 +2666,12 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib();
 
+  /* mask used bits, ignore reserved */
+  if (ib > 7) {
+    BX_ERROR(("CMPPS_VpsWpsIb: unrecognized predicate %u", i->Ib()));
+  }
+  ib &= 7; 
+
   if (MXCSR.get_DAZ()) {
     op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
     op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
@@ -2689,7 +2695,7 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
     result.xmm32u(3) = 
         compare32[ib](op1.xmm32u(3), op2.xmm32u(3), status) ? 0xFFFFFFFF : 0;
   }
-  else if(ib < 8)
+  else
   {
     ib -= 4;
 
@@ -2701,9 +2707,6 @@ void BX_CPU_C::CMPPS_VpsWpsIb(bxInstruction_c *i)
         compare32[ib](op1.xmm32u(2), op2.xmm32u(2), status) ? 0 : 0xFFFFFFFF;
     result.xmm32u(3) = 
         compare32[ib](op1.xmm32u(3), op2.xmm32u(3), status) ? 0 : 0xFFFFFFFF;
-  }
-  else {
-    BX_PANIC(("CMPPS_VpsWpsIb: unrecognized predicate %u", ib));
   }
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status.float_exception_flags);
@@ -2740,6 +2743,12 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status, MXCSR);
   int ib = i->Ib();
 
+  /* mask used bits, ignore reserved */
+  if (ib > 7) {
+    BX_ERROR(("CMPPD_VpdWpdIb: unrecognized predicate %u", i->Ib()));
+  }
+  ib &= 7; 
+
   if (MXCSR.get_DAZ()) 
   {
     op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
@@ -2755,7 +2764,7 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
     result.xmm64u(1) = compare64[ib](op1.xmm64u(1), op2.xmm64u(1), status) ? 
        BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
   }
-  else if(ib < 8)
+  else
   {
     ib -= 4;
 
@@ -2763,9 +2772,6 @@ void BX_CPU_C::CMPPD_VpdWpdIb(bxInstruction_c *i)
        0 : BX_CONST64(0xFFFFFFFFFFFFFFFF);
     result.xmm64u(1) = compare64[ib](op1.xmm64u(1), op2.xmm64u(1), status) ? 
        0 : BX_CONST64(0xFFFFFFFFFFFFFFFF);
-  }
-  else {
-    BX_PANIC(("CMPPS_VpdWpdIb: unrecognized predicate %u", ib));
   }
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status.float_exception_flags);
@@ -2802,6 +2808,12 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   int ib = i->Ib();
 
+  /* mask used bits, ignore reserved */
+  if (ib > 7) {
+    BX_ERROR(("CMPSD_VsdWsdIb: unrecognized predicate %u", i->Ib()));
+  }
+  ib &= 7; 
+
   if (MXCSR.get_DAZ()) 
   {
     op1 = handleDAZ(op1);
@@ -2814,19 +2826,16 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
      } else {
         result = 0;
      }
-  } else if(ib < 8) {
+  } else {
      if(compare64[ib-4](op1, op2, status_word)) {
         result = 0;
      } else {
         result = BX_CONST64(0xFFFFFFFFFFFFFFFF);
      }
-  } else {
-     BX_PANIC(("CMPPS_VsdWsdIb: unrecognized predicate %u", ib));
   }
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
-
 #else
   BX_INFO(("CMPSD_VsdWsdIb: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -2858,6 +2867,12 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   int ib = i->Ib();
 
+  /* mask used bits, ignore reserved */
+  if (ib > 7) {
+    BX_ERROR(("CMPSS_VssWssIb: unrecognized predicate %u", i->Ib()));
+  }
+  ib &= 7; 
+
   if (MXCSR.get_DAZ()) 
   {
     op1 = handleDAZ(op1);
@@ -2870,19 +2885,16 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
      } else {
         result = 0;
      }
-  } else if(ib < 8) {
+  } else {
      if(compare32[ib-4](op1, op2, status_word)) {
         result = 0;
      } else {
         result = 0xFFFFFFFF;
      }
-  } else {
-     BX_PANIC(("CMPPS_VssWssIb: unrecognized predicate %u", ib));
   }
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
-
 #else
   BX_INFO(("CMPSS_VssWssIb: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
