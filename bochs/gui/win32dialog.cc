@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.33 2005-12-26 18:10:21 vruppert Exp $
+// $Id: win32dialog.cc,v 1.34 2006-02-22 19:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -663,12 +663,12 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 
   switch (msg) {
     case WM_INITDIALOG:
-      SetDlgItemInt(hDlg, IDVGAUPDATE, SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->get(), FALSE);
-      SetDlgItemInt(hDlg, IDKBDPASTE, SIM->get_param_num(BXP_KBD_PASTE_DELAY)->get(), FALSE);
-      if (SIM->get_param_num(BXP_MOUSE_ENABLED)->get()) {
+      SetDlgItemInt(hDlg, IDVGAUPDATE, SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDKBDPASTE, SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get(), FALSE);
+      if (SIM->get_param_num(BXPN_MOUSE_ENABLED)->get()) {
         SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_SETCHECK, BST_CHECKED, 0);
       }
-      SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXP_USER_SHORTCUT)->getptr());
+      SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
       SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXP_SB16_DMATIMER)->get(), FALSE);
       SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXP_SB16_LOGLEVEL)->get(), FALSE);
       changed = FALSE;
@@ -679,13 +679,13 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
             value = GetDlgItemInt(hDlg, IDVGAUPDATE, NULL, FALSE);
-            SIM->get_param_num(BXP_VGA_UPDATE_INTERVAL)->set(value);
+            SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set(value);
             value = GetDlgItemInt(hDlg, IDKBDPASTE, NULL, FALSE);
-            SIM->get_param_num(BXP_KBD_PASTE_DELAY)->set(value);
+            SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set(value);
             value = SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_GETCHECK, 0, 0);
-            SIM->get_param_num(BXP_MOUSE_ENABLED)->set(value==BST_CHECKED);
+            SIM->get_param_num(BXPN_MOUSE_ENABLED)->set(value==BST_CHECKED);
             GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
-            SIM->get_param_string(BXP_USER_SHORTCUT)->set(buffer);
+            SIM->get_param_string(BXPN_USER_SHORTCUT)->set(buffer);
             value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
             SIM->get_param_num(BXP_SB16_DMATIMER)->set(value);
             value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);

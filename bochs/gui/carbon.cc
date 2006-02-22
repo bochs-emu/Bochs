@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.30 2006-02-22 19:18:28 vruppert Exp $
+// $Id: carbon.cc,v 1.31 2006-02-22 19:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1699,7 +1699,7 @@ void UpdateTools()
   
   // User control active if keys defined
   char *user_shortcut;
-  user_shortcut = bx_options.Ouser_shortcut->getptr();
+  user_shortcut = SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr();
   if (user_shortcut[0] && (strcmp(user_shortcut, "none"))) {
     EnableControl(bx_tool_pixmap[USER_TOOL_BUTTON].control);
   }

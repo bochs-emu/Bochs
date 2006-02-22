@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.22 2006-02-22 19:18:28 vruppert Exp $
+// $Id: amigaos.cc,v 1.23 2006-02-22 19:43:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -434,7 +434,7 @@ bx_amigaos_gui_c::flush(void)
   void
 bx_amigaos_gui_c::clear_screen(void)
 {
-	if(d > 8 || !bx_options.Ofullscreen->get ())
+	if (d > 8 || !SIM->get_param_bool(BXPN_FULLSCREEN)->get())
 		SetAPen(window->RPort, black);
 	else
 		SetAPen(window->RPort, 0); /*should be ok to clear with the first pen in the map*/
@@ -634,7 +634,7 @@ bx_amigaos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, u
   	*ptr = green; ptr++;
   	*ptr = blue;
 
-  if(d > 8 || !bx_options.Ofullscreen->get ())
+  if (d > 8 || !SIM->get_param_bool(BXPN_FULLSCREEN)->get())
   {
   	if(pmap[index] != -1)
   		ReleasePen(window->WScreen->ViewPort.ColorMap, pmap[index]);
@@ -682,7 +682,7 @@ bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
 	  }
 	}
 
-	if(!bx_options.Ofullscreen->get () && (x != w || y != h))
+	if (!SIM->get_param_bool(BXPN_FULLSCREEN)->get() && (x != w || y != h))
 	{
 		ChangeWindowBox(window, window->LeftEdge, window->TopEdge, x + bx_borderleft + bx_borderright, y + bx_bordertop + bx_borderbottom + bx_headerbar_y);
 		w = x;
@@ -727,7 +727,7 @@ bx_amigaos_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, unsign
 	bx_header_image[bx_image_entries].ImageData   = (UWORD *)bmap;
 	bx_header_image[bx_image_entries].NextImage	   = NULL;
 	bx_header_image[bx_image_entries].PlanePick   = 0x1;
-	if(d > 8 || !bx_options.Ofullscreen->get ())
+	if (d > 8 || !SIM->get_param_bool(BXPN_FULLSCREEN)->get())
 		bx_header_image[bx_image_entries].PlaneOnOff  = 0x2;
 
 	/*we need to reverse the bitorder for this to work*/
@@ -795,7 +795,7 @@ bx_amigaos_gui_c::show_headerbar(void)
 {
 	RemoveGList(window, bx_glistptr, bx_headerbar_entries);
 	
-	if(d > 8 || !bx_options.Ofullscreen->get ())
+	if (d > 8 || !SIM->get_param_bool(BXPN_FULLSCREEN)->get())
 		SetAPen(window->RPort, white);
 	else
 		SetAPen(window->RPort, 0);
