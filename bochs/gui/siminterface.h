@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.162 2006-02-22 19:18:28 vruppert Exp $
+// $Id: siminterface.h,v 1.163 2006-02-23 22:48:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -168,6 +168,14 @@ typedef enum {
 #define BXPN_USER_SHORTCUT               "keyboard_mouse.keyboard.user_shortcut"
 #define BXPN_MOUSE_TYPE                  "keyboard_mouse.mouse.type"
 #define BXPN_MOUSE_ENABLED               "keyboard_mouse.mouse.enabled"
+#define BXPN_BOOTDRIVE1                  "boot_params.boot_drive1"
+#define BXPN_BOOTDRIVE2                  "boot_params.boot_drive2"
+#define BXPN_BOOTDRIVE3                  "boot_params.boot_drive3"
+#define BXPN_FLOPPYSIGCHECK              "boot_params.floppy_sig_check"
+#define BXPN_LOAD32BITOS_WHICH           "boot_params.load32bitos.which"
+#define BXPN_LOAD32BITOS_PATH            "boot_params.load32bitos.path"
+#define BXPN_LOAD32BITOS_IOLOG           "boot_params.load32bitos.iolog"
+#define BXPN_LOAD32BITOS_INITRD          "boot_params.load32bitos.initrd"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -373,16 +381,6 @@ typedef enum {
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
-  BXP_LOAD32BITOS_WHICH,
-  BXP_LOAD32BITOS_PATH,
-  BXP_LOAD32BITOS_IOLOG,
-  BXP_LOAD32BITOS_INITRD,
-  BXP_LOAD32BITOS,
-  BXP_BOOTDRIVE1,
-  BXP_BOOTDRIVE2,
-  BXP_BOOTDRIVE3,
-  BXP_FLOPPYSIGCHECK,
-  BXP_BOOT,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
   BXP_MENU_DISK,

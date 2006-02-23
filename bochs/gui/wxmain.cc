@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.117 2006-02-22 19:18:28 vruppert Exp $
+// $Id: wxmain.cc,v 1.118 2006-02-23 22:48:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -317,17 +317,16 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA1, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA2, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
-  EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_CPU, MyFrame::OnEditCPU)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Clock_Cmos, MyFrame::OnEditClockCmos)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
   EVT_MENU(ID_Edit_Display, MyFrame::OnEditDisplay)
+  EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
+  EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
-  EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
-  EVT_MENU(ID_Edit_LoadHack, MyFrame::OnEditLoadHack)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
@@ -431,17 +430,16 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_ATA1, "ATA Channel 1..." );
   menuEdit->Append(ID_Edit_ATA2, "ATA Channel 2..." );
   menuEdit->Append(ID_Edit_ATA3, "ATA Channel 3..." );
-  menuEdit->Append(ID_Edit_Boot, "&Boot..." );
   menuEdit->Append(ID_Edit_CPU, "&CPU..." );
   menuEdit->Append(ID_Edit_Memory, "&Memory..." );
   menuEdit->Append(ID_Edit_Clock_Cmos, "C&lock/Cmos..." );
   menuEdit->Append(ID_Edit_PCI, "&PCI..." );
   menuEdit->Append(ID_Edit_Display, "&Display + Interface..." );
   menuEdit->Append(ID_Edit_Keyboard, "&Keyboard + Mouse..." );
+  menuEdit->Append(ID_Edit_Boot, "&Boot..." );
   menuEdit->Append(ID_Edit_Sound, "S&ound..." );
   menuEdit->Append(ID_Edit_Network, "&Network..." );
   menuEdit->Append(ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
-  menuEdit->Append(ID_Edit_LoadHack, "Loader &Hack..." );
   menuEdit->Append(ID_Edit_Other, "&Other..." );
 
   menuSimulate = new wxMenu;
@@ -568,35 +566,6 @@ void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
   delete fdialog;
 }
 
-void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
-{
-#define MAX_BOOT_DEVICES 3
-  int bootDevices = 0;
-  int dev_id[MAX_BOOT_DEVICES];
-  bx_param_enum_c *floppy = SIM->get_param_enum (BXP_FLOPPYA_DEVTYPE);
-  if (floppy->get () != BX_FLOPPY_NONE) {
-    dev_id[bootDevices++] = BX_BOOT_FLOPPYA;
-  }
-  bx_param_c *firsthd = SIM->get_first_hd ();
-  if (firsthd != NULL) {
-    dev_id[bootDevices++] = BX_BOOT_DISKC;
-  }
-  bx_param_c *firstcd = SIM->get_first_cdrom ();
-  if (firstcd != NULL) {
-    dev_id[bootDevices++] = BX_BOOT_CDROM;
-  }
-  if (bootDevices == 0) {
-    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM.",
-                  "None enabled", wxOK | wxICON_ERROR, this );
-    return;
-  }
-  ParamDialog dlg (this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_BOOT);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.ShowModal ();
-}
-
 void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
@@ -653,6 +622,33 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
+void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
+{
+  int bootDevices = 0;
+  bx_param_enum_c *floppy = SIM->get_param_enum(BXP_FLOPPYA_DEVTYPE);
+  if (floppy->get() != BX_FLOPPY_NONE) {
+    bootDevices++;
+  }
+  bx_param_c *firsthd = SIM->get_first_hd();
+  if (firsthd != NULL) {
+    bootDevices++;
+  }
+  bx_param_c *firstcd = SIM->get_first_cdrom();
+  if (firstcd != NULL) {
+    bootDevices++;
+  }
+  if (bootDevices == 0) {
+    wxMessageBox( "All the possible boot devices are disabled right now!\nYou must enable the first floppy drive, a hard drive, or a CD-ROM.",
+                  "None enabled", wxOK | wxICON_ERROR, this );
+    return;
+  }
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("boot_params");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.ShowModal();
+}
+
 void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg (this, -1);
@@ -682,23 +678,14 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal ();
 }
 
-void MyFrame::OnEditLoadHack(wxCommandEvent& WXUNUSED(event))
-{
-  ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_LOAD32BITOS);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.ShowModal ();
-}
-
 void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
-//ParamDialog dlg(this, -1);
-//bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_MISC_2);
-//dlg.SetTitle (list->get_name ());
-//dlg.AddParam (list);
-//dlg.SetRuntimeFlag (sim_thread != NULL);
-//dlg.ShowModal ();
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_MENU_MISC);
+  dlg.SetTitle(list->get_name ());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
@@ -948,21 +935,20 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
       }
     }
   }
-  menuEdit->Enable(ID_Edit_Boot, canConfigure);
   menuEdit->Enable(ID_Edit_CPU, canConfigure);
   menuEdit->Enable(ID_Edit_Memory, canConfigure);
   menuEdit->Enable(ID_Edit_Clock_Cmos, canConfigure);
   menuEdit->Enable(ID_Edit_PCI, canConfigure);
+  menuEdit->Enable(ID_Edit_Boot, canConfigure);
   menuEdit->Enable(ID_Edit_Network, canConfigure);
-  menuEdit->Enable(ID_Edit_LoadHack, canConfigure);
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.
   bx_param_c *param;
   param = SIM->get_param(BXP_FLOPPYA);
-  menuEdit->Enable (ID_Edit_FD_0, canConfigure || param->get_enabled ());
+  menuEdit->Enable(ID_Edit_FD_0, canConfigure || param->get_enabled());
   param = SIM->get_param(BXP_FLOPPYB);
-  menuEdit->Enable (ID_Edit_FD_1, canConfigure || param->get_enabled ());
+  menuEdit->Enable(ID_Edit_FD_1, canConfigure || param->get_enabled());
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)

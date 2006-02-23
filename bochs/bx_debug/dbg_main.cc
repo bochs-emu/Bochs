@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.58 2006-02-19 21:35:46 vruppert Exp $
+// $Id: dbg_main.cc,v 1.59 2006-02-23 22:48:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,7 +228,7 @@ int bx_dbg_main(int argc, char *argv[])
   bx_pc_system.start_timers();
 
   // Just like in main.cc before set_init_done()
-  if (bx_options.load32bitOSImage.OwhichOS->get ()) {
+  if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
     void bx_load32bitOSimagehack(void);
     bx_load32bitOSimagehack();
   }

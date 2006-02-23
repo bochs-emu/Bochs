@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.57 2006-02-16 21:44:17 vruppert Exp $
+// $Id: wxdialog.h,v 1.58 2006-02-23 22:48:57 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -476,7 +476,8 @@ protected:
   // map parameter ID (BXP_*) onto ParamStruct.
   wxHashTable *paramHash;
   virtual void EnableChanged ();
-  void EnableParam (int param_id, bool enabled);
+  void EnableParam(int param_id, bool enabled);
+  void EnableParam(const char *pname, bool enabled);
   void EnumChanged (ParamStruct *pstr);
   void EnableChangedRecursive (bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
   void EnableChanged (ParamStruct *pstr);

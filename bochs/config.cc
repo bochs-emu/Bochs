@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.81 2006-02-22 19:18:28 vruppert Exp $
+// $Id: config.cc,v 1.82 2006-02-23 22:48:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -57,15 +57,9 @@ static int get_floppy_type_from_image(const char *filename);
 static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
+  char *pname = param->get_name();
+
   switch (id) {
-    case BXP_LOAD32BITOS_WHICH:
-      if (set) {
-        int enable = (val != Load32bitOSNone);
-        SIM->get_param (BXP_LOAD32BITOS_PATH)->set_enabled (enable);
-        SIM->get_param (BXP_LOAD32BITOS_IOLOG)->set_enabled (enable);
-        SIM->get_param (BXP_LOAD32BITOS_INITRD)->set_enabled (enable);
-      }
-      break;
     case BXP_ATA0_MASTER_STATUS:
     case BXP_ATA0_SLAVE_STATUS:
     case BXP_ATA1_MASTER_STATUS:
@@ -182,8 +176,17 @@ static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
         }
       break;
     default:
-      BX_PANIC (("bx_param_handler called with unknown id %d", id));
-      return -1;
+      if (!strcmp(pname, "which")) { // FIXME: check full param path
+        if (set) {
+          int enable = (val != Load32bitOSNone);
+          SIM->get_param(BXPN_LOAD32BITOS_PATH)->set_enabled(enable);
+          SIM->get_param(BXPN_LOAD32BITOS_IOLOG)->set_enabled(enable);
+          SIM->get_param(BXPN_LOAD32BITOS_INITRD)->set_enabled(enable);
+        }
+      } else {
+        BX_PANIC (("bx_param_handler called with unknown id %d", id));
+        return -1;
+      }
   }
   return val;
 }
@@ -747,66 +750,6 @@ void bx_init_options()
     }
   }
 
-  // boot sequence
-  for (i=0; i<3; i++) {
-    sprintf (name, "Boot drive #%d", i+1);
-    sprintf (descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
-    bx_options.Obootdrive[i] = new bx_param_enum_c ((bx_id)(BXP_BOOTDRIVE1+i),
-        strdup(name),
-        strdup(descr),
-        &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
-        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
-        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE);
-    bx_options.Obootdrive[i]->set_ask_format ("Boot from floppy drive, hard drive or cdrom ? [%s] ");
-  }
-
-  bx_options.OfloppySigCheck = new bx_param_bool_c (BXP_FLOPPYSIGCHECK,
-      "Skip Floppy Boot Signature Check",
-      "Skips check for the 0xaa55 signature on floppy boot device.",
-      0);
-
-  // disk menu
-  bx_param_c *disk_menu_init_list[] = {
-    SIM->get_param (BXP_FLOPPYA),
-    SIM->get_param (BXP_FLOPPYB),
-    SIM->get_param (BXP_ATA0),
-    SIM->get_param (BXP_ATA0_MASTER),
-    SIM->get_param (BXP_ATA0_SLAVE),
-#if BX_MAX_ATA_CHANNEL>1
-    SIM->get_param (BXP_ATA1),
-    SIM->get_param (BXP_ATA1_MASTER),
-    SIM->get_param (BXP_ATA1_SLAVE),
-#endif
-#if BX_MAX_ATA_CHANNEL>2
-    SIM->get_param (BXP_ATA2),
-    SIM->get_param (BXP_ATA2_MASTER),
-    SIM->get_param (BXP_ATA2_SLAVE),
-#endif
-#if BX_MAX_ATA_CHANNEL>3
-    SIM->get_param (BXP_ATA3),
-    SIM->get_param (BXP_ATA3_MASTER),
-    SIM->get_param (BXP_ATA3_SLAVE),
-#endif
-    SIM->get_param (BXP_BOOTDRIVE1),
-    SIM->get_param (BXP_BOOTDRIVE2),
-    SIM->get_param (BXP_BOOTDRIVE3),
-    SIM->get_param (BXP_FLOPPYSIGCHECK),
-    NULL
-  };
-  menu = new bx_list_c (BXP_MENU_DISK, "Bochs Disk Options", "", disk_menu_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
-
-#if BX_WITH_WX
-  bx_param_c *boot_init_list[] = {
-    bx_options.Obootdrive[0],
-    bx_options.Obootdrive[1],
-    bx_options.Obootdrive[2],
-    bx_options.OfloppySigCheck,
-    NULL
-  };
-  menu = new bx_list_c (BXP_BOOT, "Boot options", "", boot_init_list);
-#endif
-
 #if BX_SUPPORT_SMP
   #define BX_CPU_PROCESSORS_LIMIT 8
   #define BX_CPU_CORES_LIMIT 4
@@ -1277,6 +1220,90 @@ void bx_init_options()
   keyboard->get_options()->set(bx_list_c::SHOW_PARENT);
   mouse->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // boot parameter subtree
+  bx_list_c *boot_params = new bx_list_c(root_param, "boot_params", "Boot Options");
+  // boot sequence
+  for (i=0; i<3; i++) {
+    sprintf(name, "boot_drive%d", i+1);
+    sprintf(label, "Boot drive #%d", i+1);
+    sprintf(descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
+    bx_param_enum_c *bootdrive = new bx_param_enum_c(boot_params,
+        strdup(name),
+        strdup(label),
+        strdup(descr),
+        &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
+        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
+        (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE);
+    bootdrive->set_ask_format("Boot from floppy drive, hard drive or cdrom ? [%s] ");
+  }
+
+  new bx_param_bool_c(boot_params,
+      "floppy_sig_check",
+      "Skip Floppy Boot Signature Check",
+      "Skips check for the 0xaa55 signature on floppy boot device.",
+      0);
+
+  // disk menu
+  bx_param_c *disk_menu_init_list[] = {
+    SIM->get_param(BXP_FLOPPYA),
+    SIM->get_param(BXP_FLOPPYB),
+    SIM->get_param(BXP_ATA0),
+    SIM->get_param(BXP_ATA0_MASTER),
+    SIM->get_param(BXP_ATA0_SLAVE),
+#if BX_MAX_ATA_CHANNEL>1
+    SIM->get_param(BXP_ATA1),
+    SIM->get_param(BXP_ATA1_MASTER),
+    SIM->get_param(BXP_ATA1_SLAVE),
+#endif
+#if BX_MAX_ATA_CHANNEL>2
+    SIM->get_param(BXP_ATA2),
+    SIM->get_param(BXP_ATA2_MASTER),
+    SIM->get_param(BXP_ATA2_SLAVE),
+#endif
+#if BX_MAX_ATA_CHANNEL>3
+    SIM->get_param(BXP_ATA3),
+    SIM->get_param(BXP_ATA3_MASTER),
+    SIM->get_param(BXP_ATA3_SLAVE),
+#endif
+    SIM->get_param("boot_params"),
+    NULL
+  };
+  menu = new bx_list_c(BXP_MENU_DISK, "Bochs Disk Options", "", disk_menu_init_list);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  boot_params->get_options()->set(bx_list_c::SHOW_PARENT);
+
+  // loader hack
+  bx_list_c *load32bitos = new bx_list_c(boot_params, "load32bitos", "32-bit OS Loader Hack");
+  bx_param_enum_c *whichOS = new bx_param_enum_c(load32bitos,
+      "which",
+      "Which operating system?",
+      "Which OS to boot",
+      loader_os_names,
+      Load32bitOSNone,
+      Load32bitOSNone);
+  bx_param_filename_c *path = new bx_param_filename_c(load32bitos,
+      "path",
+      "Pathname of OS to load",
+      "Pathname of the 32-bit OS to load",
+      "", BX_PATHNAME_LEN);
+  bx_param_filename_c *iolog = new bx_param_filename_c(load32bitos,
+      "iolog",
+      "Pathname of I/O log file",
+      "I/O logfile used for initializing the hardware",
+      "", BX_PATHNAME_LEN);
+  bx_param_filename_c *initrd = new bx_param_filename_c(load32bitos,
+      "initrd",
+      "Pathname of initrd",
+      "Pathname of the initial ramdisk",
+      "", BX_PATHNAME_LEN);
+  whichOS->set_ask_format("Enter OS to load: [%s] ");
+  path->set_ask_format("Enter pathname of OS: [%s]");
+  iolog->set_ask_format("Enter pathname of I/O log: [%s] ");
+  initrd->set_ask_format("Enter pathname of initrd: [%s] ");
+  load32bitos->get_options()->set(menu->SERIES_ASK);
+  whichOS->set_handler(bx_param_handler);
+  whichOS->set(Load32bitOSNone);
+
   // serial and parallel port options
 
 #define PAR_SER_INIT_LIST_MAX \
@@ -1636,45 +1663,6 @@ void bx_init_options()
       "-", BX_PATHNAME_LEN);
   bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
 
-  // loader
-  bx_options.load32bitOSImage.OwhichOS = new bx_param_enum_c (BXP_LOAD32BITOS_WHICH,
-      "Which operating system?",
-      "Which OS to boot",
-      loader_os_names,
-      Load32bitOSNone,
-      Load32bitOSNone);
-  bx_options.load32bitOSImage.Opath = new bx_param_filename_c (BXP_LOAD32BITOS_PATH,
-      "Pathname of OS to load",
-      "Pathname of the 32-bit OS to load",
-      "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oiolog = new bx_param_filename_c (BXP_LOAD32BITOS_IOLOG,
-      "Pathname of I/O log file",
-      "I/O logfile used for initializing the hardware",
-      "", BX_PATHNAME_LEN);
-  bx_options.load32bitOSImage.Oinitrd = new bx_param_filename_c (BXP_LOAD32BITOS_INITRD,
-      "Pathname of initrd",
-      "Pathname of the initial ramdisk",
-      "", BX_PATHNAME_LEN);
-  bx_param_c *loader_init_list[] = {
-    bx_options.load32bitOSImage.OwhichOS,
-    bx_options.load32bitOSImage.Opath,
-    bx_options.load32bitOSImage.Oiolog,
-    bx_options.load32bitOSImage.Oinitrd,
-    NULL
-  };
-  bx_options.load32bitOSImage.OwhichOS->set_format ("os=%s");
-  bx_options.load32bitOSImage.Opath->set_format ("path=%s");
-  bx_options.load32bitOSImage.Oiolog->set_format ("iolog=%s");
-  bx_options.load32bitOSImage.Oinitrd->set_format ("initrd=%s");
-  bx_options.load32bitOSImage.OwhichOS->set_ask_format ("Enter OS to load: [%s] ");
-  bx_options.load32bitOSImage.Opath->set_ask_format ("Enter pathname of OS: [%s]");
-  bx_options.load32bitOSImage.Oiolog->set_ask_format ("Enter pathname of I/O log: [%s] ");
-  bx_options.load32bitOSImage.Oinitrd->set_ask_format ("Enter pathname of initrd: [%s] ");
-  menu = new bx_list_c (BXP_LOAD32BITOS, "32-bit OS Loader", "", loader_init_list);
-  menu->get_options ()->set (menu->SERIES_ASK);
-  bx_options.load32bitOSImage.OwhichOS->set_handler (bx_param_handler);
-  bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNone);
-
   // other
   // GDB stub
   bx_options.gdbstub.port = 1234;
@@ -1683,11 +1671,11 @@ void bx_init_options()
   bx_options.gdbstub.bss_base = 0;
 
   bx_param_c *other_init_list[] = {
-      SIM->get_param(BXP_LOAD32BITOS),
+      SIM->get_param(BXP_TEXT_SNAPSHOT_CHECK),
       NULL
   };
-  menu = new bx_list_c (BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
+  menu->get_options()->set(menu->SHOW_PARENT);
 
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
@@ -1745,12 +1733,6 @@ void bx_reset_options ()
     }
   }
 
-  // boot
-  for (i=0; i<3; i++) {
-    bx_options.Obootdrive[i]->reset();
-  }
-  bx_options.OfloppySigCheck->reset();
-
   // cpu
   SIM->get_param("cpu")->reset();
 
@@ -1768,6 +1750,9 @@ void bx_reset_options ()
 
   // keyboard & mouse
   SIM->get_param("keyboard_mouse")->reset();
+
+  // boot
+  SIM->get_param("boot_params")->reset();
 
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -1817,12 +1802,6 @@ void bx_reset_options ()
   bx_options.log.Ofilename->reset();
   bx_options.log.Oprefix->reset();
   bx_options.log.Odebugger_filename->reset();
-
-  // loader
-  bx_options.load32bitOSImage.OwhichOS->reset();
-  bx_options.load32bitOSImage.Opath->reset();
-  bx_options.load32bitOSImage.Oiolog->reset();
-  bx_options.load32bitOSImage.Oinitrd->reset();
 
   // other
   bx_options.Otext_snapshot_check->reset();
@@ -2464,33 +2443,35 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       }
     }
   } else if (!strcmp(params[0], "boot")) {
+    char tmppath[80];
     if (num_params < 2) {
       PARSE_ERR(("%s: boot directive malformed.", context));
     }
     for (i=1; i<num_params; i++) {
+      sprintf(tmppath, "boot_params.boot_drive%d", i);
       if (!strcmp(params[i], "none")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_NONE);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_NONE);
       } else if (!strcmp(params[i], "a")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_FLOPPYA);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_FLOPPYA);
       } else if (!strcmp(params[i], "floppy")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_FLOPPYA);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_FLOPPYA);
       } else if (!strcmp(params[i], "c")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_DISKC);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_DISKC);
       } else if (!strcmp(params[i], "disk")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_DISKC);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_DISKC);
       } else if (!strcmp(params[i], "cdrom")) {
-        bx_options.Obootdrive[i-1]->set (BX_BOOT_CDROM);
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_CDROM);
       } else {
         PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[i]));
       }
     }
-    if (bx_options.Obootdrive[0]->get () == BX_BOOT_NONE) {
+    if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() == BX_BOOT_NONE) {
       PARSE_ERR(("%s: first boot drive must be one of 'floppy', 'disk' or 'cdrom'.", context));
     }
-    if ((bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[1]->get ()) ||
-        (bx_options.Obootdrive[0]->get () == bx_options.Obootdrive[2]->get ()) ||
-        ((bx_options.Obootdrive[2]->get () != BX_BOOT_NONE) &&
-        (bx_options.Obootdrive[1]->get () == bx_options.Obootdrive[2]->get ()))) {
+    if ((SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() == SIM->get_param_enum(BXPN_BOOTDRIVE2)->get()) ||
+        (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() == SIM->get_param_enum(BXPN_BOOTDRIVE3)->get()) ||
+        ((SIM->get_param_enum(BXPN_BOOTDRIVE3)->get() != BX_BOOT_NONE) &&
+        (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() == SIM->get_param_enum(BXPN_BOOTDRIVE3)->get()))) {
       PARSE_ERR(("%s: a boot drive appears twice in boot sequence.", context));
     }
   } else if (!strcmp(params[0], "floppy_bootsig_check")) {
@@ -2501,9 +2482,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
     }
     if (params[1][9] == '0')
-      bx_options.OfloppySigCheck->set (0);
+      SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->set(0);
     else if (params[1][9] == '1')
-      bx_options.OfloppySigCheck->set (1);
+      SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->set(1);
     else {
       PARSE_ERR(("%s: floppy_bootsig_check directive malformed.", context));
     }
@@ -3121,10 +3102,10 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
     }
     if (!strcmp(&params[1][3], "nullkernel")) {
-      bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSNullKernel);
+      SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->set(Load32bitOSNullKernel);
     }
     else if (!strcmp(&params[1][3], "linux")) {
-      bx_options.load32bitOSImage.OwhichOS->set (Load32bitOSLinux);
+      SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->set(Load32bitOSLinux);
     }
     else {
       PARSE_ERR(("%s: load32bitOSImage: unsupported OS.", context));
@@ -3135,13 +3116,13 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (strncmp(params[3], "iolog=", 6)) {
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
     }
-    bx_options.load32bitOSImage.Opath->set (strdup(&params[2][5]));
-    bx_options.load32bitOSImage.Oiolog->set (strdup(&params[3][6]));
+    SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->set(strdup(&params[2][5]));
+    SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->set (strdup(&params[3][6]));
     if (num_params == 5) {
       if (strncmp(params[4], "initrd=", 7)) {
         PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
       }
-      bx_options.load32bitOSImage.Oinitrd->set (strdup(&params[4][7]));
+      SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set (strdup(&params[4][7]));
     }
   }
   else if (!strcmp(params[0], "keyboard_type")) {
@@ -3444,18 +3425,19 @@ int bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
   return 0;
 }
 
-int bx_write_loader_options (FILE *fp, bx_load32bitOSImage_t *opt)
+int bx_write_loader_options(FILE *fp)
 {
-  if (opt->OwhichOS->get () == 0) {
-    fprintf (fp, "# no loader\n");
+  if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSNone) {
+    fprintf(fp, "# no loader\n");
     return 0;
   }
-  BX_ASSERT(opt->OwhichOS->get () == Load32bitOSLinux || opt->OwhichOS->get () == Load32bitOSNullKernel);
+  BX_ASSERT((SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSLinux) ||
+            (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSNullKernel));
   fprintf (fp, "load32bitOSImage: os=%s, path=%s, iolog=%s, initrd=%s\n",
-      (opt->OwhichOS->get () == Load32bitOSLinux) ? "linux" : "nullkernel",
-      opt->Opath->getptr (),
-      opt->Oiolog->getptr (),
-      opt->Oinitrd->getptr ());
+      (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get() == Load32bitOSLinux) ? "linux" : "nullkernel",
+      SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(),
+      SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr(),
+      SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr());
   return 0;
 }
 
@@ -3572,13 +3554,15 @@ int bx_write_configuration (char *rc, int overwrite)
     fprintf(fp, "vgaromimage: file=\"%s\"\n", strptr);
   else
     fprintf(fp, "# no vgaromimage\n");
-  fprintf(fp, "boot: %s", bx_options.Obootdrive[0]->get_selected());
+  fprintf(fp, "boot: %s", SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected());
   for (i=1; i<3; i++) {
-    if (bx_options.Obootdrive[i]->get() != BX_BOOT_NONE) {
-      fprintf(fp, ", %s", bx_options.Obootdrive[i]->get_selected());
+    sprintf(tmppath, "boot_params.boot_drive%d", i+1);
+    if (SIM->get_param_enum(tmppath)->get() != BX_BOOT_NONE) {
+      fprintf(fp, ", %s", SIM->get_param_enum(tmppath)->get_selected());
     }
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
+  fprintf(fp, "floppy_bootsig_check: disabled=%d\n", SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->get());
   // it would be nice to put this type of function as methods on
   // the structs like bx_floppy_options::print or something.
   bx_write_floppy_options (fp, 0, &bx_options.floppya);
@@ -3625,14 +3609,13 @@ int bx_write_configuration (char *rc, int overwrite)
     }
   }
   fprintf (fp, "\n");
-  if (SIM->get_param_bool(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
+  if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
     fprintf(fp, "pcidev: vendor=0x%04x, device=0x%04x\n",
-      SIM->get_param_bool(BXPN_PCIDEV_VENDOR)->get(),
-      SIM->get_param_bool(BXPN_PCIDEV_DEVICE)->get());
+      SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
+      SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
   }
   bx_write_usb_options (fp, &bx_options.usb[0], 1);
   bx_write_sb16_options (fp, &bx_options.sb16);
-  fprintf (fp, "floppy_bootsig_check: disabled=%d\n", bx_options.OfloppySigCheck->get());
   fprintf (fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf (fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
@@ -3651,11 +3634,11 @@ int bx_write_configuration (char *rc, int overwrite)
   fprintf (fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
-  bx_write_ne2k_options (fp, &bx_options.ne2k);
-  bx_write_pnic_options (fp, &bx_options.pnic);
-  bx_write_loader_options (fp, &bx_options.load32bitOSImage);
+  bx_write_ne2k_options(fp, &bx_options.ne2k);
+  bx_write_pnic_options(fp, &bx_options.pnic);
+  bx_write_loader_options(fp);
   bx_write_log_options (fp, &bx_options.log);
-  bx_write_keyboard_options (fp);
+  bx_write_keyboard_options(fp);
   fprintf(fp, "mouse: enabled=%d, type=%s\n",
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
     SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected());

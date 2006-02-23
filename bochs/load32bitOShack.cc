@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.18 2006-01-25 22:19:57 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.19 2006-02-23 22:48:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,8 +40,8 @@ static Bit32u bx_load_kernel_image(char *path, Bit32u paddr);
   void
 bx_load32bitOSimagehack(void)
 {
-  if ( bx_options.load32bitOSImage.Oiolog 
-       && (bx_options.load32bitOSImage.Oiolog->getptr ()[0] != '\0')
+  if (SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG) &&
+      (SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr()[0] != '\0')
       ) {
 
   // Replay IO from log to initialize IO devices to
@@ -52,7 +52,7 @@ bx_load32bitOSimagehack(void)
 
   FILE *fp;
 
-  fp = fopen(bx_options.load32bitOSImage.Oiolog->getptr (), "r");
+  fp = fopen(SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr(), "r");
 
   if (fp == NULL) {
     BX_PANIC(("could not open IO init file."));
@@ -82,7 +82,7 @@ bx_load32bitOSimagehack(void)
   }//if iolog file to load
 
   // Invoke proper hack depending on which OS image we're loading
-  switch (bx_options.load32bitOSImage.OwhichOS->get ()) {
+  switch (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
     case Load32bitOSLinux:
       bx_load_linux_hack();
       break;
@@ -185,10 +185,10 @@ bx_load_linux_hack(void)
   // Set CPU and memory features which are assumed at this point.
 
   // Load Linux kernel image
-  bx_load_kernel_image( bx_options.load32bitOSImage.Opath->getptr (), 0x100000 );
+  bx_load_kernel_image(SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(), 0x100000);
 
   // Load initial ramdisk image if requested
-  char * tmpPtr = bx_options.load32bitOSImage.Oinitrd->getptr ();
+  char * tmpPtr = SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->getptr();
   if ( tmpPtr && tmpPtr[0] ) /* The initial value is "" and not NULL */
   {
     initrd_start = 0x00800000;  /* FIXME: load at top of memory */
@@ -241,7 +241,7 @@ bx_load_null_kernel_hack(void)
   // The RESET function will have been called first.
   // Set CPU and memory features which are assumed at this point.
 
-  bx_load_kernel_image(bx_options.load32bitOSImage.Opath->getptr (), 0x100000);
+  bx_load_kernel_image(SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->getptr(), 0x100000);
 
   // EIP deltas
   BX_CPU(0)->prev_eip =

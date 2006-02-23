@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.83 2006-02-19 15:43:03 vruppert Exp $
+// $Id: wxdialog.cc,v 1.84 2006-02-23 22:48:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1429,19 +1429,30 @@ void ParamDialog::EnableChangedRecursive (
   }
 }
 
-void ParamDialog::EnableParam (int param_id, bool enabled)
+void ParamDialog::EnableParam(int param_id, bool enabled)
 {
-  ParamStruct *pstr = (ParamStruct*) paramHash->Get (param_id);
+  ParamStruct *pstr = (ParamStruct*) paramHash->Get(param_id);
   if (!pstr) return;
-  if (pstr->label) pstr->label->Enable (enabled);
-  if (pstr->browseButton) pstr->browseButton->Enable (enabled);
-  if (pstr->u.window) pstr->u.window->Enable (enabled);
+  if (pstr->label) pstr->label->Enable(enabled);
+  if (pstr->browseButton) pstr->browseButton->Enable(enabled);
+  if (pstr->u.window) pstr->u.window->Enable(enabled);
+}
+
+void ParamDialog::EnableParam(const char *pname, bool enabled)
+{
+  int param_id = SIM->get_param(pname)->get_id();
+  ParamStruct *pstr = (ParamStruct*) paramHash->Get(param_id);
+  if (!pstr) return;
+  if (pstr->label) pstr->label->Enable(enabled);
+  if (pstr->browseButton) pstr->browseButton->Enable(enabled);
+  if (pstr->u.window) pstr->u.window->Enable(enabled);
 }
 
 void ParamDialog::EnumChanged (ParamStruct *pstr)
 {
   wxLogDebug ("EnumChanged");
   int id = pstr->param->get_id ();
+  char *pname = pstr->param->get_name();
   switch (id) {
     case BXP_ATA0_MASTER_TYPE:
     case BXP_ATA0_SLAVE_TYPE:
@@ -1529,16 +1540,18 @@ void ParamDialog::EnumChanged (ParamStruct *pstr)
         }
       }
       break;
-    case BXP_LOAD32BITOS_WHICH: {
-      int os = pstr->u.choice->GetSelection ();
-      if (os != Load32bitOSNone) {
-	EnableParam (BXP_LOAD32BITOS_PATH, 1);
-	EnableParam (BXP_LOAD32BITOS_IOLOG, 1);
-	EnableParam (BXP_LOAD32BITOS_INITRD, 1);
-      } else {
-	EnableParam (BXP_LOAD32BITOS_PATH, 0);
-	EnableParam (BXP_LOAD32BITOS_IOLOG, 0);
-	EnableParam (BXP_LOAD32BITOS_INITRD, 0);
+    default: {
+      if (!strcmp(pname, "which")) { // FIXME: check full param path
+        int os = pstr->u.choice->GetSelection();
+        if (os != Load32bitOSNone) {
+          EnableParam(BXPN_LOAD32BITOS_PATH, 1);
+          EnableParam(BXPN_LOAD32BITOS_IOLOG, 1);
+          EnableParam(BXPN_LOAD32BITOS_INITRD, 1);
+        } else {
+          EnableParam(BXPN_LOAD32BITOS_PATH, 0);
+          EnableParam(BXPN_LOAD32BITOS_IOLOG, 0);
+          EnableParam(BXPN_LOAD32BITOS_INITRD, 0);
+        }
       }
     }
 

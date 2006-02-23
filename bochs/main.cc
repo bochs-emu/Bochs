@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.316 2006-02-23 18:23:30 sshwarts Exp $
+// $Id: main.cc,v 1.317 2006-02-23 22:48:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -787,7 +787,7 @@ int bx_begin_simulation (int argc, char *argv[])
   {
     bx_init_hardware();
 
-    if (bx_options.load32bitOSImage.OwhichOS->get()) {
+    if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
       void bx_load32bitOSimagehack(void);
       bx_load32bitOSimagehack();
     }
