@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.315 2006-02-22 19:18:28 vruppert Exp $
+// $Id: main.cc,v 1.316 2006-02-23 18:23:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -868,7 +868,10 @@ int bx_init_hardware()
   BX_INFO(("  fpu support: %s",BX_SUPPORT_FPU?"yes":"no"));
   BX_INFO(("  paging support: %s, tlb enabled: %s",BX_SUPPORT_PAGING?"yes":"no",BX_USE_TLB?"yes":"no"));
   BX_INFO(("  mmx support: %s",BX_SUPPORT_MMX?"yes":"no"));
-  BX_INFO(("  sse support: %s",BX_SUPPORT_SSE==2?"2":BX_SUPPORT_SSE==1?"1":"no"));
+  if (BX_SUPPORT_SSE == 0)
+    BX_INFO(("  sse support: no"));
+  else
+    BX_INFO(("  sse support: %d",BX_SUPPORT_SSE));
   BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
   BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));

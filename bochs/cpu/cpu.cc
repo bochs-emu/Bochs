@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.131 2006-02-14 20:03:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.132 2006-02-23 18:23:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,9 +122,7 @@ static unsigned iCacheMisses=0;
 
 void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 {
-  unsigned ret;
   bxInstruction_c iStorage BX_CPP_AlignN(32);
-  bxInstruction_c *i = &iStorage;
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
@@ -205,86 +203,8 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-#if BX_SUPPORT_ICACHE
-  Bit32u pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
-  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
-  bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
-  i = &(cache_entry->i);
-
-  Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-
-#if BX_SUPPORT_ICACHE
-  InstrICache_Increment(iCacheLookups);
-  InstrICache_Stats();
-#endif
-
-  if ((cache_entry->pAddr == pAddr) &&
-      (cache_entry->writeStamp == pageWriteStamp))
-  {
-    // iCache hit. Instruction is already decoded and stored in the
-    // instruction cache.
-
-#if BX_INSTRUMENTATION
-    // An instruction was found in the iCache.
-    BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
-       i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
-#endif
-  }
-  else
-#endif
-  {
-    // iCache miss. No validated instruction with matching fetch parameters
-    // is in the iCache. Or we're not compiling iCache support in, in which
-    // case we always have an iCache miss.  :^)
-    bx_address remainingInPage;
-    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-    unsigned maxFetch = 15;
-    if (remainingInPage < 15) maxFetch = remainingInPage;
-    Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-
-#if BX_SUPPORT_ICACHE
-    // The entry will be marked valid if fetchdecode will succeed
-    cache_entry->writeStamp = ICacheWriteStampInvalid;
-    InstrICache_Increment(iCacheMisses);
-#endif
-
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, i, maxFetch);
-    else
-#endif
-      ret = fetchDecode(fetchPtr, i, maxFetch);
-
-    if (ret==0) {
-#if BX_SUPPORT_ICACHE
-      i = &iStorage;	// Leave entry invalid
-#endif
-      boundaryFetch(fetchPtr, remainingInPage, i);
-    }
-    else
-    {
-#if BX_SUPPORT_ICACHE
-      // In the case where the page is marked ICacheWriteStampInvalid, all
-      // counter bits will be high, being eqivalent to ICacheWriteStampMax.
-      // In the case where the page is marked as possibly having associated
-      // iCache entries, we need to leave the counter as-is, unless we're
-      // willing to dump all iCache entries which can hash to this page.
-      // Therefore, in either case, we can keep the counter as-is and
-      // replace the fetch mode bits.
-      Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
-      pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
-      pageWriteStamp |= fetchModeMask;         // Add in new ones.
-      pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
-      cache_entry->pAddr = pAddr;
-      cache_entry->writeStamp = pageWriteStamp;
-#endif
-#if BX_INSTRUMENTATION
-      // An instruction was either fetched, or found in the iCache.
-      BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
-#endif
-    }
-  }
+  // fetch and decode next instruction
+  bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
 
   bx_address next_RIP = RIP + i->ilen();
   if (! Is64BitMode()) {
@@ -495,6 +415,93 @@ debugger_check:
 #endif
 
   }  // while (1)
+}
+
+bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_address eipBiased)
+{
+  unsigned ret;
+  bxInstruction_c *i = iStorage;
+
+#if BX_SUPPORT_ICACHE
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
+  bxICacheEntry_c *cache_entry = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
+  i = &(cache_entry->i);
+
+  Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+
+  InstrICache_Increment(iCacheLookups);
+  InstrICache_Stats();
+
+  if ((cache_entry->pAddr == pAddr) &&
+      (cache_entry->writeStamp == pageWriteStamp))
+  {
+    // iCache hit. Instruction is already decoded and stored in the
+    // instruction cache.
+
+#if BX_INSTRUMENTATION
+    // An instruction was found in the iCache.
+    BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
+       i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+#endif
+  }
+  else
+#endif
+  {
+    // iCache miss. No validated instruction with matching fetch parameters
+    // is in the iCache. Or we're not compiling iCache support in, in which
+    // case we always have an iCache miss.  :^)
+    bx_address remainingInPage;
+    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+    unsigned maxFetch = 15;
+    if (remainingInPage < 15) maxFetch = remainingInPage;
+    Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+#if BX_SUPPORT_ICACHE
+    // The entry will be marked valid if fetchdecode will succeed
+    cache_entry->writeStamp = ICacheWriteStampInvalid;
+    InstrICache_Increment(iCacheMisses);
+#endif
+
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+      ret = fetchDecode64(fetchPtr, i, maxFetch);
+    else
+#endif
+      ret = fetchDecode(fetchPtr, i, maxFetch);
+
+    if (ret==0) {
+#if BX_SUPPORT_ICACHE
+      i = iStorage;	// Leave entry invalid
+#endif
+      boundaryFetch(fetchPtr, remainingInPage, i);
+    }
+    else
+    {
+#if BX_SUPPORT_ICACHE
+      // In the case where the page is marked ICacheWriteStampInvalid, all
+      // counter bits will be high, being eqivalent to ICacheWriteStampMax.
+      // In the case where the page is marked as possibly having associated
+      // iCache entries, we need to leave the counter as-is, unless we're
+      // willing to dump all iCache entries which can hash to this page.
+      // Therefore, in either case, we can keep the counter as-is and
+      // replace the fetch mode bits.
+      Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
+      pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
+      pageWriteStamp |= fetchModeMask;         // Add in new ones.
+      pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
+      cache_entry->pAddr = pAddr;
+      cache_entry->writeStamp = pageWriteStamp;
+#endif
+#if BX_INSTRUMENTATION
+      // An instruction was either fetched, or found in the iCache.
+      BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
+           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+#endif
+    }
+  }
+
+  return i;
 }
 
 unsigned BX_CPU_C::handleAsyncEvent(void)
@@ -727,8 +734,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
 void BX_CPU_C::prefetch(void)
 {
+  bx_phy_address pAddr;
+
   // prefetch QSIZE byte quantity aligned on corresponding boundary
-  Bit32u pAddr;
   bx_address laddrPageOffset0, eipPageOffset0;
 
   bx_address temp_rip = RIP;
