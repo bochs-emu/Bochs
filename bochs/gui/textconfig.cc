@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.39 2006-02-22 19:18:28 vruppert Exp $
+// $Id: textconfig.cc,v 1.40 2006-02-24 22:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -316,19 +316,21 @@ static char *runtime_menu_prompt =
 #ifndef WIN32
 void build_runtime_options_prompt (char *format, char *buf, int size)
 {
-  bx_floppy_options floppyop;
   bx_atadevice_options cdromop;
-/*  bx_param_num_c *ips = SIM->get_param_num (BXP_IPS); */
   char buffer[6][128];
+  char devtype[80], path[80], type[80], status[80];
   for (int i=0; i<2; i++) {
-    SIM->get_floppy_options (i, &floppyop);
-    if (floppyop.Odevtype->get () == BX_FLOPPY_NONE)
-      strcpy (buffer[i], "(not present)");
+    sprintf(devtype, "floppy.%d.devtype", i);
+    sprintf(path, "floppy.%d.path", i);
+    sprintf(type, "floppy.%d.type", i);
+    sprintf(status, "floppy.%d.status", i);
+    if (SIM->get_param_enum(devtype)->get() == BX_FLOPPY_NONE)
+      strcpy(buffer[i], "(not present)");
     else {
-      sprintf (buffer[i], "%s, size=%s, %s", floppyop.Opath->getptr (),
-        SIM->get_floppy_type_name (floppyop.Otype->get ()),
-        (floppyop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
-      if (!floppyop.Opath->getptr ()[0]) strcpy (buffer[i], "none");
+      sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string(path)->getptr(),
+        SIM->get_param_enum(type)->get_selected(),
+        SIM->get_param_enum(status)->get_selected());
+      if (!SIM->get_param_string(path)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }
 
@@ -505,7 +507,6 @@ int bx_config_interface (int menu)
      }
      break;
    case BX_CI_RUNTIME:
-     bx_floppy_options floppyop;
      bx_atadevice_options cdromop;
 #ifdef WIN32
      choice = RuntimeOptionsDialog();
@@ -516,12 +517,10 @@ int bx_config_interface (int menu)
 #endif
      switch (choice) {
        case BX_CI_RT_FLOPPYA: 
-         SIM->get_floppy_options (0, &floppyop);
-         if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYA);
+         if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYA, NULL);
          break;
        case BX_CI_RT_FLOPPYB:
-         SIM->get_floppy_options (1, &floppyop);
-         if (floppyop.Odevtype->get () != BX_FLOPPY_NONE) do_menu (BXP_FLOPPYB);
+         if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYB, NULL);
          break;
        case BX_CI_RT_CDROM1:
        case BX_CI_RT_CDROM2:

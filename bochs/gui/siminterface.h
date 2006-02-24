@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.164 2006-02-24 12:05:24 vruppert Exp $
+// $Id: siminterface.h,v 1.165 2006-02-24 22:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -176,6 +176,16 @@ typedef enum {
 #define BXPN_LOAD32BITOS_PATH            "boot_params.load32bitos.path"
 #define BXPN_LOAD32BITOS_IOLOG           "boot_params.load32bitos.iolog"
 #define BXPN_LOAD32BITOS_INITRD          "boot_params.load32bitos.initrd"
+#define BXPN_FLOPPYA                     "floppy.0"
+#define BXPN_FLOPPYA_DEVTYPE             "floppy.0.devtype"
+#define BXPN_FLOPPYA_PATH                "floppy.0.path"
+#define BXPN_FLOPPYA_TYPE                "floppy.0.type"
+#define BXPN_FLOPPYA_STATUS              "floppy.0.status"
+#define BXPN_FLOPPYB                     "floppy.1"
+#define BXPN_FLOPPYB_DEVTYPE             "floppy.1.devtype"
+#define BXPN_FLOPPYB_PATH                "floppy.1.path"
+#define BXPN_FLOPPYB_TYPE                "floppy.1.type"
+#define BXPN_FLOPPYB_STATUS              "floppy.1.status"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -185,16 +195,6 @@ typedef enum {
 typedef enum {
   BXP_NULL = 301,
   BXP_TEXT_SNAPSHOT_CHECK,
-  BXP_FLOPPYA_DEVTYPE,
-  BXP_FLOPPYA_PATH,
-  BXP_FLOPPYA_TYPE,
-  BXP_FLOPPYA_STATUS,
-  BXP_FLOPPYA,
-  BXP_FLOPPYB_DEVTYPE,
-  BXP_FLOPPYB_PATH,
-  BXP_FLOPPYB_TYPE,
-  BXP_FLOPPYB_STATUS,
-  BXP_FLOPPYB,
 
   BXP_ATA0_MENU,
   BXP_ATA1_MENU,
@@ -1469,9 +1469,7 @@ public:
   virtual int set_log_prefix(char *prefix) {return -1;}
   virtual int get_debugger_log_file(char *path, int len) {return -1;}
   virtual int set_debugger_log_file(char *path) {return -1;}
-  virtual int get_floppy_options(int drive, bx_floppy_options *out) {return -1;}
   virtual int get_cdrom_options(int drive, bx_atadevice_options *out, int *where = NULL) {return -1;}
-  virtual char *get_floppy_type_name(int type) {return NULL;}
 
   // The CI calls set_notify_callback to register its event handler function.
   // This event handler function is called whenever the simulator needs to

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.119 2006-02-24 12:05:24 vruppert Exp $
+// $Id: siminterface.cc,v 1.120 2006-02-24 22:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -90,9 +90,7 @@ public:
   virtual int set_log_prefix (char *prefix);
   virtual int get_debugger_log_file (char *path, int len);
   virtual int set_debugger_log_file (char *path);
-  virtual int get_floppy_options (int drive, bx_floppy_options *out);
   virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
-  virtual char *get_floppy_type_name (int type);
   virtual void set_notify_callback (bxevent_handler func, void *arg);
   virtual void get_notify_callback (bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
@@ -536,13 +534,6 @@ bx_real_sim_c::set_debugger_log_file (char *path)
 }
 
 int 
-bx_real_sim_c::get_floppy_options (int drive, bx_floppy_options *out)
-{
-  *out = (drive==0)? bx_options.floppya : bx_options.floppyb;
-  return 0;
-}
-
-int 
 bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -590,15 +581,6 @@ int n_atadevice_translation_names = 5;
 char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
 int clock_sync_n_names=4;
 
-
-
-char *
-bx_real_sim_c::get_floppy_type_name (int type)
-{
-  BX_ASSERT (type >= BX_FLOPPY_NONE && type <= BX_FLOPPY_LAST);
-  type -= BX_FLOPPY_NONE;
-  return floppy_type_names[type];
-}
 
 void 
 bx_real_sim_c::set_notify_callback (bxevent_handler func, void *arg)
@@ -1407,22 +1389,22 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
 }
 
 int 
-bx_param_enum_c::find_by_name (const char *string)
+bx_param_enum_c::find_by_name(const char *string)
 {
   char **p;
   for (p=&choices[0]; *p; p++) {
-    if (!strcmp (string, *p))
+    if (!strcmp(string, *p))
       return p-choices;
   }
   return -1;
 }
 
 bool 
-bx_param_enum_c::set_by_name (const char *string)
+bx_param_enum_c::set_by_name(const char *string)
 {
-  int n = find_by_name (string);
+  int n = find_by_name(string);
   if (n<0) return false;
-  set (n);
+  set(n + min);
   return true;
 }
 

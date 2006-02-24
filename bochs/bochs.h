@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.180 2006-02-23 22:48:56 vruppert Exp $
+// $Id: bochs.h,v 1.181 2006-02-24 22:35:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -522,17 +522,15 @@ typedef struct {
 #define BX_N_PCI_SLOTS 5
 
 typedef struct BOCHSAPI {
-  bx_floppy_options floppya;
-  bx_floppy_options floppyb;
   bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
   bx_atadevice_options  atadevice[BX_MAX_ATA_CHANNEL][2];
   bx_serial_options com[BX_N_SERIAL_PORTS];
+  bx_parport_options par[BX_N_PARALLEL_PORTS];
   bx_usb_options    usb[BX_N_USB_HUBS];
+  bx_ne2k_options   ne2k;
   bx_pnic_options   pnic;
-  bx_parport_options par[BX_N_PARALLEL_PORTS]; // parallel ports
   bx_sb16_options   sb16;
   bx_param_bool_c   *Otext_snapshot_check;
-  bx_ne2k_options   ne2k;
   bx_log_options    log;
   bx_gdbstub_t      gdbstub;
 } bx_options_t;

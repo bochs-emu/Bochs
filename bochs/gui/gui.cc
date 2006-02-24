@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.90 2006-02-22 19:18:28 vruppert Exp $
+// $Id: gui.cc,v 1.91 2006-02-24 22:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -234,12 +234,12 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 
 void
 bx_gui_c::update_drive_status_buttons (void) {
-  BX_GUI_THIS floppyA_status = 
+  BX_GUI_THIS floppyA_status =
     DEV_floppy_get_media_status(0)
-    && bx_options.floppya.Ostatus->get ();
-  BX_GUI_THIS floppyB_status = 
-      DEV_floppy_get_media_status(1)
-      && bx_options.floppyb.Ostatus->get ();
+    && (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
+  BX_GUI_THIS floppyB_status =
+    DEV_floppy_get_media_status(1)
+    && (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
   Bit32u handle = DEV_hd_get_first_cd_handle();
   BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
   if (BX_GUI_THIS floppyA_status)
@@ -248,7 +248,7 @@ bx_gui_c::update_drive_status_buttons (void) {
 #if BX_WITH_MACOS
     // If we are using the Mac floppy driver, eject the disk
     // from the floppy drive.  This doesn't work in MacOS X.
-    if (!strcmp(bx_options.floppya.Opath->getptr (), SuperDrive))
+    if (!strcmp(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr(), SuperDrive))
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_eject_bmap_id);
@@ -259,7 +259,7 @@ bx_gui_c::update_drive_status_buttons (void) {
 #if BX_WITH_MACOS
     // If we are using the Mac floppy driver, eject the disk
     // from the floppy drive.  This doesn't work in MacOS X.
-    if (!strcmp(bx_options.floppyb.Opath->getptr (), SuperDrive))
+    if (!strcmp(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr(), SuperDrive))
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
@@ -274,39 +274,39 @@ bx_gui_c::update_drive_status_buttons (void) {
   void
 bx_gui_c::floppyA_handler(void)
 {
-  if (bx_options.floppya.Odevtype->get() == BX_FLOPPY_NONE)
+  if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FLOPPY_NONE)
     return; // no primary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up
     // a dialog asking what disk image you want to switch to.
-    int ret = SIM->ask_param (BXP_FLOPPYA_PATH);
+    int ret = SIM->ask_param(BXPN_FLOPPYA_PATH);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons ();
+      BX_GUI_THIS update_drive_status_buttons();
     }
     return;
   }
   BX_GUI_THIS floppyA_status = !BX_GUI_THIS floppyA_status;
   DEV_floppy_set_media_status(0, BX_GUI_THIS floppyA_status);
-  BX_GUI_THIS update_drive_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons();
 }
 
   void
 bx_gui_c::floppyB_handler(void)
 {
-  if (bx_options.floppyb.Odevtype->get() == BX_FLOPPY_NONE)
+  if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FLOPPY_NONE)
     return; // no secondary floppy device present
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_FLOPPY) {
     // instead of just toggling the status, call win32dialog to bring up
     // a dialog asking what disk image you want to switch to.
-    int ret = SIM->ask_param (BXP_FLOPPYB_PATH);
+    int ret = SIM->ask_param(BXPN_FLOPPYB_PATH);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons ();
+      BX_GUI_THIS update_drive_status_buttons();
     }
     return;
   }
   BX_GUI_THIS floppyB_status = !BX_GUI_THIS floppyB_status;
   DEV_floppy_set_media_status(1, BX_GUI_THIS floppyB_status);
-  BX_GUI_THIS update_drive_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons();
 }
 
   void

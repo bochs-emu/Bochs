@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.118 2006-02-23 22:48:57 vruppert Exp $
+// $Id: wxmain.cc,v 1.119 2006-02-24 22:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -625,7 +625,7 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 {
   int bootDevices = 0;
-  bx_param_enum_c *floppy = SIM->get_param_enum(BXP_FLOPPYA_DEVTYPE);
+  bx_param_enum_c *floppy = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE);
   if (floppy->get() != BX_FLOPPY_NONE) {
     bootDevices++;
   }
@@ -945,9 +945,9 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.
   bx_param_c *param;
-  param = SIM->get_param(BXP_FLOPPYA);
+  param = SIM->get_param(BXPN_FLOPPYA);
   menuEdit->Enable(ID_Edit_FD_0, canConfigure || param->get_enabled());
-  param = SIM->get_param(BXP_FLOPPYB);
+  param = SIM->get_param(BXPN_FLOPPYB);
   menuEdit->Enable(ID_Edit_FD_1, canConfigure || param->get_enabled());
 }
 
@@ -1221,58 +1221,58 @@ MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
   return true;
 }
 
-void MyFrame::editFloppyConfig (int drive)
+void MyFrame::editFloppyConfig(int drive)
 {
-  FloppyConfigDialog dlg (this, -1);
-  dlg.SetDriveName (wxString (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME));
-  dlg.SetCapacityChoices (n_floppy_type_names, floppy_type_names);
-  bx_list_c *list = (bx_list_c*) SIM->get_param ((drive==0)? BXP_FLOPPYA : BXP_FLOPPYB);
+  FloppyConfigDialog dlg(this, -1);
+  dlg.SetDriveName(wxString (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME));
+  dlg.SetCapacityChoices(n_floppy_type_names, floppy_type_names);
+  bx_list_c *list = (bx_list_c*) SIM->get_param((drive==0)? BXPN_FLOPPYA : BXPN_FLOPPYB);
   if (!list) { wxLogError ("floppy object param is null"); return; }
-  bx_param_filename_c *fname = (bx_param_filename_c*) list->get(0);
-  bx_param_enum_c *disktype = (bx_param_enum_c *) list->get(1);
-  bx_param_enum_c *status = (bx_param_enum_c *) list->get(2);
-  if (fname->get_type () != BXT_PARAM_STRING
-      || disktype->get_type () != BXT_PARAM_ENUM 
+  bx_param_filename_c *fname = (bx_param_filename_c*) list->get_by_name("path");
+  bx_param_enum_c *disktype = (bx_param_enum_c *) list->get_by_name("type");
+  bx_param_enum_c *status = (bx_param_enum_c *) list->get_by_name("status");
+  if (fname->get_type() != BXT_PARAM_STRING
+      || disktype->get_type() != BXT_PARAM_ENUM 
       || status->get_type() != BXT_PARAM_ENUM) {
     wxLogError ("floppy params have wrong type");
     return;
   }
   if (sim_thread == NULL) {
-    dlg.AddRadio ("Not Present", "");
+    dlg.AddRadio("Not Present", "");
   }
-  dlg.AddRadio ("Ejected", "none");
+  dlg.AddRadio("Ejected", "none");
 #if defined(__linux__)
-  dlg.AddRadio ("Physical floppy drive /dev/fd0", "/dev/fd0");
-  dlg.AddRadio ("Physical floppy drive /dev/fd1", "/dev/fd1");
+  dlg.AddRadio("Physical floppy drive /dev/fd0", "/dev/fd0");
+  dlg.AddRadio("Physical floppy drive /dev/fd1", "/dev/fd1");
 #elif defined(WIN32)
-  dlg.AddRadio ("Physical floppy drive A:", "A:");
-  dlg.AddRadio ("Physical floppy drive B:", "B:");
+  dlg.AddRadio("Physical floppy drive A:", "A:");
+  dlg.AddRadio("Physical floppy drive B:", "B:");
 #else
   // add your favorite operating system here
 #endif
-  dlg.SetCapacity (disktype->get () - disktype->get_min ());
-  dlg.SetFilename (fname->getptr ());
+  dlg.SetCapacity(disktype->get() - disktype->get_min());
+  dlg.SetFilename(fname->getptr());
   dlg.SetValidateFunc (editFloppyValidate);
   if (disktype->get() == BX_FLOPPY_NONE) {
     dlg.SetRadio(0);
-  } else if ((status->get() == BX_EJECTED) || (!strcmp("none", fname->getptr ()))) {
+  } else if ((status->get() == BX_EJECTED) || (!strcmp("none", fname->getptr()))) {
     dlg.SetRadio((sim_thread == NULL)?1:0);
   } else {
     // otherwise the SetFilename() should have done the right thing.
   }
-  int n = dlg.ShowModal ();
+  int n = dlg.ShowModal();
   wxLogMessage ("floppy config returned %d", n);
   if (n==wxID_OK) {
     char filename[1024];
-    wxString fn (dlg.GetFilename ());
-    strncpy (filename, fn.c_str (), sizeof(filename));
-    wxLogMessage ("filename is '%s'", filename);
-    wxLogMessage ("capacity = %d (%s)", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
-    fname->set (filename);
-    disktype->set (disktype->get_min () + dlg.GetCapacity ());
+    wxString fn(dlg.GetFilename());
+    strncpy(filename, fn.c_str(), sizeof(filename));
+    wxLogMessage("filename is '%s'", filename);
+    wxLogMessage("capacity = %d (%s)", dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity ()]);
+    fname->set(filename);
+    disktype->set(disktype->get_min() + dlg.GetCapacity());
     if (sim_thread == NULL) {
       if (dlg.GetRadio() == 0) {
-        disktype->set (BX_FLOPPY_NONE);
+        disktype->set(BX_FLOPPY_NONE);
       }
     } else {
       if (dlg.GetRadio() > 0) {
