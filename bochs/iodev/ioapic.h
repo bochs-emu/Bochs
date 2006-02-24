@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.15 2006-01-10 06:13:26 sshwarts Exp $
+// $Id: ioapic.h,v 1.16 2006-02-24 09:46:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 extern class bx_ioapic_c bx_ioapic;
@@ -15,26 +15,36 @@ class bx_io_redirect_entry_t {
 public:
   bx_io_redirect_entry_t(): hi(0), lo(0x10000) {}
 
-  Bit32u get_even_word () const { return lo; }
-  Bit32u get_odd_word () const  { return hi; }
-  void set_even_word (Bit32u even) {
-    // keep high 32 bits of value, replace low 32
-    lo = even; 
-    parse_value ();
+  Bit8u destination() const { return (Bit8u)((hi >> 24) & APIC_ID_MASK); }
+  bx_bool is_masked() const { return (bx_bool)((lo >> 16) & 1); }
+  Bit8u trigger_mode() const { return (Bit8u)((lo >> 15) & 1); }
+  bx_bool remote_irr() const { return (bx_bool)((lo >> 14) & 1); }
+  Bit8u pin_polarity() const { return (Bit8u)((lo >> 13) & 1); }
+  bx_bool delivery_status() const { return (bx_bool)((lo >> 12) & 1); }
+  Bit8u destination_mode() const { return (Bit8u)((lo >> 11) & 1); }
+  Bit8u delivery_mode() const { return (Bit8u)((lo >> 8) & 7); }
+  Bit8u vector() const { return (Bit8u)(lo & 0xff); }
+
+  void set_delivery_status() { lo |= (1<<12); }
+  void clear_delivery_status() { lo &= ~(1<<12); }
+  void set_remote_irr() { lo |= (1<<14); }
+  void clear_remote_irr() { lo &= ~(1<<14); }
+  
+  Bit32u get_lo_part () const { return lo; }
+  Bit32u get_hi_part () const  { return hi; }
+  void set_lo_part (Bit32u val_lo_part) {
+    // keep high 32 bits of value, replace low 32, ignore R/O bits
+    lo = val_lo_part & 0xffffafff;
   }
-  void set_odd_word (Bit32u odd) { 
+  void set_hi_part (Bit32u val_hi_part) { 
     // keep low 32 bits of value, replace high 32
-    hi = odd; 
-    parse_value ();
+    hi = val_hi_part;
   }
-  void parse_value ();
   void sprintf_self (char *buf);
-  // parse_value sets the value and all the fields below.  Do not change
-  // these fields except by calling parse_value.
-  Bit8u dest, masked, trig_mode, remote_irr, polarity, delivery_status, dest_mode, delivery_mode, vector;
 };
 
-class bx_ioapic_c : public bx_generic_apic_c {
+class bx_ioapic_c : public bx_generic_apic_c
+{
   Bit32u ioregsel;    // selects between various registers
   Bit32u intin;
   // interrupt request bitmask, not visible from the outside.  Bits in the
@@ -48,12 +58,12 @@ public:
   bx_io_redirect_entry_t ioredtbl[BX_IOAPIC_NUM_PINS];  // table of redirections
   bx_ioapic_c ();
   ~bx_ioapic_c ();
-  virtual void init ();
-  virtual void reset (unsigned type);
+  virtual void init();
+  virtual void reset(unsigned type) {}
   virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
   virtual void write(Bit32u address, Bit32u *value, unsigned len);
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);
-  void service_ioapic ();
-  virtual bx_apic_type_t get_type () { return APIC_TYPE_IOAPIC; }
+  void service_ioapic();
+  virtual bx_apic_type_t get_type() { return APIC_TYPE_IOAPIC; }
 };
