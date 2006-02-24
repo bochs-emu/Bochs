@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.82 2006-02-23 22:48:56 vruppert Exp $
+// $Id: config.cc,v 1.83 2006-02-24 12:05:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -57,7 +57,7 @@ static int get_floppy_type_from_image(const char *filename);
 static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
-  char *pname = param->get_name();
+  char pname[BX_PATHNAME_LEN];
 
   switch (id) {
     case BXP_ATA0_MASTER_STATUS:
@@ -176,7 +176,8 @@ static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
         }
       break;
     default:
-      if (!strcmp(pname, "which")) { // FIXME: check full param path
+      param->get_param_path(pname, BX_PATHNAME_LEN);
+      if (!strcmp(pname, BXPN_LOAD32BITOS_WHICH)) {
         if (set) {
           int enable = (val != Load32bitOSNone);
           SIM->get_param(BXPN_LOAD32BITOS_PATH)->set_enabled(enable);
@@ -194,7 +195,7 @@ static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
 char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
 {
   bx_id id = param->get_id();
-  char *pname = param->get_name();
+  char pname[BX_PATHNAME_LEN];
 
   int empty = 0;
   if ((strlen(val) < 1) || !strcmp ("none", val)) {
@@ -292,7 +293,8 @@ char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int
       break;
     
     default:
-      if (!strcmp(pname, "screenmode")) { // FIXME: check full param path
+      param->get_param_path(pname, BX_PATHNAME_LEN);
+      if (!strcmp(pname, BXPN_SCREENMODE)) {
         if (set==1) {
           BX_INFO (("Screen mode changed to %s", val));
         }
@@ -1018,7 +1020,7 @@ void bx_init_options()
   i440fx_support->set_dependent_list(new bx_list_c(BXP_NULL, "", "", pci_deps_list));
   pci->get_options()->set(bx_list_c::SHOW_PARENT);
   slot->get_options()->set(bx_list_c::SHOW_PARENT);
-  pcidev->get_options()->set(bx_list_c::SHOW_PARENT);
+  pcidev->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
 
   // display subtree
   bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 8);
@@ -3129,17 +3131,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: keyboard_type directive: wrong # args.", context));
     }
-    if (!strcmp(params[1],"xt")) {
-      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_XT_TYPE);
-    }
-    else if (!strcmp(params[1],"at")) {
-      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_AT_TYPE);
-    }
-    else if (!strcmp(params[1],"mf")) {
-      SIM->get_param_enum(BXPN_KBD_TYPE)->set(BX_KBD_MF_TYPE);
-    }
-    else {
-      PARSE_ERR(("%s: keyboard_type directive: wrong arg %s.", context,params[1]));
+    if (!SIM->get_param_enum(BXPN_KBD_TYPE)->set_by_name(params[1])) {
+      PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
     }
   }
 
@@ -3505,8 +3498,7 @@ int bx_write_log_options (FILE *fp, bx_log_options *opt)
 
 int bx_write_keyboard_options(FILE *fp)
 {
-  fprintf(fp, "keyboard_type: %s\n", SIM->get_param_enum(BXPN_KBD_TYPE)->get()==BX_KBD_XT_TYPE?"xt":
-                                     SIM->get_param_enum(BXPN_KBD_TYPE)->get()==BX_KBD_AT_TYPE?"at":"mf");
+  fprintf(fp, "keyboard_type: %s\n", SIM->get_param_enum(BXPN_KBD_TYPE)->get_selected());
   fprintf(fp, "keyboard_serial_delay: %u\n", SIM->get_param_num(BXPN_KBD_SERIAL_DELAY)->get());
   fprintf(fp, "keyboard_paste_delay: %u\n", SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get());
   fprintf(fp, "keyboard_mapping: enabled=%d, map=%s\n",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.163 2006-02-23 22:48:57 vruppert Exp $
+// $Id: siminterface.h,v 1.164 2006-02-24 12:05:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -887,6 +887,7 @@ protected:
 public:
   bx_param_c(bx_id id, char *name, char *description);
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
+  int get_param_path(char *path_out, int maxlen);
   void set_format(const char *format) {text_format = format;}
   const char *get_format() {return text_format;}
   void set_long_format(const char *format) {long_text_format = format;}

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.118 2006-02-22 19:18:28 vruppert Exp $
+// $Id: siminterface.cc,v 1.119 2006-02-24 12:05:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -948,6 +948,22 @@ bx_param_c::bx_param_c (bx_id id, char *name, char *description)
   this->enabled = 1;
   this->parent = NULL;
   SIM->register_param (id, this);
+}
+
+int bx_param_c::get_param_path(char *path_out, int maxlen)
+{
+  if ((get_parent() == NULL) || (get_parent() == root_param)) {
+    // Start with an empty string.
+    // Never print the name of the root param.
+    path_out[0] = 0;
+  } else {
+    // build path of the parent, add a period, add path of this node
+    if (get_parent()->get_param_path(path_out, maxlen) > 0) {
+      strncat(path_out, ".", maxlen);
+    }
+  }
+  strncat(path_out, name, maxlen);
+  return strlen(path_out);
 }
 
 const char* bx_param_c::set_default_format (const char *f) {
