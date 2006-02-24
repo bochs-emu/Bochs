@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.73 2006-02-18 16:53:17 vruppert Exp $
+// $Id: exception.cc,v 1.74 2006-02-24 09:49:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -862,6 +862,13 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     bx_guard.special_unwind_stack = true;
 #endif
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+  }
+
+  if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
+  {
+    if (vector != BX_PF_EXCEPTION) {
+       BX_ERROR(("exception(): except_chk is ON not for #PF !"));
+    }
   }
 
   // note: fault-class exceptions _except_ #DB set RF in
