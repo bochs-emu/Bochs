@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.9 2005-08-01 21:40:14 sshwarts Exp $
+// $Id: descriptor.h,v 1.10 2006-02-26 21:44:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,12 +44,13 @@ typedef struct { /* bx_selector_t */
 
 typedef struct
 {
-  bx_bool valid;         // Holds above values, Or'd together.  Used to
-                         // hold only 0 or 1.
 
 #define SegValidCache (0x1)
 #define SegAccessROK  (0x2)
 #define SegAccessWOK  (0x4)
+
+  unsigned valid;        // Holds above values, Or'd together.  Used to
+                         // hold only 0 or 1.
 
   bx_bool p;             /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */
