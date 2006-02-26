@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.119 2006-02-24 22:35:46 vruppert Exp $
+// $Id: wxmain.cc,v 1.120 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -892,6 +892,9 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 
 // update the menu items, status bar, etc.
 void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
+  char ata_name[20];
+  bx_list_c *base;
+
   switch (change) {
     case Start:  // running
       wxLogStatus ("Starting Bochs simulation");
@@ -926,12 +929,19 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuConfiguration->Enable (ID_Config_Read, canConfigure);
   // only enabled ATA channels with a cdrom connected are available at runtime
   for (unsigned i=0; i<4; i++) {
-    if (!SIM->get_param_bool((bx_id)(BXP_ATA0_PRESENT+i))->get ()) {
+    sprintf(ata_name, "ata.%d.resources", i);
+    base = (bx_list_c*) SIM->get_param(ata_name);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
       menuEdit->Enable (ID_Edit_ATA0+i, canConfigure);
     } else {
-      if ( (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE+i*2))->get () != BX_ATA_DEVICE_CDROM) &&
-           (SIM->get_param_num((bx_id)(BXP_ATA0_SLAVE_TYPE+i*2))->get () != BX_ATA_DEVICE_CDROM) ) {
-        menuEdit->Enable (ID_Edit_ATA0+i, canConfigure);
+    sprintf(ata_name, "ata.%d.master", i);
+    base = (bx_list_c*) SIM->get_param(ata_name);
+      if (SIM->get_param_enum("type", base)->get () != BX_ATA_DEVICE_CDROM) {
+        sprintf(ata_name, "ata.%d.slave", i);
+        base = (bx_list_c*) SIM->get_param(ata_name);
+        if (SIM->get_param_enum("type", base)->get () != BX_ATA_DEVICE_CDROM) {
+          menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);
+        }
       }
     }
   }
@@ -1297,17 +1307,18 @@ void MyFrame::editFirstCdrom ()
   dlg.ShowModal ();
 }
 
-void MyFrame::OnEditATA (wxCommandEvent& event)
+void MyFrame::OnEditATA(wxCommandEvent& event)
 {
   int id = event.GetId ();
   int channel = id - ID_Edit_ATA0;
-  ParamDialog dlg (this, -1);
-  wxString str;
-  str.Printf ("Configure ATA%d", channel);
-  dlg.SetTitle (str);
-  dlg.SetRuntimeFlag (sim_thread != NULL);
-  dlg.AddParam (SIM->get_param ((bx_id)(BXP_ATA0_MENU+channel)));
-  dlg.ShowModal ();
+  char ata_name[10];
+  sprintf(ata_name, "ata.%d", channel);
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param(ata_name);
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnToolbarClick(wxCommandEvent& event)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.84 2006-02-24 22:35:45 vruppert Exp $
+// $Id: config.cc,v 1.85 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,288 +54,254 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 static int parse_bochsrc(char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
-static Bit64s bx_param_handler (bx_param_c *param, int set, Bit64s val)
+static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
 {
-  bx_id id = param->get_id ();
   char pname[BX_PATHNAME_LEN];
+  Bit8u channel, device;
 
-  switch (id) {
-    case BXP_ATA0_MASTER_STATUS:
-    case BXP_ATA0_SLAVE_STATUS:
-    case BXP_ATA1_MASTER_STATUS:
-    case BXP_ATA1_SLAVE_STATUS:
-    case BXP_ATA2_MASTER_STATUS:
-    case BXP_ATA2_SLAVE_STATUS:
-    case BXP_ATA3_MASTER_STATUS:
-    case BXP_ATA3_SLAVE_STATUS:
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  base->get_param_path(pname, BX_PATHNAME_LEN);
+  if (!strncmp(pname, "ata.", 4)) {
+    channel = pname[4] - '0';
+    if (!strcmp(base->get_name(), "master")) {
+      device = 0;
+    } else {
+      device = 1;
+    }
+    if (!strcmp(param->get_name(), "status")) {
       if ((set) && (SIM->get_init_done ())) {
-        Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-        Bit32u handle = DEV_hd_get_device_handle (device/2, device%2);
+        Bit32u handle = DEV_hd_get_device_handle(channel, device);
         DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
-        bx_gui->update_drive_status_buttons ();
+        bx_gui->update_drive_status_buttons();
       }
-      break;
-
-    case BXP_ATA0_MASTER_MODE:
-    case BXP_ATA0_SLAVE_MODE:
-    case BXP_ATA1_MASTER_MODE:
-    case BXP_ATA1_SLAVE_MODE:
-    case BXP_ATA2_MASTER_MODE:
-    case BXP_ATA2_SLAVE_MODE:
-    case BXP_ATA3_MASTER_MODE:
-    case BXP_ATA3_SLAVE_MODE:
+    } else if (!strcmp(param->get_name(), "mode")) {
       if (set) {
-        int device = id - BXP_ATA0_MASTER_MODE;
         switch (val) {
           case BX_ATA_MODE_UNDOABLE:
           case BX_ATA_MODE_VOLATILE:
 //        case BX_ATA_MODE_Z_UNDOABLE:
 //        case BX_ATA_MODE_Z_VOLATILE:
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (1);
+            SIM->get_param("journal", base)->set_enabled(1);
             break;
           default:
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (0);
+            SIM->get_param("journal", base)->set_enabled(0);
           }
         }
-      break;
-
-    case BXP_ATA0_MASTER_TYPE:
-    case BXP_ATA0_SLAVE_TYPE:
-    case BXP_ATA1_MASTER_TYPE:
-    case BXP_ATA1_SLAVE_TYPE:
-    case BXP_ATA2_MASTER_TYPE:
-    case BXP_ATA2_SLAVE_TYPE:
-    case BXP_ATA3_MASTER_TYPE:
-    case BXP_ATA3_SLAVE_TYPE:
+    } else if (!strcmp(param->get_name(), "type")) {
       if (set) {
-        int device = id - BXP_ATA0_MASTER_TYPE;
         switch (val) {
           case BX_ATA_DEVICE_DISK:
-            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODE + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
-            //SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_SPT + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_runtime_param (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_runtime_param (0);
+            SIM->get_param_num("present", base)->set(1);
+            SIM->get_param("mode", base)->set_enabled(1);
+            SIM->get_param("path", base)->set_enabled(1);
+            //SIM->get_param("journal", base)->set_enabled(1);
+            SIM->get_param("cylinders", base)->set_enabled(1);
+            SIM->get_param("heads", base)->set_enabled(1);
+            SIM->get_param("spt", base)->set_enabled(1);
+            SIM->get_param("status", base)->set_enabled(0);
+            SIM->get_param("model", base)->set_enabled(1);
+            SIM->get_param("biosdetect", base)->set_enabled(1);
+            SIM->get_param("translation", base)->set_enabled(1);
+            SIM->get_param("path", base)->set_runtime_param(0);
+            SIM->get_param("status", base)->set_runtime_param(0);
             break;
           case BX_ATA_DEVICE_CDROM:
-            SIM->get_param_num ((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->set (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODE + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_JOURNAL + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_CYLINDERS + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_HEADS + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_SPT + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_TRANSLATION + device))->set_enabled (0);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_PATH + device))->set_runtime_param (1);
-            SIM->get_param ((bx_id)(BXP_ATA0_MASTER_STATUS + device))->set_runtime_param (1);
+            SIM->get_param_num("present", base)->set(1);
+            SIM->get_param("mode", base)->set_enabled(0);
+            SIM->get_param("path", base)->set_enabled(1);
+            SIM->get_param("journal", base)->set_enabled(0);
+            SIM->get_param("cylinders", base)->set_enabled(0);
+            SIM->get_param("heads", base)->set_enabled(0);
+            SIM->get_param("spt", base)->set_enabled(0);
+            SIM->get_param("status", base)->set_enabled(1);
+            SIM->get_param("model", base)->set_enabled(1);
+            SIM->get_param("biosdetect", base)->set_enabled(1);
+            SIM->get_param("translation", base)->set_enabled(0);
+            SIM->get_param("path", base)->set_runtime_param(1);
+            SIM->get_param("status", base)->set_runtime_param(1);
             break;
-          }
         }
-      break;
-    default:
-      param->get_param_path(pname, BX_PATHNAME_LEN);
-      if (!strcmp(pname, BXPN_LOAD32BITOS_WHICH)) {
-        if (set) {
-          int enable = (val != Load32bitOSNone);
-          SIM->get_param(BXPN_LOAD32BITOS_PATH)->set_enabled(enable);
-          SIM->get_param(BXPN_LOAD32BITOS_IOLOG)->set_enabled(enable);
-          SIM->get_param(BXPN_LOAD32BITOS_INITRD)->set_enabled(enable);
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYA_TYPE)) {
-        if (set) {
-          if (val == BX_FLOPPY_AUTO) {
-            val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
-            SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(val);
-          } else if (!SIM->get_init_done ()) {
-            SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(val);
-          }
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYB_TYPE)) {
-        if (set) {
-          if (val == BX_FLOPPY_AUTO) {
-            val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr());
-            SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(val);
-          } else if (!SIM->get_init_done ()) {
-            SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(val);
-          }
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
-        if ((set) && (SIM->get_init_done())) {
-          DEV_floppy_set_media_status(0, val == BX_INSERTED);
-          bx_gui->update_drive_status_buttons();
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
-        if ((set) && (SIM->get_init_done())) {
-          DEV_floppy_set_media_status(1, val == BX_INSERTED);
-          bx_gui->update_drive_status_buttons();
-        }
-      } else {
-        BX_PANIC (("bx_param_handler called with unknown id %d", id));
-        return -1;
       }
+    }
+  } else {
+    param->get_param_path(pname, BX_PATHNAME_LEN);
+    if (!strcmp(pname, BXPN_LOAD32BITOS_WHICH)) {
+      if (set) {
+        int enable = (val != Load32bitOSNone);
+        SIM->get_param(BXPN_LOAD32BITOS_PATH)->set_enabled(enable);
+        SIM->get_param(BXPN_LOAD32BITOS_IOLOG)->set_enabled(enable);
+        SIM->get_param(BXPN_LOAD32BITOS_INITRD)->set_enabled(enable);
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYA_TYPE)) {
+      if (set) {
+        if (val == BX_FLOPPY_AUTO) {
+          val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
+          SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(val);
+        } else if (!SIM->get_init_done ()) {
+          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(val);
+        }
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYB_TYPE)) {
+      if (set) {
+        if (val == BX_FLOPPY_AUTO) {
+          val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr());
+          SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(val);
+        } else if (!SIM->get_init_done ()) {
+          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(val);
+        }
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYA_STATUS)) {
+      if ((set) && (SIM->get_init_done())) {
+        DEV_floppy_set_media_status(0, val == BX_INSERTED);
+        bx_gui->update_drive_status_buttons();
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYB_STATUS)) {
+      if ((set) && (SIM->get_init_done())) {
+        DEV_floppy_set_media_status(1, val == BX_INSERTED);
+        bx_gui->update_drive_status_buttons();
+      }
+    } else {
+      BX_PANIC(("bx_param_handler called with unknown parameter '%s'", pname));
+      return -1;
+    }
   }
   return val;
 }
 
-char *bx_param_string_handler (bx_param_string_c *param, int set, char *val, int maxlen)
+char *bx_param_string_handler(bx_param_string_c *param, int set, char *val, int maxlen)
 {
-  bx_id id = param->get_id();
   char pname[BX_PATHNAME_LEN];
+  Bit8u channel, device;
 
   int empty = 0;
   if ((strlen(val) < 1) || !strcmp ("none", val)) {
     empty = 1;
     val = "none";
   }
-  switch (id) {
-    case BXP_ATA0_MASTER_PATH:
-    case BXP_ATA0_SLAVE_PATH:
-    case BXP_ATA1_MASTER_PATH:
-    case BXP_ATA1_SLAVE_PATH:
-    case BXP_ATA2_MASTER_PATH:
-    case BXP_ATA2_SLAVE_PATH:
-    case BXP_ATA3_MASTER_PATH:
-    case BXP_ATA3_SLAVE_PATH:
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  base->get_param_path(pname, BX_PATHNAME_LEN);
+  if (!strncmp(pname, "ata.", 4)) {
+    channel = pname[4] - '0';
+    if (!strcmp(base->get_name(), "master")) {
+      device = 0;
+    } else {
+      device = 1;
+    }
+    if (!strcmp(param->get_name(), "path")) {
       if (set==1) {
         if (SIM->get_init_done ()) {
-
-          Bit8u device = id - BXP_ATA0_MASTER_PATH;
-          Bit32u handle = DEV_hd_get_device_handle(device/2, device%2);
-
+          Bit32u handle = DEV_hd_get_device_handle(channel, device);
           if (empty) {
             DEV_hd_set_cd_media_status(handle, 0);
-            bx_gui->update_drive_status_buttons ();
+            bx_gui->update_drive_status_buttons();
           } else {
-            if (!SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_PRESENT + device))->get ()) {
+            if (!SIM->get_param_num("present", base)->get()) {
               BX_ERROR(("Cannot add a cdrom drive at runtime"));
-              bx_options.atadevice[device/2][device%2].Opresent->set (0);
+              SIM->get_param_num("present", base)->set(0);
             }
-            if (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () != BX_ATA_DEVICE_CDROM) {
+            if (SIM->get_param_num("type", base)->get() != BX_ATA_DEVICE_CDROM) {
               BX_ERROR(("Device is not a cdrom drive"));
-              bx_options.atadevice[device/2][device%2].Opresent->set (0);
+              SIM->get_param_num("present", base)->set(0);
             }
           }
           if (DEV_hd_present() &&
-              (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_STATUS + device))->get () == BX_INSERTED) &&
-              (SIM->get_param_num((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get () == BX_ATA_DEVICE_CDROM)) {
+              (SIM->get_param_num("status", base)->get () == BX_INSERTED) &&
+              (SIM->get_param_num("type", base)->get() == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
             DEV_hd_set_cd_media_status(handle, 0);
             DEV_hd_set_cd_media_status(handle, 1);
           }
         }
       }
-      break;
-    
-    default:
-      param->get_param_path(pname, BX_PATHNAME_LEN);
-      if (!strcmp(pname, BXPN_SCREENMODE)) {
-        if (set==1) {
-          BX_INFO (("Screen mode changed to %s", val));
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYA_PATH)) {
-        if (set==1) {
-          if (SIM->get_init_done()) {
-            if (empty) {
-              DEV_floppy_set_media_status(0, 0);
-              bx_gui->update_drive_status_buttons();
-            } else {
-              if (!SIM->get_param_num(BXPN_FLOPPYA_TYPE)->get_enabled()) {
-                BX_ERROR(("Cannot add a floppy drive at runtime"));
-                SIM->get_param_string(BXPN_FLOPPYA_PATH)->set("none");
-              }
-            }
-            if ((DEV_floppy_present()) &&
-                (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED)) {
-              // tell the device model that we removed, then inserted the disk
-              DEV_floppy_set_media_status(0, 0);
-              DEV_floppy_set_media_status(0, 1);
-            }
-          } else {
-            SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set_enabled(!empty);
-            SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set_enabled(!empty);
-            SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set_enabled(!empty);
-          }
-        }
-      } else if (!strcmp(pname, BXPN_FLOPPYB_PATH)) {
-        if (set==1) {
-          if (SIM->get_init_done()) {
-            if (empty) {
-              DEV_floppy_set_media_status(1, 0);
-              bx_gui->update_drive_status_buttons();
-            } else {
-              if (!SIM->get_param_num(BXPN_FLOPPYB_TYPE)->get_enabled()) {
-                BX_ERROR(("Cannot add a floppy drive at runtime"));
-                SIM->get_param_string(BXPN_FLOPPYB_PATH)->set("none");
-              }
-            }
-            if ((DEV_floppy_present()) &&
-                (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED)) {
-              // tell the device model that we removed, then inserted the disk
-              DEV_floppy_set_media_status(1, 0);
-              DEV_floppy_set_media_status(1, 1);
-            }
-          } else {
-            SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set_enabled(!empty);
-            SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set_enabled(!empty);
-            SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_enabled(!empty);
-          }
-        }
-      } else {
-        BX_PANIC (("bx_string_handler called with unexpected parameter %d", param->get_id()));
+    }
+  } else {
+    param->get_param_path(pname, BX_PATHNAME_LEN);
+    if (!strcmp(pname, BXPN_SCREENMODE)) {
+      if (set==1) {
+        BX_INFO(("Screen mode changed to %s", val));
       }
+    } else if (!strcmp(pname, BXPN_FLOPPYA_PATH)) {
+      if (set==1) {
+        if (SIM->get_init_done()) {
+          if (empty) {
+            DEV_floppy_set_media_status(0, 0);
+            bx_gui->update_drive_status_buttons();
+          } else {
+            if (!SIM->get_param_num(BXPN_FLOPPYA_TYPE)->get_enabled()) {
+              BX_ERROR(("Cannot add a floppy drive at runtime"));
+              SIM->get_param_string(BXPN_FLOPPYA_PATH)->set("none");
+            }
+          }
+          if ((DEV_floppy_present()) &&
+              (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED)) {
+            // tell the device model that we removed, then inserted the disk
+            DEV_floppy_set_media_status(0, 0);
+            DEV_floppy_set_media_status(0, 1);
+          }
+        } else {
+          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set_enabled(!empty);
+          SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set_enabled(!empty);
+          SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set_enabled(!empty);
+        }
+      }
+    } else if (!strcmp(pname, BXPN_FLOPPYB_PATH)) {
+      if (set==1) {
+        if (SIM->get_init_done()) {
+          if (empty) {
+            DEV_floppy_set_media_status(1, 0);
+            bx_gui->update_drive_status_buttons();
+          } else {
+            if (!SIM->get_param_num(BXPN_FLOPPYB_TYPE)->get_enabled()) {
+              BX_ERROR(("Cannot add a floppy drive at runtime"));
+              SIM->get_param_string(BXPN_FLOPPYB_PATH)->set("none");
+            }
+          }
+          if ((DEV_floppy_present()) &&
+              (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED)) {
+            // tell the device model that we removed, then inserted the disk
+            DEV_floppy_set_media_status(1, 0);
+            DEV_floppy_set_media_status(1, 1);
+          }
+        } else {
+          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set_enabled(!empty);
+          SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set_enabled(!empty);
+          SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_enabled(!empty);
+        }
+      }
+    } else {
+      BX_PANIC(("bx_param_string_handler called with unknown parameter '%s'", pname));
+    }
   }
   return val;
 }
 
 static int bx_param_enable_handler (bx_param_c *param, int val)
 {
-  bx_id id = param->get_id ();
-  switch (id) {
-    case BXP_ATA0_MASTER_STATUS:
-    case BXP_ATA0_SLAVE_STATUS:
-    case BXP_ATA1_MASTER_STATUS:
-    case BXP_ATA1_SLAVE_STATUS:
-    case BXP_ATA2_MASTER_STATUS:
-    case BXP_ATA2_SLAVE_STATUS:
-    case BXP_ATA3_MASTER_STATUS:
-    case BXP_ATA3_SLAVE_STATUS:
+  char pname[BX_PATHNAME_LEN];
+  Bit8u channel, device;
+
+  bx_list_c *base = (bx_list_c*) param->get_parent();
+  base->get_param_path(pname, BX_PATHNAME_LEN);
+  if (!strncmp(pname, "ata.", 4)) {
+    channel = pname[4] - '0';
+    if (!strcmp(base->get_name(), "master")) {
+      device = 0;
+    } else {
+      device = 1;
+    }
+    if (!strcmp(param->get_name(), "status")) {
       if (val != 0) {
-        Bit8u device = id - BXP_ATA0_MASTER_STATUS;
-  
-        switch (SIM->get_param_enum ((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get()) {
+        switch (SIM->get_param_enum("type", base)->get()) {
           case BX_ATA_DEVICE_CDROM:
             return (1);
             break;
-          }
         }
-      return (0);
-      break;
-
-    case BXP_ATA0_MASTER_JOURNAL:
-    case BXP_ATA0_SLAVE_JOURNAL:
-    case BXP_ATA1_MASTER_JOURNAL:
-    case BXP_ATA1_SLAVE_JOURNAL:
-    case BXP_ATA2_MASTER_JOURNAL:
-    case BXP_ATA2_SLAVE_JOURNAL:
-    case BXP_ATA3_MASTER_JOURNAL:
-    case BXP_ATA3_SLAVE_JOURNAL:
+      }
+    } else if (!strcmp(param->get_name(), "journal")) {
       if (val != 0) {
-        Bit8u device = id - BXP_ATA0_MASTER_JOURNAL;
-  
-        switch (SIM->get_param_enum ((bx_id)(BXP_ATA0_MASTER_TYPE + device))->get()) {
+        switch (SIM->get_param_enum("type", base)->get()) {
           case BX_ATA_DEVICE_DISK:
-            switch (SIM->get_param_enum ((bx_id)(BXP_ATA0_MASTER_MODE + device))->get()) {
+            switch (SIM->get_param_enum("mode", base)->get()) {
               case BX_ATA_MODE_UNDOABLE:
               case BX_ATA_MODE_VOLATILE:
 //            case BX_ATA_MODE_Z_UNDOABLE:
@@ -343,13 +309,14 @@ static int bx_param_enable_handler (bx_param_c *param, int val)
                 return (1);
                 break;
             }
-          }
         }
+      }
       return (0);
-      break;
-
-    default:
-      BX_PANIC (("bx_param_handler called with unknown id %d", id));
+    } else {
+      BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
+    }
+  } else {
+    BX_PANIC(("bx_param_enable_handler called with unknown parameter '%s'", pname));
   }
   return val;
 }
@@ -359,6 +326,8 @@ void bx_init_options()
   int i;
   bx_list_c *menu;
   bx_list_c *deplist;
+  bx_param_num_c *ioaddr, *ioaddr2, *irq;
+  bx_param_bool_c *enabled;
   bx_param_filename_c *path;
   char name[1024], descr[1024], group[16], label[1024];
 
@@ -373,282 +342,6 @@ void bx_init_options()
       bochs_start_names,
       BX_RUN_START,
       BX_QUICK_START);
-
-  // disk options
-
-  // FIXME use descr and name
-  char *s_atachannel[] = {
-    "ATA channel 0",
-    "ATA channel 1",
-    "ATA channel 2",
-    "ATA channel 3",
-    };
-  char *s_atadevice[4][2] = {
-    { "First HD/CD on channel 0",
-      "Second HD/CD on channel 0" },
-    { "First HD/CD on channel 1",
-    "Second HD/CD on channel 1" },
-    { "First HD/CD on channel 2",
-    "Second HD/CD on channel 2" },
-    { "First HD/CD on channel 3",
-    "Second HD/CD on channel 3" }
-    };
-  Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
-    0x1f0, 0x170, 0x1e8, 0x168 
-  };
-  Bit16u ata_default_ioaddr2[BX_MAX_ATA_CHANNEL] = {
-    0x3f0, 0x370, 0x3e0, 0x360 
-  };
-  Bit8u ata_default_irq[BX_MAX_ATA_CHANNEL] = { 
-    14, 15, 11, 9 
-  };
-
-  bx_list_c *ata[BX_MAX_ATA_CHANNEL];
-  bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
-
-  Bit8u channel;
-  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
-
-    ata[channel] = new bx_list_c ((bx_id)(BXP_ATAx(channel)), s_atachannel[channel], s_atachannel[channel], 8);
-    ata[channel]->get_options ()->set (bx_list_c::SERIES_ASK);
-
-    ata[channel]->add (bx_options.ata[channel].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATAx_PRESENT(channel)),
-      "ata:present",                                
-      "Controls whether ata channel is installed or not",
-      0));
-
-    ata[channel]->add (bx_options.ata[channel].Oioaddr1 = new bx_param_num_c ((bx_id)(BXP_ATAx_IOADDR1(channel)),
-      "ata:ioaddr1",
-      "IO adress of ata command block",
-      0, 0xffff,
-      ata_default_ioaddr1[channel]));
-
-    ata[channel]->add (bx_options.ata[channel].Oioaddr2 = new bx_param_num_c ((bx_id)(BXP_ATAx_IOADDR2(channel)),
-      "ata:ioaddr2",
-      "IO adress of ata control block",
-      0, 0xffff,
-      ata_default_ioaddr2[channel]));
-
-    ata[channel]->add (bx_options.ata[channel].Oirq = new bx_param_num_c ((bx_id)(BXP_ATAx_IRQ(channel)),
-      "ata:irq",
-      "IRQ used by this ata channel",
-      0, 15,
-      ata_default_irq[channel]));
-
-    // all items in the ata[channel] menu depend on the present flag.
-    // The menu list is complete, but a few dependent_list items will
-    // be added later.  Use clone() to make a copy of the dependent_list
-    // so that it can be changed without affecting the menu.
-    bx_options.ata[channel].Opresent->set_dependent_list (
-        ata[channel]->clone());
-
-    for (Bit8u slave=0; slave<2; slave++) {
-
-      menu = bx_options.atadevice[channel][slave].Omenu = new bx_list_c ((bx_id)(BXP_ATAx_DEVICE(channel,slave)),
-          s_atadevice[channel][slave], 
-          s_atadevice[channel][slave],
-          BXP_PARAMS_PER_ATA_DEVICE + 1 );
-      menu->get_options ()->set (menu->SERIES_ASK);
-
-      menu->add (bx_options.atadevice[channel][slave].Opresent = new bx_param_bool_c ((bx_id)(BXP_ATAx_DEVICE_PRESENT(channel,slave)),
-        "ata-device:present",                                
-        "Controls whether ata device is installed or not",  
-        0));
-
-      menu->add (bx_options.atadevice[channel][slave].Otype = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_TYPE(channel,slave)),
-          "ata-device:type",
-          "Type of ATA device (disk or cdrom)",
-          atadevice_type_names,
-          BX_ATA_DEVICE_DISK,
-          BX_ATA_DEVICE_DISK));
-
-      menu->add (bx_options.atadevice[channel][slave].Opath = new bx_param_filename_c ((bx_id)(BXP_ATAx_DEVICE_PATH(channel,slave)),
-          "ata-device:path",
-          "Pathname of the image or physical device (cdrom only)",
-          "", BX_PATHNAME_LEN));
-
-      menu->add (bx_options.atadevice[channel][slave].Omode = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_MODE(channel,slave)),
-          "ata-device:mode",
-          "Mode of the ATA harddisk",
-          atadevice_mode_names,
-          BX_ATA_MODE_FLAT,
-          BX_ATA_MODE_FLAT));
-
-      menu->add (bx_options.atadevice[channel][slave].Ostatus = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_STATUS(channel,slave)),
-       "ata-device:status",
-       "CD-ROM media status (inserted / ejected)",
-       atadevice_status_names,
-       BX_INSERTED,
-       BX_EJECTED));
-
-      menu->add (bx_options.atadevice[channel][slave].Ojournal = new bx_param_filename_c ((bx_id)(BXP_ATAx_DEVICE_JOURNAL(channel,slave)),
-          "ata-device:journal",
-          "Pathname of the journal file",
-          "", BX_PATHNAME_LEN));
-
-      menu->add (bx_options.atadevice[channel][slave].Ocylinders = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_CYLINDERS(channel,slave)),
-          "ata-device:cylinders",
-          "Number of cylinders",
-          0, 262143,
-          0));
-      menu->add (bx_options.atadevice[channel][slave].Oheads = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_HEADS(channel,slave)),
-          "ata-device:heads",
-          "Number of heads",
-          0, 255,
-          0));
-      menu->add (bx_options.atadevice[channel][slave].Ospt = new bx_param_num_c ((bx_id)(BXP_ATAx_DEVICE_SPT(channel,slave)),
-          "ata-device:spt",
-          "Number of sectors per track",
-          0, 255,
-          0));
-      
-      menu->add (bx_options.atadevice[channel][slave].Omodel = new bx_param_string_c ((bx_id)(BXP_ATAx_DEVICE_MODEL(channel,slave)),
-       "ata-device:model",
-       "String returned by the 'identify device' command",
-       "Generic 1234", 40));
-
-      menu->add (bx_options.atadevice[channel][slave].Obiosdetect = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_BIOSDETECT(channel,slave)),
-       "ata-device:biosdetect",
-       "Type of bios detection",
-       atadevice_biosdetect_names,
-       BX_ATA_BIOSDETECT_AUTO,
-       BX_ATA_BIOSDETECT_NONE));
-
-      menu->add (bx_options.atadevice[channel][slave].Otranslation = new bx_param_enum_c ((bx_id)(BXP_ATAx_DEVICE_TRANSLATION(channel,slave)),
-       "How the ata-disk translation is done by the bios",
-       "Type of translation",
-       atadevice_translation_names,
-       BX_ATA_TRANSLATION_AUTO,
-       BX_ATA_TRANSLATION_NONE));
-
-      // the menu and all items on it depend on the Opresent flag
-      bx_options.atadevice[channel][slave].Opresent->set_dependent_list (
-          menu->clone ());
-      // the present flag depends on the ATA channel's present flag
-      bx_options.ata[channel].Opresent->get_dependent_list()->add (
-          bx_options.atadevice[channel][slave].Opresent);
-      // the menu depends on the ATA channel's present flag
-      bx_options.ata[channel].Opresent->get_dependent_list()->add(menu);
-    }
-
-    // set up top level menu for ATA[i] controller configuration.  This list
-    // controls what will appear on the ATA configure dialog.  It now
-    // requests the USE_TAB_WINDOW display, which is implemented in wx.
-    char buffer[32];
-    sprintf (buffer, "Configure ATA%d", channel);
-    ata_menu[channel] = new bx_list_c ((bx_id)(BXP_ATAx_MENU(channel)), strdup(buffer), "", 4);
-    ata_menu[channel]->add (ata[channel]);
-    ata_menu[channel]->add (bx_options.atadevice[channel][0].Omenu);
-    ata_menu[channel]->add (bx_options.atadevice[channel][1].Omenu);
-    ata_menu[channel]->get_options()->set (bx_list_c::USE_TAB_WINDOW);
-  }
-
-  // Enable two ATA interfaces by default, disable the others.
-  // Now that the dependence relationships are established, call set() on
-  // the ata device present params to set all enables correctly.
-  for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
-    bx_options.ata[i].Opresent->set_initial_val(i<2);
-    bx_options.ata[i].Opresent->set(i<2);
-  }
-
-  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel ++) {
-
-    bx_options.ata[channel].Opresent->set_ask_format ("Channel is enabled: [%s] ");
-    bx_options.ata[channel].Oioaddr1->set_ask_format ("Enter new ioaddr1: [0x%x] ");
-    bx_options.ata[channel].Oioaddr2->set_ask_format ("Enter new ioaddr2: [0x%x] ");
-    bx_options.ata[channel].Oirq->set_ask_format ("Enter new IRQ: [%d] ");
-#if BX_WITH_WX
-    bx_options.ata[channel].Opresent->set_label ("Enable this channel?");
-    bx_options.ata[channel].Oioaddr1->set_label ("I/O Address 1:");
-    bx_options.ata[channel].Oioaddr2->set_label ("I/O Address 2:");
-    bx_options.ata[channel].Oirq->set_label ("IRQ:");
-    bx_options.ata[channel].Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-#else
-    bx_options.ata[channel].Opresent->set_format ("enabled: %s");
-    bx_options.ata[channel].Oioaddr1->set_format ("ioaddr1: 0x%x");
-    bx_options.ata[channel].Oioaddr2->set_format ("ioaddr2: 0x%x");
-    bx_options.ata[channel].Oirq->set_format ("irq: %d");
-#endif
-    bx_options.ata[channel].Oioaddr1->set_base (16);
-    bx_options.ata[channel].Oioaddr2->set_base (16);
-
-    for (Bit8u slave=0; slave<2; slave++) {
-
-      bx_options.atadevice[channel][slave].Opresent->set_ask_format (
-          "Device is enabled: [%s] ");
-      bx_options.atadevice[channel][slave].Otype->set_ask_format (
-          "Enter type of ATA device, disk or cdrom: [%s] ");
-      bx_options.atadevice[channel][slave].Omode->set_ask_format (
-          "Enter mode of ATA device, (flat, concat, etc.): [%s] ");
-      bx_options.atadevice[channel][slave].Opath->set_ask_format (
-          "Enter new filename: [%s] ");
-      bx_options.atadevice[channel][slave].Ocylinders->set_ask_format (
-          "Enter number of cylinders: [%d] ");
-      bx_options.atadevice[channel][slave].Oheads->set_ask_format (
-          "Enter number of heads: [%d] ");
-      bx_options.atadevice[channel][slave].Ospt->set_ask_format (
-          "Enter number of sectors per track: [%d] ");
-      bx_options.atadevice[channel][slave].Ostatus->set_ask_format (
-          "Is the device inserted or ejected? [%s] ");
-      bx_options.atadevice[channel][slave].Omodel->set_ask_format (
-          "Enter new model name: [%s]");
-      bx_options.atadevice[channel][slave].Otranslation->set_ask_format (
-          "Enter translation type: [%s]");
-      bx_options.atadevice[channel][slave].Obiosdetect->set_ask_format (
-          "Enter bios detection type: [%s]");
-      bx_options.atadevice[channel][slave].Ojournal->set_ask_format (
-          "Enter path of journal file: [%s]");
-
-#if BX_WITH_WX
-      bx_options.atadevice[channel][slave].Opresent->set_label (
-          "Enable this device?");
-      bx_options.atadevice[channel][slave].Otype->set_label (
-          "Type of ATA device:");
-      bx_options.atadevice[channel][slave].Omode->set_label (
-          "Type of disk image:");
-      bx_options.atadevice[channel][slave].Opath->set_label (
-          "Path or physical device name:");
-      bx_options.atadevice[channel][slave].Ocylinders->set_label (
-          "Cylinders:");
-      bx_options.atadevice[channel][slave].Oheads->set_label (
-          "Heads:");
-      bx_options.atadevice[channel][slave].Ospt->set_label (
-          "Sectors per track:");
-      bx_options.atadevice[channel][slave].Ostatus->set_label (
-          "Inserted?");
-      bx_options.atadevice[channel][slave].Omodel->set_label (
-          "Model name:");
-      bx_options.atadevice[channel][slave].Otranslation->set_label (
-          "Translation type:");
-      bx_options.atadevice[channel][slave].Obiosdetect->set_label (
-          "BIOS Detection:");
-      bx_options.atadevice[channel][slave].Ojournal->set_label (
-          "Path of journal file:");
-#else
-      bx_options.atadevice[channel][slave].Opresent->set_format ("enabled: %s");
-      bx_options.atadevice[channel][slave].Otype->set_format ("type %s");
-      bx_options.atadevice[channel][slave].Omode->set_format ("mode %s");
-      bx_options.atadevice[channel][slave].Opath->set_format ("path '%s'");
-      bx_options.atadevice[channel][slave].Ocylinders->set_format ("%d cylinders");
-      bx_options.atadevice[channel][slave].Oheads->set_format ("%d heads");
-      bx_options.atadevice[channel][slave].Ospt->set_format ("%d sectors/track");
-      bx_options.atadevice[channel][slave].Ostatus->set_format ("%s");
-      bx_options.atadevice[channel][slave].Omodel->set_format ("model '%s'");
-      bx_options.atadevice[channel][slave].Otranslation->set_format ("translation '%s'");
-      bx_options.atadevice[channel][slave].Obiosdetect->set_format ("biosdetect '%s'");
-      bx_options.atadevice[channel][slave].Ojournal->set_format ("journal is '%s'");
-#endif
-
-      bx_options.atadevice[channel][slave].Otype->set_handler (bx_param_handler);
-      bx_options.atadevice[channel][slave].Omode->set_handler (bx_param_handler);
-      bx_options.atadevice[channel][slave].Ostatus->set_handler (bx_param_handler);
-      bx_options.atadevice[channel][slave].Opath->set_handler (bx_param_string_handler);
-
-      // Set the enable_hanlders
-      bx_options.atadevice[channel][slave].Ojournal->set_enable_handler (bx_param_enable_handler);
-      bx_options.atadevice[channel][slave].Ostatus->set_enable_handler (bx_param_enable_handler);
-    }
-  }
 
 #if BX_SUPPORT_SMP
   #define BX_CPU_PROCESSORS_LIMIT 8
@@ -1265,27 +958,240 @@ void bx_init_options()
   floppyb->get_options()->set(bx_list_c::SERIES_ASK);
   floppy->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // ATA/ATAPI subtree
+  bx_list_c *ata = new bx_list_c(root_param, "ata", "ATA/ATAPI Options");
+
+  // disk options
+  char *s_atachannel[] = {
+    "ATA channel 0",
+    "ATA channel 1",
+    "ATA channel 2",
+    "ATA channel 3",
+    };
+  char *s_atadevname[2] = {
+    "master",
+    "slave",
+  };
+  char *s_atadevice[4][2] = {
+    { "First HD/CD on channel 0",
+      "Second HD/CD on channel 0" },
+    { "First HD/CD on channel 1",
+    "Second HD/CD on channel 1" },
+    { "First HD/CD on channel 2",
+    "Second HD/CD on channel 2" },
+    { "First HD/CD on channel 3",
+    "Second HD/CD on channel 3" }
+    };
+  Bit16u ata_default_ioaddr1[BX_MAX_ATA_CHANNEL] = {
+    0x1f0, 0x170, 0x1e8, 0x168 
+  };
+  Bit16u ata_default_ioaddr2[BX_MAX_ATA_CHANNEL] = {
+    0x3f0, 0x370, 0x3e0, 0x360 
+  };
+  Bit8u ata_default_irq[BX_MAX_ATA_CHANNEL] = { 
+    14, 15, 11, 9 
+  };
+
+  bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
+  bx_list_c *ata_res[BX_MAX_ATA_CHANNEL];
+
+  Bit8u channel;
+  for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
+
+    sprintf(name, "%d", channel);
+    ata_menu[channel] = new bx_list_c(ata, strdup(name), s_atachannel[channel]);
+    ata_menu[channel]->get_options()->set(bx_list_c::USE_TAB_WINDOW);
+    ata_res[channel] = new bx_list_c(ata_menu[channel], "resources", s_atachannel[channel], 8);
+    ata_res[channel]->get_options()->set(bx_list_c::SERIES_ASK);
+
+    enabled = new bx_param_bool_c(ata_res[channel],
+      "enabled",                                
+      "Enable ATA channel",
+      "Controls whether ata channel is installed or not",
+      0);
+    enabled->set_ask_format("Channel is enabled: [%s] ");
+
+    ioaddr = new bx_param_num_c(ata_res[channel],
+      "ioaddr1",
+      "I/O Address 1",
+      "IO adress of ata command block",
+      0, 0xffff,
+      ata_default_ioaddr1[channel]);
+    ioaddr->set_base(16);
+    ioaddr->set_ask_format("Enter new ioaddr1: [0x%x] ");
+
+    ioaddr2 = new bx_param_num_c(ata_res[channel],
+      "ioaddr2",
+      "I/O Address 2",
+      "IO adress of ata control block",
+      0, 0xffff,
+      ata_default_ioaddr2[channel]);
+    ioaddr2->set_base(16);
+    ioaddr2->set_ask_format("Enter new ioaddr2: [0x%x] ");
+
+    irq = new bx_param_num_c(ata_res[channel],
+      "irq",
+      "IRQ",
+      "IRQ used by this ata channel",
+      0, 15,
+      ata_default_irq[channel]);
+    irq->set_ask_format("Enter new IRQ: [%d] ");
+    irq->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+
+    // all items in the ata[channel] menu depend on the enabled flag.
+    // The menu list is complete, but a few dependent_list items will
+    // be added later.  Use clone() to make a copy of the dependent_list
+    // so that it can be changed without affecting the menu.
+    enabled->set_dependent_list(ata_res[channel]->clone());
+
+    for (Bit8u slave=0; slave<2; slave++) {
+
+      menu = new bx_list_c(ata_menu[channel],
+          s_atadevname[slave],
+          s_atadevice[channel][slave],
+          BXP_PARAMS_PER_ATA_DEVICE + 1);
+      menu->get_options()->set(bx_list_c::SERIES_ASK);
+
+      bx_param_bool_c *present = new bx_param_bool_c(menu,
+        "present",                                
+        "Enable this device",
+        "Controls whether ata device is installed or not",
+        0);
+      present->set_ask_format("Device is enabled: [%s] ");
+
+      bx_param_enum_c *type = new bx_param_enum_c(menu,
+        "type",
+        "Type of ATA device",
+        "Type of ATA device (disk or cdrom)",
+        atadevice_type_names,
+        BX_ATA_DEVICE_DISK,
+        BX_ATA_DEVICE_DISK);
+      type->set_ask_format("Enter type of ATA device, disk or cdrom: [%s] ");
+
+      path = new bx_param_filename_c(menu,
+        "path",
+        "Path or physical device name",
+        "Pathname of the image or physical device (cdrom only)",
+        "", BX_PATHNAME_LEN);
+      path->set_ask_format("Enter new filename: [%s] ");
+
+      bx_param_enum_c *mode = new bx_param_enum_c(menu,
+        "mode",
+        "Type of disk image",
+        "Mode of the ATA harddisk",
+        atadevice_mode_names,
+        BX_ATA_MODE_FLAT,
+        BX_ATA_MODE_FLAT);
+      mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
+
+      bx_param_enum_c *status = new bx_param_enum_c(menu,
+        "status",
+        "Inserted",
+        "CD-ROM media status (inserted / ejected)",
+        atadevice_status_names,
+        BX_INSERTED,
+        BX_EJECTED);
+      status->set_ask_format("Is the device inserted or ejected? [%s] ");
+
+      bx_param_filename_c *journal = new bx_param_filename_c(menu,
+        "journal",
+        "Path of journal file",
+        "Pathname of the journal file",
+        "", BX_PATHNAME_LEN);
+      journal->set_ask_format("Enter path of journal file: [%s]");
+
+      bx_param_num_c *cylinders = new bx_param_num_c(menu,
+        "cylinders",
+        "Cylinders",
+        "Number of cylinders",
+        0, 262143,
+        0);
+      cylinders->set_ask_format("Enter number of cylinders: [%d] ");
+      bx_param_num_c *heads = new bx_param_num_c(menu,
+        "heads",
+        "Heads",
+        "Number of heads",
+        0, 255,
+        0);
+      heads->set_ask_format("Enter number of heads: [%d] ");
+      bx_param_num_c *spt = new bx_param_num_c(menu,
+        "spt",
+        "Sectors per track",
+        "Number of sectors per track",
+        0, 255,
+        0);
+      spt->set_ask_format("Enter number of sectors per track: [%d] ");
+
+      bx_param_string_c *model = new bx_param_string_c(menu,
+        "model",
+        "Model name",
+        "String returned by the 'identify device' command",
+        "Generic 1234", 40);
+      model->set_ask_format("Enter new model name: [%s]");
+
+      bx_param_enum_c *biosdetect = new bx_param_enum_c(menu,
+        "biosdetect",
+        "BIOS Detection",
+        "Type of bios detection",
+        atadevice_biosdetect_names,
+        BX_ATA_BIOSDETECT_AUTO,
+        BX_ATA_BIOSDETECT_NONE);
+      biosdetect->set_ask_format("Enter bios detection type: [%s]");
+
+      bx_param_enum_c *translation = new bx_param_enum_c(menu,
+        "translation",
+        "Translation type",
+        "How the ata-disk translation is done by the bios",
+        atadevice_translation_names,
+        BX_ATA_TRANSLATION_AUTO,
+        BX_ATA_TRANSLATION_NONE);
+      translation->set_ask_format("Enter translation type: [%s]");
+
+      // the menu and all items on it depend on the present flag
+      present->set_dependent_list(menu->clone());
+      // the present flag depends on the ATA channel's enabled flag
+      enabled->get_dependent_list()->add(present);
+      // the master/slave menu depends on the ATA channel's enabled flag
+      enabled->get_dependent_list()->add(menu);
+
+      type->set_handler(bx_param_handler);
+      mode->set_handler(bx_param_handler);
+      status->set_handler(bx_param_handler);
+      path->set_handler(bx_param_string_handler);
+
+      // Set the enable_hanlders
+      journal->set_enable_handler(bx_param_enable_handler);
+      status->set_enable_handler(bx_param_enable_handler);
+    }
+
+    // Enable two ATA interfaces by default, disable the others.
+    // Now that the dependence relationships are established, call set() on
+    // the ata device present params to set all enables correctly.
+    enabled->set_initial_val(i<2);
+    enabled->set(i<2);
+  }
+
   // disk menu
   bx_param_c *disk_menu_init_list[] = {
     SIM->get_param(BXPN_FLOPPYA),
     SIM->get_param(BXPN_FLOPPYB),
-    SIM->get_param(BXP_ATA0),
-    SIM->get_param(BXP_ATA0_MASTER),
-    SIM->get_param(BXP_ATA0_SLAVE),
+    SIM->get_param(BXPN_ATA0_RES),
+    SIM->get_param(BXPN_ATA0_MASTER),
+    SIM->get_param(BXPN_ATA0_SLAVE),
 #if BX_MAX_ATA_CHANNEL>1
-    SIM->get_param(BXP_ATA1),
-    SIM->get_param(BXP_ATA1_MASTER),
-    SIM->get_param(BXP_ATA1_SLAVE),
+    SIM->get_param(BXPN_ATA1_RES),
+    SIM->get_param(BXPN_ATA1_MASTER),
+    SIM->get_param(BXPN_ATA1_SLAVE),
 #endif
 #if BX_MAX_ATA_CHANNEL>2
-    SIM->get_param(BXP_ATA2),
-    SIM->get_param(BXP_ATA2_MASTER),
-    SIM->get_param(BXP_ATA2_SLAVE),
+    SIM->get_param(BXPN_ATA2_RES),
+    SIM->get_param(BXPN_ATA2_MASTER),
+    SIM->get_param(BXPN_ATA2_SLAVE),
 #endif
 #if BX_MAX_ATA_CHANNEL>3
-    SIM->get_param(BXP_ATA3),
-    SIM->get_param(BXP_ATA3_MASTER),
-    SIM->get_param(BXP_ATA3_SLAVE),
+    SIM->get_param(BXPN_ATA3_RES),
+    SIM->get_param(BXPN_ATA3_MASTER),
+    SIM->get_param(BXPN_ATA3_SLAVE),
 #endif
     SIM->get_param("boot_params"),
     NULL
@@ -1683,35 +1589,13 @@ void bx_init_options()
   menu->get_options ()->set (menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
 
 // param-tree test output
-//printf ("parameter tree:\n");
-//print_tree (root_param, 0);
+//printf("parameter tree:\n");
+//print_tree(root_param, 0);
 }
 
 void bx_reset_options ()
 {
   Bit8u i;
-
-  // ata/atapi drives
-  for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    bx_options.ata[channel].Opresent->reset();
-    bx_options.ata[channel].Oioaddr1->reset();
-    bx_options.ata[channel].Oioaddr2->reset();
-    bx_options.ata[channel].Oirq->reset();
-
-    for (unsigned slave=0; slave<2; slave++) {
-      bx_options.atadevice[channel][slave].Opresent->reset();
-      bx_options.atadevice[channel][slave].Otype->reset();
-      bx_options.atadevice[channel][slave].Omode->reset();
-      bx_options.atadevice[channel][slave].Opath->reset();
-      bx_options.atadevice[channel][slave].Ocylinders->reset();
-      bx_options.atadevice[channel][slave].Oheads->reset();
-      bx_options.atadevice[channel][slave].Ospt->reset();
-      bx_options.atadevice[channel][slave].Ostatus->reset();
-      bx_options.atadevice[channel][slave].Omodel->reset();
-      bx_options.atadevice[channel][slave].Obiosdetect->reset();
-      bx_options.atadevice[channel][slave].Otranslation->reset();
-    }
-  }
 
   // cpu
   SIM->get_param("cpu")->reset();
@@ -1736,6 +1620,9 @@ void bx_reset_options ()
 
   // floppy drives
   SIM->get_param("floppy")->reset();
+
+  // ata/atapi drives
+  SIM->get_param("ata")->reset();
 
   // standard ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
@@ -2124,6 +2011,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 {
   int i, slot, t;
   Bit8u idx;
+  bx_list_c *base;
 
   if (num_params < 1) return 0;
   if (num_params < 2) {
@@ -2251,6 +2139,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   }
 
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) == 4)) {
+    char tmpname[80];
     Bit8u channel = params[0][3];
 
     if ((channel < '0') || (channel > '9')) {
@@ -2264,12 +2153,12 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if ((num_params < 2) || (num_params > 5)) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
     }
-
+    sprintf(tmpname, "ata.%d.resources", channel);
+    base = (bx_list_c*) SIM->get_param(tmpname);
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: ataX directive malformed.", context));
-    }
-    else {
-      bx_options.ata[channel].Opresent->set (atol(&params[1][8]));
+    } else {
+      SIM->get_param_bool("enabled", base)->set(atol(&params[1][8]));
     }
 
     if (num_params > 2) {
@@ -2278,9 +2167,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       }
       else {
         if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-          bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 16));
+          SIM->get_param_num("ioaddr1", base)->set(strtoul (&params[2][8], NULL, 16));
         else
-          bx_options.ata[channel].Oioaddr1->set (strtoul (&params[2][8], NULL, 10));
+          SIM->get_param_num("ioaddr1", base)->set(strtoul (&params[2][8], NULL, 10));
       }
     }
 
@@ -2290,9 +2179,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       }
       else {
         if ( (params[3][8] == '0') && (params[3][9] == 'x') )
-          bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 16));
+          SIM->get_param_num("ioaddr2", base)->set(strtoul (&params[3][8], NULL, 16));
         else
-          bx_options.ata[channel].Oioaddr2->set (strtoul (&params[3][8], NULL, 10));
+          SIM->get_param_num("ioaddr2", base)->set(strtoul (&params[3][8], NULL, 10));
       }
     }
 
@@ -2301,15 +2190,16 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         PARSE_ERR(("%s: ataX directive malformed.", context));
       }
       else {
-        bx_options.ata[channel].Oirq->set (atol(&params[4][4]));
+        SIM->get_param_num("irq", base)->set(atol(&params[4][4]));
       }
     }
   }
 
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
-    Bit8u channel = params[0][3], slave = 0, type = 0, mode = BX_ATA_MODE_FLAT;
+    Bit8u channel = params[0][3], type = 0, mode = BX_ATA_MODE_FLAT;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
+    char tmpname[80];
 
     if ((channel < '0') || (channel > '9')) {
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
@@ -2324,10 +2214,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
     }
 
-    if (!strcmp(&params[0][4], "-slave")) {
-      slave = 1;
-    }
-
+    sprintf(tmpname, "ata.%d.%s", channel, &params[0][5]);
+    base = (bx_list_c*) SIM->get_param(tmpname);
     for (i=1; i<num_params; i++) {
       if (!strcmp(params[i], "type=disk")) {
         type = BX_ATA_DEVICE_DISK;
@@ -2356,7 +2244,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       } else if (!strcmp(params[i], "mode=z-volatile")) {
         PARSE_ERR(("%s: ataX-master/slave mode 'z-volatile' not implemented yet", context));
       } else if (!strncmp(params[i], "path=", 5)) {
-        bx_options.atadevice[channel][slave].Opath->set (&params[i][5]);
+        SIM->get_param_string("path", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "cylinders=", 10)) {
         cylinders = atol(&params[i][10]);
       } else if (!strncmp(params[i], "heads=", 6)) {
@@ -2364,58 +2252,58 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       } else if (!strncmp(params[i], "spt=", 4)) {
         sectors = atol(&params[i][4]);
       } else if (!strncmp(params[i], "model=", 6)) {
-        bx_options.atadevice[channel][slave].Omodel->set(&params[i][6]);
+        SIM->get_param_string("model", base)->set(&params[i][6]);
       } else if (!strcmp(params[i], "biosdetect=none")) {
-        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_NONE);
+        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_NONE);
       } else if (!strcmp(params[i], "biosdetect=cmos")) {
-        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_CMOS);
+        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_CMOS);
       } else if (!strcmp(params[i], "biosdetect=auto")) {
-        bx_options.atadevice[channel][slave].Obiosdetect->set(BX_ATA_BIOSDETECT_AUTO);
+        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_AUTO);
       } else if (!strcmp(params[i], "translation=none")) {
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_NONE);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_NONE);
       } else if (!strcmp(params[i], "translation=lba")) {
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LBA);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LBA);
       } else if (!strcmp(params[i], "translation=large")) { 
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LARGE);
       } else if (!strcmp(params[i], "translation=echs")) { // synonym of large
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_LARGE);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_LARGE);
       } else if (!strcmp(params[i], "translation=rechs")) {
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_RECHS);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_RECHS);
       } else if (!strcmp(params[i], "translation=auto")) {
-        bx_options.atadevice[channel][slave].Otranslation->set(BX_ATA_TRANSLATION_AUTO);
+        SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_AUTO);
       } else if (!strcmp(params[i], "status=ejected")) {
-        bx_options.atadevice[channel][slave].Ostatus->set(BX_EJECTED);
+        SIM->get_param_enum("status", base)->set(BX_EJECTED);
       } else if (!strcmp(params[i], "status=inserted")) {
-        bx_options.atadevice[channel][slave].Ostatus->set(BX_INSERTED);
+        SIM->get_param_enum("status", base)->set(BX_INSERTED);
       } else if (!strncmp(params[i], "journal=", 8)) {
-        bx_options.atadevice[channel][slave].Ojournal->set(&params[i][8]);
+        SIM->get_param_string("journal", base)->set(&params[i][8]);
       } else {
         PARSE_ERR(("%s: ataX-master/slave directive malformed.", context));
       }
     }
 
     // Enables the ata device
-    if (strlen(bx_options.atadevice[channel][slave].Opath->getptr()) > 0) {
-      bx_options.atadevice[channel][slave].Opresent->set(1);
-      bx_options.atadevice[channel][slave].Otype->set (type);
-      bx_options.atadevice[channel][slave].Omode->set (mode);
-      bx_options.atadevice[channel][slave].Ocylinders->set (cylinders);
-      bx_options.atadevice[channel][slave].Oheads->set (heads);
-      bx_options.atadevice[channel][slave].Ospt->set (sectors);
+    if (strlen(SIM->get_param_string("path", base)->getptr()) > 0) {
+      SIM->get_param_bool("present", base)->set(1);
+      SIM->get_param_enum("type", base)->set(type);
+      SIM->get_param_enum("mode", base)->set(mode);
+      SIM->get_param_num("cylinders", base)->set(cylinders);
+      SIM->get_param_num("heads", base)->set(heads);
+      SIM->get_param_num("spt", base)->set(sectors);
     }
 
     // if enabled, check if device ok
-    if (bx_options.atadevice[channel][slave].Opresent->get() == 1) {
-      if (bx_options.atadevice[channel][slave].Otype->get() == BX_ATA_DEVICE_DISK) {
-        if ((bx_options.atadevice[channel][slave].Ocylinders->get() == 0) &&
-            (bx_options.atadevice[channel][slave].Oheads->get() ==0 ) &&
-            (bx_options.atadevice[channel][slave].Ospt->get() == 0)) {
+    if (SIM->get_param_bool("present", base)->get() == 1) {
+      if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
+        if ((SIM->get_param_num("cylinders", base)->get() == 0) &&
+            (SIM->get_param_num("heads", base)->get() ==0 ) &&
+            (SIM->get_param_num("spt", base)->get() == 0)) {
           PARSE_WARN(("%s: ataX-master/slave CHS set to 0/0/0 - autodetection enabled", context));
           // using heads = 16 and spt = 63 for autodetection (bximage defaults)
-          bx_options.atadevice[channel][slave].Oheads->set (16);
-          bx_options.atadevice[channel][slave].Ospt->set (63);
+          SIM->get_param_num("heads", base)->set(16);
+          SIM->get_param_num("spt", base)->set(63);
         }
-      } else if (bx_options.atadevice[channel][slave].Otype->get() != BX_ATA_DEVICE_CDROM) {
+      } else if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
         PARSE_WARN(("%s: ataX-master/slave: type should be specified", context));
       }
     }
@@ -3198,64 +3086,64 @@ int bx_write_floppy_options (FILE *fp, int drive)
   return 0;
 }
 
-int bx_write_ata_options (FILE *fp, Bit8u channel, bx_ata_options *opt)
+int bx_write_ata_options (FILE *fp, Bit8u channel, bx_list_c *base)
 {
-  fprintf (fp, "ata%d: enabled=%d", channel, opt->Opresent->get());
+  fprintf(fp, "ata%d: enabled=%d", channel, SIM->get_param_bool("enabled", base)->get());
 
-  if (opt->Opresent->get()) {
-    fprintf (fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", opt->Oioaddr1->get(), 
-      opt->Oioaddr2->get(), opt->Oirq->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", ioaddr1=0x%x, ioaddr2=0x%x, irq=%d", SIM->get_param_num("ioaddr1", base)->get(), 
+      SIM->get_param_num("ioaddr2", base)->get(), SIM->get_param_num("irq", base)->get());
     }
 
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
-int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevice_options *opt)
+int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *base)
 {
-  if (opt->Opresent->get()) {
-    fprintf (fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
+  if (SIM->get_param_bool("present", base)->get()) {
+    fprintf(fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
 
-    if (opt->Otype->get() == BX_ATA_DEVICE_DISK) {
-      fprintf (fp, "type=disk");
+    if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
+      fprintf(fp, "type=disk");
 
-      switch(opt->Omode->get()) {
+      switch (SIM->get_param_enum("mode", base)->get()) {
         case BX_ATA_MODE_FLAT:
-          fprintf (fp, ", mode=flat");
+          fprintf(fp, ", mode=flat");
           break;
         case BX_ATA_MODE_CONCAT:
-          fprintf (fp, ", mode=concat");
+          fprintf(fp, ", mode=concat");
           break;
         case BX_ATA_MODE_EXTDISKSIM:
-          fprintf (fp, ", mode=external");
+          fprintf(fp, ", mode=external");
           break;
         case BX_ATA_MODE_DLL_HD:
-          fprintf (fp, ", mode=dll");
+          fprintf(fp, ", mode=dll");
           break;
         case BX_ATA_MODE_SPARSE:
-          fprintf (fp, ", mode=sparse");
+          fprintf(fp, ", mode=sparse");
           break;
         case BX_ATA_MODE_VMWARE3:
-          fprintf (fp, ", mode=vmware3");
+          fprintf(fp, ", mode=vmware3");
           break;
         case BX_ATA_MODE_UNDOABLE:
-          fprintf (fp, ", mode=undoable");
+          fprintf(fp, ", mode=undoable");
           break;
         case BX_ATA_MODE_GROWING:
-          fprintf (fp, ", mode=growing");
+          fprintf(fp, ", mode=growing");
           break;
         case BX_ATA_MODE_VOLATILE:
-          fprintf (fp, ", mode=volatile");
+          fprintf(fp, ", mode=volatile");
           break;
 //      case BX_ATA_MODE_Z_UNDOABLE:
-//        fprintf (fp, ", mode=z-undoable");
+//        fprintf(fp, ", mode=z-undoable");
 //        break;
 //      case BX_ATA_MODE_Z_VOLATILE:
-//        fprintf (fp, ", mode=z-volatile");
+//        fprintf(fp, ", mode=z-volatile");
 //        break;
         }
 
-      switch(opt->Otranslation->get()) {
+      switch(SIM->get_param_enum("translation", base)->get()) {
         case BX_ATA_TRANSLATION_NONE:
           fprintf (fp, ", translation=none");
           break;
@@ -3274,21 +3162,22 @@ int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevi
         }
 
       fprintf (fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
-          opt->Opath->getptr(), 
-          opt->Ocylinders->get(), opt->Oheads->get(), opt->Ospt->get());
+          SIM->get_param_string("path", base)->getptr(),
+          SIM->get_param_num("cylinders", base)->get(),
+          SIM->get_param_num("heads", base)->get(),
+          SIM->get_param_num("spt", base)->get());
 
-      if (opt->Ojournal->getptr() != NULL)
-        if ( strcmp(opt->Ojournal->getptr(), "") != 0)
-          fprintf (fp, ", journal=\"%s\"", opt->Ojournal->getptr());
+      if (SIM->get_param_string("journal", base)->getptr() != NULL)
+        if (strcmp(SIM->get_param_string("journal", base)->getptr(), "") != 0)
+          fprintf (fp, ", journal=\"%s\"", SIM->get_param_string("journal", base)->getptr());
 
-      }
-    else if (opt->Otype->get() == BX_ATA_DEVICE_CDROM) {
+    } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
       fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 
-        opt->Opath->getptr(), 
-        opt->Ostatus->get ()==BX_EJECTED ? "ejected" : "inserted");
-      }
+        SIM->get_param_string("path", base)->getptr(),
+        SIM->get_param_enum("status", base)->get()==BX_EJECTED ? "ejected" : "inserted");
+    }
 
-    switch(opt->Obiosdetect->get()) {
+    switch(SIM->get_param_enum("biosdetect", base)->get()) {
       case BX_ATA_BIOSDETECT_NONE:
         fprintf (fp, ", biosdetect=none");
         break;
@@ -3299,8 +3188,8 @@ int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_atadevi
         fprintf (fp, ", biosdetect=auto");
         break;
       }
-    if (strlen(opt->Omodel->getptr())>0) {
-        fprintf (fp, ", model=\"%s\"", opt->Omodel->getptr());
+    if (SIM->get_param_string("model", base)->getptr()>0) {
+        fprintf (fp, ", model=\"%s\"", SIM->get_param_string("model", base)->getptr());
       }
 
     fprintf (fp, "\n");
@@ -3493,10 +3382,11 @@ int bx_write_keyboard_options(FILE *fp)
 //   0: written ok
 //  -1: failed
 //  -2: already exists, and overwrite was off
-int bx_write_configuration (char *rc, int overwrite)
+int bx_write_configuration(char *rc, int overwrite)
 {
   int i;
   char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];
+  bx_list_c *base;
 
   BX_INFO(("write configuration to %s\n", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
@@ -3515,8 +3405,8 @@ int bx_write_configuration (char *rc, int overwrite)
   if (strlen(strptr) > 0)
     fprintf(fp, ", options=\"%s\"\n", strptr);
   else
-    fprintf (fp, "\n");
-  fprintf (fp, "megs: %d\n", SIM->get_param_num(BXPN_MEM_SIZE)->get());
+    fprintf(fp, "\n");
+  fprintf(fp, "megs: %d\n", SIM->get_param_num(BXPN_MEM_SIZE)->get());
   strptr = SIM->get_param_string(BXPN_ROM_PATH)->getptr();
   if (strlen(strptr) > 0)
     fprintf(fp, "romimage: file=\"%s\", address=0x%05x\n", strptr, (unsigned int)SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
@@ -3541,9 +3431,11 @@ int bx_write_configuration (char *rc, int overwrite)
   bx_write_floppy_options(fp, 0);
   bx_write_floppy_options(fp, 1);
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    bx_write_ata_options (fp, channel, &bx_options.ata[channel]);
-    bx_write_atadevice_options (fp, channel, 0, &bx_options.atadevice[channel][0]);
-    bx_write_atadevice_options (fp, channel, 1, &bx_options.atadevice[channel][1]);
+    sprintf(tmppath, "ata.%d", channel);
+    base = (bx_list_c*) SIM->get_param(tmppath);
+    bx_write_ata_options(fp, channel, (bx_list_c*) SIM->get_param("resources", base));
+    bx_write_atadevice_options(fp, channel, 0, (bx_list_c*) SIM->get_param("master", base));
+    bx_write_atadevice_options(fp, channel, 1, (bx_list_c*) SIM->get_param("slave", base));
   }
   for (i=0; i<BX_N_OPTROM_IMAGES; i++) {
     sprintf(tmppath, "memory.optrom.%d.path", i+1);
@@ -3563,11 +3455,11 @@ int bx_write_configuration (char *rc, int overwrite)
   }
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    bx_write_parport_options (fp, &bx_options.par[i], i+1);
+    bx_write_parport_options(fp, &bx_options.par[i], i+1);
   }
   // serial ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    bx_write_serial_options (fp, &bx_options.com[i], i+1);
+    bx_write_serial_options(fp, &bx_options.com[i], i+1);
   }
   // pci
   fprintf(fp, "i440fxsupport: enabled=%d",
@@ -3577,45 +3469,45 @@ int bx_write_configuration (char *rc, int overwrite)
       sprintf(tmpdev, "pci.slot.%d", i+1);
       strptr = SIM->get_param_string(tmpdev)->getptr();
       if (strlen(strptr) > 0) {
-        fprintf (fp, ", slot%d=%s", i+1, strptr);
+        fprintf(fp, ", slot%d=%s", i+1, strptr);
       }
     }
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
     fprintf(fp, "pcidev: vendor=0x%04x, device=0x%04x\n",
       SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
       SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
   }
-  bx_write_usb_options (fp, &bx_options.usb[0], 1);
-  bx_write_sb16_options (fp, &bx_options.sb16);
-  fprintf (fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
-  fprintf (fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
+  bx_write_usb_options(fp, &bx_options.usb[0], 1);
+  bx_write_sb16_options(fp, &bx_options.sb16);
+  fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
+  fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
-  fprintf (fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
+  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
     SIM->get_param_num(BXPN_CPU_NTHREADS)->get(), SIM->get_param_num(BXPN_IPS)->get(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #else
-  fprintf (fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
+  fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
     SIM->get_param_num(BXPN_IPS)->get(), SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #endif
-  fprintf (fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
-  fprintf (fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
+  fprintf(fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
+  fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
-  fprintf (fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());
-  fprintf (fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
+  fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());
+  fprintf(fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, &bx_options.ne2k);
   bx_write_pnic_options(fp, &bx_options.pnic);
   bx_write_loader_options(fp);
-  bx_write_log_options (fp, &bx_options.log);
+  bx_write_log_options(fp, &bx_options.log);
   bx_write_keyboard_options(fp);
   fprintf(fp, "mouse: enabled=%d, type=%s\n",
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
     SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected());
-  fclose (fp);
+  fclose(fp);
   return 0;
 }
 

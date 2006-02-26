@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.40 2006-02-24 22:35:46 vruppert Exp $
+// $Id: textconfig.cc,v 1.41 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -314,64 +314,64 @@ static char *runtime_menu_prompt =
       assert (0); } while (0)
 
 #ifndef WIN32
-void build_runtime_options_prompt (char *format, char *buf, int size)
+void build_runtime_options_prompt(char *format, char *buf, int size)
 {
-  bx_atadevice_options cdromop;
+  bx_list_c *floppyop;
+  bx_list_c *cdromop = NULL;
+  char pname[80];
   char buffer[6][128];
-  char devtype[80], path[80], type[80], status[80];
+
   for (int i=0; i<2; i++) {
-    sprintf(devtype, "floppy.%d.devtype", i);
-    sprintf(path, "floppy.%d.path", i);
-    sprintf(type, "floppy.%d.type", i);
-    sprintf(status, "floppy.%d.status", i);
-    if (SIM->get_param_enum(devtype)->get() == BX_FLOPPY_NONE)
+    sprintf(pname, "floppy.%d", i);
+    floppyop = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_enum("devtype", floppyop)->get() == BX_FLOPPY_NONE)
       strcpy(buffer[i], "(not present)");
     else {
-      sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string(path)->getptr(),
-        SIM->get_param_enum(type)->get_selected(),
-        SIM->get_param_enum(status)->get_selected());
-      if (!SIM->get_param_string(path)->getptr()[0]) strcpy(buffer[i], "none");
+      sprintf(buffer[i], "%s, size=%s, %s", SIM->get_param_string("path", floppyop)->getptr(),
+        SIM->get_param_enum("type", floppyop)->get_selected(),
+        SIM->get_param_enum("status", floppyop)->get_selected());
+      if (!SIM->get_param_string("path", floppyop)->getptr()[0]) strcpy(buffer[i], "none");
     }
   }
 
   // 4 cdroms supported at run time
   int device;
   for (Bit8u cdrom=0; cdrom<4; cdrom++) {
-    if (!SIM->get_cdrom_options (cdrom, &cdromop, &device) || !cdromop.Opresent->get ())
+    if (!SIM->get_cdrom_options(cdrom, &cdromop, &device) || !SIM->get_param_bool("present", cdromop)->get())
       sprintf (buffer[2+cdrom], "(not present)");
     else
       sprintf (buffer[2+cdrom], "(%s on ata%d) %s, %s",
-        device&1?"slave":"master", device/2, cdromop.Opath->getptr (),
-        (cdromop.Ostatus->get () == BX_INSERTED)? "inserted" : "ejected");
+        device&1?"slave":"master", device/2, SIM->get_param_string("path", cdromop)->getptr(),
+        (SIM->get_param_enum("status", cdromop)->get () == BX_INSERTED)? "inserted" : "ejected");
     }
 
-  snprintf (buf, size, format, buffer[0], buffer[1], buffer[2],
-            buffer[3], buffer[4], buffer[5]);
+  snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],
+           buffer[3], buffer[4], buffer[5]);
 }
 #endif
 
-int do_menu (bx_id id) {
-  bx_list_c *menu = (bx_list_c *)SIM->get_param (id);
+int do_menu(bx_id id) {
+  bx_list_c *menu = (bx_list_c *)SIM->get_param(id);
   while (1) {
-    menu->get_choice()->set (0);
-    int status = menu->text_ask (stdin, stderr);
+    menu->get_choice()->set(0);
+    int status = menu->text_ask(stdin, stderr);
     if (status < 0) return status;
     bx_param_num_c *choice = menu->get_choice();
-    if (choice->get () < 1)
-      return choice->get ();
+    if (choice->get() < 1)
+      return choice->get();
     else {
-      int index = choice->get () - 1;  // choosing 1 means list[0]
-      bx_param_c *chosen = menu->get (index);
+      int index = choice->get() - 1;  // choosing 1 means list[0]
+      bx_param_c *chosen = menu->get(index);
       assert (chosen != NULL);
-      if (chosen->get_enabled ()) {
-        if (chosen->get_type () == BXT_LIST) {
-          if (chosen->get_id() != BXP_NULL) {
+      if (chosen->get_enabled()) {
+        if (chosen->get_type() == BXT_LIST) {
+          if (chosen->get_id() < BXP_NEW_PARAM_ID) {
             do_menu(chosen->get_id());
           } else {
-            do_menu2(chosen->get_name(), menu);
+            do_menu2(chosen->get_name(), chosen->get_parent());
           }
         } else {
-          chosen->text_ask (stdin, stderr);
+          chosen->text_ask(stdin, stderr);
         }
       }
     }
@@ -393,7 +393,7 @@ int do_menu2(const char *pname, bx_param_c *base) {
       assert(chosen != NULL);
       if (chosen->get_enabled()) {
         if (chosen->get_type() == BXT_LIST) {
-          if (chosen->get_id() != BXP_NULL) {
+          if (chosen->get_id() < BXP_NEW_PARAM_ID) {
             do_menu(chosen->get_id());
           } else {
             do_menu2(chosen->get_name(), menu);
@@ -507,50 +507,54 @@ int bx_config_interface (int menu)
      }
      break;
    case BX_CI_RUNTIME:
-     bx_atadevice_options cdromop;
+     {
+       bx_list_c *cdromop = NULL;
+       char pname[80];
 #ifdef WIN32
-     choice = RuntimeOptionsDialog();
+       choice = RuntimeOptionsDialog();
 #else
-     char prompt[1024];
-     build_runtime_options_prompt (runtime_menu_prompt, prompt, 1024);
-     if (ask_uint (prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+       char prompt[1024];
+       build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
+       if (ask_uint(prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
 #endif
-     switch (choice) {
-       case BX_CI_RT_FLOPPYA: 
-         if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYA, NULL);
-         break;
-       case BX_CI_RT_FLOPPYB:
-         if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYB, NULL);
-         break;
-       case BX_CI_RT_CDROM1:
-       case BX_CI_RT_CDROM2:
-       case BX_CI_RT_CDROM3:
-       case BX_CI_RT_CDROM4:
-         int device;
-         if (SIM->get_cdrom_options (choice - 3, &cdromop, &device) && cdromop.Opresent->get ()) {
-           // disable type selection
-           SIM->get_param((bx_id)(BXP_ATA0_MASTER_TYPE + device))->set_enabled(0);
-           SIM->get_param((bx_id)(BXP_ATA0_MASTER_MODEL + device))->set_enabled(0);
-           SIM->get_param((bx_id)(BXP_ATA0_MASTER_BIOSDETECT + device))->set_enabled(0);
-           do_menu ((bx_id)(BXP_ATA0_MASTER + device));
-         }
-         break;
-       case BX_CI_RT_IPS:
-         // not implemented yet because I would have to mess with
-         // resetting timers and pits and everything on the fly.
-         // askparam (BXP_IPS);
-         break;
-       case BX_CI_RT_LOGOPTS1: bx_log_options (0); break;
-       case BX_CI_RT_LOGOPTS2: bx_log_options (1); break;
-       case BX_CI_RT_INST_TR: NOT_IMPLEMENTED (choice); break;
-       case BX_CI_RT_MISC: do_menu (BXP_MENU_RUNTIME); break;
-       case BX_CI_RT_CONT: fprintf (stderr, "Continuing simulation\n"); return 0;
-       case BX_CI_RT_QUIT:
-         fprintf (stderr, "You chose quit on the configuration interface.\n");
-         bx_user_quit = 1;
-         SIM->quit_sim (1);
-         return -1;
-       default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
+       switch (choice) {
+         case BX_CI_RT_FLOPPYA: 
+           if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYA, NULL);
+           break;
+         case BX_CI_RT_FLOPPYB:
+           if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYB, NULL);
+           break;
+         case BX_CI_RT_CDROM1:
+         case BX_CI_RT_CDROM2:
+         case BX_CI_RT_CDROM3:
+         case BX_CI_RT_CDROM4:
+           int device;
+           if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device) && SIM->get_param_bool("present", cdromop)->get()) {
+             // disable type selection
+             SIM->get_param("type", cdromop)->set_enabled(0);
+             SIM->get_param("model", cdromop)->set_enabled(0);
+             SIM->get_param("biosdetect", cdromop)->set_enabled(0);
+             cdromop->get_param_path(pname, 80);
+             do_menu2(pname, NULL);
+           }
+           break;
+         case BX_CI_RT_IPS:
+           // not implemented yet because I would have to mess with
+           // resetting timers and pits and everything on the fly.
+           // askparam (BXP_IPS);
+           break;
+         case BX_CI_RT_LOGOPTS1: bx_log_options (0); break;
+         case BX_CI_RT_LOGOPTS2: bx_log_options (1); break;
+         case BX_CI_RT_INST_TR: NOT_IMPLEMENTED (choice); break;
+         case BX_CI_RT_MISC: do_menu (BXP_MENU_RUNTIME); break;
+         case BX_CI_RT_CONT: fprintf (stderr, "Continuing simulation\n"); return 0;
+         case BX_CI_RT_QUIT:
+           fprintf (stderr, "You chose quit on the configuration interface.\n");
+           bx_user_quit = 1;
+           SIM->quit_sim (1);
+           return -1;
+         default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
+       }
      }
      break;
    default:
@@ -735,7 +739,6 @@ ask:
 }
 
 void bx_config_interface_init () {
-  //fprintf (stderr, "bx_config_interface_init()\n");
   SIM->set_notify_callback (config_interface_notify_callback, NULL);
 }
 
@@ -745,8 +748,6 @@ void bx_config_interface_init () {
 void
 bx_param_num_c::text_print (FILE *fp)
 {
-  //fprintf (fp, "number parameter, id=%u, name=%s\n", get_id (), get_name ());
-  //fprintf (fp, "value=%u\n", get ());
   if (get_long_format()) {
     fprintf(fp, get_long_format(), get());
   } else {
@@ -920,7 +921,6 @@ int parse_raw_bytes (char *dest, char *src, int destsize, char separator)
     if (*src == 0) break;
     // try to read a byte of hex
     if (sscanf (src, "%02x", &n) == 1) {
-      //printf ("found a byte %02x\n", n);
       dest[i] = n;
       src+=2;
     } else {
@@ -963,18 +963,17 @@ bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
   }
 }
 
-int
-bx_list_c::text_ask (FILE *fpin, FILE *fpout)
+int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
 {
   bx_list_c *child;
 
-  char *my_title = title->getptr ();
+  char *my_title = title->getptr();
   fprintf (fpout, "\n");
   int i, imax = strlen (my_title);
   for (i=0; i<imax; i++) fprintf (fpout, "-");
   fprintf (fpout, "\n%s\n", my_title);
   for (i=0; i<imax; i++) fprintf (fpout, "-");
-  fprintf (fpout, "\n"); //fprintf (fp, "options=%s\n", options->get ());
+  fprintf(fpout, "\n");
   if (options->get () & SERIES_ASK) {
     for (int i=0; i<size; i++) {
       if (list[i]->get_enabled()) {
@@ -1009,12 +1008,12 @@ bx_list_c::text_ask (FILE *fpin, FILE *fpout)
       }
     }
     fprintf (fpout, "\n");
-    Bit32u n = choice->get ();
-    int min = (options->get () & SHOW_PARENT) ? 0 : 1;
+    Bit32u n = choice->get();
+    int min = (options->get() & SHOW_PARENT) ? 0 : 1;
     int max = size;
-    int status = ask_uint ("Please choose one: [%d] ", min, max, n, &n, 10);
+    int status = ask_uint("Please choose one: [%d] ", min, max, n, &n, 10);
     if (status < 0) return status;
-    choice->set (n);
+    choice->set(n);
   }
   return 0;
 }
@@ -1024,7 +1023,6 @@ static int ci_callback (void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      //fprintf (stderr, "textconfig.cc: start\n");
       bx_config_interface_init ();
       if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START)
 	bx_config_interface (BX_CI_START_SIMULATION);
@@ -1038,7 +1036,6 @@ static int ci_callback (void *userdata, ci_command_t command)
       bx_config_interface (BX_CI_RUNTIME);
       break;
     case CI_SHUTDOWN:
-      //fprintf (stderr, "textconfig.cc: shutdown\n");
       break;
   }
   return 0;

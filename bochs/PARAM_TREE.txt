@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.7 2006-02-22 19:18:28 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.8 2006-02-26 19:11:20 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -167,12 +167,12 @@ floppy
     status              BXP_FLOPPYB_STATUS,
 
 ata
-  0
-    menu (for some reason, I had a separate object for menu)
-    present             BXP_ATA0_PRESENT,
-    ioaddr1             BXP_ATA0_IOADDR1,
-    ioaddr2             BXP_ATA0_IOADDR2,
-    irq                 BXP_ATA0_IRQ,
+  0                     BXP_ATA0_MENU
+    resources           BXP_ATA0
+      enabled           BXP_ATA0_PRESENT,
+      ioaddr1           BXP_ATA0_IOADDR1,
+      ioaddr2           BXP_ATA0_IOADDR2,
+      irq               BXP_ATA0_IRQ,
     master              BXP_ATA0_MASTER
       present           BXP_ATA0_MASTER_PRESENT
       type              BXP_ATA0_MASTER_TYPE

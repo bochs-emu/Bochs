@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.120 2006-02-24 22:35:46 vruppert Exp $
+// $Id: siminterface.cc,v 1.121 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -61,10 +61,10 @@ public:
   virtual bx_param_enum_c *get_param_enum (bx_id id);
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
-  virtual bx_param_num_c *get_param_num(const char *pname);
-  virtual bx_param_string_c *get_param_string(const char *pname);
-  virtual bx_param_bool_c *get_param_bool(const char *pname);
-  virtual bx_param_enum_c *get_param_enum(const char *pname);
+  virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL);
+  virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL);
+  virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL);
+  virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
   virtual unsigned gen_param_id();
   virtual int get_n_log_modules ();
   virtual char *get_prefix (int mod);
@@ -90,7 +90,7 @@ public:
   virtual int set_log_prefix (char *prefix);
   virtual int get_debugger_log_file (char *path, int len);
   virtual int set_debugger_log_file (char *path);
-  virtual int get_cdrom_options (int drive, bx_atadevice_options *out, int *device = NULL);
+  virtual int get_cdrom_options(int drive, bx_list_c **out, int *device = NULL);
   virtual void set_notify_callback (bxevent_handler func, void *arg);
   virtual void get_notify_callback (bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
@@ -112,12 +112,12 @@ public:
     bx_gui->handle_events ();
   }
   // find first hard drive or cdrom
-  bx_param_c *get_first_atadevice (Bit32u search_type);
-  bx_param_c *get_first_cdrom () {
-    return get_first_atadevice (BX_ATA_DEVICE_CDROM);
+  bx_param_c *get_first_atadevice(Bit32u search_type);
+  bx_param_c *get_first_cdrom() {
+    return get_first_atadevice(BX_ATA_DEVICE_CDROM);
   }
-  bx_param_c *get_first_hd () {
-    return get_first_atadevice (BX_ATA_DEVICE_DISK);
+  bx_param_c *get_first_hd() {
+    return get_first_atadevice(BX_ATA_DEVICE_DISK);
   }
 #if BX_DEBUGGER
   virtual void debug_break ();
@@ -195,14 +195,14 @@ bx_param_c *find_param (const char *full_pname, const char *rest_of_pname, bx_pa
 }
 
 bx_param_c *
-bx_real_sim_c::get_param (const char *pname, bx_param_c *base) 
+bx_real_sim_c::get_param(const char *pname, bx_param_c *base) 
 {
   if (base == NULL)
     base = root_param;
   // to access top level object, look for parameter "."
   if (pname[0] == '.' && pname[1] == 0)
     return base;
-  return find_param (pname, pname, base);
+  return find_param(pname, pname, base);
 }
 
 bx_param_num_c *
@@ -220,16 +220,16 @@ bx_real_sim_c::get_param_num (bx_id id) {
 }
 
 bx_param_num_c *
-bx_real_sim_c::get_param_num (const char *pname) {
-  bx_param_c *generic = get_param(pname);
+bx_real_sim_c::get_param_num (const char *pname, bx_param_c *base) {
+  bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC (("get_param_num(%s) could not find a parameter", pname));
+    BX_PANIC(("get_param_num(%s) could not find a parameter", pname));
     return NULL;
   }
-  int type = generic->get_type ();
+  int type = generic->get_type();
   if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
     return (bx_param_num_c *)generic;
-  BX_PANIC (("get_param_num(%s) could not find an integer parameter with that name", pname));
+  BX_PANIC(("get_param_num(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
@@ -247,15 +247,15 @@ bx_real_sim_c::get_param_string (bx_id id) {
 }
 
 bx_param_string_c *
-bx_real_sim_c::get_param_string (const char *pname) {
-  bx_param_c *generic = get_param(pname);
+bx_real_sim_c::get_param_string(const char *pname, bx_param_c *base) {
+  bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
     BX_PANIC (("get_param_string(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (generic->get_type () == BXT_PARAM_STRING)
+  if (generic->get_type() == BXT_PARAM_STRING)
     return (bx_param_string_c *)generic;
-  BX_PANIC (("get_param_string(%s) could not find an integer parameter with that name", pname));
+  BX_PANIC(("get_param_string(%s) could not find an integer parameter with that name", pname));
   return NULL;
 }
 
@@ -273,15 +273,15 @@ bx_real_sim_c::get_param_bool (bx_id id) {
 }
 
 bx_param_bool_c *
-bx_real_sim_c::get_param_bool (const char *pname) {
-  bx_param_c *generic = get_param(pname);
+bx_real_sim_c::get_param_bool(const char *pname, bx_param_c *base) {
+  bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC (("get_param_bool(%s) could not find a parameter", pname));
+    BX_PANIC(("get_param_bool(%s) could not find a parameter", pname));
     return NULL;
   }
   if (generic->get_type () == BXT_PARAM_BOOL)
     return (bx_param_bool_c *)generic;
-  BX_PANIC (("get_param_bool(%s) could not find a bool parameter with that name", pname));
+  BX_PANIC(("get_param_bool(%s) could not find a bool parameter with that name", pname));
   return NULL;
 }
 
@@ -299,15 +299,15 @@ bx_real_sim_c::get_param_enum (bx_id id) {
 }
 
 bx_param_enum_c *
-bx_real_sim_c::get_param_enum (const char *pname) {
-  bx_param_c *generic = get_param(pname);
+bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *base) {
+  bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
-    BX_PANIC (("get_param_enum(%s) could not find a parameter", pname));
+    BX_PANIC(("get_param_enum(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (generic->get_type () == BXT_PARAM_ENUM)
+  if (generic->get_type() == BXT_PARAM_ENUM)
     return (bx_param_enum_c *)generic;
-  BX_PANIC (("get_param_enum(%s) could not find a enum parameter with that name", pname));
+  BX_PANIC(("get_param_enum(%s) could not find a enum parameter with that name", pname));
   return NULL;
 }
 
@@ -445,7 +445,6 @@ bx_real_sim_c::quit_sim (int code) {
   BX_INFO (("quit_sim called with exit code %d", code));
   exit_code = code;
   // use longjmp to quit cleanly, no matter where in the stack we are.
-  //fprintf (stderr, "using longjmp() to jump directly to the quit context!\n");
   if (quit_context != NULL) {
     longjmp (*quit_context, 1);
     BX_PANIC (("in bx_real_sim_c::quit_sim, longjmp should never return"));
@@ -534,20 +533,26 @@ bx_real_sim_c::set_debugger_log_file (char *path)
 }
 
 int 
-bx_real_sim_c::get_cdrom_options (int level, bx_atadevice_options *out, int *where)
+bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
 {
+  char pname[80];
+  bx_list_c *devlist;
+
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device++) {
-      if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
+      sprintf(pname, "ata.%d.%s", channel, (device==0)?"master":"slave");
+      devlist = (bx_list_c*) SIM->get_param(pname);
+      if (SIM->get_param_enum("type", devlist)->get() == BX_ATA_DEVICE_CDROM) {
         if (level==0) {
-          *out = bx_options.atadevice[channel][device];
-	  if (where != NULL) *where=(channel*2)+device;
+          *out = devlist;
+	  if (where != NULL) *where = (channel * 2) + device;
           return 1;
-          }
-        else level--;
-	}
+        } else {
+	  level--;
+        }
       }
     }
+  }
   return 0;
 }
 
@@ -772,15 +777,20 @@ void bx_real_sim_c::refresh_ci () {
 }
 
 bx_param_c *
-bx_real_sim_c::get_first_atadevice (Bit32u search_type) {
+bx_real_sim_c::get_first_atadevice(Bit32u search_type) {
+  char pname[80];
   for (int channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if (!bx_options.ata[channel].Opresent->get ())
+    sprintf(pname, "ata.%d.resources.enabled", channel);
+    if (!SIM->get_param_bool(pname)->get())
       continue;
     for (int slave=0; slave<2; slave++) {
-      Bit32u present = bx_options.atadevice[channel][slave].Opresent->get ();
-      Bit32u type = bx_options.atadevice[channel][slave].Otype->get ();
+      sprintf(pname, "ata.%d.%s.present", channel, (slave==0)?"master":"slave");
+      Bit32u present = SIM->get_param_bool(pname)->get();
+      sprintf(pname, "ata.%d.%s.type", channel, (slave==0)?"master":"slave");
+      Bit32u type = SIM->get_param_enum(pname)->get();
       if (present && (type == search_type)) {
-	return bx_options.atadevice[channel][slave].Omenu;
+        sprintf(pname, "ata.%d.%s", channel, (slave==0)?"master":"slave");
+	return SIM->get_param(pname);
       }
     }
   }
@@ -1042,9 +1052,9 @@ bx_param_num_c::set_enable_handler (param_enable_handler handler)
   this->enable_handler = handler; 
 }
 
-void bx_param_num_c::set_dependent_list (bx_list_c *l) {
-  dependent_list = l; 
-  update_dependents ();
+void bx_param_num_c::set_dependent_list(bx_list_c *l) {
+  dependent_list = l;
+  update_dependents();
 }
 
 Bit64s 
@@ -1072,7 +1082,7 @@ bx_param_num_c::set (Bit64s newval)
   }
   if ((val.number < min || val.number > max) && (Bit64u)max != BX_MAX_BIT64U)
     BX_PANIC (("numerical parameter '%s' was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), val.number, min, max));
-  if (dependent_list != NULL) update_dependents ();
+  if (dependent_list != NULL) update_dependents();
 }
 
 void bx_param_num_c::set_range (Bit64u min, Bit64u max)
@@ -1085,14 +1095,14 @@ void bx_param_num_c::set_initial_val (Bit64s initial_val) {
   this->val.number = this->initial_val = initial_val;
 }
 
-void bx_param_num_c::update_dependents ()
+void bx_param_num_c::update_dependents()
 {
   if (dependent_list) {
     int en = val.number && enabled;
-    for (int i=0; i<dependent_list->get_size (); i++) {
-      bx_param_c *param = dependent_list->get (i);
+    for (int i=0; i<dependent_list->get_size(); i++) {
+      bx_param_c *param = dependent_list->get(i);
       if (param != this)
-	param->set_enabled (en);
+	param->set_enabled(en);
     }
   }
 }
@@ -1573,7 +1583,7 @@ void bx_param_string_c::set_initial_val (char *buf) {
   set (initial_val);
 }
 
-bx_list_c::bx_list_c (bx_id id, int maxsize)
+bx_list_c::bx_list_c(bx_id id, int maxsize)
   : bx_param_c (id, "list", "")
 {
   set_type(BXT_LIST);
@@ -1584,8 +1594,8 @@ bx_list_c::bx_list_c (bx_id id, int maxsize)
   init("");
 }
 
-bx_list_c::bx_list_c (bx_id id, char *name, char *title, int maxsize)
-  : bx_param_c (id, name, NULL)
+bx_list_c::bx_list_c(bx_id id, char *name, char *title, int maxsize)
+  : bx_param_c(id, name, NULL)
 {
   set_type(BXT_LIST);
   this->size = 0;
@@ -1595,9 +1605,9 @@ bx_list_c::bx_list_c (bx_id id, char *name, char *title, int maxsize)
   init(title);
 }
 
-bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *title,
+bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
     int maxsize)
-  : bx_param_c (BXP_NULL, name, NULL)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, NULL)
 {
   set_type (BXT_LIST);
   this->size = 0;
@@ -1607,12 +1617,12 @@ bx_list_c::bx_list_c (bx_param_c *parent, char *name, char *title,
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
-    this->parent->add (this);
+    this->parent->add(this);
   }
   init(title);
 }
 
-bx_list_c::bx_list_c (bx_id id, char *name, char *title, bx_param_c **init_list)
+bx_list_c::bx_list_c(bx_id id, char *name, char *title, bx_param_c **init_list)
   : bx_param_c (id, name, NULL)
 {
   set_type(BXT_LIST);
@@ -1651,68 +1661,63 @@ bx_list_c::~bx_list_c()
     }
 }
 
-void
-bx_list_c::init(const char *list_title)
+void bx_list_c::init(const char *list_title)
 {
   // the title defaults to the name
-  this->title = new bx_param_string_c (BXP_NULL,
+  this->title = new bx_param_string_c(BXP_NULL,
       "title of list",
       "",
       get_name(), 80);
   if ((list_title != NULL) && (strlen(list_title) > 0)) {
     this->title->set(strdup(list_title));
   }
-  this->options = new bx_param_num_c (BXP_NULL,
+  this->options = new bx_param_num_c(BXP_NULL,
       "list_option", "", 0, BX_MAX_BIT64S,
       0);
-  this->choice = new bx_param_num_c (BXP_NULL,
+  this->choice = new bx_param_num_c(BXP_NULL,
       "list_choice", "", 0, BX_MAX_BIT64S,
       1);
 }
 
-bx_list_c *
-bx_list_c::clone ()
+bx_list_c* bx_list_c::clone()
 {
-  bx_list_c *newlist = new bx_list_c (get_parent(), name, description, maxsize);
-  for (int i=0; i<get_size (); i++)
-    newlist->add (get(i));
-  newlist->set_options (get_options ());
+  bx_list_c *newlist = new bx_list_c(NULL, name, description, maxsize);
+  for (int i=0; i<get_size(); i++)
+    newlist->add(get(i));
+  newlist->set_options(get_options());
   return newlist;
 }
 
-void
-bx_list_c::add (bx_param_c *param)
+void bx_list_c::add(bx_param_c *param)
 {
   if (this->size >= this->maxsize)
-    BX_PANIC (("add param %u to bx_list_c id=%u: list capacity exceeded", param->get_id (), get_id ()));
+    BX_PANIC(("add param '%s' to bx_list_c '%s': list capacity exceeded",
+              param->get_name(), get_name()));
   list[size] = param;
   size++;
 }
 
-bx_param_c *
-bx_list_c::get (int index)
+bx_param_c* bx_list_c::get(int index)
 {
-  BX_ASSERT (index >= 0 && index < size);
+  BX_ASSERT(index >= 0 && index < size);
   return list[index];
 }
 
-bx_param_c *
-bx_list_c::get_by_name (const char *name)
+bx_param_c* bx_list_c::get_by_name(const char *name)
 {
-  int i, imax = get_size ();
+  int i, imax = get_size();
   for (i=0; i<imax; i++) {
     bx_param_c *p = get(i);
-    if (0 == strcmp (name, p->get_name ())) {
+    if (0 == strcmp (name, p->get_name())) {
       return p;
     }
   }
   return NULL;
 }
 
-void
-bx_list_c::reset()
+void bx_list_c::reset()
 {
-  int i, imax = get_size ();
+  int i, imax = get_size();
   for (i=0; i<imax; i++) {
     get(i)->reset();
   }

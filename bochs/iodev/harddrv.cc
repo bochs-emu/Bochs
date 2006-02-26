@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.162 2006-02-23 22:48:57 vruppert Exp $
+// $Id: harddrv.cc,v 1.163 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,14 +143,18 @@ bx_hard_drive_c::init(void)
   Bit8u channel;
   char  string[5];
   char  sbtext[8];
+  char  ata_name[20];
+  bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.162 2006-02-23 22:48:57 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.163 2006-02-26 19:11:20 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if (bx_options.ata[channel].Opresent->get() == 1) {
-      BX_HD_THIS channels[channel].ioaddr1 = bx_options.ata[channel].Oioaddr1->get();
-      BX_HD_THIS channels[channel].ioaddr2 = bx_options.ata[channel].Oioaddr2->get();
-      BX_HD_THIS channels[channel].irq = bx_options.ata[channel].Oirq->get();
+    sprintf(ata_name, "ata.%d.resources", channel);
+    base = (bx_list_c*) SIM->get_param(ata_name);
+    if (SIM->get_param_bool("enabled", base)->get() == 1) {
+      BX_HD_THIS channels[channel].ioaddr1 = SIM->get_param_num("ioaddr1", base)->get();
+      BX_HD_THIS channels[channel].ioaddr2 = SIM->get_param_num("ioaddr2", base)->get();
+      BX_HD_THIS channels[channel].irq = SIM->get_param_num("irq", base)->get();
 
       // Coherency check
       if ( (BX_HD_THIS channels[channel].ioaddr1 == 0) ||
@@ -205,8 +209,10 @@ bx_hard_drive_c::init(void)
   channel = 0;
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
+      sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
+      base = (bx_list_c*) SIM->get_param(ata_name);
 
-	  // Initialize controller state, even if device is not present
+      // Initialize controller state, even if device is not present
       BX_CONTROLLER(channel,device).status.busy           = 0;
       BX_CONTROLLER(channel,device).status.drive_ready    = 1;
       BX_CONTROLLER(channel,device).status.write_fault    = 0;
@@ -238,48 +244,48 @@ bx_hard_drive_c::init(void)
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].statusbar_id = -1;
       BX_HD_THIS channels[channel].drives[device].iolight_counter = 0;
-      if (!bx_options.atadevice[channel][device].Opresent->get()) {
+      if (!SIM->get_param_bool("present", base)->get()) {
         continue;
       }
 
       // Make model string
       strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no, 
-        bx_options.atadevice[channel][device].Omodel->getptr(), 40);
+        SIM->get_param_string("model", base)->getptr(), 40);
       while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
         strcat ((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
-        }
+      }
 
-      if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_DISK) {
+      if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(( "Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_DISK;
         sprintf(sbtext, "HD:%d-%s", channel, device?"S":"M");
         BX_HD_THIS channels[channel].drives[device].statusbar_id =
           bx_gui->register_statusitem(sbtext);
 
-        int cyl = bx_options.atadevice[channel][device].Ocylinders->get ();
-        int heads = bx_options.atadevice[channel][device].Oheads->get ();
-        int spt = bx_options.atadevice[channel][device].Ospt->get ();
+        int cyl = SIM->get_param_num("cylinders", base)->get();
+        int heads = SIM->get_param_num("heads", base)->get();
+        int spt = SIM->get_param_num("spt", base)->get();
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
         /* instantiate the right class */
-        switch (bx_options.atadevice[channel][device].Omode->get()) {
+        switch (SIM->get_param_enum("mode", base)->get()) {
 
           case BX_ATA_MODE_FLAT:
-            BX_INFO(("HD on ata%d-%d: '%s' 'flat' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+            BX_INFO(("HD on ata%d-%d: '%s' 'flat' mode ", channel, device,
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new default_image_t();
             break;
 
           case BX_ATA_MODE_CONCAT:
             BX_INFO(("HD on ata%d-%d: '%s' 'concat' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new concat_image_t();
             break;
 
 #if EXTERNAL_DISK_SIMULATOR
           case BX_ATA_MODE_EXTDISKSIM:
             BX_INFO(("HD on ata%d-%d: '%s' 'External Simulator' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new EXTERNAL_DISK_SIMULATOR_CLASS();
             break;
 #endif //EXTERNAL_DISK_SIMULATOR
@@ -287,41 +293,41 @@ bx_hard_drive_c::init(void)
 #if DLL_HD_SUPPORT
           case BX_ATA_MODE_DLL_HD:
             BX_INFO(("HD on ata%d-%d: '%s' 'dll' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new dll_image_t();
             break;
 #endif //DLL_HD_SUPPORT
 
           case BX_ATA_MODE_SPARSE:
             BX_INFO(("HD on ata%d-%d: '%s' 'sparse' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new sparse_image_t();
             break;
 
           case BX_ATA_MODE_VMWARE3:
             BX_INFO(("HD on ata%d-%d: '%s' 'vmware3' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new vmware3_image_t();
             break;
 
           case BX_ATA_MODE_UNDOABLE:
             BX_INFO(("HD on ata%d-%d: '%s' 'undoable' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new undoable_image_t(disk_size,
-                            bx_options.atadevice[channel][device].Ojournal->getptr());
+                SIM->get_param_string("journal", base)->getptr());
             break;
 
           case BX_ATA_MODE_GROWING:
             BX_INFO(("HD on ata%d-%d: '%s' 'growing' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new growing_image_t(disk_size);
             break;
 
           case BX_ATA_MODE_VOLATILE:
             BX_INFO(("HD on ata%d-%d: '%s' 'volatile' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new volatile_image_t(disk_size,
-                            bx_options.atadevice[channel][device].Ojournal->getptr());
+                SIM->get_param_string("journal", base)->getptr());
             break;
 
 #if BX_COMPRESSED_HD_SUPPORT
@@ -329,9 +335,9 @@ bx_hard_drive_c::init(void)
             BX_PANIC(("z-undoable disk support not implemented"));
 #if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-undoable' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new z_undoable_image_t(disk_size,
-                            bx_options.atadevice[channel][device].Ojournal->getptr());
+                SIM->get_param_string("journal", base)->getptr());
 #endif
             break;
 
@@ -339,17 +345,17 @@ bx_hard_drive_c::init(void)
             BX_PANIC(("z-volatile disk support not implemented"));
 #if 0
             BX_INFO(("HD on ata%d-%d: '%s' 'z-volatile' mode ", channel, device, 
-                                    bx_options.atadevice[channel][device].Opath->getptr ()));
+                     SIM->get_param_string("path", base)->getptr()));
             channels[channel].drives[device].hard_drive = new z_volatile_image_t(disk_size,
-                            bx_options.atadevice[channel][device].Ojournal->getptr());
+                SIM->get_param_string("journal", base)->getptr());
 #endif
             break;
 #endif //BX_COMPRESSED_HD_SUPPORT
 
           default:
             BX_PANIC(("HD on ata%d-%d: '%s' unsupported HD mode : %s", channel, device, 
-                      bx_options.atadevice[channel][device].Opath->getptr (),
-                      atadevice_mode_names[bx_options.atadevice[channel][device].Omode->get()]));
+                      SIM->get_param_string("path", base)->getptr(),
+                      atadevice_mode_names[SIM->get_param_enum("mode", base)->get()]));
             break;
         }
 
@@ -357,7 +363,7 @@ bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
 
-        if (bx_options.atadevice[channel][device].Omode->get() == BX_ATA_MODE_FLAT) {
+        if (SIM->get_param_enum("mode", base)->get() == BX_ATA_MODE_FLAT) {
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d/%d cannot have zero heads, or sectors/track", channel, device));
           }
@@ -368,11 +374,11 @@ bx_hard_drive_c::init(void)
         }
 
         /* open hard drive image file */
-        if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(bx_options.atadevice[channel][device].Opath->getptr ())) < 0) {
-          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
+        if ((BX_HD_THIS channels[channel].drives[device].hard_drive->open(SIM->get_param_string("path", base)->getptr())) < 0) {
+          BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
         }
 
-        if (bx_options.atadevice[channel][device].Omode->get() == BX_ATA_MODE_FLAT) {
+        if (SIM->get_param_enum("mode", base)->get() == BX_ATA_MODE_FLAT) {
           if (cyl > 0) {
             if (disk_size != (Bit64u)BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
               BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));
@@ -382,11 +388,11 @@ bx_hard_drive_c::init(void)
             disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
             cyl = (int)(disk_size / (heads * spt * 512));
             BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
-            bx_options.atadevice[channel][device].Ocylinders->set (cyl);
+            SIM->get_param_num("cylinders", base)->set(cyl);
             BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
           }
         }
-      } else if (bx_options.atadevice[channel][device].Otype->get() == BX_ATA_DEVICE_CDROM) {
+      } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         BX_DEBUG(( "CDROM on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_CDROM;
         BX_HD_THIS channels[channel].drives[device].cdrom.locked = 0;
@@ -421,10 +427,10 @@ bx_hard_drive_c::init(void)
 
 	// allocate low level driver
 #ifdef LOWLEVEL_CDROM
-        BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(bx_options.atadevice[channel][device].Opath->getptr ());
-        BX_INFO(("CD on ata%d-%d: '%s'",channel, device, bx_options.atadevice[channel][device].Opath->getptr ()));
+        BX_HD_THIS channels[channel].drives[device].cdrom.cd = new LOWLEVEL_CDROM(SIM->get_param_string("path", base)->getptr());
+        BX_INFO(("CD on ata%d-%d: '%s'",channel, device, SIM->get_param_string("path", base)->getptr()));
 
-        if (bx_options.atadevice[channel][device].Ostatus->get () == BX_INSERTED) {
+        if (SIM->get_param_enum("status", base)->get() == BX_INSERTED) {
           if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom()) {
             BX_INFO(( "Media present in CD-ROM drive"));
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
@@ -434,7 +440,7 @@ bx_hard_drive_c::init(void)
           } else {		    
             BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
             BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
-            bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
+            SIM->get_param_enum("status", base)->set(BX_EJECTED);
           }
         }
         else
@@ -452,65 +458,69 @@ bx_hard_drive_c::init(void)
     DEV_cmos_set_reg(0x12, 0x00); // start out with: no drive 0, no drive 1
 
     if (BX_DRIVE_IS_HD(0,0)) {
+      base = (bx_list_c*) SIM->get_param(BXPN_ATA0_MASTER);
       // Flag drive type as Fh, use extended CMOS location as real type
       DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0x0f) | 0xf0);
       DEV_cmos_set_reg(0x19, 47); // user definable type
       // AMI BIOS: 1st hard disk #cyl low byte
-      DEV_cmos_set_reg(0x1b, (bx_options.atadevice[0][0].Ocylinders->get () & 0x00ff));
+      DEV_cmos_set_reg(0x1b, (SIM->get_param_num("cylinders", base)->get() & 0x00ff));
       // AMI BIOS: 1st hard disk #cyl high byte
-      DEV_cmos_set_reg(0x1c, (bx_options.atadevice[0][0].Ocylinders->get () & 0xff00) >> 8);
+      DEV_cmos_set_reg(0x1c, (SIM->get_param_num("cylinders", base)->get() & 0xff00) >> 8);
       // AMI BIOS: 1st hard disk #heads
-      DEV_cmos_set_reg(0x1d, (bx_options.atadevice[0][0].Oheads->get ()));
+      DEV_cmos_set_reg(0x1d, (SIM->get_param_num("heads", base)->get()));
       // AMI BIOS: 1st hard disk write precompensation cylinder, low byte
       DEV_cmos_set_reg(0x1e, 0xff); // -1
       // AMI BIOS: 1st hard disk write precompensation cylinder, high byte
       DEV_cmos_set_reg(0x1f, 0xff); // -1
       // AMI BIOS: 1st hard disk control byte
-      DEV_cmos_set_reg(0x20, (0xc0 | ((bx_options.atadevice[0][0].Oheads->get () > 8) << 3)));
+      DEV_cmos_set_reg(0x20, (0xc0 | ((SIM->get_param_num("heads", base)->get() > 8) << 3)));
       // AMI BIOS: 1st hard disk landing zone, low byte
       DEV_cmos_set_reg(0x21, DEV_cmos_get_reg(0x1b));
       // AMI BIOS: 1st hard disk landing zone, high byte
       DEV_cmos_set_reg(0x22, DEV_cmos_get_reg(0x1c));
       // AMI BIOS: 1st hard disk sectors/track
-      DEV_cmos_set_reg(0x23, bx_options.atadevice[0][0].Ospt->get ());
+      DEV_cmos_set_reg(0x23, SIM->get_param_num("spt", base)->get());
     }
 
     //set up cmos for second hard drive
     if (BX_DRIVE_IS_HD(0,1)) {
+      base = (bx_list_c*) SIM->get_param(BXPN_ATA0_SLAVE);
       BX_DEBUG(("1: I will put 0xf into the second hard disk field"));
       // fill in lower 4 bits of 0x12 for second HD
       DEV_cmos_set_reg(0x12, (DEV_cmos_get_reg(0x12) & 0xf0) | 0x0f);
       DEV_cmos_set_reg(0x1a, 47); // user definable type
       // AMI BIOS: 2nd hard disk #cyl low byte
-      DEV_cmos_set_reg(0x24, (bx_options.atadevice[0][1].Ocylinders->get () & 0x00ff));
+      DEV_cmos_set_reg(0x24, (SIM->get_param_num("cylinders", base)->get() & 0x00ff));
       // AMI BIOS: 2nd hard disk #cyl high byte
-      DEV_cmos_set_reg(0x25, (bx_options.atadevice[0][1].Ocylinders->get () & 0xff00) >> 8);
+      DEV_cmos_set_reg(0x25, (SIM->get_param_num("cylinders", base)->get() & 0xff00) >> 8);
       // AMI BIOS: 2nd hard disk #heads
-      DEV_cmos_set_reg(0x26, (bx_options.atadevice[0][1].Oheads->get ()));
+      DEV_cmos_set_reg(0x26, (SIM->get_param_num("heads", base)->get()));
       // AMI BIOS: 2nd hard disk write precompensation cylinder, low byte
       DEV_cmos_set_reg(0x27, 0xff); // -1
       // AMI BIOS: 2nd hard disk write precompensation cylinder, high byte
       DEV_cmos_set_reg(0x28, 0xff); // -1
       // AMI BIOS: 2nd hard disk, 0x80 if heads>8
-      DEV_cmos_set_reg(0x29, (bx_options.atadevice[0][1].Oheads->get () > 8) ? 0x80 : 0x00);
+      DEV_cmos_set_reg(0x29, (SIM->get_param_num("heads", base)->get() > 8) ? 0x80 : 0x00);
       // AMI BIOS: 2nd hard disk landing zone, low byte
       DEV_cmos_set_reg(0x2a, DEV_cmos_get_reg(0x24));
       // AMI BIOS: 2nd hard disk landing zone, high byte
       DEV_cmos_set_reg(0x2b, DEV_cmos_get_reg(0x25));
       // AMI BIOS: 2nd hard disk sectors/track
-      DEV_cmos_set_reg(0x2c, bx_options.atadevice[0][1].Ospt->get ());
+      DEV_cmos_set_reg(0x2c, SIM->get_param_num("spt", base)->get());
     }
 
     DEV_cmos_set_reg(0x39, 0);
     DEV_cmos_set_reg(0x3a, 0);
     for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
       for (Bit8u device=0; device<2; device ++) {
-        if (bx_options.atadevice[channel][device].Opresent->get()) {
+        sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
+        base = (bx_list_c*) SIM->get_param(ata_name);
+        if (SIM->get_param_bool("present", base)->get()) {
           if (BX_DRIVE_IS_HD(channel,device)) {
-            Bit16u cylinders = bx_options.atadevice[channel][device].Ocylinders->get();
-            Bit16u heads = bx_options.atadevice[channel][device].Oheads->get();
-            Bit16u spt = bx_options.atadevice[channel][device].Ospt->get();
-            Bit8u  translation = bx_options.atadevice[channel][device].Otranslation->get();
+            Bit16u cylinders = SIM->get_param_num("cylinders", base)->get();
+            Bit16u heads = SIM->get_param_num("heads", base)->get();
+            Bit16u spt = SIM->get_param_num("spt", base)->get();
+            Bit8u  translation = SIM->get_param_enum("translation", base)->get();
 
             Bit8u reg = 0x39 + channel/2;
             Bit8u bitshift = 2 * (device+(2 * (channel%2)));
@@ -1345,6 +1355,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x1b: // start stop unit
                 {
+                  char ata_name[20];
                   //bx_bool Immed = (BX_SELECTED_CONTROLLER(channel).buffer[1] >> 0) & 1;
                   bx_bool LoEj = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 1) & 1;
                   bx_bool Start = (BX_SELECTED_CONTROLLER(channel).buffer[4] >> 0) & 1;
@@ -1368,7 +1379,9 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       BX_SELECTED_DRIVE(channel).cdrom.cd->eject_cdrom();
 #endif
                       BX_SELECTED_DRIVE(channel).cdrom.ready = 0;
-                      bx_options.atadevice[channel][BX_SLAVE_SELECTED(channel)].Ostatus->set(BX_EJECTED);
+                      sprintf(ata_name, "ata.%d.%s", channel, BX_SLAVE_SELECTED(channel)?"slave":"master");
+                      bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
+                      SIM->get_param_enum("status", base)->set(BX_EJECTED);
                       bx_gui->update_drive_status_buttons();
                     }
                     raise_interrupt(channel);
@@ -3175,21 +3188,25 @@ bx_hard_drive_c::atapi_cmd_nop(Bit8u channel)
 void
 bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size)
 {
-      // Header
-      BX_SELECTED_CONTROLLER(channel).buffer[0] = (size+6) >> 8;
-      BX_SELECTED_CONTROLLER(channel).buffer[1] = (size+6) & 0xff;
-      if (bx_options.atadevice[channel][BX_HD_THIS channels[channel].drive_select].Ostatus->get () == BX_INSERTED)
-        BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
-      else
-        BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
-      BX_SELECTED_CONTROLLER(channel).buffer[3] = 0; // reserved
-      BX_SELECTED_CONTROLLER(channel).buffer[4] = 0; // reserved
-      BX_SELECTED_CONTROLLER(channel).buffer[5] = 0; // reserved
-      BX_SELECTED_CONTROLLER(channel).buffer[6] = 0; // reserved
-      BX_SELECTED_CONTROLLER(channel).buffer[7] = 0; // reserved
+  char ata_name[20];
 
-      // Data
-      memcpy(BX_SELECTED_CONTROLLER(channel).buffer + 8, src, size);
+  // Header
+  BX_SELECTED_CONTROLLER(channel).buffer[0] = (size+6) >> 8;
+  BX_SELECTED_CONTROLLER(channel).buffer[1] = (size+6) & 0xff;
+  sprintf(ata_name, "ata.%d.%s", channel, BX_HD_THIS channels[channel].drive_select?"slave":"master");
+  bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
+  if (SIM->get_param_enum("status", base)->get() == BX_INSERTED)
+    BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x12; // media present 120mm CD-ROM (CD-R) data/audio  door closed
+  else
+    BX_SELECTED_CONTROLLER(channel).buffer[2] = 0x70; // no media present
+  BX_SELECTED_CONTROLLER(channel).buffer[3] = 0; // reserved
+  BX_SELECTED_CONTROLLER(channel).buffer[4] = 0; // reserved
+  BX_SELECTED_CONTROLLER(channel).buffer[5] = 0; // reserved
+  BX_SELECTED_CONTROLLER(channel).buffer[6] = 0; // reserved
+  BX_SELECTED_CONTROLLER(channel).buffer[7] = 0; // reserved
+
+  // Data
+  memcpy(BX_SELECTED_CONTROLLER(channel).buffer + 8, src, size);
 }
 
   void BX_CPP_AttrRegparmN(1)
@@ -3266,12 +3283,16 @@ bx_hard_drive_c::get_cd_media_status(Bit32u handle)
   unsigned
 bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
 {
+  char ata_name[20];
+
   BX_DEBUG (("set_cd_media_status handle=%d status=%d", handle, status));
   if ( handle >= BX_MAX_ATA_CHANNEL*2 ) return 0;
 
   Bit8u channel = handle / 2;
   Bit8u device  = handle % 2;
 
+  sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
+  bx_list_c *base = (bx_list_c*) SIM->get_param(ata_name);
   // if setting to the current value, nothing to do
   if (status == BX_HD_THIS channels[channel].drives[device].cdrom.ready)
     return(status);
@@ -3287,18 +3308,18 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
       BX_HD_THIS channels[channel].drives[device].cdrom.cd->eject_cdrom();
 #endif
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
-      bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
-      }
+      SIM->get_param_enum("status", base)->set(BX_EJECTED);
+    }
   } else {
     // insert cdrom
 #ifdef LOWLEVEL_CDROM
-    if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom(bx_options.atadevice[channel][device].Opath->getptr())) {
+    if (BX_HD_THIS channels[channel].drives[device].cdrom.cd->insert_cdrom(SIM->get_param_string("path", base)->getptr())) {
       BX_INFO(( "Media present in CD-ROM drive"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 1;
       Bit32u capacity = BX_HD_THIS channels[channel].drives[device].cdrom.cd->capacity();
       BX_HD_THIS channels[channel].drives[device].cdrom.capacity = capacity;
       BX_INFO(("Capacity is %d sectors (%.2f MB)", capacity, (float)capacity / 512.0));
-      bx_options.atadevice[channel][device].Ostatus->set(BX_INSERTED);
+      SIM->get_param_enum("status", base)->set(BX_INSERTED);
       BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_UNIT_ATTENTION;
       BX_SELECTED_DRIVE(channel).sense.asc = 0;
       BX_SELECTED_DRIVE(channel).sense.ascq = 0;
@@ -3309,7 +3330,7 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
     {
       BX_INFO(( "Could not locate CD-ROM, continuing with media not present"));
       BX_HD_THIS channels[channel].drives[device].cdrom.ready = 0;
-      bx_options.atadevice[channel][device].Ostatus->set(BX_EJECTED);
+      SIM->get_param_enum("status", base)->set(BX_EJECTED);
     }
   }
   return (BX_HD_THIS channels[channel].drives[device].cdrom.ready);

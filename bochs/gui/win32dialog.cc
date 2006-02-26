@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.35 2006-02-24 22:35:46 vruppert Exp $
+// $Id: win32dialog.cc,v 1.36 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -246,7 +246,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 
 static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  static bx_atadevice_options cdromop;
+  static bx_list_c *cdromop;
   int device;
   static char origpath[MAX_PATH];
   char path[MAX_PATH];
@@ -254,18 +254,18 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   switch (msg) {
     case WM_INITDIALOG:
       SIM->get_cdrom_options(0, &cdromop, &device);
-      lstrcpy(origpath, cdromop.Opath->getptr());
+      lstrcpy(origpath, SIM->get_param_string("path", cdromop)->getptr());
       if (lstrlen(origpath) && lstrcmp(origpath, "none")) {
         SetWindowText(GetDlgItem(hDlg, IDCDROM1), origpath);
       }
-      if (cdromop.Ostatus->get() == BX_INSERTED) {
+      if (SIM->get_param_enum("status", cdromop)->get() == BX_INSERTED) {
         SendMessage(GetDlgItem(hDlg, IDSTATUS1), BM_SETCHECK, BST_CHECKED, 0);
       }
       return TRUE;
       break;
     case WM_CLOSE:
-      if (lstrcmp(cdromop.Opath->getptr(), origpath)) {
-        cdromop.Opath->set(origpath);
+      if (lstrcmp(SIM->get_param_string("path", cdromop)->getptr(), origpath)) {
+        SIM->get_param_string("path", cdromop)->set(origpath);
       }
       EndDialog(hDlg, -1);
       break;
@@ -273,9 +273,9 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       switch (LOWORD(wParam)) {
         case IDBROWSE1:
           GetDlgItemText(hDlg, IDCDROM1, path, MAX_PATH);
-          cdromop.Opath->set(path);
-          if (AskFilename(hDlg, (bx_param_filename_c *)cdromop.Opath, "iso") > 0) {
-            SetWindowText(GetDlgItem(hDlg, IDCDROM1), cdromop.Opath->getptr());
+          SIM->get_param_string("path", cdromop)->set(path);
+          if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop), "iso") > 0) {
+            SetWindowText(GetDlgItem(hDlg, IDCDROM1), SIM->get_param_string("path", cdromop)->getptr());
             SendMessage(GetDlgItem(hDlg, IDSTATUS1), BM_SETCHECK, BST_CHECKED, 0);
           }
           break;
@@ -283,21 +283,21 @@ static BOOL CALLBACK Cdrom1DlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
           if (SendMessage(GetDlgItem(hDlg, IDSTATUS1), BM_GETCHECK, 0, 0) == BST_CHECKED) {
             GetDlgItemText(hDlg, IDCDROM1, path, MAX_PATH);
             if (lstrlen(path)) {
-              cdromop.Ostatus->set(BX_INSERTED);
-              if (lstrcmp(path, cdromop.Opath->getptr())) {
-                cdromop.Opath->set(path);
+              SIM->get_param_enum("status", cdromop)->set(BX_INSERTED);
+              if (lstrcmp(path, SIM->get_param_string("path", cdromop)->getptr())) {
+                SIM->get_param_string("path", cdromop)->set(path);
               }
             } else {
-              cdromop.Ostatus->set(BX_EJECTED);
+              SIM->get_param_enum("status", cdromop)->set(BX_EJECTED);
             }
           } else {
-            cdromop.Ostatus->set(BX_EJECTED);
+            SIM->get_param_enum("status", cdromop)->set(BX_EJECTED);
           }
           EndDialog(hDlg, 1);
           break;
         case IDCANCEL:
-          if (lstrcmp(cdromop.Opath->getptr(), origpath)) {
-            cdromop.Opath->set(origpath);
+          if (lstrcmp(SIM->get_param_string("path", cdromop)->getptr(), origpath)) {
+            SIM->get_param_string("path", cdromop)->set(origpath);
           }
           EndDialog(hDlg, -1);
           break;
@@ -370,7 +370,7 @@ void RuntimeDlgSetAdvLogOpt(HWND hDlg)
 static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static int devcount;
-  static bx_atadevice_options cdromop[4];
+  static bx_list_c *cdromop[4];
   static char origpath[4][MAX_PATH];
   static BOOL changed;
   int device;
@@ -387,17 +387,18 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
       // 4 cdroms supported at run time
       devcount = 1;
       for (cdrom=1; cdrom<4; cdrom++) {
-        if (!SIM->get_cdrom_options (cdrom, &cdromop[cdrom], &device) || !cdromop[cdrom].Opresent->get ()) {
+        if (!SIM->get_cdrom_options(cdrom, &cdromop[cdrom], &device) ||
+	    !SIM->get_param_bool("present", cdromop[cdrom])->get()) {
           EnableWindow(GetDlgItem(hDlg, IDLABEL1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDCDROM1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDBROWSE1+cdrom), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDSTATUS1+cdrom), FALSE);
         } else {
-          lstrcpy(origpath[cdrom], cdromop[cdrom].Opath->getptr());
+          lstrcpy(origpath[cdrom], SIM->get_param_string("path", cdromop[cdrom])->getptr());
           if (lstrlen(origpath[cdrom]) && lstrcmp(origpath[cdrom], "none")) {
             SetWindowText(GetDlgItem(hDlg, IDCDROM1+cdrom), origpath[cdrom]);
           }
-          if (cdromop[cdrom].Ostatus->get() == BX_INSERTED) {
+          if (SIM->get_param_enum("status", cdromop[cdrom])->get() == BX_INSERTED) {
             SendMessage(GetDlgItem(hDlg, IDSTATUS1+cdrom), BM_SETCHECK, BST_CHECKED, 0);
           }
           devcount++;
@@ -414,23 +415,23 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
               if (SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_GETCHECK, 0, 0) == BST_CHECKED) {
                 GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
                 if (lstrlen(path)) {
-                  cdromop[device].Ostatus->set(BX_INSERTED);
-                  if (lstrcmp(path, cdromop[device].Opath->getptr())) {
-                    cdromop[device].Opath->set(path);
+                  SIM->get_param_enum("status", cdromop[device])->set(BX_INSERTED);
+                  if (lstrcmp(path, SIM->get_param_string("path", cdromop[device])->getptr())) {
+                    SIM->get_param_string("path", cdromop[device])->set(path);
                   }
                 } else {
-                  cdromop[device].Ostatus->set(BX_EJECTED);
+                  SIM->get_param_enum("status", cdromop[device])->set(BX_EJECTED);
                 }
               } else {
-                cdromop[device].Ostatus->set(BX_EJECTED);
+                SIM->get_param_enum("status", cdromop[device])->set(BX_EJECTED);
               }
             }
             changed = FALSE;
           } else {
             if (changed) {
               for (device=1; device<devcount; device++) {
-                if (lstrcmp(cdromop[device].Opath->getptr(), origpath[device])) {
-                  cdromop[device].Opath->set(origpath[device]);
+                if (lstrcmp(SIM->get_param_string("path", cdromop[device])->getptr(), origpath[device])) {
+                  SIM->get_param_string("path", cdromop[device])->set(origpath[device]);
                 }
               }
             }
@@ -462,9 +463,9 @@ static BOOL CALLBACK RTCdromDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM l
             case IDBROWSE4:
               device = LOWORD(wParam) - IDBROWSE1;
               GetDlgItemText(hDlg, IDCDROM1+device, path, MAX_PATH);
-              cdromop[device].Opath->set(path);
-              if (AskFilename(hDlg, (bx_param_filename_c *)cdromop[device].Opath, "iso") > 0) {
-                SetWindowText(GetDlgItem(hDlg, IDCDROM1+device), cdromop[device].Opath->getptr());
+              SIM->get_param_string("path", cdromop[device])->set(path);
+              if (AskFilename(hDlg, (bx_param_filename_c *)SIM->get_param_string("path", cdromop[device]), "iso") > 0) {
+                SetWindowText(GetDlgItem(hDlg, IDCDROM1+device), SIM->get_param_string("path", cdromop[device])->getptr());
                 SendMessage(GetDlgItem(hDlg, IDSTATUS1+device), BM_SETCHECK, BST_CHECKED, 0);
               }
               break;

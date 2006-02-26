@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.317 2006-02-23 22:48:56 vruppert Exp $
+// $Id: main.cc,v 1.318 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -205,16 +205,18 @@ void print_tree(bx_param_c *node, int level)
     case BXT_PARAM_BOOL:
       printf ("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
       break;
-    case BXT_PARAM:
     case BXT_PARAM_ENUM:
+      printf ("%s = '%s'  (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
+      break;
+    case BXT_PARAM:
     case BXT_PARAM_STRING:
       printf ("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
       break;
     case BXT_LIST:
       {
-	printf ("%s = \n", node->get_name ());
+	printf ("%s = \n", node->get_name());
 	bx_list_c *list = (bx_list_c*)node;
-	for (i=0; i < list->get_size (); i++) {
+	for (i=0; i < list->get_size(); i++) {
 	   print_tree(list->get(i), level+1);
 	}
 	break;

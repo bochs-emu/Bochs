@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.181 2006-02-24 22:35:45 vruppert Exp $
+// $Id: bochs.h,v 1.182 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -465,13 +465,6 @@ extern bx_bool bx_gui_sighandler;
 #define BX_PATHNAME_LEN 512
 
 typedef struct {
-  bx_param_bool_c *Opresent;
-  bx_param_num_c *Oioaddr1;
-  bx_param_num_c *Oioaddr2;
-  bx_param_num_c *Oirq;
-} bx_ata_options;
-
-typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_string_c *Ooutfile;
 } bx_parport_options;
@@ -522,8 +515,6 @@ typedef struct {
 #define BX_N_PCI_SLOTS 5
 
 typedef struct BOCHSAPI {
-  bx_ata_options    ata[BX_MAX_ATA_CHANNEL];
-  bx_atadevice_options  atadevice[BX_MAX_ATA_CHANNEL][2];
   bx_serial_options com[BX_N_SERIAL_PORTS];
   bx_parport_options par[BX_N_PARALLEL_PORTS];
   bx_usb_options    usb[BX_N_USB_HUBS];

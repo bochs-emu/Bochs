@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.165 2006-02-24 22:35:46 vruppert Exp $
+// $Id: siminterface.h,v 1.166 2006-02-26 19:11:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -186,178 +186,31 @@ typedef enum {
 #define BXPN_FLOPPYB_PATH                "floppy.1.path"
 #define BXPN_FLOPPYB_TYPE                "floppy.1.type"
 #define BXPN_FLOPPYB_STATUS              "floppy.1.status"
+#define BXPN_ATA0_RES                    "ata.0.resources"
+#define BXPN_ATA1_RES                    "ata.1.resources"
+#define BXPN_ATA2_RES                    "ata.2.resources"
+#define BXPN_ATA3_RES                    "ata.3.resources"
+#define BXPN_ATA0_ENABLED                "ata.0.resources.enabled"
+#define BXPN_ATA1_ENABLED                "ata.1.resources.enabled"
+#define BXPN_ATA0_MASTER                 "ata.0.master"
+#define BXPN_ATA1_MASTER                 "ata.1.master"
+#define BXPN_ATA2_MASTER                 "ata.2.master"
+#define BXPN_ATA3_MASTER                 "ata.3.master"
+#define BXPN_ATA0_SLAVE                  "ata.0.slave"
+#define BXPN_ATA1_SLAVE                  "ata.1.slave"
+#define BXPN_ATA2_SLAVE                  "ata.2.slave"
+#define BXPN_ATA3_SLAVE                  "ata.3.slave"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
+
+#define BXP_PARAMS_PER_ATA_DEVICE 12
 
 // list if parameter id values.  The actual values are not important;
 // it's only important that they all be different from each other.
 typedef enum {
   BXP_NULL = 301,
   BXP_TEXT_SNAPSHOT_CHECK,
-
-  BXP_ATA0_MENU,
-  BXP_ATA1_MENU,
-  BXP_ATA2_MENU,
-  BXP_ATA3_MENU,
-#define BXP_ATAx_MENU(i) (BXP_ATA0_MENU + (i))
-  BXP_ATA0,
-  BXP_ATA1,
-  BXP_ATA2,
-  BXP_ATA3,
-#define BXP_ATAx(i) (BXP_ATA0 + (i))
-  BXP_ATA0_PRESENT,
-  BXP_ATA1_PRESENT,
-  BXP_ATA2_PRESENT,
-  BXP_ATA3_PRESENT,
-#define BXP_ATAx_PRESENT(i) (BXP_ATA0_PRESENT + (i))
-  BXP_ATA0_IOADDR1,
-  BXP_ATA1_IOADDR1,
-  BXP_ATA2_IOADDR1,
-  BXP_ATA3_IOADDR1,
-#define BXP_ATAx_IOADDR1(i) (BXP_ATA0_IOADDR1 + (i))
-  BXP_ATA0_IOADDR2,
-  BXP_ATA1_IOADDR2,
-  BXP_ATA2_IOADDR2,
-  BXP_ATA3_IOADDR2,
-#define BXP_ATAx_IOADDR2(i) (BXP_ATA0_IOADDR2 + (i))
-  BXP_ATA0_IRQ,
-  BXP_ATA1_IRQ,
-  BXP_ATA2_IRQ,
-  BXP_ATA3_IRQ,
-#define BXP_ATAx_IRQ(i) (BXP_ATA0_IRQ + (i))
-
-  BXP_ATA0_MASTER,
-  BXP_ATA0_SLAVE,
-  BXP_ATA1_MASTER,
-  BXP_ATA1_SLAVE,
-  BXP_ATA2_MASTER,
-  BXP_ATA2_SLAVE,
-  BXP_ATA3_MASTER,
-  BXP_ATA3_SLAVE,
-#define BXP_ATAx_DEVICE(i, s) (BXP_ATA0_MASTER + (2*(i)) + (s))
-
-#define BXP_PARAMS_PER_ATA_DEVICE 12
-
-  BXP_ATA0_MASTER_PRESENT,
-  BXP_ATA0_SLAVE_PRESENT,
-  BXP_ATA1_MASTER_PRESENT,
-  BXP_ATA1_SLAVE_PRESENT,
-  BXP_ATA2_MASTER_PRESENT,
-  BXP_ATA2_SLAVE_PRESENT,
-  BXP_ATA3_MASTER_PRESENT,
-  BXP_ATA3_SLAVE_PRESENT,
-#define BXP_ATAx_DEVICE_PRESENT(i, s) (BXP_ATA0_MASTER_PRESENT + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_TYPE,
-  BXP_ATA0_SLAVE_TYPE,
-  BXP_ATA1_MASTER_TYPE,
-  BXP_ATA1_SLAVE_TYPE,
-  BXP_ATA2_MASTER_TYPE,
-  BXP_ATA2_SLAVE_TYPE,
-  BXP_ATA3_MASTER_TYPE,
-  BXP_ATA3_SLAVE_TYPE,
-#define BXP_ATAx_DEVICE_TYPE(i, s) (BXP_ATA0_MASTER_TYPE + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_MODE,
-  BXP_ATA0_SLAVE_MODE,
-  BXP_ATA1_MASTER_MODE,
-  BXP_ATA1_SLAVE_MODE,
-  BXP_ATA2_MASTER_MODE,
-  BXP_ATA2_SLAVE_MODE,
-  BXP_ATA3_MASTER_MODE,
-  BXP_ATA3_SLAVE_MODE,
-#define BXP_ATAx_DEVICE_MODE(i, s) (BXP_ATA0_MASTER_MODE + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_PATH,
-  BXP_ATA0_SLAVE_PATH,
-  BXP_ATA1_MASTER_PATH,
-  BXP_ATA1_SLAVE_PATH,
-  BXP_ATA2_MASTER_PATH,
-  BXP_ATA2_SLAVE_PATH,
-  BXP_ATA3_MASTER_PATH,
-  BXP_ATA3_SLAVE_PATH,
-#define BXP_ATAx_DEVICE_PATH(i, s) (BXP_ATA0_MASTER_PATH + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_CYLINDERS,
-  BXP_ATA0_SLAVE_CYLINDERS,
-  BXP_ATA1_MASTER_CYLINDERS,
-  BXP_ATA1_SLAVE_CYLINDERS,
-  BXP_ATA2_MASTER_CYLINDERS,
-  BXP_ATA2_SLAVE_CYLINDERS,
-  BXP_ATA3_MASTER_CYLINDERS,
-  BXP_ATA3_SLAVE_CYLINDERS,
-#define BXP_ATAx_DEVICE_CYLINDERS(i, s) (BXP_ATA0_MASTER_CYLINDERS + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_HEADS,
-  BXP_ATA0_SLAVE_HEADS,
-  BXP_ATA1_MASTER_HEADS,
-  BXP_ATA1_SLAVE_HEADS,
-  BXP_ATA2_MASTER_HEADS,
-  BXP_ATA2_SLAVE_HEADS,
-  BXP_ATA3_MASTER_HEADS,
-  BXP_ATA3_SLAVE_HEADS,
-#define BXP_ATAx_DEVICE_HEADS(i, s) (BXP_ATA0_MASTER_HEADS + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_SPT,
-  BXP_ATA0_SLAVE_SPT,
-  BXP_ATA1_MASTER_SPT,
-  BXP_ATA1_SLAVE_SPT,
-  BXP_ATA2_MASTER_SPT,
-  BXP_ATA2_SLAVE_SPT,
-  BXP_ATA3_MASTER_SPT,
-  BXP_ATA3_SLAVE_SPT,
-#define BXP_ATAx_DEVICE_SPT(i, s) (BXP_ATA0_MASTER_SPT + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_STATUS,
-  BXP_ATA0_SLAVE_STATUS,
-  BXP_ATA1_MASTER_STATUS,
-  BXP_ATA1_SLAVE_STATUS,
-  BXP_ATA2_MASTER_STATUS,
-  BXP_ATA2_SLAVE_STATUS,
-  BXP_ATA3_MASTER_STATUS,
-  BXP_ATA3_SLAVE_STATUS,
-#define BXP_ATAx_DEVICE_STATUS(i, s) (BXP_ATA0_MASTER_STATUS + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_MODEL,
-  BXP_ATA0_SLAVE_MODEL,
-  BXP_ATA1_MASTER_MODEL,
-  BXP_ATA1_SLAVE_MODEL,
-  BXP_ATA2_MASTER_MODEL,
-  BXP_ATA2_SLAVE_MODEL,
-  BXP_ATA3_MASTER_MODEL,
-  BXP_ATA3_SLAVE_MODEL,
-#define BXP_ATAx_DEVICE_MODEL(i, s) (BXP_ATA0_MASTER_MODEL + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_BIOSDETECT,
-  BXP_ATA0_SLAVE_BIOSDETECT,
-  BXP_ATA1_MASTER_BIOSDETECT,
-  BXP_ATA1_SLAVE_BIOSDETECT,
-  BXP_ATA2_MASTER_BIOSDETECT,
-  BXP_ATA2_SLAVE_BIOSDETECT,
-  BXP_ATA3_MASTER_BIOSDETECT,
-  BXP_ATA3_SLAVE_BIOSDETECT,
-#define BXP_ATAx_DEVICE_BIOSDETECT(i, s) (BXP_ATA0_MASTER_BIOSDETECT + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_TRANSLATION,
-  BXP_ATA0_SLAVE_TRANSLATION,
-  BXP_ATA1_MASTER_TRANSLATION,
-  BXP_ATA1_SLAVE_TRANSLATION,
-  BXP_ATA2_MASTER_TRANSLATION,
-  BXP_ATA2_SLAVE_TRANSLATION,
-  BXP_ATA3_MASTER_TRANSLATION,
-  BXP_ATA3_SLAVE_TRANSLATION,
-#define BXP_ATAx_DEVICE_TRANSLATION(i, s) (BXP_ATA0_MASTER_TRANSLATION + (2*(i)) + (s))
-
-  BXP_ATA0_MASTER_JOURNAL,
-  BXP_ATA0_SLAVE_JOURNAL,
-  BXP_ATA1_MASTER_JOURNAL,
-  BXP_ATA1_SLAVE_JOURNAL,
-  BXP_ATA2_MASTER_JOURNAL,
-  BXP_ATA2_SLAVE_JOURNAL,
-  BXP_ATA3_MASTER_JOURNAL,
-  BXP_ATA3_SLAVE_JOURNAL,
-#define BXP_ATAx_DEVICE_JOURNAL(i, s) (BXP_ATA0_MASTER_JOURNAL + (2*(i)) + (s))
 
 #define BXP_PARAMS_PER_SERIAL_PORT 3
   BXP_COM1_ENABLED,
@@ -1349,29 +1202,6 @@ BOCHSAPI extern char *clock_sync_names[];
 BOCHSAPI extern int clock_sync_n_names;
 
 typedef struct {
-  bx_param_enum_c *Odevtype;
-  bx_param_string_c *Opath;
-  bx_param_enum_c *Otype;
-  bx_param_enum_c *Ostatus;
-} bx_floppy_options;
-
-typedef struct {
-  bx_list_c *Omenu;
-  bx_param_bool_c *Opresent;
-  bx_param_enum_c *Otype;
-  bx_param_enum_c *Omode;
-  bx_param_string_c *Opath;
-  bx_param_string_c *Ojournal;
-  bx_param_num_c *Ocylinders;
-  bx_param_num_c *Oheads;
-  bx_param_num_c *Ospt;
-  bx_param_enum_c *Ostatus;
-  bx_param_string_c *Omodel;
-  bx_param_enum_c *Obiosdetect;
-  bx_param_enum_c *Otranslation;
-} bx_atadevice_options;
-
-typedef struct {
   bx_param_bool_c *Oenabled;
   bx_param_enum_c *Omode;
   bx_param_string_c *Odev;
@@ -1435,10 +1265,10 @@ public:
   virtual bx_param_enum_c *get_param_enum(bx_id id) {return NULL;}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
-  virtual bx_param_num_c *get_param_num(const char *pname) {return NULL;}
-  virtual bx_param_string_c *get_param_string(const char *pname) {return NULL;}
-  virtual bx_param_bool_c *get_param_bool(const char *pname) {return NULL;}
-  virtual bx_param_enum_c *get_param_enum(const char *pname) {return NULL;}
+  virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL) {return NULL;}
+  virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL) {return NULL;}
+  virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL) {return NULL;}
+  virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual unsigned gen_param_id() {return 0;}
   virtual int get_n_log_modules() {return -1;}
   virtual char *get_prefix(int mod) {return 0;}
@@ -1469,7 +1299,7 @@ public:
   virtual int set_log_prefix(char *prefix) {return -1;}
   virtual int get_debugger_log_file(char *path, int len) {return -1;}
   virtual int set_debugger_log_file(char *path) {return -1;}
-  virtual int get_cdrom_options(int drive, bx_atadevice_options *out, int *where = NULL) {return -1;}
+  virtual int get_cdrom_options(int drive, bx_list_c **out, int *where = NULL) {return -1;}
 
   // The CI calls set_notify_callback to register its event handler function.
   // This event handler function is called whenever the simulator needs to
