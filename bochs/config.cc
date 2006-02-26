@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.85 2006-02-26 19:11:20 vruppert Exp $
+// $Id: config.cc,v 1.86 2006-02-26 22:36:01 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1167,8 +1167,8 @@ void bx_init_options()
     // Enable two ATA interfaces by default, disable the others.
     // Now that the dependence relationships are established, call set() on
     // the ata device present params to set all enables correctly.
-    enabled->set_initial_val(i<2);
-    enabled->set(i<2);
+    enabled->set_initial_val(channel<2);
+    enabled->set(channel<2);
   }
 
   // disk menu
