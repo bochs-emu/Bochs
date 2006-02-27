@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.120 2006-02-26 19:11:20 vruppert Exp $
+// $Id: wxmain.cc,v 1.121 2006-02-27 12:03:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -478,6 +478,10 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   // disable things that don't work yet
   menuDebug->Enable(ID_Debug_ShowMemory, FALSE);  // not implemented
   menuLog->Enable(ID_Log_View, FALSE);  // not implemented
+  // enable ATA channels in menu
+  menuEdit->Enable(ID_Edit_ATA1, BX_MAX_ATA_CHANNEL > 1);
+  menuEdit->Enable(ID_Edit_ATA2, BX_MAX_ATA_CHANNEL > 2);
+  menuEdit->Enable(ID_Edit_ATA3, BX_MAX_ATA_CHANNEL > 3);
 
   CreateStatusBar();
   wxStatusBar *sb = GetStatusBar();
@@ -928,18 +932,18 @@ void MyFrame::simStatusChanged (StatusChange change, bx_bool popupNotify) {
   menuConfiguration->Enable (ID_Config_New, canConfigure);
   menuConfiguration->Enable (ID_Config_Read, canConfigure);
   // only enabled ATA channels with a cdrom connected are available at runtime
-  for (unsigned i=0; i<4; i++) {
+  for (unsigned i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(ata_name, "ata.%d.resources", i);
     base = (bx_list_c*) SIM->get_param(ata_name);
     if (!SIM->get_param_bool("enabled", base)->get()) {
-      menuEdit->Enable (ID_Edit_ATA0+i, canConfigure);
+      menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);
     } else {
     sprintf(ata_name, "ata.%d.master", i);
     base = (bx_list_c*) SIM->get_param(ata_name);
-      if (SIM->get_param_enum("type", base)->get () != BX_ATA_DEVICE_CDROM) {
+      if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
         sprintf(ata_name, "ata.%d.slave", i);
         base = (bx_list_c*) SIM->get_param(ata_name);
-        if (SIM->get_param_enum("type", base)->get () != BX_ATA_DEVICE_CDROM) {
+        if (SIM->get_param_enum("type", base)->get() != BX_ATA_DEVICE_CDROM) {
           menuEdit->Enable(ID_Edit_ATA0+i, canConfigure);
         }
       }
@@ -1048,8 +1052,11 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
   wxLogDebug ("HandleAskParamString start");
   bx_param_num_c *opt = param->get_options ();
   wxASSERT (opt != NULL);
-  int n_opt = opt->get ();
-  char *msg = param->get_name ();
+  int n_opt = opt->get();
+  char *msg = param->get_label();
+  if ((msg == NULL) || (strlen(msg) == 0)) {
+    msg = param->get_name();
+  }
   char *newval = NULL;
   wxDialog *dialog = NULL;
   if (n_opt & param->IS_FILENAME) {
