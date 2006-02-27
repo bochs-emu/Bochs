@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.30 2006-02-19 21:35:50 vruppert Exp $
+// $Id: memory.h,v 1.31 2006-02-27 19:04:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,12 +51,11 @@ typedef bx_bool (*memory_handler_t)(unsigned long addr, unsigned long len, void 
 
 struct memory_handler_struct {
 	struct memory_handler_struct *next;
+	void *param;
 	unsigned long begin;
 	unsigned long end;
 	memory_handler_t read_handler;
 	memory_handler_t write_handler;
-	void *read_param;
-	void *write_param;
 };
 
 class BOCHSAPI BX_MEM_C : public logfunctions {
@@ -94,9 +93,8 @@ public:
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc);
   BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
-  BX_MEM_SMF bx_bool registerMemoryHandlers(memory_handler_t read_handler, void *read_param, 
-		  memory_handler_t write_handler, void *write_param, 
-		  Bit32u begin_addr, Bit32u end_addr);
+  BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
+		  memory_handler_t write_handler, Bit32u begin_addr, Bit32u end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 
 		  Bit32u begin_addr, Bit32u end_addr);
   };

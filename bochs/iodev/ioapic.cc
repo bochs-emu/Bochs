@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.26 2006-02-24 09:46:10 sshwarts Exp $
+// $Id: ioapic.cc,v 1.27 2006-02-27 19:04:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -9,6 +9,21 @@
 
 class bx_ioapic_c bx_ioapic;
 #define LOG_THIS  bx_ioapic.
+
+static bx_bool ioapic_read(unsigned long a20addr, unsigned long len, void *data, void *param)
+{
+  bx_ioapic.read(a20addr, data, len);
+  return 1;
+}
+
+static bx_bool ioapic_write(unsigned long a20addr, unsigned long len, void *data, void *param)
+{
+  if (len != 4) {
+    BX_PANIC (("I/O apic write with len=%d (should be 4)", len));
+  }
+  bx_ioapic.write(a20addr, (Bit32u*) data, len);
+  return 1;
+}
 
 void bx_io_redirect_entry_t::sprintf_self(char *buf)
 {
@@ -35,13 +50,15 @@ bx_ioapic_c::~bx_ioapic_c() {}
 
 #define BX_IOAPIC_DEFAULT_ID (BX_SMP_PROCESSORS)
 
-void bx_ioapic_c::init() 
+void bx_ioapic_c::init(void)
 {
   bx_generic_apic_c::init();
   BX_INFO(("initializing I/O APIC"));
   base_addr = 0xfec00000;
   set_id(BX_IOAPIC_DEFAULT_ID);
   ioregsel = 0;
+  DEV_register_memory_handlers(&bx_ioapic, 
+      ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
   // all interrupts masked
   for (int i=0; i<BX_IOAPIC_NUM_PINS; i++) {
     ioredtbl[i].set_lo_part(0x00010000);

@@ -255,10 +255,9 @@ bx_pcidev_c::init(void)
 		BX_INFO(("Registering memory I/O handler for %#x to %#x",
 						  (unsigned)find.resources[idx].start,
 						  (unsigned)find.resources[idx].end));
-		DEV_register_memory_handlers(pcidev_mem_read_handler, 
-				&(BX_PCIDEV_THIS regions[idx]), 
+		DEV_register_memory_handlers(&(BX_PCIDEV_THIS regions[idx]),
+                                pcidev_mem_read_handler, 
 				pcidev_mem_write_handler, 
-				&(BX_PCIDEV_THIS regions[idx]), 
 				find.resources[idx].start, 
 				find.resources[idx].end);
 	  }
@@ -437,10 +436,9 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 			BX_PCIDEV_THIS regions[io_reg_idx].start;
 		BX_PCIDEV_THIS regions[io_reg_idx].start = base & PCI_BASE_ADDRESS_MEM_MASK;
 		if (BX_PCIDEV_THIS regions[io_reg_idx].start) // dirty hack
-			DEV_register_memory_handlers(pcidev_mem_read_handler, 
-					&(BX_PCIDEV_THIS regions[io_reg_idx]), 
+			DEV_register_memory_handlers(&(BX_PCIDEV_THIS regions[io_reg_idx]),
+                                        pcidev_mem_read_handler, 
 					pcidev_mem_write_handler, 
-					&(BX_PCIDEV_THIS regions[io_reg_idx]), 
 					BX_PCIDEV_THIS regions[io_reg_idx].start, 
 					BX_PCIDEV_THIS regions[io_reg_idx].end);
 	}

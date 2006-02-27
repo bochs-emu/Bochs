@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.125 2006-02-21 21:35:09 vruppert Exp $
+// $Id: vga.cc,v 1.126 2006-02-27 19:04:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,8 +147,8 @@ bx_vga_c::init(void)
   BX_VGA_THIS init_iohandlers(read_handler,write_handler);
 #endif // !BX_SUPPORT_CLGD54XX
 
-  DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
-                               theVga, 0xa0000, 0xbffff);
+  DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
+                               0xa0000, 0xbffff);
 
   BX_VGA_THIS s.vga_enabled = 1;
   BX_VGA_THIS s.misc_output.color_emulation  = 1;
@@ -298,8 +298,8 @@ bx_vga_c::init(void)
         DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
       }    
     }
-    DEV_register_memory_handlers(mem_read_handler, theVga, mem_write_handler,
-                                 theVga, VBE_DISPI_LFB_PHYSICAL_ADDRESS,
+    DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
+                                 VBE_DISPI_LFB_PHYSICAL_ADDRESS,
                                  VBE_DISPI_LFB_PHYSICAL_ADDRESS + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
 
     if (BX_VGA_THIS s.vbe_memory == NULL)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.48 2006-01-21 09:28:49 vruppert Exp $
+// $Id: plugin.h,v 1.49 2006-02-27 19:04:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -221,8 +221,8 @@ extern "C" {
 #endif
 
 //////// Memory macros
-#define DEV_register_memory_handlers(rh,rp,wh,wp,b,e) \
-    bx_devices.mem->registerMemoryHandlers(rh,rp,wh,wp,b,e)
+#define DEV_register_memory_handlers(param,rh,wh,b,e) \
+    bx_devices.mem->registerMemoryHandlers(param,rh,wh,b,e)
 #define DEV_unregister_memory_handlers(rh,wh,b,e) \
     bx_devices.mem->unregisterMemoryHandlers(rh,wh,b,e)
 

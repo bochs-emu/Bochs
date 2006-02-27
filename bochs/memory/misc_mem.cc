@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.78 2006-02-19 21:35:50 vruppert Exp $
+// $Id: misc_mem.cc,v 1.79 2006-02-27 19:04:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.78 2006-02-19 21:35:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.79 2006-02-27 19:04:01 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -552,19 +552,16 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
 {
 
 #if BX_SUPPORT_APIC
-    bx_generic_apic_c *local_apic = &cpu->local_apic;
-    if (local_apic->get_base () == (a20Addr & ~0xfff))
-      return(NULL); // Vetoed!  APIC address space
-    bx_generic_apic_c *ioapic = bx_devices.ioapic;
-    if (ioapic->get_base () == (a20Addr & ~0xfff))
-      return(NULL); // Vetoed!  IOAPIC address space
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  if (local_apic->get_base () == (a20Addr & ~0xfff))
+    return(NULL); // Vetoed!  APIC address space
 #endif
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20Addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20Addr &&
         memory_handler->end >= a20Addr) {
-      return(NULL); // Vetoed!  memory handler for vram, mmio and PCI PnP
+      return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
     }
     memory_handler = memory_handler->next;
   }
@@ -666,24 +663,21 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
  * XXX: maybe we should check for overlapping memory handlers
  */
   bx_bool 
-BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param,
-		memory_handler_t write_handler, void *write_param,
-		Bit32u begin_addr, Bit32u end_addr)
+BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
+		memory_handler_t write_handler, Bit32u begin_addr, Bit32u end_addr)
 {
   if (end_addr < begin_addr)
     return false;
-  if (!read_handler)
+  if (!read_handler || !write_handler)
     return false;
-  if (!write_handler)
-    return false;
+  BX_INFO(("Register memory access handlers: %08x-%08x", begin_addr, end_addr));
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
     memory_handler->next = memory_handlers[page_idx];
     memory_handlers[page_idx] = memory_handler;
     memory_handler->read_handler = read_handler;
     memory_handler->write_handler = write_handler;
-    memory_handler->read_param = read_param;
-    memory_handler->write_param = write_param;
+    memory_handler->param = param;
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
   }
@@ -694,28 +688,29 @@ BX_MEM_C::registerMemoryHandlers(memory_handler_t read_handler, void *read_param
 BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		Bit32u begin_addr, Bit32u end_addr)
 {
-   bx_bool ret = true;
-   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
-     struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
-     struct memory_handler_struct *prev = NULL;
-     while (memory_handler && 
+  bx_bool ret = true;
+  BX_INFO(("Memory access handlers unregistered: %08x-%08x", begin_addr, end_addr));
+  for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
+    struct memory_handler_struct *memory_handler = memory_handlers[page_idx];
+    struct memory_handler_struct *prev = NULL;
+    while (memory_handler && 
          memory_handler->read_handler != read_handler &&
          memory_handler->write_handler != write_handler && 
          memory_handler->begin != begin_addr && 
          memory_handler->end != end_addr)
-     {
-       prev = memory_handler;
-       memory_handler = memory_handler->next;
-     }
-     if (!memory_handler) {
-       ret = false; // we should have found it
-       continue; // anyway, try the other pages
-     }
-     if (prev)
-       prev->next = memory_handler->next;
-     else
-       memory_handlers[page_idx] = memory_handler->next;
-     delete memory_handler;
-   }  
-   return ret;
+    {
+      prev = memory_handler;
+      memory_handler = memory_handler->next;
+    }
+    if (!memory_handler) {
+      ret = false; // we should have found it
+      continue; // anyway, try the other pages
+    }
+    if (prev)
+      prev->next = memory_handler->next;
+    else
+      memory_handlers[page_idx] = memory_handler->next;
+    delete memory_handler;
+  }  
+  return ret;
 }

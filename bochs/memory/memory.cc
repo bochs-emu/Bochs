@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.44 2006-02-19 21:35:50 vruppert Exp $
+// $Id: memory.cc,v 1.45 2006-02-27 19:04:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,29 +60,24 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
-          memory_handler->write_handler(a20addr, len, data, memory_handler->write_param))
+          memory_handler->write_handler(a20addr, len, data, memory_handler->param))
     {
       return;
     }
     memory_handler = memory_handler->next;
   }
 
-#if BX_SUPPORT_ICACHE
-  if (a20addr < BX_MEM_THIS len)
-    pageWriteStampTable.decWriteStamp(a20addr);
-#endif
-
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
-  bx_generic_apic_c *ioapic = bx_devices.ioapic;
   if (local_apic->is_selected (a20addr, len)) {
     local_apic->write (a20addr, (Bit32u *)data, len);
     return;
   }
-  if (ioapic->is_selected (a20addr, len)) {
-    ioapic->write (a20addr, (Bit32u *)data, len);
-    return;
-  }
+#endif
+
+#if BX_SUPPORT_ICACHE
+  if (a20addr < BX_MEM_THIS len)
+    pageWriteStampTable.decWriteStamp(a20addr);
 #endif
 
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
@@ -107,9 +102,9 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
     }
 
 #ifdef BX_LITTLE_ENDIAN
-  data_ptr = (Bit8u *) data;
+    data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
-  data_ptr = (Bit8u *) data + (len - 1);
+    data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
 write_one:
@@ -218,7 +213,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
-          memory_handler->read_handler(a20addr, len, data, memory_handler->read_param))
+          memory_handler->read_handler(a20addr, len, data, memory_handler->param))
     {
       return;
     }
@@ -227,13 +222,8 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
-  bx_generic_apic_c *ioapic = bx_devices.ioapic;
   if (local_apic->is_selected (addr, len)) {
     local_apic->read (addr, data, len);
-    return;
-  }
-  if (ioapic->is_selected (addr, len)) {
-    ioapic->read (addr, data, len);
     return;
   }
 #endif
