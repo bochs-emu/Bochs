@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.121 2006-02-26 19:11:20 vruppert Exp $
+// $Id: siminterface.cc,v 1.122 2006-02-27 09:37:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -95,7 +95,7 @@ public:
   virtual void get_notify_callback (bxevent_handler *func, void **arg);
   virtual BxEvent* sim_to_ci_event (BxEvent *event);
   virtual int log_msg (const char *prefix, int level, const char *msg);
-  virtual int ask_param(bx_id which);
+  virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
   virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
@@ -634,15 +634,14 @@ bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
 // send it to the CI, and wait for the response.  The CI will call the
 // set() method on the parameter if the user changes the value.
 int 
-bx_real_sim_c::ask_param (bx_id param)
+bx_real_sim_c::ask_param(bx_param_c *param)
 {
-  bx_param_c *paramptr = SIM->get_param(param);
-  BX_ASSERT (paramptr != NULL);
+  BX_ASSERT(param != NULL);
   // create appropriate event
   BxEvent event;
   event.type = BX_SYNC_EVT_ASK_PARAM;
-  event.u.param.param = paramptr;
-  sim_to_ci_event (&event);
+  event.u.param.param = param;
+  sim_to_ci_event(&event);
   return event.retcode;
 }
 

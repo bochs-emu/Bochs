@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.91 2006-02-24 22:35:46 vruppert Exp $
+// $Id: gui.cc,v 1.92 2006-02-27 09:37:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -318,18 +318,18 @@ bx_gui_c::cdromD_handler(void)
     // a dialog asking what disk image you want to switch to.
     // This code handles the first cdrom only. The cdrom drives #2, #3 and
     // #4 are handled in the win32 runtime dialog.
-    bx_param_c *cdrom = SIM->get_first_cdrom ();
+    bx_param_c *cdrom = SIM->get_first_cdrom();
     if (cdrom == NULL)
       return;  // no cdrom found
-    int ret = SIM->ask_param (cdrom->get_id ());
+    int ret = SIM->ask_param(cdrom);
     if (ret > 0) {
-      BX_GUI_THIS update_drive_status_buttons ();
+      BX_GUI_THIS update_drive_status_buttons();
     }
     return;
   }
   BX_GUI_THIS cdromD_status =
     DEV_hd_set_cd_media_status(handle, !BX_GUI_THIS cdromD_status);
-  BX_GUI_THIS update_drive_status_buttons ();
+  BX_GUI_THIS update_drive_status_buttons();
 }
 
   void
