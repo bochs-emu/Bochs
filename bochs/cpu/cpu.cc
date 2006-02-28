@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.132 2006-02-23 18:23:31 sshwarts Exp $
+// $Id: cpu.cc,v 1.133 2006-02-28 17:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -226,7 +226,7 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 #if BX_DEBUGGER
   if (BX_CPU_THIS_PTR trace) {
     // print the instruction that is about to be executed.
-    bx_dbg_disassemble_current (BX_CPU_ID, 1);  // only one cpu, print time stamp
+    bx_dbg_disassemble_current(BX_CPU_ID, 1);  // only one cpu, print time stamp
   }
 #endif
 
@@ -486,9 +486,8 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
       // willing to dump all iCache entries which can hash to this page.
       // Therefore, in either case, we can keep the counter as-is and
       // replace the fetch mode bits.
-      Bit32u fetchModeMask = BX_CPU_THIS_PTR iCache.fetchModeMask;
       pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
-      pageWriteStamp |= fetchModeMask;         // Add in new ones.
+      pageWriteStamp |= BX_CPU_THIS_PTR fetchModeMask;  // Add in new ones.
       pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
       cache_entry->pAddr = pAddr;
       cache_entry->writeStamp = pageWriteStamp;
@@ -790,7 +789,7 @@ void BX_CPU_C::prefetch(void)
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR currPageWriteStampPtr = pageWriteStampTable.getPageWriteStampPtr(pAddr);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
-  Bit32u fetchModeMask  = BX_CPU_THIS_PTR iCache.fetchModeMask;
+  Bit32u fetchModeMask  = BX_CPU_THIS_PTR fetchModeMask;
   if ((pageWriteStamp & ICacheFetchModeMask) != fetchModeMask)
   {
     // The current CPU mode does not match iCache entries for this
@@ -853,11 +852,11 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
   // Restore EIP since we fudged it to start at the 2nd page boundary.
   RIP = BX_CPU_THIS_PTR prev_eip;
 
-// Since we cross an instruction boundary, note that we need a prefetch()
-// again on the next instruction.  Perhaps we can optimize this to
-// eliminate the extra prefetch() since we do it above, but have to
-// think about repeated instructions, etc.
-BX_CPU_THIS_PTR eipPageWindowSize = 0; // Fixme
+  // Since we cross an instruction boundary, note that we need a prefetch()
+  // again on the next instruction.  Perhaps we can optimize this to
+  // eliminate the extra prefetch() since we do it above, but have to
+  // think about repeated instructions, etc.
+  invalidate_prefetch_q();
 
   BX_INSTR_OPCODE(BX_CPU_ID, fetchBuffer, i->ilen(),
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());

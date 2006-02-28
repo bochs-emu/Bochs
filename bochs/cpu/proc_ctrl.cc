@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.134 2006-02-14 19:00:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.135 2006-02-28 17:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1160,7 +1160,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
   /* ES */
@@ -1869,7 +1869,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
@@ -1929,7 +1929,7 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR iCache.fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;

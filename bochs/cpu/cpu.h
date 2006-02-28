@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.262 2006-02-23 18:23:31 sshwarts Exp $
+// $Id: cpu.h,v 1.263 2006-02-28 17:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -647,7 +647,7 @@ public:
   //  4...4  os32
   //  3...3  (unused)
   //  2...0  seg
-  unsigned metaInfo;
+  Bit32u metaInfo;
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
@@ -1219,7 +1219,8 @@ public: // for now...
   // this structure should be aligned on a 32-byte boundary to be friendly
   // with the host cache lines.
 #if BX_SUPPORT_ICACHE
-  bxICache_c iCache  BX_CPP_AlignN(32);
+  bxICache_c iCache BX_CPP_AlignN(32);
+  Bit32u fetchModeMask;
 #endif
 
 

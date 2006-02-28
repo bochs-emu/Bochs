@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.63 2005-11-26 21:36:51 sshwarts Exp $
+// $Id: paging.cc,v 1.64 2006-02-28 17:47:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -432,7 +432,7 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
     TLB_flush(1); // 1 = Flush Global entries also.
 
   if (bx_dbg.paging)
-    BX_INFO(("pagingCR0Changed(0x%x -> 0x%x):", oldCR0, newCR0));
+    BX_INFO(("pagingCR0Changed: (0x%x -> 0x%x)", oldCR0, newCR0));
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -443,7 +443,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
     TLB_flush(1); // 1 = Flush Global entries also.
 
   if (bx_dbg.paging)
-    BX_INFO(("pagingCR4Changed(0x%x -> 0x%x):", oldCR4, newCR4));
+    BX_INFO(("pagingCR4Changed: (0x%x -> 0x%x)", oldCR4, newCR4));
 
 #if BX_SUPPORT_PAE
   if ( (oldCR4 & 0x00000020) != (newCR4 & 0x00000020) ) {
@@ -550,7 +550,7 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[i];
     if (tlbEntry->lpf != BX_INVALID_TLB_ENTRY) {
 #if BX_SUPPORT_GLOBAL_PAGES
-      if ( invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage) )
+      if (invalidateGlobal || !(tlbEntry->accessBits & TLB_GlobalPage))
 #endif
       {
         tlbEntry->lpf = BX_INVALID_TLB_ENTRY;
