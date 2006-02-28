@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.263 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: cpu.h,v 1.264 2006-02-28 19:50:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -611,6 +611,15 @@ typedef struct {
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
   Bit64u tsc_last_reset;
 
+  // SYSENTER/SYSEXIT instruction msr's
+#if BX_SUPPORT_SEP
+  Bit32u sysenter_cs_msr;
+  Bit32u sysenter_esp_msr;
+  Bit32u sysenter_eip_msr;
+#endif
+
+  Bit32u smbase;
+
   /* TODO finish of the others */
 } bx_regs_msr_t;
 #endif
@@ -1191,13 +1200,6 @@ public: // for now...
 
 #if BX_GDBSTUB
   Bit8u ispanic;
-#endif
-
-  // SYSENTER/SYSEXIT instruction msr's
-#if BX_SUPPORT_SEP
-  Bit32u sysenter_cs_msr;
-  Bit32u sysenter_esp_msr;
-  Bit32u sysenter_eip_msr;
 #endif
 
   // for paging
@@ -2815,7 +2817,7 @@ public: // for now...
   BX_SMF bx_bool can_pop(Bit32u bytes);
   BX_SMF void    decrementESPForPush(unsigned nBytes, Bit32u *eSP);
   BX_SMF void    sanity_checks(void);
-
+  BX_SMF void    enter_system_management_mode(void);
   BX_SMF void    debug(bx_address offset);
 #if BX_DISASM
   BX_SMF void    debug_disasm_instruction(bx_address offset);

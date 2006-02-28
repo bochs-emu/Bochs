@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.135 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.136 2006-02-28 19:50:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1561,17 +1561,17 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS:
-      RAX = BX_CPU_THIS_PTR sysenter_cs_msr;  
+      RAX = BX_CPU_THIS_PTR msr.sysenter_cs_msr;  
       RDX = 0; 
       return;
 
     case BX_MSR_SYSENTER_ESP: 
-      RAX = BX_CPU_THIS_PTR sysenter_esp_msr; 
+      RAX = BX_CPU_THIS_PTR msr.sysenter_esp_msr; 
       RDX = 0; 
       return;
 
     case BX_MSR_SYSENTER_EIP: 
-      RAX = BX_CPU_THIS_PTR sysenter_eip_msr; 
+      RAX = BX_CPU_THIS_PTR msr.sysenter_eip_msr; 
       RDX = 0; 
       return;
 #endif 
@@ -1708,16 +1708,16 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_SYSENTER_CS: {
       // not a bug according to book ... but very stOOpid
       if (EAX & 3) BX_PANIC(("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));
-      BX_CPU_THIS_PTR sysenter_cs_msr  = EAX;
+      BX_CPU_THIS_PTR msr.sysenter_cs_msr  = EAX;
       return;
     }
 
     case BX_MSR_SYSENTER_ESP:
-      BX_CPU_THIS_PTR sysenter_esp_msr = EAX; 
+      BX_CPU_THIS_PTR msr.sysenter_esp_msr = EAX; 
       return;
 
     case BX_MSR_SYSENTER_EIP: 
-      BX_CPU_THIS_PTR sysenter_eip_msr = EAX; 
+      BX_CPU_THIS_PTR msr.sysenter_eip_msr = EAX; 
       return;
 #endif
 
@@ -1841,7 +1841,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
     exception (BX_GP_EXCEPTION, 0, 0);
     return;
   }
-  if ((BX_CPU_THIS_PTR sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_INFO (("sysenter with zero sysenter_cs_msr"));
     exception (BX_GP_EXCEPTION, 0, 0);
     return;
@@ -1853,9 +1853,9 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR clear_IF();
   BX_CPU_THIS_PTR clear_RF();
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR sysenter_cs_msr & BX_SELECTOR_RPL_MASK;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR sysenter_cs_msr >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (BX_CPU_THIS_PTR sysenter_cs_msr >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = BX_CPU_THIS_PTR msr.sysenter_cs_msr >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    =(BX_CPU_THIS_PTR msr.sysenter_cs_msr >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;          // code segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;          // non-conforming
@@ -1872,9 +1872,9 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 8) >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    =((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;          // data segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;          // expand-up
@@ -1887,8 +1887,8 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
 
-  ESP = BX_CPU_THIS_PTR sysenter_esp_msr;
-  EIP = BX_CPU_THIS_PTR sysenter_eip_msr;
+  ESP = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
+  EIP = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
 #else
   BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
@@ -1902,7 +1902,7 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
     BX_INFO (("sysexit not from protected mode"));
     exception (BX_GP_EXCEPTION, 0, 0);
   }
-  if ((BX_CPU_THIS_PTR sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
+  if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_INFO (("sysexit with zero sysenter_cs_msr"));
     exception (BX_GP_EXCEPTION, 0, 0);
   }
@@ -1913,9 +1913,9 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) | 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 16) >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) | 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    =((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;           // code segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;           // non-conforming
@@ -1932,9 +1932,9 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) | 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = ((BX_CPU_THIS_PTR sysenter_cs_msr + 24) >> 2) & 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) | 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) >> 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    =((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) >> 2) & 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 3;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;           // data segment
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;           // expand-up

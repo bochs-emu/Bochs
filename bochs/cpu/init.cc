@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.85 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: init.cc,v 1.86 2006-02-28 19:50:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,14 +63,14 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
     break;
 #define CASE_LAZY_EFLAG_GET(flag) \
     case BXP_CPU_EFLAGS_##flag: \
-      return BX_CPU(0)->get_##flag ();
+      return BX_CPU(0)->get_##flag();
 #define CASE_LAZY_EFLAG_SET(flag, val) \
     case BXP_CPU_EFLAGS_##flag: \
       BX_CPU(0)->set_##flag(val); \
       break;
 #define CASE_EFLAG_GET(flag) \
     case BXP_CPU_EFLAGS_##flag: \
-      return BX_CPU(0)->get_##flag ();
+      return BX_CPU(0)->get_##flag();
 #define CASE_EFLAG_SET(flag, val) \
     case BXP_CPU_EFLAGS_##flag: \
       BX_CPU(0)->set_##flag(val); \
@@ -78,8 +78,7 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
 
 // implement get/set handler for parameters that need unusual set/get
-static Bit64s
-cpu_param_handler (bx_param_c *param, int set, Bit64s val)
+static Bit64s cpu_param_handler (bx_param_c *param, int set, Bit64s val)
 {
   bx_id id = param->get_id ();
   if (set) {
@@ -103,8 +102,8 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
       CASE_LAZY_EFLAG_SET (PF, val);
       CASE_LAZY_EFLAG_SET (CF, val);
       CASE_EFLAG_SET (ID,   val);
-      //CASE_EFLAG_SET (VIP,  val);
-      //CASE_EFLAG_SET (VIF,  val);
+      CASE_EFLAG_SET (VIP,  val);
+      CASE_EFLAG_SET (VIF,  val);
       CASE_EFLAG_SET (AC,   val);
       CASE_EFLAG_SET (VM,   val);
       CASE_EFLAG_SET (RF,   val);
@@ -137,8 +136,8 @@ cpu_param_handler (bx_param_c *param, int set, Bit64s val)
       CASE_LAZY_EFLAG_GET (PF);
       CASE_LAZY_EFLAG_GET (CF);
       CASE_EFLAG_GET (ID);
-      //CASE_EFLAG_GET (VIP);
-      //CASE_EFLAG_GET (VIF);
+      CASE_EFLAG_GET (VIP);
+      CASE_EFLAG_GET (VIF);
       CASE_EFLAG_GET (AC);
       CASE_EFLAG_GET (VM);
       CASE_EFLAG_GET (RF);
@@ -379,8 +378,8 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 
 #if BX_CPU_LEVEL >= 4
     DEFPARAM_EFLAG(ID);
-    //DEFPARAM_EFLAG(VIP);
-    //DEFPARAM_EFLAG(VIF);
+    DEFPARAM_EFLAG(VIP);
+    DEFPARAM_EFLAG(VIF);
     DEFPARAM_EFLAG(AC);
 #endif
 #if BX_CPU_LEVEL >= 3
@@ -498,7 +497,7 @@ void BX_CPU_C::reset(unsigned source)
    */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = 0xF000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
 
@@ -513,8 +512,8 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0xFFFF0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled =     0xFFFF;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFF;
 #endif
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g   = 0; /* byte granular */
@@ -529,40 +528,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
 #endif
 
-  /* SS (Stack Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = 0x0000;
-#if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.index = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl   = 0;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write/access */
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0; /* data/stack segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0; /* normal expand up */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1; /* writeable */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1; /* accessed */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled =     0xFFFF;
-#endif
-#if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g   = 0; /* byte granular */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b = 0; /* 16bit default size */
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l   = 0; /* 16bit default size */
-#endif
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl = 0;
-#endif
-
   /* DS (Data Segment) and descriptor cache */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0x0000;
 #if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = 0x0000;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = 0;
 
@@ -577,100 +546,24 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.r_w          = 1; /* writeable */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.a            = 1; /* accessed */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled =     0xFFFF;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit        = 0xFFFF;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xFFFF;
 #endif
 #if BX_CPU_LEVEL >= 3
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.g   = 0; /* byte granular */
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 0; /* 16bit default size */
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.l   = 0; /* 16bit default size */
 #endif
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl = 0;
 #endif
 
-  /* ES (Extra Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0x0000;
-#if BX_CPU_LEVEL >= 2
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.index = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl   = 0;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid    = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p        = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl      = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type     = 3; /* read/write/access */
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable   = 0; /* data/stack segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed         = 0; /* normal expand up */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.r_w          = 1; /* writeable */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.a            = 1; /* accessed */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled =     0xFFFF;
-#endif
+  // use DS segment as template for the others
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
 #if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.g   = 0; /* byte granular */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.d_b = 0; /* 16bit default size */
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.l   = 0; /* 16bit default size */
-#endif
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl = 0;
-#endif
-
-#if BX_CPU_LEVEL >= 3
-  /* FS and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.index = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl   = 0;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid   = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p       = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl     = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type    = 3; /* read/write/access */
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.executable   = 0; /* data/stack segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.c_ed         = 0; /* normal expand up */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.r_w          = 1; /* writeable */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.a            = 1; /* accessed */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.g   = 0; /* byte granular */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.d_b = 0; /* 16bit default size */
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.l   = 0; /* 16bit default size */
-#endif
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.avl = 0;
-
-  /* GS and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.index = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.rpl   = 0;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid    = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p        = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl      = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment  = 1; /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type     = 3; /* read/write/access */
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.executable   = 0; /* data/stack segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.c_ed         = 0; /* normal expand up */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.r_w          = 1; /* writeable */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.a            = 1; /* accessed */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base         = 0x00000000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit        =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled =     0xFFFF;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g   = 0; /* byte granular */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b = 0; /* 16bit default size */
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.l   = 0; /* 16bit default size */
-#endif
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.avl = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
 #endif
 
 #if BX_CPU_LEVEL >= 2
@@ -719,20 +612,18 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR dr2 = 0;   /* undefined */
   BX_CPU_THIS_PTR dr3 = 0;   /* undefined */
 #endif
+
+  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #if   BX_CPU_LEVEL == 3
   BX_CPU_THIS_PTR dr6 = 0xFFFF1FF0;
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #elif BX_CPU_LEVEL == 4
   BX_CPU_THIS_PTR dr6 = 0xFFFF1FF0;
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #elif BX_CPU_LEVEL == 5
   BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #elif BX_CPU_LEVEL == 6
   BX_CPU_THIS_PTR dr6 = 0xFFFF0FF0;
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
 #else
-#  error "DR6,7: CPU > 6"
+#  error "DR6: CPU > 6"
 #endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
@@ -895,9 +786,10 @@ void BX_CPU_C::sanity_checks(void)
        ah != ((EAX >> 8) & 0xFF) ||
        ch != ((ECX >> 8) & 0xFF) ||
        dh != ((EDX >> 8) & 0xFF) ||
-       bh != ((EBX >> 8) & 0xFF) ) {
+       bh != ((EBX >> 8) & 0xFF) )
+  {
     BX_PANIC(("problems using BX_READ_8BIT_REGx()!"));
-    }
+  }
 
   ax = AX;
   cx = CX;
@@ -915,9 +807,10 @@ void BX_CPU_C::sanity_checks(void)
        sp != (ESP & 0xFFFF) ||
        bp != (EBP & 0xFFFF) ||
        si != (ESI & 0xFFFF) ||
-       di != (EDI & 0xFFFF) ) {
+       di != (EDI & 0xFFFF) )
+  {
     BX_PANIC(("problems using BX_READ_16BIT_REG()!"));
-    }
+  }
 
   eax = EAX;
   ecx = ECX;
@@ -939,7 +832,6 @@ void BX_CPU_C::sanity_checks(void)
 
   BX_DEBUG(("#(%u)all sanity checks passed!", BX_CPU_ID));
 }
-
 
 void BX_CPU_C::set_INTR(bx_bool value)
 {
