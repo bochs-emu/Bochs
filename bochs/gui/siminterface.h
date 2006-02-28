@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.167 2006-02-27 09:37:58 vruppert Exp $
+// $Id: siminterface.h,v 1.168 2006-02-28 16:19:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1078,7 +1078,6 @@ public:
   bx_param_c *get_by_name(const char *name);
   int get_size() { return size; }
   bx_param_num_c *get_options() { return options; }
-  void set_options(bx_param_num_c *newopt) { options = newopt; }
   bx_param_num_c *get_choice() { return choice; }
   bx_param_string_c *get_title() { return title; }
   void set_parent(bx_param_c *newparent);

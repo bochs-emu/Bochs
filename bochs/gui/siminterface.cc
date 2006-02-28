@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.123 2006-02-28 14:02:06 vruppert Exp $
+// $Id: siminterface.cc,v 1.124 2006-02-28 16:19:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1684,7 +1684,7 @@ bx_list_c* bx_list_c::clone()
   bx_list_c *newlist = new bx_list_c(NULL, name, title->getptr(), maxsize);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
-  newlist->set_options(get_options());
+  newlist->get_options()->set(options->get());
   return newlist;
 }
 
