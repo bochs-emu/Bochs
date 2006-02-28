@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.87 2006-02-27 09:37:58 vruppert Exp $
+// $Id: config.cc,v 1.88 2006-02-28 14:02:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -440,7 +440,7 @@ void bx_init_options()
     sprintf(name, "%d", i+1);
     sprintf(descr, "Pathname of optional ROM image #%d to load", i+1);
     sprintf(label, "Optional ROM image #%d", i+1);
-    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), strdup(label));
+    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), label);
     path = new bx_param_filename_c(optnum1,
       "path", 
       "Path",
@@ -469,7 +469,7 @@ void bx_init_options()
     sprintf(name, "%d", i+1);
     sprintf(descr, "Pathname of optional RAM image #%d to load", i+1);
     sprintf(label, "Optional RAM image #%d", i+1);
-    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), strdup(label));
+    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), label);
     path = new bx_param_filename_c(optnum2,
       "path", 
       "Path",
@@ -1047,7 +1047,7 @@ void bx_init_options()
     for (Bit8u slave=0; slave<2; slave++) {
 
       menu = new bx_list_c(ata_menu[channel],
-          s_atadevname[slave],
+          strdup(s_atadevname[slave]),
           s_atadevice[channel][slave],
           BXP_PARAMS_PER_ATA_DEVICE + 1);
       menu->get_options()->set(bx_list_c::SERIES_ASK);
@@ -1396,7 +1396,7 @@ void bx_init_options()
        eth_module_list,
        0,
        0);
-  bx_options.ne2k.Oethmod->set_by_name ("null");
+  bx_options.ne2k.Oethmod->set_by_name("null");
   bx_options.ne2k.Oethmod->set_ask_format ("Choose ethernet module for the NE2K [%s] ");
   bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
       "Ethernet device",
@@ -1425,7 +1425,7 @@ void bx_init_options()
        eth_module_list,
        0,
        0);
-  bx_options.pnic.Oethmod->set_by_name ("null");
+  bx_options.pnic.Oethmod->set_by_name("null");
   bx_options.pnic.Oethmod->set_ask_format ("Choose ethernet module for the Pseudo NIC [%s]");
   bx_options.pnic.Oethdev = new bx_param_string_c (BXP_PNIC_ETHDEV,
       "Ethernet device",
@@ -2581,7 +2581,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         else
           PARSE_ERR(("%s: mouse directive malformed.", context));
       } else if (!strncmp(params[i], "type=", 5)) {
-        if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(strdup(&params[i][5])))
+        if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(&params[i][5]))
           PARSE_ERR(("%s: mouse type '%s' not available", context, strdup(&params[i][5])));
       } else {
         PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -2621,7 +2621,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (strncmp(params[1], "name=", 5)) {
       PARSE_ERR(("%s: screenmode directive malformed.", context));
     }
-    SIM->get_param_string(BXPN_SCREENMODE)->set(strdup(&params[1][5]));
+    SIM->get_param_string(BXPN_SCREENMODE)->set(&params[1][5]);
 #endif
   } else if (!strcmp(params[0], "sb16")) {
     int enable = 1;
@@ -2629,15 +2629,15 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
       } else if (!strncmp(params[i], "midi=", 5)) {
-        bx_options.sb16.Omidifile->set (strdup(&params[i][5]));
+        bx_options.sb16.Omidifile->set(&params[i][5]);
       } else if (!strncmp(params[i], "midimode=", 9)) {
         bx_options.sb16.Omidimode->set (atol(&params[i][9]));
       } else if (!strncmp(params[i], "wave=", 5)) {
-        bx_options.sb16.Owavefile->set (strdup(&params[i][5]));
+        bx_options.sb16.Owavefile->set(&params[i][5]);
       } else if (!strncmp(params[i], "wavemode=", 9)) {
         bx_options.sb16.Owavemode->set (atol(&params[i][9]));
       } else if (!strncmp(params[i], "log=", 4)) {
-        bx_options.sb16.Ologfile->set (strdup(&params[i][4]));
+        bx_options.sb16.Ologfile->set(&params[i][4]);
       } else if (!strncmp(params[i], "loglevel=", 9)) {
         bx_options.sb16.Ologlevel->set (atol(&params[i][9]));
       } else if (!strncmp(params[i], "dmatimer=", 9)) {
@@ -2663,7 +2663,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.com[idx].Oenabled->set (atol(&params[i][8]));
       } else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[idx].Omode->set_by_name (strdup(&params[i][5])))
+        if (!bx_options.com[idx].Omode->set_by_name(&params[i][5]))
           PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx+1, strdup(&params[i][5])));
         bx_options.com[idx].Oenabled->set (1);
       } else if (!strncmp(params[i], "dev=", 4)) {
@@ -2686,7 +2686,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.par[idx].Oenabled->set (atol(&params[i][8]));
       } else if (!strncmp(params[i], "file=", 5)) {
-        bx_options.par[idx].Ooutfile->set (strdup(&params[i][5]));
+        bx_options.par[idx].Ooutfile->set(&params[i][5]);
         bx_options.par[idx].Oenabled->set (1);
       } else {
         BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx+1));
@@ -2705,13 +2705,13 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       if (!strncmp(params[i], "enabled=", 8)) {
         bx_options.usb[idx].Oenabled->set (atol(&params[i][8]));
       } else if (!strncmp(params[i], "port1=", 6)) {
-        bx_options.usb[idx].Oport1->set (strdup(&params[i][6]));
+        bx_options.usb[idx].Oport1->set(&params[i][6]);
       } else if (!strncmp(params[i], "option1=", 6)) {
-        bx_options.usb[idx].Ooption1->set (strdup(&params[i][6]));
+        bx_options.usb[idx].Ooption1->set(&params[i][6]);
       } else if (!strncmp(params[i], "port2=", 6)) {
-        bx_options.usb[idx].Oport2->set (strdup(&params[i][6]));
+        bx_options.usb[idx].Oport2->set(&params[i][6]);
       } else if (!strncmp(params[i], "option2=", 6)) {
-        bx_options.usb[idx].Ooption2->set (strdup(&params[i][6]));
+        bx_options.usb[idx].Ooption2->set(&params[i][6]);
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
         PARSE_WARN(("%s: usb ioaddr is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
@@ -2729,7 +2729,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         slot = atol(&params[i][4]);
         if ((slot > 0) && (slot < 6)) {
           sprintf(tmpdev, "pci.slot.%d", slot);
-          SIM->get_param_string(tmpdev)->set(strdup(&params[i][6]));
+          SIM->get_param_string(tmpdev)->set(&params[i][6]);
         } else {
           BX_ERROR(("%s: unknown pci slot number ignored.", context));
         }
@@ -2761,14 +2761,14 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
   } else if (!strcmp(params[0], "cmosimage")) {
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "file=", 5)) {
-        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(strdup(&params[i][5]));
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(&params[i][5]);
       } else if (!strcmp(params[i], "rtc_init=time0")) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(0);
       } else if (!strcmp(params[i], "rtc_init=image")) {
         SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->set(1);
       } else {
         // for backward compatiblity
-        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(strdup(params[i]));
+        SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->set(params[i]);
       }
     }
     if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
@@ -2860,7 +2860,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     int valid = 0;
     int n;
     if (!bx_options.ne2k.Oenabled->get ()) {
-      bx_options.ne2k.Oethmod->set_by_name ("null");
+      bx_options.ne2k.Oethmod->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -2886,14 +2886,14 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         valid |= 0x04;
       }
       else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!bx_options.ne2k.Oethmod->set_by_name (strdup(&params[i][7])))
+        if (!bx_options.ne2k.Oethmod->set_by_name(&params[i][7]))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
       }
       else if (!strncmp(params[i], "ethdev=", 7)) {
-        bx_options.ne2k.Oethdev->set (strdup(&params[i][7]));
+        bx_options.ne2k.Oethdev->set(&params[i][7]);
       }
       else if (!strncmp(params[i], "script=", 7)) {
-        bx_options.ne2k.Oscript->set (strdup(&params[i][7]));
+        bx_options.ne2k.Oscript->set(&params[i][7]);
       }
       else {
         PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
@@ -2918,7 +2918,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     int valid = 0;
     int n;
     if (!bx_options.pnic.Oenabled->get ()) {
-      bx_options.pnic.Oethmod->set_by_name ("null");
+      bx_options.pnic.Oethmod->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -2938,12 +2938,12 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         bx_options.pnic.Omacaddr->set (tmpchar);
         valid |= 0x07;
       } else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!bx_options.pnic.Oethmod->set_by_name (strdup(&params[i][7])))
+        if (!bx_options.pnic.Oethmod->set_by_name(&params[i][7]))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
       } else if (!strncmp(params[i], "ethdev=", 7)) {
-        bx_options.pnic.Oethdev->set (strdup(&params[i][7]));
+        bx_options.pnic.Oethdev->set(&params[i][7]);
       } else if (!strncmp(params[i], "script=", 7)) {
-        bx_options.pnic.Oscript->set (strdup(&params[i][7]));
+        bx_options.pnic.Oscript->set(&params[i][7]);
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
       }
@@ -2981,13 +2981,13 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (strncmp(params[3], "iolog=", 6)) {
       PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
     }
-    SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->set(strdup(&params[2][5]));
-    SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->set (strdup(&params[3][6]));
+    SIM->get_param_string(BXPN_LOAD32BITOS_PATH)->set(&params[2][5]);
+    SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->set(&params[3][6]);
     if (num_params == 5) {
       if (strncmp(params[4], "initrd=", 7)) {
         PARSE_ERR(("%s: load32bitOSImage: directive malformed.", context));
       }
-      SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set (strdup(&params[4][7]));
+      SIM->get_param_string(BXPN_LOAD32BITOS_INITRD)->set(&params[4][7]);
     }
   }
   else if (!strcmp(params[0], "keyboard_type")) {
@@ -3006,7 +3006,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         SIM->get_param_bool(BXPN_KBD_USEMAPPING)->set(atol(&params[i][8]));
       }
       else if (!strncmp(params[i], "map=", 4)) {
-        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(strdup(&params[i][4]));
+        SIM->get_param_string(BXPN_KBD_KEYMAP)->set(&params[i][4]);
       }
     }
   }
@@ -3016,7 +3016,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: user_shortcut directive: wrong # args.", context));
     }
     if(!strncmp(params[1], "keys=", 4)) {
-      SIM->get_param_string(BXPN_USER_SHORTCUT)->set(strdup(&params[1][5]));
+      SIM->get_param_string(BXPN_USER_SHORTCUT)->set(&params[1][5]);
       if ((strchr(&params[1][5], '-') == NULL) && (strlen(&params[1][5]) > 5))
         PARSE_WARN(("user_shortcut: old-style syntax detected"));
     } else {
@@ -3039,7 +3039,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: display library '%s' not available", context, params[1]));
     if (num_params == 3) {
       if (!strncmp(params[2], "options=", 8)) {
-        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(strdup(&params[2][8]));
+        SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
       }
     }
   }

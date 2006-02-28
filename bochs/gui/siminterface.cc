@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.122 2006-02-27 09:37:58 vruppert Exp $
+// $Id: siminterface.cc,v 1.123 2006-02-28 14:02:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -999,25 +999,26 @@ bx_param_num_c::bx_param_num_c (bx_id id,
   set (initial_val);
 }
 
-bx_param_num_c::bx_param_num_c (bx_param_c *parent,
+bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     char *name,
     char *label,
     char *description,
     Bit64s min, Bit64s max, Bit64s initial_val)
   : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
 {
-  set_type (BXT_PARAM_NUM);
+  set_type(BXT_PARAM_NUM);
   this->label = label;
   this->min = min;
   this->max = max;
   this->initial_val = initial_val;
   this->val.number = initial_val;
   this->handler = NULL;
+  this->enable_handler = NULL;
   this->base = default_base;
   // dependent_list must be initialized before the set(),
   // because set calls update_dependents().
   dependent_list = NULL;
-  set (initial_val);
+  set(initial_val);
   BX_ASSERT(parent->get_type() == BXT_LIST);
   this->parent = (bx_list_c *) parent;
   if (this->parent) this->parent->add (this);
@@ -1668,7 +1669,7 @@ void bx_list_c::init(const char *list_title)
       "",
       get_name(), 80);
   if ((list_title != NULL) && (strlen(list_title) > 0)) {
-    this->title->set(strdup(list_title));
+    this->title->set((char *)list_title);
   }
   this->options = new bx_param_num_c(BXP_NULL,
       "list_option", "", 0, BX_MAX_BIT64S,
@@ -1680,7 +1681,7 @@ void bx_list_c::init(const char *list_title)
 
 bx_list_c* bx_list_c::clone()
 {
-  bx_list_c *newlist = new bx_list_c(NULL, name, description, maxsize);
+  bx_list_c *newlist = new bx_list_c(NULL, name, title->getptr(), maxsize);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
   newlist->set_options(get_options());
