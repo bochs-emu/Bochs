@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.37 2006-02-26 22:36:01 vruppert Exp $
+// $Id: win32dialog.cc,v 1.38 2006-02-28 15:48:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -103,12 +103,16 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_string_c *param;
-  char buffer[512];
+  char buffer[512], *title;
 
   switch (msg) {
     case WM_INITDIALOG:
       param = (bx_param_string_c *)lParam;
-      SetWindowText(hDlg, param->get_name());
+      title = param->get_label();
+      if ((title == NULL) || (strlen(title) == 0)) {
+        title = param->get_name();
+      }
+      SetWindowText(hDlg, title);
       SetWindowText(GetDlgItem(hDlg, IDSTRING), param->getptr());
       SendMessage(GetDlgItem(hDlg, IDSTRING), EM_SETLIMITTEXT, param->get_maxsize(), 0);
       return TRUE;
