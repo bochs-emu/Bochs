@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.74 2006-02-24 09:49:03 sshwarts Exp $
+// $Id: exception.cc,v 1.75 2006-02-28 20:29:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -864,13 +864,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 
-  if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
-  {
-    if (vector != BX_PF_EXCEPTION) {
-       BX_ERROR(("exception(): except_chk is ON not for #PF !"));
-    }
-  }
-
   // note: fault-class exceptions _except_ #DB set RF in
   //       eflags image.
 
@@ -953,12 +946,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       exception_type  = BX_ET_CONTRIBUTORY;
       break;
     case BX_PF_EXCEPTION: // page fault
-      if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
-      {
-            BX_CPU_THIS_PTR except_chk = 0;
-            BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR except_cs;
-            BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = BX_CPU_THIS_PTR except_ss;
-      }
       push_error = 1;
       exception_class = BX_EXCEPTION_CLASS_FAULT;
       exception_type  = BX_ET_PAGE_FAULT;
@@ -1009,6 +996,13 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     // restore RIP/RSP to value before error occurred
     RIP = BX_CPU_THIS_PTR prev_eip;
     RSP = BX_CPU_THIS_PTR prev_esp;
+
+    if (BX_CPU_THIS_PTR except_chk) // FIXME: Help with OS/2
+    {
+      BX_CPU_THIS_PTR except_chk = 0;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS] = BX_CPU_THIS_PTR except_cs;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS] = BX_CPU_THIS_PTR except_ss;
+    }
 
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
