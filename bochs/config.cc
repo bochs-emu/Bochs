@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.89 2006-03-01 17:14:36 vruppert Exp $
+// $Id: config.cc,v 1.90 2006-03-01 21:24:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1328,33 +1328,7 @@ void bx_init_options()
     enabled->set_dependent_list(deplist);
   }
 
-  bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
-      "Enable panic for use in bochs testing",
-      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
-      0);
   // NE2K options
-  bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
-      "Enable NE2K NIC emulation",
-      "Enables the NE2K NIC emulation",
-      0);
-  bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
-      "NE2K I/O Address",
-      "I/O base address of the emulated NE2K device",
-      0, 0xffff,
-      0x240);
-  bx_options.ne2k.Oioaddr->set_base (16);
-  bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
-      "NE2K Interrupt",
-      "IRQ used by the NE2K device",
-      0, 15,
-      9);
-  bx_options.ne2k.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-  bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
-      "MAC Address",
-      "MAC address of the NE2K device. Don't use an address of a machine on your net.",
-      "\xfe\xfd\xde\xad\xbe\xef", 6);
-  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
-  bx_options.ne2k.Omacaddr->set_separator (':');
   static char *eth_module_list[] = {
     "null",
 #if defined(ETH_LINUX)
@@ -1381,6 +1355,28 @@ void bx_init_options()
     "vnet",
     NULL
   };
+  bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
+      "Enable NE2K NIC emulation",
+      "Enables the NE2K NIC emulation",
+      0);
+  bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
+      "NE2K I/O Address",
+      "I/O base address of the emulated NE2K device",
+      0, 0xffff,
+      0x240);
+  bx_options.ne2k.Oioaddr->set_base (16);
+  bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
+      "NE2K Interrupt",
+      "IRQ used by the NE2K device",
+      0, 15,
+      9);
+  bx_options.ne2k.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
+      "MAC Address",
+      "MAC address of the NE2K device. Don't use an address of a machine on your net.",
+      "\xfe\xfd\xde\xad\xbe\xef", 6);
+  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
+  bx_options.ne2k.Omacaddr->set_separator (':');
   bx_options.ne2k.Oethmod = new bx_param_enum_c (BXP_NE2K_ETHMOD,
       "Ethernet module",
       "Module used for the connection to the real net.",
@@ -1447,22 +1443,24 @@ void bx_init_options()
     bx_options.pnic.Oscript,
     NULL
   };
-  menu = new bx_list_c (BXP_NE2K, "NE2000", "", ne2k_init_list);
-  menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
-  bx_options.ne2k.Oenabled->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", ne2k_init_list));
-  menu = new bx_list_c (BXP_PNIC, "PCI Pseudo NIC", "", pnic_init_list);
-  menu->get_options ()->set (menu->USE_BOX_TITLE | menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_NE2K, "ne2k", "NE2000", ne2k_init_list);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_NE2K);
+  bx_options.ne2k.Oenabled->set_dependent_list(
+      new bx_list_c(BXP_NULL, "", "", ne2k_init_list));
+  menu = new bx_list_c(BXP_PNIC, "pnic", "PCI Pseudo NIC", pnic_init_list);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_PCIPNIC);
   bx_options.pnic.Oenabled->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", pnic_init_list));
+      new bx_list_c(BXP_NULL, "", "", pnic_init_list));
 
   bx_param_c *netdev_init_list2[] = {
-    SIM->get_param (BXP_NE2K),
-    SIM->get_param (BXP_PNIC),
+    SIM->get_param(BXP_NE2K),
+    SIM->get_param(BXP_PNIC),
     NULL
   };
-  menu = new bx_list_c (BXP_NETWORK, "Network Configuration", "", netdev_init_list2);
-  menu->get_options ()->set (menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_NETWORK, "network", "Network Configuration", netdev_init_list2);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_TAB_WINDOW);
 
   // SB16 options
   bx_options.sb16.Oenabled = new bx_param_bool_c (BXP_SB16_ENABLED,
@@ -1531,6 +1529,7 @@ void bx_init_options()
   bx_options.sb16.Oenabled->set_dependent_list (
       new bx_list_c (BXP_NULL, "", "", sb16_dependent_list));
 
+  // log options
   bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
       "Log filename",
       "Pathname of bochs log file",
@@ -1550,6 +1549,11 @@ void bx_init_options()
   bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
 
   // other
+  bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
+      "Enable panic for use in bochs testing",
+      "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
+      0);
+
   // GDB stub
   bx_options.gdbstub.port = 1234;
   bx_options.gdbstub.text_base = 0;
@@ -2171,7 +2175,8 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 
   // ataX-master, ataX-slave
   else if ((!strncmp(params[0], "ata", 3)) && (strlen(params[0]) > 4)) {
-    Bit8u channel = params[0][3], type = 0, mode = BX_ATA_MODE_FLAT;
+    Bit8u channel = params[0][3];
+    int type = 0, mode = BX_ATA_MODE_FLAT, biosdetect = BX_ATA_BIOSDETECT_AUTO;
     Bit32u cylinders = 0, heads = 0, sectors = 0;
     char tmpname[80];
 
@@ -2191,32 +2196,20 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     sprintf(tmpname, "ata.%d.%s", channel, &params[0][5]);
     base = (bx_list_c*) SIM->get_param(tmpname);
     for (i=1; i<num_params; i++) {
-      if (!strcmp(params[i], "type=disk")) {
-        type = BX_ATA_DEVICE_DISK;
-      } else if (!strcmp(params[i], "type=cdrom")) {
-        type = BX_ATA_DEVICE_CDROM;
-      } else if (!strcmp(params[i], "mode=flat")) {
-        mode = BX_ATA_MODE_FLAT;
-      } else if (!strcmp(params[i], "mode=concat")) {
-        mode = BX_ATA_MODE_CONCAT;
-      } else if (!strcmp(params[i], "mode=external")) {
-        mode = BX_ATA_MODE_EXTDISKSIM;
-      } else if (!strcmp(params[i], "mode=dll")) {
-        mode = BX_ATA_MODE_DLL_HD;
-      } else if (!strcmp(params[i], "mode=sparse")) {
-        mode = BX_ATA_MODE_SPARSE;
-      } else if (!strcmp(params[i], "mode=vmware3")) {
-        mode = BX_ATA_MODE_VMWARE3;
-      } else if (!strcmp(params[i], "mode=undoable")) {
-        mode = BX_ATA_MODE_UNDOABLE;
-      } else if (!strcmp(params[i], "mode=growing")) {
-        mode = BX_ATA_MODE_GROWING;
-      } else if (!strcmp(params[i], "mode=volatile")) {
-        mode = BX_ATA_MODE_VOLATILE;
+      if (!strncmp(params[i], "type=", 5)) {
+        type = SIM->get_param_enum("type", base)->find_by_name(&params[i][5]);
+        if (type < 0) {
+          PARSE_ERR(("%s: ataX-master/slave: unknown type '%s'", context, &params[i][5]));
+        }
       } else if (!strcmp(params[i], "mode=z-undoable")) {
         PARSE_ERR(("%s: ataX-master/slave mode 'z-undoable' not implemented yet", context));
       } else if (!strcmp(params[i], "mode=z-volatile")) {
         PARSE_ERR(("%s: ataX-master/slave mode 'z-volatile' not implemented yet", context));
+      } else if (!strncmp(params[i], "mode=", 5)) {
+        mode = SIM->get_param_enum("mode", base)->find_by_name(&params[i][5]);
+        if (mode < 0) {
+          PARSE_ERR(("%s: ataX-master/slave: unknown mode '%s'", context, &params[i][5]));
+        }
       } else if (!strncmp(params[i], "path=", 5)) {
         SIM->get_param_string("path", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "cylinders=", 10)) {
@@ -2227,12 +2220,11 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         sectors = atol(&params[i][4]);
       } else if (!strncmp(params[i], "model=", 6)) {
         SIM->get_param_string("model", base)->set(&params[i][6]);
-      } else if (!strcmp(params[i], "biosdetect=none")) {
-        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_NONE);
-      } else if (!strcmp(params[i], "biosdetect=cmos")) {
-        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_CMOS);
-      } else if (!strcmp(params[i], "biosdetect=auto")) {
-        SIM->get_param_enum("biosdetect", base)->set(BX_ATA_BIOSDETECT_AUTO);
+      } else if (!strncmp(params[i], "biosdetect=", 11)) {
+        biosdetect = SIM->get_param_enum("biosdetect", base)->find_by_name(&params[i][11]);
+        if (biosdetect < 0) {
+          PARSE_ERR(("%s: ataX-master/slave: unknown biosdetect '%s'", context, &params[i][11]));
+        }
       } else if (!strcmp(params[i], "translation=none")) {
         SIM->get_param_enum("translation", base)->set(BX_ATA_TRANSLATION_NONE);
       } else if (!strcmp(params[i], "translation=lba")) {
@@ -2264,6 +2256,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       SIM->get_param_num("cylinders", base)->set(cylinders);
       SIM->get_param_num("heads", base)->set(heads);
       SIM->get_param_num("spt", base)->set(sectors);
+      SIM->get_param_num("biosdetect", base)->set(biosdetect);
     }
 
     // if enabled, check if device ok
@@ -3090,61 +3083,9 @@ int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *
     if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
       fprintf(fp, "type=disk");
 
-      switch (SIM->get_param_enum("mode", base)->get()) {
-        case BX_ATA_MODE_FLAT:
-          fprintf(fp, ", mode=flat");
-          break;
-        case BX_ATA_MODE_CONCAT:
-          fprintf(fp, ", mode=concat");
-          break;
-        case BX_ATA_MODE_EXTDISKSIM:
-          fprintf(fp, ", mode=external");
-          break;
-        case BX_ATA_MODE_DLL_HD:
-          fprintf(fp, ", mode=dll");
-          break;
-        case BX_ATA_MODE_SPARSE:
-          fprintf(fp, ", mode=sparse");
-          break;
-        case BX_ATA_MODE_VMWARE3:
-          fprintf(fp, ", mode=vmware3");
-          break;
-        case BX_ATA_MODE_UNDOABLE:
-          fprintf(fp, ", mode=undoable");
-          break;
-        case BX_ATA_MODE_GROWING:
-          fprintf(fp, ", mode=growing");
-          break;
-        case BX_ATA_MODE_VOLATILE:
-          fprintf(fp, ", mode=volatile");
-          break;
-//      case BX_ATA_MODE_Z_UNDOABLE:
-//        fprintf(fp, ", mode=z-undoable");
-//        break;
-//      case BX_ATA_MODE_Z_VOLATILE:
-//        fprintf(fp, ", mode=z-volatile");
-//        break;
-        }
-
-      switch(SIM->get_param_enum("translation", base)->get()) {
-        case BX_ATA_TRANSLATION_NONE:
-          fprintf (fp, ", translation=none");
-          break;
-        case BX_ATA_TRANSLATION_LBA:
-          fprintf (fp, ", translation=lba");
-          break;
-        case BX_ATA_TRANSLATION_LARGE:
-          fprintf (fp, ", translation=large");
-          break;
-        case BX_ATA_TRANSLATION_RECHS:
-          fprintf (fp, ", translation=rechs");
-          break;
-        case BX_ATA_TRANSLATION_AUTO:
-          fprintf (fp, ", translation=auto");
-          break;
-        }
-
-      fprintf (fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
+      fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
+      fprintf(fp, ", translation=%s", SIM->get_param_enum("translation", base)->get_selected());
+      fprintf(fp, ", path=\"%s\", cylinders=%d, heads=%d, spt=%d",
           SIM->get_param_string("path", base)->getptr(),
           SIM->get_param_num("cylinders", base)->get(),
           SIM->get_param_num("heads", base)->get(),
@@ -3152,30 +3093,21 @@ int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *
 
       if (SIM->get_param_string("journal", base)->getptr() != NULL)
         if (strcmp(SIM->get_param_string("journal", base)->getptr(), "") != 0)
-          fprintf (fp, ", journal=\"%s\"", SIM->get_param_string("journal", base)->getptr());
+          fprintf(fp, ", journal=\"%s\"", SIM->get_param_string("journal", base)->getptr());
 
     } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
-      fprintf (fp, "type=cdrom, path=\"%s\", status=%s", 
+      fprintf(fp, "type=cdrom, path=\"%s\", status=%s", 
         SIM->get_param_string("path", base)->getptr(),
-        SIM->get_param_enum("status", base)->get()==BX_EJECTED ? "ejected" : "inserted");
+        SIM->get_param_enum("status", base)->get_selected());
     }
 
-    switch(SIM->get_param_enum("biosdetect", base)->get()) {
-      case BX_ATA_BIOSDETECT_NONE:
-        fprintf (fp, ", biosdetect=none");
-        break;
-      case BX_ATA_BIOSDETECT_CMOS:
-        fprintf (fp, ", biosdetect=cmos");
-        break;
-      case BX_ATA_BIOSDETECT_AUTO:
-        fprintf (fp, ", biosdetect=auto");
-        break;
-      }
-    if (SIM->get_param_string("model", base)->getptr()>0) {
-        fprintf (fp, ", model=\"%s\"", SIM->get_param_string("model", base)->getptr());
-      }
+    fprintf(fp, ", biosdetect=%s", SIM->get_param_enum("biosdetect", base)->get_selected());
 
-    fprintf (fp, "\n");
+    if (SIM->get_param_string("model", base)->getptr()>0) {
+        fprintf(fp, ", model=\"%s\"", SIM->get_param_string("model", base)->getptr());
+    }
+
+    fprintf(fp, "\n");
   }
   return 0;
 }

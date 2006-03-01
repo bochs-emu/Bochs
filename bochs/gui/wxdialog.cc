@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.86 2006-02-26 19:11:20 vruppert Exp $
+// $Id: wxdialog.cc,v 1.87 2006-03-01 21:24:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1458,14 +1458,18 @@ void ParamDialog::EnableParam(const char *pname, bx_list_c *base, bool enabled)
   if (pstr->u.window) pstr->u.window->Enable(enabled);
 }
 
-void ParamDialog::EnumChanged (ParamStruct *pstr)
+void ParamDialog::EnumChanged(ParamStruct *pstr)
 {
-  wxLogDebug ("EnumChanged");
+  wxLogDebug("EnumChanged");
   char pname[512];
   Bit8u channel, device;
 
   bx_list_c *base = (bx_list_c*) pstr->param->get_parent();
-  base->get_param_path(pname, 512);
+  if (base != NULL) {
+    base->get_param_path(pname, 512);
+  } else {
+    pname[0] = 0;
+  }
   if (!strncmp(pname, "ata.", 4)) {
     channel = pname[4] - '0';
     if (!strcmp(base->get_name(), "master")) {

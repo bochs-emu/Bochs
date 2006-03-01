@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.122 2006-03-01 17:14:36 vruppert Exp $
+// $Id: wxmain.cc,v 1.123 2006-03-01 21:24:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -667,7 +667,7 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_NETWORK);
-  dlg.SetTitle(list->get_name());
+  dlg.SetTitle(list->get_title()->getptr());
   dlg.AddParam(list);
   dlg.ShowModal();
 }
