@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.38 2006-02-28 15:48:59 vruppert Exp $
+// $Id: win32dialog.cc,v 1.39 2006-03-01 17:56:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -497,11 +497,11 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
   switch (msg) {
     case WM_INITDIALOG:
-      if (SIM->get_param_string(BXP_USB1_PORT1)->get_enabled()) {
-        SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXP_USB1_PORT1)->getptr());
-        SetDlgItemText(hDlg, IDUSBOPT1, SIM->get_param_string(BXP_USB1_OPTION1)->getptr());
-        SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXP_USB1_PORT2)->getptr());
-        SetDlgItemText(hDlg, IDUSBOPT2, SIM->get_param_string(BXP_USB1_OPTION2)->getptr());
+      if (SIM->get_param_string(BXPN_USB1_PORT1)->get_enabled()) {
+        SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXPN_USB1_PORT1)->getptr());
+        SetDlgItemText(hDlg, IDUSBOPT1, SIM->get_param_string(BXPN_USB1_OPTION1)->getptr());
+        SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXPN_USB1_PORT2)->getptr());
+        SetDlgItemText(hDlg, IDUSBOPT2, SIM->get_param_string(BXPN_USB1_OPTION2)->getptr());
       } else {
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL1), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL2), FALSE);
@@ -520,13 +520,13 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case PSN_APPLY:
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
             GetDlgItemText(hDlg, IDUSBDEV1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXP_USB1_PORT1)->set(buffer);
+            SIM->get_param_string(BXPN_USB1_PORT1)->set(buffer);
             GetDlgItemText(hDlg, IDUSBOPT1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXP_USB1_OPTION1)->set(buffer);
+            SIM->get_param_string(BXPN_USB1_OPTION1)->set(buffer);
             GetDlgItemText(hDlg, IDUSBDEV2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXP_USB1_PORT2)->set(buffer);
+            SIM->get_param_string(BXPN_USB1_PORT2)->set(buffer);
             GetDlgItemText(hDlg, IDUSBOPT2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXP_USB1_OPTION2)->set(buffer);
+            SIM->get_param_string(BXPN_USB1_OPTION2)->set(buffer);
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
