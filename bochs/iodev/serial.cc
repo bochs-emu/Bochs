@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.68 2006-02-22 19:18:29 vruppert Exp $
+// $Id: serial.cc,v 1.69 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -80,8 +80,13 @@ bx_serial_c::bx_serial_c(void)
 
 bx_serial_c::~bx_serial_c(void)
 {
+  char pname[20];
+  bx_list_c *base;
+
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
-    if (bx_options.com[i].Oenabled->get ()) {
+    sprintf(pname, "ports.serial.%d", i+1);
+    base = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_bool("enabled", base)->get()) {
       switch (BX_SER_THIS s[i].io_mode) {
         case BX_SER_MODE_FILE:
           if (BX_SER_THIS s[i].output != NULL)
@@ -112,7 +117,8 @@ bx_serial_c::~bx_serial_c(void)
 bx_serial_c::init(void)
 {
   Bit16u ports[BX_SERIAL_MAXDEV] = {0x03f8, 0x02f8, 0x03e8, 0x02e8};
-  char name[16];
+  char name[16], pname[20];
+  bx_list_c *base;
   unsigned i;
 
   BX_SER_THIS detect_mouse = 0;
@@ -127,7 +133,9 @@ bx_serial_c::init(void)
    * Put the UART registers into their RESET state
    */
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    if (bx_options.com[i].Oenabled->get ()) {
+    sprintf(pname, "ports.serial.%d", i+1);
+    base = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_bool("enabled", base)->get()) {
       sprintf(name, "Serial Port %d", i + 1);
       /* serial interrupt */
       BX_SER_THIS s[i].IRQ = 4 - (i & 1);
@@ -228,19 +236,20 @@ bx_serial_c::init(void)
       }
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
-      char *mode = bx_options.com[i].Omode->get_selected();
+      char *mode = SIM->get_param_enum("mode", base)->get_selected();
+      char *dev = SIM->get_param_string("dev", base)->getptr();
       if (!strcmp(mode, "file")) {
-        if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
-          BX_SER_THIS s[i].output = fopen(bx_options.com[i].Odev->getptr (), "wb");
+        if (strlen(dev) > 0) {
+          BX_SER_THIS s[i].output = fopen(dev, "wb");
           if (BX_SER_THIS s[i].output)
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_FILE;
         }
       } else if (!strcmp(mode, "term")) {
 #if defined(SERIAL_ENABLE) && !defined(WIN32)
-        if (strlen(bx_options.com[i].Odev->getptr ()) > 0) {
-          BX_SER_THIS s[i].tty_id = open(bx_options.com[i].Odev->getptr (), O_RDWR|O_NONBLOCK,600);
+        if (strlen(dev) > 0) {
+          BX_SER_THIS s[i].tty_id = open(dev, O_RDWR|O_NONBLOCK,600);
           if (BX_SER_THIS s[i].tty_id < 0) {
-            BX_PANIC(("open of com%d (%s) failed", i+1, bx_options.com[i].Odev->getptr ()));
+            BX_PANIC(("open of com%d (%s) failed", i+1, dev));
           } else {
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_TERM;
             BX_DEBUG(("com%d tty_id: %d", i+1, BX_SER_THIS s[i].tty_id));
@@ -273,7 +282,7 @@ bx_serial_c::init(void)
 #endif   /* def SERIAL_ENABLE */
       } else if (!strcmp(mode, "raw")) {
 #if USE_RAW_SERIAL
-        BX_SER_THIS s[i].raw = new serial_raw(bx_options.com[i].Odev->getptr ());
+        BX_SER_THIS s[i].raw = new serial_raw(dev);
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_RAW;
 #else
         BX_PANIC(("raw serial support not present"));
@@ -303,12 +312,11 @@ bx_serial_c::init(void)
         }
 #endif
 
-        char *substr = strtok(bx_options.com[i].Odev->getptr(), ":");
+        char *substr = strtok(dev, ":");
         strcpy(host, substr);
         substr = strtok(NULL, ":");
         if (!substr) {
-          BX_PANIC(("com%d: inet address is wrong (%s)", i+1,
-            bx_options.com[i].Odev->getptr ()));
+          BX_PANIC(("com%d: inet address is wrong (%s)", i+1, dev));
         }
         port = atoi (substr);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.26 2004-06-19 15:20:13 sshwarts Exp $
+// $Id: parallel.cc,v 1.27 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,12 +75,15 @@ bx_parallel_c::init(void)
 {
   Bit16u ports[BX_PARPORT_MAXDEV] = {0x0378, 0x0278};
   Bit8u irqs[BX_PARPORT_MAXDEV] = {7, 5};
-  char name[16];
+  char name[16], pname[20];
+  bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.26 2004-06-19 15:20:13 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.27 2006-03-01 17:14:36 vruppert Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    if (bx_options.par[i].Oenabled->get ()) {
+    sprintf(pname, "ports.parallel.%d", i+1);
+    base = (bx_list_c*) SIM->get_param(pname);
+    if (SIM->get_param_bool("enabled", base)->get()) {
       sprintf(name, "Parallel Port %d", i + 1);
       /* parallel interrupt and i/o ports */
       BX_PAR_THIS s[i].IRQ = irqs[i];
@@ -106,11 +109,12 @@ bx_parallel_c::init(void)
 
       BX_PAR_THIS s[i].initmode = 0;
       /* output file */
-      if (strlen(bx_options.par[i].Ooutfile->getptr ()) > 0) {
-        s[i].output = fopen(bx_options.par[i].Ooutfile->getptr (), "wb");
+      char *outfile = SIM->get_param_string("outfile", base)->getptr();
+      if (strlen(outfile) > 0) {
+        s[i].output = fopen(outfile, "wb");
         if (!s[i].output)
-          BX_PANIC (("Could not open '%s' to write parport%d output",
-                     bx_options.par[i].Ooutfile->getptr (), i+1));
+          BX_PANIC(("Could not open '%s' to write parport%d output",
+                    outfile, i+1));
       }
     }
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.168 2006-02-28 16:19:29 vruppert Exp $
+// $Id: siminterface.h,v 1.169 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -75,7 +75,7 @@
 //
 // An important part of the siminterface implementation is the use of parameter
 // classes, or bx_param_*.  The parameter classes are described below, where
-// they are declared.  Search for "parameter classes" below for detals.
+// they are declared.  Search for "parameter classes" below for details.
 //
 // Also this header file declares data structures for certain events that pass
 // between the siminterface and the CI.  Search for "event structures" below.
@@ -200,6 +200,11 @@ typedef enum {
 #define BXPN_ATA1_SLAVE                  "ata.1.slave"
 #define BXPN_ATA2_SLAVE                  "ata.2.slave"
 #define BXPN_ATA3_SLAVE                  "ata.3.slave"
+#define BXPN_USB1_ENABLED                "ports.usb.1.enabled"
+#define BXPN_USB1_PORT1                  "ports.usb.1.port1"
+#define BXPN_USB1_OPTION1                "ports.usb.1.option1"
+#define BXPN_USB1_PORT2                  "ports.usb.1.port2"
+#define BXPN_USB1_OPTION2                "ports.usb.1.option2"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -212,32 +217,12 @@ typedef enum {
   BXP_NULL = 301,
   BXP_TEXT_SNAPSHOT_CHECK,
 
-#define BXP_PARAMS_PER_SERIAL_PORT 3
-  BXP_COM1_ENABLED,
-  BXP_COM1_MODE,
-  BXP_COM1_PATH,
-  BXP_COM2_ENABLED,
-  BXP_COM2_MODE,
-  BXP_COM2_PATH,
-  BXP_COM3_ENABLED,
-  BXP_COM3_MODE,
-  BXP_COM3_PATH,
-  BXP_COM4_ENABLED,
-  BXP_COM4_MODE,
-  BXP_COM4_PATH,
-#define BXP_PARAMS_PER_USB_HUB 5
-  BXP_USB1_ENABLED,
-  BXP_USB1_PORT1,
-  BXP_USB1_OPTION1,
-  BXP_USB1_PORT2,
-  BXP_USB1_OPTION2,
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
   BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
   BXP_MENU_DISK,
-  BXP_MENU_SERIAL_PARALLEL,
   BXP_MENU_SOUND,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
@@ -265,11 +250,6 @@ typedef enum {
   BXP_SB16_LOGLEVEL,
   BXP_SB16_DMATIMER,
   BXP_SB16,
-#define BXP_PARAMS_PER_PARALLEL_PORT 2
-  BXP_PARPORT1_ENABLED,
-  BXP_PARPORT1_OUTFILE,
-  BXP_PARPORT2_ENABLED,
-  BXP_PARPORT2_OUTFILE,
   BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
   BXP_CPU_PARAMETERS,
@@ -348,32 +328,6 @@ typedef enum {
 #endif
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
-
-// use x=1,2,3,4
-#define BXP_COMx_ENABLED(x) \
-   (bx_id)(BXP_COM1_ENABLED + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
-#define BXP_COMx_MODE(x) \
-   (bx_id)(BXP_COM1_MODE + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
-#define BXP_COMx_PATH(x) \
-  (bx_id)(BXP_COM1_PATH + (((x)-1)*BXP_PARAMS_PER_SERIAL_PORT))
-
-// use x=1
-#define BXP_USBx_ENABLED(x) \
-   (bx_id)(BXP_USB1_ENABLED + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-#define BXP_USBx_PORT1(x) \
-   (bx_id)(BXP_USB1_PORT1 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-#define BXP_USBx_OPTION1(x) \
-   (bx_id)(BXP_USB1_OPTION1 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-#define BXP_USBx_PORT2(x) \
-   (bx_id)(BXP_USB1_PORT2 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-#define BXP_USBx_OPTION2(x) \
-   (bx_id)(BXP_USB1_OPTION2 + (((x)-1)*BXP_PARAMS_PER_USB_HUB))
-
-// use x=1,2
-#define BXP_PARPORTx_ENABLED(x) \
-  (bx_id)(BXP_PARPORT1_ENABLED + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
-#define BXP_PARPORTx_OUTFILE(x) \
-  (bx_id)(BXP_PARPORT1_OUTFILE + (((x)-1)*BXP_PARAMS_PER_PARALLEL_PORT))
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
@@ -1199,20 +1153,6 @@ BOCHSAPI extern char *atadevice_translation_names[];
 BOCHSAPI extern int n_atadevice_translation_names;
 BOCHSAPI extern char *clock_sync_names[];
 BOCHSAPI extern int clock_sync_n_names;
-
-typedef struct {
-  bx_param_bool_c *Oenabled;
-  bx_param_enum_c *Omode;
-  bx_param_string_c *Odev;
-} bx_serial_options;
-
-typedef struct {
-  bx_param_bool_c *Oenabled;
-  bx_param_string_c *Oport1;
-  bx_param_string_c *Ooption1;
-  bx_param_string_c *Oport2;
-  bx_param_string_c *Ooption2;
-} bx_usb_options;
 
 typedef struct {
   bx_param_bool_c *Oenabled;

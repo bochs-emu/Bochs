@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.126 2006-02-27 19:04:01 sshwarts Exp $
+// $Id: vga.cc,v 1.127 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -292,7 +292,7 @@ bx_vga_c::init(void)
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }    
-    if (!BX_SUPPORT_PCIUSB || !bx_options.usb[0].Oenabled->get()) {
+    if (!BX_SUPPORT_PCIUSB || !SIM->get_param_bool(BXPN_USB1_ENABLED)->get()) {
       for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
         DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
         DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);

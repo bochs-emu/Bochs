@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.32 2006-02-22 19:18:29 vruppert Exp $
+// $Id: pciusb.cc,v 1.33 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -98,7 +98,7 @@ bx_pciusb_c::init(void)
 {
   // called once when bochs initializes
 
-  if (!bx_options.usb[0].Oenabled->get()) return;
+  if (!SIM->get_param_bool(BXPN_USB1_ENABLED)->get()) return;
 
   BX_USB_THIS device_buffer = new Bit8u[65536];
 
@@ -125,14 +125,14 @@ bx_pciusb_c::init(void)
   //FIXME: for now, we want a status bar // hub zero, port zero
   BX_USB_THIS hub[0].statusbar_id[0] = bx_gui->register_statusitem("USB");
 
-  bx_options.usb[0].Oport1->set_handler(usb_param_handler);
-  bx_options.usb[0].Oport1->set_runtime_param(1);
-  bx_options.usb[0].Ooption1->set_handler(usb_param_handler);
-  bx_options.usb[0].Ooption1->set_runtime_param(1);
-  bx_options.usb[0].Oport2->set_handler(usb_param_handler);
-  bx_options.usb[0].Oport2->set_runtime_param(1);
-  bx_options.usb[0].Ooption2->set_handler(usb_param_handler);
-  bx_options.usb[0].Ooption2->set_runtime_param(1);
+  SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(usb_param_handler);
+  SIM->get_param_string(BXPN_USB1_PORT1)->set_runtime_param(1);
+  SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(usb_param_handler);
+  SIM->get_param_string(BXPN_USB1_OPTION1)->set_runtime_param(1);
+  SIM->get_param_string(BXPN_USB1_PORT2)->set_handler(usb_param_handler);
+  SIM->get_param_string(BXPN_USB1_PORT2)->set_runtime_param(1);
+  SIM->get_param_string(BXPN_USB1_OPTION2)->set_handler(usb_param_handler);
+  SIM->get_param_string(BXPN_USB1_OPTION2)->set_runtime_param(1);
 
   //HACK: Turn on debug messages from the start
   //BX_USB_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -143,7 +143,7 @@ bx_pciusb_c::reset(unsigned type)
 {
   unsigned i, j;
 
-  if (!bx_options.usb[0].Oenabled->get()) return;
+  if (!SIM->get_param_bool(BXPN_USB1_ENABLED)->get()) return;
 
   if (type == BX_RESET_HARDWARE) {
     static const struct reset_vals_t {
@@ -241,8 +241,8 @@ bx_pciusb_c::reset(unsigned type)
   // include the device(s) initialize code
   #include "pciusb_devs.h"
 
-  init_device(0, bx_options.usb[0].Oport1->getptr());
-  init_device(1, bx_options.usb[0].Oport2->getptr());
+  init_device(0, SIM->get_param_string(BXPN_USB1_PORT1)->getptr());
+  init_device(1, SIM->get_param_string(BXPN_USB1_PORT2)->getptr());
 }
 
   void
@@ -1857,22 +1857,18 @@ char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, char *va
 {
   // handler for USB runtime parameters
   if (set) {
-    bx_id id = param->get_id ();
-    switch (id) {
-      case BXP_USB1_PORT1:
-        BX_ERROR(("USB port #1 device change not implemented yet"));
-        break;
-      case BXP_USB1_OPTION1:
-        BX_ERROR(("USB port #1 option change not implemented yet"));
-        break;
-      case BXP_USB1_PORT2:
-        BX_ERROR(("USB port #2 device change not implemented yet"));
-        break;
-      case BXP_USB1_OPTION2:
-        BX_ERROR(("USB port #2 option change not implemented yet"));
-        break;
-      default:
-        BX_PANIC(("usb_param_handler called with unexpected parameter %d", id));
+    char pname[BX_PATHNAME_LEN];
+    param->get_param_path(pname, BX_PATHNAME_LEN);
+    if (!strcmp(pname, BXPN_USB1_PORT1)) {
+      BX_ERROR(("USB port #1 device change not implemented yet"));
+    } else if (!strcmp(pname, BXPN_USB1_OPTION1)) {
+      BX_ERROR(("USB port #1 option change not implemented yet"));
+    } else if (!strcmp(pname, BXPN_USB1_PORT2)) {
+      BX_ERROR(("USB port #2 device change not implemented yet"));
+    } else if (!strcmp(pname, BXPN_USB1_OPTION2)) {
+      BX_ERROR(("USB port #2 option change not implemented yet"));
+    } else {
+      BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", pname));
     }
   }
   return val;

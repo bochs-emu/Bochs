@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.121 2006-02-27 12:03:56 vruppert Exp $
+// $Id: wxmain.cc,v 1.122 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -324,9 +324,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Display, MyFrame::OnEditDisplay)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
-  EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
-  EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
+  EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
+  EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
   EVT_MENU(ID_Log_Prefs, MyFrame::OnLogPrefs)
   EVT_MENU(ID_Log_PrefsDevice, MyFrame::OnLogPrefsDevice)
@@ -437,9 +437,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Display, "&Display + Interface..." );
   menuEdit->Append(ID_Edit_Keyboard, "&Keyboard + Mouse..." );
   menuEdit->Append(ID_Edit_Boot, "&Boot..." );
-  menuEdit->Append(ID_Edit_Sound, "S&ound..." );
-  menuEdit->Append(ID_Edit_Network, "&Network..." );
   menuEdit->Append(ID_Edit_Serial_Parallel, "&Serial/Parallel..." );
+  menuEdit->Append(ID_Edit_Network, "&Network..." );
+  menuEdit->Append(ID_Edit_Sound, "S&ound..." );
   menuEdit->Append(ID_Edit_Other, "&Other..." );
 
   menuSimulate = new wxMenu;
@@ -653,33 +653,33 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   dlg.ShowModal();
 }
 
-void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg (this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_SB16);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.SetRuntimeFlag (sim_thread != NULL);
-  dlg.ShowModal ();
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("ports");
+  dlg.SetTitle(list->get_title()->getptr());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg (this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_NETWORK);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.ShowModal ();
+  ParamDialog dlg(this, -1);
+  bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_NETWORK);
+  dlg.SetTitle(list->get_name());
+  dlg.AddParam(list);
+  dlg.ShowModal();
 }
 
-void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param (BXP_MENU_SERIAL_PARALLEL);
-  dlg.SetTitle (list->get_name ());
-  dlg.AddParam (list);
-  dlg.SetRuntimeFlag (sim_thread != NULL);
-  dlg.ShowModal ();
+  bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_SB16);
+  dlg.SetTitle(list->get_name());
+  dlg.AddParam(list);
+  dlg.SetRuntimeFlag(sim_thread != NULL);
+  dlg.ShowModal();
 }
 
 void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))

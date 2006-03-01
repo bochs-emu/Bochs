@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.8 2006-02-26 19:11:20 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.9 2006-03-01 17:14:35 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -197,22 +197,22 @@ ata
 
 ports
   serial
-    0
+    1
       enabled           BXP_COM1_ENABLED
       mode              BXP_COM1_MODE
       path              BXP_COM1_PATH
-    1
-      (same options as ports.serial.0)
     2
-      (same options as ports.serial.0)
+      (same options as ports.serial.1)
     3
-      (same options as ports.serial.0)
+      (same options as ports.serial.1)
+    4
+      (same options as ports.serial.1)
   parallel
-    0
+    1
       enabled           BXP_PARPORT1_ENABLED,
       outfile           BXP_PARPORT1_OUTFILE,
-    1
-      (same options as ports.parallel.0)
+    2
+      (same options as ports.parallel.1)
   usb
     1
       enabled           BXP_USB1_ENABLED,

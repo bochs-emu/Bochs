@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.88 2006-02-28 14:02:06 vruppert Exp $
+// $Id: config.cc,v 1.89 2006-03-01 17:14:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -239,7 +239,6 @@ char *bx_param_string_handler(bx_param_string_c *param, int set, char *val, int 
             DEV_floppy_set_media_status(0, 1);
           }
         } else {
-          SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set_enabled(!empty);
           SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set_enabled(!empty);
           SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->set_enabled(!empty);
         }
@@ -263,7 +262,6 @@ char *bx_param_string_handler(bx_param_string_c *param, int set, char *val, int 
             DEV_floppy_set_media_status(1, 1);
           }
         } else {
-          SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set_enabled(!empty);
           SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set_enabled(!empty);
           SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->set_enabled(!empty);
         }
@@ -328,6 +326,7 @@ void bx_init_options()
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled;
+  bx_param_enum_c *mode, *status, *type;
   bx_param_filename_c *path;
   char name[1024], descr[1024], group[16], label[1024];
 
@@ -738,13 +737,13 @@ void bx_init_options()
   bx_list_c *mouse = new bx_list_c(kbd_mouse, "mouse", "Mouse Options");
 
   // keyboard & mouse options
-  bx_param_enum_c *keyboard_type = new bx_param_enum_c(keyboard,
+  type = new bx_param_enum_c(keyboard,
       "type", "Keyboard type",
       "Keyboard type reported by the 'identify keyboard' command",
       keyboard_type_names,
       BX_KBD_MF_TYPE,
       BX_KBD_XT_TYPE);
-  keyboard_type->set_ask_format ("Enter keyboard type: [%s] ");
+  type->set_ask_format ("Enter keyboard type: [%s] ");
 
   new bx_param_num_c(keyboard,
       "serial_delay", "Keyboard serial delay",
@@ -789,7 +788,7 @@ void bx_init_options()
     "serial_wheel",
     NULL
   };
-  bx_param_enum_c *mouse_type = new bx_param_enum_c(mouse,
+  type = new bx_param_enum_c(mouse,
       "type", "Mouse type",
       "The mouse type can be one of these: 'none', 'ps2', 'imps2', 'serial', 'serial_wheel'"
 #if BX_SUPPORT_BUSMOUSE
@@ -802,7 +801,7 @@ void bx_init_options()
       mouse_type_list,
       BX_MOUSE_TYPE_PS2,
       BX_MOUSE_TYPE_NONE);
-  mouse_type->set_ask_format("Choose the type of mouse [%s] ");
+  type->set_ask_format("Choose the type of mouse [%s] ");
 
   new bx_param_bool_c(mouse,
       "enabled", "Enable the mouse capture",
@@ -873,7 +872,7 @@ void bx_init_options()
   bx_list_c *floppya = new bx_list_c(floppy, "0", "Floppy Disk 0");
   bx_list_c *floppyb = new bx_list_c(floppy, "1", "Floppy Disk 1");
 
-  bx_param_enum_c *devtype, *type, *status;
+  bx_param_enum_c *devtype;
   // floppy options
   path = new bx_param_filename_c(floppya,
       "path",
@@ -890,6 +889,7 @@ void bx_init_options()
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
+  devtype->set_enabled(0); // hide devtype parameter
   type = new bx_param_enum_c(floppya,
       "type",
       "Type of floppy disk",
@@ -931,6 +931,7 @@ void bx_init_options()
       floppy_type_names,
       BX_FLOPPY_NONE,
       BX_FLOPPY_NONE);
+  devtype->set_enabled(0); // hide devtype parameter
   type = new bx_param_enum_c(floppyb,
       "type",
       "Type of floppy disk",
@@ -1059,7 +1060,7 @@ void bx_init_options()
         0);
       present->set_ask_format("Device is enabled: [%s] ");
 
-      bx_param_enum_c *type = new bx_param_enum_c(menu,
+      type = new bx_param_enum_c(menu,
         "type",
         "Type of ATA device",
         "Type of ATA device (disk or cdrom)",
@@ -1075,7 +1076,7 @@ void bx_init_options()
         "", BX_PATHNAME_LEN);
       path->set_ask_format("Enter new filename: [%s] ");
 
-      bx_param_enum_c *mode = new bx_param_enum_c(menu,
+      mode = new bx_param_enum_c(menu,
         "mode",
         "Type of disk image",
         "Mode of the ATA harddisk",
@@ -1084,7 +1085,7 @@ void bx_init_options()
         BX_ATA_MODE_FLAT);
       mode->set_ask_format("Enter mode of ATA device, (flat, concat, etc.): [%s] ");
 
-      bx_param_enum_c *status = new bx_param_enum_c(menu,
+      status = new bx_param_enum_c(menu,
         "status",
         "Inserted",
         "CD-ROM media status (inserted / ejected)",
@@ -1199,37 +1200,35 @@ void bx_init_options()
   menu = new bx_list_c(BXP_MENU_DISK, "Bochs Disk Options", "", disk_menu_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
 
-  // serial and parallel port options
-
-#define PAR_SER_INIT_LIST_MAX \
-  ((BXP_PARAMS_PER_PARALLEL_PORT * BX_N_PARALLEL_PORTS) \
-  + (BXP_PARAMS_PER_SERIAL_PORT * BX_N_SERIAL_PORTS) \
-  + (BXP_PARAMS_PER_USB_HUB * BX_N_USB_HUBS))
-  bx_param_c *par_ser_init_list[1+PAR_SER_INIT_LIST_MAX];
-  bx_param_c **par_ser_ptr = &par_ser_init_list[0];
+  // ports subtree
+  bx_list_c *ports = new bx_list_c(root_param, "ports", "Serial and Parallel Port Options");
+  ports->get_options()->set(bx_list_c::USE_TAB_WINDOW | bx_list_c::SHOW_PARENT);
 
   // parallel ports
+  bx_list_c *parallel = new bx_list_c(ports, "parallel", "Parallel Port Options");
+  parallel->get_options()->set(bx_list_c::SHOW_PARENT);
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-        sprintf (name, "Enable parallel port #%d", i+1);
-        sprintf (descr, "Controls whether parallel port #%d is installed or not", i+1);
-        bx_options.par[i].Oenabled = new bx_param_bool_c (
-                BXP_PARPORTx_ENABLED(i+1), 
-                strdup(name), 
-                strdup(descr), 
-                (i==0)? 1 : 0);  // only enable #1 by default
-        sprintf (name, "Parallel port #%d output file", i+1);
-        sprintf (descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
-        bx_options.par[i].Ooutfile = new bx_param_filename_c (
-                BXP_PARPORTx_OUTFILE(i+1), 
-                strdup(name), 
-                strdup(descr),
-                "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 1);
-        deplist->add (bx_options.par[i].Ooutfile);
-        bx_options.par[i].Oenabled->set_dependent_list (deplist);
-        // add to menu
-        *par_ser_ptr++ = bx_options.par[i].Oenabled;
-        *par_ser_ptr++ = bx_options.par[i].Ooutfile;
+    sprintf(name, "%d", i+1);
+    sprintf(label, "Parallel Port %d", i+1);
+    menu = new bx_list_c(parallel, strdup(name), label);
+    menu->get_options()->set(bx_list_c::SERIES_ASK);
+    sprintf(label, "Enable parallel port #%d", i+1);
+    sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
+    enabled = new bx_param_bool_c(menu,
+      "enabled",
+      strdup(label),
+      strdup(descr),
+      (i==0)? 1 : 0);  // only enable #1 by default
+    sprintf(label, "Parallel port #%d output file", i+1);
+    sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
+    path = new bx_param_filename_c(menu,
+      "outfile", 
+      strdup(label),
+      strdup(descr),
+      "", BX_PATHNAME_LEN);
+    deplist = new bx_list_c(BXP_NULL, 1);
+    deplist->add(path);
+    enabled->set_dependent_list(deplist);
   }
 
   static char *serial_mode_list[] = {
@@ -1243,99 +1242,91 @@ void bx_init_options()
   };
 
   // serial ports
+  bx_list_c *serial = new bx_list_c(ports, "serial", "Serial Port Options");
+  serial->get_options()->set(bx_list_c::SHOW_PARENT);
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-        // options for COM port
-        sprintf (name, "Enable serial port #%d (COM%d)", i+1, i+1);
-        sprintf (descr, "Controls whether COM%d is installed or not", i+1);
-        bx_options.com[i].Oenabled = new bx_param_bool_c (
-                BXP_COMx_ENABLED(i+1),
-                strdup(name), 
-                strdup(descr), 
-                (i==0)?1 : 0);  // only enable the first by default
-        sprintf (name, "I/O mode of the serial device for COM%d", i+1);
-        sprintf (descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket'");
-        bx_options.com[i].Omode = new bx_param_enum_c (
-                BXP_COMx_MODE(i+1),
-                strdup(name), 
-                strdup(descr), 
-                serial_mode_list,
-                0,
-                0);
-        bx_options.com[i].Omode->set_ask_format ("Choose I/O mode of the serial device [%s] ");
-        sprintf (name, "Pathname of the serial device for COM%d", i+1);
-        sprintf (descr, "The path can be a real serial device or a pty (X/Unix only)");
-        bx_options.com[i].Odev = new bx_param_filename_c (
-                BXP_COMx_PATH(i+1),
-                strdup(name), 
-                strdup(descr), 
-                "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 2);
-        deplist->add (bx_options.com[i].Omode);
-        deplist->add (bx_options.com[i].Odev);
-        bx_options.com[i].Oenabled->set_dependent_list (deplist);
-        // add to menu
-        *par_ser_ptr++ = bx_options.com[i].Oenabled;
-        *par_ser_ptr++ = bx_options.com[i].Omode;
-        *par_ser_ptr++ = bx_options.com[i].Odev;
+    sprintf(name, "%d", i+1);
+    sprintf(label, "Serial Port %d", i+1);
+    menu = new bx_list_c(serial, strdup(name), label);
+    menu->get_options()->set(bx_list_c::SERIES_ASK);
+    sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
+    sprintf(descr, "Controls whether COM%d is installed or not", i+1);
+    enabled = new bx_param_bool_c(menu,
+      "enabled",
+      strdup(label), 
+      strdup(descr), 
+      (i==0)?1 : 0);  // only enable the first by default
+    sprintf(label, "I/O mode of the serial device for COM%d", i+1);
+    sprintf(descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket'");
+    mode = new bx_param_enum_c(menu,
+      "mode",
+      strdup(label),
+      strdup(descr),
+      serial_mode_list,
+      0,
+      0);
+    mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
+    sprintf(label, "Pathname of the serial device for COM%d", i+1);
+    sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
+    path = new bx_param_filename_c(menu,
+      "dev",
+      strdup(label), 
+      strdup(descr), 
+      "", BX_PATHNAME_LEN);
+    deplist = new bx_list_c(BXP_NULL, 2);
+    deplist->add(mode);
+    deplist->add(path);
+    enabled->set_dependent_list(deplist);
   }
+
+  bx_param_string_c *port, *option;
 
   // usb hubs
+  bx_list_c *usb = new bx_list_c(ports, "usb", "USB Hub Options");
+  usb->get_options()->set(bx_list_c::SHOW_PARENT);
   for (i=0; i<BX_N_USB_HUBS; i++) {
-        // options for USB hub
-        sprintf (group, "USB%d", i+1);
-        sprintf (name, "Enable usb hub #%d (%s)", i+1, group);
-        sprintf (descr, "Controls whether %s is installed or not", group);
-        bx_options.usb[i].Oenabled = new bx_param_bool_c (
-                BXP_USBx_ENABLED(i+1),
-                strdup(name), 
-                strdup(descr), 
-                0);
-        bx_options.usb[i].Oport1 = new bx_param_string_c (
-                BXP_USBx_PORT1(i+1), 
-                "port #1 device", 
-                "Device connected to USB port #1",
-                "", BX_PATHNAME_LEN);
-        bx_options.usb[i].Ooption1 = new bx_param_string_c (
-                BXP_USBx_OPTION1(i+1), 
-                "port #1 device options", 
-                "Options for device on USB port #1",
-                "", BX_PATHNAME_LEN);
-        bx_options.usb[i].Oport2 = new bx_param_string_c (
-                BXP_USBx_PORT2(i+1), 
-                "port #2 device", 
-                "Device connected to USB port #2",
-                "", BX_PATHNAME_LEN);
-        bx_options.usb[i].Ooption2 = new bx_param_string_c (
-                BXP_USBx_OPTION2(i+1), 
-                "port #2 device options", 
-                "Options for device on USB port #2",
-                "", BX_PATHNAME_LEN);
-        deplist = new bx_list_c (BXP_NULL, 4);
-        deplist->add (bx_options.usb[i].Oport1);
-        deplist->add (bx_options.usb[i].Ooption1);
-        deplist->add (bx_options.usb[i].Oport2);
-        deplist->add (bx_options.usb[i].Ooption2);
-        bx_options.usb[i].Oenabled->set_dependent_list (deplist);
-        // add to menu
-        *par_ser_ptr++ = bx_options.usb[i].Oenabled;
-        *par_ser_ptr++ = bx_options.usb[i].Oport1;
-        *par_ser_ptr++ = bx_options.usb[i].Ooption1;
-        *par_ser_ptr++ = bx_options.usb[i].Oport2;
-        *par_ser_ptr++ = bx_options.usb[i].Ooption2;
-
-        bx_options.usb[i].Oport1->set_group (strdup(group));
-        bx_options.usb[i].Ooption1->set_group (strdup(group));
-        bx_options.usb[i].Oport2->set_group (strdup(group));
-        bx_options.usb[i].Ooption2->set_group (strdup(group));
+    sprintf(group, "USB%d", i+1);
+    sprintf(name, "%d", i+1);
+    sprintf(label, "USB Hub %d", i+1);
+    menu = new bx_list_c(usb, strdup(name), label);
+    sprintf(label, "Enable usb hub #%d", i+1);
+    sprintf(descr, "Controls whether %s is installed or not", group);
+    enabled = new bx_param_bool_c(menu,
+      "enabled",
+      strdup(label), 
+      strdup(descr), 
+      0);
+    deplist = new bx_list_c(BXP_NULL, 4);
+    port = new bx_param_string_c(menu,
+      "port1", 
+      "Port #1 device", 
+      "Device connected to USB port #1",
+      "", BX_PATHNAME_LEN);
+    port->set_group(strdup(group));
+    option = new bx_param_string_c(menu,
+      "option1", 
+      "Port #1 device options", 
+      "Options for device on USB port #1",
+      "", BX_PATHNAME_LEN);
+    option->set_group(strdup(group));
+    deplist->add(port);
+    deplist->add(option);
+    port = new bx_param_string_c(menu,
+      "port2", 
+      "Port #2 device", 
+      "Device connected to USB port #2",
+      "", BX_PATHNAME_LEN);
+    port->set_group(strdup(group));
+    option = new bx_param_string_c(menu,
+      "option2", 
+      "Port #2 device options", 
+      "Options for device on USB port #2",
+      "", BX_PATHNAME_LEN);
+    option->set_group(strdup(group));
+    deplist->add(port);
+    deplist->add(option);
+    enabled->set_dependent_list(deplist);
   }
-  // add final NULL at the end, and build the menu
-  *par_ser_ptr = NULL;
-  menu = new bx_list_c (BXP_MENU_SERIAL_PARALLEL,
-          "Serial and Parallel Port Options",
-          "",
-          par_ser_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
-  menu->get_options ()->set (menu->SHOW_GROUP_NAME);
 
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
       "Enable panic for use in bochs testing",
@@ -1579,10 +1570,10 @@ void bx_init_options()
       SIM->get_param_string(BXPN_USER_SHORTCUT),
       bx_options.sb16.Odmatimer,
       bx_options.sb16.Ologlevel,
-      bx_options.usb[0].Oport1,
-      bx_options.usb[0].Ooption1,
-      bx_options.usb[0].Oport2,
-      bx_options.usb[0].Ooption2,
+      SIM->get_param_string(BXPN_USB1_PORT1),
+      SIM->get_param_string(BXPN_USB1_OPTION1),
+      SIM->get_param_string(BXPN_USB1_PORT2),
+      SIM->get_param_string(BXPN_USB1_OPTION2),
       NULL
   };
   menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
@@ -1595,8 +1586,6 @@ void bx_init_options()
 
 void bx_reset_options ()
 {
-  Bit8u i;
-
   // cpu
   SIM->get_param("cpu")->reset();
 
@@ -1625,22 +1614,7 @@ void bx_reset_options ()
   SIM->get_param("ata")->reset();
 
   // standard ports
-  for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    bx_options.com[i].Oenabled->reset();
-    bx_options.com[i].Omode->reset();
-    bx_options.com[i].Odev->reset();
-  }
-  for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    bx_options.par[i].Oenabled->reset();
-    bx_options.par[i].Ooutfile->reset();
-  }
-  for (i=0; i<BX_N_USB_HUBS; i++) {
-    bx_options.usb[i].Oenabled->reset();
-    bx_options.usb[i].Oport1->reset();
-    bx_options.usb[i].Ooption1->reset();
-    bx_options.usb[i].Oport2->reset();
-    bx_options.usb[i].Ooption2->reset();
-  }
+  SIM->get_param("ports")->reset();
 
   // ne2k
   bx_options.ne2k.Oenabled->reset();
@@ -2651,73 +2625,82 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     else
       bx_options.sb16.Oenabled->set (0);
   } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
+    char tmpname[80];
     idx = params[0][3];
     if ((idx < '1') || (idx > '9')) {
       PARSE_ERR(("%s: comX directive malformed.", context));
     }
-    idx -= '1';
-    if (idx >= BX_N_SERIAL_PORTS) {
+    idx -= '0';
+    if (idx > BX_N_SERIAL_PORTS) {
       PARSE_ERR(("%s: comX port number out of range.", context));
     }
+    sprintf(tmpname, "ports.serial.%d", idx);
+    base = (bx_list_c*) SIM->get_param(tmpname);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.com[idx].Oenabled->set (atol(&params[i][8]));
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "mode=", 5)) {
-        if (!bx_options.com[idx].Omode->set_by_name(&params[i][5]))
-          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx+1, strdup(&params[i][5])));
-        bx_options.com[idx].Oenabled->set (1);
+        if (!SIM->get_param_enum("mode", base)->set_by_name(&params[i][5]))
+          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx, strdup(&params[i][5])));
+        SIM->get_param_bool("enabled", base)->set(1);
       } else if (!strncmp(params[i], "dev=", 4)) {
-        bx_options.com[idx].Odev->set (&params[i][4]);
-        bx_options.com[idx].Oenabled->set (1);
+        SIM->get_param_string("dev", base)->set(&params[i][4]);
+        SIM->get_param_bool("enabled", base)->set(1);
       } else {
-        PARSE_ERR(("%s: unknown parameter for com%d ignored.", context, idx+1));
+        PARSE_ERR(("%s: unknown parameter for com%d ignored.", context, idx));
       }
     }
   } else if ((!strncmp(params[0], "parport", 7)) && (strlen(params[0]) == 8)) {
+    char tmpname[80];
     idx = params[0][7];
     if ((idx < '1') || (idx > '9')) {
       PARSE_ERR(("%s: parportX directive malformed.", context));
     }
-    idx -= '1';
-    if (idx >= BX_N_PARALLEL_PORTS) {
+    idx -= '0';
+    if (idx > BX_N_PARALLEL_PORTS) {
       PARSE_ERR(("%s: parportX port number out of range.", context));
     }
+    sprintf(tmpname, "ports.parallel.%d", idx);
+    base = (bx_list_c*) SIM->get_param(tmpname);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.par[idx].Oenabled->set (atol(&params[i][8]));
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "file=", 5)) {
-        bx_options.par[idx].Ooutfile->set(&params[i][5]);
-        bx_options.par[idx].Oenabled->set (1);
+        SIM->get_param_string("outfile", base)->set(&params[i][5]);
+        SIM->get_param_bool("enabled", base)->set(1);
       } else {
-        BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx+1));
+        BX_ERROR(("%s: unknown parameter for parport%d ignored.", context, idx));
       }
     }
   } else if ((!strncmp(params[0], "usb", 3)) && (strlen(params[0]) == 4)) {
+    char tmpname[80];
     idx = params[0][3];
     if ((idx < '1') || (idx > '9')) {
       PARSE_ERR(("%s: usbX directive malformed.", context));
     }
-    idx -= '1';
-    if (idx >= BX_N_USB_HUBS) {
+    idx -= '0';
+    if (idx > BX_N_USB_HUBS) {
       PARSE_ERR(("%s: usbX hub number out of range.", context));
     }
+    sprintf(tmpname, "ports.usb.%d", idx);
+    base = (bx_list_c*) SIM->get_param(tmpname);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
-        bx_options.usb[idx].Oenabled->set (atol(&params[i][8]));
+        SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "port1=", 6)) {
-        bx_options.usb[idx].Oport1->set(&params[i][6]);
-      } else if (!strncmp(params[i], "option1=", 6)) {
-        bx_options.usb[idx].Ooption1->set(&params[i][6]);
+        SIM->get_param_string("port1", base)->set(&params[i][6]);
+      } else if (!strncmp(params[i], "option1=", 8)) {
+        SIM->get_param_string("option1", base)->set(&params[i][8]);
       } else if (!strncmp(params[i], "port2=", 6)) {
-        bx_options.usb[idx].Oport2->set(&params[i][6]);
-      } else if (!strncmp(params[i], "option2=", 6)) {
-        bx_options.usb[idx].Ooption2->set(&params[i][6]);
+        SIM->get_param_string("port2", base)->set(&params[i][6]);
+      } else if (!strncmp(params[i], "option2=", 8)) {
+        SIM->get_param_string("option2", base)->set(&params[i][8]);
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
         PARSE_WARN(("%s: usb ioaddr is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
         PARSE_WARN(("%s: usb irq is now DEPRECATED (assigned by BIOS).", context));
       } else {
-        PARSE_WARN(("%s: unknown parameter '%s' for usb%d ignored.", context, params[i], idx+1));
+        PARSE_WARN(("%s: unknown parameter '%s' for usb%d ignored.", context, params[i], idx));
       }
     }
   } else if (!strcmp(params[0], "i440fxsupport")) {
@@ -3064,7 +3047,7 @@ static char *fdtypes[] = {
   "none", "1_2", "1_44", "2_88", "720k", "360k", "160k", "180k", "320k"
 };
 
-int bx_write_floppy_options (FILE *fp, int drive)
+int bx_write_floppy_options(FILE *fp, int drive)
 {
   char path[80], type[80], status[80];
 
@@ -3086,7 +3069,7 @@ int bx_write_floppy_options (FILE *fp, int drive)
   return 0;
 }
 
-int bx_write_ata_options (FILE *fp, Bit8u channel, bx_list_c *base)
+int bx_write_ata_options(FILE *fp, Bit8u channel, bx_list_c *base)
 {
   fprintf(fp, "ata%d: enabled=%d", channel, SIM->get_param_bool("enabled", base)->get());
 
@@ -3099,7 +3082,7 @@ int bx_write_ata_options (FILE *fp, Bit8u channel, bx_list_c *base)
   return 0;
 }
 
-int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *base)
+int bx_write_atadevice_options(FILE *fp, Bit8u channel, Bit8u drive, bx_list_c *base)
 {
   if (SIM->get_param_bool("present", base)->get()) {
     fprintf(fp, "ata%d-%s: ", channel, drive==0?"master":"slave");
@@ -3197,39 +3180,41 @@ int bx_write_atadevice_options (FILE *fp, Bit8u channel, Bit8u drive, bx_list_c 
   return 0;
 }
 
-int bx_write_parport_options (FILE *fp, bx_parport_options *opt, int n)
+int bx_write_parport_options(FILE *fp, bx_list_c *base, int n)
 {
-  fprintf (fp, "parport%d: enabled=%d", n, opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    fprintf (fp, ", file=\"%s\"", opt->Ooutfile->getptr ());
+  fprintf(fp, "parport%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", file=\"%s\"", SIM->get_param_string("outfile", base)->getptr());
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
-int bx_write_serial_options (FILE *fp, bx_serial_options *opt, int n)
+int bx_write_serial_options(FILE *fp, bx_list_c *base, int n)
 {
-  fprintf (fp, "com%d: enabled=%d", n, opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    fprintf(fp, ", mode=%s", opt->Omode->get_selected());
-    fprintf(fp, ", dev=\"%s\"", opt->Odev->getptr());
+  fprintf(fp, "com%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", mode=%s", SIM->get_param_enum("mode", base)->get_selected());
+    fprintf(fp, ", dev=\"%s\"", SIM->get_param_string("dev", base)->getptr());
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
-int bx_write_usb_options (FILE *fp, bx_usb_options *opt, int n)
+int bx_write_usb_options(FILE *fp, bx_list_c *base, int n)
 {
-  fprintf (fp, "usb%d: enabled=%d", n, opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    fprintf (fp, ", port1=%s, option1=%s", opt->Oport1->getptr (), opt->Ooption1->getptr ());
-    fprintf (fp, ", port2=%s, option2=%s", opt->Oport2->getptr (), opt->Ooption2->getptr ());
+  fprintf(fp, "usb%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", port1=%s, option1=%s", SIM->get_param_string("port1", base)->getptr(),
+            SIM->get_param_string("option1", base)->getptr());
+    fprintf(fp, ", port2=%s, option2=%s", SIM->get_param_string("port2", base)->getptr(),
+            SIM->get_param_string("option2", base)->getptr());
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
-int bx_write_pnic_options (FILE *fp, bx_pnic_options *opt)
+int bx_write_pnic_options(FILE *fp, bx_pnic_options *opt)
 {
   fprintf (fp, "pnic: enabled=%d", opt->Oenabled->get ());
   if (opt->Oenabled->get ()) {
@@ -3455,12 +3440,18 @@ int bx_write_configuration(char *rc, int overwrite)
   }
   // parallel ports
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
-    bx_write_parport_options(fp, &bx_options.par[i], i+1);
+    sprintf(tmpdev, "ports.parallel.%d", i+1);
+    base = (bx_list_c*) SIM->get_param(tmpdev);
+    bx_write_parport_options(fp, base, i+1);
   }
   // serial ports
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
-    bx_write_serial_options(fp, &bx_options.com[i], i+1);
+    sprintf(tmpdev, "ports.serial.%d", i+1);
+    base = (bx_list_c*) SIM->get_param(tmpdev);
+    bx_write_serial_options(fp, base, i+1);
   }
+  base = (bx_list_c*) SIM->get_param("ports.usb.1");
+  bx_write_usb_options(fp, base, 1);
   // pci
   fprintf(fp, "i440fxsupport: enabled=%d",
           SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get());
@@ -3479,7 +3470,6 @@ int bx_write_configuration(char *rc, int overwrite)
       SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
       SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
   }
-  bx_write_usb_options(fp, &bx_options.usb[0], 1);
   bx_write_sb16_options(fp, &bx_options.sb16);
   fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
