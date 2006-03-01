@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.17 2006-02-27 19:04:00 sshwarts Exp $
+// $Id: ioapic.h,v 1.18 2006-03-01 22:32:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 extern class bx_ioapic_c bx_ioapic;
@@ -60,8 +60,8 @@ public:
   ~bx_ioapic_c ();
   virtual void init();
   virtual void reset(unsigned type) {}
-  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
-  virtual void write(Bit32u address, Bit32u *value, unsigned len);
+  virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len);
+  virtual void write(bx_phy_address address, Bit32u *value, unsigned len);
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);
   void service_ioapic(void);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.75 2006-02-20 19:28:57 sshwarts Exp $
+// $Id: apic.cc,v 1.76 2006-03-01 22:32:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,10 +156,10 @@ bx_generic_apic_c::bx_generic_apic_c()
   settype(APICLOG);
 }
 
-void bx_generic_apic_c::set_base (bx_address newbase)
+void bx_generic_apic_c::set_base (bx_phy_address newbase)
 {
   newbase &= (~0xfff);
-  BX_INFO(("relocate APIC id=%d to " FMT_ADDRX, id, newbase));
+  BX_INFO(("relocate APIC id=%d to %08x", id, newbase));
   base_addr = newbase;
 }
 
@@ -169,7 +169,7 @@ void bx_generic_apic_c::set_id (Bit8u newid)
   id = newid;
 }
 
-bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
+bx_bool bx_generic_apic_c::is_selected (bx_phy_address addr, unsigned len)
 {
   if ((addr & ~0xfff) == get_base()) {
     if (((addr & 0xf) != 0) || (len != 4))
@@ -179,7 +179,7 @@ bx_bool bx_generic_apic_c::is_selected (bx_address addr, Bit32u len)
   return 0;
 }
 
-void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
+void bx_generic_apic_c::read (bx_phy_address addr, void *data, unsigned len)
 {
   if ((addr & ~0xf) != ((addr+len-1) & ~0xf))
     BX_PANIC(("APIC read spans 32-bit boundary"));
@@ -198,8 +198,7 @@ void bx_generic_apic_c::read (Bit32u addr, void *data, unsigned len)
   Bit8u *p1 = bytes+(addr&3);
   Bit8u *p2 = (Bit8u *)data;
   for (unsigned i=0; i<len; i++) {
-    if (bx_dbg.apic)
-      BX_INFO(("apic: Copying byte %02x", (unsigned int) *p1));
+    BX_DEBUG(("apic: Copying byte %02x", (unsigned int) *p1));
     *p2++ = *p1++;
   }
 }
@@ -309,7 +308,7 @@ void bx_local_apic_c::set_divide_configuration (Bit32u value)
   BX_INFO(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
 }
 
-void bx_local_apic_c::write (Bit32u addr, Bit32u *data, unsigned len)
+void bx_local_apic_c::write (bx_phy_address addr, Bit32u *data, unsigned len)
 {
   if (len != 4) {
     BX_PANIC (("local apic write with len=%d (should be 4)", len));
@@ -512,13 +511,13 @@ void bx_local_apic_c::startup_msg (Bit32u vector)
   }
 }
 
-void bx_local_apic_c::read_aligned (Bit32u addr, Bit32u *data, unsigned len)
+void bx_local_apic_c::read_aligned (bx_phy_address addr, Bit32u *data, unsigned len)
 {
   if (len != 4) {
     BX_PANIC (("local apic read with len=%d (should be 4)", len));
   }
   *data = 0;  // default value for unimplemented registers
-  Bit32u addr2 = addr & 0xff0;
+  bx_phy_address addr2 = addr & 0xff0;
   switch (addr2) {
   case 0x20: // local APIC id
     *data = (id) << 24; break;
@@ -754,10 +753,6 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
   int vector = highest_priority_int(irr);
   if (vector < 0) goto spurious;
   if ((vector & 0xf0) <= get_ppr()) goto spurious;
-  if (irr[vector] != 1) {
-    BX_PANIC(("IRR was not 1! irr[%d]=%#x", vector, irr[vector]));
-    irr[vector]=1;
-  }
   BX_ASSERT (irr[vector] == 1);
   BX_DEBUG(("%s: acknowledge_int returning vector 0x%x", cpu->name, vector));
   irr[vector] = 0;

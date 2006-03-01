@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.79 2006-02-27 19:04:01 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.80 2006-03-01 22:32:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.79 2006-02-27 19:04:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.80 2006-03-01 22:32:24 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -553,7 +553,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
 
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->get_base () == (a20Addr & ~0xfff))
+  if (local_apic->get_base() == (a20Addr & ~0xfff))
     return(NULL); // Vetoed!  APIC address space
 #endif
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.45 2006-02-27 19:04:01 sshwarts Exp $
+// $Id: memory.cc,v 1.46 2006-03-01 22:32:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -66,14 +66,6 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
     }
     memory_handler = memory_handler->next;
   }
-
-#if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->is_selected (a20addr, len)) {
-    local_apic->write (a20addr, (Bit32u *)data, len);
-    return;
-  }
-#endif
 
 #if BX_SUPPORT_ICACHE
   if (a20addr < BX_MEM_THIS len)
@@ -219,14 +211,6 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
     }
     memory_handler = memory_handler->next;
   }
-
-#if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->is_selected (addr, len)) {
-    local_apic->read (addr, data, len);
-    return;
-  }
-#endif
 
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory

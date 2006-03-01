@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.26 2006-01-27 19:50:00 sshwarts Exp $
+// $Id: apic.h,v 1.27 2006-03-01 22:32:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,23 +54,23 @@ typedef enum {
 
 class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:
-  bx_address base_addr;
+  bx_phy_address base_addr;
   Bit8u id;
 #define APIC_UNKNOWN_ID 0xff
 public:
-  bx_generic_apic_c ();
-  virtual ~bx_generic_apic_c () { }
+  bx_generic_apic_c();
+  virtual ~bx_generic_apic_c() { }
   // init is called during RESET and when an INIT message is delivered
-  virtual void init () { }
-  virtual void reset () { }
-  bx_address get_base (void) const { return base_addr; }
-  void set_base (bx_address newbase);
-  void set_id (Bit8u newid);
-  Bit8u get_id () const { return id; }
-  bx_bool is_selected (bx_address addr, Bit32u len);
-  void read (Bit32u addr, void *data, unsigned len);
-  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len) = 0;
-  virtual void write(Bit32u address, Bit32u *value, unsigned len) = 0;
+  virtual void init() { }
+  virtual void reset() { }
+  bx_phy_address get_base(void) const { return base_addr; }
+  void set_base(bx_phy_address newbase);
+  void set_id(Bit8u newid);
+  Bit8u get_id() const { return id; }
+  bx_bool is_selected (bx_phy_address addr, unsigned len);
+  void read(bx_phy_address addr, void *data, unsigned len);
+  virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len) = 0;
+  virtual void write(bx_phy_address address, Bit32u *value, unsigned len) = 0;
   virtual bx_apic_type_t get_type () = 0;
 };
 
@@ -157,20 +157,20 @@ public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu);
   virtual ~bx_local_apic_c(void) { }
-  virtual void reset (void);
-  virtual void init (void);
-  BX_CPU_C *get_cpu () { return cpu; }
-  void set_id (Bit8u newid);   // redefine to set cpu->name
-  virtual void write (Bit32u addr, Bit32u *data, unsigned len);
-  virtual void read_aligned(Bit32u address, Bit32u *data, unsigned len);
-  void startup_msg (Bit32u vector);
+  virtual void reset(void);
+  virtual void init(void);
+  BX_CPU_C *get_cpu() { return cpu; }
+  void set_id(Bit8u newid);   // redefine to set cpu->name
+  virtual void write(bx_phy_address addr, Bit32u *data, unsigned len);
+  virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len);
+  void startup_msg(Bit32u vector);
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq (unsigned num, unsigned trigger_mode);
-  void untrigger_irq (unsigned num, unsigned trigger_mode);
-  Bit8u acknowledge_int (void);  // only the local CPU should call this
-  int highest_priority_int (Bit8u *array);
+  void trigger_irq(unsigned num, unsigned trigger_mode);
+  void untrigger_irq(unsigned num, unsigned trigger_mode);
+  Bit8u acknowledge_int(void);  // only the local CPU should call this
+  int highest_priority_int(Bit8u *array);
   void receive_EOI(Bit32u value);
   void send_ipi(void);
   void write_spurious_interrupt_register(Bit32u value);
@@ -178,11 +178,11 @@ public:
   void print_status(void);
   bx_bool match_logical_addr (Bit8u address);
   virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
-  bx_bool deliver (Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
-  Bit8u get_tpr (void);
-  void  set_tpr (Bit8u tpr);
-  Bit8u get_ppr (void);
-  Bit8u get_apr (void);
+  bx_bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
+  Bit8u get_tpr(void);
+  void  set_tpr(Bit8u tpr);
+  Bit8u get_ppr(void);
+  Bit8u get_apr(void);
   bx_bool is_focus(Bit8u vector);
   static void periodic_smf(void *);
   void periodic(void);

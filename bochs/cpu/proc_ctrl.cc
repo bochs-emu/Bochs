@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.136 2006-02-28 19:50:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.137 2006-03-01 22:32:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1613,9 +1613,8 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
        36:63  Reserved
     */
     case BX_MSR_APICBASE:
-      /* we return low 32 bits in EAX, and high in EDX */
-      RAX = Bit32u(BX_CPU_THIS_PTR msr.apicbase & 0xffffffff);
-      RDX = Bit32u(BX_CPU_THIS_PTR msr.apicbase >> 32);
+      RAX = BX_CPU_THIS_PTR msr.apicbase;
+      RDX = 0;
       BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
       return;
 
@@ -1752,16 +1751,20 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
        8     This is set if its the BSP
        9:10    Reserved
        11    APIC Global Enable bit (1=enabled 0=disabled)
-       12:35  APIC Base Address
+       12:35  APIC Base Address (in Bochs 12:31 because of 32-bit physical addr)
        36:63  Reserved
     */
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
-      if (BX_CPU_THIS_PTR msr.apicbase & 0x800)
-      {
-        BX_CPU_THIS_PTR msr.apicbase = ((Bit64u) EDX << 32) + EAX;
+      if (BX_CPU_THIS_PTR msr.apicbase & 0x800) {
         BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", EDX, EAX));
+        BX_CPU_THIS_PTR msr.apicbase = EAX; /* ignore the high 32bits */
+        if (EDX != 0) {
+            BX_PANIC(("MSR_APICBASE: Only 32 bit physical address space is emulated !"));
+        }
         BX_CPU_THIS_PTR local_apic.set_base(BX_CPU_THIS_PTR msr.apicbase);
+        // TLB flush is required for emulation correctness
+        TLB_flush(1);  // don't care about performance of apic relocation
       }
       else {
         BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
@@ -1784,7 +1787,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       BX_CPU_THIS_PTR msr.ffxsr = (EAX >> 14) & 1;
       return;
 
-     case BX_MSR_STAR:
+    case BX_MSR_STAR:
       MSR_STAR   = ((Bit64u) EDX << 32) + EAX;
       return;
 

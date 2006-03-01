@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.265 2006-02-28 20:29:03 sshwarts Exp $
+// $Id: cpu.h,v 1.266 2006-03-01 22:32:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -585,7 +585,7 @@ typedef struct {
 
 #if BX_CPU_LEVEL >= 5
 typedef struct {
-  Bit64u apicbase;
+  bx_phy_address apicbase;
 
 #if BX_SUPPORT_X86_64
   // x86-64 EFER bits
@@ -2716,6 +2716,7 @@ public: // for now...
   BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
+  BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void TLB_init(void);
   BX_SMF void set_INTR(bx_bool value);
   BX_SMF char *strseg(bx_segment_reg_t *seg) BX_CPP_AttrRegparmN(1);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.64 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: paging.cc,v 1.65 2006-03-01 22:32:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,7 +25,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-// Notes from merge of x86-64 enhancements: (KPL)
+// Notes from merge of x86-64 enhancements:
 //   Looks like for x86-64/PAE=1/PTE with PSE=1, the
 //     CR4.PSE field is not consulted by the processor?
 //   Fix the PAE case to not update the page table tree entries
@@ -533,8 +533,7 @@ BX_CPU_C::TLB_init(void)
 #endif  // #if BX_USE_TLB
 }
 
-  void
-BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
+void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 {
 #if InstrumentTLB
   if (invalidateGlobal)
@@ -561,11 +560,16 @@ BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 #endif  // #if BX_USE_TLB
 }
 
+void BX_CPU_C::TLB_invlpg(bx_address laddr)
+{
+  Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+  InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
+}
+
 void BX_CPU_C::INVLPG(bxInstruction_c* i)
 {
 #if BX_CPU_LEVEL >= 4
-  bx_address laddr;
-
   invalidate_prefetch_q();
 
   // Operand must not be a register
@@ -619,9 +623,8 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   }
 
 #if BX_USE_TLB
-  laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
-  Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
+  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
+  TLB_invlpg(laddr);
   InstrTLB_Increment(tlbEntryInvlpg);
 #endif // BX_USE_TLB
 
@@ -1188,7 +1191,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 {
 
 #if BX_X86_DEBUGGER
-  if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
+  if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
     // Only compare debug registers if any breakpoints are enabled
     Bit32u dr6_bits;
     unsigned opa, opb;
@@ -1219,18 +1222,32 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 
       if (rw == BX_READ) {
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, length);
+#if BX_SUPPORT_APIC
+        if (BX_CPU_THIS_PTR local_apic.is_selected(BX_CPU_THIS_PTR address_xlation.paddress1, length)) {
+            BX_CPU_THIS_PTR local_apic.read(BX_CPU_THIS_PTR address_xlation.paddress1, data, length);
+            return;
+        }
+#endif
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
       }
       else {
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, length);
+#if BX_SUPPORT_APIC
+        if (BX_CPU_THIS_PTR local_apic.is_selected(BX_CPU_THIS_PTR address_xlation.paddress1, length)) {
+            BX_CPU_THIS_PTR local_apic.write(BX_CPU_THIS_PTR address_xlation.paddress1, (Bit32u*) data, length);
+            return;
+        }
+#endif
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
       }
       return;
     }
     else {
-      // access across 2 pages
+      // access across 2 pages, no need to check for Local APIC here,
+      // correct Local APIC access always 16-byte aligned and 
+      // maximum 4-byte length so it cannot page split.
       BX_CPU_THIS_PTR address_xlation.paddress1 =
           dtranslate_linear(laddr, pl, xlate_rw);
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
@@ -1308,6 +1325,12 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       if (rw == BX_READ) {
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, laddr, length);
+#if BX_SUPPORT_APIC
+        if (BX_CPU_THIS_PTR local_apic.is_selected(laddr, length)) {
+            BX_CPU_THIS_PTR local_apic.read(laddr, data, length);
+            return;
+        }
+#endif
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -1349,6 +1372,12 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       }
       else { // Write
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, laddr, length);
+#if BX_SUPPORT_APIC
+        if (BX_CPU_THIS_PTR local_apic.is_selected(laddr, length)) {
+            BX_CPU_THIS_PTR local_apic.write(laddr, (Bit32u*) data, length);
+            return;
+        }
+#endif
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -1380,7 +1409,9 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       }
     }
     else {
-      // Access spans two pages.
+      // access across 2 pages, no need to check for Local APIC here,
+      // correct Local APIC access always 16-byte aligned and 
+      // maximum 4-byte length so it cannot page split.
       BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
       BX_CPU_THIS_PTR address_xlation.len2 = length -
@@ -1461,15 +1492,13 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 
 // stub functions for non-support of paging
 
-  void
-BX_CPU_C::CR3_change(Bit32u value32)
+void BX_CPU_C::CR3_change(bx_address value32)
 {
   BX_INFO(("CR3_change(): flush TLB cache"));
   BX_INFO(("Page Directory Base %08x", (unsigned) value32));
 }
 
-  void
-BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
+void BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
     unsigned rw, void *data)
 {
   /* perhaps put this check before all code which calls this function,
@@ -1486,8 +1515,7 @@ BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
   BX_PANIC(("access_linear: paging not supported"));
 }
 
-  void
-BX_CPU_C::INVLPG(bxInstruction_c* i)
+void BX_CPU_C::INVLPG(bxInstruction_c* i)
 {}
 
 #endif  // BX_SUPPORT_PAGING
