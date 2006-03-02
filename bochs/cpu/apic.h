@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.27 2006-03-01 22:32:23 sshwarts Exp $
+// $Id: apic.h,v 1.28 2006-03-02 20:09:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -188,10 +188,6 @@ public:
   void periodic(void);
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
-/*
-  Bit32u get_arb_id (void);
-  void   set_arb_id (Bit32u newid);
-*/
 };
 
 // For P6 and Pentium family processors the local APIC ID feild is 4 bits.
