@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.77 2006-03-02 20:09:20 sshwarts Exp $
+// $Id: apic.cc,v 1.78 2006-03-02 20:17:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,9 +39,9 @@
 
 int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bit8u dest_mode, bx_bool level, bx_bool trig_mode)
 {
-  if (delivery_mode == APIC_DM_LOWPRI)
+  if(delivery_mode == APIC_DM_LOWPRI)
   {
-     if (dest_mode == 0) {
+     if(dest_mode == 0) {
        // I/O subsytem initiated interrupt with lowest priority delivery
        // mode is not supported in physical destination mode
 //     BX_ERROR(("Ignoring lowest priority interrupt in physical dest mode !"));
@@ -53,8 +53,8 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bi
   }
 
   // determine destination local apics and deliver
-  if (dest_mode == 0) {
-    if (dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
+  if(dest_mode == 0) {
+    if(dest == APIC_BROADCAST_PHYSICAL_DESTINATION_MODE)
     {
        return apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, APIC_MAX_ID);
     }
@@ -73,12 +73,12 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bi
   } 
   else {
     // logical destination mode
-    if (dest == 0) return 0;
+    if(dest == 0) return 0;
 
     bx_bool interrupt_delivered = 0;
 
     for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
-      if (BX_CPU_APIC(i)->match_logical_addr(dest)) {
+      if(BX_CPU_APIC(i)->match_logical_addr(dest)) {
         BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
         interrupt_delivered = 1;
       }
@@ -93,7 +93,7 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
 #ifndef BX_IMPLEMENT_XAPIC
   // search for if focus processor exists
   for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
-    if (BX_CPU_APIC(i)->is_focus(vector)) {
+    if(BX_CPU_APIC(i)->is_focus(vector)) {
       BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
       return 1;
     }
@@ -104,20 +104,20 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
   int lowest_priority_agent = -1, lowest_priority = 0x100;
 
   for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
-    if (broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
+    if(broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
 #ifndef BX_IMPLEMENT_XAPIC
       int priority = BX_CPU_APIC(i)->get_apr();
 #else
       int priority = BX_CPU_APIC(i)->get_tpr();
 #endif
-      if (priority < lowest_priority) {
+      if(priority < lowest_priority) {
         lowest_priority = priority;
         lowest_priority_agent = i;
       }
     }
   }
 
-  if (lowest_priority_agent >= 0)
+  if(lowest_priority_agent >= 0)
   {
     BX_CPU_APIC(lowest_priority_agent)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
     return 1;
@@ -128,14 +128,14 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
 
 int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig_mode, int exclude_cpu)
 {
-  if (delivery_mode == APIC_DM_LOWPRI)
+  if(delivery_mode == APIC_DM_LOWPRI)
   {
     return apic_bus_deliver_lowest_priority(vector, 0 /* doesn't matter */, trig_mode, 1);
   }
 
   // deliver to all bus agents except 'exclude_cpu'
   for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
-    if (i == exclude_cpu) continue;
+    if(i == exclude_cpu) continue;
     BX_CPU_APIC(i)->deliver(vector, delivery_mode, trig_mode);
   }
 
@@ -171,8 +171,8 @@ void bx_generic_apic_c::set_id(Bit8u newid)
 
 bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 {
-  if ((addr & ~0xfff) == get_base()) {
-    if (((addr & 0xf) != 0) || (len != 4))
+  if((addr & ~0xfff) == get_base()) {
+    if(((addr & 0xf) != 0) || (len != 4))
       BX_INFO(("warning: misaligned or wrong-size APIC access. len=%d, addr=" FMT_ADDRX "", len, addr));
     return 1;
   }
@@ -181,11 +181,11 @@ bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 
 void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 {
-  if ((addr & ~0xf) != ((addr+len-1) & ~0xf))
+  if((addr & ~0xf) != ((addr+len-1) & ~0xf))
     BX_PANIC(("APIC read spans 32-bit boundary"));
   Bit32u value;
   read_aligned(addr, &value, 4);
-  if ((addr&3) == 0 && len == 4) {
+  if((addr&3) == 0 && len == 4) {
     *((Bit32u *)data) = value;
     return;
   }
@@ -285,16 +285,6 @@ void bx_local_apic_c::set_id(Bit8u newid)
     BX_INFO(( "80%d86", BX_CPU_LEVEL ));
 }
 
-void bx_local_apic_c::set_divide_configuration(Bit32u value)
-{
-  BX_ASSERT(value ==(value & 0x0b));
-  // move bit 3 down to bit 0.
-  value =((value & 8) >> 1) |(value & 3);
-  BX_ASSERT(value >= 0 && value <= 7);
-  timer_divide_factor =(value==7)? 1 :(2 << value);
-  BX_INFO(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
-}
-
 void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
 {
   if(len != 4) {
@@ -305,7 +295,7 @@ void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
   Bit32u value = *data;
   switch(addr) {
     case 0x20: // local APIC id
-      id =(value>>24) & APIC_ID_MASK;
+      id = (value>>24) & APIC_ID_MASK;
       break;
     case 0x80: // task priority
       set_tpr(value & 0xff);
@@ -314,11 +304,11 @@ void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
       receive_EOI(value);
       break;
     case 0xd0: // logical destination
-      log_dest =(value >> 24) & APIC_ID_MASK;
+      log_dest = (value >> 24) & APIC_ID_MASK;
       BX_DEBUG(("set logical destination to %02x", log_dest));
       break;
     case 0xe0: // destination format
-      dest_format =(value >> 28) & 0xf;
+      dest_format = (value >> 28) & 0xf;
       BX_DEBUG(("set destination format to %02x", dest_format));
       break;
     case 0xf0: // spurious interrupt vector
@@ -398,13 +388,13 @@ void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
 
 void bx_local_apic_c::send_ipi(void)
 {
-  int dest =(icr_hi >> 24) & 0xff;
-  int dest_shorthand =(icr_lo >> 18) & 3;
-  int trig_mode =(icr_lo >> 15) & 1;
-  int level =(icr_lo >> 14) & 1;
-  int dest_mode =(icr_lo >> 11) & 1;
-  int delivery_mode =(icr_lo >> 8) & 7;
-  int vector =(icr_lo & 0xff);
+  int dest = (icr_hi >> 24) & 0xff;
+  int dest_shorthand = (icr_lo >> 18) & 3;
+  int trig_mode = (icr_lo >> 15) & 1;
+  int level = (icr_lo >> 14) & 1;
+  int dest_mode = (icr_lo >> 11) & 1;
+  int delivery_mode = (icr_lo >> 8) & 7;
+  int vector = (icr_lo & 0xff);
   int accepted = 0;
 
   if(delivery_mode == APIC_DM_INIT)
@@ -451,11 +441,11 @@ void bx_local_apic_c::write_spurious_interrupt_register(Bit32u value)
   spurious_vector = value & 0xff;
 #else
   // bits 0-3 of the spurious vector hardwired to '1
-  spurious_vector =(value & 0xf0) | 0xf;
+  spurious_vector = (value & 0xf0) | 0xf;
 #endif
 
-  software_enabled =(value >> 8) & 1;
-  focus_disable    =(value >> 9) & 1;
+  software_enabled = (value >> 8) & 1;
+  focus_disable    = (value >> 9) & 1;
 
   if(! software_enabled) {
     for(unsigned i=0; i<APIC_LVT_ENTRIES; i++) {
@@ -507,7 +497,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   bx_phy_address addr2 = addr & 0xff0;
   switch(addr2) {
   case 0x20: // local APIC id
-    *data =(id) << 24; break;
+    *data = (id) << 24; break;
   case 0x30: // local APIC version
     *data = APIC_VERSION_ID; break;
   case 0x80: // task priority
@@ -524,9 +514,9 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
      */
     break;
   case 0xd0: // logical destination
-    *data =(log_dest & APIC_ID_MASK) << 24; break;
+    *data = (log_dest & APIC_ID_MASK) << 24; break;
   case 0xe0: // destination format
-    *data =((dest_format & 0xf) << 24) | 0x0fffffff; break;
+    *data = ((dest_format & 0xf) << 24) | 0x0fffffff; break;
   case 0xf0: // spurious interrupt vector
     {
       Bit32u reg = spurious_vector;
@@ -540,7 +530,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x140: case 0x150:
   case 0x160: case 0x170:
     {
-      unsigned index =(addr2 - 0x100) >> 2;
+      unsigned index = (addr2 - 0x100) >> 2;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(isr[index+i]) value |= mask;
@@ -554,7 +544,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x1c0: case 0x1d0:
   case 0x1e0: case 0x1f0:
     {
-      unsigned index =(addr2 - 0x180) >> 2;
+      unsigned index = (addr2 - 0x180) >> 2;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(tmr[index+i]) value |= mask;
@@ -568,7 +558,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x240: case 0x250:
   case 0x260: case 0x270:
     {
-      unsigned index =(addr2 - 0x200) >> 2;
+      unsigned index = (addr2 - 0x200) >> 2;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(irr[index+i]) value |= mask;
@@ -590,7 +580,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x360: // LVT Lint1 Reg
   case 0x370: // LVT Error Reg
     {
-      int index =(addr2 - 0x320) >> 4;
+      int index = (addr2 - 0x320) >> 4;
       *data = lvt[index];
       break;
     }
@@ -604,8 +594,8 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
     } else {
       Bit64u delta64;
       Bit32u delta32;
-      delta64 =(bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
-      delta32 =(Bit32u) delta64;
+      delta64 = (bx_pc_system.time_ticks() - ticksInitial) / timer_divide_factor;
+      delta32 = (Bit32u) delta64;
       if(delta32 > timer_initial)
         BX_PANIC(("APIC: R(curr timer count): delta < initial"));
       timer_current = timer_initial - delta32;
@@ -639,13 +629,13 @@ void bx_local_apic_c::service_local_apic(void)
   if(INTR) return;  // INTR already up; do nothing
   // find first interrupt in irr.
   int first_irr = highest_priority_int(irr);
-  if(first_irr < 0) return;   // no interrupts, leave INTR=0
+  if (first_irr < 0) return;   // no interrupts, leave INTR=0
   int first_isr = highest_priority_int(isr);
-  if(first_isr >= 0 && first_irr >= first_isr) {
+  if (first_isr >= 0 && first_irr >= first_isr) {
     BX_DEBUG(("local apic(%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
     return;
   }
-  if(((Bit32u)(first_irr) & 0x00f0) <=(task_priority & 0x00f0)) {
+  if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
     BX_DEBUG(("local apic(%s): not delivering int%02X because task_priority is %X", cpu->name, first_irr, task_priority));
     return;
   }
@@ -775,7 +765,7 @@ bx_bool bx_local_apic_c::match_logical_addr(Bit8u address)
   if(dest_format != 0xf) {
     BX_PANIC(("bx_local_apic_c::match_logical_addr: cluster model addressing not implemented"));
   }
-  bx_bool match =((address & log_dest) != 0);
+  bx_bool match = ((address & log_dest) != 0);
   BX_DEBUG(("%s: comparing MDA %02x to my LDR %02x -> %s", cpu->name,
     address, log_dest, match? "Match" : "Not a match"));
   return match;
@@ -785,7 +775,7 @@ Bit8u bx_local_apic_c::get_ppr(void)
 {
   int ppr = highest_priority_int(isr);
 
-  if((ppr < 0) ||((task_priority & 0xF0) >=((Bit32u) ppr & 0xF0))) 
+  if((ppr < 0) || ((task_priority & 0xF0) >= ((Bit32u) ppr & 0xF0))) 
     ppr = task_priority;
   else 
     ppr &= 0xF0;
@@ -810,19 +800,19 @@ void  bx_local_apic_c::set_tpr(Bit8u priority)
 
 Bit8u bx_local_apic_c::get_apr(void)
 {
-  Bit32u tpr  =(task_priority >> 4) & 0xf;
-  Bit32u isrv =(highest_priority_int(isr) >> 4) & 0xf;
-  Bit32u irrv =(highest_priority_int(irr) >> 4) & 0xf;
+  Bit32u tpr  = (task_priority >> 4) & 0xf;
+  Bit32u isrv = (highest_priority_int(isr) >> 4) & 0xf;
+  Bit32u irrv = (highest_priority_int(irr) >> 4) & 0xf;
   Bit8u  apr;
 
   if(isrv < 0) isrv = 0;
   if(irrv < 0) irrv = 0;
 
-  if((tpr >= irrv) &&(tpr > isrv)) {
+  if((tpr >= irrv) && (tpr > isrv)) {
     apr = task_priority & 0xff;
   }
   else {
-    apr =((tpr & isrv) > irrv) ?(tpr & isrv) : irrv;
+    apr = ((tpr & isrv) > irrv) ?(tpr & isrv) : irrv;
     apr <<= 4;
   }
 
@@ -839,7 +829,7 @@ bx_bool bx_local_apic_c::is_focus(Bit8u vector)
 
 void bx_local_apic_c::periodic_smf(void *this_ptr)
 {
-  bx_local_apic_c *class_ptr =(bx_local_apic_c *) this_ptr;
+  bx_local_apic_c *class_ptr = (bx_local_apic_c *) this_ptr;
   class_ptr->periodic();
 }
 
@@ -876,6 +866,16 @@ void bx_local_apic_c::periodic(void)
   }
 }
 
+void bx_local_apic_c::set_divide_configuration(Bit32u value)
+{
+  BX_ASSERT(value == (value & 0x0b));
+  // move bit 3 down to bit 0.
+  value = ((value & 8) >> 1) | (value & 3);
+  BX_ASSERT(value >= 0 && value <= 7);
+  timer_divide_factor = (value==7)? 1 : (2 << value);
+  BX_INFO(("%s: set timer divide factor to %d", cpu->name, timer_divide_factor));
+}
+
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
 {
   // If active before, deactive the current timer before changing it.
@@ -895,7 +895,7 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
     timer_current = timer_initial;
     timer_active = 1;
     Bit32u timervec = lvt[APIC_LVT_TIMER];
-    bx_bool continuous =(timervec & 0x20000) > 0;
+    bx_bool continuous = (timervec & 0x20000) > 0;
     ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
     bx_pc_system.activate_timer_ticks(timer_handle,
             Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
