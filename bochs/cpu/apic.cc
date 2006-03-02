@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.78 2006-03-02 20:17:54 sshwarts Exp $
+// $Id: apic.cc,v 1.79 2006-03-02 23:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -173,7 +173,7 @@ bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 {
   if((addr & ~0xfff) == get_base()) {
     if(((addr & 0xf) != 0) || (len != 4))
-      BX_INFO(("warning: misaligned or wrong-size APIC access. len=%d, addr=" FMT_ADDRX "", len, addr));
+      BX_INFO(("warning: misaligned or wrong-size APIC access. len=%d, addr=%08x", len, addr));
     return 1;
   }
   return 0;
@@ -288,7 +288,7 @@ void bx_local_apic_c::set_id(Bit8u newid)
 void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
 {
   if(len != 4) {
-    BX_PANIC(("local apic write with len=%d(should be 4)", len));
+    BX_PANIC(("local apic write with len=%d (should be 4)", len));
   }
   BX_DEBUG(("%s: write 0x%08x to APIC address %08x", cpu->name, *data, addr));
   addr &= 0xff0;
@@ -491,7 +491,7 @@ void bx_local_apic_c::startup_msg(Bit32u vector)
 void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned len)
 {
   if(len != 4) {
-    BX_PANIC(("local apic read with len=%d(should be 4)", len));
+    BX_PANIC(("local apic read with len=%d (should be 4)", len));
   }
   *data = 0;  // default value for unimplemented registers
   bx_phy_address addr2 = addr & 0xff0;

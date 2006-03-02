@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.46 2006-03-01 22:32:24 sshwarts Exp $
+// $Id: memory.cc,v 1.47 2006-03-02 23:16:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,6 +54,14 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
               BX_CPU(0)->break_point = BREAK_POINT_WRITE;
               break;
         }
+#endif
+
+#if BX_SUPPORT_APIC
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  if (local_apic->is_selected (a20addr, len)) {
+    local_apic->write(a20addr, (Bit32u *)data, len);
+    return;
+  }
 #endif
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
@@ -199,6 +207,14 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
               BX_CPU(0)->break_point = BREAK_POINT_READ;
               break;
         }
+#endif
+
+#if BX_SUPPORT_APIC
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  if (local_apic->is_selected (a20addr, len)) {
+    local_apic->read(a20addr, data, len);
+    return;
+  }
 #endif
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];

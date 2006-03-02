@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.65 2006-03-01 22:32:24 sshwarts Exp $
+// $Id: paging.cc,v 1.66 2006-03-02 23:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1222,23 +1222,11 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 
       if (rw == BX_READ) {
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, length);
-#if BX_SUPPORT_APIC
-        if (BX_CPU_THIS_PTR local_apic.is_selected(BX_CPU_THIS_PTR address_xlation.paddress1, length)) {
-            BX_CPU_THIS_PTR local_apic.read(BX_CPU_THIS_PTR address_xlation.paddress1, data, length);
-            return;
-        }
-#endif
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
       }
       else {
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, length);
-#if BX_SUPPORT_APIC
-        if (BX_CPU_THIS_PTR local_apic.is_selected(BX_CPU_THIS_PTR address_xlation.paddress1, length)) {
-            BX_CPU_THIS_PTR local_apic.write(BX_CPU_THIS_PTR address_xlation.paddress1, (Bit32u*) data, length);
-            return;
-        }
-#endif
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, length, data);
       }
@@ -1325,12 +1313,6 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       if (rw == BX_READ) {
         BX_INSTR_LIN_READ(BX_CPU_ID, laddr, laddr, length);
-#if BX_SUPPORT_APIC
-        if (BX_CPU_THIS_PTR local_apic.is_selected(laddr, length)) {
-            BX_CPU_THIS_PTR local_apic.read(laddr, data, length);
-            return;
-        }
-#endif
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -1372,12 +1354,6 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       }
       else { // Write
         BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, laddr, length);
-#if BX_SUPPORT_APIC
-        if (BX_CPU_THIS_PTR local_apic.is_selected(laddr, length)) {
-            BX_CPU_THIS_PTR local_apic.write(laddr, (Bit32u*) data, length);
-            return;
-        }
-#endif
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
