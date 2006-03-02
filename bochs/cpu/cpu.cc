@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.133 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: cpu.cc,v 1.134 2006-03-02 17:39:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -730,13 +730,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 //  * ROM boundary:             2k (dont care since we are only reading)
 //  * segment boundary:         any
 
-
 void BX_CPU_C::prefetch(void)
 {
   bx_phy_address pAddr;
-
-  // prefetch QSIZE byte quantity aligned on corresponding boundary
-  bx_address laddrPageOffset0, eipPageOffset0;
 
   bx_address temp_rip = RIP;
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
@@ -744,8 +740,8 @@ void BX_CPU_C::prefetch(void)
   if (! Is64BitMode()) {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
 
-    if (((Bit32u) temp_rip) > temp_limit) {
-      BX_PANIC(("prefetch: RIP > CS.limit"));
+    if (((Bit32u) temp_rip) >= temp_limit) {
+      BX_ERROR(("prefetch: EIP > CS.limit"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -762,24 +758,18 @@ void BX_CPU_C::prefetch(void)
     pAddr = A20ADDR(laddr);
   }
 
-  // Linear address at the beginning of the page.
-#if BX_SUPPORT_X86_64
-  laddrPageOffset0 = laddr & BX_CONST64(0xfffffffffffff000);
-#else
-  laddrPageOffset0 = laddr & 0xfffff000;
-#endif
   // Calculate RIP at the beginning of the page.
-  eipPageOffset0 = RIP - (laddr - laddrPageOffset0);
-  BX_CPU_THIS_PTR eipPageBias = - eipPageOffset0;
-  BX_CPU_THIS_PTR eipPageWindowSize = 4096; // FIXME:
+  bx_address eipPageOffset0 = RIP - (laddr & 0xfff);
+  BX_CPU_THIS_PTR eipPageBias = -eipPageOffset0;
+  BX_CPU_THIS_PTR eipPageWindowSize = 4096;
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
        BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, BX_CPU_THIS_PTR pAddrA20Page, BX_READ);
 
   // Sanity checks
-  if ( !BX_CPU_THIS_PTR eipFetchPtr ) {
-    if ( pAddr >= BX_CPU_THIS_PTR mem->len ) {
-      BX_PANIC(("prefetch : running in bogus memory, pAddr=0x%08x", pAddr));
+  if (! BX_CPU_THIS_PTR eipFetchPtr) {
+    if (pAddr >= BX_CPU_THIS_PTR mem->len) {
+      BX_PANIC(("prefetch: running in bogus memory, pAddr=0x%08x", pAddr));
     }
     else {
       BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x%08x", pAddr));
@@ -845,7 +835,7 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
   }
 
   if (ret==0) {
-    BX_INFO(("fetchDecode #GP(0): cross boundary"));
+    BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -882,7 +872,6 @@ void BX_CPU_C::trap_debugger (bx_bool callnow)
 }
 
 #endif  // #if BX_EXTERNAL_DEBUGGER
-
 
 #if BX_DEBUGGER
 extern unsigned dbg_show_mask;
@@ -1055,5 +1044,4 @@ void BX_CPU_C::dbg_take_dma(void)
     DEV_dma_raise_hlda();
   }
 }
-
 #endif  // #if BX_DEBUGGER
