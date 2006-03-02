@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.81 2006-02-21 21:35:09 vruppert Exp $
+// $Id: ne2k.cc,v 1.82 2006-03-02 20:13:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1316,11 +1316,13 @@ void
 bx_ne2k_c::init(void)
 {
   char devname[16];
+  bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.81 2006-02-21 21:35:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.82 2006-03-02 20:13:14 vruppert Exp $"));
 
-  // Read in values from config file
-  memcpy(BX_NE2K_THIS s.physaddr, bx_options.ne2k.Omacaddr->getptr (), 6);
+  // Read in values from config interface
+  base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+  memcpy(BX_NE2K_THIS s.physaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
   BX_NE2K_THIS s.pci_enabled = 0;
   strcpy(devname, "NE2000 NIC");
 
@@ -1357,8 +1359,8 @@ bx_ne2k_c::init(void)
   }
   // Register the IRQ and i/o port addresses
   if (!BX_NE2K_THIS s.pci_enabled) {
-    BX_NE2K_THIS s.base_address = bx_options.ne2k.Oioaddr->get ();
-    BX_NE2K_THIS s.base_irq     = bx_options.ne2k.Oirq->get ();
+    BX_NE2K_THIS s.base_address = SIM->get_param_num("ioaddr", base)->get();
+    BX_NE2K_THIS s.base_irq     = SIM->get_param_num("irq", base)->get();
 
     DEV_register_irq(BX_NE2K_THIS s.base_irq, "NE2000 ethernet NIC");
 
@@ -1422,13 +1424,13 @@ bx_ne2k_c::init(void)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
     
   // Attach to the simulated ethernet dev
-  char *ethmod = bx_options.ne2k.Oethmod->get_selected();
+  char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
   BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
-                                              bx_options.ne2k.Oethdev->getptr (),
-                                              (const char *) bx_options.ne2k.Omacaddr->getptr (),
+                                              SIM->get_param_string("ethdev", base)->getptr(),
+                                              (const char *) SIM->get_param_string("macaddr", base)->getptr(),
                                               rx_handler, 
                                               this,
-                                              bx_options.ne2k.Oscript->getptr ());
+                                              SIM->get_param_string("script", base)->getptr());
 
   if (BX_NE2K_THIS ethdev == NULL) {
     BX_PANIC(("could not find eth module %s", ethmod));
@@ -1436,7 +1438,7 @@ bx_ne2k_c::init(void)
     BX_INFO(("could not find eth module %s - using null instead", ethmod));
 
     BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
-                                                (const char *) bx_options.ne2k.Omacaddr->getptr (),
+                                                (const char *) SIM->get_param_string("macaddr", base)->getptr(),
                                                 rx_handler, 
                                                 this, "");
     if (BX_NE2K_THIS ethdev == NULL)

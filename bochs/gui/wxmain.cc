@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.123 2006-03-01 21:24:20 vruppert Exp $
+// $Id: wxmain.cc,v 1.124 2006-03-02 20:13:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -666,7 +666,7 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
-  bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_NETWORK);
+  bx_list_c *list = (bx_list_c*) SIM->get_param("network");
   dlg.SetTitle(list->get_title()->getptr());
   dlg.AddParam(list);
   dlg.ShowModal();
@@ -676,7 +676,7 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_SB16);
-  dlg.SetTitle(list->get_name());
+  dlg.SetTitle(list->get_title()->getptr());
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -686,7 +686,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(BXP_MENU_MISC);
-  dlg.SetTitle(list->get_name ());
+  dlg.SetTitle(list->get_title()->getptr());
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();

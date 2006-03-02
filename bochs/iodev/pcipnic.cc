@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.16 2006-02-21 21:35:09 vruppert Exp $
+// $Id: pcipnic.cc,v 1.17 2006-03-02 20:13:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -68,10 +68,9 @@ bx_pcipnic_c::init(void)
 {
   // called once when bochs initializes
 
-  if (!bx_options.pnic.Oenabled->get()) return;
-
-  memcpy ( BX_PNIC_THIS s.macaddr, bx_options.pnic.Omacaddr->getptr(),
-	   sizeof( BX_PNIC_THIS s.macaddr ) );
+  // Read in values from config interface
+  base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
+  memcpy(BX_PNIC_THIS s.physaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this,
@@ -86,13 +85,13 @@ bx_pcipnic_c::init(void)
 
   // This code ripped wholesale from ne2k.cc:
   // Attach to the simulated ethernet dev
-  char *ethmod = bx_options.pnic.Oethmod->get_selected();
+  char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
   BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
-                                              bx_options.pnic.Oethdev->getptr (),
-                                              (const char *) bx_options.pnic.Omacaddr->getptr (),
+                                              SIM->get_param_string("ethdev", base)->getptr(),
+                                              (const char *) SIM->get_param_string("macaddr", base)->getptr(),
                                               rx_handler, 
                                               this,
-                                              bx_options.pnic.Oscript->getptr ());
+                                              SIM->get_param_string("script", base)->getptr());
 
   if (BX_PNIC_THIS ethdev == NULL) {
     BX_PANIC(("could not find eth module %s", ethmod));
@@ -100,7 +99,7 @@ bx_pcipnic_c::init(void)
     BX_INFO(("could not find eth module %s - using null instead", ethmod));
 
     BX_PNIC_THIS ethdev = eth_locator_c::create("null", NULL,
-                                                (const char *) bx_options.pnic.Omacaddr->getptr (),
+                                                (const char *) SIM->get_param_string("macaddr", base)->getptr(),
                                                 rx_handler, 
                                                 this, "");
     if (BX_PNIC_THIS ethdev == NULL)

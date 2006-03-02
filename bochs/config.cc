@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.90 2006-03-01 21:24:19 vruppert Exp $
+// $Id: config.cc,v 1.91 2006-03-02 20:13:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -326,9 +326,10 @@ void bx_init_options()
   bx_list_c *deplist;
   bx_param_num_c *ioaddr, *ioaddr2, *irq;
   bx_param_bool_c *enabled;
-  bx_param_enum_c *mode, *status, *type;
+  bx_param_enum_c *mode, *status, *type, *ethmod;
+  bx_param_string_c *macaddr, *ethdev;
   bx_param_filename_c *path;
-  char name[1024], descr[1024], group[16], label[1024];
+  char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
 
   memset(&bx_options, 0, sizeof(bx_options));
 
@@ -1289,6 +1290,7 @@ void bx_init_options()
     sprintf(name, "%d", i+1);
     sprintf(label, "USB Hub %d", i+1);
     menu = new bx_list_c(usb, strdup(name), label);
+    menu->set_enabled(BX_SUPPORT_PCIUSB);
     sprintf(label, "Enable usb hub #%d", i+1);
     sprintf(descr, "Controls whether %s is installed or not", group);
     enabled = new bx_param_bool_c(menu,
@@ -1296,7 +1298,7 @@ void bx_init_options()
       strdup(label), 
       strdup(descr), 
       0);
-    deplist = new bx_list_c(BXP_NULL, 4);
+    enabled->set_enabled(BX_SUPPORT_PCIUSB);
     port = new bx_param_string_c(menu,
       "port1", 
       "Port #1 device", 
@@ -1309,8 +1311,6 @@ void bx_init_options()
       "Options for device on USB port #1",
       "", BX_PATHNAME_LEN);
     option->set_group(strdup(group));
-    deplist->add(port);
-    deplist->add(option);
     port = new bx_param_string_c(menu,
       "port2", 
       "Port #2 device", 
@@ -1323,12 +1323,14 @@ void bx_init_options()
       "Options for device on USB port #2",
       "", BX_PATHNAME_LEN);
     option->set_group(strdup(group));
-    deplist->add(port);
-    deplist->add(option);
-    enabled->set_dependent_list(deplist);
+    enabled->set_dependent_list(menu->clone());
   }
 
-  // NE2K options
+  // network subtree
+  bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
+  network->get_options()->set(bx_list_c::USE_TAB_WINDOW | bx_list_c::SHOW_PARENT);
+
+  // ne2k & pnic options
   static char *eth_module_list[] = {
     "null",
 #if defined(ETH_LINUX)
@@ -1355,112 +1357,96 @@ void bx_init_options()
     "vnet",
     NULL
   };
-  bx_options.ne2k.Oenabled = new bx_param_bool_c (BXP_NE2K_ENABLED,
-      "Enable NE2K NIC emulation",
-      "Enables the NE2K NIC emulation",
-      0);
-  bx_options.ne2k.Oioaddr = new bx_param_num_c (BXP_NE2K_IOADDR,
-      "NE2K I/O Address",
-      "I/O base address of the emulated NE2K device",
-      0, 0xffff,
-      0x240);
-  bx_options.ne2k.Oioaddr->set_base (16);
-  bx_options.ne2k.Oirq = new bx_param_num_c (BXP_NE2K_IRQ,
-      "NE2K Interrupt",
-      "IRQ used by the NE2K device",
-      0, 15,
-      9);
-  bx_options.ne2k.Oirq->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-  bx_options.ne2k.Omacaddr = new bx_param_string_c (BXP_NE2K_MACADDR,
-      "MAC Address",
-      "MAC address of the NE2K device. Don't use an address of a machine on your net.",
-      "\xfe\xfd\xde\xad\xbe\xef", 6);
-  bx_options.ne2k.Omacaddr->get_options ()->set (bx_options.ne2k.Omacaddr->RAW_BYTES);
-  bx_options.ne2k.Omacaddr->set_separator (':');
-  bx_options.ne2k.Oethmod = new bx_param_enum_c (BXP_NE2K_ETHMOD,
-      "Ethernet module",
-      "Module used for the connection to the real net.",
-       eth_module_list,
-       0,
-       0);
-  bx_options.ne2k.Oethmod->set_by_name("null");
-  bx_options.ne2k.Oethmod->set_ask_format ("Choose ethernet module for the NE2K [%s] ");
-  bx_options.ne2k.Oethdev = new bx_param_string_c (BXP_NE2K_ETHDEV,
-      "Ethernet device",
-      "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
-      "xl0", BX_PATHNAME_LEN);
-  bx_options.ne2k.Oscript = new bx_param_string_c (BXP_NE2K_SCRIPT,
-      "Device configuration script",
-      "Name of the script that is executed after Bochs initializes the network interface (optional).",
-      "none", BX_PATHNAME_LEN);
-#if !BX_WITH_WX
-  bx_options.ne2k.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
-#endif
-  bx_options.pnic.Oenabled = new bx_param_bool_c (BXP_PNIC_ENABLED,
-      "Enable Pseudo NIC emulation",
-      "Enables the Pseudo NIC emulation",
-      0);
-  bx_options.pnic.Omacaddr = new bx_param_string_c (BXP_PNIC_MACADDR,
-      "MAC Address",
-      "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
-      "\xfe\xfd\xde\xad\xbe\xef", 6);
-  bx_options.pnic.Omacaddr->get_options ()->set (bx_options.pnic.Omacaddr->RAW_BYTES);
-  bx_options.pnic.Omacaddr->set_separator (':');
-  bx_options.pnic.Oethmod = new bx_param_enum_c (BXP_PNIC_ETHMOD,
-      "Ethernet module",
-      "Module used for the connection to the real net.",
-       eth_module_list,
-       0,
-       0);
-  bx_options.pnic.Oethmod->set_by_name("null");
-  bx_options.pnic.Oethmod->set_ask_format ("Choose ethernet module for the Pseudo NIC [%s]");
-  bx_options.pnic.Oethdev = new bx_param_string_c (BXP_PNIC_ETHDEV,
-      "Ethernet device",
-      "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
-      "xl0", BX_PATHNAME_LEN);
-  bx_options.pnic.Oscript = new bx_param_string_c (BXP_PNIC_SCRIPT,
-      "Device configuration script",
-      "Name of the script that is executed after Bochs initializes the network interface (optional).",
-      "none", BX_PATHNAME_LEN);
-#if !BX_WITH_WX
-  bx_options.pnic.Oscript->set_ask_format ("Enter new script name, or 'none': [%s] ");
-#endif
-  bx_param_c *ne2k_init_list[] = {
-    bx_options.ne2k.Oenabled,
-    bx_options.ne2k.Oioaddr,
-    bx_options.ne2k.Oirq,
-    bx_options.ne2k.Omacaddr,
-    bx_options.ne2k.Oethmod,
-    bx_options.ne2k.Oethdev,
-    bx_options.ne2k.Oscript,
-    NULL
-  };
-  bx_param_c *pnic_init_list[] = {
-    bx_options.pnic.Oenabled,
-    bx_options.pnic.Omacaddr,
-    bx_options.pnic.Oethmod,
-    bx_options.pnic.Oethdev,
-    bx_options.pnic.Oscript,
-    NULL
-  };
-  menu = new bx_list_c(BXP_NE2K, "ne2k", "NE2000", ne2k_init_list);
+  // ne2k options
+  menu = new bx_list_c(network, "ne2k", "NE2000", 7);
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_NE2K);
-  bx_options.ne2k.Oenabled->set_dependent_list(
-      new bx_list_c(BXP_NULL, "", "", ne2k_init_list));
-  menu = new bx_list_c(BXP_PNIC, "pnic", "PCI Pseudo NIC", pnic_init_list);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable NE2K NIC emulation",
+    "Enables the NE2K NIC emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_NE2K);
+  ioaddr = new bx_param_num_c(menu,
+    "ioaddr",
+    "NE2K I/O Address",
+    "I/O base address of the emulated NE2K device",
+    0, 0xffff,
+    0x240);
+  ioaddr->set_base(16);
+  irq = new bx_param_num_c(menu,
+    "irq",
+    "NE2K Interrupt",
+    "IRQ used by the NE2K device",
+    0, 15,
+    9);
+  irq->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  macaddr = new bx_param_string_c(menu,
+    "macaddr",
+    "MAC Address",
+    "MAC address of the NE2K device. Don't use an address of a machine on your net.",
+    "\xfe\xfd\xde\xad\xbe\xef", 6);
+  macaddr->get_options()->set(bx_param_string_c::RAW_BYTES);
+  macaddr->set_separator(':');
+  ethmod = new bx_param_enum_c(menu,
+    "ethmod",
+    "Ethernet module",
+    "Module used for the connection to the real net.",
+    eth_module_list,
+    0,
+    0);
+  ethmod->set_by_name("null");
+  ethmod->set_ask_format("Choose ethernet module for the NE2K [%s] ");
+  ethdev = new bx_param_string_c(menu,
+    "ethdev",
+    "Ethernet device",
+    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
+    "xl0", BX_PATHNAME_LEN);
+  path = new bx_param_filename_c(menu,
+    "script",
+    "Device configuration script",
+    "Name of the script that is executed after Bochs initializes the network interface (optional).",
+    "none", BX_PATHNAME_LEN);
+    path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  enabled->set_dependent_list(menu->clone());
+  // pnic options
+  menu = new bx_list_c(network, "pnic", "PCI Pseudo NIC");
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
   menu->set_enabled(BX_SUPPORT_PCIPNIC);
-  bx_options.pnic.Oenabled->set_dependent_list (
-      new bx_list_c(BXP_NULL, "", "", pnic_init_list));
-
-  bx_param_c *netdev_init_list2[] = {
-    SIM->get_param(BXP_NE2K),
-    SIM->get_param(BXP_PNIC),
-    NULL
-  };
-  menu = new bx_list_c(BXP_NETWORK, "network", "Network Configuration", netdev_init_list2);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_TAB_WINDOW);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable Pseudo NIC emulation",
+    "Enables the Pseudo NIC emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_PCIPNIC);
+  macaddr = new bx_param_string_c(menu,
+    "macaddr",
+    "MAC Address",
+    "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
+    "\xfe\xfd\xde\xad\xbe\xef", 6);
+  macaddr->get_options ()->set(bx_param_string_c::RAW_BYTES);
+  macaddr->set_separator(':');
+  ethmod = new bx_param_enum_c(menu,
+    "ethmod",
+    "Ethernet module",
+    "Module used for the connection to the real net.",
+    eth_module_list,
+    0,
+    0);
+  ethmod->set_by_name("null");
+  ethmod->set_ask_format("Choose ethernet module for the Pseudo NIC [%s]");
+  ethdev = new bx_param_string_c(menu,
+    "ethdev",
+    "Ethernet device",
+    "Device used for the connection to the real net. This is only valid if an ethernet module other than 'null' is used.",
+    "xl0", BX_PATHNAME_LEN);
+  path = new bx_param_filename_c(menu,
+    "script",
+    "Device configuration script",
+    "Name of the script that is executed after Bochs initializes the network interface (optional).",
+    "none", BX_PATHNAME_LEN);
+  path->set_ask_format("Enter new script name, or 'none': [%s] ");
+  enabled->set_dependent_list(menu->clone());
 
   // SB16 options
   bx_options.sb16.Oenabled = new bx_param_bool_c (BXP_SB16_ENABLED,
@@ -1520,14 +1506,12 @@ void bx_init_options()
     bx_options.sb16.Odmatimer,
     NULL
   };
-  menu = new bx_list_c (BXP_SB16, "SB16 Configuration", "", sb16_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_SB16, "sb16", "SB16 Configuration", sb16_init_list);
+  menu->get_options()->set (menu->SHOW_PARENT);
   // sb16_dependent_list is a null-terminated list including all the
   // sb16 fields except for the "present" field.  These will all be enabled/
   // disabled according to the value of the present field.
-  bx_param_c **sb16_dependent_list = &sb16_init_list[1];
-  bx_options.sb16.Oenabled->set_dependent_list (
-      new bx_list_c (BXP_NULL, "", "", sb16_dependent_list));
+  bx_options.sb16.Oenabled->set_dependent_list(menu->clone());
 
   // log options
   bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
@@ -1548,12 +1532,11 @@ void bx_init_options()
       "-", BX_PATHNAME_LEN);
   bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
 
-  // other
+  // misc options
   bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
-      "Enable panic for use in bochs testing",
+      "Enable text snapshot check panic",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
-
   // GDB stub
   bx_options.gdbstub.port = 1234;
   bx_options.gdbstub.text_base = 0;
@@ -1564,8 +1547,8 @@ void bx_init_options()
       SIM->get_param(BXP_TEXT_SNAPSHOT_CHECK),
       NULL
   };
-  menu = new bx_list_c(BXP_MENU_MISC, "Configure Everything Else", "", other_init_list);
-  menu->get_options()->set(menu->SHOW_PARENT);
+  menu = new bx_list_c(BXP_MENU_MISC, "misc", "Configure Everything Else", other_init_list);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
 
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
@@ -1580,15 +1563,15 @@ void bx_init_options()
       SIM->get_param_string(BXPN_USB1_OPTION2),
       NULL
   };
-  menu = new bx_list_c (BXP_MENU_RUNTIME, "Misc runtime options", "", runtime_init_list);
-  menu->get_options ()->set (menu->SHOW_PARENT | menu->SHOW_GROUP_NAME);
+  menu = new bx_list_c(BXP_MENU_RUNTIME, "runtime", "Misc runtime options", runtime_init_list);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::SHOW_GROUP_NAME);
 
 // param-tree test output
 //printf("parameter tree:\n");
 //print_tree(root_param, 0);
 }
 
-void bx_reset_options ()
+void bx_reset_options()
 {
   // cpu
   SIM->get_param("cpu")->reset();
@@ -1620,21 +1603,8 @@ void bx_reset_options ()
   // standard ports
   SIM->get_param("ports")->reset();
 
-  // ne2k
-  bx_options.ne2k.Oenabled->reset();
-  bx_options.ne2k.Oioaddr->reset();
-  bx_options.ne2k.Oirq->reset();
-  bx_options.ne2k.Omacaddr->reset();
-  bx_options.ne2k.Oethmod->reset();
-  bx_options.ne2k.Oethdev->reset();
-  bx_options.ne2k.Oscript->reset();
-
-  // pnic
-  bx_options.pnic.Oenabled->reset();
-  bx_options.pnic.Omacaddr->reset();
-  bx_options.pnic.Oethmod->reset();
-  bx_options.pnic.Oethdev->reset();
-  bx_options.pnic.Oscript->reset();
+  // ne2k & pnic
+  SIM->get_param("network")->reset();
 
   // SB16
   bx_options.sb16.Oenabled->reset();
@@ -1651,7 +1621,7 @@ void bx_reset_options ()
   bx_options.log.Oprefix->reset();
   bx_options.log.Odebugger_filename->reset();
 
-  // other
+  // misc
   bx_options.Otext_snapshot_check->reset();
 }
 
@@ -2835,19 +2805,20 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     char tmpchar[6];
     int valid = 0;
     int n;
-    if (!bx_options.ne2k.Oenabled->get ()) {
-      bx_options.ne2k.Oethmod->set_by_name("null");
+    base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (atol(&params[i][8]) == 0) valid |= 0x80;
       }
       else if (!strncmp(params[i], "ioaddr=", 7)) {
-        bx_options.ne2k.Oioaddr->set (strtoul(&params[i][7], NULL, 16));
+        SIM->get_param_num("ioaddr", base)->set(strtoul(&params[i][7], NULL, 16));
         valid |= 0x01;
       }
       else if (!strncmp(params[i], "irq=", 4)) {
-        bx_options.ne2k.Oirq->set (atol(&params[i][4]));
+        SIM->get_param_num("irq", base)->set(atol(&params[i][4]));
         valid |= 0x02;
       }
       else if (!strncmp(params[i], "mac=", 4)) {
@@ -2858,34 +2829,32 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         }
         for (n=0;n<6;n++)
           tmpchar[n] = (unsigned char)tmp[n];
-        bx_options.ne2k.Omacaddr->set (tmpchar);
+        SIM->get_param_string("macaddr", base)->set(tmpchar);
         valid |= 0x04;
       }
       else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!bx_options.ne2k.Oethmod->set_by_name(&params[i][7]))
+        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
       }
       else if (!strncmp(params[i], "ethdev=", 7)) {
-        bx_options.ne2k.Oethdev->set(&params[i][7]);
+        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
       }
       else if (!strncmp(params[i], "script=", 7)) {
-        bx_options.ne2k.Oscript->set(&params[i][7]);
+        SIM->get_param_string("script", base)->set(&params[i][7]);
       }
       else {
         PARSE_WARN(("%s: unknown parameter '%s' for ne2k ignored.", context, params[i]));
       }
     }
-    if (!bx_options.ne2k.Oenabled->get ()) {
+    if (!SIM->get_param_bool("enabled", base)->get()) {
       if (valid == 0x07) {
-        bx_options.ne2k.Oenabled->set (1);
-      }
-      else if (valid < 0x80) {
+        SIM->get_param_bool("enabled", base)->set(1);
+      } else if (valid < 0x80) {
         PARSE_ERR(("%s: ne2k directive incomplete (ioaddr, irq and mac are required)", context));
       }
-    }
-    else {
+    } else {
       if (valid & 0x80) {
-        bx_options.ne2k.Oenabled->set (0);
+        SIM->get_param_bool("enabled", base)->set(0);
       }
     }
   } else if (!strcmp(params[0], "pnic")) {
@@ -2893,8 +2862,9 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     char tmpchar[6];
     int valid = 0;
     int n;
-    if (!bx_options.pnic.Oenabled->get ()) {
-      bx_options.pnic.Oethmod->set_by_name("null");
+    base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
@@ -2911,28 +2881,28 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         }
         for (n=0;n<6;n++)
           tmpchar[n] = (unsigned char)tmp[n];
-        bx_options.pnic.Omacaddr->set (tmpchar);
+        SIM->get_param_string("macaddr", base)->set(tmpchar);
         valid |= 0x07;
       } else if (!strncmp(params[i], "ethmod=", 7)) {
-        if (!bx_options.pnic.Oethmod->set_by_name(&params[i][7]))
+        if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
           PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
       } else if (!strncmp(params[i], "ethdev=", 7)) {
-        bx_options.pnic.Oethdev->set(&params[i][7]);
+        SIM->get_param_string("ethdev", base)->set(&params[i][7]);
       } else if (!strncmp(params[i], "script=", 7)) {
-        bx_options.pnic.Oscript->set(&params[i][7]);
+        SIM->get_param_string("script", base)->set(&params[i][7]);
       } else {
         PARSE_WARN(("%s: unknown parameter '%s' for pnic ignored.", context, params[i]));
       }
     }
-    if (!bx_options.pnic.Oenabled->get ()) {
+    if (!SIM->get_param_bool("enabled", base)->get()) {
       if (valid == 0x07) {
-        bx_options.pnic.Oenabled->set (1);
+        SIM->get_param_bool("enabled", base)->set(1);
       } else if (valid < 0x80) {
-        PARSE_ERR(("%s: pnic directive incomplete (ioaddr, irq and mac are required)", context));
+        PARSE_ERR(("%s: pnic directive incomplete (mac is required)", context));
       }
     } else {
       if (valid & 0x80) {
-        bx_options.pnic.Oenabled->set (0);
+        SIM->get_param_bool("enabled", base)->set(0);
       }
     }
   } else if (!strcmp(params[0], "load32bitOSImage")) {
@@ -3146,11 +3116,11 @@ int bx_write_usb_options(FILE *fp, bx_list_c *base, int n)
   return 0;
 }
 
-int bx_write_pnic_options(FILE *fp, bx_pnic_options *opt)
+int bx_write_pnic_options(FILE *fp, bx_list_c *base)
 {
-  fprintf (fp, "pnic: enabled=%d", opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    char *ptr = opt->Omacaddr->getptr ();
+  fprintf (fp, "pnic: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
     fprintf (fp, ", mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
       (unsigned int)(0xff & ptr[0]),
       (unsigned int)(0xff & ptr[1]),
@@ -3158,33 +3128,33 @@ int bx_write_pnic_options(FILE *fp, bx_pnic_options *opt)
       (unsigned int)(0xff & ptr[3]),
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
-      opt->Oethmod->get_selected(),
-      opt->Oethdev->getptr(),
-      opt->Oscript->getptr());
+      SIM->get_param_enum("ethmod", base)->get_selected(),
+      SIM->get_param_string("ethdev", base)->getptr(),
+      SIM->get_param_string("script", base)->getptr());
   }
   fprintf (fp, "\n");
   return 0;
 }
 
-int bx_write_ne2k_options (FILE *fp, bx_ne2k_options *opt)
+int bx_write_ne2k_options (FILE *fp, bx_list_c *base)
 {
-  fprintf (fp, "ne2k: enabled=%d", opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    char *ptr = opt->Omacaddr->getptr ();
-    fprintf (fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
-      opt->Oioaddr->get (), 
-      opt->Oirq->get (),
+  fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    char *ptr = SIM->get_param_string("macaddr", base)->getptr ();
+    fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
+      SIM->get_param_num("ioaddr", base)->get(), 
+      SIM->get_param_num("irq", base)->get(),
       (unsigned int)(0xff & ptr[0]),
       (unsigned int)(0xff & ptr[1]),
       (unsigned int)(0xff & ptr[2]),
       (unsigned int)(0xff & ptr[3]),
       (unsigned int)(0xff & ptr[4]),
       (unsigned int)(0xff & ptr[5]),
-      opt->Oethmod->get_selected(),
-      opt->Oethdev->getptr(),
-      opt->Oscript->getptr());
+      SIM->get_param_enum("ethmod", base)->get_selected(),
+      SIM->get_param_string("ethdev", base)->getptr(),
+      SIM->get_param_string("script", base)->getptr());
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
@@ -3421,8 +3391,8 @@ int bx_write_configuration(char *rc, int overwrite)
   fprintf(fp, "screenmode: name=\"%s\"\n", SIM->get_param_string(BXPN_SCREENMODE)->getptr());
 #endif
   bx_write_clock_cmos_options(fp);
-  bx_write_ne2k_options(fp, &bx_options.ne2k);
-  bx_write_pnic_options(fp, &bx_options.pnic);
+  bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
+  bx_write_pnic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, &bx_options.log);
   bx_write_keyboard_options(fp);

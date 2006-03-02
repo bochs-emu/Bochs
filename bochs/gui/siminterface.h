@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.169 2006-03-01 17:14:36 vruppert Exp $
+// $Id: siminterface.h,v 1.170 2006-03-02 20:13:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -205,6 +205,10 @@ typedef enum {
 #define BXPN_USB1_OPTION1                "ports.usb.1.option1"
 #define BXPN_USB1_PORT2                  "ports.usb.1.port2"
 #define BXPN_USB1_OPTION2                "ports.usb.1.option2"
+#define BXPN_NE2K                        "network.ne2k"
+#define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
+#define BXPN_PNIC                        "network.pnic"
+#define BXPN_PNIC_ENABLED                "network.pnic.enabled"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -226,21 +230,6 @@ typedef enum {
   BXP_MENU_SOUND,
   BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
-  BXP_NE2K_ENABLED,
-  BXP_NE2K_IOADDR,
-  BXP_NE2K_IRQ,
-  BXP_NE2K_MACADDR,
-  BXP_NE2K_ETHMOD,
-  BXP_NE2K_ETHDEV,
-  BXP_NE2K_SCRIPT,
-  BXP_NE2K,
-  BXP_PNIC_ENABLED,
-  BXP_PNIC_MACADDR,
-  BXP_PNIC_ETHMOD,
-  BXP_PNIC_ETHDEV,
-  BXP_PNIC_SCRIPT,
-  BXP_PNIC,
-  BXP_NETWORK,
   BXP_SB16_ENABLED,
   BXP_SB16_MIDIFILE,
   BXP_SB16_WAVEFILE,
@@ -1153,14 +1142,6 @@ BOCHSAPI extern char *atadevice_translation_names[];
 BOCHSAPI extern int n_atadevice_translation_names;
 BOCHSAPI extern char *clock_sync_names[];
 BOCHSAPI extern int clock_sync_n_names;
-
-typedef struct {
-  bx_param_bool_c *Oenabled;
-  bx_param_string_c *Omacaddr;
-  bx_param_enum_c *Oethmod;
-  bx_param_string_c *Oethdev;
-  bx_param_string_c *Oscript;
-} bx_pnic_options;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

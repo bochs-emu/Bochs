@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.183 2006-03-01 17:14:36 vruppert Exp $
+// $Id: bochs.h,v 1.184 2006-03-02 20:13:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -465,21 +465,6 @@ extern bx_bool bx_gui_sighandler;
 #define BX_PATHNAME_LEN 512
 
 typedef struct {
-  bx_param_bool_c *Oenabled;
-  bx_param_string_c *Ooutfile;
-} bx_parport_options;
-
-typedef struct {
-  bx_param_bool_c *Oenabled;
-  bx_param_num_c *Oioaddr;
-  bx_param_num_c *Oirq;
-  bx_param_string_c *Omacaddr;
-  bx_param_enum_c *Oethmod;
-  bx_param_string_c *Oethdev;
-  bx_param_string_c *Oscript;
-} bx_ne2k_options;
-
-typedef struct {
   bx_param_string_c *Ofilename;
   bx_param_string_c *Oprefix;
   bx_param_string_c *Odebugger_filename;
@@ -515,8 +500,6 @@ typedef struct {
 #define BX_N_PCI_SLOTS 5
 
 typedef struct BOCHSAPI {
-  bx_ne2k_options   ne2k;
-  bx_pnic_options   pnic;
   bx_sb16_options   sb16;
   bx_param_bool_c   *Otext_snapshot_check;
   bx_log_options    log;

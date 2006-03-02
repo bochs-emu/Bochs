@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.91 2006-03-01 17:14:36 vruppert Exp $
+// $Id: devices.cc,v 1.92 2006-03-02 20:13:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.91 2006-03-01 17:14:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.92 2006-03-02 20:13:14 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -169,9 +169,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(busmouse, PLUGTYPE_OPTIONAL);
   }
 #endif
-  if (is_serial_enabled ())
+  if (is_serial_enabled())
     PLUG_load_plugin(serial, PLUGTYPE_OPTIONAL);
-  if (is_parallel_enabled ()) 
+  if (is_parallel_enabled()) 
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_GAME
@@ -195,7 +195,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
     }
 #endif
 #if BX_SUPPORT_PCIUSB
-    PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
+    if (is_usb_enabled()) {
+      PLUG_load_plugin(pciusb, PLUGTYPE_OPTIONAL);
+    }
 #endif
 #if BX_SUPPORT_PCIDEV
     if (SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get() != 0xffff) {
@@ -203,7 +205,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
     }
 #endif
 #if BX_SUPPORT_PCIPNIC
-  if (bx_options.pnic.Oenabled->get ()) {
+  if (SIM->get_param_bool(BXPN_PNIC_ENABLED)->get()) {
     PLUG_load_plugin(pcipnic, PLUGTYPE_OPTIONAL);
   }
 #endif
@@ -213,7 +215,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   }
 
   // NE2000 NIC
-  if (bx_options.ne2k.Oenabled->get ()) {
+  if (SIM->get_param_bool(BXPN_NE2K_ENABLED)->get()) {
 #if BX_SUPPORT_NE2K
     PLUG_load_plugin(ne2k, PLUGTYPE_OPTIONAL);
 #else
@@ -931,7 +933,7 @@ bx_devices_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   }
 }
 
-bx_bool bx_devices_c::is_serial_enabled ()
+bx_bool bx_devices_c::is_serial_enabled()
 {
   char pname[24];
 
@@ -943,7 +945,7 @@ bx_bool bx_devices_c::is_serial_enabled ()
   return false;
 }
 
-bx_bool bx_devices_c::is_usb_enabled ()
+bx_bool bx_devices_c::is_usb_enabled()
 {
   char pname[20];
 
@@ -955,7 +957,7 @@ bx_bool bx_devices_c::is_usb_enabled ()
   return false;
 }
 
-bx_bool bx_devices_c::is_parallel_enabled ()
+bx_bool bx_devices_c::is_parallel_enabled()
 {
   char pname[26];
 

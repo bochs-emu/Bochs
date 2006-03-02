@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.9 2006-03-01 17:14:35 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.10 2006-03-02 20:13:13 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -222,22 +222,20 @@ ports
       option2           BXP_USB1_OPTION2,
 
 network
-  ne2k
-    0                   BXP_NE2K,
-      enabled           BXP_NE2K_ENABLED,
-      ioaddr            BXP_NE2K_IOADDR,
-      irq               BXP_NE2K_IRQ,
-      macaddr           BXP_NE2K_MACADDR,
-      ethmod            BXP_NE2K_ETHMOD,
-      ethdev            BXP_NE2K_ETHDEV,
-      script            BXP_NE2K_SCRIPT,
-  pnic
-    0                   BXP_PNIC,
-      enabled           BXP_PNIC_ENABLED,
-      macaddr           BXP_PNIC_MACADDR,
-      ethmod            BXP_PNIC_ETHMOD,
-      ethdev            BXP_PNIC_ETHDEV,
-      script            BXP_PNIC_SCRIPT,
+  ne2k                  BXP_NE2K,
+    enabled             BXP_NE2K_ENABLED,
+    ioaddr              BXP_NE2K_IOADDR,
+    irq                 BXP_NE2K_IRQ,
+    macaddr             BXP_NE2K_MACADDR,
+    ethmod              BXP_NE2K_ETHMOD,
+    ethdev              BXP_NE2K_ETHDEV,
+    script              BXP_NE2K_SCRIPT,
+  pnic                  BXP_PNIC,
+    enabled             BXP_PNIC_ENABLED,
+    macaddr             BXP_PNIC_MACADDR,
+    ethmod              BXP_PNIC_ETHMOD,
+    ethdev              BXP_PNIC_ETHDEV,
+    script              BXP_PNIC_SCRIPT,
 
 sound
   sb16                  BXP_SB16,
@@ -250,28 +248,29 @@ sound
     loglevel            BXP_SB16_LOGLEVEL,
     dmatimer            BXP_SB16_DMATIMER,
 
-config_menus                      
-  main                  BXP_MENU_MAIN,
-  disk                  BXP_MENU_DISK,
-  ser_par               BXP_MENU_SERIAL_PARALLEL,
-  sound                 BXP_MENU_SOUND,
-  runtime               BXP_MENU_RUNTIME,
-
-general
-  start_mode            BXP_BOCHS_START,
+misc
   text_snapshot_check   BXP_TEXT_SNAPSHOT_CHECK,
-
-log
-  filename              BXP_LOG_FILENAME,
-  prefix                BXP_LOG_PREFIX,
-  debugger_filename     BXP_DEBUGGER_LOG_FILENAME,
-
-debugger
-  running               BXP_DEBUG_RUNNING,
   gdbstub
     port
     text_base
     data_base
     bss_base
 
-(updated Feb 22, 2006 by vruppert)
+log
+  filename              BXP_LOG_FILENAME,
+  prefix                BXP_LOG_PREFIX,
+  debugger_filename     BXP_DEBUGGER_LOG_FILENAME,
+
+general
+  start_mode            BXP_BOCHS_START,
+
+debugger
+  running               BXP_DEBUG_RUNNING,
+
+config_menus                      
+  main                  BXP_MENU_MAIN,
+  disk                  BXP_MENU_DISK,
+  sound                 BXP_MENU_SOUND,
+  runtime               BXP_MENU_RUNTIME,
+
+(updated Mar  2, 2006 by vruppert)
