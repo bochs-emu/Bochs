@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.47 2006-03-02 23:16:13 sshwarts Exp $
+// $Id: memory.cc,v 1.48 2006-03-03 12:55:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,15 +34,14 @@
 BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
-  Bit32u a20addr;
+  Bit32u a20addr = A20ADDR(addr);
 
   // Note: accesses should always be contained within a single page now.
 
 #if BX_SUPPORT_IODEBUG
-  bx_iodebug_c::mem_write(cpu, addr, len, data);
+  bx_iodebug_c::mem_write(cpu, a20addr, len, data);
 #endif
 
-  a20addr = A20ADDR(addr);
   BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
@@ -83,6 +82,11 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
+      if (len == 8) {
+        WriteHostQWordToLittleEndian(&vector[a20addr], *(Bit64u*)data);
+        BX_DBG_DIRTY_PAGE(a20addr >> 12);
+        return;
+      }
       if (len == 4) {
         WriteHostDWordToLittleEndian(&vector[a20addr], *(Bit32u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
@@ -189,13 +193,12 @@ inc_one:
 BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
   Bit8u *data_ptr;
-  Bit32u a20addr;
+  Bit32u a20addr = A20ADDR(addr);
 
 #if BX_SUPPORT_IODEBUG
-  bx_iodebug_c::mem_read(cpu, addr, len, data);
+  bx_iodebug_c::mem_read(cpu, a20addr, len, data);
 #endif
  
-  a20addr = A20ADDR(addr);
   BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
@@ -231,6 +234,10 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   if ( (a20addr + len) <= BX_MEM_THIS len ) {
     // all of data is within limits of physical memory
     if ( (a20addr & 0xfff80000) != 0x00080000 ) {
+      if (len == 8) {
+        ReadHostQWordFromLittleEndian(&vector[a20addr], * (Bit64u*) data);
+        return;
+      }
       if (len == 4) {
         ReadHostDWordFromLittleEndian(&vector[a20addr], * (Bit32u*) data);
         return;
