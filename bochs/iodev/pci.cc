@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.43 2006-02-27 19:04:00 sshwarts Exp $
+// $Id: pci.cc,v 1.44 2006-03-03 20:15:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,8 +40,7 @@
 
 bx_pci_c *thePciBridge = NULL;
 
-  int
-libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePciBridge = new bx_pci_c ();
   bx_devices.pluginPciBridge = thePciBridge;
@@ -49,26 +48,23 @@ libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
   return(0); // Success
 }
 
-  void
-libpci_LTX_plugin_fini(void)
+void libpci_LTX_plugin_fini(void)
 {
 }
 
-bx_pci_c::bx_pci_c(void)
+bx_pci_c::bx_pci_c()
 {
   put("PCI");
   settype(PCILOG);
 }
 
-bx_pci_c::~bx_pci_c(void)
+bx_pci_c::~bx_pci_c()
 {
   // nothing for now
   BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_pci_c::init(void)
+void bx_pci_c::init(void)
 {
   // called once when bochs initializes
   unsigned i;
@@ -78,7 +74,7 @@ bx_pci_c::init(void)
   for (i=0; i < BX_MAX_PCI_DEVICES; i++) {
     BX_PCI_THIS pci_handler[i].read  = NULL;
     BX_PCI_THIS pci_handler[i].write = NULL;
-    }
+  }
 
   for (i=0; i < 0x100; i++) {
     BX_PCI_THIS pci_handler_id[i] = BX_MAX_PCI_DEVICES;  // not assigned
@@ -154,23 +150,18 @@ bx_pci_c::reset(unsigned type)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x00;
 }
 
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pci_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_pci_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
   bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
 
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_pci_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_pci_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -186,7 +177,7 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
     case 0x0CFD:
     case 0x0CFE:
     case 0x0CFF:
-      {
+    {
       Bit32u handle, retval;
       Bit8u devfunc, regnum;
 
@@ -199,25 +190,22 @@ bx_pci_c::read(Bit32u address, unsigned io_len)
                      (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, io_len);
         else
           retval = 0xFFFFFFFF;
-        }
+      }
       else
         retval = 0xFFFFFFFF;
       BX_PCI_THIS s.i440fx.confData = retval;
       return retval;
-      }
     }
+  }
 
-  BX_PANIC(("unsupported IO read to port 0x%x",
-           (unsigned) address));
+  BX_PANIC(("unsupported IO read to port 0x%x", (unsigned) address));
   return(0xffffffff);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pci_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
   bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
@@ -225,8 +213,7 @@ bx_pci_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned i
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -262,7 +249,7 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
             (* BX_PCI_THIS pci_handler[handle].write)
                (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, value, io_len);
             BX_PCI_THIS s.i440fx.confData = value << (8 * (address & 0x03));
-            }
+          }
           else
             BX_DEBUG(("read only register, write ignored"));
           }
@@ -275,22 +262,17 @@ bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
+// static pci configuration space read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static pci configuration space read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pci_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_pci_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
   bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
-
-  return( class_ptr->pci_read(address, io_len) );
+  return class_ptr->pci_read(address, io_len);
 }
 
-
-  Bit32u
-bx_pci_c::pci_read(Bit8u address, unsigned io_len)
+Bit32u bx_pci_c::pci_read(Bit8u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -304,26 +286,22 @@ bx_pci_c::pci_read(Bit8u address, unsigned io_len)
     }
     BX_DEBUG(("440FX PMC read register 0x%02x value 0x%08x", address, val440fx));
     return val440fx;
-    }
+  }
   else
     return(0xffffffff);
 }
 
+// static pci configuration space write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static pci configuration space write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pci_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
   bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
-
   class_ptr->pci_write(address, value, io_len);
 }
 
-  void
-bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -345,121 +323,116 @@ bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
           break;
         default:
           BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
-          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i,
-                    value8));
-        }
+          BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
       }
     }
+  }
 }
 
 
-  Bit8u
-bx_pci_c::rd_memType (Bit32u addr)
+Bit8u bx_pci_c::rd_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5A] & 0x1);
       case 0xC4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 4) & 0x1);
       case 0xC8:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5B] & 0x1);
       case 0xCC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 4) & 0x1);
-
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 4) & 0x1);
 
       case 0xD0:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5C] & 0x1);
       case 0xD4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 4) & 0x1);
       case 0xD8:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5D] & 0x1);
       case 0xDC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 4) & 0x1);
 
       case 0xE0:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5E] & 0x1);
       case 0xE4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 4) & 0x1);
       case 0xE8:
            return (BX_PCI_THIS s.i440fx.pci_conf[0x5F] & 0x1);
       case 0xEC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 4) & 0x1);
 
       case 0xF0:
       case 0xF4:
       case 0xF8:
       case 0xFC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 4) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 4) & 0x1);
 
       default:
            BX_PANIC(("rd_memType () Error: Memory Type not known !"));
-           return(0); // keep compiler happy
            break;
    }
 
+   return(0); // keep compiler happy
 }
 
-  Bit8u
-bx_pci_c::wr_memType (Bit32u addr)
+Bit8u bx_pci_c::wr_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 1) & 0x1);
       case 0xC4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5A] >> 5) & 0x1);
       case 0xC8:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 1) & 0x1);
       case 0xCC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 5) & 0x1);
-
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5B] >> 5) & 0x1);
 
       case 0xD0:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 1) & 0x1);
       case 0xD4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5C] >> 5) & 0x1);
       case 0xD8:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 1) & 0x1);
       case 0xDC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5D] >> 5) & 0x1);
 
       case 0xE0:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 1) & 0x1);
       case 0xE4:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5E] >> 5) & 0x1);
       case 0xE8:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 1) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 1) & 0x1);
       case 0xEC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x5F] >> 5) & 0x1);
 
       case 0xF0:
       case 0xF4:
       case 0xF8:
       case 0xFC:
-           return ( (BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 5) & 0x1);
+           return ((BX_PCI_THIS s.i440fx.pci_conf[0x59] >> 5) & 0x1);
 
       default:
            BX_PANIC(("wr_memType () Error: Memory Type not known !"));
-           return(0); // keep compiler happy
            break;
    }
+
+   return(0); // keep compiler happy
 }
 
-  void
-bx_pci_c::print_i440fx_state()
+void bx_pci_c::print_i440fx_state()
 {
-  int  i;
+  int i;
 
-  BX_DEBUG(( "i440fxConfAddr:0x%08x", BX_PCI_THIS s.i440fx.confAddr ));
-  BX_DEBUG(( "i440fxConfData:0x%08x", BX_PCI_THIS s.i440fx.confData ));
+  BX_DEBUG(("i440fxConfAddr:0x%08x", BX_PCI_THIS s.i440fx.confAddr));
+  BX_DEBUG(("i440fxConfData:0x%08x", BX_PCI_THIS s.i440fx.confData));
 
 #ifdef DUMP_FULL_I440FX
   for (i=0; i<256; i++) {
-    BX_DEBUG(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i] ));
-    }
+    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i]));
+  }
 #else /* DUMP_FULL_I440FX */
   for (i=0x59; i<0x60; i++) {
-    BX_DEBUG(( "i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i] ));
-    }
+    BX_DEBUG(("i440fxArray%02x:0x%02x", i, BX_PCI_THIS s.i440fx.pci_conf[i]));
+  }
 #endif /* DUMP_FULL_I440FX */
 }
 
@@ -494,7 +467,7 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
       BX_INFO(("too many PCI devices installed."));
       BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
       return false;
-      }
+    }
     handle = BX_PCI_THIS num_pci_handles++;
     BX_PCI_THIS pci_handler[handle].read  = f1;
     BX_PCI_THIS pci_handler[handle].write = f2;
@@ -503,15 +476,13 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
     BX_INFO(("%s present at device %d, function %d", descr, *devfunc >> 3,
              *devfunc & 0x07));
     return true; // device/function mapped successfully
-    }
+  }
   else {
     return false; // device/function not available, return false.
-    }
+  }
 }
 
-
-  bx_bool
-bx_pci_c::is_pci_device(const char *name)
+bx_bool bx_pci_c::is_pci_device(const char *name)
 {
   unsigned i;
   char devname[80];
@@ -527,8 +498,7 @@ bx_pci_c::is_pci_device(const char *name)
   return 0;
 }
 
-  bx_bool
-bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+bx_bool bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                            Bit32u *addr, Bit8u *pci_conf, unsigned size)
 {
   Bit32u newbase;
@@ -555,8 +525,7 @@ bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t
   return 0;
 }
 
-  bx_bool
-bx_pci_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+bx_bool bx_pci_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                           Bit32u *addr, Bit8u *pci_conf, unsigned size,
                           const Bit8u *iomask, const char *name)
 {

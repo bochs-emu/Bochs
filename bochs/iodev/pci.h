@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.21 2005-11-15 17:19:28 vruppert Exp $
+// $Id: pci.h,v 1.22 2006-03-03 20:15:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,17 +50,15 @@ typedef struct {
   Bit32u confAddr;
   Bit32u confData;
   Bit8u  pci_conf[256];
-  } bx_def440fx_t;
-
+} bx_def440fx_t;
 
 
 class bx_pci_c : public bx_pci_stub_c {
-
 public:
-  bx_pci_c(void);
-  ~bx_pci_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+  bx_pci_c();
+ ~bx_pci_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
   virtual bx_bool register_pci_handlers(void *this_ptr,
                                         bx_pci_read_handler_t f1,
                                         bx_pci_write_handler_t f2,
@@ -74,7 +72,7 @@ public:
                                   bx_write_handler_t f2, Bit32u *addr,
                                   Bit8u *pci_conf, unsigned size,
                                   const Bit8u *iomask, const char *name);
-  virtual void   print_i440fx_state(void);
+  virtual void  print_i440fx_state(void);
   virtual Bit8u rd_memType (Bit32u addr);
   virtual Bit8u wr_memType (Bit32u addr);
 
@@ -83,7 +81,7 @@ private:
   struct {
     bx_pci_read_handler_t  read;
     bx_pci_write_handler_t write;
-    void             *this_ptr;
+    void *this_ptr;
   } pci_handler[BX_MAX_PCI_DEVICES];
   unsigned num_pci_handles;
 
@@ -92,7 +90,7 @@ private:
 
   struct {
     bx_def440fx_t i440fx;
-    } s;
+  } s;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -104,4 +102,4 @@ private:
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
