@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.87 2006-03-01 21:24:20 vruppert Exp $
+// $Id: wxdialog.cc,v 1.88 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1008,18 +1008,18 @@ void ParamDialog::AddDefaultButtons ()
 void ParamDialog::Init()
 {
   // if nobody has made any buttons, then create some now
-  if (nbuttons==0) AddDefaultButtons ();
-  mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
-  EnableChanged ();
+  if (nbuttons==0) AddDefaultButtons();
+  mainSizer->Add(buttonSizer, 0, wxALIGN_RIGHT);
+  EnableChanged();
   // lay it out!
   SetAutoLayout(TRUE);
   SetSizer(mainSizer);
-  mainSizer->Fit (this);
-  wxSize size = mainSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  mainSizer->Fit(this);
+  wxSize size = mainSizer->GetMinSize();
+  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight());
   int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
+  SetSizeHints (size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
 }
 
 static int _next_id = ID_LAST_USER_DEFINED;
@@ -1360,60 +1360,58 @@ bool ParamDialog::CopyGuiToParam ()
   return true;
 }
 
-void ParamDialog::EnableChanged ()
+void ParamDialog::EnableChanged()
 {
-  idHash->BeginFind ();
+  idHash->BeginFind();
   wxNode *node;
   while ((node = idHash->Next ()) != NULL) {
-    ParamStruct *pstr = (ParamStruct*) node->GetData ();
-    if (pstr->param->get_type () == BXT_PARAM_BOOL)
-      EnableChanged (pstr);
-    if (pstr->param->get_type () == BXT_PARAM_ENUM)
-      EnumChanged (pstr);
+    ParamStruct *pstr = (ParamStruct*) node->GetData();
+    if (pstr->param->get_type() == BXT_PARAM_BOOL)
+      EnableChanged(pstr);
+    if (pstr->param->get_type() == BXT_PARAM_ENUM)
+      EnumChanged(pstr);
     if (runtime) {
-      if ((pstr->param->get_type() != BXT_LIST) && !pstr->param->get_runtime_param ())
-        EnableParam (pstr->param->get_id (),  false);
+      if ((pstr->param->get_type() != BXT_LIST) && !pstr->param->get_runtime_param())
+        EnableParam(pstr->param->get_id(),  false);
     }
     // special cases that can't be handled in the usual way
   }
 }
 
-void ParamDialog::EnableChanged (ParamStruct *pstrOfCheckbox)
+void ParamDialog::EnableChanged(ParamStruct *pstrOfCheckbox)
 {
-  wxLogDebug ("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name ());
+  wxLogDebug("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name());
   bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
-  wxASSERT (enableParam->get_type () == BXT_PARAM_BOOL); // or we wouldn't be here
-  bool en = pstrOfCheckbox->u.checkbox->GetValue ();
-  EnableChangedRecursive (enableParam->get_dependent_list (), en, pstrOfCheckbox);
+  wxASSERT(enableParam->get_type() == BXT_PARAM_BOOL); // or we wouldn't be here
+  bool en = pstrOfCheckbox->u.checkbox->GetValue();
+  EnableChangedRecursive(enableParam->get_dependent_list(), en, pstrOfCheckbox);
 }
 
-void ParamDialog::EnableChangedRecursive (
+void ParamDialog::EnableChangedRecursive(
     bx_list_c *list,
     bool en,
     ParamStruct *pstrOfCheckbox)
 {
   if (list==NULL) return;
   int i;
-  for (i=0; i<list->get_size (); i++) {
+  for (i=0; i<list->get_size(); i++) {
     bx_param_c *param = list->get(i);
-    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+    ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
     if (pstr) {
       if (param == pstrOfCheckbox->param) {
-	wxLogDebug ("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name ());
+	wxLogDebug("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name());
 	continue;
       }
-      wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name (), en?1:0);
-      if (en != pstr->u.window->IsEnabled ()) {
-	EnableParam (pstr->param->get_id (), en);
-	//pstr->u.window->Enable (en);
-	//if (pstr->browseButton) pstr->browseButton->Enable (en);
-	//if (pstr->label) pstr->label->Enable (en);
-	bx_list_c *deps = pstr->param->get_dependent_list ();
-	if (deps) {
-	  wxLogDebug ("recursing on dependent list of %s", list->get_name ());
-	  wxASSERT (pstr->param->get_type () == BXT_PARAM_BOOL);
-          bool dep_en = pstr->u.window->IsEnabled () && pstr->u.checkbox->GetValue ();
-	  EnableChangedRecursive (deps, dep_en, pstr);
+      wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name(), en?1:0);
+      if (en != pstr->u.window->IsEnabled()) {
+        EnableParam(pstr->param->get_id(), en);
+        bx_list_c *deps = pstr->param->get_dependent_list();
+        if (deps) {
+          wxLogDebug ("recursing on dependent list of %s", list->get_name());
+          if (pstr->param->get_type() == BXT_PARAM_BOOL) {
+            bool dep_en = pstr->u.window->IsEnabled() && pstr->u.checkbox->GetValue();
+            EnableChangedRecursive(deps, dep_en, pstr);
+          }
 	}
       }
     }
@@ -1421,7 +1419,7 @@ void ParamDialog::EnableChangedRecursive (
   // if any enums changed, give them a chance to update
   for (i=0; i<list->get_size (); i++) {
     bx_param_c *param = list->get(i);
-    ParamStruct *pstr = (ParamStruct*) paramHash->Get (param->get_id ());
+    ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
     if (pstr) {
       if (pstr->param->get_type () == BXT_PARAM_ENUM)
 	EnumChanged (pstr);
@@ -1617,7 +1615,7 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
       switch (pstr->param->get_type ()) {
 	case BXT_PARAM_BOOL:
-	  EnableChanged (pstr);
+	  EnableChanged(pstr);
 	  break;
 	case BXT_PARAM_ENUM:
 	  EnumChanged (pstr);

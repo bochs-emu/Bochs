@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.6 2005-12-10 18:37:35 vruppert Exp $
+// $Id: soundosx.cc,v 1.7 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -13,6 +13,7 @@
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
+#define BX_SOUNDLOW
 #include "sb16.h"
 #undef Float32
 #undef Float64

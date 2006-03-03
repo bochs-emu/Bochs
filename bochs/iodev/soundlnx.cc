@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundlnx.cc,v 1.10 2005-12-10 18:37:35 vruppert Exp $
+// $Id: soundlnx.cc,v 1.11 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,7 @@
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
+#define BX_SOUNDLOW
 #include "sb16.h"
 
 #if (defined(linux) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)) && BX_SUPPORT_SB16

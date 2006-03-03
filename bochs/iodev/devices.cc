@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.92 2006-03-02 20:13:14 vruppert Exp $
+// $Id: devices.cc,v 1.93 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -111,7 +111,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.92 2006-03-02 20:13:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.93 2006-03-03 20:29:50 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -242,7 +242,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   pluginFloppyDevice->init();
 
   //--- SOUND ---
-  if (bx_options.sb16.Oenabled->get ()) {
+  if (SIM->get_param_bool(BXPN_SB16_ENABLED)->get()) {
 #if BX_SUPPORT_SB16
     PLUG_load_plugin(sb16, PLUGTYPE_OPTIONAL);
 #else

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.91 2006-03-02 20:13:13 vruppert Exp $
+// $Id: config.cc,v 1.92 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1448,92 +1448,80 @@ void bx_init_options()
   path->set_ask_format("Enter new script name, or 'none': [%s] ");
   enabled->set_dependent_list(menu->clone());
 
+  // sound subtree
+  bx_list_c *sound = new bx_list_c(root_param, "sound", "Sound Configuration");
+  sound->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu = new bx_list_c(sound, "sb16", "SB16 Configuration", 8);
+  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu->set_enabled(BX_SUPPORT_SB16);
+
   // SB16 options
-  bx_options.sb16.Oenabled = new bx_param_bool_c (BXP_SB16_ENABLED,
-      "Enable SB16 emulation",
-      "Enables the SB16 emulation",
-      0);
-  bx_options.sb16.Omidifile = new bx_param_filename_c (BXP_SB16_MIDIFILE,
-      "MIDI file",
-      "The filename is where the MIDI data is sent. This can be device or just a file.",
-      "", BX_PATHNAME_LEN);
-  bx_options.sb16.Owavefile = new bx_param_filename_c (BXP_SB16_WAVEFILE,
-      "Wave file",
-      "This is the device/file where the wave output is stored",
-      "", BX_PATHNAME_LEN);
-  bx_options.sb16.Ologfile = new bx_param_filename_c (BXP_SB16_LOGFILE,
-      "Log file",
-      "The file to write the SB16 emulator messages to.",
-      "", BX_PATHNAME_LEN);
-  bx_options.sb16.Omidimode = new bx_param_num_c (BXP_SB16_MIDIMODE,
-      "Midi mode",
-      "Controls the MIDI output format.",
-      0, 3,
-      0);
-  bx_options.sb16.Owavemode = new bx_param_num_c (BXP_SB16_WAVEMODE,
-      "Wave mode",
-      "Controls the wave output format.",
-      0, 3,
-      0);
-  bx_options.sb16.Ologlevel = new bx_param_num_c (BXP_SB16_LOGLEVEL,
-      "Log level",
-      "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
-      0, 5,
-      0);
-  bx_options.sb16.Odmatimer = new bx_param_num_c (BXP_SB16_DMATIMER,
-      "DMA timer",
-      "Microseconds per second for a DMA cycle.",
-      0, BX_MAX_BIT32U,
-      0);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable SB16 emulation",
+    "Enables the SB16 emulation",
+    0);
+  enabled->set_enabled(BX_SUPPORT_SB16);
+  bx_param_num_c *midimode = new bx_param_num_c(menu,
+    "midimode",
+    "Midi mode",
+    "Controls the MIDI output format.",
+    0, 3,
+    0);
+  bx_param_filename_c *midifile = new bx_param_filename_c(menu,
+    "midifile",
+    "MIDI file",
+    "The filename is where the MIDI data is sent. This can be device or just a file.",
+    "", BX_PATHNAME_LEN);
+  bx_param_num_c *wavemode = new bx_param_num_c(menu,
+    "wavemode",
+    "Wave mode",
+    "Controls the wave output format.",
+    0, 3,
+    0);
+  bx_param_filename_c *wavefile = new bx_param_filename_c(menu,
+    "wavefile",
+    "Wave file",
+    "This is the device/file where the wave output is stored",
+    "", BX_PATHNAME_LEN);
+  bx_param_num_c *loglevel = new bx_param_num_c(menu,
+    "loglevel",
+    "Log level",
+    "Controls how verbose the SB16 emulation is (0 = no log, 5 = all errors and infos).",
+    0, 5,
+    0);
+  bx_param_filename_c *logfile = new bx_param_filename_c(menu,
+    "logfile",
+    "Log file",
+    "The file to write the SB16 emulator messages to.",
+    "", BX_PATHNAME_LEN);
+  bx_param_num_c *dmatimer = new bx_param_num_c(menu,
+    "dmatimer",
+    "DMA timer",
+    "Microseconds per second for a DMA cycle.",
+    0, BX_MAX_BIT32U,
+    0);
 
 #if BX_WITH_WX
-  bx_options.sb16.Omidimode->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-  bx_options.sb16.Owavemode->set_options (bx_param_num_c::USE_SPIN_CONTROL);
-  bx_options.sb16.Ologlevel->set_options (bx_param_num_c::USE_SPIN_CONTROL);
+  midimode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  wavemode->set_options(bx_param_num_c::USE_SPIN_CONTROL);
+  loglevel->set_options(bx_param_num_c::USE_SPIN_CONTROL);
 #endif
-  bx_options.sb16.Odmatimer->set_runtime_param (1);
-  bx_options.sb16.Odmatimer->set_group ("SB16");
-  bx_options.sb16.Ologlevel->set_runtime_param (1);
-  bx_options.sb16.Ologlevel->set_group ("SB16");
-  bx_param_c *sb16_init_list[] = {
-    bx_options.sb16.Oenabled,
-    bx_options.sb16.Omidimode,
-    bx_options.sb16.Omidifile,
-    bx_options.sb16.Owavemode,
-    bx_options.sb16.Owavefile,
-    bx_options.sb16.Ologlevel,
-    bx_options.sb16.Ologfile,
-    bx_options.sb16.Odmatimer,
-    NULL
-  };
-  menu = new bx_list_c(BXP_SB16, "sb16", "SB16 Configuration", sb16_init_list);
-  menu->get_options()->set (menu->SHOW_PARENT);
-  // sb16_dependent_list is a null-terminated list including all the
-  // sb16 fields except for the "present" field.  These will all be enabled/
-  // disabled according to the value of the present field.
-  bx_options.sb16.Oenabled->set_dependent_list(menu->clone());
-
-  // log options
-  bx_options.log.Ofilename = new bx_param_filename_c (BXP_LOG_FILENAME,
-      "Log filename",
-      "Pathname of bochs log file",
-      "-", BX_PATHNAME_LEN);
-  bx_options.log.Ofilename->set_ask_format ("Enter log filename: [%s] ");
-
-  bx_options.log.Oprefix = new bx_param_string_c (BXP_LOG_PREFIX,
-      "Log output prefix",
-      "Prefix prepended to log output",
-      "%t%e%d", BX_PATHNAME_LEN);
-  bx_options.log.Oprefix->set_ask_format ("Enter log prefix: [%s] ");
-
-  bx_options.log.Odebugger_filename = new bx_param_filename_c (BXP_DEBUGGER_LOG_FILENAME,
-      "Debugger Log filename",
-      "Pathname of debugger log file",
-      "-", BX_PATHNAME_LEN);
-  bx_options.log.Odebugger_filename->set_ask_format ("Enter debugger log filename: [%s] ");
+  loglevel->set_group("SB16");
+  dmatimer->set_group("SB16");
+  enabled->set_dependent_list(menu->clone());
+  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist->add(midifile);
+  midimode->set_dependent_list(deplist);
+  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist->add(wavefile);
+  wavemode->set_dependent_list(deplist);
+  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist->add(logfile);
+  loglevel->set_dependent_list(deplist);
 
   // misc options
-  bx_options.Otext_snapshot_check = new bx_param_bool_c (BXP_TEXT_SNAPSHOT_CHECK,
+  bx_options.Otext_snapshot_check = new bx_param_bool_c(BXP_TEXT_SNAPSHOT_CHECK,
       "Enable text snapshot check panic",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
@@ -1550,13 +1538,33 @@ void bx_init_options()
   menu = new bx_list_c(BXP_MENU_MISC, "misc", "Configure Everything Else", other_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
 
+  // log options
+  bx_options.log.Ofilename = new bx_param_filename_c(BXP_LOG_FILENAME,
+      "Log filename",
+      "Pathname of bochs log file",
+      "-", BX_PATHNAME_LEN);
+  bx_options.log.Ofilename->set_ask_format("Enter log filename: [%s] ");
+
+  bx_options.log.Oprefix = new bx_param_string_c(BXP_LOG_PREFIX,
+      "Log output prefix",
+      "Prefix prepended to log output",
+      "%t%e%d", BX_PATHNAME_LEN);
+  bx_options.log.Oprefix->set_ask_format("Enter log prefix: [%s] ");
+
+  bx_options.log.Odebugger_filename = new bx_param_filename_c(BXP_DEBUGGER_LOG_FILENAME,
+      "Debugger Log filename",
+      "Pathname of debugger log file",
+      "-", BX_PATHNAME_LEN);
+  bx_options.log.Odebugger_filename->set_ask_format("Enter debugger log filename: [%s] ");
+
+  // runtime options
   bx_param_c *runtime_init_list[] = {
       SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL),
       SIM->get_param_bool(BXPN_MOUSE_ENABLED),
       SIM->get_param_num(BXPN_KBD_PASTE_DELAY),
       SIM->get_param_string(BXPN_USER_SHORTCUT),
-      bx_options.sb16.Odmatimer,
-      bx_options.sb16.Ologlevel,
+      SIM->get_param_num(BXPN_SB16_DMATIMER),
+      SIM->get_param_num(BXPN_SB16_LOGLEVEL),
       SIM->get_param_string(BXPN_USB1_PORT1),
       SIM->get_param_string(BXPN_USB1_OPTION1),
       SIM->get_param_string(BXPN_USB1_PORT2),
@@ -1607,22 +1615,15 @@ void bx_reset_options()
   SIM->get_param("network")->reset();
 
   // SB16
-  bx_options.sb16.Oenabled->reset();
-  bx_options.sb16.Omidifile->reset();
-  bx_options.sb16.Owavefile->reset();
-  bx_options.sb16.Ologfile->reset();
-  bx_options.sb16.Omidimode->reset();
-  bx_options.sb16.Owavemode->reset();
-  bx_options.sb16.Ologlevel->reset();
-  bx_options.sb16.Odmatimer->reset();
+  SIM->get_param("sound")->reset();
+
+  // misc
+  bx_options.Otext_snapshot_check->reset();
 
   // logfile
   bx_options.log.Ofilename->reset();
   bx_options.log.Oprefix->reset();
   bx_options.log.Odebugger_filename->reset();
-
-  // misc
-  bx_options.Otext_snapshot_check->reset();
 }
 
 int bx_read_configuration (char *rcfile)
@@ -2562,31 +2563,32 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
 #endif
   } else if (!strcmp(params[0], "sb16")) {
     int enable = 1;
+    base = (bx_list_c*) SIM->get_param(BXPN_SB16);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         enable = atol(&params[i][8]);
       } else if (!strncmp(params[i], "midi=", 5)) {
-        bx_options.sb16.Omidifile->set(&params[i][5]);
+        SIM->get_param_string("midifile", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "midimode=", 9)) {
-        bx_options.sb16.Omidimode->set (atol(&params[i][9]));
+        SIM->get_param_num("midimode", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "wave=", 5)) {
-        bx_options.sb16.Owavefile->set(&params[i][5]);
+        SIM->get_param_string("wavefile", base)->set(&params[i][5]);
       } else if (!strncmp(params[i], "wavemode=", 9)) {
-        bx_options.sb16.Owavemode->set (atol(&params[i][9]));
+        SIM->get_param_num("wavemode", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "log=", 4)) {
-        bx_options.sb16.Ologfile->set(&params[i][4]);
+        SIM->get_param_string("logfile", base)->set(&params[i][4]);
       } else if (!strncmp(params[i], "loglevel=", 9)) {
-        bx_options.sb16.Ologlevel->set (atol(&params[i][9]));
+        SIM->get_param_num("loglevel", base)->set(atol(&params[i][9]));
       } else if (!strncmp(params[i], "dmatimer=", 9)) {
-        bx_options.sb16.Odmatimer->set (atol(&params[i][9]));
+        SIM->get_param_num("dmatimer", base)->set(atol(&params[i][9]));
       } else {
         BX_ERROR(("%s: unknown parameter for sb16 ignored.", context));
       }
     }
-    if ((enable != 0) && (bx_options.sb16.Odmatimer->get () > 0))
-      bx_options.sb16.Oenabled->set (1);
+    if ((enable != 0) && (SIM->get_param_num("dmatimer", base)->get() > 0))
+      SIM->get_param_bool("enabled", base)->set(1);
     else
-      bx_options.sb16.Oenabled->set (0);
+      SIM->get_param_bool("enabled", base)->set(0);
   } else if ((!strncmp(params[0], "com", 3)) && (strlen(params[0]) == 4)) {
     char tmpname[80];
     idx = params[0][3];
@@ -3158,20 +3160,20 @@ int bx_write_ne2k_options (FILE *fp, bx_list_c *base)
   return 0;
 }
 
-int bx_write_sb16_options (FILE *fp, bx_sb16_options *opt)
+int bx_write_sb16_options (FILE *fp, bx_list_c *base)
 {
-  fprintf (fp, "sb16: enabled=%d", opt->Oenabled->get ());
-  if (opt->Oenabled->get ()) {
-    fprintf (fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
-      opt->Omidimode->get (),
-      opt->Omidifile->getptr (),
-      opt->Owavemode->get (),
-      opt->Owavefile->getptr (),
-      opt->Ologlevel->get (),
-      opt->Ologfile->getptr (),
-      opt->Odmatimer->get ());
+  fprintf(fp, "sb16: enabled=%d", SIM->get_param_bool("enabled", base)->get());
+  if (SIM->get_param_bool("enabled", base)->get()) {
+    fprintf(fp, ", midimode=%d, midi=%s, wavemode=%d, wave=%s, loglevel=%d, log=%s, dmatimer=%d",
+      SIM->get_param_num("midimode", base)->get(),
+      SIM->get_param_string("midifile", base)->getptr(),
+      SIM->get_param_num("wavemode", base)->get(),
+      SIM->get_param_string("wavefile", base)->getptr(),
+      SIM->get_param_num("loglevel", base)->get(),
+      SIM->get_param_string("logfile", base)->getptr(),
+      SIM->get_param_num("dmatimer", base)->get());
   }
-  fprintf (fp, "\n");
+  fprintf(fp, "\n");
   return 0;
 }
 
@@ -3372,7 +3374,6 @@ int bx_write_configuration(char *rc, int overwrite)
       SIM->get_param_num(BXPN_PCIDEV_VENDOR)->get(),
       SIM->get_param_num(BXPN_PCIDEV_DEVICE)->get());
   }
-  bx_write_sb16_options(fp, &bx_options.sb16);
   fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
@@ -3393,6 +3394,7 @@ int bx_write_configuration(char *rc, int overwrite)
   bx_write_clock_cmos_options(fp);
   bx_write_ne2k_options(fp, (bx_list_c*) SIM->get_param(BXPN_NE2K));
   bx_write_pnic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
+  bx_write_sb16_options(fp, (bx_list_c*) SIM->get_param(BXPN_SB16));
   bx_write_loader_options(fp);
   bx_write_log_options(fp, &bx_options.log);
   bx_write_keyboard_options(fp);

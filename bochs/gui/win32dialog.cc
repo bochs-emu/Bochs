@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.39 2006-03-01 17:56:32 vruppert Exp $
+// $Id: win32dialog.cc,v 1.40 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -676,8 +676,8 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
         SendMessage(GetDlgItem(hDlg, IDMOUSE), BM_SETCHECK, BST_CHECKED, 0);
       }
       SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
-      SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXP_SB16_DMATIMER)->get(), FALSE);
-      SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXP_SB16_LOGLEVEL)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXPN_SB16_DMATIMER)->get(), FALSE);
+      SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get(), FALSE);
       changed = FALSE;
       return TRUE;
     case WM_NOTIFY:
@@ -694,9 +694,9 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             GetDlgItemText(hDlg, IDUSERBTN, buffer, sizeof(buffer));
             SIM->get_param_string(BXPN_USER_SHORTCUT)->set(buffer);
             value = GetDlgItemInt(hDlg, IDSB16TIMER, NULL, FALSE);
-            SIM->get_param_num(BXP_SB16_DMATIMER)->set(value);
+            SIM->get_param_num(BXPN_SB16_DMATIMER)->set(value);
             value = GetDlgItemInt(hDlg, IDSBLOGLEV, NULL, FALSE);
-            SIM->get_param_num(BXP_SB16_LOGLEVEL)->set(value);
+            SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set(value);
             changed = FALSE;
           }
           return PSNRET_NOERROR;

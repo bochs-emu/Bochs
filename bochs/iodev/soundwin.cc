@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundwin.cc,v 1.17 2006-02-05 17:13:54 vruppert Exp $
+// $Id: soundwin.cc,v 1.18 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,7 @@
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
+#define BX_SOUNDLOW
 #include "sb16.h"
 
 #if defined(WIN32) && BX_SUPPORT_SB16

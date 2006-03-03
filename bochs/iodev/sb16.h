@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.21 2006-02-09 21:59:42 vruppert Exp $
+// $Id: sb16.h,v 1.22 2006-03-03 20:29:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,13 +198,19 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
 
-      /* Make writelog available to output functions */
-  BX_SB16_SMF void   writelog(int loglevel, const char *str, ...);
+  /* Make writelog available to output functions */
+  BX_SB16_SMF void writelog(int loglev, const char *str, ...);
+  // return midimode and wavemode setting (for lowlevel output class)
+  int get_midimode() {return midimode;}
+  int get_wavemode() {return wavemode;}
+  // runtimer parameter handler
+  static Bit64s sb16_param_handler(bx_param_c *param, int set, Bit64s val);
 
 private:
 
-  FILE *logfile;
-  FILE *midifile,*wavefile;     // the output files or devices
+  int midimode, wavemode, loglevel;
+  Bit32u dmatimer;
+  FILE *logfile, *midifile, *wavefile; // the output files or devices
   BX_SOUND_OUTPUT_C_DEF *output;// the output class
   int currentirq;
   int currentdma8;
@@ -413,5 +419,10 @@ public:
 
 #define WRITELOG        sb16->writelog
 #define BOTHLOG(x)      (x)
-#define MIDILOG(x)      ((bx_options.sb16.Omidimode->get ()>0?x:0x7f))
-#define WAVELOG(x)      ((bx_options.sb16.Owavemode->get ()>0?x:0x7f))
+#ifndef BX_SOUNDLOW
+#define MIDILOG(x)      ((BX_SB16_THIS midimode>0?x:0x7f))
+#define WAVELOG(x)      ((BX_SB16_THIS wavemode>0?x:0x7f))
+#else
+#define MIDILOG(x)      ((sb16->get_midimode()>0?x:0x7f))
+#define WAVELOG(x)      ((sb16->get_wavemode()>0?x:0x7f))
+#endif
