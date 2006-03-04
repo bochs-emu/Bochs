@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.92 2006-03-03 20:29:50 vruppert Exp $
+// $Id: config.cc,v 1.93 2006-03-04 12:43:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1520,23 +1520,52 @@ void bx_init_options()
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
 
-  // misc options
-  bx_options.Otext_snapshot_check = new bx_param_bool_c(BXP_TEXT_SNAPSHOT_CHECK,
+  // misc options subtree
+  bx_list_c *misc = new bx_list_c(root_param, "misc", "Configure Everything Else");
+  misc->get_options()->set(bx_list_c::SHOW_PARENT);
+  bx_param_num_c *gdbstub_opt;
+
+  // text snapshot check panic
+  new bx_param_bool_c(misc,
+      "text_snapshot_check",
       "Enable text snapshot check panic",
       "Enable panic when text on screen matches snapchk.txt.\nUseful for regression testing.\nIn win32, turns off CR/LF in snapshots and cuts.",
       0);
   // GDB stub
-  bx_options.gdbstub.port = 1234;
-  bx_options.gdbstub.text_base = 0;
-  bx_options.gdbstub.data_base = 0;
-  bx_options.gdbstub.bss_base = 0;
-
-  bx_param_c *other_init_list[] = {
-      SIM->get_param(BXP_TEXT_SNAPSHOT_CHECK),
-      NULL
-  };
-  menu = new bx_list_c(BXP_MENU_MISC, "misc", "Configure Everything Else", other_init_list);
-  menu->get_options()->set(bx_list_c::SHOW_PARENT);
+  menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
+  menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
+  menu->set_enabled(BX_GDBSTUB);
+  enabled = new bx_param_bool_c(menu,
+    "enabled",
+    "Enable GDB stub",
+    "",
+    0);
+  enabled->set_enabled(BX_GDBSTUB);
+  gdbstub_opt = new bx_param_num_c(menu,
+    "port",
+    "Port",
+    "TCP/IP port for GDB stub",
+    0, 65535,
+    1234);
+  gdbstub_opt = new bx_param_num_c(menu,
+    "text_base",
+    "Text base",
+    "",
+    0, BX_MAX_BIT32U,
+    0);
+  gdbstub_opt = new bx_param_num_c(menu,
+    "data_base",
+    "Data base",
+    "",
+    0, BX_MAX_BIT32U,
+    0);
+  gdbstub_opt = new bx_param_num_c(menu,
+    "bss_base",
+    "BSS base",
+    "",
+    0, BX_MAX_BIT32U,
+    0);
+  enabled->set_dependent_list(menu->clone());
 
   // log options
   bx_options.log.Ofilename = new bx_param_filename_c(BXP_LOG_FILENAME,
@@ -1618,7 +1647,7 @@ void bx_reset_options()
   SIM->get_param("sound")->reset();
 
   // misc
-  bx_options.Otext_snapshot_check->reset();
+  SIM->get_param("misc")->reset();
 
   // logfile
   bx_options.log.Ofilename->reset();
@@ -2503,11 +2532,14 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: text_snapshot_check directive: wrong # args.", context));
     }
-    if (!strncmp(params[1], "enable", 6)) {
-      bx_options.Otext_snapshot_check->set (1);
-    } else if (!strncmp(params[1], "disable", 7)) {
-      bx_options.Otext_snapshot_check->set (0);
-    } else bx_options.Otext_snapshot_check->set (!!(atol(params[1])));
+    if (!strncmp(params[1], "enabled=", 8)) {
+      if (params[1][8] == '0' || params[1][8] == '1')
+        SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->set(params[1][8] - '0');
+      else
+        PARSE_ERR(("%s: text_snapshot_check directive malformed.", context));
+    } else {
+      PARSE_ERR(("%s: text_snapshot_check directive malformed.", context));
+    }
   } else if (!strcmp(params[0], "mouse")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: mouse directive malformed.", context));
@@ -2746,13 +2778,16 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params < 2) {
       PARSE_ERR(("%s: gdbstub directive: wrong # args.", context));
     }
+    base = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "enabled=", 8)) {
         if (params[i][8] == '0') {
+          SIM->get_param_bool("enabled", base)->set(0);
           BX_INFO(("Disabled gdbstub"));
           bx_dbg.gdbstub_enabled = 0;
         }
         else if (params[i][8] == '1') {
+          SIM->get_param_bool("enabled", base)->set(1);
           BX_INFO(("Enabled gdbstub"));
           bx_dbg.gdbstub_enabled = 1;
         }
@@ -2761,16 +2796,16 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         }
       }
       else if (!strncmp(params[i], "port=", 5)) {
-        bx_options.gdbstub.port = atoi(&params[i][5]);
+        SIM->get_param_num("port", base) = atoi(&params[i][5]);
       }
       else if (!strncmp(params[i], "text_base=", 10)) {
-        bx_options.gdbstub.text_base = atoi(&params[i][10]);
+        SIM->get_param_num("text_base", base) = atoi(&params[i][10]);
       }
       else if (!strncmp(params[i], "data_base=", 10)) {
-        bx_options.gdbstub.data_base = atoi(&params[i][10]);
+        SIM->get_param_num("data_base", base) = atoi(&params[i][10]);
       }
       else if (!strncmp(params[i], "bss_base=", 9)) {
-        bx_options.gdbstub.bss_base = atoi(&params[i][9]);
+        SIM->get_param_num("bss_base", base) = atoi(&params[i][9]);
       }
       else {
         PARSE_ERR(("%s: gdbstub directive malformed.", context));
@@ -3385,7 +3420,7 @@ int bx_write_configuration(char *rc, int overwrite)
   fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
     SIM->get_param_num(BXPN_IPS)->get(), SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #endif
-  fprintf(fp, "text_snapshot_check: %d\n", bx_options.Otext_snapshot_check->get());
+  fprintf(fp, "text_snapshot_check: enabled=%d\n", SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get());
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
   fprintf(fp, "fullscreen: enabled=%d\n", SIM->get_param_bool(BXPN_FULLSCREEN)->get());

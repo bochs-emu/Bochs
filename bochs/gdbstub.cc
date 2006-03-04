@@ -27,6 +27,7 @@ static int last_stop_reason = GDBSTUB_STOP_NO_REASON;
 #define GDBSTUB_TRACE                   (0xac2)
 #define GDBSTUB_USER_BREAK              (0xac3)
 
+static bx_list_c *gdbstub_list;
 static int listen_socket_fd;
 static int socket_fd;
 
@@ -775,9 +776,9 @@ static void debug_loop(void)
               {
                  sprintf(obuf,
                          "Text=%x;Data=%x;Bss=%x",
-                         bx_options.gdbstub.text_base, 
-                         bx_options.gdbstub.data_base, 
-                         bx_options.gdbstub.bss_base);
+                         SIM->get_param_num("text_base", gdbstub_list)->get(),
+                         SIM->get_param_num("data_base", gdbstub_list)->get(),
+                         SIM->get_param_num("bss_base", gdbstub_list)->get());
                  put_reply(obuf);
               }
             else
@@ -882,7 +883,8 @@ static void wait_for_connect(int portn)
 
 void bx_gdbstub_init(int argc, char* argv[])
 {
-   int portn = bx_options.gdbstub.port;
+   gdbstub_list = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
+   int portn = SIM->get_param_num("port", gdbstub_list)->get();
 
 #ifdef __MINGW32__
    WSADATA wsaData;

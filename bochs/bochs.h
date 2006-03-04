@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.185 2006-03-03 20:29:49 vruppert Exp $
+// $Id: bochs.h,v 1.186 2006-03-04 12:43:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -470,13 +470,6 @@ typedef struct {
   bx_param_string_c *Odebugger_filename;
 } bx_log_options;
 
-typedef struct {
-  unsigned int port;
-  unsigned int text_base;
-  unsigned int data_base;
-  unsigned int bss_base;
-} bx_gdbstub_t;
-
 #define BX_KBD_XT_TYPE        0
 #define BX_KBD_AT_TYPE        1
 #define BX_KBD_MF_TYPE        2 
@@ -489,9 +482,7 @@ typedef struct {
 #define BX_N_PCI_SLOTS 5
 
 typedef struct BOCHSAPI {
-  bx_param_bool_c   *Otext_snapshot_check;
   bx_log_options    log;
-  bx_gdbstub_t      gdbstub;
 } bx_options_t;
 
 BOCHSAPI extern bx_options_t bx_options;

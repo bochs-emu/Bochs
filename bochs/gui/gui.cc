@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.92 2006-02-27 09:37:58 vruppert Exp $
+// $Id: gui.cc,v 1.93 2006-03-04 12:43:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -220,7 +220,7 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
                           BX_GRAVITY_RIGHT, userbutton_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
 
-  if(bx_options.Otext_snapshot_check->get()) {
+  if (SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get()) {
     bx_pc_system.register_timer(this, bx_gui_c::snapshot_checker, (unsigned) 1000000, 1, 1, "snap_chk");
   }
 
@@ -370,7 +370,7 @@ bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
     }
     while ((txt_addr > 0) && (clean_snap[txt_addr-1] == ' ')) txt_addr--;
 #ifdef WIN32
-    if(!(bx_options.Otext_snapshot_check->get())) {
+    if(!(SIM->get_param_bool(BXPN_TEXT_SNAPSHOT_CHECK)->get())) {
       clean_snap[txt_addr++] = 13;
     }
 #endif

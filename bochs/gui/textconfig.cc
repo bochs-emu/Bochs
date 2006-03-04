@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.44 2006-03-03 20:29:50 vruppert Exp $
+// $Id: textconfig.cc,v 1.45 2006-03-04 12:43:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -501,7 +501,7 @@ int bx_config_interface (int menu)
 	 case 13: do_menu2("ports", NULL); break;
 	 case 14: do_menu2("network", NULL); break;
 	 case 15: do_menu2(BXPN_SB16, NULL); break;
-	 case 16: do_menu(BXP_MENU_MISC); break;
+	 case 16: do_menu2("misc", NULL); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }

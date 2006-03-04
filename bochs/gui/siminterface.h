@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.171 2006-03-03 20:29:50 vruppert Exp $
+// $Id: siminterface.h,v 1.172 2006-03-04 12:43:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -215,6 +215,8 @@ typedef enum {
 #define BXPN_SB16_WAVEFILE               "sound.sb16.wavefile"
 #define BXPN_SB16_DMATIMER               "sound.sb16.dmatimer"
 #define BXPN_SB16_LOGLEVEL               "sound.sb16.loglevel"
+#define BXPN_TEXT_SNAPSHOT_CHECK         "misc.text_snapshot_check"
+#define BXPN_GDBSTUB                     "misc.gdbstub"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -225,15 +227,12 @@ typedef enum {
 // it's only important that they all be different from each other.
 typedef enum {
   BXP_NULL = 301,
-  BXP_TEXT_SNAPSHOT_CHECK,
 
   BXP_LOG_FILENAME,
   BXP_LOG_PREFIX,
   BXP_DEBUGGER_LOG_FILENAME,
-  BXP_MENU_MAIN,
   BXP_MENU_MEMORY,
   BXP_MENU_DISK,
-  BXP_MENU_MISC,
   BXP_MENU_RUNTIME,
   BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
