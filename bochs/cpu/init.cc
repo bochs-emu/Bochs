@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.86 2006-02-28 19:50:08 sshwarts Exp $
+// $Id: init.cc,v 1.87 2006-03-04 16:58:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -651,7 +651,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.nw = 0;
   BX_CPU_THIS_PTR cr0.am = 0; // disable alignment check
   BX_CPU_THIS_PTR cr0.wp = 0; // disable write-protect
-  BX_CPU_THIS_PTR cr0.ne = 0; // ndp exceptions through int 13H, DOS compat
+  BX_CPU_THIS_PTR cr0.ne = 0; // np exceptions through int 13H, DOS compat
   BX_CPU_THIS_PTR cr0.val32 |= 0x00000000;
 #endif
 
@@ -664,6 +664,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr0.val32 |= 0x00000010;
 #endif
 #endif // CPU >= 2
+
+  // CR0 paging might be modified
+  TLB_flush(1);
 
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR cr2 = 0;
@@ -750,6 +753,8 @@ void BX_CPU_C::reset(unsigned source)
 #else
   BX_CPU_THIS_PTR async_event=2;
 #endif
+
+  invalidate_prefetch_q();
 
   BX_CPU_THIS_PTR kill_bochs_request = 0;
   BX_INSTR_RESET(BX_CPU_ID);

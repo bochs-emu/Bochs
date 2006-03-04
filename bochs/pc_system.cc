@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.49 2006-01-31 20:43:24 sshwarts Exp $
+// $Id: pc_system.cc,v 1.50 2006-03-04 16:58:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
 #endif
 
   // constructor
-bx_pc_system_c::bx_pc_system_c(void)
+bx_pc_system_c::bx_pc_system_c()
 {
   this->put("SYS");
 
@@ -82,16 +82,6 @@ bx_pc_system_c::bx_pc_system_c(void)
 void bx_pc_system_c::init_ips(Bit32u ips)
 {
   HRQ = 0;
-
-  enable_a20 = 1;
-
-#if BX_CPU_LEVEL < 2
-  a20_mask   =    0xfffff;
-#elif BX_CPU_LEVEL == 2
-  a20_mask   =   0xffffff;
-#else /* 386+ */
-  a20_mask   = 0xffffffff;
-#endif
 
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
@@ -120,13 +110,9 @@ void bx_pc_system_c::set_INTR(bx_bool value)
   Bit32u BX_CPP_AttrRegparmN(2)
 bx_pc_system_c::inp(Bit16u addr, unsigned io_len)
 {
-  Bit32u ret;
-
-  ret = bx_devices.inp(addr, io_len);
-
-  return( ret );
+  Bit32u ret = bx_devices.inp(addr, io_len);
+  return ret;
 }
-
 
 //
 // Write to the IO memory address space.
@@ -138,22 +124,19 @@ bx_pc_system_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
   bx_devices.outp(addr, value, io_len);
 }
 
-  void BX_CPP_AttrRegparmN(1)
-bx_pc_system_c::set_enable_a20(Bit8u value)
-{
-#if BX_CPU_LEVEL < 2
-    BX_PANIC(("set_enable_a20() called: 8086 emulation"));
-#else
-
 #if BX_SUPPORT_A20
+void bx_pc_system_c::set_enable_a20(bx_bool value)
+{
   unsigned old_enable_a20 = enable_a20;
 
   if (value) {
     enable_a20 = 1;
-#if BX_CPU_LEVEL == 2
-    a20_mask   = 0xffffff;   /* 286: enable all 24 address lines */
+#if BX_CPU_LEVEL < 2
+  a20_mask   =    0xfffff;
+#elif BX_CPU_LEVEL == 2
+  a20_mask   =   0xffffff;
 #else /* 386+ */
-    a20_mask   = 0xffffffff; /* 386: enable all 32 address lines */
+  a20_mask   = 0xffffffff;
 #endif
   }
   else {
@@ -171,32 +154,38 @@ bx_pc_system_c::set_enable_a20(Bit8u value)
   if (old_enable_a20 != enable_a20) {
     for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
       BX_CPU(i)->pagingA20Changed();
-    }
-#else
-  BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0"));
-#endif  // #if BX_SUPPORT_A20
-
-#endif
+  }
 }
 
 bx_bool bx_pc_system_c::get_enable_a20(void)
 {
-#if BX_SUPPORT_A20
   if (bx_dbg.a20)
     BX_INFO(("A20: get() = %u", (unsigned) enable_a20));
 
   if (enable_a20) return(1);
   else return(0);
-#else
-  BX_INFO(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
-  return(1);
-#endif  // #if BX_SUPPORT_A20
 }
 
-int bx_pc_system_c::Reset( unsigned type )
+#else
+
+void bx_pc_system_c::set_enable_a20(bx_bool value)
+{
+  BX_DEBUG(("set_enable_a20: ignoring: SUPPORT_A20 = 0"));
+}
+
+bx_bool bx_pc_system_c::get_enable_a20(void)
+{
+  BX_INFO(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
+  return(1);
+}
+#endif  // #if BX_SUPPORT_A20
+
+int bx_pc_system_c::Reset(unsigned type)
 {
   // type is BX_RESET_HARDWARE or BX_RESET_SOFTWARE
-  BX_INFO(( "bx_pc_system_c::Reset(%s) called",type==BX_RESET_HARDWARE?"HARDWARE":"SOFTWARE" ));
+  BX_INFO(("bx_pc_system_c::Reset(%s) called",type==BX_RESET_HARDWARE?"HARDWARE":"SOFTWARE"));
+
+  set_enable_a20(1);
 
   // Always reset cpu
   for (int i=0; i<BX_SMP_PROCESSORS; i++) {
@@ -213,7 +202,7 @@ int bx_pc_system_c::Reset( unsigned type )
 
 Bit8u bx_pc_system_c::IAC(void)
 {
-  return( DEV_pic_iac() );
+  return DEV_pic_iac();
 }
 
 void bx_pc_system_c::exit(void)
@@ -500,7 +489,7 @@ void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continu
   activate_timer_ticks(i, ticks, continuous);
 }
 
-void bx_pc_system_c::deactivate_timer( unsigned i )
+void bx_pc_system_c::deactivate_timer(unsigned i)
 {
 #if BX_TIMER_DEBUG
   if (i >= numTimers)

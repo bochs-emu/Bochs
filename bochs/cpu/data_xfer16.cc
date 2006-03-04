@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.35 2005-09-23 16:45:41 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.36 2006-03-04 16:58:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 
   /* Illegal to use nonexisting segments */
   if (i->nnn() >= 6) {
-    BX_INFO(("MOV_EwSw: using of nonexisting segment register"));
+    BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
     UndefinedOpcode(i);
   }
 
@@ -108,7 +108,7 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 
   /* Illegal to use nonexisting segments */
   if (i->nnn() >= 6) {
-    BX_INFO(("MOV_EwSw: using of nonexisting segment register"));
+    BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
     UndefinedOpcode(i);
   }
 
