@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.137 2006-03-01 22:32:24 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.138 2006-03-04 09:22:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -601,13 +601,11 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       BX_PANIC(("MOV_CdRd: CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CdRd: CR2 not implemented yet"));
-      BX_DEBUG(("MOV_CdRd: CR2 = reg"));
+      BX_DEBUG(("MOV_CdRd:CR2 = %08x", (unsigned) val_32));
       BX_CPU_THIS_PTR cr2 = val_32;
       break;
     case 3: // CR3
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_CdRd:CR3 = %08x", (unsigned) val_32));
+      BX_DEBUG(("MOV_CdRd:CR3 = %08x", (unsigned) val_32));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
@@ -661,25 +659,17 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
       val_32 = BX_CPU_THIS_PTR cr0.val32;
-#if 0
-      BX_INFO(("MOV_RdCd:CR0: R32 = %08x @CS:EIP %04x:%04x",
-        (unsigned) val_32,
-        (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-        (unsigned) EIP));
-#endif
       break;
     case 1: /* CR1 */
       BX_PANIC(("MOV_RdCd: CR1 not implemented yet"));
       val_32 = 0;
       break;
     case 2: /* CR2 */
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_RdCd: CR2"));
+      BX_DEBUG(("MOV_RdCd: reading CR3"));
       val_32 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_RdCd: reading CR3"));
+      BX_DEBUG(("MOV_RdCd: reading CR3"));
       val_32 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
@@ -745,12 +735,11 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       BX_PANIC(("MOV_CqRq: CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CqRq: CR2 not implemented yet"));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
-      if (bx_dbg.creg)
-        BX_INFO(("MOV_CqRq:CR3 = %08x", (unsigned) val_64));
+      BX_INFO(("MOV_CqRq: write to CR3 of %08x:%08x", 
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
@@ -758,7 +747,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     case 4: // CR4
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
-      BX_INFO(("MOV_CqRq: write to CR4 of %08x:%08x", 
+      BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       SetCR4(val_64);
       break;
@@ -809,12 +798,6 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
       val_64 = BX_CPU_THIS_PTR cr0.val32;
-#if 0
-      BX_INFO(("MOV_RqCq:CR0: R64 = %08x @CS:EIP %04x:%04x",
-        (unsigned) val_64,
-        (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-        (unsigned) EIP));
-#endif
       break;
     case 1: /* CR1 */
       BX_PANIC(("MOV_RqCq: CR1 not implemented yet"));

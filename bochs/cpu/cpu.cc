@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.134 2006-03-02 17:39:10 sshwarts Exp $
+// $Id: cpu.cc,v 1.135 2006-03-04 09:22:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -227,7 +227,6 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   if (BX_CPU_THIS_PTR trace) {
     // print the instruction that is about to be executed.
     bx_dbg_disassemble_current(BX_CPU_ID, 1);  // only one cpu, print time stamp
-  }
 #endif
 
   // decoding instruction compeleted -> continue with execution
@@ -740,8 +739,8 @@ void BX_CPU_C::prefetch(void)
   if (! Is64BitMode()) {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
 
-    if (((Bit32u) temp_rip) >= temp_limit) {
-      BX_ERROR(("prefetch: EIP > CS.limit"));
+    if (((Bit32u) temp_rip) > temp_limit) {
+      BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", (Bit32u) temp_rip, temp_limit));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
