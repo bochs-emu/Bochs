@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.59 2006-02-23 22:48:57 vruppert Exp $
+// $Id: dbg_main.cc,v 1.60 2006-03-05 10:24:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -198,16 +198,16 @@ int bx_dbg_main(int argc, char *argv[])
   }
 
   // Open debugger log file if needed
-  if ((strlen(bx_options.log.Odebugger_filename->getptr()) > 0) 
-   && (strcmp(bx_options.log.Odebugger_filename->getptr(), "-") != 0)) {
-    debugger_log = fopen (bx_options.log.Odebugger_filename->getptr(), "w");
+  if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
+   && (strcmp(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "-") != 0)) {
+    debugger_log = fopen (SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "w");
     if (!debugger_log) {
       BX_PANIC(("Can not open debugger log file '%s'",
-        bx_options.log.Odebugger_filename->getptr()));
+        SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
       }
     else {
       BX_INFO(("Using debugger log file %s",
-        bx_options.log.Odebugger_filename->getptr()));
+        SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
       }
     }
 
@@ -242,7 +242,9 @@ int bx_dbg_main(int argc, char *argv[])
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
   // some parts of the GUI.
-  sim_running = new bx_param_bool_c (BXP_DEBUG_RUNNING, 
+  bx_list_c *base = SIM->get_param("general");
+  sim_running = new bx_param_bool_c(base,
+      "debug_running",
       "Simulation is running", "", 0);
 
   // setup Ctrl-C handler

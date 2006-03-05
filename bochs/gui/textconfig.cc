@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.45 2006-03-04 12:43:47 vruppert Exp $
+// $Id: textconfig.cc,v 1.46 2006-03-05 10:24:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -41,7 +41,6 @@ extern "C" {
 
 #define BX_INSERTED 11
 
-int do_menu2(const char *pname, bx_param_c *base);
 /* functions for changing particular options */
 void bx_config_interface_init();
 int bx_read_rc(char *rc);
@@ -350,35 +349,7 @@ void build_runtime_options_prompt(char *format, char *buf, int size)
 }
 #endif
 
-int do_menu(bx_id id) {
-  bx_list_c *menu = (bx_list_c *)SIM->get_param(id);
-  while (1) {
-    menu->get_choice()->set(0);
-    int status = menu->text_ask(stdin, stderr);
-    if (status < 0) return status;
-    bx_param_num_c *choice = menu->get_choice();
-    if (choice->get() < 1)
-      return choice->get();
-    else {
-      int index = choice->get() - 1;  // choosing 1 means list[0]
-      bx_param_c *chosen = menu->get(index);
-      assert (chosen != NULL);
-      if (chosen->get_enabled()) {
-        if (chosen->get_type() == BXT_LIST) {
-          if (chosen->get_id() < BXP_NEW_PARAM_ID) {
-            do_menu(chosen->get_id());
-          } else {
-            do_menu2(chosen->get_name(), chosen->get_parent());
-          }
-        } else {
-          chosen->text_ask(stdin, stderr);
-        }
-      }
-    }
-  }
-}
-
-int do_menu2(const char *pname, bx_param_c *base) {
+int do_menu(const char *pname, bx_param_c *base) {
   bx_list_c *menu = (bx_list_c *)SIM->get_param(pname, base);
   while (1) {
     menu->get_choice()->set(0);
@@ -393,11 +364,7 @@ int do_menu2(const char *pname, bx_param_c *base) {
       assert(chosen != NULL);
       if (chosen->get_enabled()) {
         if (chosen->get_type() == BXT_LIST) {
-          if (chosen->get_id() < BXP_NEW_PARAM_ID) {
-            do_menu(chosen->get_id());
-          } else {
-            do_menu2(chosen->get_name(), menu);
-          }
+          do_menu(chosen->get_name(), menu);
         } else {
           chosen->text_ask(stdin, stderr);
         }
@@ -406,10 +373,10 @@ int do_menu2(const char *pname, bx_param_c *base) {
   }
 }
 
-void askparam (bx_id id)
+void askparam(char *pname)
 {
-  bx_param_c *param = SIM->get_param (id);
-  param->text_ask (stdin, stderr);
+  bx_param_c *param = SIM->get_param(pname);
+  param->text_ask(stdin, stderr);
 }
 
 int bx_config_interface (int menu)
@@ -430,7 +397,7 @@ int bx_config_interface (int menu)
    case BX_CI_START_MENU:
      {
        Bit32u default_choice;
-       switch (SIM->get_param_enum(BXP_BOCHS_START)->get ()) {
+       switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
          case BX_LOAD_START: 
            default_choice = 2; break;
          case BX_EDIT_START: 
@@ -443,19 +410,19 @@ int bx_config_interface (int menu)
        switch (choice) {
 	 case 1:
 	   fprintf (stderr, "I reset all options back to their factory defaults.\n\n");
-	   SIM->reset_all_param ();
-	   SIM->get_param_enum(BXP_BOCHS_START)->set(BX_EDIT_START);
+	   SIM->reset_all_param();
+	   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
 	   break;
 	 case 2: 
 	   // Before reading a new configuration, reset every option to its
 	   // original state.
-	   SIM->reset_all_param ();
+	   SIM->reset_all_param();
 	   if (bx_read_rc (NULL) >= 0)
-	     SIM->get_param_enum(BXP_BOCHS_START)->set(BX_RUN_START);
+	     SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
 	   break;
 	 case 3: 
-           bx_config_interface (BX_CI_START_OPTS); 
-	   SIM->get_param_enum(BXP_BOCHS_START)->set(BX_RUN_START);
+           bx_config_interface(BX_CI_START_OPTS); 
+	   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
            break;
 	 case 4: bx_write_rc (NULL); break;
 	 case 5: bx_config_interface (BX_CI_START_SIMULATION); break;
@@ -486,22 +453,22 @@ int bx_config_interface (int menu)
        if (ask_uint (prompt, 0, 16, 0, &choice, 10) < 0) return -1;
        switch (choice) {
 	 case 0: return 0;
-	 case 1: askparam (BXP_LOG_FILENAME); break;
-	 case 2: askparam (BXP_LOG_PREFIX); break;
-	 case 3: askparam (BXP_DEBUGGER_LOG_FILENAME); break;
-	 case 4: bx_log_options (0); break;
-	 case 5: bx_log_options (1); break;
-	 case 6: do_menu2("cpu", NULL); break;
-	 case 7: do_menu(BXP_MENU_MEMORY); break;
-	 case 8: do_menu2("clock_cmos", NULL); break;
-	 case 9: do_menu2("pci", NULL); break;
-	 case 10: do_menu2("display", NULL); break;
-	 case 11: do_menu2("keyboard_mouse", NULL); break;
-	 case 12: do_menu(BXP_MENU_DISK); break;
-	 case 13: do_menu2("ports", NULL); break;
-	 case 14: do_menu2("network", NULL); break;
-	 case 15: do_menu2(BXPN_SB16, NULL); break;
-	 case 16: do_menu2("misc", NULL); break;
+	 case 1: askparam(BXPN_LOG_FILENAME); break;
+	 case 2: askparam(BXPN_LOG_PREFIX); break;
+	 case 3: askparam(BXPN_DEBUGGER_LOG_FILENAME); break;
+	 case 4: bx_log_options(0); break;
+	 case 5: bx_log_options(1); break;
+	 case 6: do_menu("cpu", NULL); break;
+	 case 7: do_menu(BXPN_MENU_MEMORY, NULL); break;
+	 case 8: do_menu("clock_cmos", NULL); break;
+	 case 9: do_menu("pci", NULL); break;
+	 case 10: do_menu("display", NULL); break;
+	 case 11: do_menu("keyboard_mouse", NULL); break;
+	 case 12: do_menu(BXPN_MENU_DISK, NULL); break;
+	 case 13: do_menu("ports", NULL); break;
+	 case 14: do_menu("network", NULL); break;
+	 case 15: do_menu(BXPN_SB16, NULL); break;
+	 case 16: do_menu("misc", NULL); break;
 	 default: BAD_OPTION(menu, choice);
        }
      }
@@ -519,10 +486,10 @@ int bx_config_interface (int menu)
 #endif
        switch (choice) {
          case BX_CI_RT_FLOPPYA: 
-           if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYA, NULL);
+           if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYA, NULL);
            break;
          case BX_CI_RT_FLOPPYB:
-           if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu2(BXPN_FLOPPYB, NULL);
+           if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYB, NULL);
            break;
          case BX_CI_RT_CDROM1:
          case BX_CI_RT_CDROM2:
@@ -535,7 +502,7 @@ int bx_config_interface (int menu)
              SIM->get_param("model", cdromop)->set_enabled(0);
              SIM->get_param("biosdetect", cdromop)->set_enabled(0);
              cdromop->get_param_path(pname, 80);
-             do_menu2(pname, NULL);
+             do_menu(pname, NULL);
            }
            break;
          case BX_CI_RT_IPS:
@@ -546,7 +513,7 @@ int bx_config_interface (int menu)
          case BX_CI_RT_LOGOPTS1: bx_log_options (0); break;
          case BX_CI_RT_LOGOPTS2: bx_log_options (1); break;
          case BX_CI_RT_INST_TR: NOT_IMPLEMENTED (choice); break;
-         case BX_CI_RT_MISC: do_menu (BXP_MENU_RUNTIME); break;
+         case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME, NULL); break;
          case BX_CI_RT_CONT: fprintf (stderr, "Continuing simulation\n"); return 0;
          case BX_CI_RT_QUIT:
            fprintf (stderr, "You chose quit on the configuration interface.\n");
@@ -1018,22 +985,22 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
   return 0;
 }
 
-static int ci_callback (void *userdata, ci_command_t command)
+static int ci_callback(void *userdata, ci_command_t command)
 {
   switch (command)
   {
     case CI_START:
-      bx_config_interface_init ();
-      if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START)
-	bx_config_interface (BX_CI_START_SIMULATION);
+      bx_config_interface_init();
+      if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START)
+	bx_config_interface(BX_CI_START_SIMULATION);
       else {
-        if (!SIM->test_for_text_console ())
+        if (!SIM->test_for_text_console())
 	  return CI_ERR_NO_TEXT_CONSOLE;
-        bx_config_interface (BX_CI_START_MENU);
+        bx_config_interface(BX_CI_START_MENU);
       }
       break;
     case CI_RUNTIME_CONFIG:
-      bx_config_interface (BX_CI_RUNTIME);
+      bx_config_interface(BX_CI_RUNTIME);
       break;
     case CI_SHUTDOWN:
       break;

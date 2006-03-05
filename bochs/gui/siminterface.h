@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.172 2006-03-04 12:43:47 vruppert Exp $
+// $Id: siminterface.h,v 1.173 2006-03-05 10:24:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -217,6 +217,14 @@ typedef enum {
 #define BXPN_SB16_LOGLEVEL               "sound.sb16.loglevel"
 #define BXPN_TEXT_SNAPSHOT_CHECK         "misc.text_snapshot_check"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
+#define BXPN_LOG_FILENAME                "log.filename"
+#define BXPN_LOG_PREFIX                  "log.prefix"
+#define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
+#define BXPN_BOCHS_START                 "general.start_mode"
+#define BXPN_DEBUG_RUNNING               "general.debug_running"
+#define BXPN_MENU_DISK                   "menu.disk"
+#define BXPN_MENU_MEMORY                 "menu.memory"
+#define BXPN_MENU_RUNTIME                "menu.runtime"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -228,13 +236,6 @@ typedef enum {
 typedef enum {
   BXP_NULL = 301,
 
-  BXP_LOG_FILENAME,
-  BXP_LOG_PREFIX,
-  BXP_DEBUGGER_LOG_FILENAME,
-  BXP_MENU_MEMORY,
-  BXP_MENU_DISK,
-  BXP_MENU_RUNTIME,
-  BXP_BOCHS_START,        // How Bochs starts
   // experiment: add params for CPU registers
   BXP_CPU_PARAMETERS,
   BXP_CPU_EAX,
@@ -305,11 +306,6 @@ typedef enum {
   BXP_KBD_TIMER_PENDING,
   BXP_KBD_IRQ1_REQ,
   BXP_KBD_IRQ12_REQ,
-#if BX_DEBUGGER
-  // in debugger, is the simulation running (continue command) or waiting.
-  // This is only modified by debugger code, not by the user.
-  BXP_DEBUG_RUNNING,
-#endif
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -1006,9 +1002,9 @@ public:
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
   bx_list_c(bx_id id, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_id id, char *name, char *title, bx_param_c **init_list);
   bx_list_c(bx_id id, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c(bx_param_c *parent, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list);
   virtual ~bx_list_c();
   bx_list_c *clone();
   void add(bx_param_c *param);
@@ -1172,12 +1168,8 @@ public:
   virtual void get_param_id_range(int *min, int *max) {}
   virtual int register_param(bx_id id, bx_param_c *it) {return -1;}
   virtual void reset_all_param() {}
-  // deprecated param methods
+  // deprecated param method
   virtual bx_param_c *get_param(bx_id id) {return NULL;}
-  virtual bx_param_num_c *get_param_num(bx_id id) {return NULL;}
-  virtual bx_param_string_c *get_param_string(bx_id id) {return NULL;}
-  virtual bx_param_bool_c *get_param_bool(bx_id id) {return NULL;}
-  virtual bx_param_enum_c *get_param_enum(bx_id id) {return NULL;}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL) {return NULL;}

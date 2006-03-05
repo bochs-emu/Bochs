@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.126 2006-03-04 12:43:47 vruppert Exp $
+// $Id: wxmain.cc,v 1.127 2006-03-05 10:24:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -229,26 +229,26 @@ IMPLEMENT_APP_NO_MAIN(MyApp)
 bool MyApp::OnInit()
 {
   //wxLog::AddTraceMask (_T("mime"));
-  wxLog::SetActiveTarget (new wxLogStderr ());
-  bx_init_siminterface ();
+  wxLog::SetActiveTarget (new wxLogStderr());
+  bx_init_siminterface();
   // Install callback function to handle anything that occurs before the
   // simulation begins.  This is responsible for displaying any error
   // dialogs during bochsrc and command line processing.
-  SIM->set_notify_callback (&MyApp::DefaultCallback, this);
-  MyFrame *frame = new MyFrame( "Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION );
+  SIM->set_notify_callback(&MyApp::DefaultCallback, this);
+  MyFrame *frame = new MyFrame("Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
   theFrame = frame;  // hack alert
-  frame->Show( TRUE );
-  SetTopWindow( frame );
-  wxTheClipboard->UsePrimarySelection (true);
+  frame->Show(TRUE);
+  SetTopWindow(frame);
+  wxTheClipboard->UsePrimarySelection(true);
   // if quickstart is enabled, kick off the simulation
-  if (SIM->get_param_enum(BXP_BOCHS_START)->get () == BX_QUICK_START) {
+  if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START) {
     wxCommandEvent unusedEvent;
-    frame->OnStartSim (unusedEvent);
+    frame->OnStartSim(unusedEvent);
   }
   return TRUE;
 }
 
-int MyApp::OnExit ()
+int MyApp::OnExit()
 {
   return 0;
 }
@@ -699,9 +699,9 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   // At least I can verify that the expected numbers are the same.
   wxASSERT (SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
   LogOptionsDialog dlg (this, -1);
-  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
-  dlg.SetLogfile (wxString (logfile->getptr ()));
-  bx_param_string_c *debuggerlogfile = SIM->get_param_string (BXP_DEBUGGER_LOG_FILENAME);
+  bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
+  dlg.SetLogfile (wxString (logfile->getptr()));
+  bx_param_string_c *debuggerlogfile = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME);
   dlg.SetDebuggerlogfile (wxString (debuggerlogfile->getptr ()));
 
   // The inital values of the dialog are complicated.  If the panic action

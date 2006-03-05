@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.88 2006-03-03 20:29:50 vruppert Exp $
+// $Id: wxdialog.cc,v 1.89 2006-03-05 10:24:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -695,23 +695,23 @@ void AdvancedLogOptionsDialog::Init()
   Center ();
 }
 
-void AdvancedLogOptionsDialog::CopyParamToGui () {
-  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
-  SetLogfile (wxString (logfile->getptr ()));
+void AdvancedLogOptionsDialog::CopyParamToGui() {
+  bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
+  SetLogfile (wxString (logfile->getptr()));
   // copy log action settings from siminterface to gui
-  int dev, ndev = SIM->get_n_log_modules ();
-  int type, ntype = SIM->get_max_log_level ();
+  int dev, ndev = SIM->get_n_log_modules();
+  int type, ntype = SIM->get_max_log_level();
   for (dev=0; dev<ndev; dev++) {
     for (type=0; type<ntype; type++) {
-      SetAction (dev, type, SIM->get_log_action (dev, type));
+      SetAction(dev, type, SIM->get_log_action(dev, type));
     }
   }
 }
 
-void AdvancedLogOptionsDialog::CopyGuiToParam () {
+void AdvancedLogOptionsDialog::CopyGuiToParam() {
   char buf[1024];
-  safeWxStrcpy (buf, GetLogfile (), sizeof (buf));
-  bx_param_string_c *logfile = SIM->get_param_string (BXP_LOG_FILENAME);
+  safeWxStrcpy (buf, GetLogfile(), sizeof (buf));
+  bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
   logfile->set (buf);
   // copy log action settings from gui to siminterface
   int dev, ndev = SIM->get_n_log_modules ();
@@ -1820,7 +1820,7 @@ CpuRegistersDialog::CopyParamToGui ()
 {
   ParamDialog::CopyParamToGui ();
 #if BX_DEBUGGER
-  stateChanged (SIM->get_param_bool (BXP_DEBUG_RUNNING)->get ());
+  stateChanged (SIM->get_param_bool(BXPN_DEBUG_RUNNING)->get());
 #endif
 }
 

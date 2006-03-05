@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.93 2006-03-04 12:43:46 vruppert Exp $
+// $Id: config.cc,v 1.94 2006-03-05 10:24:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,8 +45,6 @@ int bochsrc_include_count = 0;
 #define LOG_THIS genlog->
 
 extern bx_debug_t bx_dbg;
-
-bx_options_t bx_options; // initialized in bx_init_options()
 
 static char *get_builtin_variable(char *varname);
 static Bit32s parse_line_unformatted(char *context, char *line);
@@ -331,17 +329,22 @@ void bx_init_options()
   bx_param_filename_c *path;
   char name[BX_PATHNAME_LEN], descr[512], group[16], label[512];
 
-  memset(&bx_options, 0, sizeof(bx_options));
-
   bx_param_c *root_param = SIM->get_param(".");
 
+  // general options subtree
+  menu = new bx_list_c(root_param, "general", "");
+
   // quick start option, set by command line arg
-  new bx_param_enum_c(BXP_BOCHS_START,
+  new bx_param_enum_c(menu,
+      "start_mode",
       "Bochs start types",
       "Bochs start types",
       bochs_start_names,
       BX_RUN_START,
       BX_QUICK_START);
+
+  // subtree for special menus
+  bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
 
 #if BX_SUPPORT_SMP
   #define BX_CPU_PROCESSORS_LIMIT 8
@@ -504,7 +507,7 @@ void bx_init_options()
     SIM->get_param("memory.optram"),
     NULL
   };
-  menu = new bx_list_c(BXP_MENU_MEMORY, "Bochs Memory Options", "", memory_init_list);
+  menu = new bx_list_c(special_menus, "memory", "Bochs Memory Options", memory_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
 
   // clock & cmos subtree
@@ -607,7 +610,7 @@ void bx_init_options()
 #endif
   // add final NULL at the end, and build the menu
   *pci_deps_ptr = NULL;
-  i440fx_support->set_dependent_list(new bx_list_c(BXP_NULL, "", "", pci_deps_list));
+  i440fx_support->set_dependent_list(new bx_list_c(NULL, "", "", pci_deps_list));
   pci->get_options()->set(bx_list_c::SHOW_PARENT);
   slot->get_options()->set(bx_list_c::SHOW_PARENT);
   pcidev->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
@@ -1198,7 +1201,7 @@ void bx_init_options()
     SIM->get_param("boot_params"),
     NULL
   };
-  menu = new bx_list_c(BXP_MENU_DISK, "Bochs Disk Options", "", disk_menu_init_list);
+  menu = new bx_list_c(special_menus, "disk", "Bochs Disk Options", disk_menu_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT);
 
   // ports subtree
@@ -1567,24 +1570,31 @@ void bx_init_options()
     0);
   enabled->set_dependent_list(menu->clone());
 
+  // log options subtree
+  menu = new bx_list_c(root_param, "log", "Logfile Options");
+
   // log options
-  bx_options.log.Ofilename = new bx_param_filename_c(BXP_LOG_FILENAME,
+  path = new bx_param_filename_c(menu,
+      "filename",
       "Log filename",
       "Pathname of bochs log file",
       "-", BX_PATHNAME_LEN);
-  bx_options.log.Ofilename->set_ask_format("Enter log filename: [%s] ");
+  path->set_ask_format("Enter log filename: [%s] ");
 
-  bx_options.log.Oprefix = new bx_param_string_c(BXP_LOG_PREFIX,
+  bx_param_string_c *prefix = new bx_param_string_c(menu,
+      "prefix",
       "Log output prefix",
       "Prefix prepended to log output",
       "%t%e%d", BX_PATHNAME_LEN);
-  bx_options.log.Oprefix->set_ask_format("Enter log prefix: [%s] ");
+  prefix->set_ask_format("Enter log prefix: [%s] ");
 
-  bx_options.log.Odebugger_filename = new bx_param_filename_c(BXP_DEBUGGER_LOG_FILENAME,
+  path = new bx_param_filename_c(menu,
+      "debugger_filename",
       "Debugger Log filename",
       "Pathname of debugger log file",
       "-", BX_PATHNAME_LEN);
-  bx_options.log.Odebugger_filename->set_ask_format("Enter debugger log filename: [%s] ");
+  path->set_ask_format("Enter debugger log filename: [%s] ");
+  path->set_enabled(BX_DEBUGGER);
 
   // runtime options
   bx_param_c *runtime_init_list[] = {
@@ -1600,7 +1610,7 @@ void bx_init_options()
       SIM->get_param_string(BXPN_USB1_OPTION2),
       NULL
   };
-  menu = new bx_list_c(BXP_MENU_RUNTIME, "runtime", "Misc runtime options", runtime_init_list);
+  menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::SHOW_GROUP_NAME);
 
 // param-tree test output
@@ -1650,9 +1660,7 @@ void bx_reset_options()
   SIM->get_param("misc")->reset();
 
   // logfile
-  bx_options.log.Ofilename->reset();
-  bx_options.log.Oprefix->reset();
-  bx_options.log.Odebugger_filename->reset();
+  SIM->get_param("log")->reset();
 }
 
 int bx_read_configuration (char *rcfile)
@@ -2324,17 +2332,17 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     if (num_params != 2) {
       PARSE_ERR(("%s: log directive has wrong # args.", context));
     }
-    bx_options.log.Ofilename->set (params[1]);
+    SIM->get_param_string(BXPN_LOG_FILENAME)->set(params[1]);
   } else if (!strcmp(params[0], "logprefix")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: logprefix directive has wrong # args.", context));
     }
-    bx_options.log.Oprefix->set (params[1]);
+    SIM->get_param_string(BXPN_LOG_PREFIX)->set(params[1]);
   } else if (!strcmp(params[0], "debugger_log")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: debugger_log directive has wrong # args.", context));
     }
-    bx_options.log.Odebugger_filename->set (params[1]);
+    SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(params[1]);
   } else if (!strcmp(params[0], "panic")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: panic directive malformed.", context));
@@ -3272,20 +3280,20 @@ int bx_write_clock_cmos_options(FILE *fp)
   return 0;
 }
 
-int bx_write_log_options (FILE *fp, bx_log_options *opt)
+int bx_write_log_options(FILE *fp, bx_list_c *base)
 {
-  fprintf (fp, "log: %s\n", opt->Ofilename->getptr ());
-  fprintf (fp, "logprefix: %s\n", opt->Oprefix->getptr ());
-  fprintf (fp, "debugger_log: %s\n", opt->Odebugger_filename->getptr ());
-  fprintf (fp, "panic: action=%s\n",
+  fprintf(fp, "log: %s\n", SIM->get_param_string("filename", base)->getptr());
+  fprintf(fp, "logprefix: %s\n", SIM->get_param_string("prefix", base)->getptr());
+  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string("debugger_filename", base)->getptr());
+  fprintf(fp, "panic: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_PANIC)));
-  fprintf (fp, "error: action=%s\n",
+  fprintf(fp, "error: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_ERROR)));
-  fprintf (fp, "info: action=%s\n",
+  fprintf(fp, "info: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_INFO)));
-  fprintf (fp, "debug: action=%s\n",
+  fprintf(fp, "debug: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_DEBUG)));
-  fprintf (fp, "pass: action=%s\n",
+  fprintf(fp, "pass: action=%s\n",
       io->getaction(logfunctions::get_default_action (LOGLEV_PASS)));
   return 0;
 }
@@ -3431,7 +3439,7 @@ int bx_write_configuration(char *rc, int overwrite)
   bx_write_pnic_options(fp, (bx_list_c*) SIM->get_param(BXPN_PNIC));
   bx_write_sb16_options(fp, (bx_list_c*) SIM->get_param(BXPN_SB16));
   bx_write_loader_options(fp);
-  bx_write_log_options(fp, &bx_options.log);
+  bx_write_log_options(fp, (bx_list_c*) SIM->get_param("log"));
   bx_write_keyboard_options(fp);
   fprintf(fp, "mouse: enabled=%d, type=%s\n",
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),

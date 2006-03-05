@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.319 2006-03-04 16:58:10 sshwarts Exp $
+// $Id: main.cc,v 1.320 2006-03-05 10:24:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -473,13 +473,13 @@ int bx_init_main (int argc, char *argv[])
   SAFE_GET_GENLOG();  // never freed
 
   // initalization must be done early because some destructors expect
-  // the bx_options to exist by the time they are called.
-  bx_init_bx_dbg ();
-  bx_init_options ();
+  // the bochs config options to exist by the time they are called.
+  bx_init_bx_dbg();
+  bx_init_options();
 
-  bx_print_header ();
+  bx_print_header();
 
-  SIM->get_param_enum(BXP_BOCHS_START)->set (BX_RUN_START);
+  SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
 
   // interpret the args that start with -, like -q, -f, etc.
   int arg = 1, load_rcfile=1;
@@ -497,14 +497,14 @@ int bx_init_main (int argc, char *argv[])
       load_rcfile = 0;
     }
     else if (!strcmp ("-q", argv[arg])) {
-      SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
     }
     else if (!strcmp ("-f", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-f must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
     else if (!strcmp ("-qf", argv[arg])) {
-      SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
@@ -518,7 +518,7 @@ int bx_init_main (int argc, char *argv[])
       arg = argc; // ignore all other args.
       setupWorkingDirectory (argv[0]);
       // there is no stdin/stdout so disable the text-based config interface.
-      SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       char cwd[MAXPATHLEN];
       getwd (cwd);
       BX_INFO (("Now my working directory is %s", cwd));
@@ -583,7 +583,7 @@ int bx_init_main (int argc, char *argv[])
     if(!isatty(STDIN_FILENO))
     {
       // there is no stdin/stdout so disable the text-based config interface.
-      SIM->get_param_enum(BXP_BOCHS_START)->set (BX_QUICK_START);
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
     }
     BX_INFO (("fixing default lib location ..."));
     // locate the lib directory within the application bundle.
@@ -648,13 +648,13 @@ int bx_init_main (int argc, char *argv[])
     // No configuration was loaded, so the current settings are unusable.
     // Switch off quick start so that we will drop into the configuration
     // interface.
-    if (SIM->get_param_enum(BXP_BOCHS_START)->get() == BX_QUICK_START) {
-      if (!SIM->test_for_text_console ())
+    if (SIM->get_param_enum(BXPN_BOCHS_START)->get() == BX_QUICK_START) {
+      if (!SIM->test_for_text_console())
         BX_PANIC(("Unable to start Bochs without a bochsrc.txt and without a text console"));
       else 
         BX_ERROR (("Switching off quick start, because no configuration file was found."));
     }
-    SIM->get_param_enum(BXP_BOCHS_START)->set (BX_LOAD_START);
+    SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_LOAD_START);
   }
 
   // parse the rest of the command line.  This is done after reading the
@@ -840,7 +840,7 @@ int bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
-  if (SIM->get_param_enum(BXP_BOCHS_START)->get()==BX_QUICK_START) {
+  if (SIM->get_param_enum(BXPN_BOCHS_START)->get()==BX_QUICK_START) {
     for (int level=0; level<N_LOGLEV; level++) {
       int action = SIM->get_default_log_action (level);
       io->set_log_action (level, action);
@@ -849,12 +849,12 @@ int bx_init_hardware()
 
   bx_pc_system.init_ips(SIM->get_param_num(BXPN_IPS)->get());
 
-  if(bx_options.log.Ofilename->getptr()[0]!='-') {
-    BX_INFO (("using log file %s", bx_options.log.Ofilename->getptr()));
-    io->init_log(bx_options.log.Ofilename->getptr());
+  if (SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()[0]!='-') {
+    BX_INFO (("using log file %s", SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()));
+    io->init_log(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr());
   }
 
-  io->set_log_prefix(bx_options.log.Oprefix->getptr());
+  io->set_log_prefix(SIM->get_param_string(BXPN_LOG_PREFIX)->getptr());
 
   // Output to the log file the cpu and device settings
   // This will by handy for bug reports

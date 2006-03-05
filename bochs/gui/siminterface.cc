@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.124 2006-02-28 16:19:28 vruppert Exp $
+// $Id: siminterface.cc,v 1.125 2006-03-05 10:24:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -52,13 +52,9 @@ public:
     *max = BXP_THIS_IS_THE_LAST-1;
   }
   virtual int register_param (bx_id id, bx_param_c *it);
-  virtual void reset_all_param ();
-  // deprecated param methods
-  virtual bx_param_c *get_param (bx_id id);
-  virtual bx_param_num_c *get_param_num (bx_id id);
-  virtual bx_param_string_c *get_param_string (bx_id id);
-  virtual bx_param_bool_c *get_param_bool (bx_id id);
-  virtual bx_param_enum_c *get_param_enum (bx_id id);
+  virtual void reset_all_param();
+  // deprecated param method
+  virtual bx_param_c *get_param(bx_id id);
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL);
@@ -66,35 +62,35 @@ public:
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
   virtual unsigned gen_param_id();
-  virtual int get_n_log_modules ();
-  virtual char *get_prefix (int mod);
-  virtual int get_log_action (int mod, int level);
-  virtual void set_log_action (int mod, int level, int action);
-  virtual char *get_action_name (int action);
-  virtual int get_default_log_action (int level) {
-	return logfunctions::get_default_action (level);
+  virtual int get_n_log_modules();
+  virtual char *get_prefix(int mod);
+  virtual int get_log_action(int mod, int level);
+  virtual void set_log_action(int mod, int level, int action);
+  virtual char *get_action_name(int action);
+  virtual int get_default_log_action(int level) {
+	return logfunctions::get_default_action(level);
   }
-  virtual void set_default_log_action (int level, int action) {
-	logfunctions::set_default_action (level, action);
+  virtual void set_default_log_action(int level, int action) {
+	logfunctions::set_default_action(level, action);
   }
-  virtual const char *get_log_level_name (int level);
-  virtual int get_max_log_level ();
-  virtual void quit_sim (int code);
-  virtual int get_exit_code () { return exit_code; }
-  virtual int get_default_rc (char *path, int len);
-  virtual int read_rc (char *path);
-  virtual int write_rc (char *path, int overwrite);
-  virtual int get_log_file (char *path, int len);
-  virtual int set_log_file (char *path);
-  virtual int get_log_prefix (char *prefix, int len);
-  virtual int set_log_prefix (char *prefix);
-  virtual int get_debugger_log_file (char *path, int len);
-  virtual int set_debugger_log_file (char *path);
+  virtual const char *get_log_level_name(int level);
+  virtual int get_max_log_level();
+  virtual void quit_sim(int code);
+  virtual int get_exit_code() { return exit_code; }
+  virtual int get_default_rc(char *path, int len);
+  virtual int read_rc(char *path);
+  virtual int write_rc(char *path, int overwrite);
+  virtual int get_log_file(char *path, int len);
+  virtual int set_log_file(char *path);
+  virtual int get_log_prefix(char *prefix, int len);
+  virtual int set_log_prefix(char *prefix);
+  virtual int get_debugger_log_file(char *path, int len);
+  virtual int set_debugger_log_file(char *path);
   virtual int get_cdrom_options(int drive, bx_list_c **out, int *device = NULL);
-  virtual void set_notify_callback (bxevent_handler func, void *arg);
-  virtual void get_notify_callback (bxevent_handler *func, void **arg);
-  virtual BxEvent* sim_to_ci_event (BxEvent *event);
-  virtual int log_msg (const char *prefix, int level, const char *msg);
+  virtual void set_notify_callback(bxevent_handler func, void *arg);
+  virtual void get_notify_callback(bxevent_handler *func, void **arg);
+  virtual BxEvent* sim_to_ci_event(BxEvent *event);
+  virtual int log_msg(const char *prefix, int level, const char *msg);
   virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
@@ -145,19 +141,19 @@ public:
 };
 
 bx_param_c *
-bx_real_sim_c::get_param (bx_id id)
+bx_real_sim_c::get_param(bx_id id)
 {
-  BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
+  BX_ASSERT(id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
   bx_param_c *retval = param_registry[index];
   if (!retval) 
-    BX_INFO (("get_param can't find id %u", id));
+    BX_INFO(("get_param can't find id %u", id));
   return retval;
 }
 
 // recursive function to find parameters from the path
 static
-bx_param_c *find_param (const char *full_pname, const char *rest_of_pname, bx_param_c *base)
+bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_param_c *base)
 {
   const char *from = rest_of_pname;
   char component[BX_PATHNAME_LEN];
@@ -181,7 +177,7 @@ bx_param_c *find_param (const char *full_pname, const char *rest_of_pname, bx_pa
 
   // find the component in the list.
   bx_list_c *list = (bx_list_c *)base;
-  bx_param_c *child = list->get_by_name (component);
+  bx_param_c *child = list->get_by_name(component);
   // if child not found, there is nothing else that can be done. return NULL.
   if (child == NULL) return NULL;
   if (from[0] == 0) {
@@ -191,7 +187,7 @@ bx_param_c *find_param (const char *full_pname, const char *rest_of_pname, bx_pa
   // continue parsing the path
   BX_ASSERT(from[0] == '.');
   from++;  // skip over the separator
-  return find_param (full_pname, from, child);
+  return find_param(full_pname, from, child);
 }
 
 bx_param_c *
@@ -203,20 +199,6 @@ bx_real_sim_c::get_param(const char *pname, bx_param_c *base)
   if (pname[0] == '.' && pname[1] == 0)
     return base;
   return find_param(pname, pname, base);
-}
-
-bx_param_num_c *
-bx_real_sim_c::get_param_num (bx_id id) {
-  bx_param_c *generic = get_param(id);
-  if (generic==NULL) {
-    BX_PANIC (("get_param_num(%u) could not find a parameter", id));
-    return NULL;
-  }
-  int type = generic->get_type ();
-  if (type == BXT_PARAM_NUM || type == BXT_PARAM_BOOL || type == BXT_PARAM_ENUM)
-    return (bx_param_num_c *)generic;
-  BX_PANIC (("get_param_num %u could not find an integer parameter with that id", id));
-  return NULL;
 }
 
 bx_param_num_c *
@@ -234,19 +216,6 @@ bx_real_sim_c::get_param_num (const char *pname, bx_param_c *base) {
 }
 
 bx_param_string_c *
-bx_real_sim_c::get_param_string (bx_id id) {
-  bx_param_c *generic = get_param(id);
-  if (generic==NULL) {
-    BX_PANIC (("get_param_string(%u) could not find a parameter", id));
-    return NULL;
-  }
-  if (generic->get_type () == BXT_PARAM_STRING)
-    return (bx_param_string_c *)generic;
-  BX_PANIC (("get_param_string %u could not find an integer parameter with that id", id));
-  return NULL;
-}
-
-bx_param_string_c *
 bx_real_sim_c::get_param_string(const char *pname, bx_param_c *base) {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
@@ -260,19 +229,6 @@ bx_real_sim_c::get_param_string(const char *pname, bx_param_c *base) {
 }
 
 bx_param_bool_c *
-bx_real_sim_c::get_param_bool (bx_id id) {
-  bx_param_c *generic = get_param(id);
-  if (generic==NULL) {
-    BX_PANIC (("get_param_bool(%u) could not find a parameter", id));
-    return NULL;
-  }
-  if (generic->get_type () == BXT_PARAM_BOOL)
-    return (bx_param_bool_c *)generic;
-  BX_PANIC (("get_param_bool %u could not find a bool parameter with that id", id));
-  return NULL;
-}
-
-bx_param_bool_c *
 bx_real_sim_c::get_param_bool(const char *pname, bx_param_c *base) {
   bx_param_c *generic = get_param(pname, base);
   if (generic==NULL) {
@@ -282,19 +238,6 @@ bx_real_sim_c::get_param_bool(const char *pname, bx_param_c *base) {
   if (generic->get_type () == BXT_PARAM_BOOL)
     return (bx_param_bool_c *)generic;
   BX_PANIC(("get_param_bool(%s) could not find a bool parameter with that name", pname));
-  return NULL;
-}
-
-bx_param_enum_c *
-bx_real_sim_c::get_param_enum (bx_id id) {
-  bx_param_c *generic = get_param(id);
-  if (generic==NULL) {
-    BX_PANIC (("get_param_enum(%u) could not find a parameter", id));
-    return NULL;
-  }
-  if (generic->get_type () == BXT_PARAM_ENUM)
-    return (bx_param_enum_c *)generic;
-  BX_PANIC (("get_param_enum %u could not find a enum parameter with that id", id));
   return NULL;
 }
 
@@ -475,7 +418,7 @@ bx_real_sim_c::get_default_rc (char *path, int len)
 }
 
 int 
-bx_real_sim_c::read_rc (char *rc)
+bx_real_sim_c::read_rc(char *rc)
 {
   return bx_read_configuration (rc);
 }
@@ -485,50 +428,50 @@ bx_real_sim_c::read_rc (char *rc)
 //  -1: failed
 //  -2: already exists, and overwrite was off
 int 
-bx_real_sim_c::write_rc (char *rc, int overwrite)
+bx_real_sim_c::write_rc(char *rc, int overwrite)
 {
   return bx_write_configuration (rc, overwrite);
 }
 
 int 
-bx_real_sim_c::get_log_file (char *path, int len)
+bx_real_sim_c::get_log_file(char *path, int len)
 {
-  strncpy (path, bx_options.log.Ofilename->getptr (), len);
+  strncpy(path, SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), len);
   return 0;
 }
 
 int 
-bx_real_sim_c::set_log_file (char *path)
+bx_real_sim_c::set_log_file(char *path)
 {
-  bx_options.log.Ofilename->set (path);
+  SIM->get_param_string(BXPN_LOG_FILENAME)->set(path);
   return 0;
 }
 
 int 
-bx_real_sim_c::get_log_prefix (char *prefix, int len)
+bx_real_sim_c::get_log_prefix(char *prefix, int len)
 {
-  strncpy (prefix, bx_options.log.Oprefix->getptr (), len);
+  strncpy(prefix, SIM->get_param_string(BXPN_LOG_PREFIX)->getptr(), len);
   return 0;
 }
 
 int 
-bx_real_sim_c::set_log_prefix (char *prefix)
+bx_real_sim_c::set_log_prefix(char *prefix)
 {
-  bx_options.log.Oprefix->set (prefix);
+  SIM->get_param_string(BXPN_LOG_PREFIX)->set(prefix);
   return 0;
 }
 
 int 
-bx_real_sim_c::get_debugger_log_file (char *path, int len)
+bx_real_sim_c::get_debugger_log_file(char *path, int len)
 {
-  strncpy (path, bx_options.log.Odebugger_filename->getptr (), len);
+  strncpy(path, SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), len);
   return 0;
 }
 
 int 
-bx_real_sim_c::set_debugger_log_file (char *path)
+bx_real_sim_c::set_debugger_log_file(char *path)
 {
-  bx_options.log.Odebugger_filename->set (path);
+  SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(path);
   return 0;
 }
 
@@ -1622,8 +1565,8 @@ bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
   init(title);
 }
 
-bx_list_c::bx_list_c(bx_id id, char *name, char *title, bx_param_c **init_list)
-  : bx_param_c (id, name, NULL)
+bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, NULL)
 {
   set_type(BXT_LIST);
   this->size = 0;
@@ -1633,8 +1576,13 @@ bx_list_c::bx_list_c(bx_id id, char *name, char *title, bx_param_c **init_list)
   this->list = new bx_param_c*  [maxsize];
   for (int i=0; i<this->size; i++)
     this->list[i] = init_list[i];
-  init(title);
   this->parent = NULL;
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
+  init(title);
 }
 
 bx_list_c::~bx_list_c()

@@ -1,4 +1,4 @@
-$Id: PARAM_TREE.txt,v 1.10 2006-03-02 20:13:13 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.11 2006-03-05 10:24:27 vruppert Exp $
 
 I'm trying to organize the parameters into a tree structure instead of
 a huge flat list.  Once the parameter code is improved, I hope to use
@@ -263,14 +263,14 @@ log
 
 general
   start_mode            BXP_BOCHS_START,
+  debug_running         BXP_DEBUG_RUNNING,
 
-debugger
-  running               BXP_DEBUG_RUNNING,
-
-config_menus                      
-  main                  BXP_MENU_MAIN,
+menu
   disk                  BXP_MENU_DISK,
-  sound                 BXP_MENU_SOUND,
+  memory                BXP_MENU_MEMORY,
   runtime               BXP_MENU_RUNTIME,
 
-(updated Mar  2, 2006 by vruppert)
+save_restore
+  (special subtree for save/restore Bochs state)
+
+(updated Mar  5, 2006 by vruppert)
