@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.28 2006-03-02 20:09:21 sshwarts Exp $
+// $Id: apic.h,v 1.29 2006-03-06 22:02:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,28 +29,19 @@
 #ifndef BX_CPU_APIC_H
 #  define BX_CPU_APIC_H 1
 
-#define APIC_BASE_ADDR    0xfee00000  // default APIC address
-
 #if BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2
   #define BX_IMPLEMENT_XAPIC 1
 #endif
 
-#ifdef BX_IMPLEMENT_XAPIC
-#  define APIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
-#else
-#  define APIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries
-#endif
-
 #if BX_SUPPORT_APIC
-
-#define BX_CPU_APIC(i) (&(BX_CPU(i)->local_apic))
 
 typedef enum {
   APIC_TYPE_IOAPIC,
   APIC_TYPE_LOCAL_APIC
 } bx_apic_type_t;
 
-#define BX_NUM_LOCAL_APICS BX_SMP_PROCESSORS
+#define APIC_LEVEL_TRIGGERED	1
+#define APIC_EDGE_TRIGGERED	0
 
 class BOCHSAPI bx_generic_apic_c : public logfunctions {
 protected:
@@ -58,7 +49,7 @@ protected:
   Bit8u id;
 #define APIC_UNKNOWN_ID 0xff
 public:
-  bx_generic_apic_c();
+  bx_generic_apic_c(bx_phy_address base);
   virtual ~bx_generic_apic_c() { }
   // init is called during RESET and when an INIT message is delivered
   virtual void init() { }
@@ -74,12 +65,23 @@ public:
   virtual bx_apic_type_t get_type () = 0;
 };
 
+#ifdef BX_INCLUDE_LOCAL_APIC
+
+#define BX_CPU_APIC(i) (&(BX_CPU(i)->local_apic))
+
+#ifdef BX_IMPLEMENT_XAPIC
+#  define BX_LAPIC_VERSION_ID 0x00050014  // P4 has 6 LVT entries
+#else
+#  define BX_LAPIC_VERSION_ID 0x00040010  // P6 has 4 LVT entries
+#endif
+
+#define BX_LAPIC_BASE_ADDR  0xfee00000  // default Local APIC address
+
+#define BX_NUM_LOCAL_APICS BX_SMP_PROCESSORS
+
 #define BX_APIC_FIRST_VECTOR	0x10
 #define BX_APIC_LAST_VECTOR	0xfe
 #define BX_LOCAL_APIC_MAX_INTS  256
-
-#define APIC_LEVEL_TRIGGERED	1
-#define APIC_EDGE_TRIGGERED	0
 
 class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c 
 {
@@ -189,6 +191,8 @@ public:
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
 };
+
+#endif /* BX_INCLUDE_LOCAL_APIC */
 
 // For P6 and Pentium family processors the local APIC ID feild is 4 bits.
 #ifdef BX_IMPLEMENT_XAPIC

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.53 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.54 2006-03-06 22:03:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

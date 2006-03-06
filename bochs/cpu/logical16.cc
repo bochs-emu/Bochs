@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.23 2005-05-20 20:06:50 sshwarts Exp $
+// $Id: logical16.cc,v 1.24 2006-03-06 22:03:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

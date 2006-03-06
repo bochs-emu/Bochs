@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.20 2005-09-29 17:32:32 sshwarts Exp $
+// $Id: mult16.cc,v 1.21 2006-03-06 22:03:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

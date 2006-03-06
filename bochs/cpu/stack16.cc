@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.19 2005-07-31 17:57:27 sshwarts Exp $
+// $Id: stack16.cc,v 1.20 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,12 +27,13 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
 void BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
-  push_16( BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx );
+  push_16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx);
 }
 
 void BX_CPU_C::PUSH16_CS(bxInstruction_c *i)

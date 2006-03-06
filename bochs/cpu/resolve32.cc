@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve32.cc,v 1.10 2004-11-02 16:10:02 sshwarts Exp $
+// $Id: resolve32.cc,v 1.11 2006-03-06 22:03:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

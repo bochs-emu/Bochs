@@ -1,10 +1,33 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.27 2006-02-27 19:04:00 sshwarts Exp $
+// $Id: ioapic.cc,v 1.28 2006-03-06 22:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-#include <stdio.h>
+//  Copyright (C) 2002  MandrakeSoft S.A.
+//
+//    MandrakeSoft S.A.
+//    43, rue d'Aboukir
+//    75002 Paris - France
+//    http://www.linux-mandrake.com/
+//    http://www.mandrakesoft.com/
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#include "bochs.h"
+#include "cpu/apic.h"
 #include "iodev.h"
+
 #if BX_SUPPORT_APIC
 
 class bx_ioapic_c bx_ioapic;
@@ -39,8 +62,10 @@ void bx_io_redirect_entry_t::sprintf_self(char *buf)
      (unsigned) vector());
 }
 
+#define BX_IOAPIC_BASE_ADDR (0xfec00000)
+
 bx_ioapic_c::bx_ioapic_c() 
-  : bx_generic_apic_c()
+  : bx_generic_apic_c(BX_IOAPIC_BASE_ADDR)
 {
   put("IOAP");
   settype(IOAPICLOG);
@@ -54,7 +79,7 @@ void bx_ioapic_c::init(void)
 {
   bx_generic_apic_c::init();
   BX_INFO(("initializing I/O APIC"));
-  base_addr = 0xfec00000;
+  base_addr = BX_IOAPIC_BASE_ADDR;
   set_id(BX_IOAPIC_DEFAULT_ID);
   ioregsel = 0;
   DEV_register_memory_handlers(&bx_ioapic, 

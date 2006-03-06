@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.50 2006-03-04 16:58:10 sshwarts Exp $
+// $Id: pc_system.cc,v 1.51 2006-03-06 22:02:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,8 +25,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS bx_pc_system.
 

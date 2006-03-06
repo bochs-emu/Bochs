@@ -26,7 +26,7 @@
   --enable-x86-debugger \
   --enable-cdrom \
   --enable-sb16 \
-  --enable-instrumentation \
+  --enable-instrumentation=instrument/example1 \
   --enable-iodebug \
   --enable-show-ips \
   --enable-clgd54xx \

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.66 2006-03-02 23:16:12 sshwarts Exp $
+// $Id: paging.cc,v 1.67 2006-03-06 22:03:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,9 +33,9 @@
 //     P6 for non-PAE anyways...
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if 0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.2 2006-02-28 19:50:08 sshwarts Exp $
+// $Id: smm.cc,v 1.3 2006-03-06 22:03:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -23,6 +23,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_CPU_LEVEL >= 3

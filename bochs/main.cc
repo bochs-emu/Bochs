@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.320 2006-03-05 10:24:27 vruppert Exp $
+// $Id: main.cc,v 1.321 2006-03-06 22:02:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 #include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 
 #ifdef HAVE_LOCALE_H

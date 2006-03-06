@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.10 2005-12-12 22:01:22 sshwarts Exp $
+// $Id: iret.cc,v 1.11 2006-03-06 22:03:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64==0

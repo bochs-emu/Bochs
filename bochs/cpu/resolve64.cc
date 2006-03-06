@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.7 2003-12-29 21:47:36 sshwarts Exp $
+// $Id: resolve64.cc,v 1.8 2006-03-06 22:03:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,16 +25,13 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
 #if BX_SUPPORT_X86_64
-
 
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm0(bxInstruction_c *i)

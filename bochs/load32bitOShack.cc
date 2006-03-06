@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.19 2006-02-23 22:48:56 vruppert Exp $
+// $Id: load32bitOShack.cc,v 1.20 2006-03-06 22:02:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,61 +25,54 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
-
 #include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS genlog->
-
 
 
 static void bx_load_linux_hack(void);
 static void bx_load_null_kernel_hack(void);
 static Bit32u bx_load_kernel_image(char *path, Bit32u paddr);
 
-  void
-bx_load32bitOSimagehack(void)
+void bx_load32bitOSimagehack(void)
 {
   if (SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG) &&
-      (SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr()[0] != '\0')
-      ) {
+     (SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr()[0] != '\0'))
+  {
 
-  // Replay IO from log to initialize IO devices to
-  // a reasonable state needed for the OS.  This is done
-  // in lieu of running the 16-bit BIOS to init things,
-  // since we want to test straight 32bit stuff for
-  // freemware.
+    // Replay IO from log to initialize IO devices to
+    // a reasonable state needed for the OS.  This is done
+    // in lieu of running the 16-bit BIOS to init things,
+    // since we want to test straight 32bit stuff for
+    // freemware.
 
-  FILE *fp;
-
-  fp = fopen(SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr(), "r");
-
-  if (fp == NULL) {
-    BX_PANIC(("could not open IO init file."));
-    }
-
-  while (1) {
-    unsigned len, op, port, val;
-    int ret;
-    ret = fscanf(fp, "%u %u %x %x\n",
-      &len, &op, &port, &val);
-    if (ret != 4) {
+    FILE *fp = fopen(SIM->get_param_string(BXPN_LOAD32BITOS_IOLOG)->getptr(), "r");
+    if (fp == NULL) {
       BX_PANIC(("could not open IO init file."));
-      }
-    if (op == 0) {
-      // read
-      (void) bx_devices.inp(port, len);
-      }
-    else if (op == 1) {
-      // write
-      bx_devices.outp(port, val, len);
-      }
-    else {
-      BX_PANIC(("bad IO op in init filen"));
-      }
-    if (feof(fp)) break;
     }
-  }//if iolog file to load
+
+    while (1) {
+      unsigned len, op, port, val;
+      int ret;
+      ret = fscanf(fp, "%u %u %x %x\n", &len, &op, &port, &val);
+      if (ret != 4) {
+        BX_PANIC(("could not open IO init file."));
+      }
+      if (op == 0) {
+        // read
+        bx_devices.inp(port, len);
+      }
+      else if (op == 1) {
+        // write
+        bx_devices.outp(port, val, len);
+      }
+      else {
+        BX_PANIC(("bad IO op in init filen"));
+      }
+      if (feof(fp)) break;
+    }
+  } //if iolog file to load
 
   // Invoke proper hack depending on which OS image we're loading
   switch (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
@@ -99,6 +92,7 @@ struct gdt_entry
   Bit32u low;
   Bit32u high;
 };
+
 struct linux_setup_params
 {
    /* 0x000 */ Bit8u   orig_x;
@@ -138,8 +132,7 @@ struct linux_setup_params
    /* 0x800 */ Bit8u   commandline[2048];
 };
 
-  static void
-bx_load_linux_setup_params( Bit32u initrd_start, Bit32u initrd_size )
+static void bx_load_linux_setup_params(Bit32u initrd_start, Bit32u initrd_size)
 {
   BX_MEM_C *mem = BX_MEM(0);
   struct linux_setup_params *params =
@@ -176,8 +169,7 @@ bx_load_linux_setup_params( Bit32u initrd_start, Bit32u initrd_size )
   params->gdt[3].low  = 0x0000ffff;
 }
 
-  void
-bx_load_linux_hack(void)
+void bx_load_linux_hack(void)
 {
   Bit32u initrd_start = 0, initrd_size = 0;
 
@@ -235,8 +227,7 @@ bx_load_linux_hack(void)
   BX_CPU(0)->jump_protected( NULL, 0x10, 0x00100000 );
 }
 
-  void
-bx_load_null_kernel_hack(void)
+void bx_load_null_kernel_hack(void)
 {
   // The RESET function will have been called first.
   // Set CPU and memory features which are assumed at this point.
@@ -282,12 +273,12 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   if (fd < 0) {
     BX_INFO(( "load_kernel_image: couldn't open image file '%s'.", path ));
     BX_EXIT(1);
-    }
+  }
   ret = fstat(fd, &stat_buf);
   if (ret) {
     BX_INFO(( "load_kernel_image: couldn't stat image file '%s'.", path ));
     BX_EXIT(1);
-    }
+  }
 
   size = (unsigned long)stat_buf.st_size;
   page_size = ((Bit32u)size + 0xfff) & ~0xfff;
@@ -296,7 +287,7 @@ bx_load_kernel_image(char *path, Bit32u paddr)
   if ( (paddr + size) > mem->len ) {
     BX_INFO(( "load_kernel_image: address range > physical memsize!" ));
     BX_EXIT(1);
-    }
+  }
 
   offset = 0;
   while (size > 0) {
@@ -304,10 +295,10 @@ bx_load_kernel_image(char *path, Bit32u paddr)
     if (ret <= 0) {
       BX_INFO(( "load_kernel_image: read failed on image" ));
       BX_EXIT(1);
-      }
+    }
     size -= ret;
     offset += ret;
-    }
+  }
   close(fd);
   BX_INFO(("load_kernel_image: '%s', size=%u read into memory at %08x",
        path, (unsigned) stat_buf.st_size, (unsigned) paddr));

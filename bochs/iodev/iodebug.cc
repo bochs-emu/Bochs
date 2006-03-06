@@ -1,7 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.20 2006-03-03 12:55:37 sshwarts Exp $
+// $Id: iodebug.cc,v 1.21 2006-03-06 22:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
+#include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev.h"
 #if BX_SUPPORT_IODEBUG
 
@@ -17,7 +19,6 @@ bx_iodebug_c bx_iodebug;
     Bit32u monitored_mem_areas_end[BX_IODEBUG_MAX_AREAS];
   } bx_iodebug_s;
 
-// Constructor
 bx_iodebug_c::bx_iodebug_c()
 {
   put("IODEBUG");
@@ -41,7 +42,7 @@ void bx_iodebug_c::init(void)
 
 Bit32u bx_iodebug_c::read_handler(void *this_ptr, Bit32u addr, unsigned io_len)
 {
-  bx_iodebug_c bx_iodebug_ptr = (bx_iodebug_c *) this_ptr;
+  bx_iodebug_c *bx_iodebug_ptr = (bx_iodebug_c *) this_ptr;
   return bx_iodebug_ptr->read(addr, io_len);
 }
 
@@ -53,7 +54,7 @@ Bit32u bx_iodebug_c::read(Bit32u addr, unsigned io_len)
 
 void bx_iodebug_c::write_handler(void *this_ptr, Bit32u addr, Bit32u dvalue, unsigned io_len)
 {
-  bx_iodebug_c bx_iodebug_ptr = (bx_iodebug_c *) this_ptr;
+  bx_iodebug_c *bx_iodebug_ptr = (bx_iodebug_c *) this_ptr;
   bx_iodebug_ptr->write(addr, dvalue, io_len);
 }
 
@@ -75,7 +76,7 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
     if(dvalue == 0x8A00)
     {
       bx_iodebug_s.enabled = 1;
-//      fprintf(stderr, "IODEBUG enabled\n");
+//    fprintf(stderr, "IODEBUG enabled\n");
       bx_iodebug_s.registers[0] = 0;
       bx_iodebug_s.registers[1] = 0;
     }
@@ -86,12 +87,12 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
   {
     case 0x8A01:
       bx_iodebug_s.register_select = 0;
-//      fprintf(stderr, "IODEBUG register 0 selected\n");
+//    fprintf(stderr, "IODEBUG register 0 selected\n");
       break;
 
     case 0x8A02:
       bx_iodebug_s.register_select = 1;
-//      fprintf(stderr, "IODEBUG register 1 selected\n");
+//    fprintf(stderr, "IODEBUG register 1 selected\n");
       break;
 
     case 0x8A80:
@@ -149,14 +150,22 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
   if(area)
   {
     area--;
+
 #if BX_DEBUGGER
-    fprintf(stdout, "%s @ eip: " FMT_ADDRX " wrote at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
+    if (cpu != NULL)
+      fprintf(stdout, "IODEBUG %s @ eip: " FMT_ADDRX " write at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
+    else
+      fprintf(stdout, "IODEBUG write at monitored memory location %8X\n", addr);
     bx_guard.interrupt_requested=1;
 #else
-    fprintf(stderr,
-             "IODEBUG write to monitored memory area: %2i\tby EIP:\t\t" FMT_ADDRX "\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
-	     area,
-	     cpu->get_ip(),
+    fprintf(stderr, "IODEBUG write to monitored memory area: %2i\t", area);
+
+    if (cpu != NULL)
+      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_ip());
+    else
+      fprintf(stderr, "(device origin)\t", cpu->get_ip());
+
+    fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned) addr);
@@ -201,14 +210,22 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   if(area)
   {
     area--;
+
 #if BX_DEBUGGER
-    fprintf(stdout, "%s @ eip: " FMT_ADDRX " wrote at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
+    if (cpu != NULL)
+      fprintf(stdout, "IODEBUG %s @ eip: " FMT_ADDRX " read at monitored memory location %8X\n", cpu->name, cpu->get_ip(), addr);
+    else
+      fprintf(stdout, "IODEBUG read at monitored memory location %8X\n", addr);
     bx_guard.interrupt_requested=1;
 #else
-    fprintf(stderr,
-             "IODEBUG read to monitored memory area: %2i\tby EIP:\t\t" FMT_ADDRX "\n\trange start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
-	     area,
-	     cpu->get_ip(),
+    fprintf(stderr, "IODEBUG read at monitored memory area: %2i\t", area);
+
+    if (cpu != NULL)
+      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_ip());
+    else
+      fprintf(stderr, "(device origin)\t", cpu->get_ip());
+
+    fprintf(stderr, "range start: \t\t%08X\trange end:\t%08X\n\taddress accessed:\t%08X\tdata written:\t",
 	     bx_iodebug_s.monitored_mem_areas_start[area],
 	     bx_iodebug_s.monitored_mem_areas_end[area],
 	     (unsigned) addr);

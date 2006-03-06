@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.79 2006-03-02 23:16:12 sshwarts Exp $
+// $Id: apic.cc,v 1.80 2006-03-06 22:02:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #include "iodev/iodev.h"
 
 #if BX_SUPPORT_APIC
@@ -149,18 +150,20 @@ static void apic_bus_broadcast_eoi(Bit8u vector)
 
 ////////////////////////////////////
 
-bx_generic_apic_c::bx_generic_apic_c()
+bx_generic_apic_c::bx_generic_apic_c(bx_phy_address base)
 {
-  id = APIC_UNKNOWN_ID;
   put("APIC?");
   settype(APICLOG);
+  id = APIC_UNKNOWN_ID;
+  set_base(base);
 }
 
 void bx_generic_apic_c::set_base(bx_phy_address newbase)
 {
   newbase &= (~0xfff);
-  BX_INFO(("relocate APIC id=%d to %08x", id, newbase));
   base_addr = newbase;
+  if (id != APIC_UNKNOWN_ID)
+    BX_INFO(("relocate APIC id=%d to 0x%08x", id, newbase));
 }
 
 void bx_generic_apic_c::set_id(Bit8u newid) 
@@ -204,7 +207,7 @@ void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
-  : bx_generic_apic_c(), cpu(mycpu), cpu_id(cpu->which_cpu())
+  : bx_generic_apic_c(BX_LAPIC_BASE_ADDR), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
   reset();
 
@@ -232,7 +235,7 @@ void bx_local_apic_c::init()
      (cpu && cpu->name) ? cpu->name : "?"));
 
   // default address for a local APIC, can be moved
-  base_addr = APIC_BASE_ADDR;
+  base_addr = BX_LAPIC_BASE_ADDR;
   bypass_irr_isr = 0;
   error_status = shadow_error_status = 0;
   log_dest = 0;
@@ -499,7 +502,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x20: // local APIC id
     *data = (id) << 24; break;
   case 0x30: // local APIC version
-    *data = APIC_VERSION_ID; break;
+    *data = BX_LAPIC_VERSION_ID; break;
   case 0x80: // task priority
     *data = task_priority & 0xff; break;
   case 0x90: // arbitration priority

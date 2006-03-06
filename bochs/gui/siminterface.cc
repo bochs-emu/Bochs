@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.126 2006-03-06 18:50:55 vruppert Exp $
+// $Id: siminterface.cc,v 1.127 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -7,6 +7,7 @@
 // the configuration user interface, and allows them to talk to each other.
 
 #include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev.h"
 
 bx_simulator_interface_c *SIM = NULL;
@@ -140,8 +141,7 @@ public:
   virtual bool test_for_text_console ();
 };
 
-bx_param_c *
-bx_real_sim_c::get_param(bx_id id)
+bx_param_c *bx_real_sim_c::get_param(bx_id id)
 {
   BX_ASSERT(id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
   int index = (int)id - BXP_NULL;
@@ -152,8 +152,7 @@ bx_real_sim_c::get_param(bx_id id)
 }
 
 // recursive function to find parameters from the path
-static
-bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_param_c *base)
+static bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_param_c *base)
 {
   const char *from = rest_of_pname;
   char component[BX_PATHNAME_LEN];
@@ -167,7 +166,7 @@ bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_par
   }
   *to = 0;
   if (!component[0]) {
-    BX_PANIC (("find_param: found empty component in parameter name %s", full_pname));
+    BX_PANIC (("find_param: found empty component in parameter name '%s'", full_pname));
     // or does that mean that we're done?
   }
   if (base->get_type() != BXT_LIST) {
@@ -304,15 +303,14 @@ bx_real_sim_c::bx_real_sim_c()
 // which can be used to look them up by number (get_param).
 bx_real_sim_c::~bx_real_sim_c ()
 {
-    if ( param_registry != NULL )
+    if (param_registry != NULL)
     {
         delete [] param_registry;
         param_registry = NULL;
     }
 }
 
-int
-bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
+int bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
 {
   if ((id == BXP_NULL) || (id >= BXP_NEW_PARAM_ID)) return 0;
   BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
@@ -324,34 +322,29 @@ bx_real_sim_c::register_param (bx_id id, bx_param_c *it)
   return 0;
 }
 
-void 
-bx_real_sim_c::reset_all_param ()
+void bx_real_sim_c::reset_all_param ()
 {
   bx_reset_options ();
 }
 
-int 
-bx_real_sim_c::get_n_log_modules ()
+int bx_real_sim_c::get_n_log_modules ()
 {
   return io->get_n_logfns ();
 }
 
-char *
-bx_real_sim_c::get_prefix (int mod)
+char *bx_real_sim_c::get_prefix (int mod)
 {
   logfunc_t *logfn = io->get_logfn (mod);
   return logfn->getprefix ();
 }
 
-int 
-bx_real_sim_c::get_log_action (int mod, int level)
+int bx_real_sim_c::get_log_action (int mod, int level)
 {
   logfunc_t *logfn = io->get_logfn (mod);
   return logfn->getonoff (level);
 }
 
-void 
-bx_real_sim_c::set_log_action (int mod, int level, int action)
+void bx_real_sim_c::set_log_action (int mod, int level, int action)
 {
   // normal
   if (mod >= 0) {
@@ -365,26 +358,22 @@ bx_real_sim_c::set_log_action (int mod, int level, int action)
 	set_log_action (mod, level, action);
 }
 
-char *
-bx_real_sim_c::get_action_name (int action)
+char *bx_real_sim_c::get_action_name(int action)
 {
-  return io->getaction (action);
+  return io->getaction(action);
 }
 
-const char *
-bx_real_sim_c::get_log_level_name (int level)
+const char *bx_real_sim_c::get_log_level_name(int level)
 {
   return io->getlevel (level);
 }
 
-int 
-bx_real_sim_c::get_max_log_level ()
+int bx_real_sim_c::get_max_log_level()
 {
   return N_LOGLEV;
 }
 
-void 
-bx_real_sim_c::quit_sim (int code) {
+void bx_real_sim_c::quit_sim (int code) {
   BX_INFO (("quit_sim called with exit code %d", code));
   exit_code = code;
   // use longjmp to quit cleanly, no matter where in the stack we are.
@@ -407,8 +396,7 @@ bx_real_sim_c::quit_sim (int code) {
   }
 }
 
-int
-bx_real_sim_c::get_default_rc (char *path, int len)
+int bx_real_sim_c::get_default_rc (char *path, int len)
 {
   char *rc = bx_find_bochsrc ();
   if (rc == NULL) return -1;
@@ -417,8 +405,7 @@ bx_real_sim_c::get_default_rc (char *path, int len)
   return 0;
 }
 
-int 
-bx_real_sim_c::read_rc(char *rc)
+int bx_real_sim_c::read_rc(char *rc)
 {
   return bx_read_configuration (rc);
 }
@@ -427,56 +414,48 @@ bx_real_sim_c::read_rc(char *rc)
 //   0: written ok
 //  -1: failed
 //  -2: already exists, and overwrite was off
-int 
-bx_real_sim_c::write_rc(char *rc, int overwrite)
+int bx_real_sim_c::write_rc(char *rc, int overwrite)
 {
   return bx_write_configuration (rc, overwrite);
 }
 
-int 
-bx_real_sim_c::get_log_file(char *path, int len)
+int bx_real_sim_c::get_log_file(char *path, int len)
 {
   strncpy(path, SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), len);
   return 0;
 }
 
-int 
-bx_real_sim_c::set_log_file(char *path)
+int bx_real_sim_c::set_log_file(char *path)
 {
   SIM->get_param_string(BXPN_LOG_FILENAME)->set(path);
   return 0;
 }
 
-int 
-bx_real_sim_c::get_log_prefix(char *prefix, int len)
+int bx_real_sim_c::get_log_prefix(char *prefix, int len)
 {
   strncpy(prefix, SIM->get_param_string(BXPN_LOG_PREFIX)->getptr(), len);
   return 0;
 }
 
-int 
-bx_real_sim_c::set_log_prefix(char *prefix)
+int bx_real_sim_c::set_log_prefix(char *prefix)
 {
   SIM->get_param_string(BXPN_LOG_PREFIX)->set(prefix);
   return 0;
 }
 
-int 
-bx_real_sim_c::get_debugger_log_file(char *path, int len)
+int bx_real_sim_c::get_debugger_log_file(char *path, int len)
 {
   strncpy(path, SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), len);
   return 0;
 }
 
-int 
-bx_real_sim_c::set_debugger_log_file(char *path)
+int bx_real_sim_c::set_debugger_log_file(char *path)
 {
   SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(path);
   return 0;
 }
 
-int 
-bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
+int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
 {
   char pname[80];
   bx_list_c *devlist;
@@ -530,8 +509,7 @@ char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
 int clock_sync_n_names=4;
 
 
-void 
-bx_real_sim_c::set_notify_callback (bxevent_handler func, void *arg)
+void bx_real_sim_c::set_notify_callback (bxevent_handler func, void *arg)
 {
   bxevent_callback = func;
   bxevent_callback_data = arg;
@@ -545,8 +523,7 @@ void bx_real_sim_c::get_notify_callback (
   *arg = bxevent_callback_data;
 }
 
-BxEvent *
-bx_real_sim_c::sim_to_ci_event (BxEvent *event)
+BxEvent *bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 {
   if (bxevent_callback == NULL) {
     BX_ERROR (("notify called, but no bxevent_callback function is registered"));
@@ -557,8 +534,7 @@ bx_real_sim_c::sim_to_ci_event (BxEvent *event)
 }
 
 // returns 0 for continue, 1 for alwayscontinue, 2 for die.
-int 
-bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
+int bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
 {
   BxEvent be;
   be.type = BX_SYNC_EVT_LOG_ASK;
@@ -576,8 +552,7 @@ bx_real_sim_c::log_msg (const char *prefix, int level, const char *msg)
 // for a registered parameter.  Create a synchronous ASK_PARAM event, 
 // send it to the CI, and wait for the response.  The CI will call the
 // set() method on the parameter if the user changes the value.
-int 
-bx_real_sim_c::ask_param(bx_param_c *param)
+int bx_real_sim_c::ask_param(bx_param_c *param)
 {
   BX_ASSERT(param != NULL);
   // create appropriate event
@@ -588,8 +563,7 @@ bx_real_sim_c::ask_param(bx_param_c *param)
   return event.retcode;
 }
 
-int 
-bx_real_sim_c::ask_param(const char *pname)
+int bx_real_sim_c::ask_param(const char *pname)
 {
   bx_param_c *paramptr = SIM->get_param(pname);
   BX_ASSERT(paramptr != NULL);
@@ -601,8 +575,7 @@ bx_real_sim_c::ask_param(const char *pname)
   return event.retcode;
 }
 
-int
-bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags)
+int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags)
 {
   // implement using ASK_PARAM on a newly created param.  I can't use
   // ask_param because I don't intend to register this param.
@@ -618,8 +591,7 @@ bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_
   return event.retcode;
 }
 
-void
-bx_real_sim_c::periodic ()
+void bx_real_sim_c::periodic ()
 {
   // give the GUI a chance to do periodic things on the bochs thread. in 
   // particular, notice if the thread has been asked to die.
@@ -655,8 +627,7 @@ bx_real_sim_c::periodic ()
 // write, e.g. disk full.
 // 
 // wxWidgets: This may be called from the gui thread.
-int 
-bx_real_sim_c::create_disk_image (
+int bx_real_sim_c::create_disk_image (
     const char *filename,
     int sectors,
     bx_bool overwrite) 
@@ -707,7 +678,8 @@ bx_real_sim_c::create_disk_image (
   return 0;
 }
 
-void bx_real_sim_c::refresh_ci () {
+void bx_real_sim_c::refresh_ci ()
+{
   if (SIM->is_wx_selected ()) {
     // presently, only wxWidgets interface uses these events
     // It's an async event, so allocate a pointer and send it.
@@ -742,12 +714,14 @@ bx_real_sim_c::get_first_atadevice(Bit32u search_type) {
 #if BX_DEBUGGER
 
 // this can be safely called from either thread.
-void bx_real_sim_c::debug_break () {
+void bx_real_sim_c::debug_break ()
+{
   bx_debug_break ();
 }
 
 // this should only be called from the sim_thread.
-void bx_real_sim_c::debug_interpret_cmd (char *cmd) {
+void bx_real_sim_c::debug_interpret_cmd (char *cmd)
+{
   if (!is_sim_thread ()) {
     fprintf (stderr, "ERROR: debug_interpret_cmd called but not from sim_thread\n");
     return;
@@ -755,7 +729,7 @@ void bx_real_sim_c::debug_interpret_cmd (char *cmd) {
   bx_dbg_interpret_line (cmd);
 }
 
-char *bx_real_sim_c::debug_get_next_command ()
+char *bx_real_sim_c::debug_get_next_command()
 {
   fprintf (stderr, "begin debug_get_next_command\n");
   BxEvent event;
@@ -768,7 +742,7 @@ char *bx_real_sim_c::debug_get_next_command ()
   return NULL;
 }
 
-void bx_real_sim_c::debug_puts (const char *text)
+void bx_real_sim_c::debug_puts(const char *text)
 {
   if (SIM->is_wx_selected ()) {
     // send message to the wxWidgets debugger
@@ -785,8 +759,7 @@ void bx_real_sim_c::debug_puts (const char *text)
 }
 #endif
 
-void 
-bx_real_sim_c::register_configuration_interface (
+void bx_real_sim_c::register_configuration_interface (
   const char* name, 
   config_interface_callback_t callback,
   void *userdata)
@@ -796,8 +769,7 @@ bx_real_sim_c::register_configuration_interface (
   registered_ci_name = name;
 }
 
-int 
-bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
+int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
 {
   bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
   char *name = ci_param->get_selected();
@@ -820,8 +792,7 @@ bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
   return retval;
 }
 
-int 
-bx_real_sim_c::begin_simulation (int argc, char *argv[])
+int bx_real_sim_c::begin_simulation (int argc, char *argv[])
 {
   return bx_begin_simulation (argc, argv);
 }
@@ -836,8 +807,7 @@ bool bx_real_sim_c::is_sim_thread ()
 // started from the "Start Menu" or by double clicking on it on a Mac,
 // there may be nothing attached to stdin/stdout/stderr.  This function
 // tests if stdin/stdout/stderr are usable and returns false if not.
-bool 
-bx_real_sim_c::test_for_text_console ()
+bool bx_real_sim_c::test_for_text_console ()
 {
 #if BX_WITH_CARBON
   // In a Carbon application, you have a text console if you run the app from
@@ -859,8 +829,7 @@ bx_object_c::bx_object_c (bx_id id)
   this->type = BXT_OBJECT;
 }
 
-void
-bx_object_c::set_type (bx_objtype type)
+void bx_object_c::set_type (bx_objtype type)
 {
   this->type = type;
 }
@@ -977,22 +946,19 @@ Bit32u bx_param_num_c::set_default_base (Bit32u val) {
   return old;
 }
 
-void 
-bx_param_num_c::reset ()
+void bx_param_num_c::reset ()
 {
   this->val.number = initial_val;
 }
 
-void 
-bx_param_num_c::set_handler (param_event_handler handler)
+void bx_param_num_c::set_handler (param_event_handler handler)
 { 
   this->handler = handler; 
   // now that there's a handler, call set once to run the handler immediately
   //set (get ());
 }
 
-void 
-bx_param_num_c::set_enable_handler (param_enable_handler handler)
+void bx_param_num_c::set_enable_handler (param_enable_handler handler)
 { 
   this->enable_handler = handler; 
 }
@@ -1002,8 +968,7 @@ void bx_param_num_c::set_dependent_list(bx_list_c *l) {
   update_dependents();
 }
 
-Bit64s 
-bx_param_num_c::get64 ()
+Bit64s bx_param_num_c::get64()
 {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
@@ -1014,8 +979,7 @@ bx_param_num_c::get64 ()
   }
 }
 
-void
-bx_param_num_c::set (Bit64s newval)
+void bx_param_num_c::set(Bit64s newval)
 {
   if (handler) {
     // the handler can override the new value and/or perform some side effect
@@ -1052,8 +1016,7 @@ void bx_param_num_c::update_dependents()
   }
 }
 
-void
-bx_param_num_c::set_enabled (int en)
+void bx_param_num_c::set_enabled (int en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
@@ -1183,8 +1146,8 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
   val.p8bit = (Bit8s*) ptr_to_real_val;
 }
 
-Bit64s
-bx_shadow_num_c::get64 () {
+Bit64s bx_shadow_num_c::get64()
+{
   Bit64u current = 0;
   switch (varsize) {
     case 8: current = *(val.p8bit);  break;
@@ -1203,8 +1166,7 @@ bx_shadow_num_c::get64 () {
   }
 }
 
-void
-bx_shadow_num_c::set (Bit64s newval)
+void bx_shadow_num_c::set(Bit64s newval)
 {
   Bit64u tmp = 0;
   if ((newval < min || newval > max) && (Bit64u)max != BX_MAX_BIT64U)
@@ -1239,8 +1201,7 @@ bx_shadow_num_c::set (Bit64s newval)
   }
 }
 
-void 
-bx_shadow_num_c::reset ()
+void bx_shadow_num_c::reset()
 {
   BX_PANIC (("reset not supported on bx_shadow_num_c yet"));
 }
@@ -1277,8 +1238,7 @@ bx_shadow_bool_c::bx_shadow_bool_c (bx_id id,
   this->bitnum = bitnum;
 }
 
-Bit64s
-bx_shadow_bool_c::get64 () {
+Bit64s bx_shadow_bool_c::get64 () {
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
     Bit64s ret = (*handler)(this, 0, (Bit64s) *(val.pbool));
@@ -1289,8 +1249,7 @@ bx_shadow_bool_c::get64 () {
   }
 }
 
-void
-bx_shadow_bool_c::set (Bit64s newval)
+void bx_shadow_bool_c::set (Bit64s newval)
 {
   // only change the bitnum bit
   Bit64s tmp = (newval&1) << bitnum;
@@ -1323,8 +1282,7 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
   set(initial_val);
 }
 
-int 
-bx_param_enum_c::find_by_name(const char *string)
+int bx_param_enum_c::find_by_name(const char *string)
 {
   char **p;
   for (p=&choices[0]; *p; p++) {
@@ -1334,8 +1292,7 @@ bx_param_enum_c::find_by_name(const char *string)
   return -1;
 }
 
-bool 
-bx_param_enum_c::set_by_name(const char *string)
+bool bx_param_enum_c::set_by_name(const char *string)
 {
   int n = find_by_name(string);
   if (n<0) return false;
@@ -1403,37 +1360,32 @@ bx_param_string_c::~bx_param_string_c()
     }
 }
 
-void 
-bx_param_string_c::reset() {
+void bx_param_string_c::reset() {
   strncpy(this->val, this->initial_val, maxsize);
 }
 
-void 
-bx_param_string_c::set_handler(param_string_event_handler handler)
+void bx_param_string_c::set_handler(param_string_event_handler handler)
 {
   this->handler = handler; 
   // now that there's a handler, call set once to run the handler immediately
   //set (getptr ());
 }
 
-void 
-bx_param_string_c::set_enable_handler(param_enable_handler handler)
+void bx_param_string_c::set_enable_handler(param_enable_handler handler)
 { 
   this->enable_handler = handler; 
 }
 
-void
-bx_param_string_c::set_enabled(int en)
+void bx_param_string_c::set_enabled(int en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
     en = (*enable_handler)(this, en);
-    }
+  }
   bx_param_c::set_enabled(en);
 }
 
-Bit32s
-bx_param_string_c::get(char *buf, int len)
+Bit32s bx_param_string_c::get(char *buf, int len)
 {
   if (options->get() & RAW_BYTES)
     memcpy(buf, val, len);
@@ -1447,8 +1399,7 @@ bx_param_string_c::get(char *buf, int len)
   return 0;
 }
 
-void 
-bx_param_string_c::set(char *buf)
+void  bx_param_string_c::set(char *buf)
 {
   if (options->get() & RAW_BYTES)
     memcpy(val, buf, maxsize);
@@ -1460,8 +1411,7 @@ bx_param_string_c::set(char *buf)
   }
 }
 
-bx_bool
-bx_param_string_c::equals(const char *buf)
+bx_bool bx_param_string_c::equals(const char *buf)
 {
   if (options->get() & RAW_BYTES)
     return (memcmp(val, buf, maxsize) == 0);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.94 2006-03-05 10:24:27 vruppert Exp $
+// $Id: config.cc,v 1.95 2006-03-06 22:02:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2475,10 +2475,10 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
     int num = atoi(&params[0][11]);
     char tmppath[80], tmpaddr[80];
     if ((num < 1) || (num > BX_N_OPTRAM_IMAGES)) {
-      PARSE_ERR(("%s: ramimage%d: not supported", context, num));
+      PARSE_ERR(("%s: optramimage%d: not supported", context, num));
     }
     if (num_params != 3) {
-      PARSE_ERR(("%s: ramimage%d directive: wrong # args.", context, num));
+      PARSE_ERR(("%s: optramimage%d directive: wrong # args.", context, num));
     }
     sprintf(tmppath, "memory.optram.%d.path", num);
     sprintf(tmpaddr, "memory.optram.%d.addr", num);
@@ -2491,7 +2491,7 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
         else
           SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 10));
       } else {
-        PARSE_ERR(("%s: optram%d directive malformed.", context, num));
+        PARSE_ERR(("%s: optramimage%d directive malformed.", context, num));
       }
     }
   } else if (!strcmp(params[0], "vga_update_interval")) {
@@ -2989,7 +2989,6 @@ static Bit32s parse_line_formatted(char *context, int num_params, char *params[]
       PARSE_ERR(("%s: keyboard_type directive: wrong arg '%s'.", context,params[1]));
     }
   }
-
   else if (!strcmp(params[0], "keyboard_mapping")
          ||!strcmp(params[0], "keyboardmapping")) {
     for (i=1; i<num_params; i++) {

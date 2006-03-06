@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.24 2005-10-17 13:06:09 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.25 2006-03-06 22:02:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_trans.cc,v 1.9 2005-05-12 18:07:46 sshwarts Exp $
+// $Id: fpu_trans.cc,v 1.10 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -24,6 +24,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "softfloatx80.h"

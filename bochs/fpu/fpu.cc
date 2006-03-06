@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.19 2006-01-29 17:37:23 sshwarts Exp $
+// $Id: fpu.cc,v 1.20 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -24,9 +24,10 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "iodev/iodev.h"
+#include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "iodev/iodev.h"
 
 #define UPDATE_LAST_OPCODE       1
 #define CHECK_PENDING_EXCEPTIONS 1

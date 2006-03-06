@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.30 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: tasking.cc,v 1.31 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 

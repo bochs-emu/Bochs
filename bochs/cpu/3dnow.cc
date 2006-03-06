@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.16 2005-05-12 18:07:41 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.17 2006-03-06 22:02:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -23,6 +23,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_3DNOW

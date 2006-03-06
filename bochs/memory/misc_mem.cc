@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.80 2006-03-01 22:32:24 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.81 2006-03-06 22:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,7 +26,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #define LOG_THIS BX_MEM(0)->
 
@@ -93,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.80 2006-03-01 22:32:24 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.81 2006-03-06 22:03:16 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
   // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
@@ -323,7 +324,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
     for (i = 0; i < BX_SMP_PROCESSORS; i++) {
       put_8bit(&p, 0); // entry type = processor
       put_8bit(&p, (Bit8u)i); // APIC id
-      put_8bit(&p, APIC_VERSION_ID & 0xff); // local APIC version number
+      put_8bit(&p, BX_LAPIC_VERSION_ID & 0xff); // local APIC version number
       put_8bit(&p, (i==0)?3:1); // cpu flags: enabled, cpu0 = bootstrap cpu
       put_8bit(&p, 0); // cpu signature
       put_8bit(&p, 0);

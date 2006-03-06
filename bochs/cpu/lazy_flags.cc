@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.30 2006-01-25 22:20:00 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.31 2006-03-06 22:03:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,7 +28,9 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
 
 // This array defines a look-up table for the even parity-ness
 // of an 8bit quantity, for optimal assignment of the parity bit

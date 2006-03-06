@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.12 2006-01-17 18:17:01 sshwarts Exp $
+// $Id: instrument.cc,v 1.13 2006-03-06 22:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 #include <assert.h>
 
 #include "bochs.h"
+#include "cpu/cpu.h"
 
 bxInstrumentation *icpu = NULL;
 

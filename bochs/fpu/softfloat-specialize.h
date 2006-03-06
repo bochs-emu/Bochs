@@ -30,6 +30,8 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_SPECIALIZE_H_
 #define _SOFTFLOAT_SPECIALIZE_H_
 
+#include "softfloat.h"
+
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
  *            Stanislav Shwartsman (stl at fidonet.org.il)

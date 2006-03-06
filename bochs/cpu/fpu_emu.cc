@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_emu.cc,v 1.2 2005-03-19 20:44:00 sshwarts Exp $
+// $Id: fpu_emu.cc,v 1.3 2006-03-06 22:02:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //  Copyright (C) 2004  MandrakeSoft S.A.
 //
@@ -27,6 +27,7 @@
 
 #define LOG_THIS BX_CPU_THIS_PTR
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 /* 9B */

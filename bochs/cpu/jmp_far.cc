@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.3 2005-08-02 18:44:20 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.4 2006-03-06 22:03:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,12 +28,14 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
+
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)

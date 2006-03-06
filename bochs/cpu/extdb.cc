@@ -6,6 +6,7 @@
 #endif
 
 #include "iodev/iodev.h"
+#include "cpu.h"
 #include "extdb.h"
 
 TRegs regs;

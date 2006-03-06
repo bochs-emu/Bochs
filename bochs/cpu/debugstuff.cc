@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.59 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.60 2006-03-06 22:02:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,9 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
 
 #if BX_DISASM
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)

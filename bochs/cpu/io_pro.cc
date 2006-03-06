@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.17 2005-06-22 18:13:45 sshwarts Exp $
+// $Id: io_pro.cc,v 1.18 2006-03-06 22:02:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,9 +27,10 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "iodev/iodev.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "iodev/iodev.h"
 
   Bit16u BX_CPP_AttrRegparmN(1)
 BX_CPU_C::inp16(Bit16u addr)

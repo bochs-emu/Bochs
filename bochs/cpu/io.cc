@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.28 2005-08-01 21:40:17 sshwarts Exp $
+// $Id: io.cc,v 1.29 2006-03-06 22:02:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,8 +27,10 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "iodev/iodev.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#include "iodev/iodev.h"
 
 
 #if BX_SUPPORT_X86_64==0

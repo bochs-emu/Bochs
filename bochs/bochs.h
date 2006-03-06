@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.188 2006-03-06 19:23:13 sshwarts Exp $
+// $Id: bochs.h,v 1.189 2006-03-06 22:02:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -357,14 +357,6 @@ BOCHSAPI extern logfunc_t *genlog;
 
 #if BX_DISASM
 #  include "disasm/disasm.h"
-#endif
-
-#if BX_PROVIDE_CPU_MEMORY==1
-#  include "cpu/cpu.h"
-#endif
-
-#if BX_EXTERNAL_DEBUGGER
-#  include "cpu/extdb.h"
 #endif
 
 #if BX_GDBSTUB

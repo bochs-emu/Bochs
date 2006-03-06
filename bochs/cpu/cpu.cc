@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.136 2006-03-04 09:24:31 sshwarts Exp $
+// $Id: cpu.cc,v 1.137 2006-03-06 22:02:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,11 +25,16 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "iodev/iodev.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#include "iodev/iodev.h"
+
+#if BX_EXTERNAL_DEBUGGER
+#include "extdb.h"
+#endif
 
 #if BX_PROVIDE_CPU_MEMORY==1
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.61 2006-03-06 18:50:54 vruppert Exp $
+// $Id: dbg_main.cc,v 1.62 2006-03-06 22:02:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,7 @@ extern "C" {
 }
 
 #include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #if BX_DEBUGGER
 
@@ -3494,17 +3495,17 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
 
 void bx_dbg_step_over_command ()
 {
-  bx_address Laddr = BX_CPU(which_cpu)->guard_found.laddr;
+  bx_address Laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
 
   if (! bx_dbg_read_linear(dbg_cpu, Laddr, 16, bx_disasm_ibuf))
   {
     return;
   }
 
-  x86_insn insn = bx_disassemble.decode(BX_CPU(which_cpu)->guard_found.is_32bit_code,
-      BX_CPU(which_cpu)->guard_found.is_64bit_code,
-      BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS), 
-      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+  x86_insn insn = bx_disassemble.decode(BX_CPU(dbg_cpu)->guard_found.is_32bit_code,
+      BX_CPU(dbg_cpu)->guard_found.is_64bit_code,
+      BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_CS), 
+      BX_CPU(dbg_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
   unsigned b1 = insn.b1;
 

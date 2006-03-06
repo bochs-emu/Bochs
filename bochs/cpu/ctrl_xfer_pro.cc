@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.51 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.52 2006-03-06 22:02:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,9 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_X86_64==0

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.9 2006-02-20 19:28:57 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.10 2006-03-06 22:03:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -23,6 +23,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 extern float_status_t FPU_pre_exception_handling(Bit16u control_word);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.93 2006-03-03 20:29:50 vruppert Exp $
+// $Id: devices.cc,v 1.94 2006-03-06 22:03:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,9 +27,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+#include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev.h"
 #define LOG_THIS bx_devices.
-
 
 
 /* main memory size (in Kbytes)
@@ -42,10 +43,8 @@
 bx_devices_c bx_devices;
 
 
-
-
 // constructor for bx_devices_c
-bx_devices_c::bx_devices_c(void)
+bx_devices_c::bx_devices_c()
 {
   put("DEV");
   settype(DEVLOG);
@@ -98,20 +97,19 @@ bx_devices_c::bx_devices_c(void)
 }
 
 
-bx_devices_c::~bx_devices_c(void)
+bx_devices_c::~bx_devices_c()
 {
   // nothing needed for now
   BX_DEBUG(("Exit."));
   timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
-
   void
 bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.93 2006-03-03 20:29:50 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.94 2006-03-06 22:03:16 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -349,18 +347,14 @@ bx_devices_c::reset(unsigned type)
 }
 
 
-  Bit32u
-bx_devices_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_devices_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_DEV_SMF
   bx_devices_c *class_ptr = (bx_devices_c *) this_ptr;
-
-  return( class_ptr->port92_read(address, io_len) );
+  return class_ptr->port92_read(address, io_len);
 }
 
-
-  Bit32u
-bx_devices_c::port92_read(Bit32u address, unsigned io_len)
+Bit32u bx_devices_c::port92_read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -371,18 +365,14 @@ bx_devices_c::port92_read(Bit32u address, unsigned io_len)
   return(BX_GET_ENABLE_A20() << 1);
 }
 
-
-  void
-bx_devices_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_devices_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_DEV_SMF
   bx_devices_c *class_ptr = (bx_devices_c *) this_ptr;
-
   class_ptr->port92_write(address, value, io_len);
 }
 
-  void
-bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -401,8 +391,7 @@ bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
 
 // This defines a no-default read handler, 
 // so Bochs does not segfault if unmapped is not loaded
-  Bit32u
-bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
   UNUSED(this_ptr);
   BX_PANIC(("No default io-read handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
@@ -411,30 +400,26 @@ bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_l
 
 // This defines a no-default write handler, 
 // so Bochs does not segfault if unmapped is not loaded
-  void
-bx_devices_c::default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_devices_c::default_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
   UNUSED(this_ptr);
   BX_PANIC(("No default io-write handler found for 0x%04x/%d. Unmapped io-device not loaded ?", address, io_len));
 }
 
-  void
-bx_devices_c::timer_handler(void *this_ptr)
+void bx_devices_c::timer_handler(void *this_ptr)
 {
   bx_devices_c *class_ptr = (bx_devices_c *) this_ptr;
-
   class_ptr->timer();
 }
 
-  void
-bx_devices_c::timer()
+void bx_devices_c::timer()
 {
 #if (BX_USE_NEW_PIT==0)
   if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
     // This is a hack to make the IRQ0 work
     DEV_pic_lower_irq(0);
     DEV_pic_raise_irq(0);
-    }
+  }
 #endif
 
 
@@ -454,31 +439,29 @@ bx_devices_c::timer()
 }
 
 
-  bx_bool
-bx_devices_c::register_irq(unsigned irq, const char *name)
+bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s registered with IRQ=%d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
     return false;
-    }
+  }
   if (irq_handler_name[irq]) {
     BX_PANIC(("IRQ %u conflict, %s with %s", irq,
       irq_handler_name[irq], name));
     return false;
-    }
+  }
   irq_handler_name[irq] = name;
   return true;
 }
 
-  bx_bool
-bx_devices_c::unregister_irq(unsigned irq, const char *name)
+bx_bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
 {
   if (irq >= BX_MAX_IRQS) {
     BX_PANIC(("IO device %s tried to unregister IRQ %d above %u",
              name, irq, (unsigned) BX_MAX_IRQS-1));
     return false;
-    }
+  }
 
   if (!irq_handler_name[irq]) {
     BX_INFO(("IO device %s tried to unregister IRQ %d, not registered",
@@ -490,13 +473,12 @@ bx_devices_c::unregister_irq(unsigned irq, const char *name)
     BX_INFO(("IRQ %u not registered to %s but to %s", irq,
       name, irq_handler_name[irq]));
     return false;
-    }
+  }
   irq_handler_name[irq] = NULL;
   return true;
 }
 
-  bx_bool
-bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                        Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0x0000ffff;
@@ -547,10 +529,7 @@ bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
   return true; // address mapped successfully
 }
 
-
-
-  bx_bool
-bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                         Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0x0000ffff;
@@ -601,9 +580,7 @@ bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
   return true; // address mapped successfully
 }
 
-
-  bx_bool
-bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                              Bit32u begin_addr, Bit32u end_addr,
                                              const char *name, Bit8u mask)
 {
@@ -666,9 +643,7 @@ bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handler_t f
   return true; // address mapped successfully
 }
 
-
-  bx_bool
-bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                               Bit32u begin_addr, Bit32u end_addr,
                                               const char *name, Bit8u mask)
 {
@@ -733,8 +708,7 @@ bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_handler_t
 
 
 // Registration of default handlers (mainly be the unmapped device)
-  bx_bool
-bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bx_bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                                const char *name, Bit8u mask)
 {
   io_read_handlers.funct = (void *)f;
@@ -744,10 +718,7 @@ bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_handler_t
   return true; 
 }
 
-
-
-  bx_bool
-bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bx_bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                                 const char *name, Bit8u mask)
 {
   io_write_handlers.funct = (void *)f;
@@ -757,9 +728,7 @@ bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write_handler
   return true; 
 }
 
-
-  bx_bool
-bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
+bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                          Bit32u addr, Bit8u mask)
 {
   addr &= 0x0000ffff;
@@ -804,9 +773,7 @@ bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
   return true;
 }
 
-
-  bx_bool
-bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
+bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
                                           Bit32u addr, Bit8u mask)
 {
   addr &= 0x0000ffff;
@@ -839,9 +806,7 @@ bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
   return true;
 }
 
-
-  bx_bool
-bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+bx_bool bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
                                                Bit32u begin, Bit32u end, Bit8u mask)
 {
   begin &= 0x0000ffff;
@@ -859,9 +824,7 @@ bx_devices_c::unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t
   return ret;
 }
 
-
-  bx_bool
-bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+bx_bool bx_devices_c::unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
                                                 Bit32u begin, Bit32u end, Bit8u mask)
 {
   begin &= 0x0000ffff;
