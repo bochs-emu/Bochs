@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.31 2006-02-27 19:04:01 sshwarts Exp $
+// $Id: memory.h,v 1.32 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,6 +39,8 @@
 #  define BX_MEM_SMF
 #  define BX_MEM_THIS this->
 #endif
+
+class BX_CPU_C;
 
 // alignment of memory vector, must be a power of 2
 #define BX_MEM_VECTOR_ALIGN 4096

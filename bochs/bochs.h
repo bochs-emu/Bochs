@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.187 2006-03-05 10:24:27 vruppert Exp $
+// $Id: bochs.h,v 1.188 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -136,10 +136,6 @@ void print_tree(bx_param_c *node, int level = 0);
 #define BX_CPU_C                    bx_cpu_c
 #define BX_MEM_C                    bx_mem_c
 #define BX_HRQ                      (bx_pc_system.HRQ)
-#define BX_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
-  BX_MEM(0)->readPhysicalPage(BX_CPU(0), phy_addr, len, ptr)
-#define BX_MEM_WRITE_PHYSICAL(phy_addr, len, ptr) \
-  BX_MEM(0)->writePhysicalPage(BX_CPU(0), phy_addr, len, ptr)
 
 #if BX_SUPPORT_SMP
 #define BX_CPU(x)                   (bx_cpu_array[x])
@@ -316,8 +312,6 @@ protected:
 #define MAX_LOGFNS 128
 	logfunc_t *logfn_list[MAX_LOGFNS];
 	char *logfn;
-
-
 };
 
 typedef class BOCHSAPI iofunctions iofunc_t;

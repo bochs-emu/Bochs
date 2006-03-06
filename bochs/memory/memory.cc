@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.48 2006-03-03 12:55:37 sshwarts Exp $
+// $Id: memory.cc,v 1.49 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,32 +36,36 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   Bit8u *data_ptr;
   Bit32u a20addr = A20ADDR(addr);
 
-  // Note: accesses should always be contained within a single page now.
+  // Note: accesses should always be contained within a single page now
+
+  if (cpu != NULL) {
 
 #if BX_SUPPORT_IODEBUG
-  bx_iodebug_c::mem_write(cpu, a20addr, len, data);
+    bx_iodebug_c::mem_write(cpu, a20addr, len, data);
 #endif
 
-  BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
+    BX_INSTR_PHY_WRITE(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
-  // (mch) Check for physical write break points, TODO
-  // (bbd) Each breakpoint should have an associated CPU#, TODO
-  for (int i = 0; i < num_write_watchpoints; i++)
-        if (write_watchpoint[i] == a20addr) {
-	      BX_CPU(0)->watchpoint = a20addr;
-              BX_CPU(0)->break_point = BREAK_POINT_WRITE;
-              break;
-        }
+    // (mch) Check for physical write break points, TODO
+    // (bbd) Each breakpoint should have an associated CPU#, TODO
+    for (int i = 0; i < num_write_watchpoints; i++) {
+      if (write_watchpoint[i] == a20addr) {
+        BX_CPU(0)->watchpoint = a20addr;
+        BX_CPU(0)->break_point = BREAK_POINT_WRITE;
+        break;
+      }
+    }
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->is_selected (a20addr, len)) {
-    local_apic->write(a20addr, (Bit32u *)data, len);
-    return;
-  }
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    if (local_apic->is_selected (a20addr, len)) {
+      local_apic->write(a20addr, (Bit32u *)data, len);
+      return;
+    }
 #endif
+  }
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {
@@ -195,30 +199,36 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   Bit8u *data_ptr;
   Bit32u a20addr = A20ADDR(addr);
 
+  // Note: accesses should always be contained within a single page now
+
+  if (cpu != NULL) {
+
 #if BX_SUPPORT_IODEBUG
-  bx_iodebug_c::mem_read(cpu, a20addr, len, data);
+    bx_iodebug_c::mem_read(cpu, a20addr, len, data);
 #endif
  
-  BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
+    BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER
-  // (mch) Check for physical read break points, TODO
-  // (bbd) Each breakpoint should have an associated CPU#, TODO
-  for (int i = 0; i < num_read_watchpoints; i++)
-        if (read_watchpoint[i] == a20addr) {
-	      BX_CPU(0)->watchpoint = a20addr;
-              BX_CPU(0)->break_point = BREAK_POINT_READ;
-              break;
-        }
+    // (mch) Check for physical read break points, TODO
+    // (bbd) Each breakpoint should have an associated CPU#, TODO
+    for (int i = 0; i < num_read_watchpoints; i++) {
+      if (read_watchpoint[i] == a20addr) {
+         BX_CPU(0)->watchpoint = a20addr;
+         BX_CPU(0)->break_point = BREAK_POINT_READ;
+         break;
+      }
+    }
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->is_selected (a20addr, len)) {
-    local_apic->read(a20addr, data, len);
-    return;
-  }
+    bx_generic_apic_c *local_apic = &cpu->local_apic;
+    if (local_apic->is_selected (a20addr, len)) {
+      local_apic->read(a20addr, data, len);
+      return;
+    }
 #endif
+  }
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.7 2005-10-29 12:35:01 vruppert Exp $
+// $Id: pci_ide.h,v 1.8 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -39,8 +39,8 @@
 class bx_pci_ide_c : public bx_pci_ide_stub_c {
 
 public:
-  bx_pci_ide_c(void);
-  ~bx_pci_ide_c(void);
+  bx_pci_ide_c();
+  ~bx_pci_ide_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
   virtual bx_bool bmdma_present(void);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.33 2006-03-01 17:14:36 vruppert Exp $
+// $Id: pciusb.cc,v 1.34 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -635,7 +635,7 @@ void bx_pciusb_c::usb_timer(void)
     Bit32u item, address, lastvertaddr = 0, queue_num = 0;
     Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base + 
                                 (BX_USB_THIS hub[0].usb_frame_num.frame_num << 2);
-    BX_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
+    DEV_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
     if ((frame & 1) == 0) {
       stack[stk].next = (frame & ~0xF);
       stack[stk].d = 0;
@@ -655,14 +655,14 @@ void bx_pciusb_c::usb_timer(void)
           lastvertaddr = address + 4;
           // get HORZ slot
           stk++;
-          BX_MEM_READ_PHYSICAL(address, 4, &item);
+          DEV_MEM_READ_PHYSICAL(address, 4, &item);
           stack[stk].next = item & ~0xF;
           stack[stk].d = HC_HORZ;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
           stack[stk].t = (item & 0x0001) ? 1 : 0;
           // get VERT slot
           stk++;
-          BX_MEM_READ_PHYSICAL(lastvertaddr, 4, &item);
+          DEV_MEM_READ_PHYSICAL(lastvertaddr, 4, &item);
           stack[stk].next = item & ~0xF;
           stack[stk].d = HC_VERT;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
@@ -673,7 +673,7 @@ void bx_pciusb_c::usb_timer(void)
           queue_num++;
         } else {  // else is a TD
           address = stack[stk].next;
-          BX_MEM_READ_PHYSICAL(address, 32, &td);
+          DEV_MEM_READ_PHYSICAL(address, 32, &td);
           bx_bool spd = (td.dword1 & (1<<29)) ? 1 : 0;
           stack[stk].next = td.dword0 & ~0xF;
           bx_bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
@@ -693,10 +693,10 @@ void bx_pciusb_c::usb_timer(void)
               }
               if (td.dword1 & (1<<22)) stalled = 1;
 
-              BX_MEM_WRITE_PHYSICAL(address+4, 4, &td.dword1);  // write back the status
+              DEV_MEM_WRITE_PHYSICAL(address+4, 4, &td.dword1);  // write back the status
               // copy pointer for next queue item, in to vert queue head
               if ((stk > 0) && !shortpacket && (stack[stk].d == HC_VERT))
-                BX_MEM_WRITE_PHYSICAL(lastvertaddr, 4, &td.dword0);
+                DEV_MEM_WRITE_PHYSICAL(lastvertaddr, 4, &td.dword0);
             }
           }
 
@@ -777,7 +777,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
 
   // if packet, read in the packet data
   if (pid == TOKEN_SETUP) {
-    if (td->dword3) BX_MEM_READ_PHYSICAL(td->dword3, 8, data);
+    if (td->dword3) DEV_MEM_READ_PHYSICAL(td->dword3, 8, data);
     // the '8' above may need to be maxlen (unless maxlen == 0)
   }
 
@@ -855,7 +855,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
 
               memcpy(device_buffer, BX_USB_THIS key_pad_packet, 8);
 
-              BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
+              DEV_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
 
@@ -872,7 +872,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS mouse_x = 0;
               BX_USB_THIS mouse_y = 0;
               BX_USB_THIS mouse_z = 0;
-              BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
+              DEV_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
 
@@ -917,7 +917,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
         if (dev->function.in_cnt > 0) {
           bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 1);
           cnt = (dev->function.in_cnt < maxlen) ? dev->function.in_cnt : maxlen;
-          BX_MEM_WRITE_PHYSICAL(td->dword3, cnt, dev->function.in);
+          DEV_MEM_WRITE_PHYSICAL(td->dword3, cnt, dev->function.in);
           dump_packet(dev->function.in, cnt);
           dev->function.in += cnt;
           dev->function.in_cnt -= cnt;
@@ -943,7 +943,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
         if (fnd) {
           // Read in the packet
           Bit8u bulk_int_packet[1024];
-          BX_MEM_READ_PHYSICAL(td->dword3, maxlen, bulk_int_packet);
+          DEV_MEM_READ_PHYSICAL(td->dword3, maxlen, bulk_int_packet);
 
           // now do the task
           switch (protocol) {

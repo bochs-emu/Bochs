@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.69 2006-01-17 20:16:59 vruppert Exp $
+// $Id: iodev.h,v 1.70 2006-03-06 19:23:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -502,7 +502,12 @@ private:
   bx_bool is_serial_enabled ();
   bx_bool is_usb_enabled ();
   bx_bool is_parallel_enabled ();
-  };
+};
+
+#define DEV_MEM_READ_PHYSICAL(phy_addr, len, ptr) \
+  BX_MEM(0)->readPhysicalPage(NULL, phy_addr, len, ptr)
+#define DEV_MEM_WRITE_PHYSICAL(phy_addr, len, ptr) \
+  BX_MEM(0)->writePhysicalPage(NULL, phy_addr, len, ptr)
 
 #ifndef NO_DEVICE_INCLUDES
 
