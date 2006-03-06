@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.60 2006-03-05 10:24:28 vruppert Exp $
+// $Id: dbg_main.cc,v 1.61 2006-03-06 18:50:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -242,7 +242,7 @@ int bx_dbg_main(int argc, char *argv[])
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
   // some parts of the GUI.
-  bx_list_c *base = SIM->get_param("general");
+  bx_list_c *base = (bx_list_c*) SIM->get_param("general");
   sim_running = new bx_param_bool_c(base,
       "debug_running",
       "Simulation is running", "", 0);

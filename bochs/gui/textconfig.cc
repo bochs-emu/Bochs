@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.46 2006-03-05 10:24:29 vruppert Exp $
+// $Id: textconfig.cc,v 1.47 2006-03-06 18:50:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -52,68 +52,44 @@ void bx_log_options(int individual);
 /* remove leading spaces, newline junk at end.  returns pointer to 
  cleaned string, which is between s0 and the null */
 char *
-clean_string (char *s0)
+clean_string(char *s0)
 {
   char *s = s0;
   char *ptr;
   /* find first nonblank */
-  while (isspace (*s))
+  while (isspace(*s))
     s++;
   /* truncate string at first non-alphanumeric */
   ptr = s;
-  while (isprint (*ptr))
+  while (isprint(*ptr))
     ptr++;
   *ptr = 0;
   return s;
 }
 
-void
-double_percent (char *s, int max_len)
-{
-  char d[CI_PATH_LENGTH];
-  int  i=0,j=0;
-
-  if (max_len>CI_PATH_LENGTH)
-    max_len=CI_PATH_LENGTH;
-
-  max_len--;
-
-  while((s[i]!=0)&&(j<max_len))
-  {
-    d[j++]=s[i];
-    if((s[i]=='%')&&(j<max_len))
-    {
-      d[j++]=s[i];
-    }
-    i++;
-  }
-  d[j]=0;
-  strcpy(s,d);
-}
-
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int 
-ask_uint (char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
+ask_uint(char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
   Bit32u n = max + 1;
   char buffer[1024];
   char *clean;
   int illegal;
-  assert (base==10 || base==16);
+  assert(base==10 || base==16);
   while (1) {
-    printf (prompt, the_default);
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf(prompt, the_default);
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
       return 0;
     }
     const char *format = (base==10) ? "%d" : "%x";
-    illegal = (1 != sscanf (buffer, format, &n));
+    illegal = (1 != sscanf(buffer, format, &n));
     if (illegal || n<min || n>max) {
-      printf ("Your choice (%s) was not an integer between %u and %u.\n\n",
+      printf("Your choice (%s) was not an integer between %u and %u.\n\n",
 	  clean, min, max);
     } else {
       // choice is okay
@@ -125,25 +101,25 @@ ask_uint (char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out,
 
 // identical to ask_uint, but uses signed comparisons
 int 
-ask_int (char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
+ask_int(char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
   char buffer[1024];
   char *clean;
   int illegal;
   while (1) {
-    printf (prompt, the_default);
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf(prompt, the_default);
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
       return 0;
     }
-    illegal = (1 != sscanf (buffer, "%d", &n));
+    illegal = (1 != sscanf(buffer, "%d", &n));
     if (illegal || n<min || n>max) {
-      printf ("Your choice (%s) was not an integer between %d and %d.\n\n",
+      printf("Your choice (%s) was not an integer between %d and %d.\n\n",
 	  clean, min, max);
     } else {
       // choice is okay
@@ -154,51 +130,51 @@ ask_int (char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 }
 
 int 
-ask_menu (char *prompt, int n_choices, char *choice[], int the_default, int *out)
+ask_menu(char *prompt, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
   int i;
   *out = -1;
   while (1) {
-    printf (prompt, choice[the_default]);
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf(prompt, choice[the_default]);
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
       return 0;
     }
     for (i=0; i<n_choices; i++) {
-      if (!strcmp (choice[i], clean)) {
+      if (!strcmp(choice[i], clean)) {
 	// matched, return the choice number
 	*out = i;
 	return 0;
       }
     }
     if (clean[0] != '?')
-      printf ("Your choice (%s) did not match any of the choices:\n", clean);
+      printf("Your choice (%s) did not match any of the choices:\n", clean);
     for (i=0; i<n_choices; i++) {
       if (i>0) printf (", ");
-      printf ("%s", choice[i]);
+      printf("%s", choice[i]);
     }
-    printf ("\n");
+    printf("\n");
   }
 }
 
 int 
-ask_yn (char *prompt, Bit32u the_default, Bit32u *out)
+ask_yn(char *prompt, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
   char *clean;
   *out = 1<<31;
   while (1) {
     // if there's a %s field, substitute in the default yes/no.
-    printf (prompt, the_default ? "yes" : "no");
-    if (!fgets (buffer, sizeof(buffer), stdin))
+    printf(prompt, the_default ? "yes" : "no");
+    if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
-    clean = clean_string (buffer);
+    clean = clean_string(buffer);
     if (strlen(clean) < 1) {
       // empty line, use the default
       *out = the_default;
@@ -216,22 +192,22 @@ ask_yn (char *prompt, Bit32u the_default, Bit32u *out)
 // returns 0 if default was taken
 // returns 1 if value changed
 int 
-ask_string (char *prompt, char *the_default, char *out)
+ask_string(char *prompt, char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
-  assert (the_default != out);
+  assert(the_default != out);
   out[0] = 0;
-  printf (prompt, the_default);
-  if (fgets (buffer, sizeof(buffer), stdin) == NULL)
+  printf(prompt, the_default);
+  if (fgets(buffer, sizeof(buffer), stdin) == NULL)
     return -1;
-  clean = clean_string (buffer);
+  clean = clean_string(buffer);
   if (strlen(clean) < 1) {
     // empty line, use the default
-    strcpy (out, the_default);
+    strcpy(out, the_default);
     return 0;
   }
-  strcpy (out, clean);
+  strcpy(out, clean);
   return 1;
 }
 
@@ -264,22 +240,20 @@ static char *startup_options_prompt =
 "Bochs Options Menu\n"
 "------------------\n"
 "0. Return to previous menu\n"
-"1. Log file: %s\n"
-"2. Log prefix: %s\n"
-"3. Debug log file: %s\n"
-"4. Log options for all devices\n"
-"5. Log options for individual devices\n"
-"6. CPU options\n"
-"7. Memory options\n"
-"8. Clock & CMOS options\n"
-"9. PCI options\n"
-"10. Bochs Display & Interface options\n"
-"11. Keyboard & Mouse options\n"
-"12. Disk options\n"
-"13. Serial & Parallel port options\n"
-"14. Network card options\n"
-"15. Sound Blaster 16 options\n"
-"16. Other options\n"
+"1. Logfile options\n"
+"2. Log options for all devices\n"
+"3. Log options for individual devices\n"
+"4. CPU options\n"
+"5. Memory options\n"
+"6. Clock & CMOS options\n"
+"7. PCI options\n"
+"8. Bochs Display & Interface options\n"
+"9. Keyboard & Mouse options\n"
+"10. Disk options\n"
+"11. Serial & Parallel port options\n"
+"12. Network card options\n"
+"13. Sound Blaster 16 options\n"
+"14. Other options\n"
 "\n"
 "Please choose one: [0] ";
 
@@ -406,70 +380,51 @@ int bx_config_interface (int menu)
            default_choice = 5; break;
        }
 
-       if (ask_uint (startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
+       if (ask_uint(startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
        switch (choice) {
-	 case 1:
-	   fprintf (stderr, "I reset all options back to their factory defaults.\n\n");
-	   SIM->reset_all_param();
-	   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
-	   break;
-	 case 2: 
-	   // Before reading a new configuration, reset every option to its
-	   // original state.
-	   SIM->reset_all_param();
-	   if (bx_read_rc (NULL) >= 0)
-	     SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
-	   break;
-	 case 3: 
-           bx_config_interface(BX_CI_START_OPTS); 
-	   SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
+         case 1:
+           fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
+           SIM->reset_all_param();
+           SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
            break;
-	 case 4: bx_write_rc (NULL); break;
-	 case 5: bx_config_interface (BX_CI_START_SIMULATION); break;
-	 case 6: SIM->quit_sim (1); return -1;
-	 default: BAD_OPTION(menu, choice);
+         case 2: 
+           // Before reading a new configuration, reset every option to its
+           // original state.
+           SIM->reset_all_param();
+           if (bx_read_rc (NULL) >= 0)
+             SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
+           break;
+         case 3: 
+           bx_config_interface(BX_CI_START_OPTS); 
+           SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
+           break;
+         case 4: bx_write_rc(NULL); break;
+         case 5: bx_config_interface(BX_CI_START_SIMULATION); break;
+         case 6: SIM->quit_sim(1); return -1;
+         default: BAD_OPTION(menu, choice);
        }
      }
      break;
    case BX_CI_START_OPTS:
      {
-       char prompt[CI_PATH_LENGTH];
-       char oldpath[CI_PATH_LENGTH];
-       char olddebuggerpath[CI_PATH_LENGTH];
-       char oldprefix[CI_PATH_LENGTH];
-       int  retval;
-
-       retval = SIM->get_log_file (oldpath, CI_PATH_LENGTH);
-       assert (retval >= 0);
-       double_percent(oldpath,CI_PATH_LENGTH);
-       retval = SIM->get_log_prefix (oldprefix, CI_PATH_LENGTH);
-       assert (retval >= 0);
-       double_percent(oldprefix,CI_PATH_LENGTH);
-       retval = SIM->get_debugger_log_file (olddebuggerpath, CI_PATH_LENGTH);
-       assert (retval >= 0);
-       double_percent(olddebuggerpath,CI_PATH_LENGTH);
-
-       sprintf (prompt, startup_options_prompt, oldpath, oldprefix, olddebuggerpath);
-       if (ask_uint (prompt, 0, 16, 0, &choice, 10) < 0) return -1;
+       if (ask_uint(startup_options_prompt, 0, 14, 0, &choice, 10) < 0) return -1;
        switch (choice) {
-	 case 0: return 0;
-	 case 1: askparam(BXPN_LOG_FILENAME); break;
-	 case 2: askparam(BXPN_LOG_PREFIX); break;
-	 case 3: askparam(BXPN_DEBUGGER_LOG_FILENAME); break;
-	 case 4: bx_log_options(0); break;
-	 case 5: bx_log_options(1); break;
-	 case 6: do_menu("cpu", NULL); break;
-	 case 7: do_menu(BXPN_MENU_MEMORY, NULL); break;
-	 case 8: do_menu("clock_cmos", NULL); break;
-	 case 9: do_menu("pci", NULL); break;
-	 case 10: do_menu("display", NULL); break;
-	 case 11: do_menu("keyboard_mouse", NULL); break;
-	 case 12: do_menu(BXPN_MENU_DISK, NULL); break;
-	 case 13: do_menu("ports", NULL); break;
-	 case 14: do_menu("network", NULL); break;
-	 case 15: do_menu(BXPN_SB16, NULL); break;
-	 case 16: do_menu("misc", NULL); break;
-	 default: BAD_OPTION(menu, choice);
+         case 0: return 0;
+         case 1: do_menu("log", NULL); break;
+         case 2: bx_log_options(0); break;
+         case 3: bx_log_options(1); break;
+         case 4: do_menu("cpu", NULL); break;
+         case 5: do_menu(BXPN_MENU_MEMORY, NULL); break;
+         case 6: do_menu("clock_cmos", NULL); break;
+         case 7: do_menu("pci", NULL); break;
+         case 8: do_menu("display", NULL); break;
+         case 9: do_menu("keyboard_mouse", NULL); break;
+         case 10: do_menu(BXPN_MENU_DISK, NULL); break;
+         case 11: do_menu("ports", NULL); break;
+         case 12: do_menu("network", NULL); break;
+         case 13: do_menu(BXPN_SB16, NULL); break;
+         case 14: do_menu("misc", NULL); break;
+         default: BAD_OPTION(menu, choice);
        }
      }
      break;
@@ -508,19 +463,19 @@ int bx_config_interface (int menu)
          case BX_CI_RT_IPS:
            // not implemented yet because I would have to mess with
            // resetting timers and pits and everything on the fly.
-           // askparam (BXP_IPS);
+           // askparam(BXPN_IPS);
            break;
-         case BX_CI_RT_LOGOPTS1: bx_log_options (0); break;
-         case BX_CI_RT_LOGOPTS2: bx_log_options (1); break;
-         case BX_CI_RT_INST_TR: NOT_IMPLEMENTED (choice); break;
+         case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
+         case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
+         case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
          case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME, NULL); break;
-         case BX_CI_RT_CONT: fprintf (stderr, "Continuing simulation\n"); return 0;
+         case BX_CI_RT_CONT: fprintf(stderr, "Continuing simulation\n"); return 0;
          case BX_CI_RT_QUIT:
-           fprintf (stderr, "You chose quit on the configuration interface.\n");
+           fprintf(stderr, "You chose quit on the configuration interface.\n");
            bx_user_quit = 1;
-           SIM->quit_sim (1);
+           SIM->quit_sim(1);
            return -1;
-         default: fprintf (stderr, "Menu choice %d not implemented.\n", choice);
+         default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
        }
      }
      break;

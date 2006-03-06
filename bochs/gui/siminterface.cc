@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.125 2006-03-05 10:24:28 vruppert Exp $
+// $Id: siminterface.cc,v 1.126 2006-03-06 18:50:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -94,7 +94,7 @@ public:
   virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
-  virtual int ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags);
+  virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
   virtual int create_disk_image (const char *filename, int sectors, bx_bool overwrite);
@@ -259,26 +259,26 @@ unsigned bx_real_sim_c::gen_param_id()
   return param_id++;
 }
 
-void bx_init_siminterface ()
+void bx_init_siminterface()
 {
-  siminterface_log = new logfunctions ();
-  siminterface_log->put ("CTRL");
+  siminterface_log = new logfunctions();
+  siminterface_log->put("CTRL");
   siminterface_log->settype(CTRLLOG);
   if (SIM == NULL) 
     SIM = new bx_real_sim_c();
   if (root_param == NULL) {
-    root_param = new bx_list_c (NULL, 
+    root_param = new bx_list_c(NULL,
 	"bochs",
 	"list of top level bochs parameters", 
 	30);
   }
 }
 
-bx_simulator_interface_c::bx_simulator_interface_c ()
+bx_simulator_interface_c::bx_simulator_interface_c()
 {
 }
 
-bx_real_sim_c::bx_real_sim_c ()
+bx_real_sim_c::bx_real_sim_c()
 {
   bxevent_callback = NULL;
   bxevent_callback_data = NULL;
@@ -602,12 +602,12 @@ bx_real_sim_c::ask_param(const char *pname)
 }
 
 int
-bx_real_sim_c::ask_filename (char *filename, int maxlen, char *prompt, char *the_default, int flags)
+bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags)
 {
   // implement using ASK_PARAM on a newly created param.  I can't use
   // ask_param because I don't intend to register this param.
   BxEvent event;
-  bx_param_string_c param (BXP_NULL, prompt, "filename", the_default, maxlen);
+  bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
   flags |= param.IS_FILENAME;
   param.get_options()->set (flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
@@ -962,9 +962,11 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   // because set calls update_dependents().
   dependent_list = NULL;
   set(initial_val);
-  BX_ASSERT(parent->get_type() == BXT_LIST);
-  this->parent = (bx_list_c *) parent;
-  if (this->parent) this->parent->add (this);
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
 }
 
 Bit32u bx_param_num_c::default_base = 10;
@@ -1300,26 +1302,6 @@ bx_shadow_bool_c::set (Bit64s newval)
   }
 }
 
-bx_param_enum_c::bx_param_enum_c(bx_id id,
-      char *name,
-      char *description,
-      char **choices,
-      Bit64s initial_val,
-      Bit64s value_base)
-  : bx_param_num_c(id, name, description, value_base, BX_MAX_BIT64S, initial_val)
-{
-  set_type(BXT_PARAM_ENUM);
-  this->choices = choices;
-  // count number of choices, set max
-  char **p = choices;
-  while (*p != NULL) p++;
-  this->min = value_base;
-  // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
-  // class constructor with the real max.
-  this->max = value_base + (p - choices - 1);
-  set(initial_val);
-}
-
 bx_param_enum_c::bx_param_enum_c(bx_param_c *parent, 
       char *name,
       char *label,
@@ -1361,30 +1343,7 @@ bx_param_enum_c::set_by_name(const char *string)
   return true;
 }
 
-bx_param_string_c::bx_param_string_c (bx_id id,
-    char *name,
-    char *description,
-    char *initial_val,
-    int maxsize)
-  : bx_param_c (id, name, description)
-{
-  set_type (BXT_PARAM_STRING);
-  if (maxsize < 0) 
-    maxsize = strlen(initial_val);
-  this->val = new char[maxsize + 1];
-  this->initial_val = new char[maxsize + 1];
-  this->handler = NULL;
-  this->enable_handler = NULL;
-  this->maxsize = maxsize;
-  strncpy (this->val, initial_val, maxsize);
-  strncpy (this->initial_val, initial_val, maxsize);
-  this->val[maxsize] = 0;
-  this->options = new bx_param_num_c (BXP_NULL,
-      "stringoptions", NULL, 0, BX_MAX_BIT64S, 0);
-  set (initial_val);
-}
-
-bx_param_string_c::bx_param_string_c (bx_param_c *parent,
+bx_param_string_c::bx_param_string_c(bx_param_c *parent,
     char *name,
     char *label,
     char *description,
@@ -1392,7 +1351,7 @@ bx_param_string_c::bx_param_string_c (bx_param_c *parent,
     int maxsize)
   : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
 {
-  set_type (BXT_PARAM_STRING);
+  set_type(BXT_PARAM_STRING);
   this->label = label;
   if (maxsize < 0) 
     maxsize = strlen(initial_val) + 1;
@@ -1401,27 +1360,19 @@ bx_param_string_c::bx_param_string_c (bx_param_c *parent,
   this->handler = NULL;
   this->enable_handler = NULL;
   this->maxsize = maxsize;
-  strncpy (this->val, initial_val, maxsize);
-  strncpy (this->initial_val, initial_val, maxsize);
-  this->options = new bx_param_num_c (BXP_NULL,
-      "stringoptions", NULL, 0, BX_MAX_BIT64S, 0);
-  set (initial_val);
-  BX_ASSERT(parent->get_type() == BXT_LIST);
-  this->parent = (bx_list_c *) parent;
-  if (this->parent) this->parent->add (this);
+  strncpy(this->val, initial_val, maxsize);
+  strncpy(this->initial_val, initial_val, maxsize);
+  this->options = new bx_param_num_c(NULL,
+      "stringoptions", NULL, NULL, 0, BX_MAX_BIT64S, 0);
+  set(initial_val);
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
 }
 
-bx_param_filename_c::bx_param_filename_c (bx_id id,
-    char *name,
-    char *description,
-    char *initial_val,
-    int maxsize)
-  : bx_param_string_c(id, name, description, initial_val, maxsize)
-{
-  get_options()->set(IS_FILENAME);
-}
-
-bx_param_filename_c::bx_param_filename_c (bx_param_c *parent,
+bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
     char *name,
     char *label,
     char *description,
@@ -1432,7 +1383,7 @@ bx_param_filename_c::bx_param_filename_c (bx_param_c *parent,
   get_options()->set(IS_FILENAME);
 }
 
-bx_param_string_c::~bx_param_string_c ()
+bx_param_string_c::~bx_param_string_c()
 {
     if ( this->val != NULL )
     {
@@ -1453,12 +1404,12 @@ bx_param_string_c::~bx_param_string_c ()
 }
 
 void 
-bx_param_string_c::reset () {
-  strncpy (this->val, this->initial_val, maxsize);
+bx_param_string_c::reset() {
+  strncpy(this->val, this->initial_val, maxsize);
 }
 
 void 
-bx_param_string_c::set_handler (param_string_event_handler handler)
+bx_param_string_c::set_handler(param_string_event_handler handler)
 {
   this->handler = handler; 
   // now that there's a handler, call set once to run the handler immediately
@@ -1466,28 +1417,28 @@ bx_param_string_c::set_handler (param_string_event_handler handler)
 }
 
 void 
-bx_param_string_c::set_enable_handler (param_enable_handler handler)
+bx_param_string_c::set_enable_handler(param_enable_handler handler)
 { 
   this->enable_handler = handler; 
 }
 
 void
-bx_param_string_c::set_enabled (int en)
+bx_param_string_c::set_enabled(int en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
-    en = (*enable_handler) (this, en);
+    en = (*enable_handler)(this, en);
     }
-  bx_param_c::set_enabled (en);
+  bx_param_c::set_enabled(en);
 }
 
 Bit32s
-bx_param_string_c::get (char *buf, int len)
+bx_param_string_c::get(char *buf, int len)
 {
-  if (options->get () & RAW_BYTES)
-    memcpy (buf, val, len);
+  if (options->get() & RAW_BYTES)
+    memcpy(buf, val, len);
   else
-    strncpy (buf, val, len);
+    strncpy(buf, val, len);
   if (handler) {
     // the handler can choose to replace the value in val/len.  Also its
     // return value is passed back as the return value of get.
@@ -1497,12 +1448,12 @@ bx_param_string_c::get (char *buf, int len)
 }
 
 void 
-bx_param_string_c::set (char *buf)
+bx_param_string_c::set(char *buf)
 {
-  if (options->get () & RAW_BYTES)
-    memcpy (val, buf, maxsize);
+  if (options->get() & RAW_BYTES)
+    memcpy(val, buf, maxsize);
   else
-    strncpy (val, buf, maxsize);
+    strncpy(val, buf, maxsize);
   if (handler) {
     // the handler can return a different char* to be copied into the value
     buf = (*handler)(this, 1, buf, -1);
@@ -1510,20 +1461,20 @@ bx_param_string_c::set (char *buf)
 }
 
 bx_bool
-bx_param_string_c::equals (const char *buf)
+bx_param_string_c::equals(const char *buf)
 {
-  if (options->get () & RAW_BYTES)
-    return (memcmp (val, buf, maxsize) == 0);
+  if (options->get() & RAW_BYTES)
+    return (memcmp(val, buf, maxsize) == 0);
   else
-    return (strncmp (val, buf, maxsize) == 0);
+    return (strncmp(val, buf, maxsize) == 0);
 }
 
-void bx_param_string_c::set_initial_val (char *buf) { 
-  if (options->get () & RAW_BYTES)
-    memcpy (initial_val, buf, maxsize);
+void bx_param_string_c::set_initial_val(char *buf) { 
+  if (options->get() & RAW_BYTES)
+    memcpy(initial_val, buf, maxsize);
   else
-    strncpy (initial_val, buf, maxsize);
-  set (initial_val);
+    strncpy(initial_val, buf, maxsize);
+  set(initial_val);
 }
 
 bx_list_c::bx_list_c(bx_id id, int maxsize)
@@ -1612,18 +1563,18 @@ bx_list_c::~bx_list_c()
 void bx_list_c::init(const char *list_title)
 {
   // the title defaults to the name
-  this->title = new bx_param_string_c(BXP_NULL,
-      "title of list",
-      "",
+  this->title = new bx_param_string_c(NULL,
+      "list_title",
+      "", "",
       get_name(), 80);
   if ((list_title != NULL) && (strlen(list_title) > 0)) {
     this->title->set((char *)list_title);
   }
-  this->options = new bx_param_num_c(BXP_NULL,
-      "list_option", "", 0, BX_MAX_BIT64S,
+  this->options = new bx_param_num_c(NULL,
+      "list_option", "", "", 0, BX_MAX_BIT64S,
       0);
-  this->choice = new bx_param_num_c(BXP_NULL,
-      "list_choice", "", 0, BX_MAX_BIT64S,
+  this->choice = new bx_param_num_c(NULL,
+      "list_choice", "", "", 0, BX_MAX_BIT64S,
       1);
 }
 
