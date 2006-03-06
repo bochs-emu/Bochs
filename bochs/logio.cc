@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.52 2006-01-31 19:37:56 vruppert Exp $
+// $Id: logio.cc,v 1.53 2006-03-06 22:32:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,6 +25,8 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+#include "bochs.h"
+#include "cpu/cpu.h"
 #include "iodev/iodev.h"
 #include <assert.h>
 

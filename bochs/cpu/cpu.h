@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.267 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: cpu.h,v 1.268 2006-03-06 22:32:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,10 @@
 
 #include "cpu/lazy_flags.h"
 #include "cpu/hostasm.h"
+
+#if BX_DISASM
+#  include "disasm/disasm.h"
+#endif
 
 // <TAG-DEFINES-DECODE-START>
 // segment register encoding
@@ -619,8 +623,6 @@ typedef struct {
   Bit32u sysenter_eip_msr;
 #endif
 
-  Bit32u smbase;
-
   /* TODO finish of the others */
 } bx_regs_msr_t;
 #endif
@@ -1107,6 +1109,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t cr4;
 #endif
+
+  /* SMM base register */
+  Bit32u smbase;
 
 #if BX_CPU_LEVEL >= 5
   bx_regs_msr_t msr;  

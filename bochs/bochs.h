@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.189 2006-03-06 22:02:48 sshwarts Exp $
+// $Id: bochs.h,v 1.190 2006-03-06 22:32:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -353,10 +353,6 @@ BOCHSAPI extern logfunc_t *genlog;
 #define FMT_ADDRX FMT_ADDRX64
 #else
 #define FMT_ADDRX FMT_ADDRX32
-#endif
-
-#if BX_DISASM
-#  include "disasm/disasm.h"
 #endif
 
 #if BX_GDBSTUB
