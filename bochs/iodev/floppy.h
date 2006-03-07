@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.26 2005-11-22 18:34:51 vruppert Exp $
+// $Id: floppy.h,v 1.27 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#ifndef BX_IODEV_FLOPPY_H
+#define BX_IODEV_FLOPPY_H
 
 #define FROM_FLOPPY 10
 #define TO_FLOPPY   11
@@ -196,5 +197,7 @@ typedef struct _BLOCK_DEV_PARAMS {
     BYTE  remainder[5];
 } BLOCK_DEV_PARAMS, *PBLOCK_DEV_PARAMS;
 #pragma pack(pop)
+
+#endif /* WIN32 */
 
 #endif

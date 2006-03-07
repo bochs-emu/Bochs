@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.9 2004-09-25 22:15:02 vruppert Exp $
+// $Id: pci2isa.h,v 1.10 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,6 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
+#ifndef BX_IODEV_PIC2ISA_H
+#define BX_IODEV_PIC2ISA_H
+
 #if BX_USE_P2I_SMF
 #  define BX_P2I_SMF  static
 #  define BX_P2I_THIS thePci2IsaBridge->
@@ -35,13 +38,12 @@
 
 
 class bx_pci2isa_c : public bx_pci2isa_stub_c {
-
 public:
-  bx_pci2isa_c(void);
-  ~bx_pci2isa_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
-  virtual void   pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level);
+  bx_pci2isa_c();
+ ~bx_pci2isa_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level);
 
 private:
 
@@ -52,7 +54,7 @@ private:
     Bit8u irq_registry[16];
     Bit32u irq_level[16];
     Bit8u pci_reset;
-    } s;
+  } s;
 
   static void pci_register_irq(unsigned pirq, unsigned irq);
   static void pci_unregister_irq(unsigned pirq);
@@ -67,4 +69,6 @@ private:
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
+
+#endif

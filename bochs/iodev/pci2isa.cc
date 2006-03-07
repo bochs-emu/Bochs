@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.25 2006-01-02 22:26:27 vruppert Exp $
+// $Id: pci2isa.cc,v 1.26 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,8 +40,7 @@
 
 bx_pci2isa_c *thePci2IsaBridge = NULL;
 
-  int
-libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePci2IsaBridge = new bx_pci2isa_c ();
   bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
@@ -49,26 +48,20 @@ libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *
   return(0); // Success
 }
 
-  void
-libpci2isa_LTX_plugin_fini(void)
-{
-}
+void libpci2isa_LTX_plugin_fini(void) {}
 
-bx_pci2isa_c::bx_pci2isa_c(void)
+bx_pci2isa_c::bx_pci2isa_c()
 {
   put("P2I");
   settype(PCI2ISALOG);
 }
 
-bx_pci2isa_c::~bx_pci2isa_c(void)
+bx_pci2isa_c::~bx_pci2isa_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_pci2isa_c::init(void)
+void bx_pci2isa_c::init(void)
 {
   unsigned i;
   // called once when bochs initializes
@@ -111,8 +104,7 @@ bx_pci2isa_c::init(void)
   BX_P2I_THIS s.pci_conf[0x63] = 0x80;
 }
 
-  void
-bx_pci2isa_c::reset(unsigned type)
+void bx_pci2isa_c::reset(unsigned type)
 {
   BX_P2I_THIS s.pci_conf[0x05] = 0x00;
   BX_P2I_THIS s.pci_conf[0x06] = 0x00;
@@ -152,8 +144,7 @@ bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_reset = 0x00;
 }
 
-  void
-bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
+void bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
 {
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (BX_P2I_THIS s.pci_conf[0x60 + pirq] < 16) {
@@ -167,8 +158,7 @@ bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
   }
 }
 
-  void
-bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
+void bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
 {
   Bit8u irq =  BX_P2I_THIS s.pci_conf[0x60 + pirq];
   if (irq < 16) {
@@ -181,8 +171,7 @@ bx_pci2isa_c::pci_unregister_irq(unsigned pirq)
   }
 }
 
-  void
-bx_pci2isa_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
+void bx_pci2isa_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
 {
   Bit8u pirq = ((devfunc >> 3) + line - 2) & 0x03;
   Bit8u irq = BX_P2I_THIS s.pci_conf[0x60 + pirq];
@@ -203,22 +192,17 @@ bx_pci2isa_c::pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level)
   }
 }
 
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pci2isa_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_pci2isa_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_P2I_SMF
   bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_pci2isa_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_pci2isa_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -245,21 +229,17 @@ bx_pci2isa_c::read(Bit32u address, unsigned io_len)
   return(0xffffffff);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pci2isa_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci2isa_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_P2I_SMF
   bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -303,21 +283,17 @@ bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
 }
 
 
-  // static pci configuration space read callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static pci configuration space read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_pci2isa_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_pci2isa_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
 #if !BX_USE_P2I_SMF
   bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-
-  return( class_ptr->pci_read(address, io_len) );
+  return class_ptr->pci_read(address, io_len);
 }
 
-
-  Bit32u
-bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
+Bit32u bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -331,26 +307,23 @@ bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
     }
     BX_DEBUG(("PIIX3 PCI-to-ISA read register 0x%02x value 0x%08x", address, value));
     return value;
-    }
+  }
   else
     return(0xffffffff);
 }
 
 
-  // static pci configuration space write callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static pci configuration space write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  void
-bx_pci2isa_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci2isa_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_P2I_SMF
   bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-
   class_ptr->pci_write(address, value, io_len);
 }
 
-  void
-bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);

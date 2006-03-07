@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.22 2006-03-03 20:29:50 vruppert Exp $
+// $Id: sb16.h,v 1.23 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,6 +26,8 @@
 
 // This file (SB16.H) written and donated by Josef Drexler
 
+#ifndef BX_IODEV_SB16_H
+#define BX_IODEV_SB16_H
 
 #if BX_USE_SB16_SMF
 #  define BX_SB16_SMF   static
@@ -201,8 +203,8 @@ public:
   /* Make writelog available to output functions */
   BX_SB16_SMF void writelog(int loglev, const char *str, ...);
   // return midimode and wavemode setting (for lowlevel output class)
-  int get_midimode() {return midimode;}
-  int get_wavemode() {return wavemode;}
+  int get_midimode() const {return midimode;}
+  int get_wavemode() const {return wavemode;}
   // runtimer parameter handler
   static Bit64s sb16_param_handler(bx_param_c *param, int set, Bit64s val);
 
@@ -403,18 +405,18 @@ public:
   bx_sound_output_c(bx_sb16_c *sb16);
   BX_SOUND_VIRTUAL ~bx_sound_output_c();
 
-  BX_SOUND_VIRTUAL int    waveready();
-  BX_SOUND_VIRTUAL int    midiready();
+  BX_SOUND_VIRTUAL int waveready();
+  BX_SOUND_VIRTUAL int midiready();
 
-  BX_SOUND_VIRTUAL int    openmidioutput(char *device);
-  BX_SOUND_VIRTUAL int    sendmidicommand(int delta, int command, int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int    closemidioutput();
+  BX_SOUND_VIRTUAL int openmidioutput(char *device);
+  BX_SOUND_VIRTUAL int sendmidicommand(int delta, int command, int length, Bit8u data[]);
+  BX_SOUND_VIRTUAL int closemidioutput();
 
-  BX_SOUND_VIRTUAL int    openwaveoutput(char *device);
-  BX_SOUND_VIRTUAL int    startwaveplayback(int frequency, int bits, int stereo, int format);
-  BX_SOUND_VIRTUAL int    sendwavepacket(int length, Bit8u data[]);
-  BX_SOUND_VIRTUAL int    stopwaveplayback();
-  BX_SOUND_VIRTUAL int    closewaveoutput();
+  BX_SOUND_VIRTUAL int openwaveoutput(char *device);
+  BX_SOUND_VIRTUAL int startwaveplayback(int frequency, int bits, int stereo, int format);
+  BX_SOUND_VIRTUAL int sendwavepacket(int length, Bit8u data[]);
+  BX_SOUND_VIRTUAL int stopwaveplayback();
+  BX_SOUND_VIRTUAL int closewaveoutput();
 };
 
 #define WRITELOG        sb16->writelog
@@ -425,4 +427,6 @@ public:
 #else
 #define MIDILOG(x)      ((sb16->get_midimode()>0?x:0x7f))
 #define WAVELOG(x)      ((sb16->get_wavemode()>0?x:0x7f))
+#endif
+
 #endif

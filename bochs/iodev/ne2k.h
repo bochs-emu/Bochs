@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.16 2004-09-05 10:30:19 vruppert Exp $
+// $Id: ne2k.h,v 1.17 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,6 +33,8 @@
 // to provide a windowed memory region for the chip and a MAC address.
 //
 
+#ifndef BX_IODEV_NE2K
+#define BX_IODEV_NE2K
 
 #if BX_USE_NE2K_SMF
 #  define BX_NE2K_SMF  static
@@ -256,3 +258,5 @@ private:
 #endif
 #endif
 };
+
+#endif

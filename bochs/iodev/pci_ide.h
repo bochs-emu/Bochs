@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.h,v 1.8 2006-03-06 19:23:13 sshwarts Exp $
+// $Id: pci_ide.h,v 1.9 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -24,6 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef BX_IODEV_PCIIDE_H
+#define BX_IODEV_PCIIDE_H
 
 #if BX_USE_PIDE_SMF
 #  define BX_PIDE_SMF  static
@@ -35,16 +37,14 @@
 #  define BX_PIDE_THIS_PTR this
 #endif
 
-
 class bx_pci_ide_c : public bx_pci_ide_stub_c {
-
 public:
   bx_pci_ide_c();
-  ~bx_pci_ide_c();
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+ ~bx_pci_ide_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
   virtual bx_bool bmdma_present(void);
-  virtual void   bmdma_set_irq(Bit8u channel);
+  virtual void bmdma_set_irq(Bit8u channel);
 
   static void timer_handler(void *);
   BX_PIDE_SMF void timer(void);
@@ -77,4 +77,6 @@ private:
   Bit32u pci_read(Bit8u address, unsigned io_len);
   void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
+
+#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.87 2005-12-27 13:21:25 vruppert Exp $
+// $Id: cdrom.cc,v 1.88 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,6 +31,8 @@
 // ioctl() calls and such.  Should be fairly easy to add support
 // for your OS if it is not supported yet.
 
+#ifndef BX_IODEV_CDROM_H
+#define BX_IODEV_CDROM_H
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
@@ -530,7 +532,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.87 2005-12-27 13:21:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.88 2006-03-07 18:16:40 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -1484,3 +1486,5 @@ void cdrom_interface::seek(int lba)
 }
 
 #endif /* if BX_SUPPORT_CDROM */
+
+#endif

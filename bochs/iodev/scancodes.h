@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.h,v 1.4 2002-10-24 21:07:51 bdenney Exp $
+// $Id: scancodes.h,v 1.5 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -18,6 +18,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef BX_SCANCODES_H
+#define BX_SCANCODES_H
 
 // Translation table of the 8042
 extern unsigned char translation8042[256];
@@ -25,7 +27,9 @@ extern unsigned char translation8042[256];
 typedef struct { 
   const char *make;
   const char *brek;
-  }scancode;
+} scancode;
 
 // Scancodes table
 extern scancode scancodes[BX_KEY_NBKEYS][3];
+
+#endif

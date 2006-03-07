@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.70 2006-03-06 19:23:13 sshwarts Exp $
+// $Id: iodev.h,v 1.71 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -259,8 +259,8 @@ class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
   virtual void dump_status(void) {}
 };
 
-class BOCHSAPI bx_pci_stub_c : public bx_devmodel_c {
-  public:
+class BOCHSAPI bx_pci_bridge_stub_c : public bx_devmodel_c {
+public:
   virtual bx_bool register_pci_handlers(void *this_ptr,
                                         Bit32u (*bx_pci_read_handler)(void *, Bit8u, unsigned),
                                         void(*bx_pci_write_handler)(void *, Bit8u, Bit32u, unsigned),
@@ -402,7 +402,7 @@ public:
 #if BX_SUPPORT_APIC
   bx_ioapic_c       *ioapic;
 #endif
-  bx_pci_stub_c     *pluginPciBridge;
+  bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
   bx_devmodel_c     *pluginPciVgaAdapter;
@@ -449,7 +449,7 @@ public:
   bx_pic_stub_c  stubPic;
   bx_floppy_stub_c  stubFloppy;
   bx_vga_stub_c  stubVga;
-  bx_pci_stub_c  stubPci;
+  bx_pci_bridge_stub_c  stubPci;
   bx_pci2isa_stub_c stubPci2Isa;
   bx_pci_ide_stub_c stubPciIde;
   bx_ne2k_stub_c    stubNE2k;

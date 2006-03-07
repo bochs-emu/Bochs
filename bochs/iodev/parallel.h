@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.12 2004-01-27 21:38:51 vruppert Exp $
+// $Id: parallel.h,v 1.13 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+#ifndef BX_IODEV_PARPORT_H
+#define BX_IODEV_PARPORT_H
 
 
 #if BX_USE_PAR_SMF
@@ -62,7 +65,6 @@ typedef struct {
 } bx_par_t;
 
 
-
 class bx_parallel_c : public bx_devmodel_c {
 public:
 
@@ -82,4 +84,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
+
+#endif

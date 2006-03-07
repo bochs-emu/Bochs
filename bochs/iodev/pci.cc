@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.44 2006-03-03 20:15:07 sshwarts Exp $
+// $Id: pci.cc,v 1.45 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,11 +38,11 @@
 
 #define LOG_THIS thePciBridge->
 
-bx_pci_c *thePciBridge = NULL;
+bx_pci_bridge_c *thePciBridge = NULL;
 
 int libpci_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePciBridge = new bx_pci_c ();
+  thePciBridge = new bx_pci_bridge_c ();
   bx_devices.pluginPciBridge = thePciBridge;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciBridge, BX_PLUGIN_PCI);
   return(0); // Success
@@ -52,19 +52,19 @@ void libpci_LTX_plugin_fini(void)
 {
 }
 
-bx_pci_c::bx_pci_c()
+bx_pci_bridge_c::bx_pci_bridge_c()
 {
   put("PCI");
   settype(PCILOG);
 }
 
-bx_pci_c::~bx_pci_c()
+bx_pci_bridge_c::~bx_pci_bridge_c()
 {
   // nothing for now
   BX_DEBUG(("Exit."));
 }
 
-void bx_pci_c::init(void)
+void bx_pci_bridge_c::init(void)
 {
   // called once when bochs initializes
   unsigned i;
@@ -111,7 +111,7 @@ void bx_pci_c::init(void)
 }
 
   void
-bx_pci_c::reset(unsigned type)
+bx_pci_bridge_c::reset(unsigned type)
 {
   unsigned i;
   char devname[80];
@@ -153,15 +153,15 @@ bx_pci_c::reset(unsigned type)
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
 
-Bit32u bx_pci_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_pci_bridge_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
-  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
 
   return class_ptr->read(address, io_len);
 }
 
-Bit32u bx_pci_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -205,15 +205,15 @@ Bit32u bx_pci_c::read(Bit32u address, unsigned io_len)
 // static IO port write callback handler
 // redirects to non-static class handler to avoid virtual functions
 
-void bx_pci_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci_bridge_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
-  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
 
   class_ptr->write(address, value, io_len);
 }
 
-void bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -265,14 +265,14 @@ void bx_pci_c::write(Bit32u address, Bit32u value, unsigned io_len)
 // static pci configuration space read callback handler
 // redirects to non-static class handler to avoid virtual functions
 
-Bit32u bx_pci_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_pci_bridge_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
-  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
   return class_ptr->pci_read(address, io_len);
 }
 
-Bit32u bx_pci_c::pci_read(Bit8u address, unsigned io_len)
+Bit32u bx_pci_bridge_c::pci_read(Bit8u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -294,14 +294,14 @@ Bit32u bx_pci_c::pci_read(Bit8u address, unsigned io_len)
 // static pci configuration space write callback handler
 // redirects to non-static class handler to avoid virtual functions
 
-void bx_pci_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci_bridge_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCI_SMF
-  bx_pci_c *class_ptr = (bx_pci_c *) this_ptr;
+  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
   class_ptr->pci_write(address, value, io_len);
 }
 
-void bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+void bx_pci_bridge_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -330,7 +330,7 @@ void bx_pci_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 }
 
 
-Bit8u bx_pci_c::rd_memType(Bit32u addr)
+Bit8u bx_pci_bridge_c::rd_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
@@ -374,7 +374,7 @@ Bit8u bx_pci_c::rd_memType(Bit32u addr)
    return(0); // keep compiler happy
 }
 
-Bit8u bx_pci_c::wr_memType(Bit32u addr)
+Bit8u bx_pci_bridge_c::wr_memType(Bit32u addr)
 {
    switch ((addr & 0xFC000) >> 12) {
       case 0xC0:
@@ -418,7 +418,7 @@ Bit8u bx_pci_c::wr_memType(Bit32u addr)
    return(0); // keep compiler happy
 }
 
-void bx_pci_c::print_i440fx_state()
+void bx_pci_bridge_c::print_i440fx_state()
 {
   int i;
 
@@ -437,7 +437,7 @@ void bx_pci_c::print_i440fx_state()
 }
 
   bx_bool
-bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
+bx_pci_bridge_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
                                  bx_pci_write_handler_t f2, Bit8u *devfunc,
                                  const char *name, const char *descr)
 {
@@ -482,7 +482,7 @@ bx_pci_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
   }
 }
 
-bx_bool bx_pci_c::is_pci_device(const char *name)
+bx_bool bx_pci_bridge_c::is_pci_device(const char *name)
 {
   unsigned i;
   char devname[80];
@@ -498,7 +498,7 @@ bx_bool bx_pci_c::is_pci_device(const char *name)
   return 0;
 }
 
-bx_bool bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
+bx_bool bx_pci_bridge_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
                            Bit32u *addr, Bit8u *pci_conf, unsigned size)
 {
   Bit32u newbase;
@@ -525,7 +525,7 @@ bx_bool bx_pci_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_h
   return 0;
 }
 
-bx_bool bx_pci_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
+bx_bool bx_pci_bridge_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                           Bit32u *addr, Bit8u *pci_conf, unsigned size,
                           const Bit8u *iomask, const char *name)
 {

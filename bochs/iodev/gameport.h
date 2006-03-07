@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.h,v 1.1 2003-06-21 12:55:19 vruppert Exp $
+// $Id: gameport.h,v 1.2 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -24,6 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef BX_IODEV_GAMEPORT_H
+#define BX_IODEV_GAMEPORT_H
 
 #if BX_USE_GAME_SMF
 #  define BX_GAMEPORT_SMF  static
@@ -35,10 +37,9 @@
 
 
 class bx_gameport_c : public bx_devmodel_c {
-
 public:
-  bx_gameport_c(void);
-  ~bx_gameport_c(void);
+  bx_gameport_c();
+ ~bx_gameport_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
 
@@ -60,4 +61,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
+
+#endif

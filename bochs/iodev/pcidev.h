@@ -16,6 +16,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
  */
 
+#ifndef BX_IODEV_PCIDEV_H
+#define BX_IODEV_PCIDEV_H
+
 #if BX_USE_PCIDEV_SMF
 #  define BX_PCIDEV_THIS thePciDevAdapter->
 #  define BX_PCIDEV_THIS_ thePciDevAdapter
@@ -37,8 +40,8 @@
 class bx_pcidev_c : public bx_devmodel_c
 {
 public:
-  bx_pcidev_c(void);
-  ~bx_pcidev_c(void);
+  bx_pcidev_c();
+ ~bx_pcidev_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
   
@@ -64,3 +67,5 @@ private:
   void write(void *param, Bit32u address, Bit32u value, unsigned io_len);
 #endif
 };
+
+#endif

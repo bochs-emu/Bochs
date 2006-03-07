@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.10 2002-10-24 21:07:52 bdenney Exp $
+// $Id: unmapped.h,v 1.11 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,8 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
-
+#ifndef BX_IODEV_UNMAPPED_H
+#define BX_IODEV_UNMAPPED_H
 
 #if BX_USE_UM_SMF
 #  define BX_UM_SMF  static
@@ -35,12 +35,10 @@
 #  define BX_UM_THIS this->
 #endif
 
-
-
 class bx_unmapped_c : public bx_devmodel_c {
 public:
-  bx_unmapped_c(void);
-  ~bx_unmapped_c(void);
+  bx_unmapped_c();
+ ~bx_unmapped_c();
 
   virtual void init(void);
   virtual void reset (unsigned type);
@@ -54,11 +52,11 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
-
   struct {
     Bit8u port80;
     Bit8u port8e;
     Bit8u shutdown;
-    } s;  // state information
+  } s;  // state information
+};
 
-  };
+#endif

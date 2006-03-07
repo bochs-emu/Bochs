@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.cc,v 1.14 2004-06-19 15:20:12 sshwarts Exp $
+// $Id: guest2host.cc,v 1.15 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 
 bx_g2h_c bx_g2h;
 
-bx_g2h_c::bx_g2h_c(void)
+bx_g2h_c::bx_g2h_c()
 {
   put("G2H");
   settype(G2HLOG);
@@ -40,36 +40,32 @@ bx_g2h_c::bx_g2h_c(void)
   for (i=0; i<BX_MAX_G2H_CHANNELS; i++) {
     s.callback[i].f = NULL;
     s.callback[i].used = 0;
-    }
+  }
 }
 
-bx_g2h_c::~bx_g2h_c(void)
+bx_g2h_c::~bx_g2h_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
-  void
-bx_g2h_c::init(void)
+void bx_g2h_c::init(void)
 {
-  BX_DEBUG(("Init $Id: guest2host.cc,v 1.14 2004-06-19 15:20:12 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: guest2host.cc,v 1.15 2006-03-07 18:16:40 sshwarts Exp $"));
   // Reserve a dword port for this interface
   for (Bit32u addr=BX_G2H_PORT; addr<=(BX_G2H_PORT+3); addr++) {
     bx_devices.register_io_read_handler(&bx_g2h,
       inp_handler, addr, "g2h");
     bx_devices.register_io_write_handler(&bx_g2h,
       outp_handler, addr, "g2h");
-    }
+  }
   memset(&bx_g2h.s, 0, sizeof(bx_g2h.s));
 }
 
-  void
-bx_g2h_c::reset(unsigned type)
+void bx_g2h_c::reset(unsigned type)
 {
 }
 
-  unsigned
-bx_g2h_c::acquire_channel(bx_g2h_callback_t f)
+unsigned bx_g2h_c::acquire_channel(bx_g2h_callback_t f)
 {
   unsigned i;
 
@@ -78,32 +74,30 @@ bx_g2h_c::acquire_channel(bx_g2h_callback_t f)
       bx_g2h.s.callback[i].f = f;
       bx_g2h.s.callback[i].used = 1;
       return(i);
-      }
     }
+  }
 
   BX_INFO(("g2h: attempt to acquire channel: maxed out"));
-  return(BX_G2H_ERROR); // No more free channels
+  return BX_G2H_ERROR; // No more free channels
 }
 
-  unsigned
-bx_g2h_c::deacquire_channel(unsigned channel)
+unsigned bx_g2h_c::deacquire_channel(unsigned channel)
 {
   if ( (channel >= BX_MAX_G2H_CHANNELS) ||
-       (bx_g2h.s.callback[channel].used==0) ) {
-    BX_PANIC(("g2h: attempt to deacquire channel %u: not acquired",
-      channel));
-    }
+       (bx_g2h.s.callback[channel].used==0) )
+  {
+    BX_PANIC(("g2h: attempt to deacquire channel %u: not acquired", channel));
+  }
   bx_g2h.s.callback[channel].used = 0;
   bx_g2h.s.callback[channel].f = NULL;
-  return(0);
+  return 0;
 }
 
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_g2h_c::inp_handler(void *this_ptr, Bit32u addr, unsigned io_len)
+Bit32u bx_g2h_c::inp_handler(void *this_ptr, Bit32u addr, unsigned io_len)
 {
   UNUSED(this_ptr);
 
@@ -116,11 +110,7 @@ bx_g2h_c::inp_handler(void *this_ptr, Bit32u addr, unsigned io_len)
   return(0);
 }
 
-
-
-  void
-bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
-                               Bit32u val32, unsigned io_len)
+void bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr, Bit32u val32, unsigned io_len)
 {
   UNUSED(this_ptr);
 
@@ -132,7 +122,7 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
   if ( (bx_g2h.s.packet_count==0) && (val32!=BX_G2H_MAGIC) ) {
     BX_INFO(("g2h: IO W: Not magic header."));
     return;
-    }
+  }
   bx_g2h.s.guest_packet[bx_g2h.s.packet_count++] = val32;
   if (bx_g2h.s.packet_count >= BX_G2H_PACKET_SIZE) {
     unsigned channel;
@@ -141,11 +131,11 @@ bx_g2h_c::outp_handler(void *this_ptr, Bit32u addr,
     channel = bx_g2h.s.guest_packet[1];
     if (channel >= BX_MAX_G2H_CHANNELS) {
       BX_PANIC(("g2h: channel (%u) out of bounds", channel));
-      }
+    }
     if (bx_g2h.s.callback[channel].used==0) {
       BX_PANIC(("g2h: channel (%u) not active", channel));
-      }
+    }
     bx_g2h.s.callback[channel].f(&bx_g2h.s.guest_packet);
     bx_g2h.s.packet_count = 0; // Ready for next packet
-    }
+  }
 }

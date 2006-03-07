@@ -1,5 +1,5 @@
 
-// $Id: biosdev.h,v 1.4 2004-09-05 17:55:12 vruppert Exp $
+// $Id: biosdev.h,v 1.5 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,8 +25,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-#define BX_BIOS_MESSAGE_SIZE 80
+#ifndef BX_IODEV_BIOSDEV_H
+#define BX_IODEV_BIOSDEV_H
 
+#define BX_BIOS_MESSAGE_SIZE 80
 
 #if BX_USE_BIOS_SMF
 #  define BX_BIOS_SMF  static
@@ -36,11 +38,10 @@
 #  define BX_BIOS_THIS this->
 #endif
 
-
 class bx_biosdev_c : public bx_devmodel_c {
 public:
-  bx_biosdev_c(void);
-  ~bx_biosdev_c(void);
+  bx_biosdev_c();
+ ~bx_biosdev_c();
 
   virtual void init(void);
   virtual void reset (unsigned type);
@@ -60,6 +61,7 @@ private:
     Bit8u vgabios_message[BX_BIOS_MESSAGE_SIZE];
     unsigned int vgabios_message_i;
     bx_bool vgabios_panic_flag;
-    } s;  // state information
+  } s;  // state information
+};
 
-  };
+#endif

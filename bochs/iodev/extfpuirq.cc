@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.6 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: extfpuirq.cc,v 1.7 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,8 +48,7 @@ libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char
   return(0); // Success
 }
 
-  void
-libextfpuirq_LTX_plugin_fini(void)
+void libextfpuirq_LTX_plugin_fini(void)
 {
 }
 
@@ -62,40 +61,32 @@ bx_extfpuirq_c::bx_extfpuirq_c(void)
 bx_extfpuirq_c::~bx_extfpuirq_c(void)
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_extfpuirq_c::init(void)
+void bx_extfpuirq_c::init(void)
 {
   // called once when bochs initializes
   DEV_register_iowrite_handler(this, write_handler, 0x00F0, "External FPU IRQ", 1);
   DEV_register_irq(13, "External FPU IRQ");
 }
 
-  void
-bx_extfpuirq_c::reset(unsigned type)
+void bx_extfpuirq_c::reset(unsigned type)
 {
   // We should handle IGNNE here
   DEV_pic_lower_irq(13);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_extfpuirq_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_extfpuirq_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_EFI_SMF
   bx_extfpuirq_c *class_ptr = (bx_extfpuirq_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_extfpuirq_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_extfpuirq_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -104,4 +95,3 @@ bx_extfpuirq_c::write(Bit32u address, Bit32u value, unsigned io_len)
   // We should handle IGNNE here
   DEV_pic_lower_irq(13);
 }
-

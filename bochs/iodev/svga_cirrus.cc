@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.28 2006-02-21 21:35:09 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.29 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -229,14 +229,11 @@ libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
   return(0); // Success
 }
 
-  void
-libvga_LTX_plugin_fini(void)
+void libvga_LTX_plugin_fini(void)
 {
 }
 
-
-bx_svga_cirrus_c::bx_svga_cirrus_c(void) :
-  bx_vga_c ()
+bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
 {
   put("CLVGA");
   vidmem = NULL;
@@ -247,14 +244,13 @@ bx_svga_cirrus_c::~bx_svga_cirrus_c()
 {
   if (vidmem != NULL) {
     delete [] vidmem;
-    }
+  }
   if (tilemem != NULL) {
     delete [] tilemem;
-    }
+  }
 }
 
-  void
-bx_svga_cirrus_c::init(void)
+void bx_svga_cirrus_c::init(void)
 {
   // initialize VGA stuffs.
   BX_CIRRUS_THIS bx_vga_c::init();
@@ -289,8 +285,7 @@ bx_svga_cirrus_c::init(void)
   }
 }
 
-  void
-bx_svga_cirrus_c::svga_init_members()
+void bx_svga_cirrus_c::svga_init_members()
 {
   unsigned i;
 
@@ -366,7 +361,7 @@ bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem;
 }
 
-  void
+void
 bx_svga_cirrus_c::reset(unsigned type)
 {
   // reset VGA stuffs.
@@ -378,9 +373,7 @@ bx_svga_cirrus_c::reset(unsigned type)
   }
 }
 
-
-  void
-bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, 
+void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, 
                               unsigned width, unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1;
@@ -419,15 +412,13 @@ bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0,
   }
 }
 
-  void
-bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value)
+void bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value)
 {
-  int x;
   Bit8u val = value;
   Bit8u *dst;
 
   dst = BX_CIRRUS_THIS vidmem + offset;
-  for (x = 0; x < 8; x++) {
+  for (int x = 0; x < 8; x++) {
     if (val & 0x80) {
       *dst = BX_CIRRUS_THIS control.shadow_reg1;
     } else if (mode == 5) {
@@ -438,15 +429,13 @@ bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u valu
   }
 }
 
-  void
-bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value)
+void bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value)
 {
-  int x;
   Bit8u val = value;
   Bit8u *dst;
 
   dst = BX_CIRRUS_THIS vidmem + offset;
-  for (x = 0; x < 8; x++) {
+  for (int x = 0; x < 8; x++) {
     if (val & 0x80) {
       *dst = BX_CIRRUS_THIS control.shadow_reg1;
       *(dst + 1) = BX_CIRRUS_THIS control.reg[0x11];
@@ -460,9 +449,8 @@ bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u val
 }
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  bx_bool
-bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
-                                          void *data, void *param)
+bx_bool bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
+                                        void *data, void *param)
 {
   Bit8u *data_ptr;
 
@@ -484,12 +472,11 @@ bx_svga_cirrus_c::cirrus_mem_read_handler(unsigned long addr, unsigned long len,
 }
 #endif
 
-  Bit8u
-bx_svga_cirrus_c::mem_read(Bit32u addr)
+Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
 {
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     return BX_CIRRUS_THIS bx_vga_c::mem_read(addr);
-    }
+  }
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
@@ -550,13 +537,13 @@ bx_svga_cirrus_c::mem_read(Bit32u addr)
       if (ptr != BX_CIRRUS_THIS bitblt.memdst_endptr) {
         BX_CIRRUS_THIS bitblt.memdst_ptr ++;
         return *ptr;
-        }
+      }
       if (!svga_asyncbitblt_next()) {
         ptr = BX_CIRRUS_THIS bitblt.memdst_ptr;
         BX_CIRRUS_THIS bitblt.memdst_ptr ++;
         return *ptr;
-        }
       }
+    }
 
     offset = addr & 0xffff;
     bank = (offset >> 15);
@@ -570,11 +557,11 @@ bx_svga_cirrus_c::mem_read(Bit32u addr)
       }
       offset &= (BX_CIRRUS_THIS memsize - 1);
       return *(BX_CIRRUS_THIS vidmem + offset);
-      }
+    }
     else {
       return 0xff;
-      }
     }
+  }
   else if (addr >= 0xB8000 && addr <= 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset;
@@ -582,18 +569,17 @@ bx_svga_cirrus_c::mem_read(Bit32u addr)
     offset = addr - 0xb8000;
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04)
       return svga_mmio_blt_read(offset);
-    }
+  }
   else {
     BX_DEBUG(("mem_read 0x%08x",addr));
-    }
+  }
 
   return 0xff;
 }
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
-  bx_bool
-bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
-                                           void *data, void *param)
+bx_bool bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len,
+                                         void *data, void *param)
 {
   Bit8u *data_ptr;
 
@@ -615,13 +601,12 @@ bx_svga_cirrus_c::cirrus_mem_write_handler(unsigned long addr, unsigned long len
 }
 #endif
 
-  void
-bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
+void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
 {
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     BX_CIRRUS_THIS bx_vga_c::mem_write(addr,value);
     return;
-    }
+  }
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
@@ -727,23 +712,20 @@ bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
     offset = addr - 0xb8000;
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04) {
       svga_mmio_blt_write(offset & 0xff, value);
-      }
     }
+  }
   else {
     BX_DEBUG(("mem_write 0x%08x, value 0x%02x",addr,value));
-    }
+  }
 }
 
-
-  void
-bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot, 
+void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot, 
                                     unsigned *txHeight, unsigned *txWidth)
 {
   BX_CIRRUS_THIS bx_vga_c::get_text_snapshot(text_snapshot,txHeight,txWidth);
 }
 
-  void
-bx_svga_cirrus_c::trigger_timer(void *this_ptr)
+void bx_svga_cirrus_c::trigger_timer(void *this_ptr)
 {
   BX_CIRRUS_THIS timer_handler(this_ptr);
 }
@@ -758,22 +740,20 @@ Bit64s bx_svga_cirrus_c::svga_param_handler(bx_param_c *param, int set, Bit64s v
   return val;
 }
 
-  Bit8u
-bx_svga_cirrus_c::get_actl_palette_idx(Bit8u index)
+Bit8u bx_svga_cirrus_c::get_actl_palette_idx(Bit8u index)
 {
   return BX_CIRRUS_THIS bx_vga_c::get_actl_palette_idx(index);
 }
 
-  Bit32u
-bx_svga_cirrus_c::svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_svga_cirrus_c::svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_CIRRUS_SMF
   bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) this_ptr;
 
-  return( class_ptr->svga_read(address, io_len) );
+  return class_ptr->svga_read(address, io_len);
 }
-  Bit32u
-bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
+
+Bit32u bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -784,11 +764,11 @@ bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
     value = (Bit32u)SVGA_READ(address,1);
     value |= (Bit32u)SVGA_READ(address+1,1) << 8;
     return value;
-    }
+  }
 
   if (io_len != 1) {
     BX_PANIC(("SVGA read: io_len != 1"));
-    }
+  }
 
   switch (address) {
     case 0x03b4: /* VGA: CRTC Index Register (monochrome emulation modes) */
@@ -852,21 +832,19 @@ bx_svga_cirrus_c::svga_read(Bit32u address, unsigned io_len)
 
     default:
       break;
-    }
+  }
 
   return VGA_READ(address,io_len);
 }
 
-  void
-bx_svga_cirrus_c::svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_svga_cirrus_c::svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_CIRRUS_SMF
   bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) this_ptr;
-
   class_ptr->svga_write(address, value, io_len);
 }
-  void
-bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
+
+void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -876,11 +854,11 @@ bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     SVGA_WRITE(address,value & 0xff,1);
     SVGA_WRITE(address+1,value >> 8,1);
     return;
-    }
+  }
 
   if (io_len != 1) {
     BX_PANIC(("SVGA write: io_len != 1"));
-    }
+  }
 
   switch (address) {
     case 0x03b4: /* VGA: CRTC Index Register (monochrome emulation modes) */
@@ -892,7 +870,7 @@ bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_CIRRUS_THIS is_unlocked()) {
         BX_CIRRUS_THIS svga_write_crtc(address,BX_CIRRUS_THIS crtc.index,value);
         return;
-        }
+      }
       break;
 
     case 0x03c4: /* VGA: Sequencer Index Register */
@@ -903,7 +881,7 @@ bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           (BX_CIRRUS_THIS is_unlocked())) {
         BX_CIRRUS_THIS svga_write_sequencer(address,BX_CIRRUS_THIS sequencer.index,value);
         return;
-        }
+      }
       break;
     case 0x03c6: /* Hidden DAC */
       if (BX_CIRRUS_THIS is_unlocked()) {
@@ -936,26 +914,23 @@ bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_CIRRUS_THIS is_unlocked()) {
         BX_CIRRUS_THIS svga_write_control(address,BX_CIRRUS_THIS control.index,value);
         return;
-        }
+      }
       break;
     default:
       break;
-    }
+  }
 
   VGA_WRITE(address,value,io_len);
 }
 
-  void
-bx_svga_cirrus_c::svga_timer_handler(void *this_ptr)
+void bx_svga_cirrus_c::svga_timer_handler(void *this_ptr)
 {
 #if !BX_USE_CIRRUS_SMF
   bx_svga_cirrus_c *class_ptr = (bx_svga_cirrus_c *) this_ptr;
-
   class_ptr->svga_timer();
 }
 
-  void
-bx_svga_cirrus_c::svga_timer(void)
+void bx_svga_cirrus_c::svga_timer(void)
 {
 #else // !BX_USE_CIRRUS_SMF
   UNUSED(this_ptr);
@@ -965,8 +940,7 @@ bx_svga_cirrus_c::svga_timer(void)
   bx_gui->flush();
 }
 
-  void
-bx_svga_cirrus_c::svga_modeupdate(void)
+void bx_svga_cirrus_c::svga_modeupdate(void)
 {
   Bit32u iTopOffset, iWidth, iHeight;
   Bit8u iBpp, iDispBpp;
@@ -1022,8 +996,7 @@ bx_svga_cirrus_c::svga_modeupdate(void)
   BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem + iTopOffset;
 }
 
-  void
-bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
+void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
   if (BX_CIRRUS_THIS hw_cursor.size &&
       (xc < (unsigned)(BX_CIRRUS_THIS hw_cursor.x+BX_CIRRUS_THIS hw_cursor.size)) &&
@@ -1144,8 +1117,7 @@ bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinf
   }
 }
 
-  void
-bx_svga_cirrus_c::svga_update(void)
+void bx_svga_cirrus_c::svga_update(void)
 {
   unsigned width, height, pitch;
 
@@ -1449,8 +1421,7 @@ bx_svga_cirrus_c::svga_update(void)
   }
 }
 
-  void
-bx_svga_cirrus_c::update_bank_ptr(Bit8u bank_index)
+void bx_svga_cirrus_c::update_bank_ptr(Bit8u bank_index)
 {
   unsigned offset;
   unsigned limit;
@@ -1490,8 +1461,7 @@ bx_svga_cirrus_c::update_bank_ptr(Bit8u bank_index)
   }
 }
 
-  Bit8u
-bx_svga_cirrus_c::svga_read_crtc(Bit32u address, unsigned index)
+Bit8u bx_svga_cirrus_c::svga_read_crtc(Bit32u address, unsigned index)
 {
   switch (index) {
     case 0x00: // VGA
@@ -1535,21 +1505,20 @@ bx_svga_cirrus_c::svga_read_crtc(Bit32u address, unsigned index)
     default:
       BX_DEBUG(("CRTC index 0x%02x is unknown(read)", index));
       break;
-    }
+  }
 
   if (index <= VGA_CRTC_MAX) {
     return VGA_READ(address,1);
-    }
+  }
 
   if (index <= CIRRUS_CRTC_MAX) {
     return BX_CIRRUS_THIS crtc.reg[index];
-    }
+  }
 
   return 0xff;
 }
 
-  void
-bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
+void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 {
   BX_DEBUG(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
@@ -1599,7 +1568,7 @@ bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     default:
       BX_DEBUG(("CRTC index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
       return;
-    }
+  }
 
   if (index <= CIRRUS_CRTC_MAX) {
     BX_CIRRUS_THIS crtc.reg[index] = value;
@@ -1614,8 +1583,7 @@ bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
   }
 }
 
-  Bit8u
-bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
+Bit8u bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
 {
   switch (index) {
     case 0x00:  // VGA
@@ -1652,7 +1620,7 @@ bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
     default:
       BX_DEBUG(("sequencer index 0x%02x is unknown(read)", index));
       break;
-    }
+  }
 
   if (index <= VGA_SEQENCER_MAX) {
     return VGA_READ(address,1);
@@ -1665,8 +1633,7 @@ bx_svga_cirrus_c::svga_read_sequencer(Bit32u address, unsigned index)
   return 0xff;
 }
 
-  void
-bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u value)
+void bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u value)
 {
   BX_DEBUG(("sequencer: index 0x%02x write 0x%02x", index, (unsigned)value));
 
@@ -1691,11 +1658,11 @@ bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u val
       if (value == 0x12) {
         BX_CIRRUS_THIS svga_unlock_special = true;
         BX_CIRRUS_THIS sequencer.reg[0x6] = 0x12;
-        }
+      }
       else {
         BX_CIRRUS_THIS svga_unlock_special = false;
         BX_CIRRUS_THIS sequencer.reg[0x6] = 0x0f;
-        }
+      }
       return;
     case 0x7: // cirrus extended sequencer mode
       if (value != BX_CIRRUS_THIS sequencer.reg[0x7]) {
@@ -1766,7 +1733,7 @@ bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u val
     default:
       BX_DEBUG(("sequencer index 0x%02x is unknown(write 0x%02x)", index, (unsigned)value));
       break;
-    }
+  }
 
   if (update_cursor) {
     BX_CIRRUS_THIS redraw_area(x, y, size, size);
@@ -1775,14 +1742,13 @@ bx_svga_cirrus_c::svga_write_sequencer(Bit32u address, unsigned index, Bit8u val
 
   if (index <= CIRRUS_SEQENCER_MAX) {
     BX_CIRRUS_THIS sequencer.reg[index] = value;
-    }
+  }
   if (index <= VGA_SEQENCER_MAX) {
     VGA_WRITE(address,value,1);
-    }
+  }
 }
 
-  Bit8u
-bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
+Bit8u bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
 {
   switch (index) {
     case 0x00:  // VGA
@@ -1839,7 +1805,7 @@ bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
     default:
       BX_DEBUG(("control index 0x%02x is unknown(read)", index));
       break;
-    }
+  }
 
   if (index <= VGA_CONTROL_MAX) {
     return VGA_READ(address,1);
@@ -1852,8 +1818,7 @@ bx_svga_cirrus_c::svga_read_control(Bit32u address, unsigned index)
   return 0xff;
 }
 
-  void
-bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value)
+void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value)
 {
   Bit8u old_value;
 
@@ -1944,12 +1909,12 @@ bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value
       if (((old_value & CIRRUS_BLT_RESET) != 0) &&
           ((value & CIRRUS_BLT_RESET) == 0)) {
         svga_reset_bitblt();
-        }
+      }
       else if (((old_value & CIRRUS_BLT_START) == 0) &&
           ((value & CIRRUS_BLT_START) != 0)) {
         BX_CIRRUS_THIS control.reg[0x31] |= CIRRUS_BLT_BUSY;
         svga_bitblt();
-        }
+      }
       return;
     case 0x32: // RASTER OP
     case 0x33: // BLT MODE EXTENSION
@@ -1971,8 +1936,7 @@ bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u value
   }
 }
 
-  Bit8u
-bx_svga_cirrus_c::svga_mmio_vga_read(Bit32u address)
+Bit8u bx_svga_cirrus_c::svga_mmio_vga_read(Bit32u address)
 {
   Bit8u value = 0xff;
 //  bx_bool svga_unlock_special_old = BX_CIRRUS_THIS svga_unlock_special;
@@ -1991,8 +1955,7 @@ bx_svga_cirrus_c::svga_mmio_vga_read(Bit32u address)
   return value;
 }
 
-  void
-bx_svga_cirrus_c::svga_mmio_vga_write(Bit32u address,Bit8u value)
+void bx_svga_cirrus_c::svga_mmio_vga_write(Bit32u address,Bit8u value)
 {
 //  bx_bool svga_unlock_special_old = BX_CIRRUS_THIS svga_unlock_special;
 
@@ -2018,8 +1981,7 @@ bx_svga_cirrus_c::svga_mmio_vga_write(Bit32u address,Bit8u value)
   BX_CIRRUS_THIS svga_unlock_special = svga_unlock_special_old;*/
 }
 
-  Bit8u
-bx_svga_cirrus_c::svga_mmio_blt_read(Bit32u address)
+Bit8u bx_svga_cirrus_c::svga_mmio_blt_read(Bit32u address)
 {
   Bit8u value = 0xff;
 
@@ -2142,8 +2104,7 @@ bx_svga_cirrus_c::svga_mmio_blt_read(Bit32u address)
   return value;
 }
 
-  void
-bx_svga_cirrus_c::svga_mmio_blt_write(Bit32u address,Bit8u value)
+void bx_svga_cirrus_c::svga_mmio_blt_write(Bit32u address,Bit8u value)
 {
   BX_DEBUG(("MMIO blt write - address 0x%04x, value 0x%02x",address,value));
 
@@ -2274,8 +2235,7 @@ bx_svga_cirrus_c::svga_mmio_blt_write(Bit32u address,Bit8u value)
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
 
-  void
-bx_svga_cirrus_c::svga_init_pcihandlers(void)
+void bx_svga_cirrus_c::svga_init_pcihandlers(void)
 {
   int i;
 
@@ -2309,33 +2269,28 @@ bx_svga_cirrus_c::svga_init_pcihandlers(void)
   BX_CIRRUS_THIS pci_mmioaddr = 0;
 }
 
-  Bit32u
-bx_svga_cirrus_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_svga_cirrus_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
 #if !BX_USE_CIRRUS_SMF
   return ((bx_svga_cirrus_c *)this_ptr)->pci_read(address,io_len);
 }
 
-  Bit32u
-bx_svga_cirrus_c::pci_read(Bit8u address, unsigned io_len)
+Bit32u bx_svga_cirrus_c::pci_read(Bit8u address, unsigned io_len)
 {
 #endif // !BX_USE_CIRRUS_SMF
-  unsigned i;
-  Bit32u ret;
-
   if (io_len > 4) {
     BX_PANIC(("pci_read: io_len > 4!"));
     return 0xffffffff;
-    }
+  }
   if (((unsigned)address + io_len) > 256) {
     BX_PANIC(("pci_read: (address + io_len) > 256!"));
     return 0xffffffff;
-    }
+  }
 
-  ret = 0;
-  for (i = 0; i < io_len; i++) {
+  Bit32u ret = 0;
+  for (unsigned i = 0; i < io_len; i++) {
     ret |= (Bit32u)(BX_CIRRUS_THIS pci_conf[address + i]) << (i*8);
-    }
+  }
 
   BX_DEBUG(("pci_read: address 0x%02x, io_len 0x%02x, value 0x%x",
     (unsigned)address, (unsigned)io_len, (unsigned)ret));
@@ -2343,15 +2298,13 @@ bx_svga_cirrus_c::pci_read(Bit8u address, unsigned io_len)
   return ret;
 }
 
-  void
-bx_svga_cirrus_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_svga_cirrus_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_CIRRUS_SMF
   ((bx_svga_cirrus_c *)this_ptr)->pci_write(address,value,io_len);
 }
 
-  void
-bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+void bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #endif // !BX_USE_CIRRUS_SMF
   unsigned i;
@@ -2440,8 +2393,7 @@ bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 //
 /////////////////////////////////////////////////////////////////////////
 
-  void
-bx_svga_cirrus_c::svga_reset_bitblt(void)
+void bx_svga_cirrus_c::svga_reset_bitblt(void)
 {
   BX_CIRRUS_THIS control.reg[0x31] &= ~(CIRRUS_BLT_START|CIRRUS_BLT_BUSY|CIRRUS_BLT_FIFOUSED);
   BX_CIRRUS_THIS bitblt.rop_handler = NULL;
@@ -2455,8 +2407,7 @@ bx_svga_cirrus_c::svga_reset_bitblt(void)
   BX_CIRRUS_THIS bitblt.memdst_needed = 0;
 }
 
-  void
-bx_svga_cirrus_c::svga_bitblt()
+void bx_svga_cirrus_c::svga_bitblt()
 {
   Bit16u tmp16;
   Bit32u tmp32;
@@ -2512,7 +2463,8 @@ bx_svga_cirrus_c::svga_bitblt()
     default:
       BX_PANIC(("unknown pixel width"));
       goto ignoreblt;
-    }
+  }
+
   BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_PIXELWIDTHMASK;
 
   if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST))
@@ -2520,7 +2472,7 @@ bx_svga_cirrus_c::svga_bitblt()
     BX_ERROR(("BLT: memory-to-memory copy is requested, ROP %02x",
       (unsigned)BX_CIRRUS_THIS bitblt.bltrop));
     goto ignoreblt;
-    }
+  }
 
   if ((BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_SOLIDFILL) &&
       (BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSDEST | 
@@ -2549,23 +2501,21 @@ bx_svga_cirrus_c::svga_bitblt()
     // setup bitblt engine.
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_MEMSYSSRC) {
       svga_setup_bitblt_cputovideo(dstaddr,srcaddr);
-      }
+    }
     else if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_MEMSYSDEST) {
       svga_setup_bitblt_videotocpu(dstaddr,srcaddr);
-      }
+    }
     else {
       svga_setup_bitblt_videotovideo(dstaddr,srcaddr);
-      }
+    }
     return;
   }
 
 ignoreblt:
   svga_reset_bitblt();
-  return;
 }
 
-  void
-bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
+void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
 {
   Bit16u w;
 
@@ -2608,8 +2558,7 @@ bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcaddr)
   BX_CIRRUS_THIS bitblt.memsrc_endptr += BX_CIRRUS_THIS bitblt.srcpitch;
 }
 
-  void
-bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr)
+void bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr)
 {
   BX_ERROR(("BLT: MEMSYSDEST is not implemented"));
 
@@ -2628,15 +2577,14 @@ bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcaddr)
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_memdst_static;
-    }
+  }
   else {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_memdst_static;
-    }
+  }
 #endif
 }
 
-  void
-bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
+void bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
 {
   BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS vidmem + dstaddr;
 
@@ -2654,9 +2602,7 @@ bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
                              BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
-
-  void
-bx_svga_cirrus_c::svga_colorexpand(Bit8u *dst,const Bit8u *src,int count,int pixelwidth)
+void bx_svga_cirrus_c::svga_colorexpand(Bit8u *dst,const Bit8u *src,int count,int pixelwidth)
 {
   BX_DEBUG(("svga_cirrus: COLOR EXPAND"));
 
@@ -2676,40 +2622,34 @@ bx_svga_cirrus_c::svga_colorexpand(Bit8u *dst,const Bit8u *src,int count,int pix
     default:
       BX_PANIC(("COLOREXPAND: unknown pixelwidth %u",(unsigned)pixelwidth));
       break;
-    }
+  }
 }
 
 #if !BX_USE_CIRRUS_SMF
-  void
-bx_svga_cirrus_c::svga_colorexpand_8_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_8_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_8(dst,src,count);
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_16_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_16_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_16(dst,src,count);
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_24_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_24_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_24(dst,src,count);
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_32_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_32_static(void *this_ptr,Bit8u *dst,const Bit8u *src,int count)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_32(dst,src,count);
 }
 
 #endif // BX_USE_CIRRUS_SMF
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count)
 {
-  int x;
   Bit8u colors[2];
   unsigned bits;
   unsigned bitmask;
@@ -2719,20 +2659,18 @@ bx_svga_cirrus_c::svga_colorexpand_8(Bit8u *dst,const Bit8u *src,int count)
 
   bitmask = 0x80;
   bits = *src++;
-  for (x = 0; x < count; x++) {
+  for (int x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
       bitmask = 0x80;
       bits = *src++;
-      }
+    }
     *dst++ = colors[!!(bits & bitmask)];
     bitmask >>= 1;
-    }
+  }
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count)
 {
-  int x;
   Bit8u colors[2][2];
   unsigned bits;
   unsigned bitmask;
@@ -2745,22 +2683,20 @@ bx_svga_cirrus_c::svga_colorexpand_16(Bit8u *dst,const Bit8u *src,int count)
 
   bitmask = 0x80;
   bits = *src++;
-  for (x = 0; x < count; x++) {
+  for (int x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
       bitmask = 0x80;
       bits = *src++;
-      }
+    }
     index = !!(bits & bitmask);
     *dst++ = colors[index][0];
     *dst++ = colors[index][1];
     bitmask >>= 1;
-    }
+  }
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
 {
-  int x;
   Bit8u colors[2][3];
   unsigned bits;
   unsigned bitmask;
@@ -2775,23 +2711,21 @@ bx_svga_cirrus_c::svga_colorexpand_24(Bit8u *dst,const Bit8u *src,int count)
 
   bitmask = 0x80;
   bits = *src++;
-  for (x = 0; x < count; x++) {
+  for (int x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
       bitmask = 0x80;
       bits = *src++;
-      }
+    }
     index = !!(bits & bitmask);
     *dst++ = colors[index][0];
     *dst++ = colors[index][1];
     *dst++ = colors[index][2];
     bitmask >>= 1;
-    }
+  }
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
+void bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
 {
-  int x;
   Bit8u colors[2][4];
   unsigned bits;
   unsigned bitmask;
@@ -2808,61 +2742,54 @@ bx_svga_cirrus_c::svga_colorexpand_32(Bit8u *dst,const Bit8u *src,int count)
 
   bitmask = 0x80;
   bits = *src++;
-  for (x = 0; x < count; x++) {
+  for (int x = 0; x < count; x++) {
     if ((bitmask & 0xff) == 0) {
       bitmask = 0x80;
       bits = *src++;
-      }
+    }
     index = !!(bits & bitmask);
     *dst++ = colors[index][0];
     *dst++ = colors[index][1];
     *dst++ = colors[index][2];
     *dst++ = colors[index][3];
     bitmask >>= 1;
-    }
+  }
 }
 
 #if !BX_USE_CIRRUS_SMF
-  void
-bx_svga_cirrus_c::svga_patterncopy_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_patterncopy_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_patterncopy();
 }
 
-  void
-bx_svga_cirrus_c::svga_simplebitblt_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_simplebitblt_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_simplebitblt();
 }
 
-  void
-bx_svga_cirrus_c::svga_solidfill_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_solidfill_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_solidfill();
 }
 
-  void
-bx_svga_cirrus_c::svga_patterncopy_memsrc_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_patterncopy_memsrc_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_patterncopy_memsrc();
 }
 
-  void
-bx_svga_cirrus_c::svga_simplebitblt_memsrc_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_simplebitblt_memsrc_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_simplebitblt_memsrc();
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_transp_memsrc_static(void *this_ptr)
+void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc_static(void *this_ptr)
 {
   ((bx_svga_cirrus_c *)this_ptr)->svga_colorexpand_transp_memsrc();
 }
 
 #endif // !BX_USE_CIRRUS_SMF
 
-  void
-bx_svga_cirrus_c::svga_patterncopy()
+void bx_svga_cirrus_c::svga_patterncopy()
 {
   Bit8u color[4];
   Bit8u work_colorexp[256];
@@ -2951,8 +2878,7 @@ bx_svga_cirrus_c::svga_patterncopy()
   }
 }
 
-  void
-bx_svga_cirrus_c::svga_simplebitblt()
+void bx_svga_cirrus_c::svga_simplebitblt()
 {
   Bit8u color[4];
   Bit8u work_colorexp[2048];
@@ -3021,18 +2947,16 @@ bx_svga_cirrus_c::svga_simplebitblt()
   if (BX_CIRRUS_THIS bitblt.bltmode & ~CIRRUS_BLTMODE_BACKWARDS) {
     BX_ERROR(("SIMPLE BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
     return;
-    }
+  }
 
   BX_DEBUG(("svga_cirrus: BITBLT"));
   (*BX_CIRRUS_THIS bitblt.rop_handler)(
     BX_CIRRUS_THIS bitblt.dst, BX_CIRRUS_THIS bitblt.src,
     BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.srcpitch,
-    BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight
-    );
+    BX_CIRRUS_THIS bitblt.bltwidth, BX_CIRRUS_THIS bitblt.bltheight);
 }
 
-  void
-bx_svga_cirrus_c::svga_solidfill()
+void bx_svga_cirrus_c::svga_solidfill()
 {
   Bit8u color[4];
   int x, y;
@@ -3058,8 +2982,7 @@ bx_svga_cirrus_c::svga_solidfill()
                              BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
-  void
-bx_svga_cirrus_c::svga_patterncopy_memsrc()
+void bx_svga_cirrus_c::svga_patterncopy_memsrc()
 {
   BX_INFO(("svga_patterncopy_memsrc() - not tested"));
 
@@ -3070,8 +2993,7 @@ bx_svga_cirrus_c::svga_patterncopy_memsrc()
                              BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h);
 }
 
-  void
-bx_svga_cirrus_c::svga_simplebitblt_memsrc()
+void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
 {
   Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
   Bit8u work_colorexp[2048];
@@ -3107,8 +3029,7 @@ bx_svga_cirrus_c::svga_simplebitblt_memsrc()
   }
 }
 
-  void
-bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
+void bx_svga_cirrus_c::svga_colorexpand_transp_memsrc()
 {
   Bit8u *src = &BX_CIRRUS_THIS bitblt.memsrc[0];
   Bit8u color[4];
@@ -3176,8 +3097,8 @@ bx_svga_cirrus_c::svga_asyncbitblt_next()
     if (BX_CIRRUS_THIS bitblt.memsrc_needed <= 0 &&
         BX_CIRRUS_THIS bitblt.memdst_needed <= 0) {
       goto cleanup;
-      }
     }
+  }
 
   (*BX_CIRRUS_THIS bitblt.bitblt_ptr)();
 
@@ -3211,8 +3132,7 @@ cleanup:
 /////////////////////////////////////////////////////////////////////////
 
 #define IMPLEMENT_FORWARD_BITBLT(name,opline) \
-    static void \
-  bitblt_rop_fwd_##name( \
+  static void bitblt_rop_fwd_##name( \
     Bit8u *dst,const Bit8u *src, \
     int dstpitch,int srcpitch, \
     int bltwidth,int bltheight) \
@@ -3225,15 +3145,14 @@ cleanup:
         opline; \
         dst++; \
         src++; \
-        } \
+      } \
       dst += dstpitch; \
       src += srcpitch; \
-      } \
-    }
+    } \
+  }
 
 #define IMPLEMENT_BACKWARD_BITBLT(name,opline) \
-    static void \
-  bitblt_rop_bkwd_##name( \
+  static void bitblt_rop_bkwd_##name( \
     Bit8u *dst,const Bit8u *src, \
     int dstpitch,int srcpitch, \
     int bltwidth,int bltheight) \
@@ -3246,11 +3165,11 @@ cleanup:
         opline; \
         dst--; \
         src--; \
-        } \
+      } \
       dst += dstpitch; \
       src += srcpitch; \
-      } \
-    }
+    } \
+  }
 
 IMPLEMENT_FORWARD_BITBLT(0, *dst = 0)
 IMPLEMENT_FORWARD_BITBLT(src_and_dst, *dst = (*src) & (*dst))
@@ -3286,9 +3205,7 @@ IMPLEMENT_BACKWARD_BITBLT(notsrc, *dst = (~(*src)))
 IMPLEMENT_BACKWARD_BITBLT(notsrc_or_dst, *dst = (~(*src)) | (*dst))
 IMPLEMENT_BACKWARD_BITBLT(notsrc_and_notdst, *dst = (~(*src)) & (~(*dst)))
 
-
-  bx_cirrus_bitblt_rop_t
-bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
+bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
 {
   bx_cirrus_bitblt_rop_t rop_handler = bitblt_rop_fwd_nop;
 
@@ -3345,13 +3262,12 @@ bx_svga_cirrus_c::svga_get_fwd_rop_handler(Bit8u rop)
     default:
       BX_ERROR(("unknown ROP %02x",rop));
       break;
-    }
+  }
 
   return rop_handler;
 }
 
-  bx_cirrus_bitblt_rop_t
-bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
+bx_cirrus_bitblt_rop_t bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
 {
   bx_cirrus_bitblt_rop_t rop_handler = bitblt_rop_bkwd_nop;
 
@@ -3408,10 +3324,9 @@ bx_svga_cirrus_c::svga_get_bkwd_rop_handler(Bit8u rop)
     default:
       BX_ERROR(("unknown ROP %02x",rop));
       break;
-    }
+  }
 
   return rop_handler;
 }
-
 
 #endif // BX_SUPPORT_CLGD54XX

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.h,v 1.2 2003-01-07 08:17:15 cbothamy Exp $
+// $Id: extfpuirq.h,v 1.3 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,6 +24,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef BX_IODEV_EXTFPUIRQ_H
+#define BX_IODEV_EXTFPUIRQ_H
+
 
 #if BX_USE_EFI_SMF
 #  define BX_EXTFPUIRQ_SMF  static
@@ -35,10 +38,9 @@
 
 
 class bx_extfpuirq_c : public bx_devmodel_c {
-
 public:
-  bx_extfpuirq_c(void);
-  ~bx_extfpuirq_c(void);
+  bx_extfpuirq_c();
+ ~bx_extfpuirq_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
 
@@ -48,4 +50,6 @@ private:
 #if !BX_USE_EFI_SMF
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
+
+#endif

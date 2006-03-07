@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.50 2006-01-07 12:10:59 vruppert Exp $
+// $Id: vga.h,v 1.51 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,6 +23,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+#ifndef BX_IODEV_VGA_H
+#define BX_IODEV_VGA_H
 
 // Make colour
 #define MAKE_COLOUR(red, red_shiftfrom, red_shiftto, red_mask, \
@@ -127,7 +130,6 @@
 #  define BX_VGA_THIS this->
 #endif
 
-
 class bx_vga_c : public bx_vga_stub_c {
 public:
 
@@ -182,13 +184,13 @@ protected:
                                 //   1 = 400 lines
                                 //   2 = 350 lines
                                 //   3 - 480 lines
-      } misc_output;
+    } misc_output;
 
     struct {
       Bit8u   address;
       Bit8u   reg[0x19];
       bx_bool write_protect;
-      } CRTC;
+    } CRTC;
 
     struct {
       bx_bool  flip_flop; /* 0 = address, 1 = data-write */
@@ -207,8 +209,8 @@ protected:
         bx_bool pixel_panning_compat;
         bx_bool pixel_clock_select;
         bx_bool internal_palette_size;
-        } mode_ctrl;
-      } attribute_ctrl;
+      } mode_ctrl;
+    } attribute_ctrl;
 
     struct {
       Bit8u write_data_register;
@@ -220,10 +222,9 @@ protected:
         Bit8u red;
         Bit8u green;
         Bit8u blue;
-        } data[256];
+      } data[256];
       Bit8u mask;
-      } pel;
-
+    } pel;
 
     struct {
       Bit8u   index;
@@ -247,7 +248,7 @@ protected:
       Bit8u   color_dont_care;
       Bit8u   bitmask;
       Bit8u   latch[4];
-      } graphics_ctrl;
+    } graphics_ctrl;
 
     struct {
       Bit8u   index;
@@ -260,7 +261,7 @@ protected:
       bx_bool extended_mem;
       bx_bool odd_even;
       bx_bool chain_four;
-      } sequencer;
+    } sequencer;
 
     bx_bool  vga_enabled;
     bx_bool  vga_mem_updated;
@@ -302,12 +303,12 @@ protected:
     bx_bool vbe_get_capabilities;
     bx_bool vbe_8bit_dac;
 #endif    
-    } s;  // state information
+  } s;  // state information
 
 
 #if !BX_USE_VGA_SMF
   Bit32u read(Bit32u address, unsigned io_len);
-  void   write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  void  write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #else
   void write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
@@ -316,7 +317,7 @@ protected:
 
 #if !BX_USE_VGA_SMF
   Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void   vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
+  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #else
   void vbe_write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log);
 #endif
@@ -335,10 +336,11 @@ protected:
   BX_VGA_SMF void update(void);
   BX_VGA_SMF void determine_screen_dimensions(unsigned *piHeight,
                                               unsigned *piWidth);
-  };
+};
 
 #if BX_SUPPORT_CLGD54XX
-  void
-libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
+void libvga_set_smf_pointer(bx_vga_c *theVga_ptr);
 #include "iodev/svga_cirrus.h"
-#endif // BX_SUPPORT_CLGD54XX
+#endif
+
+#endif

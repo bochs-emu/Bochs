@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.h,v 1.8 2002-12-06 18:48:08 bdenney Exp $
+// $Id: guest2host.h,v 1.9 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,18 +36,16 @@
 #define BX_G2H_PACKET_SIZE 5
 
 
-
 typedef Bit32u bx_guest_packet_t[BX_G2H_PACKET_SIZE];
 typedef void (*bx_g2h_callback_t)(bx_guest_packet_t *);
 
 
-
 class bx_g2h_c : public logfunctions {
 public:
-  bx_g2h_c(void);
-  ~bx_g2h_c(void);
-  static void   init(void);
-  void reset (unsigned type);
+  bx_g2h_c();
+ ~bx_g2h_c();
+  static void init(void);
+  void reset(unsigned type);
   unsigned acquire_channel(bx_g2h_callback_t);
   unsigned deacquire_channel(unsigned channel);
 
@@ -61,7 +59,7 @@ private:
     struct {
       bx_g2h_callback_t f;
       bx_bool used;
-      } callback[BX_MAX_G2H_CHANNELS];
+    } callback[BX_MAX_G2H_CHANNELS];
 
     // Define the data received from the guest OS.
     //   dword0: magic number, should be BX_G2H_MAGIC
@@ -71,7 +69,7 @@ private:
     //   dword4: address of return data structure in guest physical memory
     unsigned packet_count;
     bx_guest_packet_t guest_packet;
-    } s;
-  };
+  } s;
+};
 
 extern bx_g2h_c bx_g2h;

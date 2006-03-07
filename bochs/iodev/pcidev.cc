@@ -39,33 +39,29 @@
 
 bx_pcidev_c* thePciDevAdapter = 0;
 
-  int
-libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePciDevAdapter = new bx_pcidev_c ();
+  thePciDevAdapter = new bx_pcidev_c();
   bx_devices.pluginPciDevAdapter = thePciDevAdapter;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciDevAdapter, BX_PLUGIN_PCIDEV);
   return 0; // Success
 }
 
-  void
-libpcidev_LTX_plugin_fini(void)
+void libpcidev_LTX_plugin_fini(void)
 {
 }
 
 
-bx_pcidev_c::bx_pcidev_c(void)
+bx_pcidev_c::bx_pcidev_c()
 {
   put("PCI2H");
   settype(PCIDEVLOG);
 }
 
-bx_pcidev_c::~bx_pcidev_c(void)
+bx_pcidev_c::~bx_pcidev_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
-
 
 static void pcidev_sighandler(int param)
 {
@@ -79,8 +75,7 @@ static void pcidev_sighandler(int param)
   DEV_pic_raise_irq(irq);
 }
 
-
-static bx_bool  pcidev_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param)
+static bx_bool pcidev_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param)
 {
 	struct region_struct *region = (struct region_struct *)param;
 	bx_pcidev_c *pcidev = region->pcidev;
@@ -96,15 +91,15 @@ static bx_bool  pcidev_mem_read_handler(unsigned long addr, unsigned long len, v
 	switch(len) {
 		case 1:
 			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_BYTE, &io);
-			*(unsigned char *)data = io.value;
+			*(Bit8u *)data = io.value;
 			break;
 		case 2:
 			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_WORD, &io);
-			*(unsigned short *)data = io.value;
+			*(Bit16u *)data = io.value;
 			break;
 		case 4:
 			ret = ioctl(fd, PCIDEV_IOCTL_READ_MEM_DWORD, &io);
-			*(unsigned long *)data = io.value;
+			*(Bit32u *)data = io.value;
 			break;
 		default:
 			BX_ERROR(("Unsupported pcidev read mem operation"));
@@ -132,15 +127,15 @@ static bx_bool pcidev_mem_write_handler(unsigned long addr, unsigned long len, v
 	io.address = addr + region->host_start - region->start;
 	switch(len) {
 		case 1:
-			io.value = *(unsigned char *)data;
+			io.value = *(Bit8u *)data;
 			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_BYTE, &io);
 			break;
 		case 2:
-			io.value = *(unsigned short *)data;
+			io.value = *(Bit16u *)data;
 			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_WORD, &io);
 			break;
 		case 4:
-			io.value = *(unsigned long *)data;
+			io.value = *(Bit32u *)data;
 			ret = ioctl(fd, PCIDEV_IOCTL_WRITE_MEM_DWORD, &io);
 			break;
 		default:
@@ -156,8 +151,7 @@ static bx_bool pcidev_mem_write_handler(unsigned long addr, unsigned long len, v
 
 static const char * const pcidev_name = "Experimental PCI 2 host PCI";
 
-  void
-bx_pcidev_c::init(void)
+void bx_pcidev_c::init(void)
 {
   // called once when bochs initializes
   BX_PCIDEV_THIS pcidev_fd = -1;
@@ -281,17 +275,12 @@ bx_pcidev_c::init(void)
   //ioctl(fd, PCIDEV_IOCTL_INTERRUPT_TEST, 1);
 }
 
-  void
-bx_pcidev_c::reset(unsigned type)
-{
-}
+void bx_pcidev_c::reset(unsigned type) { }
 
+// static pci configuration space read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static pci configuration space read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pcidev_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_pcidev_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
 {
 #if !BX_USE_PCIDEV_SMF
   bx_pcidev_c *class_ptr = (bx_pcidev_c *) this_ptr;
@@ -299,9 +288,7 @@ bx_pcidev_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
   return class_ptr->pci_read(address, io_len);
 }
 
-
-  Bit32u
-bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
+Bit32u bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -505,18 +492,14 @@ bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     BX_ERROR(("pcidev config write error"));
 }
 
-
-  Bit32u
-bx_pcidev_c::read_handler(void *param, Bit32u address, unsigned io_len)
+Bit32u bx_pcidev_c::read_handler(void *param, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PCIDEV_SMF
   bx_pcidev_c *class_ptr = ((struct region_struct *)param)->pcidev;
-
   return class_ptr->read(param, address, io_len);
 }
 
-  Bit32u
-bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
+Bit32u bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
 {
 #endif  // !BX_USE_PCIDEV_SMF
   struct region_struct *region = (struct region_struct *)param;
@@ -548,17 +531,14 @@ bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
   return io.value;
 }
 
-  void
-bx_pcidev_c::write_handler(void *param, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pcidev_c::write_handler(void *param, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCIDEV_SMF
   bx_pcidev_c *class_ptr = ((struct region_struct *)param)->pcidev;
-
   class_ptr->write(param, address, value, io_len);
 }
 
-  void
-bx_pcidev_c::write(void *param, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pcidev_c::write(void *param, Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   //UNUSED(this_ptr);

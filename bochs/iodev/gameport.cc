@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.6 2004-06-19 15:20:11 sshwarts Exp $
+// $Id: gameport.cc,v 1.7 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -59,8 +59,7 @@ UINT STDCALL joyGetPos(UINT, LPJOYINFO);
 
 bx_gameport_c *theGameport = NULL;
 
-  int
-libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theGameport = new bx_gameport_c ();
   bx_devices.pluginGameport = theGameport;
@@ -68,26 +67,23 @@ libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
   return(0); // Success
 }
 
-  void
-libgameport_LTX_plugin_fini(void)
+void libgameport_LTX_plugin_fini(void)
 {
 }
 
-bx_gameport_c::bx_gameport_c(void)
+bx_gameport_c::bx_gameport_c()
 {
   put("GAME");
   settype(EXTFPUIRQLOG);
 }
 
-bx_gameport_c::~bx_gameport_c(void)
+bx_gameport_c::~bx_gameport_c()
 {
   if (joyfd >= 0) close(joyfd);
   BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_gameport_c::init(void)
+void bx_gameport_c::init(void)
 {
   // Allocate the gameport IO address range 0x200..0x207
   for (unsigned addr=0x200; addr<0x208; addr++) {
@@ -117,14 +113,12 @@ bx_gameport_c::init(void)
 #endif
 }
 
-  void
-bx_gameport_c::reset(unsigned type)
+void bx_gameport_c::reset(unsigned type)
 {
   // nothing for now
 }
 
-  void
-bx_gameport_c::poll_joydev(void)
+void bx_gameport_c::poll_joydev(void)
 {
 #ifdef __linux__
   struct js_event e;
@@ -172,22 +166,17 @@ bx_gameport_c::poll_joydev(void)
 #endif
 }
 
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_gameport_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_gameport_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_GAME_SMF
   bx_gameport_c *class_ptr = (bx_gameport_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_gameport_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_gameport_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -216,20 +205,17 @@ bx_gameport_c::read(Bit32u address, unsigned io_len)
 }
 
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  void
-bx_gameport_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_gameport_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_GAME_SMF
   bx_gameport_c *class_ptr = (bx_gameport_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_gameport_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_gameport_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);

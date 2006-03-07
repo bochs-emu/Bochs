@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.38 2006-02-06 21:27:34 vruppert Exp $
+// $Id: harddrv.h,v 1.39 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,6 +23,9 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+
+#ifndef BX_IODEV_HDDRIVE_H
+#define BX_IODEV_HDDRIVE_H
 
 typedef enum _sense {
       SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
@@ -153,9 +156,8 @@ typedef enum {
 
 class bx_hard_drive_c : public bx_hard_drive_stub_c {
 public:
-
-  bx_hard_drive_c(void);
-  virtual ~bx_hard_drive_c(void);
+  bx_hard_drive_c();
+  virtual ~bx_hard_drive_c();
   virtual void   close_harddrive(void);
   virtual void   init();
   virtual void   reset(unsigned type);
@@ -236,5 +238,6 @@ private:
     } channels[BX_MAX_ATA_CHANNEL];
 
   int iolight_timer_index;
+};
 
-  };
+#endif

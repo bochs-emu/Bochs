@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.163 2006-02-26 19:11:20 vruppert Exp $
+// $Id: harddrv.cc,v 1.164 2006-03-07 18:16:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ libharddrv_LTX_plugin_fini(void)
 {
 }
 
-bx_hard_drive_c::bx_hard_drive_c(void)
+bx_hard_drive_c::bx_hard_drive_c()
 {
 #if DLL_HD_SUPPORT
 #   error code must be fixed to use DLL_HD_SUPPORT and 4 ata channels
@@ -118,27 +118,24 @@ bx_hard_drive_c::bx_hard_drive_c(void)
     iolight_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
-
-bx_hard_drive_c::~bx_hard_drive_c(void)
+bx_hard_drive_c::~bx_hard_drive_c()
 {
   BX_DEBUG(("Exit."));
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if (channels[channel].drives[0].hard_drive != NULL )      /* DT 17.12.2001 21:55 */
+    if (channels[channel].drives[0].hard_drive != NULL)      /* DT 17.12.2001 21:55 */
     {
       delete channels[channel].drives[0].hard_drive;
-      channels[channel].drives[0].hard_drive =  NULL;
+      channels[channel].drives[0].hard_drive = NULL;
     }
-    if ( channels[channel].drives[1].hard_drive != NULL )
+    if ( channels[channel].drives[1].hard_drive != NULL)
     {
       delete channels[channel].drives[1].hard_drive;
-      channels[channel].drives[1].hard_drive =  NULL;        /* DT 17.12.2001 21:56 */
+      channels[channel].drives[1].hard_drive = NULL;        /* DT 17.12.2001 21:56 */
     }
   }
 }
 
-
-  void
-bx_hard_drive_c::init(void)
+void bx_hard_drive_c::init(void)
 {
   Bit8u channel;
   char  string[5];
@@ -146,7 +143,7 @@ bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.163 2006-02-26 19:11:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.164 2006-03-07 18:16:40 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -165,14 +162,14 @@ bx_hard_drive_c::init(void)
 	  BX_HD_THIS channels[channel].ioaddr1,
 	  BX_HD_THIS channels[channel].ioaddr2,
 	  BX_HD_THIS channels[channel].irq));
-        }
       }
+    }
     else {
       BX_HD_THIS channels[channel].ioaddr1 = 0;
       BX_HD_THIS channels[channel].ioaddr2 = 0;
       BX_HD_THIS channels[channel].irq = 0;
-      }
     }
+  }
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(string ,"ATA%d", channel);
@@ -190,8 +187,8 @@ bx_hard_drive_c::init(void)
                              BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
         DEV_register_iowrite_handler(this, write_handler,
                              BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
-        }
       }
+    }
 
     // We don't want to register addresses 0x3f6 and 0x3f7 as they are handled by the floppy controller
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
@@ -200,11 +197,11 @@ bx_hard_drive_c::init(void)
                               BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
         DEV_register_iowrite_handler(this, write_handler,
                               BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
-        }
       }
-     
-     BX_HD_THIS channels[channel].drive_select = 0;
     }
+     
+    BX_HD_THIS channels[channel].drive_select = 0;
+  }
 
   channel = 0;
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
@@ -600,8 +597,7 @@ bx_hard_drive_c::init(void)
   }
 }
 
-  void
-bx_hard_drive_c::reset(unsigned type)
+void bx_hard_drive_c::reset(unsigned type)
 {
   for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (BX_HD_THIS channels[channel].irq)
@@ -609,16 +605,13 @@ bx_hard_drive_c::reset(unsigned type)
   }
 }
 
-  void
-bx_hard_drive_c::iolight_timer_handler(void *this_ptr)
+void bx_hard_drive_c::iolight_timer_handler(void *this_ptr)
 {
   bx_hard_drive_c *class_ptr = (bx_hard_drive_c *) this_ptr;
-
   class_ptr->iolight_timer();
 }
 
-  void
-bx_hard_drive_c::iolight_timer()
+void bx_hard_drive_c::iolight_timer()
 {
   for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (unsigned device=0; device<2; device++) {
@@ -648,18 +641,14 @@ bx_hard_drive_c::iolight_timer()
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_hard_drive_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_hard_drive_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_HD_SMF
   bx_hard_drive_c *class_ptr = (bx_hard_drive_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_hard_drive_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -725,10 +714,10 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             DEV_bulk_io_host_addr() += transferLen;
             BX_SELECTED_CONTROLLER(channel).buffer_index += transferLen;
             value32 = 0; // Value returned not important;
-            }
+          }
           else
 #endif
-            {
+          {
             value32 = 0L;
             switch(io_len){
               case 4:
@@ -737,9 +726,9 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
               case 2:
                 value32 |= (BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] << 8);
                 value32 |=  BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index];
-              }
-            BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
             }
+            BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
+          }
 
           // if buffer completely read
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= 512) {
@@ -760,7 +749,7 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 
             if (BX_SELECTED_CONTROLLER(channel).sector_count==0) {
               BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-              }
+            }
             else { /* read next one into controller buffer */
               off_t logical_sector;
               off_t ret;
@@ -771,13 +760,13 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	      if (!calculate_logical_address(channel, &logical_sector)) {
 	        BX_ERROR(("multi-sector read reached invalid sector %lu, aborting", (unsigned long)logical_sector));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-	        GOTO_RETURN_VALUE ;
+	        GOTO_RETURN_VALUE;
 	      }
 	      ret = BX_SELECTED_DRIVE(channel).hard_drive->lseek(logical_sector * 512, SEEK_SET);
               if (ret < 0) {
                 BX_ERROR(("could not lseek() hard drive image file"));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-	        GOTO_RETURN_VALUE ;
+	        GOTO_RETURN_VALUE;
 	      }
               /* set status bar conditions for device */
               if (!BX_SELECTED_DRIVE(channel).iolight_counter)
@@ -789,14 +778,14 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
                 BX_ERROR(("logical sector was %lu", (unsigned long)logical_sector));
                 BX_ERROR(("could not read() hard drive image file at byte %lu", (unsigned long)logical_sector*512));
 		command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
-	        GOTO_RETURN_VALUE ;
+	        GOTO_RETURN_VALUE;
 	      }
 
               BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
 	      raise_interrupt(channel);
 	    }
 	  }
-	  GOTO_RETURN_VALUE ;
+	  GOTO_RETURN_VALUE;
           break;
 
         case 0xec:    // IDENTIFY DEVICE
@@ -1125,21 +1114,17 @@ bx_hard_drive_c::read(Bit32u address, unsigned io_len)
   return value8;
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_hard_drive_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_hard_drive_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_HD_SMF
   bx_hard_drive_c *class_ptr = (bx_hard_drive_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -2497,7 +2482,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	default:
           BX_ERROR(("IO write to 0x%04x: unknown command 0x%02x", address, value));
           command_aborted(channel, value);
-        }
+      }
       break;
 
     case 0x16: // hard disk adapter control 0x3f6
@@ -2565,8 +2550,7 @@ bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
-  void
-bx_hard_drive_c::close_harddrive(void)
+void bx_hard_drive_c::close_harddrive(void)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if(BX_HD_THIS channels[channel].drives[0].hard_drive != NULL)
@@ -2575,7 +2559,6 @@ bx_hard_drive_c::close_harddrive(void)
       BX_HD_THIS channels[channel].drives[1].hard_drive->close();
   }
 }
-
 
   bx_bool BX_CPP_AttrRegparmN(2)
 bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
@@ -2632,8 +2615,7 @@ bx_hard_drive_c::increment_address(Bit8u channel)
   }
 }
 
-  void
-bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
+void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
 {
   unsigned i;
   char serial_number[21];
@@ -2737,8 +2719,7 @@ bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   }
 }
 
-  void
-bx_hard_drive_c::identify_drive(Bit8u channel)
+void bx_hard_drive_c::identify_drive(Bit8u channel)
 {
   unsigned i;
   char serial_number[21];
@@ -3092,7 +3073,7 @@ bx_hard_drive_c::identify_drive(Bit8u channel)
     temp16 = BX_SELECTED_DRIVE(channel).id_drive[i];
     BX_SELECTED_CONTROLLER(channel).buffer[i*2] = temp16 & 0x00ff;
     BX_SELECTED_CONTROLLER(channel).buffer[i*2+1] = temp16 >> 8;
-    }
+  }
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -3149,8 +3130,7 @@ bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_l
       // }
 }
 
-void
-bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show)
+void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show)
 {
   if (show) {
     BX_ERROR(("ata%d-%d: atapi_cmd_error: key=%02x asc=%02x", channel, BX_SLAVE_SELECTED(channel), sense_key, asc));
@@ -3173,20 +3153,19 @@ bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx
   BX_SELECTED_DRIVE(channel).sense.ascq = 0;
 }
 
-void BX_CPP_AttrRegparmN(1)
+  void BX_CPP_AttrRegparmN(1)
 bx_hard_drive_c::atapi_cmd_nop(Bit8u channel)
 {
-      BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-      BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
-      BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
-      BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-      BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-      BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-      BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
+  BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 1;
+  BX_SELECTED_CONTROLLER(channel).interrupt_reason.rel = 0;
+  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+  BX_SELECTED_CONTROLLER(channel).status.err = 0;
 }
 
-void
-bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size)
+void bx_hard_drive_c::init_mode_sense_single(Bit8u channel, const void* src, int size)
 {
   char ata_name[20];
 
@@ -3233,8 +3212,7 @@ bx_hard_drive_c::raise_interrupt(Bit8u channel)
       }
 }
 
-  void
-bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
+void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
 {
   BX_DEBUG(("aborting on command 0x%02x {%s}", value, BX_SELECTED_TYPE_STRING(channel)));
   BX_SELECTED_CONTROLLER(channel).current_command = 0;
@@ -3249,39 +3227,35 @@ bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
   raise_interrupt(channel);
 }
 
-  Bit32u
-bx_hard_drive_c::get_device_handle(Bit8u channel, Bit8u device)
+Bit32u bx_hard_drive_c::get_device_handle(Bit8u channel, Bit8u device)
 {
   BX_DEBUG(("get_device_handle %d %d",channel, device));
   if ((channel < BX_MAX_ATA_CHANNEL) && (device < 2)) {
     return ((channel*2) + device);
-    }
+  }
   
   return BX_MAX_ATA_CHANNEL*2;
 }
 
-  Bit32u
-bx_hard_drive_c::get_first_cd_handle(void)
+Bit32u bx_hard_drive_c::get_first_cd_handle(void)
 {
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (BX_DRIVE_IS_CD(channel,0)) return (channel*2);
     if (BX_DRIVE_IS_CD(channel,1)) return ((channel*2) + 1);
-    }
+  }
   return BX_MAX_ATA_CHANNEL*2;
 }
 
-  unsigned
-bx_hard_drive_c::get_cd_media_status(Bit32u handle)
+unsigned bx_hard_drive_c::get_cd_media_status(Bit32u handle)
 {
-  if ( handle >= BX_MAX_ATA_CHANNEL*2 ) return 0;
+  if (handle >= BX_MAX_ATA_CHANNEL*2) return 0;
 
   Bit8u channel = handle / 2;
   Bit8u device  = handle % 2;
   return( BX_HD_THIS channels[channel].drives[device].cdrom.ready );
 }
 
-  unsigned
-bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
+unsigned bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
 {
   char ata_name[20];
 
@@ -3336,8 +3310,7 @@ bx_hard_drive_c::set_cd_media_status(Bit32u handle, unsigned status)
   return (BX_HD_THIS channels[channel].drives[device].cdrom.ready);
 }
 
-  bx_bool
-bx_hard_drive_c::bmdma_present(void)
+bx_bool bx_hard_drive_c::bmdma_present(void)
 {
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
@@ -3348,8 +3321,7 @@ bx_hard_drive_c::bmdma_present(void)
 }
 
 #if BX_SUPPORT_PCI
-  bx_bool
-bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
+bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
 {
   off_t logical_sector;
   off_t ret;
@@ -3413,8 +3385,7 @@ bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_
   return 1;
 }
 
-  bx_bool
-bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
+bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
 {
   off_t logical_sector;
   off_t ret;
@@ -3450,8 +3421,7 @@ bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
   return 1;
 }
 
-  void
-bx_hard_drive_c::bmdma_complete(Bit8u channel)
+void bx_hard_drive_c::bmdma_complete(Bit8u channel)
 {
   BX_SELECTED_CONTROLLER(channel).status.busy = 0;
   BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -3485,31 +3455,28 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
   }
 }
 
-
 error_recovery_t::error_recovery_t ()
 {
-      if (sizeof(error_recovery_t) != 8) {
-	    BX_PANIC(("error_recovery_t has size != 8"));
-      }
+  if (sizeof(error_recovery_t) != 8) {
+    BX_PANIC(("error_recovery_t has size != 8"));
+  }
 
-      data[0] = 0x01;
-      data[1] = 0x06;
-      data[2] = 0x00;
-      data[3] = 0x05; // Try to recover 5 times
-      data[4] = 0x00;
-      data[5] = 0x00;
-      data[6] = 0x00;
-      data[7] = 0x00;
+  data[0] = 0x01;
+  data[1] = 0x06;
+  data[2] = 0x00;
+  data[3] = 0x05; // Try to recover 5 times
+  data[4] = 0x00;
+  data[5] = 0x00;
+  data[6] = 0x00;
+  data[7] = 0x00;
 }
 
-Bit16u  BX_CPP_AttrRegparmN(1) 
-read_16bit(const Bit8u* buf)
+Bit16u BX_CPP_AttrRegparmN(1) read_16bit(const Bit8u* buf)
 {
-      return (buf[0] << 8) | buf[1];
+  return (buf[0] << 8) | buf[1];
 }
 
-Bit32u  BX_CPP_AttrRegparmN(1)
-read_32bit(const Bit8u* buf)
+Bit32u BX_CPP_AttrRegparmN(1) read_32bit(const Bit8u* buf)
 {
-      return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+  return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }

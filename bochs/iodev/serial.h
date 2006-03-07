@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.26 2005-07-10 16:51:09 vruppert Exp $
+// $Id: serial.h,v 1.27 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -24,6 +24,9 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+
+#ifndef BX_IODEV_SERIAL_H
+#define BX_IODEV_SERIAL_H
 
 // Peter Grehan (grehan@iprg.nokia.com) coded most of this
 // serial emulation.
@@ -199,11 +202,11 @@ typedef struct {
 
 class bx_serial_c : public bx_serial_stub_c {
 public:
-  bx_serial_c(void);
-  ~bx_serial_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
-  virtual void   serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  bx_serial_c();
+ ~bx_serial_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
 private:
   bx_serial_t s[BX_SERIAL_MAXDEV];
@@ -239,5 +242,6 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  };
+};
 
+#endif

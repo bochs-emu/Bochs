@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.14 2006-01-05 21:57:58 vruppert Exp $
+// $Id: pic.h,v 1.15 2006-03-07 18:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,6 +24,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
+#ifndef BX_IODEV_PIC_H
+#define BX_IODEV_PIC_H
 
 #if BX_USE_PIC_SMF
 #  define BX_PIC_SMF  static
@@ -33,8 +35,6 @@
 #  define BX_PIC_THIS this->
 #endif
 
-
-
 typedef struct {
   Bit8u single_PIC;        /* 0=cascaded PIC, 1=master only */
   Bit8u interrupt_offset;  /* programmable interrupt vector offset */
@@ -42,7 +42,7 @@ typedef struct {
     Bit8u   slave_connect_mask; /* for master, a bit for each interrupt line
                                    0=not connect to a slave, 1=connected */
     Bit8u   slave_id;           /* for slave, id number of slave PIC */
-    } u;
+  } u;
   Bit8u sfnm;              /* specially fully nested mode: 0=no, 1=yes*/
   Bit8u buffered_mode;     /* 0=no buffered mode, 1=buffered mode */
   Bit8u master_slave;      /* master/slave: 0=slave PIC, 1=master PIC */
@@ -59,32 +59,31 @@ typedef struct {
     bx_bool    in_init;
     bx_bool    requires_4;
     int        byte_expected;
-    } init;
+  } init;
   bx_bool special_mask;
   bx_bool polled;            /* Set when poll command is issued. */
   bx_bool rotate_on_autoeoi; /* Set when should rotate in auto-eoi mode. */
   Bit8u edge_level; /* bitmap for irq mode (0=edge, 1=level) */
-  } bx_pic_t;
+} bx_pic_t;
 
 
 class bx_pic_c : public bx_pic_stub_c {
-
 public:
-  bx_pic_c(void);
-  ~bx_pic_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
-  virtual void   lower_irq(unsigned irq_no);
-  virtual void   raise_irq(unsigned irq_no);
-  virtual void   set_mode(bx_bool ma_sl, Bit8u mode);
-  virtual Bit8u  IAC(void);
-  virtual void   show_pic_state(void);
+  bx_pic_c();
+ ~bx_pic_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void lower_irq(unsigned irq_no);
+  virtual void raise_irq(unsigned irq_no);
+  virtual void set_mode(bx_bool ma_sl, Bit8u mode);
+  virtual Bit8u IAC(void);
+  virtual void show_pic_state(void);
 
 private:
   struct {
     bx_pic_t master_pic;
     bx_pic_t slave_pic;
-    } s;
+  } s;
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -97,3 +96,5 @@ private:
   BX_PIC_SMF void   service_slave_pic(void);
   BX_PIC_SMF void   clear_highest_interrupt(bx_pic_t *pic);
 };
+
+#endif
