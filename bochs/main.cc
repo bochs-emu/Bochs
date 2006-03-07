@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.321 2006-03-06 22:02:48 sshwarts Exp $
+// $Id: main.cc,v 1.322 2006-03-07 17:54:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -189,6 +189,8 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 void print_tree(bx_param_c *node, int level)
 {
   int i;
+  char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+
   for (i=0; i<level; i++)
     printf ("  ");
   if (node == NULL) {
@@ -198,24 +200,37 @@ void print_tree(bx_param_c *node, int level)
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
       if (((bx_param_num_c*)node)->get_base() == 10) {
-        printf ("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+        printf("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
       } else {
-        printf ("%s = 0x%x  (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+        printf("%s = 0x%x  (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
       }
       break;
     case BXT_PARAM_BOOL:
-      printf ("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
+      printf("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
       break;
     case BXT_PARAM_ENUM:
-      printf ("%s = '%s'  (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
+      printf("%s = '%s'  (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
       break;
-    case BXT_PARAM:
     case BXT_PARAM_STRING:
-      printf ("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+      if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+        tmpstr[0] = 0;
+        for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
+          if (i > 0) {
+            tmpbyte[0] = ((bx_param_string_c*)node)->get_separator();
+            tmpbyte[1] = 0;
+            strcat(tmpstr, tmpbyte);
+          }
+          sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
+          strcat(tmpstr, tmpbyte);
+        }
+        printf("%s = '%s'  (raw byte string)\n", node->get_name(), tmpstr);
+      } else {
+        printf("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+      }
       break;
     case BXT_LIST:
       {
-	printf ("%s = \n", node->get_name());
+	printf("%s = \n", node->get_name());
 	bx_list_c *list = (bx_list_c*)node;
 	for (i=0; i < list->get_size(); i++) {
 	   print_tree(list->get(i), level+1);

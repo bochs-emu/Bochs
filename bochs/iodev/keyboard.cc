@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.111 2006-03-01 17:14:36 vruppert Exp $
+// $Id: keyboard.cc,v 1.112 2006-03-07 17:54:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   void
 bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.111 2006-03-01 17:14:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.112 2006-03-07 17:54:27 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -215,40 +215,41 @@ bx_keyb_c::init(void)
   if (first_time) {
     first_time = 0;
     // register shadow params (Experimental, not a complete list by far)
-    bx_list_c *list = new bx_list_c (BXP_KBD_PARAMETERS, "Keyboard State", "", 20);
-    list->add (new bx_shadow_bool_c (BXP_KBD_IRQ1_REQ, 
-	  "Keyboard IRQ1 requested: ", "",
-	  &BX_KEY_THIS s.kbd_controller.irq1_requested));
-    list->add (new bx_shadow_bool_c (BXP_KBD_IRQ12_REQ,
-	  "Keyboard IRQ12 requested: ", "",
-	  &BX_KEY_THIS s.kbd_controller.irq12_requested));
-    list->add (new bx_shadow_num_c (BXP_KBD_TIMER_PENDING,
-	"Keyboard timer pending: ", "",
-	&BX_KEY_THIS s.kbd_controller.timer_pending));
-    list->add (new bx_shadow_bool_c (BXP_KBD_PARE,
-	"Keyboard PARE", "",
-	&BX_KEY_THIS s.kbd_controller.pare));
-    list->add (new bx_shadow_bool_c (BXP_KBD_TIM,
-	"Keyboard TIM", "",
-	&BX_KEY_THIS s.kbd_controller.tim));
-    list->add (new bx_shadow_bool_c (BXP_KBD_AUXB,
-	"Keyboard AUXB", "",
-	&BX_KEY_THIS s.kbd_controller.auxb));
-    list->add (new bx_shadow_bool_c (BXP_KBD_KEYL,
-	"Keyboard KEYL", "",
-	&BX_KEY_THIS s.kbd_controller.keyl));
-    list->add (new bx_shadow_bool_c (BXP_KBD_C_D,
-	"Keyboard C_D", "",
-	&BX_KEY_THIS s.kbd_controller.c_d));
-    list->add (new bx_shadow_bool_c (BXP_KBD_SYSF,
-	"Keyboard SYSF", "",
-	&BX_KEY_THIS s.kbd_controller.sysf));
-    list->add (new bx_shadow_bool_c (BXP_KBD_INPB,
-	"Keyboard INPB", "",
-	&BX_KEY_THIS s.kbd_controller.inpb));
-    list->add (new bx_shadow_bool_c (BXP_KBD_OUTB,
-	"Keyboard OUTB", "",
-	&BX_KEY_THIS s.kbd_controller.outb));
+    bx_list_c *list = new bx_list_c(SIM->get_param("save_restore"), "keyboard",
+                                    "Keyboard State", 20);
+    new bx_shadow_bool_c(list, "irq1_req",
+          "Keyboard IRQ1 requested",
+          &BX_KEY_THIS s.kbd_controller.irq1_requested);
+    new bx_shadow_bool_c(list, "irq12_req",
+          "Keyboard IRQ12 requested",
+          &BX_KEY_THIS s.kbd_controller.irq12_requested);
+    new bx_shadow_num_c(list, "timer_pending",
+          "Keyboard timer pending",
+          &BX_KEY_THIS s.kbd_controller.timer_pending);
+    new bx_shadow_bool_c(list, "pare",
+	"Keyboard PARE",
+	&BX_KEY_THIS s.kbd_controller.pare);
+    new bx_shadow_bool_c(list, "tim",
+	"Keyboard TIM",
+	&BX_KEY_THIS s.kbd_controller.tim);
+    new bx_shadow_bool_c(list, "auxb",
+	"Keyboard AUXB",
+	&BX_KEY_THIS s.kbd_controller.auxb);
+    new bx_shadow_bool_c(list, "keyl",
+	"Keyboard KEYL",
+	&BX_KEY_THIS s.kbd_controller.keyl);
+    new bx_shadow_bool_c(list, "c_d",
+	"Keyboard C_D",
+	&BX_KEY_THIS s.kbd_controller.c_d);
+    new bx_shadow_bool_c(list, "sysf",
+	"Keyboard SYSF",
+	&BX_KEY_THIS s.kbd_controller.sysf);
+    new bx_shadow_bool_c(list, "inpb",
+	"Keyboard INPB",
+	&BX_KEY_THIS s.kbd_controller.inpb);
+    new bx_shadow_bool_c(list, "outb",
+	  "Keyboard OUTB",
+          &BX_KEY_THIS s.kbd_controller.outb);
   }
 #endif
 
@@ -1234,8 +1235,8 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
 {
   // if we are not using a ps2 mouse, some of the following commands need to return different values
   bx_bool is_ps2 = 0;
-  if ((SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_PS2) ||
-      (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_IMPS2)) is_ps2 = 1;
+  if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_PS2) ||
+      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_IMPS2)) is_ps2 = 1;
 
   BX_DEBUG(("MOUSE: kbd_ctrl_to_mouse(%02xh)", (unsigned) value));
   BX_DEBUG(("  enable = %u", (unsigned) BX_KEY_THIS s.mouse.enable));

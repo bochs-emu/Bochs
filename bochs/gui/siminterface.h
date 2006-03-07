@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.174 2006-03-06 18:50:55 vruppert Exp $
+// $Id: siminterface.h,v 1.175 2006-03-07 17:54:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -225,6 +225,7 @@ typedef enum {
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
+#define BXPN_KBD_STATE                   "save_restore.keyboard"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -293,19 +294,6 @@ typedef enum {
   BXP_CPU_CR2,
   BXP_CPU_CR3,
   BXP_CPU_CR4,
-  // a few parameters for the keyboard
-  BXP_KBD_PARAMETERS,
-  BXP_KBD_PARE,
-  BXP_KBD_TIM ,
-  BXP_KBD_AUXB,
-  BXP_KBD_KEYL,
-  BXP_KBD_C_D,
-  BXP_KBD_SYSF,
-  BXP_KBD_INPB,
-  BXP_KBD_OUTB,
-  BXP_KBD_TIMER_PENDING,
-  BXP_KBD_IRQ1_REQ,
-  BXP_KBD_IRQ12_REQ,
   BXP_THIS_IS_THE_LAST    // used to determine length of list
 } bx_id;
 
@@ -801,6 +789,12 @@ public:
       Bit32u *ptr_to_real_val,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
+  bx_shadow_num_c(bx_param_c *parent,
+      char *name,
+      char *label,
+      Bit32u *ptr_to_real_val,
+      Bit8u highbit = 31,
+      Bit8u lowbit = 0);
   bx_shadow_num_c(bx_id id,
       char *name,
       char *description,
@@ -859,6 +853,11 @@ public:
   bx_shadow_bool_c(bx_id id,
       char *name,
       char *description,
+      bx_bool *ptr_to_real_val,
+      Bit8u bitnum = 0);
+  bx_shadow_bool_c(bx_param_c *parent,
+      char *name,
+      char *label,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum = 0);
   virtual Bit64s get64();
