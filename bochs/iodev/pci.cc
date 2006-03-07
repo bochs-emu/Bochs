@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.45 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: pci.cc,v 1.46 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,12 +68,11 @@ void bx_pci_bridge_c::init(void)
 {
   // called once when bochs initializes
   unsigned i;
-  BX_PCI_THIS num_pci_handles = 0;
+  BX_PCI_THIS num_pci_handlers = 0;
 
   /* set unused elements to appropriate values */
   for (i=0; i < BX_MAX_PCI_DEVICES; i++) {
-    BX_PCI_THIS pci_handler[i].read  = NULL;
-    BX_PCI_THIS pci_handler[i].write = NULL;
+    BX_PCI_THIS pci_handler[i].handler = NULL;
   }
 
   for (i=0; i < 0x100; i++) {
@@ -97,8 +96,7 @@ void bx_pci_bridge_c::init(void)
   }
 
   Bit8u devfunc = BX_PCI_DEVICE(0,0);
-  DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI, "440FX Host bridge");
 
   for (i=0; i<256; i++)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x0;
@@ -186,8 +184,7 @@ Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
         regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
         handle = BX_PCI_THIS pci_handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES))
-          retval = (* BX_PCI_THIS pci_handler[handle].read)
-                     (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, io_len);
+          retval = BX_PCI_THIS pci_handler[handle].handler->pci_read_handler(regnum, io_len);
         else
           retval = 0xFFFFFFFF;
       }
@@ -246,8 +243,7 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
         handle = BX_PCI_THIS pci_handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
           if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
-            (* BX_PCI_THIS pci_handler[handle].write)
-               (BX_PCI_THIS pci_handler[handle].this_ptr, regnum, value, io_len);
+            BX_PCI_THIS pci_handler[handle].handler->pci_write_handler(regnum, value, io_len);
             BX_PCI_THIS s.i440fx.confData = value << (8 * (address & 0x03));
           }
           else
@@ -262,22 +258,9 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
 }
 
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u bx_pci_bridge_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pci_bridge_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PCI_SMF
-  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
-  return class_ptr->pci_read(address, io_len);
-}
-
-Bit32u bx_pci_bridge_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCI_SMF
-
   Bit32u val440fx = 0;
 
   if (io_len <= 4) {
@@ -291,22 +274,9 @@ Bit32u bx_pci_bridge_c::pci_read(Bit8u address, unsigned io_len)
     return(0xffffffff);
 }
 
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void bx_pci_bridge_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PCI_SMF
-  bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void bx_pci_bridge_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCI_SMF
-
   Bit8u value8;
 
   if ((address >= 0x10) && (address < 0x34))
@@ -328,7 +298,6 @@ void bx_pci_bridge_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
     }
   }
 }
-
 
 Bit8u bx_pci_bridge_c::rd_memType(Bit32u addr)
 {
@@ -436,10 +405,9 @@ void bx_pci_bridge_c::print_i440fx_state()
 #endif /* DUMP_FULL_I440FX */
 }
 
-  bx_bool
-bx_pci_bridge_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1,
-                                 bx_pci_write_handler_t f2, Bit8u *devfunc,
-                                 const char *name, const char *descr)
+bx_bool bx_pci_bridge_c::register_pci_handlers(bx_pci_device_stub_c *dev,
+                                        Bit8u *devfunc, const char *name,
+                                        const char *descr)
 {
   unsigned i, handle;
   char devname[80];
@@ -463,15 +431,13 @@ bx_pci_bridge_c::register_pci_handlers( void *this_ptr, bx_pci_read_handler_t f1
   }
   /* check if device/function is available */
   if (BX_PCI_THIS pci_handler_id[*devfunc] == BX_MAX_PCI_DEVICES) {
-    if (BX_PCI_THIS num_pci_handles >= BX_MAX_PCI_DEVICES) {
+    if (BX_PCI_THIS num_pci_handlers >= BX_MAX_PCI_DEVICES) {
       BX_INFO(("too many PCI devices installed."));
       BX_PANIC(("  try increasing BX_MAX_PCI_DEVICES"));
       return false;
     }
-    handle = BX_PCI_THIS num_pci_handles++;
-    BX_PCI_THIS pci_handler[handle].read  = f1;
-    BX_PCI_THIS pci_handler[handle].write = f2;
-    BX_PCI_THIS pci_handler[handle].this_ptr = this_ptr;
+    handle = BX_PCI_THIS num_pci_handlers++;
+    BX_PCI_THIS pci_handler[handle].handler = dev;
     BX_PCI_THIS pci_handler_id[*devfunc] = handle;
     BX_INFO(("%s present at device %d, function %d", descr, *devfunc >> 3,
              *devfunc & 0x07));

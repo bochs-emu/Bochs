@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.h,v 1.4 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: pcipnic.h,v 1.5 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -60,12 +60,15 @@ typedef struct {
 } bx_pnic_t;
 
 
-class bx_pcipnic_c : public bx_devmodel_c {
+class bx_pcipnic_c : public bx_pci_device_stub_c {
 public:
   bx_pcipnic_c();
- ~bx_pcipnic_c();
+  virtual ~bx_pcipnic_c();
   virtual void init(void);
   virtual void reset(unsigned type);
+
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
   bx_pnic_t s;
@@ -77,13 +80,9 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
-  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
 #if !BX_USE_PCIPNIC_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-  Bit32u pci_read(Bit8u address, unsigned io_len);
-  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 
   eth_pktmover_c *ethdev;

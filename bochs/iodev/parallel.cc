@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.27 2006-03-01 17:14:36 vruppert Exp $
+// $Id: parallel.cc,v 1.28 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,8 +39,7 @@
 
 bx_parallel_c *theParallelDevice = NULL;
 
-  int
-libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theParallelDevice = new bx_parallel_c ();
   bx_devices.pluginParallelDevice = theParallelDevice;
@@ -48,12 +47,11 @@ libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
   return(0); // Success
 }
 
-  void
-libparallel_LTX_plugin_fini(void)
+void libparallel_LTX_plugin_fini(void)
 {
 }
 
-bx_parallel_c::bx_parallel_c(void)
+bx_parallel_c::bx_parallel_c()
 {
   put("PAR");
   settype(PARLOG);
@@ -62,7 +60,7 @@ bx_parallel_c::bx_parallel_c(void)
   }
 }
 
-bx_parallel_c::~bx_parallel_c(void)
+bx_parallel_c::~bx_parallel_c()
 {
   for (int i=0; i<BX_PARPORT_MAXDEV; i++) {
     if (s[i].output != NULL)
@@ -70,15 +68,14 @@ bx_parallel_c::~bx_parallel_c(void)
   }
 }
 
-  void
-bx_parallel_c::init(void)
+void bx_parallel_c::init(void)
 {
   Bit16u ports[BX_PARPORT_MAXDEV] = {0x0378, 0x0278};
   Bit8u irqs[BX_PARPORT_MAXDEV] = {7, 5};
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.27 2006-03-01 17:14:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.28 2006-03-07 21:11:19 sshwarts Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);
@@ -120,45 +117,39 @@ bx_parallel_c::init(void)
   }
 }
 
-  void
-bx_parallel_c::reset(unsigned type)
+void bx_parallel_c::reset(unsigned type)
 {
 }
 
-  void
-bx_parallel_c::virtual_printer(Bit8u port)
+void bx_parallel_c::virtual_printer(Bit8u port)
 {
   if (BX_PAR_THIS s[port].STATUS.slct) {
     if (BX_PAR_THIS s[port].output != NULL) {
       fputc(BX_PAR_THIS s[port].data, BX_PAR_THIS s[port].output);
       fflush (BX_PAR_THIS s[port].output);
-      }
+    }
     if (BX_PAR_THIS s[port].CONTROL.irq == 1) {
       DEV_pic_raise_irq(BX_PAR_THIS s[port].IRQ);
-      }
+    }
     BX_PAR_THIS s[port].STATUS.ack = 0;
     BX_PAR_THIS s[port].STATUS.busy = 1;
-    }
+  }
   else {
     BX_ERROR(("data is valid, but printer is offline"));
-    }
+  }
 }
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_parallel_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_parallel_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PAR_SMF
   bx_parallel_c *class_ptr = (bx_parallel_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_parallel_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_parallel_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -224,12 +215,10 @@ bx_parallel_c::read(Bit32u address, unsigned io_len)
   return(0);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_parallel_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_parallel_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PAR_SMF
   bx_parallel_c *class_ptr = (bx_parallel_c *) this_ptr;
@@ -237,8 +226,7 @@ bx_parallel_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsig
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_parallel_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);

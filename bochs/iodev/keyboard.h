@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.31 2005-12-02 17:27:19 vruppert Exp $
+// $Id: keyboard.h,v 1.32 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,15 +48,15 @@
 
 class bx_keyb_c : public bx_keyb_stub_c {
 public:
-  bx_keyb_c(void);
-  ~bx_keyb_c(void);
+  bx_keyb_c();
+  virtual ~bx_keyb_c() {}
   // implement bx_devmodel_c interface
-  virtual void     init(void);
-  virtual void     reset(unsigned type);
+  virtual void init(void);
+  virtual void reset(unsigned type);
   // override stubs from bx_keyb_stub_c
-  virtual void     gen_scancode(Bit32u key);
-  virtual void     paste_bytes(Bit8u *data, Bit32s length);
-  virtual void     mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  virtual void gen_scancode(Bit32u key);
+  virtual void paste_bytes(Bit8u *data, Bit32s length);
+  virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
   // runtime options
   static     Bit64s   kbd_param_handler(bx_param_c *param, int set, Bit64s val);

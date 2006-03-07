@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.21 2006-03-06 19:23:13 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.22 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -81,8 +81,8 @@ void bx_pci_ide_c::init(void)
   unsigned i;
 
   Bit8u devfunc = BX_PCI_DEVICE(1,1);
-  DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCI_IDE, "PIIX3 PCI IDE controller");
+  DEV_register_pci_handlers(this, &devfunc, 
+      BX_PLUGIN_PCI_IDE, "PIIX3 PCI IDE controller");
 
   // register BM-DMA timer
   for (i=0; i<2; i++) {
@@ -327,22 +327,9 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
 }
 
 
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u bx_pci_ide_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pci_ide_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PIDE_SMF
-  bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) this_ptr;
-  return class_ptr->pci_read(address, io_len);
-}
-
-Bit32u bx_pci_ide_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PIDE_SMF
-
   Bit32u value = 0;
 
   if (io_len <= 4) {
@@ -356,22 +343,9 @@ Bit32u bx_pci_ide_c::pci_read(Bit8u address, unsigned io_len)
   }
 }
 
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void bx_pci_ide_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pci_ide_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PIDE_SMF
-  bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) this_ptr;
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void bx_pci_ide_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PIDE_SMF
-
   Bit8u value8, oldval;
   bx_bool bmdma_change = 0;
 

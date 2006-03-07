@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.17 2006-03-02 20:13:14 vruppert Exp $
+// $Id: pcipnic.cc,v 1.18 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -44,27 +44,20 @@ libpcipnic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *
   return 0; // Success
 }
 
-  void
-libpcipnic_LTX_plugin_fini(void)
-{
-}
+void libpcipnic_LTX_plugin_fini(void) {}
 
-
-bx_pcipnic_c::bx_pcipnic_c(void)
+bx_pcipnic_c::bx_pcipnic_c()
 {
   put("PNIC");
   settype(PCIPNICLOG);
 }
 
-bx_pcipnic_c::~bx_pcipnic_c(void)
+bx_pcipnic_c::~bx_pcipnic_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_pcipnic_c::init(void)
+void bx_pcipnic_c::init(void)
 {
   // called once when bochs initializes
 
@@ -73,10 +66,7 @@ bx_pcipnic_c::init(void)
   memcpy(BX_PNIC_THIS s.physaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;
-  DEV_register_pci_handlers(this,
-                            pci_read_handler,
-                            pci_write_handler,
-                            &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,
+  DEV_register_pci_handlers(this, &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,
                             "Experimental PCI Pseudo NIC");
 
   for (unsigned i=0; i<256; i++) {
@@ -111,8 +101,7 @@ bx_pcipnic_c::init(void)
   BX_INFO(("PCI Pseudo NIC initialized - I/O base and IRQ assigned by PCI BIOS"));
 }
 
-void
-bx_pcipnic_c::reset(unsigned type)
+void bx_pcipnic_c::reset(unsigned type)
 {
   unsigned i;
 
@@ -158,28 +147,22 @@ bx_pcipnic_c::reset(unsigned type)
   set_irq_level(0);
 }
 
-  void
-bx_pcipnic_c::set_irq_level(bx_bool level)
+void bx_pcipnic_c::set_irq_level(bx_bool level)
 {
   DEV_pci_set_irq(BX_PNIC_THIS s.devfunc, BX_PNIC_THIS s.pci_conf[0x3d], level);
 }
 
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pcipnic_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_pcipnic_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PCIPNIC_SMF
   bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_pcipnic_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -218,12 +201,10 @@ bx_pcipnic_c::read(Bit32u address, unsigned io_len)
   return(val);
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pcipnic_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_pcipnic_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_PCIPNIC_SMF
   bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) this_ptr;
@@ -231,8 +212,7 @@ bx_pcipnic_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsign
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -283,26 +263,9 @@ void bx_pcipnic_c::pnic_timer(void)
 
 }
   
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u
-bx_pcipnic_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pcipnic_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PCIPNIC_SMF
-  bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) this_ptr;
-  
-  return class_ptr->pci_read(address, io_len);
-}
-
-
-Bit32u
-bx_pcipnic_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIPNIC_SMF
-
   Bit32u value = 0;
 
   if (io_len > 4 || io_len == 0) {
@@ -358,25 +321,9 @@ bx_pcipnic_c::pci_read(Bit8u address, unsigned io_len)
 }
 
 
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void
-bx_pcipnic_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pcipnic_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PCIPNIC_SMF
-  bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) this_ptr;
-  
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void
-bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIPNIC_SMF
-  
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
 
@@ -435,8 +382,7 @@ bx_pcipnic_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 /*
  * Execute a hardware command.
  */
-void
-bx_pcipnic_c::exec_command(void)
+void bx_pcipnic_c::exec_command(void)
 {
   Bit16u command = BX_PNIC_THIS s.rCmd;
   Bit16u ilength = BX_PNIC_THIS s.rLength;
@@ -450,7 +396,6 @@ bx_pcipnic_c::exec_command(void)
 	      ilength, BX_PNIC_THIS s.rDataCursor ));
   
   switch ( command ) {
-
   case PNIC_CMD_NOOP :
     status = PNIC_STATUS_OK;
     break;
@@ -539,12 +484,10 @@ bx_pcipnic_c::exec_command(void)
 /*
  * Callback from the eth system driver when a frame has arrived
  */
-void
-bx_pcipnic_c::rx_handler(void *arg, const void *buf, unsigned len)
+void bx_pcipnic_c::rx_handler(void *arg, const void *buf, unsigned len)
 {
     // BX_DEBUG(("rx_handler with length %d", len));
   bx_pcipnic_c *class_ptr = (bx_pcipnic_c *) arg;
-  
   class_ptr->rx_frame(buf, len);
 }
 
@@ -555,8 +498,7 @@ bx_pcipnic_c::rx_handler(void *arg, const void *buf, unsigned len)
  * rx ring has enough room, it is copied into it and
  * the receive process is updated
  */
-void
-bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
+void bx_pcipnic_c::rx_frame(const void *buf, unsigned io_len)
 {
   // Check packet length
   if ( io_len > PNIC_DATA_SIZE ) {

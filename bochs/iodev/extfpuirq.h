@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.h,v 1.3 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: extfpuirq.h,v 1.4 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 class bx_extfpuirq_c : public bx_devmodel_c {
 public:
   bx_extfpuirq_c();
- ~bx_extfpuirq_c();
+  virtual ~bx_extfpuirq_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
 

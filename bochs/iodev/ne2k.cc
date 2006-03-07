@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.82 2006-03-02 20:13:14 vruppert Exp $
+// $Id: ne2k.cc,v 1.83 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,8 +48,7 @@ bx_ne2k_c *theNE2kDevice = NULL;
 const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
-  int
-libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theNE2kDevice = new bx_ne2k_c ();
   bx_devices.pluginNE2kDevice = theNE2kDevice;
@@ -57,12 +56,9 @@ libne2k_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *arg
   return(0); // Success
 }
 
-  void
-libne2k_LTX_plugin_fini(void)
-{
-}
+void libne2k_LTX_plugin_fini(void) {}
   
-bx_ne2k_c::bx_ne2k_c(void)
+bx_ne2k_c::bx_ne2k_c()
 {
   put("NE2K");
   settype(NE2KLOG);
@@ -70,7 +66,7 @@ bx_ne2k_c::bx_ne2k_c(void)
 }
 
 
-bx_ne2k_c::~bx_ne2k_c(void)
+bx_ne2k_c::~bx_ne2k_c()
 {
   // nothing for now
 }
@@ -78,8 +74,7 @@ bx_ne2k_c::~bx_ne2k_c(void)
 //
 // reset - restore state to power-up, cancelling all i/o
 //
-void
-bx_ne2k_c::reset(unsigned type)
+void bx_ne2k_c::reset(unsigned type)
 {
   BX_DEBUG (("reset"));
   // Zero out registers and memory
@@ -129,8 +124,7 @@ bx_ne2k_c::reset(unsigned type)
 // read_cr/write_cr - utility routines for handling reads/writes to
 // the Command Register
 //
-Bit32u
-bx_ne2k_c::read_cr(void)
+Bit32u bx_ne2k_c::read_cr(void)
 {
   Bit32u val = 
          (((BX_NE2K_THIS s.CR.pgsel    & 0x03) << 6) |
@@ -142,8 +136,7 @@ bx_ne2k_c::read_cr(void)
   return val;
 }
 
-void
-bx_ne2k_c::write_cr(Bit32u value)
+void bx_ne2k_c::write_cr(Bit32u value)
 {
   BX_DEBUG(("wrote 0x%02x to CR", value));
 
@@ -426,8 +419,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 // page0_read/page0_write - These routines handle reads/writes to
 // the 'zeroth' page of the DS8390 register file
 //
-Bit32u
-bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
+Bit32u bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
 {
   Bit8u value = 0;
 
@@ -538,8 +530,7 @@ bx_ne2k_c::page0_read(Bit32u offset, unsigned int io_len)
   return value;
 }
 
-void
-bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
+void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   Bit8u value2;
 
@@ -735,13 +726,11 @@ bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
   }
 }
 
-
 //
 // page1_read/page1_write - These routines handle reads/writes to
 // the first page of the DS8390 register file
 //
-Bit32u
-bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
+Bit32u bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
 {
   BX_DEBUG(("page 1 read from register 0x%02x, len=%u", offset, io_len));
 
@@ -780,8 +769,7 @@ bx_ne2k_c::page1_read(Bit32u offset, unsigned int io_len)
   return (0);
 }
 
-void
-bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
+void bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_DEBUG(("page 1 write to register 0x%02x, len=%u, value=0x%04x", offset,
             io_len, value));
@@ -816,13 +804,11 @@ bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
   }  
 }
 
-
 //
 // page2_read/page2_write - These routines handle reads/writes to
 // the second page of the DS8390 register file
 //
-Bit32u
-bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
+Bit32u bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 {
   BX_DEBUG(("page 2 read from register 0x%02x, len=%u", offset, io_len));
 
@@ -832,31 +818,24 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   switch (offset) {
   case 0x1:  // PSTART
     return (BX_NE2K_THIS s.page_start);
-    break;
 
   case 0x2:  // PSTOP
     return (BX_NE2K_THIS s.page_stop);
-    break;
 
   case 0x3:  // Remote Next-packet pointer
     return (BX_NE2K_THIS s.rempkt_ptr);
-    break;
 
   case 0x4:  // TPSR
     return (BX_NE2K_THIS s.tx_page_start);
-    break;
 
   case 0x5:  // Local Next-packet pointer
     return (BX_NE2K_THIS s.localpkt_ptr);
-    break;
 
   case 0x6:  // Address counter (upper)
     return (BX_NE2K_THIS s.address_cnt >> 8);
-    break;
 
   case 0x7:  // Address counter (lower)
     return (BX_NE2K_THIS s.address_cnt & 0xff);
-    break;
 
   case 0x8:  // Reserved
   case 0x9:
@@ -864,7 +843,6 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   case 0xb:
     BX_ERROR(("reserved read - page 2, register 0x%02x", offset));
     return (0xff);
-    break;
 
   case 0xc:  // RCR
     return ((BX_NE2K_THIS s.RCR.monitor   << 5) |
@@ -873,14 +851,12 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 	    (BX_NE2K_THIS s.RCR.broadcast << 2) |
 	    (BX_NE2K_THIS s.RCR.runts_ok  << 1) |
 	    (BX_NE2K_THIS s.RCR.errors_ok));
-    break;
 
   case 0xd:  // TCR
     return ((BX_NE2K_THIS s.TCR.coll_prio   << 4) |
 	    (BX_NE2K_THIS s.TCR.ext_stoptx  << 3) |
 	    ((BX_NE2K_THIS s.TCR.loop_cntl & 0x3) << 1) |
 	    (BX_NE2K_THIS s.TCR.crc_disable));
-    break;
 
   case 0xe:  // DCR
     return (((BX_NE2K_THIS s.DCR.fifo_size & 0x3) << 5) |
@@ -889,7 +865,6 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 	    (BX_NE2K_THIS s.DCR.longaddr << 2) |
 	    (BX_NE2K_THIS s.DCR.endian   << 1) |
 	    (BX_NE2K_THIS s.DCR.wdsize));
-    break;
 
   case 0xf:  // IMR
     return ((BX_NE2K_THIS s.IMR.rdma_inte  << 6) |
@@ -899,7 +874,6 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
 	    (BX_NE2K_THIS s.IMR.rxerr_inte << 2) |
 	    (BX_NE2K_THIS s.IMR.tx_inte    << 1) |
 	    (BX_NE2K_THIS s.IMR.rx_inte));
-    break;
 
   default:
     BX_PANIC(("page 2 register 0x%02x out of range", offset));
@@ -908,8 +882,7 @@ bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   return (0);
 };
 
-void
-bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
+void bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   // Maybe all writes here should be BX_PANIC()'d, since they
   // affect internal operation, but let them through for now
@@ -974,8 +947,7 @@ bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
 //
 // page3_read/page3_write - writes to this page are illegal
 //
-Bit32u
-bx_ne2k_c::page3_read(Bit32u offset, unsigned int io_len)
+Bit32u bx_ne2k_c::page3_read(Bit32u offset, unsigned int io_len)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
     switch (offset) {
@@ -995,8 +967,7 @@ bx_ne2k_c::page3_read(Bit32u offset, unsigned int io_len)
   }
 }
 
-void
-bx_ne2k_c::page3_write(Bit32u offset, Bit32u value, unsigned io_len)
+void bx_ne2k_c::page3_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_ERROR(("page 3 write register 0x%02x attempted", offset));
 }
@@ -1004,16 +975,14 @@ bx_ne2k_c::page3_write(Bit32u offset, Bit32u value, unsigned io_len)
 //
 // tx_timer_handler/tx_timer
 //
-void
-bx_ne2k_c::tx_timer_handler(void *this_ptr)
+void bx_ne2k_c::tx_timer_handler(void *this_ptr)
 {
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
 
   class_ptr->tx_timer();
 }
 
-void
-bx_ne2k_c::tx_timer(void)
+void bx_ne2k_c::tx_timer(void)
 {
   BX_DEBUG(("tx_timer"));
   BX_NE2K_THIS s.CR.tx_packet = 0;
@@ -1032,8 +1001,7 @@ bx_ne2k_c::tx_timer(void)
 // mainline when the CPU attempts a read in the i/o space registered
 // by this ne2000 instance
 //
-Bit32u
-bx_ne2k_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_ne2k_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
@@ -1041,8 +1009,7 @@ bx_ne2k_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
   return( class_ptr->read(address, io_len) );
 }
 
-Bit32u
-bx_ne2k_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_ne2k_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1087,18 +1054,15 @@ bx_ne2k_c::read(Bit32u address, unsigned io_len)
 // mainline when the CPU attempts a write in the i/o space registered
 // by this ne2000 instance
 //
-void
-bx_ne2k_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, 
+void bx_ne2k_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, 
 			 unsigned io_len)
 {
 #if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
-  
   class_ptr->write(address, value, io_len);
 }
 
-void
-bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1146,8 +1110,7 @@ bx_ne2k_c::write(Bit32u address, Bit32u value, unsigned io_len)
  * mcast_index() - return the 6-bit index into the multicast
  * table. Stolen unashamedly from FreeBSD's if_ed.c
  */
-unsigned
-bx_ne2k_c::mcast_index(const void *dst)
+unsigned bx_ne2k_c::mcast_index(const void *dst)
 {
 #define POLYNOMIAL 0x04c11db6
   Bit32u crc = 0xffffffffL;
@@ -1172,8 +1135,7 @@ bx_ne2k_c::mcast_index(const void *dst)
 /*
  * Callback from the eth system driver when a frame has arrived
  */
-void
-bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
+void bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
 {
     // BX_DEBUG(("rx_handler with length %d", len));
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
@@ -1188,8 +1150,7 @@ bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
  * rx ring has enough room, it is copied into it and
  * the receive process is updated
  */
-void
-bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
+void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 {
   unsigned pages;
   unsigned avail;
@@ -1312,13 +1273,12 @@ bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 
 }
 
-void
-bx_ne2k_c::init(void)
+void bx_ne2k_c::init(void)
 {
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.82 2006-03-02 20:13:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.83 2006-03-07 21:11:19 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1446,8 +1406,7 @@ bx_ne2k_c::init(void)
   }
 }
 
-  void
-bx_ne2k_c::set_irq_level(bx_bool level)
+void bx_ne2k_c::set_irq_level(bx_bool level)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
 #if BX_SUPPORT_PCI
@@ -1497,12 +1456,10 @@ bx_ne2k_c::pci_read(Bit8u address, unsigned io_len)
   }
 }
 
+// static pci configuration space write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static pci configuration space write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_ne2k_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_ne2k_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_NE2K_SMF
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
@@ -1510,8 +1467,7 @@ bx_ne2k_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsign
   class_ptr->pci_write(address, value, io_len);
 }
 
-  void
-bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
+void bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1583,8 +1539,7 @@ bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
 #define BX_LOW_BYTE(x) (0x00ff & (x))
 #define BX_DUPLICATE(n) if (brief && num!=n) break;
 
-void
-bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 {
   int i;
   int n = 0;
@@ -1814,8 +1769,7 @@ bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 
 #else
 
-void
-bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
+void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
 {
 }
 

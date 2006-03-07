@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.h,v 1.2 2004-12-25 09:29:31 vruppert Exp $
+// $Id: busmouse.h,v 1.3 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -48,12 +48,12 @@
 
 class bx_busm_c : public bx_busm_stub_c {
 public:
-  bx_busm_c(void);
-  ~bx_busm_c(void);
+  bx_busm_c();
+  virtual ~bx_busm_c();
 
-  virtual void     init(void);
-  virtual void     reset(unsigned type);
-  virtual void     bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  virtual void init(void);
+  virtual void reset(unsigned type);
+  virtual void bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 
 private:
   static void timer_handler(void *);

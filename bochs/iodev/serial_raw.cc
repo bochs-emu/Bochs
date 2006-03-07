@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.19 2006-01-08 15:23:25 vruppert Exp $
+// $Id: serial_raw.cc,v 1.20 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
 DWORD WINAPI RawSerialThread(VOID *this_ptr);
 #endif
 
-serial_raw::serial_raw (char *devname)
+serial_raw::serial_raw(char *devname)
 {
 #ifdef WIN32
   char portstr[MAX_PATH];

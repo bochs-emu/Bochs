@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.127 2006-03-01 17:14:36 vruppert Exp $
+// $Id: vga.cc,v 1.128 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,13 +96,12 @@ libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
   return(0); // Success
 }
 
-  void
-libvga_LTX_plugin_fini(void)
+void libvga_LTX_plugin_fini(void)
 {
 }
 #endif // BX_SUPPORT_CLGD54XX
 
-bx_vga_c::bx_vga_c(void)
+bx_vga_c::bx_vga_c()
 {
   put("VGA");
   s.vga_mem_updated = 0;
@@ -114,8 +113,7 @@ bx_vga_c::bx_vga_c(void)
 #endif
 }
 
-
-bx_vga_c::~bx_vga_c(void)
+bx_vga_c::~bx_vga_c()
 {
 #if BX_SUPPORT_VBE
   if (s.vbe_memory != NULL) {
@@ -124,9 +122,7 @@ bx_vga_c::~bx_vga_c(void)
 #endif
 }
 
-
-  void
-bx_vga_c::init(void)
+void bx_vga_c::init(void)
 {
   unsigned i,string_i;
   unsigned x,y;
@@ -189,7 +185,7 @@ bx_vga_c::init(void)
     BX_VGA_THIS s.pel.data[i].red = 0;
     BX_VGA_THIS s.pel.data[i].green = 0;
     BX_VGA_THIS s.pel.data[i].blue = 0;
-    }
+  }
   BX_VGA_THIS s.pel.write_data_register = 0;
   BX_VGA_THIS s.pel.write_data_cycle = 0;
   BX_VGA_THIS s.pel.read_data_register = 0;
@@ -215,13 +211,13 @@ bx_vga_c::init(void)
   BX_VGA_THIS s.graphics_ctrl.bitmask = 0;
   for (i=0; i<4; i++) {
     BX_VGA_THIS s.graphics_ctrl.latch[i] = 0;
-    }
+  }
 
   BX_VGA_THIS s.sequencer.index = 0;
   BX_VGA_THIS s.sequencer.map_mask = 0;
   for (i=0; i<4; i++) {
     BX_VGA_THIS s.sequencer.map_mask_bit[i] = 0;
-    }
+  }
   BX_VGA_THIS s.sequencer.reset1 = 1;
   BX_VGA_THIS s.sequencer.reset2 = 1;
   BX_VGA_THIS s.sequencer.reg1 = 0;
@@ -343,41 +339,38 @@ bx_vga_c::init(void)
 #endif  
 }
 
-  void
-bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
+void bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
 {
   unsigned addr, i;
   Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
   for (addr=0x03B4; addr<=0x03B5; addr++) {
     DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
-    }
+  }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
     DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
-    }
+  }
 
   i = 0;
   for (addr=0x03C0; addr<=0x03CF; addr++) {
     DEV_register_ioread_handler(this, f_read, addr, "vga video", io_mask[i++]);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
-    }
+  }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
     DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
-    }
+  }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
     DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
     DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
-    }
-
+  }
 }
 
-  void
-bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
+void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
   bx_param_num_c *vga_update_interval = SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL);
   BX_INFO(("interval=%u", vga_update_interval->get()));
@@ -389,8 +382,7 @@ bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_par
   }
 }
 
-  void
-bx_vga_c::reset(unsigned type)
+void bx_vga_c::reset(unsigned type)
 {
   if (!BX_VGA_THIS extension_checked) {
     char *strptr = SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr();
@@ -415,69 +407,64 @@ bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
   h = (ai[1] + 1) * 8;
   v = (ai[18] | ((ai[7] & 0x02) << 7) | ((ai[7] & 0x40) << 3)) + 1;
 
-  if ( BX_VGA_THIS s.graphics_ctrl.shift_reg == 0 )
-    {
+  if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 0)
+  {
     *piWidth = 640;
     *piHeight = 480;
 
     if ( BX_VGA_THIS s.CRTC.reg[6] == 0xBF )
-      {
+    {
       if (BX_VGA_THIS s.CRTC.reg[23] == 0xA3 &&
          BX_VGA_THIS s.CRTC.reg[20] == 0x40 &&
          BX_VGA_THIS s.CRTC.reg[9] == 0x41)
-        {
+      {
         *piWidth = 320;
         *piHeight = 240;
-        }
+      }
       else {
         if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
         *piWidth = h;
         *piHeight = v;
-        }
       }
+    }
     else if ((h >= 640) && (v >= 480)) {
       *piWidth = h;
       *piHeight = v;
-      }
     }
-  else if ( BX_VGA_THIS s.graphics_ctrl.shift_reg == 2 )
+  }
+  else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2)
     {
 
-    if ( BX_VGA_THIS s.sequencer.chain_four )
-      {
-      *piWidth = h;
-      *piHeight = v;
-      }
-    else
-      {
-      *piWidth = h;
-      *piHeight = v;
-      }
-    }
-  else
+    if (BX_VGA_THIS s.sequencer.chain_four)
     {
+      *piWidth = h;
+      *piHeight = v;
+    }
+    else
+    {
+      *piWidth = h;
+      *piHeight = v;
+    }
+  }
+  else
+  {
     if (BX_VGA_THIS s.x_dotclockdiv2) h <<= 1;
     *piWidth = h;
     *piHeight = v;
-    }
+  }
 }
 
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_vga_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_vga_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_VGA_SMF
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
-
-  return( class_ptr->read(address, io_len) );
+  return class_ptr->read(address, io_len);
 }
 
-
-  Bit32u
-bx_vga_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_vga_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -507,9 +494,9 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
-     {
+  {
      return _inp(address);
-     }
+  }
 #endif
 
 #if !defined(VGA_TRACE_FEATURE)
@@ -572,11 +559,11 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           (BX_VGA_THIS s.attribute_ctrl.video_enabled << 5) |
           BX_VGA_THIS s.attribute_ctrl.address;
         RETURN(retval);
-        }
+      }
       else {
         BX_ERROR(("io read: 0x3c0: flip_flop != 0"));
         return(0);
-        }
+      }
       break;
 
     case 0x03c1: /* */
@@ -615,7 +602,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           BX_INFO(("io read: 0x3c1: unknown register 0x%02x",
             (unsigned) BX_VGA_THIS s.attribute_ctrl.address));
           RETURN(0);
-        }
+      }
       break;
 
     case 0x03c2: /* Input Status 0 */
@@ -688,16 +675,16 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
             break;
           default:
             retval = 0; // keep compiler happy
-          }
+        }
         BX_VGA_THIS s.pel.read_data_cycle++;
         if (BX_VGA_THIS s.pel.read_data_cycle >= 3) {
           BX_VGA_THIS s.pel.read_data_cycle = 0;
           BX_VGA_THIS s.pel.read_data_register++;
-          }
-	}
+        }
+      }
       else {
         retval = 0x3f;
-        }
+      }
       RETURN(retval);
       break;
 
@@ -771,7 +758,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
           BX_DEBUG(("io read: 0x3cf: index %u unhandled",
             (unsigned) BX_VGA_THIS s.graphics_ctrl.index));
           RETURN(0);
-        }
+      }
       break;
 
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
@@ -793,7 +780,7 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
     default:
       BX_INFO(("io read from vga port 0x%04x", (unsigned) address));
       RETURN(0); /* keep compiler happy */
-    }
+  }
 
 #if defined(VGA_TRACE_FEATURE)
   read_return:
@@ -809,15 +796,13 @@ bx_vga_c::read(Bit32u address, unsigned io_len)
 #undef RETURN
 #endif
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  void
-bx_vga_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_VGA_SMF
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
-
   class_ptr->write(address, value, io_len, 0);
 #else
   UNUSED(this_ptr);
@@ -825,12 +810,10 @@ bx_vga_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned i
 #endif
 }
 
-  void
-bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_VGA_SMF
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
-
   class_ptr->write(address, value, io_len, 1);
 #else
   UNUSED(this_ptr);
@@ -838,8 +821,7 @@ bx_vga_c::write_handler_no_log(void *this_ptr, Bit32u address, Bit32u value, uns
 #endif
 }
 
-  void
-bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
+void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
 {
   unsigned i;
   Bit8u charmap1, charmap2, prev_memory_mapping;
@@ -875,14 +857,14 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
     bx_vga_c::write(address+1, (value >> 8) & 0xff, 1, 1);
 #endif
     return;
-    }
+  }
 
 #ifdef __OS2__
   if ( bx_options.videomode == BX_VIDEO_DIRECT )
-     {
+   {
      _outp(address,value);
      return;
-     }
+   }
 #endif
 
   if ( (address >= 0x03b0) && (address <= 0x03bf) &&
@@ -927,8 +909,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           default:
             BX_DEBUG(("io write 0x3c0: address mode reg=0x%02x",
               (unsigned) value));
-          }
         }
+      }
       else { /* data-write mode */
         switch (BX_VGA_THIS s.attribute_ctrl.address) {
           case 0x00: case 0x01: case 0x02: case 0x03:
@@ -1005,8 +987,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           default:
             BX_DEBUG(("io write 0x3c0: data-write mode 0x%02x",
               (unsigned) BX_VGA_THIS s.attribute_ctrl.address));
-          }
         }
+      }
       BX_VGA_THIS s.attribute_ctrl.flip_flop = !BX_VGA_THIS s.attribute_ctrl.flip_flop;
       break;
 
@@ -1045,7 +1027,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
     case 0x03c4: /* Sequencer Index Register */
       if (value > 4) {
         BX_DEBUG(("io write 3c4: value > 4"));
-        }
+      }
       BX_VGA_THIS s.sequencer.index = value;
       break;
 
@@ -1090,7 +1072,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
             bx_gui->set_text_charmap(
               & BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
             BX_VGA_THIS s.vga_mem_updated = 1;
-            }
+          }
           if (charmap2 != charmap1)
             BX_INFO(("char map select: map #2 in block #%d unused", charmap2));
           break;
@@ -1112,7 +1094,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         default:
           BX_DEBUG(("io write 0x3c5: index 0x%02x unhandled",
             (unsigned) BX_VGA_THIS s.sequencer.index));
-        }
+      }
       break;
 
     case 0x03c6: /* PEL mask */
@@ -1162,7 +1144,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           }
 #endif
           break;
-        }
+      }
 
       BX_VGA_THIS s.pel.write_data_cycle++;
       if (BX_VGA_THIS s.pel.write_data_cycle >= 3) {
@@ -1173,7 +1155,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
         //  (unsigned) BX_VGA_THIS s.pel.data[BX_VGA_THIS s.pel.write_data_register].blue);
         BX_VGA_THIS s.pel.write_data_cycle = 0;
         BX_VGA_THIS s.pel.write_data_register++;
-        }
+      }
       break;
 
     case 0x03ca: /* Graphics 2 Position (EGA) */
@@ -1263,7 +1245,7 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
           /* ??? */
           BX_DEBUG(("io write: 0x3cf: index %u unhandled",
             (unsigned) BX_VGA_THIS s.graphics_ctrl.index));
-        }
+      }
       break;
 
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
@@ -1369,7 +1351,8 @@ bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_log)
     default:
       BX_ERROR(("unsupported io write to port 0x%04x, val=0x%02x",
         (unsigned) address, (unsigned) value));
-    }
+  }
+
   if (needs_update) {
     // Mark all video as updated so the changes will go through
     BX_VGA_THIS redraw_area(0, 0, old_iWidth, old_iHeight);
@@ -1387,24 +1370,19 @@ Bit64s bx_vga_c::vga_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-  void
-bx_vga_c::trigger_timer(void *this_ptr)
+void bx_vga_c::trigger_timer(void *this_ptr)
 {
   timer_handler(this_ptr);
 }
 
-  void
-bx_vga_c::timer_handler(void *this_ptr)
+void bx_vga_c::timer_handler(void *this_ptr)
 {
 #if !BX_USE_VGA_SMF
-  
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
-
   class_ptr->timer();
 }
 
-  void
-bx_vga_c::timer(void)
+void bx_vga_c::timer(void)
 {
 #else
   UNUSED(this_ptr);
@@ -1412,12 +1390,9 @@ bx_vga_c::timer(void)
 
   update();
   bx_gui->flush();
-
 }
 
-
-  void
-bx_vga_c::update(void)
+void bx_vga_c::update(void)
 {
   unsigned iHeight, iWidth;
 
@@ -2035,9 +2010,7 @@ bx_vga_c::update(void)
   }
 }
 
-
-  bx_bool
-bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
+bx_bool bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
                            void *data, void *param)
 {
   Bit8u *data_ptr;
@@ -2059,8 +2032,7 @@ bx_vga_c::mem_read_handler(unsigned long addr, unsigned long len,
   return 1;
 }
 
-  Bit8u
-bx_vga_c::mem_read(Bit32u addr)
+Bit8u bx_vga_c::mem_read(Bit32u addr)
 {
   Bit32u offset;
   Bit8u *plane0, *plane1, *plane2, *plane3;
@@ -2087,14 +2059,12 @@ bx_vga_c::mem_read(Bit32u addr)
 #error Fix the code for plugins
 #endif
 
-  if ( bx_options.videomode == BX_VIDEO_DIRECT )
-     {
+  if (bx_options.videomode == BX_VIDEO_DIRECT)
+  {
      char value;
-
      value = devices->mem->video[addr-0xA0000];
-
      return value;
-     }
+  }
 #endif
 
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
@@ -2177,11 +2147,10 @@ bx_vga_c::mem_read(Bit32u addr)
       break;
     default:
       return 0;
-    }
+  }
 }
 
-  bx_bool
-bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
+bx_bool bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
                             void *data, void *param)
 {
   Bit8u *data_ptr;
@@ -2203,8 +2172,7 @@ bx_vga_c::mem_write_handler(unsigned long addr, unsigned long len,
   return 1;
 }
 
-  void
-bx_vga_c::mem_write(Bit32u addr, Bit8u value)
+void bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 {
   Bit32u offset;
   Bit8u new_val[4];
@@ -2215,12 +2183,12 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
   // if in a vbe enabled mode, write to the vbe_memory
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
-        vbe_mem_write(addr,value);
-        return;
+    vbe_mem_write(addr,value);
+    return;
   }
   else if (addr >= VBE_DISPI_LFB_PHYSICAL_ADDRESS)
   {
-        return;
+    return;
   }
 #endif
 
@@ -2234,12 +2202,11 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 #error Fix the code for plugins
 #endif
 
-  if ( bx_options.videomode == BX_VIDEO_DIRECT )
-    {
+  if (bx_options.videomode == BX_VIDEO_DIRECT)
+  {
     devices->mem->video[addr-0xA0000] = value;
-
     return;
-    }
+  }
 #endif
 
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
@@ -2470,7 +2437,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
     case 1: /* write mode 1 */
       for (i=0; i<4; i++ ) {
         new_val[i] = BX_VGA_THIS s.graphics_ctrl.latch[i];
-        }
+      }
       break;
 
     case 2: /* write mode 2 */
@@ -2659,8 +2626,7 @@ bx_vga_c::mem_write(Bit32u addr, Bit8u value)
   }
 }
 
-  void
-bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
+void bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                                    unsigned *txWidth)
 {
   unsigned VDE, MSL;
@@ -2677,14 +2643,12 @@ bx_vga_c::get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
   }
 }
 
-  Bit8u
-bx_vga_c::get_actl_palette_idx(Bit8u index)
+Bit8u bx_vga_c::get_actl_palette_idx(Bit8u index)
 {
   return BX_VGA_THIS s.attribute_ctrl.palette_reg[index];
 }
 
-  void
-bx_vga_c::dump_status(void)
+void bx_vga_c::dump_status(void)
 {
 #if BX_DEBUGGER
   dbg_printf("s.misc_output.color_emulation = %u\n",
@@ -2709,7 +2673,7 @@ bx_vga_c::dump_status(void)
     case 2: dbg_printf("(350 lines)\n"); break;
     case 3: dbg_printf("(480 lines)\n"); break;
     default: dbg_printf("(reserved)\n");
-    }
+  }
 
   dbg_printf("s.graphics_ctrl.odd_even = %u\n",
             (unsigned) BX_VGA_THIS s.graphics_ctrl.odd_even);
@@ -2726,7 +2690,7 @@ bx_vga_c::dump_status(void)
     case 2: dbg_printf("(B0000-B7FFF)\n"); break;
     case 3: dbg_printf("(B8000-BFFFF)\n"); break;
     default: dbg_printf("(A0000-BFFFF)\n"); break;
-    }
+  }
 
   dbg_printf("s.sequencer.extended_mem = %u\n",
             (unsigned) BX_VGA_THIS s.sequencer.extended_mem);
@@ -2748,9 +2712,7 @@ bx_vga_c::dump_status(void)
 #endif
 }
 
-
-  void
-bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
+void bx_vga_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
                       unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
@@ -2890,8 +2852,7 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
   }  
 }
 
-  Bit32u
-bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_VGA_SMF
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
@@ -2899,9 +2860,7 @@ bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
   return( class_ptr->vbe_read(address, io_len) );
 }
 
-
-  Bit32u
-bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
+Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -3001,8 +2960,7 @@ bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
   return 0; /* keep compiler happy */
 }
 
-  void
-bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_VGA_SMF
   bx_vga_c *class_ptr = (bx_vga_c *) this_ptr;
@@ -3010,8 +2968,7 @@ bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsign
   class_ptr->vbe_write(address, value, io_len);
 }
 
-  Bit32u
-bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
+Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 { 
 #else
   UNUSED(this_ptr);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.23 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: sb16.h,v 1.24 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,9 +194,8 @@ class BX_SOUND_OUTPUT_C_DEF;
 // The actual emulator class, emulating the sound blaster ports
 class bx_sb16_c : public bx_devmodel_c {
 public:
-
-  bx_sb16_c(void);
-  ~bx_sb16_c(void);
+  bx_sb16_c();
+  virtual ~bx_sb16_c();
   virtual void init(void);
   virtual void reset(unsigned type);
 

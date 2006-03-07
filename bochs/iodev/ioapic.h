@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.19 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: ioapic.h,v 1.20 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,8 +83,8 @@ class bx_ioapic_c : public bx_generic_apic_c
 
 public:
   bx_io_redirect_entry_t ioredtbl[BX_IOAPIC_NUM_PINS];  // table of redirections
-  bx_ioapic_c ();
-  ~bx_ioapic_c ();
+  bx_ioapic_c();
+  virtual ~bx_ioapic_c();
   virtual void init();
   virtual void reset(unsigned type) {}
   virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.112 2006-03-07 17:54:27 vruppert Exp $
+// $Id: keyboard.cc,v 1.113 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,8 +62,7 @@
 
 bx_keyb_c *theKeyboard = NULL;
 
-  int
-libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Create one instance of the keyboard device object.
   theKeyboard = new bx_keyb_c ();
@@ -75,34 +74,22 @@ libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
   return(0); // Success
 }
 
-  void
-libkeyboard_LTX_plugin_fini(void)
+void libkeyboard_LTX_plugin_fini(void)
 {
   BX_INFO (("keyboard plugin_fini"));
 }
 
-bx_keyb_c::bx_keyb_c(void)
+bx_keyb_c::bx_keyb_c()
 {
-  // constructor
   put("KBD");
   settype(KBDLOG);
 }
 
-bx_keyb_c::~bx_keyb_c(void)
-{
-  // destructor
-  BX_DEBUG(("Exit."));
-}
-
-
 // flush internal buffer and reset keyboard settings to power-up condition
-  void
-bx_keyb_c::resetinternals(bx_bool powerup)
+void bx_keyb_c::resetinternals(bx_bool powerup)
 {
-  Bit32u   i;
-
   BX_KEY_THIS s.kbd_internal_buffer.num_elements = 0;
-  for (i=0; i<BX_KBD_ELEMENTS; i++)
+  for (int i=0; i<BX_KBD_ELEMENTS; i++)
     BX_KEY_THIS s.kbd_internal_buffer.buffer[i] = 0;
   BX_KEY_THIS s.kbd_internal_buffer.head = 0;
 
@@ -120,12 +107,9 @@ bx_keyb_c::resetinternals(bx_bool powerup)
   }
 }
 
-
-
-  void
-bx_keyb_c::init(void)
+void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.112 2006-03-07 17:54:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.113 2006-03-07 21:11:16 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -260,8 +244,7 @@ bx_keyb_c::init(void)
   SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_runtime_param(1);
 }
 
-  void
-bx_keyb_c::reset(unsigned type)
+void bx_keyb_c::reset(unsigned type)
 {
   if (BX_KEY_THIS pastebuf != NULL) {
     BX_KEY_THIS stop_paste = 1;
@@ -285,15 +268,14 @@ Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-  void
-bx_keyb_c::paste_delay_changed(Bit32u value)
+void bx_keyb_c::paste_delay_changed(Bit32u value)
 {
   BX_KEY_THIS pastedelay = value / BX_IODEV_HANDLER_PERIOD;
   BX_INFO(("will paste characters every %d keyboard ticks",BX_KEY_THIS pastedelay));
 }
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 
 // read function - the big picture:
 // if address == data port then
@@ -302,8 +284,7 @@ bx_keyb_c::paste_delay_changed(Bit32u value)
 // else address== status port
 //    assemble the status bits and return them.
 //
-  Bit32u
-bx_keyb_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_keyb_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_KEY_SMF
   bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
@@ -311,9 +292,7 @@ bx_keyb_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
   return( class_ptr->read(address, io_len) );
 }
 
-
-  Bit32u
-bx_keyb_c::read(Bit32u   address, unsigned io_len)
+Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -338,15 +317,15 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         for (i=0; i<BX_KEY_THIS s.controller_Qsize-1; i++) {
           // move Q elements towards head of queue by one
           BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
-          }
-        BX_KEY_THIS s.controller_Qsize--;
         }
+        BX_KEY_THIS s.controller_Qsize--;
+      }
 
       DEV_pic_lower_irq(12);
       activate_timer();
       BX_DEBUG(("[mouse] read from 0x%02x returns 0x%02x", address, val));
       return val;
-      }
+    }
     else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
       val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
       BX_KEY_THIS s.kbd_controller.outb = 0;
@@ -364,27 +343,25 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
         for (i=0; i<BX_KEY_THIS s.controller_Qsize-1; i++) {
           // move Q elements towards head of queue by one
           BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
-          }
+        }
 	BX_DEBUG(("s.controller_Qsize: %02X",BX_KEY_THIS s.controller_Qsize));
         BX_KEY_THIS s.controller_Qsize--;
-        }
+      }
 
       DEV_pic_lower_irq(1);
       activate_timer();
-      BX_DEBUG(("READ(%02x) = %02x", (unsigned) address,
-          (unsigned) val));
+      BX_DEBUG(("READ(%02x) = %02x", (unsigned) address, (unsigned) val));
       return val;
-      }
+    }
     else {
       BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
       BX_DEBUG(("read from port 60h with outb empty"));
       return BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
-      }
     }
+  }
 
 #if BX_CPU_LEVEL >= 2
   else if (address == 0x64) { /* status register */
-
     val = (BX_KEY_THIS s.kbd_controller.pare << 7)  |
           (BX_KEY_THIS s.kbd_controller.tim  << 6)  |
           (BX_KEY_THIS s.kbd_controller.auxb << 5)  |
@@ -395,14 +372,14 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
           BX_KEY_THIS s.kbd_controller.outb;
     BX_KEY_THIS s.kbd_controller.tim = 0;
     return val;
-    }
+  }
 
 #else /* BX_CPU_LEVEL > 0 */
   /* XT MODE, System 8255 Mode Register */
   else if (address == 0x64) { /* status register */
     BX_DEBUG(("IO read from port 64h, system 8255 mode register"));
     return BX_KEY_THIS s.kbd_controller.outb;
-    }
+  }
 #endif /* BX_CPU_LEVEL > 0 */
 
   BX_PANIC(("unknown address in io read to keyboard port %x",
@@ -410,21 +387,17 @@ bx_keyb_c::read(Bit32u   address, unsigned io_len)
   return 0; /* keep compiler happy */
 }
 
+// static IO port write callback handler
+// redirects to non-static class handler to avoid virtual functions
 
-  // static IO port write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_keyb_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_keyb_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_KEY_SMF
   bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
+void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -443,7 +416,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
         BX_KEY_THIS s.kbd_controller.c_d = 0;
         if (BX_KEY_THIS s.kbd_controller.inpb) {
           BX_PANIC(("write to port 60h, not ready for write"));
-          }
+        }
         switch (BX_KEY_THIS s.kbd_controller.last_comm) {
           case 0x60: // write command byte
             {
@@ -691,8 +664,7 @@ bx_keyb_c::write( Bit32u   address, Bit32u   value, unsigned io_len)
 // we have to be conservative.  Note that this process depends on the
 // keymap tables to know what chars correspond to what keys, and which
 // chars require a shift or other modifier.
-void 
-bx_keyb_c::service_paste_buf ()
+void bx_keyb_c::service_paste_buf()
 {
   if (!BX_KEY_THIS pastebuf) return;
   BX_DEBUG (("service_paste_buf: ptr at %d out of %d", BX_KEY_THIS pastebuf_ptr, BX_KEY_THIS pastebuf_len));
@@ -728,8 +700,7 @@ bx_keyb_c::service_paste_buf ()
 // paste which is still in progress will be thrown out.  BYTES is a pointer
 // to a region of memory containing the chars to be pasted. When the paste
 // is complete, the keyboard code will call delete [] bytes;
-void
-bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
+void bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
 {
   BX_DEBUG (("paste_bytes: %d bytes", length));
   if (BX_KEY_THIS pastebuf) {
@@ -743,8 +714,7 @@ bx_keyb_c::paste_bytes (Bit8u *bytes, Bit32s length)
   BX_KEY_THIS service_paste_buf ();
 }
 
-  void
-bx_keyb_c::gen_scancode(Bit32u key)
+void bx_keyb_c::gen_scancode(Bit32u key)
 {
   unsigned char *scancode;
   Bit8u  i;
@@ -774,7 +744,6 @@ bx_keyb_c::gen_scancode(Bit32u key)
     if (DEV_usb_key_enq(scancode)) return;
   }
 #endif
-
 
   if (BX_KEY_THIS s.kbd_controller.scancodes_translate) {
     // Translate before send
@@ -819,10 +788,7 @@ bx_keyb_c::set_kbd_clock_enable(Bit8u   value)
   }
 }
 
-
-
-  void
-bx_keyb_c::set_aux_clock_enable(Bit8u   value)
+void bx_keyb_c::set_aux_clock_enable(Bit8u   value)
 {
   bx_bool prev_aux_clock_enabled;
 
@@ -838,8 +804,7 @@ bx_keyb_c::set_aux_clock_enable(Bit8u   value)
   }
 }
 
-  Bit8u
-bx_keyb_c::get_kbd_enable(void)
+Bit8u bx_keyb_c::get_kbd_enable(void)
 {
   BX_DEBUG(("get_kbd_enable(): getting kbd_clock_enabled of: %02x",
       (unsigned) BX_KEY_THIS s.kbd_controller.kbd_clock_enabled));
@@ -847,8 +812,7 @@ bx_keyb_c::get_kbd_enable(void)
   return(BX_KEY_THIS s.kbd_controller.kbd_clock_enabled);
 }
 
-  void
-bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
+void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
 {
   // source is 0 for keyboard, 1 for mouse
 
@@ -882,8 +846,7 @@ bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
   }
 }
 
-void
-bx_keyb_c::kbd_enQ_imm(Bit8u val)
+void bx_keyb_c::kbd_enQ_imm(Bit8u val)
 {
   int tail;
 
@@ -903,9 +866,7 @@ bx_keyb_c::kbd_enQ_imm(Bit8u val)
     BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
 }
 
-
-  void
-bx_keyb_c::kbd_enQ(Bit8u scancode)
+void bx_keyb_c::kbd_enQ(Bit8u scancode)
 {
   int tail;
 
@@ -932,8 +893,7 @@ bx_keyb_c::kbd_enQ(Bit8u scancode)
   }
 }
 
-  bx_bool
-bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
+bx_bool bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
 {
   int bytes = 3;
   if (BX_KEY_THIS s.mouse.im_mode) bytes = 4;
@@ -950,9 +910,7 @@ bx_keyb_c::mouse_enQ_packet(Bit8u b1, Bit8u b2, Bit8u b3, Bit8u b4)
   return(1);
 }
 
-
-  void
-bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
+void bx_keyb_c::mouse_enQ(Bit8u mouse_data)
 {
   int tail;
 
@@ -976,8 +934,7 @@ bx_keyb_c::mouse_enQ(Bit8u   mouse_data)
   }
 }
 
-  void
-bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
+void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
 {
 
   BX_DEBUG(("controller passed byte %02xh to keyboard", value));
@@ -1131,8 +1088,7 @@ bx_keyb_c::kbd_ctrl_to_kbd(Bit8u   value)
   }
 }
 
-  void
-bx_keyb_c::timer_handler(void *this_ptr)
+void bx_keyb_c::timer_handler(void *this_ptr)
 {
   bx_keyb_c *class_ptr = (bx_keyb_c *) this_ptr;
   unsigned retval;
@@ -1145,8 +1101,7 @@ bx_keyb_c::timer_handler(void *this_ptr)
     DEV_pic_raise_irq(12);
 }
 
-  unsigned
-bx_keyb_c::periodic( Bit32u   usec_delta )
+unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 {
 /*  static int multiple=0; */
   static unsigned count_before_paste=0;
@@ -1218,20 +1173,14 @@ bx_keyb_c::periodic( Bit32u   usec_delta )
   return(retval);
 }
 
-
-
-
-  void
-bx_keyb_c::activate_timer(void)
+void bx_keyb_c::activate_timer(void)
 {
   if (BX_KEY_THIS s.kbd_controller.timer_pending == 0) {
     BX_KEY_THIS s.kbd_controller.timer_pending = 1;
   }
 }
 
-
-  void
-bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
+void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
 {
   // if we are not using a ps2 mouse, some of the following commands need to return different values
   bx_bool is_ps2 = 0;
@@ -1467,9 +1416,9 @@ bx_keyb_c::kbd_ctrl_to_mouse(Bit8u   value)
   }
 }
 
-void
-bx_keyb_c::create_mouse_packet(bool force_enq) {
-  Bit8u   b1, b2, b3, b4;
+void bx_keyb_c::create_mouse_packet(bool force_enq)
+{
+  Bit8u b1, b2, b3, b4;
 
   if(BX_KEY_THIS s.mouse_internal_buffer.num_elements && !force_enq)
     return;
@@ -1492,40 +1441,40 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
   if ( (delta_x>=0) && (delta_x<=255) ) {
     b2 = (Bit8u) delta_x;
     BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
-    }
+  }
   else if ( delta_x > 255 ) {
     b2 = (Bit8u) 0xff;
     BX_KEY_THIS s.mouse.delayed_dx-=255;
-    }
+  }
   else if ( delta_x >= -256 ) {
     b2 = (Bit8u) delta_x;
     b1 |= 0x10;
     BX_KEY_THIS s.mouse.delayed_dx-=delta_x;
-    }
+  }
   else {
     b2 = (Bit8u) 0x00;
     b1 |= 0x10;
     BX_KEY_THIS s.mouse.delayed_dx+=256;
-    }
+  }
 
   if ( (delta_y>=0) && (delta_y<=255) ) {
     b3 = (Bit8u) delta_y;
     BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
-    }
+  }
   else if ( delta_y > 255 ) {
     b3 = (Bit8u) 0xff;
     BX_KEY_THIS s.mouse.delayed_dy-=255;
-    }
+  }
   else if ( delta_y >= -256 ) {
     b3 = (Bit8u) delta_y;
     b1 |= 0x20;
     BX_KEY_THIS s.mouse.delayed_dy-=delta_y;
-    }
+  }
   else {
     b3 = (Bit8u) 0x00;
     b1 |= 0x20;
     BX_KEY_THIS s.mouse.delayed_dy+=256;
-    }
+  }
 
   b4 = (Bit8u) -BX_KEY_THIS s.mouse.delayed_dz;
 
@@ -1533,8 +1482,7 @@ bx_keyb_c::create_mouse_packet(bool force_enq) {
 }
 
 
-void
-bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
+void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
 {
 #if BX_SUPPORT_PCIUSB
   // if type == usb, connect or disconnect the USB mouse
@@ -1554,8 +1502,7 @@ bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
   BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 
-  void
-bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
+void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   bool force_enq=0;
 

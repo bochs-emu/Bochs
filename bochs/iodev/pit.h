@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.13 2004-12-13 19:10:38 vruppert Exp $
+// $Id: pit.h,v 1.14 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,15 +58,12 @@ typedef struct {
   bx_bool    active;
   bx_bool    GATE;     // GATE input  pin
   bx_bool    OUT;      // OUT  output pin
-  } bx_pit_t;
-
-
-
+} bx_pit_t;
 
 class bx_pit_c : public logfunctions {
 public:
-  bx_pit_c( void );
-  ~bx_pit_c( void );
+  bx_pit_c();
+  virtual ~bx_pit_c();
   BX_PIT_SMF int init(void);
   BX_PIT_SMF void reset( unsigned type);
   BX_PIT_SMF bx_bool periodic( Bit32u   usec_delta );
@@ -85,14 +82,14 @@ private:
     Bit8u   speaker_data_on;
     bx_bool refresh_clock_div2;
     int  timer_handle[3];
-    } s;
+  } s;
 
   BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
   BX_PIT_SMF Bit8u read_counter( unsigned timerid );
   BX_PIT_SMF void  latch( unsigned timerid );
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
-  };
+};
 
 extern bx_pit_c bx_pit;
 

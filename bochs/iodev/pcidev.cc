@@ -47,10 +47,7 @@ int libpcidev_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
   return 0; // Success
 }
 
-void libpcidev_LTX_plugin_fini(void)
-{
-}
-
+void libpcidev_LTX_plugin_fini(void) {}
 
 bx_pcidev_c::bx_pcidev_c()
 {
@@ -194,10 +191,7 @@ void bx_pcidev_c::init(void)
 	(unsigned)find.bus, (unsigned)find.device, (unsigned)find.func));
 
   Bit8u devfunc = 0x00;
-  DEV_register_pci_handlers(this,
-                            pci_read_handler,
-                            pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCIDEV,
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCIDEV,
                             pcidev_name);
 
   BX_PCIDEV_THIS irq = PCIDEV_IRQ; // initial irq value
@@ -277,22 +271,9 @@ void bx_pcidev_c::init(void)
 
 void bx_pcidev_c::reset(unsigned type) { }
 
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u bx_pcidev_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pcidev_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PCIDEV_SMF
-  bx_pcidev_c *class_ptr = (bx_pcidev_c *) this_ptr;
-
-  return class_ptr->pci_read(address, io_len);
-}
-
-Bit32u bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIDEV_SMF
   int ret = -1;
 
   if (io_len > 4 || io_len == 0) {
@@ -337,24 +318,9 @@ Bit32u bx_pcidev_c::pci_read(Bit8u address, unsigned io_len)
 }
 
 
-  // static pci configuration space write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pcidev_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PCIDEV_SMF
-  bx_pcidev_c *class_ptr = (bx_pcidev_c *) this_ptr;
-
-  class_ptr->pci_write(address, value, io_len);
-}
-
-  void
-bx_pcidev_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIDEV_SMF
   int ret = -1;
 
   if (io_len > 4 || io_len == 0) {

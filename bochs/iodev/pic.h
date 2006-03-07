@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.15 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: pic.h,v 1.16 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ typedef struct {
 class bx_pic_c : public bx_pic_stub_c {
 public:
   bx_pic_c();
- ~bx_pic_c();
+  virtual ~bx_pic_c();
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void lower_irq(unsigned irq_no);

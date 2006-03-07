@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.8 2005-09-18 13:02:56 vruppert Exp $
+// $Id: pcivga.cc,v 1.9 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -40,8 +40,7 @@
 
 bx_pcivga_c* thePciVgaAdapter = 0;
 
-  int
-libpcivga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libpcivga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   thePciVgaAdapter = new bx_pcivga_c ();
   bx_devices.pluginPciVgaAdapter = thePciVgaAdapter;
@@ -49,37 +48,27 @@ libpcivga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *a
   return 0; // Success
 }
 
-  void
-libpcivga_LTX_plugin_fini(void)
-{
-}
+void libpcivga_LTX_plugin_fini(void) {}
 
-
-bx_pcivga_c::bx_pcivga_c(void)
+bx_pcivga_c::bx_pcivga_c()
 {
   put("PCIVGA");
   settype(PCIVGALOG);
 }
 
-bx_pcivga_c::~bx_pcivga_c(void)
+bx_pcivga_c::~bx_pcivga_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
-
-  void
-bx_pcivga_c::init(void)
+void bx_pcivga_c::init(void)
 {
   // called once when bochs initializes
 
   Bit8u devfunc = 0x00;
   unsigned i;
 
-  DEV_register_pci_handlers(this,
-                            pci_read_handler,
-                            pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCIVGA,
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCIVGA,
                             "Experimental PCI VGA");
 
   for (i=0; i<256; i++) {
@@ -105,8 +94,7 @@ bx_pcivga_c::init(void)
   }
 }
 
-  void
-bx_pcivga_c::reset(unsigned type)
+void bx_pcivga_c::reset(unsigned type)
 {
   static const struct reset_vals_t {
     unsigned      addr;
@@ -120,27 +108,9 @@ bx_pcivga_c::reset(unsigned type)
   }
 }
 
-
-  // static pci configuration space read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_pcivga_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pcivga_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PCIVGA_SMF
-  bx_pcivga_c *class_ptr = (bx_pcivga_c *) this_ptr;
-
-  return class_ptr->pci_read(address, io_len);
-}
-
-
-  Bit32u
-bx_pcivga_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIVGA_SMF
-
   Bit32u value = 0;
 
   if (io_len > 4 || io_len == 0) {
@@ -196,25 +166,9 @@ bx_pcivga_c::pci_read(Bit8u address, unsigned io_len)
 }
 
 
-  // static pci configuration space write callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  void
-bx_pcivga_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// static pci configuration space write callback handler
+void bx_pcivga_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PCIVGA_SMF
-  bx_pcivga_c *class_ptr = (bx_pcivga_c *) this_ptr;
-
-  class_ptr->pci_write(address, value, io_len);
-}
-
-  void
-bx_pcivga_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIVGA_SMF
-
   if ((address >= 0x10) && (address < 0x34))
     return;
   // This odd code is to display only what bytes actually were written.

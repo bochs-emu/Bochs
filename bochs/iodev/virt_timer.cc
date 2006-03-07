@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.26 2006-02-19 15:43:03 vruppert Exp $
+// $Id: virt_timer.cc,v 1.27 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -130,7 +130,7 @@ bx_virt_timer_c bx_virt_timer;
 #define TICKS_TO_USEC(a) ( ((a)*usec_per_second)/ticks_per_second )
 #define USEC_TO_TICKS(a) ( ((a)*ticks_per_second)/usec_per_second )
 
-bx_virt_timer_c::bx_virt_timer_c( void )
+bx_virt_timer_c::bx_virt_timer_c()
 {
   put("VTIMER");
   settype(VTIMERLOG);
@@ -147,21 +147,15 @@ bx_virt_timer_c::bx_virt_timer_c( void )
   init_done = 0;
 }
 
-bx_virt_timer_c::~bx_virt_timer_c( void )
-{
-}
-
-
-
 const Bit64u bx_virt_timer_c::NullTimerInterval = BX_MAX_VIRTUAL_TIME;
 
-void
-bx_virt_timer_c::nullTimer(void* this_ptr) {
+void bx_virt_timer_c::nullTimer(void* this_ptr)
+{
   UNUSED(this_ptr);
 }
 
-void
-bx_virt_timer_c::periodic(Bit64u time_passed) {
+void bx_virt_timer_c::periodic(Bit64u time_passed)
+{
   //Assert that we haven't skipped any events.
   BX_ASSERT (time_passed <= timers_next_event_time);
   BX_ASSERT(!in_timer_handler);
@@ -215,8 +209,8 @@ bx_virt_timer_c::periodic(Bit64u time_passed) {
 
 //Get the current virtual time.
 //  This may return the same value on subsequent calls.
-Bit64u
-bx_virt_timer_c::time_usec(void) {
+Bit64u bx_virt_timer_c::time_usec(void)
+{
   if(!use_virtual_timers) {
     return bx_pc_system.time_usec();
   }
@@ -234,8 +228,8 @@ bx_virt_timer_c::time_usec(void) {
 //Get the current virtual time.
 //  This will return a monotonically increasing value.
 // MUST NOT be called from within a timer interrupt.
-Bit64u
-bx_virt_timer_c::time_usec_sequential(void) {
+Bit64u bx_virt_timer_c::time_usec_sequential(void)
+{
   if(!use_virtual_timers) {
     return bx_pc_system.time_usec_sequential();
   }
@@ -253,14 +247,13 @@ bx_virt_timer_c::time_usec_sequential(void) {
 }
 
 
-
 //Register a timer handler to go off after a given interval.
 //Register a timer handler to go off with a periodic interval.
-int
-bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
+int bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
 				 Bit32u useconds,
 				 bx_bool continuous, bx_bool active,
-				 const char *id) {
+				 const char *id)
+{
   if(!use_virtual_timers) {
     return bx_pc_system.register_timer(this_ptr, handler, useconds,
 				       continuous, active, id);
@@ -299,8 +292,8 @@ bx_virt_timer_c::register_timer( void *this_ptr, bx_timer_handler_t handler,
 }
 
 //unregister a previously registered timer.
-unsigned
-bx_virt_timer_c::unregisterTimer(int timerID) {
+unsigned bx_virt_timer_c::unregisterTimer(int timerID)
+{
   if(!use_virtual_timers) {
     return bx_pc_system.unregisterTimer(timerID);
   }
@@ -311,16 +304,15 @@ bx_virt_timer_c::unregisterTimer(int timerID) {
   if (timer[timerID].active) {
     BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[timerID].id));
     return(0); // Fail.
-    }
-
+  }
 
   //No need to prevent doing this to unused timers.
   timer[timerID].inUse = 0;
   return(1);
 }
 
-void
-bx_virt_timer_c::start_timers(void) {
+void bx_virt_timer_c::start_timers(void)
+{
   if(!use_virtual_timers) {
     bx_pc_system.start_timers();
     return;
@@ -329,9 +321,9 @@ bx_virt_timer_c::start_timers(void) {
 }
 
 //activate a deactivated but registered timer.
-void
-bx_virt_timer_c::activate_timer( unsigned timer_index, Bit32u useconds,
-		       bx_bool continuous ) {
+void bx_virt_timer_c::activate_timer(unsigned timer_index, Bit32u useconds,
+		       bx_bool continuous)
+{
   if(!use_virtual_timers) {
     bx_pc_system.activate_timer(timer_index, useconds, continuous);
     return;
@@ -356,8 +348,8 @@ bx_virt_timer_c::activate_timer( unsigned timer_index, Bit32u useconds,
 }
 
 //deactivate (but don't unregister) a currently registered timer.
-void
-bx_virt_timer_c::deactivate_timer( unsigned timer_index ) {
+void bx_virt_timer_c::deactivate_timer( unsigned timer_index )
+{
   if(!use_virtual_timers) {
     bx_pc_system.deactivate_timer(timer_index);
     return;
@@ -370,8 +362,8 @@ bx_virt_timer_c::deactivate_timer( unsigned timer_index ) {
   timer[timer_index].active = 0;
 }
 
-void
-bx_virt_timer_c::advance_virtual_time(Bit64u time_passed) {
+void bx_virt_timer_c::advance_virtual_time(Bit64u time_passed)
+{
   BX_ASSERT(time_passed <= virtual_next_event_time);
 
   current_virtual_time += time_passed;
@@ -383,8 +375,8 @@ bx_virt_timer_c::advance_virtual_time(Bit64u time_passed) {
 }
 
 //Called when next_event_time changes.
-void
-bx_virt_timer_c::next_event_time_update(void) {
+void bx_virt_timer_c::next_event_time_update(void)
+{
   virtual_next_event_time = timers_next_event_time + current_timers_time - current_virtual_time;
   if(init_done) {
     bx_pc_system.deactivate_timer(system_timer_id);
@@ -395,9 +387,8 @@ bx_virt_timer_c::next_event_time_update(void) {
   }
 }
 
-void
-bx_virt_timer_c::init(void) {
-
+void bx_virt_timer_c::init(void)
+{
   if ( (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_REALTIME)
     && (SIM->get_param_enum(BXPN_CLOCK_SYNC)->get()!=BX_CLOCK_SYNC_BOTH) )
     virtual_timers_realtime = 0;
@@ -434,8 +425,8 @@ bx_virt_timer_c::init(void) {
   init_done = 1;
 }
 
-void
-bx_virt_timer_c::timer_handler(void) {
+void bx_virt_timer_c::timer_handler(void)
+{
   if(!virtual_timers_realtime) {
     Bit64u temp_final_time = bx_pc_system.time_usec();
     temp_final_time-=current_virtual_time;
@@ -544,11 +535,10 @@ bx_virt_timer_c::timer_handler(void) {
   bx_pc_system.activate_timer(system_timer_id, 
 			      (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 			      0);
-
 }
 
-void
-bx_virt_timer_c::pc_system_timer_handler(void* this_ptr) {
+void bx_virt_timer_c::pc_system_timer_handler(void* this_ptr)
+{
   ((bx_virt_timer_c *)this_ptr)->timer_handler();
 }
 

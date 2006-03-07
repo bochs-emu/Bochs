@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.11 2004-05-13 16:23:15 vruppert Exp $
+// $Id: serial_raw.h,v 1.12 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -37,9 +37,9 @@
 #define RX_BUFSIZE 256
 
 class serial_raw : public logfunctions {
-  public:
+public:
     serial_raw (char *devname);
-    ~serial_raw (void);
+    virtual ~serial_raw ();
     void set_baudrate (int rate);
     void set_data_bits (int );
     void set_stop_bits (int);

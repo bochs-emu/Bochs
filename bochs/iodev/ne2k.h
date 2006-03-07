@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.17 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: ne2k.h,v 1.18 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -207,8 +207,8 @@ typedef struct {
 
 class bx_ne2k_c : public bx_ne2k_stub_c {
 public:
-  bx_ne2k_c(void);
-  ~bx_ne2k_c(void);
+  bx_ne2k_c();
+  virtual ~bx_ne2k_c();
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void print_info (FILE *file, int page, int reg, int nodups);

@@ -1,5 +1,5 @@
 
-// $Id: biosdev.h,v 1.5 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: biosdev.h,v 1.6 2006-03-07 21:11:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 class bx_biosdev_c : public bx_devmodel_c {
 public:
   bx_biosdev_c();
- ~bx_biosdev_c();
+  virtual ~bx_biosdev_c();
 
   virtual void init(void);
   virtual void reset (unsigned type);

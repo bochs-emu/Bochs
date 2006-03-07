@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.14 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: cmos.h,v 1.15 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,7 +39,7 @@
 class bx_cmos_c : public bx_cmos_stub_c {
 public:
   bx_cmos_c();
- ~bx_cmos_c();
+  virtual ~bx_cmos_c();
 
   virtual void init(void);
   virtual void checksum_cmos(void);

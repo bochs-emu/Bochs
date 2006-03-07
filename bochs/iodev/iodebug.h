@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.h,v 1.8 2006-03-03 12:55:37 sshwarts Exp $
+// $Id: iodebug.h,v 1.9 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #ifndef _BX_IODEBUG_H
@@ -14,7 +14,7 @@
 class bx_iodebug_c : public bx_devmodel_c {
 public:
   bx_iodebug_c();
- ~bx_iodebug_c() {}
+  virtual ~bx_iodebug_c() {}
   virtual void init(void);
   virtual void reset (unsigned type) {}
   static void mem_write( BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.35 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: pciusb.cc,v 1.36 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -103,10 +103,7 @@ void bx_pciusb_c::init(void)
                    bx_pc_system.register_timer(this, usb_timer_handler, 1000, 1,1, "usb.timer");
 
   BX_USB_THIS hub[0].devfunc = BX_PCI_DEVICE(1,2);
-  DEV_register_pci_handlers(this,
-                            pci_read_handler,
-                            pci_write_handler,
-                            &BX_USB_THIS hub[0].devfunc, BX_PLUGIN_PCIUSB,
+  DEV_register_pci_handlers(this, &BX_USB_THIS hub[0].devfunc, BX_PLUGIN_PCIUSB,
                             "Experimental PCI USB");
 
   for (unsigned i=0; i<256; i++) {
@@ -1418,22 +1415,9 @@ void bx_pciusb_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
 }
  
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u bx_pciusb_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pciusb_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_PCIUSB_SMF
-  bx_pciusb_c *class_ptr = (bx_pciusb_c *) this_ptr;
-  return class_ptr->pci_read(address, io_len);
-}
-
-Bit32u bx_pciusb_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIUSB_SMF
-
   Bit32u value = 0;
 
   if (io_len > 4 || io_len == 0) {
@@ -1488,22 +1472,9 @@ Bit32u bx_pciusb_c::pci_read(Bit8u address, unsigned io_len)
 }
 
 
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void bx_pciusb_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pciusb_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_PCIUSB_SMF
-  bx_pciusb_c *class_ptr = (bx_pciusb_c *) this_ptr;
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void bx_pciusb_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_PCIUSB_SMF
-
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
 

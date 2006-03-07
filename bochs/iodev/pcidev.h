@@ -37,13 +37,15 @@
 	class bx_pcidev_c *pcidev;
   };
 
-class bx_pcidev_c : public bx_devmodel_c
-{
+class bx_pcidev_c : public bx_pci_device_stub_c {
 public:
   bx_pcidev_c();
- ~bx_pcidev_c();
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+  virtual ~bx_pcidev_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
+
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
   
   int pcidev_fd; // to access the pcidev
 
@@ -52,17 +54,9 @@ public:
   int irq;
 
 private:
-
-  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
-  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
-  
   static Bit32u read_handler(void *param, Bit32u address, unsigned io_len);
   static void write_handler(void *param, Bit32u address, Bit32u value, unsigned io_len);
-
 #if !BX_USE_PCIDEV_SMF
-  Bit32u pci_read(Bit8u address, unsigned io_len);
-  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
-  
   Bit32u read(void *param, Bit32u address, unsigned io_len);
   void write(void *param, Bit32u address, Bit32u value, unsigned io_len);
 #endif

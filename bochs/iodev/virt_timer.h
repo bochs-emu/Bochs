@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.8 2006-01-18 18:35:38 sshwarts Exp $
+// $Id: virt_timer.h,v 1.9 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,8 +108,8 @@ private:
 
 public:
 
-  bx_virt_timer_c(void);
- ~bx_virt_timer_c(void);
+  bx_virt_timer_c();
+  virtual ~bx_virt_timer_c() {}
 
   //Get the current virtual time.
   //  This may return the same value on subsequent calls.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.15 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: pciusb.h,v 1.16 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -335,10 +335,10 @@ struct HCSTACK {
   bx_bool t;
 };
 
-class bx_pciusb_c : public bx_usb_stub_c {
+class bx_pciusb_c : public bx_pci_usb_stub_c {
 public:
   bx_pciusb_c();
- ~bx_pciusb_c();
+  virtual ~bx_pciusb_c();
   virtual void init(void);
   virtual void reset(unsigned);
   virtual void usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
@@ -346,10 +346,12 @@ public:
   virtual bx_bool usb_key_enq(Bit8u *scan_code);
   virtual bx_bool usb_keyboard_connected();
   virtual bx_bool usb_mouse_connected();
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+
   static char *usb_param_handler(bx_param_string_c *param, int set, char *val, int maxlen);
 
 private:
-
   bx_bool  busy;
 
   bx_usb_t hub[BX_USB_CONFDEV];
@@ -392,13 +394,9 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
-  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
 #if !BX_USE_PCIUSB_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-  Bit32u pci_read(Bit8u address, unsigned io_len);
-  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.h,v 1.19 2005-12-27 13:21:25 vruppert Exp $
+// $Id: cdrom.h,v 1.20 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -31,7 +31,7 @@
 class cdrom_interface : public logfunctions {
 public:
   cdrom_interface(char *dev);
-  ~cdrom_interface(void);
+  virtual ~cdrom_interface(void);
   void init(void);
 
   // Load CD-ROM. Returns 0 if CD is not ready.

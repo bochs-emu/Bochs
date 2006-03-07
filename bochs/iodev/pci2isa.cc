@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.26 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.27 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,8 +67,8 @@ void bx_pci2isa_c::init(void)
   // called once when bochs initializes
 
   Bit8u devfunc = BX_PCI_DEVICE(1,0);
-  DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                            &devfunc, BX_PLUGIN_PCI2ISA, "PIIX3 PCI-to-ISA bridge");
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI2ISA, 
+      "PIIX3 PCI-to-ISA bridge");
 
   DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
@@ -279,26 +279,12 @@ void bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
       break;
-    }
+  }
 }
 
-
-// static pci configuration space read callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-Bit32u bx_pci2isa_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_pci2isa_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_P2I_SMF
-  bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-  return class_ptr->pci_read(address, io_len);
-}
-
-Bit32u bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_P2I_SMF
-
   Bit32u value = 0;
 
   if (io_len <= 4) {
@@ -312,23 +298,9 @@ Bit32u bx_pci2isa_c::pci_read(Bit8u address, unsigned io_len)
     return(0xffffffff);
 }
 
-
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void bx_pci2isa_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_pci2isa_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_P2I_SMF
-  bx_pci2isa_c *class_ptr = (bx_pci2isa_c *) this_ptr;
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void bx_pci2isa_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_P2I_SMF
-
   Bit8u value8;
 
   if ((address >= 0x10) && (address < 0x34))

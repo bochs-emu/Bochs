@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.27 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: floppy.h,v 1.28 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,11 +54,10 @@ typedef struct {
 
 class bx_floppy_ctrl_c : public bx_floppy_stub_c {
 public:
-
-  bx_floppy_ctrl_c(void);
-  ~bx_floppy_ctrl_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+  bx_floppy_ctrl_c();
+  virtual ~bx_floppy_ctrl_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
   virtual unsigned set_media_status(unsigned drive, unsigned status);
   virtual unsigned get_media_status(unsigned drive);
 

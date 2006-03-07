@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.15 2004-10-07 17:38:03 vruppert Exp $
+// $Id: eth.h,v 1.16 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ int execute_script(char *name, char* arg1);
 class eth_pktmover_c {
 public:
   virtual void sendpkt(void *buf, unsigned io_len) = 0;
-  virtual ~eth_pktmover_c (void) {}
+  virtual ~eth_pktmover_c () {}
 protected:
   eth_rx_handler_t  rxh;   // receive callback
   void *rxarg;

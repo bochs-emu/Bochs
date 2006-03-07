@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.51 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: vga.h,v 1.52 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,9 +132,8 @@
 
 class bx_vga_c : public bx_vga_stub_c {
 public:
-
-  bx_vga_c(void);
-  ~bx_vga_c(void);
+  bx_vga_c();
+  virtual ~bx_vga_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
   BX_VGA_SMF bx_bool mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);

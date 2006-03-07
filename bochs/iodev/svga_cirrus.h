@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.6 2005-11-27 17:49:59 vruppert Exp $
+// $Id: svga_cirrus.h,v 1.7 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -58,13 +58,17 @@ typedef void (*bx_cirrus_bitblt_rop_t)(
     int dstpitch,int srcpitch,
     int bltwidth,int bltheight);
 
-class bx_svga_cirrus_c : public bx_vga_c {
+class bx_svga_cirrus_c : public bx_vga_c
+#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+  , public bx_pci_device_stub_c
+#endif
+{
 public:
-  bx_svga_cirrus_c(void);
-  ~bx_svga_cirrus_c();
+  bx_svga_cirrus_c();
+  virtual ~bx_svga_cirrus_c();
 
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+  virtual void init(void);
+  virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0, 
                            unsigned width, unsigned height);
   virtual Bit8u mem_read(Bit32u addr);
@@ -75,6 +79,11 @@ public:
                                  unsigned *txHeight, unsigned *txWidth);
   virtual void trigger_timer(void *this_ptr);
   virtual Bit8u get_actl_palette_idx(Bit8u index);
+
+#if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
+#endif
 
 private:
   static Bit32u svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
@@ -164,22 +173,22 @@ private:
   struct {
     Bit8u index;
     Bit8u reg[CIRRUS_CRTC_MAX+1];
-    } crtc; // 0x3b4-5/0x3d4-5
+  } crtc; // 0x3b4-5/0x3d4-5
   struct {
     Bit8u index;
     Bit8u reg[CIRRUS_SEQENCER_MAX+1];
-    } sequencer; // 0x3c4-5
+  } sequencer; // 0x3c4-5
   struct {
     Bit8u index;
     Bit8u reg[CIRRUS_CONTROL_MAX+1];
     Bit8u shadow_reg0;
     Bit8u shadow_reg1;
-    } control; // 0x3ce-f
+  } control; // 0x3ce-f
   struct {
     unsigned lockindex;
     Bit8u data;
     Bit8u palette[48];
-    } hidden_dac; // 0x3c6
+  } hidden_dac; // 0x3c6
 
   bx_bool svga_unlock_special;
   bx_bool svga_needs_update_tile;
@@ -247,15 +256,9 @@ private:
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
   BX_CIRRUS_SMF void svga_init_pcihandlers(void);
 
-  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
-  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
-
   BX_CIRRUS_SMF bx_bool cirrus_mem_read_handler(unsigned long addr, unsigned long len, void *data, void *param);
   BX_CIRRUS_SMF bx_bool cirrus_mem_write_handler(unsigned long addr, unsigned long len, void *data, void *param);
-#if !BX_USE_CIRRUS_SMF
-  Bit32u pci_read(Bit8u address, unsigned io_len);
-  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
-#endif // !BX_USE_CIRRUS_SMF
+
   Bit8u pci_conf[256];
   Bit32u pci_memaddr;
   Bit32u pci_mmioaddr;

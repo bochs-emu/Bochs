@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: guest2host.h,v 1.9 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: guest2host.h,v 1.10 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ typedef void (*bx_g2h_callback_t)(bx_guest_packet_t *);
 class bx_g2h_c : public logfunctions {
 public:
   bx_g2h_c();
- ~bx_g2h_c();
+  virtual ~bx_g2h_c();
   static void init(void);
   void reset(unsigned type);
   unsigned acquire_channel(bx_g2h_callback_t);

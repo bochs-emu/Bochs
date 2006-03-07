@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.11 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: unmapped.h,v 1.12 2006-03-07 21:11:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,8 +38,7 @@
 class bx_unmapped_c : public bx_devmodel_c {
 public:
   bx_unmapped_c();
- ~bx_unmapped_c();
-
+  virtual ~bx_unmapped_c();
   virtual void init(void);
   virtual void reset (unsigned type);
 

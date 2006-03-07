@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.h,v 1.18 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: dma.h,v 1.19 2006-03-07 21:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,7 +40,7 @@
 class bx_dma_c : public bx_dma_stub_c {
 public:
   bx_dma_c();
- ~bx_dma_c();
+  virtual ~bx_dma_c();
 
   virtual void     init(void);
   virtual void     reset(unsigned type);

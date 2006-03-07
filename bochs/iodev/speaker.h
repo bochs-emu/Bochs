@@ -14,7 +14,7 @@ This code may be distributed under the same terms as bochs.
 class bx_speaker_c : public bx_speaker_stub_c {
 public:
     bx_speaker_c();
-    ~bx_speaker_c();
+    virtual ~bx_speaker_c();
 
     virtual void init(void);
     virtual void reset(unsigned int);

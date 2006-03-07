@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.29 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.30 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -2241,7 +2241,6 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
 
   Bit8u devfunc = 0x00;
   DEV_register_pci_handlers(BX_CIRRUS_THIS_PTR,
-     pci_read_handler, pci_write_handler,
      &devfunc, "cirrus", "SVGA Cirrus PCI");
 
   for (i=0; i<256; i++) {
@@ -2269,15 +2268,8 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
   BX_CIRRUS_THIS pci_mmioaddr = 0;
 }
 
-Bit32u bx_svga_cirrus_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+Bit32u bx_svga_cirrus_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_CIRRUS_SMF
-  return ((bx_svga_cirrus_c *)this_ptr)->pci_read(address,io_len);
-}
-
-Bit32u bx_svga_cirrus_c::pci_read(Bit8u address, unsigned io_len)
-{
-#endif // !BX_USE_CIRRUS_SMF
   if (io_len > 4) {
     BX_PANIC(("pci_read: io_len > 4!"));
     return 0xffffffff;
@@ -2298,15 +2290,8 @@ Bit32u bx_svga_cirrus_c::pci_read(Bit8u address, unsigned io_len)
   return ret;
 }
 
-void bx_svga_cirrus_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_CIRRUS_SMF
-  ((bx_svga_cirrus_c *)this_ptr)->pci_write(address,value,io_len);
-}
-
-void bx_svga_cirrus_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#endif // !BX_USE_CIRRUS_SMF
   unsigned i;
   unsigned write_addr;
   Bit8u new_value, old_value;

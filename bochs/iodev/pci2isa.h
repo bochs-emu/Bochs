@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.10 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: pci2isa.h,v 1.11 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -40,10 +40,13 @@
 class bx_pci2isa_c : public bx_pci2isa_stub_c {
 public:
   bx_pci2isa_c();
- ~bx_pci2isa_c();
+  virtual ~bx_pci2isa_c();
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void pci_set_irq(Bit8u devfunc, unsigned line, bx_bool level);
+
+  virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
+  virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
 private:
 
@@ -61,13 +64,9 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-  static Bit32u pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len);
-  static void   pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len);
 #if !BX_USE_P2I_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
-  Bit32u pci_read(Bit8u address, unsigned io_len);
-  void   pci_write(Bit8u address, Bit32u value, unsigned io_len);
 #endif
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.h,v 1.13 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: parallel.h,v 1.14 2006-03-07 21:11:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,7 +26,6 @@
 
 #ifndef BX_IODEV_PARPORT_H
 #define BX_IODEV_PARPORT_H
-
 
 #if BX_USE_PAR_SMF
 #  define BX_PAR_SMF  static
@@ -64,14 +63,12 @@ typedef struct {
   bx_bool initmode;
 } bx_par_t;
 
-
 class bx_parallel_c : public bx_devmodel_c {
 public:
-
-  bx_parallel_c(void);
-  ~bx_parallel_c(void);
-  virtual void   init(void);
-  virtual void   reset(unsigned type);
+  bx_parallel_c();
+  virtual ~bx_parallel_c();
+  virtual void init(void);
+  virtual void reset(unsigned type);
 
 private:
   bx_par_t s[BX_PARPORT_MAXDEV];
