@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.322 2006-03-07 17:54:26 vruppert Exp $
+// $Id: main.cc,v 1.323 2006-03-07 20:32:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -194,7 +194,7 @@ void print_tree(bx_param_c *node, int level)
   for (i=0; i<level; i++)
     printf ("  ");
   if (node == NULL) {
-      printf ("NULL pointer\n");
+      printf("NULL pointer\n");
       return;
   }
   switch (node->get_type()) {

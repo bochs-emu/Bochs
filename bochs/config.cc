@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.95 2006-03-06 22:02:48 sshwarts Exp $
+// $Id: config.cc,v 1.96 2006-03-07 20:32:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -540,7 +540,7 @@ void bx_init_options()
       "rtc_init", "Initialize RTC from image",
       "Controls whether to initialize the RTC with values stored in the image",
       0);
-  deplist = new bx_list_c(BXP_NULL, 2);
+  deplist = new bx_list_c(NULL, 2);
   deplist->add(path);
   deplist->add(rtc_init);
   use_cmosimage->set_dependent_list(deplist);
@@ -767,7 +767,7 @@ void bx_init_options()
       "keymap", "Keymap filename",
       "Pathname of the keymap file used",
       "", BX_PATHNAME_LEN);
-  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist = new bx_list_c(NULL, 1);
   deplist->add(keymap);
   use_kbd_mapping->set_dependent_list(deplist);
 
@@ -1230,7 +1230,7 @@ void bx_init_options()
       strdup(label),
       strdup(descr),
       "", BX_PATHNAME_LEN);
-    deplist = new bx_list_c(BXP_NULL, 1);
+    deplist = new bx_list_c(NULL, 1);
     deplist->add(path);
     enabled->set_dependent_list(deplist);
   }
@@ -1277,7 +1277,7 @@ void bx_init_options()
       strdup(label), 
       strdup(descr), 
       "", BX_PATHNAME_LEN);
-    deplist = new bx_list_c(BXP_NULL, 2);
+    deplist = new bx_list_c(NULL, 2);
     deplist->add(mode);
     deplist->add(path);
     enabled->set_dependent_list(deplist);
@@ -1513,13 +1513,13 @@ void bx_init_options()
   loglevel->set_group("SB16");
   dmatimer->set_group("SB16");
   enabled->set_dependent_list(menu->clone());
-  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist = new bx_list_c(NULL, 1);
   deplist->add(midifile);
   midimode->set_dependent_list(deplist);
-  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist = new bx_list_c(NULL, 1);
   deplist->add(wavefile);
   wavemode->set_dependent_list(deplist);
-  deplist = new bx_list_c(BXP_NULL, 1);
+  deplist = new bx_list_c(NULL, 1);
   deplist->add(logfile);
   loglevel->set_dependent_list(deplist);
 

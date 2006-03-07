@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.128 2006-03-07 17:54:26 vruppert Exp $
+// $Id: siminterface.cc,v 1.129 2006-03-07 20:32:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -875,42 +875,6 @@ const char* bx_param_c::set_default_format(const char *f) {
   return old;
 }
 
-void bx_list_c::set_parent(bx_param_c *newparent) { 
-  if (parent) {
-    // if this object already had a parent, the correct thing
-    // to do would be to remove this object from the parent's
-    // list of children.  Deleting children is currently
-    // not supported.
-    BX_PANIC(("bx_list_c::set_parent: changing from one parent to another is not supported"));
-  }
-  if (newparent) {
-    BX_ASSERT(newparent->get_type() == BXT_LIST);
-    this->parent = (bx_list_c *)newparent;
-    this->parent->add(this);
-  }
-}
-
-
-bx_param_num_c::bx_param_num_c(bx_id id,
-    char *name,
-    char *description,
-    Bit64s min, Bit64s max, Bit64s initial_val)
-  : bx_param_c(id, name, description)
-{
-  set_type(BXT_PARAM_NUM);
-  this->min = min;
-  this->max = max;
-  this->initial_val = initial_val;
-  this->val.number = initial_val;
-  this->handler = NULL;
-  this->enable_handler = NULL;
-  this->base = default_base;
-  // dependent_list must be initialized before the set(),
-  // because set calls update_dependents().
-  dependent_list = NULL;
-  set(initial_val);
-}
-
 bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     char *name,
     char *label,
@@ -1016,7 +980,7 @@ void bx_param_num_c::update_dependents()
   }
 }
 
-void bx_param_num_c::set_enabled (int en)
+void bx_param_num_c::set_enabled(int en)
 {
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
@@ -1027,13 +991,13 @@ void bx_param_num_c::set_enabled (int en)
 }
 
 // Signed 64 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *description,
     Bit64s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, description, NULL, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1042,13 +1006,13 @@ bx_shadow_num_c::bx_shadow_num_c(bx_id id,
 }
 
 // Unsigned 64 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit64u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1057,13 +1021,13 @@ bx_shadow_num_c::bx_shadow_num_c(bx_id id,
 }
 
 // Signed 32 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit32s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1072,21 +1036,6 @@ bx_shadow_num_c::bx_shadow_num_c(bx_id id,
 }
 
 // Unsigned 32 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
-    char *name,
-    char *description,
-    Bit32u *ptr_to_real_val,
-    Bit8u highbit,
-    Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val)
-{
-  this->varsize = 32;
-  this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
-  val.p32bit = (Bit32s*) ptr_to_real_val;
-}
-
-// Unsigned 32 bit (new)
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
@@ -1102,13 +1051,13 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 }
 
 // Signed 16 bit
-bx_shadow_num_c::bx_shadow_num_c (bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit16s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1117,13 +1066,13 @@ bx_shadow_num_c::bx_shadow_num_c (bx_id id,
 }
 
 // Unsigned 16 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit16u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1132,13 +1081,13 @@ bx_shadow_num_c::bx_shadow_num_c(bx_id id,
 }
 
 // Signed 8 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit8s *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1147,13 +1096,13 @@ bx_shadow_num_c::bx_shadow_num_c(bx_id id,
 }
 
 // Unsigned 8 bit
-bx_shadow_num_c::bx_shadow_num_c(bx_id id,
+bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
+    char *label,
     Bit8u *ptr_to_real_val,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(id, name, description, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val)
 {
   this->varsize = 8;
   this->lowbit = lowbit;
@@ -1220,16 +1169,6 @@ void bx_shadow_num_c::reset()
   BX_PANIC(("reset not supported on bx_shadow_num_c yet"));
 }
 
-bx_param_bool_c::bx_param_bool_c(bx_id id,
-    char *name,
-    char *description,
-    Bit64s initial_val)
-  : bx_param_num_c(id, name, description, 0, 1, initial_val)
-{
-  set_type(BXT_PARAM_BOOL);
-  set(initial_val);
-}
-
 bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
     char *name,
     char *label,
@@ -1239,17 +1178,6 @@ bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
 {
   set_type(BXT_PARAM_BOOL);
   set(initial_val);
-}
-
-bx_shadow_bool_c::bx_shadow_bool_c(bx_id id,
-      char *name,
-      char *description,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum)
-  : bx_param_bool_c(id, name, description, (Bit64s) *ptr_to_real_val)
-{
-  val.pbool = ptr_to_real_val;
-  this->bitnum = bitnum;
 }
 
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
@@ -1452,31 +1380,25 @@ void bx_param_string_c::set_initial_val(char *buf) {
   set(initial_val);
 }
 
-bx_list_c::bx_list_c(bx_id id, int maxsize)
-  : bx_param_c(id, "list", "")
+bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
+  : bx_param_c((bx_id)SIM->gen_param_id(), "list", "")
 {
   set_type(BXT_LIST);
   this->size = 0;
   this->maxsize = maxsize;
   this->list = new bx_param_c*  [maxsize];
   this->parent = NULL;
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
   init("");
-}
-
-bx_list_c::bx_list_c(bx_id id, char *name, char *title, int maxsize)
-  : bx_param_c(id, name, NULL)
-{
-  set_type(BXT_LIST);
-  this->size = 0;
-  this->maxsize = maxsize;
-  this->list = new bx_param_c*  [maxsize];
-  this->parent = NULL;
-  init(title);
 }
 
 bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
     int maxsize)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, NULL)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, "")
 {
   set_type (BXT_LIST);
   this->size = 0;
@@ -1492,7 +1414,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
 }
 
 bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, NULL)
+  : bx_param_c((bx_id)SIM->gen_param_id(), name, "")
 {
   set_type(BXT_LIST);
   this->size = 0;
@@ -1551,6 +1473,21 @@ void bx_list_c::init(const char *list_title)
   this->choice = new bx_param_num_c(NULL,
       "list_choice", "", "", 0, BX_MAX_BIT64S,
       1);
+}
+
+void bx_list_c::set_parent(bx_param_c *newparent) { 
+  if (parent) {
+    // if this object already had a parent, the correct thing
+    // to do would be to remove this object from the parent's
+    // list of children.  Deleting children is currently
+    // not supported.
+    BX_PANIC(("bx_list_c::set_parent: changing from one parent to another is not supported"));
+  }
+  if (newparent) {
+    BX_ASSERT(newparent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)newparent;
+    this->parent->add(this);
+  }
 }
 
 bx_list_c* bx_list_c::clone()

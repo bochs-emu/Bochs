@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.175 2006-03-07 17:54:27 vruppert Exp $
+// $Id: siminterface.h,v 1.176 2006-03-07 20:32:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -226,6 +226,7 @@ typedef enum {
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
 #define BXPN_KBD_STATE                   "save_restore.keyboard"
+#define BXPN_CPU_STATE                   "save_restore.cpu"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
@@ -238,7 +239,6 @@ typedef enum {
   BXP_NULL = 301,
 
   // experiment: add params for CPU registers
-  BXP_CPU_PARAMETERS,
   BXP_CPU_EAX,
   BXP_CPU_EBX,
   BXP_CPU_ECX,
@@ -721,10 +721,6 @@ public:
     // whether a spin control should be used instead of a simple text control.
     USE_SPIN_CONTROL = (1<<0)
   } bx_numopt_bits;
-  bx_param_num_c(bx_id id,
-      char *name,
-      char *description,
-      Bit64s min, Bit64s max, Bit64s initial_val);
   bx_param_num_c(bx_param_c *parent,
       char *name,
       char *label,
@@ -765,28 +761,22 @@ class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
   Bit8u lowbit;   // range of bits associated with this param
   Bit64u mask;     // mask is ANDed with value before it is returned from get
 public:
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit64s *ptr_to_real_val,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit64u *ptr_to_real_val,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit32s *ptr_to_real_val,
-      Bit8u highbit = 31,
-      Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
-      char *name,
-      char *description,
-      Bit32u *ptr_to_real_val,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
@@ -795,27 +785,27 @@ public:
       Bit32u *ptr_to_real_val,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit16s *ptr_to_real_val,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit16u *ptr_to_real_val,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
-  bx_shadow_num_c(bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit8s *ptr_to_real_val,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
-  bx_shadow_num_c (bx_id id,
+  bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *description,
+      char *label,
       Bit8u *ptr_to_real_val,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
@@ -829,10 +819,6 @@ class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
   // user interface, the enable variable should enable/disable all the
   // other parameters associated with that module.
 public:
-  bx_param_bool_c(bx_id id, 
-      char *name,
-      char *description,
-      Bit64s initial_val);
   bx_param_bool_c(bx_param_c *parent,
       char *name,
       char *label,
@@ -850,11 +836,6 @@ class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
   // bit is used.  get/set will only modify that bit.
   Bit8u bitnum;
 public:
-  bx_shadow_bool_c(bx_id id,
-      char *name,
-      char *description,
-      bx_bool *ptr_to_real_val,
-      Bit8u bitnum = 0);
   bx_shadow_bool_c(bx_param_c *parent,
       char *name,
       char *label,
@@ -984,8 +965,7 @@ public:
     // item (used in the runtime menu).
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
-  bx_list_c(bx_id id, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_id id, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c(bx_param_c *parent, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list);
   virtual ~bx_list_c();
