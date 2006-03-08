@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.22 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: stack64.cc,v 1.23 2006-03-08 18:21:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
       RBP -= 8;
       read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
-      ESP -= 8;
+      RSP -= 8;
       write_virtual_qword(BX_SEG_REG_SS, RSP, &temp64);
     } /* while (--level) */
 
