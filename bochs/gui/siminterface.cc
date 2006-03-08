@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.129 2006-03-07 20:32:07 vruppert Exp $
+// $Id: siminterface.cc,v 1.130 2006-03-08 18:10:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -35,34 +35,25 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
   int init_done;
-  bx_param_c **param_registry;
-  int registry_alloc_size;
   int enabled;
   // save context to jump to if we must quit unexpectedly
   jmp_buf *quit_context;
   int exit_code;
   unsigned param_id;
 public:
-  bx_real_sim_c ();
-  virtual ~bx_real_sim_c ();
-  virtual void set_quit_context (jmp_buf *context) { quit_context = context; }
-  virtual int get_init_done () { return init_done; }
-  virtual int set_init_done (int n) { init_done = n; return 0;}
-  virtual void get_param_id_range (int *min, int *max) {
-    *min = BXP_NULL;
-    *max = BXP_THIS_IS_THE_LAST-1;
-  }
-  virtual int register_param (bx_id id, bx_param_c *it);
+  bx_real_sim_c();
+  virtual ~bx_real_sim_c();
+  virtual void set_quit_context(jmp_buf *context) { quit_context = context; }
+  virtual int get_init_done() { return init_done; }
+  virtual int set_init_done(int n) { init_done = n; return 0;}
   virtual void reset_all_param();
-  // deprecated param method
-  virtual bx_param_c *get_param(bx_id id);
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
-  virtual unsigned gen_param_id();
+  virtual Bit32u gen_param_id();
   virtual int get_n_log_modules();
   virtual char *get_prefix(int mod);
   virtual int get_log_action(int mod, int level);
@@ -140,16 +131,6 @@ public:
   }
   virtual bool test_for_text_console ();
 };
-
-bx_param_c *bx_real_sim_c::get_param(bx_id id)
-{
-  BX_ASSERT(id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
-  int index = (int)id - BXP_NULL;
-  bx_param_c *retval = param_registry[index];
-  if (!retval) 
-    BX_INFO(("get_param can't find id %u", id));
-  return retval;
-}
 
 // recursive function to find parameters from the path
 static bx_param_c *find_param(const char *full_pname, const char *rest_of_pname, bx_param_c *base)
@@ -253,7 +234,7 @@ bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *base) {
   return NULL;
 }
 
-unsigned bx_real_sim_c::gen_param_id()
+Bit32u bx_real_sim_c::gen_param_id()
 {
   return param_id++;
 }
@@ -291,39 +272,14 @@ bx_real_sim_c::bx_real_sim_c()
   wxsel = false;
   
   enabled = 1;
-  int i;
   init_done = 0;
-  registry_alloc_size = BXP_THIS_IS_THE_LAST - BXP_NULL;
-  param_registry = new bx_param_c*  [registry_alloc_size];
-  for (i=0; i<registry_alloc_size; i++)
-    param_registry[i] = NULL;
   quit_context = NULL;
   exit_code = 0;
   param_id = BXP_NEW_PARAM_ID;
 }
 
-// called by constructor of bx_param_c, so that every parameter that is
-// initialized gets registered.  This builds a list of all parameters
-// which can be used to look them up by number (get_param).
 bx_real_sim_c::~bx_real_sim_c()
 {
-    if (param_registry != NULL)
-    {
-        delete [] param_registry;
-        param_registry = NULL;
-    }
-}
-
-int bx_real_sim_c::register_param(bx_id id, bx_param_c *it)
-{
-  if ((id == BXP_NULL) || (id >= BXP_NEW_PARAM_ID)) return 0;
-  BX_ASSERT (id >= BXP_NULL && id < BXP_THIS_IS_THE_LAST);
-  int index = (int)id - BXP_NULL;
-  if (this->param_registry[index] != NULL) {
-    BX_INFO (("register_param is overwriting parameter id %d", id));
-  }
-  this->param_registry[index] = it;
-  return 0;
 }
 
 void bx_real_sim_c::reset_all_param()
@@ -581,8 +537,6 @@ int bx_real_sim_c::ask_param(const char *pname)
 
 int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags)
 {
-  // implement using ASK_PARAM on a newly created param.  I can't use
-  // ask_param because I don't intend to register this param.
   BxEvent event;
   bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
   flags |= param.IS_FILENAME;
@@ -591,7 +545,7 @@ int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *
   event.u.param.param = &param;
   sim_to_ci_event (&event);
   if (event.retcode >= 0)
-    memcpy (filename, param.getptr(), maxlen);
+    memcpy(filename, param.getptr(), maxlen);
   return event.retcode;
 }
 
@@ -823,7 +777,7 @@ bool bx_real_sim_c::test_for_text_console()
 // define methods of bx_param_* and family
 /////////////////////////////////////////////////////////////////////////
 
-bx_object_c::bx_object_c(bx_id id)
+bx_object_c::bx_object_c(Bit32u id)
 {
   this->id = id;
   this->type = BXT_OBJECT;
@@ -836,7 +790,7 @@ void bx_object_c::set_type(bx_objtype type)
 
 const char* bx_param_c::default_text_format = NULL;
 
-bx_param_c::bx_param_c(bx_id id, char *name, char *description)
+bx_param_c::bx_param_c(Bit32u id, char *name, char *description)
   : bx_object_c(id)
 {
   set_type(BXT_PARAM);
@@ -850,7 +804,6 @@ bx_param_c::bx_param_c(bx_id id, char *name, char *description)
   this->runtime_param = 0;
   this->enabled = 1;
   this->parent = NULL;
-  SIM->register_param(id, this);
 }
 
 int bx_param_c::get_param_path(char *path_out, int maxlen)
@@ -880,7 +833,7 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     char *label,
     char *description,
     Bit64s min, Bit64s max, Bit64s initial_val)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
+  : bx_param_c(SIM->gen_param_id(), name, description)
 {
   set_type(BXT_PARAM_NUM);
   this->label = label;
@@ -904,7 +857,7 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
 
 Bit32u bx_param_num_c::default_base = 10;
 
-Bit32u bx_param_num_c::set_default_base (Bit32u val) {
+Bit32u bx_param_num_c::set_default_base(Bit32u val) {
   Bit32u old = default_base;
   default_base = val; 
   return old;
@@ -1259,7 +1212,7 @@ bx_param_string_c::bx_param_string_c(bx_param_c *parent,
     char *description,
     char *initial_val,
     int maxsize)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, description)
+  : bx_param_c(SIM->gen_param_id(), name, description)
 {
   set_type(BXT_PARAM_STRING);
   this->label = label;
@@ -1381,7 +1334,7 @@ void bx_param_string_c::set_initial_val(char *buf) {
 }
 
 bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
-  : bx_param_c((bx_id)SIM->gen_param_id(), "list", "")
+  : bx_param_c(SIM->gen_param_id(), "list", "")
 {
   set_type(BXT_LIST);
   this->size = 0;
@@ -1398,7 +1351,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
 
 bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
     int maxsize)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, "")
+  : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type (BXT_LIST);
   this->size = 0;
@@ -1414,7 +1367,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title,
 }
 
 bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list)
-  : bx_param_c((bx_id)SIM->gen_param_id(), name, "")
+  : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_LIST);
   this->size = 0;

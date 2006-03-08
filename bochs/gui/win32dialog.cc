@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.40 2006-03-03 20:29:50 vruppert Exp $
+// $Id: win32dialog.cc,v 1.41 2006-03-08 18:10:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -868,7 +868,7 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options()->get();
         if (opts & sparam->IS_FILENAME) {
-          if (param->get_id() == BXP_NULL) {
+          if (param->get_parent() == NULL) {
             event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
           } else {
             event->retcode = FloppyDialog((bx_param_filename_c *)sparam);

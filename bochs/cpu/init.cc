@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.89 2006-03-07 20:32:06 vruppert Exp $
+// $Id: init.cc,v 1.90 2006-03-08 18:10:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -353,7 +353,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 #undef DEFPARAM_SEGREG
 
 #if BX_SUPPORT_X86_64==0
-    param = new bx_shadow_num_c(list, "eflags", "EFLAGS",
+    param = new bx_shadow_num_c(list, "EFLAGS", "EFLAGS",
         &BX_CPU_THIS_PTR eflags.val32);
 #endif
 
@@ -383,7 +383,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     // IOPL is a special case because it is 2 bits wide.
     param = new bx_shadow_num_c(
             list,
-            "iopl", "IOPL",
+            "IOPL", "IOPL",
             &eflags.val32,
             12, 13);
     param->set_range(0, 3);

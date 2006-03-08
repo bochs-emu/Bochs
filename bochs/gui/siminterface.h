@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.176 2006-03-07 20:32:07 vruppert Exp $
+// $Id: siminterface.h,v 1.177 2006-03-08 18:10:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -227,75 +227,10 @@ typedef enum {
 #define BXPN_MENU_RUNTIME                "menu.runtime"
 #define BXPN_KBD_STATE                   "save_restore.keyboard"
 #define BXPN_CPU_STATE                   "save_restore.cpu"
+#define BXPN_CPU_EFLAGS_IOPL             "save_restore.cpu.IOPL"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001
-
-#define BXP_PARAMS_PER_ATA_DEVICE 12
-
-// list if parameter id values.  The actual values are not important;
-// it's only important that they all be different from each other.
-typedef enum {
-  BXP_NULL = 301,
-
-  // experiment: add params for CPU registers
-  BXP_CPU_EAX,
-  BXP_CPU_EBX,
-  BXP_CPU_ECX,
-  BXP_CPU_EDX,
-  BXP_CPU_EBP,
-  BXP_CPU_ESI,
-  BXP_CPU_EDI,
-  BXP_CPU_ESP,
-  BXP_CPU_EIP,
-  BXP_CPU_SEG_CS,
-  BXP_CPU_SEG_DS,
-  BXP_CPU_SEG_SS,
-  BXP_CPU_SEG_ES,
-  BXP_CPU_SEG_FS,
-  BXP_CPU_SEG_GS,
-  BXP_CPU_SEG_LDTR,
-  BXP_CPU_SEG_TR,
-  BXP_CPU_GDTR_BASE,
-  BXP_CPU_GDTR_LIMIT,
-  BXP_CPU_IDTR_BASE,
-  BXP_CPU_IDTR_LIMIT,
-  BXP_CPU_EFLAGS,
-  BXP_CPU_EFLAGS_ID,
-  BXP_CPU_EFLAGS_VIP,
-  BXP_CPU_EFLAGS_VIF,
-  BXP_CPU_EFLAGS_AC,
-  BXP_CPU_EFLAGS_VM,
-  BXP_CPU_EFLAGS_RF,
-  BXP_CPU_EFLAGS_NT,
-  BXP_CPU_EFLAGS_IOPL,
-  BXP_CPU_EFLAGS_OF,
-  BXP_CPU_EFLAGS_DF,
-  BXP_CPU_EFLAGS_IF,
-  BXP_CPU_EFLAGS_TF,
-  BXP_CPU_EFLAGS_SF,
-  BXP_CPU_EFLAGS_ZF,
-  BXP_CPU_EFLAGS_AF,
-  BXP_CPU_EFLAGS_PF,
-  BXP_CPU_EFLAGS_CF,
-  BXP_CPU_DR0,
-  BXP_CPU_DR1,
-  BXP_CPU_DR2,
-  BXP_CPU_DR3,
-  BXP_CPU_DR6,
-  BXP_CPU_DR7,
-  BXP_CPU_TR3,
-  BXP_CPU_TR4,
-  BXP_CPU_TR5,
-  BXP_CPU_TR6,
-  BXP_CPU_TR7,
-  BXP_CPU_CR0,
-  BXP_CPU_CR1,
-  BXP_CPU_CR2,
-  BXP_CPU_CR3,
-  BXP_CPU_CR4,
-  BXP_THIS_IS_THE_LAST    // used to determine length of list
-} bx_id;
 
 typedef enum {
   BX_TOOLBAR_UNDEFINED,
@@ -636,13 +571,13 @@ class bx_list_c;
 
 class BOCHSAPI bx_object_c {
 private:
-  bx_id id;
+  Bit32u id;
   bx_objtype type;
 protected:
   void set_type(bx_objtype type);
 public:
-  bx_object_c(bx_id id);
-  bx_id get_id() { return id; }
+  bx_object_c(Bit32u id);
+  Bit32u get_id() { return id; }
   Bit8u get_type() { return type; }
 };
 
@@ -660,7 +595,7 @@ protected:
   int runtime_param;
   int enabled;
 public:
-  bx_param_c(bx_id id, char *name, char *description);
+  bx_param_c(Bit32u id, char *name, char *description);
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
   int get_param_path(char *path_out, int maxlen);
   void set_format(const char *format) {text_format = format;}
@@ -1128,11 +1063,7 @@ public:
   virtual void set_quit_context(jmp_buf *context) {}
   virtual int get_init_done() { return -1; }
   virtual int set_init_done(int n) {return -1;}
-  virtual void get_param_id_range(int *min, int *max) {}
-  virtual int register_param(bx_id id, bx_param_c *it) {return -1;}
   virtual void reset_all_param() {}
-  // deprecated param method
-  virtual bx_param_c *get_param(bx_id id) {return NULL;}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL) {return NULL;}

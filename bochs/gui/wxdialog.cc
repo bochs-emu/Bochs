@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.89 2006-03-05 10:24:29 vruppert Exp $
+// $Id: wxdialog.cc,v 1.90 2006-03-08 18:10:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1032,14 +1032,15 @@ bool ParamDialog::isGeneratedId (int id) {
   return (id >= ID_LAST_USER_DEFINED && id < _next_id);
 }
 
-void ParamDialog::AddParamList (bx_id *idList, wxFlexGridSizer *sizer, bool plain)
+void ParamDialog::AddParamList(char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer, bool plain)
 {
-  bx_id *idptr;
-  for (idptr = idList; *idptr != BXP_NULL; idptr++) {
-    bx_param_c *param = SIM->get_param (*idptr);
+  int i = 0;
+  while (nameList[i] != NULL) {
+    bx_param_c *param = SIM->get_param(nameList[i], base);
     if (param != NULL) {
-      AddParam (param, sizer, plain);
+      AddParam(param, sizer, plain);
     }
+    i++;
   }
 }
 
@@ -1689,120 +1690,126 @@ END_EVENT_TABLE()
 CpuRegistersDialog::CpuRegistersDialog(
     wxWindow* parent,
     wxWindowID id)
-  : ParamDialog (parent, id)
+  : ParamDialog(parent, id)
 {
   wxFlexGridSizer *column;
   nflags = 0;
-  bx_id mainRegList1[] = CPU_REGS_MAIN_REGS1;
-  bx_id mainRegList2[] = CPU_REGS_MAIN_REGS2;
-  bx_id mainRegList3[] = CPU_REGS_MAIN_REGS3;
-  bx_id flagList[]     = CPU_REGS_FLAGS;
-  bx_id controlList[]  = CPU_REGS_CONTROL_REGS;
-  bx_id debugList[]    = CPU_REGS_DEBUG_REGS;
-  bx_id testList[]     = CPU_REGS_TEST_REGS;
-  bx_id *idptr;
+  char *mainRegList1[] = CPU_REGS_MAIN_REGS1;
+  char *mainRegList2[] = CPU_REGS_MAIN_REGS2;
+  char *mainRegList3[] = CPU_REGS_MAIN_REGS3;
+  char *flagList[]     = CPU_REGS_FLAGS;
+  char *controlList[]  = CPU_REGS_CONTROL_REGS;
+  char *debugList[]    = CPU_REGS_DEBUG_REGS;
+  char *testList[]     = CPU_REGS_TEST_REGS;
+  bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_CPU_STATE);
 
   // top level objects
-  wxStaticBox *mainRegsBox = new wxStaticBox (this, -1, "Basic Registers");
+  wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, "Basic Registers");
   wxStaticBoxSizer *mainRegsBoxSizer = 
-    new wxStaticBoxSizer (mainRegsBox, wxVERTICAL);
-  mainSizer->Add (mainRegsBoxSizer, 0, wxALL|wxGROW, 10);
+    new wxStaticBoxSizer(mainRegsBox, wxVERTICAL);
+  mainSizer->Add(mainRegsBoxSizer, 0, wxALL|wxGROW, 10);
 
-  wxStaticBox *flagsBox = new wxStaticBox (this, -1, "EFLAGS Bits");
+  wxStaticBox *flagsBox = new wxStaticBox(this, -1, "EFLAGS Bits");
   wxStaticBoxSizer *flagsBoxSizer = 
-    new wxStaticBoxSizer (flagsBox, wxVERTICAL);
-  mainSizer->Add (flagsBoxSizer, 0, wxALL|wxGROW, 10);
+    new wxStaticBoxSizer(flagsBox, wxVERTICAL);
+  mainSizer->Add(flagsBoxSizer, 0, wxALL|wxGROW, 10);
 
-  wxStaticBox *otherBox = new wxStaticBox (this, -1, "Other Registers");
+  wxStaticBox *otherBox = new wxStaticBox(this, -1, "Other Registers");
   wxStaticBoxSizer *otherBoxSizer = 
-    new wxStaticBoxSizer (otherBox, wxVERTICAL);
-  mainSizer->Add (otherBoxSizer, 0, wxALL|wxGROW, 10);
+    new wxStaticBoxSizer(otherBox, wxVERTICAL);
+  mainSizer->Add(otherBoxSizer, 0, wxALL|wxGROW, 10);
 
   // mainRegsSizer contents
-  mainRegsSizer = new wxFlexGridSizer (3);
-  mainRegsBoxSizer->Add (mainRegsSizer, 0, wxALL, 3);
-  column = new wxFlexGridSizer (3);
-  mainRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (mainRegList1, column);
+  mainRegsSizer = new wxFlexGridSizer(3);
+  mainRegsBoxSizer->Add(mainRegsSizer, 0, wxALL, 3);
+  column = new wxFlexGridSizer(3);
+  mainRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(mainRegList1, base, column);
 
-  column = new wxFlexGridSizer (3);
-  mainRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (mainRegList2, column);
+  column = new wxFlexGridSizer(3);
+  mainRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(mainRegList2, base, column);
 
-  column = new wxFlexGridSizer (3);
-  mainRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (mainRegList3, column);
+  column = new wxFlexGridSizer(3);
+  mainRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(mainRegList3, base, column);
 
   // add flag parameters
-  flagsSizer = new wxFlexGridSizer (CPU_REGS_MAX_FLAGS);
-  flagsBoxSizer->Add (flagsSizer, 0, wxALL | wxALIGN_CENTER, 3);
-  for (idptr = flagList; *idptr != BXP_NULL; idptr++)
-    AddFlag (*idptr);
+  flagsSizer = new wxFlexGridSizer(CPU_REGS_MAX_FLAGS);
+  flagsBoxSizer->Add(flagsSizer, 0, wxALL | wxALIGN_CENTER, 3);
+  int i = 0;
+  while (flagList[i] != NULL) {
+    bx_param_c *param = SIM->get_param(flagList[i], base);
+    if (param != NULL) {
+      AddFlag(param);
+    }
+    i++;
+  }
 
   // extRegsSizer contents
-  extRegsSizer = new wxFlexGridSizer (3);
-  otherBoxSizer->Add (extRegsSizer, 0, wxALL, 3);
+  extRegsSizer = new wxFlexGridSizer(3);
+  otherBoxSizer->Add(extRegsSizer, 0, wxALL, 3);
 
-  column = new wxFlexGridSizer (3);
-  extRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (controlList, column);
+  column = new wxFlexGridSizer(3);
+  extRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(controlList, base, column);
 
-  column = new wxFlexGridSizer (3);
-  extRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (debugList, column);
+  column = new wxFlexGridSizer(3);
+  extRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(debugList, base, column);
 
-  column = new wxFlexGridSizer (3);
-  extRegsSizer->Add (column, 0, wxALL, 10);
-  AddParamList (testList, column);
+  column = new wxFlexGridSizer(3);
+  extRegsSizer->Add(column, 0, wxALL, 10);
+  AddParamList(testList, base, column);
 
   // add buttons
 #if BX_DEBUGGER
   // only show these if debugger is enabled
-  contButton = AddButton (ID_Debug_Continue, BTNLABEL_DEBUG_CONTINUE);
-  stopButton = AddButton (ID_Debug_Stop, BTNLABEL_DEBUG_STOP);
-  stepButton = AddButton (ID_Debug_Step, BTNLABEL_DEBUG_STEP);
-  //commitButton = AddButton (ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
+  contButton = AddButton(ID_Debug_Continue, BTNLABEL_DEBUG_CONTINUE);
+  stopButton = AddButton(ID_Debug_Stop, BTNLABEL_DEBUG_STOP);
+  stepButton = AddButton(ID_Debug_Step, BTNLABEL_DEBUG_STEP);
+  //commitButton = AddButton(ID_Debug_Commit, BTNLABEL_DEBUG_COMMIT);
 #endif
-  AddButton (ID_Close, BTNLABEL_CLOSE);
+  AddButton(ID_Close, BTNLABEL_CLOSE);
 }
 
 void
-CpuRegistersDialog::AddFlag (bx_id paramId)
+CpuRegistersDialog::AddFlag(bx_param_c *param)
 {
-  if (SIM->get_param (paramId) == NULL) {
-    wxLogDebug ("AddFlag on unregistered param id=%d", (int)paramId);
+  if (param == NULL) {
+    wxLogDebug("AddFlag on undefined param");
     return;
   }
-  wxASSERT (nflags < CPU_REGS_MAX_FLAGS);
-  flagid[nflags++] = paramId;
+  wxASSERT(nflags < CPU_REGS_MAX_FLAGS);
+  flagptr[nflags++] = param;
 }
 
 void
-CpuRegistersDialog::Init ()
+CpuRegistersDialog::Init()
 {
   int i;
   for (i=0; i<CPU_REGS_MAX_FLAGS; i++) {
     if (i<nflags) {
-      bx_param_c *param = SIM->get_param (flagid[i]);
-      flagsSizer->Add (new wxStaticText (this, -1, param->get_name ()), 0, wxALL|wxALIGN_LEFT, 4);
+      bx_param_c *param = flagptr[i];
+      flagsSizer->Add (new wxStaticText(this, -1, param->get_label()), 0, wxALL|wxALIGN_LEFT, 4);
     } else {
-      flagsSizer->Add (0, 0);  // spacer
+      flagsSizer->Add(0, 0);  // spacer
     }
   }
   for (i=0; i<nflags; i++) {
-    bx_param_c *param = SIM->get_param (flagid[i]);
-    AddParam (param, flagsSizer, true);
+    bx_param_c *param = flagptr[i];
+    AddParam(param, flagsSizer, true);
   }
   // special case: make IOPL text field small
-  ParamStruct *pstr = (ParamStruct*) paramHash->Get (BXP_CPU_EFLAGS_IOPL);
+  ParamStruct *pstr = (ParamStruct*)paramHash->Get(SIM->get_param(BXPN_CPU_EFLAGS_IOPL)->get_id());
   if (pstr != NULL) {
-    wxSize size = pstr->u.text->GetSize ();
-    size.SetWidth (size.GetWidth () / 2);
-    pstr->u.text->SetSize (size);
-    flagsSizer->SetItemMinSize (pstr->u.text, size.GetWidth(), size.GetHeight());
+    wxSize size = pstr->u.text->GetSize();
+    size.SetWidth (size.GetWidth() / 2);
+    pstr->u.text->SetSize(size);
+    flagsSizer->SetItemMinSize(pstr->u.text, size.GetWidth(), size.GetHeight());
   }
-  ParamDialog::Init ();
-  stateChanged (false);
+  ParamDialog::Init();
+  stateChanged(false);
 }
 
 void

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.59 2006-02-26 19:11:20 vruppert Exp $
+// $Id: wxdialog.h,v 1.60 2006-03-08 18:10:41 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -458,12 +458,12 @@ struct AddParamContext {
 class ParamDialog: public wxDialog 
 {
 private:
-  void ShowHelp ();
+  void ShowHelp();
   wxChoice *type;
   wxTextCtrl *serialDelay, *pasteDelay, *mappingFile;
   wxCheckBox *enableKeymap;
-  int genId ();
-  bool isGeneratedId (int id);
+  int genId();
+  bool isGeneratedId(int id);
   bool isShowing;
   int nbuttons;
   bool runtime;
@@ -475,21 +475,21 @@ protected:
   wxHashTable *idHash;
   // map parameter ID (BXP_*) onto ParamStruct.
   wxHashTable *paramHash;
-  virtual void EnableChanged ();
+  virtual void EnableChanged();
   void EnableParam(int param_id, bool enabled);
   void EnableParam(const char *pname, bool enabled);
   void EnableParam(const char *pname, bx_list_c *base, bool enabled);
-  void EnumChanged (ParamStruct *pstr);
-  void EnableChangedRecursive (bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
-  void EnableChanged (ParamStruct *pstr);
-  bool CopyGuiToParam ();
+  void EnumChanged(ParamStruct *pstr);
+  void EnableChangedRecursive(bx_list_c *list, bool en, ParamStruct *pstrOfCheckbox);
+  void EnableChanged(ParamStruct *pstr);
+  bool CopyGuiToParam();
 public:
   ParamDialog(wxWindow* parent, wxWindowID id);
   virtual ~ParamDialog();
-  void OnEvent (wxCommandEvent& event);
+  void OnEvent(wxCommandEvent& event);
   wxButton* AddButton(int id, wxString label);
-  virtual void AddDefaultButtons ();
-  virtual void Init ();  // called automatically by ShowModal()
+  virtual void AddDefaultButtons();
+  virtual void Init();  // called automatically by ShowModal()
   int ShowModal() {
     Init(); 
     isShowing = true;
@@ -497,12 +497,12 @@ public:
     isShowing = false;
     return ret;
   }
-  bool Show (bool val) { isShowing = val; return wxDialog::Show (val); }
-  void AddParam (bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false);
-  void AddParam (bx_param_c *param, bool plain = false, AddParamContext *context = NULL);
-  void AddParamList (bx_id *idList, wxFlexGridSizer *sizer = NULL, bool plain = false);
-  virtual void CopyParamToGui ();
-  bool IsShowing () { return isShowing; }
+  bool Show(bool val) { isShowing = val; return wxDialog::Show (val); }
+  void AddParam(bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false);
+  void AddParam(bx_param_c *param, bool plain = false, AddParamContext *context = NULL);
+  void AddParamList(char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer = NULL, bool plain = false);
+  virtual void CopyParamToGui();
+  bool IsShowing() { return isShowing; }
   void SetRuntimeFlag(bool val) { runtime = val; }
 DECLARE_EVENT_TABLE()
 };
@@ -552,53 +552,53 @@ DECLARE_EVENT_TABLE()
 class CpuRegistersDialog : public ParamDialog
 {
 
-#define CPU_REGS_MAIN_REGS1                                             \
-  { BXP_CPU_EAX, BXP_CPU_EBX, BXP_CPU_ECX, BXP_CPU_EDX,                 \
-    BXP_CPU_EBP, BXP_CPU_ESI, BXP_CPU_EDI, BXP_CPU_ESP,                 \
-    BXP_NULL }
-#define CPU_REGS_MAIN_REGS2                                             \
-  { BXP_CPU_EIP, BXP_CPU_SEG_CS, BXP_CPU_SEG_SS, BXP_CPU_SEG_DS,        \
-    BXP_CPU_SEG_ES, BXP_CPU_SEG_FS, BXP_CPU_SEG_GS, BXP_CPU_EFLAGS,     \
-    BXP_NULL }
-#define CPU_REGS_MAIN_REGS3                                             \
-  { BXP_CPU_SEG_LDTR, BXP_CPU_SEG_TR,                                   \
-    BXP_CPU_GDTR_BASE, BXP_CPU_IDTR_LIMIT,                              \
-    BXP_CPU_IDTR_BASE, BXP_CPU_GDTR_LIMIT,                              \
-    BXP_NULL }
-#define CPU_REGS_FLAGS                                                  \
-  { BXP_CPU_EFLAGS_ID, BXP_CPU_EFLAGS_VIP, BXP_CPU_EFLAGS_VIF,          \
-    BXP_CPU_EFLAGS_AC, BXP_CPU_EFLAGS_VM, BXP_CPU_EFLAGS_RF,            \
-    BXP_CPU_EFLAGS_NT, BXP_CPU_EFLAGS_IOPL, BXP_CPU_EFLAGS_OF,          \
-    BXP_CPU_EFLAGS_DF, BXP_CPU_EFLAGS_IF, BXP_CPU_EFLAGS_TF,            \
-    BXP_CPU_EFLAGS_SF, BXP_CPU_EFLAGS_ZF, BXP_CPU_EFLAGS_AF,            \
-    BXP_CPU_EFLAGS_PF, BXP_CPU_EFLAGS_CF, \
-    BXP_NULL }
-#define CPU_REGS_DEBUG_REGS                                             \
-  { BXP_CPU_DR0, BXP_CPU_DR1, BXP_CPU_DR2,                              \
-    BXP_CPU_DR3, BXP_CPU_DR6, BXP_CPU_DR7,                              \
-    BXP_NULL }
-#define CPU_REGS_TEST_REGS                                              \
-  { BXP_CPU_TR3, BXP_CPU_TR4, BXP_CPU_TR5, BXP_CPU_TR6, BXP_CPU_TR7,    \
-    BXP_NULL }
-#define CPU_REGS_CONTROL_REGS                                           \
-  { BXP_CPU_CR0, BXP_CPU_CR1, BXP_CPU_CR2, BXP_CPU_CR3, BXP_CPU_CR4,    \
-    BXP_NULL  }
+#define CPU_REGS_MAIN_REGS1     \
+  { "EAX", "EBX", "ECX", "EDX", \
+    "EBP", "ESI", "EDI", "ESP", \
+    NULL }
+#define CPU_REGS_MAIN_REGS2     \
+  { "EIP", "CS", "SS", "DS"     \
+    "ES", "FS", "GS", "EFLAGS", \
+    NULL }
+#define CPU_REGS_MAIN_REGS3     \
+  { "LDTR", "TR",               \
+    "GDTR_base", "IDTR_limit",  \
+    "IDTR_base", "GDTR_limit",  \
+    NULL }
+#define CPU_REGS_FLAGS          \
+  { "ID", "VIP", "VIF",         \
+    "AC", "VM", "RF",           \
+    "NT", "IOPL", "OF",         \
+    "DF", "IF", "TF",           \
+    "SF", "ZF", "AF",           \
+    "PF", "CF", \
+    NULL }
+#define CPU_REGS_DEBUG_REGS     \
+  { "DR0", "DR1", "DR2",        \
+    "DR3", "DR6", "DR7",        \
+    NULL }
+#define CPU_REGS_TEST_REGS             \
+  { "TR3", "TR4", "TR5", "TR6", "TR7", \
+    NULL }
+#define CPU_REGS_CONTROL_REGS          \
+  { "CR0", "CR1", "CR2", "CR3", "CR4", \
+    NULL  }
 
-  void Init ();  // called automatically by ShowModal()
+  void Init();  // called automatically by ShowModal()
   wxFlexGridSizer *mainRegsSizer, *flagsSizer, *extRegsSizer;
 #define CPU_REGS_MAX_FLAGS 17
-  bx_id flagid[CPU_REGS_MAX_FLAGS];
+  bx_param_c *flagptr[CPU_REGS_MAX_FLAGS];
   int nflags;
 #if BX_DEBUGGER
   wxButton *contButton, *stopButton, *stepButton, *commitButton;
 #endif
-  void stateChanged (bool simRunning);
+  void stateChanged(bool simRunning);
 public:
   CpuRegistersDialog(wxWindow* parent, wxWindowID id);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void AddFlag (bx_id paramId);
-  void OnEvent (wxCommandEvent& event);
-  virtual void CopyParamToGui ();
+  void AddFlag(bx_param_c *param);
+  void OnEvent(wxCommandEvent& event);
+  virtual void CopyParamToGui();
   DECLARE_EVENT_TABLE()
 };
 

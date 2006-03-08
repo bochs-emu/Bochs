@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.96 2006-03-07 20:32:02 vruppert Exp $
+// $Id: config.cc,v 1.97 2006-03-08 18:10:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -996,6 +996,8 @@ void bx_init_options()
   Bit8u ata_default_irq[4] = { 
     14, 15, 11, 9 
   };
+
+  #define BXP_PARAMS_PER_ATA_DEVICE 12
 
   bx_list_c *ata_menu[BX_MAX_ATA_CHANNEL];
   bx_list_c *ata_res[BX_MAX_ATA_CHANNEL];
