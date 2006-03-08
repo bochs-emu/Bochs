@@ -4,6 +4,7 @@ Changes after 2.2.6 release:
 - Recognize #XF exception (19) when SSE is enabled
 - Fixed bug in SYSRET instruction legacy mode
 - Fixed bug in PSRAW/PSRAD MMX and SSE instructions
+- Fixed bug in ENTER instruction in x86-64 mode (Stanislav Shwartsman)
 - Fixes in Bochs debugger and disassembler
 - Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
 - Moved configure time --enable-reset-on-triple-fault option to runtime, 
@@ -14,6 +15,7 @@ Changes after 2.2.6 release:
   core from .bochsrc for SMP simulation (Stanislav Shwartsman)
 - Removed --enable-pni configure option, to compile with PNI use 
   --enable-sse=3 instead (Stanislav Shwartsman)
+- Raise A20 line after system reset (Stanislav Shwartsman)
 
 -------------------------------------------------------------------------
 Changes in 2.2.6 (January 29, 2006):

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.62 2006-03-06 22:02:50 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.63 2006-03-08 20:10:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -222,13 +222,7 @@ int bx_dbg_main(int argc, char *argv[])
   // initialize hardware
   bx_init_hardware();
 
-  // Moved from main.cc
-  DEV_init_devices();
-  DEV_reset_devices(BX_RESET_HARDWARE);
-  bx_gui->init_signal_handlers ();
-  bx_pc_system.start_timers();
-
-  // Just like in main.cc before set_init_done()
+  // Moved from main.cc, just like in main.cc before set_init_done()
   if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
     void bx_load32bitOSimagehack(void);
     bx_load32bitOSimagehack();

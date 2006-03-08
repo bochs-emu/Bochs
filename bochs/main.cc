@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.323 2006-03-07 20:32:04 vruppert Exp $
+// $Id: main.cc,v 1.324 2006-03-08 20:10:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -952,13 +952,10 @@ int bx_init_hardware()
   if (strcmp(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), "") !=0)
     BX_MEM(0)->load_RAM(SIM->get_param_string(BXPN_OPTRAM4_PATH)->getptr(), SIM->get_param_num(BXPN_OPTRAM4_ADDRESS)->get(), 2);
 
-  bx_pc_system.set_enable_a20(1); // enable A20 on RESET
-
 #if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize(BX_MEM(0));
   BX_CPU(0)->sanity_checks();
   BX_INSTR_INIT(0);
-  BX_CPU(0)->reset(BX_RESET_HARDWARE);
 #else
   bx_cpu_array = new BX_CPU_C_PTR[BX_SMP_PROCESSORS];
 
@@ -967,16 +964,15 @@ int bx_init_hardware()
     BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();
     BX_INSTR_INIT(i);
-    BX_CPU(i)->reset(BX_RESET_HARDWARE);
   }
 #endif
 
-#if BX_DEBUGGER == 0
   DEV_init_devices();
-  DEV_reset_devices(BX_RESET_HARDWARE);
-  bx_gui->init_signal_handlers ();
+  // will enable A20 line and reset CPU and devices
+  bx_pc_system.Reset(BX_RESET_HARDWARE);
+  bx_gui->init_signal_handlers();
   bx_pc_system.start_timers();
-#endif
+
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
 #if !BX_DEBUGGER
@@ -993,7 +989,7 @@ int bx_init_hardware()
   return(0);
 }
 
-void bx_init_bx_dbg (void)
+void bx_init_bx_dbg(void)
 {
   bx_dbg.floppy = 0;
   bx_dbg.keyboard = 0;
