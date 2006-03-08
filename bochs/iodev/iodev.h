@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.72 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: iodev.h,v 1.73 2006-03-08 19:28:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -326,7 +326,7 @@ public:
   virtual void bmdma_set_irq(Bit8u channel) {}
 };
 
-class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+class BOCHSAPI bx_ne2k_stub_c : public bx_devmodel_c {
 public:
   virtual void print_info(FILE *file, int page, int reg, int nodups) {}
 };

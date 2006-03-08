@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.83 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: ne2k.cc,v 1.84 2006-03-08 19:28:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1278,7 +1278,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.83 2006-03-07 21:11:19 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.84 2006-03-08 19:28:36 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1292,8 +1292,8 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS s.pci_enabled = 1;
     strcpy(devname, "NE2000 PCI NIC");
     BX_NE2K_THIS s.devfunc = 0x00;
-    DEV_register_pci_handlers(this, pci_read_handler, pci_write_handler,
-                              &BX_NE2K_THIS s.devfunc, BX_PLUGIN_NE2K, devname);
+    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc, 
+        BX_PLUGIN_NE2K, devname);
 
     for (unsigned i=0; i<256; i++)
       BX_NE2K_THIS s.pci_conf[i] = 0x0;
@@ -1423,26 +1423,9 @@ void bx_ne2k_c::set_irq_level(bx_bool level)
 
 #if BX_SUPPORT_PCI
 
-  // static pci configuration space read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
-  Bit32u
-bx_ne2k_c::pci_read_handler(void *this_ptr, Bit8u address, unsigned io_len)
+// pci configuration space read callback handler
+Bit32u bx_ne2k_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
-#if !BX_USE_NE2K_SMF
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
-
-  return( class_ptr->pci_read(address, io_len) );
-}
-
-
-  Bit32u
-bx_ne2k_c::pci_read(Bit8u address, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_NE2K_SMF
-
   Bit32u value = 0;
 
   if (io_len <= 4) {
@@ -1456,23 +1439,9 @@ bx_ne2k_c::pci_read(Bit8u address, unsigned io_len)
   }
 }
 
-// static pci configuration space write callback handler
-// redirects to non-static class handler to avoid virtual functions
-
-void bx_ne2k_c::pci_write_handler(void *this_ptr, Bit8u address, Bit32u value, unsigned io_len)
+// pci configuration space write callback handler
+void bx_ne2k_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_NE2K_SMF
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
-
-  class_ptr->pci_write(address, value, io_len);
-}
-
-void bx_ne2k_c::pci_write(Bit8u address, Bit32u value, unsigned io_len)
-{
-#else
-  UNUSED(this_ptr);
-#endif // !BX_USE_NE2K_SMF
-
   Bit8u value8, oldval;
   bx_bool baseaddr_change = 0;
 
