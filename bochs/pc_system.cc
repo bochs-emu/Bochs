@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.51 2006-03-06 22:02:50 sshwarts Exp $
+// $Id: pc_system.cc,v 1.52 2006-03-08 19:27:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -132,11 +132,11 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
   if (value) {
     enable_a20 = 1;
 #if BX_CPU_LEVEL < 2
-  a20_mask   =    0xfffff;
+    a20_mask   =    0xfffff;
 #elif BX_CPU_LEVEL == 2
-  a20_mask   =   0xffffff;
+    a20_mask   =   0xffffff;
 #else /* 386+ */
-  a20_mask   = 0xffffffff;
+    a20_mask   = 0xffffffff;
 #endif
   }
   else {
