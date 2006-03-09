@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.90 2006-03-08 18:10:41 vruppert Exp $
+// $Id: init.cc,v 1.91 2006-03-09 20:16:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,52 +45,42 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
 #if BX_WITH_WX
 
-#if BX_SUPPORT_SMP
-#ifdef __GNUC__
-#warning cpu_param_handler only supports parameters for one processor.
-#endif
-// To fix this, I think I will need to change bx_param_num_c::set_handler
-// so that I pass in a void* data value.  The void* will be passed to each
-// handler.  In this case, I would pass a pointer to the BX_CPU_C object
-// in the void*, then in the handler I'd cast it back to BX_CPU_C and call
-// BX_CPU_C::cpu_param_handler() which then could be a member function. -BBD
-#endif
-
 #define IF_SEG_REG_GET(x) \
   if (!strcmp(param->get_name(), #x)) { \
-    return BX_CPU(0)->sregs[BX_SEG_REG_##x].selector.value; \
+    return BX_CPU(cpu)->sregs[BX_SEG_REG_##x].selector.value; \
   }
 #define IF_SEG_REG_SET(reg, val) \
   if (!strcmp(param->get_name(), #reg)) { \
-    BX_CPU(0)->load_seg_reg(&BX_CPU(0)->sregs[BX_SEG_REG_##reg],val); \
+    BX_CPU(cpu)->load_seg_reg(&BX_CPU(cpu)->sregs[BX_SEG_REG_##reg],val); \
   }
 #define IF_LAZY_EFLAG_GET(flag) \
     if (!strcmp(param->get_name(), #flag)) { \
-      return BX_CPU(0)->get_##flag(); \
+      return BX_CPU(cpu)->get_##flag(); \
     }
 #define IF_LAZY_EFLAG_SET(flag, val) \
     if (!strcmp(param->get_name(), #flag)) { \
-      BX_CPU(0)->set_##flag(val); \
+      BX_CPU(cpu)->set_##flag(val); \
     }
 #define IF_EFLAG_GET(flag) \
     if (!strcmp(param->get_name(), #flag)) { \
-      return BX_CPU(0)->get_##flag(); \
+      return BX_CPU(cpu)->get_##flag(); \
     }
 #define IF_EFLAG_SET(flag, val) \
     if (!strcmp(param->get_name(), #flag)) { \
-      BX_CPU(0)->set_##flag(val); \
+      BX_CPU(cpu)->set_##flag(val); \
     }
 
 
 // implement get/set handler for parameters that need unusual set/get
 static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 {
+  int cpu = atoi(param->get_parent()->get_name());
   if (set) {
     if (!strcmp(param->get_name(), "LDTR")) {
-      BX_CPU(0)->panic("setting LDTR not implemented");
+      BX_CPU(cpu)->panic("setting LDTR not implemented");
     }
     if (!strcmp(param->get_name(), "TR")) {
-      BX_CPU(0)->panic("setting LDTR not implemented");
+      BX_CPU(cpu)->panic("setting LDTR not implemented");
     }
     IF_SEG_REG_SET(CS, val);
     IF_SEG_REG_SET(DS, val);
@@ -117,10 +107,10 @@ static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
     IF_EFLAG_SET(TF,   val);
   } else {
     if (!strcmp(param->get_name(), "LDTR")) {
-      return BX_CPU(0)->ldtr.selector.value;
+      return BX_CPU(cpu)->ldtr.selector.value;
     }
     if (!strcmp(param->get_name(), "TR")) {
-      return BX_CPU(0)->tr.selector.value;
+      return BX_CPU(cpu)->tr.selector.value;
     }
     IF_SEG_REG_GET (CS);
     IF_SEG_REG_GET (DS);
@@ -283,18 +273,21 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
   sprintf(name, "CPU %d", BX_CPU_ID);
 
 #if BX_WITH_WX
-  static bx_bool first_time = 1;
-  if (first_time) {
-    first_time = 0;
+  static bx_bool counter = 0;
+  if (counter < BX_MAX_SMP_THREADS_SUPPORTED) {
     // Register some of the CPUs variables as shadow parameters so that
     // they can be visible in the config interface.
     // (Experimental, obviously not a complete list)
     bx_param_num_c *param;
+    char cpu_name[10], cpu_title[10];
     const char *fmt16 = "%04X";
     const char *fmt32 = "%08X";
     Bit32u oldbase = bx_param_num_c::set_default_base(16);
     const char *oldfmt = bx_param_num_c::set_default_format(fmt32);
-    bx_list_c *list = new bx_list_c(SIM->get_param("save_restore"), "cpu", "CPU State", 60);
+    sprintf(cpu_name, "%d", BX_CPU_ID);
+    sprintf(cpu_title, "CPU %d", BX_CPU_ID);
+    bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_CPU_STATE), strdup(cpu_name),
+                                    cpu_title, 60);
 #define DEFPARAM_NORMAL(name,field) \
     new bx_shadow_num_c(list, #name, #name, &(field))
 
@@ -404,6 +397,8 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     // restore defaults
     bx_param_num_c::set_default_base(oldbase);
     bx_param_num_c::set_default_format(oldfmt);
+
+    counter++;
   }
 #endif
 }

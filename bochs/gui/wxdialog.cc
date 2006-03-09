@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.90 2006-03-08 18:10:41 vruppert Exp $
+// $Id: wxdialog.cc,v 1.91 2006-03-09 20:16:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1701,7 +1701,7 @@ CpuRegistersDialog::CpuRegistersDialog(
   char *controlList[]  = CPU_REGS_CONTROL_REGS;
   char *debugList[]    = CPU_REGS_DEBUG_REGS;
   char *testList[]     = CPU_REGS_TEST_REGS;
-  bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_CPU_STATE);
+  bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_CPU_0_STATE);
 
   // top level objects
   wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, "Basic Registers");
@@ -1801,7 +1801,7 @@ CpuRegistersDialog::Init()
     AddParam(param, flagsSizer, true);
   }
   // special case: make IOPL text field small
-  ParamStruct *pstr = (ParamStruct*)paramHash->Get(SIM->get_param(BXPN_CPU_EFLAGS_IOPL)->get_id());
+  ParamStruct *pstr = (ParamStruct*)paramHash->Get(SIM->get_param(BXPN_CPU_0_EFLAGS_IOPL)->get_id());
   if (pstr != NULL) {
     wxSize size = pstr->u.text->GetSize();
     size.SetWidth (size.GetWidth() / 2);
