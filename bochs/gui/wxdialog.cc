@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.91 2006-03-09 20:16:17 vruppert Exp $
+// $Id: wxdialog.cc,v 1.92 2006-03-11 10:00:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -389,167 +389,6 @@ void FloppyConfigDialog::ShowHelp ()
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// LogOptionsDialog implementation
-//////////////////////////////////////////////////////////////////////
-// Structure:
-//   vertSizer:
-//     logfileSizer
-//       prompt
-//       logfile
-//       browse button
-//     prompt
-//     gridSizer 2 columns:
-//       "debug"
-//       action[0] = wxChoice
-//       "info"
-//       action[1] = wxChoice
-//       "error"
-//       action[2] = wxChoice
-//       "panic"
-//       action[3] = wxChoice
-//     debuggerlogfileSizer
-//       prompt
-//       debuggerlogfile
-//       browse button
-//     buttonSizer:
-//       help
-//       cancel
-//       ok
-
-// all events go to OnEvent method
-BEGIN_EVENT_TABLE(LogOptionsDialog, wxDialog)
-  EVT_BUTTON(-1, LogOptionsDialog::OnEvent)
-  EVT_CHECKBOX(-1, LogOptionsDialog::OnEvent)
-  EVT_TEXT(-1, LogOptionsDialog::OnEvent)
-END_EVENT_TABLE()
-
-
-LogOptionsDialog::LogOptionsDialog(
-    wxWindow* parent,
-    wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
-    wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
-{
-  static char *names[] = LOG_OPTS_TYPE_NAMES;
-  SetTitle (LOG_OPTS_TITLE);
-  vertSizer = new wxBoxSizer (wxVERTICAL);
-  // top level objects
-  logfileSizer = new wxBoxSizer (wxHORIZONTAL);
-  vertSizer->Add (logfileSizer, 0, wxTOP|wxLEFT, 20);
-  wxStaticText *text = new wxStaticText (this, -1, LOG_OPTS_PROMPT);
-  vertSizer->Add (text, 0, wxALL, 10);
-  gridSizer = new wxFlexGridSizer (2);
-  vertSizer->Add (gridSizer, 1, wxLEFT, 40);
-  text = new wxStaticText (this, -1, LOG_OPTS_ADV);
-  vertSizer->Add (text, 0, wxTOP|wxLEFT, 20);
-  debuggerlogfileSizer = new wxBoxSizer (wxHORIZONTAL);
-  vertSizer->Add (debuggerlogfileSizer, 0, wxALL, 20);
-  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
-
-  // logfileSizer contents
-  text = new wxStaticText (this, -1, LOG_OPTS_LOGFILE);
-  logfileSizer->Add (text);
-  logfile = new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize);
-  logfileSizer->Add (logfile);
-  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
-  logfileSizer->Add (btn, 0, wxALL, 5);
-
-  // debuggerlogfileSizer contents
-  text = new wxStaticText (this, -1, LOG_OPTS_DEBUGGER_LOGFILE);
-  debuggerlogfileSizer->Add (text);
-  debuggerlogfile = new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize);
-  debuggerlogfileSizer->Add (debuggerlogfile);
-  btn = new wxButton (this, ID_Browse2, BTNLABEL_BROWSE);
-  debuggerlogfileSizer->Add (btn, 0, wxALL, 5);
-
-  // gridSizer contents
-  gridSizer->AddGrowableCol (1);
-  for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
-    gridSizer->Add (new wxStaticText (this, -1, names[evtype]), 0, wxALL, 5);
-    action[evtype] = makeLogOptionChoiceBox (this, -1, evtype, true);
-    gridSizer->Add (action[evtype], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 5);
-  }
-
-  // buttonSizer contents
-  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-}
-
-void LogOptionsDialog::Init()
-{
-  // lay it out!
-  SetAutoLayout(TRUE);
-  SetSizer(vertSizer);
-  vertSizer->Fit (this);
-  wxSize size = vertSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
-  int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
-}
-
-void LogOptionsDialog::SetAction (int evtype, int a) {
-  // find the choice whose client data matches "a".
-  int *ptr;
-  //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
-  for (int i=0; i < action[evtype]->GetCount (); i++) {
-    //wxLogDebug ("reading action[%d]->GetClientData(%d)", evtype, i);
-    ptr = (int*) action[evtype]->GetClientData (i);
-    if (ptr == NULL) continue;
-    if (a == *ptr) {  // found it!
-      action[evtype]->SetSelection (i);
-      return;
-    }
-  }
-  // this can happen if one of the choices that is excluded by
-  // LOG_OPTS_EXCLUDE() is used, for example.
-  wxLogDebug ("SetAction type=%d a=%d not found", evtype, a);
-}
-
-int LogOptionsDialog::GetAction (int evtype) {
-  int sel = action[evtype]->GetSelection (); 
-  int *ptrToChoice = (int*)action[evtype]->GetClientData (sel);
-  wxASSERT (ptrToChoice != NULL);
-  return *ptrToChoice;
-}
-
-void LogOptionsDialog::OnEvent(wxCommandEvent& event)
-{
-  int id = event.GetId ();
-  wxLogMessage ("you pressed button id=%d", id);
-  switch (id) {
-    case ID_Browse:
-      BrowseTextCtrl (logfile);
-      break;
-    case ID_Browse2:
-      BrowseTextCtrl (debuggerlogfile);
-      break;
-    case wxID_OK:
-      EndModal (wxID_OK);
-      break;
-    case wxID_CANCEL:
-      EndModal (wxID_CANCEL);
-      break;
-    case wxID_HELP:
-      ShowHelp(); 
-      break;
-    default:
-      event.Skip ();
-  }
-}
-
-void LogOptionsDialog::ShowHelp ()
-{
-  wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
-}
 
 //////////////////////////////////////////////////////////////////////
 // AdvancedLogOptionsDialog implementation
@@ -1886,6 +1725,66 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
     default:
       ParamDialog::OnEvent (event);
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+// LogOptionsDialog implementation
+//////////////////////////////////////////////////////////////////////
+
+// all events go to OnEvent method
+BEGIN_EVENT_TABLE(LogOptionsDialog, wxDialog)
+  EVT_BUTTON(-1, LogOptionsDialog::OnEvent)
+  EVT_CHECKBOX(-1, LogOptionsDialog::OnEvent)
+  EVT_TEXT(-1, LogOptionsDialog::OnEvent)
+END_EVENT_TABLE()
+
+LogOptionsDialog::LogOptionsDialog(
+    wxWindow* parent,
+    wxWindowID id)
+  : ParamDialog(parent, id)
+{
+  static char *names[] = LOG_OPTS_TYPE_NAMES;
+  SetTitle(LOG_OPTS_TITLE);
+  AddParam(SIM->get_param("log"));
+  wxStaticText *text = new wxStaticText(this, -1, LOG_OPTS_PROMPT);
+  mainSizer->Add(text, 0, wxALL, 10);
+  gridSizer = new wxFlexGridSizer (2);
+  mainSizer->Add(gridSizer, 1, wxLEFT, 40);
+  text = new wxStaticText (this, -1, LOG_OPTS_ADV);
+  mainSizer->Add(text, 0, wxTOP|wxLEFT, 20);
+
+  // gridSizer contents
+  gridSizer->AddGrowableCol(1);
+  for (int evtype=0; evtype<LOG_OPTS_N_TYPES; evtype++) {
+    gridSizer->Add(new wxStaticText (this, -1, names[evtype]), 0, wxALL, 5);
+    action[evtype] = makeLogOptionChoiceBox(this, -1, evtype, true);
+    gridSizer->Add(action[evtype], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 5);
+  }
+}
+
+void LogOptionsDialog::SetAction(int evtype, int a) {
+  // find the choice whose client data matches "a".
+  int *ptr;
+  //wxLogDebug ("SetAction type=%d a=%d", evtype, a);
+  for (int i=0; i < action[evtype]->GetCount(); i++) {
+    //wxLogDebug ("reading action[%d]->GetClientData(%d)", evtype, i);
+    ptr = (int*) action[evtype]->GetClientData(i);
+    if (ptr == NULL) continue;
+    if (a == *ptr) {  // found it!
+      action[evtype]->SetSelection(i);
+      return;
+    }
+  }
+  // this can happen if one of the choices that is excluded by
+  // LOG_OPTS_EXCLUDE() is used, for example.
+  wxLogDebug ("SetAction type=%d a=%d not found", evtype, a);
+}
+
+int LogOptionsDialog::GetAction(int evtype) {
+  int sel = action[evtype]->GetSelection();
+  int *ptrToChoice = (int*)action[evtype]->GetClientData(sel);
+  wxASSERT(ptrToChoice != NULL);
+  return *ptrToChoice;
 }
 
 

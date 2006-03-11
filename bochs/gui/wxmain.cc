@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.129 2006-03-07 20:32:07 vruppert Exp $
+// $Id: wxmain.cc,v 1.130 2006-03-11 10:00:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -697,12 +697,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   // Ideally I would use the siminterface methods to fill in the fields
   // of the LogOptionsDialog, but in fact several things are hardcoded.
   // At least I can verify that the expected numbers are the same.
-  wxASSERT (SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
-  LogOptionsDialog dlg (this, -1);
-  bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
-  dlg.SetLogfile (wxString (logfile->getptr()));
-  bx_param_string_c *debuggerlogfile = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME);
-  dlg.SetDebuggerlogfile (wxString (debuggerlogfile->getptr ()));
+  wxASSERT(SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
+  LogOptionsDialog dlg(this, -1);
 
   // The inital values of the dialog are complicated.  If the panic action
   // for all modules is "ask", then clearly the inital value in the dialog
@@ -716,36 +712,31 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
   int level, nlevel = SIM->get_max_log_level();
   for (level=0; level<nlevel; level++) {
     int mod = 0;
-    int first = SIM->get_log_action (mod, level);
+    int first = SIM->get_log_action(mod, level);
     bool consensus = true;
     // now compare all others to first.  If all match, then use "first" as
     // the initial value.
-    for (mod=1; mod<SIM->get_n_log_modules (); mod++) {
-      if (first != SIM->get_log_action (mod, level)) {
+    for (mod=1; mod<SIM->get_n_log_modules(); mod++) {
+      if (first != SIM->get_log_action(mod, level)) {
         consensus = false;
         break;
       }
     }
     if (consensus)
-      dlg.SetAction (level, first);
+      dlg.SetAction(level, first);
     else
-      dlg.SetAction (level, LOG_OPTS_NO_CHANGE);
+      dlg.SetAction(level, LOG_OPTS_NO_CHANGE);
   }
-  int n = dlg.ShowModal ();   // show the dialog!
+  int n = dlg.ShowModal();   // show the dialog!
   if (n == wxID_OK) {
-    char buf[1024];
-    safeWxStrcpy (buf, dlg.GetLogfile (), sizeof (buf));
-    logfile->set (buf);
-    safeWxStrcpy (buf, dlg.GetDebuggerlogfile (), sizeof (buf));
-    debuggerlogfile->set (buf);
     for (level=0; level<nlevel; level++) {
       // ask the dialog what action the user chose for this type of event
-      int action = dlg.GetAction (level);
+      int action = dlg.GetAction(level);
       if (action != LOG_OPTS_NO_CHANGE) {
         // set new default
-        SIM->set_default_log_action (level, action);
+        SIM->set_default_log_action(level, action);
         // apply that action to all modules (devices)
-        SIM->set_log_action (-1, level, action);
+        SIM->set_log_action(-1, level, action);
       }
     }
   }
@@ -754,8 +745,8 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
 {
   wxASSERT (SIM->get_max_log_level() == ADVLOG_OPTS_N_TYPES);
-  AdvancedLogOptionsDialog dlg (this, -1);
-  dlg.ShowModal ();
+  AdvancedLogOptionsDialog dlg(this, -1);
+  dlg.ShowModal();
 }
 
 // How is this going to work?
@@ -781,17 +772,17 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
     return;
   }
   if (showCpu == NULL) {
-    showCpu = new CpuRegistersDialog (this, -1);
+    showCpu = new CpuRegistersDialog(this, -1);
 #if BX_DEBUGGER
-    showCpu->SetTitle ("Bochs Debugger");
+    showCpu->SetTitle("Bochs Debugger");
 #else
-    showCpu->SetTitle ("CPU Registers");
+    showCpu->SetTitle("CPU Registers");
 #endif
-    showCpu->Init ();
+    showCpu->Init();
   } else {
-    showCpu->CopyParamToGui ();
+    showCpu->CopyParamToGui();
   }
-  showCpu->Show (TRUE);
+  showCpu->Show(TRUE);
 }
 
 void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))

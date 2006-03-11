@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.60 2006-03-08 18:10:41 vruppert Exp $
+// $Id: wxdialog.h,v 1.61 2006-03-11 10:00:56 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -34,14 +34,14 @@
 #endif
 
 // utility function prototype
-void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext);
-bool CreateImage (int harddisk, int sectors, const char *filename);
-void SetTextCtrl (wxTextCtrl *text, const char *format, int val);
-int GetTextCtrlInt (wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
-bool BrowseTextCtrl (wxTextCtrl *text,
+void ChangeStaticText(wxSizer *sizer, wxStaticText *win, wxString newtext);
+bool CreateImage(int harddisk, int sectors, const char *filename);
+void SetTextCtrl(wxTextCtrl *text, const char *format, int val);
+int GetTextCtrlInt(wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
+bool BrowseTextCtrl(wxTextCtrl *text,
     wxString prompt="Choose a file",
     long style=wxOPEN);
-wxChoice *makeLogOptionChoiceBox (wxWindow *parent, wxWindowID id, int evtype, bool includeNoChange = false);
+wxChoice *makeLogOptionChoiceBox(wxWindow *parent, wxWindowID id, int evtype, bool includeNoChange = false);
 
 ////////////////////////////////////////////////////////////////////
 // LogMsgAskDialog is a modal dialog box that shows the user a
@@ -209,83 +209,6 @@ public:
 DECLARE_EVENT_TABLE()
 };
 
-
-////////////////////////////////////////////////////////////////////////////
-// LogOptionsDialog
-////////////////////////////////////////////////////////////////////////////
-// LogOptionsDialog allows the user to decide how Bochs will
-// behave for each type of log event.
-//
-// +---- Configure events -----------------------------------+
-// |                                                         |
-// | Log file is [_____________________________]  [ Browse ] |
-// |                                                         |
-// | How should Bochs respond to each type of event?         |
-// |                                                         |
-// |            Debug events: [ignore]                       |
-// |             Info events: [ignore]                       |
-// |            Error events: [report]                       |
-// |            Panic events: [ask   ]                       |
-// |                                                         |
-// | For additional control over how each device responds    |
-// | to events, use the menu option "Log ... By Device".     |
-// |                                                         |
-// | Debugger log file is [____________________]  [ Browse ] |
-// |                                                         |
-// |                [ Advanced ]  [ Help ] [ Cancel ] [ Ok ] |
-// +---------------------------------------------------------+
-// To use this dialog:
-// After constructor, call SetAction(eventtype, action) to set initial
-// value for each choice field.  The eventtype is 0 to LOG_OPTS_N_TYPES-1,
-// representing the types listed in LOG_OPTS_TYPE_NAMES.  The choice field is 0
-// to LOG_OPTS_N_CHOICES-1, representing the actions listed in
-// LOG_OPTS_CHOICES.  Then call ShowModal(), which will return wxID_OK or
-// wxID_CANCEL.  Afterward, the GetAction(eventtype) method will tell what was
-// selected in each choice box.  
-class LogOptionsDialog: public wxDialog
-{
-private:
-#define LOG_OPTS_TITLE "Configure Log Events"
-#define LOG_OPTS_LOGFILE "Log file is "
-#define LOG_OPTS_DEBUGGER_LOGFILE "Debugger log file is "
-#define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
-#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: ", "Pass events: " }
-#define LOG_OPTS_N_TYPES 5
-#define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
-#define LOG_OPTS_N_CHOICES_NORMAL 4
-#define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
-#define LOG_OPTS_NO_CHANGE 4   // index of "no change"
-// normally all choices are available for all event types. The exclude 
-// expression allows some choices to be eliminated if they don't make any 
-// sense.  For example, it would be stupid to ignore a panic.
-#define LOG_OPTS_EXCLUDE(type,choice)  ( \
-   /* can't die or ask, on debug or info events */   \
-   (type <= 1 && (choice==2 || choice==3)) \
-   /* can't ignore panics or errors */ \
-   || (type >= 2 && choice==0) \
-   )
-#define LOG_OPTS_ADV "For additional control over how each device responds to events, use the menu option \"Log ... By Device\"."
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
-  wxBoxSizer *vertSizer, *logfileSizer, *debuggerlogfileSizer, *buttonSizer;
-  wxFlexGridSizer *gridSizer;
-  wxButton *applyDefault;
-  wxTextCtrl *logfile;
-  wxTextCtrl *debuggerlogfile;
-  wxChoice *action[LOG_OPTS_N_TYPES];
-public:
-  LogOptionsDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent (wxCommandEvent& event);
-  int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  int GetAction (int evtype);
-  void SetAction (int evtype, int action);
-  void SetLogfile (wxString f) { logfile->SetValue (f); }
-  void SetDebuggerlogfile (wxString f) { debuggerlogfile->SetValue (f); }
-  wxString GetLogfile () { return logfile->GetValue (); }
-  wxString GetDebuggerlogfile () { return debuggerlogfile->GetValue (); }
-DECLARE_EVENT_TABLE()
-};
-
 ////////////////////////////////////////////////////////////////////////////
 // AdvancedLogOptionsDialog
 ////////////////////////////////////////////////////////////////////////////
@@ -317,7 +240,7 @@ class AdvancedLogOptionsDialog: public wxDialog
 {
 private:
 #define ADVLOG_OPTS_TITLE "Configure Log Events"
-#define ADVLOG_OPTS_LOGFILE LOG_OPTS_LOGFILE
+#define ADVLOG_OPTS_LOGFILE "Log file"
 #define ADVLOG_OPTS_PROMPT                                                    \
 "This table determines how Bochs will respond to each kind of event coming\n" \
 "from a particular source.  For example if you are having problems with\n"    \
@@ -508,6 +431,43 @@ DECLARE_EVENT_TABLE()
 };
 
 ////////////////////////////////////////////////////////////////////////////
+// LogOptionsDialog
+////////////////////////////////////////////////////////////////////////////
+//
+// the new LogOptionsDialog is based on ParamDialog. It allows the user to
+// configure the log file settings and to decide how Bochs will behave for
+// each type of log event.
+class LogOptionsDialog : public ParamDialog
+{
+private:
+#define LOG_OPTS_TITLE "Configure Log Events"
+#define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
+#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: ", "Pass events: " }
+#define LOG_OPTS_N_TYPES 5
+#define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
+#define LOG_OPTS_N_CHOICES_NORMAL 4
+#define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
+#define LOG_OPTS_NO_CHANGE 4   // index of "no change"
+// normally all choices are available for all event types. The exclude 
+// expression allows some choices to be eliminated if they don't make any 
+// sense.  For example, it would be stupid to ignore a panic.
+#define LOG_OPTS_EXCLUDE(type,choice)  ( \
+   /* can't die or ask, on debug or info events */   \
+   (type <= 1 && (choice==2 || choice==3)) \
+   /* can't ignore panics or errors */ \
+   || (type >= 2 && choice==0) \
+   )
+#define LOG_OPTS_ADV "For additional control over how each device responds to events, use the menu option \"Log ... By Device\"."
+  wxFlexGridSizer *gridSizer;
+  wxChoice *action[LOG_OPTS_N_TYPES];
+public:
+  LogOptionsDialog(wxWindow* parent, wxWindowID id);
+  int GetAction(int evtype);
+  void SetAction(int evtype, int action);
+  DECLARE_EVENT_TABLE()
+};
+
+////////////////////////////////////////////////////////////////////////////
 // CpuRegistersDialog
 ////////////////////////////////////////////////////////////////////////////
 // 
@@ -601,7 +561,6 @@ public:
   virtual void CopyParamToGui();
   DECLARE_EVENT_TABLE()
 };
-
 
 
 /**************************************************************************
