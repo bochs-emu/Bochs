@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.324 2006-03-08 20:10:29 sshwarts Exp $
+// $Id: main.cc,v 1.325 2006-03-11 22:40:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -847,9 +847,19 @@ int bx_begin_simulation (int argc, char *argv[])
 #endif
   }
 #endif /* ! BX_DEBUGGER */
-  BX_INFO (("cpu loop quit, shutting down simulator"));
-  bx_atexit ();
+  BX_INFO(("cpu loop quit, shutting down simulator"));
+  bx_atexit();
   return(0);
+}
+
+void bx_stop_simulation()
+{
+  // in wxWidgets, the whole simulator is running in a separate thread.
+  // our only job is to end the thread as soon as possible, NOT to shut
+  // down the whole application with an exit.
+  BX_CPU(0)->async_event = 1;
+  BX_CPU(0)->kill_bochs_request = 1;
+  // the cpu loop will exit very soon after this condition is set.
 }
 
 int bx_init_hardware()

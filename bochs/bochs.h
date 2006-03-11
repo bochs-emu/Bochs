@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.190 2006-03-06 22:32:01 sshwarts Exp $
+// $Id: bochs.h,v 1.191 2006-03-11 22:40:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,12 +105,13 @@ extern "C" {
 #endif
 
 // prototypes
-int bx_begin_simulation (int argc, char *argv[]);
-char *bx_find_bochsrc (void);
-int bx_parse_cmdline (int arg, int argc, char *argv[]);
-int bx_read_configuration (char *rcfile);
-int bx_write_configuration (char *rcfile, int overwrite);
-void bx_reset_options (void);
+int bx_begin_simulation(int argc, char *argv[]);
+void bx_stop_simulation();
+char *bx_find_bochsrc(void);
+int bx_parse_cmdline(int arg, int argc, char *argv[]);
+int bx_read_configuration(char *rcfile);
+int bx_write_configuration(char *rcfile, int overwrite);
+void bx_reset_options(void);
 Bit32u crc32(const Bit8u *buf, int len);
 // for param-tree testing only
 void print_tree(bx_param_c *node, int level = 0);
