@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.130 2006-03-11 10:00:56 vruppert Exp $
+// $Id: wxmain.cc,v 1.131 2006-03-12 15:11:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -765,10 +765,10 @@ void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
 // When simulation is free running, #1 or #2 might make sense.  Try #2.
 void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 {
-  if (SIM->get_param(BXPN_CPU_STATE) == NULL) {
+  if (SIM->get_param(BXPN_CPU_0_STATE) == NULL) {
     // if params not initialized yet, then give up
-    wxMessageBox ("Cannot show the debugger window until the simulation has begun.",
-                  "Sim not started", wxOK | wxICON_ERROR, this );
+    wxMessageBox("Cannot show the debugger window until the simulation has begun.",
+                 "Sim not started", wxOK | wxICON_ERROR, this);
     return;
   }
   if (showCpu == NULL) {
