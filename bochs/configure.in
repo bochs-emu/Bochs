@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.315 2006-03-12 15:11:52 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.316 2006-03-13 17:17:38 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1990,6 +1990,7 @@ AC_MSG_CHECKING(for wxWidgets configuration script)
 AC_MSG_RESULT($WX_CONFIG)
   
 ok_wx_version=0
+wx_multi_lib=0
 wx_needs_gtk2=0
 AC_MSG_CHECKING(for wxWidgets library version)
 if test x$WX_CONFIG != xnot_found; then
@@ -2004,9 +2005,11 @@ if test x$WX_CONFIG != xnot_found; then
     x2.[4-5]*) ok_wx_version=1 ;;  # version 2.4 / 2.5
     x2.[6-9]*)  # version 2.6 or greater
       ok_wx_version=1
-      if test "$WX_BASENAME" = "wx_gtk2"; then
-        wx_needs_gtk2=1
-      fi
+      wx_multi_lib=1
+      case x$WX_BASENAME in
+	xwx_gtk2|xwx_gtk2u) wx_needs_gtk2=1 ;;
+	*) ;;
+      esac
       ;;
     x[3-9]*) ok_wx_version=1 ;;  # version 3 or greater
     *) ;; # who knows?
@@ -2086,8 +2089,9 @@ if test "$with_sdl" = yes; then
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_SDL)"
   # GUI_*FLAGS are added to the compilation of every bochs file, not just
   # the files in gui/*.cc.
-  GUI_CFLAGS="$GUI_CFLAGS \`sdl-config --cflags\`"
-  GUI_CXXFLAGS="$GUI_CXXFLAGS \`sdl-config --cflags\`"
+  SDL_CFLAGS=`sdl-config --cflags`
+  GUI_CFLAGS="$GUI_CFLAGS $SDL_CFLAGS"
+  GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL_CFLAGS"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -2194,22 +2198,25 @@ if test "$with_wx" = yes; then
   AC_DEFINE(BX_WITH_WX, 1)
   SPECIFIC_GUI_OBJS="$SPECIFIC_GUI_OBJS \$(GUI_OBJS_WX)"
   SPECIFIC_GUI_SUPPORT_OBJS="$SPECIFIC_GUI_SUPPORT_OBJS \$(GUI_OBJS_WX_SUPPORT)"
-  WX_CFLAGS="\`$WX_CONFIG --cflags\`"
-  WX_CXXFLAGS="\`$WX_CONFIG --cxxflags\`"
-  GUI_LINK_OPTS_WX="\`$WX_CONFIG --libs core,base\`"
+  WX_CFLAGS="`$WX_CONFIG --cflags`"
+  WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
+  if test "$wx_multi_lib" = 1; then
+    GUI_LINK_OPTS_WX="`$WX_CONFIG --libs core,base`"
+  else
+    GUI_LINK_OPTS_WX="`$WX_CONFIG --libs`"
+  fi
   if test "$wx_needs_gtk2" = 1; then
-    # this hack might not work with all GTK 2 installations
-    AC_CHECK_HEADER(/opt/gnome/include/gtk-2.0/gdk/gdkkeysyms.h, [
-      WX_CFLAGS="$WX_CFLAGS -I/opt/gnome/include/gtk-2.0"
-      WX_CXXFLAGS="$WX_CXXFLAGS -I/opt/gnome/include/gtk-2.0"
+    PKG_CHECK_MODULES([GTK], [gtk+-2.0], [
+      WX_CFLAGS="$WX_CFLAGS $GTK_CFLAGS"
+      WX_CXXFLAGS="$WX_CXXFLAGS $GTK_CFLAGS"
     ])
   else
     # if gtk-config exists, then add it to the cflags.
     gtkconf=`gtk-config --cflags`
     if test $? = 0; then
       # gtk-config was found and returned 0, so it must return valid output
-      WX_CFLAGS="$WX_CFLAGS \`gtk-config --cflags\`"
-      WX_CXXFLAGS="$WX_CXXFLAGS \`gtk-config --cflags\`"
+      WX_CFLAGS="$WX_CFLAGS $gtkconf"
+      WX_CXXFLAGS="$WX_CXXFLAGS $gtkconf"
     fi
   fi
   # GUI_C*FLAGS are added to the compilation of every bochs file, not just
