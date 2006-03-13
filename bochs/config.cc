@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.97 2006-03-08 18:10:38 vruppert Exp $
+// $Id: config.cc,v 1.98 2006-03-13 18:55:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -47,9 +47,9 @@ int bochsrc_include_count = 0;
 extern bx_debug_t bx_dbg;
 
 static char *get_builtin_variable(char *varname);
-static Bit32s parse_line_unformatted(char *context, char *line);
-static Bit32s parse_line_formatted(char *context, int num_params, char *params[]);
-static int parse_bochsrc(char *rcfile);
+static Bit32s parse_line_unformatted(const char *context, char *line);
+static Bit32s parse_line_formatted(const char *context, int num_params, char *params[]);
+static int parse_bochsrc(const char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
 static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
@@ -166,7 +166,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
   return val;
 }
 
-char *bx_param_string_handler(bx_param_string_c *param, int set, char *val, int maxlen)
+const char *bx_param_string_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
 {
   char pname[BX_PATHNAME_LEN];
   Bit8u channel, device;
@@ -1665,7 +1665,7 @@ void bx_reset_options()
   SIM->get_param("log")->reset();
 }
 
-int bx_read_configuration (char *rcfile)
+int bx_read_configuration(const char *rcfile)
 {
   // parse rcfile first, then parse arguments in order.
   BX_INFO (("reading configuration from %s", rcfile));
@@ -1737,7 +1737,7 @@ char *bx_find_bochsrc ()
   return strdup (rcfile);
 }
 
-static int parse_bochsrc(char *rcfile)
+static int parse_bochsrc(const char *rcfile)
 {
   FILE *fd = NULL;
   char *ret;
@@ -1808,7 +1808,7 @@ static char *get_builtin_variable(char *varname)
   }
 }
 
-static Bit32s parse_line_unformatted(char *context, char *line)
+static Bit32s parse_line_unformatted(const char *context, char *line)
 {
 #define MAX_PARAMS_LEN 40
   char *ptr;
@@ -1962,7 +1962,7 @@ int get_floppy_type_from_image(const char *filename)
   }
 }
 
-static Bit32s parse_log_options(char *context, char *loglev, char *param1)
+static Bit32s parse_log_options(const char *context, char *loglev, char *param1)
 {
   int level;
 
@@ -1995,7 +1995,7 @@ static Bit32s parse_log_options(char *context, char *loglev, char *param1)
   return 0;
 }
 
-static Bit32s parse_line_formatted(char *context, int num_params, char *params[])
+static Bit32s parse_line_formatted(const char *context, int num_params, char *params[])
 {
   int i, slot, t;
   Bit8u idx;
@@ -3315,7 +3315,7 @@ int bx_write_keyboard_options(FILE *fp)
 //   0: written ok
 //  -1: failed
 //  -2: already exists, and overwrite was off
-int bx_write_configuration(char *rc, int overwrite)
+int bx_write_configuration(const char *rc, int overwrite)
 {
   int i;
   char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];

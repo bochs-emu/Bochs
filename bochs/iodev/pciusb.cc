@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.36 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pciusb.cc,v 1.37 2006-03-13 18:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -1794,7 +1794,7 @@ bx_bool bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out)
   return 1;
 }
 
-char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, char *val, int maxlen)
+const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
 {
   // handler for USB runtime parameters
   if (set) {

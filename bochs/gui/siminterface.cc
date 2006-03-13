@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.132 2006-03-11 22:40:32 vruppert Exp $
+// $Id: siminterface.cc,v 1.133 2006-03-13 18:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -69,8 +69,8 @@ public:
   virtual void quit_sim(int code);
   virtual int get_exit_code() { return exit_code; }
   virtual int get_default_rc(char *path, int len);
-  virtual int read_rc(char *path);
-  virtual int write_rc(char *path, int overwrite);
+  virtual int read_rc(const char *path);
+  virtual int write_rc(const char *path, int overwrite);
   virtual int get_log_file(char *path, int len);
   virtual int set_log_file(char *path);
   virtual int get_log_prefix(char *prefix, int len);
@@ -367,7 +367,7 @@ int bx_real_sim_c::get_default_rc(char *path, int len)
   return 0;
 }
 
-int bx_real_sim_c::read_rc(char *rc)
+int bx_real_sim_c::read_rc(const char *rc)
 {
   return bx_read_configuration(rc);
 }
@@ -376,7 +376,7 @@ int bx_real_sim_c::read_rc(char *rc)
 //   0: written ok
 //  -1: failed
 //  -2: already exists, and overwrite was off
-int bx_real_sim_c::write_rc(char *rc, int overwrite)
+int bx_real_sim_c::write_rc(const char *rc, int overwrite)
 {
   return bx_write_configuration(rc, overwrite);
 }
@@ -1307,12 +1307,14 @@ Bit32s bx_param_string_c::get(char *buf, int len)
   return 0;
 }
 
-void bx_param_string_c::set(char *buf)
+void bx_param_string_c::set(const char *buf)
 {
   if (options->get() & RAW_BYTES)
     memcpy(val, buf, maxsize);
-  else
+  else {
     strncpy(val, buf, maxsize);
+    val[maxsize - 1] = 0;
+  }
   if (handler) {
     // the handler can return a different char* to be copied into the value
     buf = (*handler)(this, 1, buf, -1);

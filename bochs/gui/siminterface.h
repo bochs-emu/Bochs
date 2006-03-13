@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.178 2006-03-09 20:16:17 vruppert Exp $
+// $Id: siminterface.h,v 1.179 2006-03-13 18:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -802,7 +802,7 @@ public:
 #endif
 };
 
-typedef char* (*param_string_event_handler)(class bx_param_string_c *, int set, char *val, int maxlen);
+typedef const char* (*param_string_event_handler)(class bx_param_string_c *, int set, const char *val, int maxlen);
 
 class BOCHSAPI bx_param_string_c : public bx_param_c {
   int maxsize;
@@ -832,7 +832,7 @@ public:
   virtual void set_enabled(int enabled);
   Bit32s get(char *buf, int len);
   char *getptr() {return val; }
-  void set(char *buf);
+  void set(const char *buf);
   bx_bool equals(const char *buf);
   bx_param_num_c *get_options() { return options; }
   void set_separator(char sep) {separator = sep; }
@@ -1093,8 +1093,8 @@ public:
   virtual int get_exit_code() { return 0; }
 
   virtual int get_default_rc(char *path, int len) {return -1;}
-  virtual int read_rc(char *path) {return -1;}
-  virtual int write_rc(char *rc, int overwrite) {return -1;}
+  virtual int read_rc(const char *path) {return -1;}
+  virtual int write_rc(const char *rc, int overwrite) {return -1;}
   virtual int get_log_file(char *path, int len) {return -1;}
   virtual int set_log_file(char *path) {return -1;}
   virtual int get_log_prefix(char *prefix, int len) {return -1;}
