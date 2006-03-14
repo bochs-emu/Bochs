@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.137 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: cpu.cc,v 1.138 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
 
-  if (setjmp( BX_CPU_THIS_PTR jmp_buf_env )) 
+  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) 
   { 
     // only from exception function can we get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
@@ -477,23 +477,13 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
 
     if (ret==0) {
 #if BX_SUPPORT_ICACHE
-      i = iStorage;	// Leave entry invalid
+      i = iStorage;	// return iStorage and leave icache entry invalid
 #endif
       boundaryFetch(fetchPtr, remainingInPage, i);
     }
     else
     {
 #if BX_SUPPORT_ICACHE
-      // In the case where the page is marked ICacheWriteStampInvalid, all
-      // counter bits will be high, being eqivalent to ICacheWriteStampMax.
-      // In the case where the page is marked as possibly having associated
-      // iCache entries, we need to leave the counter as-is, unless we're
-      // willing to dump all iCache entries which can hash to this page.
-      // Therefore, in either case, we can keep the counter as-is and
-      // replace the fetch mode bits.
-      pageWriteStamp &= ICacheWriteStampMask;  // Clear out old fetch mode bits.
-      pageWriteStamp |= BX_CPU_THIS_PTR fetchModeMask;  // Add in new ones.
-      pageWriteStampTable.setPageWriteStamp(pAddr, pageWriteStamp);
       cache_entry->pAddr = pAddr;
       cache_entry->writeStamp = pageWriteStamp;
 #endif
@@ -554,7 +544,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
       return 1; // Return to caller of cpu_loop.
     }
 #endif
-  } else if (BX_CPU_THIS_PTR kill_bochs_request) {
+  } else if (bx_pc_system.kill_bochs_request) {
     // setting kill_bochs_request causes the cpu loop to return ASAP.
     return 1; // Return to caller of cpu_loop.
   }

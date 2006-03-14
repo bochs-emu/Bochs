@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.139 2006-03-06 22:03:01 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.140 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -610,8 +610,6 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       // Reserved bits take on value of MOV instruction
       CR3_change(val_32);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_32);
-      // Reload of CR3 always serializes.
-      // invalidate_prefetch_q(); // Already done.
       break;
     case 4: // CR4
 #if BX_CPU_LEVEL == 3

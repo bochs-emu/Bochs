@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.4 2006-03-06 22:32:02 sshwarts Exp $
+// $Id: smm.cc,v 1.5 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -34,12 +34,12 @@
 
 void BX_CPU_C::RSM(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
     UndefinedOpcode(i);
   }
+
+  invalidate_prefetch_q();
  
   BX_INFO(("RSM: System Management Mode not implemented yet"));
 
@@ -48,6 +48,8 @@ void BX_CPU_C::RSM(bxInstruction_c *i)
 
 void BX_CPU_C::enter_system_management_mode(void)
 {
+  invalidate_prefetch_q();
+
   // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
   BX_CPU_THIS_PTR lf_flags_status = 0x000000;
 

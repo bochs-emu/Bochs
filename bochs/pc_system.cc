@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.52 2006-03-08 19:27:56 sshwarts Exp $
+// $Id: pc_system.cc,v 1.53 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,9 +79,11 @@ bx_pc_system_c::bx_pc_system_c()
   usecSinceLast = 0;
 }
 
-void bx_pc_system_c::init_ips(Bit32u ips)
+void bx_pc_system_c::initialize(Bit32u ips)
 {
   HRQ = 0;
+
+  kill_bochs_request = 0;
 
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
@@ -175,7 +177,7 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
 
 bx_bool bx_pc_system_c::get_enable_a20(void)
 {
-  BX_INFO(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
+  BX_DEBUG(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
   return(1);
 }
 #endif  // #if BX_SUPPORT_A20

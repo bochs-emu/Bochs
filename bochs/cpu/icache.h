@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.12 2006-02-28 17:47:33 sshwarts Exp $
+// $Id: icache.h,v 1.13 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -150,7 +150,7 @@ BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
     if (e->writeStamp != pageWriteStamp)
       e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
     else
-      e->writeStamp |= 0x1fffffff;
+      e->writeStamp |= ICacheWriteStampMask;
   }
 }
 

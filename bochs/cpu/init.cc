@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.91 2006-03-09 20:16:16 vruppert Exp $
+// $Id: init.cc,v 1.92 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -742,7 +742,6 @@ void BX_CPU_C::reset(unsigned source)
 
   invalidate_prefetch_q();
 
-  BX_CPU_THIS_PTR kill_bochs_request = 0;
   BX_INSTR_RESET(BX_CPU_ID);
 }
 

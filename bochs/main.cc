@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.325 2006-03-11 22:40:32 vruppert Exp $
+// $Id: main.cc,v 1.326 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -839,7 +839,7 @@ int bx_begin_simulation (int argc, char *argv[])
       // do some instructions in each processor
       BX_CPU(processor)->cpu_loop(quantum);
       processor = (processor+1) % BX_SMP_PROCESSORS;
-      if (BX_CPU(0)->kill_bochs_request) 
+      if (bx_pc_system.kill_bochs_request) 
         break;
       if (processor == 0) 
         BX_TICKN(quantum);
@@ -858,7 +858,7 @@ void bx_stop_simulation()
   // our only job is to end the thread as soon as possible, NOT to shut
   // down the whole application with an exit.
   BX_CPU(0)->async_event = 1;
-  BX_CPU(0)->kill_bochs_request = 1;
+  bx_pc_system.kill_bochs_request = 1;
   // the cpu loop will exit very soon after this condition is set.
 }
 
@@ -873,7 +873,7 @@ int bx_init_hardware()
     }
   }
 
-  bx_pc_system.init_ips(SIM->get_param_num(BXPN_IPS)->get());
+  bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
 
   if (SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()[0]!='-') {
     BX_INFO (("using log file %s", SIM->get_param_string(BXPN_LOG_FILENAME)->getptr()));

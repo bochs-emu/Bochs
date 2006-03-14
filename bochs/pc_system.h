@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.35 2006-03-04 16:58:10 sshwarts Exp $
+// $Id: pc_system.h,v 1.36 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -24,14 +24,13 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
-
+#ifndef BX_PCSYS_H
+#define BX_PCSYS_H
 
 #define BX_MAX_TIMERS 64
 #define BX_NULL_TIMER_HANDLE 10000
 
-
 typedef void (*bx_timer_handler_t)(void *);
-
 
 BOCHSAPI extern class bx_pc_system_c bx_pc_system;
 
@@ -92,14 +91,13 @@ public:
   // Timer oriented public features
   // ==============================
 
-  void   init_ips(Bit32u ips);
-  int    register_timer( void *this_ptr, bx_timer_handler_t, Bit32u useconds,
+  void   initialize(Bit32u ips);
+  int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          bx_bool continuous, bx_bool active, const char *id);
   unsigned unregisterTimer(int timerID);
   void   start_timers(void);
-  void   activate_timer( unsigned timer_index, Bit32u useconds,
-                         bx_bool continuous );
-  void   deactivate_timer( unsigned timer_index );
+  void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
+  void   deactivate_timer(unsigned timer_index);
   unsigned triggeredTimerID(void) {
     return triggeredTimer;
   }
@@ -161,11 +159,13 @@ public:
   //
   Bit32u  a20_mask;
 
+  volatile bx_bool kill_bochs_request;
+
   void set_HRQ(bx_bool val);  // set the Hold ReQuest line
   void set_INTR(bx_bool value); // set the INTR line to value
 
   // Cpu and System Reset
-  int Reset( unsigned type );
+  int Reset(unsigned type);
   Bit8u  IAC(void);
 
   bx_pc_system_c();
@@ -176,3 +176,5 @@ public:
   bx_bool get_enable_a20(void);
   void    exit(void);
 };
+
+#endif

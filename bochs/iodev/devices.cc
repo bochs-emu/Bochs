@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.94 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: devices.cc,v 1.95 2006-03-14 18:11:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,7 +28,6 @@
 
 
 #include "bochs.h"
-#include "cpu/cpu.h"
 #include "iodev.h"
 #define LOG_THIS bx_devices.
 
@@ -96,20 +95,17 @@ bx_devices_c::bx_devices_c()
 #endif
 }
 
-
 bx_devices_c::~bx_devices_c()
 {
   // nothing needed for now
-  BX_DEBUG(("Exit."));
   timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
-  void
-bx_devices_c::init(BX_MEM_C *newmem)
+void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.94 2006-03-06 22:03:16 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.95 2006-03-14 18:11:22 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -222,9 +218,9 @@ bx_devices_c::init(BX_MEM_C *newmem)
   }
 
 #if BX_SUPPORT_APIC
-    // I/O APIC 82093AA
-    ioapic = & bx_ioapic;
-    ioapic->init ();
+  // I/O APIC 82093AA
+  ioapic = & bx_ioapic;
+  ioapic->init ();
 #endif
 
   // BIOS log 
@@ -303,7 +299,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff) );
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
-    timer_handle = bx_pc_system.register_timer( this, timer_handler,
+    timer_handle = bx_pc_system.register_timer(this, timer_handler,
       (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
   }
 
@@ -318,9 +314,7 @@ bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_checksum();
 }
 
-
-  void
-bx_devices_c::reset(unsigned type)
+void bx_devices_c::reset(unsigned type)
 {
   pluginUnmapped->reset(type);
 #if BX_SUPPORT_PCI
@@ -345,7 +339,6 @@ bx_devices_c::reset(unsigned type)
   // now reset optional plugins
   bx_reset_plugins(type);
 }
-
 
 Bit32u bx_devices_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
@@ -388,7 +381,6 @@ void bx_devices_c::port92_write(Bit32u address, Bit32u value, unsigned io_len)
   }
 }
 
-
 // This defines a no-default read handler, 
 // so Bochs does not segfault if unmapped is not loaded
 Bit32u bx_devices_c::default_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
@@ -415,13 +407,12 @@ void bx_devices_c::timer_handler(void *this_ptr)
 void bx_devices_c::timer()
 {
 #if (BX_USE_NEW_PIT==0)
-  if ( pit->periodic( BX_IODEV_HANDLER_PERIOD ) ) {
+  if (pit->periodic(BX_IODEV_HANDLER_PERIOD)) {
     // This is a hack to make the IRQ0 work
     DEV_pic_lower_irq(0);
     DEV_pic_raise_irq(0);
   }
 #endif
-
 
   // separate calls to bx_gui->handle_events from the keyboard code.
   {
@@ -429,15 +420,12 @@ void bx_devices_c::timer()
     if ( ++multiple==10)
     {
       multiple=0;
-      SIM->periodic ();
-      if (!BX_CPU(0)->kill_bochs_request)
+      SIM->periodic();
+      if (! bx_pc_system.kill_bochs_request)
 	bx_gui->handle_events();
     }
   }
-
-// KPL Removed lapic periodic timer registration here.
 }
-
 
 bx_bool bx_devices_c::register_irq(unsigned irq, const char *name)
 {
