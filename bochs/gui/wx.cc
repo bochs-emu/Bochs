@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.82 2006-02-22 19:18:28 vruppert Exp $
+// $Id: wx.cc,v 1.83 2006-03-14 18:13:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -189,12 +189,12 @@ void MyPanel::ToggleMouse (bool fromToolbar)
   if (fromToolbar && first_enable && en) {
     // only show this help if you click on the toolbar.  If they already
     // know the shortcut, don't annoy them with the message.
-    wxString msg = 
+    wxString msg = wxT(
       "You have enabled the mouse in Bochs, so now your mouse actions will\n"
       "be sent into the simulator.  The usual mouse cursor will be trapped\n"
       "inside the Bochs window until you press a CTRL key + the middle button\n"
-      "to turn mouse capture off.";
-    wxMessageBox(msg, "Mouse Capture Enabled", wxOK | wxICON_INFORMATION);
+      "to turn mouse capture off.");
+    wxMessageBox(msg, wxT("Mouse Capture Enabled"), wxOK | wxICON_INFORMATION);
     first_enable = false;
   }
   enable->set (en);
@@ -1050,10 +1050,10 @@ bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
         strcpy(status_text+1, statusitem_text[i]);
         theFrame->SetStatusText(status_text, i+1);
 #else
-        theFrame->SetStatusText(statusitem_text[i], i+1);
+        theFrame->SetStatusText(wxString(statusitem_text[i], wxConvUTF8), i+1);
 #endif
       } else {
-        theFrame->SetStatusText("", i+1);
+        theFrame->SetStatusText(wxT(""), i+1);
       }
     }
   } else if ((unsigned)element < statusitem_count) {
@@ -1063,10 +1063,11 @@ bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
         strcpy(status_text+1, statusitem_text[element]);
         theFrame->SetStatusText(status_text, element+1);
 #else
-      theFrame->SetStatusText(statusitem_text[element], element+1);
+      theFrame->SetStatusText(wxString(statusitem_text[element], wxConvUTF8),
+        element+1);
 #endif
     } else {
-      theFrame->SetStatusText("", element+1);
+      theFrame->SetStatusText(wxT(""), element+1);
     }
   }
 }
@@ -1591,15 +1592,15 @@ bx_wx_gui_c::mouse_enabled_changed_specific (bx_bool val)
 bx_wx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   int ret = 0;
-  wxMutexGuiEnter ();
-  if (wxTheClipboard->Open ()) {
-    if (wxTheClipboard->IsSupported (wxDF_TEXT)) {
+  wxMutexGuiEnter();
+  if (wxTheClipboard->Open()) {
+    if (wxTheClipboard->IsSupported(wxDF_TEXT)) {
       wxTextDataObject data;
-      wxTheClipboard->GetData (data);
-      wxString str = data.GetText ();
-      int len = str.Len ();
+      wxTheClipboard->GetData(data);
+      wxString str = data.GetText();
+      int len = str.Len();
       Bit8u *buf = new Bit8u[len];
-      memcpy (buf, str.c_str (), len);
+      memcpy(buf, str.mb_str(wxConvUTF8), len);
       *bytes = buf;
       *nbytes = len;
       ret = 1;
@@ -1608,24 +1609,24 @@ bx_wx_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
     } else {
       BX_ERROR (("paste: could not open wxWidgets clipboard"));
     }
-    wxTheClipboard->Close ();
+    wxTheClipboard->Close();
   }
-  wxMutexGuiLeave ();
+  wxMutexGuiLeave();
   return ret;
 }
 
   int
 bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
-  wxMutexGuiEnter ();
+  wxMutexGuiEnter();
   int ret = 0;
-  if (wxTheClipboard->Open ()) {
-    wxString string (text_snapshot, len);
-    wxTheClipboard->SetData (new wxTextDataObject (string));
-    wxTheClipboard->Close ();
+  if (wxTheClipboard->Open()) {
+    wxString string(text_snapshot, wxConvUTF8, len);
+    wxTheClipboard->SetData(new wxTextDataObject (string));
+    wxTheClipboard->Close();
     ret = 1;
   }
-  wxMutexGuiLeave ();
+  wxMutexGuiLeave();
   return ret;
 }
 
