@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.92 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: init.cc,v 1.93 2006-03-15 17:57:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -665,13 +665,11 @@ void BX_CPU_C::reset(unsigned source)
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
+#if BX_SUPPORT_APIC
   /* APIC Address, APIC enabled and BSP is default, we'll fill in the rest later */
   BX_CPU_THIS_PTR msr.apicbase = BX_LAPIC_BASE_ADDR;
-#if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR local_apic.init ();
+  BX_CPU_THIS_PTR local_apic.init();
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
-#else
-  BX_CPU_THIS_PTR msr.apicbase |= 0x100;
 #endif
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
@@ -687,6 +685,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif // BX_USE_TLB
 #endif // BX_SUPPORT_PAGING
 
+  // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
   BX_CPU_THIS_PTR eipFetchPtr = NULL;
@@ -721,16 +720,13 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SMP
   // notice if I'm the bootstrap processor.  If not, do the equivalent of
   // a HALT instruction.
-  int apic_id = local_apic.get_id ();
-  if (BX_BOOTSTRAP_PROCESSOR == apic_id)
-  {
+  int apic_id = local_apic.get_id();
+  if (BX_BOOTSTRAP_PROCESSOR == apic_id) {
     // boot normally
-    BX_CPU_THIS_PTR bsp = 1;
     BX_CPU_THIS_PTR msr.apicbase |= 0x0100; /* set bit 8 BSP */
     BX_INFO(("CPU[%d] is the bootstrap processor", apic_id));
   } else {
     // it's an application processor, halt until IPI is heard.
-    BX_CPU_THIS_PTR bsp = 0;
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
     debug_trap |= 0x80000000;
@@ -739,8 +735,6 @@ void BX_CPU_C::reset(unsigned source)
 #else
   BX_CPU_THIS_PTR async_event=2;
 #endif
-
-  invalidate_prefetch_q();
 
   BX_INSTR_RESET(BX_CPU_ID);
 }

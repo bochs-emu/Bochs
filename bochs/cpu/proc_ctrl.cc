@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.140 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.141 2006-03-15 17:57:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1594,11 +1594,13 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
        12:35  APIC Base Address
        36:63  Reserved
     */
+#if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       RAX = BX_CPU_THIS_PTR msr.apicbase;
       RDX = 0;
       BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", EDX, EAX));
       return;
+#endif
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:

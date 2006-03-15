@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.268 2006-03-06 22:32:02 sshwarts Exp $
+// $Id: cpu.h,v 1.269 2006-03-15 17:57:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -589,8 +589,11 @@ typedef struct {
 #endif
 
 #if BX_CPU_LEVEL >= 5
-typedef struct {
+typedef struct
+{
+#if BX_SUPPORT_APIC
   bx_phy_address apicbase;
+#endif
 
 #if BX_SUPPORT_X86_64
   // x86-64 EFER bits
@@ -1141,12 +1144,9 @@ public: // for now...
   Bit32u   debug_trap; // holds DR6 value to be set as well
   volatile bx_bool async_event;
   volatile bx_bool INTR;
-  volatile bx_bool kill_bochs_request;
   volatile bx_bool smi_pending;
   volatile bx_bool nmi_pending;
 
-  /* wether this CPU is the BSP always set for UP */
-  bx_bool bsp;
   // for accessing registers by index number
   Bit16u *_16bit_base_reg[8];
   Bit16u *_16bit_index_reg[8];
