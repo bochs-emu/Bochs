@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.43 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.44 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -293,6 +293,8 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
+
+  BX_CPU_THIS_PTR nmi_disable = 0;
 
   BX_ASSERT(protected_mode());
   iret_protected(i);

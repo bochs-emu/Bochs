@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.138 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: cpu.cc,v 1.139 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -517,7 +517,10 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     while (1)
 #endif
     {
-      if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
+      if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || 
+           BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
+      {
+        // interrupt ends the HALT condition
         break;
       }
       if (BX_CPU_THIS_PTR async_event == 2) {
@@ -531,11 +534,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from
     // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF ()) {
+    if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || 
+         BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
+    {
       // interrupt ends the HALT condition
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-      //bx_printf ("halt condition has been cleared in %s", name);
     } else {
       // HALT condition remains, return so other CPUs have a chance
 #if BX_DEBUGGER
@@ -548,7 +552,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // setting kill_bochs_request causes the cpu loop to return ASAP.
     return 1; // Return to caller of cpu_loop.
   }
-
 
   // Priority 1: Hardware Reset and Machine Checks
   //   RESET
@@ -570,8 +573,10 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // (bochs doesn't support these)
   if (BX_CPU_THIS_PTR smi_pending && ! BX_CPU_THIS_PTR smm_mode())
   {
-     BX_PANIC(("SMI: system management mode still not implemented !"));
-     // clear SMI pending flag if accepting SMM !
+    BX_PANIC(("SMI: system management mode still not implemented !"));
+    // clear SMI pending flag and NMI disable flag when SMM was accepted
+    BX_CPU_THIS_PTR smi_pending = 0;
+    BX_CPU_THIS_PTR nmi_disable = 1;
   }
 
   // Priority 4: Traps on Previous Instruction
@@ -598,6 +603,14 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // an opportunity to check interrupts on the next instruction
     // boundary.
   }
+  else if (BX_CPU_THIS_PTR nmi_pending) {
+    BX_CPU_THIS_PTR nmi_pending = 0;
+    BX_CPU_THIS_PTR nmi_disable = 1;
+    BX_CPU_THIS_PTR errorno = 0;
+    BX_CPU_THIS_PTR EXT = 1; /* external event */
+    interrupt(2, 0, 0, 0);
+    BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+  }
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
     Bit8u vector;
@@ -612,12 +625,11 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // if no local APIC, always acknowledge the PIC.
     vector = DEV_pic_iac(); // may set INTR with next interrupt
 #endif
-    //BX_DEBUG(("decode: interrupt %u", (unsigned) vector));
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
     interrupt(vector, 0, 0, 0);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
-        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
     // the new EIP/ESP values.  But here, we call interrupt() much like
@@ -658,7 +670,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //   Alignment check
   // (handled by rest of the code)
 
-  if (BX_CPU_THIS_PTR get_TF ())
+  if (BX_CPU_THIS_PTR get_TF())
   {
     // TF is set before execution of next instruction.  Schedule
     // a debug trap (#DB) after execution.  After completion of
@@ -668,13 +680,13 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
   // Now we can handle things which are synchronous to instruction
   // execution.
-  if (BX_CPU_THIS_PTR get_RF ()) {
-    BX_CPU_THIS_PTR clear_RF ();
+  if (BX_CPU_THIS_PTR get_RF()) {
+    BX_CPU_THIS_PTR clear_RF();
   }
 #if BX_X86_DEBUGGER
   else {
     // only bother comparing if any breakpoints enabled
-    if ( BX_CPU_THIS_PTR dr7 & 0x000000ff ) {
+    if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
       Bit32u iaddr =
         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) +
         BX_CPU_THIS_PTR prev_eip;
@@ -706,7 +718,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   if ( !(BX_CPU_INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
-         BX_CPU_THIS_PTR get_TF () 
+         BX_CPU_THIS_PTR get_TF() 
 #if BX_X86_DEBUGGER
          || (BX_CPU_THIS_PTR dr7 & 0xff)
 #endif
@@ -850,7 +862,7 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
 
 #if BX_EXTERNAL_DEBUGGER
 
-void BX_CPU_C::ask (int level, const char *prefix, const char *fmt, va_list ap)
+void BX_CPU_C::ask(int level, const char *prefix, const char *fmt, va_list ap)
 {
   char buf1[1024];
   vsprintf (buf1, fmt, ap);
@@ -858,7 +870,7 @@ void BX_CPU_C::ask (int level, const char *prefix, const char *fmt, va_list ap)
   trap_debugger(1);
 }
 
-void BX_CPU_C::trap_debugger (bx_bool callnow)
+void BX_CPU_C::trap_debugger(bx_bool callnow)
 {
   regs.debug_state = debug_step;
   if (callnow) {
@@ -1001,16 +1013,14 @@ bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address 
 
 void BX_CPU_C::dbg_take_irq(void)
 {
-  unsigned vector;
-
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF () ) {
+  if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() ) {
     if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
       // normal return from setjmp setup
-      vector = DEV_pic_iac(); // may set INTR with next interrupt
+      unsigned vector = DEV_pic_iac(); // may set INTR with next interrupt
       BX_CPU_THIS_PTR errorno = 0;
-      BX_CPU_THIS_PTR EXT   = 1; // external event
+      BX_CPU_THIS_PTR EXT = 1; // external event
       BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
       interrupt(vector, 0, 0, 0);
     }
@@ -1025,7 +1035,7 @@ void BX_CPU_C::dbg_force_interrupt(unsigned vector)
   if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
     // normal return from setjmp setup
     BX_CPU_THIS_PTR errorno = 0;
-    BX_CPU_THIS_PTR EXT   = 1; // external event
+    BX_CPU_THIS_PTR EXT = 1; // external event
     BX_CPU_THIS_PTR async_event = 1; // probably don't need this
     interrupt(vector, 0, 0, 0);
   }
@@ -1034,9 +1044,20 @@ void BX_CPU_C::dbg_force_interrupt(unsigned vector)
 void BX_CPU_C::dbg_take_dma(void)
 {
   // NOTE: similar code in ::cpu_loop()
-  if ( BX_HRQ ) {
+  if (BX_HRQ) {
     BX_CPU_THIS_PTR async_event = 1; // set in case INTR is triggered
     DEV_dma_raise_hlda();
   }
 }
+
+void BX_CPU_C::dbg_queue_NMI(void)
+{
+  BX_CPU_THIS_PTR nmi_pending = 1;
+}
+
+void BX_CPU_C::dbg_queue_SMI(void)
+{
+  BX_CPU_THIS_PTR smi_pending = 1;
+}
+
 #endif  // #if BX_DEBUGGER

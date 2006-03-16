@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.33 2006-03-06 22:02:52 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.34 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -401,6 +401,8 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_iret;
 #endif
+
+  BX_CPU_THIS_PTR nmi_disable = 0;
 
   if (v8086_mode()) {
     // IOPL check in stack_return_from_v86()

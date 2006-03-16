@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.269 2006-03-15 17:57:11 sshwarts Exp $
+// $Id: cpu.h,v 1.270 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1191,6 +1191,7 @@ public: // for now...
 #endif
   unsigned cpu_mode;
   bx_bool  in_smm;
+  bx_bool  nmi_disable;
 
 #if BX_DEBUGGER
   Bit32u watchpoint;
@@ -2609,6 +2610,8 @@ public: // for now...
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
+  BX_SMF void     dbg_queue_NMI(void);
+  BX_SMF void     dbg_queue_SMI(void);
   BX_SMF void     dbg_take_irq(void);
   BX_SMF void     dbg_force_interrupt(unsigned vector);
   BX_SMF void     dbg_take_dma(void);

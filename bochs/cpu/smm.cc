@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.5 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: smm.cc,v 1.6 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -42,6 +42,9 @@ void BX_CPU_C::RSM(bxInstruction_c *i)
   invalidate_prefetch_q();
  
   BX_INFO(("RSM: System Management Mode not implemented yet"));
+
+  BX_CPU_THIS_PTR nmi_disable = 0;
+  BX_CPU_THIS_PTR in_smm = 0;
 
   UndefinedOpcode(i);
 }

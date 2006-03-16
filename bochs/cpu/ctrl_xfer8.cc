@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.20 2006-03-06 22:02:52 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.21 2006-03-16 20:24:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
       RCX = ECX - 1;  // zero extend
     else
       CX--;
-    }
+  }
 }
 
 void BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
@@ -142,7 +142,7 @@ void BX_CPU_C::LOOPE_Jb(bxInstruction_c *i)
   }
   else
 #endif
- {
+  {
     Bit32u count;
 
 #if BX_CPU_LEVEL >= 3
