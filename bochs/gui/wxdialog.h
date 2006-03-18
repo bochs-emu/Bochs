@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.61 2006-03-11 10:00:56 vruppert Exp $
+// $Id: wxdialog.h,v 1.62 2006-03-18 16:30:51 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -9,20 +9,20 @@
 ////////////////////////////////////////////////////////////////////
 // text messages used in several places
 ////////////////////////////////////////////////////////////////////
-#define MSG_NO_HELP "No help is available yet."
-#define MSG_NO_HELP_CAPTION "No help"
-#define MSG_ENABLED "Enabled"
-#define BTNLABEL_HELP "Help"
-#define BTNLABEL_CANCEL "Cancel"
-#define BTNLABEL_OK "Ok"
-#define BTNLABEL_CREATE_IMG "Create Image"
-#define BTNLABEL_BROWSE "<--Browse"
-#define BTNLABEL_DEBUG_CONTINUE "Continue"
-#define BTNLABEL_DEBUG_STOP "Stop"
-#define BTNLABEL_DEBUG_STEP "Step"
-#define BTNLABEL_DEBUG_COMMIT "Commit"
-#define BTNLABEL_CLOSE "Close"
-#define BTNLABEL_EXECUTE "Execute"
+#define MSG_NO_HELP wxT("No help is available yet.")
+#define MSG_NO_HELP_CAPTION wxT("No help")
+#define MSG_ENABLED wxT("Enabled")
+#define BTNLABEL_HELP wxT("Help")
+#define BTNLABEL_CANCEL wxT("Cancel")
+#define BTNLABEL_OK wxT("Ok")
+#define BTNLABEL_CREATE_IMG wxT("Create Image")
+#define BTNLABEL_BROWSE wxT("<--Browse")
+#define BTNLABEL_DEBUG_CONTINUE wxT("Continue")
+#define BTNLABEL_DEBUG_STOP wxT("Stop")
+#define BTNLABEL_DEBUG_STEP wxT("Step")
+#define BTNLABEL_DEBUG_COMMIT wxT("Commit")
+#define BTNLABEL_CLOSE wxT("Close")
+#define BTNLABEL_EXECUTE wxT("Execute")
 
 #if defined(WIN32)
 // On win32, apparantly the spinctrl depends on a native control which only
@@ -37,9 +37,9 @@
 void ChangeStaticText(wxSizer *sizer, wxStaticText *win, wxString newtext);
 bool CreateImage(int harddisk, int sectors, const char *filename);
 void SetTextCtrl(wxTextCtrl *text, const char *format, int val);
-int GetTextCtrlInt(wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = "Invalid integer!");
+int GetTextCtrlInt(wxTextCtrl *text, bool *valid = NULL, bool complain=false, wxString complaint = wxT("Invalid integer!"));
 bool BrowseTextCtrl(wxTextCtrl *text,
-    wxString prompt="Choose a file",
+    wxString prompt= wxT("Choose a file"),
     long style=wxOPEN);
 wxChoice *makeLogOptionChoiceBox(wxWindow *parent, wxWindowID id, int evtype, bool includeNoChange = false);
 
@@ -75,11 +75,11 @@ public:
 #define LOG_MSG_ASK_IDS \
   { ID_Continue, ID_Die, ID_DumpCore, ID_Debugger, wxHELP }
 #define LOG_MSG_ASK_NAMES \
-  { "Continue", "Kill Sim", "Dump Core", "Debugger", "Help" }
+  { wxT("Continue"), wxT("Kill Sim"), wxT("Dump Core"), wxT("Debugger"), wxT("Help") }
 #define LOG_MSG_DONT_ASK_STRING \
-  "Don't ask about future messages like this"
-#define LOG_MSG_CONTEXT "Context: %s"
-#define LOG_MSG_MSG "Message: %s"
+  wxT("Don't ask about future messages like this")
+#define LOG_MSG_CONTEXT wxT("Context: %s")
+#define LOG_MSG_MSG wxT("Message: %s")
 private:
   wxStaticText *context, *message;
   wxCheckBox *dontAsk;
@@ -168,12 +168,12 @@ DECLARE_EVENT_TABLE()
 class FloppyConfigDialog: public wxDialog
 {
 public:
-#define FLOPPY_CONFIG_TITLE "Configure %s"
-#define FLOPPY_CONFIG_INSTRS "Select the device or image to use when simulating %s."
-#define FLOPPY_CONFIG_CAP "What is the capacity of this disk?"
-#define FLOPPY_CONFIG_HINT "To create a disk image, choose the file name and capacity, then click on \"Create Image\".\n\n" \
-                           "Clicking OK signals a media change for this drive."
-#define FLOPPY_CONFIG_DISKIMG "Disk image: "
+#define FLOPPY_CONFIG_TITLE wxT("Configure %s")
+#define FLOPPY_CONFIG_INSTRS wxT("Select the device or image to use when simulating %s.")
+#define FLOPPY_CONFIG_CAP wxT("What is the capacity of this disk?")
+#define FLOPPY_CONFIG_HINT wxT("To create a disk image, choose the file name and capacity, then click on \"Create Image\".\n\n" \
+                           "Clicking OK signals a media change for this drive.")
+#define FLOPPY_CONFIG_DISKIMG wxT("Disk image: ")
 private:
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
@@ -239,16 +239,16 @@ DECLARE_EVENT_TABLE()
 class AdvancedLogOptionsDialog: public wxDialog
 {
 private:
-#define ADVLOG_OPTS_TITLE "Configure Log Events"
-#define ADVLOG_OPTS_LOGFILE "Log file"
-#define ADVLOG_OPTS_PROMPT                                                    \
+#define ADVLOG_OPTS_TITLE wxT("Configure Log Events")
+#define ADVLOG_OPTS_LOGFILE wxT("Log file")
+#define ADVLOG_OPTS_PROMPT wxT(                                               \
 "This table determines how Bochs will respond to each kind of event coming\n" \
 "from a particular source.  For example if you are having problems with\n"    \
 "the keyboard, you could ask for debug and info events from the keyboard\n"   \
-"to be reported."
-#define ADVLOG_OPTS_TYPE_NAMES { "Debug", "Info", "Error", "Panic", "Pass" }
+"to be reported.")
+#define ADVLOG_OPTS_TYPE_NAMES { wxT("debug"), wxT("Info"), wxT("Error"), wxT("Panic"), wxT("Pass") }
 #define ADVLOG_OPTS_N_TYPES 5
-#define ADVLOG_DEFAULTS "Use defaults for all devices"
+#define ADVLOG_DEFAULTS wxT("Use defaults for all devices")
   void Init ();  // called automatically by ShowModal()
   void ShowHelp ();
   wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
@@ -301,8 +301,8 @@ DECLARE_EVENT_TABLE()
 class DebugLogDialog: public wxDialog
 {
 private:
-#define DEBUG_LOG_TITLE "Debugger log"
-#define DEBUG_CMD_PROMPT "Type a debugger command:"
+#define DEBUG_LOG_TITLE wxT("Debugger log")
+#define DEBUG_CMD_PROMPT wxT("Type a debugger command:")
   wxBoxSizer *mainSizer, *commandSizer, *buttonSizer;
   wxTextCtrl *log, *command;
   Bit32u lengthMax;
@@ -440,11 +440,11 @@ DECLARE_EVENT_TABLE()
 class LogOptionsDialog : public ParamDialog
 {
 private:
-#define LOG_OPTS_TITLE "Configure Log Events"
-#define LOG_OPTS_PROMPT "How should Bochs respond to each type of event?"
-#define LOG_OPTS_TYPE_NAMES { "Debug events: ", "Info events: ", "Error events: ", "Panic events: ", "Pass events: " }
+#define LOG_OPTS_TITLE wxT("Configure Log Events")
+#define LOG_OPTS_PROMPT wxT("How should Bochs respond to each type of event?")
+#define LOG_OPTS_TYPE_NAMES { wxT("Debug events: "), wxT("Info events: "), wxT("Error events: "), wxT("Panic events: "), wxT("Pass events: ") }
 #define LOG_OPTS_N_TYPES 5
-#define LOG_OPTS_CHOICES { "ignore", "log", "ask user", "end simulation", "no change" }
+#define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
 #define LOG_OPTS_N_CHOICES_NORMAL 4
 #define LOG_OPTS_N_CHOICES 5   // number of choices, including "no change"
 #define LOG_OPTS_NO_CHANGE 4   // index of "no change"
@@ -457,7 +457,7 @@ private:
    /* can't ignore panics or errors */ \
    || (type >= 2 && choice==0) \
    )
-#define LOG_OPTS_ADV "For additional control over how each device responds to events, use the menu option \"Log ... By Device\"."
+#define LOG_OPTS_ADV wxT("For additional control over how each device responds to events, use the menu option \"Log ... By Device\".")
   wxFlexGridSizer *gridSizer;
   wxChoice *action[LOG_OPTS_N_TYPES];
 public:

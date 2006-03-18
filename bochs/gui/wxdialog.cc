@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.92 2006-03-11 10:00:56 vruppert Exp $
+// $Id: wxdialog.cc,v 1.93 2006-03-18 16:30:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -80,12 +80,12 @@ LogMsgAskDialog::LogMsgAskDialog(
 {
   for (int i=0; i<N_BUTTONS; i++) enabled[i] = TRUE;
   vertSizer = new wxBoxSizer(wxVERTICAL);
-  context = new wxStaticText (this, -1, "");
+  context = new wxStaticText (this, -1, wxT(""));
   wxFont font = context->GetFont ();
   font.SetWeight (wxBOLD);
   font.SetPointSize (2 + font.GetPointSize ());
   context->SetFont (font);
-  message = new wxStaticText (this, -1, "");
+  message = new wxStaticText (this, -1, wxT(""));
   message->SetFont (font);
   dontAsk = new wxCheckBox (this, -1, LOG_MSG_DONT_ASK_STRING);
   btnSizer = new wxBoxSizer(wxHORIZONTAL);
@@ -120,12 +120,12 @@ void LogMsgAskDialog::Init ()
     btnSizer->Add (btn, 1, wxALL, 5);
   }
   wxSize ms = message->GetSize ();
-  wxLogMessage ("message size is %d,%d", ms.GetWidth(), ms.GetHeight ());
+  // wxLogMessage(wxT("message size is %d,%d"), ms.GetWidth(), ms.GetHeight());
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
   vertSizer->Fit (this);
   wxSize size = vertSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 10;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -147,7 +147,7 @@ void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
     default:
       return;  // without EndModal
   }
-  wxLogMessage ("you pressed button id=%d, return value=%d", id, ret);
+  // wxLogMessage(wxT("you pressed button id=%d, return value=%d"), id, ret);
   EndModal (ret);
 }
 
@@ -191,7 +191,7 @@ END_EVENT_TABLE()
 FloppyConfigDialog::FloppyConfigDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   validate = NULL;
@@ -228,7 +228,7 @@ FloppyConfigDialog::FloppyConfigDialog(
   // create filename and diskImageRadioBtn so that we can tweak them before
   // Init comes.  However don't add it to any sizer yet because it needs to go
   // in after the last radio button.
-  filename = new wxTextCtrl (this, ID_FilenameText, "", wxDefaultPosition, longTextSize);
+  filename = new wxTextCtrl (this, ID_FilenameText, wxT(""), wxDefaultPosition, longTextSize);
   diskImageRadioBtn = new wxRadioButton (this, ID_Filename, FLOPPY_CONFIG_DISKIMG);
 
   // the radioSizer contents will be added by successive calls to
@@ -240,12 +240,12 @@ void FloppyConfigDialog::AddRadio (
     const wxString& filename)
 {
   if (n_rbtns >= FLOPPY_MAX_RBTNS) {
-    wxLogError ("AddRadio failed: increase FLOPPY_MAX_RBTNS in wxdialog.h");
+    wxLogError(wxT("AddRadio failed: increase FLOPPY_MAX_RBTNS in wxdialog.h"));
     return;
   }
-  rbtn[n_rbtns] = new wxRadioButton (this, -1, description);
+  rbtn[n_rbtns] = new wxRadioButton(this, -1, description);
   equivalentFilename[n_rbtns] = filename;
-  radioSizer->Add (rbtn[n_rbtns]);
+  radioSizer->Add(rbtn[n_rbtns]);
   n_rbtns++;
 }
 
@@ -260,7 +260,7 @@ void FloppyConfigDialog::SetDriveName (wxString name) {
 void FloppyConfigDialog::SetCapacityChoices (int n, char *choices[])
 {
   for (int i=0; i<n; i++)
-    capacity->Append (wxString (choices[i]));
+    capacity->Append(wxString (choices[i]));
 }
 
 void FloppyConfigDialog::SetCapacity (int cap)
@@ -272,33 +272,33 @@ void FloppyConfigDialog::SetCapacity (int cap)
 void FloppyConfigDialog::Init()
 {
   // add contents of diskImageSizer
-  diskImageSizer->Add (diskImageRadioBtn);
-  diskImageSizer->Add (filename, 1, wxGROW);
+  diskImageSizer->Add(diskImageRadioBtn);
+  diskImageSizer->Add(filename, 1, wxGROW);
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
-  diskImageSizer->Add (btn, 0, wxALL, 5);
-  radioSizer->Add (diskImageSizer);
+  diskImageSizer->Add(btn, 0, wxALL, 5);
+  radioSizer->Add(diskImageSizer);
 
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
-  vertSizer->Fit (this);
-  wxSize size = vertSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  vertSizer->Fit(this);
+  wxSize size = vertSizer->GetMinSize();
+  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
+  SetSizeHints (size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
 }
 
 int
 FloppyConfigDialog::GetRadio () {
   int i;
   for (i=0; i<n_rbtns; i++) {
-    if (rbtn[i]->GetValue ()) 
+    if (rbtn[i]->GetValue()) 
       return i;
   }
-  if (diskImageRadioBtn->GetValue ()) {
+  if (diskImageRadioBtn->GetValue()) {
     return i;
   }
-  wxLogError ("GetRadio() found nothing selected");
+  wxLogError(wxT("GetRadio() found nothing selected"));
   return 0;
 }
 
@@ -352,7 +352,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case ID_Browse:
       if (BrowseTextCtrl(filename)) {
-        capacity->SetSelection(capacity->FindString("auto"));
+        capacity->SetSelection(capacity->FindString(wxT("auto")));
       }
       break;
     case ID_Capacity:
@@ -363,20 +363,20 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       break;
     case ID_Create:
       {
-        int cap = capacity->GetSelection ();
+        int cap = capacity->GetSelection();
         char name[1024];
-        strncpy (name, filename->GetValue ().c_str (), sizeof(name));
+        strncpy (name, filename->GetValue().c_str(), sizeof(name));
         if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
           wxString msg;
-          msg.Printf ("Created a %s disk image called '%s'.",
-            capacity->GetString (cap).c_str (), 
-            filename->GetValue ().c_str ());
-          wxMessageBox(msg, "Image Created", wxOK | wxICON_INFORMATION, this);
+          msg.Printf("Created a %s disk image called '%s'.",
+            capacity->GetString(cap).c_str(), 
+            filename->GetValue().c_str());
+          wxMessageBox(msg, wxT("Image Created"), wxOK | wxICON_INFORMATION, this);
         }
       }
       break;
     case wxID_CANCEL:
-      EndModal (wxID_CANCEL);
+      EndModal(wxID_CANCEL);
       break;
     case wxID_HELP:
       ShowHelp(); 
@@ -384,7 +384,7 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
   }
 }
 
-void FloppyConfigDialog::ShowHelp ()
+void FloppyConfigDialog::ShowHelp()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
@@ -425,7 +425,7 @@ END_EVENT_TABLE()
 AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   //static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
@@ -447,7 +447,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   // logfileSizer contents
   text = new wxStaticText (this, -1, ADVLOG_OPTS_LOGFILE);
   logfileSizer->Add (text);
-  logfile = new wxTextCtrl (this, -1, "", wxDefaultPosition, longTextSize);
+  logfile = new wxTextCtrl (this, -1, wxT(""), wxDefaultPosition, longTextSize);
   logfileSizer->Add (logfile);
   wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
   logfileSizer->Add (btn, 0, wxALL, 5);
@@ -522,16 +522,16 @@ AdvancedLogOptionsDialog::~AdvancedLogOptionsDialog()
 
 void AdvancedLogOptionsDialog::Init()
 {
-  CopyParamToGui ();
+  CopyParamToGui();
   // lay it out!
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
-  vertSizer->Fit (this);
-  wxSize size = vertSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  vertSizer->Fit(this);
+  wxSize size = vertSizer->GetMinSize();
+  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
 }
 
 void AdvancedLogOptionsDialog::CopyParamToGui() {
@@ -565,20 +565,20 @@ void AdvancedLogOptionsDialog::CopyGuiToParam() {
 void AdvancedLogOptionsDialog::SetAction (int dev, int evtype, int act) {
   // find the choice whose client data matches "act".
   int *ptr;
-  //wxLogDebug ("SetAction dev=%d type=%d act=%d", dev, evtype, act);
+  // wxLogDebug(wxT("SetAction dev=%d type=%d act=%d"), dev, evtype, act);
   wxChoice *control = action[dev][evtype];
   for (int i=0; i < control->GetCount (); i++) {
-    //wxLogDebug ("reading action[%d][%d]->GetClientData(%d)", dev, evtype, i);
-    ptr = (int*) control->GetClientData (i);
+    // wxLogDebug(wxT("reading action[%d][%d]->GetClientData(%d)"), dev, evtype, i);
+    ptr = (int*) control->GetClientData(i);
     if (ptr == NULL) continue;
     if (act == *ptr) {  // found it!
-      control->SetSelection (i);
+      control->SetSelection(i);
       return;
     }
   }
   // this can happen if one of the choices that is excluded by
   // ADVLOG_OPTS_EXCLUDE() is used, for example.
-  wxLogDebug ("warning: SetAction type=%d act=%d not found", evtype, act);
+  wxLogDebug(wxT("warning: SetAction type=%d act=%d not found"), evtype, act);
 }
 
 int AdvancedLogOptionsDialog::GetAction (int dev, int evtype) {
@@ -591,7 +591,7 @@ int AdvancedLogOptionsDialog::GetAction (int dev, int evtype) {
 void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId ();
-  wxLogMessage ("you pressed button id=%d", id);
+  // wxLogMessage(wxT("you pressed button id=%d"), id);
   switch (id) {
     case ID_Browse:
       BrowseTextCtrl (logfile);
@@ -660,14 +660,14 @@ END_EVENT_TABLE()
 DebugLogDialog::DebugLogDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   lengthMax = DEBUG_LOG_DEFAULT_LENGTH_MAX;
   lengthTolerance = DEBUG_LOG_DEFAULT_TOLERANCE;
   SetTitle (DEBUG_LOG_TITLE);
   mainSizer = new wxBoxSizer (wxVERTICAL);
-  log = new wxTextCtrl (this, -1, "",
+  log = new wxTextCtrl (this, -1, wxT(""),
       wxDefaultPosition, wxSize(400, 300), 
       wxTE_MULTILINE | wxTE_RICH | wxTE_READONLY);
   mainSizer->Add (log, 1, wxALL|wxGROW, 10);
@@ -679,7 +679,7 @@ DebugLogDialog::DebugLogDialog(
   mainSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
 
   // commandSizer contents
-  command = new wxTextCtrl (this, ID_DebugCommand, "", 
+  command = new wxTextCtrl (this, ID_DebugCommand, wxT(""), 
       wxDefaultPosition, wxDefaultSize, 
       wxTE_PROCESS_ENTER);
   commandSizer->Add (command, 1, wxGROW);
@@ -697,12 +697,12 @@ void DebugLogDialog::Init()
   // lay it out!
   SetAutoLayout(TRUE);
   SetSizer(mainSizer);
-  mainSizer->Fit (this);
-  wxSize size = mainSizer->GetMinSize ();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight ());
+  mainSizer->Fit(this);
+  wxSize size = mainSizer->GetMinSize();
+  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
-  SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
-  Center ();
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
+  Center();
 }
 
 void DebugLogDialog::Execute(bool clear)
@@ -743,13 +743,13 @@ void DebugLogDialog::CheckLogLength ()
 
 void DebugLogDialog::AppendCommand (const char *cmd)
 {
-  log->AppendText (wxT(">>> "));
-  log->AppendText (wxString (cmd));
-  log->AppendText (wxT("\n"));
-  int n = log->GetLastPosition ();
+  log->AppendText(wxT(">>> "));
+  log->AppendText(wxString (cmd));
+  log->AppendText(wxT("\n"));
+  int n = log->GetLastPosition();
   if (n>0) n--;
-  log->ShowPosition (n);
-  CheckLogLength ();
+  log->ShowPosition(n);
+  CheckLogLength();
 }
 
 void DebugLogDialog::AppendText (wxString text) {
@@ -762,23 +762,23 @@ void DebugLogDialog::AppendText (wxString text) {
 
 void DebugLogDialog::OnEvent(wxCommandEvent& event)
 {
-  int id = event.GetId ();
-  //wxLogMessage ("event was from id=%d, type=%d", id, (int)event.GetEventType ());
+  int id = event.GetId();
+  //wxLogMessage(wxT("event was from id=%d, type=%d"), id, (int)event.GetEventType ());
   switch (id) {
     case wxID_OK:
       Show(FALSE);
       break;
     case ID_Execute: // pressed execute button
-      Execute (false);
+      Execute(false);
       break;
     default:
-      event.Skip ();
+      event.Skip();
   }
 }
 
 void DebugLogDialog::OnKeyEvent(wxKeyEvent& event)
 {
-  wxLogDebug ("key event");
+  wxLogDebug(wxT("key event"));
 }
 #endif
 
@@ -797,7 +797,7 @@ END_EVENT_TABLE()
 ParamDialog::ParamDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, "", wxDefaultPosition, wxDefaultSize, 
+  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   idHash = new wxHashTable (wxKEY_INTEGER);
@@ -814,13 +814,13 @@ ParamDialog::ParamDialog(
 
 ParamDialog::~ParamDialog()
 {
-  paramHash->BeginFind ();
+  paramHash->BeginFind();
   wxNode *node;
-  while ((node = paramHash->Next ()) != NULL) {
+  while ((node = paramHash->Next()) != NULL) {
     // assume that no ParamStruct appears in the hash table under multiple
     // keys.  If so, we will delete it twice and corrupt memory.
-    ParamStruct *pstr = (ParamStruct*) node->GetData ();
-    //wxLogDebug ("deleting ParamStruct id=%d for param %s", pstr->id, pstr->param->get_name ());
+    ParamStruct *pstr = (ParamStruct*) node->GetData();
+    // wxLogDebug(wxT("deleting ParamStruct id=%d for param %s"), pstr->id, pstr->param->get_name());
     delete pstr;
   }
   delete idHash;
@@ -855,9 +855,9 @@ void ParamDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit(this);
   wxSize size = mainSizer->GetMinSize();
-  wxLogMessage ("minsize is %d,%d", size.GetWidth(), size.GetHeight());
+  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
-  SetSizeHints (size.GetWidth() + margin, size.GetHeight() + margin);
+  SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
   Center();
 }
 
@@ -911,7 +911,7 @@ void ParamDialog::AddParam (
   wxASSERT (context->vertSizer != NULL);
   if (param_generic == NULL) 
     return;  // param not registered, probably this option was not compiled in
-  wxLogDebug ("AddParam for param '%s'", param_generic->get_name ());
+  wxLogDebug(wxT("AddParam for param '%s'"), param_generic->get_name());
   if (context->gridSizer == NULL) {
     // create a gridSizer if none exists yet.  add it to default vertSizer.  
     context->gridSizer = new wxFlexGridSizer (3);
@@ -941,7 +941,7 @@ void ParamDialog::AddParam (
     case BXT_PARAM_BOOL: {
 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
-	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, "");
+	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, wxT(""));
 	ckbx->SetValue (param->get ());
         if (description) ckbx->SetToolTip(description);
 	sizer->Add (ckbx, 0, wxALL, 2);
@@ -964,7 +964,7 @@ void ParamDialog::AddParam (
           if (!plain) sizer->Add (1, 1);  // spacer
           pstr->u.spin = spinctrl;
         } else {
-          wxTextCtrl *textctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, normalTextSize);
+          wxTextCtrl *textctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, normalTextSize);
           const char *format = param->get_format ();
           if (!format)
             format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
@@ -1000,7 +1000,7 @@ void ParamDialog::AddParam (
 	bx_param_string_c *param = (bx_param_string_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
 	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
-	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, "", wxDefaultPosition, isFilename? longTextSize : normalTextSize);
+	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
         if (description) txtctrl->SetToolTip(description);
         if (param->get_options()->get () & param->RAW_BYTES) {
           char *value = param->getptr ();
@@ -1010,7 +1010,7 @@ void ParamDialog::AddParam (
           sep_string[1] = 0;
           for (int i=0; i<param->get_maxsize (); i++) {
             wxString eachbyte;
-            eachbyte.Printf ("%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&value[i]);
+            eachbyte.Printf ("%s%02x", (i>0)?sep_string : wxT(""), (unsigned int)0xff&value[i]);
             buffer += eachbyte;
           }
           txtctrl->SetValue (buffer);
@@ -1086,7 +1086,7 @@ void ParamDialog::AddParam (
           if (list->get_options()->get () & bx_list_c::USE_BOX_TITLE) {
             boxTitle = prompt;
           } else {
-            boxTitle = "";
+            boxTitle = wxT("");
           }
           wxStaticBox *box = new wxStaticBox (context->parent, -1, boxTitle);
 	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
@@ -1113,22 +1113,22 @@ void ParamDialog::AddParam (
 	break;
       }
     default:
-      wxLogError ("ParamDialog::AddParam called with unsupported param type id=%d", (int)type);
+      wxLogError(wxT("ParamDialog::AddParam called with unsupported param type id=%d"), (int)type);
   }
   if (pstr->label) pstr->label->Enable(pstr->param->get_enabled());
   if (pstr->u.window) pstr->u.window->Enable(pstr->param->get_enabled());
   if (pstr->browseButton) pstr->browseButton->Enable(pstr->param->get_enabled());
 }
 
-bool ParamDialog::CopyGuiToParam ()
+bool ParamDialog::CopyGuiToParam()
 {
   // loop through all the parameters
-  idHash->BeginFind ();
+  idHash->BeginFind();
   wxNode *node;
-  while ((node = idHash->Next ()) != NULL) {
-    ParamStruct *pstr = (ParamStruct*) node->GetData ();
-    wxLogDebug ("commit changes for param %s", pstr->param->get_name ());
-    int type = pstr->param->get_type ();
+  while ((node = idHash->Next()) != NULL) {
+    ParamStruct *pstr = (ParamStruct*) node->GetData();
+    wxLogDebug(wxT("commit changes for param %s"), pstr->param->get_name());
+    int type = pstr->param->get_type();
     switch (type) {
       case BXT_PARAM_BOOL: {
         bx_param_bool_c *boolp = (bx_param_bool_c*) pstr->param;
@@ -1147,11 +1147,11 @@ bool ParamDialog::CopyGuiToParam ()
         } else {
           n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
         }
-        if ((n < nump->get_min ()) || (n > nump->get_max ())) {
-          wxMessageBox("Numerical parameter out of range", "Error", wxOK | wxICON_ERROR, this );
+        if ((n < nump->get_min()) || (n > nump->get_max())) {
+          wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this );
           return false;
         }
-	if (n != nump->get ()) nump->set (n);
+	if (n != nump->get()) nump->set(n);
 	break;
         }
       case BXT_PARAM_ENUM: {
@@ -1180,7 +1180,7 @@ bool ParamDialog::CopyGuiToParam ()
               buf[i] = n;
               p+=2;
             } else {
-              wxMessageBox("Illegal raw byte format", "Error", wxOK | wxICON_ERROR, this );
+              wxMessageBox(wxT("Illegal raw byte format"), wxT("Error"), wxOK | wxICON_ERROR, this );
               return false;
             }
           }
@@ -1194,7 +1194,7 @@ bool ParamDialog::CopyGuiToParam ()
       case BXT_LIST:
         break;
       default:
-        wxLogError ("ParamDialog::CopyGuiToParam: unsupported param type id=%d", (int)type);
+        wxLogError(wxT("ParamDialog::CopyGuiToParam: unsupported param type id=%d"), (int)type);
     }
   }
   return true;
@@ -1220,7 +1220,7 @@ void ParamDialog::EnableChanged()
 
 void ParamDialog::EnableChanged(ParamStruct *pstrOfCheckbox)
 {
-  wxLogDebug("EnableChanged on checkbox %s", pstrOfCheckbox->param->get_name());
+  wxLogDebug(wxT("EnableChanged on checkbox %s"), pstrOfCheckbox->param->get_name());
   bx_param_bool_c *enableParam = (bx_param_bool_c*) pstrOfCheckbox->param;
   wxASSERT(enableParam->get_type() == BXT_PARAM_BOOL); // or we wouldn't be here
   bool en = pstrOfCheckbox->u.checkbox->GetValue();
@@ -1239,15 +1239,15 @@ void ParamDialog::EnableChangedRecursive(
     ParamStruct *pstr = (ParamStruct*) paramHash->Get(param->get_id());
     if (pstr) {
       if (param == pstrOfCheckbox->param) {
-	wxLogDebug("not setting enable on checkbox '%s' that triggered the enable change", pstrOfCheckbox->param->get_name());
+	wxLogDebug(wxT("not setting enable on checkbox '%s' that triggered the enable change"), pstrOfCheckbox->param->get_name());
 	continue;
       }
-      wxLogDebug ("setting enable for param '%s' to %d", pstr->param->get_name(), en?1:0);
+      wxLogDebug(wxT("setting enable for param '%s' to %d"), pstr->param->get_name(), en?1:0);
       if (en != pstr->u.window->IsEnabled()) {
         EnableParam(pstr->param->get_id(), en);
         bx_list_c *deps = pstr->param->get_dependent_list();
         if (deps) {
-          wxLogDebug ("recursing on dependent list of %s", list->get_name());
+          wxLogDebug(wxT("recursing on dependent list of %s"), list->get_name());
           if (pstr->param->get_type() == BXT_PARAM_BOOL) {
             bool dep_en = pstr->u.window->IsEnabled() && pstr->u.checkbox->GetValue();
             EnableChangedRecursive(deps, dep_en, pstr);
@@ -1298,7 +1298,7 @@ void ParamDialog::EnableParam(const char *pname, bx_list_c *base, bool enabled)
 
 void ParamDialog::EnumChanged(ParamStruct *pstr)
 {
-  wxLogDebug("EnumChanged");
+  wxLogDebug(wxT("EnumChanged"));
   char pname[512];
   Bit8u channel, device;
 
@@ -1328,7 +1328,7 @@ void ParamDialog::EnumChanged(ParamStruct *pstr)
       int type = pstr->u.choice->GetSelection();
       if (type == BX_ATA_DEVICE_DISK) {
         // enable cylinders, heads, spt
-        wxLogDebug ("enabling disk parameters");
+        wxLogDebug(wxT("enabling disk parameters"));
         EnableParam("mode", base, 1);
         EnableParam("cylinders", base, 1);
         EnableParam("heads", base, 1);
@@ -1352,7 +1352,7 @@ void ParamDialog::EnumChanged(ParamStruct *pstr)
 
       } else {
         // enable inserted
-        wxLogDebug ("enabling cdrom parameters");
+        wxLogDebug(wxT("enabling cdrom parameters"));
         EnableParam("mode", base, 0);
         EnableParam("cylinders", base, 0);
         EnableParam("heads", base, 0);
@@ -1870,7 +1870,7 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
 bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
   wxConfigBase::Get() -> Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
-  wxFileDialog *fdialog = new wxFileDialog (text->GetParent (), prompt, "", text->GetValue (), "*.*", style);
+  wxFileDialog *fdialog = new wxFileDialog (text->GetParent(), prompt, wxT(""), text->GetValue(), wxT("*.*"), style);
   int result = fdialog->ShowModal();
   if (result == wxID_OK)
     text->SetValue (fdialog->GetPath ());
