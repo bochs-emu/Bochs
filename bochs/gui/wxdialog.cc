@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.94 2006-03-19 09:24:10 vruppert Exp $
+// $Id: wxdialog.cc,v 1.95 2006-03-19 15:35:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -98,19 +98,17 @@ LogMsgAskDialog::LogMsgAskDialog(
   // so that caller has time to configure the dialog.
 }
 
-void LogMsgAskDialog::SetContext (wxString s) {
-  wxString text;
-  text.Printf (LOG_MSG_CONTEXT, s.c_str ());
-  ChangeStaticText (vertSizer, context, text);
+void LogMsgAskDialog::SetContext(wxString s)
+{
+  ChangeStaticText(vertSizer, context, wxString(LOG_MSG_CONTEXT) + s);
 }
 
-void LogMsgAskDialog::SetMessage (wxString s) {
-  wxString text;
-  text.Printf (LOG_MSG_MSG, s.c_str ());
-  ChangeStaticText (vertSizer, message, text);
+void LogMsgAskDialog::SetMessage(wxString s)
+{
+  ChangeStaticText(vertSizer, message, wxString(LOG_MSG_MSG) + s);
 }
 
-void LogMsgAskDialog::Init ()
+void LogMsgAskDialog::Init()
 {
   static const int ids[N_BUTTONS] = LOG_MSG_ASK_IDS;
   static const wxString names[N_BUTTONS] = LOG_MSG_ASK_NAMES;
@@ -249,7 +247,8 @@ void FloppyConfigDialog::AddRadio (
   n_rbtns++;
 }
 
-void FloppyConfigDialog::SetDriveName (wxString name) {
+void FloppyConfigDialog::SetDriveName (wxString name)
+{
   SetTitle(wxString(FLOPPY_CONFIG_TITLE) + name);
   ChangeStaticText(vertSizer, instr, wxString(FLOPPY_CONFIG_INSTRS) + name +
     wxT("."));
@@ -1009,7 +1008,7 @@ void ParamDialog::AddParam (
           sep_string[1] = 0;
           for (int i=0; i<param->get_maxsize(); i++) {
             wxString eachbyte;
-            eachbyte.Printf(wxT("%s%02x"), (unsigned int)0xff&value[i]);
+            eachbyte.Printf(wxT("%02x"), (unsigned int)0xff&value[i]);
             if (i > 0)
               buffer += wxString(sep_string, wxConvUTF8);
             buffer += eachbyte;

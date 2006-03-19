@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.62 2006-03-18 16:30:51 vruppert Exp $
+// $Id: wxdialog.h,v 1.63 2006-03-19 15:35:20 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -85,17 +85,17 @@ private:
   wxCheckBox *dontAsk;
   bool enabled[N_BUTTONS];
   wxBoxSizer *btnSizer, *vertSizer;
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
+  void Init();  // called automatically by ShowModal()
+  void ShowHelp();
 public:
   LogMsgAskDialog(wxWindow* parent,
       wxWindowID id,
       const wxString& title);
-  void EnableButton (button_t btn, bool en) { enabled[(int)btn] = en; }
-  void SetContext (wxString s);
-  void SetMessage (wxString s);
-  bool GetDontAsk () { return dontAsk->GetValue (); }
-  void OnEvent (wxCommandEvent& event);
+  void EnableButton(button_t btn, bool en) { enabled[(int)btn] = en; }
+  void SetContext(wxString s);
+  void SetMessage(wxString s);
+  bool GetDontAsk() { return dontAsk->GetValue(); }
+  void OnEvent(wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
 DECLARE_EVENT_TABLE()
 };
@@ -122,7 +122,7 @@ DECLARE_EVENT_TABLE()
 // |                   [ Help ] [ Cancel ] [ Create Image ] [ Ok ] |
 // +---------------------------------------------------------------+
 // To use this dialog:
-// After constructor, use AddRadio () to add radio buttons, SetFilename()
+// After constructor, use AddRadio() to add radio buttons, SetFilename()
 // to fill in the disk image filename, SetCapacity() to set the capacity. 
 // Then call ShowModal() to display it.  Return value is wxID_OK or
 // wxID_CANCEL.  If you set a validation function, then it will be called when
@@ -175,8 +175,8 @@ public:
                            "Clicking OK signals a media change for this drive.")
 #define FLOPPY_CONFIG_DISKIMG wxT("Disk image: ")
 private:
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
+  void Init();  // called automatically by ShowModal()
+  void ShowHelp();
   wxStaticText *instr;
 #define FLOPPY_MAX_RBTNS 4
   wxRadioButton *rbtn[FLOPPY_MAX_RBTNS];
@@ -191,21 +191,21 @@ private:
   validateFunc_t validate;
 public:
   FloppyConfigDialog(wxWindow* parent, wxWindowID id);
-  void OnEvent (wxCommandEvent& event);
-  void OnTextEvent (wxCommandEvent& event);
+  void OnEvent(wxCommandEvent& event);
+  void OnTextEvent(wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetRadio (int val);
-  void SetFilename (wxString f);
+  void SetRadio(int val);
+  void SetFilename(wxString f);
   // Use char* instead of wxString because the array we use is already
   // expressed as a char *[].
-  void SetCapacityChoices (int n, char *choices[]);
-  void SetCapacity (int cap);
-  int GetRadio ();
-  int GetCapacity () { return capacity->GetSelection (); }
-  wxString GetFilename ();
-  void SetDriveName (wxString name);
-  void SetValidateFunc (validateFunc_t v) { validate = v; }
-  void AddRadio (const wxString& description, const wxString& filename);
+  void SetCapacityChoices(int n, char *choices[]);
+  void SetCapacity(int cap);
+  int GetRadio();
+  int GetCapacity() { return capacity->GetSelection(); }
+  wxString GetFilename();
+  void SetDriveName(wxString name);
+  void SetValidateFunc(validateFunc_t v) { validate = v; }
+  void AddRadio(const wxString& description, const wxString& filename);
 DECLARE_EVENT_TABLE()
 };
 
@@ -249,8 +249,8 @@ private:
 #define ADVLOG_OPTS_TYPE_NAMES { wxT("debug"), wxT("Info"), wxT("Error"), wxT("Panic"), wxT("Pass") }
 #define ADVLOG_OPTS_N_TYPES 5
 #define ADVLOG_DEFAULTS wxT("Use defaults for all devices")
-  void Init ();  // called automatically by ShowModal()
-  void ShowHelp ();
+  void Init();  // called automatically by ShowModal()
+  void ShowHelp();
   wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
   wxScrolledWindow *scrollWin;
   wxPanel *scrollPanel;
@@ -262,14 +262,14 @@ private:
 public:
   AdvancedLogOptionsDialog(wxWindow* parent, wxWindowID id);
   ~AdvancedLogOptionsDialog();
-  void OnEvent (wxCommandEvent& event);
+  void OnEvent(wxCommandEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void SetLogfile (wxString f) { logfile->SetValue (f); }
-  wxString GetLogfile () { return logfile->GetValue (); }
-  void CopyParamToGui ();
-  void CopyGuiToParam ();
-  void SetAction (int dev, int evtype, int act);
-  int GetAction (int dev, int evtype);
+  void SetLogfile(wxString f) { logfile->SetValue(f); }
+  wxString GetLogfile() { return logfile->GetValue(); }
+  void CopyParamToGui();
+  void CopyGuiToParam();
+  void SetAction(int dev, int evtype, int act);
+  int GetAction(int dev, int evtype);
 DECLARE_EVENT_TABLE()
 };
 
@@ -311,16 +311,16 @@ private:
 #define DEBUG_LOG_DEFAULT_TOLERANCE (200*80)
 public:
   DebugLogDialog(wxWindow* parent, wxWindowID id);
-  void Init ();  // called automatically by ShowModal()
-  void OnEvent (wxCommandEvent& event);
-  void OnEnterEvent (wxCommandEvent& event) { Execute(true); }
-  void OnKeyEvent (wxKeyEvent& event);
+  void Init();  // called automatically by ShowModal()
+  void OnEvent(wxCommandEvent& event);
+  void OnEnterEvent(wxCommandEvent& event) { Execute(true); }
+  void OnKeyEvent(wxKeyEvent& event);
   int ShowModal() { Init(); return wxDialog::ShowModal(); }
-  void Execute (bool clearCommand);
-  void CheckLogLength ();
-  void AppendCommand (const char *);
-  void AppendText (wxString text);
-  void CopyParamToGui () { /* empty for now */ }
+  void Execute(bool clearCommand);
+  void CheckLogLength();
+  void AppendCommand(const char *);
+  void AppendText(wxString text);
+  void CopyParamToGui() { /* empty for now */ }
 DECLARE_EVENT_TABLE()
 };
 #endif
@@ -396,7 +396,7 @@ protected:
   // wxTextCtrl) to the associated ParamStruct object.  Data in the hash table
   // is of ParamStruct*.
   wxHashTable *idHash;
-  // map parameter ID (BXP_*) onto ParamStruct.
+  // map parameter ID onto ParamStruct.
   wxHashTable *paramHash;
   virtual void EnableChanged();
   void EnableParam(int param_id, bool enabled);
@@ -420,7 +420,7 @@ public:
     isShowing = false;
     return ret;
   }
-  bool Show(bool val) { isShowing = val; return wxDialog::Show (val); }
+  bool Show(bool val) { isShowing = val; return wxDialog::Show(val); }
   void AddParam(bx_param_c *param, wxFlexGridSizer *sizer, bool plain = false);
   void AddParam(bx_param_c *param, bool plain = false, AddParamContext *context = NULL);
   void AddParamList(char *nameList[], bx_param_c *base, wxFlexGridSizer *sizer = NULL, bool plain = false);

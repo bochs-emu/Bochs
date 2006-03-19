@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.53 2006-03-18 16:30:52 vruppert Exp $
+// $Id: wxmain.h,v 1.54 2006-03-19 15:35:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -126,14 +126,14 @@ enum
 
 
 // defined in wxmain.cc
-void safeWxStrcpy (char *dest, wxString src, int destlen);
+void safeWxStrcpy(char *dest, wxString src, int destlen);
 
 /// the MyPanel methods are defined in wx.cc
 class MyPanel: public wxPanel
 {
-  bx_bool fillBxKeyEvent (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);  // for all platforms
-  bx_bool fillBxKeyEvent_MSW (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
-  bx_bool fillBxKeyEvent_GTK (wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
+  bx_bool fillBxKeyEvent(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);  // for all platforms
+  bx_bool fillBxKeyEvent_MSW(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
+  bx_bool fillBxKeyEvent_GTK(wxKeyEvent& event, BxKeyEvent& bxev, bx_bool release);
 public:
   MyPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxTAB_TRAVERSAL, const wxString& name = wxT("panel"));
   ~MyPanel();
@@ -142,9 +142,9 @@ public:
   void OnTimer(wxTimerEvent& event);
   void OnPaint(wxPaintEvent& event);
   void OnMouse(wxMouseEvent& event);
-  void MyRefresh ();
-  static void OnPluginInit ();
-  void ToggleMouse (bool fromToolbar);
+  void MyRefresh();
+  static void OnPluginInit();
+  void ToggleMouse(bool fromToolbar);
 private:
   wxCursor *blankCursor;
   bool needRefresh;
@@ -162,7 +162,7 @@ public:
   MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, const long style);
   ~MyFrame();
   enum StatusChange { Start, Stop, Pause, Resume };
-  void simStatusChanged (StatusChange change, bx_bool popupNotify=false);
+  void simStatusChanged(StatusChange change, bx_bool popupNotify=false);
   void OnConfigNew(wxCommandEvent& event);
   void OnConfigRead(wxCommandEvent& event);
   void OnConfigSave(wxCommandEvent& event);
@@ -191,20 +191,20 @@ public:
   void OnShowKeyboard(wxCommandEvent& event);
 #if BX_DEBUGGER
   void OnDebugLog(wxCommandEvent& event);
-  void DebugBreak ();
-  void DebugCommand (wxString string);
-  void DebugCommand (const char *cmd);
+  void DebugBreak();
+  void DebugCommand(wxString string);
+  void DebugCommand(const char *cmd);
 #endif
-  static bool editFloppyValidate (FloppyConfigDialog *dialog);
-  void editFloppyConfig (int drive);
-  void editFirstCdrom ();
+  static bool editFloppyValidate(FloppyConfigDialog *dialog);
+  void editFloppyConfig(int drive);
+  void editFirstCdrom();
   void OnToolbarClick(wxCommandEvent& event);
-  int HandleAskParam (BxEvent *event);
-  int HandleAskParamString (bx_param_string_c *param);
+  int HandleAskParam(BxEvent *event);
+  int HandleAskParamString(bx_param_string_c *param);
 
   // called from the sim thread's OnExit() method.
-  void OnSimThreadExit ();
-  SimThread *GetSimThread () { return sim_thread; }
+  void OnSimThreadExit();
+  SimThread *GetSimThread() { return sim_thread; }
 
 private:
   wxCriticalSection sim_thread_lock;
@@ -220,11 +220,11 @@ private:
 #if BX_DEBUGGER
   DebugLogDialog *showDebugLog;
 #endif
-  void RefreshDialogs ();
+  void RefreshDialogs();
   char *debugCommand; // maybe need lock on this
   BxEvent *debugCommandEvent;  // maybe need lock on this
 public:
-  bool WantRefresh ();
+  bool WantRefresh();
 
 DECLARE_EVENT_TABLE()
 };
