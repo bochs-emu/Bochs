@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.93 2006-03-18 16:30:50 vruppert Exp $
+// $Id: wxdialog.cc,v 1.94 2006-03-19 09:24:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -113,18 +113,18 @@ void LogMsgAskDialog::SetMessage (wxString s) {
 void LogMsgAskDialog::Init ()
 {
   static const int ids[N_BUTTONS] = LOG_MSG_ASK_IDS;
-  static const char *names[N_BUTTONS] = LOG_MSG_ASK_NAMES;
+  static const wxString names[N_BUTTONS] = LOG_MSG_ASK_NAMES;
   for (int i=0; i<N_BUTTONS; i++) {
     if (!enabled[i]) continue;
-    wxButton *btn = new wxButton (this, ids[i], names[i]);
-    btnSizer->Add (btn, 1, wxALL, 5);
+    wxButton *btn = new wxButton(this, ids[i], names[i]);
+    btnSizer->Add(btn, 1, wxALL, 5);
   }
-  wxSize ms = message->GetSize ();
+  wxSize ms = message->GetSize();
   // wxLogMessage(wxT("message size is %d,%d"), ms.GetWidth(), ms.GetHeight());
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
-  vertSizer->Fit (this);
-  wxSize size = vertSizer->GetMinSize ();
+  vertSizer->Fit(this);
+  wxSize size = vertSizer->GetMinSize();
   // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 10;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
@@ -211,20 +211,20 @@ FloppyConfigDialog::FloppyConfigDialog(
   vertSizer->Add (hint, 0, wxTOP|wxLEFT, 30);
   vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT|wxTOP, 30);
   // contents of capacitySizer
-  wxStaticText *captext = new wxStaticText (this, -1, FLOPPY_CONFIG_CAP);
-  capacity = new wxChoice (this, ID_Capacity);
-  capacitySizer->Add (captext, 0, wxALL, 5);
-  capacitySizer->Add (capacity, 0, wxALL|wxADJUST_MINSIZE, 5);
+  wxStaticText *captext = new wxStaticText(this, -1, FLOPPY_CONFIG_CAP);
+  capacity = new wxChoice(this, ID_Capacity);
+  capacitySizer->Add(captext, 0, wxALL, 5);
+  capacitySizer->Add(capacity, 0, wxALL|wxADJUST_MINSIZE, 5);
   // contents of buttonSizer
-  btn = new wxButton (this, wxID_HELP, "Help");
-  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_HELP, wxT("Help"));
+  buttonSizer->Add(btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, "Cancel");
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  CreateBtn = new wxButton (this, ID_Create, "Create Image");
-  buttonSizer->Add (CreateBtn, 0, wxALL, 5);
-  btn = new wxButton (this, wxID_OK, "Ok");
-  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
+  buttonSizer->Add(btn, 0, wxALL, 5);
+  CreateBtn = new wxButton(this, ID_Create, wxT("Create Image"));
+  buttonSizer->Add(CreateBtn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_OK, wxT("Ok"));
+  buttonSizer->Add(btn, 0, wxALL, 5);
   // create filename and diskImageRadioBtn so that we can tweak them before
   // Init comes.  However don't add it to any sizer yet because it needs to go
   // in after the last radio button.
@@ -250,17 +250,15 @@ void FloppyConfigDialog::AddRadio (
 }
 
 void FloppyConfigDialog::SetDriveName (wxString name) {
-  wxString text;
-  text.Printf (FLOPPY_CONFIG_TITLE, name.c_str ());
-  SetTitle (text);
-  text.Printf (FLOPPY_CONFIG_INSTRS, name.c_str ());
-  ChangeStaticText (vertSizer, instr, text);
+  SetTitle(wxString(FLOPPY_CONFIG_TITLE) + name);
+  ChangeStaticText(vertSizer, instr, wxString(FLOPPY_CONFIG_INSTRS) + name +
+    wxT("."));
 }
 
-void FloppyConfigDialog::SetCapacityChoices (int n, char *choices[])
+void FloppyConfigDialog::SetCapacityChoices(int n, char *choices[])
 {
   for (int i=0; i<n; i++)
-    capacity->Append(wxString (choices[i]));
+    capacity->Append(wxString(choices[i], wxConvUTF8));
 }
 
 void FloppyConfigDialog::SetCapacity (int cap)
@@ -315,23 +313,23 @@ void FloppyConfigDialog::SetFilename (wxString f) {
   // search equivalentFilename[] for matches. if it matches, select the
   // radio button instead.
   for (int i=0; i<n_rbtns; i++) {
-    if (!strcmp (f.c_str (), equivalentFilename[i])) {
-      rbtn[i]->SetValue (TRUE);
+    if (!f.Cmp(equivalentFilename[i])) {
+      rbtn[i]->SetValue(TRUE);
       return;  // leaving filename text field unchanged
     }
   }
-  filename->SetValue (f); 
-  diskImageRadioBtn->SetValue (TRUE);
+  filename->SetValue(f); 
+  diskImageRadioBtn->SetValue(TRUE);
 }
 
 wxString
-FloppyConfigDialog::GetFilename ()
+FloppyConfigDialog::GetFilename()
 {
-  int n = GetRadio ();
+  int n = GetRadio();
   if (n < n_rbtns) {
     return equivalentFilename[n];
   } else {
-    return filename->GetValue ().c_str ();
+    return filename->GetValue();
   }
 }
 
@@ -365,12 +363,13 @@ void FloppyConfigDialog::OnEvent(wxCommandEvent& event)
       {
         int cap = capacity->GetSelection();
         char name[1024];
-        strncpy (name, filename->GetValue().c_str(), sizeof(name));
+        strncpy(name, filename->GetValue().mb_str(wxConvUTF8), sizeof(name));
         if (CreateImage (0, floppy_type_n_sectors[cap], name)) {
-          wxString msg;
-          msg.Printf("Created a %s disk image called '%s'.",
-            capacity->GetString(cap).c_str(), 
-            filename->GetValue().c_str());
+          wxString msg(wxT("Created a "));
+          msg += capacity->GetString(cap);
+          msg += wxT(" disk image called '");
+          msg += filename->GetValue();
+          msg += wxT("'.");
           wxMessageBox(msg, wxT("Image Created"), wxOK | wxICON_INFORMATION, this);
         }
       }
@@ -429,7 +428,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   //static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
-  static char *names[] = ADVLOG_OPTS_TYPE_NAMES;
+  static wxString names[] = ADVLOG_OPTS_TYPE_NAMES;
   SetTitle (ADVLOG_OPTS_TITLE);
   vertSizer = new wxBoxSizer (wxVERTICAL);
   // top level objects
@@ -458,7 +457,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   gridSizer = new wxGridSizer (ADVLOG_OPTS_N_TYPES + 1);
   // add title row
   int typemax = ADVLOG_OPTS_N_TYPES;
-  text = new wxStaticText (scrollPanel, -1, "Device");
+  text = new wxStaticText (scrollPanel, -1, wxT("Device"));
   gridSizer->Add (text, 0, wxALIGN_CENTER);
   int type;
   for (type=0; type < typemax; type++) {
@@ -471,7 +470,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   for (int dev=0; dev<devmax; dev++) {
     action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
     // name of device in first column
-    gridSizer->Add (new wxStaticText (scrollPanel, -1, SIM->get_prefix (dev)));
+    gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_prefix(dev), wxConvUTF8)));
     // wxChoice in every other column
     for (type=0; type < typemax; type++) {
       action[dev][type] = makeLogOptionChoiceBox (scrollPanel, -1, type);
@@ -536,7 +535,7 @@ void AdvancedLogOptionsDialog::Init()
 
 void AdvancedLogOptionsDialog::CopyParamToGui() {
   bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
-  SetLogfile (wxString (logfile->getptr()));
+  SetLogfile(wxString(logfile->getptr(), wxConvUTF8));
   // copy log action settings from siminterface to gui
   int dev, ndev = SIM->get_n_log_modules();
   int type, ntype = SIM->get_max_log_level();
@@ -936,14 +935,14 @@ void ParamDialog::AddParam (
   if (!prompt) prompt = pstr->param->get_name ();
   char *description = pstr->param->get_description ();
   wxASSERT (prompt != NULL);
-#define ADD_LABEL(x) sizer->Add (pstr->label = new wxStaticText (context->parent, -1, wxString (x)), 0, wxALIGN_RIGHT|wxALL, 3)
+#define ADD_LABEL(x) sizer->Add(pstr->label = new wxStaticText(context->parent, -1, wxString(x, wxConvUTF8)), 0, wxALIGN_RIGHT|wxALL, 3)
   switch (type) {
     case BXT_PARAM_BOOL: {
 	bx_param_bool_c *param = (bx_param_bool_c*) param_generic;
-	if (!plain) ADD_LABEL (prompt);
+	if (!plain) ADD_LABEL(prompt);
 	wxCheckBox *ckbx = new wxCheckBox (context->parent, pstr->id, wxT(""));
 	ckbx->SetValue (param->get ());
-        if (description) ckbx->SetToolTip(description);
+        if (description) ckbx->SetToolTip(wxString(description, wxConvUTF8));
 	sizer->Add (ckbx, 0, wxALL, 2);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	pstr->u.checkbox = ckbx;
@@ -959,7 +958,7 @@ void ParamDialog::AddParam (
           spinctrl->SetValue (param->get ());
           int max = (param->get_max () < (1<<24))?param->get_max ():(1<<24)-1;
           spinctrl->SetRange (param->get_min (), SPINCTRL_FIX_MAX (max));
-          if (description) spinctrl->SetToolTip(description);
+          if (description) spinctrl->SetToolTip(wxString(description, wxConvUTF8));
           sizer->Add (spinctrl, 0, wxALL, 2);
           if (!plain) sizer->Add (1, 1);  // spacer
           pstr->u.spin = spinctrl;
@@ -969,7 +968,7 @@ void ParamDialog::AddParam (
           if (!format)
             format = strdup(param->get_base () == 16 ? "0x%X" : "%d");
           SetTextCtrl (textctrl, format, param->get ());
-          if (description) textctrl->SetToolTip(description);
+          if (description) textctrl->SetToolTip(wxString(description, wxConvUTF8));
           sizer->Add (textctrl, 0, wxALL, 2);
           if (!plain) sizer->Add (1, 1);  // spacer
           pstr->u.text = textctrl;
@@ -982,18 +981,18 @@ void ParamDialog::AddParam (
 	bx_param_enum_c *param = (bx_param_enum_c*) param_generic;
 	if (!plain) ADD_LABEL (prompt);
 	wxChoice *choice = new wxChoice (context->parent, pstr->id);
-        if (description) choice->SetToolTip(description);
+        if (description) choice->SetToolTip(wxString(description, wxConvUTF8));
 	sizer->Add (choice, 0, wxADJUST_MINSIZE, 2);
 	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
 	int i=0;
 	char *ptr;
-	while (NULL != (ptr = param->get_choice (i++)))
-	  choice->Append (ptr);
-	choice->SetSelection (param->get() - param->get_min ());
+	while (NULL != (ptr = param->get_choice(i++)))
+	  choice->Append(wxString(ptr, wxConvUTF8));
+	choice->SetSelection (param->get() - param->get_min());
 	pstr->u.choice = choice;
-	idHash->Put (pstr->id, pstr);
-	paramHash->Put (pstr->param->get_id (), pstr);
+	idHash->Put(pstr->id, pstr);
+	paramHash->Put(pstr->param->get_id(), pstr);
         break;
       }
     case BXT_PARAM_STRING: {
@@ -1001,22 +1000,24 @@ void ParamDialog::AddParam (
 	if (!plain) ADD_LABEL (prompt);
 	bool isFilename = param->get_options ()->get () & param->IS_FILENAME;
 	wxTextCtrl *txtctrl = new wxTextCtrl (context->parent, pstr->id, wxT(""), wxDefaultPosition, isFilename? longTextSize : normalTextSize);
-        if (description) txtctrl->SetToolTip(description);
-        if (param->get_options()->get () & param->RAW_BYTES) {
-          char *value = param->getptr ();
+        if (description) txtctrl->SetToolTip(wxString(description, wxConvUTF8));
+        if (param->get_options()->get() & param->RAW_BYTES) {
+          char *value = param->getptr();
           wxString buffer;
           char sep_string[2];
-          sep_string[0] = param->get_separator ();
+          sep_string[0] = param->get_separator();
           sep_string[1] = 0;
-          for (int i=0; i<param->get_maxsize (); i++) {
+          for (int i=0; i<param->get_maxsize(); i++) {
             wxString eachbyte;
-            eachbyte.Printf ("%s%02x", (i>0)?sep_string : wxT(""), (unsigned int)0xff&value[i]);
+            eachbyte.Printf(wxT("%s%02x"), (unsigned int)0xff&value[i]);
+            if (i > 0)
+              buffer += wxString(sep_string, wxConvUTF8);
             buffer += eachbyte;
           }
-          txtctrl->SetValue (buffer);
+          txtctrl->SetValue(buffer);
         } else {
-          txtctrl->SetValue (param->getptr ());
-          txtctrl->SetMaxLength (param->get_maxsize ());
+          txtctrl->SetValue(wxString(param->getptr(), wxConvUTF8));
+          txtctrl->SetMaxLength(param->get_maxsize());
         }
 	sizer->Add (txtctrl, 0, wxALL, 2);
 	if (!plain) {
@@ -1038,11 +1039,11 @@ void ParamDialog::AddParam (
       }
     case BXT_LIST: {
 	bx_list_c *list = (bx_list_c*) param_generic;
-	if (list->get_options()->get () & bx_list_c::USE_TAB_WINDOW) {
+	if (list->get_options()->get() & bx_list_c::USE_TAB_WINDOW) {
 	  // put each item in a separate tab of a tabbed window
-	  wxNotebook *notebook = new wxNotebook (context->parent, -1);
+	  wxNotebook *notebook = new wxNotebook(context->parent, -1);
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
-	  wxNotebookSizer *nbsizer = new wxNotebookSizer (notebook);
+	  wxNotebookSizer *nbsizer = new wxNotebookSizer(notebook);
 #endif
 	  // put all items in the list into a separate page of the notebook.
 	  for (int i=0; i<list->get_size (); i++) {
@@ -1051,8 +1052,8 @@ void ParamDialog::AddParam (
 	    // the child must be a list!  I could support other things but
 	    // I don't see any reason to.  It wouldn't make sense to devote
 	    // a whole tab to a single parameter.
-	    wxPanel *panel = new wxPanel (notebook);
-	    wxBoxSizer *boxsz = new wxBoxSizer (wxVERTICAL);
+	    wxPanel *panel = new wxPanel(notebook);
+	    wxBoxSizer *boxsz = new wxBoxSizer(wxVERTICAL);
 	    AddParamContext newcontext;
 	    newcontext.depth = 1 + context->depth;
 	    newcontext.parent = panel;
@@ -1064,32 +1065,32 @@ void ParamDialog::AddParam (
 	    for (int j=0; j<childl->get_size(); j++)
 	      AddParam (childl->get(j), plain, &newcontext);
 	    const char *pagename = child->get_title()->getptr();
-	    if (!pagename) pagename = child->get_name ();
-	    panel->SetAutoLayout (TRUE);
-	    panel->SetSizer (boxsz);
-	    notebook->AddPage (panel, wxString(pagename));
+	    if (!pagename) pagename = child->get_name();
+	    panel->SetAutoLayout(TRUE);
+	    panel->SetSizer(boxsz);
+	    notebook->AddPage(panel, wxString(pagename, wxConvUTF8));
 	  }
 #if wxMAJOR_VERSION == 2 && wxMINOR_VERSION < 6
-	  context->vertSizer->Add (nbsizer, 0, wxALL|wxGROW, 10);
+	  context->vertSizer->Add(nbsizer, 0, wxALL|wxGROW, 10);
 #else
-	  context->vertSizer->Add (notebook, 0, wxALL|wxGROW, 10);
+	  context->vertSizer->Add(notebook, 0, wxALL|wxGROW, 10);
 #endif
 	  // clear gridSizer variable so that any future parameters force
 	  // creation of a new one.
 	  context->gridSizer = NULL;
 	  // add to hashes
 	  pstr->u.notebook = notebook;
-	  idHash->Put (pstr->id, pstr);
-	  paramHash->Put (pstr->param->get_id (), pstr);
+	  idHash->Put(pstr->id, pstr);
+	  paramHash->Put(pstr->param->get_id(), pstr);
 	} else {
           wxString boxTitle;
-          if (list->get_options()->get () & bx_list_c::USE_BOX_TITLE) {
-            boxTitle = prompt;
+          if (list->get_options()->get() & bx_list_c::USE_BOX_TITLE) {
+            boxTitle = wxString(prompt, wxConvUTF8);
           } else {
             boxTitle = wxT("");
           }
-          wxStaticBox *box = new wxStaticBox (context->parent, -1, boxTitle);
-	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer (box, wxVERTICAL);
+          wxStaticBox *box = new wxStaticBox(context->parent, -1, boxTitle);
+	  wxStaticBoxSizer *boxsz = new wxStaticBoxSizer(box, wxVERTICAL);
 	  AddParamContext newcontext;
 	  newcontext.depth = 1 + context->depth;
 	  newcontext.parent = context->parent;
@@ -1140,12 +1141,13 @@ bool ParamDialog::CopyGuiToParam()
         bx_param_num_c *nump = (bx_param_num_c*) pstr->param;
 	bool valid;
         int n;
-	wxString complaint;
-	complaint.Printf ("Invalid integer for %s.", pstr->param->get_name ());
-        if (nump->get_options () & nump->USE_SPIN_CONTROL) {
-          n = pstr->u.spin->GetValue ();
+	wxString complaint(wxT("Invalid integer for '"));
+	complaint += wxString(pstr->param->get_name(), wxConvUTF8);
+	complaint += wxT("'.");
+        if (nump->get_options() & nump->USE_SPIN_CONTROL) {
+          n = pstr->u.spin->GetValue();
         } else {
-          n = GetTextCtrlInt (pstr->u.text, &valid, true, complaint);
+          n = GetTextCtrlInt(pstr->u.text, &valid, true, complaint);
         }
         if ((n < nump->get_min()) || (n > nump->get_max())) {
           wxMessageBox(wxT("Numerical parameter out of range"), wxT("Error"), wxOK | wxICON_ERROR, this );
@@ -1168,8 +1170,8 @@ bool ParamDialog::CopyGuiToParam()
           char src[1024];
           int i, p = 0;
           unsigned int n;
-          strcpy(src, tmp.c_str());
-          for (i=0; i<stringp->get_maxsize (); i++) 
+          strcpy(src, tmp.mb_str(wxConvUTF8));
+          for (i=0; i<stringp->get_maxsize(); i++) 
             buf[i] = 0;
           for (i=0; i<stringp->get_maxsize (); i++) {
             while (src[p] == stringp->get_separator ())
@@ -1185,7 +1187,7 @@ bool ParamDialog::CopyGuiToParam()
             }
           }
         } else {
-          strncpy (buf, tmp.c_str(), sizeof(buf));
+          strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
         }
 	buf[sizeof(buf)-1] = 0;
 	if (!stringp->equals (buf)) stringp->set (buf);
@@ -1407,7 +1409,7 @@ void ParamDialog::CopyParamToGui ()
   wxNode *node;
   while ((node = idHash->Next ()) != NULL) {
     ParamStruct *pstr = (ParamStruct*) node->GetData ();
-    IFDBG_DLG (wxLogDebug ("refresh param %s", pstr->param->get_name ()));
+    IFDBG_DLG(wxLogDebug(wxT("refresh param %s"), pstr->param->get_name()));
     int type = pstr->param->get_type ();
     switch (type) {
       case BXT_PARAM_BOOL: {
@@ -1430,13 +1432,13 @@ void ParamDialog::CopyParamToGui ()
         }
       case BXT_PARAM_STRING: {
         bx_param_string_c *stringp = (bx_param_string_c*) pstr->param;
-	pstr->u.text->SetValue (wxString (stringp->getptr ()));
+	pstr->u.text->SetValue (wxString(stringp->getptr (), wxConvUTF8));
 	break;
         }
       case BXT_LIST:
         break;
       default:
-        wxLogError ("ParamDialog::CopyParamToGui(): unsupported param type id=%d", (int)type);
+        wxLogError(wxT("ParamDialog::CopyParamToGui(): unsupported param type id=%d"), (int)type);
     }
   }
 }
@@ -1448,11 +1450,11 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
   if (isGeneratedId (id)) {
     ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
     if (pstr == NULL) {
-      wxLogDebug ("ParamStruct not found for id=%d", id);
+      wxLogDebug(wxT("ParamStruct not found for id=%d"), id);
       return;
     }
     if (id == pstr->id) {
-      IFDBG_DLG (wxLogDebug ("event came from window %p (id=%d) controlled by parameter '%s'", pstr->u.window, id, pstr->param->get_name ()));
+      IFDBG_DLG(wxLogDebug(wxT("event came from window %p (id=%d) controlled by parameter '%s'"), pstr->u.window, id, pstr->param->get_name()));
       switch (pstr->param->get_type ()) {
 	case BXT_PARAM_BOOL:
 	  EnableChanged(pstr);
@@ -1464,11 +1466,11 @@ void ParamDialog::OnEvent(wxCommandEvent& event)
       return;
     }
     if (id == pstr->browseButtonId) {
-      wxLogDebug ("browse button id=%d attached to wxTextCtrl %p", id, pstr->u.text);
-      BrowseTextCtrl (pstr->u.text);
+      wxLogDebug(wxT("browse button id=%d attached to wxTextCtrl %p"), id, pstr->u.text);
+      BrowseTextCtrl(pstr->u.text);
       return;
     }
-    wxLogDebug ("id was key to ParamStruct but doesn't match either id inside");
+    wxLogDebug(wxT("id was key to ParamStruct but doesn't match either id inside"));
   }
   switch (id) {
     case wxID_OK:
@@ -1543,17 +1545,17 @@ CpuRegistersDialog::CpuRegistersDialog(
   bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_CPU_0_STATE);
 
   // top level objects
-  wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, "Basic Registers");
+  wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, wxT("Basic Registers"));
   wxStaticBoxSizer *mainRegsBoxSizer = 
     new wxStaticBoxSizer(mainRegsBox, wxVERTICAL);
   mainSizer->Add(mainRegsBoxSizer, 0, wxALL|wxGROW, 10);
 
-  wxStaticBox *flagsBox = new wxStaticBox(this, -1, "EFLAGS Bits");
+  wxStaticBox *flagsBox = new wxStaticBox(this, -1, wxT("EFLAGS Bits"));
   wxStaticBoxSizer *flagsBoxSizer = 
     new wxStaticBoxSizer(flagsBox, wxVERTICAL);
   mainSizer->Add(flagsBoxSizer, 0, wxALL|wxGROW, 10);
 
-  wxStaticBox *otherBox = new wxStaticBox(this, -1, "Other Registers");
+  wxStaticBox *otherBox = new wxStaticBox(this, -1, wxT("Other Registers"));
   wxStaticBoxSizer *otherBoxSizer = 
     new wxStaticBoxSizer(otherBox, wxVERTICAL);
   mainSizer->Add(otherBoxSizer, 0, wxALL|wxGROW, 10);
@@ -1616,7 +1618,7 @@ void
 CpuRegistersDialog::AddFlag(bx_param_c *param)
 {
   if (param == NULL) {
-    wxLogDebug("AddFlag on undefined param");
+    wxLogDebug(wxT("AddFlag on undefined param"));
     return;
   }
   wxASSERT(nflags < CPU_REGS_MAX_FLAGS);
@@ -1630,7 +1632,7 @@ CpuRegistersDialog::Init()
   for (i=0; i<CPU_REGS_MAX_FLAGS; i++) {
     if (i<nflags) {
       bx_param_c *param = flagptr[i];
-      flagsSizer->Add (new wxStaticText(this, -1, param->get_label()), 0, wxALL|wxALIGN_LEFT, 4);
+      flagsSizer->Add(new wxStaticText(this, -1, wxString(param->get_label(), wxConvUTF8)), 0, wxALL|wxALIGN_LEFT, 4);
     } else {
       flagsSizer->Add(0, 0);  // spacer
     }
@@ -1743,7 +1745,7 @@ LogOptionsDialog::LogOptionsDialog(
     wxWindowID id)
   : ParamDialog(parent, id)
 {
-  static char *names[] = LOG_OPTS_TYPE_NAMES;
+  static wxString names[] = LOG_OPTS_TYPE_NAMES;
   SetTitle(LOG_OPTS_TITLE);
   AddParam(SIM->get_param("log"));
   wxStaticText *text = new wxStaticText(this, -1, LOG_OPTS_PROMPT);
@@ -1777,7 +1779,7 @@ void LogOptionsDialog::SetAction(int evtype, int a) {
   }
   // this can happen if one of the choices that is excluded by
   // LOG_OPTS_EXCLUDE() is used, for example.
-  wxLogDebug ("SetAction type=%d a=%d not found", evtype, a);
+  wxLogDebug(wxT("SetAction type=%d a=%d not found"), evtype, a);
 }
 
 int LogOptionsDialog::GetAction(int evtype) {
@@ -1799,9 +1801,9 @@ int LogOptionsDialog::GetAction(int evtype) {
 // Dirk Birnhardt.
 void ChangeStaticText (wxSizer *sizer, wxStaticText *win, wxString newtext)
 {
-  win->SetLabel (newtext);
-  wxSize sz = win->GetSize ();
-  sizer->SetItemMinSize (win, sz.GetWidth (), sz.GetHeight ());
+  win->SetLabel(newtext);
+  wxSize sz = win->GetSize();
+  sizer->SetItemMinSize(win, sz.GetWidth(), sz.GetHeight());
 }
 
 // CreateImage produces a disk image.  It's in the utility function
@@ -1810,12 +1812,12 @@ bool
 CreateImage (int harddisk, int sectors, const char *filename)
 {
   if (sectors<1) {
-    wxMessageBox("The disk size is invalid.", "Invalid Size", wxOK | wxICON_ERROR );
+    wxMessageBox(wxT("The disk size is invalid."), wxT("Invalid Size"), wxOK | wxICON_ERROR);
     return false;
   }
-  wxLogDebug ("filename = '%s'\n", filename);
+  wxLogDebug(wxT("filename = '%s'\n"), filename);
   if (strlen (filename) < 1) {
-    wxMessageBox("You must type a file name for the new disk image.", "Bad Filename", wxOK | wxICON_ERROR );
+    wxMessageBox(wxT("You must type a file name for the new disk image."), wxT("Bad Filename"), wxOK | wxICON_ERROR);
     return false;
   }
   // create disk image with name and capacity determined by the filename
@@ -1825,25 +1827,25 @@ CreateImage (int harddisk, int sectors, const char *filename)
   // you want to overwrite?".  If yes, call again with overwrite=1.
   int ret = SIM->create_disk_image (filename, sectors, 0);
   if (ret == -1) {  // already exists
-    int answer = wxMessageBox ("File exists.  Do you want to overwrite it?",
-      "File exists", wxYES_NO | wxCENTER);
+    int answer = wxMessageBox(wxT("File exists.  Do you want to overwrite it?"),
+      wxT("File exists"), wxYES_NO | wxCENTER);
     if (answer == wxYES)
       ret = SIM->create_disk_image (filename, sectors, 1);
     else 
       return false;  // wxNO
   }
   if (ret == -2) {
-    wxMessageBox("I could not create the disk image. Check for permission problems or available disk space.", "Failed", wxOK | wxICON_ERROR );
+    wxMessageBox(wxT("I could not create the disk image. Check for permission problems or available disk space."), wxT("Failed"), wxOK | wxICON_ERROR);
     return false;
   }
   wxASSERT (ret==0);
   return true;
 }
 
-void SetTextCtrl (wxTextCtrl *ctrl, const char *format, int val) {
+void SetTextCtrl(wxTextCtrl *ctrl, const char *format, int val) {
   wxString tmp;
-  tmp.Printf (format, val);
-  ctrl->SetValue (tmp);
+  tmp.Printf(wxString(format, wxConvUTF8), val);
+  ctrl->SetValue(tmp);
 }
 
 int GetTextCtrlInt (wxTextCtrl *ctrl,
@@ -1851,29 +1853,29 @@ int GetTextCtrlInt (wxTextCtrl *ctrl,
     bool complain,
     wxString complaint) 
 {
-  wxString tmp (ctrl->GetValue ());
+  wxString tmp (ctrl->GetValue());
   char buf[1024];
-  strncpy (buf, tmp.c_str(), sizeof(buf));
-  int n = strtol (buf, NULL, 0);
+  strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf));
+  int n = strtol(buf, NULL, 0);
   if (n != LONG_MIN && n != LONG_MAX) {
     if (valid) *valid = true;
     return n;
   }
   if (valid) *valid = false;
   if (complain) {
-    wxMessageBox(complaint, "Invalid", wxOK | wxICON_ERROR );
-    ctrl->SetFocus ();
+    wxMessageBox(complaint, wxT("Invalid"), wxOK | wxICON_ERROR );
+    ctrl->SetFocus();
   }
   return -1;
 }
 
-bool BrowseTextCtrl (wxTextCtrl *text, wxString prompt, long style) {
+bool BrowseTextCtrl(wxTextCtrl *text, wxString prompt, long style) {
   // try to configure the dialog to show hidden files
-  wxConfigBase::Get() -> Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
+  wxConfigBase::Get() ->Write(wxT("/wxWidgets/wxFileDialog/ShowHidden"), true);
   wxFileDialog *fdialog = new wxFileDialog (text->GetParent(), prompt, wxT(""), text->GetValue(), wxT("*.*"), style);
   int result = fdialog->ShowModal();
   if (result == wxID_OK)
-    text->SetValue (fdialog->GetPath ());
+    text->SetValue(fdialog->GetPath());
   delete fdialog;
   return (result == wxID_OK);
 }
@@ -1883,16 +1885,16 @@ wxChoice *makeLogOptionChoiceBox (wxWindow *parent,
     int evtype,
     bool includeNoChange)
 {
-  static char *choices[] = LOG_OPTS_CHOICES;
+  static wxString choices[] = LOG_OPTS_CHOICES;
   static int integers[LOG_OPTS_N_CHOICES] = {0, 1, 2, 3, 4};
-  wxChoice *control = new wxChoice (parent, id, wxDefaultPosition, wxDefaultSize);
+  wxChoice *control = new wxChoice(parent, id, wxDefaultPosition, wxDefaultSize);
   int lastChoice = 0;  // remember index of last choice
   int nchoice = includeNoChange? LOG_OPTS_N_CHOICES : LOG_OPTS_N_CHOICES_NORMAL;
   for (int choice=0; choice<nchoice; choice++) {
     // the exclude expression allows some choices to not be available
     // for some times.  For example, it would be stupid to ignore a panic.
-    if (!LOG_OPTS_EXCLUDE (evtype, choice)) {
-      control->Append (choices[choice], &integers[choice]);
+    if (!LOG_OPTS_EXCLUDE(evtype, choice)) {
+      control->Append(choices[choice], &integers[choice]);
       // the client data is an int* that points to the choice number.
       // This is what will be returned by GetAction().
       lastChoice++;

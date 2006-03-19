@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.132 2006-03-18 16:30:51 vruppert Exp $
+// $Id: wxmain.cc,v 1.133 2006-03-19 09:24:10 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -235,7 +235,7 @@ bool MyApp::OnInit()
   // simulation begins.  This is responsible for displaying any error
   // dialogs during bochsrc and command line processing.
   SIM->set_notify_callback(&MyApp::DefaultCallback, this);
-  MyFrame *frame = new MyFrame("Bochs x86 Emulator", wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
+  MyFrame *frame = new MyFrame(wxT("Bochs x86 Emulator"), wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
   theFrame = frame;  // hack alert
   frame->Show(TRUE);
   SetTopWindow(frame);
@@ -257,18 +257,18 @@ int MyApp::OnExit()
 BxEvent *
 MyApp::DefaultCallback (void *thisptr, BxEvent *event)
 {
-  wxLogDebug ("DefaultCallback: event type %d", event->type);
+  wxLogDebug(wxT("DefaultCallback: event type %d"), event->type);
   event->retcode = -1;  // default return code
   switch (event->type)
   {
     case BX_ASYNC_EVT_LOG_MSG:
     case BX_SYNC_EVT_LOG_ASK: {
-      wxLogDebug ("DefaultCallback: log ask event");
+      wxLogDebug(wxT("DefaultCallback: log ask event"));
       wxString text;
-      text.Printf ("Error: %s", event->u.logmsg.msg);
+      text.Printf (wxT("Error: %s"), event->u.logmsg.msg);
       if (wxBochsClosing) {
         // gui closing down, do something simple and nongraphical.
-        fprintf (stderr, "%s\n", text.c_str ());
+        fprintf(stderr, "%s\n", (const char *)text.mb_str(wxConvUTF8));
       } else {
         wxMessageBox(text, wxT("Error"), wxOK | wxICON_ERROR );
         // maybe I can make OnLogMsg display something that looks appropriate.
@@ -290,7 +290,7 @@ MyApp::DefaultCallback (void *thisptr, BxEvent *event)
     case BX_SYNC_EVT_GET_DBG_COMMAND:
       break;  // ignore
     default:
-      wxLogDebug ("DefaultCallback: unknown event type %d", event->type);
+      wxLogDebug(wxT("DefaultCallback: unknown event type %d"), event->type);
   }
   if (BX_EVT_IS_ASYNC(event->type)) {
     delete event;
@@ -574,7 +574,7 @@ void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("cpu");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -583,7 +583,7 @@ void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("memory");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -592,7 +592,7 @@ void MyFrame::OnEditClockCmos(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("clock_cmos");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -601,7 +601,7 @@ void MyFrame::OnEditPCI(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("pci");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -610,7 +610,7 @@ void MyFrame::OnEditDisplay(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("display");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -620,7 +620,7 @@ void MyFrame::OnEditKeyboard(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("keyboard_mouse");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -648,7 +648,7 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
   }
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("boot_params");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -657,7 +657,7 @@ void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("ports");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -667,7 +667,7 @@ void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("network");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
 }
@@ -676,7 +676,7 @@ void MyFrame::OnEditSound(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(BXPN_SB16);
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -686,7 +686,7 @@ void MyFrame::OnEditOther(wxCommandEvent& WXUNUSED(event))
 {
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("misc");
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -880,8 +880,9 @@ void MyFrame::OnQuit(wxCommandEvent& event)
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-  wxString str;
-  str.Printf("Bochs x86 Emulator version %s (wxWidgets port)", VER_STRING);
+  wxString str(wxT("Bochs x86 Emulator version "));
+  str += wxString(VER_STRING, wxConvUTF8);
+  str += wxT(" (wxWidgets port)");
   wxMessageBox(str, wxT("About Bochs"), wxOK | wxICON_INFORMATION, this );
 }
 
@@ -1048,25 +1049,25 @@ MyFrame::HandleAskParamString (bx_param_string_c *param)
   if ((msg == NULL) || (strlen(msg) == 0)) {
     msg = param->get_name();
   }
-  char *newval = NULL;
+  const char *newval = NULL;
   wxDialog *dialog = NULL;
   if (n_opt & param->IS_FILENAME) {
     // use file open dialog
         long style = 
           (n_opt & param->SAVE_FILE_DIALOG) ? wxSAVE|wxOVERWRITE_PROMPT : wxOPEN;
         wxLogDebug(wxT("HandleAskParamString: create dialog"));
-        wxFileDialog *fdialog = new wxFileDialog (this, msg, wxT(""), wxString(param->getptr ()), wxT("*.*"), style);
+        wxFileDialog *fdialog = new wxFileDialog (this, wxString(msg, wxConvUTF8), wxT(""), wxString(param->getptr(), wxConvUTF8), wxT("*.*"), style);
         wxLogDebug(wxT("HandleAskParamString: before showmodal"));
         if (fdialog->ShowModal() == wxID_OK)
-          newval = (char *)fdialog->GetPath().c_str ();
+          newval = fdialog->GetPath().mb_str(wxConvUTF8);
         wxLogDebug(wxT("HandleAskParamString: after showmodal"));
         dialog = fdialog; // so I can delete it
   } else {
     // use simple string dialog
         long style = wxOK|wxCANCEL;
-        wxTextEntryDialog *tdialog = new wxTextEntryDialog (this, msg, wxT("Enter new value"), wxString(param->getptr()), style);
+        wxTextEntryDialog *tdialog = new wxTextEntryDialog (this, wxString(msg, wxConvUTF8), wxT("Enter new value"), wxString(param->getptr(), wxConvUTF8), style);
         if (tdialog->ShowModal() == wxID_OK)
-          newval = (char *)tdialog->GetValue().c_str ();
+          newval = tdialog->GetValue().mb_str(wxConvUTF8);
         dialog = tdialog; // so I can delete it
   }
   // newval points to memory inside the dialog.  As soon as dialog is deleted,
@@ -1109,8 +1110,8 @@ MyFrame::HandleAskParam (BxEvent *event)
   default:
     {
           wxString msg;
-          msg.Printf ("ask param for parameter type %d is not implemented in wxWidgets",
-                      param->get_type ());
+          msg.Printf(wxT("ask param for parameter type %d is not implemented in wxWidgets"),
+                     param->get_type());
           wxMessageBox(msg, wxT("not implemented"), wxOK | wxICON_ERROR, this );
           return -1;
         }
@@ -1197,13 +1198,13 @@ void MyFrame::OnLogMsg (BxEvent *be) {
     return;  // we don't have any place to display log messages
   else
     wxASSERT (be->type == BX_SYNC_EVT_LOG_ASK);
-  wxString levelName (SIM->get_log_level_name (be->u.logmsg.level));
+  wxString levelName(SIM->get_log_level_name(be->u.logmsg.level), wxConvUTF8);
   LogMsgAskDialog dlg (this, -1, levelName);  // panic, error, etc.
 #if !BX_DEBUGGER
   dlg.EnableButton (dlg.DEBUG, FALSE);
 #endif
-  dlg.SetContext (be->u.logmsg.prefix);
-  dlg.SetMessage (be->u.logmsg.msg);
+  dlg.SetContext(wxString(be->u.logmsg.prefix, wxConvUTF8));
+  dlg.SetMessage(wxString(be->u.logmsg.msg, wxConvUTF8));
   int n = dlg.ShowModal ();
   // turn the return value into the constant that logfunctions::ask is
   // expecting.  0=continue, 1=continue but ignore future messages from this
@@ -1232,7 +1233,7 @@ MyFrame::editFloppyValidate (FloppyConfigDialog *dialog)
 void MyFrame::editFloppyConfig(int drive)
 {
   FloppyConfigDialog dlg(this, -1);
-  dlg.SetDriveName(wxString (drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME));
+  dlg.SetDriveName(wxString(drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME, wxConvUTF8));
   dlg.SetCapacityChoices(n_floppy_type_names, floppy_type_names);
   bx_list_c *list = (bx_list_c*) SIM->get_param((drive==0)? BXPN_FLOPPYA : BXPN_FLOPPYB);
   if (!list) { wxLogError(wxT("floppy object param is null")); return; }
@@ -1259,7 +1260,7 @@ void MyFrame::editFloppyConfig(int drive)
   // add your favorite operating system here
 #endif
   dlg.SetCapacity(disktype->get() - disktype->get_min());
-  dlg.SetFilename(fname->getptr());
+  dlg.SetFilename(wxString(fname->getptr(), wxConvUTF8));
   dlg.SetValidateFunc (editFloppyValidate);
   if (disktype->get() == BX_FLOPPY_NONE) {
     dlg.SetRadio(0);
@@ -1273,7 +1274,7 @@ void MyFrame::editFloppyConfig(int drive)
   if (n==wxID_OK) {
     char filename[1024];
     wxString fn(dlg.GetFilename());
-    strncpy(filename, fn.c_str(), sizeof(filename));
+    strncpy(filename, fn.mb_str(wxConvUTF8), sizeof(filename));
     wxLogMessage(wxT("filename is '%s'"), filename);
     wxLogMessage(wxT("capacity = %d (%s)"), dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity()]);
     fname->set(filename);
@@ -1313,7 +1314,7 @@ void MyFrame::OnEditATA(wxCommandEvent& event)
   sprintf(ata_name, "ata.%d", channel);
   ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param(ata_name);
-  dlg.SetTitle(list->get_title()->getptr());
+  dlg.SetTitle(wxString(list->get_title()->getptr(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
@@ -1545,7 +1546,7 @@ void
 safeWxStrcpy(char *dest, wxString src, int destlen)
 {
   wxString tmp(src);
-  strncpy(dest, tmp.c_str(), destlen);
+  strncpy(dest, tmp.mb_str(wxConvUTF8), destlen);
   dest[destlen-1] = 0;
 }
 
