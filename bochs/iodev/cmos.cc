@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.52 2006-02-19 15:43:03 vruppert Exp $
+// $Id: cmos.cc,v 1.53 2006-03-22 18:06:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.52 2006-02-19 15:43:03 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.53 2006-03-22 18:06:16 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -250,8 +250,8 @@ bx_cmos_c::init(void)
     BX_PANIC(("Out of memory."));
   }
   tmptime[strlen(tmptime)-1]='\0';
-
   BX_INFO(("Setting initial clock to: %s (time0=%u)", tmptime, (Bit32u)BX_CMOS_THIS s.timeval));
+  free(tmptime);
 
   BX_CMOS_THIS s.timeval_change = 0;
 }
