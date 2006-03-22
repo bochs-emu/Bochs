@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.44 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.45 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,7 +42,6 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit64u temp_RSP = RSP;
   Bit16u imm16 = i->Iw();
 
   pop_64(&return_RIP);
@@ -65,8 +64,6 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
-
-  Bit64u temp_RSP = RSP;
 
   pop_64(&return_RIP);
 

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.9 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: call_far.cc,v 1.10 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
       else {
-        call_gate64(&gate_descriptor);
+        call_gate64(&gate_selector);
         return;
       }
     }
@@ -458,18 +458,21 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 }
 
 #if BX_SUPPORT_X86_64
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::call_gate64(bx_descriptor_t *gate_descriptor)
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 {
   bx_selector_t cs_selector;
   Bit32u dword1, dword2, dword3;
   bx_descriptor_t cs_descriptor;
+  bx_descriptor_t gate_descriptor;
 
   // examine code segment selector in call gate descriptor
   BX_DEBUG(("call_gate64: CALL 64bit call gate"));
 
-  Bit16u dest_selector = gate_descriptor->u.gate386.dest_selector;
+  fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, &gate_descriptor);
 
+  Bit16u dest_selector = gate_descriptor.u.gate386.dest_selector;
   // selector must not be null else #GP(0)
   if ( (dest_selector & 0xfffc) == 0 ) {
     BX_ERROR(("call_gate64: selector in gate null"));
@@ -479,10 +482,11 @@ BX_CPU_C::call_gate64(bx_descriptor_t *gate_descriptor)
   parse_selector(dest_selector, &cs_selector);
   // selector must be within its descriptor table limits,
   //   else #GP(code segment selector)
-  fetch_raw_descriptor64(&cs_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
-  Bit64u new_RIP = gate_descriptor->u.gate386.dest_offset;
+  // find the RIP in the gate_descriptor
+  Bit64u new_RIP = gate_descriptor.u.gate386.dest_offset;
   new_RIP |= ((Bit64u)dword3 << 32);
 
   // AR byte of selected descriptor must indicate code segment,

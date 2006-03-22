@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.270 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: cpu.h,v 1.271 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2759,11 +2759,11 @@ public: // for now...
   BX_SMF void jmp_call_gate16(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
   BX_SMF void jmp_call_gate32(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
-  BX_SMF void jmp_call_gate64(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void jmp_call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void call_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_X86_64
-  BX_SMF void call_gate64(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
+  BX_SMF void call_gate64(bx_selector_t *selector) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void return_protected(bxInstruction_c *, Bit16u pop_bytes) BX_CPP_AttrRegparmN(2);
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2809,13 +2809,13 @@ public: // for now...
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
-  BX_SMF void    fetch_raw_descriptor(bx_selector_t *selector,
+  BX_SMF void    fetch_raw_descriptor(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, unsigned exception) BX_CPP_AttrRegparmN(3);
-  BX_SMF bx_bool fetch_raw_descriptor2(bx_selector_t *selector,
+  BX_SMF bx_bool fetch_raw_descriptor2(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
 #if BX_SUPPORT_X86_64
-  BX_SMF  void   fetch_raw_descriptor64(bx_selector_t *selector,
+  BX_SMF  void   fetch_raw_descriptor64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
                                    bx_address base, unsigned dpl);
@@ -3295,6 +3295,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxPrefixSSE         0x0020 // Group encoding: 010
 #define BxSplitMod11b       0x0030 // Group encoding: 011
 #define BxFPGroup           0x0040 // Group encoding: 100
+#define BxRMGroup           0x0050 // Group encoding: 101
 
 #define BxPrefix            0x0080 // bit  7
 #define BxAnother           0x0100 // bit  8

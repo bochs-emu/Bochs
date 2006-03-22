@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.4 2006-03-06 22:03:00 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.5 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
   /* examine AR byte of destination selector for legal values: */
   parse_descriptor(dword1, dword2, &descriptor);
 
-  if ( descriptor.segment ) {
+  if (descriptor.segment) {
     check_cs(&descriptor, cs_raw, BX_SELECTOR_RPL(cs_raw), CPL);
     branch_far64(&selector, &descriptor, disp, CPL);
     return;
@@ -90,17 +90,17 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
       }
       else {
-        jmp_call_gate64(&descriptor);
+        jmp_call_gate64(&selector);
         return;
       }
     }
 #endif
 
-    switch ( descriptor.type ) {
+    switch (descriptor.type) {
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
 
-        if ( descriptor.type==BX_SYS_SEGMENT_AVAIL_286_TSS )
+        if (descriptor.type==BX_SYS_SEGMENT_AVAIL_286_TSS)
           BX_DEBUG(("jump to 286 TSS"));
         else
           BX_DEBUG(("jump to 386 TSS"));
@@ -254,43 +254,55 @@ BX_CPU_C::jmp_call_gate32(bx_descriptor_t *gate_descriptor)
 
 #if BX_SUPPORT_X86_64
   void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::jmp_call_gate64(bx_descriptor_t *gate_descriptor)
+BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
 {
-  bx_selector_t gate_cs_selector;
-  bx_descriptor_t gate_cs_descriptor;
+  bx_selector_t cs_selector;
   Bit32u dword1, dword2, dword3;
-  Bit64u temp_RIP;
+  bx_descriptor_t cs_descriptor;
+  bx_descriptor_t gate_descriptor;
 
   BX_DEBUG(("jump_protected: jump to CALL GATE 64"));
 
-  // examine selector to code segment given in call gate descriptor
-  // selector must not be null, else #GP(0)
-  Bit16u gate_cs_raw = gate_descriptor->u.gate386.dest_selector;
+  fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, &gate_descriptor);
 
-  if ((gate_cs_raw & 0xfffc) == 0) {
-    BX_ERROR(("jump_protected: CS selector null"));
+  Bit16u dest_selector = gate_descriptor.u.gate386.dest_selector;
+  // selector must not be null else #GP(0)
+  if ( (dest_selector & 0xfffc) == 0 ) {
+    BX_ERROR(("call_gate64: selector in gate null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  parse_selector(gate_cs_raw, &gate_cs_selector);
-  // selector must be within its descriptor table limits else #GP(CS selector)
-  fetch_raw_descriptor64(&gate_cs_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
-  parse_descriptor(dword1, dword2, &gate_cs_descriptor);
+  parse_selector(dest_selector, &cs_selector);
+  // selector must be within its descriptor table limits,
+  //   else #GP(code segment selector)
+  fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+  parse_descriptor(dword1, dword2, &cs_descriptor);
+
+  // find the RIP in the gate_descriptor
+  Bit64u new_RIP = gate_descriptor.u.gate386.dest_offset;
+  new_RIP |= ((Bit64u)dword3 << 32);
+
+  // AR byte of selected descriptor must indicate code segment,
+  //   else #GP(code segment selector)
+  if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
+      cs_descriptor.u.segment.executable==0)
+  {
+    BX_ERROR(("jump_protected: not code segment in call gate 64"));
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
+  }
 
   // In long mode, only 64-bit call gates are allowed, and they must point
   // to 64-bit code segments, else #GP(selector)
-  if (! IS_LONG64_SEGMENT(gate_cs_descriptor) || gate_cs_descriptor.u.segment.d_b)
+  if (! IS_LONG64_SEGMENT(cs_descriptor) || cs_descriptor.u.segment.d_b)
   {
     BX_ERROR(("jump_protected: not 64-bit code segment in call gate 64"));
-    exception(BX_GP_EXCEPTION, gate_cs_raw & 0xfffc, 0);
+    exception(BX_GP_EXCEPTION, dest_selector & 0xfffc, 0);
   }
 
   // check code-segment descriptor
-  check_cs(&gate_cs_descriptor, gate_cs_raw, 0, CPL);
-
-  temp_RIP = gate_descriptor->u.gate386.dest_offset;
-  temp_RIP |= ((Bit64u)dword3 << 32);
-
-  branch_far64(&gate_cs_selector, &gate_cs_descriptor, temp_RIP, CPL);
+  check_cs(&cs_descriptor, dest_selector, 0, CPL);
+  // and transfer the control
+  branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
 }
 #endif

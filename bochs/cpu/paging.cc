@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.67 2006-03-06 22:03:01 sshwarts Exp $
+// $Id: paging.cc,v 1.68 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -572,41 +572,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
-  // Operand must not be a register
   if (i->modC0()) {
-
-#if BX_SUPPORT_X86_64
-
-    //
-    // Opcode 0F 01:
-    //
-
-    // ----------------------------------------------------
-    //     MOD    REG  RM  | non 64 bit mode | 64 bit mode
-    // ----------------------------------------------------
-    //  MOD <> 11  7   --- |     INVLPG      |   INVLPG
-    //  MOD == 11  7    0  |      #UD        |   SWAPGS
-    //  MOD == 11  7    1  |      #UD        |   RDTSCP
-    //  MOD == 11  7   2-7 |      #UD        |    #UD
-
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      if (i->nnn() == 7) {
-        switch(i->rm()) {
-        case 0:
-          BX_CPU_THIS_PTR SWAPGS(i);
-          return;
-        case 1:
-          BX_CPU_THIS_PTR RDTSCP(i);
-          return;
-        default:
-          BX_INFO(("INVLPG: 0F 01 /7 RM=%d opcode is undefined !", i->rm()));
-          UndefinedOpcode(i);
-        }
-      }
-    }
-
-#endif
-
     BX_INFO(("INVLPG: op is a register"));
     UndefinedOpcode(i);
   }

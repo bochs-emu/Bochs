@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.141 2006-03-15 17:57:11 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.142 2006-03-22 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -737,7 +737,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
-      BX_INFO(("MOV_CqRq: write to CR3 of %08x:%08x", 
+      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       // Reserved bits take on value of MOV instruction
       CR3_change(val_64);

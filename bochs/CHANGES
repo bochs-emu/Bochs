@@ -4,6 +4,7 @@ Changes after 2.2.6 release:
 - Recognize #XF exception (19) when SSE is enabled
 - Fixed bug in SYSRET instruction legacy mode
 - Fixed bug in PSRAW/PSRAD MMX and SSE instructions
+- Fixed bug in CALL/JMP far through call gate 64 in x86-64 mode
 - Fixed bug in ENTER instruction in x86-64 mode (Stanislav Shwartsman)
 - Fixes in Bochs debugger and disassembler
 - Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
