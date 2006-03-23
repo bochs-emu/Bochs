@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vde.cc,v 1.11 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_vde.cc,v 1.12 2006-03-23 18:28:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Renzo Davoli
@@ -52,7 +52,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <unistd.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 #define SWITCH_MAGIC 0xfeedface
 
