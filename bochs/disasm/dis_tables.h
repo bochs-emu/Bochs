@@ -67,6 +67,8 @@
 #define  Id &disassembler::Id
 #define  Iq &disassembler::Iq
 
+#define IwIb &disassembler::IwIb
+
 #define sIbw &disassembler::sIbw
 #define sIbd &disassembler::sIbd
 #define sIbq &disassembler::sIbq

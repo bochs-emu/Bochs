@@ -428,6 +428,9 @@ public:
   void Id(const x86_insn *insn);
   void Iq(const x86_insn *insn);
 
+  // two immediates Iw/Ib
+  void IwIb(const x86_insn *insn);
+
   // sign extended immediate
   void sIbw(const x86_insn *insn);
   void sIbd(const x86_insn *insn);
