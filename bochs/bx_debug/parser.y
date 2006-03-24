@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.15 2006-02-13 21:32:21 sshwarts Exp $
+// $Id: parser.y,v 1.16 2006-03-24 21:01:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -811,6 +811,11 @@ help_command:
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_LBREAKPOINT '\n'
+       {
+         dbg_printf("lb|lbreak <addr> - set a linear address instruction breakpoint\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'
        {
          dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
          free($1);free($2);
