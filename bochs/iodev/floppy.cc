@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.96 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: floppy.cc,v 1.97 2006-03-25 12:14:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.96 2006-03-07 21:11:16 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.97 2006-03-25 12:14:13 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1173,7 +1173,7 @@ void bx_floppy_ctrl_c::timer()
       break;
 
     case 0x4d: /* format track */
-      if ((BX_FD_THIS s.format_count == 0) || (DEV_dma_get_tc())) {
+      if ((BX_FD_THIS s.format_count == 0) || BX_FD_THIS s.TC) {
         BX_FD_THIS s.format_count = 0;
         BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
         enter_result_phase();
@@ -1208,13 +1208,16 @@ void bx_floppy_ctrl_c::dma_write(Bit8u *data_byte)
 
   *data_byte = BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++];
 
-  if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+  BX_FD_THIS s.TC = DEV_dma_get_tc();
+  if ((BX_FD_THIS s.floppy_buffer_index >= 512) || (BX_FD_THIS s.TC)) {
     Bit8u drive;
 
     drive = BX_FD_THIS s.DOR & 0x03;
-    increment_sector(); // increment to next sector before retrieving next one
-    BX_FD_THIS s.floppy_buffer_index = 0;
-    if (DEV_dma_get_tc()) { // Terminal Count line, done
+    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+      increment_sector(); // increment to next sector before retrieving next one
+      BX_FD_THIS s.floppy_buffer_index = 0;
+    }
+    if (BX_FD_THIS s.TC) { // Terminal Count line, done
       BX_FD_THIS s.status_reg0 = (BX_FD_THIS s.head[drive] << 2) | drive;
       BX_FD_THIS s.status_reg1 = 0;
       BX_FD_THIS s.status_reg2 = 0;
@@ -1260,6 +1263,7 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   Bit8u drive;
   Bit32u logical_sector, sector_time;
 
+  BX_FD_THIS s.TC = DEV_dma_get_tc();
   drive = BX_FD_THIS s.DOR & 0x03;
   if (BX_FD_THIS s.pending_command == 0x4d) { // format track in progress
     BX_FD_THIS s.format_count--;
@@ -1297,7 +1301,7 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
   } else { // write normal data
     BX_FD_THIS s.floppy_buffer[BX_FD_THIS s.floppy_buffer_index++] = *data_byte;
 
-    if (BX_FD_THIS s.floppy_buffer_index >= 512) {
+    if ((BX_FD_THIS s.floppy_buffer_index >= 512) || (BX_FD_THIS s.TC)) {
       logical_sector = (BX_FD_THIS s.cylinder[drive] * BX_FD_THIS s.media[drive].heads * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (BX_FD_THIS s.head[drive] * BX_FD_THIS s.media[drive].sectors_per_track) +
                        (BX_FD_THIS s.sector[drive] - 1);
@@ -1317,7 +1321,6 @@ void bx_floppy_ctrl_c::dma_read(Bit8u *data_byte)
                   512, TO_FLOPPY);
       increment_sector(); // increment to next sector after writing current one
       BX_FD_THIS s.floppy_buffer_index = 0;
-      BX_FD_THIS s.TC = DEV_dma_get_tc();
       DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
       // time to write one sector at 300 rpm
       sector_time = 200000 / BX_FD_THIS s.media[drive].sectors_per_track;
