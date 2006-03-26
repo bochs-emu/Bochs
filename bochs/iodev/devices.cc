@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.95 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: devices.cc,v 1.96 2006-03-26 22:15:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.95 2006-03-14 18:11:22 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.96 2006-03-26 22:15:05 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -316,6 +316,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
 void bx_devices_c::reset(unsigned type)
 {
+  mem->disable_smram();
   pluginUnmapped->reset(type);
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get ()) {

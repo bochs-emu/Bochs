@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.84 2006-03-26 19:48:54 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.85 2006-03-26 22:15:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.84 2006-03-26 19:48:54 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.85 2006-03-26 22:15:07 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -115,7 +115,9 @@ void BX_MEM_C::init_memory(int memsize)
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
   }
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
-  BX_MEM_THIS smram_enabled = 0;
+  BX_MEM_THIS smram_available = 0;
+  BX_MEM_THIS smram_enable = 0;
+  BX_MEM_THIS smram_restricted = 0;
 
 #if BX_DEBUGGER
   if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
@@ -437,7 +439,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
   for (; len>0; len--) {
     // Reading standard PCI/ISA Video Mem / SMMRAM
     if ((addr & 0xfffe0000) == 0x000a0000) {
-      if (BX_MEM_THIS smram_enabled)
+      if (BX_MEM_THIS smram_enable)
         *buf = vector[addr];
       else 
         *buf = DEV_vga_mem_read(addr);
@@ -503,7 +505,7 @@ bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
   for (; len>0; len--) {
     // Write to standard PCI/ISA Video Mem / SMMRAM
     if ((a20Addr & 0xfffe0000) == 0x000a0000) {
-      if (BX_MEM_THIS smram_enabled)
+      if (BX_MEM_THIS smram_enable)
         vector[addr] = *buf;
       else 
         DEV_vga_mem_write(addr, *buf);
@@ -581,11 +583,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsi
     return(NULL); // Vetoed!  APIC address space
 #endif
 
-  // allow direct access to SMMRAM memory space for code and veto data
+  // allow direct access to SMRAM memory space for code and veto data
   if (access_type == CODE_ACCESS) {
-    // reading from SMMRAM memory space
-    if ((a20Addr & 0xfffe0000) == 0x000a0000) {
-      if (BX_MEM_THIS smram_enabled || cpu->smm_mode())
+    // reading from SMRAM memory space
+    if ((a20Addr & 0xfffe0000) == 0x000a0000 && (BX_MEM_THIS smram_available))
+    {
+      if (BX_MEM_THIS smram_enable || cpu->smm_mode())
         return (Bit8u *) & vector[a20Addr];
     }
   }
@@ -748,12 +751,16 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
   return ret;
 }
 
-BX_MEM_SMF void BX_MEM_C::enable_smram(bx_bool code_only)
+BX_MEM_SMF void BX_MEM_C::enable_smram(bx_bool enable, bx_bool restricted)
 {
-  BX_MEM_THIS smram_enabled = code_only ? 1 : 2;
+  BX_MEM_THIS smram_available = 1;
+  BX_MEM_THIS smram_enable = (enable > 0);
+  BX_MEM_THIS smram_restricted = (restricted > 0);
 }
 
 BX_MEM_SMF void BX_MEM_C::disable_smram(void)
 {
-  BX_MEM_THIS smram_enabled = 0;
+  BX_MEM_THIS smram_available  = 0;
+  BX_MEM_THIS smram_enable     = 0;
+  BX_MEM_THIS smram_restricted = 0;
 }

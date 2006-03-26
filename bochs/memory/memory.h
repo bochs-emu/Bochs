@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.34 2006-03-26 19:39:37 sshwarts Exp $
+// $Id: memory.h,v 1.35 2006-03-26 22:15:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,9 @@ private:
   struct memory_handler_struct **memory_handlers;
   bx_bool rom_present[65];
   bx_bool pci_enabled;
-  unsigned smram_enabled;
+  bx_bool smram_available;
+  bx_bool smram_enable;
+  bx_bool smram_restricted;
   
 public:
   Bit8u   *actual_vector;
@@ -88,7 +90,7 @@ public:
  ~BX_MEM_C();
   BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
   BX_MEM_SMF void    init_memory(int memsize);
-  BX_MEM_SMF void    enable_smram(bx_bool code_only);
+  BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, Bit32u addr,
                                       unsigned len, void *data) BX_CPP_AttrRegparmN(3);

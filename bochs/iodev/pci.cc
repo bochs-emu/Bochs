@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.46 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pci.cc,v 1.47 2006-03-26 22:15:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,7 +61,6 @@ bx_pci_bridge_c::bx_pci_bridge_c()
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
   // nothing for now
-  BX_DEBUG(("Exit."));
 }
 
 void bx_pci_bridge_c::init(void)
@@ -146,6 +145,7 @@ bx_pci_bridge_c::reset(unsigned type)
   BX_PCI_THIS s.i440fx.pci_conf[0x58] = 0x10;
   for (i=0x59; i<0x60; i++)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x00;
+  BX_PCI_THIS s.i440fx.pci_conf[0x72] = 0x02;
 }
 
 // static IO port read callback handler
@@ -291,6 +291,9 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         case 0x06:
         case 0x0c:
           break;
+        case 0x72:
+          smram_control(value);  // SMRAM conrol register
+          break;
         default:
           BX_PCI_THIS s.i440fx.pci_conf[address+i] = value8;
           BX_DEBUG(("440FX PMC write register 0x%02x value 0x%02x", address+i, value8));
@@ -298,6 +301,62 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
     }
   }
 }
+
+void bx_pci_bridge_c::smram_control(Bit8u value8)
+{
+  //
+  // From i440FX chipset manual:
+  //
+  // [7:7] Reserved.
+  // [6:6] SMM Space Open (DOPEN), when DOPEN=1 and DLCK=0, SMM space DRAM
+  //       became visible even CPU not indicte SMM mode access. This is
+  //       indended to help BIOS to initialize SMM space.
+  // [5:5] SMM Space Closed (DCLS), when DCLS=1, SMM space is not accessible
+  //       for data references, even if CPU indicates SMM mode access. Code
+  //       references may still access SMM space DRAM.
+  // [4:4] SMM Space Locked (DLCK), when DLCK=1, DOPEN is set to 0 and
+  //       both DLCK and DOPEN became R/O. DLCK can only be cleared by
+  //       a power-on reset.
+  // [3:3] SMRAM Enable (SMRAME)
+  // [2:0] SMM space base segment, program the location of SMM space
+  //       reserved.
+  //
+
+  // SMRAM space access cycles:
+
+  // | SMRAME | DLCK | DCLS | DOPEN | CPU_SMM |    | Code | Data |
+  // ------------------------------------------    ---------------
+  // |    0   |  X   |  X   |   X   |    X    | -> |  PCI |  PCI |
+  // |    1   |  0   |  X   |   0   |    0    | -> |  PCI |  PCI |
+  // |    1   |  0   |  0   |   0   |    1    | -> | DRAM | DRAM |
+  // |    1   |  0   |  0   |   1   |    X    | -> | DRAM | DRAM |
+  // |    1   |  1   |  0   |   X   |    1    | -> | DRAM | DRAM |
+  // |    1   |  0   |  1   |   0   |    1    | -> | DRAM |  PCI |
+  // |    1   |  0   |  1   |   1   |    X    | -> | ---- | ---- |
+  // |    1   |  1   |  X   |   X   |    0    | -> |  PCI |  PCI |
+  // |    1   |  1   |  1   |   X   |    1    | -> | DRAM |  PCI |
+  // ------------------------------------------    ---------------
+
+  value8 = (value8 & 0x78) | 0x2; // ignore reserved bits
+
+  if (BX_PCI_THIS s.i440fx.pci_conf[0x72] & 0x10)
+  {
+    value8 &= 0xbf; // set DOPEN=0, DLCK=1
+    value8 |= 0x10;
+  }
+
+  if ((value8 & 0x08) == 0) {
+    bx_devices.mem->disable_smram();
+  }
+  else {
+    bx_bool DOPEN = (value8 & 0x40) > 0, DCLS = (value8 & 0x20) > 0;
+    if(DOPEN && DCLS) BX_PANIC(("SMRAM control: DOPEN not mutually exclusive with DCLS !"));
+    bx_devices.mem->enable_smram(DOPEN, DCLS);
+  }
+
+  BX_INFO(("setting SMRAM control register to 0x%02x", value8));
+  BX_PCI_THIS s.i440fx.pci_conf[0x72] = value8;
+}               
 
 Bit8u bx_pci_bridge_c::rd_memType(Bit32u addr)
 {

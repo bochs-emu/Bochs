@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.24 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pci.h,v 1.25 2006-03-26 22:15:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,6 +89,8 @@ private:
   struct {
     bx_def440fx_t i440fx;
   } s;
+
+  void smram_control(Bit8u value);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
