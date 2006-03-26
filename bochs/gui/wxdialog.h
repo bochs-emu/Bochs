@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.63 2006-03-19 15:35:20 vruppert Exp $
+// $Id: wxdialog.h,v 1.64 2006-03-26 15:52:31 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -246,7 +246,7 @@ private:
 "from a particular source.  For example if you are having problems with\n"    \
 "the keyboard, you could ask for debug and info events from the keyboard\n"   \
 "to be reported.")
-#define ADVLOG_OPTS_TYPE_NAMES { wxT("debug"), wxT("Info"), wxT("Error"), wxT("Panic"), wxT("Pass") }
+#define ADVLOG_OPTS_TYPE_NAMES { wxT("Debug"), wxT("Info"), wxT("Error"), wxT("Panic"), wxT("Pass") }
 #define ADVLOG_OPTS_N_TYPES 5
 #define ADVLOG_DEFAULTS wxT("Use defaults for all devices")
   void Init();  // called automatically by ShowModal()
@@ -254,7 +254,7 @@ private:
   wxBoxSizer *vertSizer, *logfileSizer, *buttonSizer;
   wxScrolledWindow *scrollWin;
   wxPanel *scrollPanel;
-  wxGridSizer *gridSizer;
+  wxGridSizer *headerSizer, *gridSizer;
   wxTextCtrl *logfile;
   wxButton *applyDefault;
   // 2d array of wxChoice pointers. Each wxChoice* is action[dev][type].

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.95 2006-03-19 15:35:19 vruppert Exp $
+// $Id: wxdialog.cc,v 1.96 2006-03-26 15:52:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -423,48 +423,50 @@ END_EVENT_TABLE()
 AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     wxWindow* parent,
     wxWindowID id)
-  : wxDialog (parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
+  : wxDialog(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, 
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER)
 {
   //static int integers[LOG_OPTS_N_CHOICES_NORMAL] = {0, 1, 2, 3};
   static wxString names[] = ADVLOG_OPTS_TYPE_NAMES;
-  SetTitle (ADVLOG_OPTS_TITLE);
-  vertSizer = new wxBoxSizer (wxVERTICAL);
+  SetTitle(ADVLOG_OPTS_TITLE);
+  vertSizer = new wxBoxSizer(wxVERTICAL);
   // top level objects
-  logfileSizer = new wxBoxSizer (wxHORIZONTAL);
-  vertSizer->Add (logfileSizer, 0, wxTOP|wxLEFT, 20);
-  wxStaticText *text = new wxStaticText (this, -1, ADVLOG_OPTS_PROMPT);
-  vertSizer->Add (text, 0, wxALL, 10);
-  applyDefault = new wxButton (this, ID_ApplyDefault, ADVLOG_DEFAULTS);
-  vertSizer->Add (applyDefault, 0, wxALL|wxALIGN_RIGHT, 10);
-  scrollWin = new wxScrolledWindow (this, -1);
-  vertSizer->Add (scrollWin, 1, wxALL|wxGROW, 10);
-  buttonSizer = new wxBoxSizer (wxHORIZONTAL);
-  vertSizer->Add (buttonSizer, 0, wxALIGN_RIGHT);
+  logfileSizer = new wxBoxSizer(wxHORIZONTAL);
+  vertSizer->Add(logfileSizer, 0, wxTOP|wxLEFT, 20);
+  wxStaticText *text = new wxStaticText(this, -1, ADVLOG_OPTS_PROMPT);
+  vertSizer->Add(text, 0, wxALL, 10);
+  applyDefault = new wxButton(this, ID_ApplyDefault, ADVLOG_DEFAULTS);
+  vertSizer->Add(applyDefault, 0, wxALL|wxALIGN_RIGHT, 10);
+  headerSizer = new wxGridSizer(ADVLOG_OPTS_N_TYPES + 1);
+  vertSizer->Add(headerSizer, 0, wxALL|wxGROW, 10);
+  scrollWin = new wxScrolledWindow(this, -1);
+  vertSizer->Add(scrollWin, 1, wxALL|wxGROW, 10);
+  buttonSizer = new wxBoxSizer(wxHORIZONTAL);
+  vertSizer->Add(buttonSizer, 0, wxALIGN_RIGHT);
 
   // logfileSizer contents
-  text = new wxStaticText (this, -1, ADVLOG_OPTS_LOGFILE);
-  logfileSizer->Add (text);
-  logfile = new wxTextCtrl (this, -1, wxT(""), wxDefaultPosition, longTextSize);
-  logfileSizer->Add (logfile);
-  wxButton *btn = new wxButton (this, ID_Browse, BTNLABEL_BROWSE);
-  logfileSizer->Add (btn, 0, wxALL, 5);
+  text = new wxStaticText(this, -1, ADVLOG_OPTS_LOGFILE);
+  logfileSizer->Add(text);
+  logfile = new wxTextCtrl(this, -1, wxT(""), wxDefaultPosition, longTextSize);
+  logfileSizer->Add(logfile);
+  wxButton *btn = new wxButton(this, ID_Browse, BTNLABEL_BROWSE);
+  logfileSizer->Add(btn, 0, wxALL, 5);
 
   // to get the scrollWin geometry right, first build everything on a wxPanel,
   // with gridSizer as the main sizer.
-  scrollPanel = new wxPanel (scrollWin, -1);
-  gridSizer = new wxGridSizer (ADVLOG_OPTS_N_TYPES + 1);
+  scrollPanel = new wxPanel(scrollWin, -1);
+  gridSizer = new wxGridSizer(ADVLOG_OPTS_N_TYPES + 1);
   // add title row
   int typemax = ADVLOG_OPTS_N_TYPES;
-  text = new wxStaticText (scrollPanel, -1, wxT("Device"));
-  gridSizer->Add (text, 0, wxALIGN_CENTER);
+  text = new wxStaticText(this, -1, wxT("Device"));
+  headerSizer->Add(text, 0, wxALIGN_LEFT);
   int type;
   for (type=0; type < typemax; type++) {
-    text = new wxStaticText (scrollPanel, -1, names[type]);
-    gridSizer->Add (text, 0, wxALIGN_CENTER);
+    text = new wxStaticText(this, -1, names[type]);
+    headerSizer->Add(text, 0, wxALIGN_LEFT);
   }
   // add rows of choice boxes, one for each device
-  int devmax = SIM->get_n_log_modules (); 
+  int devmax = SIM->get_n_log_modules(); 
   action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
     action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
@@ -472,46 +474,48 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
     gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_prefix(dev), wxConvUTF8)));
     // wxChoice in every other column
     for (type=0; type < typemax; type++) {
-      action[dev][type] = makeLogOptionChoiceBox (scrollPanel, -1, type);
-      gridSizer->Add (action[dev][type], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 2);
+      action[dev][type] = makeLogOptionChoiceBox(scrollPanel, -1, type);
+      gridSizer->Add(action[dev][type], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 2);
     }
   }
-  scrollPanel->SetAutoLayout (TRUE);
-  scrollPanel->SetSizer (gridSizer);
-  gridSizer->Fit (scrollPanel);
-  gridSizer->SetSizeHints (scrollPanel);
-  wxSize size = scrollPanel->GetBestSize ();
+  headerSizer->Fit(this);
+  headerSizer->SetSizeHints(this);
+  scrollPanel->SetAutoLayout(TRUE);
+  scrollPanel->SetSizer(gridSizer);
+  gridSizer->Fit(scrollPanel);
+  gridSizer->SetSizeHints(scrollPanel);
+  wxSize size = scrollPanel->GetBestSize();
   // now we know how big the panel wants to be, and we can set the scrollbar
   // and scrollWin size accordingly
 
   // finally set up the scroll window outside
-  scrollWin->SetScrollbars (1, 1, size.GetWidth (), size.GetHeight ());
+  scrollWin->SetScrollbars(1, 1, size.GetWidth(), size.GetHeight());
 
   // now that we know the desired width of the panel, use it to set the
   // width of the scrollWin.  I tried several things before arriving at 
   // a solution, and I'll list them for educational purposes.
   //
   // failure #1: this had no effect at all. sizer took precedence.
-  //   scrollWin->SetSize (500, 500);
+  //   scrollWin->SetSize(500, 500);
   // failure #2: this changed scrollWin size but sizer was not notified so
   //             the overall window didn't expand to make space for it.
-  //  scrollWin->SetSizeHints (500, 500);
+  //  scrollWin->SetSizeHints(500, 500);
   // success: tell the sizer to change the scrollWin's size, and it works
-  vertSizer->SetItemMinSize (scrollWin, size.GetWidth()+30, 400);
+  vertSizer->SetItemMinSize(scrollWin, size.GetWidth()+30, 400);
 
   // buttonSizer contents
-  btn = new wxButton (this, wxID_HELP, BTNLABEL_HELP);
-  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_HELP, BTNLABEL_HELP);
+  buttonSizer->Add(btn, 0, wxALL, 5);
   // use wxID_CANCEL because pressing ESC produces this same code
-  btn = new wxButton (this, wxID_CANCEL, BTNLABEL_CANCEL);
-  buttonSizer->Add (btn, 0, wxALL, 5);
-  btn = new wxButton (this, wxID_OK, BTNLABEL_OK);
-  buttonSizer->Add (btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_CANCEL, BTNLABEL_CANCEL);
+  buttonSizer->Add(btn, 0, wxALL, 5);
+  btn = new wxButton(this, wxID_OK, BTNLABEL_OK);
+  buttonSizer->Add(btn, 0, wxALL, 5);
 }
 
 AdvancedLogOptionsDialog::~AdvancedLogOptionsDialog()
 {
-  int dev, ndev = SIM->get_n_log_modules ();
+  int dev, ndev = SIM->get_n_log_modules();
   for (dev=0; dev<ndev; dev++) {
     delete [] action[dev];
   }
@@ -547,25 +551,25 @@ void AdvancedLogOptionsDialog::CopyParamToGui() {
 
 void AdvancedLogOptionsDialog::CopyGuiToParam() {
   char buf[1024];
-  safeWxStrcpy (buf, GetLogfile(), sizeof (buf));
+  safeWxStrcpy(buf, GetLogfile(), sizeof(buf));
   bx_param_string_c *logfile = SIM->get_param_string(BXPN_LOG_FILENAME);
-  logfile->set (buf);
+  logfile->set(buf);
   // copy log action settings from gui to siminterface
-  int dev, ndev = SIM->get_n_log_modules ();
-  int type, ntype = SIM->get_max_log_level ();
+  int dev, ndev = SIM->get_n_log_modules();
+  int type, ntype = SIM->get_max_log_level();
   for (dev=0; dev<ndev; dev++) {
     for (type=0; type<ntype; type++) {
-      SIM->set_log_action (dev, type, GetAction (dev, type));
+      SIM->set_log_action(dev, type, GetAction(dev, type));
     }
   }
 }
 
-void AdvancedLogOptionsDialog::SetAction (int dev, int evtype, int act) {
+void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
   // find the choice whose client data matches "act".
   int *ptr;
   // wxLogDebug(wxT("SetAction dev=%d type=%d act=%d"), dev, evtype, act);
   wxChoice *control = action[dev][evtype];
-  for (int i=0; i < control->GetCount (); i++) {
+  for (int i=0; i < control->GetCount(); i++) {
     // wxLogDebug(wxT("reading action[%d][%d]->GetClientData(%d)"), dev, evtype, i);
     ptr = (int*) control->GetClientData(i);
     if (ptr == NULL) continue;
@@ -579,48 +583,48 @@ void AdvancedLogOptionsDialog::SetAction (int dev, int evtype, int act) {
   wxLogDebug(wxT("warning: SetAction type=%d act=%d not found"), evtype, act);
 }
 
-int AdvancedLogOptionsDialog::GetAction (int dev, int evtype) {
-  int sel = action[dev][evtype]->GetSelection (); 
-  int *ptrToChoice = (int*)action[dev][evtype]->GetClientData (sel);
-  wxASSERT (ptrToChoice != NULL);
+int AdvancedLogOptionsDialog::GetAction(int dev, int evtype) {
+  int sel = action[dev][evtype]->GetSelection(); 
+  int *ptrToChoice = (int*)action[dev][evtype]->GetClientData(sel);
+  wxASSERT(ptrToChoice != NULL);
   return *ptrToChoice;
 }
 
 void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 {
-  int id = event.GetId ();
+  int id = event.GetId();
   // wxLogMessage(wxT("you pressed button id=%d"), id);
   switch (id) {
     case ID_Browse:
-      BrowseTextCtrl (logfile);
+      BrowseTextCtrl(logfile);
       break;
     case ID_ApplyDefault: {
-      int lev, nlev = SIM->get_max_log_level ();
+      int lev, nlev = SIM->get_max_log_level();
       // copy default settings to every device
       for (lev=0; lev<nlev; lev++) {
-	int action = SIM->get_default_log_action (lev);
-	int dev, ndev = SIM->get_n_log_modules ();
+	int action = SIM->get_default_log_action(lev);
+	int dev, ndev = SIM->get_n_log_modules();
 	for (dev=0; dev<ndev; dev++) 
-	  SetAction (dev, lev, action);
+	  SetAction(dev, lev, action);
       }
       break;
       }
     case wxID_OK:
-      CopyGuiToParam ();
-      EndModal (wxID_OK);
+      CopyGuiToParam();
+      EndModal(wxID_OK);
       break;
     case wxID_CANCEL:
-      EndModal (wxID_CANCEL);
+      EndModal(wxID_CANCEL);
       break;
     case wxID_HELP:
       ShowHelp(); 
       break;
     default:
-      event.Skip ();
+      event.Skip();
   }
 }
 
-void AdvancedLogOptionsDialog::ShowHelp ()
+void AdvancedLogOptionsDialog::ShowHelp()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
