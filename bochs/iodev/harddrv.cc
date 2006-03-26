@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.164 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: harddrv.cc,v 1.165 2006-03-26 00:38:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,7 +143,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.164 2006-03-07 18:16:40 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.165 2006-03-26 00:38:58 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1752,13 +1752,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   }
+                  if (lba > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
+                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
+                    raise_interrupt(channel);
+                    break;
+                  }
 
                   // Ben: see comment below
                   if (lba + transfer_length > BX_SELECTED_DRIVE(channel).cdrom.capacity) {
                     transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.capacity - lba);
                   }
-
-                  //if (transfer_length == 0) {
                   if (transfer_length <= 0) {
                     atapi_cmd_nop(channel);
                     raise_interrupt(channel);
