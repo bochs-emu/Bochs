@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.23 2006-03-06 22:03:02 sshwarts Exp $
+// $Id: shift8.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   /* set eflags:
@@ -120,7 +120,7 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   /* set eflags:
@@ -171,7 +171,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   /* set eflags:
@@ -216,7 +216,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   /* set eflags:
@@ -259,7 +259,7 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHL8);
@@ -298,7 +298,7 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHR8);
@@ -351,7 +351,7 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
     BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), result_8);
   }
   else {
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 
   SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SAR8);

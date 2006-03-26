@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.23 2006-03-06 22:02:53 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -124,7 +124,7 @@ void BX_CPU_C::XCHG_EbGb(bxInstruction_c *i)
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
-    Write_RMW_virtual_byte(op2);
+    write_RMW_virtual_byte(op2);
   }
 
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);

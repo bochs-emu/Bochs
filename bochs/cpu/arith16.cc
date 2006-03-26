@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.42 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: arith16.cc,v 1.43 2006-03-26 18:58:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ void BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     sum_16 = op1_16 + op2_16;
-    Write_RMW_virtual_word(sum_16);
+    write_RMW_virtual_word(sum_16);
   }
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
@@ -144,7 +144,7 @@ void BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     sum_16 = op1_16 + op2_16 + temp_CF;
-    Write_RMW_virtual_word(sum_16);
+    write_RMW_virtual_word(sum_16);
   }
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD_ADC16(temp_CF));
@@ -201,7 +201,7 @@ void BX_CPU_C::SBB_EwGw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     diff_16 = op1_16 - (op2_16 + temp_CF);
-    Write_RMW_virtual_word(diff_16);
+    write_RMW_virtual_word(diff_16);
   }
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB_SBB16(temp_CF));
@@ -257,7 +257,7 @@ void BX_CPU_C::SBB_EwIw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     diff_16 = op1_16 - (op2_16 + temp_CF);
-    Write_RMW_virtual_word(diff_16);
+    write_RMW_virtual_word(diff_16);
   }
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_SUB_SBB16(temp_CF));
@@ -289,7 +289,7 @@ void BX_CPU_C::SUB_EwGw(bxInstruction_c *i)
 #else
     diff_16 = op1_16 - op2_16;
 #endif
-    Write_RMW_virtual_word(diff_16);
+    write_RMW_virtual_word(diff_16);
   }
 
 #if !defined(BX_HostAsm_Sub16)
@@ -449,7 +449,7 @@ void BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     sum_16 = op1_16 + op2_16;
-    Write_RMW_virtual_word(sum_16);
+    write_RMW_virtual_word(sum_16);
     /* and write destination into source */
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
   }
@@ -478,7 +478,7 @@ void BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
 #endif
 
-  Write_RMW_virtual_word(sum_16);
+  write_RMW_virtual_word(sum_16);
 }
 
 void BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
@@ -516,7 +516,7 @@ void BX_CPU_C::ADC_EwIw(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     sum_16 = op1_16 + op2_16 + temp_CF;
-    Write_RMW_virtual_word(sum_16);
+    write_RMW_virtual_word(sum_16);
   }
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD_ADC16(temp_CF));
@@ -548,7 +548,7 @@ void BX_CPU_C::SUB_EwIw(bxInstruction_c *i)
 #else
     diff_16 = op1_16 - op2_16;
 #endif
-    Write_RMW_virtual_word(diff_16);
+    write_RMW_virtual_word(diff_16);
   }
 
 #if !defined(BX_HostAsm_Sub16)
@@ -591,7 +591,7 @@ void BX_CPU_C::NEG_Ew(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     diff_16 = -op1_16;
-    Write_RMW_virtual_word(diff_16);
+    write_RMW_virtual_word(diff_16);
   }
 
   SET_FLAGS_OSZAPC_RESULT_16(diff_16, BX_INSTR_NEG16);
@@ -609,7 +609,7 @@ void BX_CPU_C::INC_Ew(bxInstruction_c *i)
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
     op1_16++;
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 
   SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_INC16);
@@ -639,7 +639,7 @@ void BX_CPU_C::DEC_Ew(bxInstruction_c *i)
 #else
     op1_16--;
 #endif
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 
 #if !defined(BX_HostAsm_Dec16)
@@ -671,7 +671,7 @@ void BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
       BX_WRITE_16BIT_REG(i->rm(), op2_16);
     }
     else {
-      Write_RMW_virtual_word(op2_16);
+      write_RMW_virtual_word(op2_16);
     }
   }
   else {

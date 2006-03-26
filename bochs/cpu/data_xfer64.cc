@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.23 2006-03-06 22:02:53 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -248,7 +248,7 @@ void BX_CPU_C::XCHG_EqGq(bxInstruction_c *i)
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    Write_RMW_virtual_qword(op2_64);
+    write_RMW_virtual_qword(op2_64);
   }
 
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);

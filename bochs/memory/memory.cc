@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.50 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: memory.cc,v 1.51 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,17 @@
 
 #if BX_PROVIDE_CPU_MEMORY
 
+//
+// Memory map inside the 1st megabyte:
+//
+// 0x00000 - 0x7ffff    DOS area (512K)
+// 0x80000 - 0x9ffff    Optional fixed memory hole (128K)
+// 0xa0000 - 0xbffff    Standard PCI/ISA Video Mem / SMMRAM (128K)
+// 0xc0000 - 0xdffff    Expansion Card BIOS and Buffer Area (128K)
+// 0xe0000 - 0xeffff    Lower BIOS Area (64K)
+// 0xf0000 - 0xfffff    Upper BIOS Area (64K)
+//
+
   void BX_CPP_AttrRegparmN(3)
 BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 {
@@ -41,7 +52,6 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
   // Note: accesses should always be contained within a single page now
 
   if (cpu != NULL) {
-
 #if BX_SUPPORT_IODEBUG
     bx_iodebug_c::mem_write(cpu, a20addr, len, data);
 #endif
@@ -62,11 +72,17 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 
 #if BX_SUPPORT_APIC
     bx_generic_apic_c *local_apic = &cpu->local_apic;
-    if (local_apic->is_selected (a20addr, len)) {
+    if (local_apic->is_selected(a20addr, len)) {
       local_apic->write(a20addr, (Bit32u *)data, len);
       return;
     }
 #endif
+
+    if ((a20addr & 0xfffe0000) == 0x000a0000) {
+      // SMMRAM memory space
+      if (BX_MEM_THIS smram_enabled > 1 || cpu->smm_mode())
+        goto mem_write;
+    }
   }
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
@@ -80,14 +96,18 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
     memory_handler = memory_handler->next;
   }
 
+mem_write:
+
 #if BX_SUPPORT_ICACHE
   if (a20addr < BX_MEM_THIS len)
     pageWriteStampTable.decWriteStamp(a20addr);
 #endif
 
-  if ( (a20addr + len) <= BX_MEM_THIS len ) {
+  // all memory access feets in single 4K page 
+  if (a20addr <= BX_MEM_THIS len) {
     // all of data is within limits of physical memory
-    if ( (a20addr & 0xfff80000) != 0x00080000 ) {
+    if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
+    {
       if (len == 8) {
         WriteHostQWordToLittleEndian(&vector[a20addr], *(Bit64u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
@@ -118,8 +138,9 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
 #endif
 
 write_one:
-    if ( (a20addr & 0xfff80000) != 0x00080000 ) {
-      // addr *not* in range 00080000 .. 000FFFFF
+    if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
+    {
+      // addr *not* in range 000A0000 .. 000FFFFF
       vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
 inc_one:
@@ -134,14 +155,18 @@ inc_one:
       goto write_one;
     }
 
-    // addr in range 00080000 .. 000FFFFF
+    // addr must be in range 000A0000 .. 000FFFFF
 
-    if (a20addr <= 0x0009ffff) {
-      // regular memory 80000 .. 9FFFF
-      vector[a20addr] = *data_ptr;
-      BX_DBG_DIRTY_PAGE(a20addr >> 12);
+    // SMMRAM
+    if (a20addr <= 0x000bffff) {
+      // devices are not allowed to access SMMRAM under VGA memory
+      if (cpu && cpu->smram_write(a20addr)) {
+        vector[a20addr] = *data_ptr;
+        BX_DBG_DIRTY_PAGE(a20addr >> 12);
+      }
       goto inc_one;
     }
+
     // adapter ROM     C0000 .. DFFFF
     // ROM BIOS memory E0000 .. FFFFF
 #if BX_SUPPORT_PCI == 0
@@ -164,34 +189,14 @@ inc_one:
         default:
           BX_PANIC(("writePhysicalPage: default case"));
           goto inc_one;
-        }
       }
+    }
 #endif
     goto inc_one;
   }
   else {
-    // some or all of data is outside limits of physical memory
-
-#ifdef BX_LITTLE_ENDIAN
-    data_ptr = (Bit8u *) data;
-#else // BX_BIG_ENDIAN
-    data_ptr = (Bit8u *) data + (len - 1);
-#endif
-
-    for (unsigned i = 0; i < len; i++) {
-      if (a20addr < BX_MEM_THIS len) {
-        vector[a20addr] = *data_ptr;
-        BX_DBG_DIRTY_PAGE(a20addr >> 12);
-      }
-      // otherwise ignore byte, since it overruns memory
-      addr++;
-      a20addr = (addr);
-#ifdef BX_LITTLE_ENDIAN
-      data_ptr++;
-#else // BX_BIG_ENDIAN
-      data_ptr--;
-#endif
-    }
+    // access outside limits of physical memory, ignore
+    BX_DEBUG(("Write outside the limits of physical memory (ignore)"));
   }
 }
 
@@ -204,7 +209,6 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
   // Note: accesses should always be contained within a single page now
 
   if (cpu != NULL) {
-
 #if BX_SUPPORT_IODEBUG
     bx_iodebug_c::mem_read(cpu, a20addr, len, data);
 #endif
@@ -230,6 +234,12 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
       return;
     }
 #endif
+
+    if ((a20addr & 0xfffe0000) == 0x000a0000) {
+      // SMMRAM memory space
+      if (BX_MEM_THIS smram_enabled > 1 || cpu->smm_mode())
+        goto mem_read;
+    }
   }
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
@@ -243,9 +253,12 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
     memory_handler = memory_handler->next;
   }
 
-  if ( (a20addr + len) <= BX_MEM_THIS len ) {
+mem_read:
+
+  if (a20addr <= BX_MEM_THIS len) {
     // all of data is within limits of physical memory
-    if ( (a20addr & 0xfff80000) != 0x00080000 ) {
+    if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
+    {
       if (len == 8) {
         ReadHostQWordFromLittleEndian(&vector[a20addr], * (Bit64u*) data);
         return;
@@ -262,9 +275,8 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
         * (Bit8u *) data = * ((Bit8u *) (&vector[a20addr]));
         return;
       }
-      // len == 3 case can just fall thru to special cases handling
+      // len == other case can just fall thru to special cases handling
     }
-
 
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
@@ -273,7 +285,8 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data)
 #endif
 
 read_one:
-    if ( (a20addr & 0xfff80000) != 0x00080000 ) {
+    if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
+    {
       // addr *not* in range 00080000 .. 000FFFFF
       *data_ptr = vector[a20addr];
 inc_one:
@@ -288,7 +301,15 @@ inc_one:
       goto read_one;
     }
 
-    // addr in range 00080000 .. 000FFFFF
+    // addr must be in range 000A0000 .. 000FFFFF
+
+    // SMMRAM
+    if (a20addr <= 0x000bffff) {
+      // devices are not allowed to access SMMRAM under VGA memory
+      if (cpu) *data_ptr = vector[a20addr];
+      goto inc_one;
+    }
+
 #if BX_SUPPORT_PCI
     if (pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
     {
@@ -314,10 +335,10 @@ inc_one:
     else
 #endif  // #if BX_SUPPORT_PCI
     {
-      if ( (a20addr & 0xfffc0000) != 0x000c0000 ) {
+      if ((a20addr & 0xfffc0000) != 0x000c0000) {
         *data_ptr = vector[a20addr];
       }
-      else if ( (a20addr & 0xfffe0000) == 0x000e0000 )
+      else if ((a20addr & 0xfffe0000) == 0x000e0000)
       {
         *data_ptr = rom[a20addr & BIOS_MASK];
       }
@@ -329,7 +350,7 @@ inc_one:
     }
   }
   else
-  {  // some or all of data is outside limits of physical memory
+  {  // access outside limits of physical memory
 
 #ifdef BX_LITTLE_ENDIAN
     data_ptr = (Bit8u *) data;
@@ -338,9 +359,7 @@ inc_one:
 #endif
 
     for (unsigned i = 0; i < len; i++) {
-      if (a20addr < BX_MEM_THIS len)
-        *data_ptr = vector[a20addr];
-      else if (a20addr >= (Bit32u)~BIOS_MASK)
+      if (a20addr >= (Bit32u)~BIOS_MASK)
         *data_ptr = rom[a20addr & BIOS_MASK];
       else
         *data_ptr = 0xff;

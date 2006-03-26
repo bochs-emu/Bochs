@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.19 2006-03-06 22:03:02 sshwarts Exp $
+// $Id: shift64.cc,v 1.20 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -104,7 +104,7 @@ void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -143,7 +143,7 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -185,7 +185,7 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -234,7 +234,7 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -282,7 +282,7 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   /* set eflags:
@@ -323,7 +323,7 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHL64);
@@ -359,7 +359,7 @@ void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHR64);
@@ -401,7 +401,7 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), result_64);
   }
   else {
-    Write_RMW_virtual_qword(result_64);
+    write_RMW_virtual_qword(result_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SAR64);

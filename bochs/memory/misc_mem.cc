@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.81 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.82 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,7 +38,7 @@ Bit32u BX_MEM_C::get_memory_in_k(void)
   return(BX_MEM_THIS megabytes * 1024);
 }
 
-BX_MEM_C::BX_MEM_C(void)
+BX_MEM_C::BX_MEM_C()
 {
   char mem[6];
   snprintf(mem, 6, "MEM0");
@@ -76,9 +76,9 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
 	actual_vector, vector));
 }
 
-BX_MEM_C::~BX_MEM_C(void)
+BX_MEM_C::~BX_MEM_C()
 {
-  if (this-> vector != NULL) {
+  if (BX_MEM_THIS vector != NULL) {
     delete [] actual_vector;
     actual_vector = NULL;
     vector = NULL;
@@ -94,10 +94,9 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.81 2006-03-06 22:03:16 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.82 2006-03-26 18:58:01 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
-  // BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes) ));
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
@@ -124,6 +123,8 @@ void BX_MEM_C::init_memory(int memsize)
   }
 #endif
 
+  // accept only memory size which is multiply of 1M
+  BX_ASSERT((len & 0xfffff) == 0);
 }
 
 #if BX_SUPPORT_APIC
@@ -433,14 +434,19 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
   bx_bool ret = 1;
 
   for (; len>0; len--) {
-    if ( (addr & 0xfffe0000) == 0x000a0000 )
-      *buf = DEV_vga_mem_read(addr);
+    // Reading standard PCI/ISA Video Mem / SMMRAM
+    if ((addr & 0xfffe0000) == 0x000a0000) {
+      if (BX_MEM_THIS smram_enabled)
+        *buf = vector[addr];
+      else 
+        *buf = DEV_vga_mem_read(addr);
+    }
 #if BX_SUPPORT_PCI
     else if (pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype (addr)) {
         case 0x0:  // Read from ROM
-          if ( (addr & 0xfffe0000) == 0x000e0000 )
+          if ((addr & 0xfffe0000) == 0x000e0000)
           {
             *buf = rom[addr & BIOS_MASK];
           }
@@ -459,10 +465,10 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 #endif  // #if BX_SUPPORT_PCI
     else if (addr < BX_MEM_THIS len)
     {
-      if ( (addr & 0xfffc0000) != 0x000c0000 ) {
+      if ((addr & 0xfffc0000) != 0x000c0000) {
         *buf = vector[addr];
       }
-      else if ( (addr & 0xfffe0000) == 0x000e0000 )
+      else if ((addr & 0xfffe0000) == 0x000e0000)
       {
         *buf = rom[addr & BIOS_MASK];
       }
@@ -490,12 +496,17 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 #if BX_DEBUGGER || BX_GDBSTUB
 bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 {
-  if ( (addr + len) > this->len ) {
+  if ((addr + len) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
   }
   for (; len>0; len--) {
-    if ( (addr & 0xfffe0000) == 0x000a0000 )
-      DEV_vga_mem_write(addr, *buf);
+    // Write to standard PCI/ISA Video Mem / SMMRAM
+    if ((a20Addr & 0xfffe0000) == 0x000a0000) {
+      if (BX_MEM_THIS smram_enabled)
+        vector[addr] = *buf;
+      else 
+        DEV_vga_mem_write(addr, *buf);
+    }
 #if BX_SUPPORT_PCI
     else if (pci_enabled && ((addr & 0xfffc0000) == 0x000c0000))
     {
@@ -510,7 +521,7 @@ bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ( (addr & 0xfffc0000) != 0x000c0000 && (addr < ~BIOS_MASK) )
+    else if ((addr & 0xfffc0000) != 0x000c0000 && (addr < ~BIOS_MASK))
     {
       vector[addr] = *buf;
     }
@@ -527,7 +538,7 @@ bx_bool BX_MEM_C::dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc)
   if (addr1 > addr2)
     return(0);
 
-  if (addr2 >= this->len)
+  if (addr2 >= BX_MEM_THIS len)
     return(0); // error, specified address past last phy mem addr
   
   unsigned len = 1 + addr2 - addr1;
@@ -548,15 +559,110 @@ bx_bool BX_MEM_C::dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc)
 // directly within the page that encompasses the address requested.
 //
 
-  Bit8u * BX_CPP_AttrRegparmN(3)
-BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
+//
+// Memory map inside the 1st megabyte:
+//
+// 0x00000 - 0x7ffff    DOS area (512K)
+// 0x80000 - 0x9ffff    Optional fixed memory hole (128K)
+// 0xa0000 - 0xbffff    Standard PCI/ISA Video Mem / SMMRAM (128K)
+// 0xc0000 - 0xdffff    Expansion Card BIOS and Buffer Area (128K)
+// 0xe0000 - 0xeffff    Lower BIOS Area (64K)
+// 0xf0000 - 0xfffff    Upper BIOS Area (64K)
+//
+
+  Bit8u * BX_CPP_AttrRegparmN(2)
+BX_MEM_C::getHostMemAddrCode(BX_CPU_C *cpu, Bit32u a20Addr)
 {
+  BX_ASSERT(cpu != 0); // getHostMemAddrCode could be used only inside the CPU
 
 #if BX_SUPPORT_APIC
   bx_generic_apic_c *local_apic = &cpu->local_apic;
   if (local_apic->get_base() == (a20Addr & ~0xfff))
     return(NULL); // Vetoed!  APIC address space
 #endif
+
+  // reading from SMMRAM memory space
+  if ((a20Addr & 0xfffe0000) == 0x000a0000) {
+    if (BX_MEM_THIS smram_enabled || cpu->smm_mode())
+      return (Bit8u *) & vector[a20Addr];
+  }
+
+  struct memory_handler_struct *memory_handler = memory_handlers[a20Addr >> 20];
+  while (memory_handler) {
+    if (memory_handler->begin <= a20Addr &&
+        memory_handler->end >= a20Addr) {
+      return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
+    }
+    memory_handler = memory_handler->next;
+  }
+
+  if ((a20Addr & 0xfffe0000) == 0x000a0000)
+    return(NULL); // Vetoed!  Mem mapped IO (VGA)
+#if BX_SUPPORT_PCI
+  else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
+  {
+    switch (DEV_pci_rd_memtype (a20Addr)) {
+      case 0x0:   // Read from ROM
+        if ((a20Addr & 0xfffe0000) == 0x000e0000)
+        {
+          return (Bit8u *) & rom[a20Addr & BIOS_MASK];
+        }
+        else
+        {
+          return (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
+        }
+        break;
+      case 0x1:   // Read from ShadowRAM
+        return (Bit8u *) & vector[a20Addr];
+      default:
+        BX_PANIC(("getHostMemAddr(): default case"));
+        return(NULL);
+    }
+  }
+#endif
+  else if(a20Addr < BX_MEM_THIS len)
+  {
+    if ((a20Addr & 0xfffc0000) != 0x000c0000) {
+      return (Bit8u *) & vector[a20Addr];
+    }
+    else if ((a20Addr & 0xfffe0000) == 0x000e0000)
+    {
+      return (Bit8u *) & rom[a20Addr & BIOS_MASK];
+    }
+    else
+    {
+      return (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
+    }
+  }
+  else if (a20Addr >= (Bit32u)~BIOS_MASK)
+  {
+    return (Bit8u *) & rom[a20Addr & BIOS_MASK];
+  }
+  else
+  {
+    // Error, requested addr is out of bounds.
+    return (Bit8u *) & bogus[a20Addr & 0x0fff];
+  }
+}
+
+  Bit8u * BX_CPP_AttrRegparmN(3)
+BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
+{
+  BX_ASSERT(cpu != 0); // getHostMemAddr could be used only inside the CPU
+
+#if BX_SUPPORT_APIC
+  bx_generic_apic_c *local_apic = &cpu->local_apic;
+  if (local_apic->get_base() == (a20Addr & ~0xfff))
+    return(NULL); // Vetoed!  APIC address space
+#endif
+
+  if (op == BX_READ) {
+    // reading from SMMRAM memory space
+    if ((a20Addr & 0xfffe0000) == 0x000a0000) {
+      if (BX_MEM_THIS smram_enabled > 1 || cpu->smm_mode())
+        return (Bit8u *) & vector[a20Addr];
+    }
+  }
 
   struct memory_handler_struct *memory_handler = memory_handlers[a20Addr >> 20];
   while (memory_handler) {
@@ -568,38 +674,38 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
   }
 
   if (op == BX_READ) {
-    if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
+    if ((a20Addr & 0xfffe0000) == 0x000a0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
 #if BX_SUPPORT_PCI
     else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype (a20Addr)) {
         case 0x0:   // Read from ROM
-          if ( (a20Addr & 0xfffe0000) == 0x000e0000 )
+          if ((a20Addr & 0xfffe0000) == 0x000e0000)
           {
-            return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
+            return (Bit8u *) & rom[a20Addr & BIOS_MASK];
           }
           else
           {
-            return( (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
+            return (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
           }
           break;
         case 0x1:   // Read from ShadowRAM
-          return( (Bit8u *) & vector[a20Addr]);
+          return (Bit8u *) & vector[a20Addr];
         default:
           BX_PANIC(("getHostMemAddr(): default case"));
-          return(0);
+          return(NULL);
       }
     }
 #endif
-    else if (a20Addr < BX_MEM_THIS len)
+    else if(a20Addr < BX_MEM_THIS len)
     {
-      if ( (a20Addr & 0xfffc0000) != 0x000c0000 ) {
-        return( (Bit8u *) & vector[a20Addr]);
+      if ((a20Addr & 0xfffc0000) != 0x000c0000) {
+        return (Bit8u *) & vector[a20Addr];
       }
-      else if ( (a20Addr & 0xfffe0000) == 0x000e0000 )
+      else if ((a20Addr & 0xfffe0000) == 0x000e0000)
       {
-        return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
+        return (Bit8u *) & rom[a20Addr & BIOS_MASK];
       }
       else
       {
@@ -608,20 +714,20 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     }
     else if (a20Addr >= (Bit32u)~BIOS_MASK)
     {
-      return( (Bit8u *) & rom[a20Addr & BIOS_MASK]);
+      return (Bit8u *) & rom[a20Addr & BIOS_MASK];
     }
     else
     {
       // Error, requested addr is out of bounds.
-      return( (Bit8u *) & bogus[a20Addr & 0x0fff]);
+      return (Bit8u *) & bogus[a20Addr & 0x0fff];
     }
   }
   else
   { // op == {BX_WRITE, BX_RW}
     Bit8u *retAddr;
-    if ( a20Addr >= BX_MEM_THIS len )
+    if (a20Addr >= BX_MEM_THIS len)
       return(NULL); // Error, requested addr is out of bounds.
-    else if ( (a20Addr & 0xfffe0000) == 0x000a0000 )
+    else if ((a20Addr & 0xfffe0000) == 0x000a0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
     else if (a20Addr >= (Bit32u)~BIOS_MASK)
       return(NULL); // Vetoed!  ROMs
@@ -655,7 +761,7 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     pageWriteStampTable.decWriteStamp(a20Addr);
 #endif
 
-    return(retAddr);
+    return retAddr;
   }
 }
 
@@ -714,4 +820,14 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
     delete memory_handler;
   }  
   return ret;
+}
+
+BX_MEM_SMF void BX_MEM_C::enable_smram(bx_bool code_only)
+{
+  BX_MEM_THIS smram_enabled = code_only ? 1 : 2;
+}
+
+BX_MEM_SMF void BX_MEM_C::disable_smram(void)
+{
+  BX_MEM_THIS smram_enabled = 0;
 }

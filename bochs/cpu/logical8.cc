@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.27 2006-03-06 22:03:00 sshwarts Exp $
+// $Id: logical8.cc,v 1.28 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ void BX_CPU_C::XOR_EbGb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
@@ -97,7 +97,7 @@ void BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 ^ op2;
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
@@ -117,7 +117,7 @@ void BX_CPU_C::OR_EbIb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
@@ -135,7 +135,7 @@ void BX_CPU_C::NOT_Eb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
     result_8 = ~op1_8;
-    Write_RMW_virtual_byte(result_8);
+    write_RMW_virtual_byte(result_8);
   }
 }
 
@@ -153,7 +153,7 @@ void BX_CPU_C::OR_EbGb(bxInstruction_c *i)
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
     result = op1 | op2;
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
   SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
@@ -233,7 +233,7 @@ void BX_CPU_C::AND_EbGb(bxInstruction_c *i)
     result = op1 & op2;
 #endif
 
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
 #if !defined(BX_HostAsm_And8)
@@ -315,7 +315,7 @@ void BX_CPU_C::AND_EbIb(bxInstruction_c *i)
     result = op1 & op2;
 #endif
 
-    Write_RMW_virtual_byte(result);
+    write_RMW_virtual_byte(result);
   }
 
 #if !defined(BX_HostAsm_And8)

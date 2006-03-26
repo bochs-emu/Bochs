@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.139 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: cpu.cc,v 1.140 2006-03-26 18:58:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -771,7 +771,7 @@ void BX_CPU_C::prefetch(void)
   BX_CPU_THIS_PTR eipPageWindowSize = 4096;
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
-       BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, BX_CPU_THIS_PTR pAddrA20Page, BX_READ);
+       BX_CPU_THIS_PTR mem->getHostMemAddrCode(BX_CPU_THIS, BX_CPU_THIS_PTR pAddrA20Page);
 
   // Sanity checks
   if (! BX_CPU_THIS_PTR eipFetchPtr) {

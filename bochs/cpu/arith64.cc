@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.28 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: arith64.cc,v 1.29 2006-03-26 18:58:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ void BX_CPU_C::ADD_EqGq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     sum_64 = op1_64 + op2_64;
-    Write_RMW_virtual_qword(sum_64);
+    write_RMW_virtual_qword(sum_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
@@ -115,7 +115,7 @@ void BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     sum_64 = op1_64 + op2_64 + temp_CF;
-    Write_RMW_virtual_qword(sum_64);
+    write_RMW_virtual_qword(sum_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD_ADC64(temp_CF));
@@ -183,7 +183,7 @@ void BX_CPU_C::SBB_EqGq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     diff_64 = op1_64 - (op2_64 + temp_CF);
-    Write_RMW_virtual_qword(diff_64);
+    write_RMW_virtual_qword(diff_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB_SBB64(temp_CF));
@@ -251,7 +251,7 @@ void BX_CPU_C::SBB_EqId(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     diff_64 = op1_64 - (op2_64 + temp_CF);
-    Write_RMW_virtual_qword(diff_64);
+    write_RMW_virtual_qword(diff_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB_SBB64(temp_CF));
@@ -274,7 +274,7 @@ void BX_CPU_C::SUB_EqGq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     diff_64 = op1_64 - op2_64;
-    Write_RMW_virtual_qword(diff_64);
+    write_RMW_virtual_qword(diff_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
@@ -422,7 +422,7 @@ void BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), sum_64);
   }
   else {
-    Write_RMW_virtual_qword(sum_64);
+    write_RMW_virtual_qword(sum_64);
     /* and write destination into source */
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
   }
@@ -447,7 +447,7 @@ void BX_CPU_C::ADD_EqId(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     sum_64 = op1_64 + op2_64;
-    Write_RMW_virtual_qword(sum_64);
+    write_RMW_virtual_qword(sum_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
@@ -472,7 +472,7 @@ void BX_CPU_C::ADC_EqId(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     sum_64 = op1_64 + op2_64 + temp_CF;
-    Write_RMW_virtual_qword(sum_64);
+    write_RMW_virtual_qword(sum_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD_ADC64(temp_CF));
@@ -495,7 +495,7 @@ void BX_CPU_C::SUB_EqId(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     diff_64 = op1_64 - op2_64;
-    Write_RMW_virtual_qword(diff_64);
+    write_RMW_virtual_qword(diff_64);
   }
 
   SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_SUB64);
@@ -537,7 +537,7 @@ void BX_CPU_C::NEG_Eq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     diff_64 = -op1_64;
-    Write_RMW_virtual_qword(diff_64);
+    write_RMW_virtual_qword(diff_64);
   }
 
   SET_FLAGS_OSZAPC_RESULT_64(diff_64, BX_INSTR_NEG64);
@@ -557,7 +557,7 @@ void BX_CPU_C::INC_Eq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     op1_64++;
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 
   SET_FLAGS_OSZAP_RESULT_64(op1_64, BX_INSTR_INC64);
@@ -577,7 +577,7 @@ void BX_CPU_C::DEC_Eq(bxInstruction_c *i)
     /* pointer, segment address pair */
     read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
     op1_64--;
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 
   SET_FLAGS_OSZAP_RESULT_64(op1_64, BX_INSTR_DEC64);
@@ -608,7 +608,7 @@ void BX_CPU_C::CMPXCHG_EqGq(bxInstruction_c *i)
       BX_WRITE_64BIT_REG(i->rm(), op2_64);
     }
     else {
-      Write_RMW_virtual_qword(op2_64);
+      write_RMW_virtual_qword(op2_64);
     }
   }
   else {
@@ -641,7 +641,7 @@ void BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
     // ZF = 1
     set_ZF(1);
     // dest <-- src
-    Write_RMW_virtual_qword(RCX);
+    write_RMW_virtual_qword(RCX);
     write_virtual_qword(i->seg(), RMAddr(i), &RBX);
   }
   else {

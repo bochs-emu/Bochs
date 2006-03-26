@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.6 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: smm.cc,v 1.7 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -143,6 +143,11 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR msr.lme = 0;
   BX_CPU_THIS_PTR msr.lma = 0;
 #endif
+}
+
+bx_bool BX_CPU_C::smram_write(bx_phy_address a20addr)
+{
+  return 1; // for now
 }
 
 #endif /* BX_CPU_LEVEL >= 3 */

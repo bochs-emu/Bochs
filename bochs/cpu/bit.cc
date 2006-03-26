@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.26 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: bit.cc,v 1.27 2006-03-26 18:58:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -918,7 +918,7 @@ void BX_CPU_C::BTS_EwGw(bxInstruction_c *i)
   bit_i = (op1_16 >> index) & 0x01;
   op1_16 |= (((Bit16u) 1) << index);
 
-  Write_RMW_virtual_word(op1_16);
+  write_RMW_virtual_word(op1_16);
 
   set_CF(bit_i);
 }
@@ -953,7 +953,7 @@ void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
   bit_i = (op1_32 >> index) & 0x01;
   op1_32 |= (((Bit32u) 1) << index);
 
-  Write_RMW_virtual_dword(op1_32);
+  write_RMW_virtual_dword(op1_32);
 
   set_CF(bit_i);
 }
@@ -990,7 +990,7 @@ void BX_CPU_C::BTS_EqGq(bxInstruction_c *i)
   bit_i = (op1_64 >> index) & 0x01;
   op1_64 |= (((Bit64u) 1) << index);
 
-  Write_RMW_virtual_qword(op1_64);
+  write_RMW_virtual_qword(op1_64);
 
   set_CF(bit_i);
 }
@@ -1027,7 +1027,7 @@ void BX_CPU_C::BTR_EwGw(bxInstruction_c *i)
   op1_16 &= ~(((Bit16u) 1) << index);
 
   /* now write back to destination */
-  Write_RMW_virtual_word(op1_16);
+  write_RMW_virtual_word(op1_16);
 
   set_CF(temp_cf);
 }
@@ -1063,7 +1063,7 @@ void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
   op1_32 &= ~(((Bit32u) 1) << index);
 
   /* now write back to destination */
-  Write_RMW_virtual_dword(op1_32);
+  write_RMW_virtual_dword(op1_32);
 
   set_CF(temp_cf);
 }
@@ -1100,7 +1100,7 @@ void BX_CPU_C::BTR_EqGq(bxInstruction_c *i)
   op1_64 &= ~(((Bit64u) 1) << index);
 
   /* now write back to destination */
-  Write_RMW_virtual_qword(op1_64);
+  write_RMW_virtual_qword(op1_64);
 
   set_CF(temp_cf);
 }
@@ -1135,7 +1135,7 @@ void BX_CPU_C::BTC_EwGw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
   else {
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 
   set_CF(temp_CF);
@@ -1170,7 +1170,7 @@ void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
-    Write_RMW_virtual_dword(op1_32);
+    write_RMW_virtual_dword(op1_32);
   }
 }
 
@@ -1205,7 +1205,7 @@ void BX_CPU_C::BTC_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
   else {
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 }
 #endif
@@ -1289,7 +1289,7 @@ void BX_CPU_C::BTS_EwIb(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
   else {
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 
   set_CF(temp_CF);
@@ -1318,7 +1318,7 @@ void BX_CPU_C::BTS_EdIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
-    Write_RMW_virtual_dword(op1_32);
+    write_RMW_virtual_dword(op1_32);
   }
 
   set_CF(temp_CF);
@@ -1348,7 +1348,7 @@ void BX_CPU_C::BTS_EqIb(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
   else {
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 
   set_CF(temp_CF);
@@ -1379,7 +1379,7 @@ void BX_CPU_C::BTC_EwIb(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
   else {
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 }
 
@@ -1407,7 +1407,7 @@ void BX_CPU_C::BTC_EdIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
-    Write_RMW_virtual_dword(op1_32);
+    write_RMW_virtual_dword(op1_32);
   }
 }
 
@@ -1436,7 +1436,7 @@ void BX_CPU_C::BTC_EqIb(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
   else {
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 }
 #endif
@@ -1464,7 +1464,7 @@ void BX_CPU_C::BTR_EwIb(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
   else {
-    Write_RMW_virtual_word(op1_16);
+    write_RMW_virtual_word(op1_16);
   }
 
   set_CF(temp_CF);
@@ -1493,7 +1493,7 @@ void BX_CPU_C::BTR_EdIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
-    Write_RMW_virtual_dword(op1_32);
+    write_RMW_virtual_dword(op1_32);
   }
 
   set_CF(temp_CF);
@@ -1523,7 +1523,7 @@ void BX_CPU_C::BTR_EqIb(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
   else {
-    Write_RMW_virtual_qword(op1_64);
+    write_RMW_virtual_qword(op1_64);
   }
 
   set_CF(temp_CF);

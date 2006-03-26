@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.32 2006-03-06 19:23:13 sshwarts Exp $
+// $Id: memory.h,v 1.33 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,11 +60,15 @@ struct memory_handler_struct {
 	memory_handler_t write_handler;
 };
 
+#define SMRAM_CODE  1
+#define SMRAM_DATA  2
+
 class BOCHSAPI BX_MEM_C : public logfunctions {
 private:
   struct memory_handler_struct **memory_handlers;
   bx_bool rom_present[65];
   bx_bool pci_enabled;
+  unsigned smram_enabled;
   
 public:
   Bit8u   *actual_vector;
@@ -80,10 +84,12 @@ public:
   }
 #endif
 
-  BX_MEM_C(void);
-  ~BX_MEM_C(void);
+  BX_MEM_C();
+ ~BX_MEM_C();
   BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
   BX_MEM_SMF void    init_memory(int memsize);
+  BX_MEM_SMF void    enable_smram(bx_bool code_only);
+  BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF void    readPhysicalPage(BX_CPU_C *cpu, Bit32u addr,
                                       unsigned len, void *data) BX_CPP_AttrRegparmN(3);
   BX_MEM_SMF void    writePhysicalPage(BX_CPU_C *cpu, Bit32u addr,
@@ -95,6 +101,7 @@ public:
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc);
   BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
+  BX_MEM_SMF Bit8u* getHostMemAddrCode(BX_CPU_C *cpu, Bit32u a20Addr) BX_CPP_AttrRegparmN(2);;
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		  memory_handler_t write_handler, Bit32u begin_addr, Bit32u end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 

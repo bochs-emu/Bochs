@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.271 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: cpu.h,v 1.272 2006-03-26 18:58:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2680,11 +2680,6 @@ public: // for now...
   BX_SMF void write_RMW_virtual_dword(Bit32u val32) BX_CPP_AttrRegparmN(1);
   BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
 
-#define Write_RMW_virtual_byte(val8)   write_RMW_virtual_byte(val8)
-#define Write_RMW_virtual_word(val16)  write_RMW_virtual_word(val16)
-#define Write_RMW_virtual_dword(val32) write_RMW_virtual_dword(val32)
-#define Write_RMW_virtual_qword(val64) write_RMW_virtual_qword(val64)
-
 #if BX_SupportGuest2HostTLB
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u* v2h_read_word(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
@@ -2746,6 +2741,7 @@ public: // for now...
   BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();
 #endif
+  BX_SMF bx_bool smram_write(bx_phy_address a20addr);
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);

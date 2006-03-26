@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.36 2006-03-06 22:02:52 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.37 2006-03-26 18:58:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -189,7 +189,7 @@ void BX_CPU_C::XCHG_EdGd(bxInstruction_c *i)
   else {
     /* pointer, segment address pair */
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    Write_RMW_virtual_dword(op2_32);
+    write_RMW_virtual_dword(op2_32);
   }
 
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
