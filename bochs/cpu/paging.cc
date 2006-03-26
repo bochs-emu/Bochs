@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.68 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: paging.cc,v 1.69 2006-03-26 19:39:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1005,7 +1005,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(ppf), rw);
+    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, 
+       A20ADDR(ppf), rw, access_type);
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr) {
     // All access allowed also via direct pointer
@@ -1199,9 +1200,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       return;
     }
     else {
-      // access across 2 pages, no need to check for Local APIC here,
-      // correct Local APIC access always 16-byte aligned and 
-      // maximum 4-byte length so it cannot page split.
+      // access across 2 pages
       BX_CPU_THIS_PTR address_xlation.paddress1 =
           dtranslate_linear(laddr, pl, xlate_rw);
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
@@ -1294,12 +1293,12 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         tlbEntry->ppf = lpf;
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
-            BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE);
+            BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
 
         if (! tlbEntry->hostPageAddr) {
           // Direct write vetoed.  Try requesting only direct reads.
           tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
-              BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ);
+              BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_READ, DATA_ACCESS);
           if (tlbEntry->hostPageAddr) {
             // Got direct read pointer OK.
             tlbEntry->accessBits =
@@ -1336,7 +1335,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
-            BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE);
+            BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
 
         if (tlbEntry->hostPageAddr) {
           // Got direct write pointer OK.  Mark for any operation to succeed.
@@ -1351,9 +1350,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
       }
     }
     else {
-      // access across 2 pages, no need to check for Local APIC here,
-      // correct Local APIC access always 16-byte aligned and 
-      // maximum 4-byte length so it cannot page split.
+      // Access spans two pages.
       BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
       BX_CPU_THIS_PTR address_xlation.len2 = length -

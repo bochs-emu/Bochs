@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.82 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.83 2006-03-26 19:39:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.82 2006-03-26 18:58:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.83 2006-03-26 19:39:37 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -570,83 +570,7 @@ bx_bool BX_MEM_C::dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc)
 // 0xf0000 - 0xfffff    Upper BIOS Area (64K)
 //
 
-  Bit8u * BX_CPP_AttrRegparmN(2)
-BX_MEM_C::getHostMemAddrCode(BX_CPU_C *cpu, Bit32u a20Addr)
-{
-  BX_ASSERT(cpu != 0); // getHostMemAddrCode could be used only inside the CPU
-
-#if BX_SUPPORT_APIC
-  bx_generic_apic_c *local_apic = &cpu->local_apic;
-  if (local_apic->get_base() == (a20Addr & ~0xfff))
-    return(NULL); // Vetoed!  APIC address space
-#endif
-
-  // reading from SMMRAM memory space
-  if ((a20Addr & 0xfffe0000) == 0x000a0000) {
-    if (BX_MEM_THIS smram_enabled || cpu->smm_mode())
-      return (Bit8u *) & vector[a20Addr];
-  }
-
-  struct memory_handler_struct *memory_handler = memory_handlers[a20Addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20Addr &&
-        memory_handler->end >= a20Addr) {
-      return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
-    }
-    memory_handler = memory_handler->next;
-  }
-
-  if ((a20Addr & 0xfffe0000) == 0x000a0000)
-    return(NULL); // Vetoed!  Mem mapped IO (VGA)
-#if BX_SUPPORT_PCI
-  else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
-  {
-    switch (DEV_pci_rd_memtype (a20Addr)) {
-      case 0x0:   // Read from ROM
-        if ((a20Addr & 0xfffe0000) == 0x000e0000)
-        {
-          return (Bit8u *) & rom[a20Addr & BIOS_MASK];
-        }
-        else
-        {
-          return (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
-        }
-        break;
-      case 0x1:   // Read from ShadowRAM
-        return (Bit8u *) & vector[a20Addr];
-      default:
-        BX_PANIC(("getHostMemAddr(): default case"));
-        return(NULL);
-    }
-  }
-#endif
-  else if(a20Addr < BX_MEM_THIS len)
-  {
-    if ((a20Addr & 0xfffc0000) != 0x000c0000) {
-      return (Bit8u *) & vector[a20Addr];
-    }
-    else if ((a20Addr & 0xfffe0000) == 0x000e0000)
-    {
-      return (Bit8u *) & rom[a20Addr & BIOS_MASK];
-    }
-    else
-    {
-      return (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ];
-    }
-  }
-  else if (a20Addr >= (Bit32u)~BIOS_MASK)
-  {
-    return (Bit8u *) & rom[a20Addr & BIOS_MASK];
-  }
-  else
-  {
-    // Error, requested addr is out of bounds.
-    return (Bit8u *) & bogus[a20Addr & 0x0fff];
-  }
-}
-
-  Bit8u * BX_CPP_AttrRegparmN(3)
-BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
+Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsigned access_type)
 {
   BX_ASSERT(cpu != 0); // getHostMemAddr could be used only inside the CPU
 
@@ -656,10 +580,11 @@ BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op)
     return(NULL); // Vetoed!  APIC address space
 #endif
 
-  if (op == BX_READ) {
+  // allow direct access to SMMRAM memory space for code and veto data
+  if (access_type == CODE_ACCESS) {
     // reading from SMMRAM memory space
     if ((a20Addr & 0xfffe0000) == 0x000a0000) {
-      if (BX_MEM_THIS smram_enabled > 1 || cpu->smm_mode())
+      if (BX_MEM_THIS smram_enabled || cpu->smm_mode())
         return (Bit8u *) & vector[a20Addr];
     }
   }

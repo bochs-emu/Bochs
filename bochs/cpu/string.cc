@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.32 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: string.cc,v 1.33 2006-03-26 19:39:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrSrc = A20ADDR(paddrSrc);
   Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
+            paddrSrc, BX_READ, DATA_ACCESS);
 
   if (! hostAddrSrc) return 0;
 
@@ -85,7 +85,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 
@@ -202,7 +202,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrSrc = A20ADDR(paddrSrc);
   Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
+            paddrSrc, BX_READ, DATA_ACCESS);
 
   if (! hostAddrSrc) return 0;
 
@@ -219,7 +219,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 
@@ -340,7 +340,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrSrc = A20ADDR(paddrSrc);
   Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ);
+            paddrSrc, BX_READ, DATA_ACCESS);
 
   if (! hostAddrSrc) return 0;
 
@@ -357,7 +357,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 
@@ -472,7 +472,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 
@@ -566,7 +566,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 
@@ -663,7 +663,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   // we need the A20 address.
   paddrDst = A20ADDR(paddrDst);
   Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE);
+            paddrDst, BX_WRITE, DATA_ACCESS);
 
   if (! hostAddrDst) return 0;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.33 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: memory.h,v 1.34 2006-03-26 19:39:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -100,8 +100,7 @@ public:
   BX_MEM_SMF bx_bool dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf);
   BX_MEM_SMF bx_bool dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc);
-  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op) BX_CPP_AttrRegparmN(3);
-  BX_MEM_SMF Bit8u* getHostMemAddrCode(BX_CPU_C *cpu, Bit32u a20Addr) BX_CPP_AttrRegparmN(2);;
+  BX_MEM_SMF Bit8u* getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsigned access_type);
   BX_MEM_SMF bx_bool registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		  memory_handler_t write_handler, Bit32u begin_addr, Bit32u end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler, 
