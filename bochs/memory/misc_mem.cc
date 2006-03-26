@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.83 2006-03-26 19:39:37 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.84 2006-03-26 19:48:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.83 2006-03-26 19:39:37 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.84 2006-03-26 19:48:54 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -115,6 +115,7 @@ void BX_MEM_C::init_memory(int memsize)
     BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
   }
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
+  BX_MEM_THIS smram_enabled = 0;
 
 #if BX_DEBUGGER
   if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
