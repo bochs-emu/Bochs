@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.8 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: smm.cc,v 1.9 2006-03-27 20:09:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -348,9 +348,9 @@ bx_bool BX_CPU_C::smram_restore_state(void)
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, base, 4, &saved_state[i]);
   }
 
-  setCR0(saved_state[SMRAM_TRANSLATE(0x7ffc)]);
+  SetCR0(saved_state[SMRAM_TRANSLATE(0x7ffc)]);
   CR3_change(saved_state[SMRAM_TRANSLATE(0x7ff8)]);
-  setEFlags(saved_state[SMRAM_TRANSLATE(0x7ff4)]);
+  BX_CPU_THIS_PTR setEFlags(saved_state[SMRAM_TRANSLATE(0x7ff4)]);
 
   EIP = saved_state[SMRAM_TRANSLATE(0x7ff0)];
   EDI = saved_state[SMRAM_TRANSLATE(0x7fec)];
