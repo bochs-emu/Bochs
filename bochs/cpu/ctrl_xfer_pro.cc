@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.52 2006-03-06 22:02:52 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.53 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 #endif
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   // Loading CS will invalidate the EIP fetch window.

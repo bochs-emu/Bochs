@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.142 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.143 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -591,10 +591,6 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      // BX_INFO(("MOV_CdRd:CR0: R32 = %08x @CS:EIP %04x:%04x ",
-      //   (unsigned) val_32,
-      //   (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-      //   (unsigned) EIP));
       SetCR0(val_32);
       break;
 
@@ -616,9 +612,10 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
       BX_PANIC(("MOV_CdRd: write to CR4 of 0x%08x on 386", val_32));
       UndefinedOpcode(i);
 #else
-      //  Protected mode: #GP(0) if attempt to write a 1 to
-      //  any reserved bit of CR4
-      SetCR4(val_32);
+      // Protected mode: #GP(0) if attempt to write a 1 to
+      // any reserved bit of CR4
+      if (! SetCR4(val_32))
+        exception(BX_GP_EXCEPTION, 0, 0);
 #endif
       break;
     default:
@@ -724,10 +721,6 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      // BX_INFO(("MOV_CqRq:CR0: R64 = %08x @CS:EIP %04x:%04x ",
-      //   (unsigned) val_64,
-      //   (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-      //   (unsigned) EIP));
       SetCR0(val_64);
       break;
     case 1: /* CR1 */
@@ -748,7 +741,8 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //  any reserved bit of CR4
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      SetCR4(val_64);
+      if (! SetCR4(val_64))
+        exception(BX_GP_EXCEPTION, 0, 0);
       break;
 #if BX_SUPPORT_APIC
     case 8: // CR8
@@ -1142,7 +1136,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   /* ES */
@@ -1327,9 +1321,6 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       BX_CPU_THIS_PTR msr.lma = 1;
       BX_DEBUG(("Enter Compatibility Mode"));
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-//#if BX_EXTERNAL_DEBUGGER
-      //trap_debugger(0);
-//#endif
     }
   }
   else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0) {
@@ -1346,9 +1337,6 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         BX_DEBUG(("Enter Real Mode"));
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
       }
-//#if BX_EXTERNAL_DEBUGGER
-      //trap_debugger(0);
-//#endif
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1359,7 +1347,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 }
 
 #if BX_CPU_LEVEL >= 4
-void BX_CPU_C::SetCR4(Bit32u val_32)
+bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 {
   Bit32u oldCR4 = BX_CPU_THIS_PTR cr4.getRegister();
   Bit32u allowMask = 0;
@@ -1415,24 +1403,25 @@ void BX_CPU_C::SetCR4(Bit32u val_32)
 #endif
 
 #if BX_SUPPORT_X86_64
-  //  need to GPF #0 if LME=1 and PAE=0
+  // need to GPF #0 if LME=1 and PAE=0
   if ((BX_CPU_THIS_PTR msr.lme)
       && (!(val_32 >> 5) & 1)
       && (BX_CPU_THIS_PTR cr4.get_PAE())) 
   {
-    exception(BX_GP_EXCEPTION, 0, 0);
+    return 0;
   }
 #endif
 
   // Need to GPF if trying to set undefined bits.
   if (val_32 & ~allowMask) {
-    BX_INFO(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)",
-             val_32, allowMask));
-    exception(BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val_32, allowMask));
+    return 0;
   }
+
   val_32 &= allowMask; // Screen out unsupported bits. (not needed, for good measure)
   BX_CPU_THIS_PTR cr4.setRegister(val_32);
   pagingCR4Changed(oldCR4, BX_CPU_THIS_PTR cr4.getRegister());
+  return 1;
 }
 #endif
 
@@ -1856,7 +1845,7 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK;
@@ -1916,7 +1905,7 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;           // available for use by system
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value = (BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) | 3;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.55 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.56 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,7 +223,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
     seg->cache.u.segment.executable = 1; /* code segment */
 #if BX_SUPPORT_ICACHE
-    BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+    BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
     invalidate_prefetch_q();
   }

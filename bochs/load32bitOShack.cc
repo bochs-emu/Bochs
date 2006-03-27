@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.20 2006-03-06 22:02:48 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.21 2006-03-27 18:02:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -244,6 +244,10 @@ void bx_load_null_kernel_hack(void)
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; // page gran
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b = 1; // 32bit
+
+#if BX_SUPPORT_ICACHE
+  BX_CPU(0)->updateFetchModeMask();
+#endif
 
   // DS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.base = 0x00000000;

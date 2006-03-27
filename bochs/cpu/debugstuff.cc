@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.60 2006-03-06 22:02:53 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.61 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -719,7 +719,7 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit;
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   // SS:

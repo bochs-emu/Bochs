@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.85 2006-03-26 22:15:07 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.86 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.85 2006-03-26 22:15:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.86 2006-03-27 18:02:07 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -751,16 +751,23 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
   return ret;
 }
 
-BX_MEM_SMF void BX_MEM_C::enable_smram(bx_bool enable, bx_bool restricted)
+void BX_MEM_C::enable_smram(bx_bool enable, bx_bool restricted)
 {
   BX_MEM_THIS smram_available = 1;
   BX_MEM_THIS smram_enable = (enable > 0);
   BX_MEM_THIS smram_restricted = (restricted > 0);
 }
 
-BX_MEM_SMF void BX_MEM_C::disable_smram(void)
+void BX_MEM_C::disable_smram(void)
 {
   BX_MEM_THIS smram_available  = 0;
   BX_MEM_THIS smram_enable     = 0;
   BX_MEM_THIS smram_restricted = 0;
+}
+
+// check if SMRAM is aavailable for CPU data accesses
+bx_bool BX_MEM_C::is_smram_accessible(void)
+{
+  return(BX_MEM_THIS smram_available) &&
+        (BX_MEM_THIS smram_enable || !BX_MEM_THIS smram_restricted);
 }

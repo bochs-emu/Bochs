@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.48 2006-03-26 18:58:00 sshwarts Exp $
+// $Id: arith32.cc,v 1.49 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -440,13 +440,13 @@ void BX_CPU_C::CDQ(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG_XBTS(bxInstruction_c *i)
 {
-  BX_INFO(("CMPXCHG_XBTS:"));
+  BX_INFO(("CMPXCHG_XBTS: Generate #UD exception"));
   UndefinedOpcode(i);
 }
 
 void BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
 {
-  BX_INFO(("CMPXCHG_IBTS:"));
+  BX_INFO(("CMPXCHG_IBTS: Generate #UD exception"));
   UndefinedOpcode(i);
 }
 

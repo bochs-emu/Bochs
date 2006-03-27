@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.94 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: init.cc,v 1.95 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -511,7 +511,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_ICACHE
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   /* DS (Data Segment) and descriptor cache */

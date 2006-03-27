@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.272 2006-03-26 18:58:00 sshwarts Exp $
+// $Id: cpu.h,v 1.273 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1233,8 +1233,8 @@ public: // for now...
 #if BX_SUPPORT_ICACHE
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
+  Bit32u updateFetchModeMask(void);
 #endif
-
 
   struct {
     bx_address  rm_addr; // The address offset after resolution.
@@ -2742,6 +2742,8 @@ public: // for now...
                   BX_CPP_AttrNoReturn();
 #endif
   BX_SMF bx_bool smram_write(bx_phy_address a20addr);
+  BX_SMF void smram_save_state(void);
+  BX_SMF bx_bool smram_restore_state(void);
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
@@ -2927,18 +2929,18 @@ public: // for now...
 
   BX_SMF void SetCR0(Bit32u val_32);
 #if BX_CPU_LEVEL >= 4
-  BX_SMF void SetCR4(Bit32u val_32);
+  BX_SMF bx_bool SetCR4(Bit32u val_32);
 #endif
 
 };
 
 #if BX_SUPPORT_ICACHE
 
-BX_CPP_INLINE Bit32u createFetchModeMask(BX_CPU_C *cpu)
+BX_CPP_INLINE Bit32u BX_CPU_C::updateFetchModeMask(void)
 {
-  return (cpu->sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
+  return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
 #if BX_SUPPORT_X86_64
-         | ((cpu->cpu_mode == BX_MODE_LONG_64)<<30)
+         | ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30)
 #endif
          | (1<<29); // iCache code.
 }

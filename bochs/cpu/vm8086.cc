@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.25 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: vm8086.cc,v 1.26 2006-03-27 18:02:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -254,7 +254,7 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl                 = 3;
 
 #if BX_SUPPORT_ICACHE  // update instruction cache
-  BX_CPU_THIS_PTR fetchModeMask = createFetchModeMask(BX_CPU_THIS);
+  BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid                  = 1;
