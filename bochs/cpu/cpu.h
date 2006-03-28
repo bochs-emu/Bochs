@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.273 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: cpu.h,v 1.274 2006-03-28 16:53:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2718,10 +2718,10 @@ public: // for now...
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
        unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF Bit32u  translate_linear(bx_address laddr, 
+  BX_SMF bx_phy_address translate_linear(bx_address laddr, 
        unsigned pl, unsigned rw, unsigned access_type) BX_CPP_AttrRegparmN(3);
-  BX_SMF Bit32u itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_phy_address itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_phy_address dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
   BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void TLB_init(void);
@@ -2741,7 +2741,6 @@ public: // for now...
   BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();
 #endif
-  BX_SMF bx_bool smram_write(bx_phy_address a20addr);
   BX_SMF void smram_save_state(void);
   BX_SMF bx_bool smram_restore_state(void);
   BX_SMF int  int_number(bx_segment_reg_t *seg);

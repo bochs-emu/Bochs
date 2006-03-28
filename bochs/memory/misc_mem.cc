@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.86 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.87 2006-03-28 16:53:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.86 2006-03-27 18:02:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.87 2006-03-28 16:53:02 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -179,7 +179,7 @@ Bit8u mp_checksum(const Bit8u *p, int len)
 //   1 : VGA Bios
 //   2 : Optional ROM Bios
 //
-void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
+void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret, i, start_idx, end_idx;
@@ -244,7 +244,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
         return;
       }
     } else {
-      romaddress = (Bit32u)-size;
+      romaddress = (bx_phy_address)-size;
     }
     offset = romaddress & BIOS_MASK;
     if ((romaddress & 0xf0000) < 0xf0000) {
@@ -385,7 +385,7 @@ void BX_MEM_C::load_ROM(const char *path, Bit32u romaddress, Bit8u type)
  			path));
 }
 
-void BX_MEM_C::load_RAM(const char *path, Bit32u ramaddress, Bit8u type)
+void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
 {
   struct stat stat_buf;
   int fd, ret;
@@ -432,7 +432,7 @@ void BX_MEM_C::load_RAM(const char *path, Bit32u ramaddress, Bit8u type)
 
 
 #if ( BX_DEBUGGER || BX_DISASM || BX_GDBSTUB)
-bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
+bx_bool BX_MEM_C::dbg_fetch_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_bool ret = 1;
 
@@ -497,7 +497,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(Bit32u addr, unsigned len, Bit8u *buf)
 #endif
 
 #if BX_DEBUGGER || BX_GDBSTUB
-bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
+bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   if ((addr + len) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
@@ -535,7 +535,7 @@ bx_bool BX_MEM_C::dbg_set_mem(Bit32u addr, unsigned len, Bit8u *buf)
 }
 #endif
 
-bx_bool BX_MEM_C::dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc)
+bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *crc)
 {
   *crc = 0;
   if (addr1 > addr2)
@@ -573,7 +573,7 @@ bx_bool BX_MEM_C::dbg_crc32(Bit32u addr1, Bit32u addr2, Bit32u *crc)
 // 0xf0000 - 0xfffff    Upper BIOS Area (64K)
 //
 
-Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsigned access_type)
+Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned op, unsigned access_type)
 {
   BX_ASSERT(cpu != 0); // getHostMemAddr could be used only inside the CPU
 
@@ -641,7 +641,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsi
         return( (Bit8u *) & rom[(a20Addr & EXROM_MASK) + BIOSROMSZ]);
       }
     }
-    else if (a20Addr >= (Bit32u)~BIOS_MASK)
+    else if (a20Addr >= (bx_phy_address)~BIOS_MASK)
     {
       return (Bit8u *) & rom[a20Addr & BIOS_MASK];
     }
@@ -658,7 +658,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsi
       return(NULL); // Error, requested addr is out of bounds.
     else if ((a20Addr & 0xfffe0000) == 0x000a0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
-    else if (a20Addr >= (Bit32u)~BIOS_MASK)
+    else if (a20Addr >= (bx_phy_address)~BIOS_MASK)
       return(NULL); // Vetoed!  ROMs
 #if BX_SUPPORT_PCI
     else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
@@ -700,7 +700,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, Bit32u a20Addr, unsigned op, unsi
  */
   bx_bool 
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
-		memory_handler_t write_handler, Bit32u begin_addr, Bit32u end_addr)
+		memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   if (end_addr < begin_addr)
     return false;
@@ -722,7 +722,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 
   bx_bool 
 BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
-		Bit32u begin_addr, Bit32u end_addr)
+		bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   bx_bool ret = true;
   BX_INFO(("Memory access handlers unregistered: %08x-%08x", begin_addr, end_addr));

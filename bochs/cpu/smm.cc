@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.9 2006-03-27 20:09:37 sshwarts Exp $
+// $Id: smm.cc,v 1.10 2006-03-28 16:53:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -47,13 +47,18 @@ void BX_CPU_C::RSM(bxInstruction_c *i)
   BX_CPU_THIS_PTR in_smm = 0;
 
   UndefinedOpcode(i);
+
+  // restore the CPU state from SMRAM
+  if (! smram_restore_state()) {
+    BX_PANIC(("RSM: Incorrect state when restoring CPU state - shutdown !"));
+  }
 }
 
 void BX_CPU_C::enter_system_management_mode(void)
 {
   invalidate_prefetch_q();
 
-  // save processor state to the SMRAM
+  // save CPU state to the SMRAM
   BX_CPU_THIS_PTR smram_save_state();
 
   // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
@@ -63,6 +68,30 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
 
   BX_CPU_THIS_PTR prev_eip = RIP = 0x000080000;
+
+  // DR7
+  BX_CPU_THIS_PTR dr7 = 0x00000400;
+
+  // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified
+  BX_CPU_THIS_PTR cr0.pe = 0; // real mode (bit 0)
+  BX_CPU_THIS_PTR cr0.em = 0; // emulate math coprocessor (bit 2)
+  BX_CPU_THIS_PTR cr0.ts = 0; // no task switch (bit 3)
+  BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled (bit 31)
+
+  BX_CPU_THIS_PTR cr0.val32 &= 0x7ffffff2;
+
+  // paging mode was changed - flush TLB
+  TLB_flush(1); // 1 = Flush Global entries also
+
+#if BX_CPU_LEVEL >= 4
+  BX_CPU_THIS_PTR cr4.setRegister(0);
+#endif
+
+  // EFER.LME = 0, EFER.LME = 1
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR msr.lme = 0;
+  BX_CPU_THIS_PTR msr.lma = 0;
+#endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR smbase << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = 0;
@@ -122,35 +151,6 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
-
-  // DR7
-  BX_CPU_THIS_PTR dr7 = 0x00000400;
-
-  // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified
-  BX_CPU_THIS_PTR cr0.pe = 0; // real mode (bit 0)
-  BX_CPU_THIS_PTR cr0.em = 0; // emulate math coprocessor (bit 2)
-  BX_CPU_THIS_PTR cr0.ts = 0; // no task switch (bit 3)
-  BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled (bit 31)
-
-  BX_CPU_THIS_PTR cr0.val32 &= 0x7ffffff2;
-
-  // paging mode was changed - flush TLB
-  TLB_flush(1); // 1 = Flush Global entries also
-
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr4.setRegister(0);
-#endif
-
-  // EFER.LME = 0, EFER.LME = 1
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr.lme = 0;
-  BX_CPU_THIS_PTR msr.lma = 0;
-#endif
-}
-
-bx_bool BX_CPU_C::smram_write(bx_phy_address a20addr)
-{
-  return 1; // for now
 }
 
 #define SMRAM_TRANSLATE(addr) (((0x8000 - (addr)) >> 2) - 1)
@@ -318,7 +318,7 @@ void BX_CPU_C::smram_save_state(void)
   /* base+0x7f9c to base+0x7f04 is reserved */
   /* base+0x7f02 is Auto HALT restart field (2 byte) */
   /* base+0x7f00 is I/O restart field (2 byte) */
-  /* base+0x7efc is SMM Revision Identifier field  */
+  /* base+0x7efc is SMM Revision Identifier field */
   saved_state[SMRAM_TRANSLATE(0x7ef8)] = BX_CPU_THIS_PTR smbase;
   /* base+0x7ef4 to base+0x7e00 is reserved */
 
