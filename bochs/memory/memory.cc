@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.53 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: memory.cc,v 1.54 2006-03-28 21:09:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,6 +48,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+  struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page now
 
@@ -86,7 +87,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     }
   }
 
-  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
+  memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
@@ -206,6 +207,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, voi
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+  struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page now
 
@@ -244,7 +246,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, voi
     }
   }
 
-  struct memory_handler_struct *memory_handler = memory_handlers[a20addr >> 20];
+  memory_handler = memory_handlers[a20addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
