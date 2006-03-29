@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.179 2006-03-13 18:55:53 vruppert Exp $
+// $Id: siminterface.h,v 1.180 2006-03-29 19:27:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1047,6 +1047,7 @@ enum ci_return_t {
   };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
 typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
+typedef int (*user_option_handler_t)(const char *context, int num_params, char *params[]);
 
 // bx_gui->set_display_mode() changes the mode between the configuration
 // interface and the simulation.  This is primarily intended for display
@@ -1172,6 +1173,10 @@ public:
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
   virtual bool test_for_text_console() { return true; }
+  // user-defined option support
+  virtual bx_bool register_user_option(char *main_param, user_option_handler_t handler) {return 0;}
+  virtual bx_bool is_user_option(char *main_param) {return 0;}
+  virtual Bit32s parse_user_option(const char *context, int num_params, char *params []) {return -1;}
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

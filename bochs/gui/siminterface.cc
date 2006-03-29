@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.133 2006-03-13 18:55:53 vruppert Exp $
+// $Id: siminterface.cc,v 1.134 2006-03-29 19:27:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -13,6 +13,8 @@ bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
 bx_list_c *root_param = NULL;
 #define LOG_THIS siminterface_log->
+
+#define BX_MAX_USER_OPTIONS 16
 
 // bx_simulator_interface just defines the interface that the Bochs simulator
 // and the gui will use to talk to each other.  None of the methods of
@@ -33,6 +35,9 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   const char *registered_ci_name;
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
+  unsigned n_user_options;
+  user_option_handler_t user_option_handler[BX_MAX_USER_OPTIONS];
+  const char *user_option_name[BX_MAX_USER_OPTIONS];
   int init_done;
   int enabled;
   // save context to jump to if we must quit unexpectedly
@@ -124,11 +129,15 @@ public:
   virtual bool is_wx_selected () { return wxsel; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
-  virtual void set_display_mode (disp_mode_t newmode) {
+  virtual void set_display_mode(disp_mode_t newmode) {
     if (bx_gui != NULL)
-      bx_gui->set_display_mode (newmode);
+      bx_gui->set_display_mode(newmode);
   }
-  virtual bool test_for_text_console ();
+  virtual bool test_for_text_console();
+  // user-defined option support
+  virtual bx_bool register_user_option(char *main_param, user_option_handler_t handler);
+  virtual bx_bool is_user_option(char *main_param);
+  virtual Bit32s parse_user_option(const char *context, int num_params, char *params []);
 };
 
 // recursive function to find parameters from the path
@@ -280,6 +289,7 @@ bx_real_sim_c::bx_real_sim_c()
   quit_context = NULL;
   exit_code = 0;
   param_id = BXP_NEW_PARAM_ID;
+  n_user_options = 0;
 }
 
 bx_real_sim_c::~bx_real_sim_c()
@@ -772,6 +782,24 @@ bool bx_real_sim_c::test_for_text_console()
 #endif
   // default: yes
   return true;
+}
+
+bx_bool bx_real_sim_c::register_user_option(char *main_param, user_option_handler_t handler)
+{
+  // TODO
+  return 0;
+}
+
+bx_bool bx_real_sim_c::is_user_option(char *main_param)
+{
+  // TODO
+  return 0;
+}
+
+Bit32s bx_real_sim_c::parse_user_option(const char *context, int num_params, char *params [])
+{
+  // TODO
+  return -1;
 }
 
 

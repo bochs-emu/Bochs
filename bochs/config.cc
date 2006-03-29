@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.98 2006-03-13 18:55:52 vruppert Exp $
+// $Id: config.cc,v 1.99 2006-03-29 19:27:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3043,6 +3043,11 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
   else if (!strcmp(params[0], "time0")) // Deprectated
   {
     PARSE_ERR(("ERROR: time0 directive is DEPRECATED, use clock: instead"));
+  }
+  // user-defined options handled by registered functions
+  else if (SIM->is_user_option(params[0]))
+  {
+    return SIM->parse_user_option(context, num_params, &params[0]);
   }
   else
   {
