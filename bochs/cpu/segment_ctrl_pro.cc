@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.56 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.57 2006-03-29 18:08:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -315,6 +315,53 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 }
 #endif
 
+#if BX_CPU_LEVEL >= 3
+  Bit16u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::get_segment_ar_data(bx_descriptor_t *d)
+{
+  Bit16u val = 0;
+
+  if (d->segment) { /* data/code segment descriptors */
+    val = (d->u.segment.executable << 3) |
+          (d->u.segment.c_ed << 2) |
+          (d->u.segment.r_w << 1) |
+          (d->u.segment.a << 0) |
+          (d->segment << 4) |
+          (d->dpl << 5) |
+          (d->p << 7) |
+          (d->u.segment.avl << 12) |
+#if BX_SUPPORT_X86_64
+          (d->u.segment.l << 13) |
+#endif
+          (d->u.segment.d_b << 14) |
+          (d->u.segment.g << 15);
+    return(val);
+  }
+
+  switch (d->type) {
+    case BX_SYS_SEGMENT_LDT:
+    case BX_SYS_SEGMENT_AVAIL_286_TSS:
+    case BX_SYS_SEGMENT_BUSY_286_TSS:
+        val = (d->type << 0) |
+              (d->dpl << 5) |
+              (d->p << 7);
+        return(val);
+    case BX_SYS_SEGMENT_AVAIL_386_TSS:
+    case BX_SYS_SEGMENT_BUSY_386_TSS:
+        val = (d->type << 0) |
+              (d->dpl << 5) |
+              (d->p << 7) |
+              (d->u.tss386.avl << 12) |
+              (d->u.tss386.g << 15);
+        return(val);
+    default:
+        BX_PANIC(("get_segment_ar_data(): case %u unsupported", (unsigned) d->type));
+  }
+
+  return val;
+}
+#endif
+
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 {
@@ -337,17 +384,17 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.base       = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
 
 #if BX_CPU_LEVEL >= 3
-    temp->u.segment.limit        |= (dword2 & 0x000F0000);
-    temp->u.segment.g            =  (dword2 & 0x00800000) > 0;
-    temp->u.segment.d_b          =  (dword2 & 0x00400000) > 0;
+    temp->u.segment.limit     |= (dword2 & 0x000F0000);
+    temp->u.segment.g          = (dword2 & 0x00800000) > 0;
+    temp->u.segment.d_b        = (dword2 & 0x00400000) > 0;
 #if BX_SUPPORT_X86_64
-    temp->u.segment.l            =  (dword2 & 0x00200000) > 0;
+    temp->u.segment.l          = (dword2 & 0x00200000) > 0;
 #endif
-    temp->u.segment.avl          =  (dword2 & 0x00100000) > 0;
-    temp->u.segment.base         |= (dword2 & 0xFF000000);
+    temp->u.segment.avl        = (dword2 & 0x00100000) > 0;
+    temp->u.segment.base      |= (dword2 & 0xFF000000);
 
     if (temp->u.segment.g) {
-      if ( (temp->u.segment.executable==0) && (temp->u.segment.c_ed) )
+      if ((temp->u.segment.executable==0) && (temp->u.segment.c_ed))
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12);
       else
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0x0fff;
@@ -359,7 +406,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->valid    = 1;
   }
   else { // system & gate segment descriptors
-    switch ( temp->type ) {
+    switch (temp->type) {
       case  0: // reserved
       case  8: // reserved
       case 10: // reserved

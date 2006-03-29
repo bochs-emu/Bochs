@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.274 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: cpu.h,v 1.275 2006-03-29 18:08:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1225,7 +1225,6 @@ public: // for now...
 #endif
   } TLB;
 #endif  // #if BX_USE_TLB
-
 
   // An instruction cache.  Each entry should be exactly 32 bytes, and
   // this structure should be aligned on a 32-byte boundary to be friendly
@@ -2741,8 +2740,8 @@ public: // for now...
   BX_SMF void exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
                   BX_CPP_AttrNoReturn();
 #endif
-  BX_SMF void smram_save_state(void);
-  BX_SMF bx_bool smram_restore_state(void);
+  BX_SMF void smram_save_state(Bit32u *smm_saved_state);
+  BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(bx_segment_reg_t *seg);
   BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
@@ -2802,6 +2801,7 @@ public: // for now...
   BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
+  BX_SMF Bit16u  get_segment_ar_data(bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
@@ -2907,6 +2907,8 @@ public: // for now...
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
   BX_SMF int  FPU_exception(int exception);
+  BX_SMF int  fpu_save_environment(bxInstruction_c *i);
+  BX_SMF int  fpu_load_environment(bxInstruction_c *i);
 #endif
 
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE
@@ -2921,16 +2923,10 @@ public: // for now...
   BX_SMF void print_state_SSE(void);
 #endif
 
-#if BX_SUPPORT_FPU
-  BX_SMF int  fpu_save_environment(bxInstruction_c *i);
-  BX_SMF int  fpu_load_environment(bxInstruction_c *i);
-#endif
-
   BX_SMF void SetCR0(Bit32u val_32);
 #if BX_CPU_LEVEL >= 4
   BX_SMF bx_bool SetCR4(Bit32u val_32);
 #endif
-
 };
 
 #if BX_SUPPORT_ICACHE

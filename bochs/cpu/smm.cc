@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.10 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: smm.cc,v 1.11 2006-03-29 18:08:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -32,10 +32,47 @@
 #define RIP EIP
 #endif
 
+//
+// Some of the CPU field must be saved and restored in order to continue the
+// simulation correctly after the RSM instruction:
+//
+//      ---------------------------------------------------------------
+//
+// 1. General purpose registers: EAX-EDI, R8-R15
+// 2. EIP, RFLAGS
+// 3. Segment registers CS, DS, SS, ES, FS, GS
+//    fields: valid      - not required, initialized according to selector value
+//            p          - must be saved/restored
+//            dpl        - must be saved/restored
+//            segment    - must be 1 for seg registers, not required to save
+//            type       - must be 0 for seg registers, not required to save
+//            executable - must be saved/restored
+//            c_ed       - must be saved/restored
+//            r_w        - must be saved/restored
+//            a          - must be saved/restored
+//            base       - must be saved/restored
+//            limit      - must be saved/restored
+//            g          - must be saved/restored
+//            d_b        - must be saved/restored
+//            l          - must be saved/restored
+//            avl        - must be saved/restored
+// 4. GDTR, IDTR
+//     fields: base, limit
+// 5. LDTR, TR
+//     fields: base, limit, something more ?
+// 6. Debug Registers DR0-DR7, only DR6 and DR7 are saved
+// 7. Control Regsiters: CR0, CR1 is always 0, CR2 is NOT saved, CR3, CR4
+// 8. SMBASE
+// 9. MSR/FPU/XMM/APIC are NOT saved accoring to Intel docs
+//
+
+#define SMM_SAVE_STATE_MAP_SIZE 128
+
 void BX_CPU_C::RSM(bxInstruction_c *i)
 {
   /* If we are not in System Management Mode, then #UD should be generated */
   if (! BX_CPU_THIS_PTR smm_mode()) {
+    BX_INFO(("RSM not in System Management Mode !"));
     UndefinedOpcode(i);
   }
 
@@ -43,33 +80,50 @@ void BX_CPU_C::RSM(bxInstruction_c *i)
  
   BX_INFO(("RSM: System Management Mode not implemented yet"));
 
-  BX_CPU_THIS_PTR nmi_disable = 0;
-  BX_CPU_THIS_PTR in_smm = 0;
+  UndefinedOpcode(i); // remove later, when SMM become stable
 
-  UndefinedOpcode(i);
+  Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
+
+  // reset reserved bits
+  for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) saved_state[n] = 0;
+
+  bx_phy_address base = BX_CPU_THIS_PTR smbase + 0x10000;
+  // could be optimized with reading of only non-reserved bytes
+  for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
+    base -= 4;
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, base, 4, &saved_state[n]);
+  }
 
   // restore the CPU state from SMRAM
-  if (! smram_restore_state()) {
+  if (! smram_restore_state(saved_state)) {
     BX_PANIC(("RSM: Incorrect state when restoring CPU state - shutdown !"));
   }
+
+  BX_CPU_THIS_PTR nmi_disable = 0;
+  BX_CPU_THIS_PTR in_smm = 0;
 }
 
 void BX_CPU_C::enter_system_management_mode(void)
 {
   invalidate_prefetch_q();
 
-  // save CPU state to the SMRAM
-  BX_CPU_THIS_PTR smram_save_state();
+  Bit32u saved_state[SMM_SAVE_STATE_MAP_SIZE], n;
 
-  // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
-  BX_CPU_THIS_PTR lf_flags_status = 0x000000;
+  // reset reserved bits
+  for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) saved_state[n] = 0;
 
-  // status and control flags register set
+  // prepare CPU state to be saved in the SMRAM
+  BX_CPU_THIS_PTR smram_save_state(saved_state);
+
+  bx_phy_address base = BX_CPU_THIS_PTR smbase + 0x10000;
+  // could be optimized with reading of only non-reserved bytes
+  for(n=0;n<SMM_SAVE_STATE_MAP_SIZE;n++) {
+    base -= 4;
+    BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, base, 4, &saved_state[n]);
+  }
+
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
-
   BX_CPU_THIS_PTR prev_eip = RIP = 0x000080000;
-
-  // DR7
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 
   // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified
@@ -77,8 +131,9 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.em = 0; // emulate math coprocessor (bit 2)
   BX_CPU_THIS_PTR cr0.ts = 0; // no task switch (bit 3)
   BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled (bit 31)
-
   BX_CPU_THIS_PTR cr0.val32 &= 0x7ffffff2;
+
+  BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
 
   // paging mode was changed - flush TLB
   TLB_flush(1); // 1 = Flush Global entries also
@@ -153,241 +208,284 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS] = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
 }
 
-#define SMRAM_TRANSLATE(addr) (((0x8000 - (addr)) >> 2) - 1)
+#define SMRAM_TRANSLATE(addr)        (((0x8000 - (addr)) >> 2) - 1)
+#define SMM_SAVED_STATE(state, addr) (state[SMRAM_TRANSLATE(addr)])
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::smram_save_state(void)
+// for x86-64 configuration using AMD Athlon 64 512-byte SMM save state map
+#define SMM_REVISION_ID 0x00000000
+
+void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
-  Bit32u saved_state[256], i;
+  // --- General Purpose Registers --- //
+  SMM_SAVED_STATE(saved_state, 0x7ffc) = RAX >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7ff8) = RAX & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7ff4) = RCX >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7ff0) = RCX & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fec) = RDX >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fe8) = RDX & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fe4) = RBX >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fe0) = RBX & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fdc) = RSP >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fd8) = RSP & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fd4) = RBP >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fd0) = RBP & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fcc) = RSI >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fc8) = RSI & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fc4) = RDI >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fc0) = RDI & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fbc) =  R8 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fb8) =  R8 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fb4) =  R9 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fb0) =  R9 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fac) = R10 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fa8) = R10 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7fa4) = R11 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7fa0) = R11 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f9c) = R12 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f98) = R12 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f94) = R13 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f90) = R13 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f8c) = R14 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f88) = R14 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f84) = R15 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f80) = R15 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f7c) = RIP >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f78) = RIP & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f70) = read_eflags();
 
-  // reset reserved bits
-  for(i=0;i<256;i++) saved_state[i] = 0;
+  // --- Debug and Control Registers --- //
+  SMM_SAVED_STATE(saved_state, 0x7f68) = BX_CPU_THIS_PTR dr6;
+  SMM_SAVED_STATE(saved_state, 0x7f60) = BX_CPU_THIS_PTR dr7;
+  SMM_SAVED_STATE(saved_state, 0x7f58) = BX_CPU_THIS_PTR cr0.val32;
+  SMM_SAVED_STATE(saved_state, 0x7f54) = BX_CPU_THIS_PTR cr3 >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7f50) = BX_CPU_THIS_PTR cr3 & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7f48) = BX_CPU_THIS_PTR cr4.getRegister();
+  /* base+0x7f44 to base+0x7f04 is reserved */
+  SMM_SAVED_STATE(saved_state, 0x7f00) = BX_CPU_THIS_PTR smbase;
+  SMM_SAVED_STATE(saved_state, 0x7efc) = SMM_REVISION_ID;
+  /* base+0x7ef8 to base+0x7ed8 is reserved */
+  SMM_SAVED_STATE(saved_state, 0x7ed0) = BX_CPU_THIS_PTR get_EFER();
+  /* base+0x7ecc is reserved */
+  /* base+0x7ec8 is I/O Instruction Restart, Auto-Halt Restart and NMI Mask */
+  /* base+0x7ec4 is reserved */
+  /* base+0x7ec0 is SMM I/O Trap */
+  /* base+0x7ebc to base+0x7ea4 is reserved */
 
-  saved_state[SMRAM_TRANSLATE(0x7ff8)] = BX_CPU_THIS_PTR cr0.val32;
-  saved_state[SMRAM_TRANSLATE(0x7ff4)] = BX_CPU_THIS_PTR cr3 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7ff0)] = BX_CPU_THIS_PTR cr3 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7fe8)] = read_eflags();
-  saved_state[SMRAM_TRANSLATE(0x7fe0)] = BX_CPU_THIS_PTR get_EFER();
-  saved_state[SMRAM_TRANSLATE(0x7fdc)] = RIP >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7fd8)] = RIP & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7fd0)] = BX_CPU_THIS_PTR dr6;
-  saved_state[SMRAM_TRANSLATE(0x7fc8)] = BX_CPU_THIS_PTR dr7;
-  saved_state[SMRAM_TRANSLATE(0x7fc4)] = BX_CPU_THIS_PTR tr.selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fc0)] = BX_CPU_THIS_PTR ldtr.selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fbc)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb8)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb4)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb0)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fac)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fa8)] =
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-  /* base+7fa4 is I/O MISC (4 byte) */
-  /* base+7f9c is I/O MEM ADDRESS (8 byte) */
-  saved_state[SMRAM_TRANSLATE(0x7f98)] = RDI >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f94)] = RDI & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f90)] = RSI >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f8c)] = RSI & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f88)] = RBP >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f84)] = RBP & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f80)] = RSP >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f7c)] = RSP & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f78)] = RBX >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f74)] = RBX & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f70)] = RDX >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f6c)] = RDX & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f68)] = RCX >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f64)] = RCX & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f60)] = RAX >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f5c)] = RAX & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f58)] =  R8 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f54)] =  R8 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f50)] =  R9 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f4c)] =  R9 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f48)] = R10 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f44)] = R10 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f40)] = R11 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f3c)] = R11 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f38)] = R12 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f34)] = R12 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f30)] = R13 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f2c)] = R13 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f28)] = R14 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f24)] = R14 & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f20)] = R15 >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7f1c)] = R15 & 0xffffffff;
-  /* base+0x7f1c to base+0x7f04 is reserved */
-  /* base+0x7f02 is Auto HALT restart field (2 byte) */
-  /* base+0x7f00 is I/O restart field (2 byte) */
-  /* base+0x7efc is SMM Revision Identifier field  */
-  saved_state[SMRAM_TRANSLATE(0x7ef8)] = BX_CPU_THIS_PTR smbase;
-  /* base+0x7ff4 to base+0x7fa8 is reserved */
-  /* base+0x7fa4 is LDT Info (4 byte) */
-  saved_state[SMRAM_TRANSLATE(0x7fa0)] = 
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.limit;
-  saved_state[SMRAM_TRANSLATE(0x7f9c)] = 
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.base & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f98)] = BX_CPU_THIS_PTR idtr.limit;
-  saved_state[SMRAM_TRANSLATE(0x7f94)] = BX_CPU_THIS_PTR idtr.base & 0xffffffff;
-  saved_state[SMRAM_TRANSLATE(0x7f90)] = BX_CPU_THIS_PTR gdtr.limit;
-  saved_state[SMRAM_TRANSLATE(0x7f8c)] = BX_CPU_THIS_PTR gdtr.base & 0xffffffff;
-  /* base+0x7e80 to base+0x7e44 is reserved */
-  saved_state[SMRAM_TRANSLATE(0x7e40)] = BX_CPU_THIS_PTR cr4.getRegister();
-  /* base+0x7e3c to base+0x7df0 is reserved */
-  /* base+0x7de8 is I/O RIP (8 bytes) */
-  /* base+0x7de4 to base+0x7ddc is reserved */
-  saved_state[SMRAM_TRANSLATE(0x7dd8)] = BX_CPU_THIS_PTR idtr.base >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7fd4)] = 
-    BX_CPU_THIS_PTR ldtr.cache.u.segment.base >> 32;
-  saved_state[SMRAM_TRANSLATE(0x7dd0)] = BX_CPU_THIS_PTR gdtr.base >> 32;
-  /* base+0x7dcc to base+0x7c00 is reserved */
-
-  bx_phy_address base = (BX_CPU_THIS_PTR smbase + 0x8000);
-  base += 0x8000;
-
-  // could be optimized with writing of only non-reserved bytes
-  for(i=0;i<256;i++) {
-    base -= 4;
-    BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, base, 4, &saved_state[i]);
+  // --- Task Register --- //
+  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    SMM_SAVED_STATE(saved_state, 0x7e98) = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
+    SMM_SAVED_STATE(saved_state, 0x7e94) = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
+  } else {
+    SMM_SAVED_STATE(saved_state, 0x7e9c) = BX_CPU_THIS_PTR tr.cache.u.tss386.base >> 32;
+    SMM_SAVED_STATE(saved_state, 0x7e98) = BX_CPU_THIS_PTR tr.cache.u.tss386.base & 0xffffffff;
+    SMM_SAVED_STATE(saved_state, 0x7e94) = BX_CPU_THIS_PTR tr.cache.u.tss386.limit;
   }
+  SMM_SAVED_STATE(saved_state, 0x7e90) = BX_CPU_THIS_PTR tr.selector.value |
+    (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR tr.cache)) << 16);
+
+  // --- IDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7e8c) = BX_CPU_THIS_PTR idtr.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e88) = BX_CPU_THIS_PTR idtr.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e84) = BX_CPU_THIS_PTR idtr.limit;
+  // --- LDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7e7c) = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e78) = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e74) = BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e70) = BX_CPU_THIS_PTR ldtr.selector.value |
+    (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR ldtr.cache)) << 16);
+  // --- GDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7e6c) = BX_CPU_THIS_PTR gdtr.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e68) = BX_CPU_THIS_PTR gdtr.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e64) = BX_CPU_THIS_PTR gdtr.limit;
+  // --- GS selector --- //
+  bx_segment_reg_t *seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS]);
+  SMM_SAVED_STATE(saved_state, 0x7e5c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e58) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e54) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e50) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- FS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]);
+  SMM_SAVED_STATE(saved_state, 0x7e4c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e48) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e44) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e40) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- DS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS]);
+  SMM_SAVED_STATE(saved_state, 0x7e3c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e38) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e34) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e30) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- SS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]);
+  SMM_SAVED_STATE(saved_state, 0x7e2c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e28) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e24) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e20) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- CS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]);
+  SMM_SAVED_STATE(saved_state, 0x7e1c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e18) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e14) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e10) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- ES selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]);
+  SMM_SAVED_STATE(saved_state, 0x7e0c) = seg->cache.u.segment.base >> 32;
+  SMM_SAVED_STATE(saved_state, 0x7e08) = seg->cache.u.segment.base & 0xffffffff;
+  SMM_SAVED_STATE(saved_state, 0x7e04) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7e00) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
 }
 
-bx_bool BX_CPU_C::smram_restore_state(void)
+bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 {
-  Bit32u saved_state[256], i;
-
-  // reset reserved bits
-  for(i=0;i<256;i++) saved_state[i] = 0;
-
-  bx_phy_address base = (BX_CPU_THIS_PTR smbase + 0x8000);
-  base += 0x8000;
-
-  // could be optimized with reading of only non-reserved bytes
-  for(i=0;i<256;i++) {
-    base -= 4;
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, base, 4, &saved_state[i]);
-  }
-
   return 1;
 }
 
 #else /* BX_SUPPORT_X86_64 == 0 */
 
-void BX_CPU_C::smram_save_state(void)
+// for IA32 configuration using Intel P6 512-byte SMM save state map
+#define SMM_REVISION_ID 0x00000000
+
+// source for Intel P6 SMM save state map used: www.sandpile.org
+
+void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
-  Bit32u saved_state[128], i;
+  SMM_SAVED_STATE(saved_state, 0x7ffc) = BX_CPU_THIS_PTR cr0.val32;
+  SMM_SAVED_STATE(saved_state, 0x7ff8) = BX_CPU_THIS_PTR cr3;
+  SMM_SAVED_STATE(saved_state, 0x7ff4) = read_eflags();
 
-  // reset reserved bits
-  for(i=0;i<128;i++) saved_state[i] = 0;
+  SMM_SAVED_STATE(saved_state, 0x7ff0) = EIP;
+  SMM_SAVED_STATE(saved_state, 0x7fec) = EDI;
+  SMM_SAVED_STATE(saved_state, 0x7fe8) = ESI;
+  SMM_SAVED_STATE(saved_state, 0x7fe4) = EBP;
+  SMM_SAVED_STATE(saved_state, 0x7fe0) = ESP;
+  SMM_SAVED_STATE(saved_state, 0x7fdc) = EBX;
+  SMM_SAVED_STATE(saved_state, 0x7fd8) = EDX;
+  SMM_SAVED_STATE(saved_state, 0x7fd4) = ECX;
+  SMM_SAVED_STATE(saved_state, 0x7fd0) = EAX;
 
-  saved_state[SMRAM_TRANSLATE(0x7ffc)] = BX_CPU_THIS_PTR cr0.val32;
-  saved_state[SMRAM_TRANSLATE(0x7ff8)] = BX_CPU_THIS_PTR cr3;
-  saved_state[SMRAM_TRANSLATE(0x7ff4)] = read_eflags();
-  saved_state[SMRAM_TRANSLATE(0x7ff0)] = EIP;
-  saved_state[SMRAM_TRANSLATE(0x7fec)] = EDI;
-  saved_state[SMRAM_TRANSLATE(0x7fe8)] = ESI;
-  saved_state[SMRAM_TRANSLATE(0x7fe4)] = EBP;
-  saved_state[SMRAM_TRANSLATE(0x7fe0)] = ESP;
-  saved_state[SMRAM_TRANSLATE(0x7fdc)] = EBX;
-  saved_state[SMRAM_TRANSLATE(0x7fd8)] = EDX;
-  saved_state[SMRAM_TRANSLATE(0x7fd4)] = ECX;
-  saved_state[SMRAM_TRANSLATE(0x7fd0)] = EAX;
-  saved_state[SMRAM_TRANSLATE(0x7fcc)] = BX_CPU_THIS_PTR dr6;
-  saved_state[SMRAM_TRANSLATE(0x7fc8)] = BX_CPU_THIS_PTR dr7;
-  saved_state[SMRAM_TRANSLATE(0x7fc4)] = BX_CPU_THIS_PTR tr.selector.value;
-  /* base+0x7fc0 is reserved field */
-  saved_state[SMRAM_TRANSLATE(0x7fbc)] =
+  SMM_SAVED_STATE(saved_state, 0x7fcc) = BX_CPU_THIS_PTR dr6;
+  SMM_SAVED_STATE(saved_state, 0x7fc8) = BX_CPU_THIS_PTR dr7;
+  SMM_SAVED_STATE(saved_state, 0x7fc4) = BX_CPU_THIS_PTR   tr.selector.value;
+  SMM_SAVED_STATE(saved_state, 0x7fc0) = BX_CPU_THIS_PTR ldtr.selector.value;
+
+  SMM_SAVED_STATE(saved_state, 0x7fbc) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb8)] =
+  SMM_SAVED_STATE(saved_state, 0x7fb8) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb4)] =
+  SMM_SAVED_STATE(saved_state, 0x7fb4) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fb0)] =
+  SMM_SAVED_STATE(saved_state, 0x7fb0) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fac)] =
+  SMM_SAVED_STATE(saved_state, 0x7fac) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  saved_state[SMRAM_TRANSLATE(0x7fa8)] =
+  SMM_SAVED_STATE(saved_state, 0x7fa8) =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-  /* base+0x7fa4 is I/O state field */
-  /* base+0x7fa0 is I/O Memory Address field */
-  /* base+0x7f9c to base+0x7f04 is reserved */
+
+  // --- SS selector --- //
+  bx_segment_reg_t *seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS]);
+  SMM_SAVED_STATE(saved_state, 0x7fa4) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7fa0) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f9c) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- CS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]);
+  SMM_SAVED_STATE(saved_state, 0x7f98) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7f94) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f90) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- ES selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES]);
+  SMM_SAVED_STATE(saved_state, 0x7f8c) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7f88) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f84) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- LDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7f80) = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base;
+  SMM_SAVED_STATE(saved_state, 0x7f7c) = BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f78) = BX_CPU_THIS_PTR ldtr.selector.value |
+    (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR ldtr.cache)) << 16);
+  // --- GDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7f74) = BX_CPU_THIS_PTR gdtr.base;
+  SMM_SAVED_STATE(saved_state, 0x7f70) = BX_CPU_THIS_PTR gdtr.limit;
+  /* base+0x7f6c is reserved */
+  /* base+0x7f68 is reserved */
+
+  // --- Task Register --- //
+  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
+    SMM_SAVED_STATE(saved_state, 0x7f64) = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
+    SMM_SAVED_STATE(saved_state, 0x7f60) = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
+  } else {
+    SMM_SAVED_STATE(saved_state, 0x7f64) = BX_CPU_THIS_PTR tr.cache.u.tss386.base;
+    SMM_SAVED_STATE(saved_state, 0x7f60) = BX_CPU_THIS_PTR tr.cache.u.tss386.limit;
+  }
+  SMM_SAVED_STATE(saved_state, 0x7f5c) = BX_CPU_THIS_PTR tr.selector.value |
+    (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR tr.cache)) << 16);
+
+  // --- IDTR --- //
+  SMM_SAVED_STATE(saved_state, 0x7f58) = BX_CPU_THIS_PTR idtr.base;
+  SMM_SAVED_STATE(saved_state, 0x7f54) = BX_CPU_THIS_PTR idtr.limit;
+  /* base+0x7f50 is reserved */
+  // --- GS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS]);
+  SMM_SAVED_STATE(saved_state, 0x7f4c) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7f48) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f44) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- FS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]);
+  SMM_SAVED_STATE(saved_state, 0x7f40) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7f3c) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f38) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+  // --- DS selector --- //
+  seg = &(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS]);
+  SMM_SAVED_STATE(saved_state, 0x7f34) = seg->cache.u.segment.base;
+  SMM_SAVED_STATE(saved_state, 0x7f30) = seg->cache.u.segment.limit;
+  SMM_SAVED_STATE(saved_state, 0x7f2c) = seg->selector.value |
+    (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
+
+  /* base+0x7f28 to base+7f18 is reserved */
+#if BX_CPU_LEVEL >= 4
+  SMM_SAVED_STATE(saved_state, 0x7f14) = BX_CPU_THIS_PTR cr4.getRegister();
+#endif
+  /* base+0x7f10 is I/O restart EIP */
+  /* base+0x7f0c is I/O restart ESI */
+  /* base+0x7f08 is I/O restart ECX */
+  /* base+0x7f04 is I/O restart EDI */
   /* base+0x7f02 is Auto HALT restart field (2 byte) */
   /* base+0x7f00 is I/O restart field (2 byte) */
-  /* base+0x7efc is SMM Revision Identifier field */
-  saved_state[SMRAM_TRANSLATE(0x7ef8)] = BX_CPU_THIS_PTR smbase;
+  SMM_SAVED_STATE(saved_state, 0x7efc) = SMM_REVISION_ID;
+  SMM_SAVED_STATE(saved_state, 0x7ef8) = BX_CPU_THIS_PTR smbase;
   /* base+0x7ef4 to base+0x7e00 is reserved */
-
-  bx_phy_address base = (BX_CPU_THIS_PTR smbase + 0x8000);
-  base += 0x8000;
-
-  // could be optimized with writing of only non-reserved bytes
-  for(i=0;i<128;i++) {
-    base -= 4;
-    BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, base, 4, &saved_state[i]);
-  }
 }
 
-bx_bool BX_CPU_C::smram_restore_state(void)
+bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 {
-  Bit32u saved_state[128], i;
+  SetCR0(SMM_SAVED_STATE(saved_state, 0x7ffc));
+  CR3_change(SMM_SAVED_STATE(saved_state, 0x7ff8));
+  BX_CPU_THIS_PTR setEFlags(SMM_SAVED_STATE(saved_state, 0x7ff4));
 
-  // reset reserved bits
-  for(i=0;i<128;i++) saved_state[i] = 0;
+  EIP = SMM_SAVED_STATE(saved_state, saved_state, 0x7ff0);
+  EIP = SMM_SAVED_STATE(saved_state, 0x7ff0);
+  EDI = SMM_SAVED_STATE(saved_state, 0x7fec);
+  ESI = SMM_SAVED_STATE(saved_state, 0x7fe8);
+  EBP = SMM_SAVED_STATE(saved_state, 0x7fe4);
+  ESP = SMM_SAVED_STATE(saved_state, 0x7fe0);
+  EBX = SMM_SAVED_STATE(saved_state, 0x7fdc);
+  EDX = SMM_SAVED_STATE(saved_state, 0x7fd8);
+  ECX = SMM_SAVED_STATE(saved_state, 0x7fd4);
+  EAX = SMM_SAVED_STATE(saved_state, 0x7fd0);
 
-  bx_phy_address base = (BX_CPU_THIS_PTR smbase + 0x8000);
-  base += 0x8000;
-
-  // could be optimized with reading of only non-reserved bytes
-  for(i=0;i<128;i++) {
-    base -= 4;
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, base, 4, &saved_state[i]);
-  }
-
-  SetCR0(saved_state[SMRAM_TRANSLATE(0x7ffc)]);
-  CR3_change(saved_state[SMRAM_TRANSLATE(0x7ff8)]);
-  BX_CPU_THIS_PTR setEFlags(saved_state[SMRAM_TRANSLATE(0x7ff4)]);
-
-  EIP = saved_state[SMRAM_TRANSLATE(0x7ff0)];
-  EDI = saved_state[SMRAM_TRANSLATE(0x7fec)];
-  ESI = saved_state[SMRAM_TRANSLATE(0x7fe8)];
-  EBP = saved_state[SMRAM_TRANSLATE(0x7fe4)];
-  ESP = saved_state[SMRAM_TRANSLATE(0x7fe0)];
-  EBX = saved_state[SMRAM_TRANSLATE(0x7fdc)];
-  EDX = saved_state[SMRAM_TRANSLATE(0x7fd8)];
-  ECX = saved_state[SMRAM_TRANSLATE(0x7fd4)];
-  EAX = saved_state[SMRAM_TRANSLATE(0x7fd0)];
-
-  BX_CPU_THIS_PTR dr6 = saved_state[SMRAM_TRANSLATE(0x7fcc)];
-  BX_CPU_THIS_PTR dr7 = saved_state[SMRAM_TRANSLATE(0x7fc8)];
-
-//  saved_state[SMRAM_TRANSLATE(0x7fc4)] = BX_CPU_THIS_PTR tr.selector.value;
-//  /* base+0x7fc0 is reserved field */
-//  saved_state[SMRAM_TRANSLATE(0x7fbc)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-//  saved_state[SMRAM_TRANSLATE(0x7fb8)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-//  saved_state[SMRAM_TRANSLATE(0x7fb4)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-//  saved_state[SMRAM_TRANSLATE(0x7fb0)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-//  saved_state[SMRAM_TRANSLATE(0x7fac)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-//  saved_state[SMRAM_TRANSLATE(0x7fa8)] =
-//    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-
-  /* base+0x7fa4 is I/O state field */
-  /* base+0x7fa0 is I/O Memory Address field */
-  /* base+0x7f9c to base+0x7f04 is reserved */
-  /* base+0x7f02 is Auto HALT restart field (2 byte) */
-  /* base+0x7f00 is I/O restart field (2 byte) */
-  /* base+0x7efc is SMM Revision Identifier field  */
-  BX_CPU_THIS_PTR smbase = saved_state[SMRAM_TRANSLATE(0x7ef8)];
-  /* base+0x7ef4 to base+0x7e00 is reserved */
+  BX_CPU_THIS_PTR dr6 = SMM_SAVED_STATE(saved_state, 0x7fcc);
+  BX_CPU_THIS_PTR dr7 = SMM_SAVED_STATE(saved_state, 0x7fc8);
 
   return 1;
 }
