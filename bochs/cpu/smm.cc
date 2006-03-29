@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.11 2006-03-29 18:08:13 sshwarts Exp $
+// $Id: smm.cc,v 1.12 2006-03-29 19:16:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -473,7 +473,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   CR3_change(SMM_SAVED_STATE(saved_state, 0x7ff8));
   BX_CPU_THIS_PTR setEFlags(SMM_SAVED_STATE(saved_state, 0x7ff4));
 
-  EIP = SMM_SAVED_STATE(saved_state, saved_state, 0x7ff0);
+  EIP = SMM_SAVED_STATE(saved_state, 0x7ff0);
   EIP = SMM_SAVED_STATE(saved_state, 0x7ff0);
   EDI = SMM_SAVED_STATE(saved_state, 0x7fec);
   ESI = SMM_SAVED_STATE(saved_state, 0x7fe8);
