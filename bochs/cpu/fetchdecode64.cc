@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.90 2006-04-05 17:31:31 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.91 2006-04-05 20:52:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2123,7 +2123,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 {
   // remain must be at least 1
 
-  unsigned b1, b2, ilen=1, attr, lock=0;
+  unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r,rex_x,rex_b;
   unsigned rm, mod = 0, nnn = 0;
   unsigned sse_prefix;
@@ -2148,143 +2148,129 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 
 fetch_b1:
   b1 = *iptr++;
+  ilen++;
+  attr = BxOpcodeInfo64[b1+offset].Attr;
 
-another_byte:
-  //offset = (instruction->os32L()+instruction->os_64 <<1) << 9; // * 512
-  //BX_DEBUG (("op: 0x%02x offset: 0x%04x",b1,offset));
+  if (attr & BxPrefix) {
+    BX_INSTR_PREFIX(BX_CPU_ID, b1);
+    switch (b1) {
+      case 0x66: // OpSize
+        sse_prefix |= SSE_PREFIX_66;
+        if (!instruction->os64L()) {
+          instruction->setOs32B(0);
+          offset = 0;
+        }
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0x67: // AddrSize
+        instruction->setAs64B(0);
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0x40:
+      case 0x41:
+      case 0x42:
+      case 0x43:
+      case 0x44:
+      case 0x45:
+      case 0x46:
+      case 0x47:
+      case 0x48:
+      case 0x49:
+      case 0x4A:
+      case 0x4B:
+      case 0x4C:
+      case 0x4D:
+      case 0x4E:
+      case 0x4F:
+        instruction->assertExtend8bit();
+        if (b1 & 0x8) {
+          instruction->assertOs64();
+          instruction->assertOs32();
+          offset = 512*2;
+        }
+        if (b1 & 0x4) rex_r = 8;
+        if (b1 & 0x2) rex_x = 8;
+        if (b1 & 0x1) rex_b = 8;
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0xf2: // REPNE/REPNZ
+        sse_prefix |= SSE_PREFIX_F2;
+        instruction->setRepUsed(b1 & 3);
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0xf3: // REP/REPE/REPZ
+        sse_prefix |= SSE_PREFIX_F3;
+        instruction->setRepUsed(b1 & 3);
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0x2e: // CS:
+      case 0x26: // ES:
+      case 0x36: // SS:
+      case 0x3e: // DS:
+        /* ignore segment override prefix */
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0x64: // FS:
+        instruction->setSeg(BX_SEG_REG_FS);
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0x65: // GS:
+        instruction->setSeg(BX_SEG_REG_GS);
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      case 0xf0: // LOCK:
+        lock = 1;
+        if (ilen < remain) {
+          goto fetch_b1;
+        }
+        return(0);
+      default:
+        BX_PANIC(("fetchdecode64: prefix default = 0x%02x", b1));
+        return(0);
+    }
+  }
+
+  // handle 2-byte escape
+  if (b1 == 0x0f) {
+    if (ilen < remain) {
+      ilen++;
+      b1 = 0x100 | *iptr++;
+    }
+    else
+      return(0);
+  }
 
   attr = BxOpcodeInfo64[b1+offset].Attr;
   instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 
   if (attr & BxAnother) {
-    if (attr & BxPrefix) {
-      BX_INSTR_PREFIX(BX_CPU_ID, b1);
-      switch (b1) {
-        case 0x66: // OpSize
-          sse_prefix |= SSE_PREFIX_66;
-          if (!instruction->os64L()) {
-            instruction->setOs32B(0);
-            offset = 0;
-          }
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0x67: // AddrSize
-          instruction->setAs64B(0);
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0x40:
-        case 0x41:
-        case 0x42:
-        case 0x43:
-        case 0x44:
-        case 0x45:
-        case 0x46:
-        case 0x47:
-        case 0x48:
-        case 0x49:
-        case 0x4A:
-        case 0x4B:
-        case 0x4C:
-        case 0x4D:
-        case 0x4E:
-        case 0x4F:
-          instruction->assertExtend8bit();
-          if (b1 & 0x8) {
-            instruction->assertOs64();
-            instruction->assertOs32();
-            offset = 512*2;
-          }
-          if (b1 & 0x4) rex_r = 8;
-          if (b1 & 0x2) rex_x = 8;
-          if (b1 & 0x1) rex_b = 8;
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0xf2: // REPNE/REPNZ
-          sse_prefix |= SSE_PREFIX_F2;
-          instruction->setRepUsed(b1 & 3);
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0xf3: // REP/REPE/REPZ
-          sse_prefix |= SSE_PREFIX_F3;
-          instruction->setRepUsed(b1 & 3);
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0x2e: // CS:
-        case 0x26: // ES:
-        case 0x36: // SS:
-        case 0x3e: // DS:
-          /* ignore segment override prefix */
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0x64: // FS:
-          instruction->setSeg(BX_SEG_REG_FS);
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0x65: // GS:
-          instruction->setSeg(BX_SEG_REG_GS);
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        case 0xf0: // LOCK:
-          lock = 1;
-          if (ilen < remain) {
-            ilen++;
-            goto fetch_b1;
-          }
-          return(0);
-
-        default:
-          BX_PANIC(("fetchdecode64: prefix default = 0x%02x", b1));
-          return(0);
-      }
-    }
-    // opcode requires another byte
+    // opcode requires modrm byte
     if (ilen < remain) {
       ilen++;
       b2 = *iptr++;
-      if (b1 == 0x0f) {
-        // 2-byte prefix
-        b1 = 0x100 | b2;
-        goto another_byte;
-      }
     }
     else
       return(0);
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0;
-    nnn   = ((b2 >> 3) & 0x07) | rex_r;
+    nnn = ((b2 >> 3) & 0x07) | rex_r;
     rm  = b2 & 0x07;
     instruction->modRMForm.modRMData = (b2<<20);
     instruction->modRMForm.modRMData |= mod;
@@ -2546,11 +2532,11 @@ modrm_done:
   }
 
   if (lock) { // lock prefix invalid opcode
-      // lock prefix not allowed or destination operand is not memory
-      if ((mod == 0xc0) || !(attr & BxLockable)) {
-        BX_INFO(("LOCK prefix unallowed (op1=0x%x, mod=%u, nnn=%u)", b1, mod, nnn));
-        UndefinedOpcode(instruction);
-      }
+    // lock prefix not allowed or destination operand is not memory
+    if ((mod == 0xc0) || !(attr & BxLockable)) {
+      BX_INFO(("LOCK prefix unallowed (op1=0x%x, mod=%u, nnn=%u)", b1, mod, nnn));
+      UndefinedOpcode(instruction);
+    }
   }
 
   imm_mode = attr & BxImmediate;
