@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.97 2006-03-25 12:14:13 vruppert Exp $
+// $Id: floppy.cc,v 1.98 2006-04-05 17:23:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.97 2006-03-25 12:14:13 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.98 2006-04-05 17:23:51 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1472,7 +1472,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
   HANDLE hFile;
   DWORD bytes;
   DISK_GEOMETRY dg;
-  unsigned tracks, heads, spt;
+  unsigned tracks = 0, heads = 0, spt = 0;
 #endif
 
   //If media file is already open, close it before reopening.
