@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.275 2006-03-29 18:08:13 sshwarts Exp $
+// $Id: cpu.h,v 1.276 2006-04-05 17:31:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -903,9 +903,9 @@ typedef void (BX_CPU_C::*BxExecutePtr_tR)(bxInstruction_c *) BX_CPP_AttrRegparmN
 typedef bx_ptr_equiv_t bx_hostpageaddr_t;
 
 typedef struct {
-  bx_address lpf; // linear page frame
-  Bit32u ppf; // physical page frame
-  Bit32u accessBits; // Page Table Address for updating A & D bits
+  bx_address lpf;     // linear page frame
+  bx_phy_address ppf; // physical page frame
+  Bit32u accessBits;  // Page Table Address for updating A & D bits
   bx_hostpageaddr_t hostPageAddr;
 } bx_TLB_entry;
 #endif  // #if BX_USE_TLB
@@ -1102,11 +1102,11 @@ public: // for now...
 
   /* Control registers */
 #if BX_CPU_LEVEL >= 2
-  bx_cr0_t      cr0;
-  Bit32u        cr1;
-  bx_address    cr2;
-  bx_address    cr3;
-  bx_address    cr3_masked;
+  bx_cr0_t       cr0;
+  Bit32u         cr1;
+  bx_address     cr2;
+  bx_phy_address cr3;
+  bx_phy_address cr3_masked;
 #endif
 
 #if BX_CPU_LEVEL >= 4
@@ -1232,7 +1232,7 @@ public: // for now...
 #if BX_SUPPORT_ICACHE
   bxICache_c iCache BX_CPP_AlignN(32);
   Bit32u fetchModeMask;
-  Bit32u updateFetchModeMask(void);
+  void updateFetchModeMask(void);
 #endif
 
   struct {
@@ -1255,7 +1255,7 @@ public: // for now...
   virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
 #endif
 
-  void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
+  BX_SMF void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
 
 #define lfMaskCF 0x0000000f
 #define lfMaskPF 0x000000f0
@@ -2622,7 +2622,6 @@ public: // for now...
   BX_SMF unsigned dbg_query_pending(void);
   BX_SMF Bit32u   dbg_get_descriptor_l(bx_descriptor_t *);
   BX_SMF Bit32u   dbg_get_descriptor_h(bx_descriptor_t *);
-  BX_SMF Bit32u   dbg_get_eflags(void);
   BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
   BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
 #endif
@@ -2743,12 +2742,18 @@ public: // for now...
   BX_SMF void smram_save_state(Bit32u *smm_saved_state);
   BX_SMF bx_bool smram_restore_state(const Bit32u *smm_saved_state);
   BX_SMF int  int_number(bx_segment_reg_t *seg);
-  BX_SMF void CR3_change(bx_address value) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SetCR0(Bit32u val_32);
+  BX_SMF void CR3_change(bx_phy_address value) BX_CPP_AttrRegparmN(1);
+#if BX_CPU_LEVEL >= 4
+  BX_SMF bx_bool SetCR4(Bit32u val_32);
+#endif
   BX_SMF void pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4) BX_CPP_AttrRegparmN(2);
   BX_SMF void pagingA20Changed(void);
 
   BX_SMF void reset(unsigned source);
+  BX_SMF void shutdown(void);
+  BX_SMF void handleCpuModeChange(void);
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_task_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);
@@ -2802,6 +2807,8 @@ public: // for now...
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit16u  get_segment_ar_data(bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
+  BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, Bit16u raw_selector,
+                         bx_address base, Bit32u limit, Bit16u ar_data);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
@@ -2922,18 +2929,13 @@ public: // for now...
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
 #endif
-
-  BX_SMF void SetCR0(Bit32u val_32);
-#if BX_CPU_LEVEL >= 4
-  BX_SMF bx_bool SetCR4(Bit32u val_32);
-#endif
 };
 
 #if BX_SUPPORT_ICACHE
 
-BX_CPP_INLINE Bit32u BX_CPU_C::updateFetchModeMask(void)
+BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
-  return (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
+  fetchModeMask = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
 #if BX_SUPPORT_X86_64
          | ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30)
 #endif

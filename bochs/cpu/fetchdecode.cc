@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.89 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.90 2006-04-05 17:31:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -721,7 +721,11 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 1C */ { 0, &BX_CPU_C::BxError },
   /* 0F 1D */ { 0, &BX_CPU_C::BxError },
   /* 0F 1E */ { 0, &BX_CPU_C::BxError },
+#if BX_CPU_LEVEL < 6
   /* 0F 1F */ { 0, &BX_CPU_C::BxError },
+#else
+  /* 0F 1F */ { BxAnother, &BX_CPU_C::NOP },      // multi-byte NOP
+#endif
   /* 0F 20 */ { BxAnother, &BX_CPU_C::MOV_RdCd },
   /* 0F 21 */ { BxAnother, &BX_CPU_C::MOV_RdDd },
   /* 0F 22 */ { BxAnother, &BX_CPU_C::MOV_CdRd },
@@ -1267,7 +1271,11 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 1C */ { 0, &BX_CPU_C::BxError },
   /* 0F 1D */ { 0, &BX_CPU_C::BxError },
   /* 0F 1E */ { 0, &BX_CPU_C::BxError },
+#if BX_CPU_LEVEL < 6
   /* 0F 1F */ { 0, &BX_CPU_C::BxError },
+#else
+  /* 0F 1F */ { BxAnother, &BX_CPU_C::NOP },      // multi-byte NOP
+#endif
   /* 0F 20 */ { BxAnother, &BX_CPU_C::MOV_RdCd },
   /* 0F 21 */ { BxAnother, &BX_CPU_C::MOV_RdDd },
   /* 0F 22 */ { BxAnother, &BX_CPU_C::MOV_CdRd },

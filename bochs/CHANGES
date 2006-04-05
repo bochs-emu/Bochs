@@ -1,22 +1,30 @@
 Changes after 2.2.6 release:
 
-- Fixed bug in FSTENV instruction (Stanislav Shwartsman)
-- Recognize #XF exception (19) when SSE is enabled
-- Fixed bug in SYSRET instruction legacy mode
-- Fixed bug in PSRAW/PSRAD MMX and SSE instructions
-- Fixed bug in CALL/JMP far through call gate 64 in x86-64 mode
-- Fixed bug in ENTER instruction in x86-64 mode (Stanislav Shwartsman)
-- Fixes in Bochs debugger and disassembler
-- Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
-- Moved configure time --enable-reset-on-triple-fault option to runtime, 
-  the 'cpu' option in .bochsrc is extended and the old configure option
-  is deprecated (Stanislav Shwartsman)
-- Support for Dual Core and Intel(R) HyperThreading Technology. Now you
-  could choose amount of cores per processor and amount of HT threads per
-  core from .bochsrc for SMP simulation (Stanislav Shwartsman)
-- Removed --enable-pni configure option, to compile with PNI use 
-  --enable-sse=3 instead (Stanislav Shwartsman)
-- Raise A20 line after system reset (Stanislav Shwartsman)
+- CPU and internal debugger fixes 
+  - Fixed bug in FSTENV instruction (Stanislav Shwartsman)
+  - Recognize #XF exception (19) when SSE is enabled
+  - Fixed bug in SYSRET instruction legacy mode
+  - Fixed bug in PSRAW/PSRAD MMX and SSE instructions
+  - Fixed bug in CALL/JMP far through call gate 64 in x86-64 mode
+  - Correctly decode, disassemble and execute 'XCHG R8, rAX' x86-64 instruction
+  - Correctly decode, disassemble and execute multi-byte NOP 0F F1 opcode
+  - Fixed ENTER and LEAVE instructions in x86-64 mode (Stanislav)
+  - Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
+  - Raise A20 line after system reset (Stanislav Shwartsman)
+  - Implemented NMI delivery (Stanislav)
+  - Many fixes in Bochs debugger and disassembler
+
+- SMP
+  - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
+    could choose amount of cores per processor and amount of HT threads per
+    core from .bochsrc for SMP simulation (Stanislav Shwartsman)
+
+- Configure and compile 
+  - Moved configure time --enable-reset-on-triple-fault option to runtime, 
+    the 'cpu' option in .bochsrc is extended and the old configure option
+    is deprecated (Stanislav Shwartsman)
+  - Removed --enable-pni configure option, to compile with PNI use 
+    --enable-sse=3 instead (Stanislav Shwartsman)
 
 -------------------------------------------------------------------------
 Changes in 2.2.6 (January 29, 2006):

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.62 2006-03-29 18:08:13 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.63 2006-04-05 17:31:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,23 +37,34 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   bx_bool valid;
   Bit32u  phy_addr;
   Bit8u   instr_buf[16];
-  char    char_buf[256];
-  unsigned isize;
+  char    char_buf[512];
+  unsigned isize, i=0;
 
+  static char letters[20] = "0123456789ABCDEF";
   static disassembler bx_disassemble;
 
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
                        &phy_addr, &valid);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
+    char_buf[i++] = '>';
+    char_buf[i++] = '>';
+    char_buf[i++] = ' ';
     isize = bx_disassemble.disasm(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
-        instr_buf, char_buf);
-    for (unsigned j=0; j<isize; j++)
-      BX_INFO((">> %02x", (unsigned) instr_buf[j]));
-    BX_INFO((">> : %s", char_buf));
+        instr_buf, char_buf+i);
+    i=strlen(char_buf);
+    char_buf[i++] = ' ';
+    char_buf[i++] = ':';
+    char_buf[i++] = ' ';
+    for (unsigned j=0; j<isize; j++) {
+      char_buf[i++] = letters[(instr_buf[j] >> 4) & 0xf];
+      char_buf[i++] = letters[(instr_buf[j] >> 0) & 0xf];
+    }
+    char_buf[i] = 0;
+    BX_INFO(("%s", char_buf));
   }
   else {
     BX_INFO(("(instruction unavailable) page not present"));
@@ -206,10 +217,8 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) (BX_CPU_THIS_PTR cr0.val32), 0,
     (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
     (unsigned) (BX_CPU_THIS_PTR cr2 & 0xffffffff)));
-  BX_INFO(("| CR3=0x%08x%08x CR4=0x%08x",
-    (unsigned) (BX_CPU_THIS_PTR cr3 >> 32),
-    (unsigned) (BX_CPU_THIS_PTR cr3 & 0xffffffff),
-    BX_CPU_THIS_PTR cr4.getRegister()));
+  BX_INFO(("| CR3=0x%08x CR4=0x%08x",
+    (unsigned) BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.getRegister()));
 #else
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
     (unsigned) BX_CPU_THIS_PTR prev_eip));
@@ -245,7 +254,7 @@ Bit32u BX_CPU_C::dbg_get_reg(unsigned reg)
   switch (reg) {
     case BX_DBG_REG_EIP: return(EIP);
     case BX_DBG_REG_EFLAGS:
-      return_val32 = dbg_get_eflags();
+      return_val32 = BX_CPU_THIS_PTR read_eflags();
       return(return_val32);
     case BX_DBG_REG_CS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
     case BX_DBG_REG_SS: return(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
@@ -269,7 +278,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     case BX_DBG_REG_EIP: EIP = val; return(1);
     case BX_DBG_REG_EFLAGS:
       BX_INFO(("dbg_set_reg: can not handle eflags yet."));
-      if ( val & 0xffff0000 ) {
+      if (val & 0xffff0000) {
         BX_INFO(("dbg_set_reg: can not set upper 16 bits of eflags."));
         return(0);
       }
@@ -355,11 +364,6 @@ unsigned BX_CPU_C::dbg_query_pending(void)
   }
 
   return(ret);
-}
-
-Bit32u BX_CPU_C::dbg_get_eflags(void)
-{
-  return (BX_CPU_THIS_PTR read_eflags());
 }
 
 Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
@@ -489,14 +493,13 @@ bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->ebx = EBX;
   cpu->ecx = ECX;
   cpu->edx = EDX;
-
   cpu->ebp = EBP;
   cpu->esi = ESI;
   cpu->edi = EDI;
   cpu->esp = ESP;
+  cpu->eip = EIP;
 
-  cpu->eflags = dbg_get_eflags();
-  cpu->eip    = EIP;
+  cpu->eflags = BX_CPU_THIS_PTR read_eflags();
 
   cpu->cs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   cpu->cs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
@@ -552,7 +555,6 @@ bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->dr7 = BX_CPU_THIS_PTR dr7;
 
 #if BX_CPU_LEVEL >= 2
-  // cr0:32=pg,cd,nw,am,wp,ne,ts,em,mp,pe
   cpu->cr0 = BX_CPU_THIS_PTR cr0.val32;
   cpu->cr1 = 0;
   cpu->cr2 = BX_CPU_THIS_PTR cr2;
@@ -579,75 +581,75 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 
   // CS, SS, DS, ES, FS, GS descriptor checks
   if (!cpu->cs.valid) {
-    BX_ERROR(( "Error: CS not valid" ));
+    BX_ERROR(("Error: CS not valid"));
     return(0); // error
   }
-  if ( (cpu->cs.des_h & 0x1000) == 0 ) {
-    BX_ERROR(( "Error: CS not application type" ));
+  if ((cpu->cs.des_h & 0x1000) == 0) {
+    BX_ERROR(("Error: CS not application type"));
     return(0); // error
   }
-  if ( (cpu->cs.des_h & 0x0800) == 0 ) {
-    BX_ERROR(( "Error: CS not executable" ));
+  if ((cpu->cs.des_h & 0x0800) == 0) {
+    BX_ERROR(("Error: CS not executable"));
     return(0); // error
   }
 
   if (!cpu->ss.valid) {
-    BX_ERROR(( "Error: SS not valid" ));
+    BX_ERROR(("Error: SS not valid"));
     return(0); // error
   }
-  if ( (cpu->ss.des_h & 0x1000) == 0 ) {
-    BX_ERROR(( "Error: SS not application type" ));
+  if ((cpu->ss.des_h & 0x1000) == 0) {
+    BX_ERROR(("Error: SS not application type"));
     return(0); // error
   }
 
   if (cpu->ds.valid) {
-    if ( (cpu->ds.des_h & 0x1000) == 0 ) {
-      BX_ERROR(( "Error: DS not application type" ));
+    if ((cpu->ds.des_h & 0x1000) == 0) {
+      BX_ERROR(("Error: DS not application type"));
       return(0); // error
     }
   }
 
   if (cpu->es.valid) {
-    if ( (cpu->es.des_h & 0x1000) == 0 ) {
-      BX_ERROR(( "Error: ES not application type" ));
+    if ((cpu->es.des_h & 0x1000) == 0) {
+      BX_ERROR(("Error: ES not application type"));
       return(0); // error
     }
   }
 
   if (cpu->fs.valid) {
-    if ( (cpu->fs.des_h & 0x1000) == 0 ) {
-      BX_ERROR(( "Error: FS not application type" ));
+    if ((cpu->fs.des_h & 0x1000) == 0) {
+      BX_ERROR(("Error: FS not application type"));
       return(0); // error
     }
   }
 
   if (cpu->gs.valid) {
-    if ( (cpu->gs.des_h & 0x1000) == 0 ) {
-      BX_ERROR(( "Error: GS not application type" ));
+    if ((cpu->gs.des_h & 0x1000) == 0) {
+      BX_ERROR(("Error: GS not application type"));
       return(0); // error
     }
   }
 
   if (cpu->ldtr.valid) {
-    if ( cpu->ldtr.des_h & 0x1000 ) {
-      BX_ERROR(( "Error: LDTR not system type" ));
+    if (cpu->ldtr.des_h & 0x1000) {
+      BX_ERROR(("Error: LDTR not system type"));
       return(0); // error
     }
-    if ( ((cpu->ldtr.des_h >> 8) & 0x0f) != 2 ) {
-      BX_ERROR(( "Error: LDTR descriptor type not LDT" ));
+    if (((cpu->ldtr.des_h >> 8) & 0x0f) != BX_SYS_SEGMENT_LDT) {
+      BX_ERROR(("Error: LDTR descriptor type not LDT"));
       return(0); // error
     }
   }
 
   if (cpu->tr.valid) {
-    if ( cpu->tr.des_h & 0x1000 ) {
-      BX_ERROR(( "Error: TR not system type"));
+    if (cpu->tr.des_h & 0x1000) {
+      BX_ERROR(("Error: TR not system type"));
       return(0); // error
     }
     type = (cpu->tr.des_h >> 8) & 0x0f;
 
-    if ( (type != 1) && (type != 9) ) {
-      BX_ERROR(( "Error: TR descriptor type not TSS" ));
+    if ((type != 1) && (type != 9)) {
+      BX_ERROR(("Error: TR descriptor type not TSS"));
       return(0); // error
     }
   }
@@ -664,32 +666,9 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   ESI = cpu->esi;
   EDI = cpu->edi;
   ESP = cpu->esp;
-
-  // eflags
-  val = cpu->eflags;
-  BX_CPU_THIS_PTR set_CF(val & 0x01); val >>= 2;
-  BX_CPU_THIS_PTR set_PF(val & 0x01); val >>= 2;
-  BX_CPU_THIS_PTR set_AF(val & 0x01); val >>= 2;
-  BX_CPU_THIS_PTR set_ZF(val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_SF(val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_TF (val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_IF (val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_DF (val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_OF(val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_IOPL (val & 0x03); val >>= 2;
-  BX_CPU_THIS_PTR set_NT (val & 0x01); val >>= 2;
-  BX_CPU_THIS_PTR set_RF (val & 0x01); val >>= 1;
-  BX_CPU_THIS_PTR set_VM (val & 0x01); val >>= 1;
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR set_AC (val & 0x01); val >>= 1;
-  //BX_CPU_THIS_PTR eflags.set_VIF (val & 0x01);
-  val >>= 1;
-  //BX_CPU_THIS_PTR eflags.set_VIP (val & 0x01);
-  val >>= 1;
-  BX_CPU_THIS_PTR set_ID (val & 0x01);
-#endif
-
   EIP = cpu->eip;
+
+  setEFlags(cpu->eflags);
 
   // CS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cpu->cs.sel;
@@ -755,7 +734,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit;
 
-
   // DS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = cpu->ds.sel;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = cpu->ds.sel >> 3;
@@ -785,7 +763,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit;
-
 
   // ES:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = cpu->es.sel;
@@ -817,7 +794,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit;
 
-
   // FS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value = cpu->fs.sel;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.index = cpu->fs.sel >> 3;
@@ -847,7 +823,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   else
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit;
-
 
   // GS:
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = cpu->gs.sel;
@@ -879,21 +854,21 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled =
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit;
 
-  // LDTR:
+  // LDTR
   BX_CPU_THIS_PTR ldtr.selector.value = cpu->ldtr.sel;
   BX_CPU_THIS_PTR ldtr.selector.index = cpu->ldtr.sel >> 3;
   BX_CPU_THIS_PTR ldtr.selector.ti    = (cpu->ldtr.sel >> 2) & 0x01;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = cpu->ldtr.sel & 0x03;
 
-  BX_CPU_THIS_PTR ldtr.cache.valid            = cpu->ldtr.valid;
-  BX_CPU_THIS_PTR ldtr.cache.p                = (cpu->ldtr.des_h >> 15) & 0x01;
-  BX_CPU_THIS_PTR ldtr.cache.dpl              = (cpu->ldtr.des_h >> 13) & 0x03;
-  BX_CPU_THIS_PTR ldtr.cache.segment          = (cpu->ldtr.des_h >> 12) & 0x01;
-  BX_CPU_THIS_PTR ldtr.cache.type             = (cpu->ldtr.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base       = (cpu->ldtr.des_l >> 16);
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      |= (cpu->ldtr.des_h & 0xff) << 16;
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      |= (cpu->ldtr.des_h & 0xff000000);
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit      = (cpu->ldtr.des_l & 0xffff);
+  BX_CPU_THIS_PTR ldtr.cache.valid           = cpu->ldtr.valid;
+  BX_CPU_THIS_PTR ldtr.cache.p               = (cpu->ldtr.des_h >> 15) & 0x01;
+  BX_CPU_THIS_PTR ldtr.cache.dpl             = (cpu->ldtr.des_h >> 13) & 0x03;
+  BX_CPU_THIS_PTR ldtr.cache.segment         = (cpu->ldtr.des_h >> 12) & 0x01;
+  BX_CPU_THIS_PTR ldtr.cache.type            = (cpu->ldtr.des_h >> 8) & 0x0f;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      = (cpu->ldtr.des_l >> 16);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base     |= (cpu->ldtr.des_h & 0xff) << 16;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base     |= (cpu->ldtr.des_h & 0xff000000);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit     = (cpu->ldtr.des_l & 0xffff);
 
   // TR
   type = (cpu->tr.des_h >> 8) & 0x0f;
@@ -903,16 +878,16 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR tr.selector.ti    = (cpu->tr.sel >> 2) & 0x01;
   BX_CPU_THIS_PTR tr.selector.rpl   = cpu->tr.sel & 0x03;
 
-  BX_CPU_THIS_PTR tr.cache.valid            = cpu->tr.valid;
-  BX_CPU_THIS_PTR tr.cache.p                = (cpu->tr.des_h >> 15) & 0x01;
-  BX_CPU_THIS_PTR tr.cache.dpl              = (cpu->tr.des_h >> 13) & 0x03;
-  BX_CPU_THIS_PTR tr.cache.segment          = (cpu->tr.des_h >> 12) & 0x01;
-  BX_CPU_THIS_PTR tr.cache.type             = type;
+  BX_CPU_THIS_PTR tr.cache.valid             = cpu->tr.valid;
+  BX_CPU_THIS_PTR tr.cache.p                 = (cpu->tr.des_h >> 15) & 0x01;
+  BX_CPU_THIS_PTR tr.cache.dpl               = (cpu->tr.des_h >> 13) & 0x03;
+  BX_CPU_THIS_PTR tr.cache.segment           = (cpu->tr.des_h >> 12) & 0x01;
+  BX_CPU_THIS_PTR tr.cache.type              = type;
   if (type == 1) { // 286 TSS
     BX_CPU_THIS_PTR tr.cache.u.tss286.base   = (cpu->tr.des_l >> 16);
     BX_CPU_THIS_PTR tr.cache.u.tss286.base  |= (cpu->tr.des_h & 0xff) << 16;
     BX_CPU_THIS_PTR tr.cache.u.tss286.limit  = (cpu->tr.des_l & 0xffff);
-    }
+  }
   else { // type == 9, 386 TSS
     BX_CPU_THIS_PTR tr.cache.u.tss386.base   = (cpu->tr.des_l >> 16);
     BX_CPU_THIS_PTR tr.cache.u.tss386.base  |= (cpu->tr.des_h & 0xff) << 16;
@@ -921,14 +896,13 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR tr.cache.u.tss386.limit |= (cpu->tr.des_h & 0x000f0000);
     BX_CPU_THIS_PTR tr.cache.u.tss386.g      = (cpu->tr.des_h >> 23) & 0x01;
     BX_CPU_THIS_PTR tr.cache.u.tss386.avl    = (cpu->tr.des_h >> 20) & 0x01;
-    }
+  }
 
-
-  // gdtr
+  // GDTR
   BX_CPU_THIS_PTR gdtr.base  = cpu->gdtr.base;
   BX_CPU_THIS_PTR gdtr.limit = cpu->gdtr.limit;
 
-  // idtr
+  // IDTR
   BX_CPU_THIS_PTR idtr.base  = cpu->idtr.base;
   BX_CPU_THIS_PTR idtr.limit = cpu->idtr.limit;
 
@@ -945,7 +919,7 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   SetCR0(cpu->cr0);
   BX_CPU_THIS_PTR cr1 = cpu->cr1;
   BX_CPU_THIS_PTR cr2 = cpu->cr2;
-  BX_CPU_THIS_PTR cr3 = cpu->cr3;
+  CR3_change(cpu->cr3);
 #endif
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(cpu->cr4);
@@ -956,7 +930,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   //
   // flush cached items, prefetch, paging, etc
   //
-  BX_CPU_THIS_PTR CR3_change(cpu->cr3);
   BX_CPU_THIS_PTR invalidate_prefetch_q();
   BX_CPU_THIS_PTR async_event = 1;
 

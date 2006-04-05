@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.141 2006-03-26 19:39:37 sshwarts Exp $
+// $Id: cpu.cc,v 1.142 2006-04-05 17:31:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,10 +228,10 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
   // or the boundary fetch (across pages), by this point.
   BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
-#if BX_DEBUGGER
+#if BX_DISASM
   if (BX_CPU_THIS_PTR trace) {
-    // print the instruction that is about to be executed.
-    bx_dbg_disassemble_current(BX_CPU_ID, 1);  // only one cpu, print time stamp
+    // print the instruction that is about to be executed
+    debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
   }
 #endif
 
@@ -573,10 +573,10 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   // (bochs doesn't support these)
   if (BX_CPU_THIS_PTR smi_pending && ! BX_CPU_THIS_PTR smm_mode())
   {
-    BX_PANIC(("SMI: system management mode still not implemented !"));
-    // clear SMI pending flag and NMI disable flag when SMM was accepted
+    // clear SMI pending flag and disable NMI when SMM was accepted
     BX_CPU_THIS_PTR smi_pending = 0;
     BX_CPU_THIS_PTR nmi_disable = 1;
+    enter_system_management_mode();
   }
 
   // Priority 4: Traps on Previous Instruction
@@ -687,9 +687,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled
     if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-      Bit32u iaddr =
-        BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) +
-        BX_CPU_THIS_PTR prev_eip;
+      Bit32u iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_eip;
       Bit32u dr6_bits;
       if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
                                        BX_HWDebugInstruction)) )

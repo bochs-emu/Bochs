@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.26 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.27 2006-04-05 17:31:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -2483,7 +2483,7 @@ void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("HADDPD_VpdWpd: required PNI, use --enable-pni option"));
+  BX_INFO(("HADDPD_VpdWpd: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2537,7 +2537,7 @@ void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("HADDPS_VpsWps: required PNI, use --enable-pni option"));
+  BX_INFO(("HADDPS_VpsWps: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2583,7 +2583,7 @@ void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("HSUBPD_VpdWpd: required PNI, use --enable-pni option"));
+  BX_INFO(("HSUBPD_VpdWpd: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2637,7 +2637,7 @@ void BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("HSUBPS_VpsWps: required PNI, use --enable-pni option"));
+  BX_INFO(("HSUBPS_VpsWps: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2943,7 +2943,7 @@ void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("ADDSUBPD_VpdWpd: required PNI, use --enable-pni option"));
+  BX_INFO(("ADDSUBPD_VpdWpd: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -2997,7 +2997,7 @@ void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 
 #else
-  BX_INFO(("ADDSUBPS_VpsWps: required PNI, use --enable-pni option"));
+  BX_INFO(("ADDSUBPS_VpsWps: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

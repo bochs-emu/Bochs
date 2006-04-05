@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.57 2006-03-29 18:08:13 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.58 2006-04-05 17:31:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -317,7 +317,7 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 
 #if BX_CPU_LEVEL >= 3
   Bit16u BX_CPP_AttrRegparmN(1)
-BX_CPU_C::get_segment_ar_data(bx_descriptor_t *d)
+BX_CPU_C::get_segment_ar_data(bx_descriptor_t *d)  // used for SMM
 {
   Bit16u val = 0;
 
@@ -359,6 +359,85 @@ BX_CPU_C::get_segment_ar_data(bx_descriptor_t *d)
   }
 
   return val;
+}
+
+bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg, 
+            Bit16u raw_selector, bx_address base, Bit32u limit, Bit16u ar_data)
+{
+  parse_selector(raw_selector, &seg->selector);
+
+  bx_descriptor_t *d = &seg->cache;
+
+  d->p        = (ar_data >> 7) & 0x01;
+  d->dpl      = (ar_data >> 5) & 0x03;
+  d->segment  = (ar_data >> 4) & 0x01;
+  d->type     = (ar_data & 0x0f);
+
+  if (d->segment) { /* data/code segment descriptors */
+    d->u.segment.executable = (ar_data >>  3) & 0x01;
+    d->u.segment.c_ed       = (ar_data >>  2) & 0x01;
+    d->u.segment.r_w        = (ar_data >>  1) & 0x01;
+    d->u.segment.a          = (ar_data >>  0) & 0x01;
+    d->u.segment.g          = (ar_data >> 15) & 0x01;
+    d->u.segment.d_b        = (ar_data >> 14) & 0x01;
+#if BX_SUPPORT_X86_64
+    d->u.segment.l          = (ar_data >> 13) & 0x01;
+#endif
+    d->u.segment.avl        = (ar_data >> 12) & 0x01;
+
+    d->u.segment.base       = base;
+    d->u.segment.limit      = limit;
+
+    if (d->u.segment.g) {
+      if ((d->u.segment.executable==0) && (d->u.segment.c_ed))
+        d->u.segment.limit_scaled = (d->u.segment.limit << 12);
+      else
+        d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
+      }
+    else
+      d->u.segment.limit_scaled = d->u.segment.limit;
+
+    d->valid = 1;
+  }
+  else {
+    switch(d->type) {
+      case BX_SYS_SEGMENT_LDT:
+        d->valid       = 1;
+        d->u.ldt.base  = base;
+        d->u.ldt.limit = limit;
+        break;
+
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+        d->valid          = 1;
+        d->u.tss286.base  = base;
+        d->u.tss286.limit = limit;
+        break;
+
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        d->valid          = 1;
+        d->u.tss386.avl   = (ar_data >> 12) & 0x01;
+        d->u.tss386.g     = (ar_data >> 15) & 0x01;
+        d->u.tss386.base  = base;
+        d->u.tss386.limit = limit;
+        if (d->u.tss386.g)
+          d->u.tss386.limit_scaled = (d->u.tss386.limit << 12) | 0x0fff;
+        else
+          d->u.tss386.limit_scaled = (d->u.tss386.limit);
+        break;
+
+      default:
+        BX_PANIC(("set_segment_ar_data(): case %u unsupported", (unsigned) d->type));
+    }
+  }
+
+  /* invalidate if null selector */
+  if ((raw_selector & 0xfffc) == 0) {
+     seg->cache.valid = 0;
+  }
+
+  return seg->cache.valid;
 }
 #endif
 
@@ -531,8 +610,9 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
           BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8,   4, 0, BX_READ, dword1);
-    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8+4, 4, 0, BX_READ, dword2);
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    access_linear(offset,     4, 0, BX_READ, dword1);
+    access_linear(offset + 4, 4, 0, BX_READ, dword2);
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
@@ -545,8 +625,9 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
           BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8,   4, 0, BX_READ, dword1);
-    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8+4, 4, 0, BX_READ, dword2);
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    access_linear(offset,     4, 0, BX_READ, dword1);
+    access_linear(offset + 4, 4, 0, BX_READ, dword2);
   }
 }
 
@@ -556,8 +637,9 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
   if (selector->ti == 0) { /* GDT */
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
       return(0);
-    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8,   4, 0, BX_READ, dword1);
-    access_linear(BX_CPU_THIS_PTR gdtr.base + selector->index*8+4, 4, 0, BX_READ, dword2);
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    access_linear(offset,     4, 0, BX_READ, dword1);
+    access_linear(offset + 4, 4, 0, BX_READ, dword2);
     return(1);
   }
   else { /* LDT */
@@ -567,8 +649,9 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
     }
     if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit)
       return(0);
-    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8,   4, 0, BX_READ, dword1);
-    access_linear(BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8+4, 4, 0, BX_READ, dword2);
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    access_linear(offset,     4, 0, BX_READ, dword1);
+    access_linear(offset + 4, 4, 0, BX_READ, dword2);
     return(1);
   }
 }
@@ -586,11 +669,11 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
           BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address base = BX_CPU_THIS_PTR gdtr.base;
-    access_linear(base + selector->index*8,      4, 0, BX_READ,  dword1);
-    access_linear(base + selector->index*8 +  4, 4, 0, BX_READ,  dword2);
-    access_linear(base + selector->index*8 +  8, 4, 0, BX_READ,  dword3);
-    access_linear(base + selector->index*8 + 12, 4, 0, BX_READ, &dword4);
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    access_linear(offset,      4, 0, BX_READ,  dword1);
+    access_linear(offset +  4, 4, 0, BX_READ,  dword2);
+    access_linear(offset +  8, 4, 0, BX_READ,  dword3);
+    access_linear(offset + 12, 4, 0, BX_READ, &dword4);
   }
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
@@ -603,11 +686,11 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
           BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address base = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base;
-    access_linear(base + selector->index*8,      4, 0, BX_READ,  dword1);
-    access_linear(base + selector->index*8 +  4, 4, 0, BX_READ,  dword2);
-    access_linear(base + selector->index*8 +  8, 4, 0, BX_READ,  dword3);
-    access_linear(base + selector->index*8 + 12, 4, 0, BX_READ, &dword4);
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    access_linear(offset,      4, 0, BX_READ,  dword1);
+    access_linear(offset +  4, 4, 0, BX_READ,  dword2);
+    access_linear(offset +  8, 4, 0, BX_READ,  dword3);
+    access_linear(offset + 12, 4, 0, BX_READ, &dword4);
   }
 
   if (dword4 != 0) {

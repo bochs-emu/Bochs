@@ -16,30 +16,22 @@
 }
 
 // will be used in future
-#define IA_8086       0x00000000        /* 8086 instruction */
-#define IA_286        0x00000000        /* 286+ instruction */
-#define IA_386        0x00000000        /* 386+ instruction */
-#define IA_FPU        0x00000000
-#define IA_486        0x00000000        /* 486+ instruction */
-#define IA_PENTIUM    0x00000000        /* Pentium instruction */
-#define IA_P6         0x00000000        /* P6 instruction */
-#define IA_KATMAI     0x00000000        /* Katmai instruction */
-#define IA_WILLAMETTE 0x00000000        /* Willamette instruction */
-#define IA_PRESCOTT   0x00000000        /* Prescott instruction */
-#define IA_X86_64     0x00000000        /* x86-64 specific instruction */
-
-#define IF_ARITHMETIC 0x00000000        /* arithmetic instruction */
-#define IF_LOGIC      0x00000000        /* logic instruction */
-#define IF_SYSTEM     0x00000000        /* system instruction (require CPL=0) */
-#define IF_BRANCH     0x00000000        /* branch instruction */
-#define IF_FPU        0x00000000        /* FPU instruction */
-#define IF_MMX        0x00000000        /* MMX instruction */
-#define IF_3DNOW      0x00000000        /* 3DNow! instruction */
-#define IF_KNI        0x00000000        /* Katmai new instruction */
-#define IF_PREFETCH   0x00000000        /* Prefetch instruction */
-#define IF_SSE        0x00000000        /* SSE instruction */
-#define IF_SSE2       0x00000000        /* SSE2 instruction */
-#define IF_PNI        0x00000000        /* Prescott new instruction */
+#define IA_286        0x00000001        /* 286+ instruction */
+#define IA_386        0x00000002        /* 386+ instruction */
+#define IA_486        0x00000004        /* 486+ instruction */
+#define IA_PENTIUM    0x00000008        /* Pentium+ instruction */
+#define IA_P6         0x00000010        /* P6 new instruction */
+#define IA_SYSTEM     0x00000020        /* system instruction (require CPL=0) */
+#define IA_LEGACY     0x00000040        /* legacy instruction */
+#define IA_X87        0x00000080        /* FPU (X87) instruction */
+#define IA_MMX        0x00000100        /* MMX instruction */
+#define IA_3DNOW      0x00000200        /* 3DNow! instruction */
+#define IA_PREFETCH   0x00000400        /* Prefetch instruction */
+#define IA_SSE        0x00000800        /* SSE  instruction */
+#define IA_SSE2       0x00001000        /* SSE2 instruction */
+#define IA_SSE3       0x00002000        /* SSE3 instruction */
+#define IA_SSE4       0x00004000        /* SSE4 instruction */
+#define IA_X86_64     0x00008000        /* x86-64 instruction */
 
 /* general purpose bit register */
 enum {

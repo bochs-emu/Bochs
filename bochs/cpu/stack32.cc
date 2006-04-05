@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.31 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: stack32.cc,v 1.32 2006-04-05 17:31:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,11 +29,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_X86_64==0
-// Make life easier for merging 64&32-bit code.
-#define RBP EBP
-#endif
 
 void BX_CPU_C::POP_Ed(bxInstruction_c *i)
 {
@@ -315,7 +310,7 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   } /* if (level > 0) ... */
 
   if (ss32) {
-    RBP = frame_ptr32;
+    EBP = frame_ptr32;
     ESP -= imm16;
   }
   else {
@@ -363,7 +358,7 @@ void BX_CPU_C::LEAVE(bxInstruction_c *i)
   if (i->os32L()) {
     Bit32u temp32;
     pop_32(&temp32);
-    RBP = temp32;
+    EBP = temp32;
   }
   else
 #endif

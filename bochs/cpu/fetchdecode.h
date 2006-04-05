@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.21 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.22 2006-04-05 17:31:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -123,7 +123,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupD8[8] = {
   /* 0 */ { 0,  &BX_CPU_C::FADD_SINGLE_REAL  },
   /* 1 */ { 0,  &BX_CPU_C::FMUL_SINGLE_REAL  },
   /* 2 */ { 0,  &BX_CPU_C::FCOM_SINGLE_REAL  },
-  /* 3 */ { 0,  &BX_CPU_C::FCOM_SINGLE_REAL  },	// FCOMP_SINGLE_REAL
+  /* 3 */ { 0,  &BX_CPU_C::FCOM_SINGLE_REAL  },	        // FCOMP_SINGLE_REAL
   /* 4 */ { 0,  &BX_CPU_C::FSUB_SINGLE_REAL  },
   /* 5 */ { 0,  &BX_CPU_C::FSUBR_SINGLE_REAL },
   /* 6 */ { 0,  &BX_CPU_C::FDIV_SINGLE_REAL  },
@@ -171,7 +171,7 @@ static BxOpcodeInfo_t BxOpcodeInfo_FPGroupDC[8] = {
   /* 0 */ { 0,  &BX_CPU_C::FADD_DOUBLE_REAL  },
   /* 1 */ { 0,  &BX_CPU_C::FMUL_DOUBLE_REAL  },
   /* 2 */ { 0,  &BX_CPU_C::FCOM_DOUBLE_REAL  },
-  /* 3 */ { 0,  &BX_CPU_C::FCOM_DOUBLE_REAL  },	// FCOMP_DOUBLE_REAL
+  /* 3 */ { 0,  &BX_CPU_C::FCOM_DOUBLE_REAL  },	        // FCOMP_DOUBLE_REAL
   /* 4 */ { 0,  &BX_CPU_C::FSUB_DOUBLE_REAL  },
   /* 5 */ { 0,  &BX_CPU_C::FSUBR_DOUBLE_REAL },
   /* 6 */ { 0,  &BX_CPU_C::FDIV_DOUBLE_REAL  },
@@ -1037,8 +1037,8 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f11[4] = {
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f12[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVLPS_VpsMq    },
   /* 66 */ { 0, &BX_CPU_C::MOVLPD_VsdMq    },
-  /* F2 */ { 0, &BX_CPU_C::MOVDDUP_VpdWq   },	// PNI
-  /* F3 */ { 0, &BX_CPU_C::MOVSLDUP_VpsWps }	// PNI
+  /* F2 */ { 0, &BX_CPU_C::MOVDDUP_VpdWq   },	// SSE3
+  /* F3 */ { 0, &BX_CPU_C::MOVSLDUP_VpsWps }	// SSE3
 };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f13[4] = {
@@ -1066,7 +1066,7 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f16[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVHPS_VpsMq },
   /* 66 */ { 0, &BX_CPU_C::MOVHPD_VsdMq },
   /* F2 */ { 0, &BX_CPU_C::BxError },
-  /* F3 */ { 0, &BX_CPU_C::MOVSHDUP_VpsWps }	// PNI
+  /* F3 */ { 0, &BX_CPU_C::MOVSHDUP_VpsWps }	// SSE3
 };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f17[4] = {
@@ -1386,15 +1386,15 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0f76[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f7c[4] = {
   /* -- */ { 0, &BX_CPU_C::BxError },
-  /* 66 */ { 0, &BX_CPU_C::HADDPD_VpdWpd },	// PNI
-  /* F2 */ { 0, &BX_CPU_C::HADDPS_VpsWps },	// PNI
+  /* 66 */ { 0, &BX_CPU_C::HADDPD_VpdWpd },	// SSE3
+  /* F2 */ { 0, &BX_CPU_C::HADDPS_VpsWps },	// SSE3
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0f7d[4] = {
   /* -- */ { 0, &BX_CPU_C::BxError },
-  /* 66 */ { 0, &BX_CPU_C::HSUBPD_VpdWpd },	// PNI
-  /* F2 */ { 0, &BX_CPU_C::HSUBPS_VpsWps },	// PNI
+  /* 66 */ { 0, &BX_CPU_C::HSUBPD_VpdWpd },	// SSE3
+  /* F2 */ { 0, &BX_CPU_C::HSUBPS_VpsWps },	// SSE3
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
@@ -1449,8 +1449,8 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0fc6[4] = {
 
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0fd0[4] = {
   /* -- */ { 0, &BX_CPU_C::BxError },
-  /* 66 */ { 0, &BX_CPU_C::ADDSUBPD_VpdWpd },	// PNI
-  /* F2 */ { 0, &BX_CPU_C::ADDSUBPS_VpsWps },	// PNI
+  /* 66 */ { 0, &BX_CPU_C::ADDSUBPD_VpdWpd },	// SSE3
+  /* F2 */ { 0, &BX_CPU_C::ADDSUBPS_VpsWps },	// SSE3
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
@@ -1674,7 +1674,7 @@ static BxOpcodeInfo_t BxOpcodeGroupSSE_0fef[4] = {
 static BxOpcodeInfo_t BxOpcodeGroupSSE_0ff0[4] = {
   /* -- */ { 0, &BX_CPU_C::BxError },
   /* 66 */ { 0, &BX_CPU_C::BxError },
-  /* F2 */ { 0, &BX_CPU_C::LDDQU_VdqMdq },	// PNI
+  /* F2 */ { 0, &BX_CPU_C::LDDQU_VdqMdq },	// SSE3
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };                        
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.70 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: paging.cc,v 1.71 2006-04-05 17:31:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -439,14 +439,14 @@ BX_CPU_C::pagingCR0Changed(Bit32u oldCR0, Bit32u newCR0)
 BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 {
   // Modification of PGE,PAE,PSE flushes TLB cache according to docs.
-  if ( (oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0) )
+  if ((oldCR4 & 0x000000b0) != (newCR4 & 0x000000b0))
     TLB_flush(1); // 1 = Flush Global entries also.
 
   if (bx_dbg.paging)
     BX_INFO(("pagingCR4Changed: (0x%x -> 0x%x)", oldCR4, newCR4));
 
 #if BX_SUPPORT_PAE
-  if ( (oldCR4 & 0x00000020) != (newCR4 & 0x00000020) ) {
+  if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
     if (BX_CPU_THIS_PTR cr4.get_PAE())
       BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
     else
@@ -456,7 +456,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 }
 
   void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::CR3_change(bx_address value)
+BX_CPU_C::CR3_change(bx_phy_address value)
 {
   if (bx_dbg.paging) {
     BX_INFO(("CR3_change(): flush TLB cache"));
@@ -621,7 +621,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
   // 32 bit entries although cr3 is expanded to 64 bits.
-  Bit32u ppf, poffset, paddress;
+  Bit32u ppf, poffset;
+  bx_phy_address paddress;
 
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
 
@@ -629,8 +630,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
     bx_address pde, pdp;
-    Bit32u pde_addr;
-    Bit32u pdp_addr;
+    bx_phy_address pde_addr;
+    bx_phy_address pdp_addr;
 
     lpf     = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
     poffset = laddr & 0x00000fff; // physical offset
@@ -659,10 +660,10 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR msr.lma)
     {
-      bx_address pml4;
+      Bit64u pml4;
 
       // Get PML4 entry
-      Bit32u pml4_addr = BX_CPU_THIS_PTR cr3_masked |
+      bx_phy_address pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
 
@@ -770,7 +771,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       bx_address pte;
 
       // Get page table entry
-      Bit32u pte_addr = (pde & 0xfffff000) | ((laddr & 0x001ff000) >> 9);
+      bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x001ff000) >> 9);
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
 
@@ -851,7 +852,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
     InstrTLB_Increment(tlbMisses);
 
-    Bit32u pde, pde_addr;
+    Bit32u pde;
+    bx_phy_address pde_addr;
 
     // Get page dir entry
     pde_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xffc00000) >> 20);
@@ -902,7 +904,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     else // Else normal 4Kbyte page...
 #endif
     {
-      Bit32u pte, pte_addr;
+      Bit32u pte;
 
 #if (BX_CPU_LEVEL < 6)
       // update PDE if A bit was not set before
@@ -913,7 +915,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #endif
 
       // Get page table entry
-      pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
+      bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
 
@@ -1431,7 +1433,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 
 // stub functions for non-support of paging
 
-void BX_CPU_C::CR3_change(bx_address value32)
+void BX_CPU_C::CR3_change(bx_phy_address value32)
 {
   BX_INFO(("CR3_change(): flush TLB cache"));
   BX_INFO(("Page Directory Base %08x", (unsigned) value32));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.80 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: apic.cc,v 1.81 2006-04-05 17:31:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,8 +175,8 @@ void bx_generic_apic_c::set_id(Bit8u newid)
 bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 {
   if((addr & ~0xfff) == get_base()) {
-    if(((addr & 0xf) != 0) || (len != 4))
-      BX_INFO(("warning: misaligned or wrong-size APIC access. len=%d, addr=%08x", len, addr));
+    if((addr & 0xf) != 0)
+      BX_INFO(("warning: misaligned APIC access. addr=%08x, len=%d", addr, len));
     return 1;
   }
   return 0;
@@ -665,6 +665,8 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     return 0;
   case APIC_DM_NMI:
     BX_PANIC(("Delivery of NMI still not implemented !"));
+    cpu->async_event = 1;
+    cpu->nmi_pending = 1;
     return 0;
   case APIC_DM_INIT:
     BX_DEBUG(("Deliver INIT IPI"));

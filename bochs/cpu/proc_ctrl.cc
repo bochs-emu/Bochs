@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.143 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.144 2006-04-05 17:31:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,6 +57,11 @@ void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 #else
   UndefinedOpcode(i);
 #endif
+}
+
+void BX_CPU_C::shutdown(void)
+{
+  BX_PANIC(("Entering to shutdown state still not implemented"));
 }
 
 void BX_CPU_C::HLT(bxInstruction_c *i)
@@ -1240,6 +1245,42 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 }
 #endif
 
+void BX_CPU_C::handleCpuModeChange(void)
+{
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.lma) {
+    if (! BX_CPU_THIS_PTR cr0.pe) {
+      BX_PANIC(("change_cpu_mode: EFER.LMA is set when CR0.PE=0 !"));
+    }
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
+      BX_DEBUG(("Long Mode Activated"));
+    }
+    else {
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
+      BX_DEBUG(("Compatibility Mode Activated"));
+    }
+  }
+  else 
+#endif
+  {
+    if (BX_CPU_THIS_PTR cr0.pe) {
+      if (BX_CPU_THIS_PTR get_VM()) {
+        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
+        BX_DEBUG(("VM8086 Mode Activated"));
+      }
+      else {
+        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
+        BX_DEBUG(("Protected Mode Activated"));
+      }
+    }
+    else {
+      BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+      BX_DEBUG(("Real Mode Activated"));
+    }
+  }
+}
+
 void BX_CPU_C::SetCR0(Bit32u val_32)
 {
   bx_bool pe = val_32 & 0x01;
@@ -1319,8 +1360,6 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       BX_CPU_THIS_PTR msr.lma = 1;
-      BX_DEBUG(("Enter Compatibility Mode"));
-      BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
     }
   }
   else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0) {
@@ -1329,17 +1368,11 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
       BX_CPU_THIS_PTR msr.lma = 0;
-      if (BX_CPU_THIS_PTR cr0.pe) {
-        BX_DEBUG(("Enter Protected Mode"));
-        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
-      }
-      else {
-        BX_DEBUG(("Enter Real Mode"));
-        BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-      }
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
+
+  handleCpuModeChange();
 
   // Give the paging unit a chance to look for changes in bits
   // it cares about, like {PG,PE}, so it can flush cache entries etc.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.76 2006-03-06 22:02:53 sshwarts Exp $
+// $Id: exception.cc,v 1.77 2006-04-05 17:31:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -858,6 +858,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
     else {
       BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
       BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
+      shutdown();
     }
 #if BX_DEBUGGER
     bx_guard.special_unwind_stack = true;

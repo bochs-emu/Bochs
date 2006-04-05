@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.208 2006-02-11 21:57:04 sshwarts Exp $
+$Id: user.dbk,v 1.209 2006-04-05 17:31:35 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -35,7 +35,7 @@ This is the top level file for the Bochs Users Manual.
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
 can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium Pro, or
-AMD64 CPU, including optional MMX, SSE, SSE2 and 3DNow! instructions.
+AMD64 CPU, including optional MMX, SSE, SSE2, SSE3 and 3DNow! instructions.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
@@ -2210,13 +2210,8 @@ turn it off.
       <entry>no</entry>
       <entry>
       Add support for SSE instructions, written by Stanislav Shwartsman.
-      For SSE only, use --enable-sse=1.  For SSE and SSE2, use --enable-sse=2.
+      Any of SSE/SSE2/SSE3 instruction sets are supported.
       </entry>
-    </row>
-    <row>
-      <entry>--enable-pni</entry>
-      <entry>no</entry>
-      <entry>Add support for PNI (SSE3) instructions</entry>
     </row>
     <row>
       <entry>--enable-sep</entry>

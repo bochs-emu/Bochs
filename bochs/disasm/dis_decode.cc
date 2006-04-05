@@ -30,9 +30,9 @@ static const unsigned char instruction_has_modrm[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
   /*       -------------------------------           */
            1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,1, /* 0F 00 */
-           1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0, /* 0F 10 */
+           1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1, /* 0F 10 */
            1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1, /* 0F 20 */
-           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, /* 0F 30 */
+           0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0, /* 0F 30 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 40 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 50 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 60 */
@@ -60,6 +60,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   x86_insn insn(is_32, is_64);
   const Bit8u *instruction_begin = instruction = instr;
   resolve_modrm = NULL;
+  unsigned b3 = 0;
 
   db_eip = ip;
   db_base = base; // cs linear base (base for PM & cs<<4 for RM & VM)
@@ -183,6 +184,9 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
   entry = opcode_table + insn.b1;
 
+  // will require 3rd byte for 3-byte opcode
+  if (entry->Attr & _GRP3BTAB) b3 = fetch_byte();
+
   if (instruction_has_modrm[insn.b1])
   {
     decode_modrm(&insn);
@@ -232,6 +236,14 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          entry = &(BxDisasm3DNowGroup[peek_byte()]);
          break;
 
+       case _GRP3BTAB:
+         entry = &(OPCODE_TABLE(entry)[b3 >> 4]);
+         break;
+
+       case _GRP3BOP:
+         entry = &(OPCODE_TABLE(entry)[b3 & 15]);
+         break;
+
        default:
          printf("Internal disassembler error - unknown attribute !\n");
          return x86_insn(is_32, is_64);
@@ -271,6 +283,11 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   // patch jecx opcode
   if (insn.b1 == 0xE3 && insn.as_32 && !insn.as_64)
     opcode = &Ia_jecxz_Jb;
+
+  // fix nop opcode
+  if (insn.b1 == 0x90 && !insn.rex_b) {
+    opcode = &Ia_nop;
+  }
 
   // print instruction disassembly
   if (intel_mode)
