@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.87 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.88 2006-04-05 16:58:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.87 2006-03-28 16:53:02 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.88 2006-04-05 16:58:22 vruppert Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -263,17 +263,19 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       return;
     }
     if ((romaddress < 0xc0000) ||
-        (((romaddress + size - 1) > 0xdffff) && (romaddress != 0xe0000))) {
+        (((romaddress + size - 1) > 0xdffff) && (romaddress < 0xe0000))) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
     }
-    start_idx = ((romaddress - 0xc0000) >> 11);
-    end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
     if (romaddress < 0xe0000) {
       offset = (romaddress & EXROM_MASK) + BIOSROMSZ;
+      start_idx = ((romaddress - 0xc0000) >> 11);
+      end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
     } else {
       offset = romaddress & BIOS_MASK;
+      start_idx = 64;
+      end_idx = 64;
     }
     for (i = start_idx; i < end_idx; i++) {
       if (BX_MEM_THIS rom_present[i]) {
@@ -480,7 +482,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
         *buf = rom[(addr & EXROM_MASK) + BIOSROMSZ];
       }
     }
-    else if (addr >= ~BIOS_MASK)
+    else if (addr >= (bx_phy_address)~BIOS_MASK)
     {
       *buf = rom[addr & BIOS_MASK];
     }
