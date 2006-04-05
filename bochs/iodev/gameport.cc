@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.7 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: gameport.cc,v 1.8 2006-04-05 18:49:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -171,7 +171,7 @@ void bx_gameport_c::poll_joydev(void)
 
 Bit32u bx_gameport_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
-#if !BX_USE_GAME_SMF
+#if !BX_USE_GAMEPORT_SMF
   bx_gameport_c *class_ptr = (bx_gameport_c *) this_ptr;
   return class_ptr->read(address, io_len);
 }
@@ -180,7 +180,7 @@ Bit32u bx_gameport_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_GAME_SMF
+#endif // !BX_USE_GAMEPORT_SMF
   Bit64u usec;
 
   if (BX_GAMEPORT_THIS joyfd >= 0) {
@@ -210,7 +210,7 @@ Bit32u bx_gameport_c::read(Bit32u address, unsigned io_len)
 
 void bx_gameport_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_GAME_SMF
+#if !BX_USE_GAMEPORT_SMF
   bx_gameport_c *class_ptr = (bx_gameport_c *) this_ptr;
   class_ptr->write(address, value, io_len);
 }
@@ -219,7 +219,7 @@ void bx_gameport_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_GAME_SMF
+#endif // !BX_USE_GAMEPORT_SMF
 
   BX_GAMEPORT_THIS write_usec = bx_pc_system.time_usec();
   BX_GAMEPORT_THIS timer_x = 1;

@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.316 2006-03-13 17:17:38 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.317 2006-04-05 18:49:30 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1523,7 +1523,7 @@ AC_ARG_ENABLE(3dnow,
 support_sse=0
 AC_MSG_CHECKING(for SSE support)
 AC_ARG_ENABLE(sse,
-  [  --enable-sse                      SSE/SSE2/SSE3 support (--enable-sse=[no|1|2|3])],
+  [  --enable-sse                      SSE support (--enable-sse=[no|1|2|3|4])],
   [case "$enableval" in
     no | 0)
       support_sse=0
@@ -1531,18 +1531,22 @@ AC_ARG_ENABLE(sse,
       ;;
     yes | 1)
       support_sse=1
-      AC_MSG_RESULT(SSE only)
+      AC_MSG_RESULT(SSE1)
       ;;
     2)
       support_sse=2
-      AC_MSG_RESULT(SSE and SSE2)
+      AC_MSG_RESULT(SSE2)
       ;;
     3)
       support_sse=3
-      AC_MSG_RESULT(SSE, SSE2 and SSE3)
+      AC_MSG_RESULT(SSE3)
+      ;;
+    4)
+      support_sse=4
+      AC_MSG_RESULT(SSE4)
       ;;
     *)
-      echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=[no|1|2]"
+      echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=[no|1|2|3|4]"
       exit 1
       ;;
    esac
@@ -1550,7 +1554,7 @@ AC_ARG_ENABLE(sse,
   [
     if test "$use_x86_64" = 1; then
       support_sse=2
-      AC_MSG_RESULT(SSE and SSE2)
+      AC_MSG_RESULT(SSE2)
     else
       AC_MSG_RESULT(no)
     fi
@@ -1565,7 +1569,9 @@ if test "$support_sse" -lt 2 -a "$use_x86_64" = 1; then
   AC_MSG_ERROR([x86-64 needs SSE2 support])
 fi
 
-if test "$support_sse" = 3; then
+if test "$support_sse" = 4; then
+  AC_DEFINE(BX_SUPPORT_SSE,  4)
+elif test "$support_sse" = 3; then
   AC_DEFINE(BX_SUPPORT_SSE,  3)
 elif test "$support_sse" = 2; then
   AC_DEFINE(BX_SUPPORT_SSE,  2)
@@ -1774,7 +1780,7 @@ AC_ARG_ENABLE(gameport,
   [  --enable-gameport                 enable standard PC gameport support],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_GAME, 1)
+    AC_DEFINE(BX_SUPPORT_GAMEPORT, 1)
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
       case $target in
@@ -1786,14 +1792,14 @@ AC_ARG_ENABLE(gameport,
    else
     AC_MSG_RESULT(no)
     GAME_OBJS=''
-    AC_DEFINE(BX_SUPPORT_GAME, 0)
+    AC_DEFINE(BX_SUPPORT_GAMEPORT, 0)
    fi],
   [
     if test "$gameport_present" = 1; then
-      AC_DEFINE(BX_SUPPORT_GAME, 1)
+      AC_DEFINE(BX_SUPPORT_GAMEPORT, 1)
       AC_MSG_RESULT(yes)
     else
-      AC_DEFINE(BX_SUPPORT_GAME, 0)
+      AC_DEFINE(BX_SUPPORT_GAMEPORT, 0)
       AC_MSG_RESULT(no)
     fi]
   )

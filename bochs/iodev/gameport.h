@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.h,v 1.3 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: gameport.h,v 1.4 2006-04-05 18:49:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 #ifndef BX_IODEV_GAMEPORT_H
 #define BX_IODEV_GAMEPORT_H
 
-#if BX_USE_GAME_SMF
+#if BX_USE_GAMEPORT_SMF
 #  define BX_GAMEPORT_SMF  static
 #  define BX_GAMEPORT_THIS theGameport->
 #else
@@ -57,7 +57,7 @@ private:
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_GAME_SMF
+#if !BX_USE_GAMEPORT_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif

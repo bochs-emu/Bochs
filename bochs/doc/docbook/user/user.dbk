@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.209 2006-04-05 17:31:35 sshwarts Exp $
+$Id: user.dbk,v 1.210 2006-04-05 18:49:31 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -35,7 +35,7 @@ This is the top level file for the Bochs Users Manual.
 <para>
 Bochs is a program that simulates a complete Intel x86 computer.  It 
 can be configured to act like a <!--286,--> 386, 486, Pentium, Pentium Pro, or
-AMD64 CPU, including optional MMX, SSE, SSE2, SSE3 and 3DNow! instructions.
+x86-64 CPU, including optional MMX, SSE/SSE2/SSE3 and 3DNow! instructions.
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs

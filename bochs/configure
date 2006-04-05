@@ -1084,7 +1084,7 @@ Optional Features:
   --enable-vme                      virtual 8086 mode extensions
   --enable-mmx                      MMX support
   --enable-3dnow                    3DNow! support
-  --enable-sse                      SSE/SSE2/SSE3 support (--enable-sse=no|1|2|3)
+  --enable-sse                      SSE support (--enable-sse=no|1|2|3|4)
   --enable-daz                      denormals-are-zeroes support
   --enable-sep                      SYSENTER/SYSEXIT support
   --enable-x86-debugger             x86 debugger support
@@ -35809,21 +35809,26 @@ echo "${ECHO_T}no" >&6
       ;;
     yes | 1)
       support_sse=1
-      echo "$as_me:$LINENO: result: SSE only" >&5
-echo "${ECHO_T}SSE only" >&6
+      echo "$as_me:$LINENO: result: SSE1" >&5
+echo "${ECHO_T}SSE1" >&6
       ;;
     2)
       support_sse=2
-      echo "$as_me:$LINENO: result: SSE and SSE2" >&5
-echo "${ECHO_T}SSE and SSE2" >&6
+      echo "$as_me:$LINENO: result: SSE2" >&5
+echo "${ECHO_T}SSE2" >&6
       ;;
     3)
       support_sse=3
-      echo "$as_me:$LINENO: result: SSE" >&5
-echo "${ECHO_T}SSE" >&6
+      echo "$as_me:$LINENO: result: SSE3" >&5
+echo "${ECHO_T}SSE3" >&6
+      ;;
+    4)
+      support_sse=4
+      echo "$as_me:$LINENO: result: SSE4" >&5
+echo "${ECHO_T}SSE4" >&6
       ;;
     *)
-      echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=no|1|2"
+      echo "ERROR: --enable-sse=$enableval not understood. Use --enable-sse=no|1|2|3|4"
       exit 1
       ;;
    esac
@@ -35832,8 +35837,8 @@ else
 
     if test "$use_x86_64" = 1; then
       support_sse=2
-      echo "$as_me:$LINENO: result: SSE and SSE2" >&5
-echo "${ECHO_T}SSE and SSE2" >&6
+      echo "$as_me:$LINENO: result: SSE2" >&5
+echo "${ECHO_T}SSE2" >&6
     else
       echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6
@@ -35854,7 +35859,12 @@ echo "$as_me: error: x86-64 needs SSE2 support" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-if test "$support_sse" = 3; then
+if test "$support_sse" = 4; then
+  cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SSE 4
+_ACEOF
+
+elif test "$support_sse" = 3; then
   cat >>confdefs.h <<\_ACEOF
 #define BX_SUPPORT_SSE 3
 _ACEOF
@@ -36338,7 +36348,7 @@ if test "${enable_gameport+set}" = set; then
     echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_GAME 1
+#define BX_SUPPORT_GAMEPORT 1
 _ACEOF
 
     if test "$gameport_present" = 0; then
@@ -36354,7 +36364,7 @@ _ACEOF
 echo "${ECHO_T}no" >&6
     GAME_OBJS=''
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_GAME 0
+#define BX_SUPPORT_GAMEPORT 0
 _ACEOF
 
    fi
@@ -36362,14 +36372,14 @@ else
 
     if test "$gameport_present" = 1; then
       cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_GAME 1
+#define BX_SUPPORT_GAMEPORT 1
 _ACEOF
 
       echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
     else
       cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_GAME 0
+#define BX_SUPPORT_GAMEPORT 0
 _ACEOF
 
       echo "$as_me:$LINENO: result: no" >&5
@@ -39472,9 +39482,10 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Add them.
-  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
+  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
+  #    will be set to the directory where LIBOBJS objects are built.
+  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 

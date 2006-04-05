@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.96 2006-03-26 22:15:05 sshwarts Exp $
+// $Id: devices.cc,v 1.97 2006-04-05 18:49:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.96 2006-03-26 22:15:05 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.97 2006-04-05 18:49:32 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -168,7 +168,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   if (is_parallel_enabled()) 
     PLUG_load_plugin(parallel, PLUGTYPE_OPTIONAL);
   PLUG_load_plugin(extfpuirq, PLUGTYPE_OPTIONAL);
-#if BX_SUPPORT_GAME
+#if BX_SUPPORT_GAMEPORT
   PLUG_load_plugin(gameport, PLUGTYPE_OPTIONAL);
 #endif
   PLUG_load_plugin(speaker, PLUGTYPE_OPTIONAL);
