@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.48 2006-03-29 20:31:51 vruppert Exp $
+// $Id: textconfig.cc,v 1.49 2006-04-06 20:42:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -230,8 +230,14 @@ static char *startup_menu_prompt =
 "2. Read options from...\n"
 "3. Edit options\n"
 "4. Save options to...\n"
+#if BX_SAVE_RESTORE
+"5. Restore Bochs session from...\n"
+"6. Begin simulation\n"
+"7. Quit now\n"
+#else
 "5. Begin simulation\n"
 "6. Quit now\n"
+#endif
 "\n"
 "Please choose one: [%d] ";
 
@@ -273,10 +279,18 @@ static char *runtime_menu_prompt =
 "9. Log options for individual devices\n"
 "10. Instruction tracing: off (doesn't exist yet)\n"
 "11. Misc runtime options\n"
+#if BX_SAVE_RESTORE
+"12. Save Bochs state to...\n"
+"13. Continue simulation\n"
+"14. Quit now\n"
+"\n"
+"Please choose one:  [13] ";
+#else
 "12. Continue simulation\n"
 "13. Quit now\n"
 "\n"
 "Please choose one:  [12] ";
+#endif
 #endif
 
 #define NOT_IMPLEMENTED(choice) \
@@ -356,140 +370,165 @@ void askparam(char *pname)
   param->text_ask(stdin, stderr);
 }
 
-int bx_config_interface (int menu)
+int bx_config_interface(int menu)
 {
- Bit32u choice;
- while (1) {
-  switch (menu)
-  {
-   case BX_CI_INIT:
-     bx_config_interface_init ();
-     return 0;
-   case BX_CI_START_SIMULATION: {
-     SIM->begin_simulation (bx_startup_flags.argc, bx_startup_flags.argv);
-     // we don't expect it to return, but if it does, quit
-     SIM->quit_sim(1);
-     break;
-     }
-   case BX_CI_START_MENU:
-     {
-       Bit32u default_choice;
-       switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
-         case BX_LOAD_START: 
-           default_choice = 2; break;
-         case BX_EDIT_START: 
-           default_choice = 3; break;
-         default: 
-           default_choice = 5; break;
-       }
-
-       if (ask_uint(startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
-       switch (choice) {
-         case 1:
-           fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
-           SIM->reset_all_param();
-           SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
-           break;
-         case 2: 
-           // Before reading a new configuration, reset every option to its
-           // original state.
-           SIM->reset_all_param();
-           if (bx_read_rc (NULL) >= 0)
-             SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
-           break;
-         case 3: 
-           bx_config_interface(BX_CI_START_OPTS); 
-           SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
-           break;
-         case 4: bx_write_rc(NULL); break;
-         case 5: bx_config_interface(BX_CI_START_SIMULATION); break;
-         case 6: SIM->quit_sim(1); return -1;
-         default: BAD_OPTION(menu, choice);
-       }
-     }
-     break;
-   case BX_CI_START_OPTS:
-     {
-       if (ask_uint(startup_options_prompt, 0, 14, 0, &choice, 10) < 0) return -1;
-       switch (choice) {
-         case 0: return 0;
-         case 1: do_menu("log"); break;
-         case 2: bx_log_options(0); break;
-         case 3: bx_log_options(1); break;
-         case 4: do_menu("cpu"); break;
-         case 5: do_menu(BXPN_MENU_MEMORY); break;
-         case 6: do_menu("clock_cmos"); break;
-         case 7: do_menu("pci"); break;
-         case 8: do_menu("display"); break;
-         case 9: do_menu("keyboard_mouse"); break;
-         case 10: do_menu(BXPN_MENU_DISK); break;
-         case 11: do_menu("ports"); break;
-         case 12: do_menu("network"); break;
-         case 13: do_menu(BXPN_SB16); break;
-         case 14: do_menu("misc"); break;
-         default: BAD_OPTION(menu, choice);
-       }
-     }
-     break;
-   case BX_CI_RUNTIME:
-     {
-       bx_list_c *cdromop = NULL;
-       char pname[80];
-#ifdef WIN32
-       choice = RuntimeOptionsDialog();
-#else
-       char prompt[1024];
-       build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
-       if (ask_uint(prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+  Bit32u choice;
+#if BX_SAVE_RESTORE
+  char sr_path[CI_PATH_LENGTH];
 #endif
-       switch (choice) {
-         case BX_CI_RT_FLOPPYA: 
-           if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYA);
-           break;
-         case BX_CI_RT_FLOPPYB:
-           if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYB);
-           break;
-         case BX_CI_RT_CDROM1:
-         case BX_CI_RT_CDROM2:
-         case BX_CI_RT_CDROM3:
-         case BX_CI_RT_CDROM4:
-           int device;
-           if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device) && SIM->get_param_bool("present", cdromop)->get()) {
-             // disable type selection
-             SIM->get_param("type", cdromop)->set_enabled(0);
-             SIM->get_param("model", cdromop)->set_enabled(0);
-             SIM->get_param("biosdetect", cdromop)->set_enabled(0);
-             cdromop->get_param_path(pname, 80);
-             do_menu(pname);
-           }
-           break;
-         case BX_CI_RT_IPS:
-           // not implemented yet because I would have to mess with
-           // resetting timers and pits and everything on the fly.
-           // askparam(BXPN_IPS);
-           break;
-         case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
-         case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
-         case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
-         case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME); break;
-         case BX_CI_RT_CONT: fprintf(stderr, "Continuing simulation\n"); return 0;
-         case BX_CI_RT_QUIT:
-           fprintf(stderr, "You chose quit on the configuration interface.\n");
-           bx_user_quit = 1;
-           SIM->quit_sim(1);
-           return -1;
-         default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
-       }
-     }
-     break;
-   default:
-     fprintf (stderr, "Unknown config interface menu type.\n");
-     assert (menu >=0 && menu < BX_CI_N_MENUS);
+  while (1) {
+    switch (menu) {
+      case BX_CI_INIT:
+        bx_config_interface_init();
+        return 0;
+      case BX_CI_START_SIMULATION:
+        SIM->begin_simulation(bx_startup_flags.argc, bx_startup_flags.argv);
+        // we don't expect it to return, but if it does, quit
+        SIM->quit_sim(1);
+        break;
+      case BX_CI_START_MENU:
+        {
+          Bit32u default_choice;
+          switch (SIM->get_param_enum(BXPN_BOCHS_START)->get()) {
+            case BX_LOAD_START: 
+              default_choice = 2; break;
+            case BX_EDIT_START: 
+              default_choice = 3; break;
+            default: 
+#if BX_SAVE_RESTORE
+              default_choice = 6; break;
+#else
+              default_choice = 5; break;
+#endif
+          }
+#if BX_SAVE_RESTORE
+          if (ask_uint(startup_menu_prompt, 1, 7, default_choice, &choice, 10) < 0) return -1;
+#else
+          if (ask_uint(startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
+#endif
+          switch (choice) {
+            case 1:
+              fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
+              SIM->reset_all_param();
+              SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_EDIT_START);
+              break;
+            case 2: 
+              // Before reading a new configuration, reset every option to its
+              // original state.
+              SIM->reset_all_param();
+              if (bx_read_rc(NULL) >= 0)
+                SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
+              break;
+            case 3: 
+              bx_config_interface(BX_CI_START_OPTS); 
+              SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
+              break;
+            case 4: bx_write_rc(NULL); break;
+#if BX_SAVE_RESTORE
+            case 5:
+              if (ask_string("\nWhat is the path to restore from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+                SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
+                SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
+                bx_config_interface(BX_CI_START_SIMULATION);
+              }
+              break;
+            case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
+            case 7: SIM->quit_sim(1); return -1;
+#else
+            case 5: bx_config_interface(BX_CI_START_SIMULATION); break;
+            case 6: SIM->quit_sim(1); return -1;
+#endif
+            default: BAD_OPTION(menu, choice);
+          }
+        }
+        break;
+      case BX_CI_START_OPTS:
+        if (ask_uint(startup_options_prompt, 0, 14, 0, &choice, 10) < 0) return -1;
+        switch (choice) {
+          case 0: return 0;
+          case 1: do_menu("log"); break;
+          case 2: bx_log_options(0); break;
+          case 3: bx_log_options(1); break;
+          case 4: do_menu("cpu"); break;
+          case 5: do_menu(BXPN_MENU_MEMORY); break;
+          case 6: do_menu("clock_cmos"); break;
+          case 7: do_menu("pci"); break;
+          case 8: do_menu("display"); break;
+          case 9: do_menu("keyboard_mouse"); break;
+          case 10: do_menu(BXPN_MENU_DISK); break;
+          case 11: do_menu("ports"); break;
+          case 12: do_menu("network"); break;
+          case 13: do_menu(BXPN_SB16); break;
+          case 14: do_menu("misc"); break;
+          default: BAD_OPTION(menu, choice);
+        }
+        break;
+      case BX_CI_RUNTIME:
+        {
+          bx_list_c *cdromop = NULL;
+          char pname[80];
+#ifdef WIN32
+          choice = RuntimeOptionsDialog();
+#else
+          char prompt[1024];
+          build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
+          if (ask_uint(prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+#endif
+          switch (choice) {
+            case BX_CI_RT_FLOPPYA: 
+              if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYA);
+              break;
+            case BX_CI_RT_FLOPPYB:
+              if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FLOPPY_NONE) do_menu(BXPN_FLOPPYB);
+              break;
+            case BX_CI_RT_CDROM1:
+            case BX_CI_RT_CDROM2:
+            case BX_CI_RT_CDROM3:
+            case BX_CI_RT_CDROM4:
+              int device;
+              if (SIM->get_cdrom_options(choice - BX_CI_RT_CDROM1, &cdromop, &device) && SIM->get_param_bool("present", cdromop)->get()) {
+                // disable type selection
+                SIM->get_param("type", cdromop)->set_enabled(0);
+                SIM->get_param("model", cdromop)->set_enabled(0);
+                SIM->get_param("biosdetect", cdromop)->set_enabled(0);
+                cdromop->get_param_path(pname, 80);
+                do_menu(pname);
+              }
+              break;
+            case BX_CI_RT_IPS:
+              // not implemented yet because I would have to mess with
+              // resetting timers and pits and everything on the fly.
+              // askparam(BXPN_IPS);
+              break;
+            case BX_CI_RT_LOGOPTS1: bx_log_options(0); break;
+            case BX_CI_RT_LOGOPTS2: bx_log_options(1); break;
+            case BX_CI_RT_INST_TR: NOT_IMPLEMENTED(choice); break;
+            case BX_CI_RT_MISC: do_menu(BXPN_MENU_RUNTIME); break;
+            case BX_CI_RT_CONT: fprintf(stderr, "Continuing simulation\n"); return 0;
+            case BX_CI_RT_QUIT:
+              fprintf(stderr, "You chose quit on the configuration interface.\n");
+              bx_user_quit = 1;
+              SIM->quit_sim(1);
+              return -1;
+#if BX_SAVE_RESTORE
+            case BX_CI_RT_SAVE:
+              if (ask_string("\nWhat is the path to save the Bochs state?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+                SIM->save_state(sr_path);
+              }
+              break;
+#endif
+            default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
+          }
+        }
+        break;
+      default:
+        fprintf (stderr, "Unknown config interface menu type.\n");
+        assert (menu >=0 && menu < BX_CI_N_MENUS);
+    }
   }
- }
 }
 
-static void bx_print_log_action_table ()
+static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
   fprintf (stderr, "Current log settings:\n");

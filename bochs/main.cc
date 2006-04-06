@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.326 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: main.cc,v 1.327 2006-04-06 20:42:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -459,13 +459,16 @@ int main (int argc, char *argv[])
 }
 #endif
 
-void print_usage ()
+void print_usage()
 {
   fprintf(stderr, 
     "Usage: bochs [flags] [bochsrc options]\n\n"
     "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
+#if BX_SAVE_RESTORE
+    "  -r               restore Bochs session\n"
+#endif
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
 #if (!defined(WIN32)) && !BX_WITH_MACOS
@@ -524,6 +527,16 @@ int bx_init_main (int argc, char *argv[])
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
+#if BX_SAVE_RESTORE
+    else if (!strcmp ("-r", argv[arg])) {
+      if (++arg >= argc) BX_PANIC(("-r must be followed by a path"));
+      else {
+        SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+        SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
+        SIM->get_param_string(BXPN_RESTORE_PATH)->set(argv[arg]);
+      }
+    }
+#endif
 #if BX_WITH_CARBON
     else if (!strncmp ("-psn", argv[arg], 4)) {
       // "-psn" is passed if we are launched by double-clicking
@@ -776,6 +789,11 @@ bx_bool load_and_init_display_lib ()
 
 int bx_begin_simulation (int argc, char *argv[])
 {
+#if BX_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    SIM->restore_config();
+  }
+#endif
   // deal with gui selection
   if (!load_and_init_display_lib ()) {
     BX_PANIC (("no gui module was loaded"));
@@ -872,6 +890,11 @@ int bx_init_hardware()
       io->set_log_action (level, action);
     }
   }
+#if BX_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    SIM->restore_logopts();
+  }
+#endif
 
   bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
 
@@ -980,6 +1003,11 @@ int bx_init_hardware()
   DEV_init_devices();
   // will enable A20 line and reset CPU and devices
   bx_pc_system.Reset(BX_RESET_HARDWARE);
+#if BX_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    SIM->restore_hardware();
+  }
+#endif
   bx_gui->init_signal_handlers();
   bx_pc_system.start_timers();
 

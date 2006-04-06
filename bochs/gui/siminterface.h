@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.181 2006-04-05 16:05:11 vruppert Exp $
+// $Id: siminterface.h,v 1.182 2006-04-06 20:42:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -222,6 +222,8 @@ typedef enum {
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
 #define BXPN_BOCHS_START                 "general.start_mode"
 #define BXPN_DEBUG_RUNNING               "general.debug_running"
+#define BXPN_RESTORE_FLAG                "general.restore"
+#define BXPN_RESTORE_PATH                "general.restore_path"
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
@@ -795,7 +797,7 @@ public:
   char *get_choice(int n) { return choices[n]; }
   char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *string);
-  bool set_by_name(const char *string);
+  bx_bool set_by_name(const char *string);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
@@ -1162,21 +1164,28 @@ public:
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
-  typedef bool (*is_sim_thread_func_t)();
+  typedef bx_bool (*is_sim_thread_func_t)();
   is_sim_thread_func_t is_sim_thread_func;
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {
     is_sim_thread_func = func;
   }
-  virtual bool is_sim_thread() {return true;}
-  virtual bool is_wx_selected() {return false;}
+  virtual bx_bool is_sim_thread() {return 1;}
+  virtual bx_bool is_wx_selected() {return 0;}
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}
-  virtual bool test_for_text_console() { return true; }
+  virtual bx_bool test_for_text_console() {return 1;}
   // user-defined option support
   virtual int find_user_option(const char *keyword) {return -1;}
   virtual bx_bool register_user_option(const char *keyword, user_option_handler_t handler) {return 0;}
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []) {return -1;}
+#if BX_SAVE_RESTORE
+  // save/restore support
+  virtual bx_bool save_state(const char *checkpoint_name) {return 0;}
+  virtual bx_bool restore_config() {return 0;}
+  virtual bx_bool restore_logopts() {return 0;}
+  virtual bx_bool restore_hardware() {return 0;}
+#endif 
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

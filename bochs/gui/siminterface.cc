@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.135 2006-04-05 16:05:11 vruppert Exp $
+// $Id: siminterface.cc,v 1.136 2006-04-06 20:42:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -123,21 +123,28 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
   virtual int begin_simulation (int argc, char *argv[]);
-  virtual void set_sim_thread_func (is_sim_thread_func_t func) {}
-  virtual bool is_sim_thread ();
-  bool wxsel;
-  virtual bool is_wx_selected () { return wxsel; }
+  virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
+  virtual bx_bool is_sim_thread();
+  bx_bool wxsel;
+  virtual bx_bool is_wx_selected() { return wxsel; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
     if (bx_gui != NULL)
       bx_gui->set_display_mode(newmode);
   }
-  virtual bool test_for_text_console();
+  virtual bx_bool test_for_text_console();
   // user-defined option support
   virtual int find_user_option(const char *keyword);
   virtual bx_bool register_user_option(const char *keyword, user_option_handler_t handler);
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
+#if BX_SAVE_RESTORE
+  // save/restore support
+  virtual bx_bool save_state(const char *checkpoint_name);
+  virtual bx_bool restore_config();
+  virtual bx_bool restore_logopts();
+  virtual bx_bool restore_hardware();
+#endif 
 };
 
 // recursive function to find parameters from the path
@@ -282,7 +289,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback = NULL;
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
-  wxsel = false;
+  wxsel = 0;
   
   enabled = 1;
   init_done = 0;
@@ -591,7 +598,7 @@ void bx_real_sim_c::periodic()
 }
 
 // create a disk image file called filename, size=512 bytes * sectors.
-// If overwrite is true and the file exists, returns -1 without changing it.
+// If overwrite is 0 and the file exists, returns -1 without changing it.
 // Otherwise, opens up the image and starts writing.  Returns -2 if
 // the image could not be opened, or -3 if there are failures during
 // write, e.g. disk full.
@@ -748,9 +755,9 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     return -1;
   }
   if (!strcmp(name, "wx")) 
-    wxsel = true;
+    wxsel = 1;
   else
-    wxsel = false;
+    wxsel = 0;
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);
@@ -763,25 +770,25 @@ int bx_real_sim_c::begin_simulation(int argc, char *argv[])
   return bx_begin_simulation(argc, argv);
 }
 
-bool bx_real_sim_c::is_sim_thread()
+bx_bool bx_real_sim_c::is_sim_thread()
 {
-  if (is_sim_thread_func == NULL) return true;
+  if (is_sim_thread_func == NULL) return 1;
   return (*is_sim_thread_func)();
 }
 
 // check if the text console exists.  On some platforms, if Bochs is
 // started from the "Start Menu" or by double clicking on it on a Mac,
 // there may be nothing attached to stdin/stdout/stderr.  This function
-// tests if stdin/stdout/stderr are usable and returns false if not.
-bool bx_real_sim_c::test_for_text_console()
+// tests if stdin/stdout/stderr are usable and returns 0 if not.
+bx_bool bx_real_sim_c::test_for_text_console()
 {
 #if BX_WITH_CARBON
   // In a Carbon application, you have a text console if you run the app from
   // the command line, but if you start it from the finder you don't.
-  if(!isatty(STDIN_FILENO)) return false;
+  if(!isatty(STDIN_FILENO)) return 0;
 #endif
   // default: yes
-  return true;
+  return 1;
 }
 
 int bx_real_sim_c::find_user_option(const char *keyword)
@@ -826,6 +833,36 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
   }
   return (*user_option_handler[idx])(context, num_params, params);
 }
+
+#if BX_SAVE_RESTORE
+bx_bool bx_real_sim_c::save_state(const char *checkpoint_name)
+{
+  // TODO
+  fprintf(stderr, "save_state (not implemented yet)\n");
+  return 0;
+}
+
+bx_bool bx_real_sim_c::restore_config()
+{
+  // TODO
+  fprintf(stderr, "restore_config (not implemented yet)\n");
+  return 0;
+}
+
+bx_bool bx_real_sim_c::restore_logopts()
+{
+  // TODO
+  fprintf(stderr, "restore_logopts (not implemented yet)\n");
+  return 0;
+}
+
+bx_bool bx_real_sim_c::restore_hardware()
+{
+  // TODO
+  fprintf(stderr, "restore_hardware (not implemented yet)\n");
+  return 0;
+}
+#endif 
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -1253,12 +1290,12 @@ int bx_param_enum_c::find_by_name(const char *string)
   return -1;
 }
 
-bool bx_param_enum_c::set_by_name(const char *string)
+bx_bool bx_param_enum_c::set_by_name(const char *string)
 {
   int n = find_by_name(string);
-  if (n<0) return false;
+  if (n<0) return 0;
   set(n + min);
-  return true;
+  return 1;
 }
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
