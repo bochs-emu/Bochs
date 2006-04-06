@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.91 2006-04-05 20:52:37 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.92 2006-04-06 18:30:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -750,9 +750,17 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 35 */ { 0, &BX_CPU_C::SYSEXIT },
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+#else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+#else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 3B */ { 0, &BX_CPU_C::BxError },
   /* 0F 3C */ { 0, &BX_CPU_C::BxError },
   /* 0F 3D */ { 0, &BX_CPU_C::BxError },
@@ -1300,9 +1308,17 @@ static BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 35 */ { 0, &BX_CPU_C::SYSEXIT },
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+#else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+#else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 3B */ { 0, &BX_CPU_C::BxError },
   /* 0F 3C */ { 0, &BX_CPU_C::BxError },
   /* 0F 3D */ { 0, &BX_CPU_C::BxError },
@@ -1510,8 +1526,11 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain
   bx_bool is_32, lock=0;
   unsigned b1, b2, ilen=0, attr, os_32;
   unsigned imm_mode, offset;
-  unsigned rm, mod=0, nnn=0;
+  unsigned rm = 0, mod=0, nnn=0;
   unsigned sse_prefix;
+#if BX_SUPPORT_SSE >= 4
+  unsigned b3 = 0;
+#endif
 
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
@@ -1627,6 +1646,18 @@ fetch_b1:
 
   attr = BxOpcodeInfo[b1+offset].Attr;
   instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
+
+#if BX_SUPPORT_SSE >= 4
+  // handle 3-byte escape
+  if (attr & Bx3ByteOpcode) {
+    if (ilen < remain) {
+      ilen++;
+      b3 = *iptr++;
+    }
+    else
+      return(0);
+  }
+#endif
 
   if (attr & BxAnother) {
     // opcode requires modrm byte
@@ -1795,6 +1826,14 @@ modrm_done:
          case BxRMGroup:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
              break;
+#if BX_SUPPORT_SSE >= 4
+         case Bx3ByteOpTable:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
+             break;
+         case Bx3ByteOpIndex:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 & 15]);
+             break;
+#endif
          case BxPrefixSSE:
          {
              /* For SSE opcodes, look into another 4 entries table 
@@ -1973,7 +2012,7 @@ modrm_done:
     }
 
 #if BX_SUPPORT_3DNOW
-  if(b1 == 0x10f) {		// 3DNow! instruction set
+  if(b1 == 0x10f) {
      instruction->execute = Bx3DNowOpcodeInfo[instruction->modRMForm.Ib].ExecutePtr;
   }
 #endif
@@ -1983,12 +2022,10 @@ modrm_done:
   return(1);
 }
 
-  void
-BX_CPU_C::BxError(bxInstruction_c *i)
+void BX_CPU_C::BxError(bxInstruction_c *i)
 {
   BX_INFO(("BxError: instruction with opcode=0x%x", i->b1()));
   BX_INFO(("mod was %x, nnn was %u, rm was %u", i->mod(), i->nnn(), i->rm()));
-
   BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction)"));
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.35 2006-04-05 17:31:30 sshwarts Exp $
+// $Id: cpuid.cc,v 1.36 2006-04-06 18:30:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,11 +122,14 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
   Bit32u features = 0;
 
 #if BX_SUPPORT_SSE >= 3
-    features |= 0x01;     // report SSE3 (PNI)
+  features |= 0x1;      // report SSE3
+#endif
+#if BX_SUPPORT_SSE >= 4
+  features |= (1<<9);   // report SSE4
 #endif
 
 #if BX_SUPPORT_X86_64
-    features |= (1<<13);  // support CMPXCHG16B
+  features |= (1<<13);  // support CMPXCHG16B
 #endif
   
   return features;

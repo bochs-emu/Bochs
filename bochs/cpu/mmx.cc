@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.52 2006-03-06 22:03:00 sshwarts Exp $
+// $Id: mmx.cc,v 1.53 2006-04-06 18:30:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -114,6 +114,497 @@ void BX_CPU_C::prepareFPU2MMX(void)
 }
 
 #endif
+
+#if BX_SUPPORT_SSE >= 4
+
+/* 0F 38 00 */
+void BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  for(unsigned j=0; j<8; j++) 
+  {
+    unsigned mask = op2.mmxubyte(j);
+    if (mask & 0x80)
+      result.mmxubyte(j) = 0;
+    else
+      result.mmxubyte(j) = op1.mmxubyte(mask & 0xf);
+  }
+
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PSHUFB_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 01 */
+void BX_CPU_C::PHADDW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXUW0(result) = MMXUW0(op1) + MMXUW1(op1);
+  MMXUW1(result) = MMXUW2(op1) + MMXUW3(op1);
+  MMXUW2(result) = MMXUW0(op2) + MMXUW1(op2);
+  MMXUW3(result) = MMXUW2(op2) + MMXUW3(op2);
+
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHADDW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 02 */
+void BX_CPU_C::PHADDD_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXUD0(result) = MMXUD0(op1) + MMXUD1(op1);
+  MMXUD1(result) = MMXUD0(op2) + MMXUD1(op2);
+
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHADDD_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 03 */
+void BX_CPU_C::PHADDSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) + Bit32s(MMXSW1(op1)));
+  MMXSW1(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op1)) + Bit32s(MMXSW3(op1)));
+  MMXSW2(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op2)) + Bit32s(MMXSW1(op2)));
+  MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op2)) + Bit32s(MMXSW3(op2)));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHADDSW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 04 */
+void BX_CPU_C::PMADDUBSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  for(unsigned j=0; j<4; j++)
+  {
+    Bit32s temp = Bit32s(op1.mmxubyte(j*2+0))*Bit32s(op2.mmxsbyte(j*2+0)) +
+                  Bit32s(op1.mmxubyte(j*2+1))*Bit32s(op2.mmxsbyte(j*2+1));
+
+    result.mmx16s(j) = SaturateDwordSToWordS(temp);
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMADDUBSW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 05 */
+void BX_CPU_C::PHSUBSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXSW0(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op1)) - Bit32s(MMXSW1(op1)));
+  MMXSW1(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op1)) - Bit32s(MMXSW3(op1)));
+  MMXSW2(result) = SaturateDwordSToWordS(Bit32s(MMXSW0(op2)) - Bit32s(MMXSW1(op2)));
+  MMXSW3(result) = SaturateDwordSToWordS(Bit32s(MMXSW2(op2)) - Bit32s(MMXSW3(op2)));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHSUBSW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 05 */
+void BX_CPU_C::PHSUBW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXUW0(result) = MMXUW0(op1) - MMXUW1(op1);
+  MMXUW1(result) = MMXUW2(op1) - MMXUW3(op1);
+  MMXUW2(result) = MMXUW0(op2) - MMXUW1(op2);
+  MMXUW3(result) = MMXUW2(op2) - MMXUW3(op2);
+
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHSUBW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 06 */
+void BX_CPU_C::PHSUBD_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  MMXUD0(result) = MMXUD0(op1) - MMXUD1(op1);
+  MMXUD1(result) = MMXUD0(op2) - MMXUD1(op2);
+
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PHSUBD_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 08 */
+void BX_CPU_C::PSIGNB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  for(unsigned j=0; j<8; j++) {
+    int sign = (op2.mmxsbyte(j) > 0) - (op2.mmxsbyte(j) < 0);
+    op1.mmxsbyte(j) *= sign;
+  }
+
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("PSIGNB_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 09 */
+void BX_CPU_C::PSIGNW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  for(unsigned j=0; j<4; j++) {
+    int sign = (op2.mmx16s(j) > 0) - (op2.mmx16s(j) < 0);
+    op1.mmx16s(j) *= sign;
+  }
+
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("PSIGNW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 0A */
+void BX_CPU_C::PSIGND_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op2);
+  }
+
+  int sign;
+  
+  sign = (MMXSD0(op2) > 0) - (MMXSD0(op2) < 0);
+  MMXSD0(op1) *= sign;
+  sign = (MMXSD1(op2) > 0) - (MMXSD1(op2) < 0);
+  MMXSD1(op1) *= sign;
+
+  BX_WRITE_MMX_REG(i->nnn(), op1);
+#else
+  BX_INFO(("PSIGND_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 0B */
+void BX_CPU_C::PMULHRSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  for(unsigned j=0; j<4; j++) {
+    Bit32s temp = Bit32s(op1.mmx16s(j)) * Bit32s(op2.mmx16s(j));
+    result.mmx16u(j) = ((temp >> 14) + 1) >> 1;
+  }
+
+  MMXUW0(result) = (((MMXSW0(op1) * MMXSW0(op2)) >> 14) + 1) >> 1;
+  MMXUW1(result) = (((MMXSW1(op1) * MMXSW1(op2)) >> 14) + 1) >> 1;
+  MMXUW2(result) = (((MMXSW2(op1) * MMXSW2(op2)) >> 14) + 1) >> 1;
+  MMXUW3(result) = (((MMXSW3(op1) * MMXSW3(op2)) >> 14) + 1) >> 1;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMULHRSW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 1C */
+void BX_CPU_C::PABSB_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op;
+
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op);
+  }
+
+  if (MMXSB0(op) < 0) MMXUB0(op) = -MMXSB0(op);
+  if (MMXSB1(op) < 0) MMXUB1(op) = -MMXSB1(op);
+  if (MMXSB2(op) < 0) MMXUB2(op) = -MMXSB2(op);
+  if (MMXSB3(op) < 0) MMXUB3(op) = -MMXSB3(op);
+  if (MMXSB4(op) < 0) MMXUB4(op) = -MMXSB4(op);
+  if (MMXSB5(op) < 0) MMXUB5(op) = -MMXSB5(op);
+  if (MMXSB6(op) < 0) MMXUB6(op) = -MMXSB6(op);
+  if (MMXSB7(op) < 0) MMXUB7(op) = -MMXSB7(op);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+#else
+  BX_INFO(("PABSB_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 1D */
+void BX_CPU_C::PABSW_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op;
+
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op);
+  }
+
+  if (MMXSW0(op) < 0) MMXUW0(op) = -MMXSW0(op);
+  if (MMXSW1(op) < 0) MMXUW1(op) = -MMXSW1(op);
+  if (MMXSW2(op) < 0) MMXUW2(op) = -MMXSW2(op);
+  if (MMXSW3(op) < 0) MMXUW3(op) = -MMXSW3(op);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+#else
+  BX_INFO(("PABSW_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 38 1E */
+void BX_CPU_C::PABSD_PqQq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op;
+
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *)  &op);
+  }
+
+  if (MMXSD0(op) < 0) MMXUD0(op) = -MMXSD0(op);
+  if (MMXSD1(op) < 0) MMXUD1(op) = -MMXSD1(op);
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+#else
+  BX_INFO(("PABSD_PqQq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 0F 3A 0F */
+void BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+  }
+
+  Bit8u shift = i->Ib() * 8;
+
+  if(shift == 0)
+    MMXUQ(result) = MMXUQ(op2);
+  else if(shift < 64)
+    MMXUQ(result) = (MMXUQ(op2) >> shift) | (MMXUQ(op1) << (64-shift));
+  else if(shift < 128)
+    MMXUQ(result) = MMXUQ(op1) >> (shift-64);
+  else
+    MMXUQ(result) = 0;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), result);
+#else
+  BX_INFO(("PALIGNR_PqQqIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif /* BX_SUPPORT_SSE >= 4 */
 
 /* 0F 60 */
 void BX_CPU_C::PUNPCKLBW_PqQd(bxInstruction_c *i)

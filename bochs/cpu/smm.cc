@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.14 2006-04-06 16:47:29 sshwarts Exp $
+// $Id: smm.cc,v 1.15 2006-04-06 18:30:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -60,9 +60,9 @@
 // 4. GDTR, IDTR
 //     fields: base, limit
 // 5. LDTR, TR
-//     fields: base, limit, something more ?
+//     fields: base, limit, anything else ?
 // 6. Debug Registers DR0-DR7, only DR6 and DR7 are saved
-// 7. Control Regsiters: CR0, CR1 is always 0, CR2 is NOT saved, CR3, CR4, EFER
+// 7. Control Registers: CR0, CR1 is always 0, CR2 is NOT saved, CR3, CR4, EFER
 // 8. SMBASE
 // 9. MSR/FPU/XMM/APIC are NOT saved accoring to Intel docs
 //

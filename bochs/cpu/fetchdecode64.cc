@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.91 2006-04-05 20:52:40 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.92 2006-04-06 18:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -873,9 +873,17 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+#else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+#else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 3B */ { 0, &BX_CPU_C::BxError },
   /* 0F 3C */ { 0, &BX_CPU_C::BxError },
   /* 0F 3D */ { 0, &BX_CPU_C::BxError },
@@ -1394,9 +1402,17 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+#else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+#else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 3B */ { 0, &BX_CPU_C::BxError },
   /* 0F 3C */ { 0, &BX_CPU_C::BxError },
   /* 0F 3D */ { 0, &BX_CPU_C::BxError },
@@ -1915,9 +1931,17 @@ static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+#else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
+#if BX_SUPPORT_SSE >= 4
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+#else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
+#endif
   /* 0F 3B */ { 0, &BX_CPU_C::BxError },
   /* 0F 3C */ { 0, &BX_CPU_C::BxError },
   /* 0F 3D */ { 0, &BX_CPU_C::BxError },
@@ -2125,13 +2149,16 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r,rex_x,rex_b;
-  unsigned rm, mod = 0, nnn = 0;
+  unsigned rm = 0, mod = 0, nnn = 0;
   unsigned sse_prefix;
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
 #define SSE_PREFIX_F3   4      /* only one SSE prefix could be used */
   static int sse_prefix_index[8] = { 0, 1, 2, -1, 3, -1, -1, -1 };
+#if BX_SUPPORT_SSE >= 4
+  unsigned b3 = 0;
+#endif
 
   offset = 512*1;
   rex_r = 0;
@@ -2259,6 +2286,18 @@ fetch_b1:
   attr = BxOpcodeInfo64[b1+offset].Attr;
   instruction->setRepAttr(attr & (BxRepeatable | BxRepeatableZF));
 
+#if BX_SUPPORT_SSE >= 4
+  // handle 3-byte escape
+  if (attr & Bx3ByteOpcode) {
+    if (ilen < remain) {
+      ilen++;
+      b3 = *iptr++;
+    }
+    else
+      return(0);
+  }
+#endif
+
   if (attr & BxAnother) {
     // opcode requires modrm byte
     if (ilen < remain) {
@@ -2277,7 +2316,7 @@ fetch_b1:
     instruction->modRMForm.modRMData |= (nnn<<8);
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
-    if ( (b1 & ~3) == 0x120 )
+    if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
     if (mod == 0xc0) { // mod == 11b
@@ -2482,6 +2521,14 @@ modrm_done:
          case BxRMGroup:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
              break;
+#if BX_SUPPORT_SSE >= 4
+         case Bx3ByteOpTable:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
+             break;
+         case Bx3ByteOpIndex:
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 & 15]);
+             break;
+#endif
          case BxPrefixSSE:
          {
              /* For SSE opcodes, look into another 4 entries table 
@@ -2665,7 +2712,7 @@ modrm_done:
   }
 
 #if BX_SUPPORT_3DNOW
-  if(b1 == 0x10f) {		// 3DNow! instruction set
+  if(b1 == 0x10f) {
      instruction->execute = Bx3DNowOpcodeInfo[instruction->modRMForm.Ib].ExecutePtr;
   }
 #endif

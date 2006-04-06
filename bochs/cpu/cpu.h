@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.276 2006-04-05 17:31:30 sshwarts Exp $
+// $Id: cpu.h,v 1.277 2006-04-06 18:30:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1743,7 +1743,7 @@ public: // for now...
   BX_SMF void FISTP_QWORD_INTEGER(bxInstruction_c *);
   BX_SMF void FBSTP_PACKED_BCD(bxInstruction_c *);
 
-  BX_SMF void FISTTP16(bxInstruction_c *);
+  BX_SMF void FISTTP16(bxInstruction_c *); // SSE3
   BX_SMF void FISTTP32(bxInstruction_c *);
   BX_SMF void FISTTP64(bxInstruction_c *);
 
@@ -2202,7 +2202,7 @@ public: // for now...
 #define MOVNTDQ_MdqVdq /* 66 0f e7 */ MOVNTPD_MdqVpd   /* 66 0f 2b */
 #endif  // #ifdef StandAloneDecoder
 
-  /* PNI */
+  /* SSE3 */
   BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *i);
   BX_SMF void MOVSLDUP_VpsWps(bxInstruction_c *i);
   BX_SMF void MOVSHDUP_VpsWps(bxInstruction_c *i);
@@ -2213,7 +2213,43 @@ public: // for now...
   BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *i);
   BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
-  /* PNI */
+  /* SSE3 */
+
+#if BX_SUPPORT_SSE >= 4
+  BX_SMF void PSHUFB_PqQq(bxInstruction_c *i);
+  BX_SMF void PHADDW_PqQq(bxInstruction_c *i);
+  BX_SMF void PHADDD_PqQq(bxInstruction_c *i);
+  BX_SMF void PHADDSW_PqQq(bxInstruction_c *i);
+  BX_SMF void PMADDUBSW_PqQq(bxInstruction_c *i);
+  BX_SMF void PHSUBSW_PqQq(bxInstruction_c *i);
+  BX_SMF void PHSUBW_PqQq(bxInstruction_c *i);
+  BX_SMF void PHSUBD_PqQq(bxInstruction_c *i);
+  BX_SMF void PSIGNB_PqQq(bxInstruction_c *i);
+  BX_SMF void PSIGNW_PqQq(bxInstruction_c *i);
+  BX_SMF void PSIGND_PqQq(bxInstruction_c *i);
+  BX_SMF void PMULHRSW_PqQq(bxInstruction_c *i);
+  BX_SMF void PABSB_PqQq(bxInstruction_c *i);
+  BX_SMF void PABSW_PqQq(bxInstruction_c *i);
+  BX_SMF void PABSD_PqQq(bxInstruction_c *i);
+  BX_SMF void PALIGNR_PqQqIb(bxInstruction_c *i);
+
+  BX_SMF void PSHUFB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHADDW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHADDD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHADDSW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMADDUBSW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHSUBSW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHSUBW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHSUBD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PSIGNB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PSIGNW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PSIGND_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMULHRSW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PABSB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PABSW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PABSD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *i);
+#endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *);
@@ -3291,10 +3327,13 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxSplitMod11b       0x0030 // Group encoding: 011
 #define BxFPGroup           0x0040 // Group encoding: 100
 #define BxRMGroup           0x0050 // Group encoding: 101
+#define Bx3ByteOpIndex      0x0060 // Group encoding: 110
+#define Bx3ByteOpTable      0x0070 // Group encoding: 111
 
 #define BxPrefix            0x0080 // bit  7
 #define BxAnother           0x0100 // bit  8
 #define BxLockable          0x0200 // bit  9
+#define Bx3ByteOpcode       0x0400 // bit 10
 
 #define BxRepeatable        0x0800 // bit 11 (pass through to metaInfo field)
 #define BxRepeatableZF      0x1000 // bit 12 (pass through to metaInfo field)
