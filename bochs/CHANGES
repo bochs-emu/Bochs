@@ -1,18 +1,22 @@
 Changes after 2.2.6 release:
 
-- CPU and internal debugger fixes 
+- CPU and internal debugger fixes
   - Fixed bug in FSTENV instruction (Stanislav Shwartsman)
   - Recognize #XF exception (19) when SSE is enabled
-  - Fixed bug in SYSRET instruction legacy mode
   - Fixed bug in PSRAW/PSRAD MMX and SSE instructions
-  - Fixed bug in CALL/JMP far through call gate 64 in x86-64 mode
-  - Correctly decode, disassemble and execute 'XCHG R8, rAX' x86-64 instruction
-  - Correctly decode, disassemble and execute multi-byte NOP 0F F1 opcode
-  - Fixed ENTER and LEAVE instructions in x86-64 mode (Stanislav)
   - Save and restore RIP/RSP only for FAULT-type exceptions, not for traps
+  - Correctly decode, disassemble and execute multi-byte NOP '0F F1' opcode
   - Raise A20 line after system reset (Stanislav Shwartsman)
-  - Implemented NMI delivery (Stanislav)
+  - Implemented SMI and NMI delivery (APIC) and handling in CPU (Stanislav)
+  - Experimental implementation of System Management Mode (Stanislav)
+  - Added emulation of SSE4 instructions (Stanislav Shwarstman)
   - Many fixes in Bochs debugger and disassembler
+
+- CPU x86-64 fixes
+  - Fixed bug in SYSRET instruction legacy mode
+  - Fixed bug in CALL/JMP far through 64-bit callgate in x86-64 mode
+  - Correctly decode, disassemble and execute 'XCHG R8, rAX' instruction
+  - Fixed ENTER and LEAVE instructions in x86-64 mode (Stanislav)
 
 - SMP
   - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
