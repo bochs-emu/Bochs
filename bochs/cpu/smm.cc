@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.13 2006-04-05 17:31:32 sshwarts Exp $
+// $Id: smm.cc,v 1.14 2006-04-06 16:47:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -218,6 +218,13 @@ void BX_CPU_C::enter_system_management_mode(void)
 
 #if BX_SUPPORT_X86_64
 
+BX_CPP_INLINE Bit64u SMRAM_FIELD64(const Bit32u *saved_state, unsigned hi, unsigned lo)
+{
+  Bit64u tmp  = ((Bit64u) SMRAM_FIELD(saved_state, hi)) << 32;
+         tmp |=  (Bit64u) SMRAM_FIELD(saved_state, lo);
+  return tmp;
+}
+
 void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
   // --- General Purpose Registers --- //
@@ -344,8 +351,6 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
     (((Bit32u) get_segment_ar_data(&seg->cache)) << 16);
 }
 
-#define SMRAM_FIELD64(state, addr) ((Bit64u) state[SMRAM_TRANSLATE(addr)])
-
 bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 {
   Bit32u temp_cr0    = SMRAM_FIELD(saved_state, SMRAM_OFFSET_CR0);
@@ -406,60 +411,38 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   SetCR0(temp_cr0);
   setEFlags(temp_eflags);
 
-  bx_address temp_cr3  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_HI32) << 32;
-             temp_cr3 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_LO32);
+  bx_phy_address temp_cr3 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_HI32, SMRAM_OFFSET_RAX_LO32);
   CR3_change(temp_cr3);
 
-  RAX  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_HI32) << 32;
-  RAX |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_LO32);
-  RBX  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBX_HI32) << 32;
-  RBX |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBX_LO32);
-  RCX  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RCX_HI32) << 32;
-  RCX |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RCX_LO32);
-  RDX  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDX_HI32) << 32;
-  RDX |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDX_LO32);
-  RSP  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSP_HI32) << 32;
-  RSP |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSP_LO32);
-  RBP  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBP_HI32) << 32;
-  RBP |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBP_LO32);
-  RSI  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSI_HI32) << 32;
-  RSI |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSI_LO32);
-  RDI  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDI_HI32) << 32;
-  RDI |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDI_LO32);
-  R8   = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R8_HI32)  << 32;
-  R8  |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R8_LO32);
-  R9   = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R9_HI32)  << 32;
-  R9  |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R9_LO32);
-  R10  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R10_HI32) << 32;
-  R10 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R10_LO32);
-  R11  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R11_HI32) << 32;
-  R11 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R11_LO32);
-  R12  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R12_HI32) << 32;
-  R12 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R12_LO32);
-  R13  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R13_HI32) << 32;
-  R13 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R13_LO32);
-  R14  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R14_HI32) << 32;
-  R14 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R14_LO32);
-  R15  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R15_HI32) << 32;
-  R15 |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R15_LO32);
-  RIP  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RIP_HI32) << 32;
-  RIP |= SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RIP_LO32);
+  RAX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RAX_HI32, SMRAM_OFFSET_RAX_LO32);
+  RBX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBX_HI32, SMRAM_OFFSET_RBX_LO32);
+  RCX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RCX_HI32, SMRAM_OFFSET_RCX_LO32);
+  RDX = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDX_HI32, SMRAM_OFFSET_RDX_LO32);
+  RSP = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSP_HI32, SMRAM_OFFSET_RSP_LO32);
+  RBP = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RBP_HI32, SMRAM_OFFSET_RBP_LO32);
+  RSI = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RSI_HI32, SMRAM_OFFSET_RSI_LO32);
+  RDI = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RDI_HI32, SMRAM_OFFSET_RDI_LO32);
+  R8  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R8_HI32,  SMRAM_OFFSET_R8_LO32);
+  R9  = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R9_HI32,  SMRAM_OFFSET_R9_LO32);
+  R10 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R10_HI32, SMRAM_OFFSET_R10_LO32);
+  R11 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R11_HI32, SMRAM_OFFSET_R11_LO32);
+  R12 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R12_HI32, SMRAM_OFFSET_R12_LO32);
+  R13 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R13_HI32, SMRAM_OFFSET_R13_LO32);
+  R14 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R14_HI32, SMRAM_OFFSET_R14_LO32);
+  R15 = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_R15_HI32, SMRAM_OFFSET_R15_LO32);
+  RIP = SMRAM_FIELD64(saved_state, SMRAM_OFFSET_RIP_HI32, SMRAM_OFFSET_RIP_LO32);
 
   BX_CPU_THIS_PTR dr6 = SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR6);
   BX_CPU_THIS_PTR dr7 = SMRAM_FIELD(saved_state, SMRAM_OFFSET_DR7);
 
-  BX_CPU_THIS_PTR gdtr.base  = SMRAM_FIELD64(saved_state, SMRAM_GDTR_BASE_HI32) << 32;
-  BX_CPU_THIS_PTR gdtr.base |= SMRAM_FIELD64(saved_state, SMRAM_GDTR_BASE_LO32);
+  BX_CPU_THIS_PTR gdtr.base  = SMRAM_FIELD64(saved_state, SMRAM_GDTR_BASE_HI32, SMRAM_GDTR_BASE_LO32);
   BX_CPU_THIS_PTR gdtr.limit = SMRAM_FIELD(saved_state, SMRAM_GDTR_LIMIT);
-
-  BX_CPU_THIS_PTR idtr.base  = SMRAM_FIELD64(saved_state, SMRAM_IDTR_BASE_HI32) << 32;
-  BX_CPU_THIS_PTR idtr.base |= SMRAM_FIELD64(saved_state, SMRAM_IDTR_BASE_LO32);
+  BX_CPU_THIS_PTR idtr.base  = SMRAM_FIELD64(saved_state, SMRAM_IDTR_BASE_HI32, SMRAM_IDTR_BASE_LO32);
   BX_CPU_THIS_PTR idtr.limit = SMRAM_FIELD(saved_state, SMRAM_IDTR_LIMIT);
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS],
           SMRAM_FIELD(saved_state, SMRAM_CS_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_CS_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_CS_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_CS_BASE_HI32, SMRAM_CS_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_CS_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_CS_SELECTOR_AR) >> 16))
   {
@@ -473,8 +456,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS],
           SMRAM_FIELD(saved_state, SMRAM_DS_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_DS_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_DS_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_DS_BASE_HI32, SMRAM_DS_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_DS_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_DS_SELECTOR_AR) >> 16))
   {
@@ -486,8 +468,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS],
           SMRAM_FIELD(saved_state, SMRAM_SS_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_SS_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_SS_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_SS_BASE_HI32, SMRAM_SS_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_SS_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_SS_SELECTOR_AR) >> 16))
   {
@@ -499,8 +480,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES],
           SMRAM_FIELD(saved_state, SMRAM_ES_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_ES_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_ES_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_ES_BASE_HI32, SMRAM_ES_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_ES_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_ES_SELECTOR_AR) >> 16))
   {
@@ -512,8 +492,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS],
           SMRAM_FIELD(saved_state, SMRAM_FS_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_FS_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_FS_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_FS_BASE_HI32, SMRAM_FS_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_FS_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_FS_SELECTOR_AR) >> 16))
   {
@@ -525,8 +504,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS],
           SMRAM_FIELD(saved_state, SMRAM_GS_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_GS_BASE_LO32) |
-          SMRAM_FIELD64(saved_state, SMRAM_GS_BASE_HI32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_GS_BASE_HI32, SMRAM_GS_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_GS_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_GS_SELECTOR_AR) >> 16))
   {
@@ -538,8 +516,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR ldtr,
           SMRAM_FIELD(saved_state, SMRAM_LDTR_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_LDTR_BASE_HI32) |
-          SMRAM_FIELD64(saved_state, SMRAM_LDTR_BASE_LO32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_LDTR_BASE_HI32, SMRAM_LDTR_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_LDTR_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_LDTR_SELECTOR_AR) >> 16))
   {
@@ -551,8 +528,7 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   if (set_segment_ar_data(&BX_CPU_THIS_PTR tr,
           SMRAM_FIELD(saved_state, SMRAM_TR_SELECTOR_AR) & 0xffff,
-          SMRAM_FIELD64(saved_state, SMRAM_TR_BASE_HI32) |
-          SMRAM_FIELD64(saved_state, SMRAM_TR_BASE_LO32) << 32,
+          SMRAM_FIELD64(saved_state, SMRAM_TR_BASE_HI32, SMRAM_TR_BASE_LO32),
           SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT),
           SMRAM_FIELD(saved_state, SMRAM_TR_SELECTOR_AR) >> 16))
   {
