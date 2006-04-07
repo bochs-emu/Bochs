@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.64 2006-04-07 20:47:32 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.65 2006-04-07 20:53:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -902,7 +902,7 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR tr.cache.u.tss386.limit |= (cpu->tr.des_h & 0x000f0000);
     BX_CPU_THIS_PTR tr.cache.u.tss386.g      = (cpu->tr.des_h >> 23) & 0x01;
     BX_CPU_THIS_PTR tr.cache.u.tss386.avl    = (cpu->tr.des_h >> 20) & 0x01;
-    if (temp->u.tss386.g)
+    if (BX_CPU_THIS_PTR tr.cache.u.tss386.g)
       BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled = 
          (BX_CPU_THIS_PTR tr.cache.u.tss386.limit << 12) | 0x0fff;
     else
