@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.81 2006-04-05 17:31:29 sshwarts Exp $
+// $Id: apic.cc,v 1.82 2006-04-07 20:47:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -660,14 +660,12 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     break;
   case APIC_DM_SMI:
     BX_PANIC(("Delivery of SMI still not implemented !"));
-    cpu->async_event = 1;
-    cpu->smi_pending = 1;
-    return 0;
+    cpu->deliver_SMI();
+    return 1;
   case APIC_DM_NMI:
     BX_PANIC(("Delivery of NMI still not implemented !"));
-    cpu->async_event = 1;
-    cpu->nmi_pending = 1;
-    return 0;
+    cpu->deliver_NMI();
+    return 1;
   case APIC_DM_INIT:
     BX_DEBUG(("Deliver INIT IPI"));
     init();
@@ -682,7 +680,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     trigger_irq(vector, trig_mode);
     break;
   default:
-    break;
+    return 0;
   }
 
   return 1;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.277 2006-04-06 18:30:02 sshwarts Exp $
+// $Id: cpu.h,v 1.278 2006-04-07 20:47:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2645,8 +2645,6 @@ public: // for now...
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
-  BX_SMF void     dbg_queue_NMI(void);
-  BX_SMF void     dbg_queue_SMI(void);
   BX_SMF void     dbg_take_irq(void);
   BX_SMF void     dbg_force_interrupt(unsigned vector);
   BX_SMF void     dbg_take_dma(void);
@@ -2871,6 +2869,8 @@ public: // for now...
   BX_SMF void    decrementESPForPush(unsigned nBytes, Bit32u *eSP);
   BX_SMF void    sanity_checks(void);
   BX_SMF void    enter_system_management_mode(void);
+  BX_SMF void    deliver_NMI(void);
+  BX_SMF void    deliver_SMI(void);
   BX_SMF void    debug(bx_address offset);
 #if BX_DISASM
   BX_SMF void    debug_disasm_instruction(bx_address offset);

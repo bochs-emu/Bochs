@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.144 2006-04-05 17:31:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.145 2006-04-07 20:47:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,9 +59,33 @@ void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 #endif
 }
 
+//
+// The shutdown state is very similar to the state following the exection 
+// if HLT instruction. In this mode the processor stops executing 
+// instructions until #NMI, #SMI, #RESET or #INIT is received. If 
+// shutdown occurs why in NMI interrupt handler or in SMM, a hardware 
+// reset must be used to restart the processor execution.
+//
 void BX_CPU_C::shutdown(void)
 {
   BX_PANIC(("Entering to shutdown state still not implemented"));
+
+  BX_CPU_THIS_PTR clear_IF();
+
+  // artificial trap bit, why use another variable.
+  BX_CPU_THIS_PTR debug_trap |= 0x80000000; // artificial trap
+  BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
+  // Execution of this instruction completes.  The processor
+  // will remain in a halt state until one of the above conditions
+  // is met.
+
+  BX_INSTR_HLT(BX_CPU_ID);
+
+#if BX_USE_IDLE_HACK  
+  bx_gui->sim_is_idle ();
+#endif /* BX_USE_IDLE_HACK */  
+
+  longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
 
 void BX_CPU_C::HLT(bxInstruction_c *i)
@@ -75,7 +99,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
     return;
   }
 
-  if (! BX_CPU_THIS_PTR get_IF ()) {
+  if (! BX_CPU_THIS_PTR get_IF()) {
     BX_INFO(("WARNING: HLT instruction with IF=0!"));
   }
 
@@ -941,18 +965,14 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR cr0.em = (msw & 0x01); msw >>= 1;
   BX_CPU_THIS_PTR cr0.ts = (msw & 0x01);
 
-  //BX_INFO(("LOADALL: pe=%u, mp=%u, em=%u, ts=%u",
-  //  (unsigned) BX_CPU_THIS_PTR cr0.pe, (unsigned) BX_CPU_THIS_PTR cr0.mp,
-  //  (unsigned) BX_CPU_THIS_PTR cr0.em, (unsigned) BX_CPU_THIS_PTR cr0.ts));
-
   if (BX_CPU_THIS_PTR cr0.pe || BX_CPU_THIS_PTR cr0.mp || BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts)
     BX_PANIC(("LOADALL set PE, MP, EM or TS bits in MSW!"));
 
   /* TR */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x816, 2, &tr);
   BX_CPU_THIS_PTR tr.selector.value = tr;
-  BX_CPU_THIS_PTR tr.selector.rpl   = (tr & 0x03);  tr >>= 2;
-  BX_CPU_THIS_PTR tr.selector.ti    = (tr & 0x01);  tr >>= 1;
+  BX_CPU_THIS_PTR tr.selector.rpl   = (tr & 0x03); tr >>= 2;
+  BX_CPU_THIS_PTR tr.selector.ti    = (tr & 0x01); tr >>= 1;
   BX_CPU_THIS_PTR tr.selector.index = tr;
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x860, 2, &base_15_0);
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x862, 1, &base_23_16);
@@ -971,26 +991,21 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   if ((BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR tr.cache.valid == 0) {
-  }
-  if (BX_CPU_THIS_PTR tr.cache.u.tss286.limit < 43) {
-    BX_CPU_THIS_PTR tr.cache.valid = 0;
-  }
-  if (BX_CPU_THIS_PTR tr.cache.type != 1) {
-    BX_CPU_THIS_PTR tr.cache.valid = 0;
-  }
-  if (BX_CPU_THIS_PTR tr.cache.segment) {
+  if (BX_CPU_THIS_PTR tr.cache.u.tss286.limit < 43 ||
+      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS ||
+      BX_CPU_THIS_PTR tr.cache.segment)
+  {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
   }
   if (BX_CPU_THIS_PTR tr.cache.valid==0)
   {
-    BX_CPU_THIS_PTR tr.cache.u.tss286.base   = 0;
-    BX_CPU_THIS_PTR tr.cache.u.tss286.limit  = 0;
-    BX_CPU_THIS_PTR tr.cache.p            = 0;
-    BX_CPU_THIS_PTR tr.selector.value     = 0;
-    BX_CPU_THIS_PTR tr.selector.index     = 0;
-    BX_CPU_THIS_PTR tr.selector.ti        = 0;
-    BX_CPU_THIS_PTR tr.selector.rpl       = 0;
+    BX_CPU_THIS_PTR tr.selector.value       = 0;
+    BX_CPU_THIS_PTR tr.selector.index       = 0;
+    BX_CPU_THIS_PTR tr.selector.ti          = 0;
+    BX_CPU_THIS_PTR tr.selector.rpl         = 0;
+    BX_CPU_THIS_PTR tr.cache.u.tss286.base  = 0;
+    BX_CPU_THIS_PTR tr.cache.u.tss286.limit = 0;
+    BX_CPU_THIS_PTR tr.cache.p              = 0;
   }
 
   /* FLAGS */
@@ -1004,8 +1019,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   /* LDTR */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x81c, 2, &ldtr);
   BX_CPU_THIS_PTR ldtr.selector.value = ldtr;
-  BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03);  ldtr >>= 2;
-  BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01);  ldtr >>= 1;
+  BX_CPU_THIS_PTR ldtr.selector.rpl   = (ldtr & 0x03); ldtr >>= 2;
+  BX_CPU_THIS_PTR ldtr.selector.ti    = (ldtr & 0x01); ldtr >>= 1;
   BX_CPU_THIS_PTR ldtr.selector.index = ldtr;
   if ((BX_CPU_THIS_PTR ldtr.selector.value & 0xfffc) == 0)
   {
@@ -1110,9 +1125,6 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = (cs_raw & 0x03); cs_raw >>= 2;
-
-  //BX_INFO(("LOADALL: setting cs.selector.rpl to %u",
-  //  (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl));
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = (cs_raw & 0x01); cs_raw >>= 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = cs_raw;

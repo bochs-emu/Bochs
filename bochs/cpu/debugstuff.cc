@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.63 2006-04-05 17:31:30 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.64 2006-04-07 20:47:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,13 +35,14 @@
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
   bx_bool valid;
-  Bit32u  phy_addr;
+  bx_phy_address phy_addr;
   Bit8u   instr_buf[16];
   char    char_buf[512];
-  unsigned isize, i=0;
+  unsigned i=0;
 
-  static char letters[20] = "0123456789ABCDEF";
+  static char letters[] = "0123456789ABCDEF";
   static disassembler bx_disassemble;
+  unsigned remainsInPage = 0x1000 - (offset & 0xfff);
 
   dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
                        &phy_addr, &valid);
@@ -50,21 +51,26 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
     char_buf[i++] = '>';
     char_buf[i++] = '>';
     char_buf[i++] = ' ';
-    isize = bx_disassemble.disasm(
+    unsigned isize = bx_disassemble.disasm(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS), offset,
         instr_buf, char_buf+i);
-    i=strlen(char_buf);
-    char_buf[i++] = ' ';
-    char_buf[i++] = ':';
-    char_buf[i++] = ' ';
-    for (unsigned j=0; j<isize; j++) {
-      char_buf[i++] = letters[(instr_buf[j] >> 4) & 0xf];
-      char_buf[i++] = letters[(instr_buf[j] >> 0) & 0xf];
+    if (isize <= remainsInPage) {
+      i=strlen(char_buf);
+      char_buf[i++] = ' ';
+      char_buf[i++] = ':';
+      char_buf[i++] = ' ';
+      for (unsigned j=0; j<isize; j++) {
+        char_buf[i++] = letters[(instr_buf[j] >> 4) & 0xf];
+        char_buf[i++] = letters[(instr_buf[j] >> 0) & 0xf];
+      }
+      char_buf[i] = 0;
+      BX_INFO(("%s", char_buf));
     }
-    char_buf[i] = 0;
-    BX_INFO(("%s", char_buf));
+    else {
+      BX_INFO(("(instruction unavailable) page split instruction"));
+    }
   }
   else {
     BX_INFO(("(instruction unavailable) page not present"));
@@ -896,6 +902,12 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
     BX_CPU_THIS_PTR tr.cache.u.tss386.limit |= (cpu->tr.des_h & 0x000f0000);
     BX_CPU_THIS_PTR tr.cache.u.tss386.g      = (cpu->tr.des_h >> 23) & 0x01;
     BX_CPU_THIS_PTR tr.cache.u.tss386.avl    = (cpu->tr.des_h >> 20) & 0x01;
+    if (temp->u.tss386.g)
+      BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled = 
+         (BX_CPU_THIS_PTR tr.cache.u.tss386.limit << 12) | 0x0fff;
+    else
+      BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled = 
+         (BX_CPU_THIS_PTR tr.cache.u.tss386.limit);
   }
 
   // GDTR
