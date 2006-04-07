@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.136 2006-04-06 20:42:50 vruppert Exp $
+// $Id: siminterface.cc,v 1.137 2006-04-07 12:49:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -140,11 +140,11 @@ public:
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
 #if BX_SAVE_RESTORE
   // save/restore support
-  virtual bx_bool save_state(const char *checkpoint_name);
+  virtual bx_bool save_state(const char *checkpoint_path);
   virtual bx_bool restore_config();
   virtual bx_bool restore_logopts();
   virtual bx_bool restore_hardware();
-#endif 
+#endif
 };
 
 // recursive function to find parameters from the path
@@ -835,17 +835,24 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
 }
 
 #if BX_SAVE_RESTORE
-bx_bool bx_real_sim_c::save_state(const char *checkpoint_name)
+bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
+  char config[BX_PATHNAME_LEN];
+
+  sprintf(config, "%s/config", checkpoint_path);
+  write_rc(config, 1);
   // TODO
-  fprintf(stderr, "save_state (not implemented yet)\n");
+  fprintf(stderr, "save_state (not yet complete)\n");
   return 0;
 }
 
 bx_bool bx_real_sim_c::restore_config()
 {
-  // TODO
-  fprintf(stderr, "restore_config (not implemented yet)\n");
+  char config[BX_PATHNAME_LEN];
+
+  sprintf(config, "%s/config", get_param_string(BXPN_RESTORE_PATH)->getptr());
+  BX_INFO(("restoring '%s'", config));
+  read_rc(config);
   return 0;
 }
 

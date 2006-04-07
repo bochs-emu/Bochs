@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.327 2006-04-06 20:42:50 vruppert Exp $
+// $Id: main.cc,v 1.328 2006-04-07 12:49:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -655,6 +655,12 @@ int bx_init_main (int argc, char *argv[])
 
   int norcfile = 1;
 
+#if BX_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    load_rcfile = 0;
+    norcfile = 0;
+  }
+#endif
   if (load_rcfile) {
     /* parse configuration file and command line arguments */
 #ifdef WIN32
@@ -1005,7 +1011,7 @@ int bx_init_hardware()
   bx_pc_system.Reset(BX_RESET_HARDWARE);
 #if BX_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
-    SIM->restore_hardware();
+//  SIM->restore_hardware();
   }
 #endif
   bx_gui->init_signal_handlers();
