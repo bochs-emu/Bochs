@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.27 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.28 2006-04-07 10:48:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -142,6 +142,8 @@ void bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.elcr1 = 0x00;
   BX_P2I_THIS s.elcr2 = 0x00;
   BX_P2I_THIS s.pci_reset = 0x00;
+  BX_P2I_THIS s.apms = 0x00;
+  BX_P2I_THIS s.apmc = 0x00;
 }
 
 void bx_pci2isa_c::pci_register_irq(unsigned pirq, unsigned irq)
@@ -210,21 +212,20 @@ Bit32u bx_pci2isa_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
-      BX_ERROR(("read: APM command register not supported yet"));
-      break;
+      return(BX_P2I_THIS s.apmc);
+
     case 0x00b3:
-      BX_ERROR(("read: APM status register not supported yet"));
-      break;
+      return(BX_P2I_THIS s.apms);
+
     case 0x04d0:
       return(BX_P2I_THIS s.elcr1);
-      break;
+
     case 0x04d1:
       return(BX_P2I_THIS s.elcr2);
-      break;
+
     case 0x0cf9:
       return(BX_P2I_THIS s.pci_reset);
-      break;
-    }
+  }
 
   return(0xffffffff);
 }
@@ -250,7 +251,7 @@ void bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ERROR(("write: APM command register not supported yet"));
       break;
     case 0x00b3:
-      BX_ERROR(("write: APM status register not supported yet"));
+      BX_P2I_THIS s.apms = value & 0xff;
       break;
     case 0x04d0:
       value &= 0xf8;
@@ -295,7 +296,7 @@ Bit32u bx_pci2isa_c::pci_read_handler(Bit8u address, unsigned io_len)
     return value;
   }
   else
-    return(0xffffffff);
+    return 0xffffffff;
 }
 
 // pci configuration space write callback handler

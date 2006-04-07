@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.h,v 1.11 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pci2isa.h,v 1.12 2006-04-07 10:48:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,6 +54,8 @@ private:
     Bit8u pci_conf[256];
     Bit8u elcr1;
     Bit8u elcr2;
+    Bit8u apmc;
+    Bit8u apms;
     Bit8u irq_registry[16];
     Bit32u irq_level[16];
     Bit8u pci_reset;
