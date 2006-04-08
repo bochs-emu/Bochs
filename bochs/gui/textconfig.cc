@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.49 2006-04-06 20:42:51 vruppert Exp $
+// $Id: textconfig.cc,v 1.50 2006-04-08 16:25:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -191,8 +191,7 @@ ask_yn(char *prompt, Bit32u the_default, Bit32u *out)
 // returns -1 on error (stream closed or  something)
 // returns 0 if default was taken
 // returns 1 if value changed
-int 
-ask_string(char *prompt, char *the_default, char *out)
+int ask_string(char *prompt, const char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
@@ -231,7 +230,7 @@ static char *startup_menu_prompt =
 "3. Edit options\n"
 "4. Save options to...\n"
 #if BX_SAVE_RESTORE
-"5. Restore Bochs session from...\n"
+"5. Restore Bochs config options from...\n"
 "6. Begin simulation\n"
 "7. Quit now\n"
 #else
@@ -280,7 +279,7 @@ static char *runtime_menu_prompt =
 "10. Instruction tracing: off (doesn't exist yet)\n"
 "11. Misc runtime options\n"
 #if BX_SAVE_RESTORE
-"12. Save Bochs state to...\n"
+"12. Save Bochs config options to...\n"
 "13. Continue simulation\n"
 "14. Quit now\n"
 "\n"
@@ -426,10 +425,12 @@ int bx_config_interface(int menu)
             case 4: bx_write_rc(NULL); break;
 #if BX_SAVE_RESTORE
             case 5:
-              if (ask_string("\nWhat is the path to restore from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
-                SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
-                SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
-                bx_config_interface(BX_CI_START_SIMULATION);
+              if (ask_string("\nWhat is the path to restore Bochs config options from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+                if (strcmp (sr_path, "none")) {
+                  SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
+                  SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
+                  bx_config_interface(BX_CI_START_SIMULATION);
+                }
               }
               break;
             case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
@@ -512,8 +513,10 @@ int bx_config_interface(int menu)
               return -1;
 #if BX_SAVE_RESTORE
             case BX_CI_RT_SAVE:
-              if (ask_string("\nWhat is the path to save the Bochs state?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
-                SIM->save_state(sr_path);
+              if (ask_string("\nWhat is the path to save the Bochs config options to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+                if (strcmp (sr_path, "none")) {
+                  SIM->save_state(sr_path);
+                }
               }
               break;
 #endif
