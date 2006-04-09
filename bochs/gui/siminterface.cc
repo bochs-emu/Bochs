@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.138 2006-04-09 09:05:30 vruppert Exp $
+// $Id: siminterface.cc,v 1.139 2006-04-09 13:55:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -138,7 +138,7 @@ public:
   virtual int find_user_option(const char *keyword);
   virtual bx_bool register_user_option(const char *keyword, user_option_handler_t handler);
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
   virtual bx_bool save_state(const char *checkpoint_path);
   virtual bx_bool restore_config();
@@ -834,7 +834,7 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
   return (*user_option_handler[idx])(context, num_params, params);
 }
 
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
   char config[BX_PATHNAME_LEN];

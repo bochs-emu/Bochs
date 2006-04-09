@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.183 2006-04-07 12:49:50 vruppert Exp $
+// $Id: siminterface.h,v 1.184 2006-04-09 13:55:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1179,7 +1179,7 @@ public:
   virtual int find_user_option(const char *keyword) {return -1;}
   virtual bx_bool register_user_option(const char *keyword, user_option_handler_t handler) {return 0;}
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []) {return -1;}
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
   virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
   virtual bx_bool restore_config() {return 0;}

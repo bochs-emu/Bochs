@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.329 2006-04-09 09:05:29 vruppert Exp $
+// $Id: main.cc,v 1.330 2006-04-09 13:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -466,7 +466,7 @@ void print_usage()
     "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
     "  -r path          restore Bochs config and log options from path\n"
 #endif
     "  --help           display this help and exit\n\n"
@@ -527,7 +527,7 @@ int bx_init_main (int argc, char *argv[])
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
     else if (!strcmp ("-r", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-r must be followed by a path"));
       else {
@@ -655,7 +655,7 @@ int bx_init_main (int argc, char *argv[])
 
   int norcfile = 1;
 
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     load_rcfile = 0;
     norcfile = 0;
@@ -795,7 +795,7 @@ bx_bool load_and_init_display_lib ()
 
 int bx_begin_simulation (int argc, char *argv[])
 {
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     SIM->restore_config();
   }
@@ -1002,14 +1002,14 @@ int bx_init_hardware()
 #endif
 
   DEV_init_devices();
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     SIM->restore_logopts();
   }
 #endif
   // will enable A20 line and reset CPU and devices
   bx_pc_system.Reset(BX_RESET_HARDWARE);
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
 //  SIM->restore_hardware();
   }

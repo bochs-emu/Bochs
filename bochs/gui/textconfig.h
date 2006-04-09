@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.h,v 1.4 2006-04-06 20:42:51 vruppert Exp $
+// $Id: textconfig.h,v 1.5 2006-04-09 13:55:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -33,7 +33,7 @@ enum {
   BX_CI_RT_LOGOPTS2,
   BX_CI_RT_INST_TR,
   BX_CI_RT_MISC,
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   BX_CI_RT_SAVE,
 #endif
   BX_CI_RT_CONT,

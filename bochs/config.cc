@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.101 2006-04-06 20:42:50 vruppert Exp $
+// $Id: config.cc,v 1.102 2006-04-09 13:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -343,7 +343,7 @@ void bx_init_options()
       BX_RUN_START,
       BX_QUICK_START);
 
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   new bx_param_bool_c(menu,
       "restore",
       "Restore Bochs session",

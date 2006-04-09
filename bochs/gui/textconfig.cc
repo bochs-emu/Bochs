@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.51 2006-04-09 09:05:30 vruppert Exp $
+// $Id: textconfig.cc,v 1.52 2006-04-09 13:55:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -229,7 +229,7 @@ static char *startup_menu_prompt =
 "2. Read options from...\n"
 "3. Edit options\n"
 "4. Save options to...\n"
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
 "5. Restore Bochs config and log options from...\n"
 "6. Begin simulation\n"
 "7. Quit now\n"
@@ -278,7 +278,7 @@ static char *runtime_menu_prompt =
 "9. Log options for individual devices\n"
 "10. Instruction tracing: off (doesn't exist yet)\n"
 "11. Misc runtime options\n"
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
 "12. Save Bochs config and log options to...\n"
 "13. Continue simulation\n"
 "14. Quit now\n"
@@ -372,7 +372,7 @@ void askparam(char *pname)
 int bx_config_interface(int menu)
 {
   Bit32u choice;
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
   char sr_path[CI_PATH_LENGTH];
 #endif
   while (1) {
@@ -394,13 +394,13 @@ int bx_config_interface(int menu)
             case BX_EDIT_START: 
               default_choice = 3; break;
             default: 
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
               default_choice = 6; break;
 #else
               default_choice = 5; break;
 #endif
           }
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
           if (ask_uint(startup_menu_prompt, 1, 7, default_choice, &choice, 10) < 0) return -1;
 #else
           if (ask_uint(startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
@@ -423,7 +423,7 @@ int bx_config_interface(int menu)
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
             case 4: bx_write_rc(NULL); break;
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
             case 5:
               if (ask_string("\nWhat is the path to restore Bochs config and log options from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp (sr_path, "none")) {
@@ -511,7 +511,7 @@ int bx_config_interface(int menu)
               bx_user_quit = 1;
               SIM->quit_sim(1);
               return -1;
-#if BX_SAVE_RESTORE
+#if BX_SUPPORT_SAVE_RESTORE
             case BX_CI_RT_SAVE:
               if (ask_string("\nWhat is the path to save the Bochs config and log options to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp (sr_path, "none")) {

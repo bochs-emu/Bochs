@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.41 2006-03-08 18:10:41 vruppert Exp $
+// $Id: win32dialog.cc,v 1.42 2006-04-09 13:55:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -11,6 +11,7 @@ extern "C" {
 #include <stdio.h>
 #include <windows.h>
 #include <commctrl.h>
+#include <shlobj.h>
 #include <ctype.h>
 }
 #include "win32res.h"
@@ -60,6 +61,33 @@ BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
     return FALSE;
   }
   return TRUE;
+}
+
+int BrowseDir(const char *Title, char *result)
+{
+  BROWSEINFO browseInfo;
+  LPITEMIDLIST ItemIDList;
+  int r = 0;
+
+  memset(&browseInfo,0,sizeof(BROWSEINFO));
+  browseInfo.hwndOwner = GetActiveWindow();
+  browseInfo.pszDisplayName = result;
+  browseInfo.lpszTitle = (LPCSTR)Title;
+  browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
+  ItemIDList = SHBrowseForFolder(&browseInfo);
+  if (ItemIDList != NULL) {
+    *result = 0;
+    if (SHGetPathFromIDList(ItemIDList, result)) {
+      if (result[0]) r = 1;
+    }
+    // free memory used
+    IMalloc * imalloc = 0;
+    if (SUCCEEDED(SHGetMalloc(&imalloc))) {
+      imalloc->Free(ItemIDList);
+      imalloc->Release();
+    }
+  }
+  return r;
 }
 
 static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -667,6 +695,9 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   long noticode;
   char buffer[32];
   PSHNOTIFY *psn;
+#if BX_SUPPORT_SAVE_RESTORE
+  char sr_path[MAX_PATH];
+#endif
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -678,6 +709,7 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
       SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXPN_SB16_DMATIMER)->get(), FALSE);
       SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get(), FALSE);
+      EnableWindow(GetDlgItem(hDlg, IDSAVESTATE), BX_SUPPORT_SAVE_RESTORE);
       changed = FALSE;
       return TRUE;
     case WM_NOTIFY:
@@ -725,6 +757,15 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             case IDMOUSE:
               changed = TRUE;
               SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
+              break;
+            case IDSAVESTATE:
+#if BX_SUPPORT_SAVE_RESTORE
+              MessageBox(hDlg, "The save/restore function currently handles config and log options only", "WARNING", MB_ICONEXCLAMATION);
+              sr_path[0] = 0;
+              if (BrowseDir("Select folder for save/restore data", sr_path)) {
+                SIM->save_state(sr_path);
+              }
+#endif
               break;
           }
       }
