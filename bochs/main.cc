@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.328 2006-04-07 12:49:50 vruppert Exp $
+// $Id: main.cc,v 1.329 2006-04-09 09:05:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -467,7 +467,7 @@ void print_usage()
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
 #if BX_SAVE_RESTORE
-    "  -r               restore Bochs session\n"
+    "  -r path          restore Bochs config and log options from path\n"
 #endif
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
@@ -896,11 +896,6 @@ int bx_init_hardware()
       io->set_log_action (level, action);
     }
   }
-#if BX_SAVE_RESTORE
-  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
-    SIM->restore_logopts();
-  }
-#endif
 
   bx_pc_system.initialize(SIM->get_param_num(BXPN_IPS)->get());
 
@@ -1007,6 +1002,11 @@ int bx_init_hardware()
 #endif
 
   DEV_init_devices();
+#if BX_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    SIM->restore_logopts();
+  }
+#endif
   // will enable A20 line and reset CPU and devices
   bx_pc_system.Reset(BX_RESET_HARDWARE);
 #if BX_SAVE_RESTORE

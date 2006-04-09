@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.137 2006-04-07 12:49:50 vruppert Exp $
+// $Id: siminterface.cc,v 1.138 2006-04-09 09:05:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -838,9 +838,34 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
   char config[BX_PATHNAME_LEN];
+  char logopts[BX_PATHNAME_LEN];
+  char prefix[8];
+  int i, dev, ndev = SIM->get_n_log_modules();
+  int type, ntype = SIM->get_max_log_level();
+  FILE *fp;
 
   sprintf(config, "%s/config", checkpoint_path);
   write_rc(config, 1);
+  sprintf(logopts, "%s/logopts", checkpoint_path);
+  fp = fopen(logopts, "w");
+  if (fp != NULL) {
+    for (dev=0; dev<ndev; dev++) {
+      strcpy(prefix, get_prefix(dev));
+      strcpy(prefix, prefix+1);
+      prefix[strlen(prefix) - 1] = 0;
+      i = strlen(prefix) - 1;
+      while ((i >= 0) && (prefix[i] == ' ')) prefix[i--] = 0;
+      if (strlen(prefix) > 0) {
+        fprintf(fp, "%s: ", prefix);
+        for (type=0; type<ntype; type++) {
+          if (type > 0) fprintf(fp, ", ");
+          fprintf(fp, "%s=%s", get_log_level_name(type), get_action_name(get_log_action(dev, type)));
+        }
+        fprintf(fp, "\n");
+      }
+    }
+    fclose(fp);
+  }
   // TODO
   fprintf(stderr, "save_state (not yet complete)\n");
   return 0;
@@ -858,8 +883,75 @@ bx_bool bx_real_sim_c::restore_config()
 
 bx_bool bx_real_sim_c::restore_logopts()
 {
-  // TODO
-  fprintf(stderr, "restore_logopts (not implemented yet)\n");
+  char logopts[BX_PATHNAME_LEN];
+  FILE *fp;
+  char line[512], string[512], prefix[8];
+  char *ret, *ptr;
+  int d, i, j, dev = 0, type = 0, action = 0;
+  int ndev = SIM->get_n_log_modules();
+
+  sprintf(logopts, "%s/logopts", get_param_string(BXPN_RESTORE_PATH)->getptr());
+  BX_INFO(("restoring '%s'", logopts));
+  fp = fopen(logopts, "r");
+  if (fp != NULL) {
+    do {
+      ret = fgets(line, sizeof(line)-1, fp);
+      line[sizeof(line) - 1] = '\0';
+      int len = strlen(line);
+      if ((len>0) && (line[len-1] < ' '))
+        line[len-1] = '\0';
+      i = 0;
+      if ((ret != NULL) && strlen(line)) {
+        ptr = strtok(line, ":");
+        while (ptr) {
+          strcpy(string, ptr);
+          while (isspace(string[0])) strcpy(string, string+1);
+          while (isspace(string[strlen(string)-1])) string[strlen(string)-1] = 0;
+          if (i == 0) {
+            sprintf(prefix, "[%-5s]", string);
+            dev = -1;
+            for (d = 0; d < ndev; d++) {
+              if (!strcmp(prefix, get_prefix(d))) {
+                dev = d;
+              }
+            }
+          } else if (dev >= 0) {
+            j = 6;
+            if (!strncmp(string, "DEBUG=", 6)) {
+              type = LOGLEV_DEBUG;
+            } else if (!strncmp(string, "INFO=", 5)) {
+              type = LOGLEV_INFO;
+              j = 5;
+            } else if (!strncmp(string, "ERROR=", 6)) {
+              type = LOGLEV_ERROR;
+            } else if (!strncmp(string, "PANIC=", 6)) {
+              type = LOGLEV_PANIC;
+            } else if (!strncmp(string, "PASS=", 5)) {
+              type = LOGLEV_PASS;
+              j = 5;
+            }
+            if (!strcmp(string+j, "ignore")) {
+              action = ACT_IGNORE;
+            } else if (!strcmp(string+j, "report")) {
+              action = ACT_REPORT;
+            } else if (!strcmp(string+j, "ask")) {
+              action = ACT_ASK;
+            } else if (!strcmp(string+j, "fatal")) {
+              action = ACT_FATAL;
+            }
+            set_log_action(dev, type, action);
+          } else {
+            if (i == 1) {
+              BX_ERROR(("restore_logopts(): log module '%s' not found", prefix));
+            }
+          }
+          i++;
+          ptr = strtok(NULL, ",");
+        }
+      }
+    } while (!feof(fp));
+    fclose(fp);
+  }
   return 0;
 }
 
