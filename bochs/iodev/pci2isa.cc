@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.28 2006-04-07 10:48:54 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.29 2006-04-10 19:43:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -248,7 +248,8 @@ void bx_pci2isa_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
-      BX_ERROR(("write: APM command register not supported yet"));
+      BX_ERROR(("write %08x: APM command register not supported yet", value));
+      BX_P2I_THIS s.apmc = value & 0xff;
       break;
     case 0x00b3:
       BX_P2I_THIS s.apms = value & 0xff;
