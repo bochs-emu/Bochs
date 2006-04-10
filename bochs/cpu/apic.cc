@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.82 2006-04-07 20:47:31 sshwarts Exp $
+// $Id: apic.cc,v 1.83 2006-04-10 19:05:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -481,8 +481,8 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
 
 void bx_local_apic_c::startup_msg(Bit32u vector)
 {
-  if(cpu->debug_trap & 0x80000000) {
-    cpu->debug_trap &= ~0x80000000;
+  if(cpu->debug_trap & BX_DEBUG_TRAP_HALT_STATE) {
+    cpu->debug_trap &= ~BX_DEBUG_TRAP_HALT_STATE;
     cpu->dword.eip = 0;
     cpu->load_seg_reg(&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
     BX_INFO(("%s started up at %04X:%08X by APIC", cpu->name, vector*0x100, cpu->dword.eip));

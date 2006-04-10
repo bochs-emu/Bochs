@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.143 2006-04-07 20:47:31 sshwarts Exp $
+// $Id: cpu.cc,v 1.144 2006-04-10 19:05:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -503,12 +503,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //
   // This area is where we process special conditions and events.
   //
-
-  if (BX_CPU_THIS_PTR debug_trap & 0x80000000) {
+  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT_STATE) {
     // I made up the bitmask above to mean HALT state.
 #if BX_SUPPORT_SMP == 0
-    BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
-    BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
 #if BX_DEBUGGER
@@ -521,10 +518,12 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
            BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
       {
         // interrupt ends the HALT condition
+        BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
+        BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
         break;
       }
-      if (BX_CPU_THIS_PTR async_event == 2) {
-        BX_INFO(("decode: reset detected in halt state"));
+      if ((BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT_STATE) == 0) {
+        BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
         break;
       }
       BX_TICK1();

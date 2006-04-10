@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.145 2006-04-07 20:47:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.146 2006-04-10 19:05:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,7 +73,7 @@ void BX_CPU_C::shutdown(void)
   BX_CPU_THIS_PTR clear_IF();
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR debug_trap |= 0x80000000; // artificial trap
+  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
@@ -110,7 +110,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   // following HLT.
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR debug_trap |= 0x80000000; // artificial trap
+  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
