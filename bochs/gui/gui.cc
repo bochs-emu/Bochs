@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.93 2006-03-04 12:43:47 vruppert Exp $
+// $Id: gui.cc,v 1.94 2006-04-10 19:02:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,8 +110,7 @@ bx_gui_c::~bx_gui_c()
   }
 }
 
-  void
-bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
+void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
 {
   BX_GUI_THIS new_gfx_api = 0;
   BX_GUI_THIS host_xres = 640;
@@ -232,8 +231,8 @@ bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheight)
   show_headerbar();
 }
 
-void
-bx_gui_c::update_drive_status_buttons (void) {
+void bx_gui_c::update_drive_status_buttons (void)
+{
   BX_GUI_THIS floppyA_status =
     DEV_floppy_get_media_status(0)
     && (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
@@ -252,7 +251,7 @@ bx_gui_c::update_drive_status_buttons (void) {
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyA_hbar_id, BX_GUI_THIS floppyA_eject_bmap_id);
-    }
+  }
   if (BX_GUI_THIS floppyB_status)
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_bmap_id);
   else {
@@ -263,16 +262,15 @@ bx_gui_c::update_drive_status_buttons (void) {
       DiskEject(1);
 #endif
     replace_bitmap(BX_GUI_THIS floppyB_hbar_id, BX_GUI_THIS floppyB_eject_bmap_id);
-    }
+  }
   if (BX_GUI_THIS cdromD_status)
     replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_bmap_id);
   else {
     replace_bitmap(BX_GUI_THIS cdromD_hbar_id, BX_GUI_THIS cdromD_eject_bmap_id);
-    }
+  }
 }
 
-  void
-bx_gui_c::floppyA_handler(void)
+void bx_gui_c::floppyA_handler(void)
 {
   if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() == BX_FLOPPY_NONE)
     return; // no primary floppy device present
@@ -290,8 +288,7 @@ bx_gui_c::floppyA_handler(void)
   BX_GUI_THIS update_drive_status_buttons();
 }
 
-  void
-bx_gui_c::floppyB_handler(void)
+void bx_gui_c::floppyB_handler(void)
 {
   if (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() == BX_FLOPPY_NONE)
     return; // no secondary floppy device present
@@ -309,8 +306,7 @@ bx_gui_c::floppyB_handler(void)
   BX_GUI_THIS update_drive_status_buttons();
 }
 
-  void
-bx_gui_c::cdromD_handler(void)
+void bx_gui_c::cdromD_handler(void)
 {
   Bit32u handle = DEV_hd_get_first_cd_handle();
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_CDROM) {
@@ -332,15 +328,13 @@ bx_gui_c::cdromD_handler(void)
   BX_GUI_THIS update_drive_status_buttons();
 }
 
-  void
-bx_gui_c::reset_handler(void)
+void bx_gui_c::reset_handler(void)
 {
-  BX_INFO(( "system RESET callback." ));
-  bx_pc_system.Reset( BX_RESET_HARDWARE );
+  BX_INFO(("system RESET callback"));
+  bx_pc_system.Reset(BX_RESET_HARDWARE);
 }
 
-  void
-bx_gui_c::power_handler(void)
+void bx_gui_c::power_handler(void)
 {
   // the user pressed power button, so there's no doubt they want bochs
   // to quit.  Change panics to fatal for the GUI and then do a panic.
@@ -352,8 +346,7 @@ bx_gui_c::power_handler(void)
   BX_EXIT (1);
 }
 
-Bit32s
-bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
+Bit32s bx_gui_c::make_text_snapshot(char **snapshot, Bit32u *length)
 {
   Bit8u* raw_snap = NULL;
   char *clean_snap;
@@ -384,8 +377,7 @@ bx_gui_c::make_text_snapshot (char **snapshot, Bit32u *length)
 
 // create a text snapshot and copy to the system clipboard.  On guis that
 // we haven't figured out how to support yet, dump to a file instead.
-  void
-bx_gui_c::copy_handler(void)
+void bx_gui_c::copy_handler(void)
 {
   Bit32u len;
   char *text_snapshot;
@@ -403,8 +395,7 @@ bx_gui_c::copy_handler(void)
 }
 
 // Check the current text snapshot against file snapchk.txt.
-  void
-bx_gui_c::snapshot_checker(void * this_ptr)
+void bx_gui_c::snapshot_checker(void *this_ptr)
 {
   char filename[BX_PATHNAME_LEN];
   strcpy(filename,"snapchk.txt");
@@ -451,8 +442,7 @@ bx_gui_c::snapshot_checker(void * this_ptr)
 }
 
 // create a text snapshot and dump it to a file
-  void
-bx_gui_c::snapshot_handler(void)
+void bx_gui_c::snapshot_handler(void)
 {
   char *text_snapshot;
   Bit32u len;
@@ -481,8 +471,7 @@ bx_gui_c::snapshot_handler(void)
 
 // Read ASCII chars from the system clipboard and paste them into bochs.
 // Note that paste cannot work with the key mapping tables loaded.
-  void
-bx_gui_c::paste_handler(void)
+void bx_gui_c::paste_handler(void)
 {
   Bit32s nbytes;
   Bit8u *bytes;
@@ -498,17 +487,14 @@ bx_gui_c::paste_handler(void)
   DEV_kbd_paste_bytes (bytes, nbytes);
 }
 
-
-  void
-bx_gui_c::config_handler(void)
+void bx_gui_c::config_handler(void)
 {
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_RUNTIME) {
     SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
   }
 }
 
-  void
-bx_gui_c::toggle_mouse_enable(void)
+void bx_gui_c::toggle_mouse_enable(void)
 {
   int old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   BX_DEBUG (("toggle mouse_enabled, now %d", !old));
@@ -527,8 +513,7 @@ Bit32u get_user_key(char *key)
   return BX_KEY_UNKNOWN;
 }
 
-  void
-bx_gui_c::userbutton_handler(void)
+void bx_gui_c::userbutton_handler(void)
 {
   Bit32u shortcut[4];
   Bit32u symbol;
@@ -599,8 +584,7 @@ bx_gui_c::userbutton_handler(void)
   }
 }
 
-  void
-bx_gui_c::mouse_enabled_changed (bx_bool val)
+void bx_gui_c::mouse_enabled_changed (bx_bool val)
 {
   // This is only called when SIM->get_init_done is 1.  Note that VAL
   // is the new value of mouse_enabled, which may not match the old
@@ -616,8 +600,7 @@ bx_gui_c::mouse_enabled_changed (bx_bool val)
   BX_GUI_THIS mouse_enabled_changed_specific (val);
 }
 
-void
-bx_gui_c::init_signal_handlers ()
+void bx_gui_c::init_signal_handlers()
 {
 #if BX_GUI_SIGHANDLER
   if (bx_gui_sighandler) 
@@ -632,37 +615,31 @@ bx_gui_c::init_signal_handlers ()
 #endif
 }
 
-  void
-bx_gui_c::set_text_charmap(Bit8u *fbuffer)
+void bx_gui_c::set_text_charmap(Bit8u *fbuffer)
 {
   memcpy(& BX_GUI_THIS vga_charmap, fbuffer, 0x2000);
   for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[i] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
 
-  void
-bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
+void bx_gui_c::set_text_charbyte(Bit16u address, Bit8u data)
 {
   BX_GUI_THIS vga_charmap[address] = data;
   BX_GUI_THIS char_changed[address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
-
   
-  void
-bx_gui_c::beep_on(float frequency)
+void bx_gui_c::beep_on(float frequency)
 {
-  BX_INFO(( "GUI Beep ON (frequency=%.2f)",frequency));
+  BX_INFO(("GUI Beep ON (frequency=%.2f)", frequency));
 }
 
-  void
-bx_gui_c::beep_off()
+void bx_gui_c::beep_off()
 {
-  BX_INFO(( "GUI Beep OFF"));
+  BX_INFO(("GUI Beep OFF"));
 }
 
-  int
-bx_gui_c::register_statusitem(const char *text)
+int bx_gui_c::register_statusitem(const char *text)
 {
   if (statusitem_count < BX_MAX_STATUSITEMS) {
     strncpy(statusitem_text[statusitem_count], text, 8);
@@ -673,16 +650,14 @@ bx_gui_c::register_statusitem(const char *text)
   }
 }
 
-  void
-bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
+void bx_gui_c::get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp)
 {
   *xres = 1024;
   *yres = 768;
   *bpp = 32;
 }
 
-  bx_svga_tileinfo_t *
-bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
+bx_svga_tileinfo_t *bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
 {
   if (!info) {
     info = (bx_svga_tileinfo_t *)malloc(sizeof(bx_svga_tileinfo_t));
@@ -732,8 +707,7 @@ bx_gui_c::graphics_tile_info(bx_svga_tileinfo_t *info)
   return info;
 }
 
-  Bit8u *
-bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
+Bit8u *bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                             unsigned *w, unsigned *h)
 {
   if (x0+X_TILESIZE > BX_GUI_THIS host_xres) {
@@ -754,8 +728,7 @@ bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
                   x0 * ((BX_GUI_THIS host_bpp + 1) >> 3);
 }
 
-  void
-bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
+void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
   Bit8u tile[X_TILESIZE * Y_TILESIZE * 4];
