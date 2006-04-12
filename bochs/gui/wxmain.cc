@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.134 2006-03-19 15:35:20 vruppert Exp $
+// $Id: wxmain.cc,v 1.135 2006-04-12 20:51:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -307,6 +307,8 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Config_New, MyFrame::OnConfigNew)
   EVT_MENU(ID_Config_Read, MyFrame::OnConfigRead)
   EVT_MENU(ID_Config_Save, MyFrame::OnConfigSave)
+  EVT_MENU(ID_State_Save, MyFrame::OnStateSave)
+  EVT_MENU(ID_State_Restore, MyFrame::OnStateRestore)
   EVT_MENU(ID_Quit, MyFrame::OnQuit)
   EVT_MENU(ID_Help_About, MyFrame::OnAbout)
   EVT_MENU(ID_Simulate_Start, MyFrame::OnStartSim)
@@ -421,6 +423,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuConfiguration->Append(ID_Config_Read, wxT("&Read Configuration"));
   menuConfiguration->Append(ID_Config_Save, wxT("&Save Configuration"));
   menuConfiguration->AppendSeparator();
+  menuConfiguration->Append(ID_State_Save, wxT("&Save State"));
+  menuConfiguration->Append(ID_State_Restore, wxT("&Restore State"));
+  menuConfiguration->AppendSeparator();
   menuConfiguration->Append(ID_Quit, wxT("&Quit"));
 
   menuEdit = new wxMenu;
@@ -482,6 +487,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Enable(ID_Edit_ATA1, BX_MAX_ATA_CHANNEL > 1);
   menuEdit->Enable(ID_Edit_ATA2, BX_MAX_ATA_CHANNEL > 2);
   menuEdit->Enable(ID_Edit_ATA3, BX_MAX_ATA_CHANNEL > 3);
+  // enable restore state if present
+  menuConfiguration->Enable(ID_State_Save, FALSE);
+  menuConfiguration->Enable(ID_State_Restore, BX_SUPPORT_SAVE_RESTORE);
 
   CreateStatusBar();
   wxStatusBar *sb = GetStatusBar();
@@ -547,11 +555,11 @@ void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 {
-  const char *bochsrc;
+  char bochsrc[512];
   long style = wxOPEN;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Read configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    bochsrc = fdialog->GetPath().mb_str(wxConvUTF8);
+    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
     SIM->reset_all_param();
     SIM->read_rc(bochsrc);
   }
@@ -560,14 +568,53 @@ void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 {
-  const char *bochsrc;
+  char bochsrc[512];
   long style = wxSAVE | wxOVERWRITE_PROMPT;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Save configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    bochsrc = fdialog->GetPath().mb_str(wxConvUTF8);
+    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc));
     SIM->write_rc(bochsrc, 1);
   }
   delete fdialog;
+}
+
+void MyFrame::OnStateSave(wxCommandEvent& WXUNUSED(event))
+{
+#if BX_SUPPORT_SAVE_RESTORE
+  char sr_path[512];
+  wxMessageBox(wxT("The save/restore function currently handles config and log options only"),
+               wxT("WARNING"), wxOK | wxICON_EXCLAMATION, this);
+  // pass some initial dir to wxDirDialog
+  wxString dirSaveRestore;
+  wxGetHomeDir(&dirSaveRestore);
+
+  wxDirDialog ddialog(this, wxT("Select folder with save/restore data"), dirSaveRestore, wxDD_DEFAULT_STYLE);
+
+  if (ddialog.ShowModal() == wxID_OK) {
+    strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path));
+    SIM->save_state(sr_path);
+  }
+#endif
+}
+
+void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
+{
+#if BX_SUPPORT_SAVE_RESTORE
+  char sr_path[512];
+  wxMessageBox(wxT("The save/restore function currently handles config and log options only"),
+               wxT("WARNING"), wxOK | wxICON_EXCLAMATION, this);
+  // pass some initial dir to wxDirDialog
+  wxString dirSaveRestore;
+  wxGetHomeDir(&dirSaveRestore);
+
+  wxDirDialog ddialog(this, wxT("Select folder with save/restore data"), dirSaveRestore, wxDD_DEFAULT_STYLE);
+
+  if (ddialog.ShowModal() == wxID_OK) {
+    strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path));
+    SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
+    SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
+  }
+#endif
 }
 
 void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
@@ -923,6 +970,10 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   bool canConfigure = (change == Stop);
   menuConfiguration->Enable(ID_Config_New, canConfigure);
   menuConfiguration->Enable(ID_Config_Read, canConfigure);
+#if BX_SUPPORT_SAVE_RESTORE
+  menuConfiguration->Enable(ID_State_Save, (change == Pause));
+  menuConfiguration->Enable(ID_State_Restore, canConfigure);
+#endif
   // only enabled ATA channels with a cdrom connected are available at runtime
   for (unsigned i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(ata_name, "ata.%d.resources", i);
