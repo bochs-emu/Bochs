@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.15 2006-01-21 09:28:49 vruppert Exp $
+// $Id: plugin.cc,v 1.16 2006-04-14 13:27:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -515,6 +515,7 @@ void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmod
         // Core devices are present whether or not we are using plugins, so
         // they are managed by the same code in iodev/devices.cc whether
         // plugins are on or off.  
+        free(device);
         return; // Do not add core devices to the devices list.
       case PLUGTYPE_OPTIONAL:
       case PLUGTYPE_USER:

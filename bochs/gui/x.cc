@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.102 2006-02-22 19:18:28 vruppert Exp $
+// $Id: x.cc,v 1.103 2006-04-14 13:27:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -542,6 +542,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   XSetWMProperties(bx_x_display, win, &windowName, &iconName,
       argv, argc, &size_hints, &wm_hints,
       &class_hints);
+  XFree(windowName.value);
+  XFree(iconName.value);
   }
 
   /* Select event types wanted */
