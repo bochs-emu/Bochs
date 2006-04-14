@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.102 2006-04-09 13:55:53 vruppert Exp $
+// $Id: config.cc,v 1.103 2006-04-14 08:07:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3464,6 +3464,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "mouse: enabled=%d, type=%s\n",
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get(),
     SIM->get_param_enum(BXPN_MOUSE_TYPE)->get_selected());
+  SIM->save_user_options(fp);
   fclose(fp);
   return 0;
 }

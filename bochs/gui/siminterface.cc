@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.139 2006-04-09 13:55:54 vruppert Exp $
+// $Id: siminterface.cc,v 1.140 2006-04-14 08:07:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -36,7 +36,8 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
   int n_user_options;
-  user_option_handler_t user_option_handler[BX_MAX_USER_OPTIONS];
+  user_option_parser_t user_option_parser[BX_MAX_USER_OPTIONS];
+  user_option_save_t user_option_save[BX_MAX_USER_OPTIONS];
   const char *user_option_name[BX_MAX_USER_OPTIONS];
   int init_done;
   int enabled;
@@ -136,8 +137,9 @@ public:
   virtual bx_bool test_for_text_console();
   // user-defined option support
   virtual int find_user_option(const char *keyword);
-  virtual bx_bool register_user_option(const char *keyword, user_option_handler_t handler);
+  virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func);
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
+  virtual Bit32s save_user_options(FILE *fp);
 #if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
   virtual bx_bool save_state(const char *checkpoint_path);
@@ -803,7 +805,8 @@ int bx_real_sim_c::find_user_option(const char *keyword)
   return -1;
 }
 
-bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_handler_t handler)
+bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_parser_t parser,
+                                            user_option_save_t save_func)
 {
   int idx;
 
@@ -812,8 +815,8 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_han
   }
   idx = find_user_option(keyword);
   if (idx >= 0) {
-    if (handler == user_option_handler[idx]) {
-      // handler already registered
+    if (parser == user_option_parser[idx]) {
+      // parse handler already registered
       return 1;
     } else {
       // keyword already exists
@@ -821,7 +824,8 @@ bx_bool bx_real_sim_c::register_user_option(const char *keyword, user_option_han
     }
   } else {
     user_option_name[n_user_options] = keyword;
-    user_option_handler[n_user_options++] = handler;
+    user_option_parser[n_user_options] = parser;
+    user_option_save[n_user_options++] = save_func;
     return 1;
   }
 }
@@ -831,7 +835,19 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
   if ((idx < 0) || (idx >= n_user_options)) {
     return -1;
   }
-  return (*user_option_handler[idx])(context, num_params, params);
+  return (*user_option_parser[idx])(context, num_params, params);
+}
+
+Bit32s bx_real_sim_c::save_user_options(FILE *fp)
+{
+  int i;
+
+  for (i = 0; i < n_user_options; i++) {
+    if (user_option_save[i] != NULL) {
+      (*user_option_save[i])(fp);
+    }
+  }
+  return 0;
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
