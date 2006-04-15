@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.50 2006-03-07 21:11:12 sshwarts Exp $
+// $Id: plugin.h,v 1.51 2006-04-15 17:03:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -53,6 +53,9 @@ extern "C" {
 
 #define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
+#define DEV_register_state() {bx_devices.register_state(); }
+#define DEV_before_save_state() {bx_devices.before_save_state(); }
+#define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
@@ -73,6 +76,9 @@ extern "C" {
 
 #define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
+#define DEV_register_state() {bx_devices.register_state(); }
+#define DEV_before_save_state() {bx_devices.before_save_state(); }
+#define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
@@ -259,8 +265,6 @@ void plugin_fini_all (void);
 typedef void (*deviceInitMem_t)(BX_MEM_C *);
 typedef void (*deviceInitDev_t)(void);
 typedef void (*deviceReset_t)(unsigned);
-typedef void (*deviceLoad_t)(void);
-typedef void (*deviceSave_t)(void);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, plugintype_t type, bx_devmodel_c *dev, char *name);
 BOCHSAPI bx_bool pluginDevicePresent(char *name);
@@ -330,11 +334,16 @@ BOCHSAPI extern bx_bool  (*pluginRegisterPCIDevice)(void *this_ptr,
 BOCHSAPI extern Bit8u    (*pluginRd_memType)(Bit32u addr);
 BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
 
-void plugin_abort (void);
+void plugin_abort(void);
 
-int bx_load_plugin (const char *name, plugintype_t type);
-extern void bx_init_plugins (void);
-extern void bx_reset_plugins (unsigned);
+int bx_load_plugin(const char *name, plugintype_t type);
+extern void bx_init_plugins(void);
+extern void bx_reset_plugins(unsigned);
+#if BX_SUPPORT_SAVE_RESTORE
+extern void bx_plugins_register_state();
+extern void bx_plugins_before_save_state();
+extern void bx_plugins_after_restore_state();
+#endif
 
 // every plugin must define these, within the extern"C" block, so that
 // a non-mangled function symbol is available in the shared library.

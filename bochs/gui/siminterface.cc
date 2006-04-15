@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.141 2006-04-15 14:05:18 vruppert Exp $
+// $Id: siminterface.cc,v 1.142 2006-04-15 17:03:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -864,6 +864,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   int type, ntype = SIM->get_max_log_level();
   FILE *fp;
 
+  DEV_before_save_state();
   sprintf(sr_file, "%s/config", checkpoint_path);
   write_rc(sr_file, 1);
   sprintf(sr_file, "%s/logopts", checkpoint_path);
@@ -1056,7 +1057,6 @@ bx_bool bx_real_sim_c::restore_hardware()
                   BX_ERROR(("restore_hardware(): unknown parameter type"));
               }
             }
-            printf("%d: %s\n", i, ptr);
             i++;
             ptr = strtok(NULL, " ");
           }

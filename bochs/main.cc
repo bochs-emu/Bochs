@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.330 2006-04-09 13:55:53 vruppert Exp $
+// $Id: main.cc,v 1.331 2006-04-15 17:03:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1003,6 +1003,7 @@ int bx_init_hardware()
 
   DEV_init_devices();
 #if BX_SUPPORT_SAVE_RESTORE
+  DEV_register_state();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     SIM->restore_logopts();
   }
@@ -1012,6 +1013,7 @@ int bx_init_hardware()
 #if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
 //  SIM->restore_hardware();
+//  DEV_after_restore_state();
   }
 #endif
   bx_gui->init_signal_handlers();

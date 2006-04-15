@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.16 2006-04-14 13:27:17 vruppert Exp $
+// $Id: plugin.cc,v 1.17 2006-04-15 17:03:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -606,5 +606,47 @@ void bx_reset_plugins(unsigned signal)
       device->devmodel->reset(signal);
     }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+/**************************************************************************/
+/* Plugin system: Register device state of all registered plugin-devices  */
+/**************************************************************************/
+
+void bx_plugins_register_state()
+{
+    device_t *device;
+    for (device = devices; device; device = device->next)
+    {
+      pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
+      device->devmodel->register_state();
+    }
+}
+
+/**************************************************************************/
+/* Plugin system: Execute code before saving state of all plugin devices  */
+/**************************************************************************/
+
+void bx_plugins_before_save_state()
+{
+    device_t *device;
+    for (device = devices; device; device = device->next)
+    {
+      device->devmodel->before_save_state();
+    }
+}
+
+/***************************************************************************/
+/* Plugin system: Execute code after restoring state of all plugin devices */
+/***************************************************************************/
+
+void bx_plugins_after_restore_state()
+{
+    device_t *device;
+    for (device = devices; device; device = device->next)
+    {
+      device->devmodel->after_restore_state();
+    }
+}
+#endif
 
 }

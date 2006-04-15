@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.73 2006-03-08 19:28:36 sshwarts Exp $
+// $Id: iodev.h,v 1.74 2006-04-15 17:03:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,8 +85,11 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void init_mem(BX_MEM_C *) {}
   virtual void init(void) {}
   virtual void reset(unsigned type) {}
-  virtual void device_load_state () {}
-  virtual void device_save_state () {}
+#if BX_SUPPORT_SAVE_RESTORE
+  virtual void register_state(void) {}
+  virtual void before_save_state(void) {}
+  virtual void after_restore_state(void) {}
+#endif
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -387,6 +390,11 @@ public:
   // The types of reset conditions are defined in bochs.h:
   // power-on, hardware, or software.
   void reset(unsigned type);
+#if BX_SUPPORT_SAVE_RESTORE
+  void register_state(void);
+  void before_save_state(void);
+  void after_restore_state(void);
+#endif
   BX_MEM_C *mem;  // address space associated with these devices
   bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f, 
 		  Bit32u addr, const char *name, Bit8u mask );
