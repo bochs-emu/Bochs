@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.140 2006-04-14 08:07:24 vruppert Exp $
+// $Id: siminterface.cc,v 1.141 2006-04-15 14:05:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -146,6 +146,11 @@ public:
   virtual bx_bool restore_config();
   virtual bx_bool restore_logopts();
   virtual bx_bool restore_hardware();
+  virtual bx_list_c *get_sr_root() {
+    return (bx_list_c*)get_param("save_restore", NULL);
+  }
+private:
+  void save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path);
 #endif
 };
 
@@ -853,17 +858,16 @@ Bit32s bx_real_sim_c::save_user_options(FILE *fp)
 #if BX_SUPPORT_SAVE_RESTORE
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
-  char config[BX_PATHNAME_LEN];
-  char logopts[BX_PATHNAME_LEN];
+  char sr_file[BX_PATHNAME_LEN];
   char prefix[8];
   int i, dev, ndev = SIM->get_n_log_modules();
   int type, ntype = SIM->get_max_log_level();
   FILE *fp;
 
-  sprintf(config, "%s/config", checkpoint_path);
-  write_rc(config, 1);
-  sprintf(logopts, "%s/logopts", checkpoint_path);
-  fp = fopen(logopts, "w");
+  sprintf(sr_file, "%s/config", checkpoint_path);
+  write_rc(sr_file, 1);
+  sprintf(sr_file, "%s/logopts", checkpoint_path);
+  fp = fopen(sr_file, "w");
   if (fp != NULL) {
     for (dev=0; dev<ndev; dev++) {
       strcpy(prefix, get_prefix(dev));
@@ -882,8 +886,16 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
     }
     fclose(fp);
   }
-  // TODO
-  fprintf(stderr, "save_state (not yet complete)\n");
+  bx_list_c *sr_list = get_sr_root();
+  ndev = sr_list->get_size();
+  for (dev=0; dev<ndev; dev++) {
+    sprintf(sr_file, "%s/%s", checkpoint_path, sr_list->get(dev)->get_name());
+    fp = fopen(sr_file, "w");
+    if (fp != NULL) {
+      save_sr_param(fp, sr_list->get(dev), checkpoint_path);
+      fclose(fp);
+    }
+  }
   return 0;
 }
 
@@ -900,11 +912,11 @@ bx_bool bx_real_sim_c::restore_config()
 bx_bool bx_real_sim_c::restore_logopts()
 {
   char logopts[BX_PATHNAME_LEN];
-  FILE *fp;
   char line[512], string[512], prefix[8];
   char *ret, *ptr;
   int d, i, j, dev = 0, type = 0, action = 0;
   int ndev = SIM->get_n_log_modules();
+  FILE *fp;
 
   sprintf(logopts, "%s/logopts", get_param_string(BXPN_RESTORE_PATH)->getptr());
   BX_INFO(("restoring '%s'", logopts));
@@ -973,9 +985,154 @@ bx_bool bx_real_sim_c::restore_logopts()
 
 bx_bool bx_real_sim_c::restore_hardware()
 {
-  // TODO
-  fprintf(stderr, "restore_hardware (not implemented yet)\n");
+  char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
+  char line[512], buf[512];
+  char *ret, *ptr;
+  int i, j, p, dev, ndev;
+  unsigned int n;
+  bx_param_c *param = NULL;
+  FILE *fp, *fp2;
+
+  bx_list_c *sr_list = get_sr_root();
+  ndev = sr_list->get_size();
+  for (dev=0; dev<ndev; dev++) {
+    sprintf(devstate, "%s/%s", get_param_string(BXPN_RESTORE_PATH)->getptr(), sr_list->get(dev)->get_name());
+    BX_INFO(("restoring '%s'", devstate));
+    fp = fopen(devstate, "r");
+    if (fp != NULL) {
+      do {
+        ret = fgets(line, sizeof(line)-1, fp);
+        line[sizeof(line) - 1] = '\0';
+        int len = strlen(line);
+        if ((len>0) && (line[len-1] < ' '))
+          line[len-1] = '\0';
+        i = 0;
+        if ((ret != NULL) && strlen(line)) {
+          ptr = strtok(line, " ");
+          while (ptr) {
+            if (i == 0) {
+              param = get_param(ptr, NULL);
+            } else if (i == 2) {
+              switch (param->get_type()) {
+                case BXT_PARAM_NUM:
+                  if ((ptr[0] == '0') && (ptr[1] == 'x')) {
+                    ((bx_param_num_c*)param)->set(strtoul(ptr, NULL, 16));
+                  } else {
+                    ((bx_param_num_c*)param)->set(strtoul(ptr, NULL, 10));
+                  }
+                  break;
+                case BXT_PARAM_BOOL:
+                  ((bx_param_bool_c*)param)->set(!strcmp(ptr, "true"));
+                  break;
+                case BXT_PARAM_ENUM:
+                  ((bx_param_enum_c*)param)->set_by_name(ptr);
+                  break;
+                case BXT_PARAM_STRING:
+                  if (((bx_param_string_c*)param)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+                    p = 0;
+                    for (j = 0; j < ((bx_param_string_c*)param)->get_maxsize(); j++) {
+                      if (ptr[p] == ((bx_param_string_c*)param)->get_separator()) {
+                        p++;
+                      }
+                      if (sscanf(ptr+p, "%02x", &n) == 1) {
+                        buf[j] = n;
+                        p += 2;
+                      }
+                    }
+                    ((bx_param_string_c*)param)->set(buf);
+                  } else {
+                    ((bx_param_string_c*)param)->set(ptr);
+                  }
+                  break;
+                case BXT_PARAM_DATA:
+                  sprintf(devdata, "%s/%s", get_param_string(BXPN_RESTORE_PATH)->getptr(), ptr);
+                  fp2 = fopen(devdata, "rb");
+                  if (fp2 != NULL) {
+                    fread(((bx_shadow_data_c*)param)->getptr(), 1, ((bx_shadow_data_c*)param)->get_size(), fp2);
+                    fclose(fp2);
+                  }
+                  break;
+                default:
+                  BX_ERROR(("restore_hardware(): unknown parameter type"));
+              }
+            }
+            printf("%d: %s\n", i, ptr);
+            i++;
+            ptr = strtok(NULL, " ");
+          }
+        }
+      } while (!feof(fp));
+      fclose(fp);
+    }
+  }
   return 0;
+}
+
+void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path)
+{
+  int i;
+  char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
+  FILE *fp2;
+
+  if (node == NULL) {
+      BX_ERROR(("NULL pointer"));
+      return;
+  }
+  if (node->get_type() != BXT_LIST) {
+    node->get_param_path(tmpstr, BX_PATHNAME_LEN);
+    fprintf(fp, "%s = ", tmpstr);
+  }
+  switch (node->get_type()) {
+    case BXT_PARAM_NUM:
+      if (((bx_param_num_c*)node)->get_base() == 10) {
+        fprintf(fp, "%d\n", ((bx_param_num_c*)node)->get());
+      } else {
+        fprintf(fp, "0x%x\n", ((bx_param_num_c*)node)->get());
+      }
+      break;
+    case BXT_PARAM_BOOL:
+      fprintf(fp, "%s\n", ((bx_param_bool_c*)node)->get()?"true":"false");
+      break;
+    case BXT_PARAM_ENUM:
+      fprintf(fp, "%s\n", ((bx_param_enum_c*)node)->get_selected());
+      break;
+    case BXT_PARAM_STRING:
+      if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
+        tmpstr[0] = 0;
+        for (i = 0; i < ((bx_param_string_c*)node)->get_maxsize(); i++) {
+          if (i > 0) {
+            tmpbyte[0] = ((bx_param_string_c*)node)->get_separator();
+            tmpbyte[1] = 0;
+            strcat(tmpstr, tmpbyte);
+          }
+          sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
+          strcat(tmpstr, tmpbyte);
+        }
+        fprintf(fp, "%s\n", tmpstr);
+      } else {
+        fprintf(fp, "%s\n", ((bx_param_string_c*)node)->getptr());
+      }
+      break;
+    case BXT_PARAM_DATA:
+      fprintf(fp, "%s.%s", node->get_parent()->get_name(), node->get_name());
+      sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
+      fp2 = fopen(tmpstr, "wb");
+      if (fp != NULL) {
+        fwrite(((bx_shadow_data_c*)node)->getptr(), 1, ((bx_shadow_data_c*)node)->get_size(), fp2);
+        fclose(fp2);
+      }
+      break;
+    case BXT_LIST:
+      {
+        bx_list_c *list = (bx_list_c*)node;
+        for (i=0; i < list->get_size(); i++) {
+          save_sr_param(fp, list->get(i), sr_path);
+        }
+        break;
+      }
+    default:
+      BX_ERROR(("save_sr_param(): unknown parameter type"));
+  }
 }
 #endif 
 
@@ -1541,6 +1698,25 @@ void bx_param_string_c::set_initial_val(char *buf) {
     strncpy(initial_val, buf, maxsize);
   set(initial_val);
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
+    char *name,
+    char *description,
+    Bit8u *ptr_to_data,
+    Bit32u data_size)
+  : bx_param_c(SIM->gen_param_id(), name, description)
+{
+  set_type(BXT_PARAM_DATA);
+  this->data_ptr = ptr_to_data;
+  this->data_size = data_size;
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
+}
+#endif
 
 bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
   : bx_param_c(SIM->gen_param_id(), "list", "")
