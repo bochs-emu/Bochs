@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.135 2006-04-12 20:51:22 vruppert Exp $
+// $Id: wxmain.cc,v 1.136 2006-04-16 10:12:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -199,6 +199,15 @@ extern "C" int libwx_LTX_plugin_init(plugin_t *plugin, plugintype_t type,
   wxLogDebug(wxT("installing %s as the Bochs GUI"), wxT("wxWidgets"));
   SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->set_enabled(0);
   MyPanel::OnPluginInit();
+  bx_list_c *list = new bx_list_c(SIM->get_param("."),
+      "wxdebug",
+      "subtree for the wx debugger", 
+      30);
+  bx_list_c *cpu = new bx_list_c(list,
+      "cpu",
+      "CPU State", 
+      BX_MAX_SMP_THREADS_SUPPORTED);
+  cpu->get_options()->set(bx_list_c::USE_TAB_WINDOW);
   return 0; // success
 }
 
@@ -812,7 +821,7 @@ void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
 // When simulation is free running, #1 or #2 might make sense.  Try #2.
 void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 {
-  if (SIM->get_param(BXPN_CPU_0_STATE) == NULL) {
+  if (SIM->get_param(BXPN_WX_CPU0_STATE) == NULL) {
     // if params not initialized yet, then give up
     wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
                  wxT("Sim not started"), wxOK | wxICON_ERROR, this);
@@ -834,7 +843,7 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
 {
-  if (SIM->get_param(BXPN_KBD_STATE) == NULL) {
+  if (SIM->get_param(BXPN_WX_KBD_STATE) == NULL) {
     // if params not initialized yet, then give up
     wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
                  wxT("Sim not started"), wxOK | wxICON_ERROR, this );
@@ -843,7 +852,7 @@ void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
   if (showKbd == NULL) {
     showKbd = new ParamDialog(this, -1);
     showKbd->SetTitle(wxT("Keyboard State (incomplete, this is a demo)"));
-    showKbd->AddParam(SIM->get_param(BXPN_KBD_STATE));
+    showKbd->AddParam(SIM->get_param(BXPN_WX_KBD_STATE));
     showKbd->Init();
   } else {
     showKbd->CopyParamToGui();

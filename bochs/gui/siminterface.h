@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.186 2006-04-15 14:05:18 vruppert Exp $
+// $Id: siminterface.h,v 1.187 2006-04-16 10:12:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -228,10 +228,10 @@ typedef enum {
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
-#define BXPN_KBD_STATE                   "save_restore.keyboard"
-#define BXPN_CPU_STATE                   "save_restore.cpu"
-#define BXPN_CPU_0_STATE                 "save_restore.cpu.0"
-#define BXPN_CPU_0_EFLAGS_IOPL           "save_restore.cpu.0.IOPL"
+#define BXPN_WX_KBD_STATE                "wxdebug.keyboard"
+#define BXPN_WX_CPU_STATE                "wxdebug.cpu"
+#define BXPN_WX_CPU0_STATE               "wxdebug.cpu.0"
+#define BXPN_WX_CPU0_EFLAGS_IOPL         "wxdebug.cpu.0.IOPL"
 
 // base value for generated new parameter id
 #define BXP_NEW_PARAM_ID 1001

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.113 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: keyboard.cc,v 1.114 2006-04-16 10:12:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.113 2006-03-07 21:11:16 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.114 2006-04-16 10:12:32 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -199,7 +199,7 @@ void bx_keyb_c::init(void)
   if (first_time) {
     first_time = 0;
     // register shadow params (Experimental, not a complete list by far)
-    bx_list_c *list = new bx_list_c(SIM->get_param("save_restore"), "keyboard",
+    bx_list_c *list = new bx_list_c(SIM->get_param("wxdebug"), "keyboard",
                                     "Keyboard State", 20);
     new bx_shadow_bool_c(list, "irq1_req",
           "Keyboard IRQ1 requested",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.97 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: init.cc,v 1.98 2006-04-16 10:12:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,9 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 // implement get/set handler for parameters that need unusual set/get
 static Bit64s cpu_param_handler(bx_param_c *param, int set, Bit64s val)
 {
+#if BX_SUPPORT_SMP
   int cpu = atoi(param->get_parent()->get_name());
+#endif
   if (set) {
     if (!strcmp(param->get_name(), "LDTR")) {
       BX_CPU(cpu)->panic("setting LDTR not implemented");
@@ -286,7 +288,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     const char *oldfmt = bx_param_num_c::set_default_format(fmt32);
     sprintf(cpu_name, "%d", BX_CPU_ID);
     sprintf(cpu_title, "CPU %d", BX_CPU_ID);
-    bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_CPU_STATE), strdup(cpu_name),
+    bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE), strdup(cpu_name),
                                     cpu_title, 60);
 #define DEFPARAM_NORMAL(name,field) \
     new bx_shadow_num_c(list, #name, #name, &(field))

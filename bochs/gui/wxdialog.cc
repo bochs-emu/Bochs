@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.96 2006-03-26 15:52:31 vruppert Exp $
+// $Id: wxdialog.cc,v 1.97 2006-04-16 10:12:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -1545,7 +1545,7 @@ CpuRegistersDialog::CpuRegistersDialog(
   char *controlList[]  = CPU_REGS_CONTROL_REGS;
   char *debugList[]    = CPU_REGS_DEBUG_REGS;
   char *testList[]     = CPU_REGS_TEST_REGS;
-  bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_CPU_0_STATE);
+  bx_list_c *base      = (bx_list_c*)SIM->get_param(BXPN_WX_CPU0_STATE);
 
   // top level objects
   wxStaticBox *mainRegsBox = new wxStaticBox(this, -1, wxT("Basic Registers"));
@@ -1645,7 +1645,7 @@ CpuRegistersDialog::Init()
     AddParam(param, flagsSizer, true);
   }
   // special case: make IOPL text field small
-  ParamStruct *pstr = (ParamStruct*)paramHash->Get(SIM->get_param(BXPN_CPU_0_EFLAGS_IOPL)->get_id());
+  ParamStruct *pstr = (ParamStruct*)paramHash->Get(SIM->get_param(BXPN_WX_CPU0_EFLAGS_IOPL)->get_id());
   if (pstr != NULL) {
     wxSize size = pstr->u.text->GetSize();
     size.SetWidth (size.GetWidth() / 2);
