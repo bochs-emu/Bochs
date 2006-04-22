@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.187 2006-04-16 10:12:31 vruppert Exp $
+// $Id: siminterface.h,v 1.188 2006-04-22 18:14:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -654,6 +654,7 @@ protected:
   param_enable_handler enable_handler;
   int base;
   Bit32u options;
+  bx_bool is_shadow;
 public:
   enum {
     // When a bx_param_num_c is displayed in dialog, USE_SPIN_CONTROL controls
@@ -664,7 +665,8 @@ public:
       char *name,
       char *label,
       char *description,
-      Bit64s min, Bit64s max, Bit64s initial_val);
+      Bit64s min, Bit64s max, Bit64s initial_val,
+      bx_bool is_shadow = 0);
   virtual void reset();
   void set_handler(param_event_handler handler);
   void set_enable_handler(param_enable_handler handler);
@@ -704,48 +706,56 @@ public:
       char *name,
       char *label,
       Bit64s *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit64u *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit32s *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit32u *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit16s *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit16u *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit8s *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit8u *ptr_to_real_val,
+      int base = 10,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   virtual Bit64s get64();

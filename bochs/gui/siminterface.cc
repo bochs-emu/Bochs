@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.143 2006-04-16 10:12:31 vruppert Exp $
+// $Id: siminterface.cc,v 1.144 2006-04-22 18:14:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1086,9 +1086,18 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
       if (((bx_param_num_c*)node)->get_base() == 10) {
-        fprintf(fp, "%d\n", ((bx_param_num_c*)node)->get());
+        if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
+          if (((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
+            fprintf(fp, FMT_LL"u\n", ((bx_param_num_c*)node)->get());
+          } else {
+            fprintf(fp, "%u\n", ((bx_param_num_c*)node)->get());
+          }
+        } else {
+          fprintf(fp, "%d\n", ((bx_param_num_c*)node)->get());
+        }
       } else {
-        fprintf(fp, "0x%x\n", ((bx_param_num_c*)node)->get());
+        fprintf(fp, node->get_format(), ((bx_param_num_c*)node)->get());
+        fprintf(fp, "\n");
       }
       break;
     case BXT_PARAM_BOOL:
@@ -1115,7 +1124,7 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
       }
       break;
     case BXT_PARAM_DATA:
-      fprintf(fp, "%s.%s", node->get_parent()->get_name(), node->get_name());
+      fprintf(fp, "%s.%s\n", node->get_parent()->get_name(), node->get_name());
       sprintf(tmpstr, "%s/%s.%s", sr_path, node->get_parent()->get_name(), node->get_name());
       fp2 = fopen(tmpstr, "wb");
       if (fp != NULL) {
@@ -1197,7 +1206,8 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     char *name,
     char *label,
     char *description,
-    Bit64s min, Bit64s max, Bit64s initial_val)
+    Bit64s min, Bit64s max, Bit64s initial_val,
+    bx_bool is_shadow)
   : bx_param_c(SIM->gen_param_id(), name, description)
 {
   set_type(BXT_PARAM_NUM);
@@ -1209,10 +1219,13 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   this->handler = NULL;
   this->enable_handler = NULL;
   this->base = default_base;
+  this->is_shadow = is_shadow;
   // dependent_list must be initialized before the set(),
   // because set calls update_dependents().
   dependent_list = NULL;
-  set(initial_val);
+  if (!is_shadow) {
+    set(initial_val);
+  }
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
     this->parent = (bx_list_c *)parent;
@@ -1313,14 +1326,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *description,
     Bit64s *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, description, NULL, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, description, NULL, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val, 1)
 {
-  this->varsize = 16;
+  this->varsize = 64;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p64bit = ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%x";
+  }
 }
 
 // Unsigned 64 bit
@@ -1328,14 +1346,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit64u *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val, 1)
 {
-  this->varsize = 16;
+  this->varsize = 64;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p64bit = (Bit64s*) ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%x";
+  }
 }
 
 // Signed 32 bit
@@ -1343,14 +1366,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit32s *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p32bit = ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%08x";
+  }
 }
 
 // Unsigned 32 bit
@@ -1358,14 +1386,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit32u *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val, 1)
 {
   this->varsize = 32;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p32bit = (Bit32s*) ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%08x";
+  }
 }
 
 // Signed 16 bit
@@ -1373,14 +1406,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit16s *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p16bit = ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%04x";
+  }
 }
 
 // Unsigned 16 bit
@@ -1388,14 +1426,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit16u *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p16bit = (Bit16s*) ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%04x";
+  }
 }
 
 // Signed 8 bit
@@ -1403,14 +1446,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit8s *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p8bit = ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%02x";
+  }
 }
 
 // Unsigned 8 bit
@@ -1418,14 +1466,19 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
     char *label,
     Bit8u *ptr_to_real_val,
+    int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val)
+: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val, 1)
 {
   this->varsize = 8;
   this->lowbit = lowbit;
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p8bit = (Bit8s*) ptr_to_real_val;
+  if (base == 16) {
+    this->base = base;
+    this->text_format = "0x%02x";
+  }
 }
 
 Bit64s bx_shadow_num_c::get64() {
@@ -1450,7 +1503,7 @@ Bit64s bx_shadow_num_c::get64() {
 void bx_shadow_num_c::set(Bit64s newval)
 {
   Bit64u tmp = 0;
-  if ((newval < min || newval > max) && (Bit64u)max != BX_MAX_BIT64U)
+  if (((newval < min) || (newval > max)) && (min != BX_MIN_BIT64S) && ((Bit64u)max != BX_MAX_BIT64U))
     BX_PANIC (("numerical parameter %s was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), newval, min, max));
   switch (varsize) {
     case 8: 
