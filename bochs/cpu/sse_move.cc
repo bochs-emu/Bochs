@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.49 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: sse_move.cc,v 1.50 2006-04-23 16:01:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -127,31 +127,53 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 
   /* x87 FPU Opcode (16 bits) */
   /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-  xmm.xmm16u(3) = 0;  /* still not implemented */
+  xmm.xmm16u(3) = BX_CPU_THIS_PTR the_i387.foo;
 
   /* 
-   * x87 FPU IP Offset (32 bits)
+   * x87 FPU IP Offset (32/64 bits)
    * The contents of this field differ depending on the current 
-   * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
-   *   + 32-bit mode-32-bit IP offset
-   *   + 16-bit mode-low 16 bits are IP offset; high 16 bits are reserved.
-   *
-   * x87 CS FPU IP Selector (16 bits)
+   * addressing mode (16/32/64 bit) when the FXSAVE instruction was executed:
+   *   + 64-bit mode - 64-bit IP offset
+   *   + 32-bit mode - 32-bit IP offset
+   *   + 16-bit mode - low 16 bits are IP offset; high 16 bits are reserved.
+   * x87 CS FPU IP Selector
+   *   + 16 bit, in 16/32 bit mode only
    */
-  xmm.xmm64u(1) = 0;  /* still not implemented */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) /* 64 bit operand size mode */
+  {
+    xmm.xmm64u(1) = BX_CPU_THIS_PTR the_i387.fip;
+  }
+  else
+#endif
+  {
+    xmm.xmm32u(2) = (BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+    xmm.xmm32u(3) = (BX_CPU_THIS_PTR the_i387.fcs);
+  }
  
   writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
 
   /* 
-   * x87 FPU Instruction Operand (Data) Pointer Offset (32 bits)
+   * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
    * The contents of this field differ depending on the current 
    * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
-   *   + 32-bit mode-32-bit offset
-   *   + 16-bit mode-low 16 bits are offset; high 16 bits are reserved.
-   *
-   * x87 DS FPU Instruction Operand (Data) Pointer Selector (16 bits)
+   *   + 64-bit mode - 64-bit offset
+   *   + 32-bit mode - 32-bit offset
+   *   + 16-bit mode - low 16 bits are offset; high 16 bits are reserved.
+   * x87 DS FPU Instruction Operand (Data) Pointer Selector 
+   *   + 16 bit, in 16/32 bit mode only
    */
-  xmm.xmm64u(0) = 0;  /* still not implemented */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) /* 64 bit operand size mode */
+  {
+    xmm.xmm64u(0) = BX_CPU_THIS_PTR the_i387.fdp;
+  }
+  else
+#endif
+  {
+    xmm.xmm32u(0) = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
+    xmm.xmm32u(1) = (BX_CPU_THIS_PTR the_i387.fds);
+  }
 
 #if BX_SUPPORT_SSE >= 1
   xmm.xmm32u(2) = BX_MXCSR_REGISTER;
@@ -214,19 +236,45 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR the_i387.swd = xmm.xmm16u(1);
   BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
-  /* FOO/FPU IP restore still not implemented */
+  /* Restore x87 FPU Opcode */
+  /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
+  BX_CPU_THIS_PTR the_i387.foo = xmm.xmm16u(3) & 0x7FF;
+
+  /* Restore x87 FPU IP */
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) /* 64 bit operand size mode */
+  {
+    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm64u(1);
+  }
+  else
+#endif
+  {
+    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
+    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);;
+  }
 
   Bit32u twd = 0, tag_byte = xmm.xmm16u(2);
 
-  /* FPU DP restore still not implemented */
+  /* Restore x87 FPU DP */
+  readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L()) /* 64 bit operand size mode */
+  {
+    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm64u(0);
+  }
+  else
+#endif
+  {
+    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm32u(0);
+    BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
+  }
 
 #if BX_SUPPORT_SSE >= 1
   /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
      not restore the states of the XMM and MXCSR registers. */
   if(BX_CPU_THIS_PTR cr4.get_OSFXSR())
   {
-    readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
-
     Bit32u new_mxcsr = xmm.xmm32u(2);
     if(new_mxcsr & ~MXCSR_MASK)
        exception(BX_GP_EXCEPTION, 0, 0);
@@ -238,8 +286,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   /* load i387 register file */
   for(index=0; index < 8; index++)
   {
-    read_virtual_tword(i->seg(), 
-           RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
+    read_virtual_tword(i->seg(), RMAddr(i)+index*16+32, &(BX_FPU_REG(index)));
   }
 
   /*                                 FTW
@@ -303,7 +350,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
     {
-      readVirtualDQwordAligned(i->seg(), 
+      readVirtualDQwordAligned(i->seg(),
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
     }
   }
