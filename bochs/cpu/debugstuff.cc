@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.65 2006-04-07 20:53:39 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.66 2006-04-23 17:16:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -292,7 +292,7 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
       current_sys_bits = ((BX_CPU_THIS_PTR getB_NT()) << 14) |
                          (BX_CPU_THIS_PTR get_IOPL () << 12) |
                          ((BX_CPU_THIS_PTR getB_TF()) << 8);
-      if ( current_sys_bits != (val & 0x0000f100) ) {
+      if (current_sys_bits != (val & 0x0000f100)) {
         BX_INFO(("dbg_set_reg: can not modify NT, IOPL, or TF."));
         return(0);
       }
@@ -372,123 +372,13 @@ unsigned BX_CPU_C::dbg_query_pending(void)
   return(ret);
 }
 
-Bit32u BX_CPU_C::dbg_get_descriptor_l(bx_descriptor_t *d)
-{
-  Bit32u val;
-
-  if (d->valid == 0) {
-    return(0);
-  }
-
-  if (d->segment) {
-    val = ((d->u.segment.base & 0xffff) << 16) |
-          (d->u.segment.limit & 0xffff);
-    return(val);
-  }
-  else {
-    switch (d->type) {
-      case 0: // Reserved (not defined)
-        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
-        return(0);
-
-      case BX_SYS_SEGMENT_AVAIL_286_TSS:
-      case BX_SYS_SEGMENT_BUSY_286_TSS:
-        val = ((d->u.tss286.base & 0xffff) << 16) |
-               (d->u.tss286.limit & 0xffff);
-        return(val);
-
-      case BX_SYS_SEGMENT_LDT:
-        val = ((d->u.ldt.base & 0xffff) << 16) | d->u.ldt.limit;
-        return(val);
-
-      case BX_SYS_SEGMENT_AVAIL_386_TSS:
-      case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.tss386.base & 0xffff) << 16) |
-               (d->u.tss386.limit & 0xffff);
-        return(val);
-
-      default:
-        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
-        return(0);
-    }
-  }
-}
-
-Bit32u BX_CPU_C::dbg_get_descriptor_h(bx_descriptor_t *d)
-{
-  Bit32u val;
-
-  if (d->valid == 0) {
-    return(0);
-  }
-
-  if (d->segment) {
-    val = (d->u.segment.base & 0xff000000) |
-          ((d->u.segment.base >> 16) & 0x000000ff) |
-          (d->u.segment.executable << 11) |
-          (d->u.segment.c_ed << 10) |
-          (d->u.segment.r_w << 9) |
-          (d->u.segment.a << 8) |
-          (d->segment << 12) |
-          (d->dpl << 13) |
-          (d->p << 15) |
-          (d->u.segment.limit & 0xf0000) |
-          (d->u.segment.avl << 20) |
-#if BX_SUPPORT_X86_64
-          (d->u.segment.l << 21) |
-#endif
-          (d->u.segment.d_b << 22) |
-          (d->u.segment.g << 23);
-    return(val);
-  }
-  else {
-    switch (d->type) {
-      case 0: // Reserved (not yet defined)
-        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
-        return(0);
-
-      case BX_SYS_SEGMENT_AVAIL_286_TSS:
-      case BX_SYS_SEGMENT_BUSY_286_TSS:
-        val = ((d->u.tss286.base >> 16) & 0xff) |
-              (d->type << 8) |
-              (d->dpl << 13) |
-              (d->p << 15);
-        return(val);
-
-      case BX_SYS_SEGMENT_LDT:
-        val = ((d->u.ldt.base >> 16) & 0xff) |
-              (d->type << 8) |
-              (d->dpl << 13) |
-              (d->p << 15) |
-              (d->u.ldt.base & 0xff000000);
-        return(val);
-
-      case BX_SYS_SEGMENT_AVAIL_386_TSS:
-      case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.tss386.base >> 16) & 0xff) |
-              (d->type << 8) |
-              (d->dpl << 13) |
-              (d->p << 15) |
-              (d->u.tss386.limit & 0xf0000) |
-              (d->u.tss386.avl << 20) |
-              (d->u.tss386.g << 23) |
-              (d->u.tss386.base & 0xff000000);
-        return(val);
-
-      default:
-        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
-        return(0);
-    }
-  }
-}
-
 bx_bool BX_CPU_C::dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no)
 {
   if (sreg_no > 5)
     return(0);
   sreg->sel   = BX_CPU_THIS_PTR sregs[sreg_no].selector.value;
-  sreg->des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
-  sreg->des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
+  sreg->des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
+  sreg->des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[sreg_no].cache);
   sreg->valid = BX_CPU_THIS_PTR sregs[sreg_no].cache.valid;
   return(1);
 }
@@ -508,43 +398,43 @@ bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
   cpu->eflags = BX_CPU_THIS_PTR read_eflags();
 
   cpu->cs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  cpu->cs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
-  cpu->cs.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
+  cpu->cs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
+  cpu->cs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
   cpu->cs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid;
 
   cpu->ss.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  cpu->ss.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
-  cpu->ss.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+  cpu->ss.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
+  cpu->ss.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
   cpu->ss.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid;
 
   cpu->ds.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-  cpu->ds.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
-  cpu->ds.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
+  cpu->ds.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
+  cpu->ds.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
   cpu->ds.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid;
 
   cpu->es.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-  cpu->es.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
-  cpu->es.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
+  cpu->es.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
+  cpu->es.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
   cpu->es.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid;
 
   cpu->fs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-  cpu->fs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
-  cpu->fs.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
+  cpu->fs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
+  cpu->fs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
   cpu->fs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid;
 
   cpu->gs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-  cpu->gs.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
-  cpu->gs.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
+  cpu->gs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
+  cpu->gs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
   cpu->gs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid;
 
   cpu->ldtr.sel   = BX_CPU_THIS_PTR ldtr.selector.value;
-  cpu->ldtr.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR ldtr.cache);
-  cpu->ldtr.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache);
+  cpu->ldtr.des_l = get_descriptor_l(&BX_CPU_THIS_PTR ldtr.cache);
+  cpu->ldtr.des_h = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache);
   cpu->ldtr.valid = BX_CPU_THIS_PTR ldtr.cache.valid;
 
   cpu->tr.sel   = BX_CPU_THIS_PTR tr.selector.value;
-  cpu->tr.des_l = dbg_get_descriptor_l(&BX_CPU_THIS_PTR tr.cache);
-  cpu->tr.des_h = dbg_get_descriptor_h(&BX_CPU_THIS_PTR tr.cache);
+  cpu->tr.des_l = get_descriptor_l(&BX_CPU_THIS_PTR tr.cache);
+  cpu->tr.des_h = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache);
   cpu->tr.valid = BX_CPU_THIS_PTR tr.cache.valid;
 
   cpu->gdtr.base  = BX_CPU_THIS_PTR gdtr.base;

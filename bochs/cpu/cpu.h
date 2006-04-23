@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.279 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: cpu.h,v 1.280 2006-04-23 17:16:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2655,8 +2655,6 @@ public: // for now...
   BX_SMF Bit32u   dbg_get_reg(unsigned reg);
   BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
   BX_SMF unsigned dbg_query_pending(void);
-  BX_SMF Bit32u   dbg_get_descriptor_l(bx_descriptor_t *);
-  BX_SMF Bit32u   dbg_get_descriptor_h(bx_descriptor_t *);
   BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
   BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
 #endif
@@ -2841,7 +2839,9 @@ public: // for now...
   BX_SMF bx_bool allow_io(Bit16u addr, unsigned len);
   BX_SMF void    parse_selector(Bit16u raw_selector, bx_selector_t *selector) BX_CPP_AttrRegparmN(2);
   BX_SMF void    parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp) BX_CPP_AttrRegparmN(3);
-  BX_SMF Bit16u  get_segment_ar_data(bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
+  BX_SMF Bit32u  get_descriptor_l(const bx_descriptor_t *);
+  BX_SMF Bit32u  get_descriptor_h(const bx_descriptor_t *);
+  BX_SMF Bit16u  get_segment_ar_data(const bx_descriptor_t *d) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, Bit16u raw_selector,
                          bx_address base, Bit32u limit, Bit16u ar_data);
   BX_SMF void    load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.58 2006-04-05 17:31:32 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.59 2006-04-23 17:16:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -315,9 +315,119 @@ BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 }
 #endif
 
+Bit32u BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
+{
+  Bit32u val;
+
+  if (d->valid == 0) {
+    return(0);
+  }
+
+  if (d->segment) {
+    val = ((d->u.segment.base & 0xffff) << 16) |
+          (d->u.segment.limit & 0xffff);
+    return(val);
+  }
+  else {
+    switch (d->type) {
+      case 0: // Reserved (not defined)
+        BX_ERROR(("#get_descriptor_l(): type %d not finished", d->type));
+        return(0);
+
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+        val = ((d->u.tss286.base & 0xffff) << 16) |
+               (d->u.tss286.limit & 0xffff);
+        return(val);
+
+      case BX_SYS_SEGMENT_LDT:
+        val = ((d->u.ldt.base & 0xffff) << 16) | d->u.ldt.limit;
+        return(val);
+
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        val = ((d->u.tss386.base & 0xffff) << 16) |
+               (d->u.tss386.limit & 0xffff);
+        return(val);
+
+      default:
+        BX_PANIC(("#get_descriptor_l(): type %d not finished", d->type));
+        return(0);
+    }
+  }
+}
+
+Bit32u BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
+{
+  Bit32u val;
+
+  if (d->valid == 0) {
+    return(0);
+  }
+
+  if (d->segment) {
+    val = (d->u.segment.base & 0xff000000) |
+          ((d->u.segment.base >> 16) & 0x000000ff) |
+          (d->u.segment.executable << 11) |
+          (d->u.segment.c_ed << 10) |
+          (d->u.segment.r_w << 9) |
+          (d->u.segment.a << 8) |
+          (d->segment << 12) |
+          (d->dpl << 13) |
+          (d->p << 15) |
+          (d->u.segment.limit & 0xf0000) |
+          (d->u.segment.avl << 20) |
+#if BX_SUPPORT_X86_64
+          (d->u.segment.l << 21) |
+#endif
+          (d->u.segment.d_b << 22) |
+          (d->u.segment.g << 23);
+    return(val);
+  }
+  else {
+    switch (d->type) {
+      case 0: // Reserved (not yet defined)
+        BX_ERROR(("#get_descriptor_h(): type %d not finished", d->type));
+        return(0);
+
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+        val = ((d->u.tss286.base >> 16) & 0xff) |
+              (d->type << 8) |
+              (d->dpl << 13) |
+              (d->p << 15);
+        return(val);
+
+      case BX_SYS_SEGMENT_LDT:
+        val = ((d->u.ldt.base >> 16) & 0xff) |
+              (d->type << 8) |
+              (d->dpl << 13) |
+              (d->p << 15) |
+              (d->u.ldt.base & 0xff000000);
+        return(val);
+
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        val = ((d->u.tss386.base >> 16) & 0xff) |
+              (d->type << 8) |
+              (d->dpl << 13) |
+              (d->p << 15) |
+              (d->u.tss386.limit & 0xf0000) |
+              (d->u.tss386.avl << 20) |
+              (d->u.tss386.g << 23) |
+              (d->u.tss386.base & 0xff000000);
+        return(val);
+
+      default:
+        BX_PANIC(("#get_descriptor_h(): type %d not finished", d->type));
+        return(0);
+    }
+  }
+}
+
 #if BX_CPU_LEVEL >= 3
   Bit16u BX_CPP_AttrRegparmN(1)
-BX_CPU_C::get_segment_ar_data(bx_descriptor_t *d)  // used for SMM
+BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
 {
   Bit16u val = 0;
 
