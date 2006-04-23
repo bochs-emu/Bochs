@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.50 2006-04-23 16:01:34 sshwarts Exp $
+// $Id: sse_move.cc,v 1.51 2006-04-23 16:03:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -250,7 +250,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #endif
   {
     BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
-    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);;
+    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(5);
   }
 
   Bit32u twd = 0, tag_byte = xmm.xmm16u(2);
