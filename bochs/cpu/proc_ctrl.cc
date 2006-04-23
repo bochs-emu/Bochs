@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.146 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.147 2006-04-23 16:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1448,8 +1448,8 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 #endif
 
 #if BX_SUPPORT_X86_64
-  // need to GPF #0 if LME=1 and PAE=0
-  if ((BX_CPU_THIS_PTR msr.lme)
+  // need to GP(0) if LMA=1 and PAE=1->0
+  if ((BX_CPU_THIS_PTR msr.lma)
       && (!(val_32 >> 5) & 1)
       && (BX_CPU_THIS_PTR cr4.get_PAE())) 
   {
