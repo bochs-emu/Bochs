@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.144 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: cpu.cc,v 1.145 2006-04-23 15:37:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -231,7 +231,11 @@ void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
 #if BX_DISASM
   if (BX_CPU_THIS_PTR trace) {
     // print the instruction that is about to be executed
+#if BX_DEBUGGER
+    bx_dbg_disassemble_current(BX_CPU_ID, 1);  // only one cpu, print time stamp
+#else
     debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
+#endif
   }
 #endif
 
