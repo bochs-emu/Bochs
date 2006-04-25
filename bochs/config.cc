@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.103 2006-04-14 08:07:24 vruppert Exp $
+// $Id: config.cc,v 1.104 2006-04-25 15:59:20 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2820,16 +2820,16 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         }
       }
       else if (!strncmp(params[i], "port=", 5)) {
-        SIM->get_param_num("port", base) = atoi(&params[i][5]);
+        SIM->get_param_num("port", base)->set(atoi(&params[i][5]));
       }
       else if (!strncmp(params[i], "text_base=", 10)) {
-        SIM->get_param_num("text_base", base) = atoi(&params[i][10]);
+        SIM->get_param_num("text_base", base)->set(atoi(&params[i][10]));
       }
       else if (!strncmp(params[i], "data_base=", 10)) {
-        SIM->get_param_num("data_base", base) = atoi(&params[i][10]);
+        SIM->get_param_num("data_base", base)->set(atoi(&params[i][10]));
       }
       else if (!strncmp(params[i], "bss_base=", 9)) {
-        SIM->get_param_num("bss_base", base) = atoi(&params[i][9]);
+        SIM->get_param_num("bss_base", base)->set(atoi(&params[i][9]));
       }
       else {
         PARSE_ERR(("%s: gdbstub directive malformed.", context));
