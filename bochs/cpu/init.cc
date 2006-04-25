@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.99 2006-04-22 18:14:54 vruppert Exp $
+// $Id: init.cc,v 1.100 2006-04-25 14:42:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -819,6 +819,50 @@ void BX_CPU_C::sanity_checks(void)
     BX_PANIC(("data type Bit64u or Bit64u is not of length 8 bytes!"));
 
   BX_DEBUG(("#(%u)all sanity checks passed!", BX_CPU_ID));
+}
+
+void BX_CPU_C::assert_checks(void)
+{
+  // check CPU mode consistency
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.lma) {
+    if (! BX_CPU_THIS_PTR cr0.pe) {
+      BX_PANIC(("assert_checks: EFER.LMA is set when CR0.PE=0 !"));
+    }
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+      if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64)
+        BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_LONG_64 !"));
+    }
+    else {
+      if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_COMPAT)
+        BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_LONG_COMPAT !"));
+    }
+  }
+  else 
+#endif
+  {
+    if (BX_CPU_THIS_PTR cr0.pe) {
+      if (BX_CPU_THIS_PTR get_VM()) {
+        if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_IA32_V8086)
+          BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_IA32_V8086 !"));
+      }
+      else {
+        if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_IA32_PROTECTED)
+          BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_IA32_PROTECTED !"));
+      }
+    }
+    else {
+      if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_IA32_REAL)
+        BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_IA32_REAL !"));
+    }
+  }
+
+  // VM should be OFF in long mode
+#if BX_SUPPORT_X86_64
+  if (IsLongMode()) {
+    if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("assert_checks: VM is set in long mode !"));
+  }
+#endif
 }
 
 void BX_CPU_C::set_INTR(bx_bool value)
