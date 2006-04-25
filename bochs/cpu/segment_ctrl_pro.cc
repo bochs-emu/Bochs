@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.59 2006-04-23 17:16:27 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.60 2006-04-25 15:35:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -308,14 +308,38 @@ void BX_CPU_C::validate_seg_regs(void)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::parse_selector(Bit16u raw_selector, bx_selector_t *selector)
 {
-  selector->value  = raw_selector;
-  selector->index  = raw_selector >> 3;
-  selector->ti     = (raw_selector >> 2) & 0x01;
-  selector->rpl    = raw_selector & 0x03;
+  selector->value = raw_selector;
+  selector->index = raw_selector >> 3;
+  selector->ti    = (raw_selector >> 2) & 0x01;
+  selector->rpl   = raw_selector & 0x03;
 }
 #endif
 
-Bit32u BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
+  Bit8u  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::ar_byte(const bx_descriptor_t *d)
+{
+  if (d->valid == 0) {
+    return(0);
+  }
+
+  if (d->segment) {
+    return (d->u.segment.a) |
+           (d->u.segment.r_w << 1) |
+           (d->u.segment.c_ed << 2) |
+           (d->u.segment.executable << 3) |
+           (d->segment << 4) |
+           (d->dpl << 5) |
+           (d->p << 7);
+  }
+  else {
+    return (d->type) |
+           (d->dpl << 5) |
+           (d->p << 7);
+  }
+}
+
+  Bit32u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
 {
   Bit32u val;
 
@@ -357,7 +381,8 @@ Bit32u BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
   }
 }
 
-Bit32u BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
+  Bit32u BX_CPP_AttrRegparmN(1)
+BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
 {
   Bit32u val;
 
