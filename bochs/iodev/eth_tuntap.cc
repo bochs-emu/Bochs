@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.23 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.24 2006-04-25 22:52:38 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -361,8 +361,17 @@ void bx_tuntap_pktmover_c::rx_timer ()
 int tun_alloc(char *dev)
 {
   struct ifreq ifr;
+  char *ifname;
   int fd, err;
 
+  // split name into device:ifname if applicable, to allow for opening
+  // persistent tuntap devices
+  for (ifname = dev; *ifname; ifname++) {
+	  if (*ifname == ':') {
+		  *(ifname++) = '\0';
+		  break;
+	  }
+  }
   if ((fd = open(dev, O_RDWR)) < 0)
     return -1;
 #ifdef __linux__
@@ -374,7 +383,7 @@ int tun_alloc(char *dev)
    *        IFF_NO_PI - Do not provide packet information  
    */ 
   ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
-  ifr.ifr_name[0]=0;
+  strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
   if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
     close(fd);
     return err;
