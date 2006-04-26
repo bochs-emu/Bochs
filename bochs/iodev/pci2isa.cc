@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.30 2006-04-23 08:45:13 vruppert Exp $
+// $Id: pci2isa.cc,v 1.31 2006-04-26 16:15:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,6 @@ void bx_pci2isa_c::reset(unsigned type)
   BX_P2I_THIS s.pci_conf[0x79] = 0x00;
   BX_P2I_THIS s.pci_conf[0x80] = 0x00;
   BX_P2I_THIS s.pci_conf[0x82] = 0x00;
-  BX_P2I_THIS s.pci_conf[0xa0] = 0x08;
   BX_P2I_THIS s.pci_conf[0xa0] = 0x08;
   BX_P2I_THIS s.pci_conf[0xa2] = 0x00;
   BX_P2I_THIS s.pci_conf[0xa3] = 0x00;
@@ -338,9 +337,9 @@ void bx_pci2isa_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
           BX_P2I_THIS s.pci_conf[address+i] = value8;
           BX_DEBUG(("PIIX3 PCI-to-ISA write register 0x%02x value 0x%02x", address+i,
                     value8));
-        }
       }
     }
+  }
 }
 
 #endif /* BX_SUPPORT_PCI */
