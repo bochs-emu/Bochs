@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.18 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.19 2006-04-26 00:04:49 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -22,6 +22,7 @@
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE 
 // is used to know when we are exporting symbols and when we are importing.
+
 #define BX_PLUGGABLE
 
 #include "iodev.h"
@@ -59,11 +60,11 @@ bx_pcipnic_c::~bx_pcipnic_c()
 
 void bx_pcipnic_c::init(void)
 {
-  // called once when bochs initializes
+  bx_list_c *base;
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_PNIC);
-  memcpy(BX_PNIC_THIS s.physaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
+  memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_string("macaddr", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,
@@ -423,6 +424,9 @@ void bx_pcipnic_c::exec_command(void)
 
   case PNIC_CMD_XMIT :
     BX_PNIC_THIS ethdev->sendpkt ( data, ilength );
+    if ( BX_PNIC_THIS s.irqEnabled ) {
+      set_irq_level(1);
+    }
     status = PNIC_STATUS_OK;
     break;
 

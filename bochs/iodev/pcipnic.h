@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.h,v 1.5 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pcipnic.h,v 1.6 2006-04-26 00:04:49 mcb30 Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -60,7 +60,7 @@ typedef struct {
 } bx_pnic_t;
 
 
-class bx_pcipnic_c : public bx_pci_device_stub_c {
+class bx_pcipnic_c : public bx_ne2k_stub_c, bx_pci_device_stub_c {
 public:
   bx_pcipnic_c();
   virtual ~bx_pcipnic_c();
