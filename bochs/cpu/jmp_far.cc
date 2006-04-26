@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.5 2006-03-22 20:47:11 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.6 2006-04-26 14:05:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
   parse_selector(cs_raw, &selector);
 
-  /* destination selector index is whithin its descriptor table
+  /* destination selector index is within its descriptor table
      limits else #GP(selector) */
   fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
