@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.114 2006-04-16 10:12:32 vruppert Exp $
+// $Id: keyboard.cc,v 1.115 2006-04-27 11:58:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.114 2006-04-16 10:12:32 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.115 2006-04-27 11:58:07 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -648,13 +648,14 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 (unsigned) value));
             return;
           }
-          BX_PANIC(("unsupported io write to keyboard port %x, value = %x",
+          BX_ERROR(("unsupported io write to keyboard port %x, value = %x",
             (unsigned) address, (unsigned) value));
           break;
-        }
+      }
       break;
 
-    default: BX_PANIC(("unknown address in bx_keyb_c::write()"));
+    default:
+      BX_PANIC(("unknown address in bx_keyb_c::write()"));
   }
 }
 

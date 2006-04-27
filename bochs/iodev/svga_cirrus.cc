@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.30 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.31 2006-04-27 11:58:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -237,16 +237,12 @@ bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
 {
   put("CLVGA");
   vidmem = NULL;
-  tilemem = NULL;
 }
 
 bx_svga_cirrus_c::~bx_svga_cirrus_c()
 {
   if (vidmem != NULL) {
     delete [] vidmem;
-  }
-  if (tilemem != NULL) {
-    delete [] tilemem;
   }
 }
 
@@ -327,8 +323,6 @@ void bx_svga_cirrus_c::svga_init_members()
   // memory allocation.
   if (BX_CIRRUS_THIS vidmem == NULL)
     BX_CIRRUS_THIS vidmem = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
-  if (BX_CIRRUS_THIS tilemem == NULL)
-    BX_CIRRUS_THIS tilemem = new Bit8u[X_TILESIZE * Y_TILESIZE * 4];
 
   // set some registers.
 

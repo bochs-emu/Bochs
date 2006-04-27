@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.7 2006-03-07 21:11:20 sshwarts Exp $
+// $Id: svga_cirrus.h,v 1.8 2006-04-27 11:58:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -202,7 +202,6 @@ private:
   unsigned svga_dispbpp;
 
   Bit8u *vidmem;
-  Bit8u *tilemem;
   Bit32u bank_base[2];
   Bit32u bank_limit[2];
   Bit32u memsize;
