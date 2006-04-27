@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.51 2006-04-23 16:03:46 sshwarts Exp $
+// $Id: sse_move.cc,v 1.52 2006-04-27 06:09:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -960,7 +960,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
       write_virtual_dword(i->seg(), RMAddr(i), &op2);
     }
   }
-
+#else
   BX_INFO(("MOVD_EdVd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
