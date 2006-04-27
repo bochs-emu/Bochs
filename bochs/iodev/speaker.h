@@ -1,3 +1,7 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: speaker.h,v 1.4 2006-04-27 15:11:45 sshwarts Exp $
+/////////////////////////////////////////////////////////////////////////
+
 /*
 Copyright David N. Welton <davidw@dedasys.com> 2003
 
@@ -10,6 +14,8 @@ This code may be distributed under the same terms as bochs.
  * so we have the possiblity to signal the beep
  */
 
+#ifndef BX_PC_SPEAKER_H
+#define BX_PC_SPEAKER_H
 
 class bx_speaker_c : public bx_speaker_stub_c {
 public:
@@ -31,3 +37,5 @@ private:
     Bit64u usec_start;
 #endif
 };
+
+#endif
