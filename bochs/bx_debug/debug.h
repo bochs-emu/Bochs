@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.23 2006-04-29 07:12:13 sshwarts Exp $
+// $Id: debug.h,v 1.24 2006-04-29 09:27:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -325,8 +325,7 @@ typedef enum {
       STOP_WRITE_WATCH_POINT,
       STOP_MAGIC_BREAK_POINT,
       STOP_MODE_BREAK_POINT,
-      STOP_CPU_HALTED,
-      STOP_CPU_PANIC
+      STOP_CPU_HALTED
 } stop_reason_t;
 
 typedef enum {
@@ -365,8 +364,7 @@ void bx_dbg_exit(int code);
                                 BX_DBG_GUARD_IADDR_LIN | \
                                 BX_DBG_GUARD_IADDR_PHY)
 
-#define BX_DBG_GUARD_ICOUNT        0x0100
-#define BX_DBG_GUARD_CTRL_C        0x0200
+#define BX_DBG_GUARD_CTRL_C        0x0100
 
 typedef struct {
   unsigned long guard_for;
@@ -401,8 +399,6 @@ typedef struct {
     } phy[BX_DBG_MAX_PHY_BPOINTS];
 #endif
   } iaddr;
-
-  Bit32u icount; // stop after completing this many instructions
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
   volatile bx_bool interrupt_requested;

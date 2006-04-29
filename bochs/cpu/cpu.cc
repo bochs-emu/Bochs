@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.147 2006-04-29 07:12:13 sshwarts Exp $
+// $Id: cpu.cc,v 1.148 2006-04-29 09:27:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,18 +466,14 @@ debugger_check:
   }
 #endif
 
+  BX_CPU_THIS_PTR guard_found.icount++;
+
+  // convenient point to see if user typed Ctrl-C
+  if (bx_guard.interrupt_requested &&
+     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
   {
-    // check for icount or control-C.  If found, set guard reg and return.
-    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
-    if (dbg_is_end_instr_bpoint(
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-         debug_eip,
-         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-         Is64BitMode()))
-    {
-      return;
-    }
+    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+    return;
   }
 #endif  // #if BX_DEBUGGER
 
@@ -490,7 +486,7 @@ debugger_check:
   }
 #endif
 
-#if (BX_SUPPORT_SMP && BX_DEBUGGER==0)
+#if BX_SUPPORT_SMP || BX_DEBUGGER
   // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
   // instructions and then return so that the other processors have a chance
   // to run.  This is used only when simulating multiple processors.  If only
@@ -937,9 +933,9 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
           (tt != BX_CPU_THIS_PTR guard_found.time_tick))
       {
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
-          if ( bx_guard.iaddr.vir[i].enabled &&
-               (bx_guard.iaddr.vir[i].cs  == cs) &&
-               (bx_guard.iaddr.vir[i].eip == eip) )
+          if (bx_guard.iaddr.vir[i].enabled &&
+             (bx_guard.iaddr.vir[i].cs  == cs) &&
+             (bx_guard.iaddr.vir[i].eip == eip))
           {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
@@ -957,7 +953,7 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
       {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
           if (bx_guard.iaddr.lin[i].enabled && 
-              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr) )
+             (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr))
           {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
@@ -995,34 +991,6 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
   }
 
   return(0); // not on a breakpoint
-}
-
-bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
-{
-  BX_CPU_THIS_PTR guard_found.icount++;
-
-  // convenient point to see if user typed Ctrl-C
-  if (bx_guard.interrupt_requested &&
-     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
-  {
-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return(1);
-  }
-
-  // see if debugger requesting icount guard
-  if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (BX_CPU_THIS_PTR guard_found.icount >= bx_guard.icount) {
-      BX_CPU_THIS_PTR guard_found.cs  = cs;
-      BX_CPU_THIS_PTR guard_found.eip = eip;
-      BX_CPU_THIS_PTR guard_found.laddr = laddr;
-      BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
-      BX_CPU_THIS_PTR guard_found.is_64bit_code = is_64;
-      BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_ICOUNT;
-      return(1);
-    }
-  }
-
-  return(0); // no breakpoint
 }
 
 void BX_CPU_C::dbg_take_irq(void)

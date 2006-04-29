@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.64 2006-04-29 07:12:13 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.65 2006-04-29 09:27:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,7 +72,7 @@ static struct {
   unsigned next_bpoint_id;
 } bx_debugger;
 
-#define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
+#define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
 typedef struct {
   FILE    *fp;
@@ -99,14 +99,14 @@ void bx_dbg_post_dma_reports(void);
 #define BX_BATCH_DMA_BUFSIZE 512
 
 static struct {
-  unsigned this_many;  // batch this many max before posting events
-  unsigned Qsize;      // this many have been batched
+  unsigned this_many; // batch this many max before posting events
+  unsigned Qsize;     // this many have been batched
   struct {
-    Bit32u   addr;   // address of DMA op
-    unsigned len;    // number of bytes in op
-    unsigned what;   // BX_READ or BX_WRITE
-    Bit32u   val;    // value of DMA op
-    Bit32u icount; // icount at this dma op
+    Bit32u   addr;    // address of DMA op
+    unsigned len;     // number of bytes in op
+    unsigned what;    // BX_READ or BX_WRITE
+    Bit32u   val;     // value of DMA op
+    Bit64u   time;    // system time at this dma op
   } Q[BX_BATCH_DMA_BUFSIZE];
 } bx_dbg_batch_dma;
 
@@ -117,18 +117,18 @@ static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 #endif
 
-void dbg_printf (const char *fmt, ...)
+void dbg_printf(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
   char *buf = new char[1024];
-  vsprintf (buf, fmt, ap);
+  vsprintf(buf, fmt, ap);
   va_end(ap);
   if (debugger_log != NULL) {
     fprintf(debugger_log,"%s", buf);
     fflush(debugger_log);
   }
-  SIM->debug_puts (buf); // send to debugger, which will free buf when done.
+  SIM->debug_puts(buf); // send to debugger, which will free buf when done.
 }
 
 int bx_dbg_main(int argc, char *argv[])
@@ -137,8 +137,8 @@ int bx_dbg_main(int argc, char *argv[])
   char **bochs_argv = NULL;
   argc = 1;
   
-  setbuf (stdout, NULL);
-  setbuf (stderr, NULL);
+  setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
 
   bx_dbg_batch_dma.this_many = 1;
   bx_dbg_batch_dma.Qsize     = 0;
@@ -165,7 +165,7 @@ int bx_dbg_main(int argc, char *argv[])
   // process "-rc pathname" option, if it exists
   i = 1;
   if ( (argc >= 2) && !strcmp(argv[1], "-rc") ) {
-    if ( argc == 2 ) {
+    if (argc == 2) {
       BX_ERROR(("%s: -rc option used, but no path specified.", argv[0]));
       dbg_printf("usage: %s [-rc path]\n", argv0);
       BX_EXIT(1);
@@ -185,7 +185,7 @@ int bx_dbg_main(int argc, char *argv[])
     BX_INFO(("Warning: no rc file specified."));
   }
   else {
-    BX_INFO (("%s: using rc file '%s'.", argv[0], bx_debug_rc_fname));
+    BX_INFO(("%s: using rc file '%s'.", argv[0], bx_debug_rc_fname));
     // if there's an error, the user will know about it before proceeding
     (void) bx_nest_infile(bx_debug_rc_fname);
   }
@@ -209,7 +209,7 @@ int bx_dbg_main(int argc, char *argv[])
 #endif
 
   // parse any remaining args in the usual way
-  bx_parse_cmdline (1, bochs_argc, bochs_argv);
+  bx_parse_cmdline(1, bochs_argc, bochs_argv);
 
   // initialize hardware
   bx_init_hardware();
@@ -219,10 +219,10 @@ int bx_dbg_main(int argc, char *argv[])
     void bx_load32bitOSimagehack(void);
     bx_load32bitOSimagehack();
   }
-  SIM->set_init_done (1);
+  SIM->set_init_done(1);
 
   // update headerbar buttons since drive status can change during init
-  bx_gui->update_drive_status_buttons ();
+  bx_gui->update_drive_status_buttons();
   // iniialize statusbar and set all items inactive
   bx_gui->statusbar_setitem(-1, 0);
 
@@ -235,9 +235,9 @@ int bx_dbg_main(int argc, char *argv[])
       "Simulation is running", "", 0);
 
   // setup Ctrl-C handler
-  if (!SIM->is_wx_selected ()) {
+  if (!SIM->is_wx_selected()) {
     signal(SIGINT, bx_debug_ctrlc_handler);
-    BX_INFO (("set SIGINT handler to bx_debug_ctrlc_handler"));
+    BX_INFO(("set SIGINT handler to bx_debug_ctrlc_handler"));
   }
 
   // Print disassembly of the first instruction...  you wouldn't think it
@@ -254,22 +254,22 @@ int bx_dbg_main(int argc, char *argv[])
       (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64);
   }
   // finally, call the usual function to print the disassembly
-  dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
-  bx_dbg_disassemble_current (-1, 0);  // all cpus, don't print time
+  dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
+  bx_dbg_disassemble_current(-1, 0);  // all cpus, don't print time
 
   bx_dbg_user_input_loop();
 
-  if (debugger_log != NULL)
+  if(debugger_log != NULL)
     fclose(debugger_log);
 
   bx_dbg_exit(0);
   return(0); // keep compiler happy
 }
 
-void bx_dbg_interpret_line (char *cmd)
+void bx_dbg_interpret_line(char *cmd)
 {
-  bx_add_lex_input (cmd);
-  bxparse ();
+  bx_add_lex_input(cmd);
+  bxparse();
 }
 
 void bx_dbg_user_input_loop(void)
@@ -277,9 +277,9 @@ void bx_dbg_user_input_loop(void)
   int reti;
   unsigned include_cmd_len = strlen(BX_INCLUDE_CMD);
 
-  while ( 1 ) {
-    SIM->refresh_ci ();
-    SIM->set_display_mode (DISP_MODE_CONFIG);
+  while(1) {
+    SIM->refresh_ci();
+    SIM->set_display_mode(DISP_MODE_CONFIG);
     bx_get_command();
 reparse:
     if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
@@ -289,18 +289,15 @@ reparse:
           goto reparse;
         }
     }
-    else if ( (strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
+    else if ((strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
               (tmp_buf_ptr[include_cmd_len] == ' ' ||
-               tmp_buf_ptr[include_cmd_len] == '\t') )
+               tmp_buf_ptr[include_cmd_len] == '\t'))
     {
-      char *ptr;
-      int len;
-
-      ptr = tmp_buf_ptr + include_cmd_len+1;
-      while ( *ptr==' ' || *ptr=='\t' )
+      char *ptr = tmp_buf_ptr + include_cmd_len+1;
+      while(*ptr==' ' || *ptr=='\t')
         ptr++;
 
-      len = strlen(ptr);
+      int len = strlen(ptr);
       if (len == 0) {
         dbg_printf("%s: no filename given to 'source' command.\n", argv0);
         if (bx_infile_stack_index > 0) {
@@ -321,7 +318,7 @@ reparse:
       // consume the command.  If they return 0, then
       // we need to process the command.  A return of 1
       // means, the extensions have handled the command
-      if ( bx_dbg_extensions(tmp_buf_ptr)==0 ) {
+      if (bx_dbg_extensions(tmp_buf_ptr)==0) {
         // process command here
         bx_add_lex_input(tmp_buf_ptr);
         bxparse();
@@ -342,10 +339,10 @@ void bx_get_command(void)
   }
   if (SIM->is_wx_selected() && bx_infile_stack_index == 0) {
     // wait for wxWidgets to send another debugger command
-    charptr_ret = SIM->debug_get_next_command ();
+    charptr_ret = SIM->debug_get_next_command();
     if (charptr_ret) {
-      strncpy (tmp_buf, charptr_ret, sizeof(tmp_buf));
-      strcat (tmp_buf, "\n");
+      strncpy(tmp_buf, charptr_ret, sizeof(tmp_buf));
+      strcat(tmp_buf, "\n");
       // The returned string was allocated in wxmain.cc by "new char[]".
       // Free it with delete[].
       delete [] charptr_ret;
@@ -357,13 +354,13 @@ void bx_get_command(void)
   }
 #if HAVE_LIBREADLINE
   else if (bx_infile_stack_index == 0) {
-    charptr_ret = readline (prompt);
+    charptr_ret = readline(prompt);
     // beware, returns NULL on end of file
     if (charptr_ret && strlen(charptr_ret) > 0) {
-      add_history (charptr_ret);
-      strcpy (tmp_buf, charptr_ret);
-      strcat (tmp_buf, "\n");
-      free (charptr_ret);
+      add_history(charptr_ret);
+      strcpy(tmp_buf, charptr_ret);
+      strcat(tmp_buf, "\n");
+      free(charptr_ret);
       charptr_ret = &tmp_buf[0];
     }
   } else {
@@ -389,7 +386,7 @@ void bx_get_command(void)
       else {
         // not nested, sitting at stdin prompt, user wants out
         bx_dbg_quit_command();
-        BX_PANIC (("bx_dbg_quit_command should not return, but it did"));
+        BX_PANIC(("bx_dbg_quit_command should not return, but it did"));
       }
 
       // call recursively
@@ -435,7 +432,7 @@ int bx_nest_infile(char *path)
     return(0);
   }
 
-  if ( (bx_infile_stack_index+1) >= BX_INFILE_DEPTH ) {
+  if ((bx_infile_stack_index+1) >= BX_INFILE_DEPTH) {
     dbg_printf("%s: source files nested too deeply\n", argv0);
     return(0);
   }
@@ -483,14 +480,14 @@ void bxerror(char *s)
 void bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
-  if (SIM->is_wx_selected ()) {
+  if (SIM->is_wx_selected()) {
     // in a multithreaded environment, a signal such as SIGINT can be sent to all
     // threads.  This function is only intended to handle signals in the
     // simulator thread.  It will simply return if called from any other thread.
     // Otherwise the BX_PANIC() below can be called in multiple threads at
     // once, leading to multiple threads trying to display a dialog box,
     // leading to GUI deadlock.
-    if (!SIM->is_sim_thread ()) {
+    if (!SIM->is_sim_thread()) {
       BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
       return;
     }
@@ -498,7 +495,7 @@ void bx_debug_ctrlc_handler(int signum)
   BX_INFO(("Ctrl-C detected in signal handler."));
 
   signal(SIGINT, bx_debug_ctrlc_handler);
-  bx_debug_break ();
+  bx_debug_break();
 }
 
 void bx_debug_break()
@@ -634,7 +631,7 @@ struct playback_entry_t
   char command[100];
   Bit32u argument;
 
-  void trigger ();
+  void trigger();
 };
 
 static playback_entry_t playback_entry;
@@ -674,7 +671,7 @@ static void enter_playback_entry()
   }
 }
 
-void playback_entry_t::trigger ()
+void playback_entry_t::trigger()
 {
   if (!strcmp("gen_scancode", command)) {
     DEV_kbd_gen_scancode(argument);
@@ -1186,19 +1183,17 @@ void bx_dbg_continue_command(void)
 
 one_more:
 
-  bx_guard.icount = 0;
   // I must guard for ICOUNT or one CPU could run forever without giving
   // the others a chance.
-  bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT;
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
 
   // update gui (disable continue command, enable stop command, etc.)
-  sim_running->set (1);
-  SIM->refresh_ci ();
+  sim_running->set(1);
+  SIM->refresh_ci();
 
   // use simulation mode while executing instructions.  When the prompt
   // is printed, we will return to config mode.
-  SIM->set_display_mode (DISP_MODE_SIM);
+  SIM->set_display_mode(DISP_MODE_SIM);
 
   bx_guard.interrupt_requested = 0;
   bx_guard.special_unwind_stack = 0;
@@ -1212,19 +1207,16 @@ one_more:
     // setting should have no effect, although a low setting does
     // lead to poor performance because cpu_loop is returning and 
     // getting called again, over and over.
-    int quantum = 25;
+    int quantum = BX_DBG_DEFAULT_ICOUNT_QUANTUM;
     int cpu;
     for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
       BX_CPU(cpu)->guard_found.guard_found = 0;
       BX_CPU(cpu)->guard_found.icount = 0;
-      bx_guard.icount = quantum;
-      BX_CPU(cpu)->cpu_loop(0);
+      BX_CPU(cpu)->cpu_loop(quantum);
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
-      if (found == BX_DBG_GUARD_ICOUNT) {
-        // I expected this guard, don't stop
-      } else if (found!=0) {
+      if (found) {
         stop = 1;
         which = cpu;
       } else if (reason != STOP_NO_REASON && reason != STOP_CPU_HALTED) {
@@ -1259,8 +1251,8 @@ one_more:
 #endif /* BX_SUPPORT_SMP */
   }
 
-  sim_running->set (0);
-  SIM->refresh_ci ();
+  sim_running->set(0);
+  SIM->refresh_ci();
 
   // (mch) hack
   DEV_vga_refresh();
@@ -1282,24 +1274,21 @@ void bx_dbg_stepN_command(Bit32u count)
 
   // use simulation mode while executing instructions.  When the prompt
   // is printed, we will return to config mode.
-  SIM->set_display_mode (DISP_MODE_SIM);
+  SIM->set_display_mode(DISP_MODE_SIM);
 
   // single CPU
-  bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT; // looking for icount
   bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // or Ctrl-C
-  // for now, step each CPU one BX_DBG_DEFAULT_ICOUNT_QUANTUM at a time
+  // for now, step each CPU one instruction at a time
   for (unsigned cycle=0; cycle < count; cycle++) {
     for (unsigned cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-      bx_guard.icount = 1;
       bx_guard.interrupt_requested = 0;
       BX_CPU(cpu)->guard_found.guard_found = 0;
-      BX_CPU(cpu)->guard_found.icount = 0;
-      BX_CPU(cpu)->cpu_loop(0);
+      BX_CPU(cpu)->cpu_loop(1);
     }
 #if BX_SUPPORT_SMP == 0
     // ticks are handled inside the cpu loop
 #else
-    BX_TICK1 ();
+    BX_TICK1();
 #endif
   }
 
@@ -1309,7 +1298,7 @@ void bx_dbg_stepN_command(Bit32u count)
 
 static disassembler bx_disassemble;
 
-void bx_dbg_disassemble_current (int which_cpu, int print_time)
+void bx_dbg_disassemble_current(int which_cpu, int print_time)
 {
   Bit32u phy;
   bx_bool phy_valid;
@@ -1317,7 +1306,7 @@ void bx_dbg_disassemble_current (int which_cpu, int print_time)
   if (which_cpu < 0) {
     // iterate over all of them.
     for (int i=0; i<BX_SMP_PROCESSORS; i++)
-      bx_dbg_disassemble_current (i, print_time);
+      bx_dbg_disassemble_current(i, print_time);
     return;
   }
 
@@ -1385,8 +1374,7 @@ void bx_dbg_print_guard_results(void)
 
   for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
-    if (found & BX_DBG_GUARD_ICOUNT) { /* ... */ }
-    else if (found & BX_DBG_GUARD_CTRL_C) { /* ... */ }
+    if (found & BX_DBG_GUARD_CTRL_C) { /* ... */ }
 #if BX_DBG_SUPPORT_VIR_BPOINT
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
@@ -1416,24 +1404,29 @@ void bx_dbg_print_guard_results(void)
             BX_CPU(cpu)->guard_found.laddr);
     }
 #endif
-    else if (BX_CPU(cpu)->stop_reason == STOP_CPU_HALTED) {
-      /* returned early because processor is in halt state */
-    }
-    else if (BX_CPU(cpu)->stop_reason == STOP_MAGIC_BREAK_POINT) {
-      dbg_printf("(%u) Magic breakpoint\n", cpu);
-    } else if (BX_CPU(cpu)->stop_reason == STOP_TIME_BREAK_POINT) {
-      dbg_printf("(%u) Caught time breakpoint\n", cpu);
-    } else if (BX_CPU(cpu)->stop_reason == STOP_MODE_BREAK_POINT) {
-      dbg_printf("(%u) Caught mode switch breakpoint switching to '%s'\n",
-        cpu, cpu_mode_string(BX_CPU(cpu)->get_cpu_mode()));
-    } else if (BX_CPU(cpu)->stop_reason == STOP_READ_WATCH_POINT) {
-      dbg_printf("(%u) Caught read watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
-    } else if (BX_CPU(cpu)->stop_reason == STOP_WRITE_WATCH_POINT) {
-      dbg_printf("(%u) Caught write watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
-    }
-    else {
-      dbg_printf("Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n",
-        cpu, BX_CPU(cpu)->stop_reason);
+    switch(BX_CPU(cpu)->stop_reason) {
+    case STOP_NO_REASON:
+    case STOP_CPU_HALTED:
+        break;
+    case STOP_TIME_BREAK_POINT:
+        dbg_printf("(%u) Caught time breakpoint\n", cpu);
+        break;
+    case STOP_READ_WATCH_POINT:
+        dbg_printf("(%u) Caught read watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
+        break;
+    case STOP_WRITE_WATCH_POINT:
+        dbg_printf("(%u) Caught write watch point at %08X\n", cpu, BX_CPU(cpu)->watchpoint);
+        break;
+    case STOP_MAGIC_BREAK_POINT:
+        dbg_printf("(%u) Magic breakpoint\n", cpu);
+        break;
+    case STOP_MODE_BREAK_POINT:
+        dbg_printf("(%u) Caught mode switch breakpoint switching to '%s'\n",
+          cpu, cpu_mode_string(BX_CPU(cpu)->get_cpu_mode()));
+        break;
+    default:
+        dbg_printf("Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n",
+          cpu, BX_CPU(cpu)->stop_reason);
     }
 
 #if BX_DISASM
@@ -1442,7 +1435,7 @@ void bx_dbg_print_guard_results(void)
         // print this only once
         dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks ());
       }
-      bx_dbg_disassemble_current (cpu, 0);  // one cpu, don't print time
+      bx_dbg_disassemble_current(cpu, 0);  // one cpu, don't print time
     }
 #endif  // #if BX_DISASM
   }
@@ -1481,17 +1474,17 @@ void bx_dbg_breakpoint_changed(void)
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
-  if (bx_dbg_en_dis_vbreak (handle, enable))
+  if (bx_dbg_en_dis_vbreak(handle, enable))
    goto done;
 #endif
 
 #if BX_DBG_SUPPORT_LIN_BPOINT
-  if (bx_dbg_en_dis_lbreak (handle, enable))
+  if (bx_dbg_en_dis_lbreak(handle, enable))
    goto done;
 #endif
 
 #if BX_DBG_SUPPORT_PHY_BPOINT
-  if (bx_dbg_en_dis_pbreak (handle, enable))
+  if (bx_dbg_en_dis_pbreak(handle, enable))
       goto done;
 #endif
 
@@ -1523,11 +1516,11 @@ bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable)
   for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
     if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
       bx_guard.iaddr.lin[i].enabled=enable;
-      return (bx_bool)true;
+      return 1;
     }
   }
 #endif
-  return (bx_bool)false;
+  return 0;
 }
 
 bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable)
@@ -1537,11 +1530,11 @@ bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable)
   for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
     if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
       bx_guard.iaddr.vir[i].enabled=enable;
-      return (bx_bool)true;
+      return 1;
     }
   }
 #endif
-  return (bx_bool)false;
+  return 0;
 }
 
 void bx_dbg_del_breakpoint_command(unsigned handle)
@@ -1847,12 +1840,12 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     }
 #if BX_SUPPORT_FPU
     if (which_regs_mask & BX_INFO_FPU_REGS) {
-      BX_CPU(i)->print_state_FPU ();
+      BX_CPU(i)->print_state_FPU();
     }
 #endif
 #if BX_SUPPORT_SSE
     if (which_regs_mask & BX_INFO_SSE_REGS) {
-      BX_CPU(i)->print_state_SSE ();
+      BX_CPU(i)->print_state_SSE();
     }
 #endif
   }
@@ -1929,7 +1922,7 @@ void bx_dbg_dump_cpu_command(void)
   dbg_printf("done\n");
 }
 
-static void bx_print_char (Bit8u ch)
+static void bx_print_char(Bit8u ch)
 {
   if (ch < 10)
     dbg_printf(" \\%d  ", ch);
@@ -1939,7 +1932,7 @@ static void bx_print_char (Bit8u ch)
     dbg_printf(" \\x%02X", ch);
 }
 
-void dbg_printf_binary (char *format, Bit32u data, int bits)
+void dbg_printf_binary(char *format, Bit32u data, int bits)
 {
   int b,len = 0;
   char num[33];
@@ -2158,8 +2151,8 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
           case 'd': dbg_printf("\t%d", (int) (Bit8s) data8); break;
           case 'u': dbg_printf("\t%u", (unsigned) data8); break;
           case 'o': dbg_printf("\t%o", (unsigned) data8); break;
-            case 't': dbg_printf_binary ("\t%s", data8, 8); break;
-            case 'c': bx_print_char (data8); break;
+            case 't': dbg_printf_binary("\t%s", data8, 8); break;
+            case 'c': bx_print_char(data8); break;
         }
         break;
 
@@ -2183,10 +2176,10 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
           case 'd': dbg_printf("\t%d", (int) (Bit16s) data16); break;
           case 'u': dbg_printf("\t%u", (unsigned) data16); break;
           case 'o': dbg_printf("\t%o", (unsigned) data16); break;
-            case 't': dbg_printf_binary ("\t%s", data16, 16); break;
+            case 't': dbg_printf_binary("\t%s", data16, 16); break;
           case 'c': 
-            bx_print_char (data16>>8);
-            bx_print_char (data16 & 0xff);
+            bx_print_char(data16>>8);
+            bx_print_char(data16 & 0xff);
             break;
         }
         break;
@@ -2212,12 +2205,12 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
           case 'd': dbg_printf("\t%d", (int) (Bit32s) data32); break;
           case 'u': dbg_printf("\t%u", (unsigned) data32); break;
           case 'o': dbg_printf("\t%o", (unsigned) data32); break;
-          case 't': dbg_printf_binary ("\t%s", data32, 32); break;
+          case 't': dbg_printf_binary("\t%s", data32, 32); break;
           case 'c': 
-            bx_print_char (0xff & (data32>>24));
-            bx_print_char (0xff & (data32>>16));
-            bx_print_char (0xff & (data32>> 8));
-            bx_print_char (0xff & (data32>> 0));
+            bx_print_char(0xff & (data32>>24));
+            bx_print_char(0xff & (data32>>16));
+            bx_print_char(0xff & (data32>> 8));
+            bx_print_char(0xff & (data32>> 0));
             break;
         }
         break;
@@ -3092,24 +3085,24 @@ void bx_dbg_info_vga()
 void bx_dbg_iac_report(unsigned vector, unsigned irq)
 {
   if (bx_guard.report.irq) {
-    dbg_printf("event icount=%u IRQ irq=%u vec=%x\n",
-      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, irq, vector);
+    dbg_printf("event at t=" FMT_LL "d IRQ irq=%u vec=%x\n",
+      bx_pc_system.time_ticks(), irq, vector);
   }
 }
 
 void bx_dbg_a20_report(unsigned val)
 {
   if (bx_guard.report.a20) {
-    dbg_printf("event icount=%u A20 val=%u\n",
-      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount, val);
+    dbg_printf("event at t=" FMT_LL "d A20 val=%u\n",
+      bx_pc_system.time_ticks(), val);
   }
 }
 
 void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.io) {
-    dbg_printf("event icount=%u IO addr=0x%x size=%u op=%s val=0x%x\n",
-      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount,
+    dbg_printf("event at t=" FMT_LL "d IO addr=0x%x size=%u op=%s val=0x%x\n",
+      bx_pc_system.time_ticks(),
       (unsigned) addr,
       size,
       (op==BX_READ) ? "read" : "write",
@@ -3120,8 +3113,8 @@ void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
 void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.ucmem) {
-    dbg_printf("event icount=%u UCmem addr=0x%x size=%u op=%s val=0x%x\n",
-      (unsigned) BX_CPU(dbg_cpu)->guard_found.icount,
+    dbg_printf("event at t=" FMT_LL "d UCmem addr=0x%x size=%u op=%s val=0x%x\n",
+      bx_pc_system.time_ticks(),
       (unsigned) addr,
       size,
       (op==BX_READ) ? "read" : "write",
@@ -3149,11 +3142,11 @@ void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val)
   }
 
   bx_dbg_batch_dma.Qsize++;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].addr   = addr;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].len    = len;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].what   = what;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].val    = val;
-  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].icount = BX_CPU(dbg_cpu)->guard_found.icount;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].addr = addr;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].len  = len;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].what = what;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].val  = val;
+  bx_dbg_batch_dma.Q[bx_dbg_batch_dma.Qsize-1].time = bx_pc_system.time_ticks();
 
   // if Q is full, post events (and flush)
   if (bx_dbg_batch_dma.Qsize >= bx_dbg_batch_dma.this_many)
@@ -3204,8 +3197,8 @@ void bx_dbg_post_dma_reports(void)
         else
           first_iteration = 0;
         // need to output the event header
-        dbg_printf("event icount=%u DMA addr=0x%x size=%u op=%s val=0x%x",
-                         (unsigned) bx_dbg_batch_dma.Q[i].icount,
+        dbg_printf("event at t=" FMT_LL "d DMA addr=0x%x size=%u op=%s val=0x%x",
+                         bx_pc_system.time_ticks(),
                          addr, len, (what==BX_READ) ? "read" : "write", val);
         print_header = 0;
       }
@@ -3552,7 +3545,7 @@ void bx_dbg_step_over_command ()
     case 0xEA:
     // jmp short
     case 0xEB:
-      bx_dbg_stepN_command (1);
+      bx_dbg_stepN_command(1);
       return;
     // jmp absolute indirect
     case 0xFF:
@@ -3567,16 +3560,16 @@ void bx_dbg_step_over_command ()
   }
 
   // calls, ints, loops and so on
-  int BpId = bx_dbg_lbreakpoint_command (bkStepOver, Laddr + insn.ilen);
+  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, Laddr + insn.ilen);
   if (BpId == -1) {
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
   }
   
-  bx_dbg_continue_command ();
+  bx_dbg_continue_command();
   
   if (bx_dbg_del_lbreak (BpId))
-    bx_dbg_breakpoint_changed ();
+    bx_dbg_breakpoint_changed();
 }
 
 void bx_dbg_info_flags(void)

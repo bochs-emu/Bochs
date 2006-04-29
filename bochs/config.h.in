@@ -328,15 +328,6 @@
 #define BX_DBG_SUPPORT_LIN_BPOINT 1
 #define BX_DBG_SUPPORT_PHY_BPOINT 1
 
-// You need only define one initial breakpoint into each
-// cpu simulator (emulator) here.  Each simulator sets callbacks
-// and variables which the debugger uses from then on.
-#define BX_SIM1_INIT bx_dbg_init_cpu_mem_env0
-#ifndef BX_SIM2_INIT
-#define BX_SIM2_INIT bx_dbg_init_cpu_mem_env1
-#endif
-//#define BX_SIM2_INIT sim2_init
-
 // max number of virtual/linear/physical breakpoints handled
 #define BX_DBG_MAX_VIR_BPOINTS 10
 #define BX_DBG_MAX_LIN_BPOINTS 10
@@ -348,11 +339,6 @@
 #define BX_INFILE_DEPTH  10
 // use this command to include (nest) debug scripts
 #define BX_INCLUDE_CMD   "source"
-
-// Use either 32 or 64 bit instruction counter for
-// debugger purposes.  Uncomment one of these.
-//#define BX_DBG_ICOUNT_SIZE   32
-#define BX_DBG_ICOUNT_SIZE   64
 
 // Make a call to command line debugger extensions.  If set to 1,
 // a call is made.  An external routine has a chance to process
