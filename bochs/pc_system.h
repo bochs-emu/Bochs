@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.36 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: pc_system.h,v 1.37 2006-04-29 17:21:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -174,6 +174,7 @@ public:
   void    outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
   void    set_enable_a20(bx_bool value);
   bx_bool get_enable_a20(void);
+  void    MemoryMappingChanged(void); // flush TLB in all CPUs
   void    exit(void);
 };
 

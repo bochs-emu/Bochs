@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.53 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: pc_system.cc,v 1.54 2006-04-29 17:21:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,9 +127,10 @@ bx_pc_system_c::outp(Bit16u addr, Bit32u value, unsigned io_len)
 }
 
 #if BX_SUPPORT_A20
+
 void bx_pc_system_c::set_enable_a20(bx_bool value)
 {
-  unsigned old_enable_a20 = enable_a20;
+  bx_bool old_enable_a20 = enable_a20;
 
   if (value) {
     enable_a20 = 1;
@@ -146,17 +147,14 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
     a20_mask   = 0xffefffff;   /* mask off A20 address line */
   }
 
-  BX_DBG_A20_REPORT(value);
+  BX_DBG_A20_REPORT(enable_a20);
 
   BX_DEBUG(("A20: set() = %u", (unsigned) enable_a20));
 
   // If there has been a transition, we need to notify the CPUs so
   // they can potentially invalidate certain cache info based on
   // A20-line-applied physical addresses.
-  if (old_enable_a20 != enable_a20) {
-    for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
-      BX_CPU(i)->pagingA20Changed();
-  }
+  if (old_enable_a20 != enable_a20) MemoryMappingChanged();
 }
 
 bx_bool bx_pc_system_c::get_enable_a20(void)
@@ -164,8 +162,7 @@ bx_bool bx_pc_system_c::get_enable_a20(void)
   if (bx_dbg.a20)
     BX_INFO(("A20: get() = %u", (unsigned) enable_a20));
 
-  if (enable_a20) return(1);
-  else return(0);
+  return enable_a20;
 }
 
 #else
@@ -178,9 +175,16 @@ void bx_pc_system_c::set_enable_a20(bx_bool value)
 bx_bool bx_pc_system_c::get_enable_a20(void)
 {
   BX_DEBUG(("get_enable_a20: ignoring: SUPPORT_A20 = 0"));
-  return(1);
+  return 1;
 }
+
 #endif  // #if BX_SUPPORT_A20
+
+void bx_pc_system_c::MemoryMappingChanged(void)
+{
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->TLB_flush(1);
+}
 
 int bx_pc_system_c::Reset(unsigned type)
 {
