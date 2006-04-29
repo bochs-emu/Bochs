@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.89 2006-04-06 16:43:36 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.90 2006-04-29 16:55:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   int idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.89 2006-04-06 16:43:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.90 2006-04-29 16:55:22 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
@@ -665,21 +665,15 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
 #if BX_SUPPORT_PCI
     else if (pci_enabled && ((a20Addr & 0xfffc0000) == 0x000c0000))
     {
-      switch (DEV_pci_wr_memtype (a20Addr)) {
-        case 0x0:   // Vetoed!  ROMs
-          return(NULL);
-        case 0x1:   // Write to ShadowRAM
-          retAddr = (Bit8u *) & vector[a20Addr];
-          break;
-        default:
-          BX_PANIC(("getHostMemAddr(): default case"));
-          return(0);
-      }
+      // Veto direct writes to this area. Otherwise, there is a chance
+      // for Guest2HostTLB and memory consistency problems, for example
+      // when some 16K block marked as write-only using PAM registers.
+      return(NULL);
     }
 #endif
     else
     {
-      if ( (a20Addr & 0xfffc0000) != 0x000c0000 ) {
+      if ((a20Addr & 0xfffc0000) != 0x000c0000) {
         retAddr = (Bit8u *) & vector[a20Addr];
       }
       else
