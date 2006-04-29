@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.284 2006-04-29 09:27:49 sshwarts Exp $
+// $Id: cpu.h,v 1.285 2006-04-29 16:14:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2656,6 +2656,7 @@ public: // for now...
   BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
   BX_SMF unsigned dbg_query_pending(void);
   BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
+  BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF void     dbg_xlate_linear2phy(bx_address linear, Bit32u *phy, bx_bool *valid);

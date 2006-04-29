@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.148 2006-04-29 09:27:49 sshwarts Exp $
+// $Id: cpu.cc,v 1.149 2006-04-29 16:14:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,14 +466,18 @@ debugger_check:
   }
 #endif
 
-  BX_CPU_THIS_PTR guard_found.icount++;
-
-  // convenient point to see if user typed Ctrl-C
-  if (bx_guard.interrupt_requested &&
-     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
   {
-    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return;
+    // check for icount or control-C.  If found, set guard reg and return.
+    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+    if (dbg_is_end_instr_bpoint(
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+         debug_eip,
+         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+         Is64BitMode()))
+    {
+      return;
+    }
   }
 #endif  // #if BX_DEBUGGER
 
@@ -991,6 +995,26 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
   }
 
   return(0); // not on a breakpoint
+}
+
+bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
+{
+  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
+  BX_CPU_THIS_PTR guard_found.icount++;
+  BX_CPU_THIS_PTR guard_found.cs  = cs;
+  BX_CPU_THIS_PTR guard_found.eip = eip;
+  BX_CPU_THIS_PTR guard_found.laddr = laddr;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
+
+  // convenient point to see if user typed Ctrl-C
+  if (bx_guard.interrupt_requested &&
+     (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
+  {
+    BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
+    return(1);
+  }
+
+  return(0); // no breakpoint
 }
 
 void BX_CPU_C::dbg_take_irq(void)
