@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.282 2006-04-25 15:35:26 sshwarts Exp $
+// $Id: cpu.h,v 1.283 2006-04-29 07:12:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2664,7 +2664,7 @@ public: // for now...
   BX_SMF void     atexit(void);
   
   // now for some ancillary functions...
-  BX_SMF void cpu_loop(Bit32s max_instr_count);
+  BX_SMF void cpu_loop(Bit32u max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i);
   BX_SMF void prefetch(void);

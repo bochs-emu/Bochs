@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.22 2006-02-13 21:32:21 sshwarts Exp $
+// $Id: debug.h,v 1.23 2006-04-29 07:12:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,14 +28,6 @@
 // if including from C parser, need basic types etc
 #include "config.h"
 #include "osdep.h"
-
-#if BX_DBG_ICOUNT_SIZE == 32
-  typedef Bit32u bx_dbg_icount_t;
-#elif BX_DBG_ICOUNT_SIZE == 64
-  typedef Bit64u bx_dbg_icount_t;
-#else
-#  error "BX_DBG_ICOUNT_SIZE incorrect."
-#endif
 
 #define BX_DBG_NO_HANDLE 1000
 
@@ -252,7 +244,7 @@ void bx_dbg_print_stack_command(unsigned nwords);
 void bx_dbg_watch(int read, Bit32u address);
 void bx_dbg_unwatch(int read, Bit32u address);
 void bx_dbg_continue_command(void);
-void bx_dbg_stepN_command(bx_dbg_icount_t count);
+void bx_dbg_stepN_command(Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
 void bx_dbg_disassemble_switch_mode(void);
 void bx_dbg_set_disassemble_size(unsigned size);
@@ -327,9 +319,14 @@ extern int num_read_watchpoints;
 extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
-      STOP_NO_REASON = 0, STOP_TIME_BREAK_POINT, STOP_READ_WATCH_POINT,
-      STOP_WRITE_WATCH_POINT, STOP_MAGIC_BREAK_POINT,
-      STOP_MODE_BREAK_POINT, STOP_CPU_HALTED, STOP_CPU_PANIC
+      STOP_NO_REASON = 0,
+      STOP_TIME_BREAK_POINT,
+      STOP_READ_WATCH_POINT,
+      STOP_WRITE_WATCH_POINT,
+      STOP_MAGIC_BREAK_POINT,
+      STOP_MODE_BREAK_POINT,
+      STOP_CPU_HALTED,
+      STOP_CPU_PANIC
 } stop_reason_t;
 
 typedef enum {
@@ -405,7 +402,7 @@ typedef struct {
 #endif
   } iaddr;
 
-  bx_dbg_icount_t icount; // stop after completing this many instructions
+  Bit32u icount; // stop after completing this many instructions
 
   // user typed Ctrl-C, requesting simulator stop at next convient spot
   volatile bx_bool interrupt_requested;
@@ -460,7 +457,7 @@ typedef struct {
 typedef struct bx_guard_found_t {
   unsigned long guard_found;
   unsigned iaddr_index;
-  bx_dbg_icount_t icount; // number of completed instructions
+  Bit32u icount; // number of completed instructions
   Bit32u  cs; // cs:eip and linear addr of instruction at guard point
   bx_address eip;
   bx_address laddr;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.63 2006-03-08 20:10:29 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.64 2006-04-29 07:12:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,13 +70,6 @@ static struct {
   char     default_unit_size;
   Bit32u   default_addr;
   unsigned next_bpoint_id;
-
-  // last icount known to be in sync
-#if BX_DBG_ICOUNT_SIZE == 32
-  Bit32u last_sync_icount;
-#else  // BX_DBG_ICOUNT_SIZE == 64
-  Bit64u last_sync_icount;
-#endif
 } bx_debugger;
 
 #define BX_DBG_DEFAULT_ICOUNT_QUANTUM   3 /* mch */
@@ -113,7 +106,7 @@ static struct {
     unsigned len;    // number of bytes in op
     unsigned what;   // BX_READ or BX_WRITE
     Bit32u   val;    // value of DMA op
-    bx_dbg_icount_t icount; // icount at this dma op
+    Bit32u icount; // icount at this dma op
   } Q[BX_BATCH_DMA_BUFSIZE];
 } bx_dbg_batch_dma;
 
@@ -161,7 +154,6 @@ int bx_dbg_main(int argc, char *argv[])
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
   bx_debugger.next_bpoint_id = 1;
-  bx_debugger.last_sync_icount = 0;
 
   argv0 = strdup(argv[0]);
 
@@ -509,7 +501,7 @@ void bx_debug_ctrlc_handler(int signum)
   bx_debug_break ();
 }
 
-void bx_debug_break ()
+void bx_debug_break()
 {
   bx_guard.interrupt_requested = 1;
 }
@@ -1198,7 +1190,7 @@ one_more:
   // I must guard for ICOUNT or one CPU could run forever without giving
   // the others a chance.
   bx_guard.guard_for |= BX_DBG_GUARD_ICOUNT;
-  bx_guard.guard_for |=  BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
+  bx_guard.guard_for |= BX_DBG_GUARD_CTRL_C; // stop on Ctrl-C
 
   // update gui (disable continue command, enable stop command, etc.)
   sim_running->set (1);
@@ -1226,7 +1218,7 @@ one_more:
       BX_CPU(cpu)->guard_found.guard_found = 0;
       BX_CPU(cpu)->guard_found.icount = 0;
       bx_guard.icount = quantum;
-      BX_CPU(cpu)->cpu_loop (-1);
+      BX_CPU(cpu)->cpu_loop(0);
       // set stop flag if a guard found other than icount or halted
       unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(cpu)->stop_reason;
@@ -1281,7 +1273,7 @@ one_more:
   goto one_more;
 }
 
-void bx_dbg_stepN_command(bx_dbg_icount_t count)
+void bx_dbg_stepN_command(Bit32u count)
 {
   if (count == 0) {
     dbg_printf("Error: stepN: count=0\n");
@@ -1302,7 +1294,7 @@ void bx_dbg_stepN_command(bx_dbg_icount_t count)
       bx_guard.interrupt_requested = 0;
       BX_CPU(cpu)->guard_found.guard_found = 0;
       BX_CPU(cpu)->guard_found.icount = 0;
-      BX_CPU(cpu)->cpu_loop(-1);
+      BX_CPU(cpu)->cpu_loop(0);
     }
 #if BX_SUPPORT_SMP == 0
     // ticks are handled inside the cpu loop

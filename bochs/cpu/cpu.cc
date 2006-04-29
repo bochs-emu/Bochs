@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.146 2006-04-28 16:45:29 sshwarts Exp $
+// $Id: cpu.cc,v 1.147 2006-04-29 07:12:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,11 +106,12 @@ static unsigned iCacheMisses=0;
 // instructions and then return so that the other processors have a chance to
 // run.  This is used only when simulating multiple processors.
 // 
-// If maximum instructions have been executed, return.  A count less
-// than zero means run forever.
+// If maximum instructions have been executed, return. The zero-count
+// means run forever.
 #define CHECK_MAX_INSTRUCTIONS(count) \
-  if (count >= 0) {                   \
-    count--; if (count == 0) return;  \
+  if (count > 0) {                    \
+    count--;                          \
+    if (count == 0) return;           \
   }
 
 #if BX_SUPPORT_SMP
@@ -201,7 +202,7 @@ BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStor
   return i;
 }
 
-void BX_CPU_C::cpu_loop(Bit32s max_instr_count)
+void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 {
   bxInstruction_c iStorage BX_CPP_AlignN(32);
 
@@ -426,6 +427,69 @@ debugger_check:
   // inform instrumentation about new instruction
   BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
+#if BX_DEBUGGER
+  // Mode switch support is in dbg_is_begin_instr_bpoint
+  // note instr generating exceptions never reach this point.
+
+  // (mch) Read/write, time break point support
+  if (BX_CPU_THIS_PTR break_point) {
+    switch (BX_CPU_THIS_PTR break_point) {
+      case BREAK_POINT_TIME:
+        BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
+        BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
+        return;
+      case BREAK_POINT_READ:
+        BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
+        BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
+        return;
+      case BREAK_POINT_WRITE:
+        BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
+        BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
+        return;
+      default:
+        BX_PANIC(("Weird break point condition"));
+    }
+  }
+#if BX_MAGIC_BREAKPOINT
+  // (mch) Magic break point support
+  if (BX_CPU_THIS_PTR magic_break) {
+    if (bx_dbg.magic_break_enabled) {
+      BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
+      BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+      return;
+    }
+    else {
+      BX_CPU_THIS_PTR magic_break = 0;
+      BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
+      BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
+    }
+  }
+#endif
+
+  {
+    // check for icount or control-C.  If found, set guard reg and return.
+    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+    if (dbg_is_end_instr_bpoint(
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+         debug_eip,
+         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+         Is64BitMode()))
+    {
+      return;
+    }
+  }
+#endif  // #if BX_DEBUGGER
+
+#if BX_GDBSTUB
+  if (bx_dbg.gdbstub_enabled) {
+    unsigned int reason = bx_gdbstub_check(EIP);
+    if (reason != GDBSTUB_STOP_NO_REASON) {
+      return;
+    }
+  }
+#endif
+
 #if (BX_SUPPORT_SMP && BX_DEBUGGER==0)
   // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
   // instructions and then return so that the other processors have a chance
@@ -434,69 +498,6 @@ debugger_check:
   // with the debugger because its guard mechanism provides the same
   // functionality.
   CHECK_MAX_INSTRUCTIONS(max_instr_count);
-#endif
-
-#if BX_DEBUGGER
-    // Mode switch support is in dbg_is_begin_instr_bpoint
-    // note instr generating exceptions never reach this point.
-
-    // (mch) Read/write, time break point support
-    if (BX_CPU_THIS_PTR break_point) {
-      switch (BX_CPU_THIS_PTR break_point) {
-        case BREAK_POINT_TIME:
-          BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
-          BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
-          return;
-        case BREAK_POINT_READ:
-          BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
-          BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
-          return;
-        case BREAK_POINT_WRITE:
-          BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
-          BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
-          return;
-        default:
-          BX_PANIC(("Weird break point condition"));
-      }
-    }
-#if BX_MAGIC_BREAKPOINT
-    // (mch) Magic break point support
-    if (BX_CPU_THIS_PTR magic_break) {
-      if (bx_dbg.magic_break_enabled) {
-        BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
-        BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-        return;
-      }
-      else {
-        BX_CPU_THIS_PTR magic_break = 0;
-        BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
-        BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
-      }
-    }
-#endif
-
-    {
-      // check for icount or control-C.  If found, set guard reg and return.
-      bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
-      if (dbg_is_end_instr_bpoint(
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-           debug_eip,
-           BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-           Is64BitMode()))
-      {
-        return;
-      }
-    }
-#endif  // #if BX_DEBUGGER
-
-#if BX_GDBSTUB
-    if (bx_dbg.gdbstub_enabled) {
-      unsigned int reason = bx_gdbstub_check(EIP);
-      if (reason != GDBSTUB_STOP_NO_REASON) {
-        return;
-      }
-    }
 #endif
 
   }  // while (1)
