@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.100 2006-04-25 14:42:57 sshwarts Exp $
+// $Id: init.cc,v 1.101 2006-05-01 18:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -345,6 +345,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     DEFPARAM_SEG_REG(TR);
     DEFPARAM_GLOBAL_SEG_REG(GDTR, gdtr);
     DEFPARAM_GLOBAL_SEG_REG(IDTR, idtr);
+#undef DEFPARAM_NORMAL
 #undef DEFPARAM_SEG_REG
 #undef DEFPARAM_GLOBAL_SEG_REG
 

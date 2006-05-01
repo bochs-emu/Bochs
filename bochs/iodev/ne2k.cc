@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.84 2006-03-08 19:28:36 sshwarts Exp $
+// $Id: ne2k.cc,v 1.85 2006-05-01 18:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -210,6 +210,7 @@ void bx_ne2k_c::write_cr(Bit32u value)
     bx_pc_system.activate_timer(BX_NE2K_THIS s.tx_timer_index,
 				(64 + 96 + 4*8 + BX_NE2K_THIS s.tx_bytes*8)/10,
 				0); // not continuous
+    BX_NE2K_THIS s.tx_timer_active = 1;
   }
 
   // Linux probes for an interrupt by setting up a remote-DMA read
@@ -1278,7 +1279,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.84 2006-03-08 19:28:36 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.85 2006-05-01 18:24:47 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

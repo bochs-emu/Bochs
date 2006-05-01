@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.188 2006-04-22 18:14:55 vruppert Exp $
+// $Id: siminterface.h,v 1.189 2006-05-01 18:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -772,7 +772,8 @@ public:
       char *name,
       char *label,
       char *description,
-      Bit64s initial_val);
+      Bit64s initial_val,
+      bx_bool is_shadow = 0);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);

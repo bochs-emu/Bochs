@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.22 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pit_wrap.h,v 1.23 2006-05-01 18:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,21 +69,11 @@ private:
     pit_82C54 timer;
     Bit8u   speaker_data_on;
     bx_bool refresh_clock_div2;
-    int  timer_handle[3];
     Bit64u last_usec;
     Bit32u last_next_event_time;
     Bit64u total_ticks;
-    Bit64u usec_per_second;
-    Bit64u ticks_per_second;
-    Bit64u total_sec;
-    Bit64u last_time;
-    Bit64u last_sec_usec;
-    Bit64u max_ticks;
-    Bit64u stored_delta;
     Bit64u total_usec;
-    Bit64u em_last_realtime;
-    Bit64u last_realtime_delta;
-    Bit64u last_realtime_ticks;
+    int  timer_handle[3];
   } s;
 
   static void timer_handler(void *this_ptr);

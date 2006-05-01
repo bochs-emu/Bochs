@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.98 2006-04-05 17:23:51 sshwarts Exp $
+// $Id: floppy.cc,v 1.99 2006-05-01 18:24:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.98 2006-04-05 17:23:51 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.99 2006-05-01 18:24:47 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -371,6 +371,7 @@ void bx_floppy_ctrl_c::reset(unsigned type)
     BX_FD_THIS s.cylinder[i] = 0;
     BX_FD_THIS s.head[i] = 0;
     BX_FD_THIS s.sector[i] = 0;
+    BX_FD_THIS s.eot[i] = 0;
   }
 
   DEV_pic_lower_irq(6);
