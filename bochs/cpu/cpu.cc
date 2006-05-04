@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.149 2006-04-29 16:14:45 sshwarts Exp $
+// $Id: cpu.cc,v 1.150 2006-05-04 19:54:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -287,15 +287,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   // fetch and decode next instruction
   bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
-
   bx_address next_RIP = RIP + i->ilen();
-  if (! Is64BitMode()) {
-    if (((Bit32u) next_RIP - 1) > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-      BX_ERROR(("GP(0): instruction cross segment boundary !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-  }
-
   BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
   BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
   if (resolveModRM)
@@ -741,17 +733,23 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 
 void BX_CPU_C::prefetch(void)
 {
-  bx_phy_address pAddr;
-
   bx_address temp_rip = RIP;
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + temp_rip;
+  bx_phy_address pAddr;
+
+  // Calculate RIP at the beginning of the page.
+  bx_address eipPageOffset0 = RIP - (laddr & 0xfff);
+  BX_CPU_THIS_PTR eipPageBias = -eipPageOffset0;
+  BX_CPU_THIS_PTR eipPageWindowSize = 4096;
 
   if (! Is64BitMode()) {
     Bit32u temp_limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
-
     if (((Bit32u) temp_rip) > temp_limit) {
       BX_ERROR(("prefetch: EIP [%08x] > CS.limit [%08x]", (Bit32u) temp_rip, temp_limit));
       exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    if (temp_limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
+      BX_CPU_THIS_PTR eipPageWindowSize = temp_limit + BX_CPU_THIS_PTR eipPageBias + 1;
     }
   }
 
@@ -767,10 +765,6 @@ void BX_CPU_C::prefetch(void)
     pAddr = A20ADDR(laddr);
   }
 
-  // Calculate RIP at the beginning of the page.
-  bx_address eipPageOffset0 = RIP - (laddr & 0xfff);
-  BX_CPU_THIS_PTR eipPageBias = -eipPageOffset0;
-  BX_CPU_THIS_PTR eipPageWindowSize = 4096;
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
     BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, 
