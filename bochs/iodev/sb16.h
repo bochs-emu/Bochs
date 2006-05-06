@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.24 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: sb16.h,v 1.25 2006-05-06 15:19:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -152,8 +152,8 @@ typedef struct {
 class bx_sb16_buffer {
 public:
 
-  BX_SB16_BUFINL bx_sb16_buffer(void);
-  BX_SB16_BUFINL ~bx_sb16_buffer(void);
+  BX_SB16_BUFINL  bx_sb16_buffer(void);
+  BX_SB16_BUFINL ~bx_sb16_buffer();
   BX_SB16_BUFINL void init(int bufferlen);
   BX_SB16_BUFINL void reset();
 
