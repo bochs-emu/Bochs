@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.288 2006-05-07 18:58:45 sshwarts Exp $
+// $Id: cpu.h,v 1.289 2006-05-07 20:45:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -632,8 +632,6 @@ typedef struct
 
 #include "descriptor.h"
 
-typedef void * (*BxVoidFPtr_t)(void);
-
 // <TAG-CLASS-INSTRUCTION-START>
 class bxInstruction_c {
 public:
@@ -642,7 +640,7 @@ public:
   // and a function to execute the instruction after resolving
   // the memory address (if any).
 #if BX_USE_CPU_SMF
-  void  ( BX_CPP_AttrRegparmN(1) *ResolveModrm )(bxInstruction_c *);
+  void (BX_CPP_AttrRegparmN(1) *ResolveModrm)(bxInstruction_c *);
   void (*execute)(bxInstruction_c *);
 #else
   void (BX_CPU_C::*ResolveModrm)(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2722,18 +2720,23 @@ public: // for now...
 
 #if BX_SupportRepeatSpeedups
   BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
-       unsigned dstSeg, bx_address dstOff, Bit32u count);
+       unsigned dstSeg, bx_address dstOff, Bit32u  byteCount);
   BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
-       unsigned dstSeg, bx_address dstOff, Bit32u count);
+       unsigned dstSeg, bx_address dstOff, Bit32u  wordCount);
   BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
-       unsigned dstSeg, bx_address dstOff, Bit32u count);
+       unsigned dstSeg, bx_address dstOff, Bit32u dwordCount);
 
   BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
-       Bit8u  val, Bit32u count);
+       Bit8u  val, Bit32u  byteCount);
   BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
-       Bit16u val, Bit32u count);
+       Bit16u val, Bit32u  wordCount);
   BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
-       Bit32u val, Bit32u count);
+       Bit32u val, Bit32u dwordCount);
+
+  BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, bx_address dstOff,
+       Bit16u port, Bit32u wordCount);
+  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, 
+       Bit16u port, Bit32u wordCount);
 #endif
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
