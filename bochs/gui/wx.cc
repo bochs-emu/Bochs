@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.83 2006-03-14 18:13:08 vruppert Exp $
+// $Id: wx.cc,v 1.84 2006-05-07 09:49:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -1635,7 +1635,7 @@ void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
   sprintf(ips_text, "IPS: %9u", ips_count);
-  theFrame->SetStatusText(ips_text, 0);
+  theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
 }
 #endif
 
