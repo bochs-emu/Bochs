@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.287 2006-05-07 18:27:35 sshwarts Exp $
+// $Id: cpu.h,v 1.288 2006-05-07 18:58:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1618,28 +1618,18 @@ public: // for now...
   BX_SMF void MOVSX_GwEb(bxInstruction_c *);
   BX_SMF void MOVSX_GdEw(bxInstruction_c *);
 
-  BX_SMF void BSWAP_EAX(bxInstruction_c *);
-  BX_SMF void BSWAP_ECX(bxInstruction_c *);
-  BX_SMF void BSWAP_EDX(bxInstruction_c *);
-  BX_SMF void BSWAP_EBX(bxInstruction_c *);
-  BX_SMF void BSWAP_ESP(bxInstruction_c *);
-  BX_SMF void BSWAP_EBP(bxInstruction_c *);
-  BX_SMF void BSWAP_ESI(bxInstruction_c *);
-  BX_SMF void BSWAP_EDI(bxInstruction_c *);
+  BX_SMF void BSWAP_ERX(bxInstruction_c *);
 
   BX_SMF void ADD_EbIb(bxInstruction_c *);
   BX_SMF void ADC_EbIb(bxInstruction_c *);
   BX_SMF void SBB_EbIb(bxInstruction_c *);
   BX_SMF void SUB_EbIb(bxInstruction_c *);
   BX_SMF void CMP_EbIb(bxInstruction_c *);
-
   BX_SMF void XOR_EbIb(bxInstruction_c *);
   BX_SMF void OR_EbIb(bxInstruction_c *);
   BX_SMF void AND_EbIb(bxInstruction_c *);
-
   BX_SMF void ADD_EEdId(bxInstruction_c *);
   BX_SMF void ADD_EGdId(bxInstruction_c *);
-
   BX_SMF void OR_EdId(bxInstruction_c *);
   BX_SMF void OR_EwIw(bxInstruction_c *);
   BX_SMF void ADC_EdId(bxInstruction_c *);
@@ -2431,14 +2421,7 @@ public: // for now...
   BX_SMF void BTC_EqGq(bxInstruction_c *);
   BX_SMF void BTC_EqIb(bxInstruction_c *);
 
-  BX_SMF void BSWAP_RAX(bxInstruction_c *);
-  BX_SMF void BSWAP_RCX(bxInstruction_c *);
-  BX_SMF void BSWAP_RDX(bxInstruction_c *);
-  BX_SMF void BSWAP_RBX(bxInstruction_c *);
-  BX_SMF void BSWAP_RSP(bxInstruction_c *);
-  BX_SMF void BSWAP_RBP(bxInstruction_c *);
-  BX_SMF void BSWAP_RSI(bxInstruction_c *);
-  BX_SMF void BSWAP_RDI(bxInstruction_c *);
+  BX_SMF void BSWAP_RRX(bxInstruction_c *);
 
   BX_SMF void ADD_EqId(bxInstruction_c *);
   BX_SMF void OR_EqId(bxInstruction_c *);
