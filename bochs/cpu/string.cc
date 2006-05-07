@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.33 2006-03-26 19:39:37 sshwarts Exp $
+// $Id: string.cc,v 1.34 2006-05-07 18:27:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     bytesFitSrc = 1 + (paddrSrc & 0xfff);
     bytesFitDst = 1 + (paddrDst & 0xfff);
@@ -143,7 +143,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         Bit32u minOffset = (count-1);
         if ( srcOff < minOffset )
           return 0;
@@ -224,7 +224,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (! hostAddrDst) return 0;
 
   // See how many words can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st word must not cross page boundary.
     if ( ((paddrSrc & 0xfff) > 0xffe) || ((paddrDst & 0xfff) > 0xffe) )
@@ -280,7 +280,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         // Counting downward.
         Bit32u minOffset = (count-1) << 1;
         if ( srcOff < minOffset )
@@ -362,7 +362,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (! hostAddrDst) return 0;
 
   // See how many dwords can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
     if ( ((paddrSrc & 0xfff) > 0xffc) || ((paddrDst & 0xfff) > 0xffc) )
@@ -418,7 +418,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         // Counting downward.
         Bit32u minOffset = (count-1) << 2;
         if ( srcOff < minOffset )
@@ -477,7 +477,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     bytesFitDst = 1 + (paddrDst & 0xfff);
     pointerDelta = (signed int) -1;
@@ -519,7 +519,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         Bit32u minOffset = (count-1);
         if ( dstOff < minOffset )
           return 0;
@@ -571,7 +571,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (! hostAddrDst) return 0;
 
   // See how many words can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st word must not cross page boundary.
     if ((paddrDst & 0xfff) > 0xffe) return 0;
@@ -615,7 +615,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         // Counting downward.
         Bit32u minOffset = (count-1) << 1;
         if ( dstOff < minOffset )
@@ -668,7 +668,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (! hostAddrDst) return 0;
 
   // See how many dwords can fit in the rest of this page.
-  if (BX_CPU_THIS_PTR get_DF ()) {
+  if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
     if ((paddrDst & 0xfff) > 0xffc) return 0;    
@@ -712,7 +712,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
       // Now make sure transfer will fit within the constraints of the
       // segment boundaries, 0..limit for non expand-down.  We know
       // count >= 1 here.
-      if (BX_CPU_THIS_PTR get_DF ()) {
+      if (BX_CPU_THIS_PTR get_DF()) {
         // Counting downward.
         Bit32u minOffset = (count-1) << 2;
         if ( dstOff < minOffset )
@@ -765,7 +765,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     read_virtual_byte(seg, rsi, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, rdi, &temp8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement RSI, RDI */
       rsi--;
       rdi--;
@@ -791,7 +791,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     read_virtual_byte(seg, esi, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, edi, &temp8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement ESI, EDI */
       esi--;
       edi--;
@@ -850,7 +850,7 @@ doIncr16:
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement SI, DI */
       si -= incr;
       di -= incr;
@@ -888,7 +888,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     read_virtual_word(seg, rsi, &temp16);
     write_virtual_word(BX_SEG_REG_ES, rdi, &temp16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 2;
       rdi -= 2;
     }
@@ -910,7 +910,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     read_virtual_word(seg, esi, &temp16);
     write_virtual_word(BX_SEG_REG_ES, edi, &temp16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 2;
       edi -= 2;
     }
@@ -968,7 +968,7 @@ doIncr16:
 #endif
 #endif
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement SI, DI */
       si -= incr;
       di -= incr;
@@ -1005,7 +1005,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
     read_virtual_dword(seg, rsi, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, rdi, &temp32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 4;
       rdi -= 4;
     }
@@ -1064,7 +1064,7 @@ doIncr32:
 #endif
 #endif
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= incr;
       edi -= incr;
     }
@@ -1085,7 +1085,7 @@ doIncr32:
     read_virtual_dword(seg, si, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, di, &temp32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si -= 4;
       di -= 4;
     }
@@ -1121,7 +1121,7 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
     read_virtual_qword(seg, rsi, &temp64);
     write_virtual_qword(BX_SEG_REG_ES, rdi, &temp64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 8;
       rdi -= 8;
     }
@@ -1141,7 +1141,7 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
     read_virtual_qword(seg, esi, &temp64);
     write_virtual_qword(BX_SEG_REG_ES, edi, &temp64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 8;
       edi -= 8;
     }
@@ -1182,7 +1182,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi--;
       rdi--;
     }
@@ -1207,7 +1207,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi--;
       edi--;
     }
@@ -1232,7 +1232,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si--;
       di--;
     }
@@ -1273,7 +1273,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 2;
       rdi -= 2;
     }
@@ -1298,7 +1298,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 2;
       edi -= 2;
     }
@@ -1322,7 +1322,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     diff_16 = op1_16 - op2_16;
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si -= 2;
       di -= 2;
     }
@@ -1363,7 +1363,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 4;
       rdi -= 4;
     }
@@ -1388,7 +1388,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 4;
       edi -= 4;
     }
@@ -1413,7 +1413,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si -= 4;
       di -= 4;
     }
@@ -1453,7 +1453,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 8;
       rdi -= 8;
     }
@@ -1477,7 +1477,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 8;
       edi -= 8;
     }
@@ -1510,7 +1510,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
  
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi--;
     }
     else {
@@ -1530,7 +1530,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi--;
     }
     else {
@@ -1550,7 +1550,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       di--;
     }
     else {
@@ -1577,7 +1577,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 2;
     }
     else {
@@ -1596,7 +1596,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 2;
     }
     else {
@@ -1615,7 +1615,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       di -= 2;
     }
     else {
@@ -1642,7 +1642,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 4;
     }
     else {
@@ -1661,7 +1661,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 4;
     }
     else {
@@ -1680,7 +1680,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       di -= 4;
     }
     else {
@@ -1708,7 +1708,7 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 8;
     }
     else {
@@ -1726,7 +1726,7 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
 
     SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 8;
     }
     else {
@@ -1750,7 +1750,7 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 
     write_virtual_byte(BX_SEG_REG_ES, rdi, &al);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi--;
     }
     else {
@@ -1819,7 +1819,7 @@ doIncr16:
 #endif
 #endif
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= incr;
     }
     else {
@@ -1845,7 +1845,7 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
 
     write_virtual_word(BX_SEG_REG_ES, rdi, &ax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 2;
     }
     else {
@@ -1862,7 +1862,7 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
 
     write_virtual_word(BX_SEG_REG_ES, edi, &ax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 2;
     }
     else {
@@ -1878,7 +1878,7 @@ void BX_CPU_C::STOSW_YwAX(bxInstruction_c *i)
 
     write_virtual_word(BX_SEG_REG_ES, di, &ax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       di -= 2;
     }
     else {
@@ -1900,7 +1900,7 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
 
     write_virtual_dword(BX_SEG_REG_ES, rdi, &eax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 4;
     }
     else {
@@ -1917,7 +1917,7 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
 
     write_virtual_dword(BX_SEG_REG_ES, edi, &eax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 4;
     }
     else {
@@ -1933,7 +1933,7 @@ void BX_CPU_C::STOSD_YdEAX(bxInstruction_c *i)
 
     write_virtual_dword(BX_SEG_REG_ES, di, &eax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       di -= 4;
     }
     else {
@@ -1956,7 +1956,7 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
 
     write_virtual_qword(BX_SEG_REG_ES, rdi, &rax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 8;
     }
     else {
@@ -1971,7 +1971,7 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
 
     write_virtual_qword(BX_SEG_REG_ES, edi, &rax);
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 8;
     }
     else {
@@ -2004,7 +2004,7 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
     read_virtual_byte(seg, rsi, &al);
 
     AL = al;
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi--;
     }
     else {
@@ -2022,7 +2022,7 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
     read_virtual_byte(seg, esi, &al);
 
     AL = al;
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi--;
     }
     else {
@@ -2039,7 +2039,7 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
     read_virtual_byte(seg, si, &al);
 
     AL = al;
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si--;
     }
     else {
@@ -2070,7 +2070,7 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     read_virtual_word(seg, rsi, &ax);
     AX = ax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 2;
     }
     else {
@@ -2088,7 +2088,7 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     read_virtual_word(seg, esi, &ax);
     AX = ax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 2;
     }
     else {
@@ -2105,7 +2105,7 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
     read_virtual_word(seg, si, &ax);
     AX = ax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si -= 2;
     }
     else {
@@ -2136,7 +2136,7 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(seg, rsi, &eax);
     RAX = eax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 4;
     }
     else {
@@ -2154,7 +2154,7 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(seg, esi, &eax);
     RAX = eax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 4;
     }
     else {
@@ -2171,7 +2171,7 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(seg, si, &eax);
     RAX = eax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       si -= 4;
     }
     else {
@@ -2203,7 +2203,7 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
     read_virtual_qword(seg, rsi, &rax);
     RAX = rax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 8;
     }
     else {
@@ -2219,7 +2219,7 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
     read_virtual_qword(seg, esi, &rax);
     RAX = rax;
 
-    if (BX_CPU_THIS_PTR get_DF ()) {
+    if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 8;
     }
     else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.286 2006-04-29 17:21:45 sshwarts Exp $
+// $Id: cpu.h,v 1.287 2006-05-07 18:27:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1413,9 +1413,11 @@ public: // for now...
   BX_SMF void PUSH_Id(bxInstruction_c *);
   BX_SMF void PUSH_Iw(bxInstruction_c *);
   BX_SMF void INSB_YbDX(bxInstruction_c *);
-  BX_SMF void INSW_YvDX(bxInstruction_c *);
+  BX_SMF void INSW_YwDX(bxInstruction_c *);
+  BX_SMF void INSW_YdDX(bxInstruction_c *);
   BX_SMF void OUTSB_DXXb(bxInstruction_c *);
-  BX_SMF void OUTSW_DXXv(bxInstruction_c *);
+  BX_SMF void OUTSW_DXXw(bxInstruction_c *);
+  BX_SMF void OUTSW_DXXd(bxInstruction_c *);
 
   BX_SMF void BOUND_GwMa(bxInstruction_c *);
   BX_SMF void BOUND_GdMa(bxInstruction_c *);
@@ -1510,18 +1512,22 @@ public: // for now...
   BX_SMF void LOOP_Jb(bxInstruction_c *);
   BX_SMF void JCXZ_Jb(bxInstruction_c *);
   BX_SMF void IN_ALIb(bxInstruction_c *);
-  BX_SMF void IN_eAXIb(bxInstruction_c *);
+  BX_SMF void IN_AXIb(bxInstruction_c *);
+  BX_SMF void IN_EAXIb(bxInstruction_c *);
   BX_SMF void OUT_IbAL(bxInstruction_c *);
-  BX_SMF void OUT_IbeAX(bxInstruction_c *);
+  BX_SMF void OUT_IbAX(bxInstruction_c *);
+  BX_SMF void OUT_IbEAX(bxInstruction_c *);
   BX_SMF void CALL_Aw(bxInstruction_c *);
   BX_SMF void CALL_Ad(bxInstruction_c *);
   BX_SMF void JMP_Jd(bxInstruction_c *);
   BX_SMF void JMP_Jw(bxInstruction_c *);
   BX_SMF void JMP_Ap(bxInstruction_c *);
   BX_SMF void IN_ALDX(bxInstruction_c *);
-  BX_SMF void IN_eAXDX(bxInstruction_c *);
+  BX_SMF void IN_AXDX(bxInstruction_c *);
+  BX_SMF void IN_EAXDX(bxInstruction_c *);
   BX_SMF void OUT_DXAL(bxInstruction_c *);
-  BX_SMF void OUT_DXeAX(bxInstruction_c *);
+  BX_SMF void OUT_DXAX(bxInstruction_c *);
+  BX_SMF void OUT_DXEAX(bxInstruction_c *);
 
   BX_SMF void HLT(bxInstruction_c *);
   BX_SMF void CMC(bxInstruction_c *);
