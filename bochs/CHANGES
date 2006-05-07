@@ -11,12 +11,14 @@ Changes after 2.2.6 release:
   - Experimental implementation of System Management Mode (Stanislav)
   - Added emulation of SSE4 instructions (Stanislav Shwarstman)
   - Save and restore FPU opcode, FIP and FDP in FXSAVE/FRSTOR instructions
+  - Fixed bug in MOVD_EdVd opcode (always generated #UD exception)
   - Many fixes in Bochs debugger and disassembler
 
 - CPU x86-64 fixes
   - Fixed bug in SYSRET instruction legacy mode
   - Fixed bug in CALL/JMP far through 64-bit callgate in x86-64 mode
   - Correctly decode, disassemble and execute 'XCHG R8, rAX' instruction
+  - Correctly decode and execute 'BSWAP R8-R15' instructions
   - Fixed ENTER and LEAVE instructions in x86-64 mode (Stanislav)
   - Fixed CR4 exception condition (No Name)
 
