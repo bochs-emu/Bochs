@@ -225,6 +225,7 @@ APMSYM(04):
 APMSYM(05):
   cmp al, #0x05
   jne APMSYM(07)
+  sti
   hlt
   jmp APMSYM(ok)
 
