@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.95 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.96 2006-05-12 18:03:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -191,7 +191,7 @@ static BxExecutePtr_tR BxResolve64Mod1or2Base[16] = {
 typedef struct BxOpcodeInfo_t {
   Bit16u         Attr;
   BxExecutePtr_t ExecutePtr;
-  struct BxOpcodeInfo_t *AnotherArray;
+  const BxOpcodeInfo_t *AnotherArray;
 } BxOpcodeInfo_t;
 
 
@@ -203,7 +203,7 @@ typedef struct BxOpcodeInfo_t {
 /* Opcode Groups */
 /* ************* */
 
-static BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
   /* 0 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::ADD_EbIb },
   /* 1 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::OR_EbIb },
   /* 2 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::ADC_EbIb },
@@ -214,7 +214,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1EbIb[8] = {
   /* 7 */ { BxImmediate_Ib,              &BX_CPU_C::CMP_EbIb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G1Ew[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G1Ew[8] = {
   // attributes defined in main area
   /* 0 */ { BxSplitMod11b, NULL, opcodesADD_EwIw },
   /* 1 */ { BxLockable, &BX_CPU_C::OR_EwIw },
@@ -226,7 +226,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1Ew[8] = {
   /* 7 */ { 0,          &BX_CPU_C::CMP_EwIw }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G1Ed[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G1Ed[8] = {
   // attributes defined in main area
   /* 0 */ { BxSplitMod11b, NULL, opcodesADD_EdId },
   /* 1 */ { BxLockable, &BX_CPU_C::OR_EdId },
@@ -238,7 +238,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1Ed[8] = {
   /* 7 */ { 0,          &BX_CPU_C::CMP_EdId }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G1Eq[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G1Eq[8] = {
   // attributes defined in main area
   /* 0 */ { BxLockable, &BX_CPU_C::ADD_EqId },
   /* 1 */ { BxLockable, &BX_CPU_C::OR_EqId },
@@ -250,7 +250,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G1Eq[8] = {
   /* 7 */ { 0,          &BX_CPU_C::CMP_EqId }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G2Eb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G2Eb[8] = {
   // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::ROL_Eb },
   /* 1 */ { 0, &BX_CPU_C::ROR_Eb },
@@ -262,7 +262,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G2Eb[8] = {
   /* 7 */ { 0, &BX_CPU_C::SAR_Eb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G2Ew[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G2Ew[8] = {
   // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::ROL_Ew },
   /* 1 */ { 0, &BX_CPU_C::ROR_Ew },
@@ -274,7 +274,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G2Ew[8] = {
   /* 7 */ { 0, &BX_CPU_C::SAR_Ew }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G2Ed[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G2Ed[8] = {
   // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::ROL_Ed },
   /* 1 */ { 0, &BX_CPU_C::ROR_Ed },
@@ -286,7 +286,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G2Ed[8] = {
   /* 7 */ { 0, &BX_CPU_C::SAR_Ed }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
   // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::ROL_Eq },
   /* 1 */ { 0, &BX_CPU_C::ROR_Eq },
@@ -298,7 +298,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
   /* 7 */ { 0, &BX_CPU_C::SAR_Eq }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G3Eb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G3Eb[8] = {
   /* 0 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIb },
   /* 1 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIb },
   /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Eb },
@@ -309,7 +309,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G3Eb[8] = {
   /* 7 */ { 0,              &BX_CPU_C::IDIV_ALEb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G3Ew[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G3Ew[8] = {
   /* 0 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIw },
   /* 1 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIw },
   /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Ew },
@@ -320,7 +320,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G3Ew[8] = {
   /* 7 */ { 0,              &BX_CPU_C::IDIV_AXEw }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G3Ed[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G3Ed[8] = {
   /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdId },
   /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdId },
   /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Ed },
@@ -331,7 +331,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G3Ed[8] = {
   /* 7 */ { 0,              &BX_CPU_C::IDIV_EAXEd }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G3Eq[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G3Eq[8] = {
   /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqId },
   /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqId },
   /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Eq },
@@ -342,7 +342,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G3Eq[8] = {
   /* 7 */ { 0,              &BX_CPU_C::IDIV_RAXEq }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G4[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G4[8] = {
   /* 0 */ { BxLockable, &BX_CPU_C::INC_Eb },
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_Eb },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -353,7 +353,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G4[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
 
-static BxOpcodeInfo_t BxOpcodeInfo64G5w[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G5w[8] = {
   // attributes defined in main area
   /* 0 */ { BxLockable, &BX_CPU_C::INC_Ew },
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_Ew },
@@ -365,7 +365,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G5w[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G5d[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G5d[8] = {
   // attributes defined in main area
   /* 0 */ { BxLockable, &BX_CPU_C::INC_Ed },
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_Ed },
@@ -377,7 +377,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G5d[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G5q[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G5q[8] = {
   // attributes defined in main area
   /* 0 */ { BxLockable, &BX_CPU_C::INC_Eq },
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_Eq },
@@ -389,7 +389,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G5q[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G6[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G6[8] = {
   // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::SLDT_Ew },
   /* 1 */ { 0, &BX_CPU_C::STR_Ew },
@@ -409,7 +409,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G6[8] = {
 //  MOD == 11  7    1  |      #UD        |   RDTSCP
 //  MOD == 11  7   2-7 |      #UD        |    #UD
 
-static BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
+static const BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
   /* 0 */ { 0, &BX_CPU_C::SWAPGS  },
   /* 1 */ { 0, &BX_CPU_C::RDTSCP  },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -420,12 +420,12 @@ static BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t opcodesGroupModINVLPG[2] = {
+static const BxOpcodeInfo_t opcodesGroupModINVLPG[2] = {
   /* M */ { 0, &BX_CPU_C::INVLPG },
   /* R */ { BxRMGroup, NULL, opcodesGroupRmINVLPG }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G7[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G7[8] = {
   /* 0 */ { 0, &BX_CPU_C::SGDT_Ms },
   /* 1 */ { 0, &BX_CPU_C::SIDT_Ms },
   /* 2 */ { 0, &BX_CPU_C::LGDT_Ms },
@@ -436,7 +436,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G7[8] = {
   /* 7 */ { BxSplitMod11b, NULL, opcodesGroupModINVLPG }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G8EwIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G8EwIb[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -447,7 +447,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G8EwIb[8] = {
   /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EwIb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G8EdIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G8EdIb[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -458,7 +458,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G8EdIb[8] = {
   /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EdIb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G8EqIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G8EqIb[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -469,7 +469,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G8EqIb[8] = {
   /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EqIb }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G9[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G9[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { BxLockable, &BX_CPU_C::CMPXCHG8B },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -480,7 +480,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G9[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G9q[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G9q[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { BxLockable, &BX_CPU_C::CMPXCHG16B },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -491,7 +491,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G9q[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G12[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G12[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { BxImmediate_Ib | BxPrefixSSE, NULL, BxOpcodeGroupSSE_G1202 },
@@ -502,7 +502,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G12[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G13[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G13[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { BxImmediate_Ib | BxPrefixSSE, NULL, BxOpcodeGroupSSE_G1302 },
@@ -513,7 +513,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G13[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G14[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G14[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { BxImmediate_Ib | BxPrefixSSE, NULL, BxOpcodeGroupSSE_G1402 },
@@ -524,7 +524,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G14[8] = {
   /* 7 */ { BxImmediate_Ib | BxPrefixSSE, NULL, BxOpcodeGroupSSE_G1407 } 
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G15[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G15[8] = {
   /* 0 */ { 0, &BX_CPU_C::FXSAVE  },
   /* 1 */ { 0, &BX_CPU_C::FXRSTOR },
   /* 2 */ { 0, &BX_CPU_C::LDMXCSR },
@@ -535,7 +535,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G15[8] = {
   /* 7 */ { 0, &BX_CPU_C::NOP }       /* SFENCE/CFLUSH */
 };
 
-static BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {
   /* 0 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_NTA */
   /* 1 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_T0  */
   /* 2 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_T1  */
@@ -550,7 +550,7 @@ static BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {
 // 512 entries for 32bit operand size
 // 512 entries for 64bit operand size
 
-static BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   // 512 entries for 16bit operand size
   /* 00 */ { BxAnother | BxLockable, &BX_CPU_C::ADD_EbGb },
   /* 01 */ { BxAnother | BxLockable, &BX_CPU_C::ADD_EwGw },
@@ -2503,7 +2503,7 @@ modrm_done:
     */
 
     // Resolve ExecutePtr and additional opcode Attr
-    BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[b1+offset]);
+    const BxOpcodeInfo_t *OpcodeInfoPtr = &(BxOpcodeInfo64[b1+offset]);
     while(attr & BxGroupX) 
     {
        Bit32u Group = attr & BxGroupX;
