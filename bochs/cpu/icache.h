@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.13 2006-03-14 18:11:22 sshwarts Exp $
+// $Id: icache.h,v 1.14 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ public:
     resetWriteStamps();
   }
 
-  BX_CPP_INLINE Bit32u getPageWriteStamp(Bit32u pAddr) const
+  BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
   {
     if (pAddr < memSizeInBytes) 
        return pageWriteStampTable[pAddr>>12];
@@ -68,7 +68,7 @@ public:
        return ICacheWriteStampInvalid;
   }
 
-  BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(Bit32u pAddr) const
+  BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
   {
     if (pAddr < memSizeInBytes) 
        return &pageWriteStampTable[pAddr>>12];
@@ -76,13 +76,13 @@ public:
        return &ICacheWriteStampInvalid;
   }
 
-  BX_CPP_INLINE void setPageWriteStamp(Bit32u pAddr, Bit32u pageWriteStamp)
+  BX_CPP_INLINE void setPageWriteStamp(bx_phy_address pAddr, Bit32u pageWriteStamp)
   {
     if (pAddr < memSizeInBytes)
        pageWriteStampTable[pAddr>>12] = pageWriteStamp;
   }
 
-  BX_CPP_INLINE void decWriteStamp(Bit32u pAddr)
+  BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
     assert(pAddr < memSizeInBytes);
     // Decrement page write stamp, so iCache entries with older stamps
@@ -106,10 +106,10 @@ extern bxPageWriteStampTable pageWriteStampTable;
 
 struct bxICacheEntry_c
 {
-  Bit32u pAddr;       // Physical address of the instruction
-  Bit32u writeStamp;  // Generation ID. Each write to a physical page
-                      // decrements this value
-  bxInstruction_c i;  // The instruction decode information
+  bx_phy_address pAddr; // Physical address of the instruction
+  Bit32u writeStamp;    // Generation ID. Each write to a physical page
+                        // decrements this value
+  bxInstruction_c i;    // The instruction decode information
 };
 
 class BOCHSAPI bxICache_c {
@@ -119,11 +119,13 @@ public:
 public:
   bxICache_c() { flushICacheEntries(); }
 
-  BX_CPP_INLINE unsigned hash(Bit32u pAddr) const
+  BX_CPP_INLINE unsigned hash(bx_phy_address pAddr) const
   {
     // A pretty dumb hash function for now.
     return pAddr & (BxICacheEntries-1);
   }
+
+  BX_CPP_INLINE void invalidatePage(bx_phy_address pAddr);
 
   BX_CPP_INLINE void purgeICacheEntries(void);
   BX_CPP_INLINE void flushICacheEntries(void);
@@ -151,6 +153,16 @@ BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
       e->writeStamp = ICacheWriteStampInvalid;	// invalidate entry
     else
       e->writeStamp |= ICacheWriteStampMask;
+  }
+}
+
+BX_CPP_INLINE void bxICache_c::invalidatePage(bx_phy_address pAddr)
+{
+  // Take the hash of the 0th page offset.
+  unsigned iCacheHash = hash(pAddr & 0xfffff000);
+  for (unsigned o=0; o<4096; o++) {
+    entry[iCacheHash].writeStamp = ICacheWriteStampInvalid;
+    iCacheHash = (iCacheHash + 1) % BxICacheEntries;
   }
 }
 

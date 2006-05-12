@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.94 2006-05-07 18:58:47 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.95 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,8 +67,6 @@
 // -------------------------
 // In 64-bit mode, the CS, DS, ES, and SS segment overrides are ignored.
 
-
-void BxResolveError(bxInstruction_c *);
 
 static BxExecutePtr_tR BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm0,
@@ -2150,15 +2148,14 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r,rex_x,rex_b;
   unsigned rm = 0, mod = 0, nnn = 0;
-  unsigned sse_prefix;
-#define SSE_PREFIX_NONE 0
-#define SSE_PREFIX_66   1
-#define SSE_PREFIX_F2   2
-#define SSE_PREFIX_F3   4      /* only one SSE prefix could be used */
-  static int sse_prefix_index[8] = { 0, 1, 2, -1, 3, -1, -1, -1 };
 #if BX_SUPPORT_SSE >= 4
   unsigned b3 = 0;
 #endif
+#define SSE_PREFIX_NONE 0
+#define SSE_PREFIX_66   1
+#define SSE_PREFIX_F2   2
+#define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
+  unsigned sse_prefix = SSE_PREFIX_NONE;
 
   offset = 512*1;
   rex_r = 0;
@@ -2171,8 +2168,6 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
                   /*os64*/ 0, 	// operand size 64 override defaults to 0
                   /*as64*/ 1);	// address size 64 override defaults to 1
 
-  sse_prefix = SSE_PREFIX_NONE;
-
 fetch_b1:
   b1 = *iptr++;
   ilen++;
@@ -2182,7 +2177,7 @@ fetch_b1:
     BX_INSTR_PREFIX(BX_CPU_ID, b1);
     switch (b1) {
       case 0x66: // OpSize
-        sse_prefix |= SSE_PREFIX_66;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
         if (!instruction->os64L()) {
           instruction->setOs32B(0);
           offset = 0;
@@ -2227,14 +2222,14 @@ fetch_b1:
         }
         return(0);
       case 0xf2: // REPNE/REPNZ
-        sse_prefix |= SSE_PREFIX_F2;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_F2;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
         }
         return(0);
       case 0xf3: // REP/REPE/REPZ
-        sse_prefix |= SSE_PREFIX_F3;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_F3;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
@@ -2530,17 +2525,11 @@ modrm_done:
              break;
 #endif
          case BxPrefixSSE:
-         {
              /* For SSE opcodes, look into another 4 entries table 
                       with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-             int op = sse_prefix_index[sse_prefix];
-             if (op < 0) {
-                 BX_INFO(("fetchdecode: SSE opcode with two or more prefixes"));
-                 UndefinedOpcode(instruction);
-             }
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[op]);
+             BX_ASSERT(sse_prefix < 4);
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
              break;
-         }
          case BxSplitMod11b:
              /* For high frequency opcodes, two variants of the instruction are
               * implemented; one for the mod=11b case (Reg-Reg), and one for

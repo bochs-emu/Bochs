@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.47 2006-03-16 20:24:09 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.48 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
   Bit16u imm16 = i->Iw();
   pop_32(&return_EIP);
-  branch_near32(return_EIP); // includes revalidate_prefetch_q()
+  branch_near32(return_EIP);
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
   else
@@ -61,7 +61,7 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
 #endif
 
   pop_32(&return_EIP);
-  branch_near32(return_EIP); // includes revalidate_prefetch_q()
+  branch_near32(return_EIP);
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, EIP);
 }
@@ -239,7 +239,7 @@ done:
 void BX_CPU_C::JMP_Jd(bxInstruction_c *i)
 {
   Bit32u new_EIP = EIP + (Bit32s) i->Id();
-  branch_near32(new_EIP); // includes revalidate_prefetch_q()
+  branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
@@ -271,7 +271,7 @@ void BX_CPU_C::JCC_Jd(bxInstruction_c *i)
 
   if (condition) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    branch_near32(new_EIP); // includes revalidate_prefetch_q()
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
@@ -285,7 +285,7 @@ void BX_CPU_C::JZ_Jd(bxInstruction_c *i)
 {
   if (get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    branch_near32(new_EIP); // includes revalidate_prefetch_q()
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
@@ -299,7 +299,7 @@ void BX_CPU_C::JNZ_Jd(bxInstruction_c *i)
 {
   if (!get_ZF()) {
     Bit32u new_EIP = EIP + (Bit32s) i->Id();
-    branch_near32(new_EIP); // includes revalidate_prefetch_q()
+    branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
   }
 #if BX_INSTRUMENTATION
@@ -350,13 +350,12 @@ void BX_CPU_C::JMP_Ed(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
   }
 
-  branch_near32(new_EIP); // includes revalidate_prefetch_q()
+  branch_near32(new_EIP);
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
-  /* Far indirect jump */
-
+/* Far indirect jump */
 void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 {
   Bit16u cs_raw;

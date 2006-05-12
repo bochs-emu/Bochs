@@ -107,12 +107,14 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  the measurement of BogoMips and other benchmarks.
 #
 #  Examples:
-#  Machine                                         Mips
-# ________________________________________________________________
-#  2.1Ghz Athlon XP with Linux 2.6/g++ 3.4         12 to 15 Mips
-#  1.6Ghz Intel P4 with Win2000/g++ 3.3             5 to  7 Mips
-#  650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66  2 to  2.5 Mips
-#  400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3   1 to  1.8 Mips
+#
+#  Bochs Machine/Compiler                                 Mips
+# ____________________________________________________________________
+#  2.2.6 2.6Ghz Intel Core 2 Duo with WinXP/g++ 3.4      21 to 25 Mips
+#  2.2.6 2.1Ghz Athlon XP with Linux 2.6/g++ 3.4         12 to 15 Mips
+#  2.0.1 1.6Ghz Intel P4 with Win2000/g++ 3.3             5 to  7 Mips
+#  1.4   650Mhz Athlon K-7 with Linux 2.4.4/egcs-2.91.66  2 to  2.5 Mips
+#  1.4   400Mhz Pentium II with Linux 2.0.36/egcs-1.0.3   1 to  1.8 Mips
 #=======================================================================
 cpu: count=1, ips=10000000, reset_on_triple_fault=1
 
@@ -202,7 +204,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 # See FLOPPYA above for syntax
 #=======================================================================
 #floppyb: 1_44=b:, status=inserted
-floppyb: 1_44=b.img, status=inserted
+#floppyb: 1_44=b.img, status=inserted
 
 #=======================================================================
 # ATA0, ATA1, ATA2, ATA3
@@ -337,7 +339,6 @@ boot: disk
 #   floppy_bootsig_check: disabled=0
 #   floppy_bootsig_check: disabled=1
 #=======================================================================
-#floppy_bootsig_check: disabled=1
 floppy_bootsig_check: disabled=0
 
 #=======================================================================
@@ -679,7 +680,7 @@ keyboard_mapping: enabled=0, map=
 # Example:
 #   i440fxsupport: enabled=1, slot1=pcivga, slot2=ne2k
 #=======================================================================
-#i440fxsupport: enabled=1
+i440fxsupport: enabled=1
 
 #=======================================================================
 # USB1:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.289 2006-05-07 20:45:40 sshwarts Exp $
+// $Id: cpu.h,v 1.290 2006-05-12 17:04:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2629,7 +2629,6 @@ public: // for now...
   BX_SMF void Resolve64Mod1or2Base14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve64Mod1or2Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
-  BX_SMF void BxResolveError(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
@@ -2655,9 +2654,6 @@ public: // for now...
   BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i);
   BX_SMF void prefetch(void);
-  // revalidate_prefetch_q is now a no-op, due to the newer EIP window
-  // technique.
-  BX_SMF BX_CPP_INLINE void revalidate_prefetch_q(void) { }
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void) 
   {
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
@@ -2709,7 +2705,7 @@ public: // for now...
   BX_SMF Bit64u* v2h_write_qword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
 #endif
 
-  BX_SMF void branch_near32(Bit32u new_eip) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_near32(Bit32u new_EIP) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif

@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.210 2006-04-05 18:49:31 sshwarts Exp $
+$Id: user.dbk,v 1.211 2006-05-12 17:04:19 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3089,16 +3089,18 @@ speed.</para></footnote>.
   <tgroup cols="3" align="left" colsep="1" rowsep="1">
 <thead>
   <row>
+    <entry>Bochs</entry>
     <entry>Speed</entry>
-    <entry>Machine</entry>
+    <entry>Machine/Compiler</entry>
     <entry>Typical IPS</entry>
   </row>
 </thead>
   <tbody>
-<row><entry>2.1Ghz</entry><entry>Athlon XP with Linux 2.6/g++ 3.4 </entry><entry> 12 to 15 million</entry></row>
-<row><entry>1.6Ghz</entry><entry>Intel P4 with Win2000/g++ 3.3 </entry><entry> 5 to  7 million</entry></row>
-<row><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
-<row><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
+<row><entry>2.2.6</entry><entry>2.6Ghz</entry><entry>Intel Core 2 Duo with WinXP/g++ 3.4 </entry><entry> 21 to 25 million</entry></row>
+<row><entry>2.2.6</entry><entry>2.1Ghz</entry><entry>Athlon XP with Linux 2.6/g++ 3.4 </entry><entry> 12 to 15 million</entry></row>
+<row><entry>2.0.1</entry><entry>1.6Ghz</entry><entry>Intel P4 with Win2000/g++ 3.3 </entry><entry> 5 to  7 million</entry></row>
+<row><entry>1.4  </entry><entry>650MHz</entry><entry>Athlon K-7 with Linux 2.4.x  </entry><entry> 2 to 2.5 million</entry></row>
+<row><entry>1.4  </entry><entry>400MHz</entry><entry>Pentium II with Linux 2.0.x  </entry><entry> 1 to 1.8 million</entry></row>
 </tbody>
 </tgroup>
 </table>

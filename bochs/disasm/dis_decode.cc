@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.31 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.32 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -74,8 +74,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
-#define SSE_PREFIX_F3   4      /* only one SSE prefix could be used */
-  static int sse_prefix_index[8] = { 0, 1, 2, -1, 3, -1, -1, -1 };
+#define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
   for(;;)
@@ -84,14 +83,6 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     insn.prefixes++;
 
     switch(insn.b1) {
-      case 0xf3:     // rep
-        sse_prefix |= SSE_PREFIX_F3;
-        continue;
-
-      case 0xf2:     // repne
-        sse_prefix |= SSE_PREFIX_F2;
-        continue;
-
       case 0x40:     // rex
       case 0x41:
       case 0x42:
@@ -145,7 +136,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
       case 0x66:     // operand size override
         if (!insn.os_64) insn.os_32 = !is_32;
-        sse_prefix |= SSE_PREFIX_66;
+        if (!sse_prefix) sse_prefix = SSE_PREFIX_66;
         continue;
 
       case 0x67:     // address size override
@@ -154,6 +145,14 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
         continue;
 
       case 0xf0:     // lock
+        continue;
+
+      case 0xf2:     // repne
+        if (!sse_prefix) sse_prefix = SSE_PREFIX_F2;
+        continue;
+
+      case 0xf3:     // rep
+        if (!sse_prefix) sse_prefix = SSE_PREFIX_F3;
         continue;
 
       // no more prefixes
@@ -205,17 +204,10 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
          break;
 
        case _GRPSSE:
-         {
-            if(sse_prefix) insn.prefixes--;
-            /* For SSE opcodes, look into another 4 entries table 
-                  with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-            int op = sse_prefix_index[sse_prefix];
-            if (op < 0) {
-              printf("disassembler panic - too many sse prefixes !\n");
-              return x86_insn(is_32, is_64);
-            }
-            entry = &(OPCODE_TABLE(entry)[op]);
-         }
+         if(sse_prefix) insn.prefixes--;
+         /* For SSE opcodes, look into another 4 entries table 
+            with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
+         entry = &(OPCODE_TABLE(entry)[sse_prefix]);
          break;
 
        case _SPLIT11B:

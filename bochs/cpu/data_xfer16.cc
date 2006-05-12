@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.38 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.39 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -202,14 +202,14 @@ void BX_CPU_C::MOVSX_GwEb(bxInstruction_c *i)
 
 void BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
 {
-    Bit16u op2_16, op1_16;
+  Bit16u op2_16, op1_16;
 
 #if BX_DEBUGGER && BX_MAGIC_BREAKPOINT
   // (mch) Magic break point
   // Note for mortals: the instruction to trigger this is "xchgw %bx,%bx"
   if (i->nnn() == 3 && i->modC0() && i->rm() == 3)
   {
-     BX_CPU_THIS_PTR magic_break = 1;
+    if (bx_dbg.magic_break_enabled) BX_CPU_THIS_PTR magic_break = 1;
   }
 #endif
 

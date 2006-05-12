@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.150 2006-05-04 19:54:25 sshwarts Exp $
+// $Id: cpu.cc,v 1.151 2006-05-12 17:04:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -396,15 +396,11 @@ repeat_not_done:
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
-    if (BX_CPU_THIS_PTR async_event) {
-      invalidate_prefetch_q();
-      goto debugger_check;
-    }
-    goto repeat_loop;
-#else  /* if BX_DEBUGGER == 1 */
+    // when debugger is not enabled, directly jump to next iteration
+    if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
+#endif
     invalidate_prefetch_q();
     goto debugger_check;
-#endif
 
 repeat_done:
     RIP = next_RIP;
@@ -442,19 +438,12 @@ debugger_check:
         BX_PANIC(("Weird break point condition"));
     }
   }
+
 #if BX_MAGIC_BREAKPOINT
-  // (mch) Magic break point support
   if (BX_CPU_THIS_PTR magic_break) {
-    if (bx_dbg.magic_break_enabled) {
-      BX_DEBUG(("Stopped on MAGIC BREAKPOINT"));
-      BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-      return;
-    }
-    else {
-      BX_CPU_THIS_PTR magic_break = 0;
-      BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
-      BX_DEBUG(("Ignoring MAGIC BREAKPOINT"));
-    }
+    BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
+    BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+    return;
   }
 #endif
 
@@ -485,10 +474,8 @@ debugger_check:
 #if BX_SUPPORT_SMP || BX_DEBUGGER
   // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
   // instructions and then return so that the other processors have a chance
-  // to run.  This is used only when simulating multiple processors.  If only
-  // one processor, don't waste any cycles on it!  Also, it is not needed
-  // with the debugger because its guard mechanism provides the same
-  // functionality.
+  // to run. This is used only when simulating multiple processors. If only
+  // one processor, don't waste any cycles on it!
   CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #endif
 
@@ -993,7 +980,6 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
 
 bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
 {
-  //fprintf (stderr, "end_instr_bp: checking for icount or ^C\n");
   BX_CPU_THIS_PTR guard_found.icount++;
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = eip;

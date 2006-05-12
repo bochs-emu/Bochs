@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.94 2006-05-07 18:58:46 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.95 2006-05-12 17:04:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,8 +60,6 @@
  *  The XCHG instruction always asserts the LOCK# signal regardless of the
  *  presence or absence of the LOCK prefix.
  */
-
-void BxResolveError(bxInstruction_c *);
 
 static BxExecutePtr_tR BxResolve16Mod0[8] = {
   &BX_CPU_C::Resolve16Mod0Rm0,
@@ -1527,7 +1525,6 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain
   unsigned b1, b2, ilen=0, attr, os_32;
   unsigned imm_mode, offset;
   unsigned rm = 0, mod=0, nnn=0;
-  unsigned sse_prefix;
 #if BX_SUPPORT_SSE >= 4
   unsigned b3 = 0;
 #endif
@@ -1535,8 +1532,8 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
-#define SSE_PREFIX_F3   4      /* only one SSE prefix could be used */
-  static int sse_prefix_index[8] = { 0, 1, 2, -1, 3, -1, -1, -1 };
+#define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
+  unsigned sse_prefix = SSE_PREFIX_NONE;
 
   os_32 = is_32 =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
@@ -1546,7 +1543,6 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain
                   /*os32*/   is_32,  /*as32*/ is_32,
                   /*os64*/       0,  /*as64*/     0);
 
-  sse_prefix = SSE_PREFIX_NONE;
   offset = os_32 << 9; // * 512
 
 fetch_b1:
@@ -1560,7 +1556,7 @@ fetch_b1:
       case 0x66: // OpSize
         os_32 = !is_32;
         offset = os_32 << 9;
-        sse_prefix |= SSE_PREFIX_66;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
         instruction->setOs32B(os_32);
         if (ilen < remain) {
           goto fetch_b1;
@@ -1573,14 +1569,14 @@ fetch_b1:
         }
         return(0);
       case 0xf2: // REPNE/REPNZ
-        sse_prefix |= SSE_PREFIX_F2;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_F2;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
         }
         return(0);
       case 0xf3: // REP/REPE/REPZ
-        sse_prefix |= SSE_PREFIX_F3;
+        if(!sse_prefix) sse_prefix = SSE_PREFIX_F3;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
@@ -1835,17 +1831,11 @@ modrm_done:
              break;
 #endif
          case BxPrefixSSE:
-         {
              /* For SSE opcodes, look into another 4 entries table 
                       with the opcode prefixes (NONE, 0x66, 0xF2, 0xF3) */
-             int op = sse_prefix_index[sse_prefix];
-             if (op < 0) {
-                 BX_INFO(("fetchdecode: SSE opcode with two or more prefixes"));
-                 UndefinedOpcode(instruction);
-             }
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[op]);
+             BX_ASSERT(sse_prefix < 4);
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[sse_prefix]);
              break;
-         }
          case BxSplitMod11b:
              /* For high frequency opcodes, two variants of the instruction are
               * implemented; one for the mod=11b case (Reg-Reg), and one for
@@ -2029,10 +2019,4 @@ void BX_CPU_C::BxError(bxInstruction_c *i)
   BX_INFO(("WARNING: Encountered an unknown instruction (signalling illegal instruction)"));
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolveError(bxInstruction_c *i)
-{
-  BX_PANIC(("BxResolveError: instruction with op1=0x%x", i->b1()));
 }
