@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.147 2006-04-23 16:11:16 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.148 2006-05-13 12:29:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -237,16 +237,17 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-    case 6: // DR6
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ((i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE())) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_DdRd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
       }
 #endif
+      // Fall through to DR6 case
+    case 6: // DR6
 #if BX_CPU_LEVEL <= 4
       // On 386/486 bit12 is settable
       BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
@@ -259,22 +260,23 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     case 5: // DR5
+      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // access to DR5 causes #UD
+#if BX_CPU_LEVEL >= 4
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
+        BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
+        UndefinedOpcode(i);
+      }
+#endif
+      // Fall through to DR7 case
     case 7: // DR7
       // Note: 486+ ignore GE and LE flags.  On the 386, exact
       // data breakpoint matching does not occur unless it is enabled
       // by setting the LE and/or GE flags.
 
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
-      // access to DR5 causes #UD
-#if BX_CPU_LEVEL >= 4
-      if ((i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE())) {
-        // Debug extensions (CR4.DE) on
-        BX_INFO(("MOV_DdRd: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-#endif
       // Some sanity checks...
-      if ( val_32 & 0x00002000 ) {
+      if (val_32 & 0x00002000) {
         BX_INFO(("MOV_DdRd: GD bit not supported yet"));
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
@@ -312,13 +314,13 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       // if we have breakpoints enabled then we must check
       // breakpoints condition in cpu loop
       if(BX_CPU_THIS_PTR dr7 & 0xff)
-       BX_CPU_THIS_PTR async_event = 1;
+        BX_CPU_THIS_PTR async_event = 1;
       break;
 
     default:
       BX_PANIC(("MOV_DdRd: control register index out of range"));
       break;
-    }
+  }
 }
 
 void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
@@ -360,37 +362,39 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-    case 6: // DR6
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_RdDd: access to DR4 causes #UD"));
         UndefinedOpcode(i);
       }
 #endif
+      // Fall through to DR6 case
+    case 6: // DR6
       val_32 = BX_CPU_THIS_PTR dr6;
       break;
 
     case 5: // DR5
-    case 7: // DR7
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
 #if BX_CPU_LEVEL >= 4
-      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_RdDd: access to DR5 causes #UD"));
         UndefinedOpcode(i);
       }
 #endif
+      // Fall through to DR7 case
+    case 7: // DR7
       val_32 = BX_CPU_THIS_PTR dr7;
       break;
 
     default:
       BX_PANIC(("MOV_RdDd: control register index out of range"));
       val_32 = 0;
-    }
+  }
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 }
 
@@ -444,35 +448,36 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-    case 6: // DR6
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
-      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_DqRq: access to DR4 causes #UD"));
         UndefinedOpcode(i);
       }
+      // Fall through to DR6 case
+    case 6: // DR6
       // On Pentium+, bit12 is always zero
       BX_CPU_THIS_PTR dr6 = (BX_CPU_THIS_PTR dr6 & 0xffff0ff0) |
                             (val_64 & 0x0000e00f);
       break;
 
     case 5: // DR5
+      // DR5 aliased to DR7 by default.  With Debug Extensions on,
+      // access to DR5 causes #UD
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
+        BX_INFO(("MOV_DqRq: access to DR5 causes #UD"));
+        UndefinedOpcode(i);
+      }
+      // Fall through to DR7 case
     case 7: // DR7
       // Note: 486+ ignore GE and LE flags.  On the 386, exact
       // data breakpoint matching does not occur unless it is enabled
       // by setting the LE and/or GE flags.
 
-      // DR5 aliased to DR7 by default.  With Debug Extensions on,
-      // access to DR5 causes #UD
-      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions (CR4.DE) on
-        BX_INFO(("MOV_DqRq: access to DR5 causes #UD"));
-        UndefinedOpcode(i);
-      }
-
       // Some sanity checks...
-      if ( val_64 & 0x00002000 ) {
+      if (val_64 & 0x00002000) {
         BX_PANIC(("MOV_DqRq: GD bit not supported yet"));
         // Note: processor clears GD upon entering debug exception
         // handler, to allow access to the debug registers
@@ -513,7 +518,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
     default:
       BX_PANIC(("MOV_DqRq: control register index out of range"));
       break;
-    }
+  }
 }
 
 void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
@@ -555,26 +560,28 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       break;
 
     case 4: // DR4
-    case 6: // DR6
       // DR4 aliased to DR6 by default.  With Debug Extensions on,
       // access to DR4 causes #UD
-      if ( (i->nnn() == 4) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_RqDq: access to DR4 causes #UD"));
         UndefinedOpcode(i);
       }
+      // Fall through to DR6 case
+    case 6: // DR6
       val_64 = BX_CPU_THIS_PTR dr6;
       break;
 
     case 5: // DR5
-    case 7: // DR7
       // DR5 aliased to DR7 by default.  With Debug Extensions on,
       // access to DR5 causes #UD
-      if ( (i->nnn() == 5) && (BX_CPU_THIS_PTR cr4.get_DE()) ) {
-        // Debug extensions on
+      if (BX_CPU_THIS_PTR cr4.get_DE()) {
+        // Debug extensions CR4.DE is ON
         BX_INFO(("MOV_RqDq: access to DR5 causes #UD"));
         UndefinedOpcode(i);
       }
+      // Fall through to DR7 case
+    case 7: // DR7
       val_64 = BX_CPU_THIS_PTR dr7;
       break;
 
