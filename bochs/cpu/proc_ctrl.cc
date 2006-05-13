@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.148 2006-05-13 12:29:12 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.149 2006-05-13 12:49:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2247,65 +2247,61 @@ void BX_CPU_C::SWAPGS(bxInstruction_c *i)
 #endif
 
 #if BX_X86_DEBUGGER
-Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
+Bit32u BX_CPU_C::hwdebug_compare(bx_address laddr_0, unsigned size,
                           unsigned opa, unsigned opb)
 {
   // Support x86 hardware debug facilities (DR0..DR7)
   Bit32u dr7 = BX_CPU_THIS_PTR dr7;
 
   bx_bool ibpoint_found = 0;
-  Bit32u  laddr_n = laddr_0 + (size - 1);
-  Bit32u  dr0, dr1, dr2, dr3;
-  Bit32u  dr0_n, dr1_n, dr2_n, dr3_n;
-  Bit32u  len0, len1, len2, len3;
-  static  unsigned alignment_mask[4] =
-    //    00b=1      01b=2     10b=undef     11b=4
-    { 0xffffffff, 0xfffffffe, 0xffffffff, 0xfffffffc };
-  Bit32u dr0_op, dr1_op, dr2_op, dr3_op;
+  bx_address laddr_n = laddr_0 + (size - 1);
+  static bx_address alignment_mask[4] =
+    // 00b=1  01b=2  10b=undef  11b=4
+    {  0x0,   0x1,   0x0,       0x3   };
 
-  len0 = (dr7>>18) & 3;
-  len1 = (dr7>>22) & 3;
-  len2 = (dr7>>26) & 3;
-  len3 = (dr7>>30) & 3;
+  Bit32u len0 = (dr7>>18) & 3;
+  Bit32u len1 = (dr7>>22) & 3;
+  Bit32u len2 = (dr7>>26) & 3;
+  Bit32u len3 = (dr7>>30) & 3;
 
-  dr0 = BX_CPU_THIS_PTR dr0 & alignment_mask[len0];
-  dr1 = BX_CPU_THIS_PTR dr1 & alignment_mask[len1];
-  dr2 = BX_CPU_THIS_PTR dr2 & alignment_mask[len2];
-  dr3 = BX_CPU_THIS_PTR dr3 & alignment_mask[len3];
+  bx_address dr0 = (BX_CPU_THIS_PTR dr0) & ~(alignment_mask[len0]);
+  bx_address dr1 = (BX_CPU_THIS_PTR dr1) & ~(alignment_mask[len1]);
+  bx_address dr2 = (BX_CPU_THIS_PTR dr2) & ~(alignment_mask[len2]);
+  bx_address dr3 = (BX_CPU_THIS_PTR dr3) & ~(alignment_mask[len3]);
 
-  dr0_n = dr0 + len0;
-  dr1_n = dr1 + len1;
-  dr2_n = dr2 + len2;
-  dr3_n = dr3 + len3;
+  bx_address dr0_n = dr0 + len0;
+  bx_address dr1_n = dr1 + len1;
+  bx_address dr2_n = dr2 + len2;
+  bx_address dr3_n = dr3 + len3;
 
-  dr0_op = (dr7>>16) & 3;
-  dr1_op = (dr7>>20) & 3;
-  dr2_op = (dr7>>24) & 3;
-  dr3_op = (dr7>>28) & 3;
+  Bit32u dr0_op = (dr7>>16) & 3;
+  Bit32u dr1_op = (dr7>>20) & 3;
+  Bit32u dr2_op = (dr7>>24) & 3;
+  Bit32u dr3_op = (dr7>>28) & 3;
 
   // See if this instruction address matches any breakpoints
-  if ( (dr7 & 0x00000003) ) {
-    if ( (dr0_op==opa || dr0_op==opb) &&
+  if ((dr7 & 0x00000003)) {
+    if ((dr0_op==opa || dr0_op==opb) &&
          (laddr_0 <= dr0_n) &&
-         (laddr_n >= dr0) )
+         (laddr_n >= dr0))
       ibpoint_found = 1;
   }
-  if ( (dr7 & 0x0000000c) ) {
-    if ( (dr1_op==opa || dr1_op==opb) &&
+  if ((dr7 & 0x0000000c)) {
+    if ((dr1_op==opa || dr1_op==opb) &&
          (laddr_0 <= dr1_n) &&
-         (laddr_n >= dr1) )
+         (laddr_n >= dr1))
       ibpoint_found = 1;
   }
-  if ( (dr7 & 0x00000030) ) {
-    if ( (dr2_op==opa || dr2_op==opb) &&
+  if ((dr7 & 0x00000030)) {
+    if ((dr2_op==opa || dr2_op==opb) &&
          (laddr_0 <= dr2_n) &&
-         (laddr_n >= dr2) )
+         (laddr_n >= dr2))
       ibpoint_found = 1;
   }
-  if ( (dr7 & 0x000000c0) ) {
-    if ( (dr3_op==opa || dr3_op==opb) &&
+  if ((dr7 & 0x000000c0)) {
+    if ((dr3_op==opa || dr3_op==opb) &&
          (laddr_0 <= dr3_n) &&
-         (laddr_n >= dr3) )
+         (laddr_n >= dr3))
       ibpoint_found = 1;
   }
 
@@ -2318,25 +2314,26 @@ Bit32u BX_CPU_C::hwdebug_compare(Bit32u laddr_0, unsigned size,
   if (ibpoint_found) {
     // dr6_mask is the return value.  These bits represent the bits to
     // be OR'd into DR6 as a result of the debug event.
-    Bit32u  dr6_mask=0;
-    if ( (dr0_op==opa || dr0_op==opb) &&
+    Bit32u dr6_mask=0;
+    if ((dr0_op==opa || dr0_op==opb) &&
          (laddr_0 <= dr0_n) &&
-         (laddr_n >= dr0) )
+         (laddr_n >= dr0))
       dr6_mask |= 0x01;
-    if ( (dr1_op==opa || dr1_op==opb) &&
+    if ((dr1_op==opa || dr1_op==opb) &&
          (laddr_0 <= dr1_n) &&
-         (laddr_n >= dr1) )
+         (laddr_n >= dr1))
       dr6_mask |= 0x02;
-    if ( (dr2_op==opa || dr2_op==opb) &&
+    if ((dr2_op==opa || dr2_op==opb) &&
          (laddr_0 <= dr2_n) &&
-         (laddr_n >= dr2) )
+         (laddr_n >= dr2))
       dr6_mask |= 0x04;
-    if ( (dr3_op==opa || dr3_op==opb) &&
+    if ((dr3_op==opa || dr3_op==opb) &&
          (laddr_0 <= dr3_n) &&
-         (laddr_n >= dr3) )
+         (laddr_n >= dr3))
       dr6_mask |= 0x08;
     return(dr6_mask);
   }
+
   return(0);
 }
 #endif

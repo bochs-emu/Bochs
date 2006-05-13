@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.290 2006-05-12 17:04:18 sshwarts Exp $
+// $Id: cpu.h,v 1.291 2006-05-13 12:49:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1086,14 +1086,14 @@ public: // for now...
   bx_segment_reg_t        ldtr; /* local descriptor table register */
   bx_segment_reg_t        tr;   /* task register */
 
-  /* debug registers 0-7 (unimplemented) */
+  /* debug registers DR0-DR7 */
 #if BX_CPU_LEVEL >= 3
-  Bit32u dr0;
-  Bit32u dr1;
-  Bit32u dr2;
-  Bit32u dr3;
-  Bit32u dr6;
-  Bit32u dr7;
+  bx_address dr0;
+  bx_address dr1;
+  bx_address dr2;
+  bx_address dr3;
+  Bit32u     dr6;
+  Bit32u     dr7;
 #endif
 
   /* TR3 - TR7 (Test Register 3-7), unimplemented */
@@ -1103,12 +1103,10 @@ public: // for now...
   bx_cr0_t       cr0;
   Bit32u         cr1;
   bx_address     cr2;
-  bx_phy_address cr3;
-  bx_phy_address cr3_masked;
-#endif
-
+  bx_phy_address cr3, cr3_masked;
 #if BX_CPU_LEVEL >= 4
-  bx_cr4_t cr4;
+  bx_cr4_t       cr4;
+#endif
 #endif
 
   /* SMM base register */
@@ -2872,7 +2870,7 @@ public: // for now...
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support
-  BX_SMF Bit32u  hwdebug_compare(Bit32u laddr, unsigned size,
+  BX_SMF Bit32u hwdebug_compare(bx_address laddr, unsigned size,
                                  unsigned opa, unsigned opb);
 #endif
 

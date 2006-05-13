@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.151 2006-05-12 17:04:18 sshwarts Exp $
+// $Id: cpu.cc,v 1.152 2006-05-13 12:49:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -670,10 +670,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled
     if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-      Bit32u iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_eip;
-      Bit32u dr6_bits;
-      if ( (dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction,
-                                       BX_HWDebugInstruction)) )
+      bx_address iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_eip;
+      Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
+      if (dr6_bits)
       {
         // Add to the list of debug events thus far.
         BX_CPU_THIS_PTR async_event = 1;
@@ -681,7 +680,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         // If debug events are not inhibited on this boundary,
         // fire off a debug fault.  Otherwise handle it on the next
         // boundary. (becomes a trap)
-        if ( !(BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG) ) {
+        if (! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG)) {
           // Commit debug events to DR6
           BX_CPU_THIS_PTR dr6 = BX_CPU_THIS_PTR debug_trap;
           exception(BX_DB_EXCEPTION, 0, 0); // no error, not interrupt
