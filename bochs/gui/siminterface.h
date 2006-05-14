@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.189 2006-05-01 18:24:47 vruppert Exp $
+// $Id: siminterface.h,v 1.190 2006-05-14 15:47:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -791,6 +791,10 @@ public:
       char *label,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum = 0);
+  bx_shadow_bool_c(bx_param_c *parent,
+      char *name,
+      bx_bool *ptr_to_real_val,
+      Bit8u bitnum = 0);
   virtual Bit64s get64();
   virtual void set(Bit64s val);
 };
@@ -879,7 +883,6 @@ class BOCHSAPI bx_shadow_data_c : public bx_param_c {
 public:
   bx_shadow_data_c(bx_param_c *parent,
       char *name,
-      char *description,
       Bit8u *ptr_to_data,
       Bit32u data_size);
   Bit8u *getptr() {return data_ptr;}
@@ -931,6 +934,7 @@ public:
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
   bx_list_c(bx_param_c *parent, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, char *name, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c(bx_param_c *parent, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
   bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list);
   virtual ~bx_list_c();

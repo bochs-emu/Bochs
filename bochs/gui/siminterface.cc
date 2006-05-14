@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.145 2006-05-01 18:24:47 vruppert Exp $
+// $Id: siminterface.cc,v 1.146 2006-05-14 15:47:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -865,7 +865,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   int type, ntype = SIM->get_max_log_level();
   FILE *fp;
 
-  DEV_before_save_state();
+  bx_sr_before_save_state();
   sprintf(sr_file, "%s/config", checkpoint_path);
   write_rc(sr_file, 1);
   sprintf(sr_file, "%s/logopts", checkpoint_path);
@@ -1350,7 +1350,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 64;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT64S >> (63 - (highbit - lowbit))) << lowbit);
   val.p64bit = ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1370,7 +1370,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 64;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT64U >> (63 - (highbit - lowbit))) << lowbit);
   val.p64bit = (Bit64s*) ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1390,7 +1390,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 16;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT32S >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1410,7 +1410,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 32;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT32U >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = (Bit32s*) ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1430,7 +1430,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 16;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT16S >> (15 - (highbit - lowbit))) << lowbit);
   val.p16bit = ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1450,7 +1450,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 16;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT16U >> (15 - (highbit - lowbit))) << lowbit);
   val.p16bit = (Bit16s*) ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1470,6 +1470,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 16;
   this->lowbit = lowbit;
+  this->mask = ((BX_MAX_BIT8S >> (7 - (highbit - lowbit))) << lowbit);
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p8bit = ptr_to_real_val;
   if (base == 16) {
@@ -1490,7 +1491,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 {
   this->varsize = 8;
   this->lowbit = lowbit;
-  this->mask = (1 << (highbit - lowbit)) - 1;
+  this->mask = ((BX_MAX_BIT8U >> (7 - (highbit - lowbit))) << lowbit);
   val.p8bit = (Bit8s*) ptr_to_real_val;
   if (base == 16) {
     this->base = base;
@@ -1574,6 +1575,16 @@ bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum)
   : bx_param_bool_c(parent, name, label, NULL, (Bit64s) *ptr_to_real_val, 1)
+{
+  val.pbool = ptr_to_real_val;
+  this->bitnum = bitnum;
+}
+
+bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
+      char *name,
+      bx_bool *ptr_to_real_val,
+      Bit8u bitnum)
+  : bx_param_bool_c(parent, name, NULL, NULL, (Bit64s) *ptr_to_real_val, 1)
 {
   val.pbool = ptr_to_real_val;
   this->bitnum = bitnum;
@@ -1773,10 +1784,9 @@ void bx_param_string_c::set_initial_val(char *buf) {
 #if BX_SUPPORT_SAVE_RESTORE
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     char *name,
-    char *description,
     Bit8u *ptr_to_data,
     Bit32u data_size)
-  : bx_param_c(SIM->gen_param_id(), name, description)
+  : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_PARAM_DATA);
   this->data_ptr = ptr_to_data;
@@ -1793,6 +1803,22 @@ bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
   : bx_param_c(SIM->gen_param_id(), "list", "")
 {
   set_type(BXT_LIST);
+  this->size = 0;
+  this->maxsize = maxsize;
+  this->list = new bx_param_c*  [maxsize];
+  this->parent = NULL;
+  if (parent) {
+    BX_ASSERT(parent->get_type() == BXT_LIST);
+    this->parent = (bx_list_c *)parent;
+    this->parent->add(this);
+  }
+  init("");
+}
+
+bx_list_c::bx_list_c(bx_param_c *parent, char *name, int maxsize)
+  : bx_param_c(SIM->gen_param_id(), name, "")
+{
+  set_type (BXT_LIST);
   this->size = 0;
   this->maxsize = maxsize;
   this->list = new bx_param_c*  [maxsize];

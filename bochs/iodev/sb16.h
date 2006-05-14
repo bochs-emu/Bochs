@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.25 2006-05-06 15:19:57 sshwarts Exp $
+// $Id: sb16.h,v 1.26 2006-05-14 15:47:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -226,9 +226,9 @@ private:
     int bankmsb[BX_SB16_PATCHTABLESIZE];   // current patch lists
     int program[BX_SB16_PATCHTABLESIZE];
 
-    int outputinit, timer_handle;
-    int current_timer;                         // no. of delta times passed
+    int timer_handle, current_timer;           // no. of delta times passed
     Bit32u last_delta_time;                    // timer value at last command
+    bx_bool outputinit;
   } mpu401;
 
   // the DSP variables
@@ -250,17 +250,17 @@ private:
       // issigned= 0: unsigned data, 1: signed data
       // highspeed= 0: normal mode, 1: highspeed mode (only SBPro)
       // timer= so many us between data bytes
-      int mode, bits, fifo, output, bps;
-      int stereo, issigned, highspeed, format, timer;
+      int mode, bits, bps, format, timer;
+      bx_bool fifo, output, stereo, issigned, highspeed;
       Bit16u count;     // bytes remaining in this transfer
-      Bit8u *chunk;	// buffers up to BX_SB16_WAVEPACKETSIZE bytes
+      Bit8u *chunk;	// buffers up to BX_SOUND_OUTPUT_WAVEPACKETSIZE bytes
       int chunkindex;	// index into the buffer
       int chunkcount;   // for input: size of the recorded input
       Bit16u timeconstant;
       Bit16u blocklength, samplerate;
     } dma;
     int timer_handle;   // handle for the DMA timer
-    int outputinit;	// have the output functions been initialized
+    bx_bool outputinit; // have the output functions been initialized
   } dsp;
 
   // the ASP/CSP registers
@@ -303,7 +303,7 @@ private:
   struct bx_sb16_emul_struct {
     bx_sb16_buffer datain, dataout;
     bx_sb16_ins_map remaplist[256];
-    int remaps;
+    Bit16u remaps;
   } emuldata;
 
       /* DMA input and output, 8 and 16 bit */

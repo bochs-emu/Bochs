@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.85 2006-05-01 18:24:47 vruppert Exp $
+// $Id: ne2k.cc,v 1.86 2006-05-14 15:47:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,48 +76,50 @@ bx_ne2k_c::~bx_ne2k_c()
 //
 void bx_ne2k_c::reset(unsigned type)
 {
-  BX_DEBUG (("reset"));
-  // Zero out registers and memory
-  memset( & BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR) );
-  memset( & BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
-  memset( & BX_NE2K_THIS s.IMR, 0, sizeof(BX_NE2K_THIS s.IMR));
-  memset( & BX_NE2K_THIS s.DCR, 0, sizeof(BX_NE2K_THIS s.DCR));
-  memset( & BX_NE2K_THIS s.TCR, 0, sizeof(BX_NE2K_THIS s.TCR));
-  memset( & BX_NE2K_THIS s.TSR, 0, sizeof(BX_NE2K_THIS s.TSR));
-  memset( & BX_NE2K_THIS s.RCR, 0, sizeof(BX_NE2K_THIS s.RCR));
-  memset( & BX_NE2K_THIS s.RSR, 0, sizeof(BX_NE2K_THIS s.RSR));
-  BX_NE2K_THIS s.local_dma  = 0;
-  BX_NE2K_THIS s.page_start = 0;
-  BX_NE2K_THIS s.page_stop  = 0;
-  BX_NE2K_THIS s.bound_ptr  = 0;
-  BX_NE2K_THIS s.tx_page_start = 0;
-  BX_NE2K_THIS s.num_coll   = 0;
-  BX_NE2K_THIS s.tx_bytes   = 0;
-  BX_NE2K_THIS s.fifo       = 0;
-  BX_NE2K_THIS s.remote_dma = 0;
-  BX_NE2K_THIS s.remote_start = 0;
-  BX_NE2K_THIS s.remote_bytes = 0;
-  BX_NE2K_THIS s.tallycnt_0 = 0;
-  BX_NE2K_THIS s.tallycnt_1 = 0;
-  BX_NE2K_THIS s.tallycnt_2 = 0;
+  BX_DEBUG(("reset"));
+  if (type == BX_RESET_HARDWARE) {
+    // Zero out registers and memory
+    memset(&BX_NE2K_THIS s.CR,  0, sizeof(BX_NE2K_THIS s.CR));
+    memset(&BX_NE2K_THIS s.IMR, 0, sizeof(BX_NE2K_THIS s.IMR));
+    memset(&BX_NE2K_THIS s.DCR, 0, sizeof(BX_NE2K_THIS s.DCR));
+    memset(&BX_NE2K_THIS s.TCR, 0, sizeof(BX_NE2K_THIS s.TCR));
+    memset(&BX_NE2K_THIS s.TSR, 0, sizeof(BX_NE2K_THIS s.TSR));
+    memset(&BX_NE2K_THIS s.RCR, 0, sizeof(BX_NE2K_THIS s.RCR));
+    memset(&BX_NE2K_THIS s.RSR, 0, sizeof(BX_NE2K_THIS s.RSR));
+    BX_NE2K_THIS s.local_dma  = 0;
+    BX_NE2K_THIS s.page_start = 0;
+    BX_NE2K_THIS s.page_stop  = 0;
+    BX_NE2K_THIS s.bound_ptr  = 0;
+    BX_NE2K_THIS s.tx_page_start = 0;
+    BX_NE2K_THIS s.num_coll   = 0;
+    BX_NE2K_THIS s.tx_bytes   = 0;
+    BX_NE2K_THIS s.fifo       = 0;
+    BX_NE2K_THIS s.remote_dma = 0;
+    BX_NE2K_THIS s.remote_start = 0;
+    BX_NE2K_THIS s.remote_bytes = 0;
+    BX_NE2K_THIS s.tallycnt_0 = 0;
+    BX_NE2K_THIS s.tallycnt_1 = 0;
+    BX_NE2K_THIS s.tallycnt_2 = 0;
 
-  memset( & BX_NE2K_THIS s.physaddr, 0, sizeof(BX_NE2K_THIS s.physaddr));
-  memset( & BX_NE2K_THIS s.mchash, 0, sizeof(BX_NE2K_THIS s.mchash));
-  BX_NE2K_THIS s.curr_page = 0;
+    memset(&BX_NE2K_THIS s.physaddr, 0, sizeof(BX_NE2K_THIS s.physaddr));
+    memset(&BX_NE2K_THIS s.mchash, 0, sizeof(BX_NE2K_THIS s.mchash));
+    BX_NE2K_THIS s.curr_page = 0;
 
-  BX_NE2K_THIS s.rempkt_ptr   = 0;
-  BX_NE2K_THIS s.localpkt_ptr = 0;
-  BX_NE2K_THIS s.address_cnt  = 0;
+    BX_NE2K_THIS s.rempkt_ptr   = 0;
+    BX_NE2K_THIS s.localpkt_ptr = 0;
+    BX_NE2K_THIS s.address_cnt  = 0;
 
-  memset( & BX_NE2K_THIS s.mem, 0, sizeof(BX_NE2K_THIS s.mem));
-  
-  // Set power-up conditions
-  BX_NE2K_THIS s.CR.stop      = 1;
-  BX_NE2K_THIS s.CR.rdma_cmd  = 4;
-  BX_NE2K_THIS s.ISR.reset    = 1;
-  BX_NE2K_THIS s.DCR.longaddr = 1;
+    memset(&BX_NE2K_THIS s.mem, 0, sizeof(BX_NE2K_THIS s.mem));
 
-  set_irq_level(0);
+    // Set power-up conditions
+    BX_NE2K_THIS s.CR.stop      = 1;
+    BX_NE2K_THIS s.CR.rdma_cmd  = 4;
+    BX_NE2K_THIS s.DCR.longaddr = 1;
+
+    set_irq_level(0);
+  }
+  memset(&BX_NE2K_THIS s.ISR, 0, sizeof(BX_NE2K_THIS s.ISR));
+  BX_NE2K_THIS s.ISR.reset = 1;
 }
 
 //
@@ -407,7 +409,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
     break;
 
   case 0xf:  // Reset register
-    theNE2kDevice->reset(BX_RESET_SOFTWARE);
+    // end of reset pulse
     break;
 
   default: // this is invalid, but happens under win95 device detection
@@ -1279,7 +1281,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.85 2006-05-01 18:24:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.86 2006-05-14 15:47:37 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
