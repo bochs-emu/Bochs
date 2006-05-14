@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.21 2006-01-21 12:51:54 vruppert Exp $
+$Id: development.dbk,v 1.22 2006-05-14 09:16:29 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -68,7 +68,7 @@ anything here."   At this point, you've succeeded and you never have to do
 this step again, ever.
 
 <screen>
-  ssh <replaceable>sfusername</replaceable>@cvs.sf.net
+  ssh <replaceable>sfusername</replaceable>@bochs.cvs.sf.net
 </screen>
 </para>
 
@@ -109,9 +109,9 @@ overwrite it.
 </para>
 
 <screen>
-  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@cvs.sourceforge.net:/cvsroot/bochs"
+  export CVSROOT=":ext:<replaceable>sfusername</replaceable>@bochs.cvs.sourceforge.net:/cvsroot/bochs"
   cvs -z3 checkout bochs
-  <replaceable>sfusername</replaceable>@cvs.sourceforge.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@bochs.cvs.sourceforge.net's password:        <replaceable><--type your password</replaceable>
 </screen>
 
 <para>
@@ -141,9 +141,9 @@ since you downloaded it last.
 
 <screen>
   $ cvs update file.cc
-  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   $ cvs commit file.cc
-  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [editor opens. type log message, save, and exit.]
 </screen>
 
@@ -163,7 +163,7 @@ Here is an example of a successful checkin:
 
 <screen>
   $ cvs commit misc.txt
-  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [edit log msg]
   Checking in misc.txt;
   /cvsroot/bochs/bochs/doc/docbook/misc.txt,v  <--  misc.txt
@@ -175,7 +175,7 @@ And here is an aborted one:
 
 <screen>
   $ cvs commit misc.txt
-  <replaceable>sfusername</replaceable>@cvs.sf.net's password:        <replaceable><--type your password</replaceable>
+  <replaceable>sfusername</replaceable>@bochs.cvs.sf.net's password:        <replaceable><--type your password</replaceable>
   [quit editor without saving]
   Log message unchanged or not specified
   a)bort, c)ontinue, e)dit, !)reuse this message unchanged for remaining dirs
@@ -2075,8 +2075,8 @@ Do a clean checkout using anonymous cvs, so that the source tarball
 will be all set up for anonymous cvs.  First I'll create a clean
 directory called "clean-anon".
 <screen>
-cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs login
-cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs \
+cvs -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs login
+cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs \
   checkout -d clean-anon bochs
 </screen>
 Start with clean-anon which tracks the CVS head.  Change its sticky tag

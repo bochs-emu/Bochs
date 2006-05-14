@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.211 2006-05-12 17:04:19 sshwarts Exp $
+$Id: user.dbk,v 1.212 2006-05-14 09:16:29 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -986,10 +986,10 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 
 <figure><title>Checking out Bochs in CVS</title>
 <screen>
-  user$ <command>cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs login</command>
-  (Logging in to anonymous@cvs.sourceforge.net)
+  user$ <command>cvs -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs login</command>
+  (Logging in to anonymous@bochs.cvs.sourceforge.net)
   CVS password:    <replaceable>(there is no password, just press Enter)</replaceable>
-  user$ <command>cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
+  user$ <command>cvs -z3 -d:pserver:anonymous@bochs.cvs.sourceforge.net:/cvsroot/bochs checkout bochs</command>
   cvs server: Updating bochs
   U bochs/.bochsrc
   U bochs/.conf.AIX.4.3.1
