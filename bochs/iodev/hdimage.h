@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.2 2006-03-25 18:04:15 sshwarts Exp $
+// $Id: hdimage.h,v 1.3 2006-05-14 21:15:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -44,7 +44,8 @@
  } sparse_header_t;
 
 #define STANDARD_HEADER_MAGIC     "Bochs Virtual HD Image"
-#define STANDARD_HEADER_VERSION   (0x00010000)
+#define STANDARD_HEADER_V1        (0x00010000)
+#define STANDARD_HEADER_VERSION   (0x00020000)
 #define STANDARD_HEADER_SIZE      (512)
 
 
@@ -78,8 +79,18 @@
    Bit32u  catalog;    // #entries in the catalog
    Bit32u  bitmap;     // bitmap size in bytes
    Bit32u  extent;     // extent size in bytes
+   Bit32u  reserved;   // for data alignment
    Bit64u  disk;       // disk size in bytes
  } redolog_specific_header_t;
+
+ typedef struct
+ {
+   // the fields in the header are kept in little endian
+   Bit32u  catalog;    // #entries in the catalog
+   Bit32u  bitmap;     // bitmap size in bytes
+   Bit32u  extent;     // extent size in bytes
+   Bit64u  disk;       // disk size in bytes
+ } redolog_specific_header_v1_t;
 
  typedef struct
  {
@@ -88,6 +99,14 @@
 
    Bit8u padding[STANDARD_HEADER_SIZE - (sizeof (standard_header_t) + sizeof (redolog_specific_header_t))];
  } redolog_header_t;
+
+ typedef struct
+ {
+   standard_header_t standard;
+   redolog_specific_header_v1_t specific;
+
+   Bit8u padding[STANDARD_HEADER_SIZE - (sizeof (standard_header_t) + sizeof (redolog_specific_header_v1_t))];
+ } redolog_header_v1_t;
 
 // htod : convert host to disk (little) endianness
 // dtoh : convert disk (little) to host endianness

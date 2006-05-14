@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.2 2005-12-10 18:37:35 vruppert Exp $
+// $Id: hdimage.cc,v 1.3 2006-05-14 21:15:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -858,15 +858,26 @@ redolog_t::redolog_t ()
 void
 redolog_t::print_header()
 {
-        BX_INFO(("redolog : Standard Header : magic='%s', type='%s', subtype='%s', version = %d.%d",
-                header.standard.magic, header.standard.type, header.standard.subtype,
-                dtoh32(header.standard.version)/0x10000,
-                dtoh32(header.standard.version)%0x10000));
-        BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = " FMT_LL "d",
-                dtoh32(header.specific.catalog),
-                dtoh32(header.specific.bitmap),
-                dtoh32(header.specific.extent),
-                dtoh64(header.specific.disk)));
+  BX_INFO(("redolog : Standard Header : magic='%s', type='%s', subtype='%s', version = %d.%d",
+           header.standard.magic, header.standard.type, header.standard.subtype,
+           dtoh32(header.standard.version)/0x10000,
+           dtoh32(header.standard.version)%0x10000));
+  if (dtoh32(header.standard.version) == STANDARD_HEADER_VERSION) {
+    BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = " FMT_LL "d",
+             dtoh32(header.specific.catalog),
+             dtoh32(header.specific.bitmap),
+             dtoh32(header.specific.extent),
+             dtoh64(header.specific.disk)));
+  } else if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
+    redolog_header_v1_t header_v1;
+
+    memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
+    BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = " FMT_LL "d",
+             dtoh32(header_v1.specific.catalog),
+             dtoh32(header_v1.specific.bitmap),
+             dtoh32(header_v1.specific.extent),
+             dtoh64(header_v1.specific.disk)));
+  }
 }
 
 int 
@@ -1010,10 +1021,18 @@ redolog_t::open (const char* filename, const char *type, Bit64u size)
                return -1;
         }
 
-        if (dtoh32(header.standard.version) != STANDARD_HEADER_VERSION)
+        if ((dtoh32(header.standard.version) != STANDARD_HEADER_VERSION) &&
+            (dtoh32(header.standard.version) != STANDARD_HEADER_V1))
         {
                BX_PANIC(("redolog : Bad header version")); 
                return -1;
+        }
+
+        if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
+          redolog_header_v1_t header_v1;
+
+          memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
+          header.specific.disk = header_v1.specific.disk;
         }
 
         catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
