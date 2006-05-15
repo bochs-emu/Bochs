@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.318 2006-04-06 19:14:34 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.319 2006-05-15 17:40:16 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1484,6 +1484,7 @@ AC_ARG_ENABLE(vme,
     ]
   )
 
+support_mmx=1
 AC_MSG_CHECKING(for MMX support)
 AC_ARG_ENABLE(mmx,
   [  --enable-mmx                      MMX support],
@@ -1493,6 +1494,7 @@ AC_ARG_ENABLE(mmx,
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_MMX, 0)
+    support_mmx=0
    fi
    ],
   [
@@ -1615,8 +1617,13 @@ AC_ARG_ENABLE(sep,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_SEP, 0)
+    if test "$bx_cpu_level" -ge 6 -a "$support_mmx" = 1; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_SEP, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_SEP, 0)
+    fi
     ]
   )
 
