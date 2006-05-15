@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.101 2006-05-01 18:24:47 vruppert Exp $
+// $Id: init.cc,v 1.102 2006-05-15 18:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,33 +157,6 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
-
-  /* hack for the following fields.  Its easier to decode mod-rm bytes if
-     you can assume there's always a base & index register used.  For
-     modes which don't really use them, point to an empty (zeroed) register.
-   */
-  empty_register = 0;
-
-  // 16bit address mode base register, used for mod-rm decoding
-
-  _16bit_base_reg[0] = &gen_reg[BX_16BIT_REG_BX].word.rx;
-  _16bit_base_reg[1] = &gen_reg[BX_16BIT_REG_BX].word.rx;
-  _16bit_base_reg[2] = &gen_reg[BX_16BIT_REG_BP].word.rx;
-  _16bit_base_reg[3] = &gen_reg[BX_16BIT_REG_BP].word.rx;
-  _16bit_base_reg[4] = (Bit16u*) &empty_register;
-  _16bit_base_reg[5] = (Bit16u*) &empty_register;
-  _16bit_base_reg[6] = &gen_reg[BX_16BIT_REG_BP].word.rx;
-  _16bit_base_reg[7] = &gen_reg[BX_16BIT_REG_BX].word.rx;
-
-  // 16bit address mode index register, used for mod-rm decoding
-  _16bit_index_reg[0] = &gen_reg[BX_16BIT_REG_SI].word.rx;
-  _16bit_index_reg[1] = &gen_reg[BX_16BIT_REG_DI].word.rx;
-  _16bit_index_reg[2] = &gen_reg[BX_16BIT_REG_SI].word.rx;
-  _16bit_index_reg[3] = &gen_reg[BX_16BIT_REG_DI].word.rx;
-  _16bit_index_reg[4] = &gen_reg[BX_16BIT_REG_SI].word.rx;
-  _16bit_index_reg[5] = &gen_reg[BX_16BIT_REG_DI].word.rx;
-  _16bit_index_reg[6] = (Bit16u*) &empty_register;
-  _16bit_index_reg[7] = (Bit16u*) &empty_register;
 
 // <TAG-INIT-CPU-START>
   // for decoding instructions: access to seg reg's via index number

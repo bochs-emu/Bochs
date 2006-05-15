@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.291 2006-05-13 12:49:45 sshwarts Exp $
+// $Id: cpu.h,v 1.292 2006-05-15 18:00:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -180,14 +180,6 @@
 
 #define BX_READ_16BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].word.rx)
 #define BX_READ_32BIT_REG(index) (BX_CPU_THIS_PTR gen_reg[index].dword.erx)
-
-#define BX_READ_16BIT_BASE_REG(var, index) {\
-  var = *BX_CPU_THIS_PTR _16bit_base_reg[index];\
-}
-
-#define BX_READ_16BIT_INDEX_REG(var, index) {\
-  var = *BX_CPU_THIS_PTR _16bit_index_reg[index];\
-}
 
 #define BX_WRITE_16BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
@@ -1143,11 +1135,6 @@ public: // for now...
   volatile bx_bool INTR;
   volatile bx_bool smi_pending;
   volatile bx_bool nmi_pending;
-
-  // for accessing registers by index number
-  Bit16u *_16bit_base_reg[8];
-  Bit16u *_16bit_index_reg[8];
-  Bit32u empty_register;
 
 // <TAG-CLASS-CPU-START>
   // for decoding instructions; accessing seg reg's by index
