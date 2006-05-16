@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.40 2006-04-06 18:30:05 sshwarts Exp $
+// $Id: sse.cc,v 1.41 2006-05-16 16:20:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -534,7 +534,7 @@ void BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  Bit8u shift = i->Ib() * 8;
+  unsigned shift = i->Ib() * 8;
 
   if(shift == 0) {
     result.xmm64u(0) = op2.xmm64u(0);

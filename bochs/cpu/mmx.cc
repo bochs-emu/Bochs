@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.53 2006-04-06 18:30:05 sshwarts Exp $
+// $Id: mmx.cc,v 1.54 2006-05-16 16:20:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -585,7 +585,7 @@ void BX_CPU_C::PALIGNR_PqQqIb(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
   }
 
-  Bit8u shift = i->Ib() * 8;
+  unsigned shift = i->Ib() * 8;
 
   if(shift == 0)
     MMXUQ(result) = MMXUQ(op2);
