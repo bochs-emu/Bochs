@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.83 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: apic.cc,v 1.84 2006-05-16 20:55:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,11 +209,12 @@ void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
   : bx_generic_apic_c(BX_LAPIC_BASE_ADDR), cpu(mycpu), cpu_id(cpu->which_cpu())
 {
-  reset();
-
   // KPL: Register a non-active timer for use when the timer is started.
   timer_handle = bx_pc_system.register_timer_ticks(this,
             BX_CPU(0)->local_apic.periodic_smf, 0, 0, 0, "lapic");
+  timer_active = 0;
+
+  reset();
 	
   INTR = 0;
 }
@@ -222,7 +223,6 @@ void bx_local_apic_c::reset()
 {
   /* same as INIT but also sets arbitration ID and APIC ID */
   init();
-//arb_id = id;
 }
 
 void bx_local_apic_c::init()
@@ -283,9 +283,9 @@ void bx_local_apic_c::set_id(Bit8u newid)
     BX_INFO(("naming convention for apics requires id=0-%d only", APIC_MAX_ID));
   }
   if(BX_CPU_LEVEL<2)
-    BX_INFO(( "8086" ));
+    BX_INFO(("8086"));
   else
-    BX_INFO(( "80%d86", BX_CPU_LEVEL ));
+    BX_INFO(("80%d86", BX_CPU_LEVEL));
 }
 
 void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
@@ -589,7 +589,6 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
     }
   case 0x380: // initial count for timer
     *data = timer_initial;
-    //fprintf(stderr, "APIC: R(Initial Count Register) = %u\n", *data);
     break;
   case 0x390: // current count for timer
     if(timer_active==0) {

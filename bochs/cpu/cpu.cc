@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.153 2006-05-16 16:47:00 sshwarts Exp $
+// $Id: cpu.cc,v 1.154 2006-05-16 20:55:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ void purgeICaches(void)
   BX_CPU(0)->iCache.purgeICacheEntries();
 #endif
 
-  pageWriteStampTable.resetWriteStamps();
+  pageWriteStampTable.purgeWriteStamps();
 }
 
 void flushICaches(void)

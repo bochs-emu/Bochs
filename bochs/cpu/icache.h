@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.14 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: icache.h,v 1.15 2006-05-16 20:55:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,7 @@
 // bit30: 1=Long Mode, 0=not Long Mode.
 // bit29: 1=iCache page, 0=Data.
 const Bit32u ICacheWriteStampInvalid = 0x1fffffff;
-const Bit32u ICacheWriteStampMax     = 0x1fffffff;
+const Bit32u ICacheWriteStampStart   = 0x1fffffff;
 const Bit32u ICacheWriteStampMask    = 0x1fffffff;
 const Bit32u ICacheFetchModeMask     = ~ICacheWriteStampMask;
 
@@ -91,12 +91,20 @@ public:
   }
 
   BX_CPP_INLINE void resetWriteStamps(void);
+  BX_CPP_INLINE void purgeWriteStamps(void);
 };
 
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
   for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
     pageWriteStampTable[i] = ICacheWriteStampInvalid;
+  }
+}
+
+BX_CPP_INLINE void bxPageWriteStampTable::purgeWriteStamps(void)
+{
+  for (Bit32u i=0; i<(memSizeInBytes>>12); i++) {
+    pageWriteStampTable[i] |= ICacheWriteStampMask;
   }
 }
 

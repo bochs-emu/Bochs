@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.54 2006-04-29 17:21:45 sshwarts Exp $
+// $Id: pc_system.cc,v 1.55 2006-05-16 20:55:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,7 +48,7 @@ double     m_ips; // Millions of Instructions Per Second
 #define MinAllowableTimerPeriod 1
 
 #if BX_SUPPORT_ICACHE
-const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampMax;
+const Bit64u bx_pc_system_c::NullTimerInterval = ICacheWriteStampStart;
 #else
 // This must be the maximum 32-bit unsigned int value, NOT (Bit64u) -1.
 const Bit64u bx_pc_system_c::NullTimerInterval = 0xffffffff;
@@ -65,6 +65,7 @@ bx_pc_system_c::bx_pc_system_c()
   // case here.  It should never be turned off or modified, and its
   // duration should always remain the same.
   ticksTotal = 0; // Reset ticks since emulator started.
+  timer[0].inUse      = 1;
   timer[0].period     = NullTimerInterval;
   timer[0].timeToFire = ticksTotal + NullTimerInterval;
   timer[0].active     = 1;
@@ -231,10 +232,8 @@ void bx_pc_system_c::exit(void)
 int bx_pc_system_c::register_timer( void *this_ptr, void (*funct)(void *),
   Bit32u useconds, bx_bool continuous, bx_bool active, const char *id)
 {
-  Bit64u ticks;
-
   // Convert useconds to number of ticks.
-  ticks = (Bit64u) (double(useconds) * m_ips);
+  Bit64u ticks = (Bit64u) (double(useconds) * m_ips);
 
   return register_timer_ticks(this_ptr, funct, ticks, continuous, active, id);
 }
@@ -244,16 +243,6 @@ int bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t func
 {
   unsigned i;
 
-#if BX_TIMER_DEBUG
-  if (numTimers >= BX_MAX_TIMERS) {
-    BX_PANIC(("register_timer: too many registered timers."));
-  }
-  if (this_ptr == NULL)
-    BX_PANIC(("register_timer_ticks: this_ptr is NULL"));
-  if (funct == NULL)
-    BX_PANIC(("register_timer_ticks: funct is NULL"));
-#endif
-
   // If the timer frequency is rediculously low, make it more sane.
   // This happens when 'ips' is too low.
   if (ticks < MinAllowableTimerPeriod) {
@@ -262,10 +251,22 @@ int bx_pc_system_c::register_timer_ticks(void* this_ptr, bx_timer_handler_t func
     ticks = MinAllowableTimerPeriod;
   }
 
-  for (i=0; i < numTimers; i++) {
+  // search for new timer for i=1, i=0 is reserved for NullTimer
+  for (i=1; i < numTimers; i++) {
     if (timer[i].inUse == 0)
       break;
   }
+
+#if BX_TIMER_DEBUG
+  if (i==0)
+    BX_PANIC(("register_timer: cannot register NullTimer again!"));
+  if (numTimers >= BX_MAX_TIMERS)
+    BX_PANIC(("register_timer: too many registered timers"));
+  if (this_ptr == NULL)
+    BX_PANIC(("register_timer_ticks: this_ptr is NULL!"));
+  if (funct == NULL)
+    BX_PANIC(("register_timer_ticks: funct is NULL!"));
+#endif
 
   timer[i].inUse      = 1;
   timer[i].period     = ticks;
@@ -395,23 +396,23 @@ void bx_pc_system_c::nullTimer(void* this_ptr)
 #if BX_DEBUGGER
 void bx_pc_system_c::timebp_handler(void* this_ptr)
 {
-      BX_CPU(0)->break_point = BREAK_POINT_TIME;
-      BX_DEBUG(( "Time breakpoint triggered" ));
+   BX_CPU(0)->break_point = BREAK_POINT_TIME;
+   BX_DEBUG(("Time breakpoint triggered"));
 
-      if (timebp_queue_size > 1) {
-	    Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
-	    bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 1);
-      }
-      timebp_queue_size--;
-      for (int i = 0; i < timebp_queue_size; i++)
-	    timebp_queue[i] = timebp_queue[i+1];
+   if (timebp_queue_size > 1) {
+     Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
+     bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 1);
+   }
+   timebp_queue_size--;
+   for (int i = 0; i < timebp_queue_size; i++)
+   timebp_queue[i] = timebp_queue[i+1];
 }
 #endif // BX_DEBUGGER
 
 Bit64u bx_pc_system_c::time_usec_sequential()
 {
-    Bit64u this_time_usec = time_usec();
-    if(this_time_usec != lastTimeUsec) {
+   Bit64u this_time_usec = time_usec();
+   if(this_time_usec != lastTimeUsec) {
       Bit64u diff_usec = this_time_usec-lastTimeUsec;
       lastTimeUsec = this_time_usec;
       if(diff_usec >= usecSinceLast) {
@@ -419,13 +420,14 @@ Bit64u bx_pc_system_c::time_usec_sequential()
       } else {
 	usecSinceLast -= diff_usec;
       }
-    }
-    usecSinceLast++;
-    return (this_time_usec+usecSinceLast);
+   }
+   usecSinceLast++;
+   return (this_time_usec+usecSinceLast);
 }
 
-Bit64u bx_pc_system_c::time_usec() {
-  return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips );
+Bit64u bx_pc_system_c::time_usec()
+{
+  return (Bit64u) (((double)(Bit64s)time_ticks()) / m_ips);
 }
 
 void bx_pc_system_c::start_timers(void) { }
@@ -435,6 +437,8 @@ void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool cont
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
     BX_PANIC(("activate_timer_ticks: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("activate_timer_ticks: timer 0 is the NullTimer!"));
   if (timer[i].period < MinAllowableTimerPeriod)
     BX_PANIC(("activate_timer_ticks: timer[%u].period of " FMT_LL "u < min of %u",
               i, timer[i].period, MinAllowableTimerPeriod));
@@ -470,6 +474,8 @@ void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continu
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
     BX_PANIC(("activate_timer: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("activate_timer: timer 0 is the nullTimer!"));
 #endif
 
   // if useconds = 0, use default stored in period field
@@ -500,6 +506,8 @@ void bx_pc_system_c::deactivate_timer(unsigned i)
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
     BX_PANIC(("deactivate_timer: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("deactivate_timer: timer 0 is the nullTimer!"));
 #endif
 
   timer[i].active = 0;
