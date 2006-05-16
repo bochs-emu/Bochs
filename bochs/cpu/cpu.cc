@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.152 2006-05-13 12:49:45 sshwarts Exp $
+// $Id: cpu.cc,v 1.153 2006-05-16 16:47:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,56 +147,52 @@ BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStor
   {
     // iCache hit. Instruction is already decoded and stored in the
     // instruction cache.
-
 #if BX_INSTRUMENTATION
     // An instruction was found in the iCache.
     BX_INSTR_OPCODE(BX_CPU_ID, BX_CPU_THIS_PTR eipFetchPtr + eipBiased,
        i->ilen(), BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
 #endif
+    return i;
   }
-  else
 #endif
-  {
-    // iCache miss. No validated instruction with matching fetch parameters
-    // is in the iCache. Or we're not compiling iCache support in, in which
-    // case we always have an iCache miss.  :^)
-    bx_address remainingInPage;
-    remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-    unsigned maxFetch = 15;
-    if (remainingInPage < 15) maxFetch = remainingInPage;
-    Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+
+  // iCache miss. No validated instruction with matching fetch parameters
+  // is in the iCache. Or we're not compiling iCache support in, in which
+  // case we always have an iCache miss.  :^)
+  bx_address remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned maxFetch = 15;
+  if (remainingInPage < 15) maxFetch = remainingInPage;
+  Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
 #if BX_SUPPORT_ICACHE
-    // The entry will be marked valid if fetchdecode will succeed
-    cache_entry->writeStamp = ICacheWriteStampInvalid;
-    InstrICache_Increment(iCacheMisses);
+  // The entry will be marked valid if fetchdecode will succeed
+  cache_entry->writeStamp = ICacheWriteStampInvalid;
+  InstrICache_Increment(iCacheMisses);
 #endif
 
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, i, maxFetch);
-    else
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+    ret = fetchDecode64(fetchPtr, i, maxFetch);
+  else
 #endif
-      ret = fetchDecode(fetchPtr, i, maxFetch);
+    ret = fetchDecode(fetchPtr, i, maxFetch);
 
-    if (ret==0) {
+  if (ret==0) {
+    // return iStorage and leave icache entry invalid (do not cache instr)
+    boundaryFetch(fetchPtr, remainingInPage, iStorage);
+    return iStorage;
+  }
+  else
+  {
 #if BX_SUPPORT_ICACHE
-      i = iStorage;	// return iStorage and leave icache entry invalid
-#endif
-      boundaryFetch(fetchPtr, remainingInPage, i);
-    }
-    else
-    {
-#if BX_SUPPORT_ICACHE
-      cache_entry->pAddr = pAddr;
-      cache_entry->writeStamp = pageWriteStamp;
+    cache_entry->pAddr = pAddr;
+    cache_entry->writeStamp = pageWriteStamp;
 #endif
 #if BX_INSTRUMENTATION
-      // An instruction was either fetched, or found in the iCache.
-      BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
-           BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
+    // An instruction was either fetched, or found in the iCache.
+    BX_INSTR_OPCODE(BX_CPU_ID, fetchPtr, i->ilen(),
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, Is64BitMode());
 #endif
-    }
   }
 
   return i;
@@ -218,7 +214,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   { 
     // only from exception function can we get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
-
 #if BX_GDBSTUB
     if (bx_dbg.gdbstub_enabled) {
       return;
@@ -257,27 +252,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     }
   }
 
-#if BX_DEBUGGER
-  {
-  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
-  if (dbg_is_begin_instr_bpoint(
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-         debug_eip,
-         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-         Is64BitMode()))
-    {
-      return;
-    }
-  }
-#endif  // #if BX_DEBUGGER
-
-#if BX_EXTERNAL_DEBUGGER
-  if (regs.debug_state != debug_run) {
-    bx_external_debugger(BX_CPU_THIS);
-  }
-#endif
-
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
   if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
@@ -296,6 +270,27 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   // An instruction will have been fetched using either the normal case,
   // or the boundary fetch (across pages), by this point.
   BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+
+#if BX_DEBUGGER
+  {
+    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+    if (dbg_is_begin_instr_bpoint(
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
+         BX_CPU_THIS_PTR prev_eip,
+         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
+         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
+         Is64BitMode()))
+    {
+      return;
+    }
+  }
+#endif  // #if BX_DEBUGGER
+
+#if BX_EXTERNAL_DEBUGGER
+  if (regs.debug_state != debug_run) {
+    bx_external_debugger(BX_CPU_THIS);
+  }
+#endif
 
 #if BX_DISASM
   if (BX_CPU_THIS_PTR trace) {
