@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.99 2006-05-07 09:34:51 vruppert Exp $
+// $Id: devices.cc,v 1.100 2006-05-18 19:57:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.99 2006-05-07 09:34:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.100 2006-05-18 19:57:11 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -140,7 +140,11 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   for (i=0; i < BX_MAX_IRQS; i++) {
     irq_handler_name[i] = NULL;
-    }
+  }
+
+  // register as soon as possible - the devices want to have their timers !
+  bx_virt_timer.init();
+  bx_slowdown_timer.init();
 
   // BBD: At present, the only difference between "core" and "optional"
   // plugins is that initialization and reset of optional plugins is handled
@@ -258,10 +262,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   /*--- 8254 PIT ---*/
   pit = & bx_pit;
   pit->init();
-
-  bx_virt_timer.init();
-
-  bx_slowdown_timer.init();
 
 #if BX_SUPPORT_IODEBUG
   iodebug = &bx_iodebug;
