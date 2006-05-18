@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.56 2006-05-18 13:42:22 mcb30 Exp $
+// $Id: pc_system.cc,v 1.57 2006-05-18 18:08:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -437,6 +437,8 @@ void bx_pc_system_c::activate_timer_ticks(unsigned i, Bit64u ticks, bx_bool cont
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
     BX_PANIC(("activate_timer_ticks: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("activate_timer_ticks: timer 0 is the NullTimer!"));
   if (timer[i].period < MinAllowableTimerPeriod)
     BX_PANIC(("activate_timer_ticks: timer[%u].period of " FMT_LL "u < min of %u",
               i, timer[i].period, MinAllowableTimerPeriod));
@@ -472,6 +474,8 @@ void bx_pc_system_c::activate_timer(unsigned i, Bit32u useconds, bx_bool continu
 #if BX_TIMER_DEBUG
   if (i >= numTimers)
     BX_PANIC(("activate_timer: timer %u OOB", i));
+  if (i == 0)
+    BX_PANIC(("activate_timer: timer 0 is the nullTimer!"));
 #endif
 
   // if useconds = 0, use default stored in period field
