@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.102 2006-05-15 18:00:55 sshwarts Exp $
+// $Id: init.cc,v 1.103 2006-05-19 20:04:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -831,11 +831,49 @@ void BX_CPU_C::assert_checks(void)
     }
   }
 
-  // VM should be OFF in long mode
 #if BX_SUPPORT_X86_64
+  // VM should be OFF in long mode
   if (IsLongMode()) {
     if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("assert_checks: VM is set in long mode !"));
   }
+
+  // CS.L and CS.D_B are mutualy exclusive
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l &&
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+  {
+    BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
+  }
+#endif
+
+  // validate CR0 register
+  if (BX_CPU_THIS_PTR cr0.pe != (BX_CPU_THIS_PTR cr0.val32 & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.PE !"));
+  if (BX_CPU_THIS_PTR cr0.mp != ((BX_CPU_THIS_PTR cr0.val32 >>  1) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.MP !"));
+  if (BX_CPU_THIS_PTR cr0.em != ((BX_CPU_THIS_PTR cr0.val32 >>  2) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.EM !"));
+  if (BX_CPU_THIS_PTR cr0.ts != ((BX_CPU_THIS_PTR cr0.val32 >>  3) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.TS !"));
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr0.ne != ((BX_CPU_THIS_PTR cr0.val32 >>  5) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.NE !"));
+  if (BX_CPU_THIS_PTR cr0.wp != ((BX_CPU_THIS_PTR cr0.val32 >> 16) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.WP !"));
+  if (BX_CPU_THIS_PTR cr0.am != ((BX_CPU_THIS_PTR cr0.val32 >> 18) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.AM !"));
+  if (BX_CPU_THIS_PTR cr0.nw != ((BX_CPU_THIS_PTR cr0.val32 >> 29) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.NW !"));
+  if (BX_CPU_THIS_PTR cr0.cd != ((BX_CPU_THIS_PTR cr0.val32 >> 30) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.CD !"));
+#endif
+  if (BX_CPU_THIS_PTR cr0.pg != ((BX_CPU_THIS_PTR cr0.val32 >> 31) & 1))
+    BX_PANIC(("assert_checks: inconsistent CR0.PG !"));
+
+  if (BX_CPU_THIS_PTR cr0.pg && ! BX_CPU_THIS_PTR cr0.pe)
+    BX_PANIC(("assert_checks: CR0.PG=1 with CR0.PE=0 !"));
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr0.nw && ! BX_CPU_THIS_PTR cr0.cd)
+    BX_PANIC(("assert_checks: CR0.NW=1 with CR0.CD=0 !"));
 #endif
 }
 

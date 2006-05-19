@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.16 2006-05-18 20:16:15 sshwarts Exp $
+// $Id: icache.h,v 1.17 2006-05-19 20:04:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,10 +32,10 @@
 
 // bit31: 1=CS is 32/64-bit, 0=CS is 16-bit.
 // bit30: 1=Long Mode, 0=not Long Mode.
-// bit29: 1=iCache page, 0=Data.
-const Bit32u ICacheWriteStampInvalid = 0x1fffffff;
-const Bit32u ICacheWriteStampStart   = 0x1fffffff;
-const Bit32u ICacheWriteStampMask    = 0x1fffffff;
+// Combination bit31=1 & bit30=1 is invalid.
+const Bit32u ICacheWriteStampInvalid = 0xffffffff;
+const Bit32u ICacheWriteStampStart   = 0x3fffffff;
+const Bit32u ICacheWriteStampMask    = 0x3fffffff;
 const Bit32u ICacheFetchModeMask     = ~ICacheWriteStampMask;
 
 class bxPageWriteStampTable

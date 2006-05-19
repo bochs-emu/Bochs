@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.292 2006-05-15 18:00:55 sshwarts Exp $
+// $Id: cpu.h,v 1.293 2006-05-19 20:04:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2946,11 +2946,11 @@ public: // for now...
 
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
-  fetchModeMask = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31)
+  fetchModeMask = 
 #if BX_SUPPORT_X86_64
-         | ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30)
+    ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30) |
 #endif
-         | (1<<29); // iCache code.
+     (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b << 31);
 }
 
 #endif
