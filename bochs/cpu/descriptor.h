@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.10 2006-02-26 21:44:03 sshwarts Exp $
+// $Id: descriptor.h,v 1.11 2006-05-21 19:31:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,9 +118,6 @@ union {
     Bit16u  dest_selector;
     Bit16u  dest_offset;
   } gate286;
-  struct {                 /* type 5: Task Gate Descriptor */
-    Bit16u  tss_selector;  /* TSS segment selector */
-  } taskgate;
 #if BX_CPU_LEVEL >= 3
   struct {
     Bit8u   dword_count;   /* 5bits (0..31) #dwords to copy from caller's stack
@@ -129,6 +126,9 @@ union {
     Bit32u  dest_offset;
   } gate386;
 #endif
+  struct {                 /* type 5: Task Gate Descriptor */
+    Bit16u  tss_selector;  /* TSS segment selector */
+  } taskgate;
   struct {
     Bit32u  base;          /* 24 bit 286 TSS base  */
     Bit16u  limit;         /* 16 bit 286 TSS limit */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.103 2006-05-19 20:04:33 sshwarts Exp $
+// $Id: init.cc,v 1.104 2006-05-21 19:31:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -548,7 +548,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR ldtr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR ldtr.cache.segment  = 0; /* system segment */
-  BX_CPU_THIS_PTR ldtr.cache.type     = 2; /* LDT descriptor */
+  BX_CPU_THIS_PTR ldtr.cache.type     = BX_SYS_SEGMENT_LDT;
 
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  = 0x00000000;
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit =     0xFFFF;
@@ -563,7 +563,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
-  BX_CPU_THIS_PTR tr.cache.type     = 3; /* busy 16-bit TSS */
+  BX_CPU_THIS_PTR tr.cache.type     = BX_SYS_SEGMENT_BUSY_286_TSS;
   BX_CPU_THIS_PTR tr.cache.u.tss286.base  = 0x00000000;
   BX_CPU_THIS_PTR tr.cache.u.tss286.limit =     0xFFFF;
 #endif
@@ -844,6 +844,21 @@ void BX_CPU_C::assert_checks(void)
     BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
   }
 #endif
+
+  // check LDTR type
+  if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT)
+  {
+    BX_PANIC(("assert_checks: LDTR is not LDT type !"));
+  }
+
+  // check Task Register type
+  if (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
+      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS &&
+      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS &&
+      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS)
+  {
+    BX_PANIC(("assert_checks: TR is not TSS type !"));
+  }
 
   // validate CR0 register
   if (BX_CPU_THIS_PTR cr0.pe != (BX_CPU_THIS_PTR cr0.val32 & 1))
