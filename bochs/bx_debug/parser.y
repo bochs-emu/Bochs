@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.16 2006-03-24 21:01:44 sshwarts Exp $
+// $Id: parser.y,v 1.17 2006-05-21 16:48:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -761,7 +761,12 @@ disassemble_command:
     ;
 
 instrument_command:
-      BX_TOKEN_INSTRUMENT BX_TOKEN_COMMAND '\n'
+      BX_TOKEN_INSTRUMENT BX_TOKEN_STOP '\n'
+      {
+        bx_dbg_instrument_command($2);
+        free($1); free($2);
+      }
+    | BX_TOKEN_INSTRUMENT BX_TOKEN_COMMAND '\n'
       {
         bx_dbg_instrument_command($2);
         free($1); free($2);
