@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.149 2006-05-13 12:49:45 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.150 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -992,13 +992,13 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr.cache.segment     = (access & 0x10) >> 4;
   // don't allow busy bit in tr.cache.type, so bit 2 is masked away too.
   BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0d);
-  BX_CPU_THIS_PTR tr.cache.u.tss286.base  = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR tr.cache.u.tss286.limit = limit;
+  BX_CPU_THIS_PTR tr.cache.u.tss.base  = (base_23_16 << 16) | base_15_0;
+  BX_CPU_THIS_PTR tr.cache.u.tss.limit = limit;
 
   if ((BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR tr.cache.u.tss286.limit < 43 ||
+  if (BX_CPU_THIS_PTR tr.cache.u.tss.limit < 43 ||
       BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS ||
       BX_CPU_THIS_PTR tr.cache.segment)
   {
@@ -1006,13 +1006,13 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   }
   if (BX_CPU_THIS_PTR tr.cache.valid==0)
   {
-    BX_CPU_THIS_PTR tr.selector.value       = 0;
-    BX_CPU_THIS_PTR tr.selector.index       = 0;
-    BX_CPU_THIS_PTR tr.selector.ti          = 0;
-    BX_CPU_THIS_PTR tr.selector.rpl         = 0;
-    BX_CPU_THIS_PTR tr.cache.u.tss286.base  = 0;
-    BX_CPU_THIS_PTR tr.cache.u.tss286.limit = 0;
-    BX_CPU_THIS_PTR tr.cache.p              = 0;
+    BX_CPU_THIS_PTR tr.selector.value    = 0;
+    BX_CPU_THIS_PTR tr.selector.index    = 0;
+    BX_CPU_THIS_PTR tr.selector.ti       = 0;
+    BX_CPU_THIS_PTR tr.selector.rpl      = 0;
+    BX_CPU_THIS_PTR tr.cache.u.tss.base  = 0;
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit = 0;
+    BX_CPU_THIS_PTR tr.cache.p           = 0;
   }
 
   /* FLAGS */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.32 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: tasking.cc,v 1.33 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -165,27 +165,23 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // Gather info about old TSS
   if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
     // sanity check type: cannot have busy bit
-    obase32 = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
-    old_TSS_max   = 43;
-    old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
+    old_TSS_max = 43;
   }
   else {
-    obase32 = BX_CPU_THIS_PTR tr.cache.u.tss386.base;
-    old_TSS_max   = 103;
-    old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled;
+    old_TSS_max = 103;
   }
-
   // Gather info about new TSS
   if (tss_descriptor->type <= 3) { // {1,3}
-    nbase32 = tss_descriptor->u.tss286.base; // new TSS.base
-    new_TSS_max   = 43;
-    new_TSS_limit = tss_descriptor->u.tss286.limit;
+    new_TSS_max = 43;
   }
   else { // tss_descriptor->type = {9,11}
-    nbase32 = tss_descriptor->u.tss386.base; // new TSS.base
-    new_TSS_max   = 103;
-    new_TSS_limit = tss_descriptor->u.tss386.limit_scaled;
+    new_TSS_max = 103;
   }
+
+  obase32 = BX_CPU_THIS_PTR tr.cache.u.tss.base;        // old TSS.base
+  old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled;
+  nbase32 = tss_descriptor->u.tss.base;                 // new TSS.base
+  new_TSS_limit = tss_descriptor->u.tss.limit_scaled;
 
   // TSS must have valid limit, else #TS(TSS selector)
   if (tss_selector->ti || tss_descriptor->valid==0 ||
@@ -753,24 +749,24 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
   if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_386_TSS) {
     // 32-bit TSS
     Bit32u TSSstackaddr = 8*pl + 4;
-    if ( (TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled )
+    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
 
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base +
+    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr+4, 2, 0, BX_READ, ss);
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base +
+    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr,   4, 0, BX_READ, esp);
   }
   else if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_286_TSS) {
     // 16-bit TSS
     Bit16u temp16;
     Bit32u TSSstackaddr = 4*pl + 2;
-    if ( (TSSstackaddr+4) > BX_CPU_THIS_PTR tr.cache.u.tss286.limit )
+    if ((TSSstackaddr+4) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
 
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss286.base +
+    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr+2, 2, 0, BX_READ, ss);
-    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss286.base +
+    access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr,   2, 0, BX_READ, &temp16);
     *esp = temp16; // truncate
   }
@@ -788,11 +784,11 @@ void BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
 
   // 32-bit TSS
   Bit32u TSSstackaddr = 8*pl + 4;
-  if ( (TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled )
+  if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
     exception(BX_TS_EXCEPTION,
               BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
 
-  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base +
+  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
     TSSstackaddr,   8, 0, BX_READ, rsp);
 }
 #endif  // #if BX_SUPPORT_X86_64

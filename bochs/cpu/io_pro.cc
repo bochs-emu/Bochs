@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.18 2006-03-06 22:02:59 sshwarts Exp $
+// $Id: io_pro.cc,v 1.19 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,12 +144,12 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
     return(0);
   }
 
-  if (BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled < 103) {
+  if (BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled < 103) {
     BX_ERROR(("allow_io(): TR.limit < 103"));
     return(0);
   }
 
-  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + 102, 
+  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base + 102, 
                    2, 0, BX_READ, &io_base);
 
   if (io_base <= 103) {
@@ -157,13 +157,13 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
      return(0);
   }
 
-  if ( (Bit32s) (addr/8) >= (Bit32s) (BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled - io_base)) {
+  if ( (Bit32s) (addr/8) >= (Bit32s) (BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled - io_base)) {
     BX_INFO(("allow_io(): IO addr %x (len %d) outside TSS IO permission map (base=%x, limit=%x) #GP(0)",
-      addr, len, io_base, BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled));
+      addr, len, io_base, BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled));
     return(0);
   }
 
-  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss386.base + io_base + addr/8,
+  access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base + io_base + addr/8,
                    2, 0, BX_READ, &permission16);
 
   bit_index = addr & 0x07;

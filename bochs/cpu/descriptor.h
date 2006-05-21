@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.11 2006-05-21 19:31:23 sshwarts Exp $
+// $Id: descriptor.h,v 1.12 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -97,7 +97,7 @@ union {
                               for data/stack: 1=expand down */
     bx_bool r_w;           /* for code: readable?, for data/stack: writeable? */
     bx_bool a;             /* accessed? */
-    bx_address  base;      /* base address: 286=24bits, 386=32bits, long=64 */
+    bx_address base;       /* base address: 286=24bits, 386=32bits, long=64 */
     Bit32u  limit;         /* limit: 286=16bits, 386=20bits */
     Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
                             * limit for byte granular, and
@@ -130,20 +130,16 @@ union {
     Bit16u  tss_selector;  /* TSS segment selector */
   } taskgate;
   struct {
-    Bit32u  base;          /* 24 bit 286 TSS base  */
-    Bit16u  limit;         /* 16 bit 286 TSS limit */
-  } tss286;
+    bx_address base;       /* 24 (tss286) or 32/64 (tss386) bit TSS base */
+    Bit32u  limit;         /* 16 (tss286) or 20 (tss386) bit TSS limit */
 #if BX_CPU_LEVEL >= 3
-  struct {
-    bx_address  base;      /* 32/64 bit 386 TSS base */
-    Bit32u  limit;         /* 20 bit 386 TSS limit */
     Bit32u  limit_scaled;  // Same notes as for 'segment' field
     bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
     bx_bool avl;           /* available for use by system */
-  } tss386;
 #endif
+  } tss;
   struct {
-    bx_address  base;      /* 286=24 386+ =32/64 bit LDT base */
+    bx_address base;       /* 286=24 386+ =32/64 bit LDT base */
     Bit16u  limit;         /* 286+ =16 bit LDT limit */
   } ldt;
 } u;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.104 2006-05-21 19:31:23 sshwarts Exp $
+// $Id: init.cc,v 1.105 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -564,8 +564,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.dpl      = 0; /* field not used */
   BX_CPU_THIS_PTR tr.cache.segment  = 0; /* system segment */
   BX_CPU_THIS_PTR tr.cache.type     = BX_SYS_SEGMENT_BUSY_286_TSS;
-  BX_CPU_THIS_PTR tr.cache.u.tss286.base  = 0x00000000;
-  BX_CPU_THIS_PTR tr.cache.u.tss286.limit =     0xFFFF;
+  BX_CPU_THIS_PTR tr.cache.u.tss.base         = 0x00000000;
+  BX_CPU_THIS_PTR tr.cache.u.tss.limit        =     0xFFFF;
+#if BX_CPU_LEVEL >= 3
+  BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled =     0xFFFF;
+  BX_CPU_THIS_PTR tr.cache.u.tss.avl = 0;
+  BX_CPU_THIS_PTR tr.cache.u.tss.g   = 0;  /* byte granular */
+#endif
 #endif
 
   // DR0 - DR7 (Debug Registers)
@@ -852,12 +857,22 @@ void BX_CPU_C::assert_checks(void)
   }
 
   // check Task Register type
-  if (BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_286_TSS &&
-      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS &&
-      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_BUSY_386_TSS &&
-      BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS)
+  switch(BX_CPU_THIS_PTR tr.cache.type)
   {
-    BX_PANIC(("assert_checks: TR is not TSS type !"));
+    case BX_SYS_SEGMENT_BUSY_286_TSS:
+    case BX_SYS_SEGMENT_AVAIL_286_TSS:
+#if BX_CPU_LEVEL >= 3
+      if (BX_CPU_THIS_PTR tr.cache.u.tss.g != 0)
+        BX_PANIC(("assert_checks: tss286.g != 0 !"));
+      if (BX_CPU_THIS_PTR tr.cache.u.tss.avl != 0)
+        BX_PANIC(("assert_checks: tss286.avl != 0 !"));
+#endif
+      break;
+    case BX_SYS_SEGMENT_BUSY_386_TSS:
+    case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      break;
+    default:    
+      BX_PANIC(("assert_checks: TR is not TSS type !"));
   }
 
   // validate CR0 register

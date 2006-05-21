@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.16 2006-04-10 19:05:21 sshwarts Exp $
+// $Id: smm.cc,v 1.17 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -282,14 +282,9 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   /* base+0x7ebc to base+0x7ea0 is reserved */
 
   // --- Task Register --- //
-  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    SMRAM_FIELD(saved_state, SMRAM_TR_BASE_LO32) = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
-    SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
-  } else {
-    SMRAM_FIELD(saved_state, SMRAM_TR_BASE_HI32) = BX_CPU_THIS_PTR tr.cache.u.tss386.base >> 32;
-    SMRAM_FIELD(saved_state, SMRAM_TR_BASE_LO32) = BX_CPU_THIS_PTR tr.cache.u.tss386.base & 0xffffffff;
-    SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss386.limit;
-  }
+  SMRAM_FIELD(saved_state, SMRAM_TR_BASE_HI32) = BX_CPU_THIS_PTR tr.cache.u.tss.base >> 32;
+  SMRAM_FIELD(saved_state, SMRAM_TR_BASE_LO32) = BX_CPU_THIS_PTR tr.cache.u.tss.base & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss.limit;
   SMRAM_FIELD(saved_state, SMRAM_TR_SELECTOR_AR) = BX_CPU_THIS_PTR tr.selector.value |
     (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR tr.cache)) << 16);
 
@@ -612,13 +607,8 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   /* base+0x7f68 is reserved */
 
   // --- Task Register --- //
-  if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
-    SMRAM_FIELD(saved_state, SMRAM_TR_BASE) = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
-    SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss286.limit;
-  } else {
-    SMRAM_FIELD(saved_state, SMRAM_TR_BASE) = BX_CPU_THIS_PTR tr.cache.u.tss386.base;
-    SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss386.limit;
-  }
+  SMRAM_FIELD(saved_state, SMRAM_TR_BASE) = BX_CPU_THIS_PTR tr.cache.u.tss.base;
+  SMRAM_FIELD(saved_state, SMRAM_TR_LIMIT) = BX_CPU_THIS_PTR tr.cache.u.tss.limit;
   SMRAM_FIELD(saved_state, SMRAM_TR_SELECTOR_AR) = BX_CPU_THIS_PTR tr.selector.value |
     (((Bit32u) get_segment_ar_data(&BX_CPU_THIS_PTR tr.cache)) << 16);
 

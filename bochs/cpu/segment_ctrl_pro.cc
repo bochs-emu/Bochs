@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.60 2006-04-25 15:35:26 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.61 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -360,18 +360,14 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
-        val = ((d->u.tss286.base & 0xffff) << 16) |
-               (d->u.tss286.limit & 0xffff);
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        val = ((d->u.tss.base & 0xffff) << 16) |
+               (d->u.tss.limit & 0xffff);
         return(val);
 
       case BX_SYS_SEGMENT_LDT:
         val = ((d->u.ldt.base & 0xffff) << 16) | d->u.ldt.limit;
-        return(val);
-
-      case BX_SYS_SEGMENT_AVAIL_386_TSS:
-      case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.tss386.base & 0xffff) << 16) |
-               (d->u.tss386.limit & 0xffff);
         return(val);
 
       default:
@@ -417,10 +413,24 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
-        val = ((d->u.tss286.base >> 16) & 0xff) |
+        BX_ASSERT(d->u.tss.g   == 0);
+        BX_ASSERT(d->u.tss.avl == 0);
+        val = ((d->u.tss.base >> 16) & 0xff) |
               (d->type << 8) |
               (d->dpl << 13) |
               (d->p << 15);
+        return(val);
+
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+        val = ((d->u.tss.base >> 16) & 0xff) |
+              (d->type << 8) |
+              (d->dpl << 13) |
+              (d->p << 15) |
+              (d->u.tss.limit & 0xf0000) |
+              (d->u.tss.avl << 20) |
+              (d->u.tss.g << 23) |
+              (d->u.tss.base & 0xff000000);
         return(val);
 
       case BX_SYS_SEGMENT_LDT:
@@ -429,18 +439,6 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
               (d->dpl << 13) |
               (d->p << 15) |
               (d->u.ldt.base & 0xff000000);
-        return(val);
-
-      case BX_SYS_SEGMENT_AVAIL_386_TSS:
-      case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.tss386.base >> 16) & 0xff) |
-              (d->type << 8) |
-              (d->dpl << 13) |
-              (d->p << 15) |
-              (d->u.tss386.limit & 0xf0000) |
-              (d->u.tss386.avl << 20) |
-              (d->u.tss386.g << 23) |
-              (d->u.tss386.base & 0xff000000);
         return(val);
 
       default:
@@ -486,8 +484,8 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
         val = (d->type << 0) |
               (d->dpl << 5) |
               (d->p << 7) |
-              (d->u.tss386.avl << 12) |
-              (d->u.tss386.g << 15);
+              (d->u.tss.avl << 12) |
+              (d->u.tss.g << 15);
         return(val);
     default:
         BX_PANIC(("get_segment_ar_data(): case %u unsupported", (unsigned) d->type));
@@ -544,22 +542,17 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
-        d->valid          = 1;
-        d->u.tss286.base  = base;
-        d->u.tss286.limit = limit;
-        break;
-
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        d->valid          = 1;
-        d->u.tss386.avl   = (ar_data >> 12) & 0x01;
-        d->u.tss386.g     = (ar_data >> 15) & 0x01;
-        d->u.tss386.base  = base;
-        d->u.tss386.limit = limit;
-        if (d->u.tss386.g)
-          d->u.tss386.limit_scaled = (d->u.tss386.limit << 12) | 0x0fff;
+        d->valid       = 1;
+        d->u.tss.avl   = (ar_data >> 12) & 0x01;
+        d->u.tss.g     = (ar_data >> 15) & 0x01;
+        d->u.tss.base  = base;
+        d->u.tss.limit = limit;
+        if (d->u.tss.g)
+          d->u.tss.limit_scaled = (d->u.tss.limit << 12) | 0x0fff;
         else
-          d->u.tss386.limit_scaled = (d->u.tss386.limit);
+          d->u.tss.limit_scaled = (d->u.tss.limit);
         break;
 
       default:
@@ -629,9 +622,14 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         break;
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
       case BX_SYS_SEGMENT_BUSY_286_TSS:
-        temp->u.tss286.base  = (dword1 >> 16) | ((dword2 & 0xff) << 16);
-        temp->u.tss286.limit = (dword1 & 0xffff);
-        temp->valid    = 1;
+        temp->u.tss.base  = (dword1 >> 16) | ((dword2 & 0xff) << 16);
+        temp->u.tss.limit = (dword1 & 0xffff);
+#if BX_CPU_LEVEL >= 3
+        temp->u.tss.limit_scaled = temp->u.tss.limit;
+        temp->u.tss.g     = 0;
+        temp->u.tss.avl   = 0;
+#endif
+        temp->valid       = 1;
         break;
       case BX_SYS_SEGMENT_LDT:
         temp->u.ldt.base = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
@@ -657,17 +655,16 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
 #if BX_CPU_LEVEL >= 3
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        temp->u.tss386.base  = (dword1 >> 16) |
+        temp->u.tss.base  = (dword1 >> 16) |
                                ((dword2 & 0xff) << 16) |
                                (dword2 & 0xff000000);
-        temp->u.tss386.limit = (dword1 & 0x0000ffff) |
-                               (dword2 & 0x000f0000);
-        temp->u.tss386.g     = (dword2 & 0x00800000) > 0;
-        temp->u.tss386.avl   = (dword2 & 0x00100000) > 0;
-        if (temp->u.tss386.g)
-          temp->u.tss386.limit_scaled = (temp->u.tss386.limit << 12) | 0x0fff;
+        temp->u.tss.limit = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
+        temp->u.tss.g     = (dword2 & 0x00800000) > 0;
+        temp->u.tss.avl   = (dword2 & 0x00100000) > 0;
+        if (temp->u.tss.g)
+          temp->u.tss.limit_scaled = (temp->u.tss.limit << 12) | 0x0fff;
         else
-          temp->u.tss386.limit_scaled = temp->u.tss386.limit;
+          temp->u.tss.limit_scaled = temp->u.tss.limit;
         temp->valid = 1;
         break;
 

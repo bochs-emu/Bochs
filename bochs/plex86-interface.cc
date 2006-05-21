@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.6 2003-01-09 04:03:35 kevinlawton Exp $
+//// $Id: plex86-interface.cc,v 1.7 2006-05-21 20:41:48 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -49,14 +49,13 @@ static int  openFD(void);
 static unsigned faultCount[32];
 
 
-  int
-openFD(void)
+int openFD(void)
 {
   if (plex86State) {
     // This should be the first operation; no state should be set yet.
     fprintf(stderr, "plex86: openFD: plex86State = 0x%x\n", plex86State);
     return(0); // Error.
-    }
+  }
 
   // Open a new VM.
   fprintf(stderr, "plex86: opening VM.\n");
@@ -73,14 +72,13 @@ openFD(void)
               "  Read the toplevel README file!\n");
       perror ("open");
       return(-1); // Error.
-      }
     }
+  }
   fprintf(stderr, "OK.\n");
   return(1); // OK.
 }
 
-  unsigned
-plex86CpuInfo(BX_CPU_C *cpu)
+unsigned plex86CpuInfo(BX_CPU_C *cpu)
 {
   cpuid_info_t bochsCPUID;
 
@@ -88,8 +86,8 @@ plex86CpuInfo(BX_CPU_C *cpu)
     // If the plex86 File Descriptor has not been opened yet.
     if ( !openFD() ) {
       return(0); // Error.
-      }
     }
+  }
 
   bochsCPUID.vendorDWord0 = cpu->cpuidInfo.vendorDWord0;
   bochsCPUID.vendorDWord1 = cpu->cpuidInfo.vendorDWord1;
@@ -101,13 +99,12 @@ plex86CpuInfo(BX_CPU_C *cpu)
   if ( ioctl(plex86FD, PLEX86_CPUID, &bochsCPUID) ) {
     perror("ioctl CPUID: ");
     return(0); // Error.
-    }
+  }
 
   return(1); // OK.
 }
 
-  unsigned
-plex86TearDown(void)
+unsigned plex86TearDown(void)
 {
   fprintf(stderr, "plex86: plex86TearDown called.\n");
 
@@ -115,31 +112,30 @@ plex86TearDown(void)
   for (unsigned f=0; f<32; f++) {
     if (faultCount[f])
       fprintf(stderr, "plex86:  FC[%u] = %u\n", f, faultCount[f]);
-    }
+  }
 
   if ( plex86FD < 0 ) {
     fprintf(stderr, "plex86: plex86TearDown: FD not open.\n");
     return(0);
-    }
+  }
 
   if ( plex86State & Plex86StateMMapPhyMem ) {
     fprintf(stderr, "plex86: unmapping guest physical memory.\n");
-    }
+  }
   plex86State &= ~Plex86StateMMapPhyMem;
 
-  if ( plex86State & Plex86StateMMapPrintBuffer ) {
-    }
+  if (plex86State & Plex86StateMMapPrintBuffer) {
+  }
   plex86State &= ~Plex86StateMMapPrintBuffer;
 
-  if ( plex86State & Plex86StateMMapGuestCPU ) {
-    }
+  if (plex86State & Plex86StateMMapGuestCPU) { }
   plex86State &= ~Plex86StateMMapGuestCPU;
 
   fprintf(stderr, "plex86: tearing down VM.\n");
   if (ioctl(plex86FD, PLEX86_TEARDOWN, 0) == -1) {
     perror("ioctl TEARDOWN: ");
     return(0); // Failed.
-    }
+  }
   plex86State &= ~Plex86StateMemAllocated;
 
   // Close the connection to the kernel module.
@@ -147,7 +143,7 @@ plex86TearDown(void)
   if (close(plex86FD) == -1) {
     perror("close of VM device\n");
     return(0); // Failed.
-    }
+  }
 
   plex86FD = -1; // File descriptor is now closed.
 
@@ -156,8 +152,7 @@ plex86TearDown(void)
   return(1); // OK.
 }
 
-  unsigned
-plex86ExecuteInVM(BX_CPU_C *cpu)
+unsigned plex86ExecuteInVM(BX_CPU_C *cpu)
 {
   plex86IoctlExecute_t executeMsg;
   int ret;
@@ -167,7 +162,7 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
             plex86State);
     BX_PANIC(("plex86ExecuteInVM: bailing"));
     return(0);
-    }
+  }
 
   executeMsg.executeMethod = Plex86ExecuteMethodNative;
   plex86GuestCPU->edi = cpu->gen_reg[BX_32BIT_REG_EDI].dword.erx;
@@ -188,7 +183,7 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
     copyBochsDescriptorToPlex86(&plex86GuestCPU->sreg[s].des,
                                 &cpu->sregs[s].cache);
     plex86GuestCPU->sreg[s].valid = cpu->sregs[s].cache.valid;
-    }
+  }
 
   // LDTR
   plex86GuestCPU->ldtr.sel.raw = cpu->ldtr.selector.value;
@@ -263,8 +258,8 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
         break;
       default:
         fprintf(stderr, "ret = %d\n", ret);
-      }
     }
+  }
   else {
     switch ( executeMsg.monitorState.request ) {
       case MonReqFlushPrintBuf:
@@ -286,8 +281,8 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
         fprintf(stderr, "plex86: executeMsg.request = %u\n",
                 executeMsg.monitorState.request);
         break;
-      }
     }
+  }
 
   plex86TearDown();
   BX_PANIC(("plex86ExecuteInVM: bailing"));
@@ -295,8 +290,7 @@ plex86ExecuteInVM(BX_CPU_C *cpu)
   return(0);
 }
 
-  void
-copyPlex86StateToBochs(BX_CPU_C *cpu)
+void copyPlex86StateToBochs(BX_CPU_C *cpu)
 {
   cpu->gen_reg[BX_32BIT_REG_EDI].dword.erx = plex86GuestCPU->edi;
   cpu->gen_reg[BX_32BIT_REG_ESI].dword.erx = plex86GuestCPU->esi;
@@ -324,24 +318,23 @@ copyPlex86StateToBochs(BX_CPU_C *cpu)
         plex86TearDown();
         BX_PANIC(("copyPlex86StateToBochs: null descriptor [%u] "
                   "with descriptor cache valid bit set.", s));
-        }
-      /* valid bit == 0, invalidates a bochs descriptor cache. */
       }
+      /* valid bit == 0, invalidates a bochs descriptor cache. */
+    }
     else {
       /* Non-null selector. */
       if ( cpu->sregs[s].cache.valid==0 ) {
         plex86TearDown();
         BX_PANIC(("copyPlex86StateToBochs: non-null descriptor [%u] "
                   "with descriptor cache valid bit clear.", s));
-        }
+      }
       copyPlex86DescriptorToBochs(cpu, &cpu->sregs[s].cache,
           &plex86GuestCPU->sreg[s].des);
-      }
     }
+  }
 }
 
-  void
-copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *bochsDesc)
+void copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *bochsDesc)
 {
   // For now this function is a hack to convert from bochs descriptor
   // cache fields which are parsed out into separate fields, to
@@ -353,7 +346,7 @@ copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *bochsDesc
   if (bochsDesc->valid == 0) {
     memset(plex86Desc, 0, sizeof(*plex86Desc));
     return;
-    }
+  }
   plex86Desc->p = bochsDesc->p;
   plex86Desc->dpl = bochsDesc->dpl;
   plex86Desc->type = (bochsDesc->segment<<4) | bochsDesc->type;
@@ -383,29 +376,28 @@ copyBochsDescriptorToPlex86(descriptor_t *plex86Desc, bx_descriptor_t *bochsDesc
     plex86Desc->reserved = 0;
     plex86Desc->d_b = 0;
     plex86Desc->g   = 0;
-    }
+  }
   else if ( (bochsDesc->type == 9) || (bochsDesc->type==1) ) {
     // TSS
-    Bit32u limit = bochsDesc->u.tss386.limit;
+    Bit32u limit = bochsDesc->u.tss.limit;
     plex86Desc->limit_low  = limit; // Only lower 16-bits.
     plex86Desc->limit_high = limit >> 16;
-    Bit32u base = bochsDesc->u.tss386.base;
+    Bit32u base = bochsDesc->u.tss.base;
     plex86Desc->base_low  = base;
     plex86Desc->base_med  = base >> 16;
     plex86Desc->base_high = base >> 24;
-    plex86Desc->avl = bochsDesc->u.tss386.avl;
+    plex86Desc->avl = bochsDesc->u.tss.avl;
     plex86Desc->reserved = 0;
     plex86Desc->d_b = 0;
-    plex86Desc->g   = bochsDesc->u.tss386.g;
-    }
+    plex86Desc->g   = bochsDesc->u.tss.g;
+  }
   else {
     BX_PANIC(("copyBochsDescriptorToPlex86: desc type = %u.",
               bochsDesc->type));
-    }
+  }
 }
 
-  void
-copyPlex86DescriptorToBochs(BX_CPU_C *cpu,
+void copyPlex86DescriptorToBochs(BX_CPU_C *cpu,
                             bx_descriptor_t *bochsDesc, descriptor_t *plex86Desc)
 {
   Bit32u dword1, dword2, *dwordPtr;
@@ -417,8 +409,7 @@ copyPlex86DescriptorToBochs(BX_CPU_C *cpu,
   cpu->parse_descriptor(dword1, dword2, bochsDesc);
 }
 
-  unsigned
-plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
+unsigned plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
 {
   plex86IoctlRegisterMem_t ioctlMsg;
 
@@ -426,27 +417,27 @@ plex86RegisterGuestMemory(Bit8u *vector, unsigned bytes)
     // If the plex86 File Descriptor has not been opened yet.
     if ( !openFD() ) {
       return(0); // Error.
-      }
     }
+  }
 
   if (bytes & 0x3fffff) {
     // Memory size must be multiple of 4Meg.
     fprintf(stderr, "plex86: RegisterGuestMemory: memory size of %u bytes"
                     "is not a 4Meg increment.\n", bytes);
     return(0); // Error.
-    }
+  }
   if ( ((unsigned)vector) & 0xfff ) {
     // Memory vector must be page aligned.
     fprintf(stderr, "plex86: RegisterGuestMemory: vector not page aligned.");
     return(0); // Error.
-    }
+  }
   ioctlMsg.nMegs = bytes >> 20;
   ioctlMsg.guestPhyMemVector = (Bit32u) vector;
   ioctlMsg.logBufferWindow   = (Bit32u) plex86PrintBuffer;
   ioctlMsg.guestCPUWindow    = (Bit32u) plex86GuestCPU;
   if (ioctl(plex86FD, PLEX86_REGISTER_MEMORY, &ioctlMsg) == -1) {
     return(0); // Error.
-    }
+  }
   plex86MemSize = bytes;
 
   /* For now... */
@@ -461,8 +452,7 @@ plex86State |= Plex86StateMMapGuestCPU;
   return(1); // OK.
 }
 
-  unsigned
-plex86UnregisterGuestMemory(Bit8u *vector, unsigned bytes)
+unsigned plex86UnregisterGuestMemory(Bit8u *vector, unsigned bytes)
 {
   return(1); // OK.
 }

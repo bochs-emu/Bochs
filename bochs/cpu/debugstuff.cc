@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.66 2006-04-23 17:16:27 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.67 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -468,7 +468,6 @@ bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
 bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
 {
   // returns 1=OK, 0=Error
-  Bit32u val;
   Bit32u type;
 
   // =================================================
@@ -779,26 +778,29 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR tr.cache.dpl               = (cpu->tr.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR tr.cache.segment           = (cpu->tr.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR tr.cache.type              = type;
-  if (type == 1) { // 286 TSS
-    BX_CPU_THIS_PTR tr.cache.u.tss286.base   = (cpu->tr.des_l >> 16);
-    BX_CPU_THIS_PTR tr.cache.u.tss286.base  |= (cpu->tr.des_h & 0xff) << 16;
-    BX_CPU_THIS_PTR tr.cache.u.tss286.limit  = (cpu->tr.des_l & 0xffff);
+  if (type == BX_SYS_SEGMENT_AVAIL_286_TSS)
+    BX_CPU_THIS_PTR tr.cache.u.tss.base   = (cpu->tr.des_l >> 16);
+    BX_CPU_THIS_PTR tr.cache.u.tss.base  |= (cpu->tr.des_h & 0xff) << 16;
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit  = (cpu->tr.des_l & 0xffff);
+    BX_CPU_THIS_PTR tr.cache.u.tss.g      = 0;
+    BX_CPU_THIS_PTR tr.cache.u.tss.avl    = 0;
   }
-  else { // type == 9, 386 TSS
-    BX_CPU_THIS_PTR tr.cache.u.tss386.base   = (cpu->tr.des_l >> 16);
-    BX_CPU_THIS_PTR tr.cache.u.tss386.base  |= (cpu->tr.des_h & 0xff) << 16;
-    BX_CPU_THIS_PTR tr.cache.u.tss386.base  |= (cpu->tr.des_h & 0xff000000);
-    BX_CPU_THIS_PTR tr.cache.u.tss386.limit  = (cpu->tr.des_l & 0xffff);
-    BX_CPU_THIS_PTR tr.cache.u.tss386.limit |= (cpu->tr.des_h & 0x000f0000);
-    BX_CPU_THIS_PTR tr.cache.u.tss386.g      = (cpu->tr.des_h >> 23) & 0x01;
-    BX_CPU_THIS_PTR tr.cache.u.tss386.avl    = (cpu->tr.des_h >> 20) & 0x01;
-    if (BX_CPU_THIS_PTR tr.cache.u.tss386.g)
-      BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled = 
-         (BX_CPU_THIS_PTR tr.cache.u.tss386.limit << 12) | 0x0fff;
-    else
-      BX_CPU_THIS_PTR tr.cache.u.tss386.limit_scaled = 
-         (BX_CPU_THIS_PTR tr.cache.u.tss386.limit);
+  else { // type == BX_SYS_SEGMENT_AVAIL_386_TSS
+    BX_CPU_THIS_PTR tr.cache.u.tss.base   = (cpu->tr.des_l >> 16);
+    BX_CPU_THIS_PTR tr.cache.u.tss.base  |= (cpu->tr.des_h & 0xff) << 16;
+    BX_CPU_THIS_PTR tr.cache.u.tss.base  |= (cpu->tr.des_h & 0xff000000);
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit  = (cpu->tr.des_l & 0xffff);
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit |= (cpu->tr.des_h & 0x000f0000);
+    BX_CPU_THIS_PTR tr.cache.u.tss.g      = (cpu->tr.des_h >> 23) & 0x01;
+    BX_CPU_THIS_PTR tr.cache.u.tss.avl    = (cpu->tr.des_h >> 20) & 0x01;
   }
+
+  if (BX_CPU_THIS_PTR tr.cache.u.tss.g)
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled = 
+       (BX_CPU_THIS_PTR tr.cache.u.tss.limit << 12) | 0x0fff;
+  else
+    BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled = 
+       (BX_CPU_THIS_PTR tr.cache.u.tss.limit);
 
   // GDTR
   BX_CPU_THIS_PTR gdtr.base  = cpu->gdtr.base;

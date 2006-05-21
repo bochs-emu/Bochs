@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.11 2006-03-06 22:03:00 sshwarts Exp $
+// $Id: iret.cc,v 1.12 2006-05-21 20:41:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,28 +55,21 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   }
 #endif
 
-  if ( BX_CPU_THIS_PTR get_NT () ) { /* NT = 1: RETURN FROM NESTED TASK */
+  if (BX_CPU_THIS_PTR get_NT ())   /* NT = 1: RETURN FROM NESTED TASK */
+  {
     /* what's the deal with NT & VM ? */
-    Bit32u base32;
     Bit16u raw_link_selector;
     bx_selector_t   link_selector;
     bx_descriptor_t tss_descriptor;
 
-    if ( BX_CPU_THIS_PTR get_VM () )
+    if (BX_CPU_THIS_PTR get_VM ())
       BX_PANIC(("iret_protected: VM sholdn't be set here !"));
 
     //BX_INFO(("IRET: nested task return"));
 
     if (BX_CPU_THIS_PTR tr.cache.valid==0)
       BX_PANIC(("IRET: TR not valid"));
-    if (BX_CPU_THIS_PTR tr.cache.type == BX_SYS_SEGMENT_AVAIL_286_TSS)
-      base32 = BX_CPU_THIS_PTR tr.cache.u.tss286.base;
-    else if (BX_CPU_THIS_PTR tr.cache.type == BX_SYS_SEGMENT_AVAIL_386_TSS)
-      base32 = BX_CPU_THIS_PTR tr.cache.u.tss386.base;
-    else {
-      BX_PANIC(("IRET: TR not valid"));
-      base32 = 0; // keep compiler happy
-    }
+    Bit32u base32 = BX_CPU_THIS_PTR tr.cache.u.tss.base;
 
     // examine back link selector in TSS addressed by current TR:
     access_linear(base32, 2, 0, BX_READ, &raw_link_selector);
