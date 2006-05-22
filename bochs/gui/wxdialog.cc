@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.97 2006-04-16 10:12:31 vruppert Exp $
+// $Id: wxdialog.cc,v 1.98 2006-05-22 16:35:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -746,7 +746,7 @@ void DebugLogDialog::CheckLogLength ()
 void DebugLogDialog::AppendCommand (const char *cmd)
 {
   log->AppendText(wxT(">>> "));
-  log->AppendText(wxString (cmd));
+  log->AppendText(wxString(cmd, wxConvUTF8));
   log->AppendText(wxT("\n"));
   int n = log->GetLastPosition();
   if (n>0) n--;
@@ -1708,27 +1708,27 @@ CpuRegistersDialog::OnEvent(wxCommandEvent& event)
   int id = event.GetId ();
   switch (id) {
     case ID_Close:
-      Show (FALSE);
+      Show(FALSE);
       break;
 #if BX_DEBUGGER
   case ID_Debug_Stop:
-      wxLogDebug ("wxWidgets triggered a break");
-      theFrame->DebugBreak ();
+      wxLogDebug(wxT("wxWidgets triggered a break"));
+      theFrame->DebugBreak();
       break;
     case ID_Debug_Continue:
-      wxLogDebug ("before calling DebugCommand");
-      theFrame->DebugCommand ("continue");
-      wxLogDebug ("after calling DebugCommand");
+      wxLogDebug(wxT("before calling DebugCommand"));
+      theFrame->DebugCommand("continue");
+      wxLogDebug(wxT("after calling DebugCommand"));
       break;
     case ID_Debug_Step:
-      theFrame->DebugCommand ("step 1");
+      theFrame->DebugCommand("step 1");
       break;
     case ID_Debug_Commit:
-      CopyGuiToParam ();
+      CopyGuiToParam();
       break;
 #endif
     default:
-      ParamDialog::OnEvent (event);
+      ParamDialog::OnEvent(event);
   }
 }
 
