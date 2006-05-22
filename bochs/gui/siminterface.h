@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.190 2006-05-14 15:47:37 vruppert Exp $
+// $Id: siminterface.h,v 1.191 2006-05-22 21:29:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -585,6 +585,9 @@ public:
   Bit8u get_type() { return type; }
 };
 
+#define BASE_DEC 10
+#define BASE_HEX 16
+
 class BOCHSAPI bx_param_c : public bx_object_c {
   BOCHSAPI_CYGONLY static const char *default_text_format;
 protected:
@@ -706,56 +709,56 @@ public:
       char *name,
       char *label,
       Bit64s *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit64u *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit32s *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit32u *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit16s *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit16u *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit8s *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
       char *label,
       Bit8u *ptr_to_real_val,
-      int base = 10,
+      int base = BASE_DEC,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   virtual Bit64s get64();

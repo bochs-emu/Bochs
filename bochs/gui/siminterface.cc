@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.146 2006-05-14 15:47:37 vruppert Exp $
+// $Id: siminterface.cc,v 1.147 2006-05-22 21:29:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -697,12 +697,14 @@ bx_param_c *bx_real_sim_c::get_first_atadevice(Bit32u search_type) {
 #if BX_DEBUGGER
 
 // this can be safely called from either thread.
-void bx_real_sim_c::debug_break() {
+void bx_real_sim_c::debug_break()
+{
   bx_debug_break();
 }
 
 // this should only be called from the sim_thread.
-void bx_real_sim_c::debug_interpret_cmd(char *cmd) {
+void bx_real_sim_c::debug_interpret_cmd(char *cmd)
+{
   if (!is_sim_thread()) {
     fprintf(stderr, "ERROR: debug_interpret_cmd called but not from sim_thread\n");
     return;
@@ -1098,7 +1100,7 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
   fprintf(fp, "%s = ", node->get_name());
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
-      if (((bx_param_num_c*)node)->get_base() == 10) {
+      if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
         if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
           if (((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
             fprintf(fp, FMT_LL"u\n", ((bx_param_num_c*)node)->get());
@@ -1250,7 +1252,7 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   }
 }
 
-Bit32u bx_param_num_c::default_base = 10;
+Bit32u bx_param_num_c::default_base = BASE_DEC;
 
 Bit32u bx_param_num_c::set_default_base(Bit32u val) {
   Bit32u old = default_base;
@@ -1352,7 +1354,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT64S >> (63 - (highbit - lowbit))) << lowbit);
   val.p64bit = ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%x";
   }
@@ -1372,7 +1374,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT64U >> (63 - (highbit - lowbit))) << lowbit);
   val.p64bit = (Bit64s*) ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%x";
   }
@@ -1392,7 +1394,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT32S >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%08x";
   }
@@ -1412,7 +1414,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT32U >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = (Bit32s*) ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%08x";
   }
@@ -1432,7 +1434,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT16S >> (15 - (highbit - lowbit))) << lowbit);
   val.p16bit = ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%04x";
   }
@@ -1452,7 +1454,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT16U >> (15 - (highbit - lowbit))) << lowbit);
   val.p16bit = (Bit16s*) ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%04x";
   }
@@ -1473,7 +1475,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->mask = ((BX_MAX_BIT8S >> (7 - (highbit - lowbit))) << lowbit);
   this->mask = (1 << (highbit - lowbit)) - 1;
   val.p8bit = ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%02x";
   }
@@ -1493,7 +1495,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT8U >> (7 - (highbit - lowbit))) << lowbit);
   val.p8bit = (Bit8s*) ptr_to_real_val;
-  if (base == 16) {
+  if (base == BASE_HEX) {
     this->base = base;
     this->text_format = "0x%02x";
   }
@@ -1694,25 +1696,13 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
 
 bx_param_string_c::~bx_param_string_c()
 {
-    if ( this->val != NULL )
-    {
-        delete [] this->val;
-        this->val = NULL;
-    }
-    if ( this->initial_val != NULL )
-    {
-        delete [] this->initial_val;
-        this->initial_val = NULL;
-    }
-
-    if ( this->options != NULL )
-    {
-        delete [] this->options;
-        this->options = NULL;
-    }
+  if (this->val != NULL) delete [] this->val;
+  if (this->initial_val != NULL) delete [] this->initial_val;
+  if (this->options != NULL) delete [] this->options;
 }
 
-void bx_param_string_c::reset() {
+void bx_param_string_c::reset()
+{
   strncpy(this->val, this->initial_val, maxsize);
 }
 
@@ -1733,7 +1723,7 @@ void bx_param_string_c::set_enabled(int en)
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
     en = (*enable_handler)(this, en);
-    }
+  }
   bx_param_c::set_enabled(en);
 }
 
@@ -1870,26 +1860,10 @@ bx_list_c::bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **i
 
 bx_list_c::~bx_list_c()
 {
-    if (this->list)
-    {
-        delete [] this->list;
-        this->list = NULL;
-    }
-    if ( this->title != NULL)
-    {
-        delete this->title;
-        this->title = NULL;
-    }
-    if (this->options != NULL)
-    {
-        delete this->options;
-        this->options = NULL;
-    }
-    if ( this->choice != NULL )
-    {
-        delete this->choice;
-        this->choice = NULL;
-    }
+  if (this->list) delete [] this->list;
+  if (this->title != NULL) delete this->title;
+  if (this->options != NULL) delete this->options;
+  if (this->choice != NULL) delete this->choice;
 }
 
 void bx_list_c::init(const char *list_title)
@@ -1903,11 +1877,9 @@ void bx_list_c::init(const char *list_title)
     this->title->set((char *)list_title);
   }
   this->options = new bx_param_num_c(NULL,
-      "list_option", "", "", 0, BX_MAX_BIT64S,
-      0);
+      "list_option", "", "", 0, BX_MAX_BIT64S, 0);
   this->choice = new bx_param_num_c(NULL,
-      "list_choice", "", "", 0, BX_MAX_BIT64S,
-      1);
+      "list_choice", "", "", 0, BX_MAX_BIT64S, 1);
 }
 
 void bx_list_c::set_parent(bx_param_c *newparent) { 
