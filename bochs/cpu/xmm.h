@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.19 2005-06-06 20:14:49 vruppert Exp $
+// $Id: xmm.h,v 1.20 2006-05-22 21:17:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -58,7 +58,7 @@ typedef union bx_xmm_reg_t {
 
 #if BX_SUPPORT_SSE >= 1
 
-#ifdef BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64
 #  define BX_XMM_REGISTERS 16
 #else
 #  define BX_XMM_REGISTERS 8
