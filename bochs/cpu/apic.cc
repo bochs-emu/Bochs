@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.84 2006-05-16 20:55:55 sshwarts Exp $
+// $Id: apic.cc,v 1.85 2006-05-23 16:42:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,6 @@ void bx_local_apic_c::init()
 
   // default address for a local APIC, can be moved
   base_addr = BX_LAPIC_BASE_ADDR;
-  bypass_irr_isr = 0;
   error_status = shadow_error_status = 0;
   log_dest = 0;
   dest_format = 0xf;
@@ -675,8 +674,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
     break;
   case APIC_DM_EXTINT:
     BX_DEBUG(("Deliver EXTINT vector %02x", vector));
-    bypass_irr_isr = 1;
-    trigger_irq(vector, trig_mode);
+    trigger_irq(vector, trig_mode, 1);
     break;
   default:
     return 0;
@@ -685,7 +683,7 @@ bx_bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_m
   return 1;
 }
 
-void bx_local_apic_c::trigger_irq(unsigned vector, unsigned trigger_mode)
+void bx_local_apic_c::trigger_irq(unsigned vector, unsigned trigger_mode, bx_bool bypass_irr_isr)
 {
   BX_DEBUG(("Local apic on %s: trigger interrupt vector=0x%x", cpu->name, vector));
   
@@ -698,7 +696,6 @@ void bx_local_apic_c::trigger_irq(unsigned vector, unsigned trigger_mode)
   BX_DEBUG(("triggered vector %#02x", vector));
 
   if(bypass_irr_isr) {
-    bypass_irr_isr = 0;
     goto service_vector;
   }
 

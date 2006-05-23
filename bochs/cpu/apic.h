@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.29 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: apic.h,v 1.30 2006-05-23 16:42:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -132,7 +132,7 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
   Bit32u timer_current;         // current timer count
 
   Bit32u timer_divconf;         // Timer divide configuration register
-  Bit32u timer_divide_counter, timer_divide_factor;
+  Bit32u timer_divide_factor;
 
   // Internal timer state, not accessible from bus
   bx_bool timer_active;
@@ -153,7 +153,6 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 
   // corresponding BX_CPU_ID for the local APIC
   unsigned cpu_id;
-  bx_bool bypass_irr_isr;
 
 public:
   bx_bool INTR;
@@ -169,7 +168,7 @@ public:
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced
   // with the cpu-specific INTR signals.
-  void trigger_irq(unsigned num, unsigned trigger_mode);
+  void trigger_irq(unsigned num, unsigned trigger_mode, bx_bool bypass_irr_isr = 0);
   void untrigger_irq(unsigned num, unsigned trigger_mode);
   Bit8u acknowledge_int(void);  // only the local CPU should call this
   int highest_priority_int(Bit8u *array);
