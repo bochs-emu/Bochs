@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.154 2006-05-16 20:55:55 sshwarts Exp $
+// $Id: cpu.cc,v 1.155 2006-05-24 16:46:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -226,7 +226,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   // the debugger may request that control is returned to it so that
   // the situation may be examined.
   if (bx_guard.special_unwind_stack) {
-    printf("CPU_LOOP %d\n", bx_guard.special_unwind_stack);
+    BX_ERROR(("CPU_LOOP bx_guard.special_unwind_stack=%d\n", bx_guard.special_unwind_stack));
     return;
   }
 #endif
@@ -242,236 +242,178 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   while (1) {
 
-  // First check on events which occurred for previous instructions
-  // (traps) and ones which are asynchronous to the CPU
-  // (hardware interrupts).
-  if (BX_CPU_THIS_PTR async_event) {
-    if (handleAsyncEvent()) {
-      // If request to return to caller ASAP.
-      return;
+    // First check on events which occurred for previous instructions
+    // (traps) and ones which are asynchronous to the CPU
+    // (hardware interrupts).
+    if (BX_CPU_THIS_PTR async_event) {
+      if (handleAsyncEvent()) {
+        // If request to return to caller ASAP.
+        return;
+      }
     }
-  }
 
-  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+    bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
-  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
-    prefetch();
-    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
-  }
+    if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
+      prefetch();
+      eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+    }
 
-  // fetch and decode next instruction
-  bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
-  bx_address next_RIP = RIP + i->ilen();
-  BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
-  BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
-  if (resolveModRM)
-    BX_CPU_CALL_METHODR(resolveModRM, (i));
+    // fetch and decode next instruction
+    bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
+    bx_address next_RIP = RIP + i->ilen();
+    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
+    BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
+    if (resolveModRM)
+      BX_CPU_CALL_METHODR(resolveModRM, (i));
 
-  // An instruction will have been fetched using either the normal case,
-  // or the boundary fetch (across pages), by this point.
-  BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+    // An instruction will have been fetched using either the normal case,
+    // or the boundary fetch (across pages), by this point.
+    BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
 #if BX_DEBUGGER
-  {
-    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
-    if (dbg_is_begin_instr_bpoint(
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-         BX_CPU_THIS_PTR prev_eip,
-         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-         Is64BitMode()))
-    {
-      return;
-    }
-  }
-#endif  // #if BX_DEBUGGER
+    if(dbg_check_begin_instr_bpoint()) return;
+#endif
 
 #if BX_EXTERNAL_DEBUGGER
-  if (regs.debug_state != debug_run) {
-    bx_external_debugger(BX_CPU_THIS);
-  }
+    if (regs.debug_state != debug_run) bx_external_debugger(BX_CPU_THIS);
 #endif
 
 #if BX_DISASM
-  if (BX_CPU_THIS_PTR trace) {
-    // print the instruction that is about to be executed
+    if (BX_CPU_THIS_PTR trace) {
+      // print the instruction that is about to be executed
 #if BX_DEBUGGER
-    bx_dbg_disassemble_current(BX_CPU_ID, 1);  // only one cpu, print time stamp
+      bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
 #else
-    debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
 #endif
-  }
+    }
 #endif
 
-  // decoding instruction compeleted -> continue with execution
-  BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+    // decoding instruction compeleted -> continue with execution
+    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
 
-  if ( !(i->repUsedL() && i->repeatableL()) ) {
-    // non repeating instruction
-    RIP = next_RIP;
-    BX_CPU_CALL_METHOD(execute, (i));
-    BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-    BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
-
-    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-    BX_TICK1_IF_SINGLE_PROCESSOR();
-  }
-  else {
+    if ( !(i->repUsedL() && i->repeatableL()) ) {
+      // non repeating instruction
+      RIP = next_RIP;
+      BX_CPU_CALL_METHOD(execute, (i));
+      BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
+      BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+    }
+    else {
 
 repeat_loop:
 
-    if (i->repeatableZFL()) {
+      if (i->repeatableZFL()) {
 #if BX_SUPPORT_X86_64
-      if (i->as64L()) {
-        if (RCX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          RCX --;
+        if (i->as64L()) {
+          if (RCX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            RCX --;
+          }
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if (RCX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-        if (RCX == 0) goto repeat_done;
-        goto repeat_not_done;
-      }
-      else
+        else
 #endif
-      if (i->as32L()) {
-        if (ECX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          ECX --;
+        if (i->as32L()) {
+          if (ECX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            ECX --;
+          }
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if (ECX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-        if (ECX == 0) goto repeat_done;
-        goto repeat_not_done;
-      }
-      else {
-        if (CX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          CX --;
+        else {
+          if (CX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            CX --;
+          }
+          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
+          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
+          if (CX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
-        if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto repeat_done;
-        if (CX == 0) goto repeat_done;
-        goto repeat_not_done;
       }
-    }
-    else { // normal repeat, no concern for ZF
+      else { // normal repeat, no concern for ZF
 #if BX_SUPPORT_X86_64
-      if (i->as64L()) {
-        if (RCX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          RCX --;
+        if (i->as64L()) {
+          if (RCX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            RCX --;
+          }
+          if (RCX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if (RCX == 0) goto repeat_done;
-        goto repeat_not_done;
-      }
-      else
+        else
 #endif
-      if (i->as32L()) {
-        if (ECX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          ECX --;
+        if (i->as32L()) {
+          if (ECX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            ECX --;
+          }
+          if (ECX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if (ECX == 0) goto repeat_done;
-        goto repeat_not_done;
-      }
-      else { // 16bit addrsize
-        if (CX != 0) {
-          BX_CPU_CALL_METHOD(execute, (i));
-          CX --;
+        else { // 16bit addrsize
+          if (CX != 0) {
+            BX_CPU_CALL_METHOD(execute, (i));
+            CX --;
+          }
+          if (CX == 0) goto repeat_done;
+          goto repeat_not_done;
         }
-        if (CX == 0) goto repeat_done;
-        goto repeat_not_done;
       }
-    }
 
-    // shouldn't get here from above
+      // shouldn't get here from above
 repeat_not_done:
-    BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-    BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+      BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
-    // when debugger is not enabled, directly jump to next iteration
-    if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
+      // when debugger is not enabled, directly jump to next iteration
+      if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
 #endif
-    invalidate_prefetch_q();
-    goto debugger_check;
+      invalidate_prefetch_q();
+      goto debugger_check;
 
 repeat_done:
-    RIP = next_RIP;
-    BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-    BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
-    BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-    BX_TICK1_IF_SINGLE_PROCESSOR();
-  }
+      RIP = next_RIP;
+      BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
+      BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+    }
 
 debugger_check:
-  // inform instrumentation about new instruction
-  BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
+    // inform instrumentation about new instruction
+    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
 #if BX_DEBUGGER
-  // Mode switch support is in dbg_is_begin_instr_bpoint
-  // note instr generating exceptions never reach this point.
-
-  // (mch) Read/write, time break point support
-  if (BX_CPU_THIS_PTR break_point) {
-    switch (BX_CPU_THIS_PTR break_point) {
-      case BREAK_POINT_TIME:
-        BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
-        BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
-        return;
-      case BREAK_POINT_READ:
-        BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
-        BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
-        return;
-      case BREAK_POINT_WRITE:
-        BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
-        BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
-        return;
-      default:
-        BX_PANIC(("Weird break point condition"));
-    }
-  }
-
-#if BX_MAGIC_BREAKPOINT
-  if (BX_CPU_THIS_PTR magic_break) {
-    BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
-    BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-    return;
-  }
+    // note instr generating exceptions never reach this point.
+    if (dbg_check_end_instr_bpoint()) return;
 #endif
 
-  {
-    // check for icount or control-C.  If found, set guard reg and return.
-    bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
-    if (dbg_is_end_instr_bpoint(
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
-         debug_eip,
-         BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip,
-         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
-         Is64BitMode()))
-    {
-      return;
-    }
-  }
-#endif  // #if BX_DEBUGGER
-
 #if BX_GDBSTUB
-  if (bx_dbg.gdbstub_enabled) {
-    unsigned int reason = bx_gdbstub_check(EIP);
-    if (reason != GDBSTUB_STOP_NO_REASON) {
-      return;
+    if (bx_dbg.gdbstub_enabled) {
+      unsigned reason = bx_gdbstub_check(EIP);
+      if (reason != GDBSTUB_STOP_NO_REASON) return;
     }
-  }
 #endif
 
 #if BX_SUPPORT_SMP || BX_DEBUGGER
-  // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
-  // instructions and then return so that the other processors have a chance
-  // to run. This is used only when simulating multiple processors. If only
-  // one processor, don't waste any cycles on it!
-  CHECK_MAX_INSTRUCTIONS(max_instr_count);
+    // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
+    // instructions and then return so that the other processors have a chance
+    // to run. This is used only when simulating multiple processors. If only
+    // one processor, don't waste any cycles on it!
+    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #endif
 
   }  // while (1)
@@ -872,15 +814,19 @@ void BX_CPU_C::trap_debugger(bx_bool callnow)
 #if BX_DEBUGGER
 extern unsigned dbg_show_mask;
 
-bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
+bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 { 
   Bit64u tt = bx_pc_system.time_ticks();
+  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+  Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
-  BX_CPU_THIS_PTR guard_found.eip = eip;
-  BX_CPU_THIS_PTR guard_found.laddr = laddr;
-  BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
-  BX_CPU_THIS_PTR guard_found.is_64bit_code = is_64;
+  BX_CPU_THIS_PTR guard_found.eip = debug_eip;
+  BX_CPU_THIS_PTR guard_found.laddr = 
+    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code = 
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
 
   // mode switch breakpoint
   // instruction which generate exceptions never reach the end of the
@@ -914,7 +860,7 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
         for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
           if (bx_guard.iaddr.vir[i].enabled &&
              (bx_guard.iaddr.vir[i].cs  == cs) &&
-             (bx_guard.iaddr.vir[i].eip == eip))
+             (bx_guard.iaddr.vir[i].eip == debug_eip))
           {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
             BX_CPU_THIS_PTR guard_found.iaddr_index = i;
@@ -972,20 +918,53 @@ bx_bool BX_CPU_C::dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_addres
   return(0); // not on a breakpoint
 }
 
-bx_bool BX_CPU_C::dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64)
+bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
 {
+  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
   BX_CPU_THIS_PTR guard_found.icount++;
-  BX_CPU_THIS_PTR guard_found.cs  = cs;
-  BX_CPU_THIS_PTR guard_found.eip = eip;
-  BX_CPU_THIS_PTR guard_found.laddr = laddr;
-  BX_CPU_THIS_PTR guard_found.is_32bit_code = is_32;
+  BX_CPU_THIS_PTR guard_found.cs  = 
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  BX_CPU_THIS_PTR guard_found.eip = debug_eip;
+  BX_CPU_THIS_PTR guard_found.laddr = 
+    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip;
+  BX_CPU_THIS_PTR guard_found.is_32bit_code = 
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
+  BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
+
+  // Check if we hit read/write or time breakpoint
+  if (BX_CPU_THIS_PTR break_point) {
+    switch (BX_CPU_THIS_PTR break_point) {
+    case BREAK_POINT_TIME:
+      BX_INFO(("[" FMT_LL "d] Caught time breakpoint", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
+      return(1); // on a breakpoint
+    case BREAK_POINT_READ:
+      BX_INFO(("[" FMT_LL "d] Caught read watch point", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
+      return(1); // on a breakpoint
+    case BREAK_POINT_WRITE:
+      BX_INFO(("[" FMT_LL "d] Caught write watch point", bx_pc_system.time_ticks()));
+      BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
+      return(1); // on a breakpoint
+    default:
+      BX_PANIC(("Weird break point condition"));
+    }
+  }
+
+#if BX_MAGIC_BREAKPOINT
+  if (BX_CPU_THIS_PTR magic_break) {
+    BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
+    BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+    return(1); // on a breakpoint
+  }
+#endif
 
   // convenient point to see if user typed Ctrl-C
   if (bx_guard.interrupt_requested &&
      (bx_guard.guard_for & BX_DBG_GUARD_CTRL_C))
   {
     BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_CTRL_C;
-    return(1);
+    return(1); // Ctrl-C pressed
   }
 
   return(0); // no breakpoint
@@ -995,8 +974,8 @@ void BX_CPU_C::dbg_take_irq(void)
 {
   // NOTE: similar code in ::cpu_loop()
 
-  if ( BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() ) {
-    if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
+  if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) {
+    if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
       // normal return from setjmp setup
       unsigned vector = DEV_pic_iac(); // may set INTR with next interrupt
       BX_CPU_THIS_PTR errorno = 0;
@@ -1012,7 +991,7 @@ void BX_CPU_C::dbg_force_interrupt(unsigned vector)
   // Used to force slave simulator to take an interrupt, without
   // regard to IF
 
-  if ( setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0 ) {
+  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {
     // normal return from setjmp setup
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; // external event

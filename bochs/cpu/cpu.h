@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.293 2006-05-19 20:04:31 sshwarts Exp $
+// $Id: cpu.h,v 1.294 2006-05-24 16:46:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2626,8 +2626,8 @@ public: // for now...
   BX_SMF Bit32u   dbg_get_reg(unsigned reg);
   BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
   BX_SMF unsigned dbg_query_pending(void);
-  BX_SMF bx_bool  dbg_is_begin_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
-  BX_SMF bx_bool  dbg_is_end_instr_bpoint(Bit16u cs, bx_address eip, bx_address laddr, bx_bool is_32, bx_bool is_64);
+  BX_SMF bx_bool  dbg_check_begin_instr_bpoint(void);
+  BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF void     dbg_xlate_linear2phy(bx_address linear, Bit32u *phy, bx_bool *valid);
@@ -2877,13 +2877,11 @@ public: // for now...
 
   BX_CPP_INLINE bx_address get_ip(void);
   BX_CPP_INLINE void       set_ip(bx_address ip);
-  BX_CPP_INLINE bx_address get_linear_ip(void);
 
   BX_CPP_INLINE Bit16u get_reg16(unsigned reg);
-  BX_CPP_INLINE Bit32u get_reg32(unsigned reg);
   BX_CPP_INLINE void   set_reg16(unsigned reg, Bit16u val);
+  BX_CPP_INLINE Bit32u get_reg32(unsigned reg);
   BX_CPP_INLINE void   set_reg32(unsigned reg, Bit32u val);
-
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE Bit64u get_reg64(unsigned reg);
   BX_CPP_INLINE void   set_reg64(unsigned reg, Bit64u val);
@@ -3020,11 +3018,6 @@ BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
    BX_CPU_THIS_PTR dword.eip = ip;
 }
 #endif
-
-BX_CPP_INLINE bx_address BX_CPU_C::get_linear_ip(void)
-{
-   return BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + get_ip();
-}
 
 BX_CPP_INLINE Bit16u BX_CPU_C::get_reg16(unsigned reg)
 {
