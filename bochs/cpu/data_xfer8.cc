@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.25 2006-05-24 20:57:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -99,15 +99,10 @@ void BX_CPU_C::XLAT(bxInstruction_c *i)
     offset = EBX + AL;
   }
   else {
-    offset = BX  + AL;
+    offset =  BX + AL;
   }
 
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    read_virtual_byte(i->seg(), offset, &AL);
-  }
-  else {
-    read_virtual_byte(BX_SEG_REG_DS, offset, &AL);
-  }
+  read_virtual_byte(i->seg(), offset, &AL);
 }
 
 void BX_CPU_C::XCHG_EbGb(bxInstruction_c *i)

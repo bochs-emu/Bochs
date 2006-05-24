@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.32 2006-05-07 20:45:42 sshwarts Exp $
+// $Id: io.cc,v 1.33 2006-05-24 20:57:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -494,7 +494,6 @@ void BX_CPU_C::INSW_YdDX(bxInstruction_c *i)
 
 void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit8u value8;
   bx_address esi;
 
@@ -502,13 +501,6 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
     if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
       exception(BX_GP_EXCEPTION, 0, 0);
     }
-  }
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
   }
 
 #if BX_SUPPORT_X86_64
@@ -521,7 +513,7 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
   else
     esi = SI;
 
-  read_virtual_byte(seg, esi, &value8);
+  read_virtual_byte(i->seg(), esi, &value8);
 
   BX_OUTP(DX, value8, 1);
 
@@ -551,20 +543,12 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 // output word string to port
 void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 {
-  unsigned seg;
   bx_address esi;
   unsigned incr = 2;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 2))
       exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
   }
 
 #if BX_SUPPORT_X86_64
@@ -598,7 +582,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
       wordCount = CX;
 
     BX_ASSERT(wordCount > 0);
-    wordCount = FastRepOUTSW(i, seg, esi, DX, wordCount);
+    wordCount = FastRepOUTSW(i, i->seg(), esi, DX, wordCount);
     if (wordCount)
     {
       // Decrement eCX.  Note, the main loop will decrement 1 also, so
@@ -622,7 +606,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 #endif  // (BX_DEBUGGER == 0)
 #endif  // #if BX_SupportRepeatSpeedups
 
-  read_virtual_word(seg, esi, &value16);
+  read_virtual_word(i->seg(), esi, &value16);
   BX_OUTP(DX, value16, 2);
   incr = 2;
 
@@ -664,14 +648,6 @@ void BX_CPU_C::OUTSW_DXXd(bxInstruction_c *i)
   }
 
   bx_address esi;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L())
@@ -681,10 +657,10 @@ void BX_CPU_C::OUTSW_DXXd(bxInstruction_c *i)
   if (i->as32L())
     esi = ESI;
   else
-    esi = SI;
+    esi =  SI;
 
   Bit32u value32=0;
-  read_virtual_dword(seg, esi, &value32);
+  read_virtual_dword(i->seg(), esi, &value32);
   BX_OUTP(DX, value32, 4);
 
 #if BX_SUPPORT_X86_64

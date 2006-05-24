@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.96 2006-05-12 18:03:26 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.97 2006-05-24 20:57:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1954,8 +1954,6 @@ modrm_done:
           }
           else return(0);
         }
-        if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_SEG_REG_DS);
         break;
       case BxImmediate_Iw:
       case BxImmediate_IwIb:
@@ -1998,14 +1996,16 @@ modrm_done:
       default:
         BX_INFO(("b1 was %x", b1));
         BX_PANIC(("fetchdecode: imm_mode = %u", imm_mode));
-      }
     }
+  }
 
 #if BX_SUPPORT_3DNOW
-  if(b1 == 0x10f) {
+  if(b1 == 0x10f)
      instruction->execute = Bx3DNowOpcodeInfo[instruction->modRMForm.Ib].ExecutePtr;
-  }
 #endif
+
+  if (BX_NULL_SEG_REG(instruction->seg()))
+     instruction->setSeg(BX_SEG_REG_DS);
 
   instruction->setB1(b1);
   instruction->setILen(ilen);

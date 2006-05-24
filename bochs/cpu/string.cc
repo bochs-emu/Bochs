@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.34 2006-05-07 18:27:36 sshwarts Exp $
+// $Id: string.cc,v 1.35 2006-05-24 20:57:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -745,24 +745,14 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
  */
 void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit8u temp8;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rsi, rdi;
+    Bit64u rsi = RSI;
+    Bit64u rdi = RDI;
 
-    rsi = RSI;
-    rdi = RDI;
-
-    read_virtual_byte(seg, rsi, &temp8);
+    read_virtual_byte(i->seg(), rsi, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, rdi, &temp8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -783,12 +773,10 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L())
   {
-    Bit32u esi, edi;
+    Bit32u esi = ESI;
+    Bit32u edi = EDI;
 
-    esi = ESI;
-    edi = EDI;
-
-    read_virtual_byte(seg, esi, &temp8);
+    read_virtual_byte(i->seg(), esi, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, edi, &temp8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -821,7 +809,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     {
       Bit32u byteCount = CX;
       BX_ASSERT(byteCount > 0);
-      byteCount = FastRepMOVSB(i, seg, si, BX_SEG_REG_ES, di, byteCount);
+      byteCount = FastRepMOVSB(i, i->seg(), si, BX_SEG_REG_ES, di, byteCount);
       if (byteCount)
       {
         // Decrement the ticks count by the number of iterations, minus
@@ -841,7 +829,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
-    read_virtual_byte(seg, si, &temp8);
+    read_virtual_byte(i->seg(), si, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, di, &temp8);
 
 #if BX_SupportRepeatSpeedups
@@ -870,22 +858,13 @@ doIncr16:
 void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
 {
   Bit16u temp16;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-
     Bit64u rsi = RSI;
     Bit64u rdi = RDI;
 
-    read_virtual_word(seg, rsi, &temp16);
+    read_virtual_word(i->seg(), rsi, &temp16);
     write_virtual_word(BX_SEG_REG_ES, rdi, &temp16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -907,7 +886,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_word(seg, esi, &temp16);
+    read_virtual_word(i->seg(), esi, &temp16);
     write_virtual_word(BX_SEG_REG_ES, edi, &temp16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -939,7 +918,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     {
       Bit32u wordCount = CX;
       BX_ASSERT(wordCount > 0);
-      wordCount = FastRepMOVSW(i, seg, si, BX_SEG_REG_ES, di, wordCount);
+      wordCount = FastRepMOVSW(i, i->seg(), si, BX_SEG_REG_ES, di, wordCount);
       if (wordCount)
       {
         // Decrement the ticks count by the number of iterations, minus
@@ -959,7 +938,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
-    read_virtual_word(seg, si, &temp16);
+    read_virtual_word(i->seg(), si, &temp16);
     write_virtual_word(BX_SEG_REG_ES, di, &temp16);
 
 #if BX_SupportRepeatSpeedups
@@ -988,21 +967,13 @@ doIncr16:
 void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
 {
   Bit32u temp32;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     Bit64u rsi = RSI;
     Bit64u rdi = RDI;
 
-    read_virtual_dword(seg, rsi, &temp32);
+    read_virtual_dword(i->seg(), rsi, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, rdi, &temp32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1035,7 +1006,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
     {
       Bit32u dwordCount = ECX;
       BX_ASSERT(dwordCount > 0);
-      dwordCount = FastRepMOVSD(i, seg, esi, BX_SEG_REG_ES, edi, dwordCount);
+      dwordCount = FastRepMOVSD(i, i->seg(), esi, BX_SEG_REG_ES, edi, dwordCount);
       if (dwordCount)
       {
         // Decrement the ticks count by the number of iterations, minus
@@ -1055,7 +1026,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
 #endif  // (BX_DEBUGGER == 0)
 #endif  // BX_SupportRepeatSpeedups
 
-    read_virtual_dword(seg, esi, &temp32);
+    read_virtual_dword(i->seg(), esi, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
 
 #if BX_SupportRepeatSpeedups
@@ -1082,7 +1053,7 @@ doIncr32:
     Bit16u si = SI;
     Bit16u di = DI;
 
-    read_virtual_dword(seg, si, &temp32);
+    read_virtual_dword(i->seg(), si, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, di, &temp32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1105,20 +1076,12 @@ doIncr32:
 void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
 {
   Bit64u temp64;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
     Bit64u rdi = RDI;
 
-    read_virtual_qword(seg, rsi, &temp64);
+    read_virtual_qword(i->seg(), rsi, &temp64);
     write_virtual_qword(BX_SEG_REG_ES, rdi, &temp64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1138,7 +1101,7 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_qword(seg, esi, &temp64);
+    read_virtual_qword(i->seg(), esi, &temp64);
     write_virtual_qword(BX_SEG_REG_ES, edi, &temp64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1160,22 +1123,14 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
 
 void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit8u op1_8, op2_8, diff_8;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     Bit64u rsi = RSI;
     Bit64u rdi = RDI;
 
-    read_virtual_byte(seg, rsi, &op1_8);
+    read_virtual_byte(i->seg(), rsi, &op1_8);
     read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
 
     diff_8 = op1_8 - op2_8;
@@ -1200,7 +1155,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_byte(seg, esi, &op1_8);
+    read_virtual_byte(i->seg(), esi, &op1_8);
     read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
 
     diff_8 = op1_8 - op2_8;
@@ -1225,7 +1180,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
     Bit16u si = SI;
     Bit16u di = DI;
 
-    read_virtual_byte(seg, si, &op1_8);
+    read_virtual_byte(i->seg(), si, &op1_8);
     read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
 
     diff_8 = op1_8 - op2_8;
@@ -1250,23 +1205,13 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, diff_16;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    Bit64u rsi, rdi;
+    Bit64u rsi = RSI;
+    Bit64u rdi = RDI;
 
-    rsi = RSI;
-    rdi = RDI;
-
-    read_virtual_word(seg, rsi, &op1_16);
+    read_virtual_word(i->seg(), rsi, &op1_16);
     read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
 
     diff_16 = op1_16 - op2_16;
@@ -1291,7 +1236,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_word(seg, esi, &op1_16);
+    read_virtual_word(i->seg(), esi, &op1_16);
     read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
 
     diff_16 = op1_16 - op2_16;
@@ -1316,7 +1261,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     Bit16u si = SI;
     Bit16u di = DI;
 
-    read_virtual_word(seg, si, &op1_16);
+    read_virtual_word(i->seg(), si, &op1_16);
     read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
     diff_16 = op1_16 - op2_16;
@@ -1340,14 +1285,6 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1356,7 +1293,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     Bit32u op1_32, op2_32, diff_32;
 
-    read_virtual_dword(seg, rsi, &op1_32);
+    read_virtual_dword(i->seg(), rsi, &op1_32);
     read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
 
     diff_32 = op1_32 - op2_32;
@@ -1381,7 +1318,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_dword(seg, esi, &op1_32);
+    read_virtual_dword(i->seg(), esi, &op1_32);
     read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
 
     diff_32 = op1_32 - op2_32;
@@ -1406,7 +1343,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
     Bit16u si = SI;
     Bit16u di = DI;
 
-    read_virtual_dword(seg, si, &op1_32);
+    read_virtual_dword(i->seg(), si, &op1_32);
     read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
 
     diff_32 = op1_32 - op2_32;
@@ -1433,20 +1370,12 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, diff_64;
-  unsigned seg;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
     Bit64u rdi = RDI;
 
-    read_virtual_qword(seg, rsi, &op1_64);
+    read_virtual_qword(i->seg(), rsi, &op1_64);
     read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
 
     diff_64 = op1_64 - op2_64;
@@ -1470,7 +1399,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-    read_virtual_qword(seg, esi, &op1_64);
+    read_virtual_qword(i->seg(), esi, &op1_64);
     read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
 
     diff_64 = op1_64 - op2_64;
@@ -1496,9 +1425,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
 void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 {
-  Bit8u op1_8, op2_8, diff_8;
-
-  op1_8 = AL;
+  Bit8u op1_8 = AL, op2_8, diff_8;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1564,9 +1491,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 /* 16 bit opsize mode */
 void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16, diff_16;
-
-  op1_16 = AX;
+  Bit16u op1_16 = AX, op2_16, diff_16;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1629,9 +1554,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
 /* 32 bit opsize mode */
 void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, diff_32;
-
-  op1_32 = EAX;
+  Bit32u op1_32 = EAX, op2_32, diff_32;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1696,9 +1619,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
 /* 64 bit opsize mode */
 void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64, diff_64;
-
-  op1_64 = RAX;
+  Bit64u op1_64 = RAX, op2_64, diff_64;
 
   if (i->as64L()) {
     Bit64u rdi = RDI;
@@ -1987,21 +1908,13 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
 
 void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit8u al;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    read_virtual_byte(seg, rsi, &al);
+    read_virtual_byte(i->seg(), rsi, &al);
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2019,7 +1932,7 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
   {
     Bit32u esi = ESI;
 
-    read_virtual_byte(seg, esi, &al);
+    read_virtual_byte(i->seg(), esi, &al);
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2036,7 +1949,7 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
   { /* 16bit address mode */
     Bit16u si = SI;
 
-    read_virtual_byte(seg, si, &al);
+    read_virtual_byte(i->seg(), si, &al);
 
     AL = al;
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2053,21 +1966,13 @@ void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 /* 16 bit opsize mode */
 void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit16u ax;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    read_virtual_word(seg, rsi, &ax);
+    read_virtual_word(i->seg(), rsi, &ax);
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2085,7 +1990,7 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
   {
     Bit32u esi = ESI;
 
-    read_virtual_word(seg, esi, &ax);
+    read_virtual_word(i->seg(), esi, &ax);
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2102,7 +2007,7 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
   { /* 16bit address mode */
     Bit16u si = SI;
 
-    read_virtual_word(seg, si, &ax);
+    read_virtual_word(i->seg(), si, &ax);
     AX = ax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2119,21 +2024,13 @@ void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
 /* 32 bit opsize mode */
 void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit32u eax;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    read_virtual_dword(seg, rsi, &eax);
+    read_virtual_dword(i->seg(), rsi, &eax);
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2151,7 +2048,7 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
   {
     Bit32u esi = ESI;
 
-    read_virtual_dword(seg, esi, &eax);
+    read_virtual_dword(i->seg(), esi, &eax);
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2168,7 +2065,7 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
   { /* 16bit address mode */
     Bit16u si = SI;
 
-    read_virtual_dword(seg, si, &eax);
+    read_virtual_dword(i->seg(), si, &eax);
     RAX = eax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2187,20 +2084,12 @@ void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
 /* 64 bit opsize mode */
 void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
 {
-  unsigned seg;
   Bit64u rax;
-
-  if (!BX_NULL_SEG_REG(i->seg())) {
-    seg = i->seg();
-  }
-  else {
-    seg = BX_SEG_REG_DS;
-  }
 
   if (i->as64L()) {
     Bit64u rsi = RSI;
 
-    read_virtual_qword(seg, rsi, &rax);
+    read_virtual_qword(i->seg(), rsi, &rax);
     RAX = rax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -2216,7 +2105,7 @@ void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
   {
     Bit32u esi = ESI;
 
-    read_virtual_qword(seg, esi, &rax);
+    read_virtual_qword(i->seg(), esi, &rax);
     RAX = rax;
 
     if (BX_CPU_THIS_PTR get_DF()) {
