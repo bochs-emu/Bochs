@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.155 2006-05-24 16:46:56 sshwarts Exp $
+// $Id: cpu.cc,v 1.156 2006-05-26 17:24:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -311,6 +311,7 @@ repeat_loop:
         if (i->as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             RCX --;
           }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
@@ -323,6 +324,7 @@ repeat_loop:
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             ECX --;
           }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
@@ -333,6 +335,7 @@ repeat_loop:
         else {
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             CX --;
           }
           if ((i->repUsedValue()==3) && (get_ZF()==0)) goto repeat_done;
@@ -346,6 +349,7 @@ repeat_loop:
         if (i->as64L()) {
           if (RCX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             RCX --;
           }
           if (RCX == 0) goto repeat_done;
@@ -356,6 +360,7 @@ repeat_loop:
         if (i->as32L()) {
           if (ECX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             ECX --;
           }
           if (ECX == 0) goto repeat_done;
@@ -364,6 +369,7 @@ repeat_loop:
         else { // 16bit addrsize
           if (CX != 0) {
             BX_CPU_CALL_METHOD(execute, (i));
+            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
             CX --;
           }
           if (CX == 0) goto repeat_done;
@@ -373,9 +379,7 @@ repeat_loop:
 
       // shouldn't get here from above
 repeat_not_done:
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
-
 #if BX_DEBUGGER == 0
       // when debugger is not enabled, directly jump to next iteration
       if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
@@ -387,7 +391,6 @@ repeat_done:
       RIP = next_RIP;
       BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
       BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
-      BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
       BX_TICK1_IF_SINGLE_PROCESSOR();
     }
@@ -528,8 +531,8 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR nmi_disable = 1;
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
-    interrupt(2, 0, 0, 0);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+    interrupt(2, 0, 0, 0);
   }
   else if (BX_CPU_INTR && BX_CPU_THIS_PTR get_IF() && BX_DBG_ASYNC_INTR)
   {
@@ -547,9 +550,9 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
 #endif
     BX_CPU_THIS_PTR errorno = 0;
     BX_CPU_THIS_PTR EXT = 1; /* external event */
-    interrupt(vector, 0, 0, 0);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+    interrupt(vector, 0, 0, 0);
     // Set up environment, as would be when this main cpu loop gets
     // invoked.  At the end of normal instructions, we always commmit
     // the new EIP/ESP values.  But here, we call interrupt() much like
