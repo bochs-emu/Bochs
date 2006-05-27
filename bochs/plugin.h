@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.51 2006-04-15 17:03:59 vruppert Exp $
+// $Id: plugin.h,v 1.52 2006-05-27 15:54:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -54,7 +54,6 @@ extern "C" {
 #define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
 #define DEV_register_state() {bx_devices.register_state(); }
-#define DEV_before_save_state() {bx_devices.before_save_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
 
@@ -77,7 +76,6 @@ extern "C" {
 #define DEV_init_devices() {bx_devices.init(BX_MEM(0)); }
 #define DEV_reset_devices(type) {bx_devices.reset(type); }
 #define DEV_register_state() {bx_devices.register_state(); }
-#define DEV_before_save_state() {bx_devices.before_save_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
@@ -341,7 +339,6 @@ extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
 #if BX_SUPPORT_SAVE_RESTORE
 extern void bx_plugins_register_state();
-extern void bx_plugins_before_save_state();
 extern void bx_plugins_after_restore_state();
 #endif
 

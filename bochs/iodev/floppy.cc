@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.99 2006-05-01 18:24:47 vruppert Exp $
+// $Id: floppy.cc,v 1.100 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.99 2006-05-01 18:24:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.100 2006-05-27 15:54:48 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -378,6 +378,67 @@ void bx_floppy_ctrl_c::reset(unsigned type)
   DEV_dma_set_drq(FLOPPY_DMA_CHAN, 0);
   enter_idle_phase();
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_floppy_ctrl_c::register_state(void)
+{
+  unsigned i;
+  char name[8];
+  bx_list_c *drive;
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "floppy", "Floppy State", 36);
+  new bx_shadow_num_c(list, "data_rate", &BX_FD_THIS s.data_rate);
+  bx_list_c *command = new bx_list_c(list, "command", 10);
+  for (i=0; i<10; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(command, strdup(name), &BX_FD_THIS s.command[i], BASE_HEX);
+  }
+  new bx_shadow_num_c(list, "command_index", &BX_FD_THIS s.command_index);
+  new bx_shadow_num_c(list, "command_size", &BX_FD_THIS s.command_size);
+  new bx_shadow_bool_c(list, "command_complete", &BX_FD_THIS s.command_complete);
+  new bx_shadow_num_c(list, "pending_command", &BX_FD_THIS s.pending_command, BASE_HEX);
+  new bx_shadow_bool_c(list, "multi_track", &BX_FD_THIS s.multi_track);
+  new bx_shadow_bool_c(list, "pending_irq", &BX_FD_THIS s.pending_irq);
+  new bx_shadow_num_c(list, "reset_sensei", &BX_FD_THIS s.reset_sensei);
+  new bx_shadow_num_c(list, "format_count", &BX_FD_THIS s.format_count);
+  new bx_shadow_num_c(list, "format_fillbyte", &BX_FD_THIS s.format_fillbyte, BASE_HEX);
+  bx_list_c *result = new bx_list_c(list, "result", 10);
+  for (i=0; i<10; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(result, strdup(name), &BX_FD_THIS s.result[i], BASE_HEX);
+  }
+  new bx_shadow_num_c(list, "result_index", &BX_FD_THIS s.result_index);
+  new bx_shadow_num_c(list, "result_size", &BX_FD_THIS s.result_size);
+  new bx_shadow_num_c(list, "DOR", &BX_FD_THIS s.DOR, BASE_HEX);
+  new bx_shadow_num_c(list, "TDR", &BX_FD_THIS s.TDR, BASE_HEX);
+  new bx_shadow_bool_c(list, "TC", &BX_FD_THIS s.TC);
+  new bx_shadow_num_c(list, "main_status_reg", &BX_FD_THIS s.main_status_reg, BASE_HEX);
+  new bx_shadow_num_c(list, "status_reg0", &BX_FD_THIS s.status_reg0, BASE_HEX);
+  new bx_shadow_num_c(list, "status_reg1", &BX_FD_THIS s.status_reg1, BASE_HEX);
+  new bx_shadow_num_c(list, "status_reg2", &BX_FD_THIS s.status_reg2, BASE_HEX);
+  new bx_shadow_num_c(list, "status_reg3", &BX_FD_THIS s.status_reg3, BASE_HEX);
+  new bx_shadow_num_c(list, "floppy_buffer_index", &BX_FD_THIS s.floppy_buffer_index);
+  new bx_shadow_bool_c(list, "non_dma", &BX_FD_THIS s.non_dma);
+  new bx_shadow_bool_c(list, "lock", &BX_FD_THIS s.lock);
+  new bx_shadow_num_c(list, "SRT", &BX_FD_THIS s.SRT, BASE_HEX);
+  new bx_shadow_num_c(list, "HUT", &BX_FD_THIS s.HUT, BASE_HEX);
+  new bx_shadow_num_c(list, "HLT", &BX_FD_THIS s.HLT, BASE_HEX);
+  new bx_shadow_num_c(list, "config", &BX_FD_THIS s.config, BASE_HEX);
+  new bx_shadow_num_c(list, "pretrk", &BX_FD_THIS s.pretrk);
+  new bx_shadow_num_c(list, "perp_mode", &BX_FD_THIS s.perp_mode);
+  new bx_shadow_data_c(list, "buffer", BX_FD_THIS s.floppy_buffer, 512);
+  for (i=0; i<4; i++) {
+    sprintf(name, "drive%d", i);
+    drive = new bx_list_c(list, strdup(name));
+    new bx_shadow_num_c(drive, "cylinder", &BX_FD_THIS s.cylinder[i]);
+    new bx_shadow_num_c(drive, "head", &BX_FD_THIS s.head[i]);
+    new bx_shadow_num_c(drive, "sector", &BX_FD_THIS s.sector[i]);
+    new bx_shadow_num_c(drive, "eot", &BX_FD_THIS s.eot[i]);
+    new bx_shadow_bool_c(drive, "media_present", &BX_FD_THIS s.media_present[i]);
+    new bx_shadow_num_c(drive, "DIR", &BX_FD_THIS s.DIR[i], BASE_HEX);
+  }
+}
+#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions

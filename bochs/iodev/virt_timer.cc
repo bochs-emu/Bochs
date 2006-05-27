@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.28 2006-05-27 14:02:34 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.29 2006-05-27 15:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -266,7 +266,7 @@ int bx_virt_timer_c::register_timer(void *this_ptr, bx_timer_handler_t handler,
   for (i=0; i < numTimers; i++) {
     if (timer[i].inUse == 0 || i==numTimers)
       break;
-    }
+  }
   // If we didn't find a free slot, increment the bound, numTimers.
   if (i==numTimers)
     numTimers++; // One new timer installed.
@@ -420,6 +420,42 @@ void bx_virt_timer_c::init(void)
 
   init_done = 1;
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_virt_timer_c::register_state(void)
+{
+  unsigned i;
+  bx_list_c *bxtimer;
+  char name[4];
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "virt_timer", "Virtual Timer State", 17);
+  bx_list_c *vtimers = new bx_list_c(list, "timer", numTimers);
+  for (i = 0; i < numTimers; i++) {
+    sprintf(name, "%d", i);
+    bxtimer = new bx_list_c(vtimers, strdup(name));
+    new bx_shadow_num_c(bxtimer, "period", &timer[i].period);
+    new bx_shadow_num_c(bxtimer, "timeToFire", &timer[i].timeToFire);
+    new bx_shadow_bool_c(bxtimer, "active", &timer[i].active);
+    new bx_shadow_bool_c(bxtimer, "continuous", &timer[i].continuous);
+  }
+  new bx_shadow_num_c(list, "current_timers_time", &current_timers_time);
+  new bx_shadow_num_c(list, "timers_next_event_time", &timers_next_event_time);
+  new bx_shadow_num_c(list, "last_sequential_time", &last_sequential_time);
+  new bx_shadow_num_c(list, "virtual_next_event_time", &virtual_next_event_time);
+  new bx_shadow_num_c(list, "current_virtual_time", &current_virtual_time);
+  new bx_shadow_num_c(list, "last_real_time", &last_real_time);
+  new bx_shadow_num_c(list, "total_real_usec", &total_real_usec);
+  new bx_shadow_num_c(list, "last_realtime_delta", &last_realtime_delta);
+  new bx_shadow_num_c(list, "last_usec", &last_usec);
+  new bx_shadow_num_c(list, "usec_per_second", &usec_per_second);
+  new bx_shadow_num_c(list, "stored_delta", &stored_delta);
+  new bx_shadow_num_c(list, "last_system_usec", &last_system_usec);
+  new bx_shadow_num_c(list, "em_last_realtime", &em_last_realtime);
+  new bx_shadow_num_c(list, "total_ticks", &total_ticks);
+  new bx_shadow_num_c(list, "last_realtime_ticks", &last_realtime_ticks);
+  new bx_shadow_num_c(list, "ticks_per_second", &ticks_per_second);
+}
+#endif
 
 void bx_virt_timer_c::timer_handler(void)
 {

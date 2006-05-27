@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.10 2006-05-27 14:02:34 sshwarts Exp $
+// $Id: virt_timer.h,v 1.11 2006-05-27 15:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,6 +147,10 @@ public:
 
   //Initialization
   void init(void);
+
+#if BX_SUPPORT_SAVE_RESTORE
+  void register_state(void);
+#endif
 };
 
 extern bx_virt_timer_c bx_virt_timer;

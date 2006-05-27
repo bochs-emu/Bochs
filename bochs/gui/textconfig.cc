@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.52 2006-04-09 13:55:55 vruppert Exp $
+// $Id: textconfig.cc,v 1.53 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -230,7 +230,7 @@ static char *startup_menu_prompt =
 "3. Edit options\n"
 "4. Save options to...\n"
 #if BX_SUPPORT_SAVE_RESTORE
-"5. Restore Bochs config and log options from...\n"
+"5. Restore the Bochs state from...\n"
 "6. Begin simulation\n"
 "7. Quit now\n"
 #else
@@ -279,7 +279,7 @@ static char *runtime_menu_prompt =
 "10. Instruction tracing: off (doesn't exist yet)\n"
 "11. Misc runtime options\n"
 #if BX_SUPPORT_SAVE_RESTORE
-"12. Save Bochs config and log options to...\n"
+"12. Save the Bochs state to directory and quit...\n"
 "13. Continue simulation\n"
 "14. Quit now\n"
 "\n"
@@ -425,7 +425,7 @@ int bx_config_interface(int menu)
             case 4: bx_write_rc(NULL); break;
 #if BX_SUPPORT_SAVE_RESTORE
             case 5:
-              if (ask_string("\nWhat is the path to restore Bochs config and log options from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+              if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp (sr_path, "none")) {
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
@@ -513,9 +513,12 @@ int bx_config_interface(int menu)
               return -1;
 #if BX_SUPPORT_SAVE_RESTORE
             case BX_CI_RT_SAVE:
-              if (ask_string("\nWhat is the path to save the Bochs config and log options to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+              if (ask_string("\nWhat is the path to save the Bochs state to?\nNOTE: Bochs quits after saving!\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp (sr_path, "none")) {
                   SIM->save_state(sr_path);
+                  bx_user_quit = 1;
+                  SIM->quit_sim(1);
+                  return -1;
                 }
               }
               break;

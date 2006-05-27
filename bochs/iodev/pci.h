@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.h,v 1.25 2006-03-26 22:15:06 sshwarts Exp $
+// $Id: pci.h,v 1.26 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,6 +58,10 @@ public:
   virtual ~bx_pci_bridge_c();
   virtual void init(void);
   virtual void reset(unsigned type);
+#if BX_SUPPORT_SAVE_RESTORE
+  virtual void register_state(void);
+  virtual void after_restore_state(void);
+#endif
   virtual bx_bool register_pci_handlers(bx_pci_device_stub_c *device,
                                         Bit8u *devfunc, const char *name,
                                         const char *descr);

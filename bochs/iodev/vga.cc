@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.128 2006-03-07 21:11:20 sshwarts Exp $
+// $Id: vga.cc,v 1.129 2006-05-27 15:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -395,9 +395,160 @@ void bx_vga_c::reset(unsigned type)
   }
 }
 
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_vga_c::register_state(void)
+{
+  unsigned i;
+  char name[6];
+  bx_list_c *parent, *reg;
 
-  void
-bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
+  parent = SIM->get_sr_root();
+#if BX_SUPPORT_CLGD54XX
+  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
+    parent = (bx_list_c*)SIM->get_param("svga_cirrus", parent);;
+  }
+#endif
+  bx_list_c *list = new bx_list_c(parent, "vga", "VGA Adapter State", 17);
+  bx_list_c *misc = new bx_list_c(list, "misc_output");
+  new bx_shadow_bool_c(misc, "color_emulation", &BX_VGA_THIS s.misc_output.color_emulation);
+  new bx_shadow_bool_c(misc, "enable_ram", &BX_VGA_THIS s.misc_output.enable_ram);
+  new bx_shadow_num_c(misc, "clock_select", &BX_VGA_THIS s.misc_output.clock_select);
+  new bx_shadow_bool_c(misc, "select_high_bank", &BX_VGA_THIS s.misc_output.select_high_bank);
+  new bx_shadow_bool_c(misc, "horiz_sync_pol", &BX_VGA_THIS s.misc_output.horiz_sync_pol);
+  new bx_shadow_bool_c(misc, "vert_sync_pol", &BX_VGA_THIS s.misc_output.vert_sync_pol);
+  bx_list_c *crtc = new bx_list_c(list, "CRTC");
+  new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
+  reg = new bx_list_c(crtc, "reg", 0x19);
+  for (i=0; i<=0x18; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(reg, strdup(name), &BX_VGA_THIS s.CRTC.reg[i], BASE_HEX);
+  }
+  new bx_shadow_bool_c(crtc, "write_protect", &BX_VGA_THIS s.CRTC.write_protect);
+  bx_list_c *actl = new bx_list_c(list, "attribute_ctrl", 9);
+  new bx_shadow_bool_c(actl, "flip_flop", &BX_VGA_THIS s.attribute_ctrl.flip_flop);
+  new bx_shadow_num_c(actl, "address", &BX_VGA_THIS s.attribute_ctrl.address, BASE_HEX);
+  new bx_shadow_bool_c(actl, "video_enabled", &BX_VGA_THIS s.attribute_ctrl.video_enabled);
+  reg = new bx_list_c(actl, "palette_reg", 16);
+  for (i=0; i<16; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(reg, strdup(name), &BX_VGA_THIS s.attribute_ctrl.palette_reg[i], BASE_HEX);
+  }
+  new bx_shadow_num_c(actl, "overscan_color", &BX_VGA_THIS s.attribute_ctrl.overscan_color, BASE_HEX);
+  new bx_shadow_num_c(actl, "color_plane_enable", &BX_VGA_THIS s.attribute_ctrl.color_plane_enable, BASE_HEX);
+  new bx_shadow_num_c(actl, "horiz_pel_panning", &BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning, BASE_HEX);
+  new bx_shadow_num_c(actl, "color_select", &BX_VGA_THIS s.attribute_ctrl.color_select, BASE_HEX);
+  bx_list_c *mode = new bx_list_c(actl, "mode_ctrl", 7);
+  new bx_shadow_bool_c(mode, "graphics_alpha", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha);
+  new bx_shadow_bool_c(mode, "display_type", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.display_type);
+  new bx_shadow_bool_c(mode, "enable_line_graphics", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics);
+  new bx_shadow_bool_c(mode, "blink_intensity", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity);
+  new bx_shadow_bool_c(mode, "pixel_panning_compat", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat);
+  new bx_shadow_bool_c(mode, "pixel_clock_select", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
+  new bx_shadow_bool_c(mode, "internal_palette_size", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
+  bx_list_c *pel = new bx_list_c(list, "pel");
+  new bx_shadow_num_c(pel, "write_data_register", &BX_VGA_THIS s.pel.write_data_register, BASE_HEX);
+  new bx_shadow_num_c(pel, "write_data_cycle", &BX_VGA_THIS s.pel.write_data_cycle);
+  new bx_shadow_num_c(pel, "read_data_register", &BX_VGA_THIS s.pel.read_data_register, BASE_HEX);
+  new bx_shadow_num_c(pel, "read_data_cycle", &BX_VGA_THIS s.pel.read_data_cycle);
+  new bx_shadow_num_c(pel, "dac_state", &BX_VGA_THIS s.pel.dac_state);
+  new bx_shadow_num_c(pel, "mask", &BX_VGA_THIS s.pel.mask);
+  new bx_shadow_data_c(list, "pel_data", &BX_VGA_THIS s.pel.data[0].red, sizeof(BX_VGA_THIS s.pel.data));
+  bx_list_c *gfxc = new bx_list_c(list, "graphics_ctrl", 20);
+  new bx_shadow_num_c(gfxc, "index", &BX_VGA_THIS s.graphics_ctrl.index);
+  new bx_shadow_num_c(gfxc, "set_reset", &BX_VGA_THIS s.graphics_ctrl.set_reset);
+  new bx_shadow_num_c(gfxc, "enable_set_reset", &BX_VGA_THIS s.graphics_ctrl.enable_set_reset);
+  new bx_shadow_num_c(gfxc, "color_compare", &BX_VGA_THIS s.graphics_ctrl.color_compare);
+  new bx_shadow_num_c(gfxc, "data_rotate", &BX_VGA_THIS s.graphics_ctrl.data_rotate);
+  new bx_shadow_num_c(gfxc, "raster_op", &BX_VGA_THIS s.graphics_ctrl.raster_op);
+  new bx_shadow_num_c(gfxc, "read_map_select", &BX_VGA_THIS s.graphics_ctrl.read_map_select);
+  new bx_shadow_num_c(gfxc, "write_mode", &BX_VGA_THIS s.graphics_ctrl.write_mode);
+  new bx_shadow_bool_c(gfxc, "read_mode", &BX_VGA_THIS s.graphics_ctrl.read_mode);
+  new bx_shadow_bool_c(gfxc, "odd_even", &BX_VGA_THIS s.graphics_ctrl.odd_even);
+  new bx_shadow_bool_c(gfxc, "chain_odd_even", &BX_VGA_THIS s.graphics_ctrl.chain_odd_even);
+  new bx_shadow_num_c(gfxc, "shift_reg", &BX_VGA_THIS s.graphics_ctrl.shift_reg);
+  new bx_shadow_bool_c(gfxc, "graphics_alpha", &BX_VGA_THIS s.graphics_ctrl.graphics_alpha);
+  new bx_shadow_num_c(gfxc, "memory_mapping", &BX_VGA_THIS s.graphics_ctrl.memory_mapping);
+  new bx_shadow_num_c(gfxc, "color_dont_care", &BX_VGA_THIS s.graphics_ctrl.color_dont_care);
+  new bx_shadow_num_c(gfxc, "bitmask", &BX_VGA_THIS s.graphics_ctrl.bitmask);
+  new bx_shadow_num_c(gfxc, "latch0", &BX_VGA_THIS s.graphics_ctrl.latch[0]);
+  new bx_shadow_num_c(gfxc, "latch1", &BX_VGA_THIS s.graphics_ctrl.latch[1]);
+  new bx_shadow_num_c(gfxc, "latch2", &BX_VGA_THIS s.graphics_ctrl.latch[2]);
+  new bx_shadow_num_c(gfxc, "latch3", &BX_VGA_THIS s.graphics_ctrl.latch[3]);
+  bx_list_c *sequ = new bx_list_c(list, "sequencer", 13);
+  new bx_shadow_num_c(sequ, "index", &BX_VGA_THIS s.sequencer.index);
+  new bx_shadow_num_c(sequ, "map_mask", &BX_VGA_THIS s.sequencer.map_mask);
+  new bx_shadow_bool_c(sequ, "map_mask_bit0", &BX_VGA_THIS s.sequencer.map_mask_bit[0]);
+  new bx_shadow_bool_c(sequ, "map_mask_bit1", &BX_VGA_THIS s.sequencer.map_mask_bit[1]);
+  new bx_shadow_bool_c(sequ, "map_mask_bit2", &BX_VGA_THIS s.sequencer.map_mask_bit[2]);
+  new bx_shadow_bool_c(sequ, "map_mask_bit3", &BX_VGA_THIS s.sequencer.map_mask_bit[3]);
+  new bx_shadow_bool_c(sequ, "reset1", &BX_VGA_THIS s.sequencer.reset1);
+  new bx_shadow_bool_c(sequ, "reset2", &BX_VGA_THIS s.sequencer.reset2);
+  new bx_shadow_num_c(sequ, "reg1", &BX_VGA_THIS s.sequencer.reg1);
+  new bx_shadow_num_c(sequ, "char_map_select", &BX_VGA_THIS s.sequencer.char_map_select);
+  new bx_shadow_bool_c(sequ, "extended_mem", &BX_VGA_THIS s.sequencer.extended_mem);
+  new bx_shadow_bool_c(sequ, "odd_even", &BX_VGA_THIS s.sequencer.odd_even);
+  new bx_shadow_bool_c(sequ, "chain_four", &BX_VGA_THIS s.sequencer.chain_four);
+  new bx_shadow_bool_c(list, "enabled", &BX_VGA_THIS s.vga_enabled);
+  new bx_shadow_num_c(list, "line_offset", &BX_VGA_THIS s.line_offset);
+  new bx_shadow_num_c(list, "line_compare", &BX_VGA_THIS s.line_compare);
+  new bx_shadow_num_c(list, "vertical_display_end", &BX_VGA_THIS s.vertical_display_end);
+  new bx_shadow_num_c(list, "charmap_address", &BX_VGA_THIS s.charmap_address);
+  new bx_shadow_bool_c(list, "x_dotclockdiv2", &BX_VGA_THIS s.x_dotclockdiv2);
+  new bx_shadow_bool_c(list, "y_doublescan", &BX_VGA_THIS s.y_doublescan);
+  new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
+  new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.vga_memory, sizeof(BX_VGA_THIS s.vga_memory));
+#if BX_SUPPORT_VBE
+  if (BX_VGA_THIS s.vbe_memory != NULL) {
+    bx_list_c *vbe = new bx_list_c(list, "vbe", 18);
+    new bx_shadow_num_c(vbe, "cur_dispi", &BX_VGA_THIS s.vbe_cur_dispi);
+    new bx_shadow_num_c(vbe, "xres", &BX_VGA_THIS s.vbe_xres);
+    new bx_shadow_num_c(vbe, "yres", &BX_VGA_THIS s.vbe_yres);
+    new bx_shadow_num_c(vbe, "bpp", &BX_VGA_THIS s.vbe_bpp);
+    new bx_shadow_num_c(vbe, "bank", &BX_VGA_THIS s.vbe_bank);
+    new bx_shadow_bool_c(vbe, "enabled", &BX_VGA_THIS s.vbe_enabled);
+    new bx_shadow_num_c(vbe, "curindex", &BX_VGA_THIS s.vbe_curindex);
+    new bx_shadow_num_c(vbe, "visible_screen_size", &BX_VGA_THIS s.vbe_visible_screen_size);
+    new bx_shadow_num_c(vbe, "offset_x", &BX_VGA_THIS s.vbe_offset_x);
+    new bx_shadow_num_c(vbe, "offset_y", &BX_VGA_THIS s.vbe_offset_y);
+    new bx_shadow_num_c(vbe, "virtual_xres", &BX_VGA_THIS s.vbe_virtual_xres);
+    new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS s.vbe_virtual_yres);
+    new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS s.vbe_virtual_start);
+    new bx_shadow_num_c(vbe, "bpp_multiplier", &BX_VGA_THIS s.vbe_bpp_multiplier);
+    new bx_shadow_bool_c(vbe, "lfb_enabled", &BX_VGA_THIS s.vbe_lfb_enabled);
+    new bx_shadow_bool_c(vbe, "get_capabilities", &BX_VGA_THIS s.vbe_get_capabilities);
+    new bx_shadow_bool_c(vbe, "8bit_dac", &BX_VGA_THIS s.vbe_8bit_dac);
+    new bx_shadow_data_c(vbe, "memory", BX_VGA_THIS s.vbe_memory, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES);
+  }
+#endif
+}
+
+void bx_vga_c::after_restore_state(void)
+{
+  for (unsigned i=0; i<256; i++) {
+#if BX_SUPPORT_VBE
+    if (BX_VGA_THIS s.vbe_8bit_dac) {
+      bx_gui->palette_change(i, BX_VGA_THIS s.pel.data[i].red,
+                             BX_VGA_THIS s.pel.data[i].green,
+                             BX_VGA_THIS s.pel.data[i].blue);
+    }
+    else
+#endif
+    {
+      bx_gui->palette_change(i, BX_VGA_THIS s.pel.data[i].red<<2,
+                             BX_VGA_THIS s.pel.data[i].green<<2,
+                             BX_VGA_THIS s.pel.data[i].blue<<2);
+    }
+  }
+  bx_gui->set_text_charmap(&BX_VGA_THIS s.vga_memory[0x20000 + BX_VGA_THIS s.charmap_address]);
+  old_iWidth = BX_MAX_XRES;
+  old_iHeight = BX_MAX_YRES;
+  BX_VGA_THIS redraw_area(0, 0, BX_MAX_XRES, BX_MAX_YRES);
+  BX_VGA_THIS update();
+  bx_gui->flush();
+}
+#endif
+
+void bx_vga_c::determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth)
 {
   int ai[0x20];
   int i,h,v;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.24 2006-02-19 15:43:03 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.25 2006-05-27 15:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,8 +59,7 @@ bx_slowdown_timer_c::bx_slowdown_timer_c()
   s.timer_handle=BX_NULL_TIMER_HANDLE;
 }
 
-void
-bx_slowdown_timer_c::init(void)
+void bx_slowdown_timer_c::init(void)
 {
   // Return early if slowdown timer not selected
   if ((SIM->get_param_enum(BXPN_CLOCK_SYNC)->get() != BX_CLOCK_SYNC_SLOWDOWN) &&
@@ -85,16 +84,21 @@ bx_slowdown_timer_c::init(void)
   bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
 }
 
-void
-bx_slowdown_timer_c::timer_handler(void * this_ptr)
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_slowdown_timer_c::after_restore_state(void)
+{
+  s.start_emulated_time = bx_pc_system.time_usec();
+}
+#endif
+
+void bx_slowdown_timer_c::timer_handler(void * this_ptr)
 {
   bx_slowdown_timer_c * class_ptr = (bx_slowdown_timer_c *) this_ptr;
 
   class_ptr->handle_timer();
 }
 
-void
-bx_slowdown_timer_c::handle_timer()
+void bx_slowdown_timer_c::handle_timer()
 {
   Bit64u total_emu_time = (bx_pc_system.time_usec()) - s.start_emulated_time;
   Bit64u wanttime = s.lasttime+s.Q;

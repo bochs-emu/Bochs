@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.21 2006-01-08 09:45:11 vruppert Exp $
+// $Id: pit.cc,v 1.22 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -223,8 +223,39 @@ bx_pit_c::init( void )
   return(1);
 }
 
-void bx_pit_c::reset(unsigned type) {
+void bx_pit_c::reset(unsigned type)
+{
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pit_c::register_state(void)
+{
+  unsigned i;
+  char name[4];
+  bx_list_c *tim;
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pit", "8254 PIT State");
+  for (i=0; i<3; i++) {
+    sprintf(name, "timer%d", i);
+    tim = new bx_list_c(list, strdup(name), 13);
+    new bx_shadow_num_c(tim, "mode", &BX_PIT_THIS s.timer[i].mode, 16);
+    new bx_shadow_num_c(tim, "latch_mode", &BX_PIT_THIS s.timer[i].latch_mode, 16);
+    new bx_shadow_num_c(tim, "input_latch_value", &BX_PIT_THIS s.timer[i].input_latch_value, 16);
+    new bx_shadow_bool_c(tim, "input_latch_toggle", &BX_PIT_THIS s.timer[i].input_latch_toggle);
+    new bx_shadow_num_c(tim, "output_latch_value", &BX_PIT_THIS s.timer[i].output_latch_value, 16);
+    new bx_shadow_bool_c(tim, "output_latch_toggle", &BX_PIT_THIS s.timer[i].output_latch_toggle);
+    new bx_shadow_bool_c(tim, "output_latch_full", &BX_PIT_THIS s.timer[i].output_latch_full);
+    new bx_shadow_num_c(tim, "counter_max", &BX_PIT_THIS s.timer[i].counter_max, 16);
+    new bx_shadow_num_c(tim, "counter", &BX_PIT_THIS s.timer[i].counter, 16);
+    new bx_shadow_bool_c(tim, "bcd_mode", &BX_PIT_THIS s.timer[i].bcd_mode);
+    new bx_shadow_bool_c(tim, "active", &BX_PIT_THIS s.timer[i].active);
+    new bx_shadow_bool_c(tim, "GATE", &BX_PIT_THIS s.timer[i].GATE);
+    new bx_shadow_bool_c(tim, "OUT", &BX_PIT_THIS s.timer[i].OUT);
+  }
+  new bx_shadow_num_c(list, "speaker_data_on", &BX_PIT_THIS s.speaker_data_on, 16);
+  new bx_shadow_bool_c(list, "refresh_clock_div2", &BX_PIT_THIS s.refresh_clock_div2);
+}
+#endif
 
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions

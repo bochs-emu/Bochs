@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.105 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: init.cc,v 1.106 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,11 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_X86_64==0
+// Make life easier merging cpu64 & cpu code.
+#define RIP EIP
+#endif
 
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -264,7 +269,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE), strdup(cpu_name),
                                     cpu_title, 60);
 #define DEFPARAM_NORMAL(name,field) \
-    new bx_shadow_num_c(list, #name, #name, &(field))
+    new bx_shadow_num_c(list, #name, &(field))
 
       DEFPARAM_NORMAL(EAX, EAX);
       DEFPARAM_NORMAL(EBX, EBX);
@@ -281,17 +286,13 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
       DEFPARAM_NORMAL(DR3, dr3);
       DEFPARAM_NORMAL(DR6, dr6);
       DEFPARAM_NORMAL(DR7, dr7);
-#if BX_SUPPORT_X86_64==0
-#if BX_CPU_LEVEL >= 2
       DEFPARAM_NORMAL(CR0, cr0.val32);
       DEFPARAM_NORMAL(CR1, cr1);
       DEFPARAM_NORMAL(CR2, cr2);
       DEFPARAM_NORMAL(CR3, cr3);
-#endif
 #if BX_CPU_LEVEL >= 4
       DEFPARAM_NORMAL(CR4, cr4.registerValue);
 #endif
-#endif  // #if BX_SUPPORT_X86_64==0
 
     // segment registers require a handler function because they have
     // special get/set requirements.
@@ -302,10 +303,10 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     param->set_format(fmt16);
 #define DEFPARAM_GLOBAL_SEG_REG(name,field) \
     param = new bx_shadow_num_c(list, \
-        #name"_base", #name" base", \
+        #name"_base", \
         & BX_CPU_THIS_PTR field.base); \
     param = new bx_shadow_num_c(list, \
-        #name"_limit", #name" limit", \
+        #name"_limit", \
         & BX_CPU_THIS_PTR field.limit);
 
     DEFPARAM_SEG_REG(CS);
@@ -322,10 +323,8 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 #undef DEFPARAM_SEG_REG
 #undef DEFPARAM_GLOBAL_SEG_REG
 
-#if BX_SUPPORT_X86_64==0
-    param = new bx_shadow_num_c(list, "EFLAGS", "EFLAGS",
+    param = new bx_shadow_num_c(list, "EFLAGS",
         &BX_CPU_THIS_PTR eflags.val32);
-#endif
 
     // flags implemented in lazy_flags.cc must be done with a handler
     // that calls their get function, to force them to be computed.
@@ -353,13 +352,11 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     // IOPL is a special case because it is 2 bits wide.
     param = new bx_shadow_num_c(
             list,
-            "IOPL", "IOPL",
+            "IOPL",
             &eflags.val32, 10,
             12, 13);
     param->set_range(0, 3);
-#if BX_SUPPORT_X86_64==0
     param->set_format("%d");
-#endif
 #endif
     DEFPARAM_LAZY_EFLAG(OF);
     DEFPARAM_EFLAG(DF);
@@ -380,10 +377,355 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 #endif
 }
 
+#if BX_SUPPORT_SAVE_RESTORE
+void BX_CPU_C::register_state()
+{
+  unsigned i;
+  char cpu_name[10], cpu_title[10], name[10];
+  bx_param_num_c *param;
+  bx_list_c *reg;
+
+  sprintf(cpu_name, "%d", BX_CPU_ID);
+  sprintf(cpu_title, "CPU %d", BX_CPU_ID);
+  bx_list_c *list = new bx_list_c(SIM->get_param("save_restore.cpu"), strdup(cpu_name),
+                                    cpu_title, 60);
+#define BXRS_PARAM_SPECIAL(name) \
+    param = new bx_param_num_c(list, #name, "", "", 0, BX_MAX_BIT32U, 0); \
+    param->set_base(BASE_HEX); \
+    param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+#define BXRS_PARAM_SIMPLE(name) \
+    new bx_shadow_num_c(list, #name, &(name), BASE_HEX)
+#define BXRS_PARAM_FIELD(name, field) \
+    new bx_shadow_num_c(list, #name, &(field), BASE_HEX)
+
+  BXRS_PARAM_SPECIAL(cpu_version);
+  BXRS_PARAM_SPECIAL(cpuid_std);
+  BXRS_PARAM_SPECIAL(cpuid_ext);
+  BXRS_PARAM_SIMPLE(cpu_mode);
+  BXRS_PARAM_SIMPLE(inhibit_mask);
+#if BX_SUPPORT_X86_64
+  BXRS_PARAM_SIMPLE(RAX);
+  BXRS_PARAM_SIMPLE(RBX);
+  BXRS_PARAM_SIMPLE(RCX);
+  BXRS_PARAM_SIMPLE(RDX);
+  BXRS_PARAM_SIMPLE(RSP);
+  BXRS_PARAM_SIMPLE(RBP);
+  BXRS_PARAM_SIMPLE(RSI);
+  BXRS_PARAM_SIMPLE(RDI);
+  BXRS_PARAM_SIMPLE(R8);
+  BXRS_PARAM_SIMPLE(R9);
+  BXRS_PARAM_SIMPLE(R10);
+  BXRS_PARAM_SIMPLE(R11);
+  BXRS_PARAM_SIMPLE(R12);
+  BXRS_PARAM_SIMPLE(R13);
+  BXRS_PARAM_SIMPLE(R14);
+  BXRS_PARAM_SIMPLE(R15;
+  BXRS_PARAM_SIMPLE(RIP);
+#else
+  BXRS_PARAM_SIMPLE(EAX);
+  BXRS_PARAM_SIMPLE(EBX);
+  BXRS_PARAM_SIMPLE(ECX);
+  BXRS_PARAM_SIMPLE(EDX);
+  BXRS_PARAM_SIMPLE(ESP);
+  BXRS_PARAM_SIMPLE(EBP);
+  BXRS_PARAM_SIMPLE(ESI);
+  BXRS_PARAM_SIMPLE(EDI);
+  BXRS_PARAM_SIMPLE(EIP);
+#endif
+  BXRS_PARAM_FIELD(EFLAGS, eflags.val32);
+#if BX_CPU_LEVEL >= 3
+  BXRS_PARAM_SIMPLE(dr0);
+  BXRS_PARAM_SIMPLE(dr1);
+  BXRS_PARAM_SIMPLE(dr2);
+  BXRS_PARAM_SIMPLE(dr3);
+  BXRS_PARAM_SIMPLE(dr6);
+  BXRS_PARAM_SIMPLE(dr7);
+#endif
+  BXRS_PARAM_FIELD (cr0, cr0.val32);
+  BXRS_PARAM_SIMPLE(cr1);
+  BXRS_PARAM_SIMPLE(cr2);
+  BXRS_PARAM_SIMPLE(cr3);
+#if BX_CPU_LEVEL >= 4
+  BXRS_PARAM_FIELD(cr4, cr4.registerValue);
+#endif
+
+#define BXRS_PARAM_SEG_REG(x) \
+    reg = new bx_list_c(list, strdup(#x), 8); \
+    param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0); \
+    param->set_base(BASE_HEX); \
+    param->set_sr_handlers(this, param_save_handler, param_restore_handler); \
+    new bx_shadow_num_c(reg, \
+        "base", &(sregs[BX_SEG_REG_##x].cache.u.segment.base), BASE_HEX); \
+    new bx_shadow_num_c(reg, \
+        "limit", &(sregs[BX_SEG_REG_##x].cache.u.segment.limit), BASE_HEX); \
+    new bx_shadow_num_c(reg, \
+        "limit_scaled", &(sregs[BX_SEG_REG_##x].cache.u.segment.limit_scaled), BASE_HEX); \
+    param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0); \
+    param->set_base(BASE_HEX); \
+    param->set_sr_handlers(this, param_save_handler, param_restore_handler); \
+    new bx_shadow_bool_c(reg, \
+        "granularity", &(sregs[BX_SEG_REG_##x].cache.u.segment.g)); \
+    new bx_shadow_bool_c(reg, \
+        "d_b", &(sregs[BX_SEG_REG_##x].cache.u.segment.d_b)); \
+    new bx_shadow_bool_c(reg, \
+        "avl", &(sregs[BX_SEG_REG_##x].cache.u.segment.avl));
+
+#define BXRS_PARAM_GLOBAL_SEG_REG(name,field) \
+    new bx_shadow_num_c(list, \
+        #name"_base", & BX_CPU_THIS_PTR field.base, BASE_HEX); \
+    new bx_shadow_num_c(list, \
+        #name"_limit", & BX_CPU_THIS_PTR field.limit, BASE_HEX);
+
+  BXRS_PARAM_SEG_REG(CS);
+  BXRS_PARAM_SEG_REG(DS);
+  BXRS_PARAM_SEG_REG(SS);
+  BXRS_PARAM_SEG_REG(ES);
+  BXRS_PARAM_SEG_REG(FS);
+  BXRS_PARAM_SEG_REG(GS);
+#if BX_CPU_LEVEL >= 2
+  BXRS_PARAM_GLOBAL_SEG_REG(GDTR, gdtr);
+  BXRS_PARAM_GLOBAL_SEG_REG(IDTR, idtr);
+#endif
+
+  reg = new bx_list_c (list, "LDTR", 4);
+  param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+  new bx_shadow_num_c (reg, "base", &ldtr.cache.u.ldt.base, BASE_HEX);
+  new bx_shadow_num_c (reg, "limit", &ldtr.cache.u.ldt.limit, BASE_HEX);
+  param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+
+  reg = new bx_list_c (list, "TR", 7);
+  param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, NULL);
+  new bx_shadow_num_c (reg, "base", &tr.cache.u.tss.base, BASE_HEX);
+  new bx_shadow_num_c (reg, "limit", &tr.cache.u.tss.limit, BASE_HEX);
+  new bx_shadow_num_c (reg, "limit_scaled", &tr.cache.u.tss.limit_scaled, BASE_HEX);
+  param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+  new bx_shadow_bool_c(reg, "granularity", &tr.cache.u.tss.g);
+  new bx_shadow_bool_c(reg, "avl", &tr.cache.u.tss.avl);
+
+  BXRS_PARAM_SIMPLE(smbase);
+#if BX_CPU_LEVEL >= 5
+  bx_list_c *MSR = new bx_list_c(list, "msr", 12);
+#if BX_SUPPORT_APIC
+  new bx_shadow_num_c(MSR, "apicbase", &msr.apicbase, BASE_HEX);
+#endif
+#if BX_SUPPORT_X86_64
+  param = new bx_param_num_c(MSR, "EFER", "", "", 0, BX_MAX_BIT32U, 0);
+  param->set_base(BASE_HEX);
+  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+  new bx_shadow_num_c(MSR, "star", &msr.star, BASE_HEX);
+  new bx_shadow_num_c(MSR, "lstar", &msr.lstar, BASE_HEX);
+  new bx_shadow_num_c(MSR, "cstar", &msr.cstar, BASE_HEX);
+  new bx_shadow_num_c(MSR, "fmask", &msr.fmask, BASE_HEX);
+  new bx_shadow_num_c(MSR, "kernelgsbase", &msr.kernelgsbase, BASE_HEX);
+  new bx_shadow_num_c(MSR, "tsc_aux", &msr.tsc_aux, BASE_HEX);
+#endif
+  new bx_shadow_num_c(MSR, "tsc_last_reset", &msr.tsc_last_reset, BASE_HEX);
+#if BX_SUPPORT_SEP
+  new bx_shadow_num_c(MSR, "sysenter_cs_msr", &msr.sysenter_cs_msr, BASE_HEX);
+  new bx_shadow_num_c(MSR, "sysenter_esp_msr", &msr.sysenter_esp_msr, BASE_HEX);
+  new bx_shadow_num_c(MSR, "sysenter_eip_msr", &msr.sysenter_eip_msr, BASE_HEX);
+#endif
+#endif
+#if BX_SUPPORT_FPU || BX_SUPPORT_MMX
+  bx_list_c *fpu = new bx_list_c(list, "fpu", 17);
+  new bx_shadow_num_c(fpu, "cwd", &the_i387.cwd, BASE_HEX);
+  new bx_shadow_num_c(fpu, "swd", &the_i387.swd, BASE_HEX);
+  new bx_shadow_num_c(fpu, "twd", &the_i387.twd, BASE_HEX);
+  new bx_shadow_num_c(fpu, "foo", &the_i387.foo, BASE_HEX);
+  new bx_shadow_num_c(fpu, "fip", &the_i387.fip, BASE_HEX);
+  new bx_shadow_num_c(fpu, "fdp", &the_i387.fdp, BASE_HEX);
+  new bx_shadow_num_c(fpu, "fcs", &the_i387.fcs, BASE_HEX);
+  new bx_shadow_num_c(fpu, "fds", &the_i387.fds, BASE_HEX);
+  for (i=0; i<8; i++) {
+    sprintf(name, "st%d", i);
+    reg = new bx_list_c(fpu, strdup(name), 8);
+    new bx_shadow_num_c(reg, "exp", &the_i387.st_space[i].exp, BASE_HEX);
+    new bx_shadow_num_c(reg, "fraction", &the_i387.st_space[i].fraction, BASE_HEX);
+  }
+  new bx_shadow_num_c(fpu, "tos", &the_i387.tos, BASE_HEX);
+#endif
+#if BX_SUPPORT_SSE
+  bx_list_c *sse = new bx_list_c(list, "sse", 2*BX_XMM_REGISTERS+1);
+  new bx_shadow_num_c(sse, "mxcsr", &mxcsr.mxcsr, BASE_HEX);
+  for (i=0; i<BX_XMM_REGISTERS; i++) {
+    sprintf(name, "xmm%02d_hi", i);
+    new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(1), BASE_HEX);
+    sprintf(name, "xmm%02d_lo", i);
+    new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(0), BASE_HEX);
+  }
+#endif
+#if BX_SUPPORT_APIC
+  bx_list_c *lapic = new bx_list_c(list, "local_apic", 25);
+  local_apic.register_state(lapic);
+#endif
+  new bx_shadow_bool_c(list, "EXT", &EXT);
+  new bx_shadow_bool_c(list, "async_event", (bx_bool*)&async_event);
+  new bx_shadow_bool_c(list, "INTR", (bx_bool*)&INTR);
+  new bx_shadow_bool_c(list, "smi_pending", (bx_bool*)&smi_pending);
+  new bx_shadow_bool_c(list, "nmi_pending", (bx_bool*)&nmi_pending);
+  new bx_shadow_bool_c(list, "in_smm", (bx_bool*)&in_smm);
+  new bx_shadow_bool_c(list, "nmi_disable", (bx_bool*)&nmi_disable);
+}
+
+Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+#if !BX_USE_CPU_SMF
+  BX_CPU_C *class_ptr = (BX_CPU_C *) devptr;
+  return class_ptr->param_save(param, val);
+}
+
+Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
+{
+#else
+  UNUSED(devptr);
+#endif // !BX_USE_CPU_SMF
+  char *pname, *segname;
+  bx_segment_reg_t *segment = NULL;
+
+  pname = param->get_name();
+  if (!strcmp(pname, "cpu_version")) {
+    val = get_cpu_version_information();
+  } else if (!strcmp(pname, "cpuid_std")) {
+    val = get_std_cpuid_features();
+  } else if (!strcmp(pname, "cpuid_ext")) {
+    val = get_extended_cpuid_features();
+#if BX_SUPPORT_X86_64
+  } else if (!strcmp(pname, "EFER")) {
+    val = get_EFER();
+#endif
+  } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
+    segname = param->get_parent()->get_name();
+    if (!strcmp(segname, "CS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+    } else if (!strcmp(segname, "DS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+    } else if (!strcmp(segname, "SS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+    } else if (!strcmp(segname, "ES")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
+    } else if (!strcmp(segname, "FS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS];
+    } else if (!strcmp(segname, "GS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS];
+    } else if (!strcmp(segname, "LDTR")) {
+      segment = &BX_CPU_THIS_PTR ldtr;
+    } else if (!strcmp(segname, "TR")) {
+      segment = &BX_CPU_THIS_PTR tr;
+    }
+    if (segment != NULL) {
+      if (!strcmp(pname, "ar_byte")) {
+        val = ar_byte(&(segment->cache));
+      }
+      else if (!strcmp(pname, "selector")) {
+        val = segment->selector.value;
+      }
+    }
+  }
+  else {
+    BX_PANIC(("Unknown param %s in param_save handler !", pname));
+  }
+  return val;
+}
+
+Bit64s BX_CPU_C::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+#if !BX_USE_CPU_SMF
+  BX_CPU_C *class_ptr = (BX_CPU_C *) devptr;
+  return class_ptr->param_restore(param, val);
+}
+
+Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
+{
+#else
+  UNUSED(devptr);
+#endif // !BX_USE_CPU_SMF
+  char *pname, *segname;
+  bx_segment_reg_t *segment = NULL;
+
+  pname = param->get_name();
+  if (!strcmp(pname, "cpu_version")) {
+    if (val != get_cpu_version_information()) {
+      BX_PANIC(("save/restore: CPU version mismatch"));
+    }
+  } else if (!strcmp(pname, "cpuid_std")) {
+    if (val != get_std_cpuid_features()) {
+      BX_PANIC(("save/restore: CPUID mismatch"));
+    }
+  } else if (!strcmp(pname, "cpuid_ext")) {
+    if (val != get_extended_cpuid_features()) {
+      BX_PANIC(("save/restore: CPUID mismatch"));
+    }
+#if BX_SUPPORT_X86_64
+  } else if (!strcmp(pname, "EFER")) {
+    BX_CPU_THIS_PTR msr.sce   = (val >> 0)  & 1;
+    BX_CPU_THIS_PTR msr.lme   = (val >> 8)  & 1;
+    BX_CPU_THIS_PTR msr.lma   = (val >> 10) & 1;
+    BX_CPU_THIS_PTR msr.nxe   = (val >> 11) & 1;
+    BX_CPU_THIS_PTR msr.ffxsr = (val >> 14) & 1;
+#endif
+  } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
+    segname = param->get_parent()->get_name();
+    if (!strcmp(segname, "CS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+    } else if (!strcmp(segname, "DS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS];
+    } else if (!strcmp(segname, "SS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+    } else if (!strcmp(segname, "ES")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES];
+    } else if (!strcmp(segname, "FS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS];
+    } else if (!strcmp(segname, "GS")) {
+      segment = &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS];
+    } else if (!strcmp(segname, "LDTR")) {
+      segment = &BX_CPU_THIS_PTR ldtr;
+    } else if (!strcmp(segname, "TR")) {
+      segment = &BX_CPU_THIS_PTR tr;
+    }
+    if (segment != NULL) {
+      bx_descriptor_t *d = &(segment->cache);
+      bx_selector_t *selector = &(segment->selector);
+      if (!strcmp(pname, "ar_byte")) {
+        set_ar_byte(d, val);
+      }
+      else if (!strcmp(pname, "selector")) {
+        parse_selector(val, selector);
+        // validate the selector
+        if ((selector->value & 0xfffc) != 0) d->valid = 1;
+        else d->valid = 0;
+      }
+    }
+  }
+  else {
+    BX_PANIC(("Unknown param %s in param_restore handler !", pname));
+  }
+  return val;
+}
+
+void BX_CPU_C::after_restore_state()
+{
+  SetCR0(cr0.val32);
+  CR3_change(cr3);
+  setEFlags(eflags.val32);
+  TLB_flush(1);
+  assert_checks();
+  invalidate_prefetch_q();
+  debug(RIP);
+}
+#endif
+
 BX_CPU_C::~BX_CPU_C(void)
 {
   BX_INSTR_SHUTDOWN(BX_CPU_ID);
-  BX_DEBUG(( "Exit."));
+  BX_DEBUG(("Exit."));
 }
 
 void BX_CPU_C::reset(unsigned source)

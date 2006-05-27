@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.28 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: serial.h,v 1.29 2006-05-27 15:54:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -207,6 +207,9 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+#if BX_SUPPORT_SAVE_RESTORE
+  virtual void register_state(void);
+#endif
 
 private:
   bx_serial_t s[BX_SERIAL_MAXDEV];

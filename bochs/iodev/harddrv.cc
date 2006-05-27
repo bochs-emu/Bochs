@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.165 2006-03-26 00:38:58 vruppert Exp $
+// $Id: harddrv.cc,v 1.166 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,7 +143,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.165 2006-03-26 00:38:58 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.166 2006-05-27 15:54:48 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -604,6 +604,56 @@ void bx_hard_drive_c::reset(unsigned type)
       DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
   }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_hard_drive_c::register_state(void)
+{
+  unsigned i, j;
+  char cname[4], dname[8];
+  bx_list_c *chan, *drive, *status;
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "hard_drive", "Hard Drive State");
+  for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
+    sprintf(cname, "%d", i);
+    chan = new bx_list_c(list, strdup(cname));
+    for (j=0; j<2; j++) {
+      if (BX_DRIVE_IS_PRESENT(i, j)) {
+        sprintf(dname, "drive%d", i);
+        drive = new bx_list_c(chan, strdup(dname), 20);
+        new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, 2352);
+        status = new bx_list_c(drive, "status", 9);
+        new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
+        new bx_shadow_bool_c(status, "drive_ready", &BX_CONTROLLER(i, j).status.drive_ready);
+        new bx_shadow_bool_c(status, "write_fault", &BX_CONTROLLER(i, j).status.write_fault);
+        new bx_shadow_bool_c(status, "seek_complete", &BX_CONTROLLER(i, j).status.seek_complete);
+        new bx_shadow_bool_c(status, "drq", &BX_CONTROLLER(i, j).status.drq);
+        new bx_shadow_bool_c(status, "corrected_data", &BX_CONTROLLER(i, j).status.corrected_data);
+        new bx_shadow_bool_c(status, "index_pulse", &BX_CONTROLLER(i, j).status.index_pulse);
+        new bx_shadow_num_c(status, "index_pulse_count", &BX_CONTROLLER(i, j).status.index_pulse_count);
+        new bx_shadow_bool_c(status, "err", &BX_CONTROLLER(i, j).status.err);
+        new bx_shadow_num_c(drive, "error_register", &BX_CONTROLLER(i, j).error_register, BASE_HEX);
+        new bx_shadow_num_c(drive, "head_no", &BX_CONTROLLER(i, j).head_no, BASE_HEX);
+        new bx_shadow_num_c(drive, "sector_count", &BX_CONTROLLER(i, j).sector_count, BASE_HEX);
+        new bx_shadow_num_c(drive, "sector_no", &BX_CONTROLLER(i, j).sector_no, BASE_HEX);
+        new bx_shadow_num_c(drive, "cylinder_no", &BX_CONTROLLER(i, j).cylinder_no, BASE_HEX);
+        new bx_shadow_num_c(drive, "buffer_size", &BX_CONTROLLER(i, j).buffer_size, BASE_HEX);
+        new bx_shadow_num_c(drive, "buffer_index", &BX_CONTROLLER(i, j).buffer_index, BASE_HEX);
+        new bx_shadow_num_c(drive, "drq_index", &BX_CONTROLLER(i, j).drq_index, BASE_HEX);
+        new bx_shadow_num_c(drive, "current_command", &BX_CONTROLLER(i, j).current_command, BASE_HEX);
+        new bx_shadow_num_c(drive, "sectors_per_block", &BX_CONTROLLER(i, j).sectors_per_block, BASE_HEX);
+        new bx_shadow_num_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode, BASE_HEX);
+        new bx_shadow_num_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma, BASE_HEX);
+        new bx_shadow_bool_c(drive, "control_reset", &BX_CONTROLLER(i, j).control.reset);
+        new bx_shadow_bool_c(drive, "control_disable_irq", &BX_CONTROLLER(i, j).control.disable_irq);
+        new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
+        new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
+        new bx_shadow_bool_c(drive, "cdrom_locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
+      }
+    }
+    new bx_shadow_num_c(chan, "drive_select", &BX_HD_THIS channels[i].drive_select);
+  }
+}
+#endif
 
 void bx_hard_drive_c::iolight_timer_handler(void *this_ptr)
 {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.58 2006-05-27 14:02:34 sshwarts Exp $
+// $Id: pc_system.cc,v 1.59 2006-05-27 15:54:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -223,6 +223,33 @@ void bx_pc_system_c::exit(void)
 
   if (bx_gui) bx_gui->exit();
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pc_system_c::register_state(void)
+{
+  unsigned i;
+  bx_list_c *bxtimer;
+  char name[4];
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pc_system", "PC System State", 8);
+  new bx_shadow_bool_c(list, "enable_a20", &enable_a20);
+  new bx_shadow_num_c(list, "currCountdown", &currCountdown);
+  new bx_shadow_num_c(list, "currCountdownPeriod", &currCountdownPeriod);
+  new bx_shadow_num_c(list, "ticksTotal", &bx_pc_system.ticksTotal);
+  new bx_shadow_num_c(list, "lastTimeUsec", &lastTimeUsec);
+  new bx_shadow_num_c(list, "usecSinceLast", &usecSinceLast);
+  new bx_shadow_num_c(list, "HRQ", &HRQ);
+  bx_list_c *timers = new bx_list_c(list, "timer", numTimers);
+  for (i = 0; i < numTimers; i++) {
+    sprintf(name, "%d", i);
+    bxtimer = new bx_list_c(timers, strdup(name));
+    new bx_shadow_num_c(bxtimer, "period", &timer[i].period);
+    new bx_shadow_num_c(bxtimer, "timeToFire", &timer[i].timeToFire);
+    new bx_shadow_bool_c(bxtimer, "active", &timer[i].active);
+    new bx_shadow_bool_c(bxtimer, "continuous", &timer[i].continuous);
+  }
+}
+#endif
 
 
 // ================================================

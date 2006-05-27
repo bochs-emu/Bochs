@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.17 2006-04-15 17:03:59 vruppert Exp $
+// $Id: plugin.cc,v 1.18 2006-05-27 15:54:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -619,19 +619,6 @@ void bx_plugins_register_state()
     {
       pluginlog->info("register state of '%s' plugin device by virtual method",device->name);
       device->devmodel->register_state();
-    }
-}
-
-/**************************************************************************/
-/* Plugin system: Execute code before saving state of all plugin devices  */
-/**************************************************************************/
-
-void bx_plugins_before_save_state()
-{
-    device_t *device;
-    for (device = devices; device; device = device->next)
-    {
-      device->devmodel->before_save_state();
     }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.53 2006-03-22 18:06:16 vruppert Exp $
+// $Id: cmos.cc,v 1.54 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,9 +23,6 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
-
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -139,7 +136,7 @@ bx_cmos_c::~bx_cmos_c(void)
   void
 bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.53 2006-03-22 18:06:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.54 2006-05-27 15:54:48 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -294,6 +291,30 @@ void bx_cmos_c::save_image(void)
     close(fd);
   }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_cmos_c::register_state(void)
+{
+  unsigned i;
+  char name[6];
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "cmos", "CMOS State");
+  new bx_shadow_num_c(list, "mem_address", &BX_CMOS_THIS s.cmos_mem_address, BASE_HEX);
+  bx_list_c *ram = new bx_list_c(list, "ram", 128);
+  for (i=0; i<128; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(ram, strdup(name), &BX_CMOS_THIS s.reg[i], BASE_HEX);
+  }
+}
+
+void bx_cmos_c::after_restore_state(void)
+{
+  BX_CMOS_THIS s.rtc_mode_12hour = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x02) == 0);
+  BX_CMOS_THIS s.rtc_mode_binary = ((BX_CMOS_THIS s.reg[REG_STAT_B] & 0x04) != 0);
+  BX_CMOS_THIS update_timeval();
+  BX_CMOS_THIS CRA_change();
+}
+#endif
 
 void bx_cmos_c::CRA_change(void)
 {

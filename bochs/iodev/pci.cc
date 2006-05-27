@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.48 2006-04-29 17:21:49 sshwarts Exp $
+// $Id: pci.cc,v 1.49 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,6 +147,28 @@ bx_pci_bridge_c::reset(unsigned type)
     BX_PCI_THIS s.i440fx.pci_conf[i] = 0x00;
   BX_PCI_THIS s.i440fx.pci_conf[0x72] = 0x02;
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pci_bridge_c::register_state(void)
+{
+  unsigned i;
+  char name[6];
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci_bridge", "PCI Bridge State");
+  new bx_shadow_num_c(list, "confAddr", &BX_PCI_THIS s.i440fx.confAddr, BASE_HEX);
+  new bx_shadow_num_c(list, "confData", &BX_PCI_THIS s.i440fx.confData, BASE_HEX);
+  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
+  for (i=0; i<256; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(pci_conf, strdup(name), &BX_PCI_THIS s.i440fx.pci_conf[i], BASE_HEX);
+  }
+}
+
+void bx_pci_bridge_c::after_restore_state(void)
+{
+  BX_PCI_THIS smram_control(BX_PCI_THIS s.i440fx.pci_conf[0x72]);
+}
+#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions

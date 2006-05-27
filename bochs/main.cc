@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.334 2006-05-14 15:47:37 vruppert Exp $
+// $Id: main.cc,v 1.335 2006-05-27 15:54:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -474,7 +474,7 @@ void print_usage()
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
 #if BX_SUPPORT_SAVE_RESTORE
-    "  -r path          restore Bochs config and log options from path\n"
+    "  -r path          restore the Bochs state from path\n"
 #endif
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
@@ -694,17 +694,27 @@ int bx_init_main (int argc, char *argv[])
       if (!SIM->test_for_text_console())
         BX_PANIC(("Unable to start Bochs without a bochsrc.txt and without a text console"));
       else 
-        BX_ERROR (("Switching off quick start, because no configuration file was found."));
+        BX_ERROR(("Switching off quick start, because no configuration file was found."));
     }
     SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_LOAD_START);
   }
 
-  // parse the rest of the command line.  This is done after reading the
-  // configuration file so that the command line arguments can override
-  // the settings from the file.
-  if (bx_parse_cmdline (arg, argc, argv)) {
-    BX_PANIC(("There were errors while parsing the command line"));
-    return -1;
+#if BX_SUPPORT_SAVE_RESTORE
+  if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
+    if (arg < argc) {
+      BX_ERROR(("WARNING: bochsrc options are ignored in restore mode!"));
+    }
+  }
+  else
+#endif
+  {
+    // parse the rest of the command line.  This is done after reading the
+    // configuration file so that the command line arguments can override
+    // the settings from the file.
+    if (bx_parse_cmdline(arg, argc, argv)) {
+      BX_PANIC(("There were errors while parsing the command line"));
+      return -1;
+    }
   }
   // initialize plugin system. This must happen before we attempt to
   // load any modules.
@@ -894,13 +904,15 @@ void bx_stop_simulation()
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
-void bx_sr_before_save_state(void)
-{
-  DEV_before_save_state();
-}
-
 void bx_sr_after_restore_state(void)
 {
+#if BX_SUPPORT_SMP == 0
+  BX_CPU(0)->after_restore_state();
+#else
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
+    BX_CPU(i)->after_restore_state();
+  }
+#endif
   DEV_after_restore_state();
 }
 #endif
@@ -1008,6 +1020,9 @@ int bx_init_hardware()
 #if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize(BX_MEM(0));
   BX_CPU(0)->sanity_checks();
+#if BX_SUPPORT_SAVE_RESTORE
+  BX_CPU(0)->register_state();
+#endif
   BX_INSTR_INIT(0);
 #else
   bx_cpu_array = new BX_CPU_C_PTR[BX_SMP_PROCESSORS];
@@ -1016,12 +1031,16 @@ int bx_init_hardware()
     BX_CPU(i) = new BX_CPU_C(i);
     BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();
+#if BX_SUPPORT_SAVE_RESTORE
+    BX_CPU(i)->register_state();
+#endif
     BX_INSTR_INIT(i);
   }
 #endif
 
   DEV_init_devices();
 #if BX_SUPPORT_SAVE_RESTORE
+  bx_pc_system.register_state();
   DEV_register_state();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     SIM->restore_logopts();
@@ -1031,8 +1050,8 @@ int bx_init_hardware()
   bx_pc_system.Reset(BX_RESET_HARDWARE);
 #if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
-//  SIM->restore_hardware();
-//  bx_sr_after_restore_state();
+    SIM->restore_hardware();
+    bx_sr_after_restore_state();
   }
 #endif
   bx_gui->init_signal_handlers();

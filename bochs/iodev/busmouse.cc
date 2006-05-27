@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.3 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: busmouse.cc,v 1.4 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -71,7 +71,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.3 2006-03-07 21:11:16 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.4 2006-05-27 15:54:48 sshwarts Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -112,6 +112,32 @@ void bx_busm_c::init(void)
 void bx_busm_c::reset(unsigned type)
 {
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_busm_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "busmouse", "Busmouse State", 12);
+  new bx_shadow_num_c(list, "mouse_delayed_dx", &BX_BUSM_THIS mouse_delayed_dx);
+  new bx_shadow_num_c(list, "mouse_delayed_dy", &BX_BUSM_THIS mouse_delayed_dx);
+  new bx_shadow_num_c(list, "current_x", &BX_BUSM_THIS current_x);
+  new bx_shadow_num_c(list, "current_y", &BX_BUSM_THIS current_y);
+  new bx_shadow_num_c(list, "current_b", &BX_BUSM_THIS current_b);
+  new bx_shadow_num_c(list, "sig_port_sequ", &BX_BUSM_THIS sig_port_sequ, BASE_HEX);
+  new bx_shadow_num_c(list, "control_val", &BX_BUSM_THIS control_val, BASE_HEX);
+  bx_list_c *ctrl = new bx_list_c(list, "control", 7);
+  new bx_shadow_bool_c(ctrl, "mode_set", &BX_BUSM_THIS control.mode_set);
+  new bx_shadow_num_c(ctrl, "modeA_select", &BX_BUSM_THIS control.modeA_select);
+  new bx_shadow_bool_c(ctrl, "portA_dir", &BX_BUSM_THIS control.portA_dir);
+  new bx_shadow_bool_c(ctrl, "portC_upper_dir", &BX_BUSM_THIS control.portC_upper_dir);
+  new bx_shadow_bool_c(ctrl, "modeBC_select", &BX_BUSM_THIS control.modeBC_select);
+  new bx_shadow_bool_c(ctrl, "portB_dir", &BX_BUSM_THIS control.portB_dir);
+  new bx_shadow_bool_c(ctrl, "portC_lower_dir", &BX_BUSM_THIS control.portC_lower_dir);
+  new bx_shadow_bool_c(list, "interrupts", &BX_BUSM_THIS interrupts);
+  new bx_shadow_bool_c(list, "packet_update", &BX_BUSM_THIS packet_update);
+  new bx_shadow_num_c(list, "cur_command", &BX_BUSM_THIS cur_command, BASE_HEX);
+  new bx_shadow_num_c(list, "command_val", &BX_BUSM_THIS command_val, BASE_HEX);
+}
+#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions

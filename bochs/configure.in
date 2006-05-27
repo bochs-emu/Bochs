@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.319 2006-05-15 17:40:16 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.320 2006-05-27 15:54:47 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1069,6 +1069,22 @@ AC_ARG_ENABLE(show-ips,
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SHOW_IPS, 0)
+    ]
+  )
+
+AC_MSG_CHECKING(save/restore support)
+AC_ARG_ENABLE(save-restore,
+  [  --enable-save-restore              support for simulation save and restore],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_SAVE_RESTORE, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_SAVE_RESTORE, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_SAVE_RESTORE, 0)
     ]
   )
 

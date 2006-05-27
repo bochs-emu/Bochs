@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.100 2006-05-18 19:57:11 sshwarts Exp $
+// $Id: devices.cc,v 1.101 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.100 2006-05-18 19:57:11 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.101 2006-05-27 15:54:48 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -344,7 +344,7 @@ void bx_devices_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_devices_c::register_state()
 {
-  pluginUnmapped->register_state();
+  bx_virt_timer.register_state();
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     pluginPciBridge->register_state();
@@ -352,31 +352,29 @@ void bx_devices_c::register_state()
   }
 #endif
 #if BX_SUPPORT_APIC
-//ioapic->register_state();
+  ioapic->register_state();
 #endif
-  pluginBiosDevice->register_state();
   pluginCmosDevice->register_state();
   pluginDmaDevice->register_state();
   pluginFloppyDevice->register_state();
   pluginVgaDevice->register_state();
   pluginPicDevice->register_state();
-//pit->register_state();
-#if BX_SUPPORT_IODEBUG
-  iodebug->register_state();
-#endif
+  pit->register_state();
   // now register state of optional plugins
   bx_plugins_register_state();
 }
 
-void bx_devices_c::before_save_state()
-{
-  // TODO
-  bx_plugins_before_save_state();
-}
-
 void bx_devices_c::after_restore_state()
 {
-  // TODO
+  bx_slowdown_timer.after_restore_state();
+#if BX_SUPPORT_PCI
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+    pluginPciBridge->after_restore_state();
+    pluginPci2IsaBridge->after_restore_state();
+  }
+#endif
+  pluginCmosDevice->after_restore_state();
+  pluginVgaDevice->after_restore_state();
   bx_plugins_after_restore_state();
 }
 #endif

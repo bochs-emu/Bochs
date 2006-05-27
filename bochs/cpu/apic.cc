@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.85 2006-05-23 16:42:50 sshwarts Exp $
+// $Id: apic.cc,v 1.86 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -900,5 +900,46 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
             Bit64u(timer_initial) * Bit64u(timer_divide_factor), continuous);
   }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_local_apic_c::register_state(bx_param_c *parent)
+{
+  unsigned i;
+  char name[6];
+  new bx_shadow_num_c(parent, "base_addr", &base_addr, BASE_HEX);
+  new bx_shadow_num_c(parent, "id", &id, BASE_HEX);
+  new bx_shadow_num_c(parent, "spurious_vector", &spurious_vector, BASE_HEX);
+  new bx_shadow_bool_c(parent, "software_enabled", &software_enabled);
+  new bx_shadow_bool_c(parent, "focus_disable", &focus_disable);
+  new bx_shadow_num_c(parent, "task_priority", &task_priority, BASE_HEX);
+  new bx_shadow_num_c(parent, "log_dest", &log_dest, BASE_HEX);
+  new bx_shadow_num_c(parent, "dest_format", &dest_format, BASE_HEX);
+  bx_list_c *ISR = new bx_list_c(parent, "isr", BX_LOCAL_APIC_MAX_INTS);
+  bx_list_c *TMR = new bx_list_c(parent, "tmr", BX_LOCAL_APIC_MAX_INTS);
+  bx_list_c *IRR = new bx_list_c(parent, "irr", BX_LOCAL_APIC_MAX_INTS);
+  for (i=0; i<BX_LOCAL_APIC_MAX_INTS; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(ISR, strdup(name), &isr[i]);
+    new bx_shadow_num_c(TMR, strdup(name), &tmr[i]);
+    new bx_shadow_num_c(IRR, strdup(name), &irr[i]);
+  }
+  new bx_shadow_num_c(parent, "error_status", &error_status, BASE_HEX);
+  new bx_shadow_num_c(parent, "shadow_error_status", &shadow_error_status, BASE_HEX);
+  new bx_shadow_num_c(parent, "icr_hi", &icr_hi, BASE_HEX);
+  new bx_shadow_num_c(parent, "icr_lo", &icr_lo, BASE_HEX);
+  bx_list_c *LVT = new bx_list_c(parent, "lvt");
+  for (i=0; i<6; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(LVT, strdup(name), &lvt[i], BASE_HEX);
+  }
+  new bx_shadow_num_c(parent, "timer_initial", &timer_initial, BASE_HEX);
+  new bx_shadow_num_c(parent, "timer_current", &timer_current, BASE_HEX);
+  new bx_shadow_num_c(parent, "timer_divconf", &timer_divconf, BASE_HEX);
+  new bx_shadow_num_c(parent, "timer_divide_factor", &timer_divide_factor, BASE_HEX);
+  new bx_shadow_bool_c(parent, "timer_active", &timer_active);
+  new bx_shadow_num_c(parent, "ticksInitial", &ticksInitial, BASE_HEX);
+  new bx_shadow_bool_c(parent, "INTR", &INTR);
+}
+#endif
 
 #endif /* if BX_SUPPORT_APIC */

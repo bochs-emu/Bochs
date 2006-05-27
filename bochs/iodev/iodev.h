@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.74 2006-04-15 17:03:59 vruppert Exp $
+// $Id: iodev.h,v 1.75 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,7 +87,6 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void reset(unsigned type) {}
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void) {}
-  virtual void before_save_state(void) {}
   virtual void after_restore_state(void) {}
 #endif
 };
@@ -392,7 +391,6 @@ public:
   void reset(unsigned type);
 #if BX_SUPPORT_SAVE_RESTORE
   void register_state(void);
-  void before_save_state(void);
   void after_restore_state(void);
 #endif
   BX_MEM_C *mem;  // address space associated with these devices

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.37 2006-03-13 18:55:53 vruppert Exp $
+// $Id: pciusb.cc,v 1.38 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -235,6 +235,101 @@ void bx_pciusb_c::reset(unsigned type)
   init_device(0, SIM->get_param_string(BXPN_USB1_PORT1)->getptr());
   init_device(1, SIM->get_param_string(BXPN_USB1_PORT2)->getptr());
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pciusb_c::register_state(void)
+{
+  unsigned i, j, n;
+  char hubnum[8], portnum[8], name[6];
+  bx_list_c *hub, *usb_cmd, *usb_st, *usb_en, *port;
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pciusb", "PCI USB Controller State", BX_USB_CONFDEV + 15);
+  for (i=0; i<BX_USB_CONFDEV; i++) {
+    sprintf(hubnum, "hub%d", i+1);
+    hub = new bx_list_c(list, strdup(hubnum), USB_NUM_PORTS + 7);
+    usb_cmd = new bx_list_c(hub, "usb_command", 8);
+    new bx_shadow_bool_c(usb_cmd, "max_packet_size", &BX_USB_THIS hub[i].usb_command.max_packet_size);
+    new bx_shadow_bool_c(usb_cmd, "configured", &BX_USB_THIS hub[i].usb_command.configured);
+    new bx_shadow_bool_c(usb_cmd, "debug", &BX_USB_THIS hub[i].usb_command.debug);
+    new bx_shadow_bool_c(usb_cmd, "resume", &BX_USB_THIS hub[i].usb_command.resume);
+    new bx_shadow_bool_c(usb_cmd, "suspend", &BX_USB_THIS hub[i].usb_command.suspend);
+    new bx_shadow_bool_c(usb_cmd, "reset", &BX_USB_THIS hub[i].usb_command.reset);
+    new bx_shadow_bool_c(usb_cmd, "host_reset", &BX_USB_THIS hub[i].usb_command.host_reset);
+    new bx_shadow_bool_c(usb_cmd, "schedule", &BX_USB_THIS hub[i].usb_command.schedule);
+    usb_st = new bx_list_c(hub, "usb_status");
+    new bx_shadow_bool_c(usb_st, "host_halted", &BX_USB_THIS hub[i].usb_status.host_halted);
+    new bx_shadow_bool_c(usb_st, "host_error", &BX_USB_THIS hub[i].usb_status.host_error);
+    new bx_shadow_bool_c(usb_st, "pci_error", &BX_USB_THIS hub[i].usb_status.pci_error);
+    new bx_shadow_bool_c(usb_st, "resume", &BX_USB_THIS hub[i].usb_status.resume);
+    new bx_shadow_bool_c(usb_st, "error_interrupt", &BX_USB_THIS hub[i].usb_status.error_interrupt);
+    new bx_shadow_bool_c(usb_st, "interrupt", &BX_USB_THIS hub[i].usb_status.interrupt);
+    usb_en = new bx_list_c(hub, "usb_enable");
+    new bx_shadow_bool_c(usb_en, "short_packet", &BX_USB_THIS hub[i].usb_enable.short_packet);
+    new bx_shadow_bool_c(usb_en, "on_complete", &BX_USB_THIS hub[i].usb_enable.on_complete);
+    new bx_shadow_bool_c(usb_en, "resume", &BX_USB_THIS hub[i].usb_enable.resume);
+    new bx_shadow_bool_c(usb_en, "timeout_crc", &BX_USB_THIS hub[i].usb_enable.timeout_crc);
+    new bx_shadow_num_c(hub, "frame_num", &BX_USB_THIS hub[i].usb_frame_num.frame_num, BASE_HEX);
+    new bx_shadow_num_c(hub, "frame_base", &BX_USB_THIS hub[i].usb_frame_base.frame_base, BASE_HEX);
+    new bx_shadow_num_c(hub, "sof_timing", &BX_USB_THIS hub[i].usb_sof.sof_timing, BASE_HEX);
+    for (j=0; j<USB_NUM_PORTS; j++) {
+      sprintf(portnum, "port%d", j+1);
+      port = new bx_list_c(hub, strdup(portnum), 10);
+      new bx_shadow_bool_c(port, "suspend", &BX_USB_THIS hub[i].usb_port[j].suspend);
+      new bx_shadow_bool_c(port, "reset", &BX_USB_THIS hub[i].usb_port[j].reset);
+      new bx_shadow_bool_c(port, "low_speed", &BX_USB_THIS hub[i].usb_port[j].low_speed);
+      new bx_shadow_bool_c(port, "resume", &BX_USB_THIS hub[i].usb_port[j].resume);
+      new bx_shadow_bool_c(port, "line_dminus", &BX_USB_THIS hub[i].usb_port[j].line_dminus);
+      new bx_shadow_bool_c(port, "line_dplus", &BX_USB_THIS hub[i].usb_port[j].line_dplus);
+      new bx_shadow_bool_c(port, "able_changed", &BX_USB_THIS hub[i].usb_port[j].able_changed);
+      new bx_shadow_bool_c(port, "enabled", &BX_USB_THIS hub[i].usb_port[j].enabled);
+      new bx_shadow_bool_c(port, "connect_changed", &BX_USB_THIS hub[i].usb_port[j].connect_changed);
+      new bx_shadow_bool_c(port, "status", &BX_USB_THIS hub[i].usb_port[j].status);
+    }
+    bx_list_c *pci_conf = new bx_list_c(hub, "pci_conf", 256);
+    for (n=0; n<256; n++) {
+      sprintf(name, "0x%02x", n);
+      new bx_shadow_num_c(pci_conf, strdup(name), &BX_USB_THIS hub[i].pci_conf[n], BASE_HEX);
+    }
+  }
+  new bx_shadow_bool_c(list, "busy", &BX_USB_THIS busy);
+  new bx_shadow_num_c(list, "global_reset", &BX_USB_THIS global_reset);
+  new bx_shadow_num_c(list, "mouse_delayed_dx", &BX_USB_THIS mouse_delayed_dx);
+  new bx_shadow_num_c(list, "mouse_delayed_dy", &BX_USB_THIS mouse_delayed_dy);
+  new bx_shadow_num_c(list, "mouse_delayed_dz", &BX_USB_THIS mouse_delayed_dz);
+  new bx_shadow_num_c(list, "button_state", &BX_USB_THIS button_state);
+  new bx_shadow_num_c(list, "mouse_x", &BX_USB_THIS mouse_x);
+  new bx_shadow_num_c(list, "mouse_y", &BX_USB_THIS mouse_y);
+  new bx_shadow_num_c(list, "mouse_z", &BX_USB_THIS mouse_z);
+  new bx_shadow_num_c(list, "b_state", &BX_USB_THIS b_state);
+  bx_list_c *svkey = new bx_list_c(list, "saved_key", 8);
+  for (i=0; i<8; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(svkey, strdup(name), &BX_USB_THIS saved_key[i]);
+  }
+  bx_list_c *kppkt = new bx_list_c(list, "key_pad_packet", 8);
+  for (i=0; i<8; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(kppkt, strdup(name), &BX_USB_THIS key_pad_packet[i]);
+  }
+  new bx_shadow_data_c(list, "device_buffer", BX_USB_THIS device_buffer, 65536);
+  new bx_shadow_num_c(list, "set_address_stk", &BX_USB_THIS set_address_stk);
+  bx_list_c *setaddr = new bx_list_c(list, "set_address", 128);
+  for (i=0; i<128; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(setaddr, strdup(name), &BX_USB_THIS set_address[i], BASE_HEX);
+  }
+}
+
+void bx_pciusb_c::after_restore_state(void)
+{
+  if (DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
+                         &BX_USB_THIS hub[0].base_ioaddr,
+                         &BX_USB_THIS hub[0].pci_conf[0x20],
+                         32, &usb_iomask[0], "USB Hub #1")) {
+     BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
+  }
+}
+#endif
 
 void bx_pciusb_c::init_device(Bit8u port, char *devname)
 {

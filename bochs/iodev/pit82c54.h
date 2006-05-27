@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.h,v 1.14 2006-01-08 20:39:08 vruppert Exp $
+// $Id: pit82c54.h,v 1.15 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -111,6 +111,9 @@ public:
   void init (void);
   void reset (unsigned type);
   pit_82C54 (void);
+#if BX_SUPPORT_SAVE_RESTORE
+  void register_state(bx_param_c *parent);
+#endif
 
   void clock_all(Bit32u cycles);
   void clock_multiple(Bit8u cnum, Bit32u cycles);

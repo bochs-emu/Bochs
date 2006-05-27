@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.19 2006-04-26 00:04:49 mcb30 Exp $
+// $Id: pcipnic.cc,v 1.20 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -147,6 +147,45 @@ void bx_pcipnic_c::reset(unsigned type)
   // Deassert IRQ
   set_irq_level(0);
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pcipnic_c::register_state(void)
+{
+  unsigned i;
+  char name[6];
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pcipnic", "PCI Pseudo NIC State", 11);
+  new bx_shadow_num_c(list, "irqEnabled", &BX_PNIC_THIS s.irqEnabled);
+  new bx_shadow_num_c(list, "rCmd", &BX_PNIC_THIS s.rCmd);
+  new bx_shadow_num_c(list, "rStatus", &BX_PNIC_THIS s.rStatus);
+  new bx_shadow_num_c(list, "rLength", &BX_PNIC_THIS s.rLength);
+  new bx_shadow_num_c(list, "rDataCursor", &BX_PNIC_THIS s.rDataCursor);
+  new bx_shadow_num_c(list, "recvIndex", &BX_PNIC_THIS s.recvIndex);
+  new bx_shadow_num_c(list, "recvQueueLength", &BX_PNIC_THIS s.recvQueueLength);
+  bx_list_c *recvRL = new bx_list_c(list, "recvRingLength", PNIC_RECV_RINGS);
+  for (i=0; i<PNIC_RECV_RINGS; i++) {
+    sprintf(name, "%d", i);
+    new bx_shadow_num_c(recvRL, strdup(name), &BX_PNIC_THIS s.recvRingLength[i]);
+  }
+  new bx_shadow_data_c(list, "rData", BX_PNIC_THIS s.rData, PNIC_DATA_SIZE);
+  new bx_shadow_data_c(list, "recvRing", (Bit8u*)BX_PNIC_THIS s.recvRing, PNIC_RECV_RINGS*PNIC_DATA_SIZE);
+  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
+  for (i=0; i<256; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(pci_conf, strdup(name), &BX_PNIC_THIS s.pci_conf[i], BASE_HEX);
+  }
+}
+
+void bx_pcipnic_c::after_restore_state(void)
+{
+  if (DEV_pci_set_base_io(BX_PNIC_THIS_PTR, read_handler, write_handler,
+                          &BX_PNIC_THIS s.base_ioaddr,
+                          &BX_PNIC_THIS s.pci_conf[0x10],
+                          16, &pnic_iomask[0], "PNIC")) {
+    BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
+  }
+}
+#endif
 
 void bx_pcipnic_c::set_irq_level(bx_bool level)
 {
@@ -423,8 +462,8 @@ void bx_pcipnic_c::exec_command(void)
     break;
 
   case PNIC_CMD_XMIT :
-    BX_PNIC_THIS ethdev->sendpkt ( data, ilength );
-    if ( BX_PNIC_THIS s.irqEnabled ) {
+    BX_PNIC_THIS ethdev->sendpkt(data, ilength);
+    if (BX_PNIC_THIS s.irqEnabled) {
       set_irq_level(1);
     }
     status = PNIC_STATUS_OK;

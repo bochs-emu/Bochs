@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.22 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.23 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,8 +110,7 @@ void bx_pci_ide_c::init(void)
   BX_PIDE_THIS s.bmdma_addr = 0;
 }
 
-  void
-bx_pci_ide_c::reset(unsigned type)
+void bx_pci_ide_c::reset(unsigned type)
 {
   BX_PIDE_THIS s.pci_conf[0x04] = 0x01;
   BX_PIDE_THIS s.pci_conf[0x06] = 0x80;
@@ -136,8 +135,92 @@ bx_pci_ide_c::reset(unsigned type)
   }
 }
 
-  bx_bool
-bx_pci_ide_c::bmdma_present(void)
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pci_ide_c::register_state(void)
+{
+  unsigned i;
+  char name[6];
+  bx_list_c *ctrl;
+  bx_param_num_c *param;
+
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci_ide", "PCI IDE Controller State");
+  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
+  for (i=0; i<256; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(pci_conf, strdup(name), &BX_PIDE_THIS s.pci_conf[i], BASE_HEX);
+  }
+  new bx_shadow_data_c(list, "buffer0", BX_PIDE_THIS s.bmdma[0].buffer, 0x20000);
+  new bx_shadow_data_c(list, "buffer1", BX_PIDE_THIS s.bmdma[1].buffer, 0x20000);
+  for (i=0; i<2; i++) {
+    sprintf(name, "%d", i);
+    ctrl = new bx_list_c(list, strdup(name), 7);
+    new bx_shadow_bool_c(ctrl, "cmd_ssbm", &BX_PIDE_THIS s.bmdma[i].cmd_ssbm);
+    new bx_shadow_bool_c(ctrl, "cmd_rwcon", &BX_PIDE_THIS s.bmdma[i].cmd_rwcon);
+    new bx_shadow_num_c(ctrl, "status", &BX_PIDE_THIS s.bmdma[i].status, BASE_HEX);
+    new bx_shadow_num_c(ctrl, "dtpr", &BX_PIDE_THIS s.bmdma[i].dtpr, BASE_HEX);
+    new bx_shadow_num_c(ctrl, "prd_current", &BX_PIDE_THIS s.bmdma[i].prd_current, BASE_HEX);
+    param = new bx_param_num_c(ctrl, "buffer_top", "", "", 0, BX_MAX_BIT32U, 0);
+    param->set_base(BASE_HEX);
+    param->set_sr_handlers(BX_PIDE_THIS_PTR, BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
+    param = new bx_param_num_c(ctrl, "buffer_idx", "", "", 0, BX_MAX_BIT32U, 0);
+    param->set_base(BASE_HEX);
+    param->set_sr_handlers(BX_PIDE_THIS_PTR, BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
+  }
+}
+
+void bx_pci_ide_c::after_restore_state(void)
+{
+  if (DEV_pci_set_base_io(BX_PIDE_THIS_PTR, read_handler, write_handler,
+                          &BX_PIDE_THIS s.bmdma_addr, &BX_PIDE_THIS s.pci_conf[0x20],
+                          16, &bmdma_iomask[0], "PIIX3 PCI IDE controller")) {
+    BX_INFO(("new BM-DMA address: 0x%04x", BX_PIDE_THIS s.bmdma_addr));
+  }
+}
+
+Bit64s bx_pci_ide_c::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+#if !BX_USE_PIDE_SMF
+  bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
+  return class_ptr->param_save(param, val);
+}
+
+Bit64s bx_pci_ide_c::param_save(bx_param_c *param, Bit64s val)
+{
+#else
+  UNUSED(devptr);
+#endif // !BX_USE_PIDE_SMF
+  int chan = atoi(param->get_parent()->get_name());
+  if (!strcmp(param->get_name(), "buffer_top")) {
+    val = (Bit32u)(BX_PIDE_THIS s.bmdma[chan].buffer_top - BX_PIDE_THIS s.bmdma[chan].buffer);
+  } else if (!strcmp(param->get_name(), "buffer_idx")) {
+    val = (Bit32u)(BX_PIDE_THIS s.bmdma[chan].buffer_idx - BX_PIDE_THIS s.bmdma[chan].buffer);
+  }
+  return val;
+}
+
+Bit64s bx_pci_ide_c::param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
+{
+#if !BX_USE_PIDE_SMF
+  bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
+  return class_ptr->param_restore(param, val);
+}
+
+Bit64s bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
+{
+#else
+  UNUSED(devptr);
+#endif // !BX_USE_PIDE_SMF
+  int chan = atoi(param->get_parent()->get_name());
+  if (!strcmp(param->get_name(), "buffer_top")) {
+    BX_PIDE_THIS s.bmdma[chan].buffer_top = BX_PIDE_THIS s.bmdma[chan].buffer + val;
+  } else if (!strcmp(param->get_name(), "buffer_idx")) {
+    BX_PIDE_THIS s.bmdma[chan].buffer_idx = BX_PIDE_THIS s.bmdma[chan].buffer + val;
+  }
+  return val;
+}
+#endif
+
+bx_bool bx_pci_ide_c::bmdma_present(void)
 {
   return (BX_PIDE_THIS s.bmdma_addr > 0);
 }

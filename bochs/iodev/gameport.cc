@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.8 2006-04-05 18:49:34 sshwarts Exp $
+// $Id: gameport.cc,v 1.9 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -117,6 +117,19 @@ void bx_gameport_c::reset(unsigned type)
 {
   // nothing for now
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_gameport_c::register_state(void)
+{
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "gameport", "Gameport State");
+  new bx_shadow_num_c(list, "port", &BX_GAMEPORT_THIS port, BASE_HEX);
+  new bx_shadow_num_c(list, "delay_x", &BX_GAMEPORT_THIS delay_x);
+  new bx_shadow_num_c(list, "delay_y", &BX_GAMEPORT_THIS delay_y);
+  new bx_shadow_bool_c(list, "timer_x", &BX_GAMEPORT_THIS timer_x);
+  new bx_shadow_bool_c(list, "timer_y", &BX_GAMEPORT_THIS timer_y);
+  new bx_shadow_num_c(list, "write_usec", &BX_GAMEPORT_THIS write_usec);
+}
+#endif
 
 void bx_gameport_c::poll_joydev(void)
 {

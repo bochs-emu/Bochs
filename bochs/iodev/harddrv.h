@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.39 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: harddrv.h,v 1.40 2006-05-27 15:54:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -169,6 +169,9 @@ public:
   virtual bx_bool  bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size);
   virtual bx_bool  bmdma_write_sector(Bit8u channel, Bit8u *buffer);
   virtual void     bmdma_complete(Bit8u channel);
+#endif
+#if BX_SUPPORT_SAVE_RESTORE
+  virtual void     register_state(void);
 #endif
 
   virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) {
