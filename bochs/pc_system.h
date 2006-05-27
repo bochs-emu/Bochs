@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.37 2006-04-29 17:21:45 sshwarts Exp $
+// $Id: pc_system.h,v 1.38 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -94,7 +94,7 @@ public:
   void   initialize(Bit32u ips);
   int    register_timer(void *this_ptr, bx_timer_handler_t, Bit32u useconds,
                          bx_bool continuous, bx_bool active, const char *id);
-  unsigned unregisterTimer(int timerID);
+  bx_bool unregisterTimer(unsigned timerID);
   void   start_timers(void);
   void   activate_timer(unsigned timer_index, Bit32u useconds, bx_bool continuous);
   void   deactivate_timer(unsigned timer_index);

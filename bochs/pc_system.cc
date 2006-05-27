@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.57 2006-05-18 18:08:30 sshwarts Exp $
+// $Id: pc_system.cc,v 1.58 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -513,32 +513,32 @@ void bx_pc_system_c::deactivate_timer(unsigned i)
   timer[i].active = 0;
 }
 
-unsigned bx_pc_system_c::unregisterTimer(int timerIndex)
+bx_bool bx_pc_system_c::unregisterTimer(unsigned timerIndex)
 {
-  unsigned i = (unsigned) timerIndex;
-
 #if BX_TIMER_DEBUG
-  if (i >= numTimers)
-    BX_PANIC(("unregisterTimer: timer %u OOB", i));
-  if (i == 0)
+  if (timerIndex >= numTimers)
+    BX_PANIC(("unregisterTimer: timer %u OOB", timerIndex));
+  if (timerIndex == 0)
     BX_PANIC(("unregisterTimer: timer 0 is the nullTimer!"));
-  if (timer[i].inUse == 0)
-    BX_PANIC(("unregisterTimer: timer %u is not in-use!", i));
+  if (timer[timerIndex].inUse == 0)
+    BX_PANIC(("unregisterTimer: timer %u is not in-use!", timerIndex));
 #endif
 
-  if (timer[i].active) {
-    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[i].id));
+  if (timer[timerIndex].active) {
+    BX_PANIC(("unregisterTimer: timer '%s' is still active!", timer[timerIndex].id));
     return(0); // Fail.
   }
 
   // Reset timer fields for good measure.
-  timer[i].inUse      = 0; // No longer registered.
-  timer[i].period     = BX_MAX_BIT64S; // Max value (invalid)
-  timer[i].timeToFire = BX_MAX_BIT64S; // Max value (invalid)
-  timer[i].continuous = 0;
-  timer[i].funct      = NULL;
-  timer[i].this_ptr   = NULL;
-  memset(timer[i].id, 0, BxMaxTimerIDLen);
+  timer[timerIndex].inUse      = 0; // No longer registered.
+  timer[timerIndex].period     = BX_MAX_BIT64S; // Max value (invalid)
+  timer[timerIndex].timeToFire = BX_MAX_BIT64S; // Max value (invalid)
+  timer[timerIndex].continuous = 0;
+  timer[timerIndex].funct      = NULL;
+  timer[timerIndex].this_ptr   = NULL;
+  memset(timer[timerIndex].id, 0, BxMaxTimerIDLen);
+
+  if (timerIndex == (numTimers-1)) numTimers--;
 
   return(1); // OK
 }

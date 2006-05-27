@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.h,v 1.9 2006-03-07 21:11:20 sshwarts Exp $
+// $Id: virt_timer.h,v 1.10 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ public:
                          bx_bool continuous, bx_bool active, const char *id);
 
   //unregister a previously registered timer.
-  unsigned unregisterTimer(int timerID);
+  bx_bool unregisterTimer(unsigned timerID);
 
   void   start_timers(void);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.61 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.62 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -335,6 +335,22 @@ BX_CPU_C::ar_byte(const bx_descriptor_t *d)
     return (d->type) |
            (d->dpl << 5) |
            (d->p << 7);
+  }
+}
+
+  void BX_CPP_AttrRegparmN(2)
+BX_CPU_C::set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte)
+{
+  d->p        = (ar_byte >> 7) & 0x01;
+  d->dpl      = (ar_byte >> 5) & 0x03;
+  d->segment  = (ar_byte >> 4) & 0x01;
+  d->type     = (ar_byte & 0x0f);
+
+  if (d->segment) {
+    d->u.segment.executable = (ar_byte >> 3) & 0x01;
+    d->u.segment.c_ed       = (ar_byte >> 2) & 0x01;
+    d->u.segment.r_w        = (ar_byte >> 1) & 0x01;
+    d->u.segment.a          = (ar_byte >> 0) & 0x01;
   }
 }
 

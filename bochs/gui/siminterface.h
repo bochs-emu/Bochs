@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.191 2006-05-22 21:29:54 sshwarts Exp $
+// $Id: siminterface.h,v 1.192 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -633,6 +633,9 @@ public:
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
+#if BX_SUPPORT_SAVE_RESTORE
+typedef Bit64s (*param_sr_handler)(void *devptr, class bx_param_c *, Bit64s val);
+#endif
 typedef int (*param_enable_handler)(class bx_param_c *, int en);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
@@ -654,6 +657,11 @@ protected:
     bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
+#if BX_SUPPORT_SAVE_RESTORE
+  void *sr_devptr;
+  param_sr_handler save_handler;
+  param_sr_handler restore_handler;
+#endif
   param_enable_handler enable_handler;
   int base;
   Bit32u options;
@@ -672,6 +680,9 @@ public:
       bx_bool is_shadow = 0);
   virtual void reset();
   void set_handler(param_event_handler handler);
+#if BX_SUPPORT_SAVE_RESTORE
+  void set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore);
+#endif
   void set_enable_handler(param_enable_handler handler);
   virtual bx_list_c *get_dependent_list() { return dependent_list; }
   void set_dependent_list(bx_list_c *l);
@@ -707,56 +718,48 @@ class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
 public:
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit64s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit64u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit32s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit32u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit16s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit16u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit8s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
       char *name,
-      char *label,
       Bit8u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 7,

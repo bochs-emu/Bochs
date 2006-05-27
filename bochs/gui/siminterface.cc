@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.147 2006-05-22 21:29:54 sshwarts Exp $
+// $Id: siminterface.cc,v 1.148 2006-05-27 14:02:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1111,7 +1111,11 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
           fprintf(fp, "%d\n", ((bx_param_num_c*)node)->get());
         }
       } else {
-        fprintf(fp, node->get_format(), ((bx_param_num_c*)node)->get());
+        if (node->get_format()) {
+          fprintf(fp, node->get_format(), ((bx_param_num_c*)node)->get());
+        } else {
+          fprintf(fp, "0x%x", ((bx_param_num_c*)node)->get());
+        }
         fprintf(fp, "\n");
       }
       break;
@@ -1236,6 +1240,10 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   this->initial_val = initial_val;
   this->val.number = initial_val;
   this->handler = NULL;
+#if BX_SUPPORT_SAVE_RESTORE
+  this->save_handler = NULL;
+  this->restore_handler = NULL;
+#endif
   this->enable_handler = NULL;
   this->base = default_base;
   this->is_shadow = is_shadow;
@@ -1272,6 +1280,15 @@ void bx_param_num_c::set_handler(param_event_handler handler)
   //set (get ());
 }
 
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_param_num_c::set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore)
+{
+  this->sr_devptr = devptr; 
+  this->save_handler = save; 
+  this->restore_handler = restore; 
+}
+#endif
+
 void bx_param_num_c::set_enable_handler(param_enable_handler handler)
 { 
   this->enable_handler = handler; 
@@ -1284,6 +1301,11 @@ void bx_param_num_c::set_dependent_list(bx_list_c *l) {
 
 Bit64s bx_param_num_c::get64()
 {
+#if BX_SUPPORT_SAVE_RESTORE
+  if (save_handler) {
+    return (*save_handler)(sr_devptr, this, val.number);
+  }
+#endif
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
     return (*handler)(this, 0, val.number);
@@ -1303,6 +1325,12 @@ void bx_param_num_c::set(Bit64s newval)
     // just set the value.  This code does not check max/min.
     val.number = newval;
   }
+#if BX_SUPPORT_SAVE_RESTORE
+  if (restore_handler) {
+    val.number = newval;
+    (*restore_handler)(sr_devptr, this, newval);
+  }
+#endif
   if ((val.number < min || val.number > max) && (Bit64u)max != BX_MAX_BIT64U)
     BX_PANIC(("numerical parameter '%s' was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), val.number, min, max));
   if (dependent_list != NULL) update_dependents();
@@ -1343,12 +1371,11 @@ void bx_param_num_c::set_enabled(int en)
 // Signed 64 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *description,
     Bit64s *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, description, NULL, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT64S, BX_MAX_BIT64S, *ptr_to_real_val, 1)
 {
   this->varsize = 64;
   this->lowbit = lowbit;
@@ -1363,12 +1390,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Unsigned 64 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit64u *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT64U, BX_MAX_BIT64U, *ptr_to_real_val, 1)
 {
   this->varsize = 64;
   this->lowbit = lowbit;
@@ -1383,12 +1409,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Signed 32 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit32s *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1403,12 +1428,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Unsigned 32 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit32u *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT32U, BX_MAX_BIT32U, *ptr_to_real_val, 1)
 {
   this->varsize = 32;
   this->lowbit = lowbit;
@@ -1423,12 +1447,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Signed 16 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit16s *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT16S, BX_MAX_BIT16S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1443,12 +1466,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Unsigned 16 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit16u *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT16U, BX_MAX_BIT16U, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1463,12 +1485,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Signed 8 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit8s *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val, 1)
 {
   this->varsize = 16;
   this->lowbit = lowbit;
@@ -1484,12 +1505,11 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
 // Unsigned 8 bit
 bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     char *name,
-    char *label,
     Bit8u *ptr_to_real_val,
     int base,
     Bit8u highbit,
     Bit8u lowbit)
-: bx_param_num_c(parent, name, label, NULL, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val, 1)
+: bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT8U, BX_MAX_BIT8U, *ptr_to_real_val, 1)
 {
   this->varsize = 8;
   this->lowbit = lowbit;
@@ -1723,7 +1743,7 @@ void bx_param_string_c::set_enabled(int en)
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
     en = (*enable_handler)(this, en);
-  }
+    }
   bx_param_c::set_enabled(en);
 }
 
@@ -1877,9 +1897,11 @@ void bx_list_c::init(const char *list_title)
     this->title->set((char *)list_title);
   }
   this->options = new bx_param_num_c(NULL,
-      "list_option", "", "", 0, BX_MAX_BIT64S, 0);
+      "list_option", "", "", 0, BX_MAX_BIT64S,
+      0);
   this->choice = new bx_param_num_c(NULL,
-      "list_choice", "", "", 0, BX_MAX_BIT64S, 1);
+      "list_choice", "", "", 0, BX_MAX_BIT64S,
+      1);
 }
 
 void bx_list_c::set_parent(bx_param_c *newparent) { 
