@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.149 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: siminterface.cc,v 1.150 2006-05-27 21:37:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -848,9 +848,7 @@ Bit32s bx_real_sim_c::parse_user_option(int idx, const char *context, int num_pa
 
 Bit32s bx_real_sim_c::save_user_options(FILE *fp)
 {
-  int i;
-
-  for (i = 0; i < n_user_options; i++) {
+  for (int i = 0; i < n_user_options; i++) {
     if (user_option_save[i] != NULL) {
       (*user_option_save[i])(fp);
     }
@@ -1362,7 +1360,7 @@ void bx_param_num_c::set_enabled(int en)
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
     en = (*enable_handler)(this, en);
-    }
+  }
   bx_param_c::set_enabled(en);
   update_dependents();
 }
@@ -1382,7 +1380,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   val.p64bit = ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
-    this->text_format = "0x%x";
+    this->text_format = "0x" FMT_LL "x";
   }
 }
 
@@ -1401,7 +1399,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   val.p64bit = (Bit64s*) ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
-    this->text_format = "0x%x";
+    this->text_format = "0x " FMT_LL "x";
   }
 }
 
@@ -1742,7 +1740,7 @@ void bx_param_string_c::set_enabled(int en)
   // The enable handler may wish to allow/disallow the action
   if (enable_handler) {
     en = (*enable_handler)(this, en);
-    }
+  }
   bx_param_c::set_enabled(en);
 }
 
@@ -1896,11 +1894,9 @@ void bx_list_c::init(const char *list_title)
     this->title->set((char *)list_title);
   }
   this->options = new bx_param_num_c(NULL,
-      "list_option", "", "", 0, BX_MAX_BIT64S,
-      0);
+      "list_option", "", "", 0, BX_MAX_BIT64S, 0);
   this->choice = new bx_param_num_c(NULL,
-      "list_choice", "", "", 0, BX_MAX_BIT64S,
-      1);
+      "list_choice", "", "", 0, BX_MAX_BIT64S, 1);
 }
 
 void bx_list_c::set_parent(bx_param_c *newparent) { 
