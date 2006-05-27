@@ -21,6 +21,7 @@ Changes after 2.2.6 release:
   - Correctly decode and execute 'BSWAP R8-R15' instructions
   - Fixed ENTER and LEAVE instructions in x86-64 mode (Stanislav)
   - Fixed CR4 exception condition (No Name)
+  - Fixed x86 debugger to support x86-64 mode (Stanislav)
 
 - SMP
   - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
@@ -33,6 +34,8 @@ Changes after 2.2.6 release:
     is deprecated (Stanislav Shwartsman)
   - Removed --enable-pni configure option, to compile with PNI use 
     --enable-sse=3 instead (Stanislav Shwartsman)
+  - enable SEP (SYSENTER/SYSEXIT) support by default for Penitum II+
+    processor emulation (i.e. if cpu-level >= 6 and MMX is enabled)
 
 - general
   - limited save/restore support added. The state of CPU, memory and all
