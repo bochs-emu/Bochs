@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.106 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: init.cc,v 1.107 2006-05-27 16:05:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -419,7 +419,7 @@ void BX_CPU_C::register_state()
   BXRS_PARAM_SIMPLE(R12);
   BXRS_PARAM_SIMPLE(R13);
   BXRS_PARAM_SIMPLE(R14);
-  BXRS_PARAM_SIMPLE(R15;
+  BXRS_PARAM_SIMPLE(R15);
   BXRS_PARAM_SIMPLE(RIP);
 #else
   BXRS_PARAM_SIMPLE(EAX);
