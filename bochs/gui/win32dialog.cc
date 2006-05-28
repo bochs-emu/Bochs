@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.43 2006-05-28 08:49:20 vruppert Exp $
+// $Id: win32dialog.cc,v 1.44 2006-05-28 16:39:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -763,8 +763,9 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
               MessageBox(hDlg, "The save function quits after saving, since the state of hard drive images cannot be saved yet!", "WARNING", MB_ICONEXCLAMATION);
               sr_path[0] = 0;
               if (BrowseDir("Select folder for save/restore data", sr_path)) {
-                SIM->save_state(sr_path);
-                SendMessage(GetParent(hDlg), PSM_PRESSBUTTON, (WPARAM)PSBTN_CANCEL, 0);
+                if (SIM->save_state(sr_path)) {
+                  SendMessage(GetParent(hDlg), PSM_PRESSBUTTON, (WPARAM)PSBTN_CANCEL, 0);
+                }
               }
 #endif
               break;

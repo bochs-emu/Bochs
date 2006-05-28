@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.150 2006-05-27 21:37:36 sshwarts Exp $
+// $Id: siminterface.cc,v 1.151 2006-05-28 16:39:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -866,7 +866,8 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   FILE *fp;
 
   sprintf(sr_file, "%s/config", checkpoint_path);
-  write_rc(sr_file, 1);
+  if (write_rc(sr_file, 1) < 0)
+    return 0;
   sprintf(sr_file, "%s/logopts", checkpoint_path);
   fp = fopen(sr_file, "w");
   if (fp != NULL) {
@@ -886,6 +887,8 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
       }
     }
     fclose(fp);
+  } else {
+    return 0;
   }
   bx_list_c *sr_list = get_sr_root();
   ndev = sr_list->get_size();
@@ -895,9 +898,11 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
     if (fp != NULL) {
       save_sr_param(fp, sr_list->get(dev), checkpoint_path, 0);
       fclose(fp);
+    } else {
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 bx_bool bx_real_sim_c::restore_config()
@@ -906,8 +911,7 @@ bx_bool bx_real_sim_c::restore_config()
 
   sprintf(config, "%s/config", get_param_string(BXPN_RESTORE_PATH)->getptr());
   BX_INFO(("restoring '%s'", config));
-  read_rc(config);
-  return 0;
+  return (read_rc(config) >= 0);
 }
 
 bx_bool bx_real_sim_c::restore_logopts()
@@ -980,8 +984,10 @@ bx_bool bx_real_sim_c::restore_logopts()
       }
     } while (!feof(fp));
     fclose(fp);
+  } else {
+    return 0;
   }
-  return 0;
+  return 1;
 }
 
 bx_bool bx_real_sim_c::restore_hardware()
@@ -1077,9 +1083,11 @@ bx_bool bx_real_sim_c::restore_hardware()
         }
       } while (!feof(fp));
       fclose(fp);
+    } else {
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
