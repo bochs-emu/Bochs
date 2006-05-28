@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.108 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: init.cc,v 1.109 2006-05-28 19:18:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -382,8 +382,6 @@ void BX_CPU_C::register_state(void)
 {
   unsigned i;
   char cpu_name[10], cpu_title[10], name[10];
-  bx_list_c *reg;
-  bx_param_num_c *param;
 
   sprintf(cpu_name, "%d", BX_CPU_ID);
   sprintf(cpu_title, "CPU %d", BX_CPU_ID);
@@ -439,42 +437,29 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, CR4, cr4.registerValue);
 #endif
 
-#define BXRS_PARAM_SEG_REG(x) \
-    reg = new bx_list_c(list, strdup(#x), 8); \
-    param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0); \
-    param->set_base(BASE_HEX); \
-    param->set_sr_handlers(this, param_save_handler, param_restore_handler); \
-    new bx_shadow_num_c(reg, \
-        "base", &(sregs[BX_SEG_REG_##x].cache.u.segment.base), BASE_HEX); \
-    new bx_shadow_num_c(reg, \
-        "limit", &(sregs[BX_SEG_REG_##x].cache.u.segment.limit), BASE_HEX); \
-    new bx_shadow_num_c(reg, \
-        "limit_scaled", &(sregs[BX_SEG_REG_##x].cache.u.segment.limit_scaled), BASE_HEX); \
-    param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0); \
-    param->set_base(BASE_HEX); \
-    param->set_sr_handlers(this, param_save_handler, param_restore_handler); \
-    new bx_shadow_bool_c(reg, \
-        "granularity", &(sregs[BX_SEG_REG_##x].cache.u.segment.g)); \
-    new bx_shadow_bool_c(reg, \
-        "d_b", &(sregs[BX_SEG_REG_##x].cache.u.segment.d_b)); \
-    new bx_shadow_bool_c(reg, \
-        "avl", &(sregs[BX_SEG_REG_##x].cache.u.segment.avl));
-
-  BXRS_PARAM_SEG_REG(CS);
-  BXRS_PARAM_SEG_REG(DS);
-  BXRS_PARAM_SEG_REG(SS);
-  BXRS_PARAM_SEG_REG(ES);
-  BXRS_PARAM_SEG_REG(FS);
-  BXRS_PARAM_SEG_REG(GS);
+  for(i=0; i<6; i++) {
+    bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[i];
+    bx_list_c *sreg = new bx_list_c(list, strdup(strseg(segment)), 9);
+    BXRS_PARAM_SPECIAL16(sreg, selector, 
+           param_save_handler, param_restore_handler);
+    BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
+    BXRS_HEX_PARAM_FIELD(sreg, limit, segment->cache.u.segment.limit);
+    BXRS_HEX_PARAM_FIELD(sreg, limit_scaled, segment->cache.u.segment.limit_scaled);
+    BXRS_PARAM_SPECIAL8 (sreg, ar_byte, 
+           param_save_handler, param_restore_handler);
+    BXRS_PARAM_BOOL(sreg, granularity, segment->cache.u.segment.g);
+    BXRS_PARAM_BOOL(sreg, d_b, segment->cache.u.segment.d_b);
+#if BX_SUPPORT_X86_64
+    BXRS_PARAM_BOOL(sreg, l, segment->cache.u.segment.l);
+#endif
+    BXRS_PARAM_BOOL(sreg, avl, segment->cache.u.segment.avl);
+  }
 
 #if BX_CPU_LEVEL >= 2
-#define BXRS_PARAM_GLOBAL_SEG_REG(name,field) \
-    new bx_shadow_num_c(list, \
-        #name"_base", &(BX_CPU_THIS_PTR field.base), BASE_HEX); \
-    new bx_shadow_num_c(list, \
-        #name"_limit", &(BX_CPU_THIS_PTR field.limit), BASE_HEX);
-  BXRS_PARAM_GLOBAL_SEG_REG(GDTR, gdtr);
-  BXRS_PARAM_GLOBAL_SEG_REG(IDTR, idtr);
+  BXRS_HEX_PARAM_FIELD(list, GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
+  BXRS_HEX_PARAM_FIELD(list, GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
+  BXRS_HEX_PARAM_FIELD(list, IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
+  BXRS_HEX_PARAM_FIELD(list, IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
 #endif
 
   bx_list_c *LDTR = new bx_list_c (list, "LDTR", 4);
