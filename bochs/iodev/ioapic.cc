@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.29 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: ioapic.cc,v 1.30 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,8 +65,8 @@ void bx_io_redirect_entry_t::sprintf_self(char *buf)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 {
-  new bx_shadow_num_c(parent, "lo", &lo, BASE_HEX);
-  new bx_shadow_num_c(parent, "hi", &hi, BASE_HEX);
+  BXRS_HEX_PARAM_SIMPLE(parent, lo);
+  BXRS_HEX_PARAM_SIMPLE(parent, hi);
 }
 #endif
 
@@ -252,18 +252,16 @@ void bx_ioapic_c::service_ioapic()
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_ioapic_c::register_state(void)
 {
-  unsigned i;
-  char name[6];
-  bx_list_c *entry;
-
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ioapic", "IOAPIC State");
-  new bx_shadow_num_c(list, "ioregsel", &ioregsel, BASE_HEX);
-  new bx_shadow_num_c(list, "intin", &intin, BASE_HEX);
-  new bx_shadow_num_c(list, "irr", &irr, BASE_HEX);
+  BXRS_HEX_PARAM_SIMPLE(list, ioregsel);
+  BXRS_HEX_PARAM_SIMPLE(list, intin);
+  BXRS_HEX_PARAM_SIMPLE(list, irr);
+
   bx_list_c *table = new bx_list_c(list, "ioredtbl", BX_IOAPIC_NUM_PINS);
-  for (i=0; i<BX_IOAPIC_NUM_PINS; i++) {
+  for (unsigned i=0; i<BX_IOAPIC_NUM_PINS; i++) {
+    char name[6];
     sprintf(name, "0x%02x", i);
-    entry = new bx_list_c(table, strdup(name), 2);
+    bx_list_c *entry = new bx_list_c(table, strdup(name), 2);
     ioredtbl[i].register_state(entry);
   }
 }

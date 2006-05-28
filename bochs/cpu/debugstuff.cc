@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.68 2006-05-24 16:46:57 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.69 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -819,14 +819,13 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR dr7 = cpu->dr7;
 
 #if BX_CPU_LEVEL >= 2
-  // cr0, cr1, cr2, cr3, cr4
+  // Control registers
   SetCR0(cpu->cr0);
-  BX_CPU_THIS_PTR cr1 = cpu->cr1;
   BX_CPU_THIS_PTR cr2 = cpu->cr2;
   CR3_change(cpu->cr3);
-#endif
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(cpu->cr4);
+#endif
 #endif
 
   BX_CPU_THIS_PTR inhibit_mask = cpu->inhibit_mask;

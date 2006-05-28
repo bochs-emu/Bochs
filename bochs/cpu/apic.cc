@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.87 2006-05-27 21:44:40 sshwarts Exp $
+// $Id: apic.cc,v 1.88 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -906,14 +906,17 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
 {
   unsigned i;
   char name[6];
-  new bx_shadow_num_c(parent, "base_addr", &base_addr, BASE_HEX);
-  new bx_shadow_num_c(parent, "id", &id, BASE_HEX);
-  new bx_shadow_num_c(parent, "spurious_vector", &spurious_vector, BASE_HEX);
-  new bx_shadow_bool_c(parent, "software_enabled", &software_enabled);
-  new bx_shadow_bool_c(parent, "focus_disable", &focus_disable);
-  new bx_shadow_num_c(parent, "task_priority", &task_priority, BASE_HEX);
-  new bx_shadow_num_c(parent, "log_dest", &log_dest, BASE_HEX);
-  new bx_shadow_num_c(parent, "dest_format", &dest_format, BASE_HEX);
+
+  BXRS_HEX_PARAM_SIMPLE(parent, base_addr);
+  BXRS_HEX_PARAM_SIMPLE(parent, id);
+  BXRS_HEX_PARAM_SIMPLE(parent, spurious_vector);
+  BXRS_PARAM_BOOL(parent, software_enabled, software_enabled);
+  BXRS_PARAM_BOOL(parent, focus_disable, focus_disable);
+  BXRS_HEX_PARAM_SIMPLE(parent, task_priority);
+  BXRS_HEX_PARAM_SIMPLE(parent, spurious_vector);
+  BXRS_HEX_PARAM_SIMPLE(parent, log_dest);
+  BXRS_HEX_PARAM_SIMPLE(parent, dest_format);
+  
   bx_list_c *ISR = new bx_list_c(parent, "isr", BX_LOCAL_APIC_MAX_INTS);
   bx_list_c *TMR = new bx_list_c(parent, "tmr", BX_LOCAL_APIC_MAX_INTS);
   bx_list_c *IRR = new bx_list_c(parent, "irr", BX_LOCAL_APIC_MAX_INTS);
@@ -923,22 +926,25 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
     new bx_shadow_num_c(TMR, strdup(name), &tmr[i]);
     new bx_shadow_num_c(IRR, strdup(name), &irr[i]);
   }
-  new bx_shadow_num_c(parent, "error_status", &error_status, BASE_HEX);
-  new bx_shadow_num_c(parent, "shadow_error_status", &shadow_error_status, BASE_HEX);
-  new bx_shadow_num_c(parent, "icr_hi", &icr_hi, BASE_HEX);
-  new bx_shadow_num_c(parent, "icr_lo", &icr_lo, BASE_HEX);
+
+  BXRS_HEX_PARAM_SIMPLE(parent, error_status);
+  BXRS_HEX_PARAM_SIMPLE(parent, shadow_error_status);
+  BXRS_HEX_PARAM_SIMPLE(parent, icr_hi);
+  BXRS_HEX_PARAM_SIMPLE(parent, icr_lo);
+
   bx_list_c *LVT = new bx_list_c(parent, "lvt", APIC_LVT_ENTRIES);
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
     sprintf(name, "%d", i);
     new bx_shadow_num_c(LVT, strdup(name), &lvt[i], BASE_HEX);
   }
-  new bx_shadow_num_c(parent, "timer_initial", &timer_initial, BASE_HEX);
-  new bx_shadow_num_c(parent, "timer_current", &timer_current, BASE_HEX);
-  new bx_shadow_num_c(parent, "timer_divconf", &timer_divconf, BASE_HEX);
-  new bx_shadow_num_c(parent, "timer_divide_factor", &timer_divide_factor, BASE_HEX);
-  new bx_shadow_bool_c(parent, "timer_active", &timer_active);
-  new bx_shadow_num_c(parent, "ticksInitial", &ticksInitial, BASE_HEX);
-  new bx_shadow_bool_c(parent, "INTR", &INTR);
+
+  BXRS_HEX_PARAM_SIMPLE(parent, timer_initial);
+  BXRS_HEX_PARAM_SIMPLE(parent, timer_current);
+  BXRS_HEX_PARAM_SIMPLE(parent, timer_divconf);
+  BXRS_DEC_PARAM_SIMPLE(parent, timer_divide_factor);
+  BXRS_PARAM_BOOL(parent, timer_active, timer_active);
+  BXRS_HEX_PARAM_SIMPLE(parent, ticksInitial);
+  BXRS_PARAM_BOOL(parent, INTR, INTR);
 }
 #endif
 

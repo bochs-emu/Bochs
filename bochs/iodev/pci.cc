@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.49 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pci.cc,v 1.50 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -151,14 +151,12 @@ bx_pci_bridge_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_pci_bridge_c::register_state(void)
 {
-  unsigned i;
-  char name[6];
-
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci_bridge", "PCI Bridge State");
-  new bx_shadow_num_c(list, "confAddr", &BX_PCI_THIS s.i440fx.confAddr, BASE_HEX);
-  new bx_shadow_num_c(list, "confData", &BX_PCI_THIS s.i440fx.confData, BASE_HEX);
+  BXRS_HEX_PARAM_FIELD(list, confAddr, BX_PCI_THIS s.i440fx.confAddr);
+  BXRS_HEX_PARAM_FIELD(list, confData, BX_PCI_THIS s.i440fx.confData);
   bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
+  for (unsigned i=0; i<256; i++) {
+    char name[6];
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(pci_conf, strdup(name), &BX_PCI_THIS s.i440fx.pci_conf[i], BASE_HEX);
   }
@@ -177,7 +175,6 @@ Bit32u bx_pci_bridge_c::read_handler(void *this_ptr, Bit32u address, unsigned io
 {
 #if !BX_USE_PCI_SMF
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
-
   return class_ptr->read(address, io_len);
 }
 
@@ -189,10 +186,7 @@ Bit32u bx_pci_bridge_c::read(Bit32u address, unsigned io_len)
 
   switch (address) {
     case 0x0CF8:
-      {
-        return BX_PCI_THIS s.i440fx.confAddr;
-      }
-      break;
+      return BX_PCI_THIS s.i440fx.confAddr;
     case 0x0CFC:
     case 0x0CFD:
     case 0x0CFE:
@@ -228,7 +222,6 @@ void bx_pci_bridge_c::write_handler(void *this_ptr, Bit32u address, Bit32u value
 {
 #if !BX_USE_PCI_SMF
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c *) this_ptr;
-
   class_ptr->write(address, value, io_len);
 }
 
@@ -240,14 +233,12 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0xCF8:
-      {
-        BX_PCI_THIS s.i440fx.confAddr = value;
-        if ((value & 0x80FFFF00) == 0x80000000) {
-          BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
-        } else if ((value & 0x80000000) == 0x80000000) {
-          BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
-                    (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
-        }
+      BX_PCI_THIS s.i440fx.confAddr = value;
+      if ((value & 0x80FFFF00) == 0x80000000) {
+        BX_DEBUG(("440FX PMC register 0x%02x selected", value & 0xfc));
+      } else if ((value & 0x80000000) == 0x80000000) {
+        BX_DEBUG(("440FX request for bus 0x%02x device 0x%02x function 0x%02x",
+                  (value >> 16) & 0xFF, (value >> 11) & 0x1F, (value >> 8) & 0x07));
       }
       break;
 
@@ -255,14 +246,10 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0xCFD:
     case 0xCFE:
     case 0xCFF:
-      {
-      Bit32u handle;
-      Bit8u devfunc, regnum;
-
       if ((BX_PCI_THIS s.i440fx.confAddr & 0x80FF0000) == 0x80000000) {
-        devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
-        regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
-        handle = BX_PCI_THIS pci_handler_id[devfunc];
+        Bit8u devfunc = (BX_PCI_THIS s.i440fx.confAddr >> 8) & 0xff;
+        Bit8u regnum = (BX_PCI_THIS s.i440fx.confAddr & 0xfc) + (address & 0x03);
+        Bit32u handle = BX_PCI_THIS pci_handler_id[devfunc];
         if ((io_len <= 4) && (handle < BX_MAX_PCI_DEVICES)) {
           if (((regnum>=4) && (regnum<=7)) || (regnum==12) || (regnum==13) || (regnum>14)) {
             BX_PCI_THIS pci_handler[handle].handler->pci_write_handler(regnum, value, io_len);
@@ -270,14 +257,13 @@ void bx_pci_bridge_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           else
             BX_DEBUG(("read only register, write ignored"));
-          }
         }
       }
       break;
 
     default:
       BX_PANIC(("IO write to port 0x%x", (unsigned) address));
-    }
+  }
 }
 
 // pci configuration space read callback handler

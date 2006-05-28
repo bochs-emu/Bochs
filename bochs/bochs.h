@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.194 2006-05-27 17:50:29 vruppert Exp $
+// $Id: bochs.h,v 1.195 2006-05-28 17:07:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -121,6 +121,38 @@ void print_tree(bx_param_c *node, int level = 0);
 // so that these functions can be redirected to the debugger when
 // needed.
 //
+
+#if BX_SUPPORT_SAVE_RESTORE
+
+#define BXRS_PARAM_SPECIAL(parent, name, maxvalue, save_handler, restore_handler) { \
+  bx_param_num_c *param = new bx_param_num_c(parent, #name, "", "", 0, maxvalue, 0); \
+  param->set_base(BASE_HEX); \
+  param->set_sr_handlers(this, save_handler, restore_handler); \
+}
+
+#define BXRS_PARAM_SPECIAL64(parent, name, save_handler, restore_handler) \
+  BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT64U, save_handler, restore_handler)
+#define BXRS_PARAM_SPECIAL32(parent, name, save_handler, restore_handler) \
+  BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT32U, save_handler, restore_handler)
+#define BXRS_PARAM_SPECIAL16(parent, name, save_handler, restore_handler) \
+  BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT16U, save_handler, restore_handler)
+#define BXRS_PARAM_SPECIAL8(parent, name, save_handler, restore_handler) \
+  BXRS_PARAM_SPECIAL(parent, name, BX_MAX_BIT8U,  save_handler, restore_handler)
+
+#define BXRS_HEX_PARAM_SIMPLE(parent, name) \
+  new bx_shadow_num_c(parent, #name, &(name), BASE_HEX)
+#define BXRS_HEX_PARAM_FIELD(parent, name, field) \
+  new bx_shadow_num_c(parent, #name, &(field), BASE_HEX)
+
+#define BXRS_DEC_PARAM_SIMPLE(parent, name) \
+  new bx_shadow_num_c(parent, #name, &(name), BASE_DEC)
+#define BXRS_DEC_PARAM_FIELD(parent, name, field) \
+  new bx_shadow_num_c(parent, #name, &(field), BASE_DEC)
+
+#define BXRS_PARAM_BOOL(parent, name, field) \
+  new bx_shadow_bool_c(parent, #name, (bx_bool*)(&(field)))
+
+#endif
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // some pc_systems functions just redirect to the IO devices so optimize

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.32 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.33 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -157,11 +157,12 @@ void bx_pci2isa_c::register_state(void)
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(pci_conf, strdup(name), &BX_P2I_THIS s.pci_conf[i], BASE_HEX);
   }
-  new bx_shadow_num_c(list, "elcr1", &BX_P2I_THIS s.elcr1, BASE_HEX);
-  new bx_shadow_num_c(list, "elcr2", &BX_P2I_THIS s.elcr2, BASE_HEX);
-  new bx_shadow_num_c(list, "apmc", &BX_P2I_THIS s.apmc, BASE_HEX);
-  new bx_shadow_num_c(list, "apms", &BX_P2I_THIS s.apms, BASE_HEX);
-  new bx_shadow_num_c(list, "pci_reset", &BX_P2I_THIS s.pci_reset, BASE_HEX);
+  BXRS_HEX_PARAM_FIELD(list, elcr1, BX_P2I_THIS s.elcr1);
+  BXRS_HEX_PARAM_FIELD(list, elcr2, BX_P2I_THIS s.elcr2);
+  BXRS_HEX_PARAM_FIELD(list, apmc, BX_P2I_THIS s.apmc);
+  BXRS_HEX_PARAM_FIELD(list, apms, BX_P2I_THIS s.apms);
+  BXRS_HEX_PARAM_FIELD(list, pci_reset, BX_P2I_THIS s.pci_reset);
+
   bx_list_c *irqr = new bx_list_c(list, "irq_registry", 16);
   for (i=0; i<16; i++) {
     sprintf(name, "%d", i);
@@ -176,9 +177,7 @@ void bx_pci2isa_c::register_state(void)
 
 void bx_pci2isa_c::after_restore_state(void)
 {
-  unsigned i;
-
-  for (i=0; i<16; i++) {
+  for (unsigned i=0; i<16; i++) {
     if (BX_P2I_THIS s.irq_registry[i]) {
       DEV_register_irq(i, "PIIX3 IRQ routing");
     }
@@ -349,13 +348,11 @@ Bit32u bx_pci2isa_c::pci_read_handler(Bit8u address, unsigned io_len)
 // pci configuration space write callback handler
 void bx_pci2isa_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
 {
-  Bit8u value8;
-
   if ((address >= 0x10) && (address < 0x34))
     return;
   if (io_len <= 4) {
     for (unsigned i=0; i<io_len; i++) {
-      value8 = (value >> (i*8)) & 0xFF;
+      Bit8u value8 = (value >> (i*8)) & 0xFF;
       switch (address+i) {
         case 0x04:
         case 0x06:

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.107 2006-05-27 16:05:30 sshwarts Exp $
+// $Id: init.cc,v 1.108 2006-05-28 17:07:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,75 +378,65 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
-void BX_CPU_C::register_state()
+void BX_CPU_C::register_state(void)
 {
   unsigned i;
   char cpu_name[10], cpu_title[10], name[10];
-  bx_param_num_c *param;
   bx_list_c *reg;
+  bx_param_num_c *param;
 
   sprintf(cpu_name, "%d", BX_CPU_ID);
   sprintf(cpu_title, "CPU %d", BX_CPU_ID);
   bx_list_c *list = new bx_list_c(SIM->get_param("save_restore.cpu"), strdup(cpu_name),
                                     cpu_title, 60);
-#define BXRS_PARAM_SPECIAL(name) \
-    param = new bx_param_num_c(list, #name, "", "", 0, BX_MAX_BIT32U, 0); \
-    param->set_base(BASE_HEX); \
-    param->set_sr_handlers(this, param_save_handler, param_restore_handler);
-#define BXRS_PARAM_SIMPLE(name) \
-    new bx_shadow_num_c(list, #name, &(name), BASE_HEX)
-#define BXRS_PARAM_FIELD(name, field) \
-    new bx_shadow_num_c(list, #name, &(field), BASE_HEX)
-
-  BXRS_PARAM_SPECIAL(cpu_version);
-  BXRS_PARAM_SPECIAL(cpuid_std);
-  BXRS_PARAM_SPECIAL(cpuid_ext);
-  BXRS_PARAM_SIMPLE(cpu_mode);
-  BXRS_PARAM_SIMPLE(inhibit_mask);
+  BXRS_PARAM_SPECIAL32(list, cpu_version, param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL32(list, cpuid_std,   param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL32(list, cpuid_ext,   param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_SIMPLE(list, cpu_mode);
+  BXRS_HEX_PARAM_SIMPLE(list, inhibit_mask);
 #if BX_SUPPORT_X86_64
-  BXRS_PARAM_SIMPLE(RAX);
-  BXRS_PARAM_SIMPLE(RBX);
-  BXRS_PARAM_SIMPLE(RCX);
-  BXRS_PARAM_SIMPLE(RDX);
-  BXRS_PARAM_SIMPLE(RSP);
-  BXRS_PARAM_SIMPLE(RBP);
-  BXRS_PARAM_SIMPLE(RSI);
-  BXRS_PARAM_SIMPLE(RDI);
-  BXRS_PARAM_SIMPLE(R8);
-  BXRS_PARAM_SIMPLE(R9);
-  BXRS_PARAM_SIMPLE(R10);
-  BXRS_PARAM_SIMPLE(R11);
-  BXRS_PARAM_SIMPLE(R12);
-  BXRS_PARAM_SIMPLE(R13);
-  BXRS_PARAM_SIMPLE(R14);
-  BXRS_PARAM_SIMPLE(R15);
-  BXRS_PARAM_SIMPLE(RIP);
+  BXRS_HEX_PARAM_SIMPLE(list, RAX);
+  BXRS_HEX_PARAM_SIMPLE(list, RBX);
+  BXRS_HEX_PARAM_SIMPLE(list, RCX);
+  BXRS_HEX_PARAM_SIMPLE(list, RDX);
+  BXRS_HEX_PARAM_SIMPLE(list, RSP);
+  BXRS_HEX_PARAM_SIMPLE(list, RBP);
+  BXRS_HEX_PARAM_SIMPLE(list, RSI);
+  BXRS_HEX_PARAM_SIMPLE(list, RDI);
+  BXRS_HEX_PARAM_SIMPLE(list, R8);
+  BXRS_HEX_PARAM_SIMPLE(list, R9);
+  BXRS_HEX_PARAM_SIMPLE(list, R10);
+  BXRS_HEX_PARAM_SIMPLE(list, R11);
+  BXRS_HEX_PARAM_SIMPLE(list, R12);
+  BXRS_HEX_PARAM_SIMPLE(list, R13);
+  BXRS_HEX_PARAM_SIMPLE(list, R14);
+  BXRS_HEX_PARAM_SIMPLE(list, R15);
+  BXRS_HEX_PARAM_SIMPLE(list, RIP);
 #else
-  BXRS_PARAM_SIMPLE(EAX);
-  BXRS_PARAM_SIMPLE(EBX);
-  BXRS_PARAM_SIMPLE(ECX);
-  BXRS_PARAM_SIMPLE(EDX);
-  BXRS_PARAM_SIMPLE(ESP);
-  BXRS_PARAM_SIMPLE(EBP);
-  BXRS_PARAM_SIMPLE(ESI);
-  BXRS_PARAM_SIMPLE(EDI);
-  BXRS_PARAM_SIMPLE(EIP);
+  BXRS_HEX_PARAM_SIMPLE(list, EAX);
+  BXRS_HEX_PARAM_SIMPLE(list, EBX);
+  BXRS_HEX_PARAM_SIMPLE(list, ECX);
+  BXRS_HEX_PARAM_SIMPLE(list, EDX);
+  BXRS_HEX_PARAM_SIMPLE(list, ESP);
+  BXRS_HEX_PARAM_SIMPLE(list, EBP);
+  BXRS_HEX_PARAM_SIMPLE(list, ESI);
+  BXRS_HEX_PARAM_SIMPLE(list, EDI);
+  BXRS_HEX_PARAM_SIMPLE(list, EIP);
 #endif
-  BXRS_PARAM_FIELD(EFLAGS, eflags.val32);
+  BXRS_HEX_PARAM_FIELD(list, EFLAGS, eflags.val32);
 #if BX_CPU_LEVEL >= 3
-  BXRS_PARAM_SIMPLE(dr0);
-  BXRS_PARAM_SIMPLE(dr1);
-  BXRS_PARAM_SIMPLE(dr2);
-  BXRS_PARAM_SIMPLE(dr3);
-  BXRS_PARAM_SIMPLE(dr6);
-  BXRS_PARAM_SIMPLE(dr7);
+  BXRS_HEX_PARAM_FIELD(list, DR0, dr0);
+  BXRS_HEX_PARAM_FIELD(list, DR1, dr1);
+  BXRS_HEX_PARAM_FIELD(list, DR2, dr2);
+  BXRS_HEX_PARAM_FIELD(list, DR3, dr3);
+  BXRS_HEX_PARAM_FIELD(list, DR6, dr6);
+  BXRS_HEX_PARAM_FIELD(list, DR7, dr7);
 #endif
-  BXRS_PARAM_FIELD (cr0, cr0.val32);
-  BXRS_PARAM_SIMPLE(cr1);
-  BXRS_PARAM_SIMPLE(cr2);
-  BXRS_PARAM_SIMPLE(cr3);
+  BXRS_HEX_PARAM_FIELD(list, cR0, cr0.val32);
+  BXRS_HEX_PARAM_FIELD(list, CR2, cr2);
+  BXRS_HEX_PARAM_FIELD(list, CR3, cr3);
 #if BX_CPU_LEVEL >= 4
-  BXRS_PARAM_FIELD(cr4, cr4.registerValue);
+  BXRS_HEX_PARAM_FIELD(list, CR4, cr4.registerValue);
 #endif
 
 #define BXRS_PARAM_SEG_REG(x) \
@@ -470,91 +460,86 @@ void BX_CPU_C::register_state()
     new bx_shadow_bool_c(reg, \
         "avl", &(sregs[BX_SEG_REG_##x].cache.u.segment.avl));
 
-#define BXRS_PARAM_GLOBAL_SEG_REG(name,field) \
-    new bx_shadow_num_c(list, \
-        #name"_base", & BX_CPU_THIS_PTR field.base, BASE_HEX); \
-    new bx_shadow_num_c(list, \
-        #name"_limit", & BX_CPU_THIS_PTR field.limit, BASE_HEX);
-
   BXRS_PARAM_SEG_REG(CS);
   BXRS_PARAM_SEG_REG(DS);
   BXRS_PARAM_SEG_REG(SS);
   BXRS_PARAM_SEG_REG(ES);
   BXRS_PARAM_SEG_REG(FS);
   BXRS_PARAM_SEG_REG(GS);
+
 #if BX_CPU_LEVEL >= 2
+#define BXRS_PARAM_GLOBAL_SEG_REG(name,field) \
+    new bx_shadow_num_c(list, \
+        #name"_base", &(BX_CPU_THIS_PTR field.base), BASE_HEX); \
+    new bx_shadow_num_c(list, \
+        #name"_limit", &(BX_CPU_THIS_PTR field.limit), BASE_HEX);
   BXRS_PARAM_GLOBAL_SEG_REG(GDTR, gdtr);
   BXRS_PARAM_GLOBAL_SEG_REG(IDTR, idtr);
 #endif
 
-  reg = new bx_list_c (list, "LDTR", 4);
-  param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0);
-  param->set_base(BASE_HEX);
-  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
-  new bx_shadow_num_c (reg, "base", &ldtr.cache.u.ldt.base, BASE_HEX);
-  new bx_shadow_num_c (reg, "limit", &ldtr.cache.u.ldt.limit, BASE_HEX);
-  param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0);
-  param->set_base(BASE_HEX);
-  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
+  bx_list_c *LDTR = new bx_list_c (list, "LDTR", 4);
+  BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.ldt.base );
+  BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.ldt.limit);
+  BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
 
-  reg = new bx_list_c (list, "TR", 7);
-  param = new bx_param_num_c(reg, "selector", "", "", 0, BX_MAX_BIT16U, 0);
-  param->set_base(BASE_HEX);
-  param->set_sr_handlers(this, param_save_handler, NULL);
-  new bx_shadow_num_c (reg, "base", &tr.cache.u.tss.base, BASE_HEX);
-  new bx_shadow_num_c (reg, "limit", &tr.cache.u.tss.limit, BASE_HEX);
-  new bx_shadow_num_c (reg, "limit_scaled", &tr.cache.u.tss.limit_scaled, BASE_HEX);
-  param = new bx_param_num_c(reg, "ar_byte", "", "", 0, BX_MAX_BIT8U, 0);
-  param->set_base(BASE_HEX);
-  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
-  new bx_shadow_bool_c(reg, "granularity", &tr.cache.u.tss.g);
-  new bx_shadow_bool_c(reg, "avl", &tr.cache.u.tss.avl);
+  bx_list_c *TR = new bx_list_c (list, "TR", 7);
+  BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.tss.base);
+  BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.tss.limit);
+  BXRS_HEX_PARAM_FIELD(TR, limit_scaled, tr.cache.u.tss.limit_scaled);
+  BXRS_PARAM_SPECIAL8 (TR, ar_byte, param_save_handler, param_restore_handler);
+  BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.tss.g);
+  BXRS_PARAM_BOOL(TR, avl, tr.cache.u.tss.avl);
 
-  BXRS_PARAM_SIMPLE(smbase);
+  BXRS_HEX_PARAM_SIMPLE(list, smbase);
+
 #if BX_CPU_LEVEL >= 5
   bx_list_c *MSR = new bx_list_c(list, "msr", 12);
+
 #if BX_SUPPORT_APIC
-  new bx_shadow_num_c(MSR, "apicbase", &msr.apicbase, BASE_HEX);
+  BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
 #endif
 #if BX_SUPPORT_X86_64
-  param = new bx_param_num_c(MSR, "EFER", "", "", 0, BX_MAX_BIT32U, 0);
-  param->set_base(BASE_HEX);
-  param->set_sr_handlers(this, param_save_handler, param_restore_handler);
-  new bx_shadow_num_c(MSR, "star", &msr.star, BASE_HEX);
-  new bx_shadow_num_c(MSR, "lstar", &msr.lstar, BASE_HEX);
-  new bx_shadow_num_c(MSR, "cstar", &msr.cstar, BASE_HEX);
-  new bx_shadow_num_c(MSR, "fmask", &msr.fmask, BASE_HEX);
-  new bx_shadow_num_c(MSR, "kernelgsbase", &msr.kernelgsbase, BASE_HEX);
-  new bx_shadow_num_c(MSR, "tsc_aux", &msr.tsc_aux, BASE_HEX);
+  BXRS_PARAM_SPECIAL32(MSR, EFER, param_save_handler, param_restore_handler);
+  BXRS_HEX_PARAM_FIELD(MSR,  star, msr.star);
+  BXRS_HEX_PARAM_FIELD(MSR, lstar, msr.lstar);
+  BXRS_HEX_PARAM_FIELD(MSR, cstar, msr.cstar);
+  BXRS_HEX_PARAM_FIELD(MSR, fmask, msr.fmask);
+  BXRS_HEX_PARAM_FIELD(MSR, kernelgsbase, msr.kernelgsbase);
+  BXRS_HEX_PARAM_FIELD(MSR, tsc_aux, msr.tsc_aux);
 #endif
-  new bx_shadow_num_c(MSR, "tsc_last_reset", &msr.tsc_last_reset, BASE_HEX);
+  BXRS_HEX_PARAM_FIELD(MSR, tsc_last_reset, msr.tsc_last_reset);
 #if BX_SUPPORT_SEP
-  new bx_shadow_num_c(MSR, "sysenter_cs_msr", &msr.sysenter_cs_msr, BASE_HEX);
-  new bx_shadow_num_c(MSR, "sysenter_esp_msr", &msr.sysenter_esp_msr, BASE_HEX);
-  new bx_shadow_num_c(MSR, "sysenter_eip_msr", &msr.sysenter_eip_msr, BASE_HEX);
+  BXRS_HEX_PARAM_FIELD(MSR, sysenter_cs_msr,  msr.sysenter_cs_msr);
+  BXRS_HEX_PARAM_FIELD(MSR, sysenter_esp_msr, msr.sysenter_esp_msr);
+  BXRS_HEX_PARAM_FIELD(MSR, sysenter_eip_msr, msr.sysenter_eip_msr);
 #endif
+
 #endif
+
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
-  bx_list_c *fpu = new bx_list_c(list, "fpu", 17);
-  new bx_shadow_num_c(fpu, "cwd", &the_i387.cwd, BASE_HEX);
-  new bx_shadow_num_c(fpu, "swd", &the_i387.swd, BASE_HEX);
-  new bx_shadow_num_c(fpu, "twd", &the_i387.twd, BASE_HEX);
-  new bx_shadow_num_c(fpu, "foo", &the_i387.foo, BASE_HEX);
-  new bx_shadow_num_c(fpu, "fip", &the_i387.fip, BASE_HEX);
-  new bx_shadow_num_c(fpu, "fdp", &the_i387.fdp, BASE_HEX);
-  new bx_shadow_num_c(fpu, "fcs", &the_i387.fcs, BASE_HEX);
-  new bx_shadow_num_c(fpu, "fds", &the_i387.fds, BASE_HEX);
+  bx_list_c *fpu = new bx_list_c(list, "FPU", 17);
+  BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
+  BXRS_HEX_PARAM_FIELD(fpu, swd, the_i387.swd);
+  BXRS_HEX_PARAM_FIELD(fpu, twd, the_i387.twd);
+  BXRS_HEX_PARAM_FIELD(fpu, foo, the_i387.foo);
+  BXRS_HEX_PARAM_FIELD(fpu, fcs, the_i387.fcs);
+  BXRS_HEX_PARAM_FIELD(fpu, fip, the_i387.fip);
+  BXRS_HEX_PARAM_FIELD(fpu, fds, the_i387.fds);
+  BXRS_HEX_PARAM_FIELD(fpu, fdp, the_i387.fdp);
   for (i=0; i<8; i++) {
     sprintf(name, "st%d", i);
-    reg = new bx_list_c(fpu, strdup(name), 8);
-    new bx_shadow_num_c(reg, "exp", &the_i387.st_space[i].exp, BASE_HEX);
-    new bx_shadow_num_c(reg, "fraction", &the_i387.st_space[i].fraction, BASE_HEX);
+    bx_list_c *STx = new bx_list_c(fpu, strdup(name), 8);
+    BXRS_HEX_PARAM_FIELD(STx, exp,      the_i387.st_space[i].exp);
+    BXRS_HEX_PARAM_FIELD(STx, fraction, the_i387.st_space[i].fraction);
   }
-  new bx_shadow_num_c(fpu, "tos", &the_i387.tos, BASE_HEX);
+  BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif
+
 #if BX_SUPPORT_SSE
-  bx_list_c *sse = new bx_list_c(list, "sse", 2*BX_XMM_REGISTERS+1);
-  new bx_shadow_num_c(sse, "mxcsr", &mxcsr.mxcsr, BASE_HEX);
+  bx_list_c *sse = new bx_list_c(list, "SSE", 2*BX_XMM_REGISTERS+1);
+  BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);
     new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(1), BASE_HEX);
@@ -562,17 +547,19 @@ void BX_CPU_C::register_state()
     new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(0), BASE_HEX);
   }
 #endif
+
 #if BX_SUPPORT_APIC
   bx_list_c *lapic = new bx_list_c(list, "local_apic", 25);
   local_apic.register_state(lapic);
 #endif
-  new bx_shadow_bool_c(list, "EXT", &EXT);
-  new bx_shadow_bool_c(list, "async_event", (bx_bool*)&async_event);
-  new bx_shadow_bool_c(list, "INTR", (bx_bool*)&INTR);
-  new bx_shadow_bool_c(list, "smi_pending", (bx_bool*)&smi_pending);
-  new bx_shadow_bool_c(list, "nmi_pending", (bx_bool*)&nmi_pending);
-  new bx_shadow_bool_c(list, "in_smm", (bx_bool*)&in_smm);
-  new bx_shadow_bool_c(list, "nmi_disable", (bx_bool*)&nmi_disable);
+
+  BXRS_PARAM_BOOL(list, EXT, EXT);
+  BXRS_PARAM_BOOL(list, async_event, async_event);
+  BXRS_PARAM_BOOL(list, INTR, INTR);
+  BXRS_PARAM_BOOL(list, smi_pending, smi_pending);
+  BXRS_PARAM_BOOL(list, nmi_pending, nmi_pending);
+  BXRS_PARAM_BOOL(list, in_smm, in_smm);
+  BXRS_PARAM_BOOL(list, nmi_disable, nmi_disable);
 }
 
 Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
@@ -599,7 +586,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
     val = get_extended_cpuid_features();
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
-    val = get_EFER();
+    val = BX_CPU_THIS_PTR get_EFER();
 #endif
   } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
@@ -710,7 +697,7 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
   return val;
 }
 
-void BX_CPU_C::after_restore_state()
+void BX_CPU_C::after_restore_state(void)
 {
   SetCR0(cr0.val32);
   CR3_change(cr3);
@@ -722,7 +709,7 @@ void BX_CPU_C::after_restore_state()
 }
 #endif
 
-BX_CPU_C::~BX_CPU_C(void)
+BX_CPU_C::~BX_CPU_C()
 {
   BX_INSTR_SHUTDOWN(BX_CPU_ID);
   BX_DEBUG(("Exit."));
@@ -982,6 +969,7 @@ void BX_CPU_C::reset(unsigned source)
   TLB_flush(1);
 
 #if BX_CPU_LEVEL >= 3
+  BX_CPU_THIS_PTR cr1 = 0;
   BX_CPU_THIS_PTR cr2 = 0;
   BX_CPU_THIS_PTR cr3 = 0;
   BX_CPU_THIS_PTR cr3_masked = 0;
@@ -1000,9 +988,21 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
+  BX_CPU_THIS_PTR msr.sce = BX_CPU_THIS_PTR msr.nxe = 0;
+  BX_CPU_THIS_PTR msr.ffxsr = 0;
+  BX_CPU_THIS_PTR msr.star  = 0;
+  BX_CPU_THIS_PTR msr.lstar = 0;
+  BX_CPU_THIS_PTR msr.cstar = 0;
+  BX_CPU_THIS_PTR msr.fmask = 0;
+  BX_CPU_THIS_PTR msr.kernelgsbase = 0;
+  BX_CPU_THIS_PTR msr.tsc_aux = 0;
 #endif
   BX_CPU_THIS_PTR set_TSC(0);
 #endif
+
+  BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
+  BX_CPU_THIS_PTR msr.sysenter_esp_msr = 0;
+  BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
 
   BX_CPU_THIS_PTR EXT = 0;
 
