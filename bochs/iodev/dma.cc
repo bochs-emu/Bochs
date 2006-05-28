@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.37 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: dma.cc,v 1.38 2006-05-28 18:43:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.37 2006-05-28 17:07:57 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.38 2006-05-28 18:43:01 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 
@@ -196,30 +196,29 @@ void bx_dma_c::register_state(void)
 {
   unsigned i, c;
   char name[6];
-
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "dma", "DMA State");
   for (i=0; i<2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *ctrl = new bx_list_c(list, strdup(name), 8);
-    new bx_shadow_bool_c(ctrl, "flip_flop", &BX_DMA_THIS s[i].flip_flop);
-    new bx_shadow_num_c(ctrl, "status_reg", &BX_DMA_THIS s[i].status_reg, BASE_HEX);
-    new bx_shadow_num_c(ctrl, "command_reg", &BX_DMA_THIS s[i].command_reg, BASE_HEX);
-    new bx_shadow_bool_c(ctrl, "ctrl_disabled", &BX_DMA_THIS s[i].ctrl_disabled);
+    BXRS_PARAM_BOOL(ctrl, flip_flop, BX_DMA_THIS s[i].flip_flop);
+    BXRS_HEX_PARAM_FIELD(ctrl, status_reg, BX_DMA_THIS s[i].status_reg);
+    BXRS_HEX_PARAM_FIELD(ctrl, command_reg, BX_DMA_THIS s[i].command_reg);
+    BXRS_PARAM_BOOL(ctrl, ctrl_disabled, BX_DMA_THIS s[i].ctrl_disabled);
     for (c=0; c<4; c++) {
       sprintf(name, "%d", c);
       bx_list_c *chan = new bx_list_c(ctrl, strdup(name), 12);
-      new bx_shadow_bool_c(chan, "DRQ", &BX_DMA_THIS s[i].DRQ[c]);
-      new bx_shadow_bool_c(chan, "DACK", &BX_DMA_THIS s[i].DACK[c]);
-      new bx_shadow_bool_c(chan, "mask", &BX_DMA_THIS s[i].mask[c]);
-      new bx_shadow_num_c(chan, "mode_type", &BX_DMA_THIS s[i].chan[c].mode.mode_type);
-      new bx_shadow_num_c(chan, "address_decrement", &BX_DMA_THIS s[i].chan[c].mode.address_decrement);
-      new bx_shadow_num_c(chan, "autoinit_enable", &BX_DMA_THIS s[i].chan[c].mode.autoinit_enable);
-      new bx_shadow_num_c(chan, "transfer_type", &BX_DMA_THIS s[i].chan[c].mode.transfer_type);
-      new bx_shadow_num_c(chan, "base_address", &BX_DMA_THIS s[i].chan[c].base_address, BASE_HEX);
-      new bx_shadow_num_c(chan, "current_address", &BX_DMA_THIS s[i].chan[c].current_address, BASE_HEX);
-      new bx_shadow_num_c(chan, "base_count", &BX_DMA_THIS s[i].chan[c].base_count, BASE_HEX);
-      new bx_shadow_num_c(chan, "current_count", &BX_DMA_THIS s[i].chan[c].current_count, BASE_HEX);
-      new bx_shadow_num_c(chan, "page_reg", &BX_DMA_THIS s[i].chan[c].page_reg, BASE_HEX);
+      BXRS_PARAM_BOOL(chan, DRQ, BX_DMA_THIS s[i].DRQ[c]);
+      BXRS_PARAM_BOOL(chan, DACK, BX_DMA_THIS s[i].DACK[c]);
+      BXRS_PARAM_BOOL(chan, mask, BX_DMA_THIS s[i].mask[c]);
+      BXRS_DEC_PARAM_FIELD(chan, mode_type, BX_DMA_THIS s[i].chan[c].mode.mode_type);
+      BXRS_DEC_PARAM_FIELD(chan, address_decrement, BX_DMA_THIS s[i].chan[c].mode.address_decrement);
+      BXRS_DEC_PARAM_FIELD(chan, autoinit_enable, BX_DMA_THIS s[i].chan[c].mode.autoinit_enable);
+      BXRS_DEC_PARAM_FIELD(chan, transfer_type, BX_DMA_THIS s[i].chan[c].mode.transfer_type);
+      BXRS_HEX_PARAM_FIELD(chan, base_address, BX_DMA_THIS s[i].chan[c].base_address);
+      BXRS_HEX_PARAM_FIELD(chan, current_address, BX_DMA_THIS s[i].chan[c].current_address);
+      BXRS_HEX_PARAM_FIELD(chan, base_count, BX_DMA_THIS s[i].chan[c].base_count);
+      BXRS_HEX_PARAM_FIELD(chan, current_count, BX_DMA_THIS s[i].chan[c].current_count);
+      BXRS_HEX_PARAM_FIELD(chan, page_reg, BX_DMA_THIS s[i].chan[c].page_reg);
     }
   }
   bx_list_c *extpg = new bx_list_c(list, "ext_page", 16);
