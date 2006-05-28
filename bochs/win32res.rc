@@ -143,6 +143,6 @@ BEGIN
     EDITTEXT        IDSB16TIMER, 85, 105, 70, 14, ES_NUMBER
     LTEXT           "SB16 loglevel", IDMISCLBL5, 10, 127, 70, 14
     EDITTEXT        IDSBLOGLEV, 85, 125, 70, 14, ES_NUMBER
-    PUSHBUTTON      "Save state...", IDSAVESTATE, 85, 145, 50, 14
+    PUSHBUTTON      "Save state and quit...", IDSAVESTATE, 85, 145, 70, 14
 END
 
