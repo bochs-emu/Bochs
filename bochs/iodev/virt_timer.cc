@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.29 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.30 2006-05-28 20:24:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -424,36 +424,35 @@ void bx_virt_timer_c::init(void)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_virt_timer_c::register_state(void)
 {
-  unsigned i;
-  bx_list_c *bxtimer;
-  char name[4];
-
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "virt_timer", "Virtual Timer State", 17);
   bx_list_c *vtimers = new bx_list_c(list, "timer", numTimers);
-  for (i = 0; i < numTimers; i++) {
+  for (unsigned i = 0; i < numTimers; i++) {
+    char name[4];
     sprintf(name, "%d", i);
-    bxtimer = new bx_list_c(vtimers, strdup(name));
-    new bx_shadow_num_c(bxtimer, "period", &timer[i].period);
-    new bx_shadow_num_c(bxtimer, "timeToFire", &timer[i].timeToFire);
-    new bx_shadow_bool_c(bxtimer, "active", &timer[i].active);
-    new bx_shadow_bool_c(bxtimer, "continuous", &timer[i].continuous);
+    bx_list_c *bxtimer = new bx_list_c(vtimers, strdup(name));
+    BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
+    BXRS_DEC_PARAM_FIELD(bxtimer, period, timer[i].period);
+    BXRS_DEC_PARAM_FIELD(bxtimer, timeToFire, timer[i].timeToFire);
+    BXRS_PARAM_BOOL(bxtimer, active, timer[i].active);
+    BXRS_PARAM_BOOL(bxtimer, continuous, timer[i].continuous);
   }
-  new bx_shadow_num_c(list, "current_timers_time", &current_timers_time);
-  new bx_shadow_num_c(list, "timers_next_event_time", &timers_next_event_time);
-  new bx_shadow_num_c(list, "last_sequential_time", &last_sequential_time);
-  new bx_shadow_num_c(list, "virtual_next_event_time", &virtual_next_event_time);
-  new bx_shadow_num_c(list, "current_virtual_time", &current_virtual_time);
-  new bx_shadow_num_c(list, "last_real_time", &last_real_time);
-  new bx_shadow_num_c(list, "total_real_usec", &total_real_usec);
-  new bx_shadow_num_c(list, "last_realtime_delta", &last_realtime_delta);
-  new bx_shadow_num_c(list, "last_usec", &last_usec);
-  new bx_shadow_num_c(list, "usec_per_second", &usec_per_second);
-  new bx_shadow_num_c(list, "stored_delta", &stored_delta);
-  new bx_shadow_num_c(list, "last_system_usec", &last_system_usec);
-  new bx_shadow_num_c(list, "em_last_realtime", &em_last_realtime);
-  new bx_shadow_num_c(list, "total_ticks", &total_ticks);
-  new bx_shadow_num_c(list, "last_realtime_ticks", &last_realtime_ticks);
-  new bx_shadow_num_c(list, "ticks_per_second", &ticks_per_second);
+  BXRS_DEC_PARAM_SIMPLE(list, current_timers_time);
+  BXRS_DEC_PARAM_SIMPLE(list, timers_next_event_time);
+  BXRS_DEC_PARAM_SIMPLE(list, last_sequential_time);
+  BXRS_DEC_PARAM_SIMPLE(list, virtual_next_event_time);
+  BXRS_DEC_PARAM_SIMPLE(list, current_virtual_time);
+  BXRS_DEC_PARAM_SIMPLE(list, last_real_time);
+  BXRS_DEC_PARAM_SIMPLE(list, total_real_usec);
+  BXRS_DEC_PARAM_SIMPLE(list, last_realtime_delta);
+  BXRS_DEC_PARAM_SIMPLE(list, last_usec);
+  BXRS_DEC_PARAM_SIMPLE(list, usec_per_second);
+  BXRS_DEC_PARAM_SIMPLE(list, stored_delta);
+  BXRS_DEC_PARAM_SIMPLE(list, last_system_usec);
+  BXRS_DEC_PARAM_SIMPLE(list, em_last_realtime);
+  BXRS_DEC_PARAM_SIMPLE(list, total_ticks);
+  BXRS_DEC_PARAM_SIMPLE(list, last_realtime_ticks);
+  BXRS_DEC_PARAM_SIMPLE(list, ticks_per_second);
+
 }
 #endif
 
