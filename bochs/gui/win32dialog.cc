@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.44 2006-05-28 16:39:25 vruppert Exp $
+// $Id: win32dialog.cc,v 1.45 2006-05-29 18:52:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -63,6 +63,17 @@ BOOL CreateImage(HWND hDlg, int sectors, const char *filename)
   return TRUE;
 }
 
+int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+  char path[MAX_PATH];
+
+  if (uMsg == BFFM_INITIALIZED) {
+    GetCurrentDirectory(MAX_PATH, path);
+    SendMessage(hwnd, BFFM_SETSELECTION, TRUE, (LPARAM)path);
+  }
+  return 0;
+}
+
 int BrowseDir(const char *Title, char *result)
 {
   BROWSEINFO browseInfo;
@@ -74,6 +85,7 @@ int BrowseDir(const char *Title, char *result)
   browseInfo.pszDisplayName = result;
   browseInfo.lpszTitle = (LPCSTR)Title;
   browseInfo.ulFlags = BIF_NEWDIALOGSTYLE | BIF_RETURNONLYFSDIRS;
+  browseInfo.lpfn = BrowseCallbackProc;
   ItemIDList = SHBrowseForFolder(&browseInfo);
   if (ItemIDList != NULL) {
     *result = 0;
@@ -697,6 +709,7 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   PSHNOTIFY *psn;
 #if BX_SUPPORT_SAVE_RESTORE
   char sr_path[MAX_PATH];
+  int ret;
 #endif
 
   switch (msg) {
@@ -760,11 +773,13 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
               break;
             case IDSAVESTATE:
 #if BX_SUPPORT_SAVE_RESTORE
-              MessageBox(hDlg, "The save function quits after saving, since the state of hard drive images cannot be saved yet!", "WARNING", MB_ICONEXCLAMATION);
               sr_path[0] = 0;
               if (BrowseDir("Select folder for save/restore data", sr_path)) {
                 if (SIM->save_state(sr_path)) {
-                  SendMessage(GetParent(hDlg), PSM_PRESSBUTTON, (WPARAM)PSBTN_CANCEL, 0);
+                  ret = MessageBox(hDlg, "The save function currently doesn't handle the state of hard drive images,\nso we don't recommend to continue, unless you are running a read-only\nguest system (e.g. Live-CD).\n\nDo you want to continue?", "WARNING", MB_YESNO | MB_ICONEXCLAMATION);
+                  if (ret == IDNO) {
+                    SendMessage(GetParent(hDlg), PSM_PRESSBUTTON, (WPARAM)PSBTN_CANCEL, 0);
+                  }
                 }
               }
 #endif
