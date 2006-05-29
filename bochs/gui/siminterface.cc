@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.152 2006-05-28 17:22:35 sshwarts Exp $
+// $Id: siminterface.cc,v 1.153 2006-05-29 19:57:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1034,9 +1034,9 @@ bx_bool bx_real_sim_c::restore_hardware()
               switch (param->get_type()) {
                 case BXT_PARAM_NUM:
                   if ((ptr[0] == '0') && (ptr[1] == 'x')) {
-                    ((bx_param_num_c*)param)->set(strtoul(ptr, NULL, 16));
+                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 16));
                   } else {
-                    ((bx_param_num_c*)param)->set(strtoul(ptr, NULL, 10));
+                    ((bx_param_num_c*)param)->set(strtoull(ptr, NULL, 10));
                   }
                   break;
                 case BXT_PARAM_BOOL:
@@ -1093,6 +1093,7 @@ bx_bool bx_real_sim_c::restore_hardware()
 void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level)
 {
   int i;
+  Bit64s value;
   char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
   FILE *fp2;
 
@@ -1105,21 +1106,26 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
   fprintf(fp, "%s = ", node->get_name());
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
+      value = ((bx_param_num_c*)node)->get64();
       if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
         if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
           if (((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
-            fprintf(fp, FMT_LL"u\n", ((bx_param_num_c*)node)->get());
+            fprintf(fp, "0x"FMT_LL"u\n", value);
           } else {
-            fprintf(fp, "%u\n", ((bx_param_num_c*)node)->get());
+            fprintf(fp, "%u\n", (Bit32u) value);
           }
         } else {
-          fprintf(fp, "%d\n", ((bx_param_num_c*)node)->get());
+          fprintf(fp, "%d\n", (Bit32s) value);
         }
       } else {
         if (node->get_format()) {
-          fprintf(fp, node->get_format(), ((bx_param_num_c*)node)->get());
+          fprintf(fp, node->get_format(), value);
         } else {
-          fprintf(fp, "0x%x", ((bx_param_num_c*)node)->get());
+          if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
+            fprintf(fp, "0x"FMT_LL"x", (Bit64u) value);
+          } else {
+            fprintf(fp, "0x%x", (Bit32u) value);
+          }
         }
         fprintf(fp, "\n");
       }
@@ -1224,7 +1230,8 @@ int bx_param_c::get_param_path(char *path_out, int maxlen)
   return strlen(path_out);
 }
 
-const char* bx_param_c::set_default_format(const char *f) {
+const char* bx_param_c::set_default_format(const char *f)
+{
   const char *old = default_text_format;
   default_text_format = f; 
   return old;
@@ -1267,7 +1274,8 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
 
 Bit32u bx_param_num_c::default_base = BASE_DEC;
 
-Bit32u bx_param_num_c::set_default_base(Bit32u val) {
+Bit32u bx_param_num_c::set_default_base(Bit32u val)
+{
   Bit32u old = default_base;
   default_base = val; 
   return old;
@@ -1347,7 +1355,8 @@ void bx_param_num_c::set_range(Bit64u min, Bit64u max)
   this->max = max;
 }
 
-void bx_param_num_c::set_initial_val(Bit64s initial_val) { 
+void bx_param_num_c::set_initial_val(Bit64s initial_val)
+{ 
   this->val.number = this->initial_val = initial_val;
 }
 
@@ -1388,7 +1397,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   val.p64bit = ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
-    this->text_format = "0x%x";
+    this->text_format = "0x"FMT_LL"x";
   }
 }
 
@@ -1407,7 +1416,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   val.p64bit = (Bit64s*) ptr_to_real_val;
   if (base == BASE_HEX) {
     this->base = base;
-    this->text_format = "0x%x";
+    this->text_format = "0x"FMT_LL"x";
   }
 }
 
@@ -1420,7 +1429,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     Bit8u lowbit)
 : bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT32S, BX_MAX_BIT32S, *ptr_to_real_val, 1)
 {
-  this->varsize = 16;
+  this->varsize = 32;
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT32S >> (31 - (highbit - lowbit))) << lowbit);
   val.p32bit = ptr_to_real_val;
@@ -1496,7 +1505,7 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
     Bit8u lowbit)
 : bx_param_num_c(parent, name, NULL, NULL, BX_MIN_BIT8S, BX_MAX_BIT8S, *ptr_to_real_val, 1)
 {
-  this->varsize = 16;
+  this->varsize = 8;
   this->lowbit = lowbit;
   this->mask = ((BX_MAX_BIT8S >> (7 - (highbit - lowbit))) << lowbit);
   this->mask = (1 << (highbit - lowbit)) - 1;
@@ -1526,7 +1535,8 @@ bx_shadow_num_c::bx_shadow_num_c(bx_param_c *parent,
   }
 }
 
-Bit64s bx_shadow_num_c::get64() {
+Bit64s bx_shadow_num_c::get64()
+{
   Bit64u current = 0;
   switch (varsize) {
     case 8: current = *(val.p8bit);  break;
@@ -1569,7 +1579,7 @@ void bx_shadow_num_c::set(Bit64s newval)
     case 64:
       tmp = *(val.p64bit) & ~(mask << lowbit);
       tmp |= (newval & mask) << lowbit;
-      *(val.p64bit) = tmp;
+      *(val.p64bit) = (Bit64s)tmp;
       break;
     default: 
       BX_PANIC(("unsupported varsize %d", varsize));
@@ -1617,7 +1627,8 @@ bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
   this->bitnum = bitnum;
 }
 
-Bit64s bx_shadow_bool_c::get64() {
+Bit64s bx_shadow_bool_c::get64()
+{
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
     Bit64s ret = (*handler)(this, 0, (Bit64s) *(val.pbool));
