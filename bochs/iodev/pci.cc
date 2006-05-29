@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.50 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: pci.cc,v 1.51 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -158,7 +158,7 @@ void bx_pci_bridge_c::register_state(void)
   for (unsigned i=0; i<256; i++) {
     char name[6];
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, strdup(name), &BX_PCI_THIS s.i440fx.pci_conf[i], BASE_HEX);
+    new bx_shadow_num_c(pci_conf, name, &BX_PCI_THIS s.i440fx.pci_conf[i], BASE_HEX);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.192 2006-05-27 14:02:34 sshwarts Exp $
+// $Id: siminterface.h,v 1.193 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -581,6 +581,7 @@ protected:
   void set_type(bx_objtype type);
 public:
   bx_object_c(Bit32u id);
+  virtual ~bx_object_c() {}
   Bit32u get_id() { return id; }
   Bit8u get_type() { return type; }
 };
@@ -602,13 +603,14 @@ protected:
   int runtime_param;
   int enabled;
 public:
-  bx_param_c(Bit32u id, char *name, char *description);
+  bx_param_c(Bit32u id, const char *name, char *description);
+  virtual ~bx_param_c();
   bx_param_c *get_parent() { return (bx_param_c *) parent; }
   int get_param_path(char *path_out, int maxlen);
   void set_format(const char *format) {text_format = format;}
-  const char *get_format() {return text_format;}
+  const char *get_format() const {return text_format;}
   void set_long_format(const char *format) {long_text_format = format;}
-  const char *get_long_format() {return long_text_format;}
+  const char *get_long_format() const {return long_text_format;}
   void set_ask_format(char *format) {ask_format = format; }
   char *get_ask_format() {return ask_format;}
   void set_label(char *text) {label = text;}
@@ -617,12 +619,12 @@ public:
   int get_runtime_param() { return runtime_param; }
   void set_group(char *group) {group_name = group;}
   char *get_group() {return group_name;}
-  char *get_name() { return name; }
+  const char *get_name() const { return name; }
   char *get_description() { return description; }
-  int get_enabled() { return enabled; }
+  int get_enabled() const { return enabled; }
   virtual void set_enabled(int enabled) { this->enabled = enabled; }
   virtual void reset() {}
-  int getint() {return -1;}
+  int getint() const {return -1;}
   static const char* set_default_format(const char *f);
   static const char *get_default_format() { return default_text_format; }
   virtual bx_list_c *get_dependent_list() { return NULL; }
@@ -673,7 +675,7 @@ public:
     USE_SPIN_CONTROL = (1<<0)
   } bx_numopt_bits;
   bx_param_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       char *description,
       Bit64s min, Bit64s max, Bit64s initial_val,
@@ -717,49 +719,49 @@ class BOCHSAPI bx_shadow_num_c : public bx_param_num_c {
   Bit64u mask;     // mask is ANDed with value before it is returned from get
 public:
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit64s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit64u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 63,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit32s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit32u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 31,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit16s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit16u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 15,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit8s *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 7,
       Bit8u lowbit = 0);
   bx_shadow_num_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit8u *ptr_to_real_val,
       int base = BASE_DEC,
       Bit8u highbit = 7,
@@ -775,7 +777,7 @@ class BOCHSAPI bx_param_bool_c : public bx_param_num_c {
   // other parameters associated with that module.
 public:
   bx_param_bool_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       char *description,
       Bit64s initial_val,
@@ -793,12 +795,12 @@ class BOCHSAPI bx_shadow_bool_c : public bx_param_bool_c {
   Bit8u bitnum;
 public:
   bx_shadow_bool_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum = 0);
   bx_shadow_bool_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum = 0);
   virtual Bit64s get64();
@@ -810,7 +812,7 @@ class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
   char **choices;
 public:
   bx_param_enum_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       char *description,
       char **choices,
@@ -844,10 +846,10 @@ public:
     SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
   } bx_string_opt_bits;
   bx_param_string_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       char *description,
-      char *initial_val,
+      const char *initial_val,
       int maxsize=-1);
   virtual ~bx_param_string_c();
   virtual void reset();
@@ -860,9 +862,9 @@ public:
   bx_bool equals(const char *buf);
   bx_param_num_c *get_options() { return options; }
   void set_separator(char sep) {separator = sep; }
-  char get_separator() {return separator; }
-  int get_maxsize() {return maxsize; }
-  void set_initial_val(char *buf);
+  char get_separator() const {return separator; }
+  int get_maxsize() const {return maxsize; }
+  void set_initial_val(const char *buf);
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *fp);
   virtual int text_ask(FILE *fpin, FILE *fpout);
@@ -875,7 +877,7 @@ public:
 class BOCHSAPI bx_param_filename_c : public bx_param_string_c {
 public:
   bx_param_filename_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       char *label,
       char *description,
       char *initial_val,
@@ -888,7 +890,7 @@ class BOCHSAPI bx_shadow_data_c : public bx_param_c {
   Bit8u *data_ptr;
 public:
   bx_shadow_data_c(bx_param_c *parent,
-      char *name,
+      const char *name,
       Bit8u *ptr_to_data,
       Bit32u data_size);
   Bit8u *getptr() {return data_ptr;}
@@ -940,9 +942,9 @@ public:
     SHOW_GROUP_NAME = (1<<4)
   } bx_listopt_bits;
   bx_list_c(bx_param_c *parent, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_param_c *parent, char *name, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_param_c *parent, char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_param_c *parent, char *name, char *title, bx_param_c **init_list);
+  bx_list_c(bx_param_c *parent, const char *name, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, const char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, const char *name, char *title, bx_param_c **init_list);
   virtual ~bx_list_c();
   bx_list_c *clone();
   void add(bx_param_c *param);
@@ -1101,7 +1103,7 @@ enum disp_mode_t { DISP_MODE_CONFIG=100, DISP_MODE_SIM };
 
 class BOCHSAPI bx_simulator_interface_c {
 public:
-  bx_simulator_interface_c();
+  bx_simulator_interface_c() {}
   virtual void set_quit_context(jmp_buf *context) {}
   virtual int get_init_done() { return -1; }
   virtual int set_init_done(int n) {return -1;}

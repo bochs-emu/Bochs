@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.100 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: floppy.cc,v 1.101 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.100 2006-05-27 15:54:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.101 2006-05-29 22:33:38 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -391,7 +391,7 @@ void bx_floppy_ctrl_c::register_state(void)
   bx_list_c *command = new bx_list_c(list, "command", 10);
   for (i=0; i<10; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(command, strdup(name), &BX_FD_THIS s.command[i], BASE_HEX);
+    new bx_shadow_num_c(command, name, &BX_FD_THIS s.command[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "command_index", &BX_FD_THIS s.command_index);
   new bx_shadow_num_c(list, "command_size", &BX_FD_THIS s.command_size);
@@ -405,7 +405,7 @@ void bx_floppy_ctrl_c::register_state(void)
   bx_list_c *result = new bx_list_c(list, "result", 10);
   for (i=0; i<10; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(result, strdup(name), &BX_FD_THIS s.result[i], BASE_HEX);
+    new bx_shadow_num_c(result, name, &BX_FD_THIS s.result[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "result_index", &BX_FD_THIS s.result_index);
   new bx_shadow_num_c(list, "result_size", &BX_FD_THIS s.result_size);
@@ -429,7 +429,7 @@ void bx_floppy_ctrl_c::register_state(void)
   new bx_shadow_data_c(list, "buffer", BX_FD_THIS s.floppy_buffer, 512);
   for (i=0; i<4; i++) {
     sprintf(name, "drive%d", i);
-    drive = new bx_list_c(list, strdup(name));
+    drive = new bx_list_c(list, name);
     new bx_shadow_num_c(drive, "cylinder", &BX_FD_THIS s.cylinder[i]);
     new bx_shadow_num_c(drive, "head", &BX_FD_THIS s.head[i]);
     new bx_shadow_num_c(drive, "sector", &BX_FD_THIS s.sector[i]);

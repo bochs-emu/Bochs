@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.87 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: ne2k.cc,v 1.88 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -204,13 +204,13 @@ void bx_ne2k_c::register_state(void)
   bx_list_c *paddr = new bx_list_c(list, "physaddr");
   for (i=0; i<6; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(paddr, strdup(name), &BX_NE2K_THIS s.physaddr[i], BASE_HEX);
+    new bx_shadow_num_c(paddr, name, &BX_NE2K_THIS s.physaddr[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "curr_page", &BX_NE2K_THIS s.curr_page, BASE_HEX);
   bx_list_c *mchash = new bx_list_c(list, "mchash", 8);
   for (i=0; i<8; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(mchash, strdup(name), &BX_NE2K_THIS s.mchash[i], BASE_HEX);
+    new bx_shadow_num_c(mchash, name, &BX_NE2K_THIS s.mchash[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "rempkt_ptr", &BX_NE2K_THIS s.rempkt_ptr, BASE_HEX);
   new bx_shadow_num_c(list, "localpkt_ptr", &BX_NE2K_THIS s.localpkt_ptr, BASE_HEX);
@@ -222,7 +222,7 @@ void bx_ne2k_c::register_state(void)
     bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
     for (i=0; i<256; i++) {
       sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(pci_conf, strdup(name), &BX_NE2K_THIS s.pci_conf[i], BASE_HEX);
+      new bx_shadow_num_c(pci_conf, name, &BX_NE2K_THIS s.pci_conf[i], BASE_HEX);
     }
   }
 #endif
@@ -488,8 +488,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
   return (retval);
 }
 
-void
-bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
+void bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
   BX_DEBUG(("asic write addr=0x%02x, value=0x%04x", (unsigned) offset, (unsigned) value));
   switch (offset) {
@@ -536,7 +535,7 @@ bx_ne2k_c::asic_write(Bit32u offset, Bit32u value, unsigned io_len)
 
   default: // this is invalid, but happens under win95 device detection
     BX_INFO(("asic write invalid address %04x, ignoring", (unsigned) offset));
-    break ;
+    break;
   }
 }
 
@@ -1005,7 +1004,7 @@ Bit32u bx_ne2k_c::page2_read(Bit32u offset, unsigned int io_len)
   }
 
   return (0);
-};
+}
 
 void bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
 {
@@ -1103,7 +1102,6 @@ void bx_ne2k_c::page3_write(Bit32u offset, Bit32u value, unsigned io_len)
 void bx_ne2k_c::tx_timer_handler(void *this_ptr)
 {
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) this_ptr;
-
   class_ptr->tx_timer();
 }
 
@@ -1403,7 +1401,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.87 2006-05-27 15:54:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.88 2006-05-29 22:33:38 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

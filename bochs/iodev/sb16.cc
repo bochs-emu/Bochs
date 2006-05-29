@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.49 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: sb16.cc,v 1.50 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -329,7 +329,7 @@ void bx_sb16_c::register_state(void)
   bx_list_c *patchtbl = new bx_list_c(mpu, "patchtable", BX_SB16_PATCHTABLESIZE);
   for (i=0; i<BX_SB16_PATCHTABLESIZE; i++) {
     sprintf(name, "0x%02x", i);
-    patch = new bx_list_c(patchtbl, strdup(name));
+    patch = new bx_list_c(patchtbl, name, 3);
     new bx_shadow_num_c(patch, "banklsb", &MPU.banklsb[i]);
     new bx_shadow_num_c(patch, "bankmsb", &MPU.bankmsb[i]);
     new bx_shadow_num_c(patch, "program", &MPU.program[i]);
@@ -363,7 +363,7 @@ void bx_sb16_c::register_state(void)
   bx_list_c *csp = new bx_list_c(list, "csp_reg", 256);
   for (i=0; i<256; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(csp, strdup(name), &BX_SB16_THIS csp_reg[i], BASE_HEX);
+    new bx_shadow_num_c(csp, name, &BX_SB16_THIS csp_reg[i], BASE_HEX);
   }
   bx_list_c *opl = new bx_list_c(list, "opl", 8);
   new bx_shadow_num_c(opl, "mode", (Bit8u*)&OPL.mode);
@@ -372,7 +372,7 @@ void bx_sb16_c::register_state(void)
   new bx_shadow_num_c(opl, "drumchannel", &OPL.drumchannel);
   for (i=0; i<2; i++) {
     sprintf(name, "chip%d", i+1);
-    chip = new bx_list_c(opl, strdup(name), 11);
+    chip = new bx_list_c(opl, name, 11);
     new bx_shadow_num_c(chip, "index", &OPL.index[i]);
     new bx_shadow_num_c(chip, "wsenable", &OPL.wsenable[i]);
     new bx_shadow_num_c(chip, "timer1", &OPL.timer[i*2]);
@@ -388,16 +388,16 @@ void bx_sb16_c::register_state(void)
   bx_list_c *oper = new bx_list_c(opl, "oper", BX_SB16_FM_NOP);
   for (i=0; i<BX_SB16_FM_NOP; i++) {
     sprintf(name, "%d", i);
-    item = new bx_list_c(oper, strdup(name), BX_SB16_FM_OPB);
+    item = new bx_list_c(oper, name, BX_SB16_FM_OPB);
     for (j=0; j<BX_SB16_FM_OPB; j++) {
       sprintf(name, "%d", j);
-      new bx_shadow_num_c(item, strdup(name), &OPL.oper[i][j]);
+      new bx_shadow_num_c(item, name, &OPL.oper[i][j]);
     }
   }
   bx_list_c *chan = new bx_list_c(opl, "chan", BX_SB16_FM_NCH);
   for (i=0; i<BX_SB16_FM_NCH; i++) {
     sprintf(name, "%d", i);
-    item = new bx_list_c(chan, strdup(name), 19);
+    item = new bx_list_c(chan, name, 19);
     new bx_shadow_num_c(item, "nop", &OPL.chan[i].nop);
     new bx_shadow_num_c(item, "ncarr", &OPL.chan[i].ncarr);
     new bx_shadow_num_c(item, "opnum1", &OPL.chan[i].opnum[0]);
@@ -422,14 +422,14 @@ void bx_sb16_c::register_state(void)
   bx_list_c *mixer = new bx_list_c(list, "mixer_reg", BX_SB16_MIX_REG);
   for (i=0; i<BX_SB16_MIX_REG; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(mixer, strdup(name), &MIXER.reg[i], BASE_HEX);
+    new bx_shadow_num_c(mixer, name, &MIXER.reg[i], BASE_HEX);
   }
   bx_list_c *emul = new bx_list_c(list, "emul");
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
   bx_list_c *remap = new bx_list_c(emul, "remaplist", 256);
   for (i=0; i<EMUL.remaps; i++) {
     sprintf(name, "0x%02x", i);
-    ins_map = new bx_list_c(remap, strdup(name));
+    ins_map = new bx_list_c(remap, name, 6);
     new bx_shadow_num_c(ins_map, "oldbankmsb", &EMUL.remaplist[i].oldbankmsb);
     new bx_shadow_num_c(ins_map, "oldbanklsb", &EMUL.remaplist[i].oldbanklsb);
     new bx_shadow_num_c(ins_map, "oldprogch", &EMUL.remaplist[i].oldprogch);

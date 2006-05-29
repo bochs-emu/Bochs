@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.104 2006-04-25 15:59:20 mcb30 Exp $
+// $Id: config.cc,v 1.105 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -457,7 +457,7 @@ void bx_init_options()
     sprintf(name, "%d", i+1);
     sprintf(descr, "Pathname of optional ROM image #%d to load", i+1);
     sprintf(label, "Optional ROM image #%d", i+1);
-    bx_list_c *optnum1 = new bx_list_c(optrom, strdup(name), label);
+    bx_list_c *optnum1 = new bx_list_c(optrom, name, label);
     path = new bx_param_filename_c(optnum1,
       "path", 
       "Path",
@@ -486,7 +486,7 @@ void bx_init_options()
     sprintf(name, "%d", i+1);
     sprintf(descr, "Pathname of optional RAM image #%d to load", i+1);
     sprintf(label, "Optional RAM image #%d", i+1);
-    bx_list_c *optnum2 = new bx_list_c(optram, strdup(name), label);
+    bx_list_c *optnum2 = new bx_list_c(optram, name, label);
     path = new bx_param_filename_c(optnum2,
       "path", 
       "Path",
@@ -584,7 +584,7 @@ void bx_init_options()
     sprintf (descr, "Name of the device connected to PCI slot #%d", i+1);
     sprintf (label, "PCI slot #%d device", i+1);
     bx_param_string_c *devname = new bx_param_string_c(slot,
-        strdup(name), 
+        name, 
         strdup(label), 
         strdup(descr),
         "", BX_PATHNAME_LEN);
@@ -837,7 +837,7 @@ void bx_init_options()
     sprintf(label, "Boot drive #%d", i+1);
     sprintf(descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
     bx_param_enum_c *bootdrive = new bx_param_enum_c(boot_params,
-        strdup(name),
+        name,
         strdup(label),
         strdup(descr),
         &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
@@ -1020,7 +1020,7 @@ void bx_init_options()
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
 
     sprintf(name, "%d", channel);
-    ata_menu[channel] = new bx_list_c(ata, strdup(name), s_atachannel[channel]);
+    ata_menu[channel] = new bx_list_c(ata, name, s_atachannel[channel]);
     ata_menu[channel]->get_options()->set(bx_list_c::USE_TAB_WINDOW);
     ata_res[channel] = new bx_list_c(ata_menu[channel], "resources", s_atachannel[channel], 8);
     ata_res[channel]->get_options()->set(bx_list_c::SERIES_ASK);
@@ -1066,9 +1066,8 @@ void bx_init_options()
     enabled->set_dependent_list(ata_res[channel]->clone());
 
     for (Bit8u slave=0; slave<2; slave++) {
-
       menu = new bx_list_c(ata_menu[channel],
-          strdup(s_atadevname[slave]),
+          s_atadevname[slave],
           s_atadevice[channel][slave],
           BXP_PARAMS_PER_ATA_DEVICE + 1);
       menu->get_options()->set(bx_list_c::SERIES_ASK);
@@ -1230,7 +1229,7 @@ void bx_init_options()
   for (i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf(label, "Parallel Port %d", i+1);
-    menu = new bx_list_c(parallel, strdup(name), label);
+    menu = new bx_list_c(parallel, name, label);
     menu->get_options()->set(bx_list_c::SERIES_ASK);
     sprintf(label, "Enable parallel port #%d", i+1);
     sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
@@ -1267,7 +1266,7 @@ void bx_init_options()
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     sprintf(name, "%d", i+1);
     sprintf(label, "Serial Port %d", i+1);
-    menu = new bx_list_c(serial, strdup(name), label);
+    menu = new bx_list_c(serial, name, label);
     menu->get_options()->set(bx_list_c::SERIES_ASK);
     sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
     sprintf(descr, "Controls whether COM%d is installed or not", i+1);
@@ -1308,7 +1307,7 @@ void bx_init_options()
     sprintf(group, "USB%d", i+1);
     sprintf(name, "%d", i+1);
     sprintf(label, "USB Hub %d", i+1);
-    menu = new bx_list_c(usb, strdup(name), label);
+    menu = new bx_list_c(usb, name, label);
     menu->set_enabled(BX_SUPPORT_PCIUSB);
     sprintf(label, "Enable usb hub #%d", i+1);
     sprintf(descr, "Controls whether %s is installed or not", group);
@@ -1902,7 +1901,7 @@ static Bit32s parse_line_unformatted(const char *context, char *line)
         params[num_params] = NULL;
       }
       if (num_params < MAX_PARAMS_LEN) {
-        params[num_params++] = strdup (string);
+        params[num_params++] = strdup(string);
       } else {
         BX_PANIC (("too many parameters, max is %d\n", MAX_PARAMS_LEN));
       }

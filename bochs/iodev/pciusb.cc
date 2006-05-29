@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.38 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pciusb.cc,v 1.39 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -246,7 +246,7 @@ void bx_pciusb_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pciusb", "PCI USB Controller State", BX_USB_CONFDEV + 15);
   for (i=0; i<BX_USB_CONFDEV; i++) {
     sprintf(hubnum, "hub%d", i+1);
-    hub = new bx_list_c(list, strdup(hubnum), USB_NUM_PORTS + 7);
+    hub = new bx_list_c(list, hubnum, USB_NUM_PORTS + 7);
     usb_cmd = new bx_list_c(hub, "usb_command", 8);
     new bx_shadow_bool_c(usb_cmd, "max_packet_size", &BX_USB_THIS hub[i].usb_command.max_packet_size);
     new bx_shadow_bool_c(usb_cmd, "configured", &BX_USB_THIS hub[i].usb_command.configured);
@@ -273,7 +273,7 @@ void bx_pciusb_c::register_state(void)
     new bx_shadow_num_c(hub, "sof_timing", &BX_USB_THIS hub[i].usb_sof.sof_timing, BASE_HEX);
     for (j=0; j<USB_NUM_PORTS; j++) {
       sprintf(portnum, "port%d", j+1);
-      port = new bx_list_c(hub, strdup(portnum), 10);
+      port = new bx_list_c(hub, portnum, 10);
       new bx_shadow_bool_c(port, "suspend", &BX_USB_THIS hub[i].usb_port[j].suspend);
       new bx_shadow_bool_c(port, "reset", &BX_USB_THIS hub[i].usb_port[j].reset);
       new bx_shadow_bool_c(port, "low_speed", &BX_USB_THIS hub[i].usb_port[j].low_speed);
@@ -288,7 +288,7 @@ void bx_pciusb_c::register_state(void)
     bx_list_c *pci_conf = new bx_list_c(hub, "pci_conf", 256);
     for (n=0; n<256; n++) {
       sprintf(name, "0x%02x", n);
-      new bx_shadow_num_c(pci_conf, strdup(name), &BX_USB_THIS hub[i].pci_conf[n], BASE_HEX);
+      new bx_shadow_num_c(pci_conf, name, &BX_USB_THIS hub[i].pci_conf[n], BASE_HEX);
     }
   }
   new bx_shadow_bool_c(list, "busy", &BX_USB_THIS busy);
@@ -304,19 +304,19 @@ void bx_pciusb_c::register_state(void)
   bx_list_c *svkey = new bx_list_c(list, "saved_key", 8);
   for (i=0; i<8; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(svkey, strdup(name), &BX_USB_THIS saved_key[i]);
+    new bx_shadow_num_c(svkey, name, &BX_USB_THIS saved_key[i]);
   }
   bx_list_c *kppkt = new bx_list_c(list, "key_pad_packet", 8);
   for (i=0; i<8; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(kppkt, strdup(name), &BX_USB_THIS key_pad_packet[i]);
+    new bx_shadow_num_c(kppkt, name, &BX_USB_THIS key_pad_packet[i]);
   }
   new bx_shadow_data_c(list, "device_buffer", BX_USB_THIS device_buffer, 65536);
   new bx_shadow_num_c(list, "set_address_stk", &BX_USB_THIS set_address_stk);
   bx_list_c *setaddr = new bx_list_c(list, "set_address", 128);
   for (i=0; i<128; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(setaddr, strdup(name), &BX_USB_THIS set_address[i], BASE_HEX);
+    new bx_shadow_num_c(setaddr, name, &BX_USB_THIS set_address[i], BASE_HEX);
   }
 }
 
@@ -325,7 +325,8 @@ void bx_pciusb_c::after_restore_state(void)
   if (DEV_pci_set_base_io(BX_USB_THIS_PTR, read_handler, write_handler,
                          &BX_USB_THIS hub[0].base_ioaddr,
                          &BX_USB_THIS hub[0].pci_conf[0x20],
-                         32, &usb_iomask[0], "USB Hub #1")) {
+                         32, &usb_iomask[0], "USB Hub #1"))
+  {
      BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
   }
 }

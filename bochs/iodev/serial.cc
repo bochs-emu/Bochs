@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.70 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: serial.cc,v 1.71 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -372,7 +372,7 @@ void bx_serial_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "serial", "Serial Port State", 9);
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     sprintf(name, "%d", i);
-    port = new bx_list_c(list, strdup(name), 28);
+    port = new bx_list_c(list, name, 28);
     new bx_shadow_bool_c(port, "ls_interrupt", &BX_SER_THIS s[i].ls_interrupt);
     new bx_shadow_bool_c(port, "ms_interrupt", &BX_SER_THIS s[i].ms_interrupt);
     new bx_shadow_bool_c(port, "rx_interrupt", &BX_SER_THIS s[i].rx_interrupt);
@@ -436,12 +436,12 @@ void bx_serial_c::register_state(void)
     bx_list_c *rxfifo = new bx_list_c(port, "rx_fifo", 16);
     for (j=0; j<16; j++) {
       sprintf(name, "0x%02x", j);
-      new bx_shadow_num_c(rxfifo, strdup(name), &BX_SER_THIS s[i].rx_fifo[j], BASE_HEX);
+      new bx_shadow_num_c(rxfifo, name, &BX_SER_THIS s[i].rx_fifo[j], BASE_HEX);
     }
     bx_list_c *txfifo = new bx_list_c(port, "tx_fifo", 16);
     for (j=0; j<16; j++) {
       sprintf(name, "0x%02x", j);
-      new bx_shadow_num_c(txfifo, strdup(name), &BX_SER_THIS s[i].tx_fifo[j], BASE_HEX);
+      new bx_shadow_num_c(txfifo, name, &BX_SER_THIS s[i].tx_fifo[j], BASE_HEX);
     }
     new bx_shadow_num_c(port, "divisor_lsb", &BX_SER_THIS s[i].divisor_lsb, BASE_HEX);
     new bx_shadow_num_c(port, "divisor_msb", &BX_SER_THIS s[i].divisor_msb, BASE_HEX);
@@ -455,7 +455,7 @@ void bx_serial_c::register_state(void)
   bx_list_c *buffer = new bx_list_c(mousebuf, "buffer", BX_MOUSE_BUFF_SIZE);
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(buffer, strdup(name), &BX_SER_THIS mouse_internal_buffer.buffer[i], BASE_HEX);
+    new bx_shadow_num_c(buffer, name, &BX_SER_THIS mouse_internal_buffer.buffer[i], BASE_HEX);
   }
   new bx_shadow_num_c(mousebuf, "head", &BX_SER_THIS mouse_internal_buffer.head);
 }

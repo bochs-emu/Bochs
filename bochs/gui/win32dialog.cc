@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.45 2006-05-29 18:52:46 vruppert Exp $
+// $Id: win32dialog.cc,v 1.46 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -143,7 +143,8 @@ static BOOL CALLBACK LogAskProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 static BOOL CALLBACK StringParamProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bx_param_string_c *param;
-  char buffer[512], *title;
+  char buffer[512];
+  const char *title;
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -185,7 +186,7 @@ static BOOL CALLBACK FloppyDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   char mesg[MAX_PATH];
   char path[MAX_PATH];
   char pname[80];
-  char *title;
+  const char *title;
   int i, cap;
 
   switch (msg) {
@@ -803,7 +804,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext)
   int ret;
   DWORD errcode;
   char filename[MAX_PATH];
-  char *title;
+  const char *title;
   char errtext[80];
 
   param->get(filename, MAX_PATH);

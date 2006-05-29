@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.55 2006-05-28 18:43:01 sshwarts Exp $
+// $Id: cmos.cc,v 1.56 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ bx_cmos_c::~bx_cmos_c() {}
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.55 2006-05-28 18:43:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.56 2006-05-29 22:33:38 sshwarts Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -234,7 +234,7 @@ void bx_cmos_c::init(void)
   }
 
   char *tmptime;
-  while( (tmptime =  strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
+  while((tmptime = strdup(ctime(&(BX_CMOS_THIS s.timeval)))) == NULL) {
     BX_PANIC(("Out of memory."));
   }
   tmptime[strlen(tmptime)-1]='\0';
@@ -292,7 +292,7 @@ void bx_cmos_c::register_state(void)
   for (unsigned i=0; i<128; i++) {
     char name[6];
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(ram, strdup(name), &BX_CMOS_THIS s.reg[i], BASE_HEX);
+    new bx_shadow_num_c(ram, name, &BX_CMOS_THIS s.reg[i], BASE_HEX);
   }
 }
 

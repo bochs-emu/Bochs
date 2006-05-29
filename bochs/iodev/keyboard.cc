@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.116 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: keyboard.cc,v 1.117 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.116 2006-05-27 15:54:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.117 2006-05-29 22:33:38 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -302,7 +302,7 @@ void bx_keyb_c::register_state(void)
   buffer = new bx_list_c(kbdbuf, "buffer", BX_KBD_ELEMENTS);
   for (i=0; i<BX_KBD_ELEMENTS; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, strdup(name), &BX_KEY_THIS s.kbd_internal_buffer.buffer[i], BASE_HEX);
+    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.kbd_internal_buffer.buffer[i], BASE_HEX);
   }
   new bx_shadow_num_c(kbdbuf, "head", &BX_KEY_THIS s.kbd_internal_buffer.head);
   new bx_shadow_bool_c(kbdbuf, "expecting_typematic", &BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic);
@@ -316,13 +316,13 @@ void bx_keyb_c::register_state(void)
   buffer = new bx_list_c(mousebuf, "buffer", BX_MOUSE_BUFF_SIZE);
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, strdup(name), &BX_KEY_THIS s.mouse_internal_buffer.buffer[i], BASE_HEX);
+    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.mouse_internal_buffer.buffer[i], BASE_HEX);
   }
   new bx_shadow_num_c(mousebuf, "head", &BX_KEY_THIS s.mouse_internal_buffer.head);
   buffer = new bx_list_c(list, "controller_Q", BX_KBD_CONTROLLER_QSIZE);
   for (i=0; i<BX_KBD_CONTROLLER_QSIZE; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(buffer, strdup(name), &BX_KEY_THIS s.controller_Q[i], BASE_HEX);
+    new bx_shadow_num_c(buffer, name, &BX_KEY_THIS s.controller_Q[i], BASE_HEX);
   }
   new bx_shadow_num_c(list, "controller_Qsize", &BX_KEY_THIS s.controller_Qsize);
   new bx_shadow_num_c(list, "controller_Qsource", &BX_KEY_THIS s.controller_Qsource);

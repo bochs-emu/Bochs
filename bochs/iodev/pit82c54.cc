@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.27 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pit82c54.cc,v 1.28 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -196,7 +196,7 @@ void pit_82C54::register_state(bx_param_c *parent)
 
   for (i=0; i<3; i++) {
     sprintf(name, "%d", i);
-    tim = new bx_list_c(parent, strdup(name), 22);
+    tim = new bx_list_c(parent, name, 22);
     new bx_shadow_bool_c(tim, "GATE", &counter[i].GATE);
     new bx_shadow_bool_c(tim, "OUTpin", &counter[i].OUTpin);
     new bx_shadow_num_c(tim, "count", &counter[i].count);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.32 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.33 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -380,21 +380,21 @@ void bx_svga_cirrus_c::register_state(void)
     reg = new bx_list_c(crtc, "reg", CIRRUS_CRTC_MAX+1);
     for (i=0; i<=CIRRUS_CRTC_MAX; i++) {
       sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(reg, strdup(name), &BX_CIRRUS_THIS crtc.reg[i], BASE_HEX);
+      new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS crtc.reg[i], BASE_HEX);
     }
     bx_list_c *sequ = new bx_list_c(list, "sequencer");
     new bx_shadow_num_c(sequ, "index", &BX_CIRRUS_THIS sequencer.index, BASE_HEX);
     reg = new bx_list_c(sequ, "reg", CIRRUS_SEQENCER_MAX+1);
     for (i=0; i<=CIRRUS_SEQENCER_MAX; i++) {
       sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(reg, strdup(name), &BX_CIRRUS_THIS sequencer.reg[i], BASE_HEX);
+      new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS sequencer.reg[i], BASE_HEX);
     }
     bx_list_c *ctrl = new bx_list_c(list, "control");
     new bx_shadow_num_c(ctrl, "index", &BX_CIRRUS_THIS control.index, BASE_HEX);
     reg = new bx_list_c(ctrl, "reg", CIRRUS_CONTROL_MAX+1);
     for (i=0; i<=CIRRUS_CONTROL_MAX; i++) {
       sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(reg, strdup(name), &BX_CIRRUS_THIS control.reg[i], BASE_HEX);
+      new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS control.reg[i], BASE_HEX);
     }
     new bx_shadow_num_c(ctrl, "shadow_reg0", &BX_CIRRUS_THIS control.shadow_reg0, BASE_HEX);
     new bx_shadow_num_c(ctrl, "shadow_reg1", &BX_CIRRUS_THIS control.shadow_reg1, BASE_HEX);
@@ -404,7 +404,7 @@ void bx_svga_cirrus_c::register_state(void)
     reg = new bx_list_c(hdac, "palette", 48);
     for (i=0; i<48; i++) {
       sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(reg, strdup(name), &BX_CIRRUS_THIS hidden_dac.palette[i], BASE_HEX);
+      new bx_shadow_num_c(reg, name, &BX_CIRRUS_THIS hidden_dac.palette[i], BASE_HEX);
     }
     new bx_shadow_bool_c(list, "svga_unlock_special", &BX_CIRRUS_THIS svga_unlock_special);
     new bx_shadow_num_c(list, "svga_xres", &BX_CIRRUS_THIS svga_xres);
@@ -426,7 +426,7 @@ void bx_svga_cirrus_c::register_state(void)
       bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
       for (i=0; i<256; i++) {
         sprintf(name, "0x%02x", i);
-        new bx_shadow_num_c(pci_conf, strdup(name), &BX_CIRRUS_THIS pci_conf[i], BASE_HEX);
+        new bx_shadow_num_c(pci_conf, name, &BX_CIRRUS_THIS pci_conf[i], BASE_HEX);
       }
     }
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.129 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: vga.cc,v 1.130 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -421,7 +421,7 @@ void bx_vga_c::register_state(void)
   reg = new bx_list_c(crtc, "reg", 0x19);
   for (i=0; i<=0x18; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(reg, strdup(name), &BX_VGA_THIS s.CRTC.reg[i], BASE_HEX);
+    new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.CRTC.reg[i], BASE_HEX);
   }
   new bx_shadow_bool_c(crtc, "write_protect", &BX_VGA_THIS s.CRTC.write_protect);
   bx_list_c *actl = new bx_list_c(list, "attribute_ctrl", 9);
@@ -431,7 +431,7 @@ void bx_vga_c::register_state(void)
   reg = new bx_list_c(actl, "palette_reg", 16);
   for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(reg, strdup(name), &BX_VGA_THIS s.attribute_ctrl.palette_reg[i], BASE_HEX);
+    new bx_shadow_num_c(reg, name, &BX_VGA_THIS s.attribute_ctrl.palette_reg[i], BASE_HEX);
   }
   new bx_shadow_num_c(actl, "overscan_color", &BX_VGA_THIS s.attribute_ctrl.overscan_color, BASE_HEX);
   new bx_shadow_num_c(actl, "color_plane_enable", &BX_VGA_THIS s.attribute_ctrl.color_plane_enable, BASE_HEX);

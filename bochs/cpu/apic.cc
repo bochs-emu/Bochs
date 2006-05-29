@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.88 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: apic.cc,v 1.89 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -922,9 +922,9 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   bx_list_c *IRR = new bx_list_c(parent, "irr", BX_LOCAL_APIC_MAX_INTS);
   for (i=0; i<BX_LOCAL_APIC_MAX_INTS; i++) {
     sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(ISR, strdup(name), &isr[i]);
-    new bx_shadow_num_c(TMR, strdup(name), &tmr[i]);
-    new bx_shadow_num_c(IRR, strdup(name), &irr[i]);
+    new bx_shadow_num_c(ISR, name, &isr[i]);
+    new bx_shadow_num_c(TMR, name, &tmr[i]);
+    new bx_shadow_num_c(IRR, name, &irr[i]);
   }
 
   BXRS_HEX_PARAM_SIMPLE(parent, error_status);
@@ -935,7 +935,7 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   bx_list_c *LVT = new bx_list_c(parent, "lvt", APIC_LVT_ENTRIES);
   for (i=0; i<APIC_LVT_ENTRIES; i++) {
     sprintf(name, "%d", i);
-    new bx_shadow_num_c(LVT, strdup(name), &lvt[i], BASE_HEX);
+    new bx_shadow_num_c(LVT, name, &lvt[i], BASE_HEX);
   }
 
   BXRS_HEX_PARAM_SIMPLE(parent, timer_initial);

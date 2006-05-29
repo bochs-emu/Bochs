@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.30 2006-05-28 20:24:51 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.31 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -429,7 +429,7 @@ void bx_virt_timer_c::register_state(void)
   for (unsigned i = 0; i < numTimers; i++) {
     char name[4];
     sprintf(name, "%d", i);
-    bx_list_c *bxtimer = new bx_list_c(vtimers, strdup(name));
+    bx_list_c *bxtimer = new bx_list_c(vtimers, name, 5);
     BXRS_PARAM_BOOL(bxtimer, inUse, timer[i].inUse);
     BXRS_DEC_PARAM_FIELD(bxtimer, period, timer[i].period);
     BXRS_DEC_PARAM_FIELD(bxtimer, timeToFire, timer[i].timeToFire);

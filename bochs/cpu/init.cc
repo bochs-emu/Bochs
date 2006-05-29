@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.109 2006-05-28 19:18:29 sshwarts Exp $
+// $Id: init.cc,v 1.110 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -266,8 +266,9 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
     const char *oldfmt = bx_param_num_c::set_default_format(fmt32);
     sprintf(cpu_name, "%d", BX_CPU_ID);
     sprintf(cpu_title, "CPU %d", BX_CPU_ID);
-    bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE), strdup(cpu_name),
-                                    cpu_title, 60);
+    bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE), 
+       cpu_name, cpu_title, 60);
+
 #define DEFPARAM_NORMAL(name,field) \
     new bx_shadow_num_c(list, #name, &(field))
 
@@ -385,8 +386,9 @@ void BX_CPU_C::register_state(void)
 
   sprintf(cpu_name, "%d", BX_CPU_ID);
   sprintf(cpu_title, "CPU %d", BX_CPU_ID);
-  bx_list_c *list = new bx_list_c(SIM->get_param("save_restore.cpu"), strdup(cpu_name),
-                                    cpu_title, 60);
+  bx_list_c *list = new bx_list_c(SIM->get_param("save_restore.cpu"), 
+           cpu_name, cpu_title, 60);
+
   BXRS_PARAM_SPECIAL32(list, cpu_version, param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(list, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(list, cpuid_ext,   param_save_handler, param_restore_handler);
@@ -439,7 +441,7 @@ void BX_CPU_C::register_state(void)
 
   for(i=0; i<6; i++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[i];
-    bx_list_c *sreg = new bx_list_c(list, strdup(strseg(segment)), 9);
+    bx_list_c *sreg = new bx_list_c(list, strseg(segment), 9);
     BXRS_PARAM_SPECIAL16(sreg, selector, 
            param_save_handler, param_restore_handler);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
@@ -515,7 +517,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(fpu, fdp, the_i387.fdp);
   for (i=0; i<8; i++) {
     sprintf(name, "st%d", i);
-    bx_list_c *STx = new bx_list_c(fpu, strdup(name), 8);
+    bx_list_c *STx = new bx_list_c(fpu, name, 8);
     BXRS_HEX_PARAM_FIELD(STx, exp,      the_i387.st_space[i].exp);
     BXRS_HEX_PARAM_FIELD(STx, fraction, the_i387.st_space[i].fraction);
   }
@@ -527,9 +529,9 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);
-    new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(1), BASE_HEX);
+    new bx_shadow_num_c(sse, name, &BX_CPU_THIS_PTR xmm[i].xmm64u(1), BASE_HEX);
     sprintf(name, "xmm%02d_lo", i);
-    new bx_shadow_num_c(sse, strdup(name), &BX_CPU_THIS_PTR xmm[i].xmm64u(0), BASE_HEX);
+    new bx_shadow_num_c(sse, name, &BX_CPU_THIS_PTR xmm[i].xmm64u(0), BASE_HEX);
   }
 #endif
 
@@ -559,7 +561,7 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
 #else
   UNUSED(devptr);
 #endif // !BX_USE_CPU_SMF
-  char *pname, *segname;
+  const char *pname, *segname;
   bx_segment_reg_t *segment = NULL;
 
   pname = param->get_name();
@@ -619,7 +621,7 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
 #else
   UNUSED(devptr);
 #endif // !BX_USE_CPU_SMF
-  char *pname, *segname;
+  const char *pname, *segname;
   bx_segment_reg_t *segment = NULL;
 
   pname = param->get_name();

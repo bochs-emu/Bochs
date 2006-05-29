@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.22 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pit.cc,v 1.23 2006-05-29 22:33:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -237,7 +237,7 @@ void bx_pit_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pit", "8254 PIT State");
   for (i=0; i<3; i++) {
     sprintf(name, "timer%d", i);
-    tim = new bx_list_c(list, strdup(name), 13);
+    tim = new bx_list_c(list, name, 13);
     new bx_shadow_num_c(tim, "mode", &BX_PIT_THIS s.timer[i].mode, 16);
     new bx_shadow_num_c(tim, "latch_mode", &BX_PIT_THIS s.timer[i].latch_mode, 16);
     new bx_shadow_num_c(tim, "input_latch_value", &BX_PIT_THIS s.timer[i].input_latch_value, 16);
