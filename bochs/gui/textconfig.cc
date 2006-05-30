@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.54 2006-05-28 16:39:25 vruppert Exp $
+// $Id: textconfig.cc,v 1.55 2006-05-30 18:01:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -513,12 +513,19 @@ int bx_config_interface(int menu)
               return -1;
 #if BX_SUPPORT_SAVE_RESTORE
             case BX_CI_RT_SAVE:
-              if (ask_string("\nWhat is the path to save the Bochs state to?\nNOTE: Bochs quits after saving!\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+              if (ask_string("\nWhat is the path to save the Bochs state to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp (sr_path, "none")) {
                   if (SIM->save_state(sr_path)) {
-                    bx_user_quit = 1;
-                    SIM->quit_sim(1);
-                    return -1;
+                    Bit32u cont = 0;
+                    ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
+                           "so we don't recommend to continue, unless you are running a read-only\n"
+                           "guest system (e.g. Live-CD).\n\n"
+                           "Do you want to continue? [no]", 0, &cont);
+                    if (!cont) {
+                      bx_user_quit = 1;
+                      SIM->quit_sim(1);
+                      return -1;
+                    }
                   }
                 }
               }
