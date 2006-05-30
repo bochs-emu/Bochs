@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.17 2006-05-21 16:48:05 sshwarts Exp $
+// $Id: parser.y,v 1.18 2006-05-30 19:46:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -238,6 +238,11 @@ show_command:
       BX_TOKEN_SHOW BX_TOKEN_COMMAND '\n'
       {
           bx_dbg_show_command($2);
+          free($1); free($2);
+      }
+    | BX_TOKEN_SHOW BX_TOKEN_STRING '\n'
+      {
+          bx_dbg_show_param_command($2);
           free($1); free($2);
       }
     | BX_TOKEN_SHOW '\n'

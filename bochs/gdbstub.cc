@@ -892,10 +892,7 @@ void bx_gdbstub_init(int argc, char* argv[])
    WSAStartup(2, &wsaData);
 #endif
 
-   bx_init_hardware();
-
    /* Wait for connect */
-
    printf("Waiting for gdb connection on localhost:%d\n", portn);
    wait_for_connect(portn);
    

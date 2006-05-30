@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.65 2006-04-29 09:27:49 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.66 2006-05-30 19:46:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,12 +197,12 @@ int bx_dbg_main(int argc, char *argv[])
     if (!debugger_log) {
       BX_PANIC(("Can not open debugger log file '%s'",
         SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
-      }
+    }
     else {
       BX_INFO(("Using debugger log file %s",
         SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
-      }
     }
+  }
 
 #if BX_DISASM
   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
@@ -210,21 +210,6 @@ int bx_dbg_main(int argc, char *argv[])
 
   // parse any remaining args in the usual way
   bx_parse_cmdline(1, bochs_argc, bochs_argv);
-
-  // initialize hardware
-  bx_init_hardware();
-
-  // Moved from main.cc, just like in main.cc before set_init_done()
-  if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
-    void bx_load32bitOSimagehack(void);
-    bx_load32bitOSimagehack();
-  }
-  SIM->set_init_done(1);
-
-  // update headerbar buttons since drive status can change during init
-  bx_gui->update_drive_status_buttons();
-  // iniialize statusbar and set all items inactive
-  bx_gui->statusbar_setitem(-1, 0);
 
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
@@ -958,7 +943,7 @@ void bx_dbg_show_command(const char* arg)
       DEV_vga_refresh();
       return;
     } else {
-      printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
+      dbg_printf("Unrecognized arg: %s (only 'mode', 'int', 'softint', 'extint', 'iret', 'call', 'off', 'dbg-all' and 'dbg-none' are valid)\n", arg);
       return;
     }
   }
@@ -982,6 +967,19 @@ void bx_dbg_show_command(const char* arg)
   }
 }
 
+void bx_dbg_show_param_command(char *param)
+{
+#if BX_SUPPORT_SAVE_RESTORE
+  // remove leading and trailing quotas
+  if (param[0]=='\"') param++;
+  unsigned len = strlen(param);
+  if (param[len - 1] == '\"') param[len - 1] = '\0';
+  dbg_printf("show param name: <%s>\n", param);
+  print_tree(SIM->get_param(param, SIM->get_sr_root()), 0);
+#else
+  dbg_printf("You must compile with save/restore to use this command !\n");
+#endif
+}
 
 // return non zero to cause a stop
 int bx_dbg_show_symbolic(void) 

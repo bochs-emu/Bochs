@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.336 2006-05-28 16:39:24 vruppert Exp $
+// $Id: main.cc,v 1.337 2006-05-30 19:46:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -199,17 +199,17 @@ void print_tree(bx_param_c *node, int level)
   }
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
-      if (((bx_param_num_c*)node)->get_base() == 10) {
-        printf("%s = %d  (number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+      if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
+        printf("%s = " FMT_LL "d (number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
       } else {
-        printf("%s = 0x%x  (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get());
+        printf("%s = 0x" FMT_LL "x (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
       }
       break;
     case BXT_PARAM_BOOL:
-      printf("%s = %s  (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
+      printf("%s = %s (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
       break;
     case BXT_PARAM_ENUM:
-      printf("%s = '%s'  (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
+      printf("%s = '%s' (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
       if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
@@ -223,9 +223,9 @@ void print_tree(bx_param_c *node, int level)
           sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
           strcat(tmpstr, tmpbyte);
         }
-        printf("%s = '%s'  (raw byte string)\n", node->get_name(), tmpstr);
+        printf("%s = '%s' (raw byte string)\n", node->get_name(), tmpstr);
       } else {
-        printf("%s = '%s'  (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+        printf("%s = '%s' (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
       }
       break;
     case BXT_LIST:
@@ -239,11 +239,11 @@ void print_tree(bx_param_c *node, int level)
       }
 #if BX_SUPPORT_SAVE_RESTORE
     case BXT_PARAM_DATA:
-      printf("%s = 'size=%d'  (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());
+      printf("%s = 'size=%d' (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());
       break;
 #endif
     default:
-      printf("%s  (unknown parameter type)\n", node->get_name());
+      printf("%s (unknown parameter type)\n", node->get_name());
   }
 }
 
@@ -833,40 +833,38 @@ int bx_begin_simulation (int argc, char *argv[])
   BX_ASSERT(bx_cpu_count < BX_MAX_SMP_THREADS_SUPPORTED);
   BX_ASSERT(bx_cpu_count > 0);
 
+  bx_init_hardware();
+
+  if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
+    void bx_load32bitOSimagehack(void);
+    bx_load32bitOSimagehack();
+  }
+
+  SIM->set_init_done(1);
+
+  // update headerbar buttons since drive status can change during init
+  bx_gui->update_drive_status_buttons();
+  // iniialize statusbar and set all items inactive
+  bx_gui->statusbar_setitem(-1, 0);
+
+  // The set handler for mouse_enabled does not actually update the gui
+  // until init_done is set.  This forces the set handler to be called,
+  // which sets up the mouse enabled GUI-specific stuff correctly.
+  // Not a great solution but it works. BBD
+  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get());
+
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
   bx_dbg_main(argc, argv);
-#else
+#else 
 #if BX_GDBSTUB
   // If using gdbstub, it will take control and call
   // bx_init_hardware() and cpu_loop()
-  if (bx_dbg.gdbstub_enabled) {
-    bx_gdbstub_init (argc, argv);
-  }
+  if (bx_dbg.gdbstub_enabled) bx_gdbstub_init(argc, argv);
   else
 #endif
   {
-    bx_init_hardware();
-
-    if (SIM->get_param_enum(BXPN_LOAD32BITOS_WHICH)->get()) {
-      void bx_load32bitOSimagehack(void);
-      bx_load32bitOSimagehack();
-    }
-
-    SIM->set_init_done (1);
-
-    // update headerbar buttons since drive status can change during init
-    bx_gui->update_drive_status_buttons ();
-    // iniialize statusbar and set all items inactive
-    bx_gui->statusbar_setitem(-1, 0);
-
-    // The set handler for mouse_enabled does not actually update the gui
-    // until init_done is set.  This forces the set handler to be called,
-    // which sets up the mouse enabled GUI-specific stuff correctly.
-    // Not a great solution but it works. BBD
-    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get());
-
 #if BX_SUPPORT_SMP == 0
     // only one processor, run as fast as possible by not messing with
     // quantums and loops.
@@ -890,7 +888,7 @@ int bx_begin_simulation (int argc, char *argv[])
     }
 #endif
   }
-#endif /* ! BX_DEBUGGER */
+#endif /* BX_DEBUGGER == 0 */
   BX_INFO(("cpu loop quit, shutting down simulator"));
   bx_atexit();
   return(0);
