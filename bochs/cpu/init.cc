@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.110 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: init.cc,v 1.111 2006-05-30 17:01:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,7 +392,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(list, cpu_version, param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(list, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(list, cpuid_ext,   param_save_handler, param_restore_handler);
-  BXRS_HEX_PARAM_SIMPLE(list, cpu_mode);
+  BXRS_DEC_PARAM_SIMPLE(list, cpu_mode);
   BXRS_HEX_PARAM_SIMPLE(list, inhibit_mask);
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(list, RAX);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.155 2006-05-30 16:05:50 vruppert Exp $
+// $Id: siminterface.cc,v 1.156 2006-05-30 17:01:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1176,30 +1176,39 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
 // define methods of bx_param_* and family
 /////////////////////////////////////////////////////////////////////////
 
-bx_object_c::bx_object_c(Bit32u id)
-{
-  this->id = id;
-  this->type = BXT_OBJECT;
-}
-
-void bx_object_c::set_type(bx_objtype type)
-{
-  this->type = type;
-}
-
 const char* bx_param_c::default_text_format = NULL;
 
-bx_param_c::bx_param_c(Bit32u id, const char *param_name, char *description)
+bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc)
   : bx_object_c(id)
 {
   set_type(BXT_PARAM);
   this->name = new char[strlen(param_name)+1];
   strcpy(this->name, param_name);
-  this->description = description;
+  this->description = NULL;
+  set_description(param_desc);
+  this->label = NULL;
   this->text_format = default_text_format;
   this->long_text_format = default_text_format;
   this->ask_format = NULL;
+  this->group_name = NULL;
+  this->runtime_param = 0;
+  this->enabled = 1;
+  this->parent = NULL;
+}
+
+bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_label, const char *param_desc)
+  : bx_object_c(id)
+{
+  set_type(BXT_PARAM);
+  this->name = new char[strlen(param_name)+1];
+  strcpy(this->name, param_name);
+  this->description = NULL;
+  set_description(param_desc);
   this->label = NULL;
+  set_label(param_label);
+  this->text_format = default_text_format;
+  this->long_text_format = default_text_format;
+  this->ask_format = NULL;
   this->group_name = NULL;
   this->runtime_param = 0;
   this->enabled = 1;
@@ -1209,6 +1218,30 @@ bx_param_c::bx_param_c(Bit32u id, const char *param_name, char *description)
 bx_param_c::~bx_param_c()
 {
   delete [] name;
+  delete [] label;
+  delete [] description;
+}
+
+void bx_param_c::set_description(const char *text)
+{
+  delete [] this->description;
+  if (text) {
+    this->description = new char[strlen(text)+1];
+    strcpy(this->description, text);
+  } else {
+    this->description = NULL;
+  }
+}
+
+void bx_param_c::set_label(const char *text)
+{
+  delete [] this->label;
+  if (text) {
+    this->label = new char[strlen(text)+1];
+    strcpy(this->label, text);
+  } else {
+    this->label = NULL;
+  }
 }
 
 int bx_param_c::get_param_path(char *path_out, int maxlen)
@@ -1236,14 +1269,13 @@ const char* bx_param_c::set_default_format(const char *f)
 
 bx_param_num_c::bx_param_num_c(bx_param_c *parent,
     const char *name,
-    char *label,
-    char *description,
+    const char *label,
+    const char *description,
     Bit64s min, Bit64s max, Bit64s initial_val,
     bx_bool is_shadow)
-  : bx_param_c(SIM->gen_param_id(), name, description)
+  : bx_param_c(SIM->gen_param_id(), name, label, description)
 {
   set_type(BXT_PARAM_NUM);
-  this->label = label;
   this->min = min;
   this->max = max;
   this->initial_val = initial_val;
@@ -1594,8 +1626,8 @@ void bx_shadow_num_c::reset()
 
 bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
     const char *name,
-    char *label,
-    char *description,
+    const char *label,
+    const char *description,
     Bit64s initial_val,
     bx_bool is_shadow)
   : bx_param_num_c(parent, name, label, description, 0, 1, initial_val, is_shadow)
@@ -1605,7 +1637,7 @@ bx_param_bool_c::bx_param_bool_c(bx_param_c *parent,
 
 bx_shadow_bool_c::bx_shadow_bool_c(bx_param_c *parent,
       const char *name,
-      char *label,
+      const char *label,
       bx_bool *ptr_to_real_val,
       Bit8u bitnum)
   : bx_param_bool_c(parent, name, label, NULL, (Bit64s) *ptr_to_real_val, 1)
@@ -1650,8 +1682,8 @@ void bx_shadow_bool_c::set(Bit64s newval)
 
 bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
       const char *name,
-      char *label,
-      char *description,
+      const char *label,
+      const char *description,
       char **choices,
       Bit64s initial_val,
       Bit64s value_base)
@@ -1689,14 +1721,13 @@ bx_bool bx_param_enum_c::set_by_name(const char *string)
 
 bx_param_string_c::bx_param_string_c(bx_param_c *parent,
     const char *name,
-    char *label,
-    char *description,
+    const char *label,
+    const char *description,
     const char *initial_val,
     int maxsize)
-  : bx_param_c(SIM->gen_param_id(), name, description)
+  : bx_param_c(SIM->gen_param_id(), name, label, description)
 {
   set_type(BXT_PARAM_STRING);
-  this->label = label;
   if (maxsize < 0) 
     maxsize = strlen(initial_val) + 1;
   this->val = new char[maxsize];
@@ -1718,9 +1749,9 @@ bx_param_string_c::bx_param_string_c(bx_param_c *parent,
 
 bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
     const char *name,
-    char *label,
-    char *description,
-    char *initial_val,
+    const char *label,
+    const char *description,
+    const char *initial_val,
     int maxsize)
   : bx_param_string_c(parent, name, label, description, initial_val, maxsize)
 {
@@ -1729,14 +1760,14 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
 
 bx_param_string_c::~bx_param_string_c()
 {
-  if (this->val != NULL) delete [] this->val;
-  if (this->initial_val != NULL) delete [] this->initial_val;
-  if (this->options != NULL) delete this->options;
+  if (val != NULL) delete [] val;
+  if (initial_val != NULL) delete [] initial_val;
+  if (options != NULL) delete options;
 }
 
 void bx_param_string_c::reset()
 {
-  strncpy(this->val, this->initial_val, maxsize);
+  strncpy(val, initial_val, maxsize);
 }
 
 void bx_param_string_c::set_handler(param_string_event_handler handler)
@@ -1894,10 +1925,10 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, char *title, bx_param
 
 bx_list_c::~bx_list_c()
 {
-  if (this->list) delete [] this->list;
-  if (this->title != NULL) delete this->title;
-  if (this->options != NULL) delete this->options;
-  if (this->choice != NULL) delete this->choice;
+  if (list != NULL) delete [] list;
+  if (title != NULL) delete title;
+  if (options != NULL) delete options;
+  if (choice != NULL) delete choice;
 }
 
 void bx_list_c::init(const char *list_title)

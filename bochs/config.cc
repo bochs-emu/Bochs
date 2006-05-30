@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.105 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: config.cc,v 1.106 2006-05-30 17:01:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -461,7 +461,7 @@ void bx_init_options()
     path = new bx_param_filename_c(optnum1,
       "path", 
       "Path",
-      strdup(descr),
+      descr,
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional ROM image #%d", i+1);
     strcat(label, " : %s");
@@ -470,7 +470,7 @@ void bx_init_options()
     optaddr = new bx_param_num_c(optnum1,
       "addr", 
       "Address",
-      strdup(descr),
+      descr,
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
@@ -490,7 +490,7 @@ void bx_init_options()
     path = new bx_param_filename_c(optnum2,
       "path", 
       "Path",
-      strdup(descr),
+      descr,
       "", BX_PATHNAME_LEN);
     sprintf(label, "Name of optional RAM image #%d", i+1);
     strcat(label, " : %s");
@@ -499,7 +499,7 @@ void bx_init_options()
     optaddr = new bx_param_num_c(optnum2,
       "addr", 
       "Address",
-      strdup(descr),
+      descr,
       0, BX_MAX_BIT32U, 
       0);
     optaddr->set_base(16);
@@ -585,8 +585,8 @@ void bx_init_options()
     sprintf (label, "PCI slot #%d device", i+1);
     bx_param_string_c *devname = new bx_param_string_c(slot,
         name, 
-        strdup(label), 
-        strdup(descr),
+        label, 
+        descr,
         "", BX_PATHNAME_LEN);
     // add to deplist
     *pci_deps_ptr++ = devname;
@@ -838,8 +838,8 @@ void bx_init_options()
     sprintf(descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
     bx_param_enum_c *bootdrive = new bx_param_enum_c(boot_params,
         name,
-        strdup(label),
-        strdup(descr),
+        label,
+        descr,
         &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
         (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
         (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE);
@@ -1233,17 +1233,11 @@ void bx_init_options()
     menu->get_options()->set(bx_list_c::SERIES_ASK);
     sprintf(label, "Enable parallel port #%d", i+1);
     sprintf(descr, "Controls whether parallel port #%d is installed or not", i+1);
-    enabled = new bx_param_bool_c(menu,
-      "enabled",
-      strdup(label),
-      strdup(descr),
+    enabled = new bx_param_bool_c(menu, "enabled", label, descr,
       (i==0)? 1 : 0);  // only enable #1 by default
     sprintf(label, "Parallel port #%d output file", i+1);
     sprintf(descr, "Data written to parport#%d by the guest OS is written to this file", i+1);
-    path = new bx_param_filename_c(menu,
-      "outfile", 
-      strdup(label),
-      strdup(descr),
+    path = new bx_param_filename_c(menu, "outfile", label, descr,
       "", BX_PATHNAME_LEN);
     deplist = new bx_list_c(NULL, 1);
     deplist->add(path);
@@ -1270,27 +1264,16 @@ void bx_init_options()
     menu->get_options()->set(bx_list_c::SERIES_ASK);
     sprintf(label, "Enable serial port #%d (COM%d)", i+1, i+1);
     sprintf(descr, "Controls whether COM%d is installed or not", i+1);
-    enabled = new bx_param_bool_c(menu,
-      "enabled",
-      strdup(label), 
-      strdup(descr), 
+    enabled = new bx_param_bool_c(menu, "enabled", label, descr, 
       (i==0)?1 : 0);  // only enable the first by default
     sprintf(label, "I/O mode of the serial device for COM%d", i+1);
     sprintf(descr, "The mode can be one these: 'null', 'file', 'term', 'raw', 'mouse', 'socket'");
-    mode = new bx_param_enum_c(menu,
-      "mode",
-      strdup(label),
-      strdup(descr),
-      serial_mode_list,
-      0,
-      0);
+    mode = new bx_param_enum_c(menu, "mode", label, descr,
+      serial_mode_list, 0, 0);
     mode->set_ask_format("Choose I/O mode of the serial device [%s] ");
     sprintf(label, "Pathname of the serial device for COM%d", i+1);
     sprintf(descr, "The path can be a real serial device or a pty (X/Unix only)");
-    path = new bx_param_filename_c(menu,
-      "dev",
-      strdup(label), 
-      strdup(descr), 
+    path = new bx_param_filename_c(menu, "dev", label, descr, 
       "", BX_PATHNAME_LEN);
     deplist = new bx_list_c(NULL, 2);
     deplist->add(mode);
@@ -1311,11 +1294,7 @@ void bx_init_options()
     menu->set_enabled(BX_SUPPORT_PCIUSB);
     sprintf(label, "Enable usb hub #%d", i+1);
     sprintf(descr, "Controls whether %s is installed or not", group);
-    enabled = new bx_param_bool_c(menu,
-      "enabled",
-      strdup(label), 
-      strdup(descr), 
-      0);
+    enabled = new bx_param_bool_c(menu, "enabled", label, descr, 0);
     enabled->set_enabled(BX_SUPPORT_PCIUSB);
     port = new bx_param_string_c(menu,
       "port1", 
@@ -1747,7 +1726,7 @@ char *bx_find_bochsrc ()
   }
   assert (fd != NULL && rcfile[0] != 0);
   fclose (fd);
-  return strdup (rcfile);
+  return strdup(rcfile);
 }
 
 static int parse_bochsrc(const char *rcfile)
