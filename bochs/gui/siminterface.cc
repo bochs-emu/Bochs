@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.154 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: siminterface.cc,v 1.155 2006-05-30 16:05:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1100,8 +1100,8 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
       value = ((bx_param_num_c*)node)->get64();
       if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
         if (((bx_param_num_c*)node)->get_min() >= BX_MIN_BIT64U) {
-          if (((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
-            fprintf(fp, "0x"FMT_LL"u\n", value);
+          if ((Bit64u)((bx_param_num_c*)node)->get_max() > BX_MAX_BIT32U) {
+            fprintf(fp, FMT_LL"u\n", value);
           } else {
             fprintf(fp, "%u\n", (Bit32u) value);
           }

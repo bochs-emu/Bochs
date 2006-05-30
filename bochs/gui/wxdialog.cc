@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.98 2006-05-22 16:35:03 vruppert Exp $
+// $Id: wxdialog.cc,v 1.99 2006-05-30 16:05:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -928,7 +928,7 @@ void ParamDialog::AddParam (
   pstr->u.window = NULL;
   pstr->browseButton = NULL;
   int type = param_generic->get_type();
-  char *prompt;
+  const char *prompt;
   if (type == BXT_LIST) {
     bx_list_c *list = (bx_list_c*)pstr->param;
     prompt = list->get_title()->getptr();
