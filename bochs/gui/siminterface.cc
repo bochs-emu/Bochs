@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.156 2006-05-30 17:01:27 sshwarts Exp $
+// $Id: siminterface.cc,v 1.157 2006-05-31 20:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -92,6 +92,8 @@ public:
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
   virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags);
+  // yes/no dialog
+  virtual int ask_yes_no(char *title, char *prompt, bx_bool the_default);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
   virtual int create_disk_image (const char *filename, int sectors, bx_bool overwrite);
@@ -558,13 +560,27 @@ int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *
   BxEvent event;
   bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
   flags |= param.IS_FILENAME;
-  param.get_options()->set (flags);
+  param.get_options()->set(flags);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
-  sim_to_ci_event (&event);
+  sim_to_ci_event(&event);
   if (event.retcode >= 0)
     memcpy(filename, param.getptr(), maxlen);
   return event.retcode;
+}
+
+int bx_real_sim_c::ask_yes_no(char *title, char *prompt, bx_bool the_default)
+{
+  BxEvent event;
+  bx_param_bool_c param(NULL, "yes_no", title, prompt, the_default);
+  event.type = BX_SYNC_EVT_ASK_PARAM;
+  event.u.param.param = &param;
+  sim_to_ci_event(&event);
+  if (event.retcode >= 0) {
+    return param.get();
+  } else {
+    return event.retcode;
+  }
 }
 
 void bx_real_sim_c::periodic()

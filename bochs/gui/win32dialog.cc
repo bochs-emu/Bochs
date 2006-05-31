@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.46 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.47 2006-05-31 20:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -939,6 +939,14 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         }
       } else if (param->get_type() == BXT_LIST) {
         event->retcode = Cdrom1Dialog();
+        return event;
+      } else if (param->get_type() == BXT_PARAM_BOOL) {
+        UINT flag = MB_YESNO | MB_SETFOREGROUND;
+        if (((bx_param_bool_c *)param)->get() == 0) {
+          flag |= MB_DEFBUTTON2;
+        }
+        ((bx_param_bool_c *)param)->set(MessageBox(GetActiveWindow(), param->get_description(), param->get_label(), flag) == IDYES);
+        event->retcode = 0;
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.

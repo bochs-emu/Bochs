@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.94 2006-04-10 19:02:30 sshwarts Exp $
+// $Id: gui.cc,v 1.95 2006-05-31 20:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -336,6 +336,9 @@ void bx_gui_c::reset_handler(void)
 
 void bx_gui_c::power_handler(void)
 {
+  // test case for yes/no dialog: confirm power off
+  //if (!SIM->ask_yes_no("Quit Bochs", "Are you sure ?", 0))
+  //  return;
   // the user pressed power button, so there's no doubt they want bochs
   // to quit.  Change panics to fatal for the GUI and then do a panic.
   bx_user_quit = 1;

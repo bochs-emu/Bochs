@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.194 2006-05-30 17:01:27 sshwarts Exp $
+// $Id: siminterface.h,v 1.195 2006-05-31 20:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1174,6 +1174,8 @@ public:
 
   // ask the user for a pathname
   virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}
+  // yes/no dialog
+  virtual int ask_yes_no(char *title, char *prompt, bx_bool the_default) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic() {}
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite) {return -3;}

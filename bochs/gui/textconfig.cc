@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.55 2006-05-30 18:01:51 vruppert Exp $
+// $Id: textconfig.cc,v 1.56 2006-05-31 20:12:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -669,7 +669,7 @@ config_interface_notify_callback (void *unused, BxEvent *event)
       event->retcode = 0;
       return event;
     case BX_SYNC_EVT_ASK_PARAM:
-      event->u.param.param->text_ask (stdin, stderr);
+      event->retcode = event->u.param.param->text_ask(stdin, stderr);
       return event;
     case BX_SYNC_EVT_LOG_ASK:
     {
