@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.66 2006-05-30 19:46:31 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.67 2006-05-31 17:20:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2650,7 +2650,7 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
 void bx_dbg_info_dirty_command(void)
 {
   unsigned char *page_tbl = BX_MEM(0)->dbg_dirty_pages;
-  unsigned page_tbl_size  = BX_MEM(0)->dbg_count_dirty_pages ();
+  Bit32u page_tbl_size  = BX_MEM(0)->get_num_allocated_pages();
 
   for (unsigned i=0; i<page_tbl_size; i++) {
     if (page_tbl[i]) {

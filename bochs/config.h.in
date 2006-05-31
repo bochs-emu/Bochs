@@ -318,8 +318,6 @@
 // is not used, and this section can be ignored.
 // =================================================================
 
-#define BX_MAX_DIRTY_PAGE_TABLE_MEGS 1024
-
 // Compile in support for virtual/linear/physical breakpoints.
 // Set to 1, only those you need.  Recommend using only linear
 // breakpoints, unless you need others.  Less supported means

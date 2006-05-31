@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.91 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.92 2006-05-31 17:20:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -36,6 +36,11 @@
 Bit32u BX_MEM_C::get_memory_in_k(void)
 {
   return(BX_MEM_THIS megabytes * 1024);
+}
+
+Bit32u BX_MEM_C::get_num_allocated_pages(void)
+{
+  return(BX_MEM_THIS len / 4096);
 }
 
 BX_MEM_C::BX_MEM_C()
@@ -92,20 +97,25 @@ BX_MEM_C::~BX_MEM_C()
 
 void BX_MEM_C::init_memory(int memsize)
 {
-  int idx;
+  unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.91 2006-05-27 15:54:49 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.92 2006-05-31 17:20:52 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 
   if (BX_MEM_THIS vector == NULL) {
     // memory not already allocated, do now...
     alloc_vector_aligned (memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
-    BX_MEM_THIS len    = memsize;
+    BX_MEM_THIS len  = memsize;
     BX_MEM_THIS megabytes = memsize / (1024*1024);
     BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
     BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
     BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
+#if BX_DEBUGGER
+    unsigned pages = get_num_allocated_pages();
+    BX_MEM_THIS dbg_dirty_pages = new Bit8u[pages];
+    memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
+#endif
     memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
     memset(BX_MEM_THIS bogus, 0xff, 4096);
     for (idx = 0; idx < 1024 * 1024; idx++)
@@ -119,15 +129,8 @@ void BX_MEM_C::init_memory(int memsize)
   BX_MEM_THIS smram_enable = 0;
   BX_MEM_THIS smram_restricted = 0;
 
-#if BX_DEBUGGER
-  if (megabytes > BX_MAX_DIRTY_PAGE_TABLE_MEGS) {
-    BX_INFO(("Error: memory larger than dirty page table can handle"));
-    BX_PANIC(("Error: increase BX_MAX_DIRTY_PAGE_TABLE_MEGS"));
-  }
-#endif
-
   // accept only memory size which is multiply of 1M
-  BX_ASSERT((len & 0xfffff) == 0);
+  BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
 
 #if BX_SUPPORT_SAVE_RESTORE
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "memory", "Memory State");
@@ -401,7 +404,7 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress, Bit8u type)
   if (*path == '\0') {
     BX_PANIC(( "RAM: Optional RAM image undefined"));
     return;
-    }
+  }
   // read in RAM BIOS image file
   fd = open(path, O_RDONLY
 #ifdef O_BINARY
@@ -506,7 +509,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
 #if BX_DEBUGGER || BX_GDBSTUB
 bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
 {
-  if ((addr + len) > BX_MEM_THIS len) {
+  if ((addr + len - 1) > BX_MEM_THIS len) {
     return(0); // error, beyond limits of memory
   }
   for (; len>0; len--) {

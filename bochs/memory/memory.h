@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.37 2006-03-28 16:53:02 sshwarts Exp $
+// $Id: memory.h,v 1.38 2006-05-31 17:20:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,10 +80,7 @@ public:
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
 #if BX_DEBUGGER
-  unsigned char dbg_dirty_pages[(BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096];
-  Bit32u dbg_count_dirty_pages () {
-    return (BX_MAX_DIRTY_PAGE_TABLE_MEGS * 1024 * 1024) / 4096;
-  }
+  Bit8u   *dbg_dirty_pages;
 #endif
 
   BX_MEM_C();
@@ -108,7 +105,8 @@ public:
 		  memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
-  };
+  BX_MEM_SMF Bit32u get_num_allocated_pages(void);
+};
 
 #if BX_PROVIDE_CPU_MEMORY==1
 
