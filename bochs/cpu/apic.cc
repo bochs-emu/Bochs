@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.90 2006-06-01 11:59:23 sshwarts Exp $
+// $Id: apic.cc,v 1.91 2006-06-01 14:05:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -532,7 +532,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x140: case 0x150:
   case 0x160: case 0x170:
     {
-      unsigned index = (addr2 - 0x100) >> 2;
+      unsigned index = (addr2 - 0x100) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(isr[index+i]) value |= mask;
@@ -546,7 +546,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x1c0: case 0x1d0:
   case 0x1e0: case 0x1f0:
     {
-      unsigned index = (addr2 - 0x180) >> 2;
+      unsigned index = (addr2 - 0x180) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(tmr[index+i]) value |= mask;
@@ -560,7 +560,7 @@ void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned l
   case 0x240: case 0x250:
   case 0x260: case 0x270:
     {
-      unsigned index = (addr2 - 0x200) >> 2;
+      unsigned index = (addr2 - 0x200) << 1;
       Bit32u value = 0, mask = 1;
       for(int i=0;i<32;i++) {
         if(irr[index+i]) value |= mask;
