@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.138 2006-05-30 16:05:51 vruppert Exp $
+// $Id: wxmain.cc,v 1.139 2006-06-01 19:35:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1167,6 +1167,10 @@ MyFrame::HandleAskParam(BxEvent *event)
   {
     case BXT_PARAM_STRING:
       return HandleAskParamString((bx_param_string_c *)param);
+    case BXT_PARAM_BOOL:
+      ((bx_param_bool_c *)param)->set(wxMessageBox(wxString(param->get_description(), wxConvUTF8),
+                                                   wxString(param->get_label(), wxConvUTF8), wxYES_NO, this) == wxYES);
+      return 0;
     default:
       {
         wxString msg;
