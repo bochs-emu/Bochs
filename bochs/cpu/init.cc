@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.111 2006-05-30 17:01:27 sshwarts Exp $
+// $Id: init.cc,v 1.112 2006-06-01 20:05:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -423,7 +423,8 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(list, EDI);
   BXRS_HEX_PARAM_SIMPLE(list, EIP);
 #endif
-  BXRS_HEX_PARAM_FIELD(list, EFLAGS, eflags.val32);
+  BXRS_PARAM_SPECIAL32(list, EFLAGS, 
+         param_save_handler, param_restore_handler);
 #if BX_CPU_LEVEL >= 3
   BXRS_HEX_PARAM_FIELD(list, DR0, dr0);
   BXRS_HEX_PARAM_FIELD(list, DR1, dr1);
@@ -466,7 +467,7 @@ void BX_CPU_C::register_state(void)
 
   bx_list_c *LDTR = new bx_list_c (list, "LDTR", 4);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
-  BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.ldt.base );
+  BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.ldt.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.ldt.limit);
   BXRS_PARAM_SPECIAL8 (LDTR, ar_byte, param_save_handler, param_restore_handler);
 
@@ -536,8 +537,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_APIC
-  bx_list_c *lapic = new bx_list_c(list, "local_apic", 25);
-  local_apic.register_state(lapic);
+  local_apic.register_state(list);
 #endif
 
   BXRS_PARAM_BOOL(list, EXT, EXT);
@@ -571,6 +571,8 @@ Bit64s BX_CPU_C::param_save(bx_param_c *param, Bit64s val)
     val = get_std_cpuid_features();
   } else if (!strcmp(pname, "cpuid_ext")) {
     val = get_extended_cpuid_features();
+  } else if (!strcmp(pname, "EFLAGS")) {
+    val = BX_CPU_THIS_PTR read_eflags();
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
     val = BX_CPU_THIS_PTR get_EFER();
@@ -637,6 +639,8 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
     if (val != get_extended_cpuid_features()) {
       BX_PANIC(("save/restore: CPUID mismatch"));
     }
+  } else if (!strcmp(pname, "EFLAGS")) {
+    BX_CPU_THIS_PTR setEFlags(val);
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
     BX_CPU_THIS_PTR msr.sce   = (val >> 0)  & 1;
@@ -688,7 +692,6 @@ void BX_CPU_C::after_restore_state(void)
 {
   SetCR0(cr0.val32);
   CR3_change(cr3);
-  setEFlags(eflags.val32);
   TLB_flush(1);
   assert_checks();
   invalidate_prefetch_q();
