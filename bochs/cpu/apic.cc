@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.89 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: apic.cc,v 1.90 2006-06-01 11:59:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -847,6 +847,9 @@ void bx_local_apic_c::periodic(void)
     if((timervec & 0x10000)==0) {
       trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
     }
+    else {
+      BX_DEBUG(("%s: local apic timer LVT masked", cpu->name));
+    }
     // Reload timer values.
     timer_current = timer_initial;
     ticksInitial = bx_pc_system.time_ticks(); // Take a reading.
@@ -858,6 +861,9 @@ void bx_local_apic_c::periodic(void)
     // If timer is not masked, trigger interrupt.
     if((timervec & 0x10000)==0) {
       trigger_irq(timervec & 0xff, APIC_EDGE_TRIGGERED);
+    }
+    else {
+      BX_DEBUG(("%s: local apic timer LVT masked", cpu->name));
     }
     timer_active = 0;
     BX_DEBUG(("%s: local apic timer(one-shot) triggered int", cpu->name));
@@ -890,7 +896,7 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
   {
     // This should trigger the counter to start.  If already started,
     // restart from the new start value.
-    BX_DEBUG(("APIC: Initial Timer Count Register = %u\n", value));
+    BX_DEBUG(("APIC: Initial Timer Count Register = %u", value));
     timer_current = timer_initial;
     timer_active = 1;
     Bit32u timervec = lvt[APIC_LVT_TIMER];
