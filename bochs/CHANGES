@@ -27,6 +27,8 @@ Changes after 2.2.6 release:
   - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
     could choose amount of cores per processor and amount of HT threads per
     core from .bochsrc for SMP simulation (Stanislav Shwartsman)
+  - Fixed again reading of APIC IRR/ISR/TMR registers. Finally it became
+    fully correct.
 
 - Configure and compile 
   - Moved configure time --enable-reset-on-triple-fault option to runtime, 
