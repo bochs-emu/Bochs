@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.92 2006-05-31 17:20:52 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.93 2006-06-03 12:59:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,6 +32,12 @@
 #define LOG_THIS BX_MEM(0)->
 
 #if BX_PROVIDE_CPU_MEMORY
+
+#if BX_ADDRESS_SPACES==1
+BOCHSAPI BX_MEM_C bx_mem;
+#else
+BOCHSAPI BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
+#endif
 
 Bit32u BX_MEM_C::get_memory_in_k(void)
 {
@@ -99,7 +105,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.92 2006-05-31 17:20:52 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.93 2006-06-03 12:59:14 sshwarts Exp $"));
   // you can pass 0 if memory has been allocated already through
   // the constructor, or the desired size of memory if it hasn't
 

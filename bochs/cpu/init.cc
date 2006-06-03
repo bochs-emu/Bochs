@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.112 2006-06-01 20:05:15 sshwarts Exp $
+// $Id: init.cc,v 1.113 2006-06-03 12:59:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -990,9 +990,11 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR set_TSC(0);
 #endif
 
+#if BX_SUPPORT_SEP
   BX_CPU_THIS_PTR msr.sysenter_cs_msr  = 0;
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = 0;
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
+#endif
 
   BX_CPU_THIS_PTR EXT = 0;
 
