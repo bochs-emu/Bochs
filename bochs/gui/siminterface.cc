@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.157 2006-05-31 20:12:43 vruppert Exp $
+// $Id: siminterface.cc,v 1.158 2006-06-04 07:55:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -572,7 +572,11 @@ int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *
 int bx_real_sim_c::ask_yes_no(char *title, char *prompt, bx_bool the_default)
 {
   BxEvent event;
+  char format[512];
+
   bx_param_bool_c param(NULL, "yes_no", title, prompt, the_default);
+  sprintf(format, "%s\n\n%s [%%s] ", title, prompt);
+  param.set_ask_format(format);
   event.type = BX_SYNC_EVT_ASK_PARAM;
   event.u.param.param = &param;
   sim_to_ci_event(&event);
@@ -1257,6 +1261,17 @@ void bx_param_c::set_label(const char *text)
     strcpy(this->label, text);
   } else {
     this->label = NULL;
+  }
+}
+
+void bx_param_c::set_ask_format(const char *format)
+{
+  delete [] this->ask_format;
+  if (format) {
+    this->ask_format = new char[strlen(format)+1];
+    strcpy(this->ask_format, format);
+  } else {
+    this->ask_format = NULL;
   }
 }
 

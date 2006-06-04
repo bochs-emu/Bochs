@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.56 2006-05-31 20:12:43 vruppert Exp $
+// $Id: textconfig.cc,v 1.57 2006-06-04 07:55:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -69,7 +69,7 @@ clean_string(char *s0)
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int 
-ask_uint(char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
+ask_uint(const char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
   Bit32u n = max + 1;
   char buffer[1024];
@@ -101,7 +101,7 @@ ask_uint(char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, 
 
 // identical to ask_uint, but uses signed comparisons
 int 
-ask_int(char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
+ask_int(const char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
   char buffer[1024];
@@ -130,7 +130,7 @@ ask_int(char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 }
 
 int 
-ask_menu(char *prompt, int n_choices, char *choice[], int the_default, int *out)
+ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
@@ -164,7 +164,7 @@ ask_menu(char *prompt, int n_choices, char *choice[], int the_default, int *out)
 }
 
 int 
-ask_yn(char *prompt, Bit32u the_default, Bit32u *out)
+ask_yn(const char *prompt, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
   char *clean;
@@ -191,7 +191,7 @@ ask_yn(char *prompt, Bit32u the_default, Bit32u *out)
 // returns -1 on error (stream closed or  something)
 // returns 0 if default was taken
 // returns 1 if value changed
-int ask_string(char *prompt, const char *the_default, char *out)
+int ask_string(const char *prompt, const char *the_default, char *out)
 {
   char buffer[1024];
   char *clean;
@@ -822,32 +822,32 @@ bx_list_c::text_print (FILE *fp)
 }
 
 int 
-bx_param_num_c::text_ask (FILE *fpin, FILE *fpout)
+bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
 {
-  fprintf (fpout, "\n");
+  fprintf(fpout, "\n");
   int status;
-  char *prompt = get_ask_format ();
+  const char *prompt = get_ask_format();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    text_print (fpout);
-    fprintf (fpout, "\n");
+    text_print(fpout);
+    fprintf(fpout, "\n");
     prompt = "Enter new value: [%d] ";
     if (base==16)
       prompt = "Enter new value in hex: [%x] ";
   }
-  Bit32u n = get ();
-  status = ask_uint (prompt, (Bit32u)min, (Bit32u)max, n, &n, base);
+  Bit32u n = get();
+  status = ask_uint(prompt, (Bit32u)min, (Bit32u)max, n, &n, base);
   if (status < 0) return status;
-  set (n);
+  set(n);
   return 0;
 }
 
 int 
-bx_param_bool_c::text_ask (FILE *fpin, FILE *fpout)
+bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
 {
-  fprintf (fpout, "\n");
+  fprintf(fpout, "\n");
   int status;
-  char *prompt = get_ask_format();
+  const char *prompt = get_ask_format();
   char buffer[512];
   if (prompt == NULL) {
     if (get_label() != NULL) {
@@ -867,26 +867,26 @@ bx_param_bool_c::text_ask (FILE *fpin, FILE *fpout)
 }
 
 int 
-bx_param_enum_c::text_ask (FILE *fpin, FILE *fpout)
+bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
 {
-  fprintf (fpout, "\n");
-  char *prompt = get_ask_format ();
+  fprintf(fpout, "\n");
+  const char *prompt = get_ask_format();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    fprintf (fpout, "%s = ", get_name ());
-    text_print (fpout);
-    fprintf (fpout, "\n");
+    fprintf(fpout, "%s = ", get_name());
+    text_print(fpout);
+    fprintf(fpout, "\n");
     prompt = "Enter new value: [%s] ";
   }
-  Bit32s n = (Bit32s)(get () - min);
-  int status = ask_menu (prompt, (Bit32u)(max-min+1), choices, n, &n);
+  Bit32s n = (Bit32s)(get() - min);
+  int status = ask_menu(prompt, (Bit32u)(max-min+1), choices, n, &n);
   if (status < 0) return status;
   n += (Bit32s)min;
-  set (n);
+  set(n);
   return 0;
 }
 
-int parse_raw_bytes (char *dest, char *src, int destsize, char separator)
+int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
 {
   //printf ("parsing src='%s'\n", src);
   int i;
@@ -898,7 +898,7 @@ int parse_raw_bytes (char *dest, char *src, int destsize, char separator)
       src++;
     if (*src == 0) break;
     // try to read a byte of hex
-    if (sscanf (src, "%02x", &n) == 1) {
+    if (sscanf(src, "%02x", &n) == 1) {
       dest[i] = n;
       src+=2;
     } else {
@@ -909,34 +909,34 @@ int parse_raw_bytes (char *dest, char *src, int destsize, char separator)
 }
 
 int 
-bx_param_string_c::text_ask (FILE *fpin, FILE *fpout)
+bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
 {
-  fprintf (fpout, "\n");
+  fprintf(fpout, "\n");
   int status;
-  char *prompt = get_ask_format ();
+  const char *prompt = get_ask_format();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
-    text_print (fpout);
-    fprintf (fpout, "\n");
+    text_print(fpout);
+    fprintf(fpout, "\n");
     prompt = "Enter a new value, or press return for no change.\n";
   }
   while (1) {
     char buffer[1024];
-    status = ask_string (prompt, getptr(), buffer);
+    status = ask_string(prompt, getptr(), buffer);
     if (status < 0) return status;
-    int opts = options->get ();
+    int opts = options->get();
     char buffer2[1024];
-    strcpy (buffer2, buffer);
+    strcpy(buffer2, buffer);
     if (status == 1 && opts & RAW_BYTES) {
       // copy raw hex into buffer
-      status = parse_raw_bytes (buffer, buffer2, maxsize, separator);
+      status = parse_raw_bytes(buffer, buffer2, maxsize, separator);
       if (status < 0) {
-	fprintf (fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
+	fprintf(fpout, "Illegal raw byte format.  I expected something like 3A%c03%c12%c...\n", separator, separator, separator);
 	continue;
       }
     }
-    if (!equals (buffer)) 
-      set (buffer);
+    if (!equals(buffer)) 
+      set(buffer);
     return 0;
   }
 }
