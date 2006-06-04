@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.212 2006-05-14 09:16:29 vruppert Exp $
+$Id: user.dbk,v 1.213 2006-06-04 21:49:17 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3301,12 +3301,10 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
-The path is always mandatory.
-</para>
-<para>
-For flat hard disk images created with bximage geometry autodetection can
-be used (cylinders are calculated using heads=16 and spt=63). For other
-hard disk images and modes the cylinders, heads, and spt are mandatory.
+For 'flat' and 'concat' mode hard disk images created with bximage it is possible
+to use geometry autodetection with cylinders=0 (cylinders are calculated using
+heads=16 and spt=63). For other hard disk images and modes the cylinders, heads,
+and spt are mandatory.
 </para>
 
 <para>
@@ -7232,30 +7230,7 @@ On some host OSes, Bochs flat disk images are limited to 2GiB.
 
 <section><title>concat</title>
 <para>
-&FIXME; text from old enable-split-hd option, to be completed
-<screen>
-      When enabled, this allows a series of partial hard disk image files to be
-      treated as if it was one large file.  The .bochsrc specifies the first
-      partial HD image (example win95-1) and then bochs searches for the other
-      partial images in as a sequence (win95-2, win95-3, etc.) and opens them
-      all.  Then, it treats the series as if there was a single large file
-      created by "cat win95-1 win95-2 win95-3".  
-      All files must be a multiple of 512 bytes.
-</screen>
-
-<screen>
-// This option enables "split hard drive" support, which means
-// that a series of partial hard disk images can be treated
-// as a single large image.  If you set up the partition sizes and
-// file sizes correctly, this allows you to store each partition
-// in a separate file, which is very convenient if you want to operate
-// on a single partition (e.g. mount with loopback, create filesystem,
-// fsck, etc.).
-// [[Provide example of partitioning]]
-</screen>
-
 </para>
-
 <section><title>description</title>
 <para>
 In concat mode, all sectors of the harddisk are stored in several flat files,
@@ -7264,29 +7239,34 @@ in lba order.
 </section>
 <section><title>image creation</title>
 <para>
-&FIXME; to be completed
+Disk images for the usage in 'concat' mode can be created with the bximage
+utility (see <xref linkend="using-bximage"> for more information).
 </para>
 </section>
 <section><title>path</title>
 <para>
 The "path" option of the ataX-xxx directive in the configuration file
-must point to the first file. The lower layer files names are found by
-adding 1 to the last character.
+must point to the first file (e.g. win95-1). The lower layer files names are
+found by adding 1 to the last character (e.g. win95-2, win95-3, etc.).
 </para>
 </section>
 <section><title>external tools</title>
 <para>
-&FIXME; to be completed
+If every single file contains a complete partition, they can be accessed
+with same tools as the 'flat' mode images.
 </para>
 </section>
 <section><title>typical use</title>
 <para>
-&FIXME; to be completed
+If the partition sizes and file sizes are set up correctly, this allows you to
+store each partition in a separate file, which is very convenient if you want
+to operate on a single partition (e.g. mount with loopback, create filesystem,
+fsck, etc.).
 </para>
 </section>
 <section><title>limitations</title>
 <para>
-&FIXME; to be completed
+On some host OSes, there is a limit of 2GiB per file.
 </para>
 </section>
 </section>

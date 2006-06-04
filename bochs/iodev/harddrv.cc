@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.167 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: harddrv.cc,v 1.168 2006-06-04 21:49:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,13 +137,13 @@ bx_hard_drive_c::~bx_hard_drive_c()
 
 void bx_hard_drive_c::init(void)
 {
-  Bit8u channel;
+  Bit8u channel, image_mode;
   char  string[5];
   char  sbtext[8];
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.167 2006-05-29 22:33:38 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.168 2006-06-04 21:49:17 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -265,7 +265,8 @@ void bx_hard_drive_c::init(void)
         Bit64u disk_size = (Bit64u)cyl * heads * spt * 512;
 
         /* instantiate the right class */
-        switch (SIM->get_param_enum("mode", base)->get()) {
+        image_mode = SIM->get_param_enum("mode", base)->get();
+        switch (image_mode) {
 
           case BX_ATA_MODE_FLAT:
             BX_INFO(("HD on ata%d-%d: '%s' 'flat' mode ", channel, device,
@@ -352,7 +353,7 @@ void bx_hard_drive_c::init(void)
           default:
             BX_PANIC(("HD on ata%d-%d: '%s' unsupported HD mode : %s", channel, device, 
                       SIM->get_param_string("path", base)->getptr(),
-                      atadevice_mode_names[SIM->get_param_enum("mode", base)->get()]));
+                      atadevice_mode_names[image_mode]));
             break;
         }
 
@@ -360,7 +361,7 @@ void bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].hard_drive->heads = heads;
         BX_HD_THIS channels[channel].drives[device].hard_drive->sectors = spt;
 
-        if (SIM->get_param_enum("mode", base)->get() == BX_ATA_MODE_FLAT) {
+        if ((image_mode == BX_ATA_MODE_FLAT) || (image_mode == BX_ATA_MODE_CONCAT)) {
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d/%d cannot have zero heads, or sectors/track", channel, device));
           }
@@ -375,7 +376,7 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
         }
 
-        if (SIM->get_param_enum("mode", base)->get() == BX_ATA_MODE_FLAT) {
+        if ((image_mode == BX_ATA_MODE_FLAT) || (image_mode == BX_ATA_MODE_CONCAT)) {
           if (cyl > 0) {
             if (disk_size != (Bit64u)BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
               BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));

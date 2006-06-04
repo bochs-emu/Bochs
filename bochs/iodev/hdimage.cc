@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.3 2006-05-14 21:15:33 vruppert Exp $
+// $Id: hdimage.cc,v 1.4 2006-06-04 21:49:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,12 +95,12 @@ ssize_t default_image_t::write (const void* buf, size_t count)
   return ::write(fd, (char*) buf, count);
 }
 
-char increment_string (char *str, int diff)
+char increment_string(char *str, int diff)
 {
   // find the last character of the string, and increment it.
   char *p = str;
   while (*p != 0) p++;
-  BX_ASSERT (p>str);  // choke on zero length strings
+  BX_ASSERT(p>str);  // choke on zero length strings
   p--;  // point to last character of the string
   (*p) += diff;  // increment to next/previous ascii code.
   BX_DEBUG(("increment string returning '%s'", str));
@@ -109,17 +109,17 @@ char increment_string (char *str, int diff)
 
 /*** concat_image_t function definitions ***/
 
-concat_image_t::concat_image_t ()
+concat_image_t::concat_image_t()
 {
   fd = -1;
 }
 
-void concat_image_t::increment_string (char *str)
+void concat_image_t::increment_string(char *str)
 {
  ::increment_string(str, +1);
 }
 
-int concat_image_t::open (const char* pathname0)
+int concat_image_t::open(const char* pathname0)
 {
   char *pathname = strdup (pathname0);
   BX_DEBUG(("concat_image_t.open"));
@@ -148,8 +148,7 @@ int concat_image_t::open (const char* pathname0)
     }
 #ifdef S_ISBLK
     if (S_ISBLK(stat_buf.st_mode)) {
-      BX_PANIC(("block devices should REALLY NOT be used with --enable-split-hd. "
-                "Please reconfigure with --disable-split-hd"));
+      BX_PANIC(("block devices should REALLY NOT be used as concat images"));
     }
 #endif
     if ((stat_buf.st_size % 512) != 0) {
@@ -158,7 +157,7 @@ int concat_image_t::open (const char* pathname0)
     length_table[i] = stat_buf.st_size;
     start_offset_table[i] = start_offset;
     start_offset += stat_buf.st_size;
-    increment_string (pathname);
+    increment_string(pathname);
   }
   // start up with first image selected
   index = 0;
@@ -166,10 +165,11 @@ int concat_image_t::open (const char* pathname0)
   thismin = 0;
   thismax = length_table[0]-1;
   seek_was_last_op = 0;
+  hd_size = start_offset;
   return 0; // success.
 }
 
-void concat_image_t::close ()
+void concat_image_t::close()
 {
   BX_DEBUG(("concat_image_t.close"));
   if (fd > -1) {
@@ -177,7 +177,7 @@ void concat_image_t::close ()
   }
 }
 
-off_t concat_image_t::lseek (off_t offset, int whence)
+off_t concat_image_t::lseek(off_t offset, int whence)
 {
   if ((offset % 512) != 0) 
     BX_PANIC( ("lseek HD with offset not multiple of 512"));
