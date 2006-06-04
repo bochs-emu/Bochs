@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.139 2006-06-01 19:35:46 vruppert Exp $
+// $Id: wxmain.cc,v 1.140 2006-06-04 14:16:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -587,21 +587,26 @@ void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
   delete fdialog;
 }
 
-void MyFrame::OnStateSave(wxCommandEvent& WXUNUSED(event))
+void MyFrame::OnStateSave(wxCommandEvent& event)
 {
 #if BX_SUPPORT_SAVE_RESTORE
   char sr_path[512];
-  wxMessageBox(wxT("The save/restore function currently handles config and log options only"),
-               wxT("WARNING"), wxOK | wxICON_EXCLAMATION, this);
   // pass some initial dir to wxDirDialog
   wxString dirSaveRestore;
-  wxGetHomeDir(&dirSaveRestore);
 
+  wxGetHomeDir(&dirSaveRestore);
   wxDirDialog ddialog(this, wxT("Select folder with save/restore data"), dirSaveRestore, wxDD_DEFAULT_STYLE);
 
   if (ddialog.ShowModal() == wxID_OK) {
     strncpy(sr_path, ddialog.GetPath().mb_str(wxConvUTF8), sizeof(sr_path));
-    SIM->save_state(sr_path);
+    if (SIM->save_state(sr_path)) {
+      if (wxMessageBox(wxT("The save function currently doesn't handle the state of hard\n"
+                           "drive images, so we don't recommend to continue, unless you\n"
+                           "are running a read-only guest system (e.g. Live-CD).\n\nDo you want to continue?"),
+                           wxT("WARNING"), wxYES_NO, this) == wxNO) {
+        OnKillSim(event);
+      }
+    }
   }
 #endif
 }
@@ -610,12 +615,10 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
 {
 #if BX_SUPPORT_SAVE_RESTORE
   char sr_path[512];
-  wxMessageBox(wxT("The save/restore function currently handles config and log options only"),
-               wxT("WARNING"), wxOK | wxICON_EXCLAMATION, this);
   // pass some initial dir to wxDirDialog
   wxString dirSaveRestore;
-  wxGetHomeDir(&dirSaveRestore);
 
+  wxGetHomeDir(&dirSaveRestore);
   wxDirDialog ddialog(this, wxT("Select folder with save/restore data"), dirSaveRestore, wxDD_DEFAULT_STYLE);
 
   if (ddialog.ShowModal() == wxID_OK) {
