@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.77 2006-04-05 17:31:30 sshwarts Exp $
+// $Id: exception.cc,v 1.78 2006-06-05 16:38:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -833,7 +833,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
 
-  BX_DEBUG(("exception(%02x h)", (unsigned) vector));
+  BX_DEBUG(("exception(0x%02X)", (unsigned) vector));
 
   // if not initial error, restore previous register values from
   // previous attempt to handle exception
