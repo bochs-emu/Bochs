@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.213 2006-06-04 21:49:17 vruppert Exp $
+$Id: user.dbk,v 1.214 2006-06-05 08:00:21 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3301,10 +3301,10 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
-For 'flat' and 'concat' mode hard disk images created with bximage it is possible
-to use geometry autodetection with cylinders=0 (cylinders are calculated using
-heads=16 and spt=63). For other hard disk images and modes the cylinders, heads,
-and spt are mandatory.
+For 'flat', 'concat' and 'growing' mode hard disk images created with bximage
+it is possible to use geometry autodetection with CHS=0/0/0 (cylinders are
+calculated using heads=16 and spt=63). For other hard disk images and modes the
+cylinders, heads, and spt are mandatory.
 </para>
 
 <para>

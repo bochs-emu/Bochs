@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.4 2006-06-04 21:49:17 vruppert Exp $
+// $Id: hdimage.cc,v 1.5 2006-06-05 08:00:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -845,14 +845,14 @@ ssize_t dll_image_t::write (const void* buf, size_t count)
 #endif // DLL_HD_SUPPORT
 
 // redolog implementation
-redolog_t::redolog_t ()
+redolog_t::redolog_t()
 {
-        fd = -1;
-        catalog = NULL;
-        bitmap = NULL;
-        extent_index = (Bit32u)0;
-        extent_offset = (Bit32u)0;
-        extent_next = (Bit32u)0;
+  fd = -1;
+  catalog = NULL;
+  bitmap = NULL;
+  extent_index = (Bit32u)0;
+  extent_offset = (Bit32u)0;
+  extent_next = (Bit32u)0;
 }
 
 void
@@ -978,135 +978,138 @@ redolog_t::create (int filedes, const char* type, Bit64u size)
 }
 
 int 
-redolog_t::open (const char* filename, const char *type, Bit64u size)
+redolog_t::open(const char* filename, const char *type, Bit64u size)
 {
-        int res;
+  int res;
 
-        fd = ::open(filename, O_RDWR
+  fd = ::open(filename, O_RDWR
 #ifdef O_BINARY
-            | O_BINARY
+              | O_BINARY
 #endif
               );
-        if (fd < 0)
-        {
-                BX_INFO(("redolog : could not open image %s", filename));
-                // open failed.
-                return -1;
-        }
-        BX_INFO(("redolog : open image %s", filename));
-      
-        res = ::read(fd, &header, sizeof(header));
-        if (res != STANDARD_HEADER_SIZE)
-        {
-               BX_PANIC(("redolog : could not read header")); 
-               return -1;
-        }
+  if (fd < 0)
+  {
+    BX_INFO(("redolog : could not open image %s", filename));
+    // open failed.
+    return -1;
+  }
+  BX_INFO(("redolog : open image %s", filename));
 
-        print_header();
+  res = ::read(fd, &header, sizeof(header));
+  if (res != STANDARD_HEADER_SIZE)
+  {
+    BX_PANIC(("redolog : could not read header")); 
+    return -1;
+  }
 
-        if (strcmp((char*)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
-        {
-               BX_PANIC(("redolog : Bad header magic")); 
-               return -1;
-        }
+  print_header();
 
-        if (strcmp((char*)header.standard.type, REDOLOG_TYPE) != 0)
-        {
-               BX_PANIC(("redolog : Bad header type")); 
-               return -1;
-        }
-        if (strcmp((char*)header.standard.subtype, type) != 0)
-        {
-               BX_PANIC(("redolog : Bad header subtype")); 
-               return -1;
-        }
+  if (strcmp((char*)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
+  {
+    BX_PANIC(("redolog : Bad header magic")); 
+    return -1;
+  }
 
-        if ((dtoh32(header.standard.version) != STANDARD_HEADER_VERSION) &&
-            (dtoh32(header.standard.version) != STANDARD_HEADER_V1))
-        {
-               BX_PANIC(("redolog : Bad header version")); 
-               return -1;
-        }
+  if (strcmp((char*)header.standard.type, REDOLOG_TYPE) != 0)
+  {
+    BX_PANIC(("redolog : Bad header type")); 
+    return -1;
+  }
+  if (strcmp((char*)header.standard.subtype, type) != 0)
+  {
+    BX_PANIC(("redolog : Bad header subtype")); 
+    return -1;
+  }
 
-        if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
-          redolog_header_v1_t header_v1;
+  if ((dtoh32(header.standard.version) != STANDARD_HEADER_VERSION) &&
+      (dtoh32(header.standard.version) != STANDARD_HEADER_V1))
+  {
+    BX_PANIC(("redolog : Bad header version")); 
+    return -1;
+  }
 
-          memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
-          header.specific.disk = header_v1.specific.disk;
-        }
+  if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
+    redolog_header_v1_t header_v1;
 
-        catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
+    memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
+    header.specific.disk = header_v1.specific.disk;
+  }
+
+  catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
         
-        // FIXME could mmap
-        ::lseek(fd,dtoh32(header.standard.header),SEEK_SET);
-        res = ::read(fd, catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u)) ;
+  // FIXME could mmap
+  ::lseek(fd,dtoh32(header.standard.header),SEEK_SET);
+  res = ::read(fd, catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u));
 
-        if (res !=  (ssize_t)(dtoh32(header.specific.catalog) * sizeof(Bit32u)))
-        {
-               BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog))); 
-               return -1;
-        }
+  if (res !=  (ssize_t)(dtoh32(header.specific.catalog) * sizeof(Bit32u)))
+  {
+    BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog))); 
+    return -1;
+  }
 
-        // check last used extent
-        extent_next = 0;
-        for (Bit32u i=0; i < dtoh32(header.specific.catalog); i++)
-        {
-                if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED)
-                {
-                        if (dtoh32(catalog[i]) >= extent_next)
-                                extent_next = dtoh32(catalog[i]) + 1;
-                }
-        }
-        BX_INFO(("redolog : next extent will be at index %d",extent_next));
-      
-        // memory used for storing bitmaps
-        bitmap = (Bit8u *)malloc(dtoh32(header.specific.bitmap));
+  // check last used extent
+  extent_next = 0;
+  for (Bit32u i=0; i < dtoh32(header.specific.catalog); i++)
+  {
+    if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED)
+    {
+      if (dtoh32(catalog[i]) >= extent_next)
+        extent_next = dtoh32(catalog[i]) + 1;
+    }
+  }
+  BX_INFO(("redolog : next extent will be at index %d",extent_next));
 
-        bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
-        extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
+  // memory used for storing bitmaps
+  bitmap = (Bit8u *)malloc(dtoh32(header.specific.bitmap));
 
-        BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
-        BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
+  bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
+  extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
 
-        return 0;
+  BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
+  BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
+
+  return 0;
 }
 
-void 
-redolog_t::close ()
+void redolog_t::close()
 {
-        if (fd >= 0)
-                ::close(fd);
+  if (fd >= 0)
+    ::close(fd);
 
-        if (catalog != NULL)
-                free(catalog);
+  if (catalog != NULL)
+    free(catalog);
 
-        if (bitmap != NULL)
-                free(bitmap);
+  if (bitmap != NULL)
+    free(bitmap);
 }
 
-off_t
-redolog_t::lseek (off_t offset, int whence)
+Bit64u redolog_t::get_size()
 {
-        if ((offset % 512) != 0) {
-                BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
-                return -1;
-        }
-        if (whence != SEEK_SET) {
-                BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
-                return -1;
-        }
-        if (offset > (off_t)dtoh64(header.specific.disk))
-        {
-                BX_PANIC(("redolog : lseek to byte %ld failed", (long)offset));
-                return -1;
-        }
+  return dtoh64(header.specific.disk);
+}
 
-        extent_index = (Bit32u)(offset / dtoh32(header.specific.extent));
-        extent_offset = (Bit32u)((offset % dtoh32(header.specific.extent)) / 512);
+off_t redolog_t::lseek(off_t offset, int whence)
+{
+  if ((offset % 512) != 0) {
+    BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
+    return -1;
+  }
+  if (whence != SEEK_SET) {
+    BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
+    return -1;
+  }
+  if (offset > (off_t)dtoh64(header.specific.disk))
+  {
+    BX_PANIC(("redolog : lseek to byte %ld failed", (long)offset));
+    return -1;
+  }
 
-        BX_DEBUG(("redolog : lseeking extent index %d, offset %d",extent_index, extent_offset));
+  extent_index = (Bit32u)(offset / dtoh32(header.specific.extent));
+  extent_offset = (Bit32u)((offset % dtoh32(header.specific.extent)) / 512);
 
-        return offset;
+  BX_DEBUG(("redolog : lseeking extent index %d, offset %d",extent_index, extent_offset));
+
+  return offset;
 }
 
 ssize_t
@@ -1251,39 +1254,42 @@ redolog_t::write (const void* buf, size_t count)
 
 /*** growing_image_t function definitions ***/
 
-growing_image_t::growing_image_t(Bit64u _size)
+growing_image_t::growing_image_t(Bit64u size)
 {
-        redolog = new redolog_t();
-        size = _size;
+  redolog = new redolog_t();
+  hd_size = size;
 }
 
-int growing_image_t::open (const char* pathname)
+int growing_image_t::open(const char* pathname)
 {
-        int filedes = redolog->open(pathname,REDOLOG_SUBTYPE_GROWING,size);
-        BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
-        return filedes;
+  int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING, hd_size);
+  if (hd_size == 0) {
+    hd_size = redolog->get_size();
+  }
+  BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
+  return filedes;
 }
 
-void growing_image_t::close ()
+void growing_image_t::close()
 {
-        redolog->close();
+  redolog->close();
 }
 
-off_t growing_image_t::lseek (off_t offset, int whence)
+off_t growing_image_t::lseek(off_t offset, int whence)
 {
-      return redolog->lseek(offset, whence);
+  return redolog->lseek(offset, whence);
 }
 
-ssize_t growing_image_t::read (void* buf, size_t count)
+ssize_t growing_image_t::read(void* buf, size_t count)
 {
-      memset(buf, 0, count);
-      redolog->read((char*) buf, count);
-      return count;
+  memset(buf, 0, count);
+  redolog->read((char*) buf, count);
+  return count;
 }
 
-ssize_t growing_image_t::write (const void* buf, size_t count)
+ssize_t growing_image_t::write(const void* buf, size_t count)
 {
-      return redolog->write((char*) buf, count);
+  return redolog->write((char*) buf, count);
 }
 
 

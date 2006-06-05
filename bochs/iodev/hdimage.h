@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.3 2006-05-14 21:15:33 vruppert Exp $
+// $Id: hdimage.h,v 1.4 2006-06-05 08:00:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -339,15 +339,16 @@ class redolog_t
 {
   public:
       redolog_t();
-      int make_header (const char* type, Bit64u size);
-      int create (const char* filename, const char* type, Bit64u size);
-      int create (int filedes, const char* type, Bit64u size);
-      int open (const char* filename, const char* type, Bit64u size);
-      void close ();
+      int make_header(const char* type, Bit64u size);
+      int create(const char* filename, const char* type, Bit64u size);
+      int create(int filedes, const char* type, Bit64u size);
+      int open(const char* filename, const char* type, Bit64u size);
+      void close();
+      Bit64u get_size();
 
-      off_t lseek (off_t offset, int whence);
-      ssize_t read (void* buf, size_t count);
-      ssize_t write (const void* buf, size_t count);
+      off_t lseek(off_t offset, int whence);
+      ssize_t read(void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       void             print_header();
@@ -371,26 +372,25 @@ class growing_image_t : public device_image_t
       growing_image_t(Bit64u size);
 
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      off_t lseek(off_t offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       redolog_t *redolog;
-      Bit64u    size;
 };
 
 // UNDOABLE MODE
