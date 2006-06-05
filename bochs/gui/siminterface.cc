@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.159 2006-06-04 21:49:17 vruppert Exp $
+// $Id: siminterface.cc,v 1.160 2006-06-05 16:47:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1240,6 +1240,7 @@ bx_param_c::~bx_param_c()
   delete [] name;
   delete [] label;
   delete [] description;
+  delete [] ask_format;
 }
 
 void bx_param_c::set_description(const char *text)
