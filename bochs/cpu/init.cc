@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.114 2006-06-05 16:36:56 sshwarts Exp $
+// $Id: init.cc,v 1.115 2006-06-05 17:33:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -547,6 +547,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(list, nmi_pending, nmi_pending);
   BXRS_PARAM_BOOL(list, in_smm, in_smm);
   BXRS_PARAM_BOOL(list, nmi_disable, nmi_disable);
+  BXRS_PARAM_BOOL(list, trace, trace);
 }
 
 Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)

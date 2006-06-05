@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.106 2006-05-30 17:01:27 sshwarts Exp $
+// $Id: config.cc,v 1.107 2006-06-05 17:33:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3317,8 +3317,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   int i;
   char *strptr, tmppath[80], tmpaddr[80], tmpdev[80];
   bx_list_c *base;
-
-  BX_INFO(("write configuration to %s\n", rc));
+  BX_INFO(("write current configuration to %s", rc));
   // check if it exists.  If so, only proceed if overwrite is set.
   FILE *fp = fopen(rc, "r");
   if (fp != NULL) {
