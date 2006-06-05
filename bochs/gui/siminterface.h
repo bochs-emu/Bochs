@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.196 2006-06-04 07:55:34 vruppert Exp $
+// $Id: siminterface.h,v 1.197 2006-06-05 19:06:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -619,8 +619,8 @@ public:
   const char *get_label() const {return label;}
   void set_runtime_param(int val) { runtime_param = val; }
   int get_runtime_param() { return runtime_param; }
-  void set_group(char *group) {group_name = group;}
-  char *get_group() {return group_name;}
+  void set_group(const char *group);
+  const char *get_group() const {return group_name;}
   const char *get_name() const { return name; }
   const char *get_description() const { return description; }
   int get_enabled() const { return enabled; }

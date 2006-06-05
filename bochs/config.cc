@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.107 2006-06-05 17:33:24 sshwarts Exp $
+// $Id: config.cc,v 1.108 2006-06-05 19:06:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
       device = 1;
     }
     if (!strcmp(param->get_name(), "status")) {
-      if ((set) && (SIM->get_init_done ())) {
+      if ((set) && (SIM->get_init_done())) {
         Bit32u handle = DEV_hd_get_device_handle(channel, device);
         DEV_hd_set_cd_media_status(handle, val == BX_INSERTED);
         bx_gui->update_drive_status_buttons();
@@ -135,7 +135,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         if (val == BX_FLOPPY_AUTO) {
           val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYA_PATH)->getptr());
           SIM->get_param_enum(BXPN_FLOPPYA_TYPE)->set(val);
-        } else if (!SIM->get_init_done ()) {
+        } else if (!SIM->get_init_done()) {
           SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->set(val);
         }
       }
@@ -144,7 +144,7 @@ static Bit64s bx_param_handler(bx_param_c *param, int set, Bit64s val)
         if (val == BX_FLOPPY_AUTO) {
           val = get_floppy_type_from_image(SIM->get_param_string(BXPN_FLOPPYB_PATH)->getptr());
           SIM->get_param_enum(BXPN_FLOPPYB_TYPE)->set(val);
-        } else if (!SIM->get_init_done ()) {
+        } else if (!SIM->get_init_done()) {
           SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->set(val);
         }
       }
@@ -187,7 +187,7 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set, const cha
     }
     if (!strcmp(param->get_name(), "path")) {
       if (set==1) {
-        if (SIM->get_init_done ()) {
+        if (SIM->get_init_done()) {
           Bit32u handle = DEV_hd_get_device_handle(channel, device);
           if (empty) {
             DEV_hd_set_cd_media_status(handle, 0);
@@ -203,7 +203,7 @@ const char *bx_param_string_handler(bx_param_string_c *param, int set, const cha
             }
           }
           if (DEV_hd_present() &&
-              (SIM->get_param_num("status", base)->get () == BX_INSERTED) &&
+              (SIM->get_param_num("status", base)->get() == BX_INSERTED) &&
               (SIM->get_param_num("type", base)->get() == BX_ATA_DEVICE_CDROM)) {
             // tell the device model that we removed, then inserted the cd
             DEV_hd_set_cd_media_status(handle, 0);
@@ -1301,25 +1301,25 @@ void bx_init_options()
       "Port #1 device", 
       "Device connected to USB port #1",
       "", BX_PATHNAME_LEN);
-    port->set_group(strdup(group));
+    port->set_group(group);
     option = new bx_param_string_c(menu,
       "option1", 
       "Port #1 device options", 
       "Options for device on USB port #1",
       "", BX_PATHNAME_LEN);
-    option->set_group(strdup(group));
+    option->set_group(group);
     port = new bx_param_string_c(menu,
       "port2", 
       "Port #2 device", 
       "Device connected to USB port #2",
       "", BX_PATHNAME_LEN);
-    port->set_group(strdup(group));
+    port->set_group(group);
     option = new bx_param_string_c(menu,
       "option2", 
       "Port #2 device options", 
       "Options for device on USB port #2",
       "", BX_PATHNAME_LEN);
-    option->set_group(strdup(group));
+    option->set_group(group);
     enabled->set_dependent_list(menu->clone());
   }
 
@@ -1421,7 +1421,7 @@ void bx_init_options()
     "MAC Address",
     "MAC address of the Pseudo NIC device. Don't use an address of a machine on your net.",
     "\xfe\xfd\xde\xad\xbe\xef", 6);
-  macaddr->get_options ()->set(bx_param_string_c::RAW_BYTES);
+  macaddr->get_options()->set(bx_param_string_c::RAW_BYTES);
   macaddr->set_separator(':');
   ethmod = new bx_param_enum_c(menu,
     "ethmod",
@@ -1691,7 +1691,7 @@ int bx_parse_cmdline (int arg, int argc, char *argv[])
 }
 
 #if BX_PROVIDE_MAIN
-char *bx_find_bochsrc ()
+char *bx_find_bochsrc()
 {
   FILE *fd = NULL;
   char rcfile[512];
@@ -2392,8 +2392,8 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_num(BXPN_CPU_NCORES)->set(cores);
         SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
       } else if (!strncmp(params[i], "ips=", 4)) {
-        SIM->get_param_num(BXPN_IPS)->set (atol(&params[i][4]));
-        if (SIM->get_param_num(BXPN_IPS)->get () < BX_MIN_IPS) {
+        SIM->get_param_num(BXPN_IPS)->set(atol(&params[i][4]));
+        if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
           PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
         }
       } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
@@ -2554,7 +2554,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
           PARSE_ERR(("%s: mouse directive malformed.", context));
       } else if (!strncmp(params[i], "type=", 5)) {
         if (!SIM->get_param_enum(BXPN_MOUSE_TYPE)->set_by_name(&params[i][5]))
-          PARSE_ERR(("%s: mouse type '%s' not available", context, strdup(&params[i][5])));
+          PARSE_ERR(("%s: mouse type '%s' not available", context, &params[i][5]));
       } else {
         PARSE_ERR(("%s: mouse directive malformed.", context));
       }
@@ -2640,7 +2640,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_bool("enabled", base)->set(atol(&params[i][8]));
       } else if (!strncmp(params[i], "mode=", 5)) {
         if (!SIM->get_param_enum("mode", base)->set_by_name(&params[i][5]))
-          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx, strdup(&params[i][5])));
+          PARSE_ERR(("%s: com%d serial port mode '%s' not available", context, idx, &params[i][5]));
         SIM->get_param_bool("enabled", base)->set(1);
       } else if (!strncmp(params[i], "dev=", 4)) {
         SIM->get_param_string("dev", base)->set(&params[i][4]);
@@ -2873,7 +2873,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
       }
       else if (!strncmp(params[i], "ethmod=", 7)) {
         if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
       }
       else if (!strncmp(params[i], "ethdev=", 7)) {
         SIM->get_param_string("ethdev", base)->set(&params[i][7]);
@@ -2924,7 +2924,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         valid |= 0x07;
       } else if (!strncmp(params[i], "ethmod=", 7)) {
         if (!SIM->get_param_enum("ethmod", base)->set_by_name(&params[i][7]))
-          PARSE_ERR(("%s: ethernet module '%s' not available", context, strdup(&params[i][7])));
+          PARSE_ERR(("%s: ethernet module '%s' not available", context, &params[i][7]));
       } else if (!strncmp(params[i], "ethdev=", 7)) {
         SIM->get_param_string("ethdev", base)->set(&params[i][7]);
       } else if (!strncmp(params[i], "script=", 7)) {
@@ -3183,7 +3183,7 @@ int bx_write_ne2k_options (FILE *fp, bx_list_c *base)
 {
   fprintf(fp, "ne2k: enabled=%d", SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
-    char *ptr = SIM->get_param_string("macaddr", base)->getptr ();
+    char *ptr = SIM->get_param_string("macaddr", base)->getptr();
     fprintf(fp, ", ioaddr=0x%x, irq=%d, mac=%02x:%02x:%02x:%02x:%02x:%02x, ethmod=%s, ethdev=%s, script=%s",
       SIM->get_param_num("ioaddr", base)->get(), 
       SIM->get_param_num("irq", base)->get(),

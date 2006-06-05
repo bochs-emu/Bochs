@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.160 2006-06-05 16:47:55 sshwarts Exp $
+// $Id: siminterface.cc,v 1.161 2006-06-05 19:06:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1199,40 +1199,40 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
 const char* bx_param_c::default_text_format = NULL;
 
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_desc)
-  : bx_object_c(id)
+  : bx_object_c(id), 
+    parent(NULL),
+    description(NULL), 
+    label(NULL), 
+    ask_format(NULL),
+    group_name(NULL)
 {
   set_type(BXT_PARAM);
   this->name = new char[strlen(param_name)+1];
   strcpy(this->name, param_name);
-  this->description = NULL;
   set_description(param_desc);
-  this->label = NULL;
   this->text_format = default_text_format;
   this->long_text_format = default_text_format;
-  this->ask_format = NULL;
-  this->group_name = NULL;
   this->runtime_param = 0;
   this->enabled = 1;
-  this->parent = NULL;
 }
 
 bx_param_c::bx_param_c(Bit32u id, const char *param_name, const char *param_label, const char *param_desc)
-  : bx_object_c(id)
+  : bx_object_c(id),
+    parent(NULL),
+    description(NULL), 
+    label(NULL), 
+    ask_format(NULL),
+    group_name(NULL)
 {
   set_type(BXT_PARAM);
   this->name = new char[strlen(param_name)+1];
   strcpy(this->name, param_name);
-  this->description = NULL;
   set_description(param_desc);
-  this->label = NULL;
   set_label(param_label);
   this->text_format = default_text_format;
   this->long_text_format = default_text_format;
-  this->ask_format = NULL;
-  this->group_name = NULL;
   this->runtime_param = 0;
   this->enabled = 1;
-  this->parent = NULL;
 }
 
 bx_param_c::~bx_param_c()
@@ -1241,6 +1241,7 @@ bx_param_c::~bx_param_c()
   delete [] label;
   delete [] description;
   delete [] ask_format;
+  delete [] group_name;
 }
 
 void bx_param_c::set_description(const char *text)
@@ -1273,6 +1274,17 @@ void bx_param_c::set_ask_format(const char *format)
     strcpy(this->ask_format, format);
   } else {
     this->ask_format = NULL;
+  }
+}
+
+void bx_param_c::set_group(const char *group)
+{
+  delete [] this->group_name;
+  if (group) {
+    this->group_name = new char[strlen(group)+1];
+    strcpy(this->group_name, group);
+  } else {
+    this->group_name = NULL;
   }
 }
 
