@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.113 2006-06-03 12:59:14 sshwarts Exp $
+// $Id: init.cc,v 1.114 2006-06-05 16:36:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1185,28 +1185,34 @@ void BX_CPU_C::assert_checks(void)
 #endif
 
   // check LDTR type
-  if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT)
+  if (BX_CPU_THIS_PTR ldtr.cache.valid)
   {
-    BX_PANIC(("assert_checks: LDTR is not LDT type !"));
+    if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT)
+    {
+      BX_PANIC(("assert_checks: LDTR is not LDT type !"));
+    }
   }
 
   // check Task Register type
-  switch(BX_CPU_THIS_PTR tr.cache.type)
+  if(BX_CPU_THIS_PTR tr.cache.valid)
   {
-    case BX_SYS_SEGMENT_BUSY_286_TSS:
-    case BX_SYS_SEGMENT_AVAIL_286_TSS:
+    switch(BX_CPU_THIS_PTR tr.cache.type)
+    {
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
 #if BX_CPU_LEVEL >= 3
-      if (BX_CPU_THIS_PTR tr.cache.u.tss.g != 0)
-        BX_PANIC(("assert_checks: tss286.g != 0 !"));
-      if (BX_CPU_THIS_PTR tr.cache.u.tss.avl != 0)
-        BX_PANIC(("assert_checks: tss286.avl != 0 !"));
+        if (BX_CPU_THIS_PTR tr.cache.u.tss.g != 0)
+          BX_PANIC(("assert_checks: tss286.g != 0 !"));
+        if (BX_CPU_THIS_PTR tr.cache.u.tss.avl != 0)
+          BX_PANIC(("assert_checks: tss286.avl != 0 !"));
 #endif
-      break;
-    case BX_SYS_SEGMENT_BUSY_386_TSS:
-    case BX_SYS_SEGMENT_AVAIL_386_TSS:
-      break;
-    default:    
-      BX_PANIC(("assert_checks: TR is not TSS type !"));
+        break;
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+        break;
+      default:    
+        BX_PANIC(("assert_checks: TR is not TSS type !"));
+    }
   }
 
   // validate CR0 register
