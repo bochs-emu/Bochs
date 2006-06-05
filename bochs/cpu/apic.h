@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.32 2006-05-27 21:44:40 sshwarts Exp $
+// $Id: apic.h,v 1.33 2006-06-05 05:39:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,11 +58,12 @@ public:
   void set_base(bx_phy_address newbase);
   void set_id(Bit8u newid);
   Bit8u get_id() const { return id; }
-  bx_bool is_selected (bx_phy_address addr, unsigned len);
+  bx_bool is_selected(bx_phy_address addr, unsigned len);
   void read(bx_phy_address addr, void *data, unsigned len);
-  virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len) = 0;
-  virtual void write(bx_phy_address address, Bit32u *value, unsigned len) = 0;
-  virtual bx_apic_type_t get_type () = 0;
+  virtual void read_aligned(bx_phy_address address, Bit32u *data) = 0;
+  void write(bx_phy_address address, void *value, unsigned len);
+  virtual void write_aligned(bx_phy_address address, Bit32u *data) = 0;
+  virtual bx_apic_type_t get_type() = 0;
 };
 
 #ifdef BX_INCLUDE_LOCAL_APIC
@@ -162,8 +163,8 @@ public:
   virtual void init(void);
   BX_CPU_C *get_cpu() { return cpu; }
   void set_id(Bit8u newid);   // redefine to set cpu->name
-  virtual void write(bx_phy_address addr, Bit32u *data, unsigned len);
-  virtual void read_aligned(bx_phy_address address, Bit32u *data, unsigned len);
+  virtual void write_aligned(bx_phy_address addr, Bit32u *data);
+  virtual void read_aligned(bx_phy_address address, Bit32u *data);
   void startup_msg(Bit32u vector);
   // on local APIC, trigger means raise the CPU's INTR line. For now
   // I also have to raise pc_system.INTR but that should be replaced

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.31 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: ioapic.cc,v 1.32 2006-06-05 05:39:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,10 +101,9 @@ void bx_ioapic_c::init(void)
   irr = 0;
 }
 
-void bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
+void bx_ioapic_c::read_aligned(bx_phy_address address, Bit32u *data)
 {
-  BX_DEBUG(("I/O APIC read_aligned addr=%08x, len=%d", address, len));
-  BX_ASSERT(len == 4);
+  BX_DEBUG(("IOAPIC: read aligned addr=%08x", address));
   address &= 0xff;
   if (address == 0x00) {
     // select register
@@ -137,9 +136,9 @@ void bx_ioapic_c::read_aligned(Bit32u address, Bit32u *data, unsigned len)
   }
 }
 
-void bx_ioapic_c::write(Bit32u address, Bit32u *value, unsigned len)
+void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
 {
-  BX_DEBUG(("IOAPIC: write addr=%08x, data=%08x, len=%d", address, *value, len));
+  BX_DEBUG(("IOAPIC: write aligned addr=%08x, data=%08x", address, *value));
   address &= 0xff;
   if (address == 0x00)  {
     ioregsel = *value;

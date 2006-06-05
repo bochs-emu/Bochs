@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.92 2006-06-01 20:05:15 sshwarts Exp $
+// $Id: apic.cc,v 1.93 2006-06-05 05:39:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -176,7 +176,7 @@ bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 {
   if((addr & ~0xfff) == get_base()) {
     if((addr & 0xf) != 0)
-      BX_INFO(("warning: misaligned APIC access. addr=%08x, len=%d", addr, len));
+      BX_INFO(("warning: misaligned APIC access. addr=0x%08x, len=%d", addr, len));
     return 1;
   }
   return 0;
@@ -184,26 +184,55 @@ bx_bool bx_generic_apic_c::is_selected(bx_phy_address addr, unsigned len)
 
 void bx_generic_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 {
-  if((addr & ~0xf) != ((addr+len-1) & ~0xf))
-    BX_PANIC(("APIC read spans 32-bit boundary"));
+  if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
+    BX_PANIC(("APIC read at address 0x%08x spans 32-bit boundary !", addr));
+    return;
+  }
   Bit32u value;
-  read_aligned(addr, &value, 4);
-  if((addr&3) == 0 && len == 4) {
+  read_aligned(addr & ~0x3, &value);
+  if(len == 4) { // must be 32-bit aligned
     *((Bit32u *)data) = value;
     return;
   }
-  // handle partial word read, independent of endian-ness.
-  Bit8u bytes[4];
-  bytes[0] = value & 0xff;
-  bytes[1] = (value >> 8) & 0xff;
-  bytes[2] = (value >> 16) & 0xff;
-  bytes[3] = (value >> 24) & 0xff;
-  Bit8u *p1 = bytes+(addr&3);
-  Bit8u *p2 = (Bit8u *)data;
-  for (unsigned i=0; i<len; i++) {
-    BX_DEBUG(("apic: Copying byte %02x", (unsigned int) *p1));
-    *p2++ = *p1++;
+  // handle partial read, independent of endian-ness
+  value >>= (addr&3)*8;
+  if (len == 1)
+    *((Bit8u *) data) = value & 0xff;
+  else if (len == 2)
+    *((Bit16u *)data) = value & 0xffff;
+  else
+    BX_PANIC(("Unsupported APIC read at address 0x%08x, len=%d", addr, len));
+}
+
+void bx_generic_apic_c::write(bx_phy_address addr, void *data, unsigned len)
+{
+  if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
+    BX_PANIC(("APIC write at address 0x%08x spans 32-bit boundary !", addr));
+    return;
   }
+  bx_phy_address addr_aligned = addr & ~0x3;
+  if(len == 4) { // must be 32-bit aligned
+    write_aligned(addr_aligned, (Bit32u*) data);
+    return;
+  }
+  // partial write to the apic register, need to update some bytes 
+  // and do not touch the others, i.e. to do RMW operation
+  Bit32u value;
+  read_aligned(addr_aligned, &value);  // apic read has no side effects
+  // handle partial write, independent of endian-ness
+  unsigned shift = (addr&3)*8;
+  if (len == 1) {
+    value &= ~(0xff << shift);
+    value |= (*((Bit8u *) data) << shift);
+  }
+  else if (len == 2) {
+    value &= ~(0xffff << shift);
+    value |= (*((Bit16u *)data) << shift);
+  }
+  else {
+    BX_PANIC(("Unsupported APIC write at address 0x%08x, len=%d", addr, len));
+  }
+  write_aligned(addr_aligned, &value);
 }
 
 bx_local_apic_c::bx_local_apic_c(BX_CPU_C *mycpu)
@@ -287,12 +316,11 @@ void bx_local_apic_c::set_id(Bit8u newid)
     BX_INFO(("80%d86", BX_CPU_LEVEL));
 }
 
-void bx_local_apic_c::write(bx_phy_address addr, Bit32u *data, unsigned len)
+// APIC write: 4 byte write to 16-byte aligned APIC address
+void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u *data)
 {
-  if(len != 4) {
-    BX_PANIC(("local apic write with len=%d (should be 4)", len));
-  }
-  BX_DEBUG(("%s: write 0x%08x to APIC address %08x", cpu->name, *data, addr));
+  BX_DEBUG(("%s: LAPIC write 0x%08x to address %08x", cpu->name, *data, addr));
+  BX_ASSERT((addr & 0xf) == 0);
   addr &= 0xff0;
   Bit32u value = *data;
   switch(addr) {
@@ -490,11 +518,11 @@ void bx_local_apic_c::startup_msg(Bit32u vector)
   }
 }
 
-void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data, unsigned len)
+// APIC read: 4 byte read from 16-byte aligned APIC address
+void bx_local_apic_c::read_aligned(bx_phy_address addr, Bit32u *data)
 {
-  if(len != 4) {
-    BX_PANIC(("local apic read with len=%d (should be 4)", len));
-  }
+  BX_DEBUG(("%s: LAPIC read from address %08x", cpu->name, addr));
+  BX_ASSERT((addr & 0xf) == 0);
   *data = 0;  // default value for unimplemented registers
   bx_phy_address addr2 = addr & 0xff0;
   switch(addr2) {
