@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.55 2006-04-12 20:51:24 vruppert Exp $
+// $Id: wxmain.h,v 1.56 2006-06-06 22:11:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -76,6 +76,7 @@ enum
   ID_Toolbar_Config,
   ID_Toolbar_Mouse_en,
   ID_Toolbar_User,
+  ID_Toolbar_SaveRestore,
   // dialog box: LogMsgAskDialog
   ID_Continue,
   ID_Die,

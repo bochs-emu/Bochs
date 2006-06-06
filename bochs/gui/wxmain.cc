@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.140 2006-06-04 14:16:31 vruppert Exp $
+// $Id: wxmain.cc,v 1.141 2006-06-06 22:11:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -75,6 +75,9 @@
 #include "bitmaps/mouse.xpm"
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
+#if BX_SUPPORT_SAVE_RESTORE
+#include "bitmaps/saverestore.xpm"
+#endif
 #ifdef __WXGTK__
 #include "icon_bochs.xpm"
 #endif
@@ -519,6 +522,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_Cdrom, cdromd_xpm, wxT("Change CDROM"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
+#if BX_SUPPORT_SAVE_RESTORE
+  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save simulation state"));
+#endif
 
   BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));

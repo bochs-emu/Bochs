@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.50 2006-01-25 17:37:22 vruppert Exp $
+// $Id: gui.h,v 1.51 2006-06-06 22:11:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -133,6 +133,7 @@ public:
 
 protected:
   // And these are defined and used privately in gui.cc
+  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
   static void floppyA_handler(void);
   static void floppyB_handler(void);
   static void cdromD_handler(void);
@@ -145,7 +146,9 @@ protected:
   static void config_handler(void);
   static void toggle_mouse_enable(void);
   static void userbutton_handler(void);
-  static Bit32s make_text_snapshot (char **snapshot, Bit32u *length);
+#if BX_SUPPORT_SAVE_RESTORE
+  static void save_restore_handler(void);
+#endif
 
   bx_bool floppyA_status;
   bx_bool floppyB_status;
@@ -161,6 +164,9 @@ protected:
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
+#if BX_SUPPORT_SAVE_RESTORE
+  unsigned save_restore_bmap_id, save_restore_hbar_id;
+#endif
 
   unsigned char vga_charmap[0x2000];
   bx_bool charmap_updated;
@@ -222,9 +228,15 @@ virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
                                        unsigned w, unsigned h);
 /* end of DECLARE_GUI_NEW_VIRTUAL_METHODS */
 
+#define BX_HEADER_BAR_Y 32
+
+#if BX_SUPPORT_SAVE_RESTORE
+#define BX_MAX_PIXMAPS 17
+#define BX_MAX_HEADERBAR_ENTRIES 12
+#else
 #define BX_MAX_PIXMAPS 16
 #define BX_MAX_HEADERBAR_ENTRIES 11
-#define BX_HEADER_BAR_Y 32
+#endif
 
 // align pixmaps towards left or right side of header bar
 #define BX_GRAVITY_LEFT 10

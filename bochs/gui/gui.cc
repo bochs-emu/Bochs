@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.95 2006-05-31 20:12:43 vruppert Exp $
+// $Id: gui.cc,v 1.96 2006-06-06 22:11:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,6 +39,10 @@
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdromd.h"
 #include "gui/bitmaps/userbutton.h"
+#if BX_SUPPORT_SAVE_RESTORE
+#include "gui/bitmaps/saverestore.h"
+#endif
+
 #if BX_WITH_MACOS
 #  include <Disks.h>
 #endif
@@ -138,7 +142,6 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS nomouse_bmap_id = create_bitmap(bx_nomouse_bmap,
                           BX_MOUSE_BMAP_X, BX_MOUSE_BMAP_Y);
 
-
   BX_GUI_THIS power_bmap_id = create_bitmap(bx_power_bmap, BX_POWER_BMAP_X, BX_POWER_BMAP_Y);
   BX_GUI_THIS reset_bmap_id = create_bitmap(bx_reset_bmap, BX_RESET_BMAP_X, BX_RESET_BMAP_Y);
   BX_GUI_THIS snapshot_bmap_id = create_bitmap(bx_snapshot_bmap, BX_SNAPSHOT_BMAP_X, BX_SNAPSHOT_BMAP_Y);
@@ -147,6 +150,10 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS config_bmap_id = create_bitmap(bx_config_bmap, BX_CONFIG_BMAP_X, BX_CONFIG_BMAP_Y);
   BX_GUI_THIS user_bmap_id = create_bitmap(bx_user_bmap, BX_USER_BMAP_X, BX_USER_BMAP_Y);
 
+#if BX_SUPPORT_SAVE_RESTORE
+  BX_GUI_THIS save_restore_bmap_id = create_bitmap(bx_save_restore_bmap,
+                          BX_SAVE_RESTORE_BMAP_X, BX_SAVE_RESTORE_BMAP_Y);
+#endif
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
   // when that bitmap is clicked on
@@ -194,6 +201,12 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS power_hbar_id = headerbar_bitmap(BX_GUI_THIS power_bmap_id,
                           BX_GRAVITY_RIGHT, power_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS power_hbar_id, "Turn power off");
+  // Save/Restore Button
+#if BX_SUPPORT_SAVE_RESTORE
+  BX_GUI_THIS save_restore_hbar_id = headerbar_bitmap(BX_GUI_THIS save_restore_bmap_id,
+                          BX_GRAVITY_RIGHT, save_restore_handler);
+  BX_GUI_THIS set_tooltip(BX_GUI_THIS save_restore_hbar_id, "Save simulation state");
+#endif
   // Reset button
   BX_GUI_THIS reset_hbar_id = headerbar_bitmap(BX_GUI_THIS reset_bmap_id,
                           BX_GRAVITY_RIGHT, reset_handler);
@@ -233,11 +246,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
 
 void bx_gui_c::update_drive_status_buttons (void)
 {
-  BX_GUI_THIS floppyA_status =
-    DEV_floppy_get_media_status(0)
+  BX_GUI_THIS floppyA_status = DEV_floppy_get_media_status(0)
     && (SIM->get_param_enum(BXPN_FLOPPYA_STATUS)->get() == BX_INSERTED);
-  BX_GUI_THIS floppyB_status =
-    DEV_floppy_get_media_status(1)
+  BX_GUI_THIS floppyB_status = DEV_floppy_get_media_status(1)
     && (SIM->get_param_enum(BXPN_FLOPPYB_STATUS)->get() == BX_INSERTED);
   Bit32u handle = DEV_hd_get_first_cd_handle();
   BX_GUI_THIS cdromD_status = DEV_hd_get_cd_media_status(handle);
@@ -586,6 +597,13 @@ void bx_gui_c::userbutton_handler(void)
     }
   }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_gui_c::save_restore_handler(void)
+{
+  BX_INFO(("Save Restore Button Pressed !"));
+}
+#endif
 
 void bx_gui_c::mouse_enabled_changed (bx_bool val)
 {
