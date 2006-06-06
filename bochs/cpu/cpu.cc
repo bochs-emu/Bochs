@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.158 2006-06-03 12:59:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.159 2006-06-06 16:46:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,6 +34,14 @@
 
 #if BX_EXTERNAL_DEBUGGER
 #include "extdb.h"
+#endif
+
+#if BX_PROVIDE_CPU_MEMORY
+#if BX_ADDRESS_SPACES==1
+BOCHSAPI BX_MEM_C bx_mem;
+#else
+BOCHSAPI BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
+#endif
 #endif
 
 #if BX_SUPPORT_ICACHE
