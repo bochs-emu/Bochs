@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.197 2006-06-05 19:06:36 sshwarts Exp $
+// $Id: siminterface.h,v 1.198 2006-06-07 19:40:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -243,6 +243,9 @@ typedef enum {
   BX_TOOLBAR_CDROMD,
   BX_TOOLBAR_RESET,
   BX_TOOLBAR_POWER,
+#if BX_SUPPORT_SAVE_RESTORE
+  BX_TOOLBAR_SAVE_RESTORE,
+#endif
   BX_TOOLBAR_COPY,
   BX_TOOLBAR_PASTE,
   BX_TOOLBAR_SNAPSHOT,
@@ -1083,7 +1086,7 @@ BOCHSAPI extern int clock_sync_n_names;
 
 #include <setjmp.h>
 
-enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
+enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SAVE_RESTORE, CI_SHUTDOWN };
 enum ci_return_t { 
   CI_OK,                  // normal return value 
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console

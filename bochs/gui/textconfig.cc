@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.57 2006-06-04 07:55:34 vruppert Exp $
+// $Id: textconfig.cc,v 1.58 2006-06-07 19:40:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -511,30 +511,28 @@ int bx_config_interface(int menu)
               bx_user_quit = 1;
               SIM->quit_sim(1);
               return -1;
-#if BX_SUPPORT_SAVE_RESTORE
-            case BX_CI_RT_SAVE:
-              if (ask_string("\nWhat is the path to save the Bochs state to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
-                if (strcmp (sr_path, "none")) {
-                  if (SIM->save_state(sr_path)) {
-                    Bit32u cont = 0;
-                    ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
-                           "so we don't recommend to continue, unless you are running a read-only\n"
-                           "guest system (e.g. Live-CD).\n\n"
-                           "Do you want to continue? [no]", 0, &cont);
-                    if (!cont) {
-                      bx_user_quit = 1;
-                      SIM->quit_sim(1);
-                      return -1;
-                    }
-                  }
-                }
-              }
-              break;
-#endif
             default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
           }
         }
         break;
+      case BX_CI_SAVE_RESTORE:
+        if (ask_string("\nWhat is the path to save the Bochs state to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
+          if (strcmp(sr_path, "none")) {
+            if (SIM->save_state(sr_path)) {
+              Bit32u cont = 0;
+              ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
+                     "so we don't recommend to continue, unless you are running a read-only\n"
+                     "guest system (e.g. Live-CD).\n\n"
+                     "Do you want to continue? [no]", 0, &cont);
+              if (!cont) {
+                bx_user_quit = 1;
+                SIM->quit_sim(1);
+                return -1;
+              }
+            }
+          }
+        }
+        return 0;
       default:
         fprintf (stderr, "Unknown config interface menu type.\n");
         assert (menu >=0 && menu < BX_CI_N_MENUS);
@@ -1012,6 +1010,11 @@ static int ci_callback(void *userdata, ci_command_t command)
       break;
     case CI_RUNTIME_CONFIG:
       bx_config_interface(BX_CI_RUNTIME);
+      break;
+    case CI_SAVE_RESTORE:
+#if BX_SUPPORT_SAVE_RESTORE
+      bx_config_interface(BX_CI_SAVE_RESTORE);
+#endif
       break;
     case CI_SHUTDOWN:
       break;

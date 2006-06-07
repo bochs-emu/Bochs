@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.141 2006-06-06 22:11:08 sshwarts Exp $
+// $Id: wxmain.cc,v 1.142 2006-06-07 19:40:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -185,6 +185,9 @@ static int ci_callback(void *userdata, ci_command_t command)
       break;
     case CI_RUNTIME_CONFIG:
       fprintf(stderr, "wxmain.cc: runtime config not implemented\n");
+      break;
+    case CI_SAVE_RESTORE:
+      fprintf(stderr, "wxmain.cc: save state not implemented\n");
       break;
     case CI_SHUTDOWN:
       fprintf(stderr, "wxmain.cc: shutdown not implemented\n");

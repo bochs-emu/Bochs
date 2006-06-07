@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.96 2006-06-06 22:11:08 sshwarts Exp $
+// $Id: gui.cc,v 1.97 2006-06-07 19:40:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -120,7 +120,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned tilewidth, unsigned tileheig
   BX_GUI_THIS host_xres = 640;
   BX_GUI_THIS host_yres = 480;
   BX_GUI_THIS host_bpp = 8;
-  BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME;
+  BX_GUI_THIS dialog_caps = BX_GUI_DLG_RUNTIME | BX_GUI_DLG_SAVE_RESTORE;
 
   specific_init(argc, argv, tilewidth, tileheight, BX_HEADER_BAR_Y);
 
@@ -504,7 +504,7 @@ void bx_gui_c::paste_handler(void)
 void bx_gui_c::config_handler(void)
 {
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_RUNTIME) {
-    SIM->configuration_interface (NULL, CI_RUNTIME_CONFIG);
+    SIM->configuration_interface(NULL, CI_RUNTIME_CONFIG);
   }
 }
 
@@ -601,7 +601,9 @@ void bx_gui_c::userbutton_handler(void)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_gui_c::save_restore_handler(void)
 {
-  BX_INFO(("Save Restore Button Pressed !"));
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SAVE_RESTORE) {
+    SIM->configuration_interface(NULL, CI_SAVE_RESTORE);
+  }
 }
 #endif
 
