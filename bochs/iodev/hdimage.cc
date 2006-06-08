@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.5 2006-06-05 08:00:21 vruppert Exp $
+// $Id: hdimage.cc,v 1.6 2006-06-08 20:32:00 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,12 +42,12 @@
 
 /*** default_image_t function definitions ***/
 
-int default_image_t::open (const char* pathname)
+int default_image_t::open(const char* pathname)
 {
   return open(pathname, O_RDWR);
 }
 
-int default_image_t::open (const char* pathname, int flags)
+int default_image_t::open(const char* pathname, int flags)
 {
   fd = ::open(pathname, flags
 #ifdef O_BINARY
@@ -68,29 +68,29 @@ int default_image_t::open (const char* pathname, int flags)
   if ((stat_buf.st_size % 512) != 0) {
     BX_PANIC(("size of disk image must be multiple of 512 bytes"));
   }
-  hd_size = stat_buf.st_size;
+  hd_size = (Bit64u)stat_buf.st_size;
 
   return fd;
 }
 
-void default_image_t::close ()
+void default_image_t::close()
 {
   if (fd > -1) {
     ::close(fd);
   }
 }
 
-off_t default_image_t::lseek (off_t offset, int whence)
+off_t default_image_t::lseek(off_t offset, int whence)
 {
   return ::lseek(fd, offset, whence);
 }
 
-ssize_t default_image_t::read (void* buf, size_t count)
+ssize_t default_image_t::read(void* buf, size_t count)
 {
   return ::read(fd, (char*) buf, count);
 }
 
-ssize_t default_image_t::write (const void* buf, size_t count)
+ssize_t default_image_t::write(const void* buf, size_t count)
 {
   return ::write(fd, (char*) buf, count);
 }
@@ -121,9 +121,9 @@ void concat_image_t::increment_string(char *str)
 
 int concat_image_t::open(const char* pathname0)
 {
-  char *pathname = strdup (pathname0);
+  char *pathname = strdup(pathname0);
   BX_DEBUG(("concat_image_t.open"));
-  off_t start_offset = 0;
+  Bit64s start_offset = 0;
   for (int i=0; i<BX_CONCAT_MAX_IMAGES; i++) {
     fd_table[i] = ::open(pathname, O_RDWR
 #ifdef O_BINARY
@@ -177,7 +177,7 @@ void concat_image_t::close()
   }
 }
 
-off_t concat_image_t::lseek(off_t offset, int whence)
+Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 {
   if ((offset % 512) != 0) 
     BX_PANIC( ("lseek HD with offset not multiple of 512"));
@@ -216,10 +216,10 @@ off_t concat_image_t::lseek(off_t offset, int whence)
   }
 
   seek_was_last_op = 1;
-  return ::lseek(fd, offset, whence);
+  return ::lseek(fd, (off_t)offset, whence);
 }
 
-ssize_t concat_image_t::read (void* buf, size_t count)
+ssize_t concat_image_t::read(void* buf, size_t count)
 {
   if (bx_dbg.disk)
     BX_DEBUG(("concat_image_t.read %ld bytes", (long)count));
@@ -231,7 +231,7 @@ ssize_t concat_image_t::read (void* buf, size_t count)
   return ::read(fd, (char*) buf, count);
 }
 
-ssize_t concat_image_t::write (const void* buf, size_t count)
+ssize_t concat_image_t::write(const void* buf, size_t count)
 {
   BX_DEBUG(("concat_image_t.write %ld bytes", (long)count));
   // notice if anyone does sequential read or write without seek in between.
@@ -978,7 +978,7 @@ redolog_t::create (int filedes, const char* type, Bit64u size)
 }
 
 int 
-redolog_t::open(const char* filename, const char *type, Bit64u size)
+redolog_t::open(const char* filename, const char *type)
 {
   int res;
 
@@ -1088,7 +1088,7 @@ Bit64u redolog_t::get_size()
   return dtoh64(header.specific.disk);
 }
 
-off_t redolog_t::lseek(off_t offset, int whence)
+Bit64s redolog_t::lseek(Bit64s offset, int whence)
 {
   if ((offset % 512) != 0) {
     BX_PANIC( ("redolog : lseek HD with offset not multiple of 512"));
@@ -1254,18 +1254,15 @@ redolog_t::write (const void* buf, size_t count)
 
 /*** growing_image_t function definitions ***/
 
-growing_image_t::growing_image_t(Bit64u size)
+growing_image_t::growing_image_t()
 {
   redolog = new redolog_t();
-  hd_size = size;
 }
 
 int growing_image_t::open(const char* pathname)
 {
-  int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING, hd_size);
-  if (hd_size == 0) {
-    hd_size = redolog->get_size();
-  }
+  int filedes = redolog->open(pathname, REDOLOG_SUBTYPE_GROWING);
+  hd_size = redolog->get_size();
   BX_INFO(("'growing' disk opened, growing file is '%s'", pathname));
   return filedes;
 }
@@ -1275,7 +1272,7 @@ void growing_image_t::close()
   redolog->close();
 }
 
-off_t growing_image_t::lseek(off_t offset, int whence)
+Bit64s growing_image_t::lseek(Bit64s offset, int whence)
 {
   return redolog->lseek(offset, whence);
 }
@@ -1295,181 +1292,187 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
 
 /*** undoable_image_t function definitions ***/
 
-undoable_image_t::undoable_image_t(Bit64u _size, const char* _redolog_name)
+undoable_image_t::undoable_image_t(const char* _redolog_name)
 {
-        redolog = new redolog_t();
-        ro_disk = new default_image_t();
-        size = _size;
-        redolog_name = NULL;
-        if (_redolog_name != NULL) {
-          if (strcmp(_redolog_name,"") != 0) {
-            redolog_name = strdup(_redolog_name);
-          }
-        }
+  redolog = new redolog_t();
+  ro_disk = new default_image_t();
+  redolog_name = NULL;
+  if (_redolog_name != NULL) {
+    if (strcmp(_redolog_name,"") != 0) {
+      redolog_name = strdup(_redolog_name);
+    }
+  }
 }
 
-int undoable_image_t::open (const char* pathname)
+int undoable_image_t::open(const char* pathname)
 {
-        char *logname=NULL;
+  char *logname=NULL;
 
-        if (ro_disk->open(pathname, O_RDONLY)<0)
-                return -1;
+  if (ro_disk->open(pathname, O_RDONLY)<0)
+    return -1;
 
-        // if redolog name was set 
-        if ( redolog_name != NULL) {
-                if ( strcmp(redolog_name, "") != 0 ) {
-                        logname = (char*)malloc(strlen(redolog_name) + 1);
-                        strcpy (logname, redolog_name);
-                }
-        }
+  hd_size = ro_disk->hd_size;
+  // if redolog name was set 
+  if ( redolog_name != NULL) {
+    if ( strcmp(redolog_name, "") != 0 ) {
+      logname = (char*)malloc(strlen(redolog_name) + 1);
+      strcpy(logname, redolog_name);
+    }
+  }
 
-        // Otherwise we make up the redolog filename from the pathname
-        if ( logname == NULL) {
-                logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
-                sprintf (logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
-        }
+  // Otherwise we make up the redolog filename from the pathname
+  if ( logname == NULL) {
+    logname = (char*)malloc(strlen(pathname) + UNDOABLE_REDOLOG_EXTENSION_LENGTH + 1);
+    sprintf(logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
+  }
 
-        if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
-        {
-                if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
-                {
-                        BX_PANIC(("Can't open or create redolog '%s'",logname));
-                        return -1;
-                }
-        }
+  if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE) < 0)
+  {
+    if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, hd_size) < 0)
+    {
+      BX_PANIC(("Can't open or create redolog '%s'",logname));
+      return -1;
+    }
+    if (hd_size != redolog->get_size())
+    {
+      BX_PANIC(("size reported by redolog doesn't match r/o disk size"));
+      free(logname);
+      return -1;
+    }
+  }
 
-        BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
-        free(logname);
+  BX_INFO(("'undoable' disk opened: ro-file is '%s', redolog is '%s'", pathname, logname));
+  free(logname);
 
-        return 0;
+  return 0;
 }
 
 void undoable_image_t::close ()
 {
-        redolog->close();
-        ro_disk->close();
+  redolog->close();
+  ro_disk->close();
 
-        if (redolog_name!=NULL)
-          free(redolog_name);
+  if (redolog_name!=NULL)
+    free(redolog_name);
 }
 
-off_t undoable_image_t::lseek (off_t offset, int whence)
+Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
 {
-      redolog->lseek(offset, whence);
-      return ro_disk->lseek(offset, whence);
+  redolog->lseek(offset, whence);
+  return ro_disk->lseek((off_t)offset, whence);
 }
 
-ssize_t undoable_image_t::read (void* buf, size_t count)
+ssize_t undoable_image_t::read(void* buf, size_t count)
 {
-      // This should be fixed if count != 512
-      if ((size_t)redolog->read((char*) buf, count) != count)
-              return ro_disk->read((char*) buf, count);
-      else 
-              return count;
+  // This should be fixed if count != 512
+  if ((size_t)redolog->read((char*) buf, count) != count)
+    return ro_disk->read((char*) buf, count);
+  else 
+    return count;
 }
 
-ssize_t undoable_image_t::write (const void* buf, size_t count)
+ssize_t undoable_image_t::write(const void* buf, size_t count)
 {
-      return redolog->write((char*) buf, count);
+  return redolog->write((char*) buf, count);
 }
 
 
 /*** volatile_image_t function definitions ***/
 
-volatile_image_t::volatile_image_t(Bit64u _size, const char* _redolog_name)
+volatile_image_t::volatile_image_t(const char* _redolog_name)
 {
-        redolog = new redolog_t();
-        ro_disk = new default_image_t();
-        size = _size;
-        redolog_temp = NULL;
-        redolog_name = NULL;
-        if (_redolog_name != NULL) {
-          if (strcmp(_redolog_name,"") != 0) {
-            redolog_name = strdup(_redolog_name);
-          }
-        }
+  redolog = new redolog_t();
+  ro_disk = new default_image_t();
+  redolog_temp = NULL;
+  redolog_name = NULL;
+  if (_redolog_name != NULL) {
+    if (strcmp(_redolog_name,"") != 0) {
+      redolog_name = strdup(_redolog_name);
+    }
+  }
 }
 
-int volatile_image_t::open (const char* pathname)
+int volatile_image_t::open(const char* pathname)
 {
-        int filedes;
-        const char *logname=NULL;
+  int filedes;
+  const char *logname=NULL;
 
-        if (ro_disk->open(pathname, O_RDONLY)<0)
-                return -1;
+  if (ro_disk->open(pathname, O_RDONLY)<0)
+    return -1;
 
-        // if redolog name was set 
-        if ( redolog_name != NULL) {
-                if ( strcmp(redolog_name, "") != 0 ) {
-                        logname = redolog_name;
-                }
-        }
+  hd_size = ro_disk->hd_size;
+  // if redolog name was set 
+  if ( redolog_name != NULL) {
+    if ( strcmp(redolog_name, "") != 0 ) {
+      logname = redolog_name;
+    }
+  }
 
-        // otherwise use pathname as template
-        if (logname == NULL) {
-                logname = pathname;
-        }
+  // otherwise use pathname as template
+  if (logname == NULL) {
+    logname = pathname;
+  }
 
-        redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
-        sprintf (redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
+  redolog_temp = (char*)malloc(strlen(logname) + VOLATILE_REDOLOG_EXTENSION_LENGTH + 1);
+  sprintf (redolog_temp, "%s%s", logname, VOLATILE_REDOLOG_EXTENSION);
 
-        filedes = mkstemp (redolog_temp);
+  filedes = mkstemp (redolog_temp);
 
-        if (filedes < 0)
-        {
-                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
-                return -1;
-        }
-        if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, size) < 0)
-        {
-                BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
-                return -1;
-        }
+  if (filedes < 0)
+  {
+    BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
+    return -1;
+  }
+  if (redolog->create(filedes, REDOLOG_SUBTYPE_VOLATILE, hd_size) < 0)
+  {
+    BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
+    return -1;
+  }
         
 #if (!defined(WIN32)) && !BX_WITH_MACOS
-        // on unix it is legal to delete an open file
-        unlink(redolog_temp);
+  // on unix it is legal to delete an open file
+  unlink(redolog_temp);
 #endif
 
-        BX_INFO(("'volatile' disk opened: ro-file is '%s', redolog is '%s'", pathname, redolog_temp));
+  BX_INFO(("'volatile' disk opened: ro-file is '%s', redolog is '%s'", pathname, redolog_temp));
 
-        return 0;
+  return 0;
 }
 
-void volatile_image_t::close ()
+void volatile_image_t::close()
 {
-        redolog->close();
-        ro_disk->close();
+  redolog->close();
+  ro_disk->close();
 
 #if defined(WIN32) || BX_WITH_MACOS
-        // on non-unix we have to wait till the file is closed to delete it
-        unlink(redolog_temp);
+  // on non-unix we have to wait till the file is closed to delete it
+  unlink(redolog_temp);
 #endif
-        if (redolog_temp!=NULL)
-          free(redolog_temp);
+  if (redolog_temp!=NULL)
+    free(redolog_temp);
 
-        if (redolog_name!=NULL)
-          free(redolog_name);
+  if (redolog_name!=NULL)
+    free(redolog_name);
 }
 
-off_t volatile_image_t::lseek (off_t offset, int whence)
+Bit64s volatile_image_t::lseek(Bit64s offset, int whence)
 {
-      redolog->lseek(offset, whence);
-      return ro_disk->lseek(offset, whence);
+  redolog->lseek(offset, whence);
+  return ro_disk->lseek(offset, whence);
 }
 
-ssize_t volatile_image_t::read (void* buf, size_t count)
+ssize_t volatile_image_t::read(void* buf, size_t count)
 {
-      // This should be fixed if count != 512
-      if ((size_t)redolog->read((char*) buf, count) != count)
-              return ro_disk->read((char*) buf, count);
-      else 
-              return count;
+  // This should be fixed if count != 512
+  if ((size_t)redolog->read((char*) buf, count) != count)
+    return ro_disk->read((char*) buf, count);
+  else 
+    return count;
 }
 
-ssize_t volatile_image_t::write (const void* buf, size_t count)
+ssize_t volatile_image_t::write(const void* buf, size_t count)
 {
-      return redolog->write((char*) buf, count);
+  return redolog->write((char*) buf, count);
 }
 
 #if BX_COMPRESSED_HD_SUPPORT
