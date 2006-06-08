@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.47 2006-05-31 20:12:43 vruppert Exp $
+// $Id: win32dialog.cc,v 1.48 2006-06-08 17:02:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -708,10 +708,6 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
   long noticode;
   char buffer[32];
   PSHNOTIFY *psn;
-#if BX_SUPPORT_SAVE_RESTORE
-  char sr_path[MAX_PATH];
-  int ret;
-#endif
 
   switch (msg) {
     case WM_INITDIALOG:
@@ -723,7 +719,6 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
       SetDlgItemText(hDlg, IDUSERBTN, SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr());
       SetDlgItemInt(hDlg, IDSB16TIMER, SIM->get_param_num(BXPN_SB16_DMATIMER)->get(), FALSE);
       SetDlgItemInt(hDlg, IDSBLOGLEV, SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get(), FALSE);
-      EnableWindow(GetDlgItem(hDlg, IDSAVESTATE), BX_SUPPORT_SAVE_RESTORE);
       changed = FALSE;
       return TRUE;
     case WM_NOTIFY:
@@ -771,19 +766,6 @@ static BOOL CALLBACK RTMiscDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
             case IDMOUSE:
               changed = TRUE;
               SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
-              break;
-            case IDSAVESTATE:
-#if BX_SUPPORT_SAVE_RESTORE
-              sr_path[0] = 0;
-              if (BrowseDir("Select folder for save/restore data", sr_path)) {
-                if (SIM->save_state(sr_path)) {
-                  ret = MessageBox(hDlg, "The save function currently doesn't handle the state of hard drive images,\nso we don't recommend to continue, unless you are running a read-only\nguest system (e.g. Live-CD).\n\nDo you want to continue?", "WARNING", MB_YESNO | MB_ICONEXCLAMATION);
-                  if (ret == IDNO) {
-                    SendMessage(GetParent(hDlg), PSM_PRESSBUTTON, (WPARAM)PSBTN_CANCEL, 0);
-                  }
-                }
-              }
-#endif
               break;
           }
       }
@@ -908,6 +890,28 @@ int RuntimeOptionsDialog()
   PostMessage(GetBochsWindow(), WM_SETFOCUS, 0, 0);
   return retcode;
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+bx_bool win32SaveState()
+{
+  char sr_path[MAX_PATH];
+  int ret;
+
+  sr_path[0] = 0;
+  if (BrowseDir("Select folder for save/restore data", sr_path)) {
+    if (SIM->save_state(sr_path)) {
+      ret = MessageBox(GetBochsWindow(), "The save function currently doesn't handle the state of hard drive images,\n"
+                       "so we don't recommend to continue, unless you are running a read-only\n"
+                       "guest system (e.g. Live-CD).\n\nDo you want to continue?",
+                       "WARNING", MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
+      if (ret == IDNO) {
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+#endif
 
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.58 2006-06-07 19:40:15 vruppert Exp $
+// $Id: textconfig.cc,v 1.59 2006-06-08 17:02:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -278,17 +278,18 @@ static char *runtime_menu_prompt =
 "9. Log options for individual devices\n"
 "10. Instruction tracing: off (doesn't exist yet)\n"
 "11. Misc runtime options\n"
-#if BX_SUPPORT_SAVE_RESTORE
-"12. Save the Bochs state to directory and quit...\n"
-"13. Continue simulation\n"
-"14. Quit now\n"
-"\n"
-"Please choose one:  [13] ";
-#else
 "12. Continue simulation\n"
 "13. Quit now\n"
 "\n"
 "Please choose one:  [12] ";
+
+#if BX_SUPPORT_SAVE_RESTORE
+static char *save_state_prompt =
+"----------------\n"
+"Save Bochs State\n"
+"----------------\n\n"
+"What is the path to save the Bochs state to?\n"
+"To cancel, type 'none'. [%s] ";
 #endif
 #endif
 
@@ -516,23 +517,31 @@ int bx_config_interface(int menu)
         }
         break;
       case BX_CI_SAVE_RESTORE:
-        if (ask_string("\nWhat is the path to save the Bochs state to?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
-          if (strcmp(sr_path, "none")) {
-            if (SIM->save_state(sr_path)) {
-              Bit32u cont = 0;
-              ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
-                     "so we don't recommend to continue, unless you are running a read-only\n"
-                     "guest system (e.g. Live-CD).\n\n"
-                     "Do you want to continue? [no]", 0, &cont);
-              if (!cont) {
-                bx_user_quit = 1;
-                SIM->quit_sim(1);
-                return -1;
+        {
+          Bit32u cont = 1;
+#ifdef WIN32
+          cont = win32SaveState();
+#else
+          if (ask_string(save_state_prompt, "none", sr_path) >= 0) {
+            if (strcmp(sr_path, "none")) {
+              if (SIM->save_state(sr_path)) {
+                cont = 0;
+                ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
+                       "so we don't recommend to continue, unless you are running a read-only\n"
+                       "guest system (e.g. Live-CD).\n\n"
+                       "Do you want to continue? [no]", 0, &cont);
               }
             }
           }
+#endif
+          if (!cont) {
+            bx_user_quit = 1;
+            SIM->quit_sim(1);
+            return -1;
+          } else {
+            return 0;
+          }
         }
-        return 0;
       default:
         fprintf (stderr, "Unknown config interface menu type.\n");
         assert (menu >=0 && menu < BX_CI_N_MENUS);
