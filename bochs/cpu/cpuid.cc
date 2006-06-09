@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.37 2006-06-09 21:14:25 sshwarts Exp $
+// $Id: cpuid.cc,v 1.38 2006-06-09 21:17:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,10 +59,10 @@ Bit32u BX_CPU_C::get_cpu_version_information()
   family = 4;
 
 #if BX_SUPPORT_FPU
-  model = 1;		// 486dx
+  model = 1;            // 486dx
   stepping = 3;
 #else
-  model = 2;		// 486sx
+  model = 2;            // 486sx
   stepping = 3;
 #endif
 
@@ -73,11 +73,11 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 #elif BX_CPU_LEVEL == 5	
   family   = 5;
 #if BX_SUPPORT_MMX
-    model    = 4;	// Pentium MMX
+  model    = 4;         // Pentium MMX
 #else
-    model    = 1;	// Pentium 60/66
+  model    = 1;         // Pentium 60/66
 #endif
-    stepping = 3;
+  stepping = 3;
 
   /* ****** */
   /*  i686  */
@@ -85,7 +85,7 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 
 #elif BX_CPU_LEVEL == 6
 
-#if BX_SUPPORT_SSE >= 2		// Pentium 4 processor
+#if BX_SUPPORT_SSE >= 2 // Pentium 4 processor
 /*
      The model, family, and processor type for the first
      processor in the Intel Pentium 4 family is as follows:
@@ -94,22 +94,22 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 		* Processor Type-00B (OEM)
                 * Stepping-0B
 */
-    model    = 0;
-    family   = 0xf;
-    stepping = 0;
+  model    = 0;
+  family   = 0xf;
+  stepping = 0;
 
 #if BX_SUPPORT_X86_64
-    model = 2;    	// Hammer returns what?
+  model = 2;            // Hammer returns what?
 #endif
 
-#else			// Pentium Pro/Pentium II/Pentium III processor
-    family   = 6;
-    model    = 8;
-    stepping = 3;
+#else	                // Pentium Pro/Pentium II/Pentium III processor
+  family   = 6;
+  model    = 8;
+  stepping = 3;
 #endif
 
 #else
-    BX_PANIC(("CPUID family ID not implemented for CPU LEVEL > 6"));
+  BX_PANIC(("CPUID family ID not implemented for CPU LEVEL > 6"));
 #endif
 
 #endif  // BX_CPU_LEVEL > 3
