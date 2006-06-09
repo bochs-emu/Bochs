@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.67 2006-05-31 17:20:52 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.68 2006-06-09 12:26:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -117,12 +117,14 @@ static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
 #endif
 
+#define DBG_PRINTF_BUFFER_LEN 1024
+
 void dbg_printf(const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  char *buf = new char[1024];
-  vsprintf(buf, fmt, ap);
+  char *buf = new char[DBG_PRINTF_BUFFER_LEN+1];
+  vsnprintf(buf, DBG_PRINTF_BUFFER_LEN, fmt, ap);
   va_end(ap);
   if (debugger_log != NULL) {
     fprintf(debugger_log,"%s", buf);
@@ -164,8 +166,8 @@ int bx_dbg_main(int argc, char *argv[])
 
   // process "-rc pathname" option, if it exists
   i = 1;
-  if ( (argc >= 2) && !strcmp(argv[1], "-rc") ) {
-    if (argc == 2) {
+  if ((argc >= 2) && !strcmp(argv[1], "-rc")) {
+    if(argc == 2) {
       BX_ERROR(("%s: -rc option used, but no path specified.", argv[0]));
       dbg_printf("usage: %s [-rc path]\n", argv0);
       BX_EXIT(1);
@@ -193,7 +195,7 @@ int bx_dbg_main(int argc, char *argv[])
   // Open debugger log file if needed
   if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
    && (strcmp(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "-") != 0)) {
-    debugger_log = fopen (SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "w");
+    debugger_log = fopen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "w");
     if (!debugger_log) {
       BX_PANIC(("Can not open debugger log file '%s'",
         SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()));
@@ -473,7 +475,7 @@ void bx_debug_ctrlc_handler(int signum)
     // once, leading to multiple threads trying to display a dialog box,
     // leading to GUI deadlock.
     if (!SIM->is_sim_thread()) {
-      BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
+      BX_INFO(("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
       return;
     }
   }
@@ -1712,7 +1714,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("%3u ", bx_guard.iaddr.vir[i].bpoint_id);
     dbg_printf("vbreakpoint    ");
     dbg_printf("keep ");
-    dbg_printf ( bx_guard.iaddr.vir[i].enabled?"y   ":"n   ");
+    dbg_printf(bx_guard.iaddr.vir[i].enabled?"y   ":"n   ");
     dbg_printf("0x%04x:" FMT_ADDRX "\n",
                   bx_guard.iaddr.vir[i].cs,
                   bx_guard.iaddr.vir[i].eip);
@@ -1734,7 +1736,7 @@ void bx_dbg_info_bpoints_command(void)
     dbg_printf("%3u ", bx_guard.iaddr.phy[i].bpoint_id);
     dbg_printf("pbreakpoint    ");
     dbg_printf("keep ");
-    dbg_printf ( bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
+    dbg_printf(bx_guard.iaddr.phy[i].enabled?"y   ":"n   ");
     dbg_printf("0x%08x\n", bx_guard.iaddr.phy[i].addr);
   }
 #endif
@@ -1762,7 +1764,7 @@ void bx_dbg_disassemble_switch_mode()
 
 void bx_dbg_take_command(const char *what, unsigned n)
 {
-  if ( !strcmp(what, "dma") ) {
+  if (! strcmp(what, "dma")) {
     if (n == 0) {
       dbg_printf("Error: take what n=0.\n");
       return;
@@ -1779,7 +1781,7 @@ void bx_dbg_take_command(const char *what, unsigned n)
     if (bx_guard.report.dma)
       dbg_printf("done\n");
   }
-  else if ( !strcmp(what, "irq") ) {
+  else if (! strcmp(what, "irq")) {
     BX_CPU(0)->dbg_take_irq();
 
     if (bx_guard.report.irq)
@@ -1949,7 +1951,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   bx_bool iteration, memory_dump = false;
   unsigned data_size;
   bx_bool paddr_valid;
-  Bit32u  paddr;
+  bx_phy_address paddr;
   Bit8u   data8;
   Bit16u  data16;
   Bit32u  data32;
@@ -1957,7 +1959,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   bx_bool is_linear;
   unsigned char databuf[8];
 
-  printf("[bochs]:\n");
+  dbg_printf("[bochs]:\n");
 
   // If command was the extended "xp" command, meaning eXamine Physical memory,
   // then flag memory address as physical, rather than linear.
@@ -1997,7 +1999,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     ch = *format;
     iteration = 0;
 
-    while ( (ch>='0') && (ch<='9') ) {
+    while ((ch>='0') && (ch<='9')) {
       iteration = 1;
       repeat_count = 10*repeat_count + (ch-'0');
       format++;
@@ -2054,7 +2056,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     bx_debugger.default_unit_size      = unit_size;
   }
 
-  if ( (display_format == 'i') || (display_format == 's') ) {
+  if ((display_format == 'i') || (display_format == 's')) {
     dbg_printf("error: dbg_examine: 'i' and 's' formats not supported.\n");
     return;
   }
@@ -2098,7 +2100,6 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   columns = per_line + 1; // set current number columns past limit
 
   for (i=1; i<=repeat_count; i++) {
-
     if (columns > per_line) {
       // if not 1st run, need a newline from last line
       if (i!=1)
@@ -2116,17 +2117,13 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
       dbg_printf(" ");
 
     if (is_linear) {
-      BX_CPU(0)->dbg_xlate_linear2phy(addr, &paddr, &paddr_valid);
-      if (!paddr_valid) {
-        dbg_printf("error: examine memory: no tranlation for linear-to-phy mem available.\n");
-        return;
-      }
+      if (! bx_dbg_read_linear(dbg_cpu, addr, data_size, databuf)) return;
     }
     else {
-      paddr = addr;  // address is already physical address
+      // address is already physical address
+      BX_MEM(0)->dbg_fetch_mem(addr, data_size, databuf);
     }
 
-    BX_MEM(0)->dbg_fetch_mem(paddr, data_size, databuf);
     //FIXME HanishKVC The char display for data to be properly integrated
     //      so that repeat_count, columns, etc. can be set or used properly.
     //      Also for data_size of 2 and 4 how to display the individual
@@ -2322,13 +2319,13 @@ void bx_dbg_query_command(const char *what)
 {
   unsigned pending;
 
-  if ( !strcmp(what, "pending") ) {
+  if (! strcmp(what, "pending")) {
     pending = BX_CPU(0)->dbg_query_pending();
 
-    if ( pending & BX_DBG_PENDING_DMA )
+    if (pending & BX_DBG_PENDING_DMA)
       dbg_printf("pending DMA\n");
 
-    if ( pending & BX_DBG_PENDING_IRQ )
+    if (pending & BX_DBG_PENDING_IRQ)
       dbg_printf("pending IRQ\n");
 
     if (!pending)
@@ -3470,7 +3467,7 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
   }
 }
 
-void bx_dbg_step_over_command ()
+void bx_dbg_step_over_command()
 {
   bx_address Laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
 
