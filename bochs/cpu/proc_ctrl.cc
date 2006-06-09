@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.150 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.151 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,6 +95,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
     BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
   if (!real_mode() && CPL!=0) {
+    BX_ERROR(("HLT: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
@@ -127,7 +128,7 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
 {
   // #GP(0) if CPL is not 0
   if (!real_mode() && CPL!=0) {
-    BX_INFO(("CLTS: #GP(0) if CPL is not 0"));
+    BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
@@ -144,7 +145,7 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
   // protected or v8086 mode
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      BX_INFO(("INVD: #GP(0) if CPL is not 0"));
+      BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -169,7 +170,7 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
-      BX_INFO(("WBINVD: #GP(0) if CPL is not 0"));
+      BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -1460,6 +1461,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
       && (!(val_32 >> 5) & 1)
       && (BX_CPU_THIS_PTR cr4.get_PAE())) 
   {
+    BX_ERROR(("SetCR4: attempt to change PAE when LMA=1"));
     return 0;
   }
 #endif
@@ -1493,10 +1495,10 @@ void BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 #if (BX_CPU_LEVEL == 6 && BX_SUPPORT_SSE >= 2) // Pentium 4 processor (see cpuid.cc)
     if ((ECX & 0x7fffffff) >= 18)
-      exception (BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
 #else //
     if ((ECX & 0xffffffff) >= 2)
-      exception (BX_GP_EXCEPTION, 0, 0);
+      exception(BX_GP_EXCEPTION, 0, 0);
 #endif
     // Most counters are for hardware specific details, which
     // we anyhow do not emulate (like pipeline stalls etc)
@@ -1511,7 +1513,7 @@ void BX_CPU_C::RDPMC(bxInstruction_c *i)
     BX_ERROR(("RDPMC: Performance Counters Support not reasonably implemented yet"));
   } else {
     // not allowed to use RDPMC!
-    exception (BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 #else
   UndefinedOpcode(i);
@@ -1548,7 +1550,7 @@ void BX_CPU_C::RDTSC(bxInstruction_c *i)
   } else {
     // not allowed to use RDTSC!
     BX_ERROR(("RDTSC: incorrect usage of RDTSC instruction !"));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 #else
   BX_INFO(("RDTSC: Pentium CPU required, use --enable-cpu=5"));
@@ -1804,6 +1806,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
           (BX_CPU_THIS_PTR cr0.pg == 1))
       {
+        BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
       BX_CPU_THIS_PTR msr.sce   = (EAX >> 0)  & 1;
@@ -1865,13 +1868,13 @@ void BX_CPU_C::SYSENTER (bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode ()) {
-    BX_INFO (("sysenter not from protected mode"));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("sysenter not from protected mode !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
-    BX_INFO (("sysenter with zero sysenter_cs_msr"));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("sysenter with zero sysenter_cs_msr !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
 
@@ -1927,16 +1930,16 @@ void BX_CPU_C::SYSEXIT (bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode ()) {
-    BX_INFO (("sysexit not from protected mode"));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("sysexit not from protected mode !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
-    BX_INFO (("sysexit with zero sysenter_cs_msr"));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("sysexit with zero sysenter_cs_msr !"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
   if (CPL != 0) {
-    BX_INFO (("sysexit at non-zero cpl %u", CPL));
-    exception (BX_GP_EXCEPTION, 0, 0);
+    BX_INFO(("sysexit at non-zero cpl %u !", CPL));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();
@@ -2058,6 +2061,8 @@ SYSCALL_LEGACY_MODE:
   bx_selector_t cs_selector,ss_selector;
   Bit32u dword1, dword2;
 
+  BX_DEBUG(("Execute SYSCALL instruction"));
+
   if (!BX_CPU_THIS_PTR msr.sce) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
@@ -2174,11 +2179,14 @@ SYSRET_NON_64BIT_MODE:
   bx_selector_t cs_selector,ss_selector;
   Bit32u  dword1, dword2;
 
+  BX_DEBUG(("Execute SYSRET instruction"));
+
   if (!BX_CPU_THIS_PTR msr.sce) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   if(real_mode() || CPL != 0) {
+    BX_ERROR(("SYSRET: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

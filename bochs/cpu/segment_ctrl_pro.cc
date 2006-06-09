@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.62 2006-05-27 14:02:34 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.63 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -154,8 +154,8 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* If data or non-conforming code, then both the RPL and the CPL
        * must be less than or equal to DPL in AR byte else #GP(selector) */
-      if ( descriptor.u.segment.executable==0 ||
-           descriptor.u.segment.c_ed==0 )
+      if (descriptor.u.segment.executable==0 ||
+          descriptor.u.segment.c_ed==0)
       {
         if ((selector.rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
           BX_ERROR(("load_seg_reg(%s): RPL & CPL must be <= DPL", strseg(seg)));

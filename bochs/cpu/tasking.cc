@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.33 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: tasking.cc,v 1.34 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   unsigned exception_no = 256; // no exception
   Bit16u error_code = 0;
 
-  BX_DEBUG(( "TASKING: ENTER" ));
+  BX_DEBUG(("TASKING: ENTER"));
 
   invalidate_prefetch_q();
 
@@ -749,9 +749,10 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
   if (BX_CPU_THIS_PTR tr.cache.type==BX_SYS_SEGMENT_AVAIL_386_TSS) {
     // 32-bit TSS
     Bit32u TSSstackaddr = 8*pl + 4;
-    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
+    if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled) {
+      BX_DEBUG(("get_SS_ESP_from_TSS(386): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
-
+    }
     access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr+4, 2, 0, BX_READ, ss);
     access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
@@ -761,9 +762,10 @@ void BX_CPU_C::get_SS_ESP_from_TSS(unsigned pl, Bit16u *ss, Bit32u *esp)
     // 16-bit TSS
     Bit16u temp16;
     Bit32u TSSstackaddr = 4*pl + 2;
-    if ((TSSstackaddr+4) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
+    if ((TSSstackaddr+4) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled) {
+      BX_DEBUG(("get_SS_ESP_from_TSS(286): TSSstackaddr > TSS.LIMIT"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
-
+    }
     access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
       TSSstackaddr+2, 2, 0, BX_READ, ss);
     access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
@@ -784,12 +786,13 @@ void BX_CPU_C::get_RSP_from_TSS(unsigned pl, Bit64u *rsp)
 
   // 32-bit TSS
   Bit32u TSSstackaddr = 8*pl + 4;
-  if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled)
-    exception(BX_TS_EXCEPTION,
-              BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+  if ((TSSstackaddr+7) > BX_CPU_THIS_PTR tr.cache.u.tss.limit_scaled) {
+    BX_DEBUG(("get_RSP_from_TSS(): TSSstackaddr > TSS.LIMIT"));
+    exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc, 0);
+  }
 
   access_linear(BX_CPU_THIS_PTR tr.cache.u.tss.base +
-    TSSstackaddr,   8, 0, BX_READ, rsp);
+    TSSstackaddr, 8, 0, BX_READ, rsp);
 }
 #endif  // #if BX_SUPPORT_X86_64
 

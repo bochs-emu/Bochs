@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.13 2006-06-05 17:33:25 sshwarts Exp $
+// $Id: iret.cc,v 1.14 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -89,11 +89,11 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     // new TSS must be busy, else #TS(new TSS selector)
     parse_descriptor(dword1, dword2, &tss_descriptor);
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_INFO(("iret: TSS selector points to bad TSS"));
+      BX_ERROR(("iret: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc, 0);
     }
     if ((tss_descriptor.type!=11) && (tss_descriptor.type!=3)) {
-      BX_INFO(("iret: TSS selector points to bad TSS"));
+      BX_ERROR(("iret: TSS selector points to bad TSS"));
       exception(BX_TS_EXCEPTION, raw_link_selector & 0xfffc, 0);
     }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.297 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: cpu.h,v 1.298 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1407,10 +1407,10 @@ public: // for now...
   BX_SMF void PUSH_Iw(bxInstruction_c *);
   BX_SMF void INSB_YbDX(bxInstruction_c *);
   BX_SMF void INSW_YwDX(bxInstruction_c *);
-  BX_SMF void INSW_YdDX(bxInstruction_c *);
+  BX_SMF void INSD_YdDX(bxInstruction_c *);
   BX_SMF void OUTSB_DXXb(bxInstruction_c *);
   BX_SMF void OUTSW_DXXw(bxInstruction_c *);
-  BX_SMF void OUTSW_DXXd(bxInstruction_c *);
+  BX_SMF void OUTSD_DXXd(bxInstruction_c *);
 
   BX_SMF void BOUND_GwMa(bxInstruction_c *);
   BX_SMF void BOUND_GdMa(bxInstruction_c *);

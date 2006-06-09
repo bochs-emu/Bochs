@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.29 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: soft_int.cc,v 1.30 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -133,6 +133,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
     // interrupt is not redirected or VME is OFF
     if (BX_CPU_THIS_PTR get_IOPL() < 3)
     {
+      BX_DEBUG(("INT_Ib(): Interrupt cannot be redirected, generate #GP(0)"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.34 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: io.cc,v 1.35 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -277,8 +277,9 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 {
   Bit8u value8=0;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(DX, 1) ) {
+  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+    if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+      BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -438,10 +439,11 @@ doIncr:
 }
 
 // input doubleword from port to string
-void BX_CPU_C::INSW_YdDX(bxInstruction_c *i)
+void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+      BX_DEBUG(("INSD_YdDX: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -499,6 +501,7 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
+      BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
@@ -547,8 +550,10 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
   unsigned incr = 2;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if (! BX_CPU_THIS_PTR allow_io(DX, 2))
+    if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
+      BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
+    }
   }
 
 #if BX_SUPPORT_X86_64
@@ -640,11 +645,13 @@ doIncr:
 }
 
 // output doubleword string to port
-void BX_CPU_C::OUTSW_DXXd(bxInstruction_c *i)
+void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if (! BX_CPU_THIS_PTR allow_io(DX, 4))
+    if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
+      BX_DEBUG(("OUTSD_DXXd: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
+    }
   }
 
   bx_address esi;

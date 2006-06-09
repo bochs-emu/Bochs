@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.48 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.49 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -411,7 +411,7 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
   Bit32u eip, ecs, eflags;
 
   if (! can_pop(12)) {
-    BX_PANIC(("IRETD: to 12 bytes of stack not within stack limits"));
+    BX_ERROR(("IRETD: to 12 bytes of stack not within stack limits"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 
@@ -419,7 +419,7 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
 
   // CS.LIMIT in real mode is 0xffff
   if (eip > 0xffff) {
-    BX_PANIC(("IRETD: instruction pointer not within code segment limits"));
+    BX_ERROR(("IRETD: instruction pointer not within code segment limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

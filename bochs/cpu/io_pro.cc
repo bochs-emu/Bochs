@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.19 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: io_pro.cc,v 1.20 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,15 +37,16 @@ BX_CPU_C::inp16(Bit16u addr)
 {
   Bit16u ret16;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM () || (CPL>BX_CPU_THIS_PTR get_IOPL ()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 2) ) {
+  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 2)) {
+      BX_DEBUG(("inp16(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return(0);
     }
   }
 
   ret16 = BX_INP(addr, 2);
-  return( ret16 );
+  return ret16;
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -56,7 +57,8 @@ BX_CPU_C::outp16(Bit16u addr, Bit16u value)
    * On the 286, there is no IO permissions map */
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 2) ) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 2)) {
+      BX_DEBUG(("outp16(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -71,14 +73,15 @@ BX_CPU_C::inp32(Bit16u addr)
   Bit32u ret32;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 4) ) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 4)) {
+      BX_DEBUG(("inp32(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return(0);
     }
   }
 
   ret32 = BX_INP(addr, 4);
-  return( ret32 );
+  return ret32;
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -89,7 +92,8 @@ BX_CPU_C::outp32(Bit16u addr, Bit32u value)
    * On the 286, there is no IO permissions map */
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 4) ) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 4)) {
+      BX_DEBUG(("outp32(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -104,14 +108,15 @@ BX_CPU_C::inp8(Bit16u addr)
   Bit8u ret8;
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 1) ) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 1)) {
+      BX_DEBUG(("inp8(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return(0);
     }
   }
 
   ret8 = BX_INP(addr, 1);
-  return( ret8 );
+  return ret8;
 }
 
 
@@ -123,7 +128,8 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
    * On the 286, there is no IO permissions map */
 
   if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
-    if ( !BX_CPU_THIS_PTR allow_io(addr, 1) ) {
+    if (! BX_CPU_THIS_PTR allow_io(addr, 1)) {
+      BX_DEBUG(("outp8(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }

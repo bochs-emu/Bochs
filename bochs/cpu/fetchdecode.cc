@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.97 2006-05-24 20:57:37 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.98 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1067,9 +1067,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 6A */ { BxImmediate_Ib_SE, &BX_CPU_C::PUSH_Id },
   /* 6B */ { BxAnother | BxImmediate_Ib_SE, &BX_CPU_C::IMUL_GdEdId },
   /* 6C */ { BxRepeatable, &BX_CPU_C::INSB_YbDX },
-  /* 6D */ { BxRepeatable, &BX_CPU_C::INSW_YdDX },
+  /* 6D */ { BxRepeatable, &BX_CPU_C::INSD_YdDX },
   /* 6E */ { BxRepeatable, &BX_CPU_C::OUTSB_DXXb },
-  /* 6F */ { BxRepeatable, &BX_CPU_C::OUTSW_DXXd },
+  /* 6F */ { BxRepeatable, &BX_CPU_C::OUTSD_DXXd },
   /* 70 */ { BxImmediate_BrOff8, &BX_CPU_C::JCC_Jd },
   /* 71 */ { BxImmediate_BrOff8, &BX_CPU_C::JCC_Jd },
   /* 72 */ { BxImmediate_BrOff8, &BX_CPU_C::JCC_Jd },

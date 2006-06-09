@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.65 2006-03-06 22:02:50 sshwarts Exp $
+// $Id: access.cc,v 1.66 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,6 +54,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 #endif
   if (protected_mode()) {
     if (seg->cache.valid==0) {
+      BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -117,6 +118,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
     if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
           || (length-1 > seg->cache.u.segment.limit_scaled))
     {
+      BX_DEBUG(("write_virtual_checks(): write beyond limit (real mode)"));
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
@@ -145,6 +147,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 #endif
   if (protected_mode()) {
     if (seg->cache.valid==0) {
+      BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -230,6 +233,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
     if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
         || (length-1 > seg->cache.u.segment.limit_scaled))
     {
+      BX_DEBUG(("read_virtual_checks(): read beyond limit (real mode)"));
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
@@ -993,6 +997,7 @@ BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data
 {
   // If double quadword access is unaligned, #GP(0).
   if (offset & 0xf) {
+    BX_DEBUG(("read_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1014,6 +1019,7 @@ BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *dat
 {
   // If double quadword access is unaligned, #GP(0).
   if (offset & 0xf) {
+    BX_DEBUG(("write_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

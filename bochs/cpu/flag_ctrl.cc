@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.25 2006-03-06 22:02:59 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.26 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ void BX_CPU_C::LAHF(bxInstruction_c *i)
 
 void BX_CPU_C::CLC(bxInstruction_c *i)
 {
-  clear_CF ();
+  clear_CF();
 }
 
 void BX_CPU_C::STC(bxInstruction_c *i)
@@ -80,8 +80,10 @@ void BX_CPU_C::CLI(bxInstruction_c *i)
     else 
 #endif
     {
-      if (IOPL < cpl)
+      if (IOPL < cpl) {
+        BX_DEBUG(("CLI: IOPL < CPL in protected mode"));
         exception(BX_GP_EXCEPTION, 0, 0);
+      }
     }
   }
 #if BX_CPU_LEVEL >= 3
@@ -94,13 +96,14 @@ void BX_CPU_C::CLI(bxInstruction_c *i)
         return;
       }
 #endif
+      BX_DEBUG(("CLI: IOPL != 3 in v8086 mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
 #endif
 #endif
 
-  BX_CPU_THIS_PTR clear_IF ();
+  BX_CPU_THIS_PTR clear_IF();
 }
 
 void BX_CPU_C::STI(bxInstruction_c *i)
@@ -121,12 +124,15 @@ void BX_CPU_C::STI(bxInstruction_c *i)
           return;
         }
 
+        BX_DEBUG(("STI: #GP(0) in VME mode"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
     }
 #endif
-    if (cpl > IOPL)
+    if (cpl > IOPL) {
+      BX_DEBUG(("STI: CPL > IOPL in protected mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
+    }
   }
 #if BX_CPU_LEVEL >= 3
   else if (v8086_mode())
@@ -139,14 +145,15 @@ void BX_CPU_C::STI(bxInstruction_c *i)
         return;
       }
 #endif
+      BX_DEBUG(("STI: IOPL != 3 in v8086 mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }
 #endif
 #endif
 
-  if (!BX_CPU_THIS_PTR get_IF ()) {
-    BX_CPU_THIS_PTR assert_IF ();
+  if (!BX_CPU_THIS_PTR get_IF()) {
+    BX_CPU_THIS_PTR assert_IF();
     BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS;
     BX_CPU_THIS_PTR async_event = 1;
   }
@@ -154,17 +161,17 @@ void BX_CPU_C::STI(bxInstruction_c *i)
 
 void BX_CPU_C::CLD(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR clear_DF ();
+  BX_CPU_THIS_PTR clear_DF();
 }
 
 void BX_CPU_C::STD(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR assert_DF ();
+  BX_CPU_THIS_PTR assert_DF();
 }
 
 void BX_CPU_C::CMC(bxInstruction_c *i)
 {
-  set_CF( !get_CF() );
+  set_CF(! get_CF());
 }
 
 void BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
@@ -172,7 +179,8 @@ void BX_CPU_C::PUSHF_Fw(bxInstruction_c *i)
   Bit16u flags = read_flags();
 
   if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL () < 3) && (CR4_VME_ENABLED == 0)) {
+    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+      BX_DEBUG(("PUSHFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -208,7 +216,8 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       changeMask |= EFlagsIFMask;
   }
   else if (v8086_mode()) {
-    if ((BX_CPU_THIS_PTR get_IOPL () < 3) && (CR4_VME_ENABLED == 0)) {
+    if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
+      BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -245,7 +254,8 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
 
 void BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
 {
-  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL ()<3)) {
+  if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
+    BX_DEBUG(("PUSHFD: #GP(0) in v8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }
@@ -277,6 +287,7 @@ void BX_CPU_C::POPF_Fd(bxInstruction_c *i)
   }
   else if (v8086_mode()) {
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
+      BX_DEBUG(("POPFD: #GP(0) in v8086 mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
       return;
     }
@@ -327,7 +338,7 @@ void BX_CPU_C::POPF_Fq(bxInstruction_c *i)
 
 void BX_CPU_C::SALC(bxInstruction_c *i)
 {
-  if ( get_CF() ) {
+  if (get_CF()) {
     AL = 0xff;
   }
   else {

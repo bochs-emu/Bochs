@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.78 2006-06-05 16:38:43 sshwarts Exp $
+// $Id: exception.cc,v 1.79 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -316,7 +316,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   if ((gate_descriptor.valid==0) || gate_descriptor.segment) {
-    BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg"));
+    BX_ERROR(("interrupt(): gate descriptor is not valid sys seg"));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
@@ -328,7 +328,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   case BX_386_TRAP_GATE:
     break;
   default:
-    BX_DEBUG(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
+    BX_ERROR(("interrupt(): gate.type(%u) != {5,6,7,14,15}",
       (unsigned) gate_descriptor.type));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
@@ -342,7 +342,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
   // Gate must be present, else #NP(vector * 8 + 2 + EXT)
   if (! IS_PRESENT(gate_descriptor)) {
-    BX_DEBUG(("interrupt(): gate not present"));
+    BX_ERROR(("interrupt(): gate not present"));
     exception(BX_NP_EXCEPTION, vector*8 + 2, 0);
   }
 
@@ -367,11 +367,11 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     // AR byte must specify available TSS,
     //   else #GP(TSS selector)
     if (tss_descriptor.valid==0 || tss_descriptor.segment) {
-      BX_PANIC(("exception: TSS selector points to bad TSS"));
+      BX_ERROR(("exception: TSS selector points to bad TSS"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
     if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
-      BX_INFO(("exception: TSS selector points to bad TSS"));
+      BX_ERROR(("exception: TSS selector points to bad TSS"));
       exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
     }
 
@@ -438,19 +438,19 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
          cs_descriptor.u.segment.executable==0 ||
          cs_descriptor.dpl>CPL )
     {
-      BX_DEBUG(("interrupt(): not code segment"));
+      BX_ERROR(("interrupt(): not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
     // segment must be present, else #NP(selector + EXT)
     if (! IS_PRESENT(cs_descriptor)) {
-      BX_DEBUG(("interrupt(): segment not present"));
+      BX_ERROR(("interrupt(): segment not present"));
       exception(BX_NP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
     // if code segment is non-conforming and DPL < CPL then
     // INTERRUPT TO INNER PRIVILEGE:
-    if ( cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL )
+    if (cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL)
     {
       Bit16u old_SS, old_CS, SS_for_cpl_x;
       Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
@@ -463,6 +463,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
       if (is_v8086_mode && cs_descriptor.dpl != 0) {
         // if code segment DPL != 0 then #GP(new code segment selector)
+        BX_ERROR(("interrupt(): code segment DPL != 0 in v8086 mode"));
         exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
       }
 
@@ -517,7 +518,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       if (gate_descriptor.type>=14) {
         // 386 int/trap gate
         // new stack must have room for 20|24 bytes, else #SS(0)
-        if ( is_error_code )
+        if (is_error_code)
           bytes = 24;
         else
           bytes = 20;
@@ -526,7 +527,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       }
       else {
         // new stack must have room for 10|12 bytes, else #SS(0)
-        if ( is_error_code )
+        if (is_error_code)
           bytes = 12;
         else
           bytes = 10;
@@ -639,6 +640,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     if (v8086_mode()) {
       // if code segment DPL != 0 then #GP(new code segment selector)
+      BX_ERROR(("interrupt(): code seg DPL != 0 in v8086 mode"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
@@ -658,13 +660,13 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
       // Current stack limits must allow pushing 6|8 bytes, else #SS(0)
       if (gate_descriptor.type >= 14) { // 386 gate
-        if ( is_error_code )
+        if (is_error_code)
           bytes = 16;
         else
           bytes = 12;
       }
       else { // 286 gate
-        if ( is_error_code )
+        if (is_error_code)
           bytes = 8;
         else
           bytes = 6;
@@ -768,7 +770,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
 {
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
-    BX_INFO (("interrupt() returning early because special_unwind_stack is set"));
+    BX_INFO(("interrupt() returning early because special_unwind_stack is set"));
     return;
   }
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
@@ -822,7 +824,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
-    BX_INFO (("exception() returning early because special_unwind_stack is set"));
+    BX_INFO(("exception() returning early because special_unwind_stack is set"));
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 #endif

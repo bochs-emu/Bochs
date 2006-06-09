@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.5 2006-03-06 22:03:02 sshwarts Exp $
+// $Id: ret_far.cc,v 1.6 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   }
 
 #if BX_SUPPORT_X86_64
-  if ( i->os64L() ) {
+  if (i->os64L()) {
     /* operand size=64: 2nd qword on stack must be within stack limits,
      *   else #SS(0); */
     if (!can_pop(16))
@@ -85,10 +85,10 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   } 
   else
 #endif
-  if ( i->os32L() ) {
+  if (i->os32L()) {
     /* operand size=32: 2nd dword on stack must be within stack limits,
      *   else #SS(0); */
-    if (!can_pop(8))
+    if (! can_pop(8))
     {
       BX_ERROR(("return_protected: 2rd dword not in stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
@@ -106,7 +106,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   else {
     /* operand size=16: second word on stack must be within stack limits,
      *   else #SS(0); */
-    if ( !can_pop(4) )
+    if (! can_pop(4))
     {
       BX_ERROR(("return_protected: 2nd word not in stack limits"));
       exception(BX_SS_EXCEPTION, 0, 0);
@@ -123,8 +123,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
   }
 
   // selector must be non-null else #GP(0)
-  if ( (raw_cs_selector & 0xfffc) == 0 ) {
-    BX_INFO(("return_protected: CS selector null"));
+  if ((raw_cs_selector & 0xfffc) == 0) {
+    BX_ERROR(("return_protected: CS selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -187,7 +187,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 #if BX_SUPPORT_X86_64
     if (i->os64L()) {
       /* top 32+immediate bytes on stack must be within stack limits, else #SS(0) */
-      if ( !can_pop(32 + pop_bytes) ) {
+      if (! can_pop(32 + pop_bytes)) {
         BX_ERROR(("return_protected: 32 bytes not within stack limits"));
         exception(BX_SS_EXCEPTION, 0, 0);
       }
@@ -201,7 +201,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 #endif
     if (i->os32L()) {
       /* top 16+immediate bytes on stack must be within stack limits, else #SS(0) */
-      if ( !can_pop(16 + pop_bytes) ) {
+      if (! can_pop(16 + pop_bytes)) {
         BX_ERROR(("return_protected: 16 bytes not within stack limits"));
         exception(BX_SS_EXCEPTION, 0, 0);
       }
@@ -215,7 +215,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
     else {
       /* top 8+immediate bytes on stack must be within stack limits, else #SS(0) */
-      if ( !can_pop(8 + pop_bytes) ) {
+      if (! can_pop(8 + pop_bytes)) {
         BX_ERROR(("return_protected: 8 bytes not within stack limits"));
         exception(BX_SS_EXCEPTION, 0, 0);
       }
@@ -262,7 +262,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
         ss_descriptor.u.segment.executable ||
         ss_descriptor.u.segment.r_w==0)
     {
-      BX_PANIC(("return_protected: SS.AR byte not writable data"));
+      BX_ERROR(("return_protected: SS.AR byte not writable data"));
       exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
     }
 

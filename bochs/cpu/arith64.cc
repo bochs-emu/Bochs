@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.29 2006-03-26 18:58:00 sshwarts Exp $
+// $Id: arith64.cc,v 1.30 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -622,12 +622,12 @@ void BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
   Bit64u op1_64_lo, op1_64_hi, diff;
 
   if (i->modC0()) {
-    BX_INFO(("CMPXCHG16B: dest is not memory location (#UD)"));
+    BX_ERROR(("CMPXCHG16B: dest is not memory location (#UD)"));
     UndefinedOpcode(i);
   }
 
   if (RMAddr(i) & 0xf) {
-    BX_INFO(("CMPXCHG16B: not aligned memory location (#GP)"));
+    BX_ERROR(("CMPXCHG16B: not aligned memory location (#GP)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

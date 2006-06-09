@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.73 2006-04-29 17:21:49 sshwarts Exp $
+// $Id: paging.cc,v 1.74 2006-06-09 22:29:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -571,12 +571,15 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   }
 
   // Can not be executed in v8086 mode
-  if (v8086_mode())
+  if (v8086_mode()) {
+    BX_ERROR(("INVLPG: cannot be executed in v8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   // Protected instruction: CPL0 only
   if (BX_CPU_THIS_PTR cr0.pe) {
     if (CPL!=0) {
+      BX_ERROR(("INVLPG: #GP(0) in protected mode with CPL != 0"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
   }

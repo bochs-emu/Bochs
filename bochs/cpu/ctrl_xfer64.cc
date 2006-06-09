@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.46 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.47 2006-06-09 22:29:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
 #endif
 
   if (! IsCanonical(new_RIP)) {
-    BX_INFO(("CALL_Aq: canonical RIP violation"));
+    BX_ERROR(("CALL_Aq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -150,7 +150,7 @@ void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
 
   if (! IsCanonical(op1_64))
   {
-    BX_INFO(("CALL_Eq: canonical RIP violation"));
+    BX_ERROR(("CALL_Eq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -249,7 +249,7 @@ void BX_CPU_C::JMP_Eq(bxInstruction_c *i)
   }
 
   if (! IsCanonical(op1_64)) {
-    BX_INFO(("JMP_Eq: canonical RIP violation"));
+    BX_ERROR(("JMP_Eq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
