@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.36 2006-04-06 18:30:03 sshwarts Exp $
+// $Id: cpuid.cc,v 1.37 2006-06-09 21:14:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,19 +49,21 @@ Bit32u BX_CPU_C::get_cpu_version_information()
   Bit32u extended_model = 0;
   Bit32u extended_family = 0;
 
+#if BX_CPU_LEVEL > 3
+
   /* ****** */
   /*  i486  */
   /* ****** */
 
 #if BX_CPU_LEVEL == 4
-    family = 4;
+  family = 4;
 
 #if BX_SUPPORT_FPU
-    model = 1;		// 486dx
-    stepping = 3;
+  model = 1;		// 486dx
+  stepping = 3;
 #else
-    model = 2;		// 486sx
-    stepping = 3;
+  model = 2;		// 486sx
+  stepping = 3;
 #endif
 
   /* **************** */
@@ -69,7 +71,7 @@ Bit32u BX_CPU_C::get_cpu_version_information()
   /* **************** */
 
 #elif BX_CPU_LEVEL == 5	
-    family   = 5;
+  family   = 5;
 #if BX_SUPPORT_MMX
     model    = 4;	// Pentium MMX
 #else
@@ -109,6 +111,8 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 #else
     BX_PANIC(("CPUID family ID not implemented for CPU LEVEL > 6"));
 #endif
+
+#endif  // BX_CPU_LEVEL > 3
 
   return (extended_family << 20) | 
          (extended_model << 16) | 
