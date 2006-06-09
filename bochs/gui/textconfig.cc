@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.59 2006-06-08 17:02:51 vruppert Exp $
+// $Id: textconfig.cc,v 1.60 2006-06-09 12:01:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -516,6 +516,7 @@ int bx_config_interface(int menu)
           }
         }
         break;
+#if BX_SUPPORT_SAVE_RESTORE
       case BX_CI_SAVE_RESTORE:
         {
           Bit32u cont = 1;
@@ -542,6 +543,7 @@ int bx_config_interface(int menu)
             return 0;
           }
         }
+#endif
       default:
         fprintf (stderr, "Unknown config interface menu type.\n");
         assert (menu >=0 && menu < BX_CI_N_MENUS);
