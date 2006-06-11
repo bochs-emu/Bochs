@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.12 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: descriptor.h,v 1.13 2006-06-11 21:55:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ typedef struct
   bx_bool p;             /* present */
   Bit8u   dpl;           /* descriptor privilege level 0..3 */
   bx_bool segment;       /* 0 = system/gate, 1 = data/code segment */
-  Bit8u   type;          /* For system & gate descriptors, only
+  Bit8u   type;          /* For system & gate descriptors:
                           *  0 = invalid descriptor (reserved)
                           *  1 = 286 available Task State Segment (TSS)
                           *  2 = LDT descriptor
@@ -73,22 +73,43 @@ typedef struct
                           * 14 = 386 interrupt gate
                           * 15 = 386 trap gate */
 
-#define BX_GATE_TYPE_NONE              (0x0)
-#define BX_SYS_SEGMENT_AVAIL_286_TSS   (0x1)
-#define BX_SYS_SEGMENT_LDT             (0x2)
-#define BX_SYS_SEGMENT_BUSY_286_TSS    (0x3)
-#define BX_286_CALL_GATE               (0x4)
-#define BX_TASK_GATE                   (0x5)
-#define BX_286_INTERRUPT_GATE          (0x6)
-#define BX_286_TRAP_GATE               (0x7)
-                                     /* 0x8 reserved */
-#define BX_SYS_SEGMENT_AVAIL_386_TSS   (0x9)
-                                     /* 0xa reserved */
-#define BX_SYS_SEGMENT_BUSY_386_TSS    (0xb)
-#define BX_386_CALL_GATE               (0xc)
-                                     /* 0xd reserved */
-#define BX_386_INTERRUPT_GATE          (0xe)
-#define BX_386_TRAP_GATE               (0xf)
+// For system & gate descriptors:
+
+#define BX_GATE_TYPE_NONE                       (0x0)
+#define BX_SYS_SEGMENT_AVAIL_286_TSS            (0x1)
+#define BX_SYS_SEGMENT_LDT                      (0x2)
+#define BX_SYS_SEGMENT_BUSY_286_TSS             (0x3)
+#define BX_286_CALL_GATE                        (0x4)
+#define BX_TASK_GATE                            (0x5)
+#define BX_286_INTERRUPT_GATE                   (0x6)
+#define BX_286_TRAP_GATE                        (0x7)
+                                              /* 0x8 reserved */
+#define BX_SYS_SEGMENT_AVAIL_386_TSS            (0x9)
+                                              /* 0xa reserved */
+#define BX_SYS_SEGMENT_BUSY_386_TSS             (0xb)
+#define BX_386_CALL_GATE                        (0xc)
+                                              /* 0xd reserved */
+#define BX_386_INTERRUPT_GATE                   (0xe)
+#define BX_386_TRAP_GATE                        (0xf)
+
+// For data/code descriptors:
+
+#define BX_DATA_READ_ONLY                       (0x0)
+#define BX_DATA_READ_ONLY_ACCESSED              (0x1)
+#define BX_DATA_READ_WRITE                      (0x2)
+#define BX_DATA_READ_WRITE_ACCESSED             (0x3)
+#define BX_DATA_READ_ONLY_EXPAND_DOWN           (0x4)
+#define BX_DATA_READ_ONLY_EXPAND_DOWN_ACCESSED  (0x5)
+#define BX_DATA_READ_WRITE_EXPAND_DOWN          (0x6)
+#define BX_DATA_READ_WRITE_EXPAND_DOWN_ACCESSED (0x7)
+#define BX_CODE_EXEC_ONLY                       (0x8)
+#define BX_CODE_EXEC_ONLY_ACCESSED              (0x9)
+#define BX_CODE_EXEC_READ                       (0xa)
+#define BX_CODE_EXEC_READ_ACCESSED              (0xb)
+#define BX_CODE_EXEC_ONLY_CONFORMING            (0xc)
+#define BX_CODE_EXEC_ONLY_CONFORMING_ACCESSED   (0xd)
+#define BX_CODE_EXEC_READ_CONFORMING            (0xe)
+#define BX_CODE_EXEC_READ_CONFORMING_ACCESSED   (0xf)
 
 union {
   struct {
