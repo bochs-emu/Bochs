@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.17 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: smm.cc,v 1.18 2006-06-11 21:37:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -153,10 +153,9 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR msr.lma = 0;
 #endif
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = BX_CPU_THIS_PTR smbase >> 4;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.index = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl   = 0;
+  parse_selector(BX_CPU_THIS_PTR smbase >> 4,
+               &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
+  
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
@@ -182,10 +181,9 @@ void BX_CPU_C::enter_system_management_mode(void)
 #endif
 
   /* DS (Data Segment) and descriptor cache */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0x0000;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.index = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.ti    = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl   = 0;
+  parse_selector(0x0000,
+               &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
+
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid    = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p        = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl      = 0;

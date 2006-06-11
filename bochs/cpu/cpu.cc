@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.159 2006-06-06 16:46:07 sshwarts Exp $
+// $Id: cpu.cc,v 1.160 2006-06-11 21:37:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,7 +224,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   // the debugger may request that control is returned to it so that
   // the situation may be examined.
   if (bx_guard.special_unwind_stack) {
-    BX_ERROR(("CPU_LOOP bx_guard.special_unwind_stack=%d\n", bx_guard.special_unwind_stack));
+    BX_ERROR(("CPU_LOOP bx_guard.special_unwind_stack=%d", bx_guard.special_unwind_stack));
     return;
   }
 #endif
