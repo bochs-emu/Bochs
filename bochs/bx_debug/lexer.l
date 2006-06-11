@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.17 2006-05-29 19:56:29 sshwarts Exp $
+// $Id: lexer.l,v 1.18 2006-06-11 18:03:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -175,7 +175,7 @@ ebx             { bxlval.uval = BX_DBG_REG32_EBX; return(BX_TOKEN_32B_REG);}
 ecx             { bxlval.uval = BX_DBG_REG32_ECX; return(BX_TOKEN_32B_REG);}
 edx             { bxlval.uval = BX_DBG_REG32_EDX; return(BX_TOKEN_32B_REG);}
 esi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_32B_REG);}
-edi             { bxlval.uval = BX_DBG_REG32_ESI; return(BX_TOKEN_32B_REG);}
+edi             { bxlval.uval = BX_DBG_REG32_EDI; return(BX_TOKEN_32B_REG);}
 ebp             { bxlval.uval = BX_DBG_REG32_EBP; return(BX_TOKEN_32B_REG);}
 esp             { bxlval.uval = BX_DBG_REG32_ESP; return(BX_TOKEN_32B_REG);}
 r8d             { LONG_MODE_32B_REG(BX_DBG_REG32_R8);  }
