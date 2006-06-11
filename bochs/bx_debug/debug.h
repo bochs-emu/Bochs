@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.25 2006-05-30 19:46:31 sshwarts Exp $
+// $Id: debug.h,v 1.26 2006-06-11 16:40:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -341,6 +341,10 @@ typedef enum {
 #define BX_DBG_REG_ES           23
 #define BX_DBG_REG_FS           24
 #define BX_DBG_REG_GS           25
+#define BX_DBG_REG_CR0          30
+#define BX_DBG_REG_CR2          32
+#define BX_DBG_REG_CR3          33
+#define BX_DBG_REG_CR4          34
 
 #define BX_DBG_PENDING_DMA 1
 #define BX_DBG_PENDING_IRQ 2
@@ -474,6 +478,11 @@ typedef struct {
   Bit16u sel;
   Bit32u des_l, des_h, valid;
 } bx_dbg_sreg_t;
+
+typedef struct {
+  bx_address base;
+  Bit16u limit;
+} bx_dbg_global_sreg_t;
 
 typedef struct {
     Bit32u eax;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.298 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: cpu.h,v 1.299 2006-06-11 16:40:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2635,6 +2635,10 @@ public: // for now...
   BX_SMF bx_bool  dbg_set_reg(unsigned reg, Bit32u val);
   BX_SMF Bit32u   dbg_get_reg(unsigned reg);
   BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
+  BX_SMF void     dbg_get_tr(bx_dbg_sreg_t *sreg);
+  BX_SMF void     dbg_get_ldtr(bx_dbg_sreg_t *sreg);
+  BX_SMF void     dbg_get_gdtr(bx_dbg_global_sreg_t *sreg);
+  BX_SMF void     dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
   BX_SMF unsigned dbg_query_pending(void);
   BX_SMF bx_bool  dbg_check_begin_instr_bpoint(void);
   BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.68 2006-06-09 12:26:34 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.69 2006-06-11 16:40:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -110,12 +110,10 @@ static struct {
   } Q[BX_BATCH_DMA_BUFSIZE];
 } bx_dbg_batch_dma;
 
-
 // some buffers for disassembly
-#if BX_DISASM
+static disassembler bx_disassemble;
 static Bit8u bx_disasm_ibuf[32];
 static char  bx_disasm_tbuf[512];
-#endif
 
 #define DBG_PRINTF_BUFFER_LEN 1024
 
@@ -206,9 +204,7 @@ int bx_dbg_main(int argc, char *argv[])
     }
   }
 
-#if BX_DISASM
   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
-#endif
 
   // parse any remaining args in the usual way
   bx_parse_cmdline(1, bochs_argc, bochs_argv);
@@ -565,7 +561,7 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
           return;
         } else if (abs_time < timebp_queue[i]) {
           for (int j = timebp_queue_size; j >= i; j++)
-          timebp_queue[j+1] = timebp_queue[j];
+            timebp_queue[j+1] = timebp_queue[j];
           timebp_queue[i] = abs_time;
           goto inserted;
         }
@@ -1296,8 +1292,6 @@ void bx_dbg_stepN_command(Bit32u count)
   bx_dbg_print_guard_results();
 }
 
-static disassembler bx_disassemble;
-
 void bx_dbg_disassemble_current(int which_cpu, int print_time)
 {
   Bit32u phy;
@@ -1429,7 +1423,6 @@ void bx_dbg_print_guard_results(void)
           cpu, BX_CPU(cpu)->stop_reason);
     }
 
-#if BX_DISASM
     if (bx_debugger.auto_disassemble) {
       if (cpu==0) {
         // print this only once
@@ -1437,7 +1430,6 @@ void bx_dbg_print_guard_results(void)
       }
       bx_dbg_disassemble_current(cpu, 0);  // one cpu, don't print time
     }
-#endif  // #if BX_DISASM
   }
 #if 0
   // print the TSC value for every CPU
@@ -1495,7 +1487,7 @@ done:
   bx_dbg_breakpoint_changed();
 }
 
-bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable)
+bx_bool bx_dbg_en_dis_pbreak(unsigned handle, bx_bool enable)
 {
 #if BX_DBG_SUPPORT_PHY_BPOINT
   // see if breakpoint is a physical breakpoint
@@ -1509,7 +1501,7 @@ bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable)
   return (bx_bool)false;
 }
 
-bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable)
+bx_bool bx_dbg_en_dis_lbreak(unsigned handle, bx_bool enable)
 {
 #if BX_DBG_SUPPORT_LIN_BPOINT
   // see if breakpoint is a linear breakpoint
@@ -1523,7 +1515,7 @@ bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable)
   return 0;
 }
 
-bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable)
+bx_bool bx_dbg_en_dis_vbreak(unsigned handle, bx_bool enable)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
   // see if breakpoint is a virtual breakpoint
@@ -1540,17 +1532,17 @@ bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable)
 void bx_dbg_del_breakpoint_command(unsigned handle)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
-  if (bx_dbg_del_vbreak (handle))
+  if (bx_dbg_del_vbreak(handle))
    goto done;
 #endif
 
 #if BX_DBG_SUPPORT_LIN_BPOINT
-  if (bx_dbg_del_lbreak (handle))
+  if (bx_dbg_del_lbreak(handle))
    goto done;
 #endif
 
 #if BX_DBG_SUPPORT_PHY_BPOINT
-  if (bx_dbg_del_pbreak (handle))
+  if (bx_dbg_del_pbreak(handle))
    goto done;
 #endif
 
@@ -1561,7 +1553,7 @@ done:
   bx_dbg_breakpoint_changed();
 }
 
-bx_bool bx_dbg_del_pbreak (unsigned handle)
+bx_bool bx_dbg_del_pbreak(unsigned handle)
 {
 #if BX_DBG_SUPPORT_PHY_BPOINT
   // see if breakpoint is a physical breakpoint
@@ -1579,7 +1571,7 @@ bx_bool bx_dbg_del_pbreak (unsigned handle)
   return 0;
 }
 
-bx_bool bx_dbg_del_lbreak (unsigned handle)
+bx_bool bx_dbg_del_lbreak(unsigned handle)
 {
 #if BX_DBG_SUPPORT_LIN_BPOINT
   // see if breakpoint is a linear breakpoint
@@ -1597,7 +1589,7 @@ bx_bool bx_dbg_del_lbreak (unsigned handle)
   return 0;
 }
 
-bx_bool bx_dbg_del_vbreak (unsigned handle)
+bx_bool bx_dbg_del_vbreak(unsigned handle)
 {
 #if BX_DBG_SUPPORT_VIR_BPOINT
   // see if breakpoint is a virtual breakpoint
@@ -1950,8 +1942,6 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   char ch, display_format, unit_size;
   bx_bool iteration, memory_dump = false;
   unsigned data_size;
-  bx_bool paddr_valid;
-  bx_phy_address paddr;
   Bit8u   data8;
   Bit16u  data16;
   Bit32u  data32;
@@ -2647,7 +2637,7 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
 void bx_dbg_info_dirty_command(void)
 {
   unsigned char *page_tbl = BX_MEM(0)->dbg_dirty_pages;
-  Bit32u page_tbl_size  = BX_MEM(0)->get_num_allocated_pages();
+  Bit32u page_tbl_size = BX_MEM(0)->get_num_allocated_pages();
 
   for (unsigned i=0; i<page_tbl_size; i++) {
     if (page_tbl[i]) {
@@ -2657,7 +2647,7 @@ void bx_dbg_info_dirty_command(void)
   }
 }
 
-void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
+void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
 {
   int lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
   int hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
@@ -2767,8 +2757,8 @@ void bx_dbg_print_descriptor (unsigned char desc[8], int verbose)
 
 void bx_dbg_info_idt_command(unsigned from, unsigned to)
 {
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  bx_dbg_global_sreg_t idtr;
+  BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
   bx_bool all = 0;
 
   if (to == (unsigned) EMPTY_ARG) {
@@ -2785,16 +2775,16 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
     to = temp;
   }
 
-  dbg_printf("Interrupt Descriptor Table (base=0x%08x):\n", cpu.idtr.base);
+  dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX "):\n", idtr.base);
   for (unsigned n = from; n<=to; n++) {
     Bit8u entry[8];
-    if (bx_dbg_read_linear(dbg_cpu, cpu.idtr.base + 8*n, 8, entry)) {
+    if (bx_dbg_read_linear(dbg_cpu, idtr.base + 8*n, 8, entry)) {
       dbg_printf("IDT[0x%02x]=", n);
       bx_dbg_print_descriptor(entry, 0);
     }
     else {
-      dbg_printf("error: IDTR+8*%d points to invalid linear address 0x%-08x\n",
-        n, cpu.idtr.base);
+      dbg_printf("error: IDTR+8*%d points to invalid linear address 0x" FMT_ADDRX "\n",
+        n, idtr.base);
     }
   }
   if (all)
@@ -2803,8 +2793,8 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
 
 void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 {
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  bx_dbg_global_sreg_t gdtr;
+  BX_CPU(dbg_cpu)->dbg_get_gdtr(&gdtr);
   bx_bool all = 0;
 
   if (to == (unsigned) EMPTY_ARG) {
@@ -2821,16 +2811,16 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     to = temp;
   }
 
-  dbg_printf("Global Descriptor Table (base=0x%08x):\n", cpu.gdtr.base);
+  dbg_printf("Global Descriptor Table (base=0x%08x):\n", gdtr.base);
   for (unsigned n = from; n<=to; n++) {
     Bit8u entry[8];
-    if (bx_dbg_read_linear(dbg_cpu, cpu.gdtr.base + 8*n, 8, entry)) {
+    if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
       bx_dbg_print_descriptor (entry, 0);
     }
     else {
       dbg_printf("error: GDTR+8*%d points to invalid linear address 0x%-08x\n",
-        n, cpu.gdtr.base);
+        n, gdtr.base);
     }
   }
   if (all)
@@ -2839,8 +2829,6 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
 
 void bx_dbg_info_ldt_command(unsigned from, unsigned to)
 {
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
   dbg_printf("Local Descriptor Table output not implemented\n");
 }
 
@@ -2896,15 +2884,15 @@ static char* bx_dbg_ivt_desc(int intnum)
 
 void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 { 
-  bx_dbg_cpu_t cpu;
   unsigned char buff[4];
   Bit16u seg;
   Bit16u off;
   bx_bool all = 0;
+  bx_dbg_global_sreg_t idtr;
 
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
   
-  if ((cpu.cr0 & 1) == 0)
+  if (! BX_CPU(dbg_cpu)->protected_mode())
   { 
     if (to == (unsigned) EMPTY_ARG) {
       to = from;
@@ -2922,7 +2910,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 
     for (unsigned i = from; i <= to; i++)
     { 
-      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + i * 4, sizeof(buff), buff);
+      BX_MEM(0)->dbg_fetch_mem(idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
       off = *(Bit16u*)(&buff[0]);
@@ -2930,9 +2918,9 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
       seg = (buff[3] << 8) | buff[2];
       off = (buff[1] << 8) | buff[0];
 #endif
-      BX_MEM(0)->dbg_fetch_mem(cpu.idtr.base + ((seg << 4) + off), sizeof(buff), buff);
-      dbg_printf("INT# %02x > %04X:%04X (%08X) %s%s\n", i, seg, off, 
-         cpu.idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), 
+      BX_MEM(0)->dbg_fetch_mem(idtr.base + ((seg << 4) + off), sizeof(buff), buff);
+      dbg_printf("INT# %02x > %04X:%04X (" FMT_ADDRX ") %s%s\n", i, seg, off, 
+         idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), 
          (buff[0] == 0xcf) ? " ; dummy iret" : "");
     }
     if (all) dbg_printf("You can list individual entries with 'info ivt [NUM]' or groups with 'info ivt [NUM] [NUM]'\n");
@@ -2974,16 +2962,15 @@ static void bx_dbg_print_tss(unsigned char *tss, int len)
 
 void bx_dbg_info_tss_command(void)
 {
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  bx_dbg_sreg_t tr;
+  BX_CPU(dbg_cpu)->dbg_get_tr(&tr);
 
-  Bit32u laddr = (cpu.tr.des_l>>16) |
-                  ((cpu.tr.des_h<<16)&0x00ff0000) |
-                   (cpu.tr.des_h & 0xff000000);
-  Bit32u len = (cpu.tr.des_l & 0xffff) + 1;
+  Bit32u laddr = (tr.des_l>>16) |
+                ((tr.des_h<<16)&0x00ff0000) | (tr.des_h & 0xff000000);
+  Bit32u len = (tr.des_l & 0xffff) + 1;
 
   dbg_printf("tr:s=0x%x, base=0x%x, valid=%u\n",
-      (unsigned) cpu.tr.sel, laddr, (unsigned) cpu.tr.valid);
+      (unsigned) tr.sel, laddr, (unsigned) tr.valid);
 
   bx_bool paddr_valid;
   Bit32u paddr;
@@ -2992,7 +2979,7 @@ void bx_dbg_info_tss_command(void)
   bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
 }
 
-bx_num_range make_num_range (Bit64s from, Bit64s to)
+bx_num_range make_num_range(Bit64s from, Bit64s to)
 {
   bx_num_range x;
   x.from = from;
@@ -3002,11 +2989,9 @@ bx_num_range make_num_range (Bit64s from, Bit64s to)
 
 void bx_dbg_info_control_regs_command(void)
 {
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
-  int cr0 = cpu.cr0;
-  int cr2 = cpu.cr2;
-  int cr3 = cpu.cr3;
+  Bit32u cr0 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR0);
+  Bit32u cr2 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR2);
+  Bit32u cr3 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR3);
   dbg_printf("CR0=0x%08x\n", cr0);
   dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
   dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
@@ -3024,7 +3009,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 4
-  int cr4 = cpu.cr4;
+  Bit32u cr4 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR4);
   dbg_printf("CR4=0x%08x\n", cr4);
   dbg_printf("    VME=virtual-8086 mode extensions=%d\n", (cr4>>0) & 1);
   dbg_printf("    PVI=protected-mode virtual interrupts=%d\n", (cr4>>1) & 1);
@@ -3049,9 +3034,9 @@ void bx_dbg_info_control_regs_command(void)
 void bx_dbg_info_ne2k(int page, int reg)
 {
 #if BX_SUPPORT_NE2K
-  DEV_ne2k_print_info (stderr, page, reg, 0);
+  DEV_ne2k_print_info(stderr, page, reg, 0);
 #else
-  dbg_printf ("NE2000 support is not compiled in.\n");
+  dbg_printf("NE2000 support is not compiled in.\n");
 #endif
 }
 
