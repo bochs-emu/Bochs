@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.69 2006-06-11 16:40:37 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.70 2006-06-12 16:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3434,11 +3434,16 @@ Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs)
     }
 
     Bit32u lowaddr, highaddr;
-    if (descriptor.u.segment.c_ed && !descriptor.u.segment.executable) // expand-down
-      lowaddr = descriptor.u.segment.limit_scaled,
+
+    // expand-down
+    if (IS_DATA_SEGMENT(descriptor.type) && IS_DATA_SEGMENT_EXPAND_DOWN(descriptor.type)) {
+      lowaddr = descriptor.u.segment.limit_scaled;
       highaddr = descriptor.u.segment.g ? 0xffffffff : 0xffff;
-    else
-      lowaddr = 0, highaddr = descriptor.u.segment.limit_scaled;
+    }
+    else {
+      lowaddr = 0;
+      highaddr = descriptor.u.segment.limit_scaled;
+    }
 
     if ((ofs < lowaddr) || (ofs > highaddr)) {
       dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n",

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.28 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.29 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,7 +225,8 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
     return(0);
   }
 
-  if (descriptor->u.segment.c_ed) { /* expand down segment */
+  if (IS_DATA_SEGMENT_EXPAND_DOWN(descriptor->type)) /* expand down segment */
+  {
     Bit32u expand_down_limit;
 
     if (descriptor->u.segment.d_b)
@@ -316,7 +317,7 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
     return(0);
   }
 
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed) { /* expand down segment */
+  if (IS_DATA_SEGMENT_EXPAND_DOWN(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type)) { /* expand down */
     if (temp_ESP == expand_down_limit) {
       BX_PANIC(("can_pop(): found SP=ffff"));
       return(0);
@@ -334,7 +335,7 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
       BX_PANIC(("can_pop(): found SP=ffff"));
       return(0);
     }
-    if ( temp_ESP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled ) {
+    if (temp_ESP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled) {
       BX_PANIC(("can_pop(): eSP > SS.limit"));
       return(0);
     }

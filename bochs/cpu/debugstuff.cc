@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.70 2006-06-11 16:40:37 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.71 2006-06-12 16:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -346,15 +346,10 @@ bx_bool BX_CPU_C::dbg_set_reg(unsigned reg, Bit32u val)
     seg->cache.p = 1;
     seg->cache.dpl = 0;
     seg->cache.segment = 1; // regular segment
-    if (reg == BX_DBG_REG_CS) {
-      seg->cache.u.segment.executable = 1; // code segment
-    }
-    else {
-      seg->cache.u.segment.executable = 0; // data segment
-    }
-    seg->cache.u.segment.c_ed = 0;       // expand up/non-conforming
-    seg->cache.u.segment.r_w = 1;        // writeable
-    seg->cache.u.segment.a = 1;          // accessed
+    if (reg == BX_DBG_REG_CS)
+      seg->cache.type = BX_CODE_EXEC_READ_ACCESSED;
+    else
+      seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
     seg->cache.u.segment.base = val << 4;
     seg->cache.u.segment.limit        = 0xffff;
     seg->cache.u.segment.limit_scaled = 0xffff;
@@ -614,10 +609,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl              = (cpu->cs.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment          = (cpu->cs.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type             = (cpu->cs.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable = (cpu->cs.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed   = (cpu->cs.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w    = (cpu->cs.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a      = (cpu->cs.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base   = (cpu->cs.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base  |= (cpu->cs.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base  |= (cpu->cs.des_h & 0xff000000);
@@ -648,10 +639,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl              = (cpu->ss.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment          = (cpu->ss.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type             = (cpu->ss.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable = (cpu->ss.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed   = (cpu->ss.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w    = (cpu->ss.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a      = (cpu->ss.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base   = (cpu->ss.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base  |= (cpu->ss.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base  |= (cpu->ss.des_h & 0xff000000);
@@ -678,10 +665,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl              = (cpu->ds.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment          = (cpu->ds.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type             = (cpu->ds.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.executable = (cpu->ds.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.c_ed   = (cpu->ds.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.r_w    = (cpu->ds.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.a      = (cpu->ds.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base   = (cpu->ds.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base  |= (cpu->ds.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base  |= (cpu->ds.des_h & 0xff000000);
@@ -708,10 +691,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl              = (cpu->es.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment          = (cpu->es.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type             = (cpu->es.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable = (cpu->es.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed   = (cpu->es.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.r_w    = (cpu->es.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.a      = (cpu->es.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base   = (cpu->es.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base  |= (cpu->es.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base  |= (cpu->es.des_h & 0xff000000);
@@ -738,10 +717,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl              = (cpu->fs.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment          = (cpu->fs.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type             = (cpu->fs.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.executable = (cpu->fs.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.c_ed   = (cpu->fs.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.r_w    = (cpu->fs.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.a      = (cpu->fs.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base   = (cpu->fs.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base  |= (cpu->fs.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base  |= (cpu->fs.des_h & 0xff000000);
@@ -768,10 +743,6 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl              = (cpu->gs.des_h >> 13) & 0x03;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment          = (cpu->gs.des_h >> 12) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type             = (cpu->gs.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.executable = (cpu->gs.des_h >> 11) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.c_ed   = (cpu->gs.des_h >> 10) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.r_w    = (cpu->gs.des_h >> 9) & 0x01;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.a      = (cpu->gs.des_h >> 8) & 0x01;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base   = (cpu->gs.des_l >> 16);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base  |= (cpu->gs.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base  |= (cpu->gs.des_h & 0xff000000);
@@ -793,15 +764,15 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR ldtr.selector.ti    = (cpu->ldtr.sel >> 2) & 0x01;
   BX_CPU_THIS_PTR ldtr.selector.rpl   = cpu->ldtr.sel & 0x03;
 
-  BX_CPU_THIS_PTR ldtr.cache.valid           = cpu->ldtr.valid;
-  BX_CPU_THIS_PTR ldtr.cache.p               = (cpu->ldtr.des_h >> 15) & 0x01;
-  BX_CPU_THIS_PTR ldtr.cache.dpl             = (cpu->ldtr.des_h >> 13) & 0x03;
-  BX_CPU_THIS_PTR ldtr.cache.segment         = (cpu->ldtr.des_h >> 12) & 0x01;
-  BX_CPU_THIS_PTR ldtr.cache.type            = (cpu->ldtr.des_h >> 8) & 0x0f;
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base      = (cpu->ldtr.des_l >> 16);
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base     |= (cpu->ldtr.des_h & 0xff) << 16;
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base     |= (cpu->ldtr.des_h & 0xff000000);
-  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit     = (cpu->ldtr.des_l & 0xffff);
+  BX_CPU_THIS_PTR ldtr.cache.valid        = cpu->ldtr.valid;
+  BX_CPU_THIS_PTR ldtr.cache.p            = (cpu->ldtr.des_h >> 15) & 0x01;
+  BX_CPU_THIS_PTR ldtr.cache.dpl          = (cpu->ldtr.des_h >> 13) & 0x03;
+  BX_CPU_THIS_PTR ldtr.cache.segment      = (cpu->ldtr.des_h >> 12) & 0x01;
+  BX_CPU_THIS_PTR ldtr.cache.type         = (cpu->ldtr.des_h >> 8) & 0x0f;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base   = (cpu->ldtr.des_l >> 16);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  |= (cpu->ldtr.des_h & 0xff) << 16;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  |= (cpu->ldtr.des_h & 0xff000000);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit  = (cpu->ldtr.des_l & 0xffff);
 
   // TR
   type = (cpu->tr.des_h >> 8) & 0x0f;
@@ -811,11 +782,11 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR tr.selector.ti    = (cpu->tr.sel >> 2) & 0x01;
   BX_CPU_THIS_PTR tr.selector.rpl   = cpu->tr.sel & 0x03;
 
-  BX_CPU_THIS_PTR tr.cache.valid             = cpu->tr.valid;
-  BX_CPU_THIS_PTR tr.cache.p                 = (cpu->tr.des_h >> 15) & 0x01;
-  BX_CPU_THIS_PTR tr.cache.dpl               = (cpu->tr.des_h >> 13) & 0x03;
-  BX_CPU_THIS_PTR tr.cache.segment           = (cpu->tr.des_h >> 12) & 0x01;
-  BX_CPU_THIS_PTR tr.cache.type              = type;
+  BX_CPU_THIS_PTR tr.cache.valid          = cpu->tr.valid;
+  BX_CPU_THIS_PTR tr.cache.p              = (cpu->tr.des_h >> 15) & 0x01;
+  BX_CPU_THIS_PTR tr.cache.dpl            = (cpu->tr.des_h >> 13) & 0x03;
+  BX_CPU_THIS_PTR tr.cache.segment        = (cpu->tr.des_h >> 12) & 0x01;
+  BX_CPU_THIS_PTR tr.cache.type           = type;
   if (type == BX_SYS_SEGMENT_AVAIL_286_TSS) {
     BX_CPU_THIS_PTR tr.cache.u.tss.base   = (cpu->tr.des_l >> 16);
     BX_CPU_THIS_PTR tr.cache.u.tss.base  |= (cpu->tr.des_h & 0xff) << 16;

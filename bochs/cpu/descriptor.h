@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.13 2006-06-11 21:55:39 sshwarts Exp $
+// $Id: descriptor.h,v 1.14 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,11 +113,6 @@ typedef struct
 
 union {
   struct {
-    bx_bool executable;    /* 1=code, 0=data or stack segment */
-    bx_bool c_ed;          /* for code: 1=conforming,
-                              for data/stack: 1=expand down */
-    bx_bool r_w;           /* for code: readable?, for data/stack: writeable? */
-    bx_bool a;             /* accessed? */
     bx_address base;       /* base address: 286=24bits, 386=32bits, long=64 */
     Bit32u  limit;         /* limit: 286=16bits, 386=20bits */
     Bit32u  limit_scaled;  /* for efficiency, this contrived field is set to
@@ -170,10 +165,28 @@ union {
 #define IS_PRESENT(descriptor) (descriptor.p)
 
 #if BX_SUPPORT_X86_64
-  #define IS_LONG64_SEGMENT(descriptor)  (descriptor.u.segment.l)
+  #define IS_LONG64_SEGMENT(descriptor)   (descriptor.u.segment.l)
 #else
-  #define IS_LONG64_SEGMENT(descriptor)  (0)
+  #define IS_LONG64_SEGMENT(descriptor)   (0)
 #endif
+
+#define IS_CODE_SEGMENT(type)             (((type) >> 3) & 0x1)
+#define IS_CODE_SEGMENT_CONFORMING(type)  (((type) >> 2) & 0x1)
+#define IS_DATA_SEGMENT_EXPAND_DOWN(type) (((type) >> 2) & 0x1)
+#define IS_CODE_SEGMENT_READABLE(type)    (((type) >> 1) & 0x1)
+#define IS_DATA_SEGMENT_WRITEABLE(type)   (((type) >> 1) & 0x1)
+#define IS_SEGMENT_ACCESSED(type)         ( (type)       & 0x1)
+
+#define BX_SEGMENT_CODE                   (0x8)
+#define BX_SEGMENT_DATA_EXPAND_DOWN       (0x4)
+#define BX_SEGMENT_CODE_CONFORMING        (0x4)
+#define BX_SEGMENT_DATA_WRITE             (0x2)
+#define BX_SEGMENT_CODE_READ              (0x2)
+#define BX_SEGMENT_ACCESSED               (0x1)
+
+#define IS_DATA_SEGMENT(type) (! IS_CODE_SEGMENT(type))
+#define IS_CODE_SEGMENT_NON_CONFORMING(type) \
+            (! IS_CODE_SEGMENT_CONFORMING(type))
 
 typedef struct {
   bx_selector_t    selector;

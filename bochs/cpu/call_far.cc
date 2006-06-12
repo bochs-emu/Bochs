@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.11 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: call_far.cc,v 1.12 2006-06-12 16:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -234,7 +234,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         // DPL of selected descriptor must be <= CPL,
         // else #GP(code segment selector)
         if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
-            cs_descriptor.u.segment.executable==0 ||
+            IS_DATA_SEGMENT(cs_descriptor.type) ||
             cs_descriptor.dpl > CPL)
         {
           BX_ERROR(("call_protected: selected descriptor is not code"));
@@ -249,8 +249,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
         // CALL GATE TO MORE PRIVILEGE
         // if non-conforming code segment and DPL < CPL then
-        if ( (cs_descriptor.u.segment.c_ed==0) &&
-             (cs_descriptor.dpl < CPL) )
+        if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
         {
           Bit16u SS_for_cpl_x;
           Bit32u ESP_for_cpl_x;
@@ -298,11 +297,11 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           // descriptor must indicate writable data segment,
           //   else #TS(SS selector)
-          if (ss_descriptor.valid==0 || ss_descriptor.segment==0  ||
-              ss_descriptor.u.segment.executable ||
-              ss_descriptor.u.segment.r_w==0)
+          if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
+               IS_CODE_SEGMENT(ss_descriptor.type) ||
+              !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
           {
-            BX_ERROR(("call_protected: ss descriptor not writable data seg"));
+            BX_ERROR(("call_protected: ss descriptor is not writable data seg"));
             exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
           }
 
@@ -494,7 +493,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   // DPL of selected descriptor must be <= CPL,
   // else #GP(code segment selector)
   if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
-      cs_descriptor.u.segment.executable==0 ||
+      IS_DATA_SEGMENT(cs_descriptor.type) ||
       cs_descriptor.dpl > CPL)
   {
     BX_ERROR(("call_gate64: selected descriptor is not code"));
@@ -520,8 +519,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 
   // CALL GATE TO MORE PRIVILEGE
   // if non-conforming code segment and DPL < CPL then
-  if ( (cs_descriptor.u.segment.c_ed==0) &&
-       (cs_descriptor.dpl < CPL) )
+  if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
   {
     Bit64u RSP_for_cpl_x;
 

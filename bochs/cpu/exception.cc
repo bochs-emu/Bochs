@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.79 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: exception.cc,v 1.80 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // examine CS selector and descriptor given in gate descriptor
   // selector must be non-null else #GP(EXT)
-  if ( (gate_dest_selector & 0xfffc) == 0 ) {
+  if ((gate_dest_selector & 0xfffc) == 0) {
     BX_ERROR(("int_trap_gate(long mode): selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -141,9 +141,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // descriptor AR byte must indicate code seg
   // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
-  if ( cs_descriptor.valid==0 ||
-       cs_descriptor.segment==0 ||
-       cs_descriptor.u.segment.executable==0 ||
+  if ( cs_descriptor.valid==0 || cs_descriptor.segment==0 || 
+       IS_DATA_SEGMENT(cs_descriptor.type) ||
        cs_descriptor.dpl>CPL)
   {
     BX_ERROR(("interrupt(long mode): not code segment"));
@@ -165,7 +164,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
-  if ((cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL) || (ist > 0))
+  if ((IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) 
+                        && cs_descriptor.dpl<CPL) || (ist > 0))
   {
     Bit64u RSP_for_cpl_x;
 
@@ -217,22 +217,22 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // push long pointer to return address onto new stack
     push_64(old_CS);
     push_64(old_RIP);
-    if ( is_error_code )
+    if (is_error_code)
       push_64(error_code);
 
     // if INTERRUPT GATE set IF to 0
-    if ( !(gate_descriptor.type & 1) ) // even is int-gate
-      BX_CPU_THIS_PTR clear_IF ();
-    BX_CPU_THIS_PTR clear_TF ();
-    BX_CPU_THIS_PTR clear_VM ();
-    BX_CPU_THIS_PTR clear_RF ();
-    BX_CPU_THIS_PTR clear_NT ();
+    if (!(gate_descriptor.type & 1)) // even is int-gate
+      BX_CPU_THIS_PTR clear_IF();
+    BX_CPU_THIS_PTR clear_TF();
+    BX_CPU_THIS_PTR clear_VM();
+    BX_CPU_THIS_PTR clear_RF();
+    BX_CPU_THIS_PTR clear_NT();
     return;
   }
 
   // if code segment is conforming OR code segment DPL = CPL then
   // INTERRUPT TO SAME PRIVILEGE LEVEL:
-  if (cs_descriptor.u.segment.c_ed || cs_descriptor.dpl==CPL)
+  if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
   {
     BX_DEBUG(("interrupt(long mode): INTERRUPT TO SAME PRIVILEGE"));
 
@@ -255,28 +255,26 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     push_64(read_eflags());
     push_64(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
     push_64(RIP);
-    if ( is_error_code )
+    if (is_error_code)
       push_64(error_code);
 
     // set the RPL field of CS to CPL
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
 
     // if interrupt gate then set IF to 0
-    if ( !(gate_descriptor.type & 1) ) // even is int-gate
-      BX_CPU_THIS_PTR clear_IF ();
-    BX_CPU_THIS_PTR clear_TF ();
-    BX_CPU_THIS_PTR clear_VM ();
-    BX_CPU_THIS_PTR clear_RF ();
-    BX_CPU_THIS_PTR clear_NT ();
+    if (!(gate_descriptor.type & 1)) // even is int-gate
+      BX_CPU_THIS_PTR clear_IF();
+    BX_CPU_THIS_PTR clear_TF();
+    BX_CPU_THIS_PTR clear_VM();
+    BX_CPU_THIS_PTR clear_RF();
+    BX_CPU_THIS_PTR clear_NT();
     return;
   }
 
   // else #GP(CS selector + ext)
   BX_ERROR(("interrupt(long mode): bad descriptor"));
-  BX_ERROR(("c_ed=%u, descriptor.dpl=%u, CPL=%u",
-    (unsigned) cs_descriptor.u.segment.c_ed,
-    (unsigned) cs_descriptor.dpl,
-    (unsigned) CPL));
+  BX_ERROR(("type=%u, descriptor.dpl=%u, CPL=%u",
+    (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl, (unsigned) CPL));
   BX_ERROR(("cs.segment = %u", (unsigned) cs_descriptor.segment));
   exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
 }
@@ -389,7 +387,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     //   stack limits must allow push of 2 more bytes, else #SS(0)
     // push error code onto stack
 
-    if ( is_error_code ) {
+    if (is_error_code) {
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
         push_32(error_code);
       else
@@ -408,7 +406,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   case BX_286_TRAP_GATE:
   case BX_386_INTERRUPT_GATE:
   case BX_386_TRAP_GATE:
-    if ( gate_descriptor.type >= 14 ) { // 386 gate
+    if (gate_descriptor.type >= 14) { // 386 gate
       gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
       gate_dest_offset   = gate_descriptor.u.gate386.dest_offset;
     }
@@ -419,7 +417,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     // examine CS selector and descriptor given in gate descriptor
     // selector must be non-null else #GP(EXT)
-    if ( (gate_dest_selector & 0xfffc) == 0 ) {
+    if ((gate_dest_selector & 0xfffc) == 0) {
       BX_ERROR(("int_trap_gate(): selector null"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
@@ -433,10 +431,9 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     // descriptor AR byte must indicate code seg
     // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
-    if ( cs_descriptor.valid==0 ||
-         cs_descriptor.segment==0 ||
-         cs_descriptor.u.segment.executable==0 ||
-         cs_descriptor.dpl>CPL )
+    if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
+        IS_DATA_SEGMENT(cs_descriptor.type) ||
+        cs_descriptor.dpl>CPL)
     {
       BX_ERROR(("interrupt(): not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
@@ -450,7 +447,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     // if code segment is non-conforming and DPL < CPL then
     // INTERRUPT TO INNER PRIVILEGE:
-    if (cs_descriptor.u.segment.c_ed==0 && cs_descriptor.dpl<CPL)
+    if(IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && (cs_descriptor.dpl < CPL))
     {
       Bit16u old_SS, old_CS, SS_for_cpl_x;
       Bit32u ESP_for_cpl_x, old_EIP, old_ESP;
@@ -472,8 +469,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
                               &SS_for_cpl_x, &ESP_for_cpl_x);
 
       // Selector must be non-null else #TS(EXT)
-      if ( (SS_for_cpl_x & 0xfffc) == 0 ) {
-        BX_PANIC(("interrupt(): SS selector null"));
+      if ((SS_for_cpl_x & 0xfffc) == 0) {
+        BX_ERROR(("interrupt(): SS selector null"));
         exception(BX_TS_EXCEPTION, 0, 0); /* TS(ext) */
       }
 
@@ -487,25 +484,24 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       // selector rpl must = dpl of code segment,
       // else #TS(SS selector + ext)
       if (ss_selector.rpl != cs_descriptor.dpl) {
-        BX_PANIC(("interrupt(): SS.rpl != CS.dpl"));
+        BX_ERROR(("interrupt(): SS.rpl != CS.dpl"));
         exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
       }
 
       // stack seg DPL must = DPL of code segment,
       // else #TS(SS selector + ext)
       if (ss_descriptor.dpl != cs_descriptor.dpl) {
-        BX_PANIC(("interrupt(): SS.dpl != CS.dpl"));
+        BX_ERROR(("interrupt(): SS.dpl != CS.dpl"));
         exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
       }
 
       // descriptor must indicate writable data segment,
       // else #TS(SS selector + EXT)
-      if (ss_descriptor.valid==0 ||
-          ss_descriptor.segment==0 ||
-          ss_descriptor.u.segment.executable==1 ||
-          ss_descriptor.u.segment.r_w==0)
+      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
+           IS_CODE_SEGMENT(ss_descriptor.type) ||
+          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
       {
-        BX_PANIC(("interrupt(): SS not writable data segment"));
+        BX_ERROR(("interrupt(): SS is not writable data segment"));
         exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
       }
 
@@ -538,7 +534,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       }
 
       // new stack must have enough room, else #SS(seg selector)
-      if ( !can_push(&ss_descriptor, ESP_for_cpl_x, bytes) )
+      if (!can_push(&ss_descriptor, ESP_for_cpl_x, bytes))
       {
         BX_DEBUG(("interrupt(): new stack doesn't have room for %u bytes", (unsigned) bytes));
         exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc, 0);
@@ -572,12 +568,12 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       Bit32u eflags = read_eflags();
           
       // if INTERRUPT GATE set IF to 0
-      if ( !(gate_descriptor.type & 1) ) // even is int-gate
-        BX_CPU_THIS_PTR clear_IF ();
-      BX_CPU_THIS_PTR clear_TF ();
-      BX_CPU_THIS_PTR clear_VM ();
-      BX_CPU_THIS_PTR clear_RF ();
-      BX_CPU_THIS_PTR clear_NT ();
+      if (!(gate_descriptor.type & 1)) // even is int-gate
+        BX_CPU_THIS_PTR clear_IF();
+      BX_CPU_THIS_PTR clear_TF();
+      BX_CPU_THIS_PTR clear_VM();
+      BX_CPU_THIS_PTR clear_RF();
+      BX_CPU_THIS_PTR clear_NT();
 
       if (is_v8086_mode)
       {
@@ -646,7 +642,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
     // if code segment is conforming OR code segment DPL = CPL then
     // INTERRUPT TO SAME PRIVILEGE LEVEL:
-    if ( cs_descriptor.u.segment.c_ed==1 || cs_descriptor.dpl==CPL )
+    if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
     {
       int bytes;
       Bit32u temp_ESP;
@@ -691,14 +687,14 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         push_32(read_eflags());
         push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
         push_32(EIP);
-        if ( is_error_code )
+        if (is_error_code)
           push_32(error_code);
       }
       else { // 286 gate
         push_16(read_flags());
         push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
         push_16(IP);
-        if ( is_error_code )
+        if (is_error_code)
           push_16(error_code);
       }
 
@@ -709,20 +705,19 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       EIP = gate_dest_offset;
 
       // if interrupt gate then set IF to 0
-      if ( !(gate_descriptor.type & 1) ) // even is int-gate
-        BX_CPU_THIS_PTR clear_IF ();
-      BX_CPU_THIS_PTR clear_TF ();
-      BX_CPU_THIS_PTR clear_NT ();
-      BX_CPU_THIS_PTR clear_VM ();
-      BX_CPU_THIS_PTR clear_RF ();
+      if (!(gate_descriptor.type & 1)) // even is int-gate
+        BX_CPU_THIS_PTR clear_IF();
+      BX_CPU_THIS_PTR clear_TF();
+      BX_CPU_THIS_PTR clear_NT();
+      BX_CPU_THIS_PTR clear_VM();
+      BX_CPU_THIS_PTR clear_RF();
       return;
     }
 
     // else #GP(CS selector + ext)
     BX_DEBUG(("interrupt: bad descriptor"));
-    BX_DEBUG(("c_ed=%u, descriptor.dpl=%u, CPL=%u",
-          (unsigned) cs_descriptor.u.segment.c_ed,
-          (unsigned) cs_descriptor.dpl,
+    BX_DEBUG(("type=%u, descriptor.dpl=%u, CPL=%u",
+          (unsigned) cs_descriptor.type, (unsigned) cs_descriptor.dpl,
           (unsigned) CPL));
     BX_DEBUG(("cs.segment = %u", (unsigned) cs_descriptor.segment));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
@@ -739,8 +734,7 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // real mode interrupt
   Bit16u cs_selector, ip;
 
-  if ( (vector*4+3) > BX_CPU_THIS_PTR idtr.limit )
-  {
+  if ((vector*4+3) > BX_CPU_THIS_PTR idtr.limit) {
     BX_ERROR(("interrupt(real mode) vector > idtr.limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -758,12 +752,12 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_selector);
 
   /* INT affects the following flags: I,T */
-  BX_CPU_THIS_PTR clear_IF ();
-  BX_CPU_THIS_PTR clear_TF ();
+  BX_CPU_THIS_PTR clear_IF();
+  BX_CPU_THIS_PTR clear_TF();
 #if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR clear_AC ();
+  BX_CPU_THIS_PTR clear_AC();
 #endif
-  BX_CPU_THIS_PTR clear_RF ();
+  BX_CPU_THIS_PTR clear_RF();
 }
 
 void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
@@ -824,7 +818,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 
 #if BX_DEBUGGER
   if (bx_guard.special_unwind_stack) {
-    BX_INFO(("exception() returning early because special_unwind_stack is set"));
+    BX_INFO(("exception(): returning early because special_unwind_stack is set"));
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 #endif
@@ -863,7 +857,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       shutdown();
     }
 #if BX_DEBUGGER
-    bx_guard.special_unwind_stack = true;
+    bx_guard.special_unwind_stack = 1;
 #endif
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }

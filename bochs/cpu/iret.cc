@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.14 2006-06-09 22:29:07 sshwarts Exp $
+// $Id: iret.cc,v 1.15 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -285,10 +285,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     /* AR byte must indicate a writable data segment,
      * else #GP(SS selector) */
-    if (ss_descriptor.valid==0 ||
-        ss_descriptor.segment==0 ||
-        ss_descriptor.u.segment.executable ||
-        ss_descriptor.u.segment.r_w==0)
+    if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
+         IS_CODE_SEGMENT(ss_descriptor.type) ||
+        !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
     {
       BX_ERROR(("iret: SS AR byte not writable code segment"));
       exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);
@@ -555,10 +554,9 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
       /* AR byte must indicate a writable data segment,
        * else #GP(SS selector) */
-      if (ss_descriptor.valid==0 ||
-          ss_descriptor.segment==0 ||
-          ss_descriptor.u.segment.executable ||
-          ss_descriptor.u.segment.r_w==0)
+      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
+          IS_CODE_SEGMENT(ss_descriptor.type) ||
+         !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
       {
         BX_ERROR(("iret64: SS AR byte not writable code segment"));
         exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc, 0);

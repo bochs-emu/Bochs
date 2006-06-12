@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.26 2006-03-27 18:02:07 sshwarts Exp $
+// $Id: vm8086.cc,v 1.27 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,8 +225,8 @@ void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) temp_CS);
   RIP = temp_IP;
 
-  BX_CPU_THIS_PTR clear_TF ();
-  BX_CPU_THIS_PTR clear_RF ();
+  BX_CPU_THIS_PTR clear_TF();
+  BX_CPU_THIS_PTR clear_RF();
   if (BX_CPU_THIS_PTR get_IOPL() == 3)
     BX_CPU_THIS_PTR clear_IF ();
   else
@@ -236,15 +236,13 @@ void BX_CPU_C::v86_redirect_interrupt(Bit32u vector)
 
 void BX_CPU_C::init_v8086_mode(void)
 {
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xffff;
@@ -257,15 +255,12 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xffff;
@@ -274,15 +269,12 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable   = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit_scaled = 0xffff;
@@ -291,15 +283,12 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.executable   = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit_scaled = 0xffff;
@@ -308,15 +297,12 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.executable   = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.limit_scaled = 0xffff;
@@ -325,15 +311,12 @@ void BX_CPU_C::init_v8086_mode(void)
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.avl          = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.rpl                 = 3;
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid                  = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p                      = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl                    = 3;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment                = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.executable   = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.c_ed         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.r_w          = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.a            = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base         =
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.segment = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.base =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value << 4;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit        = 0xffff;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled = 0xffff;

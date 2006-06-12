@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.47 2006-05-21 20:41:48 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.48 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,7 +130,7 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
    */
 
   if (descriptor.segment) { /* normal segment */
-    if (descriptor.u.segment.executable && descriptor.u.segment.c_ed) {
+    if (IS_CODE_SEGMENT(descriptor.type) && IS_CODE_SEGMENT_CONFORMING(descriptor.type)) {
       /* ignore DPL for conforming segments */
     }
     else {
@@ -541,22 +541,24 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
 
   /* normal data/code segment */
-  if (descriptor.u.segment.executable) { /* code segment */
+  if (IS_CODE_SEGMENT(descriptor.type)) { /* code segment */
     /* ignore DPL for readable conforming segments */
-    if (descriptor.u.segment.c_ed && descriptor.u.segment.r_w) {
+    if (IS_CODE_SEGMENT_CONFORMING(descriptor.type) &&
+        IS_CODE_SEGMENT_READABLE(descriptor.type))
+    {
       BX_DEBUG(("VERR: conforming code, OK"));
       assert_ZF(); /* accessible */
       return;
     }
-    if (descriptor.u.segment.r_w==0) {
+    if (!IS_CODE_SEGMENT_READABLE(descriptor.type)) {
       BX_DEBUG(("VERR: code not readable"));
-      clear_ZF (); /* inaccessible */
+      clear_ZF();  /* inaccessible */
       return;
     }
     /* readable, non-conforming code segment */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       BX_DEBUG(("VERR: non-conforming code not withing priv level"));
-      clear_ZF (); /* inaccessible */
+      clear_ZF();  /* inaccessible */
       return;
     }
 
@@ -615,7 +617,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   parse_descriptor(dword1, dword2, &descriptor);
 
   /* rule out system segments & code segments */
-  if (descriptor.segment==0 || descriptor.u.segment.executable) {
+  if (descriptor.segment==0 || IS_CODE_SEGMENT(descriptor.type)) {
     BX_DEBUG(("VERW: system seg or code"));
     clear_ZF();
     return;
@@ -628,7 +630,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   }
 
   /* data segment */
-  if (descriptor.u.segment.r_w) { /* writable */
+  if (IS_DATA_SEGMENT_WRITEABLE(descriptor.type)) { /* writable */
     if ((descriptor.dpl<CPL) || (descriptor.dpl<selector.rpl)) {
       BX_DEBUG(("VERW: writable data seg not within priv level"));
       clear_ZF(); /* not accessible */

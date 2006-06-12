@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.152 2006-06-11 21:37:22 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.153 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1082,19 +1082,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x84c, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.limit = limit;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.a          = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.r_w        = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.c_ed       = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.u.segment.executable = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment    = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.dpl        = (access & 0x03); access >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid      =
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.p          = (access & 0x01);
+  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache, access);
 
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value & 0xfffc) == 0 ) {
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid==0  ||
+  else {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid = 1;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid==0 ||
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.segment==0)
   {
     BX_PANIC(("loadall: DS invalid"));
@@ -1112,18 +1108,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x846, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit = limit;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a          = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w        = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed       = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment    = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl        = (access & 0x03); access >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p          = (access & 0x01);
+  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, access);
 
   if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0  ||
+  else {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0 ||
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment==0)
   {
     BX_PANIC(("loadall: SS invalid"));
@@ -1142,19 +1135,15 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x840, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit = limit;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a          = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w        = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed       = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment    = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl        = (access & 0x03); access >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p          = (access & 0x01);
+  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache, access);
 
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value & 0xfffc) == 0)
-  {
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid==0  ||
+  else {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 1;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid==0 ||
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment==0)
   {
     BX_PANIC(("loadall: CS invalid"));
@@ -1176,19 +1165,25 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x83a, 2, &limit);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.base = (base_23_16 << 16) | base_15_0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.limit = limit;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.a          = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.r_w        = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.c_ed       = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.u.segment.executable = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment    = (access & 0x01); access >>= 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.dpl        = (access & 0x03); access >>= 2;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.p          = (access & 0x01);
+  set_ar_byte(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache, access);
+
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value & 0xfffc) == 0) {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
+  }
+  else {
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 1;
+  }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid==0 ||
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment==0)
+  {
+    BX_PANIC(("loadall: ES invalid"));
+  }
 
 #if 0
     BX_INFO(("cs.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl));
     BX_INFO(("ss.dpl = %02x", (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl));
-    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = %02x", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl));
-    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = %02x", (unsigned) BX_CPU_THIS_PTR es.cache.dpl));
+    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR ds.cache.dpl));
+    BX_INFO(("BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].dpl = 0x%02x", (unsigned) BX_CPU_THIS_PTR es.cache.dpl));
     BX_INFO(("LOADALL: setting cs.selector.rpl to %u",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl));
     BX_INFO(("LOADALL: setting ss.selector.rpl to %u",
@@ -1198,16 +1193,6 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_INFO(("LOADALL: setting es.selector.rpl to %u",
       (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.rpl));
 #endif
-
-  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value & 0xfffc) == 0)
-  {
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
-  }
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid==0  ||
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.segment==0)
-  {
-    BX_PANIC(("loadall: ES invalid"));
-  }
 
   /* DI */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x826, 2, &di);
@@ -1251,8 +1236,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
 #if 0
   if (access)
-      BX_INFO(("LOADALL: GDTR access bits not 0 (%02x).",
-        (unsigned) access));
+      BX_INFO(("LOADALL: GDTR access bits not 0 (%02x)", (unsigned) access));
 #endif
 
   /* IDTR */
@@ -1885,10 +1869,11 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
   parse_selector(BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;          // code segment
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;          // non-conforming
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;          // readable
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;          // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;          // base address
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;     // segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
@@ -1903,10 +1888,11 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;          // data segment
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;          // expand-up
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;          // writeable
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;          // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;          // base address
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;     // segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
@@ -1943,10 +1929,11 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) | 3, 
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;           // code segment
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0;           // non-conforming
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1;           // readable
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1;           // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;           // base address
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      // segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
@@ -1961,10 +1948,11 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;           // data segment
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0;           // expand-up
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1;           // writeable
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1;           // accessed
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 3;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;           // base address
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;      // segment limit
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  // scaled segment limit
@@ -2076,15 +2064,11 @@ SYSCALL_LEGACY_MODE:
     parse_selector((MSR_STAR >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* non-conforming */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2101,15 +2085,11 @@ SYSCALL_LEGACY_MODE:
     parse_selector(((MSR_STAR >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write/access */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0; /* normal expand up */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1; /* accessed */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1; /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2132,15 +2112,11 @@ SYSCALL_LEGACY_MODE:
     parse_selector((MSR_STAR >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* non-conforming */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2157,15 +2133,11 @@ SYSCALL_LEGACY_MODE:
     parse_selector(((MSR_STAR >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = 3; /* read/write/access */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.executable   = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.c_ed         = 0; /* normal expand up */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.r_w          = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.a            = 1; /* accessed */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 0;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1; /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2259,15 +2231,11 @@ SYSRET_NON_64BIT_MODE:
       parse_selector(((MSR_STAR >> 48) + 16) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 3;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* non-conforming */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2283,15 +2251,11 @@ SYSRET_NON_64BIT_MODE:
       parse_selector((MSR_STAR >> 48) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 3;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* non-conforming */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2311,10 +2275,11 @@ SYSRET_NON_64BIT_MODE:
     parse_selector((MSR_STAR >> 48) + 8,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 3;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
     writeEFlags(R11, EFlagsValidMask);
 
@@ -2325,15 +2290,11 @@ SYSRET_NON_64BIT_MODE:
     parse_selector((MSR_STAR >> 48) | 3,
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 3;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = 11; /* executable/readable/access code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.executable   = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.c_ed         = 0; /* non-conforming */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.r_w          = 1; /* writeable */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.a            = 1; /* accessed */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 3;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit        = 0xFFFF;      /* segment limit */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
@@ -2350,10 +2311,11 @@ SYSRET_NON_64BIT_MODE:
     parse_selector((MSR_STAR >> 48) + 8,
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = 3;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 3;
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
+    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
     BX_CPU_THIS_PTR assert_IF();
     temp_RIP = ECX;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.34 2006-06-09 22:29:07 sshwarts Exp $
+// $Id: tasking.cc,v 1.35 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -557,7 +557,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
       // CS descriptor AR byte must indicate code segment else #TS(CS)
       if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
-          cs_descriptor.u.segment.executable==0)
+          IS_DATA_SEGMENT(cs_descriptor.type))
       {
         BX_PANIC(("task_switch: CS not valid executable seg"));
         exception_no = BX_TS_EXCEPTION;
@@ -566,8 +566,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // if non-conforming then DPL must equal selector RPL else #TS(CS)
-      if (cs_descriptor.u.segment.c_ed==0 &&
-          cs_descriptor.dpl!=cs_selector.rpl)
+      if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) &&
+          cs_descriptor.dpl != cs_selector.rpl)
       {
         BX_INFO(("task_switch: non-conforming: CS.dpl!=CS.RPL"));
         exception_no = BX_TS_EXCEPTION;
@@ -576,8 +576,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       }
 
       // if conforming then DPL must be <= selector RPL else #TS(CS)
-      if (cs_descriptor.u.segment.c_ed &&
-               cs_descriptor.dpl>cs_selector.rpl)
+      if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) &&
+          cs_descriptor.dpl > cs_selector.rpl)
       {
         BX_INFO(("task_switch: conforming: CS.dpl>RPL"));
         exception_no = BX_TS_EXCEPTION;
@@ -624,8 +624,8 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
       // SS descriptor AR byte must must indicate writable data segment,
       // else #TS(SS)
       if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-          ss_descriptor.u.segment.executable ||
-          ss_descriptor.u.segment.r_w==0)
+           IS_CODE_SEGMENT(ss_descriptor.type) ||
+          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
       {
         BX_INFO(("task_switch: SS not valid"));
         exception_no = BX_TS_EXCEPTION;
@@ -706,7 +706,7 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
   Bit32u dword1, dword2;
 
   // NULL selector is OK, will leave cache invalid
-  if ( (raw_selector & 0xfffc) != 0 )
+  if ((raw_selector & 0xfffc) != 0)
   {
     bx_bool good = fetch_raw_descriptor2(selector, &dword1, &dword2);
     if (!good) {
@@ -716,19 +716,23 @@ void BX_CPU_C::task_switch_load_selector(bx_segment_reg_t *seg,
 
     parse_descriptor(dword1, dword2, &descriptor);
 
-    if (descriptor.valid==0 || descriptor.segment==0 ||
-       (descriptor.u.segment.executable &&
-        descriptor.u.segment.r_w==0))
+    /* AR byte must indicate data or readable code segment else #TS(selector) */
+    if (descriptor.segment==0 || (IS_CODE_SEGMENT(descriptor.type) && 
+        IS_CODE_SEGMENT_READABLE(descriptor.type) == 0))
     {
-      BX_ERROR(("task_switch(%s): not a writeable data segment !", strseg(seg)));
+      BX_ERROR(("task_switch(%s): not data or readable code !", strseg(seg)));
       exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
     }
 
-    if (descriptor.type < 12 &&
-            (descriptor.dpl < cs_rpl || descriptor.dpl < selector->rpl))
+    /* If data or non-conforming code, then both the RPL and the CPL
+     * must be less than or equal to DPL in AR byte else #GP(selector) */
+    if (IS_DATA_SEGMENT(descriptor.type) ||
+        IS_CODE_SEGMENT_NON_CONFORMING(descriptor.type))
     {
-      BX_ERROR(("task_switch(%s): descriptor DPL check failed !", strseg(seg)));
-      exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+      if ((selector->rpl > descriptor.dpl) || (cs_rpl > descriptor.dpl)) {
+        BX_ERROR(("load_seg_reg(%s): RPL & CPL must be <= DPL", strseg(seg)));
+        exception(BX_TS_EXCEPTION, raw_selector & 0xfffc, 0);
+      }
     }
 
     if (! IS_PRESENT(descriptor)) {

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.54 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.55 2006-06-12 16:58:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,8 +41,8 @@
 void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)
 {
   // descriptor AR byte must indicate code segment else #GP(selector)
-  if ((descriptor->valid==0) || (descriptor->segment==0) ||
-      (descriptor->u.segment.executable==0))
+  if (descriptor->valid==0 || descriptor->segment==0 ||
+          IS_DATA_SEGMENT(descriptor->type))
   {
     BX_ERROR(("check_cs: not a valid code segment !"));
     exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
@@ -63,7 +63,7 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
 #endif
 
   // if non-conforming, code segment descriptor DPL must = CPL else #GP(selector)
-  if (descriptor->u.segment.c_ed==0) {
+  if (IS_CODE_SEGMENT_NON_CONFORMING(descriptor->type)) {
     if (descriptor->dpl != check_cpl) {
       BX_ERROR(("check_cs: non-conforming code seg descriptor dpl != cpl"));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.63 2006-06-09 22:29:07 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.64 2006-06-12 16:58:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,9 +75,8 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       }
 
       /* AR byte must indicate a writable data segment else #GP(selector) */
-      if ((descriptor.segment==0) ||
-           descriptor.u.segment.executable ||
-           descriptor.u.segment.r_w==0 )
+      if (descriptor.segment==0 || IS_CODE_SEGMENT(descriptor.type) ||
+          IS_DATA_SEGMENT_WRITEABLE(descriptor.type) == 0)
       {
         BX_ERROR(("load_seg_reg(SS): not writable data segment"));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
@@ -144,9 +143,8 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       }
 
       /* AR byte must indicate data or readable code segment else #GP(selector) */
-      if ( descriptor.segment==0 ||
-          (descriptor.u.segment.executable==1 &&
-           descriptor.u.segment.r_w==0) )
+      if (descriptor.segment==0 || (IS_CODE_SEGMENT(descriptor.type) && 
+          IS_CODE_SEGMENT_READABLE(descriptor.type) == 0))
       {
         BX_ERROR(("load_seg_reg(%s): not data or readable code", strseg(seg)));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
@@ -154,8 +152,8 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 
       /* If data or non-conforming code, then both the RPL and the CPL
        * must be less than or equal to DPL in AR byte else #GP(selector) */
-      if (descriptor.u.segment.executable==0 ||
-          descriptor.u.segment.c_ed==0)
+      if (IS_DATA_SEGMENT(descriptor.type) ||
+          IS_CODE_SEGMENT_NON_CONFORMING(descriptor.type))
       {
         if ((selector.rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
           BX_ERROR(("load_seg_reg(%s): RPL & CPL must be <= DPL", strseg(seg)));
@@ -221,23 +219,20 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   seg->cache.p = 1; /* present */
 
   if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS]) {
-    seg->cache.u.segment.executable = 1; /* code segment */
+    seg->cache.type = BX_CODE_EXEC_READ_ACCESSED;
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
     invalidate_prefetch_q();
   }
   else {
-    seg->cache.u.segment.executable = 0; /* data segment */
+    seg->cache.type = BX_DATA_READ_WRITE_ACCESSED;
   }
 
   /* Do not modify segment limit and AR bytes when in real mode */
   if (real_mode()) return;
 
   seg->cache.dpl = 3; /* we are in v8086 mode */
-  seg->cache.u.segment.c_ed = 0; /* expand up */
-  seg->cache.u.segment.r_w = 1; /* writeable */
-  seg->cache.u.segment.a = 1; /* accessed */
   seg->cache.u.segment.limit        = 0xffff;
   seg->cache.u.segment.limit_scaled = 0xffff;
 #if BX_CPU_LEVEL >= 3
@@ -287,8 +282,9 @@ void BX_CPU_C::validate_seg_reg(unsigned seg)
   if (segment->cache.dpl < CPL)
   {
     // invalidate if data or non-conforming code segment
-    if ((segment->cache.valid==0) || (segment->cache.segment==0) ||
-        (segment->cache.u.segment.executable==0) || (segment->cache.u.segment.c_ed==0))
+    if (segment->cache.valid==0 || segment->cache.segment==0 ||
+        IS_DATA_SEGMENT(segment->cache.type) ||
+        IS_CODE_SEGMENT_NON_CONFORMING(segment->cache.type))
     {
       segment->selector.value = 0;
       segment->cache.valid = 0;
@@ -322,20 +318,10 @@ BX_CPU_C::ar_byte(const bx_descriptor_t *d)
     return(0);
   }
 
-  if (d->segment) {
-    return (d->u.segment.a) |
-           (d->u.segment.r_w << 1) |
-           (d->u.segment.c_ed << 2) |
-           (d->u.segment.executable << 3) |
-           (d->segment << 4) |
-           (d->dpl << 5) |
-           (d->p << 7);
-  }
-  else {
-    return (d->type) |
-           (d->dpl << 5) |
-           (d->p << 7);
-  }
+  return (d->type) |
+         (d->segment << 4) |
+         (d->dpl << 5) |
+         (d->p << 7);
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -345,13 +331,6 @@ BX_CPU_C::set_ar_byte(bx_descriptor_t *d, Bit8u ar_byte)
   d->dpl      = (ar_byte >> 5) & 0x03;
   d->segment  = (ar_byte >> 4) & 0x01;
   d->type     = (ar_byte & 0x0f);
-
-  if (d->segment) {
-    d->u.segment.executable = (ar_byte >> 3) & 0x01;
-    d->u.segment.c_ed       = (ar_byte >> 2) & 0x01;
-    d->u.segment.r_w        = (ar_byte >> 1) & 0x01;
-    d->u.segment.a          = (ar_byte >> 0) & 0x01;
-  }
 }
 
   Bit32u BX_CPP_AttrRegparmN(1)
@@ -405,10 +384,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
   if (d->segment) {
     val = (d->u.segment.base & 0xff000000) |
           ((d->u.segment.base >> 16) & 0x000000ff) |
-          (d->u.segment.executable << 11) |
-          (d->u.segment.c_ed << 10) |
-          (d->u.segment.r_w << 9) |
-          (d->u.segment.a << 8) |
+          (d->type << 8) |
           (d->segment << 12) |
           (d->dpl << 13) |
           (d->p << 15) |
@@ -471,10 +447,7 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
   Bit16u val = 0;
 
   if (d->segment) { /* data/code segment descriptors */
-    val = (d->u.segment.executable << 3) |
-          (d->u.segment.c_ed << 2) |
-          (d->u.segment.r_w << 1) |
-          (d->u.segment.a << 0) |
+    val = (d->type) |
           (d->segment << 4) |
           (d->dpl << 5) |
           (d->p << 7) |
@@ -491,13 +464,13 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
     case BX_SYS_SEGMENT_LDT:
     case BX_SYS_SEGMENT_AVAIL_286_TSS:
     case BX_SYS_SEGMENT_BUSY_286_TSS:
-        val = (d->type << 0) |
+        val = (d->type) |
               (d->dpl << 5) |
               (d->p << 7);
         return(val);
     case BX_SYS_SEGMENT_AVAIL_386_TSS:
     case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = (d->type << 0) |
+        val = (d->type) |
               (d->dpl << 5) |
               (d->p << 7) |
               (d->u.tss.avl << 12) |
@@ -523,22 +496,18 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
   d->type     = (ar_data & 0x0f);
 
   if (d->segment) { /* data/code segment descriptors */
-    d->u.segment.executable = (ar_data >>  3) & 0x01;
-    d->u.segment.c_ed       = (ar_data >>  2) & 0x01;
-    d->u.segment.r_w        = (ar_data >>  1) & 0x01;
-    d->u.segment.a          = (ar_data >>  0) & 0x01;
-    d->u.segment.g          = (ar_data >> 15) & 0x01;
-    d->u.segment.d_b        = (ar_data >> 14) & 0x01;
+    d->u.segment.g     = (ar_data >> 15) & 0x01;
+    d->u.segment.d_b   = (ar_data >> 14) & 0x01;
 #if BX_SUPPORT_X86_64
-    d->u.segment.l          = (ar_data >> 13) & 0x01;
+    d->u.segment.l     = (ar_data >> 13) & 0x01;
 #endif
-    d->u.segment.avl        = (ar_data >> 12) & 0x01;
+    d->u.segment.avl   = (ar_data >> 12) & 0x01;
 
-    d->u.segment.base       = base;
-    d->u.segment.limit      = limit;
+    d->u.segment.base  = base;
+    d->u.segment.limit = limit;
 
     if (d->u.segment.g) {
-      if ((d->u.segment.executable==0) && (d->u.segment.c_ed))
+      if (IS_DATA_SEGMENT(d->type) && IS_DATA_SEGMENT_EXPAND_DOWN(d->type))
         d->u.segment.limit_scaled = (d->u.segment.limit << 12);
       else
         d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
@@ -598,11 +567,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
   temp->valid    = 0; /* start out invalid */
 
   if (temp->segment) { /* data/code segment descriptors */
-    temp->u.segment.executable = (AR_byte >> 3) & 0x01;
-    temp->u.segment.c_ed       = (AR_byte >> 2) & 0x01;
-    temp->u.segment.r_w        = (AR_byte >> 1) & 0x01;
-    temp->u.segment.a          = (AR_byte >> 0) & 0x01;
-
     temp->u.segment.limit      = (dword1 & 0xffff);
     temp->u.segment.base       = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
 
@@ -617,7 +581,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
     temp->u.segment.base      |= (dword2 & 0xFF000000);
 
     if (temp->u.segment.g) {
-      if ((temp->u.segment.executable==0) && (temp->u.segment.c_ed))
+      if (IS_DATA_SEGMENT(temp->type) && IS_DATA_SEGMENT_EXPAND_DOWN(temp->type))
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12);
       else
         temp->u.segment.limit_scaled = (temp->u.segment.limit << 12) | 0x0fff;
@@ -738,10 +702,10 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     return;
   }
 #endif
-  if ( (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0 )
+  if ((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value & 0xfffc) == 0)
     BX_PANIC(("load_ss(): null selector passed"));
 
-  if ( !BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid ) {
+  if (!BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid) {
     BX_PANIC(("load_ss(): invalid selector/descriptor passed."));
   }
 }
