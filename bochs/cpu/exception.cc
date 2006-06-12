@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.80 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: exception.cc,v 1.81 2006-06-12 19:51:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -763,10 +763,6 @@ void BX_CPU_C::real_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bit16u error_code)
 {
 #if BX_DEBUGGER
-  if (bx_guard.special_unwind_stack) {
-    BX_INFO(("interrupt() returning early because special_unwind_stack is set"));
-    return;
-  }
   BX_CPU_THIS_PTR show_flag |= Flag_intsig;
 #if BX_DEBUG_LINUX
   if (bx_dbg.linux_syscall) {
@@ -816,17 +812,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   invalidate_prefetch_q();
   UNUSED(is_INT);
 
-#if BX_DEBUGGER
-  if (bx_guard.special_unwind_stack) {
-    BX_INFO(("exception(): returning early because special_unwind_stack is set"));
-    longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
-  }
-#endif
-
-//#if BX_EXTERNAL_DEBUGGER
-  //trap_debugger(1);
-//#endif
-
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
 
   BX_DEBUG(("exception(0x%02X)", (unsigned) vector));
@@ -846,9 +831,13 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
      // if 1st was a double fault (software INT?), then shutdown
      (BX_CPU_THIS_PTR errorno == 2 && BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT))
   {
+    debug(BX_CPU_THIS_PTR prev_eip); // print debug information to the log
+#if BX_DEBUGGER
+    // trap into debugger (similar as done when PANIC occured)
+    bx_debug_break();
+#endif
     if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
       BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
-      debug(BX_CPU_THIS_PTR prev_eip);
       bx_pc_system.Reset(BX_RESET_SOFTWARE);
     }
     else {
@@ -856,9 +845,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
       BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
       shutdown();
     }
-#if BX_DEBUGGER
-    bx_guard.special_unwind_stack = 1;
-#endif
     longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
   }
 

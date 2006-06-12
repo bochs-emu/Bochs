@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.26 2006-06-11 16:40:37 sshwarts Exp $
+// $Id: debug.h,v 1.27 2006-06-12 19:51:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,7 +225,7 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value);
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
-bx_num_range make_num_range (Bit64s from, Bit64s to);
+bx_num_range make_num_range(Bit64s from, Bit64s to);
 void bx_dbg_trace_command(bx_bool enable);
 void bx_dbg_trace_reg_command(bx_bool enable);
 void bx_dbg_ptime_command(void);
@@ -251,12 +251,12 @@ void bx_dbg_disassemble_switch_mode(void);
 void bx_dbg_set_disassemble_size(unsigned size);
 void bx_dbg_del_breakpoint_command(unsigned handle);
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable);
-bx_bool bx_dbg_en_dis_pbreak (unsigned handle, bx_bool enable);
-bx_bool bx_dbg_en_dis_lbreak (unsigned handle, bx_bool enable);
-bx_bool bx_dbg_en_dis_vbreak (unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_pbreak(unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_lbreak(unsigned handle, bx_bool enable);
+bx_bool bx_dbg_en_dis_vbreak(unsigned handle, bx_bool enable);
 bx_bool bx_dbg_del_pbreak(unsigned handle);
-bx_bool bx_dbg_del_lbreak (unsigned handle);
-bx_bool bx_dbg_del_vbreak (unsigned handle);
+bx_bool bx_dbg_del_lbreak(unsigned handle);
+bx_bool bx_dbg_del_vbreak(unsigned handle);
 int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip);
 int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
@@ -349,7 +349,7 @@ typedef enum {
 #define BX_DBG_PENDING_DMA 1
 #define BX_DBG_PENDING_IRQ 2
 
-void bx_debug_break ();
+void bx_debug_break(void);
 
 void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS
@@ -408,18 +408,6 @@ typedef struct {
   // user typed Ctrl-C, requesting simulator stop at next convient spot
   volatile bx_bool interrupt_requested;
 
-  // when a triple fault occurs, Bochs panics.  If you continue through
-  // the panic, it will generally produce another exception and panic
-  // again at an even deeper stack level.  To recover from this potentially
-  // infinite recursion, I set special_unwind_stack to true.  This causes
-  // the interrupt() and exception() functions to return immediately instead
-  // of creating more exception conditions, and allows the user to reenter the
-  // debugger after the triple fault.  Note that special_unwind_stack causes
-  // bochs to NOT emulate the hardware behavior correctly.  The correct
-  // behavior would be to reboot.  (Rebooting, if it is ever implemented,
-  // will need some kind of unwinding too.)
-  bx_bool special_unwind_stack;
-
   // booleans to control whether simulator should report events
   // to debug controller
   struct {
@@ -472,7 +460,7 @@ extern bx_guard_t bx_guard;
 
 int  bx_dbg_main(int argc, char *argv[]);
 void bx_dbg_user_input_loop(void);
-void bx_dbg_interpret_line (char *cmd);
+void bx_dbg_interpret_line(char *cmd);
 
 typedef struct {
   Bit16u sel;

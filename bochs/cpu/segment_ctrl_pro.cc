@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.64 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.65 2006-06-12 19:51:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -511,7 +511,7 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
         d->u.segment.limit_scaled = (d->u.segment.limit << 12);
       else
         d->u.segment.limit_scaled = (d->u.segment.limit << 12) | 0x0fff;
-      }
+    }
     else
       d->u.segment.limit_scaled = d->u.segment.limit;
 
