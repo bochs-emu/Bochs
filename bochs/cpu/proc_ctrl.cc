@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.153 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.154 2006-06-14 16:44:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -698,7 +698,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       val_32 = 0;
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_RdCd: reading CR3"));
+      BX_DEBUG(("MOV_RdCd: reading CR2"));
       val_32 = BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
@@ -706,7 +706,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
       val_32 = BX_CPU_THIS_PTR cr3;
       break;
     case 4: // CR4
-#if BX_CPU_LEVEL == 3
+#if BX_CPU_LEVEL < 4
       val_32 = 0;
       BX_INFO(("MOV_RdCd: read of CR4 causes #UD"));
       UndefinedOpcode(i);
@@ -764,6 +764,8 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       BX_PANIC(("MOV_CqRq: CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
+      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", 
+          (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3

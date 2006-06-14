@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.39 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: dma.cc,v 1.40 2006-06-14 16:44:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,8 +42,7 @@
 
 bx_dma_c *theDmaDevice = NULL;
 
-  int
-libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libdma_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   theDmaDevice = new bx_dma_c ();
   bx_devices.pluginDmaDevice = theDmaDevice;
@@ -55,13 +54,13 @@ void libdma_LTX_plugin_fini(void)
 {
 }
 
-bx_dma_c::bx_dma_c(void)
+bx_dma_c::bx_dma_c()
 {
   put("DMA");
   settype(DMALOG);
 }
 
-bx_dma_c::~bx_dma_c(void)
+bx_dma_c::~bx_dma_c()
 {
    BX_DEBUG(("Exit"));
 }
@@ -123,7 +122,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.39 2006-05-29 22:33:38 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.40 2006-06-14 16:44:33 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 
@@ -224,7 +223,7 @@ void bx_dma_c::register_state(void)
   bx_list_c *extpg = new bx_list_c(list, "ext_page", 16);
   for (i=0; i<16; i++) {
     sprintf(name, "0x%02x", 0x80+i);
-    BXRS_HEX_PARAM_FIELD(extpg, name, BX_DMA_THIS ext_page_reg[i]);
+    new bx_shadow_num_c(extpg, name, &BX_DMA_THIS ext_page_reg[i], BASE_HEX);
   }
 }
 #endif
