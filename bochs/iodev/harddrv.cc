@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.171 2006-06-15 09:44:36 vruppert Exp $
+// $Id: harddrv.cc,v 1.172 2006-06-16 07:29:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,7 +143,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.171 2006-06-15 09:44:36 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.172 2006-06-16 07:29:33 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -364,7 +364,8 @@ void bx_hard_drive_c::init(void)
 
         if ((image_mode == BX_ATA_MODE_FLAT) || (image_mode == BX_ATA_MODE_CONCAT) ||
             (image_mode == BX_ATA_MODE_GROWING) || (image_mode == BX_ATA_MODE_UNDOABLE) ||
-            (image_mode == BX_ATA_MODE_VOLATILE) || (image_mode == BX_ATA_MODE_VMWARE3)) {
+            (image_mode == BX_ATA_MODE_VOLATILE) || (image_mode == BX_ATA_MODE_VMWARE3) ||
+            (image_mode == BX_ATA_MODE_SPARSE)) {
           geometry_detect = (cyl == 0);
           if ((heads == 0) || (spt == 0)) {
             BX_PANIC(("ata%d/%d cannot have zero heads, or sectors/track", channel, device));
@@ -380,17 +381,21 @@ void bx_hard_drive_c::init(void)
           BX_PANIC(("ata%d-%d: could not open hard drive image file '%s'", channel, device, SIM->get_param_string("path", base)->getptr()));
         }
 
-        if (geometry_detect) {
-          // Autodetect number of cylinders
-          disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
-          cyl = (int)(disk_size / (heads * spt * 512));
-          BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
-          SIM->get_param_num("cylinders", base)->set(cyl);
-          BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
-        } else {
-          if (disk_size != BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
-            BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));
+        if (BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size != 0) {
+          if (geometry_detect) {
+            // Autodetect number of cylinders
+            disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
+            cyl = (int)(disk_size / (heads * spt * 512));
+            BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+            SIM->get_param_num("cylinders", base)->set(cyl);
+            BX_INFO(("ata%d-%d: autodetect geometry: CHS=%d/%d/%d", channel, device, cyl, heads, spt));
+          } else {
+            if (disk_size != BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
+              BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));
+            }
           }
+        } else if (geometry_detect) {
+          BX_PANIC(("ata%d/%d image doesn't support geometry detection", channel, device));
         }
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         BX_DEBUG(( "CDROM on target %d/%d",channel,device));

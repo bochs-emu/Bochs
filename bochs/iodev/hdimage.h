@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.5 2006-06-08 20:32:00 vruppert Exp $
+// $Id: hdimage.h,v 1.6 2006-06-16 07:29:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -29,7 +29,8 @@
 
 // SPARSE IMAGES HEADER
 #define SPARSE_HEADER_MAGIC  (0x02468ace)
-#define SPARSE_HEADER_VERSION  1
+#define SPARSE_HEADER_VERSION  2
+#define SPARSE_HEADER_V1       1
 #define SPARSE_HEADER_SIZE        (256) // Plenty of room for later
 #define SPARSE_PAGE_NOT_ALLOCATED (0xffffffff)
 
@@ -39,8 +40,9 @@
    Bit32u  version;
    Bit32u  pagesize;
    Bit32u  numpages;
+   Bit64u  disk;
 
-   Bit32u  padding[60];
+   Bit32u  padding[58];
  } sparse_header_t;
 
 #define STANDARD_HEADER_MAGIC     "Bochs Virtual HD Image"
@@ -127,6 +129,9 @@
 class device_image_t
 {
   public:
+      // Default constructor
+      device_image_t();
+
       // Open a image. Returns non-negative if successful.
       virtual int open (const char* pathname) = 0;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.6 2006-06-08 20:32:00 vruppert Exp $
+// $Id: hdimage.cc,v 1.7 2006-06-16 07:29:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,6 +39,13 @@
 #endif
 
 #define LOG_THIS bx_devices.pluginHardDrive->
+
+/*** base class device_image_t ***/
+
+device_image_t::device_image_t()
+{
+  hd_size = 0;
+}
 
 /*** default_image_t function definitions ***/
 
@@ -292,7 +299,8 @@ void sparse_image_t::read_header()
    panic("failed header magic check");
  }
 
- if (dtoh32(header.version) != 1)
+ if ((dtoh32(header.version) != SPARSE_HEADER_VERSION) &&
+     (dtoh32(header.version) != SPARSE_HEADER_V1))
  {
    panic("unknown version in header");
  }
@@ -418,6 +426,9 @@ int sparse_image_t::open (const char* pathname0)
 
  if (parentpathname != NULL) free(parentpathname);
 
+ if (dtoh32(header.version) == SPARSE_HEADER_VERSION) {
+   hd_size = header.disk;
+ }
  return 0; // success.
 }
 
