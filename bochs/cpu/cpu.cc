@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.161 2006-06-12 19:51:31 sshwarts Exp $
+// $Id: cpu.cc,v 1.162 2006-06-16 20:08:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -382,7 +382,7 @@ repeat_not_done:
       // when debugger is not enabled, directly jump to next iteration
       if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
 #endif
-      invalidate_prefetch_q();
+//    invalidate_prefetch_q(); // why do we need invalidate_prefetch_q ?
       goto debugger_check;
 
 repeat_done:
