@@ -41,7 +41,7 @@ Changes after 2.2.6 release:
 
 - general
   - limited save/restore support added. The state of CPU, memory and all
-    devices can be saved now (harddisk images not handled yet).
+    devices can be saved now (state of harddisk images not handled yet).
   - fixed several memory leaks
 
 - configuration interface
@@ -57,6 +57,8 @@ Changes after 2.2.6 release:
       only one drive connected
     - fixed data alignment of 'growing' hard drive images (sharing images
       between Windows and Linux now possible)
+    - disk geometry autodetection now supported by most of the image types
+      (unsupported: external, dll and compressed modes)
   - pci
     - forward PIRQ register changes to the I/O APIC (if present)
 

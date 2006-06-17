@@ -257,10 +257,10 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # access the "first" cdrom in the system.  On MacOSX, use path="drive"
 # to access the physical drive.
 #
-# The path is always mandatory. For 'flat', 'concat' and 'growing' mode hard
-# disk images created with bximage it is possible to use geometry autodetection
-# with CHS=0/0/0 (cylinders are calculated using heads=16 and spt=63). For other
-# hard disk images and modes the cylinders, heads, and spt are mandatory.
+# The path is always mandatory. Disk geometry autodetection works with images
+# created by bximage if CHS is set to 0/0/0 (cylinders are calculated using
+# heads=16 and spt=63). For other hard disk images and modes the cylinders,
+# heads, and spt are mandatory.
 #
 # Default values are:
 #   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
@@ -278,6 +278,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #   ata3-slave:  type=cdrom, path=iso.sample, status=inserted
 #=======================================================================
 ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, spt=17
+#ata0-master: type=disk, mode=flat, path="c.img", cylinders=0 # autodetect
 #ata0-slave: type=cdrom, path=D:, status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 #ata0-slave: type=cdrom, path="drive", status=inserted

@@ -261,10 +261,10 @@ works with it.
 In UNIX it is possible to use a raw device as a Bochs hard disk, 
 but WE DON'T RECOMMEND IT.
 
-The path is always mandatory. For 'flat', 'concat' and 'growing' mode hard disk
-images created with bximage it is possible to use geometry autodetection with
-CHS=0/0/0 (cylinders are calculated using heads=16 and spt=63). For other hard
-disk images and modes the cylinders, heads, and spt are mandatory.
+The path is always mandatory. Disk geometry autodetection works with images
+created by bximage if CHS is set to 0/0/0 (cylinders are calculated using
+heads=16 and spt=63). For other hard disk images and modes the cylinders,
+heads, and spt are mandatory.
 
 The mode option defines how the disk image is handled. Disks can be defined as:
   - flat : one file flat layout

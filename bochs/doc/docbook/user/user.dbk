@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.214 2006-06-05 08:00:21 vruppert Exp $
+$Id: user.dbk,v 1.215 2006-06-17 07:45:27 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2064,18 +2064,6 @@ turn it off.
       </entry>
     </row>
     <row>
-      <entry>--enable-config-interface</entry>
-      <entry>yes</entry>
-      <entry>
-      Enable configuration menus when you first start Bochs. The menus let you
-      read in a <filename>bochsrc</filename> file, edit some options, and save
-      the new <filename>bochsrc</filename> before starting the simulation. Also
-      enables a runtime menu which lets you change certain settings during
-      simulation. See the <link linkend="bochsopt-configinterface">config_interface option</link>
-      for how to select between the text interface and wxWidgets.
-      </entry>
-    </row>
-    <row>
       <entry>--enable-new-pit</entry>
       <entry>yes</entry>
       <entry>
@@ -2425,6 +2413,15 @@ turn it off.
       <entry>
       Enables logging of measured IPS, see the <command>ips</command> parameter
       of the <link linkend="bochsopt-cpu">cpu option</link>.
+      </entry>
+    </row>
+    <row>
+      <entry>--enable-save-restore</entry>
+      <entry>no</entry>
+      <entry>
+      Enables limited save/restore support. The state of CPU, memory and all
+      devices can be saved now (state of harddisk images not handled yet).
+      <footnote><para>&FIXME; Add save/restore documentation</para></footnote>
       </entry>
     </row>
   </tbody>
@@ -3301,10 +3298,9 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
-For 'flat', 'concat' and 'growing' mode hard disk images created with bximage
-it is possible to use geometry autodetection with CHS=0/0/0 (cylinders are
-calculated using heads=16 and spt=63). For other hard disk images and modes the
-cylinders, heads, and spt are mandatory.
+Disk geometry autodetection works with images created by bximage if CHS is set
+to 0/0/0 (cylinders are calculated using heads=16 and spt=63). For other hard
+disk images and modes the cylinders, heads, and spt are mandatory.
 </para>
 
 <para>
