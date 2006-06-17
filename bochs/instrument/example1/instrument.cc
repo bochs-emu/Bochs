@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.13 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: instrument.cc,v 1.14 2006-06-17 12:09:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,8 +178,7 @@ void bxInstrumentation::bx_instr_hwinterrupt(unsigned vector, Bit16u cs, bx_addr
 
 void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigned rw)
 {
-  Bit32u phy;
-  bx_bool page_valid;
+  bx_phy_address phy;
 
   if(!active || !valid) return;
 
@@ -188,7 +187,7 @@ void bxInstrumentation::bx_instr_mem_data(bx_address lin, unsigned size, unsigne
     return;
   }
 
-  BX_CPU(cpu_id)->dbg_xlate_linear2phy(lin, &phy, &page_valid);
+  bx_bool page_valid = BX_CPU(cpu_id)->dbg_xlate_linear2phy(lin, &phy);
   phy = A20ADDR(phy);
 
   // If linear translation doesn't exist, a paging exception will occur.

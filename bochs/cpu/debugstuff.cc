@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.71 2006-06-12 16:58:26 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.72 2006-06-17 12:09:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 #if BX_DISASM
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
-  bx_bool valid;
   bx_phy_address phy_addr;
   Bit8u   instr_buf[16];
   char    char_buf[512];
@@ -44,8 +43,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   static disassembler bx_disassemble;
   unsigned remainsInPage = 0x1000 - (offset & 0xfff);
 
-  dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset,
-                       &phy_addr, &valid);
+  bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset, &phy_addr);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(phy_addr, 16, instr_buf);
     char_buf[i++] = '>';

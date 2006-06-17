@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.71 2006-06-12 19:51:31 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.72 2006-06-17 12:09:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -700,16 +700,16 @@ void bx_dbg_modebp_command()
 static bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
 {
   unsigned remainsInPage;
-  Bit32u paddr;
-  bx_bool paddr_valid;
+  bx_phy_address paddr;
   unsigned read_len;
+  bx_bool paddr_valid;
 
 next_page:
   remainsInPage = 0x1000 - (laddr & 0xfff);
   read_len = (remainsInPage < len) ? remainsInPage : len;
   paddr_valid = 0;
 
-  BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
+  paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
     if (! BX_MEM(0)->dbg_fetch_mem(paddr, read_len, buf)) {
       dbg_printf("bx_dbg_read_linear: physical memory read error (phy=0x%08x, lin=0x" FMT_ADDRX "\n", paddr, laddr);
@@ -751,12 +751,11 @@ void bx_dbg_where_command()
   dbg_printf("(%d) 0x%08x\n", 0, ip);
   for (int i = 1; i < 50; i++) {
     // Up
-    bx_bool paddr_valid;
     Bit32u paddr;
     Bit8u buf[4];
 
     // bp = [bp];
-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr, &paddr_valid);
+    bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr);
     if (paddr_valid) {
       if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
         bp = conv_4xBit8u_to_Bit32u(buf);
@@ -770,7 +769,7 @@ void bx_dbg_where_command()
     }
 
     // ip = [bp + 4];
-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp + 4, &paddr, &paddr_valid);
+    paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp + 4, &paddr);
     if (paddr_valid) {
       if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
         ip = conv_4xBit8u_to_Bit32u(buf);
@@ -1034,10 +1033,8 @@ int bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
   {
     if(BX_CPU(dbg_cpu)->show_flag & Flag_call) {
-      Bit32u phy = 0;
-      bx_bool valid;
-
-      BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy, &valid);
+      bx_phy_address phy = 0;
+      bx_bool valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
       dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
         BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
@@ -1293,8 +1290,7 @@ void bx_dbg_stepN_command(Bit32u count)
 
 void bx_dbg_disassemble_current(int which_cpu, int print_time)
 {
-  Bit32u phy;
-  bx_bool phy_valid;
+  bx_phy_address phy;
 
   if (which_cpu < 0) {
     // iterate over all of them.
@@ -1303,7 +1299,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     return;
   }
 
-  BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy, &phy_valid);
+  bx_bool phy_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy);
   if (! phy_valid) {
     dbg_printf("(%u).[" FMT_LL "d] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
     return;
@@ -2971,10 +2967,8 @@ void bx_dbg_info_tss_command(void)
   dbg_printf("tr:s=0x%x, base=0x%x, valid=%u\n",
       (unsigned) tr.sel, laddr, (unsigned) tr.valid);
 
-  bx_bool paddr_valid;
-  Bit32u paddr;
-  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr, &paddr_valid);
-
+  bx_phy_address paddr = 0;
+  BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
 }
 
@@ -3214,7 +3208,7 @@ void bx_dbg_dump_table(void)
   start_lin = 1;
   start_phy = 2;
   while(1) {
-    BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy, &valid);
+    valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy);
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(start_lin != 1)

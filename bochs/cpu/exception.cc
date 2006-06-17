@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.81 2006-06-12 19:51:31 sshwarts Exp $
+// $Id: exception.cc,v 1.82 2006-06-17 12:09:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -141,9 +141,9 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // descriptor AR byte must indicate code seg
   // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
-  if ( cs_descriptor.valid==0 || cs_descriptor.segment==0 || 
-       IS_DATA_SEGMENT(cs_descriptor.type) ||
-       cs_descriptor.dpl>CPL)
+  if (cs_descriptor.valid==0 || cs_descriptor.segment==0 || 
+      IS_DATA_SEGMENT(cs_descriptor.type) ||
+      cs_descriptor.dpl>CPL)
   {
     BX_ERROR(("interrupt(long mode): not code segment"));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
@@ -165,14 +165,14 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
   if ((IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) 
-                        && cs_descriptor.dpl<CPL) || (ist > 0))
+                        && cs_descriptor.dpl<CPL) || (ist != 0))
   {
     Bit64u RSP_for_cpl_x;
 
     BX_DEBUG(("interrupt(long mode): INTERRUPT TO INNER PRIVILEGE"));
 
     // check selector and descriptor for new stack in current TSS
-    if (ist > 0) {
+    if (ist != 0) {
       BX_DEBUG(("interrupt(long mode): trap to IST, vector = %d\n",ist));
       get_RSP_from_TSS(ist+3, &RSP_for_cpl_x);
     }

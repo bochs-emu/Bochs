@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.299 2006-06-11 16:40:37 sshwarts Exp $
+// $Id: cpu.h,v 1.300 2006-06-17 12:09:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2644,7 +2644,7 @@ public: // for now...
   BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
-  BX_SMF void     dbg_xlate_linear2phy(bx_address linear, Bit32u *phy, bx_bool *valid);
+  BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy);
 #endif
   BX_SMF void     atexit(void);
   
