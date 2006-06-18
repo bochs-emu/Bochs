@@ -24,4 +24,5 @@ export CXXFLAGS
             --enable-pci \
             --enable-clgd54xx \
             --enable-usb \
+            --enable-save-restore \
             --with-win32 --with-rfb --with-nogui

@@ -13,6 +13,7 @@ set echo
             --enable-pci \
             --enable-clgd54xx \
             --enable-usb \
+            --enable-save-restore \
             --disable-readline \
             --without-x \
             --enable-cpp \
