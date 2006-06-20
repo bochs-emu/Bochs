@@ -1,4 +1,4 @@
-Changes after 2.2.6 release:
+Changes in 2.3 release:
 
 - CPU and internal debugger fixes
   - Fixed bug in FSTENV instruction (Stanislav Shwartsman)
@@ -15,7 +15,7 @@ Changes after 2.2.6 release:
   - Many fixes in Bochs debugger and disassembler
 
 - CPU x86-64 fixes
-  - Fixed bug in SYSRET instruction legacy mode
+  - Fixed SYSRET instruction implementation
   - Fixed bug in CALL/JMP far through 64-bit callgate in x86-64 mode
   - Correctly decode, disassemble and execute 'XCHG R8, rAX' instruction
   - Correctly decode and execute 'BSWAP R8-R15' instructions
@@ -23,12 +23,13 @@ Changes after 2.2.6 release:
   - Fixed CR4 exception condition (No Name)
   - Fixed x86 debugger to support x86-64 mode (Stanislav)
 
-- SMP
+- APIC and SMP
   - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
     could choose amount of cores per processor and amount of HT threads per
     core from .bochsrc for SMP simulation (Stanislav Shwartsman)
-  - Fixed again reading of APIC IRR/ISR/TMR registers. Finally it became
-    fully correct.
+  - Fixed interrupt priority bug in service_local_apic()
+  - Fixed again reading of APIC IRR/ISR/TMR registers. Finally it becomes
+    fully correct :-)
 
 - Configure and compile 
   - Moved configure time --enable-reset-on-triple-fault option to runtime, 
@@ -62,6 +63,59 @@ Changes after 2.2.6 release:
   - pci
     - forward PIRQ register changes to the I/O APIC (if present)
 
+- SF patches applied
+ [1455958] call/jmp through call gate in 64-bit mode
+ [1433107] PATCH: fix compile with wxwindows 2.6 (unicode / utf8) by jwrdegoede
+ [1386671] Combined dual core and hyper-threading patch
+
+- these S.F. bugs were closed
+  [427550] Incomplete IRETD implementation
+ [1508947] APIC interrupt priority checking and interrupt delivery
+  [766286] Debugger halts after any GPF exception
+  [639143] va_list is not a pointer on linuxppc
+ [1501815] debugger examines memory over page-boundary wrong
+ [1503978] movsb/w/d doesn't work when direction is stored
+ [1499405] WinPCap has changed URL hosting
+ [1498519] APIC IRR bits not set while interrupts disabled
+ [1498193] Bochs segfaults on LTR instruction
+  [787140] Guest2HostTLB optimization bug
+ [1492070] instrument stop
+ [1487772] No SEP on P4
+ [1488335] Growing hard disk images severe interoperability errors!
+ [1076312] Shadow RAM and TLB
+ [1282249] The real i440FX chipset Award bios hangs
+ [1479763] mistake "mov ax,[es:di]" for "mov ax,[ds:di]"
+ [1453575] Misconfigured floppy DMA transfers do not terminate.
+ [1460068] Incorrect handling for the Options Menu Item
+  [910203] bochs-2.1.1 wx.lo failed
+ [1438654] PANIC when trying to run install-amd64-minimal-2005.0.iso
+ [1458320] compile hdimage.h fails
+ [1455880] bochs-2.2.6,2: make error on FreeBSD
+  [696890] Network wouldn't run under W2k hosting MSDOS
+  [673391] SMP timer problems
+ [1291059] wxWindows GUI on non-windows/configure issue
+ [1356450] bochs 2.2.1 errors-omittions
+ [1178017] Win98 guest cannot receive network packets from host
+ [1076315] a20_mask after restarting
+ [1436323] real hw does not panic when bad Ib in CMPSS_VssWssIb
+ [1435269] cdrom_amigaos is not compilable
+ [1433314] disasm issues
+ [1170614] relative jumps/calls wrong in debugger
+  [758121] user might get confused when interrupt handler invoked
+ [1170622] You cannot toggle OFF "show" flags
+ [1406387] JMP instruction should display absolute address
+ [1428813] PANIC: ROM address space out of range
+ [1426288] DR-DOSs EMM386 problem
+ [1412036] Bochs cannot recognize PCI NIC correctly
+  [435115] dbg: modebp broken and no docs
+ [1419366] disasm cs:eip does not work anymore
+ [1419393] SSE's #XF exception -> "exception(19): bad vector"
+ [1419429] disassembly of "260f6f00" show DS: instead of ES: prefix
+ [1417583] Interrupt behaviour changed from 2.2.1 to 2.2.5
+ [1418281] 'push' (6A) incorrectly disassembled
+ [1417791] FLDENV generating exception when real hw does not.
+ [1264583] OS/2 1.1 doesn't run  
+ 
 -------------------------------------------------------------------------
 Changes in 2.2.6 (January 29, 2006):
 
