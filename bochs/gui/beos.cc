@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.28 2006-02-21 21:35:08 vruppert Exp $
+// $Id: beos.cc,v 1.29 2006-06-20 17:17:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,24 +67,22 @@ IMPLEMENT_GUI_PLUGIN_CODE(beos)
 
 
 class BochsApplication : public BApplication {
-
 public:
   BochsApplication();
-  };
+};
 
 class BochsWindow : public BWindow {
-
 public:
   BochsWindow(BRect frame);
   virtual  bool  QuitRequested();
   virtual  void  FrameResized(float width, float height);
-  };
+};
 
 class BochsView : public BView {
 private:
-	BBitmap *backing_store;
-	BView *backing_view;
-	
+       BBitmap *backing_store;
+       BView *backing_view;
+       
 public:
   BochsView(BRect frame, char *name);
   ~BochsView();
@@ -96,7 +94,7 @@ public:
   virtual  void  MouseUp(BPoint point);
   virtual  void  MouseMoved(BPoint point,
                             uint32 transit, const BMessage *message);
-  void DrawBitmap(const BBitmap *aBitmap, BPoint where);							
+  void DrawBitmap(const BBitmap *aBitmap, BPoint where);                                                 
   void FillRect(BRect r, pattern p = B_SOLID_HIGH);
   void SetHighColor(uchar r, uchar g, uchar b, uchar a = 255);
   void SetLowColor(uchar r, uchar g, uchar b, uchar a = 255);
@@ -104,7 +102,7 @@ public:
   void set_text_colors(void);
   void set_inv_text_colors(void);
   void set_headerbar_colors(void);
-  };
+};
 
 
 void GUI_end(void);
@@ -167,7 +165,7 @@ Bit8u ascii_to_scancode[0x7f] = {
   0x23, 0x17, 0x24, 0x25, 0x26, 0x32, 0x31, 0x18, /* hijklmno */
   0x19, 0x10, 0x13, 0x1f, 0x14, 0x16, 0x2f, 0x11, /* pqrstuvw */
   0x2d, 0x15, 0x2c, 0x1a, 0x2b, 0x1b, 0x29        /* xyz{|}~  */
-  };
+};
 
 extern Bit8u graphics_snapshot[32 * 1024];
 //extern pc_keyb_c *pc_keyboard;
@@ -183,7 +181,7 @@ struct {
   BBitmap *bmap;
   unsigned xdim;
   unsigned ydim;
-  } bx_bitmaps[BX_MAX_PIXMAPS];
+} bx_bitmaps[BX_MAX_PIXMAPS];
 unsigned bx_bitmap_entries = 0;
 
 static struct {
@@ -210,8 +208,8 @@ bx_beos_gui_c::specific_init(int argc, char **argv,
                         unsigned tilewidth, unsigned tileheight,
                         unsigned header_bar_y)
 {
-UNUSED(argc);
-UNUSED(argv);
+  UNUSED(argc);
+  UNUSED(argv);
 
   put("BGUI");
 
@@ -225,8 +223,7 @@ UNUSED(argv);
 
   for (int i=0; i<80; i++) {
     blank_line[i] = ' ';
-    }
-
+  }
 
   font_width = 8;
   font_height = 16;
@@ -255,19 +252,19 @@ BX_INFO(("font_height = %u", (unsigned) font_height));
   while (1) {
     aWindow->Lock();
     if (aWindow->IsHidden()) {
-     aWindow->Unlock();
-     continue;
-     }
+      aWindow->Unlock();
+      continue;
+    }
     aWindow->Unlock();
     break;
-    }
+  }
 
   screen = new BScreen;
   // start out with all color map indeces pointing to Black
   cmap_index[0] = screen->IndexForColor(0, 0, 0);
   for (unsigned i=1; i<256; i++) {
     cmap_index[i] = cmap_index[0];
-    }
+  }
 
   rect.Set(0,0, x_tilesize-1, y_tilesize-1);
   image = new BBitmap(rect, B_COLOR_8_BIT);
@@ -277,64 +274,53 @@ BX_INFO(("font_height = %u", (unsigned) font_height));
   create_vga_font();
 }
 
-
-
-  void
-bx_beos_gui_c::handle_events(void)
+void bx_beos_gui_c::handle_events(void)
 {
   Bit32u key;
 
   while ( head != tail ) {
     key = deq_key_event();
     DEV_kbd_gen_scancode(key);
-    }
+  }
 //IRA=> Start
   if (aView) {
       unsigned long buttons;
       aView->LockLooper();
-	  aView->GetMouse(&current, &buttons, false);    
-	  aView->UnlockLooper();
+      aView->GetMouse(&current, &buttons, false);    
+      aView->UnlockLooper();
 
-	  Bit8u newstate = 0; //please note: 2nd and 3rd button are mapped the same
-	  if (buttons & B_PRIMARY_MOUSE_BUTTON)
-	     newstate |= 0x01;
-	  if (buttons & B_SECONDARY_MOUSE_BUTTON)
-	     newstate |= 0x02;
-	  if (buttons & B_TERTIARY_MOUSE_BUTTON)
-	     newstate |= 0x02;
-	  
-	  if (current != previous || 
-	  	  mouse_button_state != newstate) {
-	    int dx = (int)(current.x - previous.x) *2;
-	    int dy = -(int)((current.y - previous.y) *2);
-	    DEV_mouse_motion( dx, dy, newstate);
-	    mouse_button_state = newstate;
-	    previous = current;
+      Bit8u newstate = 0; //please note: 2nd and 3rd button are mapped the same
+      if (buttons & B_PRIMARY_MOUSE_BUTTON)
+        newstate |= 0x01;
+      if (buttons & B_SECONDARY_MOUSE_BUTTON)
+        newstate |= 0x02;
+      if (buttons & B_TERTIARY_MOUSE_BUTTON)
+        newstate |= 0x02;
+         
+      if (current != previous || mouse_button_state != newstate) {
+        int dx = (int)(current.x - previous.x) *2;
+        int dy = -(int)((current.y - previous.y) *2);
+        DEV_mouse_motion( dx, dy, newstate);
+        mouse_button_state = newstate;
+        previous = current;
       }
-   }
+  }
 //IRA=> End
 }
 
-  void
-bx_beos_gui_c::flush(void)
+void bx_beos_gui_c::flush(void)
 {
-  if (view_attached)
-    aView->Flush();
+  if (view_attached) aView->Flush();
 }
 
-
-  void
-bx_beos_gui_c::clear_screen(void)
+void bx_beos_gui_c::clear_screen(void)
 {
   aWindow->Lock();
   aView->FillRect(BRect(0, bx_headerbar_y, dimension_x-1, dimension_y-1), B_SOLID_LOW);
   aWindow->Unlock();
 }
 
-
-
-  void
-bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t tm_info, unsigned nrows)
 {
@@ -354,12 +340,12 @@ bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     achar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
     point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
     aView->DrawBitmap(vgafont[achar], point );
-    }
+  }
 
   for (i=0; i<nchars*2; i+=2) {
-    if ( (old_text[i]!=new_text[i]) ||
-         (old_text[i+1]!=new_text[i+1]) ) {
-
+    if ((old_text[i]!=new_text[i]) ||
+        (old_text[i+1]!=new_text[i+1]))
+    {
       achar = new_text[i];
 
       x = (i/2) % ncols;
@@ -367,65 +353,56 @@ bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
       point.Set(x*8, y*16 + bx_headerbar_y);
       aView->DrawBitmap(vgafont[achar], point );
-      }
     }
+  }
 
   prev_block_cursor_x = cursor_x;
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ( (cursor_y*ncols + cursor_x) < nchars ) {
+  if ((cursor_y*ncols + cursor_x) < nchars) {
     achar = new_text[(cursor_y*ncols + cursor_x)*2];
     point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
     aView->set_inv_text_colors();
     aView->DrawBitmap(vgafont[achar], point );
     aView->set_text_colors();
-    }
+  }
 
   aWindow->Unlock();
 }
 
-  int
-bx_beos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_beos_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   return 0;
 }
 
-  int
-bx_beos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_beos_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   return 0;
 }
 
-
-  void
-bx_beos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_beos_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   for (unsigned y=0; y<y_tilesize; y++) {
     for (unsigned x=0; x<x_tilesize; x++) {
       rawdata[y*rowsize_padded + x] = cmap_index[ tile[y*x_tilesize + x] ];
-      }
     }
+  }
   aWindow->Lock();
   image->SetBits(rawdata, rowsize_padded * y_tilesize, 0, B_COLOR_8_BIT);
   image_origin.Set(x0, y0 + bx_headerbar_y);
 
-  aView->DrawBitmap( image, image_origin );
+  aView->DrawBitmap(image, image_origin);
   aWindow->Unlock();
 }
 
-
-  bx_bool
-bx_beos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
+bx_bool bx_beos_gui_c::palette_change(unsigned index, unsigned red, unsigned green, unsigned blue)
 {
-  cmap_index[index] = screen->IndexForColor(
-    red, green, blue);
+  cmap_index[index] = screen->IndexForColor(red, green, blue);
   return(1);
 }
 
-
-  void
-bx_beos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
+void bx_beos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsigned fwidth, unsigned bpp)
 {
   if (bpp > 8) {
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
@@ -446,12 +423,9 @@ bx_beos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, unsign
 
 //////////////////////////////////////////////////////
 
-
-  void
-GUI_end()
+void GUI_end()
 {
   //myApplication->Run();
-
   delete(myApplication);
 }
 
@@ -500,43 +474,36 @@ bool BochsWindow::QuitRequested()
   return(TRUE);
 }
 
-
-  void
-BochsWindow::FrameResized(float width, float height)
+void BochsWindow::FrameResized(float width, float height)
 {
   dimension_x = unsigned(width);
   dimension_y = unsigned(height) + bx_headerbar_y;
   theGui->show_headerbar();
 }
 
-
 //------------------------------
-
 
 BochsView::BochsView(BRect rect, char *name)
           : BView(rect, name, B_FOLLOW_ALL, B_WILL_DRAW)
 {
-	backing_store = new BBitmap(rect, B_BITMAP_ACCEPTS_VIEWS, B_COLOR_8_BIT);
-	backing_view = new BView(rect,"backing store", B_FOLLOW_ALL, B_WILL_DRAW);
-	backing_store->AddChild(backing_view);
+       backing_store = new BBitmap(rect, B_BITMAP_ACCEPTS_VIEWS, B_COLOR_8_BIT);
+       backing_view = new BView(rect,"backing store", B_FOLLOW_ALL, B_WILL_DRAW);
+       backing_store->AddChild(backing_view);
 }
 
-  void
-BochsView::set_text_colors(void)
+void BochsView::set_text_colors(void)
 {
   aView->SetHighColor(255, 255, 255);
   aView->SetLowColor(0, 0, 0);
 }
 
-  void
-BochsView::set_inv_text_colors(void)
+void BochsView::set_inv_text_colors(void)
 {
   aView->SetHighColor(0, 0, 0);
   aView->SetLowColor(255, 255, 255);
 }
 
-  void
-BochsView::set_headerbar_colors(void)
+void BochsView::set_headerbar_colors(void)
 {
   aView->SetHighColor(0, 0, 0);
   aView->SetLowColor(255, 255, 255);
@@ -557,31 +524,31 @@ void BochsView::AttachedToWindow()
   view_attached = 1;
 }
 
-void  BochsView::MouseDown(BPoint point)
+void BochsView::MouseDown(BPoint point)
 {
   UNUSED(point);
   if (point.y < BX_HEADER_BAR_Y) {
     headerbar_click(int(point.x), int(point.y));
     return;
-    }
-   BX_DEBUG(("mousedown()"));
+  }
+  BX_DEBUG(("mousedown()"));
 }
 
-void  BochsView::MouseUp(BPoint point)
+void BochsView::MouseUp(BPoint point)
 {
   UNUSED(point);
   // currently a place holder function
-  BX_DEBUG(( "mouseup()" ));
+  BX_DEBUG(("mouseup()"));
   BView::MouseUp(point);
 }
 
-void  BochsView::MouseMoved(BPoint point,
+void BochsView::MouseMoved(BPoint point,
                           uint32 transit, const BMessage *message)
 {
   UNUSED(point);
   UNUSED(transit);
   UNUSED(message);
-  BX_DEBUG(( "mousemoved()" ));
+  BX_DEBUG(("mousemoved()"));
 }
 
 void BochsView::KeyDown(const char *bytes, int32 numBytes)
@@ -593,10 +560,10 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
   uint8 byte;
 
   msg = Window()->CurrentMessage();
-  if ( !msg ) {
-    BX_DEBUG(( "keydown() msg NULL" ));
+  if (!msg) {
+    BX_DEBUG(("keydown() msg NULL"));
     return;
-    }
+  }
   modifiers = msg->FindInt32("modifiers");
 #if 0
   B_SHIFT_KEY          = 0x00000001,
@@ -618,20 +585,20 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
 #endif
 //if (modifiers) {
 //  fprintf(stderr, "# modifiers = %08x\n", (unsigned) modifiers);
-//  }
+//}
 
   if (numBytes == 1) {
     //fprintf(stderr, "# down: char %02xh\n", (unsigned) bytes[0]);
     byte = bytes[0];
-    if ( byte == 0x00 ) {
+    if (byte == 0x00) {
       // Ctrl-Space
       enq_key_event(BX_KEY_CTRL_L,  BX_KEY_PRESSED);
       enq_key_event(BX_KEY_SPACE, BX_KEY_PRESSED);
       enq_key_event(BX_KEY_SPACE, BX_KEY_RELEASED);
       enq_key_event(BX_KEY_CTRL_L,  BX_KEY_RELEASED);
       return;
-      }
-    if ( byte == 0x1b ) {
+    }
+    if (byte == 0x1b) {
       // Esc
       if (modifiers & B_CONTROL_KEY)
         enq_key_event(BX_KEY_CTRL_L,  BX_KEY_PRESSED);
@@ -640,15 +607,15 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
       if (modifiers & B_CONTROL_KEY)
         enq_key_event(BX_KEY_CTRL_L,  BX_KEY_RELEASED);
       return;
-      }
-    if ( (byte >= 0x30) && (byte <= 0x39) ) {
+    }
+    if ((byte >= 0x30) && (byte <= 0x39)) {
       // 0 .. 9
       byte -= 0x30;
       enq_key_event(BX_KEY_0 + byte, BX_KEY_PRESSED);
       enq_key_event(BX_KEY_0 + byte, BX_KEY_RELEASED);
       return;
-      }
-    if ( (byte >= 0x41) && (byte <= 0x5A) ) {
+    }
+    if ((byte >= 0x41) && (byte <= 0x5A)) {
       // A .. Z
       byte -= 0x41;
       enq_key_event(BX_KEY_SHIFT_L,    BX_KEY_PRESSED);
@@ -656,14 +623,14 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
       enq_key_event(BX_KEY_A + byte, BX_KEY_RELEASED);
       enq_key_event(BX_KEY_SHIFT_L,    BX_KEY_RELEASED);
       return;
-      }
-    if ( (byte >= 0x61) && (byte <= 0x7A) ) {
+    }
+    if ((byte >= 0x61) && (byte <= 0x7A)) {
       // a .. z
       byte -= 0x61;
       enq_key_event(BX_KEY_A + byte, BX_KEY_PRESSED);
       enq_key_event(BX_KEY_A + byte, BX_KEY_RELEASED);
       return;
-      }
+    }
     switch (byte) {
       case 0x20: // Space
         enq_key_event(BX_KEY_SPACE, BX_KEY_PRESSED);
@@ -893,7 +860,7 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
           default:
             fprintf(stderr, "# keydown() unknown function key %08xh\n",
               (unsigned) key);
-          }
+        }
 #endif
       case B_INSERT: break;
         enq_key_event(BX_KEY_INSERT, BX_KEY_PRESSED);
@@ -930,17 +897,17 @@ void BochsView::KeyDown(const char *bytes, int32 numBytes)
           enq_key_event(BX_KEY_A + byte, BX_KEY_RELEASED);
           enq_key_event(BX_KEY_CTRL_L,     BX_KEY_RELEASED);
           return;
-          }
+        }
         fprintf(stderr, "# keydown: char %02xh unhandled\n",
           (unsigned) bytes[0]);
         return;
-      }
-    return;
     }
+    return;
+  }
   else {
     // ignore for now
     fprintf(stderr, "# keydown() ignoring multibyte key\n");
-    }
+  }
 }
 
 void BochsView::KeyUp(const char *bytes, int32 numBytes)
@@ -951,99 +918,88 @@ void BochsView::KeyUp(const char *bytes, int32 numBytes)
 
 void BochsView::Draw(BRect rect)
 {
-	DrawBitmapAsync(backing_store, rect, rect);
+  DrawBitmapAsync(backing_store, rect, rect);
 }
 
 BochsView::~BochsView()
 {
-	delete backing_store;
-	delete backing_view;
+  delete backing_store;
+  delete backing_view;
 }
 
-void 
-BochsView::SetFont(const BFont *font, uint32 mask)
+void BochsView::SetFont(const BFont *font, uint32 mask)
 {
-	backing_store->Lock();
-	backing_view->SetFont(font,mask);
-	backing_store->Unlock();
+  backing_store->Lock();
+  backing_view->SetFont(font,mask);
+  backing_store->Unlock();
 }
 
-void 
-BochsView::SetHighColor(uchar r, uchar g, uchar b, uchar a)
+void BochsView::SetHighColor(uchar r, uchar g, uchar b, uchar a)
 {
-	backing_store->Lock();
-	backing_view->SetHighColor(r,g,b,a);
-	backing_store->Unlock();
+  backing_store->Lock();
+  backing_view->SetHighColor(r,g,b,a);
+  backing_store->Unlock();
 }
 
-void 
-BochsView::SetLowColor(uchar r, uchar g, uchar b, uchar a)
+void BochsView::SetLowColor(uchar r, uchar g, uchar b, uchar a)
 {
-	backing_store->Lock();
-	backing_view->SetLowColor(r,g,b,a);
-	backing_store->Unlock();
+  backing_store->Lock();
+  backing_view->SetLowColor(r,g,b,a);
+  backing_store->Unlock();
 }
 
-void 
-BochsView::DrawBitmap(const BBitmap *aBitmap, BPoint where)
+void BochsView::DrawBitmap(const BBitmap *aBitmap, BPoint where)
 {
-	backing_store->Lock();
-	backing_view->DrawBitmap(aBitmap,where);
-	backing_store->Unlock();
-	BRect r = aBitmap->Bounds();
-	r.OffsetBy(where);
-	Invalidate(r);
+  backing_store->Lock();
+  backing_view->DrawBitmap(aBitmap,where);
+  backing_store->Unlock();
+  BRect r = aBitmap->Bounds();
+  r.OffsetBy(where);
+  Invalidate(r);
 }
 
-void 
-BochsView::FillRect(BRect r, pattern p)
+void BochsView::FillRect(BRect r, pattern p)
 {
-	backing_store->Lock();
-	backing_view->FillRect(r,p);
-	backing_store->Unlock();
-	Invalidate(r);
+  backing_store->Lock();
+  backing_view->FillRect(r,p);
+  backing_store->Unlock();
+  Invalidate(r);
 }
 
-
-
-  void
-enq_key_event(Bit32u key, Bit32u press_release)
+void enq_key_event(Bit32u key, Bit32u press_release)
 {
-  if ( ((tail+1) % SCANCODE_BUFSIZE) == head ) {
+  if (((tail+1) % SCANCODE_BUFSIZE) == head) {
     fprintf(stderr, "# enq_key_event: buffer full\n");
     return;
-    }
+  }
   keyevents[tail] = key | press_release;
   tail = (tail + 1) % SCANCODE_BUFSIZE;
 }
 
-  Bit32u
-deq_key_event(void)
+Bit32u deq_key_event(void)
 {
   Bit32u key;
 
-  if ( head == tail ) {
+  if (head == tail) {
     fprintf(stderr, "# deq_key_event: buffer empty\n");
     return(0);
-    }
+  }
   key = keyevents[head];
   head = (head + 1) % SCANCODE_BUFSIZE;
   return(key);
 }
 
-  unsigned char
-reverse_bitorder(unsigned char b)
+unsigned char reverse_bitorder(unsigned char b)
 {
   unsigned char ret=0;
   for (unsigned i=0; i<8; i++) {
     ret |= (b & 0x01) << (7-i);
     b >>= 1;
-    }
+  }
   return(ret);
 }
 
-  unsigned
-bx_beos_gui_c::create_bitmap(const unsigned char *bmap,
+unsigned bx_beos_gui_c::create_bitmap(const unsigned char *bmap,
                         unsigned xdim, unsigned ydim)
 {
   BRect rect(0.0, 0.0, xdim-1, ydim-1);
@@ -1053,7 +1009,7 @@ bx_beos_gui_c::create_bitmap(const unsigned char *bmap,
 
   if (bx_bitmap_entries >= BX_MAX_PIXMAPS) {
     BX_PANIC(("beos: too many pixmaps, increase BX_MAX_PIXMAPS"));
-    }
+  }
 
   bx_bitmaps[bx_bitmap_entries].bmap =
     new BBitmap(rect, B_MONOCHROME_1_BIT);
@@ -1063,19 +1019,18 @@ bx_beos_gui_c::create_bitmap(const unsigned char *bmap,
   data = (unsigned char *) bx_bitmaps[bx_bitmap_entries].bmap->Bits();
   for (int32 i=0; i<bitslength; i++) {
     data[i] = reverse_bitorder(bmap[i]);
-    }
+  }
 
   bx_bitmaps[bx_bitmap_entries].xdim = xdim;
   bx_bitmaps[bx_bitmap_entries].ydim = ydim;
   if (!bx_bitmaps[bx_bitmap_entries].bmap) {
     BX_PANIC(("beos: could not create bitmap"));
-    }
+  }
   bx_bitmap_entries++;
   return(bx_bitmap_entries-1); // return index as handle
 }
 
-  unsigned
-bx_beos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
+unsigned bx_beos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
                            void (*f)(void))
 {
   unsigned hb_index;
@@ -1095,17 +1050,16 @@ bx_beos_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_left_xorigin;
     bx_headerbar_entry[hb_index].yorigin = 0;
     bx_bitmap_left_xorigin += bx_bitmaps[bmap_id].xdim;
-    }
+  }
   else { // BX_GRAVITY_RIGHT
     bx_bitmap_right_xorigin += bx_bitmaps[bmap_id].xdim;
     bx_headerbar_entry[hb_index].xorigin = bx_bitmap_right_xorigin;
     bx_headerbar_entry[hb_index].yorigin = 0;
-    }
+  }
   return(hb_index);
 }
 
-  void
-bx_beos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
+void bx_beos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
   unsigned xorigin;
 
@@ -1122,8 +1076,7 @@ bx_beos_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
   aWindow->Unlock();
 }
 
-  void
-bx_beos_gui_c::show_headerbar(void)
+void bx_beos_gui_c::show_headerbar(void)
 {
   unsigned xorigin;
   BPoint origin;
@@ -1140,14 +1093,12 @@ bx_beos_gui_c::show_headerbar(void)
       xorigin = dimension_x - bx_headerbar_entry[i].xorigin;
     origin.Set(xorigin, 0);
     aView->DrawBitmap( bx_headerbar_entry[i].bitmap, origin );
-    }
+  }
   aView->set_text_colors();
   aWindow->Unlock();
 }
 
-
-  void
-headerbar_click(int x, int y)
+void headerbar_click(int x, int y)
 {
   int xorigin;
 
@@ -1161,13 +1112,11 @@ headerbar_click(int x, int y)
     if ( (x>=xorigin) && (x<(xorigin+int(bx_headerbar_entry[i].xdim))) ) {
       bx_headerbar_entry[i].f();
       return;
-      }
     }
+  }
 }
 
-
-  void
-create_vga_font(void)
+void create_vga_font(void)
 {
   int32 bitslength;
   int32 bytesperrow;
@@ -1181,7 +1130,7 @@ create_vga_font(void)
     vgafont[c] = new BBitmap(brect, B_MONOCHROME_1_BIT);
     if (!vgafont[c]) {
       BX_PANIC(("beos: could not create bitmap"));
-      }
+    }
 
     bitslength = vgafont[c]->BitsLength();
     bytesperrow = vgafont[c]->BytesPerRow();
@@ -1189,13 +1138,11 @@ create_vga_font(void)
     memset(data, 0, bitslength);
     for (unsigned i=0; i<16; i++) {
       data[i*bytesperrow] = reverse_bitorder(bx_vgafont[c].data[i]);
-      }
     }
+  }
 }
 
-
-  void
-bx_beos_gui_c::exit(void)
+void bx_beos_gui_c::exit(void)
 {
   fprintf(stderr, "# WARNING: BEOS: bx_beos_gui_c::exit() not implemented yet.\n");
 }
@@ -1206,8 +1153,7 @@ bx_beos_gui_c::exit(void)
 // bitmap or pressing the middle button, or from the configuration interface.
 // In all those cases, setting the parameter value will get you here.
 
-  void
-bx_beos_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_beos_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
   BX_DEBUG (("mouse_enabled=%d, BeOS specific code", val?1:0));
   if (val) {
