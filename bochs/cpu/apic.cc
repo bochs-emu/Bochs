@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.93 2006-06-05 05:39:21 sshwarts Exp $
+// $Id: apic.cc,v 1.94 2006-06-20 16:51:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -660,12 +660,12 @@ void bx_local_apic_c::service_local_apic(void)
   int first_irr = highest_priority_int(irr);
   if (first_irr < 0) return;   // no interrupts, leave INTR=0
   int first_isr = highest_priority_int(isr);
-  if (first_isr >= 0 && first_irr >= first_isr) {
-    BX_DEBUG(("local apic(%s): not delivering int%02x because int%02x is in service", cpu->name, first_irr, first_isr));
+  if (first_isr >= 0 && first_irr <= first_isr) {
+    BX_DEBUG(("local apic(%s): not delivering int 0x%02x because int 0x%02x is in service", cpu->name, first_irr, first_isr));
     return;
   }
   if(((Bit32u)(first_irr) & 0xf0) <= (task_priority & 0xf0)) {
-    BX_DEBUG(("local apic(%s): not delivering int%02X because task_priority is %X", cpu->name, first_irr, task_priority));
+    BX_DEBUG(("local apic(%s): not delivering int 0x%02X because task_priority is 0x%02X", cpu->name, first_irr, task_priority));
     return;
   }
   // interrupt has appeared in irr. Raise INTR. When the CPU
@@ -755,7 +755,7 @@ Bit8u bx_local_apic_c::acknowledge_int(void)
     BX_PANIC(("%s: acknowledged an interrupt, but INTR=0", cpu->name));
   BX_ASSERT(INTR);
   int vector = highest_priority_int(irr);
-  if(vector < 0) goto spurious;
+  if (vector < 0) goto spurious;
   if((vector & 0xf0) <= get_ppr()) goto spurious;
   BX_ASSERT(irr[vector] == 1);
   BX_DEBUG(("%s: acknowledge_int returning vector 0x%x", cpu->name, vector));
