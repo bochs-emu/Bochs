@@ -210,6 +210,12 @@
 // IPS value set in the config file.
 #define BX_MIN_IPS 200000
 
+// Minimum and maximum values for SMP quantum variable. Defines
+// how many instructions each CPU could execute execute in one 
+// shot (one cpu_loop call)
+#define BX_SMP_QUANTUM_MIN  1
+#define BX_SMP_QUANTUM_MAX 16
+
 // Use Static Member Funtions to eliminate 'this' pointer passing
 // If you want the efficiency of 'C', you can make all the
 // members of the C++ CPU class to be static.

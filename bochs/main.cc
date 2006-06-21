@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.337 2006-05-30 19:46:31 sshwarts Exp $
+// $Id: main.cc,v 1.338 2006-06-21 20:42:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -399,7 +399,7 @@ int split_string_into_argv (
 // NOTE: It could probably be written so that it can safely be called for all
 // win32 builds.  Right now it appears to have absolutely no error checking:
 // for example if AllocConsole returns false we should probably return early.
-void RedirectIOToConsole ()
+void RedirectIOToConsole()
 {
   int hConHandle;
   long lStdHandle;
@@ -409,13 +409,13 @@ void RedirectIOToConsole ()
   // redirect unbuffered STDOUT to the console
   lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-  fp = _fdopen( hConHandle, "w" );
+  fp = _fdopen(hConHandle, "w");
   *stdout = *fp;
   setvbuf( stdout, NULL, _IONBF, 0 );
   // redirect unbuffered STDIN to the console
   lStdHandle = (long)GetStdHandle(STD_INPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
-  fp = _fdopen( hConHandle, "r" );
+  fp = _fdopen(hConHandle, "r");
   *stdin = *fp;
   setvbuf( stdin, NULL, _IONBF, 0 );
   // redirect unbuffered STDERR to the console
@@ -423,7 +423,7 @@ void RedirectIOToConsole ()
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
   fp = _fdopen( hConHandle, "w" );
   *stderr = *fp;
-  setvbuf( stderr, NULL, _IONBF, 0 );
+  setvbuf(stderr, NULL, _IONBF, 0);
 }
 #endif  /* if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32)) */
 
@@ -443,8 +443,8 @@ int WINAPI WinMain(
   RedirectIOToConsole ();
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
-  split_string_into_argv (m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
-  return bxmain ();
+  split_string_into_argv(m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
+  return bxmain();
 }
 #endif
 
@@ -462,7 +462,7 @@ int main (int argc, char *argv[])
 #if defined(WIN32)
   SetConsoleTitle("Bochs for Windows - Console");
 #endif
-  return bxmain ();
+  return bxmain();
 }
 #endif
 
@@ -683,7 +683,7 @@ int bx_init_main (int argc, char *argv[])
 #endif
     if (bochsrc_filename == NULL) bochsrc_filename = bx_find_bochsrc ();
     if (bochsrc_filename)
-      norcfile = bx_read_configuration (bochsrc_filename);
+      norcfile = bx_read_configuration(bochsrc_filename);
   }
 
   if (norcfile) {
@@ -722,7 +722,7 @@ int bx_init_main (int argc, char *argv[])
   return 0;
 }
 
-bx_bool load_and_init_display_lib ()
+bx_bool load_and_init_display_lib()
 {
   if (bx_gui != NULL) {
     // bx_gui has already been filled in.  This happens when you start
@@ -876,7 +876,7 @@ int bx_begin_simulation (int argc, char *argv[])
     // to another.  Increasing quantum speeds up overall performance, but
     // reduces granularity of synchronization between processors.
     int processor = 0;
-    int quantum = 5;
+    int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
     while (1) {
       // do some instructions in each processor
       BX_CPU(processor)->cpu_loop(quantum);
@@ -924,8 +924,8 @@ int bx_init_hardware()
 
   if (SIM->get_param_enum(BXPN_BOCHS_START)->get()==BX_QUICK_START) {
     for (int level=0; level<N_LOGLEV; level++) {
-      int action = SIM->get_default_log_action (level);
-      io->set_log_action (level, action);
+      int action = SIM->get_default_log_action(level);
+      io->set_log_action(level, action);
     }
   }
 
@@ -949,13 +949,18 @@ int bx_init_hardware()
   BX_INFO(("  APIC support: %s",BX_SUPPORT_APIC?"yes":"no"));
   BX_INFO(("CPU configuration"));
   BX_INFO(("  level: %d",BX_CPU_LEVEL));
-  BX_INFO(("  fpu support: %s",BX_SUPPORT_FPU?"yes":"no"));
   BX_INFO(("  paging support: %s, tlb enabled: %s",BX_SUPPORT_PAGING?"yes":"no",BX_USE_TLB?"yes":"no"));
-  BX_INFO(("  mmx support: %s",BX_SUPPORT_MMX?"yes":"no"));
+#if BX_SUPPORT_SMP
+  BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
+#else
+  BX_INFO(("  SMP support: no"));
+#endif
+  BX_INFO(("  FPU support: %s",BX_SUPPORT_FPU?"yes":"no"));
+  BX_INFO(("  MMX support: %s",BX_SUPPORT_MMX?"yes":"no"));
   if (BX_SUPPORT_SSE == 0)
-    BX_INFO(("  sse support: no"));
+    BX_INFO(("  SSE support: no"));
   else
-    BX_INFO(("  sse support: %d",BX_SUPPORT_SSE));
+    BX_INFO(("  SSE support: %d",BX_SUPPORT_SSE));
   BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
   BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
@@ -1126,21 +1131,21 @@ int bx_atexit(void)
 
   // in case we ended up in simulation mode, change back to config mode
   // so that the user can see any messages left behind on the console.
-  SIM->set_display_mode (DISP_MODE_CONFIG);
+  SIM->set_display_mode(DISP_MODE_CONFIG);
 
 #if BX_PROVIDE_DEVICE_MODELS==1
   bx_pc_system.exit();
 #endif
 
 #if BX_DEBUGGER == 0
-  if (SIM && SIM->get_init_done ()) {
+  if (SIM && SIM->get_init_done()) {
     for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
       if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
   }
 #endif
 
 #if BX_SUPPORT_PCI
-  if (SIM && SIM->get_init_done ()) {
+  if (SIM && SIM->get_init_done()) {
     if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
       bx_devices.pluginPciBridge->print_i440fx_state();
     }
@@ -1149,7 +1154,7 @@ int bx_atexit(void)
 
   // restore signal handling to defaults
 #if !BX_DEBUGGER
-  BX_INFO (("restoring default signal behavior"));
+  BX_INFO(("restoring default signal behavior"));
   signal(SIGINT, SIG_DFL);
 #endif
 
@@ -1170,15 +1175,15 @@ void bx_signal_handler(int signum)
   // Otherwise the BX_PANIC() below can be called in multiple threads at
   // once, leading to multiple threads trying to display a dialog box,
   // leading to GUI deadlock.
-  if (!SIM->is_sim_thread ()) {
+  if (!SIM->is_sim_thread()) {
     BX_INFO (("bx_signal_handler: ignored sig %d because it wasn't called from the simulator thread", signum));
     return;
   }
 #if BX_GUI_SIGHANDLER
   if (bx_gui_sighandler) {
     // GUI signal handler gets first priority, if the mask says it's wanted
-    if ((1<<signum) & bx_gui->get_sighandler_mask ()) {
-      bx_gui->sighandler (signum);
+    if ((1<<signum) & bx_gui->get_sighandler_mask()) {
+      bx_gui->sighandler(signum);
       return;
     }
   }

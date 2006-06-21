@@ -27,6 +27,9 @@ Changes in 2.3 release:
   - Support for Dual Core and Intel(R) HyperThreading Technology. Now you
     could choose amount of cores per processor and amount of HT threads per
     core from .bochsrc for SMP simulation (Stanislav Shwartsman)
+  - Allow to control SMP quantum value through .bochsrc CPU
+    option parameter. Previous Bochs version used hardcoded quantum=5
+    value.
   - Fixed interrupt priority bug in service_local_apic()
   - Fixed again reading of APIC IRR/ISR/TMR registers. Finally it becomes
     fully correct :-)
@@ -41,26 +44,26 @@ Changes in 2.3 release:
     processor emulation (i.e. if cpu-level >= 6 and MMX is enabled)
 
 - general
-  - limited save/restore support added. The state of CPU, memory and all
+  - Limited save/restore support added. The state of CPU, memory and all
     devices can be saved now (state of harddisk images not handled yet).
-  - fixed several memory leaks
+  - Fixed several memory leaks
 
 - configuration interface
-  - configuration parameter handling rewritten to a parameter tree. This is
+  - Configuration parameter handling rewritten to a parameter tree. This is
     required for dynamic menus/dialogs, user-defined options and save/restore.
-  - support for user-defined bochsrc options added
+  - Support for user-defined bochsrc options added
 
 - I/O devices (Volker)
-  - floppy
+  - Floppy
     - partial sector transfers fixed
-  - hard drive /cdrom
+  - Hard drive /cdrom
     - several fixes to the IDE register behaviour in case of a channel with
       only one drive connected
     - fixed data alignment of 'growing' hard drive images (sharing images
       between Windows and Linux now possible)
     - disk geometry autodetection now supported by most of the image types
       (unsupported: external, dll and compressed modes)
-  - pci
+  - PCI
     - forward PIRQ register changes to the I/O APIC (if present)
 
 - SF patches applied

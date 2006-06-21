@@ -89,6 +89,11 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  If Bochs is compiled without SMP support, it won't accept values 
 #  different from 1.
 #
+#  QUANTUM:
+#  Maximum amount of instruction allowed to execute by processor before
+#  returning control to another cpu. This option exits only in Bochs 
+#  binary compiled with SMP support.
+#
 #  RESET_ON_TRIPLE_FAULT:
 #  Reset the CPU when triple fault occur (highly recommended) rather than
 #  PANIC. Remember that if you trying to continue after triple fault the 

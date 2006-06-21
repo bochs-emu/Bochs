@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.108 2006-06-05 19:06:36 sshwarts Exp $
+// $Id: config.cc,v 1.109 2006-06-21 20:42:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -397,6 +397,13 @@ void bx_init_options()
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       1, BX_MAX_BIT32U,
       2000000);
+#if BX_SUPPORT_SMP
+  new bx_param_num_c(cpu_param,
+      "quantum", "Quantum ticks in SMP simulation",
+      "Maximum amount of instructions allowed to execute before returning control to another CPU.",
+      BX_SMP_QUANTUM_MIN, BX_SMP_QUANTUM_MAX,
+      5);
+#endif
   new bx_param_bool_c(cpu_param,
       "reset_on_triple_fault", "Enable CPU reset on triple fault",
       "Enable CPU reset if triple fault occured (highly recommended)",
@@ -2146,10 +2153,10 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         PARSE_ERR(("%s: ataX directive malformed.", context));
       }
       else {
-        if ( (params[2][8] == '0') && (params[2][9] == 'x') )
-          SIM->get_param_num("ioaddr1", base)->set(strtoul (&params[2][8], NULL, 16));
+        if ((params[2][8] == '0') && (params[2][9] == 'x'))
+          SIM->get_param_num("ioaddr1", base)->set(strtoul(&params[2][8], NULL, 16));
         else
-          SIM->get_param_num("ioaddr1", base)->set(strtoul (&params[2][8], NULL, 10));
+          SIM->get_param_num("ioaddr1", base)->set(strtoul(&params[2][8], NULL, 10));
       }
     }
 
@@ -2158,10 +2165,10 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         PARSE_ERR(("%s: ataX directive malformed.", context));
       }
       else {
-        if ( (params[3][8] == '0') && (params[3][9] == 'x') )
-          SIM->get_param_num("ioaddr2", base)->set(strtoul (&params[3][8], NULL, 16));
+        if ((params[3][8] == '0') && (params[3][9] == 'x'))
+          SIM->get_param_num("ioaddr2", base)->set(strtoul(&params[3][8], NULL, 16));
         else
-          SIM->get_param_num("ioaddr2", base)->set(strtoul (&params[3][8], NULL, 10));
+          SIM->get_param_num("ioaddr2", base)->set(strtoul(&params[3][8], NULL, 10));
       }
     }
 
@@ -2396,6 +2403,10 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         if (SIM->get_param_num(BXPN_IPS)->get() < BX_MIN_IPS) {
           PARSE_WARN(("%s: WARNING: ips is AWFULLY low!", context));
         }
+#if BX_SUPPORT_SMP
+      } else if (!strncmp(params[i], "quantum=", 8)) {
+        SIM->get_param_num(BXPN_SMP_QUANTUM)->set(atol(&params[i][8]));
+#endif
       } else if (!strncmp(params[i], "reset_on_triple_fault=", 22)) {
         if (params[i][22] == '0' || params[i][22] == '1') {
           SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->set (params[i][22] - '0');
@@ -2423,9 +2434,9 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     if (num_params == 3) {
       if (!strncmp(params[2], "address=", 8)) {
         if ((params[2][8] == '0') && (params[2][9] == 'x'))
-          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul (&params[2][8], NULL, 16));
+          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[2][8], NULL, 16));
         else
-          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul (&params[2][8], NULL, 10));
+          SIM->get_param_num(BXPN_ROM_ADDRESS)->set(strtoul(&params[2][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: romimage directive malformed.", context));
       }
@@ -2440,7 +2451,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
       SIM->get_param_string(BXPN_VGA_ROM_PATH)->set(&params[1][5]);
     } else {
       BX_INFO(("WARNING: syntax has changed, please use 'vgaromimage: file=...' now"));
-      SIM->get_param_string(BXPN_VGA_ROM_PATH)->set (params[1]);
+      SIM->get_param_string(BXPN_VGA_ROM_PATH)->set(params[1]);
     }
   } else if (!strncmp(params[0], "optromimage", 11)) {
     int num = atoi(&params[0][11]);
@@ -2458,9 +2469,9 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_string(tmppath)->set(&params[i][5]);
       } else if (!strncmp(params[i], "address=", 8)) {
         if ((params[i][8] == '0') && (params[2][9] == 'x'))
-          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 16));
+          SIM->get_param_num(tmpaddr)->set(strtoul(&params[i][8], NULL, 16));
         else
-          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 10));
+          SIM->get_param_num(tmpaddr)->set(strtoul(&params[i][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: optromimage%d directive malformed.", context, num));
       }
@@ -2481,9 +2492,9 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_string(tmppath)->set(&params[i][5]);
       } else if (!strncmp(params[i], "address=", 8)) {
         if ((params[i][8] == '0') && (params[2][9] == 'x'))
-          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 16));
+          SIM->get_param_num(tmpaddr)->set(strtoul(&params[i][8], NULL, 16));
         else
-          SIM->get_param_num(tmpaddr)->set(strtoul (&params[i][8], NULL, 10));
+          SIM->get_param_num(tmpaddr)->set(strtoul(&params[i][8], NULL, 10));
       } else {
         PARSE_ERR(("%s: optramimage%d directive malformed.", context, num));
       }
@@ -3417,9 +3428,10 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "vga_update_interval: %u\n", SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->get());
   fprintf(fp, "vga: extension=%s\n", SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr());
 #if BX_SUPPORT_SMP
-  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, reset_on_triple_fault=%d\n", 
+  fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, reset_on_triple_fault=%d\n", 
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
     SIM->get_param_num(BXPN_CPU_NTHREADS)->get(), SIM->get_param_num(BXPN_IPS)->get(),
+    SIM->get_param_num(BXPN_SMP_QUANTUM)->get(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get());
 #else
   fprintf(fp, "cpu: count=1, ips=%u, reset_on_triple_fault=%d\n", 
