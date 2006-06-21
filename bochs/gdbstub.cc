@@ -351,6 +351,7 @@ static int access_linear(Bit64u laddress,
                         Bit8u* data)
 {
    bx_phy_address phys;
+   bx_bool valid
     
    if (((laddress & 0xfff) + len) > 4096)
    {
@@ -370,7 +371,7 @@ static int access_linear(Bit64u laddress,
        return(valid);
    }
    
-   bx_bool valid = BX_CPU(0)->dbg_xlate_linear2phy(laddress, (bx_phy_address*)&phys);
+   valid = BX_CPU(0)->dbg_xlate_linear2phy(laddress, (bx_phy_address*)&phys);
    if (!valid)
    {
        return(0);
