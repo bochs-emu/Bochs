@@ -90,8 +90,8 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
 #  different from 1.
 #
 #  QUANTUM:
-#  Maximum amount of instruction allowed to execute by processor before
-#  returning control to another cpu. This option exits only in Bochs 
+#  Maximum amount of instructions allowed to execute by processor before
+#  returning control to another cpu. This option exists only in Bochs 
 #  binary compiled with SMP support.
 #
 #  RESET_ON_TRIPLE_FAULT:

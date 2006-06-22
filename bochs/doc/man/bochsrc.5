@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "05 Jun 2006" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "22 Jun 2006" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -111,9 +111,22 @@ This defines cpu-related parameters inside Bochs:
 
 count:
 
-Set the number of processors when Bochs is compiled for SMP emulation.
-Bochs currently supports up to 8 processors. If Bochs is compiled
-without SMP support, it won't accept values different from 1.
+Set the number of processors:cores per processor:threads per core when
+Bochs is compiled for SMP emulation. Bochs currently supports up to
+8 processors. If Bochs is compiled without SMP support, it won't accept
+values different from 1.
+
+quantum:
+
+Maximum amount of instructions allowed to execute by processor before
+returning control to another cpu. This option exists only in Bochs 
+binary compiled with SMP support.
+
+reset_on_triple_fault:
+
+Reset the CPU when triple fault occur (highly recommended) rather than
+PANIC. Remember that if you trying to continue after triple fault the 
+simulation will be completely bogus !
 
 ips:
 
