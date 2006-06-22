@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.320 2006-05-27 15:54:47 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.321 2006-06-22 16:43:50 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2753,7 +2753,7 @@ AC_ARG_ENABLE(processors,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(whether to reset on triple fault)
+AC_MSG_CHECKING(whether to reset on triple fault (deprecated))
 AC_ARG_ENABLE(reset-on-triple-fault,
   [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault (deprecated)],
   [AC_MSG_RESULT($enableval)
@@ -2763,7 +2763,7 @@ AC_ARG_ENABLE(reset-on-triple-fault,
    AC_MSG_RESULT(no)
   ])
 
-AC_MSG_CHECKING(PNI support)
+AC_MSG_CHECKING(PNI support (deprecated))
 AC_ARG_ENABLE(--enable-pni,
   [  --enable-pni                      PNI support (deprecated)],
   [AC_MSG_RESULT($enableval)

@@ -28,7 +28,7 @@ Changes in 2.3 release:
     could choose amount of cores per processor and amount of HT threads per
     core from .bochsrc for SMP simulation (Stanislav Shwartsman)
   - Allow to control SMP quantum value through .bochsrc CPU
-    option parameter. Previous Bochs version used hardcoded quantum=5
+    option parameter. Previous Bochs versions used hardcoded quantum=5
     value.
   - Fixed interrupt priority bug in service_local_apic()
   - Fixed again reading of APIC IRR/ISR/TMR registers. Finally it becomes
@@ -72,7 +72,6 @@ Changes in 2.3 release:
  [1386671] Combined dual core and hyper-threading patch
 
 - these S.F. bugs were closed
-  [427550] Incomplete IRETD implementation
  [1508947] APIC interrupt priority checking and interrupt delivery
   [766286] Debugger halts after any GPF exception
   [639143] va_list is not a pointer on linuxppc
