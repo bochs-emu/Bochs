@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.72 2006-06-17 12:09:54 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.73 2006-06-22 16:44:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2644,24 +2644,24 @@ void bx_dbg_info_dirty_command(void)
 
 void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
 {
-  int lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
-  int hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
-  //dbg_printf("descriptor hi,lo = %08x,%08x\n", hi, lo);
-  int base = ((lo >> 16) & 0xffff)
+  Bit32u lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
+  Bit32u hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
+//dbg_printf("Descriptor hi,lo = %08x,%08x\n", hi, lo);
+  Bit32u base = ((lo >> 16) & 0xffff)
              | ((hi << 16) & 0xff0000)
              | (hi & 0xff000000);
-  int limit = (hi & 0x000f0000) | (lo & 0xffff);
-  int segment = (lo >> 16) & 0xffff;
-  int offset = (lo & 0xffff) | (hi & 0xffff0000);
-  int type = (hi >> 8) & 0x0f;
-  int dpl = (hi >> 13) & 0x03;
-  int s = (hi >> 12) & 0x01;
-  int d_b = (hi >> 22) & 0x01;
-  int g = (hi >> 23) & 0x01;
+  Bit32u limit = (hi & 0x000f0000) | (lo & 0xffff);
+  Bit32u segment = (lo >> 16) & 0xffff;
+  Bit32u offset = (lo & 0xffff) | (hi & 0xffff0000);
+  unsigned type = (hi >> 8) & 0x0f;
+  unsigned dpl = (hi >> 13) & 0x03;
+  unsigned s = (hi >> 12) & 0x01;
+  unsigned d_b = (hi >> 22) & 0x01;
+  unsigned g = (hi >> 23) & 0x01;
 #if 0
-  int present = (hi >> 15) & 0x01;
-  int avl = (hi >> 20) & 0x01;
-  int base_is_jump_addr;
+  unsigned present = (hi >> 15) & 0x01;
+  unsigned avl = (hi >> 20) & 0x01;
+  unsigned base_is_jump_addr;
   if (s) {
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
@@ -2692,7 +2692,7 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
   if (base_is_jump_addr) {
     dbg_printf("target address=%04x:%08x\n", segment, offset);
   } else {
-    dbg_printf("base address=%p\n", base);
+    dbg_printf("base address=%08x\n", base);
     dbg_printf("G=granularity=%d\n", g);
     dbg_printf("limit=0x%05x %s (see G)\n", limit, g?"4K-byte units" : "bytes");
     dbg_printf("AVL=available to OS=%d\n", avl);
@@ -2706,14 +2706,14 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
     // either a code or a data segment. bit 11 (type file MSB) then says 
     // 0=data segment, 1=code seg
     if (type&8) {
-      dbg_printf("Code segment, linearaddr=%08x, len=%05x %s, %s%s%s, %d-bit\n", 
+      dbg_printf("Code segment, linearaddr=%08x, limit=%05x %s, %s%s%s, %d-bit\n", 
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Execute/Read" : "Execute-Only",
         (type&4)? ", Conforming" : "",
         (type&1)? ", Accessed" : "",
         d_b ? 32 : 16);
     } else {
-      dbg_printf("Data segment, linearaddr=%08x, len=%05x %s, %s%s%s\n",
+      dbg_printf("Data segment, linearaddr=%08x, limit=%05x %s, %s%s%s\n",
         base, limit, g ? "* 4Kbytes" : "bytes",
         (type&2)? "Read/Write" : "Read-Only",
         (type&4)? ", Expand-down" : "",
@@ -2726,7 +2726,7 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
     dbg_printf("%s ", type_names[type]);
     // only print more if type is valid
     if (type_names[type] == undef)  {
-      dbg_printf("descriptor hi=%08x, lo=%08x", hi, lo);
+      dbg_printf("descriptor hi=0x%08x, lo=0x%08x", hi, lo);
     } else {
       // for call gates, print segment:offset and parameter count p.4-15
       // for task gate, only present,dpl,TSS segment selector exist. p.5-13
@@ -2734,11 +2734,13 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
       // for trap gate, segment:offset,p,dpl
       // for TSS, base address and segment limit
       switch (type) {
-      case 1: case 3:  // 16-bit TSS
-      case 9: case 11: // 32-bit TSS
-       dbg_printf("at %08x, length 0x%05x", base, limit);
+      case BX_SYS_SEGMENT_AVAIL_286_TSS:
+      case BX_SYS_SEGMENT_BUSY_286_TSS:
+      case BX_SYS_SEGMENT_AVAIL_386_TSS:
+      case BX_SYS_SEGMENT_BUSY_386_TSS:
+       dbg_printf("at 0x%08x, length 0x%05x", base, limit);
         break;
-      case 2:
+      case BX_SYS_SEGMENT_LDT:
         // it's an LDT. not much to print.
         break;
       default:
@@ -2811,7 +2813,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     Bit8u entry[8];
     if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
-      bx_dbg_print_descriptor (entry, 0);
+      bx_dbg_print_descriptor(entry, 0);
     }
     else {
       dbg_printf("error: GDTR+8*%d points to invalid linear address 0x%-08x\n",
