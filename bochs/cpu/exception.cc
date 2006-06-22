@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.82 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: exception.cc,v 1.83 2006-06-22 19:53:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -769,6 +769,7 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
     if (vector == 0x80) bx_dbg_linux_syscall(BX_CPU_ID);
   }
 #endif
+  bx_dbg_interrupt(BX_CPU_ID, vector, error_code);
 #endif
 
   BX_DEBUG(("interrupt(): vector = %u, INT = %u, EXT = %u",
@@ -811,8 +812,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
 
   invalidate_prefetch_q();
   UNUSED(is_INT);
-
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector);
+
+#if BX_DEBUGGER
+  bx_dbg_exception(BX_CPU_ID, vector, error_code);
+#endif
 
   BX_DEBUG(("exception(0x%02X)", (unsigned) vector));
 
