@@ -1,4 +1,4 @@
-Changes in 2.3 release:
+Changes in 2.3 (not yet released):
 
 - CPU and internal debugger fixes
   - Fixed bug in FSTENV instruction (Stanislav Shwartsman)
