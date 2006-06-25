@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.216 2006-06-22 18:50:47 vruppert Exp $
+$Id: user.dbk,v 1.217 2006-06-25 12:20:34 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -4901,16 +4901,17 @@ file yet.
 </section>
 <section id="using-save-restore"><title>Save and restore simulation</title>
 <para>
-Starting with release 2.3 Bochs has limited save/restore support. The state of
+Starting with version 2.3, Bochs has limited save/restore support. The state of
 cpu(s), memory and all devices can be saved now. To enable this feature, Bochs
-must be compile with the <option>--enable-save-restore</option> option. When running
+must be compiled with the <option>--enable-save-restore</option> option. When running
 Bochs with save/restore support there will be a new button in the header bar called
 "Suspend". Depending on config interface and gui there will be a prompt where you
-can enter a path or a gui folder selection dialog box. After pressing OK/Enter,
-Bochs will save a set of files into the selected folder. The state of hard disk
-images is not handled yet, so Bochs will ask you if you want to continue after
-saving state. We don't recommend to continue unless you are running a read-only
-guest system (e.g. Live-CD).
+can enter a path or a gui folder selection dialog box. It is possible to save the
+state at any time, but we recommend to do it when the simulation is idle. After
+pressing OK/Enter, Bochs will save a set of files into the selected folder.
+The state of hard disk images is not handled yet, so Bochs will ask you if you
+want to continue after saving state. We don't recommend to continue unless you
+are running a read-only guest system (e.g. Live-CD).
 </para>
 <para>
 To restore the saved simulation state you can select the restore function in the
