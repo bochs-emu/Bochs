@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.h,v 1.8 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: extdb.h,v 1.9 2006-06-25 21:44:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef EXTDB_H
@@ -33,5 +33,6 @@ extern TRegs regs;
 extern char debug_loaded;
 
 void bx_external_debugger(BX_CPU_C *cpu);
+void trap_debugger(bx_bool callnow);
 
 #endif

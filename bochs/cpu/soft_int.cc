@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.30 2006-06-09 22:29:07 sshwarts Exp $
+// $Id: soft_int.cc,v 1.31 2006-06-25 21:44:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,6 +29,10 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_EXTERNAL_DEBUGGER
+#include "extdb.h"
+#endif
 
 void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {

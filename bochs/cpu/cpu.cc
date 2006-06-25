@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.164 2006-06-24 18:27:11 sshwarts Exp $
+// $Id: cpu.cc,v 1.165 2006-06-25 21:44:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -259,7 +259,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
     // fetch and decode next instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
-    bx_address next_RIP = RIP + i->ilen();
     BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
     BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
     if (resolveModRM)
@@ -274,7 +273,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
-    if (regs.debug_state != debug_run) bx_external_debugger(BX_CPU_THIS);
+    bx_external_debugger(BX_CPU_THIS);
 #endif
 
 #if BX_DISASM
@@ -290,7 +289,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
     // decoding instruction compeleted -> continue with execution
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-    RIP = next_RIP;
+    RIP += i->ilen();
 
     if ( !(i->repUsedL() && i->repeatableL()) ) {
       // non repeating instruction
@@ -780,7 +779,6 @@ void BX_CPU_C::deliver_SMI(void)
 }
 
 #if BX_EXTERNAL_DEBUGGER
-
 void BX_CPU_C::ask(int level, const char *prefix, const char *fmt, va_list ap)
 {
   char buf1[1024];
@@ -788,16 +786,7 @@ void BX_CPU_C::ask(int level, const char *prefix, const char *fmt, va_list ap)
   printf ("%s %s\n", prefix, buf1);
   trap_debugger(1);
 }
-
-void BX_CPU_C::trap_debugger(bx_bool callnow)
-{
-  regs.debug_state = debug_step;
-  if (callnow) {
-    bx_external_debugger(BX_CPU_THIS);
-  }
-}
-
-#endif  // #if BX_EXTERNAL_DEBUGGER
+#endif
 
 #if BX_DEBUGGER
 extern unsigned dbg_show_mask;
@@ -975,7 +964,7 @@ void BX_CPU_C::dbg_take_irq(void)
 
 void BX_CPU_C::dbg_force_interrupt(unsigned vector)
 {
-  // Used to force slave simulator to take an interrupt, without
+  // Used to force simulator to take an interrupt, without
   // regard to IF
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env) == 0) {

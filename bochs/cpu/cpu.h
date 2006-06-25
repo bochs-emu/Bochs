@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.300 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: cpu.h,v 1.301 2006-06-25 21:44:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1236,7 +1236,7 @@ public: // for now...
   } address_xlation;
 
 #if BX_EXTERNAL_DEBUGGER
-  virtual void ask (int level, const char *prefix, const char *fmt, va_list ap);
+  virtual void ask(int level, const char *prefix, const char *fmt, va_list ap);
 #endif
 
   BX_SMF void setEFlags(Bit32u val) BX_CPP_AttrRegparmN(1);
@@ -2864,10 +2864,6 @@ public: // for now...
   BX_SMF void    debug(bx_address offset);
 #if BX_DISASM
   BX_SMF void    debug_disasm_instruction(bx_address offset);
-#endif
-
-#if BX_EXTERNAL_DEBUGGER
-  BX_SMF void    trap_debugger(bx_bool callnow);
 #endif
 
 #if BX_X86_DEBUGGER
