@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.29 2006-05-07 20:56:40 sshwarts Exp $
+// $Id: bit.cc,v 1.30 2006-06-26 20:28:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,18 +32,6 @@
 
 
 #if BX_CPU_LEVEL >= 3
-
-#if BX_SUPPORT_X86_64==0
-// Make life easier merging cpu64 and cpu code.
-#define RAX EAX
-#define RBX EBX
-#define RCX ECX
-#define RDX EDX
-#define RSP ESP
-#define RSI ESI
-#define RDI EDI
-#define RBP EBP
-#endif
 
 void BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 {

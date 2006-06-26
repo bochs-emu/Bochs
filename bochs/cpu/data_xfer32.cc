@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.38 2006-04-05 17:31:30 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.39 2006-06-26 20:28:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,17 +30,16 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_X86_64==0
+// Make life easier for merging cpu64 and cpu32 code.
+#define RAX EAX
+#endif
 
 void BX_CPU_C::XCHG_ERXEAX(bxInstruction_c *i)
 {
   Bit32u temp32 = EAX;
-#if BX_SUPPORT_X86_64
   RAX = BX_READ_32BIT_REG(i->opcodeReg());
   BX_WRITE_32BIT_REGZ(i->opcodeReg(), temp32);
-#else
-  EAX = BX_READ_32BIT_REG(i->opcodeReg());
-  BX_WRITE_32BIT_REG(i->opcodeReg(), temp32);
-#endif
 }
 
 void BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
