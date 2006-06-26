@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.154 2006-06-14 16:44:33 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.155 2006-06-26 21:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -208,7 +208,7 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_DdRd(): rm field not a register!"));
+    BX_PANIC(("MOV_DdRd(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
@@ -337,7 +337,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_RdDd(): rm field not a register!"));
+    BX_PANIC(("MOV_RdDd(): rm field not a register!"));
 
   /* #GP(0) if CPL is not 0 */
   if (protected_mode() && (CPL!=0)) {
@@ -402,12 +402,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
-  Bit64u val_64;
-
-  if (v8086_mode()) {
-    BX_INFO(("MOV_DqRq: v8086 mode causes #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_ASSERT(protected_mode());
 
   /* NOTES:
    *   64bit operands always used
@@ -419,20 +414,19 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_DqRq(): rm field not a register!"));
+    BX_PANIC(("MOV_DqRq(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
   /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_DqRq: #GP(0) if CPL is not 0"));
+  if (CPL != 0) {
+    BX_ERROR(("MOV_DqRq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  val_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
   if (bx_dbg.dreg)
-    BX_INFO(("MOV_DqRq: DR[%u]=%08xh unhandled",
-      (unsigned) i->nnn(), (unsigned) val_64));
+    BX_INFO(("MOV_DqRq: DR[%u]=%08xh unhandled", i->nnn(), (unsigned) val_64));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -526,20 +520,17 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_RqDq: v8086 mode causes #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_ASSERT(protected_mode());
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_RqDq(): rm field not a register!"));
+    BX_PANIC(("MOV_RqDq(): rm field not a register!"));
 
   /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && (CPL!=0)) {
-    BX_INFO(("MOV_RqDq: #GP(0) if CPL is not 0"));
+  if (CPL != 0) {
+    BX_ERROR(("MOV_RqDq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -614,7 +605,7 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_CdRd(): rm field not a register!"));
+    BX_PANIC(("MOV_CdRd(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
@@ -681,7 +672,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_RdCd(): rm field not a register!"));
+    BX_PANIC(("MOV_RdCd(): rm field not a register!"));
 
   /* #GP(0) if CPL is not 0 */
   if (protected_mode() && CPL!=0) {
@@ -728,11 +719,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   // mov general register data to control register
   Bit64u val_64;
 
-  if (v8086_mode())
-  {
-    BX_INFO(("MOV_CqRq: v8086 mode causes #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_ASSERT(protected_mode());
 
   /* NOTES:
    *   64bit operands always used
@@ -744,13 +731,13 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_CqRq(): rm field not a register!"));
+    BX_PANIC(("MOV_CqRq(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
   /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_CqRq: #GP(0) if CPL is not 0"));
+  if (CPL!=0) {
+    BX_ERROR(("MOV_CqRq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -804,10 +791,7 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
   // mov control register data to register
   Bit64u val_64;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_RqCq: v8086 mode causes #GP(0)"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
+  BX_ASSERT(protected_mode());
 
   /* NOTES:
    *   64bit operands always used
@@ -819,11 +803,11 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
-    BX_INFO(("MOV_RqCq(): rm field not a register!"));
+    BX_PANIC(("MOV_RqCq(): rm field not a register!"));
 
   /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_RqCq: #GP(0) if CPL is not 0"));
+  if (CPL!=0) {
+    BX_ERROR(("MOV_RqCq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
