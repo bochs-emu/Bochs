@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.160 2006-01-25 17:51:49 vruppert Exp $
+// $Id: rombios.c,v 1.161 2006-07-05 09:19:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -932,7 +932,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.160 $ $Date: 2006-01-25 17:51:49 $";
+static char bios_cvs_version_string[] = "$Revision: 1.161 $ $Date: 2006-07-05 09:19:55 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -8116,6 +8116,7 @@ boot_setup:
   mov ax,    #0xaa55 ;; set ok flag
 
   pop bp
+  sti                ;; enable interrupts before executing boot code
   iret               ;; Beam me up Scotty
 
 ;----------
