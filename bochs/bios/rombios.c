@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.162 2006-07-06 07:27:44 vruppert Exp $
+// $Id: rombios.c,v 1.163 2006-07-07 16:10:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -932,7 +932,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.162 $ $Date: 2006-07-06 07:27:44 $";
+static char bios_cvs_version_string[] = "$Revision: 1.163 $ $Date: 2006-07-07 16:10:37 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2207,25 +2207,26 @@ void ata_detect( )
       write_byte(ebda_seg,&EbdaData->ata.devices[device].type,ATA_TYPE_UNKNOWN);
     
       // reset the channel
-      ata_reset (device);
+      ata_reset(device);
       
       // check for ATA or ATAPI
       outb(iobase1+ATA_CB_DH, slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0);
       sc = inb(iobase1+ATA_CB_SC);
       sn = inb(iobase1+ATA_CB_SN);
-      if ( (sc==0x01) && (sn==0x01) ) {
+      if ((sc==0x01) && (sn==0x01)) {
         cl = inb(iobase1+ATA_CB_CL);
         ch = inb(iobase1+ATA_CB_CH);
         st = inb(iobase1+ATA_CB_STAT);
 
-        if ( (cl==0x14) && (ch==0xeb) ) {
+        if ((cl==0x14) && (ch==0xeb)) {
           write_byte(ebda_seg,&EbdaData->ata.devices[device].type,ATA_TYPE_ATAPI);
-          }
-        else if ( (cl==0x00) && (ch==0x00) && (st!=0x00) ) {
+        } else if ((cl==0x00) && (ch==0x00) && (st!=0x00)) {
           write_byte(ebda_seg,&EbdaData->ata.devices[device].type,ATA_TYPE_ATA);
-          }
+        } else if ((cl==0xff) && (ch==0xff)) {
+          write_byte(ebda_seg,&EbdaData->ata.devices[device].type,ATA_TYPE_NONE);
         }
       }
+    }
 
     type=read_byte(ebda_seg,&EbdaData->ata.devices[device].type);
     
@@ -3999,6 +4000,29 @@ BX_DEBUG_INT15("case default:\n");
 }
 #endif
 
+
+void set_e820_range(ES, DI, start, end, type)
+     Bit16u ES; 
+     Bit16u DI;
+     Bit32u start;
+     Bit32u end; 
+     Bit16u type;
+{
+    write_word(ES, DI, start);
+    write_word(ES, DI+2, start >> 16);
+    write_word(ES, DI+4, 0x00);
+    write_word(ES, DI+6, 0x00);
+    
+    end -= start;
+    write_word(ES, DI+8, end);
+    write_word(ES, DI+10, end >> 16);
+    write_word(ES, DI+12, 0x0000);
+    write_word(ES, DI+14, 0x0000);
+    
+    write_word(ES, DI+16, type);
+    write_word(ES, DI+18, 0x0);
+}
+
   void
 int15_function32(regs, ES, DS, FLAGS)
   pushad_regs_t regs; // REGS pushed via pushad
@@ -4063,19 +4087,8 @@ ASM_END
                 switch(regs.u.r16.bx)
                 {
                     case 0:
-                        write_word(ES, regs.u.r16.di, 0x00);
-                        write_word(ES, regs.u.r16.di+2, 0x00);
-                        write_word(ES, regs.u.r16.di+4, 0x00);
-                        write_word(ES, regs.u.r16.di+6, 0x00);
-
-                        write_word(ES, regs.u.r16.di+8, 0xFC00);
-                        write_word(ES, regs.u.r16.di+10, 0x0009);
-                        write_word(ES, regs.u.r16.di+12, 0x0000);
-                        write_word(ES, regs.u.r16.di+14, 0x0000);
-
-                        write_word(ES, regs.u.r16.di+16, 0x1);
-                        write_word(ES, regs.u.r16.di+18, 0x0);
-
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       0x0000000L, 0x0009fc00L, 1);
                         regs.u.r32.ebx = 1;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
@@ -4083,6 +4096,24 @@ ASM_END
                         return;
                         break;
                     case 1:
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       0x0009fc00L, 0x000a0000L, 2);
+                        regs.u.r32.ebx = 2;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
+                        CLEAR_CF();
+                        return;
+                        break;
+                    case 2:
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       0x000e8000L, 0x00100000L, 2);
+                        regs.u.r32.ebx = 3;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
+                        CLEAR_CF();
+                        return;
+                        break;
+                    case 3:
                         extended_memory_size = inb_cmos(0x35);
                         extended_memory_size <<= 8;
                         extended_memory_size |= inb_cmos(0x34);
@@ -4092,9 +4123,9 @@ ASM_END
                             extended_memory_size = 0x3bc000; // everything after this is reserved memory until we get to 0x100000000
                         }
                         extended_memory_size *= 1024;
-                        extended_memory_size += 15728640; // make up for the 16mb of memory that is chopped off
+                        extended_memory_size += (16L * 1024 * 1024);
 
-                        if(extended_memory_size <= 15728640)
+                        if(extended_memory_size <= (16L * 1024 * 1024))
                         {
                             extended_memory_size = inb_cmos(0x31);
                             extended_memory_size <<= 8;
@@ -4102,28 +4133,23 @@ ASM_END
                             extended_memory_size *= 1024;
                         }
 
-                        write_word(ES, regs.u.r16.di, 0x0000);
-                        write_word(ES, regs.u.r16.di+2, 0x0010);
-                        write_word(ES, regs.u.r16.di+4, 0x0000);
-                        write_word(ES, regs.u.r16.di+6, 0x0000);
-
-                        write_word(ES, regs.u.r16.di+8, extended_memory_size);
-                        extended_memory_size >>= 16;
-                        write_word(ES, regs.u.r16.di+10, extended_memory_size);
-                        extended_memory_size >>= 16;
-                        write_word(ES, regs.u.r16.di+12, extended_memory_size);
-                        extended_memory_size >>= 16;
-                        write_word(ES, regs.u.r16.di+14, extended_memory_size);
-
-                        write_word(ES, regs.u.r16.di+16, 0x1);
-                        write_word(ES, regs.u.r16.di+18, 0x0);
-
-                        regs.u.r32.ebx = 0;
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       0x00100000L, extended_memory_size, 1);
+                        regs.u.r32.ebx = 4;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
                         CLEAR_CF();
                         return;
                         break;
+                    case 4:
+                        /* 256KB BIOS area at the end of 4 GB */
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       0xfffc0000L, 0x00000000L, 2);
+                        regs.u.r32.ebx = 0;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
+                        CLEAR_CF();
+                        return;
                     default:  /* AX=E820, DX=534D4150, BX unrecognized */
                         goto int15_unimplemented;
                         break;
@@ -8823,7 +8849,6 @@ pci_pro_unknown:
 pci_pro_fail:
   pop edi
   pop esi
-  sti
   popf
   stc
   retf
@@ -8831,7 +8856,6 @@ pci_pro_ok:
   xor ah, ah
   pop edi
   pop esi
-  sti
   popf
   clc
   retf
@@ -8971,7 +8995,7 @@ pci_real_f0c: ;; write configuration word
   jmp pci_real_ok
 pci_real_f0d: ;; write configuration dword
   cmp al, #0x0d
-  jne pci_real_unknown
+  jne pci_real_f0e
   call pci_real_select_reg
   push dx
   mov dx, #0x0cfc
@@ -8979,6 +9003,46 @@ pci_real_f0d: ;; write configuration dword
   out dx, eax
   pop dx
   jmp pci_real_ok
+pci_real_f0e: ;; get irq routing options
+  cmp al, #0x0e
+  jne pci_real_unknown
+  SEG ES
+  cmp word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start
+  jb pci_real_too_small    
+  SEG ES
+  mov word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start        
+  pushf
+  push ds
+  push es
+  push cx
+  push si
+  push di
+  cld
+  mov si, #pci_routing_table_structure_start
+  push cs
+  pop ds
+  SEG ES
+  mov cx, [di+2]
+  SEG ES
+  mov es, [di+4]
+  mov di, cx
+  mov cx, #pci_routing_table_structure_end - pci_routing_table_structure_start
+  rep 
+      movsb
+  pop di
+  pop si
+  pop cx
+  pop es
+  pop ds
+  popf
+  mov bx, #(1 << 9) | (1 << 11)   ;; irq 9 and 11 are used
+  jmp pci_real_ok
+pci_real_too_small:
+  SEG ES
+  mov word ptr [di], #pci_routing_table_structure_end - pci_routing_table_structure_start        
+  mov ah, #0x89
+  jmp pci_real_fail
+
 pci_real_unknown:
   mov ah, #0x81
 pci_real_fail:
@@ -9019,6 +9083,7 @@ pci_routing_table_structure:
   dw 0,0 ;; Miniport data
   db 0,0,0,0,0,0,0,0,0,0,0 ;; reserved
   db 0x07 ;; checksum
+pci_routing_table_structure_start:
   ;; first slot entry PCI-to-ISA (embedded)
   db 0 ;; pci bus number
   db 0x08 ;; pci device number (bit 7-3)
@@ -9097,6 +9162,7 @@ pci_routing_table_structure:
   dw 0xdef8 ;; IRQ bitmap INTD#
   db 5 ;; physical slot (0 = embedded)
   db 0 ;; reserved
+pci_routing_table_structure_end:
 
 pci_irq_list:
   db 11, 10, 9, 5;
