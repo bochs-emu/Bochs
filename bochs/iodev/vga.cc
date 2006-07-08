@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.130 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: vga.cc,v 1.131 2006-07-08 13:05:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3384,7 +3384,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_X_OFFSET:
         {
-          // BX_INFO(("VBE offset x %x",value));
+          BX_DEBUG(("VBE offset x %d",value));
           BX_VGA_THIS s.vbe_offset_x=(Bit16u)value;
 
           BX_VGA_THIS s.vbe_virtual_start = BX_VGA_THIS s.vbe_offset_y * BX_VGA_THIS s.line_offset;
@@ -3398,13 +3398,21 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_Y_OFFSET:
         {
-          // BX_INFO(("VBE offset y %x",value));
+          BX_DEBUG(("VBE offset y %d",value));
           BX_VGA_THIS s.vbe_offset_y=(Bit16u)value;
           BX_VGA_THIS s.vbe_virtual_start = BX_VGA_THIS s.vbe_offset_y * BX_VGA_THIS s.line_offset;
           if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
             BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x * BX_VGA_THIS s.vbe_bpp_multiplier);
+            if ((BX_VGA_THIS s.vbe_virtual_start + BX_VGA_THIS s.vbe_visible_screen_size) > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
+            {
+              BX_PANIC(("VBE offset y %d out of bounds",value));
+            }
           } else {
             BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
+            if ((BX_VGA_THIS s.vbe_virtual_start + BX_VGA_THIS s.vbe_visible_screen_size) > (VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / 4))
+            {
+              BX_PANIC(("VBE offset y %d out of bounds",value));
+            }
           }
           needs_update = 1;
         } break;
@@ -3429,9 +3437,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           Bit16u new_width=value;
           Bit16u new_height;
           if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
-            new_height=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
+            new_height=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / BX_VGA_THIS s.vbe_bpp_multiplier) / new_width;
           } else {
-            new_height=(sizeof(BX_VGA_THIS s.vbe_memory) * 2) / new_width;
+            new_height=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES * 2) / new_width;
           }
           if (new_height >=BX_VGA_THIS s.vbe_yres)
           {
@@ -3443,9 +3451,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             // no decent virtual height: adjust width & height
             new_height=BX_VGA_THIS s.vbe_yres;
             if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
-              new_width=(sizeof(BX_VGA_THIS s.vbe_memory) / BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
+              new_width=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / BX_VGA_THIS s.vbe_bpp_multiplier) / new_height;
             } else {
-              new_width=(sizeof(BX_VGA_THIS s.vbe_memory) * 2) / new_height;
+              new_width=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES * 2) / new_height;
             }
 
             BX_INFO(("VBE recalc virtual width %d height %d",new_width, new_height));
