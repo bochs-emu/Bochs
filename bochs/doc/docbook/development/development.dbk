@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.23 2006-06-25 12:20:34 vruppert Exp $
+$Id: development.dbk,v 1.24 2006-07-11 22:17:28 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -492,7 +492,7 @@ In the config interface it is used for menus/dialogs.</entry>
 </row>
 </tbody>
 </tgroup>
-</table>   
+</table>
 </para>
 </section>
 <section id="save-restore"><title>The save/restore feature</title>
@@ -507,7 +507,42 @@ per item in the save/restore list). Large binary arrays are registered with a
 special parameter type, so they are saved as separate files.
 </para>
 <para>
-&FIXME; Add some more information here.
+The table below shows the additional parameter types for save/restore.
+<table>   
+<title>Save/restore parameter types</title>
+<tgroup cols="2">
+<thead>
+<row>
+<entry>Type</entry>
+<entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>bx_shadow_num_c</entry>
+<entry>Based on bx_param_num_c this type stores a pointer to a numerical variable.</entry>
+</row>
+<row>
+<entry>bx_shadow_bool_c</entry>
+<entry>This parameter type stores a pointer to a boolean variable.</entry>
+</row>
+<row>
+<entry>bx_shadow_data_c</entry>
+<entry>This special parameter type stores pointer size of a binary array.</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+It is also possible to use the bx_param_num_c object with parameter save/restore
+handlers. With this special way several device settings can be save to and restored
+from one single parameter.
+</para>
+<para>
+All devices can uses these two save/restore specific methods:
+<itemizedlist>
+<listitem><para>register_state() is called after the device init() to register the device members for save/restore</para></listitem>
+<listitem><para>after_restore_state() is an optional method to do things directly after restore</para></listitem>
+</itemizedlist>
 </para>
 </section>
 </section>
