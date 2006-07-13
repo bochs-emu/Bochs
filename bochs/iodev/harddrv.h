@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.40 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: harddrv.h,v 1.41 2006-07-13 17:34:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,6 +26,8 @@
 
 #ifndef BX_IODEV_HDDRIVE_H
 #define BX_IODEV_HDDRIVE_H
+
+#define MAX_MULTIPLE_SECTORS 16
 
 typedef enum _sense {
       SENSE_NONE = 0, SENSE_NOT_READY = 2, SENSE_ILLEGAL_REQUEST = 5,
@@ -78,12 +80,12 @@ typedef struct {
     Bit16u   cylinder_no;
     Bit16u   byte_count;
   };
-  Bit8u    buffer[2352];
+  Bit8u    buffer[MAX_MULTIPLE_SECTORS*512 + 4];
   Bit32u   buffer_size;
   Bit32u   buffer_index;
   Bit32u   drq_index;
   Bit8u    current_command;
-  Bit8u    sectors_per_block;
+  Bit8u    multiple_sectors;
   Bit8u    lba_mode;
   bx_bool  packet_dma;
   struct {

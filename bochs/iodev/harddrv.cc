@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.173 2006-06-17 07:45:27 vruppert Exp $
+// $Id: harddrv.cc,v 1.174 2006-07-13 17:34:43 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,9 +45,6 @@
 #define INDEX_PULSE_CYCLE 10
 
 #define PACKET_SIZE 12
-
-static unsigned max_multiple_sectors  = 0; // was 0x3f
-static unsigned curr_multiple_sectors = 0; // was 0x3f
 
 // some packet handling macros
 #define EXTRACT_FIELD(arr,byte,start,num_bits) (((arr)[(byte)] >> (start)) & ((1 << (num_bits)) - 1))
@@ -143,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.173 2006-06-17 07:45:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.174 2006-07-13 17:34:43 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -232,7 +229,7 @@ void bx_hard_drive_c::init(void)
       BX_CONTROLLER(channel,device).control.disable_irq = 0;
       BX_CONTROLLER(channel,device).reset_in_progress   = 0;
 
-      BX_CONTROLLER(channel,device).sectors_per_block   = 0x80;
+      BX_CONTROLLER(channel,device).multiple_sectors    = MAX_MULTIPLE_SECTORS;
       BX_CONTROLLER(channel,device).lba_mode            = 0;
 
       BX_CONTROLLER(channel,device).features            = 0;
@@ -654,7 +651,7 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "buffer_index", &BX_CONTROLLER(i, j).buffer_index, BASE_HEX);
         new bx_shadow_num_c(drive, "drq_index", &BX_CONTROLLER(i, j).drq_index, BASE_HEX);
         new bx_shadow_num_c(drive, "current_command", &BX_CONTROLLER(i, j).current_command, BASE_HEX);
-        new bx_shadow_num_c(drive, "sectors_per_block", &BX_CONTROLLER(i, j).sectors_per_block, BASE_HEX);
+        new bx_shadow_num_c(drive, "multiple_sectors", &BX_CONTROLLER(i, j).multiple_sectors, BASE_HEX);
         new bx_shadow_num_c(drive, "lba_mode", &BX_CONTROLLER(i, j).lba_mode, BASE_HEX);
         new bx_shadow_num_c(drive, "packet_dma", &BX_CONTROLLER(i, j).packet_dma, BASE_HEX);
         new bx_shadow_bool_c(drive, "control_reset", &BX_CONTROLLER(i, j).control.reset);
@@ -2317,26 +2314,23 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           raise_interrupt(channel);
           break;
 
-	case 0xc6: // SET MULTIPLE MODE (mch)
-	      if (BX_SELECTED_CONTROLLER(channel).sector_count != 128 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 64 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 32 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 16 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 8 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 4 &&
-		  BX_SELECTED_CONTROLLER(channel).sector_count != 2)
-		    command_aborted(channel, value);
+	case 0xc6: // SET MULTIPLE MODE
+          if ((BX_SELECTED_CONTROLLER(channel).sector_count > MAX_MULTIPLE_SECTORS) ||
+              (BX_SELECTED_CONTROLLER(channel).sector_count == 0)) {
+            command_aborted(channel, value);
+          } else {
+            if (!BX_SELECTED_IS_HD(channel))
+              BX_PANIC(("set multiple mode issued to non-disk"));
 
-	      if (!BX_SELECTED_IS_HD(channel))
-		BX_PANIC(("set multiple mode issued to non-disk"));
-
-	      BX_SELECTED_CONTROLLER(channel).sectors_per_block = BX_SELECTED_CONTROLLER(channel).sector_count;
-	      BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-	      BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-	      BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
-	      BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-	      BX_SELECTED_CONTROLLER(channel).status.err = 0;
-	      break;
+            BX_DEBUG(("set multiple mode: sectors=%d", BX_SELECTED_CONTROLLER(channel).sector_count));
+            BX_SELECTED_CONTROLLER(channel).multiple_sectors = BX_SELECTED_CONTROLLER(channel).sector_count;
+            BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+            BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+            BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+            BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+            BX_SELECTED_CONTROLLER(channel).status.err = 0;
+          }
+          break;
 
         // ATAPI commands
         case 0xa1: // IDENTIFY PACKET DEVICE
@@ -2415,6 +2409,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         // power management
+	case 0xE0: // STANDBY NOW
+	case 0xE1: // IDLE IMMEDIATE
+	  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+	  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+	  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
+	  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+	  BX_SELECTED_CONTROLLER(channel).status.err = 0;
+	  raise_interrupt(channel);
+	  break;
+
 	case 0xe5: // CHECK POWER MODE
 	  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
 	  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -2527,8 +2531,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	case 0xDA: BX_ERROR(("write cmd 0xDA (GET MEDIA STATUS) not supported"));command_aborted(channel, 0xDA); break;
 	case 0xDE: BX_ERROR(("write cmd 0xDE (MEDIA LOCK) not supported"));command_aborted(channel, 0xDE); break;
 	case 0xDF: BX_ERROR(("write cmd 0xDF (MEDIA UNLOCK) not supported"));command_aborted(channel, 0xDF); break;
-	case 0xE0: BX_ERROR(("write cmd 0xE0 (STANDBY IMMEDIATE) not supported"));command_aborted(channel, 0xE0); break;
-	case 0xE1: BX_ERROR(("write cmd 0xE1 (IDLE IMMEDIATE) not supported"));command_aborted(channel, 0xE1); break;
 	case 0xE2: BX_ERROR(("write cmd 0xE2 (STANDBY) not supported"));command_aborted(channel, 0xE2); break;
 	case 0xE3: BX_ERROR(("write cmd 0xE3 (IDLE) not supported"));command_aborted(channel, 0xE3); break;
 	case 0xE4: BX_ERROR(("write cmd 0xE4 (READ BUFFER) not supported"));command_aborted(channel, 0xE4); break;
@@ -2589,7 +2591,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_CONTROLLER(channel,id).current_command = 0x00;
           BX_CONTROLLER(channel,id).buffer_index = 0;
 
-          BX_CONTROLLER(channel,id).sectors_per_block = 0x80;
+          BX_CONTROLLER(channel,id).multiple_sectors  = MAX_MULTIPLE_SECTORS;
           BX_CONTROLLER(channel,id).lba_mode          = 0;
 
           BX_CONTROLLER(channel,id).control.disable_irq = 0;
@@ -2845,7 +2847,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
 
   BX_SELECTED_DRIVE(channel).id_drive[57] = 0x1e80;
   BX_SELECTED_DRIVE(channel).id_drive[58] = 0x0010;
-  BX_SELECTED_DRIVE(channel).id_drive[59] = 0x0100 | BX_SELECTED_CONTROLLER(channel).sectors_per_block;
+  BX_SELECTED_DRIVE(channel).id_drive[59] = 0x0100 | BX_SELECTED_CONTROLLER(channel).multiple_sectors;
   BX_SELECTED_DRIVE(channel).id_drive[60] = 0x20e0;
   BX_SELECTED_DRIVE(channel).id_drive[61] = 0x0010;
 
@@ -2997,7 +2999,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   //           7-0 00h= read/write multiple commands not implemented
   //               xxh= maximum # of sectors that can be transferred
   //                    per interrupt on read and write multiple commands
-  BX_SELECTED_DRIVE(channel).id_drive[47] = max_multiple_sectors;
+  BX_SELECTED_DRIVE(channel).id_drive[47] = MAX_MULTIPLE_SECTORS;
 
   // Word 48: 0000h = cannot perform dword IO
   //          0001h = can    perform dword IO
@@ -3050,7 +3052,10 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   //             8 1=multiple sector setting is valid
   //           7-0 current setting for number of sectors that can be
   //               transferred per interrupt on R/W multiple commands
-  BX_SELECTED_DRIVE(channel).id_drive[59] = 0x0000 | curr_multiple_sectors;
+  if (BX_SELECTED_CONTROLLER(channel).multiple_sectors > 0)
+    BX_SELECTED_DRIVE(channel).id_drive[59] = 0x0100 | BX_SELECTED_CONTROLLER(channel).multiple_sectors;
+  else
+    BX_SELECTED_DRIVE(channel).id_drive[59] = 0x0000;
 
   // Word 60-61:
   // If drive supports LBA Mode, these words reflect total # of user
