@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.176 2006-07-17 18:40:26 vruppert Exp $
+// $Id: harddrv.cc,v 1.177 2006-07-19 19:18:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.176 2006-07-17 18:40:26 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.177 2006-07-19 19:18:42 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -229,10 +229,11 @@ void bx_hard_drive_c::init(void)
       BX_CONTROLLER(channel,device).control.disable_irq = 0;
       BX_CONTROLLER(channel,device).reset_in_progress   = 0;
 
-      BX_CONTROLLER(channel,device).multiple_sectors    = MAX_MULTIPLE_SECTORS;
+      BX_CONTROLLER(channel,device).multiple_sectors    = 0;
       BX_CONTROLLER(channel,device).lba_mode            = 0;
 
       BX_CONTROLLER(channel,device).features            = 0;
+      BX_CONTROLLER(channel,device).mdma_mode           = 0;
 
       // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
@@ -631,7 +632,7 @@ void bx_hard_drive_c::register_state(void)
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
         drive = new bx_list_c(chan, dname, 20);
-        new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512 + 4);
+        new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status", 9);
         new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
         new bx_shadow_bool_c(status, "drive_ready", &BX_CONTROLLER(i, j).status.drive_ready);
@@ -658,6 +659,7 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_bool_c(drive, "control_disable_irq", &BX_CONTROLLER(i, j).control.disable_irq);
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
         new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
+        new bx_shadow_num_c(drive, "mdma_mode", &BX_CONTROLLER(i, j).mdma_mode, BASE_HEX);
         new bx_shadow_bool_c(drive, "cdrom_locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
       }
     }
@@ -2051,9 +2053,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-
-          BX_SELECTED_CONTROLLER(channel).current_command = value;
-
           // Lose98 accesses 0/0/0 in CHS mode
           if (!BX_SELECTED_CONTROLLER(channel).lba_mode &&
               !BX_SELECTED_CONTROLLER(channel).head_no &&
@@ -2066,6 +2065,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
 
           if (value == 0xC4) {
+            if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
+              command_aborted(channel, value);
+              break;
+            }
             if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
               BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
             } else {
@@ -2074,6 +2077,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
           }
+          BX_SELECTED_CONTROLLER(channel).current_command = value;
+
           if (ide_read_sector(channel, BX_SELECTED_CONTROLLER(channel).buffer,
                                   BX_SELECTED_CONTROLLER(channel).buffer_size)) {
             BX_SELECTED_CONTROLLER(channel).error_register = 0;
@@ -2110,9 +2115,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          BX_SELECTED_CONTROLLER(channel).current_command = value;
-
           if (value == 0xC5) {
+            if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
+              command_aborted(channel, value);
+              break;
+            }
             if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
               BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
             } else {
@@ -2121,6 +2128,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
           }
+          BX_SELECTED_CONTROLLER(channel).current_command = value;
+
           // implicit seek done :^)
           BX_SELECTED_CONTROLLER(channel).error_register = 0;
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
@@ -2227,11 +2236,30 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xef: // SET FEATURES
           switch(BX_SELECTED_CONTROLLER(channel).features) {
             case 0x03: // Set Transfer Mode
-              BX_INFO(("ata%d-%d: set transfer mode to 0x%02x not supported, but returning success",
-                channel,BX_SLAVE_SELECTED(channel), BX_SELECTED_CONTROLLER(channel).sector_count));
-              BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
-              BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
-              raise_interrupt(channel);
+              {
+                Bit8u mode = BX_SELECTED_CONTROLLER(channel).sector_count & 0x07;
+                switch (BX_SELECTED_CONTROLLER(channel).sector_count >> 3) {
+                  case 0x00: // PIO default
+                  case 0x01: // PIO mode
+                    BX_INFO(("ata%d-%d: set transfer mode to PIO", channel,
+                             BX_SLAVE_SELECTED(channel)));
+                    BX_SELECTED_CONTROLLER(channel).mdma_mode = 0x00;
+                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    raise_interrupt(channel);
+                    break;
+                  case 0x04: // MDMA mode
+                    BX_INFO(("ata%d-%d: set transfer mode to MDMA%d", channel,
+                             BX_SLAVE_SELECTED(channel), mode));
+                    BX_SELECTED_CONTROLLER(channel).mdma_mode = (1 << mode);
+                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    raise_interrupt(channel);
+                    break;
+                  default:
+                    command_aborted(channel, value);
+                }
+              }
               break;
 
             case 0x02: // Enable and
@@ -2546,7 +2574,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_CONTROLLER(channel,id).current_command = 0x00;
           BX_CONTROLLER(channel,id).buffer_index = 0;
 
-          BX_CONTROLLER(channel,id).multiple_sectors  = MAX_MULTIPLE_SECTORS;
+          BX_CONTROLLER(channel,id).multiple_sectors  = 0;
           BX_CONTROLLER(channel,id).lba_mode          = 0;
 
           BX_CONTROLLER(channel,id).control.disable_irq = 0;
@@ -3036,7 +3064,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // The high order byte contains a single bit set to indiciate
   // which mode is active.
   if (BX_HD_THIS bmdma_present()) {
-    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x07;
+    BX_SELECTED_DRIVE(channel).id_drive[63] = 0x07 | (BX_SELECTED_CONTROLLER(channel).mdma_mode << 8);
   } else {
     BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0;
   }
