@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.118 2006-06-05 18:17:04 vruppert Exp $
+// $Id: keyboard.cc,v 1.119 2006-07-21 18:26:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -95,10 +95,9 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
   BX_KEY_THIS s.kbd_internal_buffer.expecting_typematic = 0;
 
-  // Default scancode set is mf2 with translation
+  // Default scancode set is mf2 (translation is controlled by the 8042)
   BX_KEY_THIS s.kbd_controller.expecting_scancodes_set = 0;
   BX_KEY_THIS s.kbd_controller.current_scancodes_set = 1;
-  BX_KEY_THIS s.kbd_controller.scancodes_translate = 1;
   
   if (powerup) {
     BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 0;
@@ -109,7 +108,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.118 2006-06-05 18:17:04 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.119 2006-07-21 18:26:53 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -158,6 +157,7 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
   BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
   BX_KEY_THIS s.kbd_controller.bat_in_progress = 0;
+  BX_KEY_THIS s.kbd_controller.scancodes_translate = 1;
 
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
@@ -324,6 +324,16 @@ void bx_keyb_c::register_state(void)
   }
   BXRS_DEC_PARAM_FIELD(list, controller_Qsize, BX_KEY_THIS s.controller_Qsize);
   BXRS_DEC_PARAM_FIELD(list, controller_Qsource, BX_KEY_THIS s.controller_Qsource);
+}
+
+void bx_keyb_c::after_restore_state(void)
+{
+  Bit8u value = BX_KEY_THIS s.kbd_internal_buffer.led_status;
+  if (value != 0) {
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[0], value & 0x02);
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[1], value & 0x04);
+    bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
+  }
 }
 #endif
 

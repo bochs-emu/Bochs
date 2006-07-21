@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.33 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: keyboard.h,v 1.34 2006-07-21 18:26:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,6 +59,7 @@ public:
   virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
+  virtual void after_restore_state(void);
 #endif
 
   // runtime options
