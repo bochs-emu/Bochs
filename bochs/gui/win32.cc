@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.107 2006-02-22 19:18:28 vruppert Exp $
+// $Id: win32.cc,v 1.108 2006-07-23 11:09:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1205,12 +1205,18 @@ void enq_key_event(Bit32u key, Bit32u press_release)
       case 0x0138:
         if (alt_pressed_r)
           return;
+        // This makes the "AltGr" key on European keyboards work
+        if (ctrl_pressed_l) {
+          enq_key_event(0x1d, BX_KEY_RELEASED);
+        }
         alt_pressed_r = TRUE;
         break;
     }
   } else {
     switch (key) {
       case 0x1d:
+        if (!ctrl_pressed_l)
+          return;
         ctrl_pressed_l = FALSE;
         break;
       case 0x2a:
@@ -1308,15 +1314,6 @@ void bx_win32_gui_c::handle_events(void) {
       headerbar_click(LOWORD(key));
     }
     else {
-      if (key & 0x0100) {
-        // It's an extended key
-        switch (key & 0xff) {
-          case 0x38:
-            // This makes the "AltGr" key on European keyboards work
-            DEV_kbd_gen_scancode(BX_KEY_CTRL_L | BX_KEY_RELEASED);
-            break;
-        }
-      }
       key_event = win32_to_bx_key[(key & 0x100) ? 1 : 0][key & 0xff];
       if (key & BX_KEY_RELEASED) key_event |= BX_KEY_RELEASED;
       DEV_kbd_gen_scancode(key_event);
