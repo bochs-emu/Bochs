@@ -56,15 +56,25 @@ Changes in 2.3 (not yet released):
 - I/O devices (Volker)
   - Floppy
     - partial sector transfers fixed
-  - Hard drive /cdrom
+  - Hard drive / cdrom
     - several fixes to the IDE register behaviour in case of a channel with
       only one drive connected
     - fixed data alignment of 'growing' hard drive images (sharing images
       between Windows and Linux now possible)
     - disk geometry autodetection now supported by most of the image types
       (unsupported: external, dll and compressed modes)
+    - multi sector read/write commands implemented
+    - hard disk now reporting ATA-3 supported
+  - Keyboard
+    - reset sent to keyboard has no effect on the 8042 (scancode translation)
   - PCI
     - forward PIRQ register changes to the I/O APIC (if present)
+
+- System BIOS (Volker)
+  - enable interrupts before executing INT 19h
+  - fixed ATA device detection in case of one drive only connected to controller
+  - improved INT 15h function AX=E820h
+  - real mode PCI BIOS now returns IRQ routing information (function 0Eh)
 
 - SF patches applied
  [1455958] call/jmp through call gate in 64-bit mode
@@ -72,6 +82,12 @@ Changes in 2.3 (not yet released):
  [1386671] Combined dual core and hyper-threading patch
 
 - these S.F. bugs were closed
+ [1061720] ATA Support level for HD
+ [1522196] Broken CHANGES link in main page
+ [1438415] crash if screen scrolled downwards
+  [778441] Shouldn't interrupts be enable after BIOS?
+ [1514949] I got a problem with the 8253 timer
+ [1513544] disasm of 0xec (in AL,DX) returns ilen of 2 instead of 1
  [1508947] APIC interrupt priority checking and interrupt delivery
   [766286] Debugger halts after any GPF exception
   [639143] va_list is not a pointer on linuxppc
