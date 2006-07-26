@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.178 2006-07-23 16:31:28 vruppert Exp $
+// $Id: harddrv.cc,v 1.179 2006-07-26 19:09:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.178 2006-07-23 16:31:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.179 2006-07-26 19:09:51 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1057,7 +1057,6 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       break;
 
     case 0x01: // hard disk error register 0x1f1
-      BX_SELECTED_CONTROLLER(channel).status.err = 0;
       // -- WARNING : On real hardware the controller registers are shared between drives.
       // So we must respond even if the select device is not present. Some OS uses this fact
       // to detect the disks.... minix2 for example
@@ -1984,9 +1983,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("enabling LBA mode"));
         WRITE_LBA_MODE(channel,(value >> 6) & 1);
         if (!BX_SELECTED_IS_PRESENT(channel)) {
-          BX_ERROR (("ata%d: device set to %d which does not exist", channel, drvsel));
-          BX_SELECTED_CONTROLLER(channel).error_register = 0x04; // aborted
-          BX_SELECTED_CONTROLLER(channel).status.err = 1;
+          BX_DEBUG(("ata%d: device set to %d which does not exist", channel, drvsel));
         }
       }
       break;
@@ -2003,6 +2000,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PANIC(("hard disk: command sent, controller BUSY"));
       if ( (value & 0xf0) == 0x10 )
         value = 0x10;
+      BX_SELECTED_CONTROLLER(channel).status.err = 0;
       switch (value) {
 
         case 0x10: // CALIBRATE DRIVE
@@ -2032,7 +2030,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-          BX_SELECTED_CONTROLLER(channel).status.err = 0;
           raise_interrupt(channel);
           break;
 
@@ -2048,7 +2045,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            */
 
           if (!BX_SELECTED_IS_HD(channel)) {
-            BX_ERROR(("ata%d-%d: read sectors issued to non-disk",
+            BX_INFO(("ata%d-%d: read sectors issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
@@ -2087,7 +2084,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err   = 0;
             BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
             raise_interrupt(channel);
           }
@@ -2104,7 +2100,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
            */
 
           if (!BX_SELECTED_IS_HD(channel)) {
-            BX_PANIC(("ata%d-%d: write sectors issued to non-disk",
+            BX_INFO(("ata%d-%d: write sectors issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
@@ -2136,7 +2132,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           // BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-          BX_SELECTED_CONTROLLER(channel).status.err   = 0;
           BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
           break;
 
@@ -2150,7 +2145,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           set_signature(channel, BX_SLAVE_SELECTED(channel));
           BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-          BX_SELECTED_CONTROLLER(channel).status.err = 0;
           break;
 
         case 0x91: // INITIALIZE DRIVE PARAMETERS
@@ -2161,7 +2155,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           if (!BX_SELECTED_IS_HD(channel)) {
-            BX_PANIC(("ata%d-%d: initialize drive parameters issued to non-disk",
+            BX_INFO(("ata%d-%d: initialize drive parameters issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
@@ -2178,7 +2172,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err = 0;
             raise_interrupt(channel);
             break;
           }
@@ -2197,7 +2190,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-          BX_SELECTED_CONTROLLER(channel).status.err = 0;
           raise_interrupt(channel);
           break;
 
@@ -2222,7 +2214,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-            BX_SELECTED_CONTROLLER(channel).status.err   = 0;
 
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
@@ -2284,7 +2275,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x40: // READ VERIFY SECTORS
           if (!BX_SELECTED_IS_HD(channel)) {
-            BX_PANIC(("ata%d-%d: read verify issued to non-disk",
+            BX_INFO(("ata%d-%d: read verify issued to non-disk",
               channel,BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
@@ -2293,26 +2284,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-          BX_SELECTED_CONTROLLER(channel).status.err = 0;
           raise_interrupt(channel);
           break;
 
-	case 0xc6: // SET MULTIPLE MODE
-          if ((BX_SELECTED_CONTROLLER(channel).sector_count > MAX_MULTIPLE_SECTORS) ||
+        case 0xc6: // SET MULTIPLE MODE
+          if (!BX_SELECTED_IS_HD(channel)) {
+            BX_INFO(("set multiple mode issued to non-disk"));
+            command_aborted(channel, value);
+          } else if ((BX_SELECTED_CONTROLLER(channel).sector_count > MAX_MULTIPLE_SECTORS) ||
               ((BX_SELECTED_CONTROLLER(channel).sector_count & (BX_SELECTED_CONTROLLER(channel).sector_count - 1)) != 0) ||
               (BX_SELECTED_CONTROLLER(channel).sector_count == 0)) {
             command_aborted(channel, value);
           } else {
-            if (!BX_SELECTED_IS_HD(channel))
-              BX_PANIC(("set multiple mode issued to non-disk"));
-
             BX_DEBUG(("set multiple mode: sectors=%d", BX_SELECTED_CONTROLLER(channel).sector_count));
             BX_SELECTED_CONTROLLER(channel).multiple_sectors = BX_SELECTED_CONTROLLER(channel).sector_count;
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err = 0;
             raise_interrupt(channel);
           }
           break;
@@ -2327,7 +2316,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 		    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
 		    BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
 		    BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
-		    BX_SELECTED_CONTROLLER(channel).status.err   = 0;
 
 		    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
 		    BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
@@ -2350,7 +2338,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
             BX_SELECTED_CONTROLLER(channel).status.drq = 0;
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
             BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           } else {
@@ -2373,7 +2360,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
               // serv bit??
               BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-              BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
               // NOTE: no interrupt here
               BX_SELECTED_CONTROLLER(channel).current_command = value;
@@ -2400,7 +2386,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
 	  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
 	  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-	  BX_SELECTED_CONTROLLER(channel).status.err = 0;
 	  raise_interrupt(channel);
 	  break;
 
@@ -2409,7 +2394,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	  BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
 	  BX_SELECTED_CONTROLLER(channel).status.write_fault = 0;
 	  BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-	  BX_SELECTED_CONTROLLER(channel).status.err = 0;
 	  BX_SELECTED_CONTROLLER(channel).sector_count = 0xff; // Active or Idle mode
 	  raise_interrupt(channel);
 	  break;
@@ -2428,21 +2412,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 0;
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
-            BX_SELECTED_CONTROLLER(channel).status.err   = 0;
             BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
-  	    BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[0]).controller.control.disable_irq));
-  	    BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[1]).controller.control.disable_irq));
-  	    BX_DEBUG(("SEEK completed.  error_register = %02x", BX_SELECTED_CONTROLLER(channel).error_register));
+  	    BX_DEBUG(("ata%d-%d: SEEK completed (IRQ %sabled)", channel,
+              BX_SLAVE_SELECTED(channel), BX_SELECTED_CONTROLLER(channel).control.disable_irq?"dis":"en"));
   	    raise_interrupt(channel);
-  	    BX_DEBUG(("SEEK interrupt completed"));
           } else {
-  	    BX_ERROR(("write cmd 0x70 (SEEK) not supported for non-disk"));
+  	    BX_INFO(("write cmd 0x70 (SEEK) not supported for non-disk"));
   	    command_aborted(channel, 0x70); 
   	  }
           break;
 
         case 0xC8: // READ DMA
-          if (BX_HD_THIS bmdma_present()) {
+          if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
@@ -2454,7 +2435,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0xCA: // WRITE DMA
-          if (BX_HD_THIS bmdma_present()) {
+          if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
@@ -2542,20 +2523,19 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                // goes to device 0 (if device 1 is absent)
 
       prev_control_reset = BX_SELECTED_CONTROLLER(channel).control.reset;
-      BX_HD_THIS channels[channel].drives[0].controller.control.reset         = value & 0x04;
-      BX_HD_THIS channels[channel].drives[1].controller.control.reset         = value & 0x04;
-      // CGS: was: BX_SELECTED_CONTROLLER(channel).control.disable_irq    = value & 0x02;
+      BX_HD_THIS channels[channel].drives[0].controller.control.reset       = value & 0x04;
+      BX_HD_THIS channels[channel].drives[1].controller.control.reset       = value & 0x04;
       BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
       BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
 
-      BX_DEBUG(( "adapter control reg: reset controller = %d",
-        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.reset) ? 1 : 0 ));
-      BX_DEBUG(( "adapter control reg: disable_irq(X) = %d",
-        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0 ));
+      BX_DEBUG(("ata%d: adapter control reg: reset controller = %d", channel,
+        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.reset) ? 1 : 0));
+      BX_DEBUG(("ata%d: adapter control reg: disable irq = %d", channel,
+        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0));
 
       if (!prev_control_reset && BX_SELECTED_CONTROLLER(channel).control.reset) {
         // transition from 0 to 1 causes all drives to reset
-        BX_DEBUG(("hard drive: RESET"));
+        BX_DEBUG(("Enter RESET mode"));
 
         // (mch) Set BSY, drive not ready
         for (int id = 0; id < 2; id++) {
@@ -2592,8 +2572,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           set_signature(channel, id);
         }
       }
-      BX_DEBUG(("s[0].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[0]).controller.control.disable_irq));
-      BX_DEBUG(("s[1].controller.control.disable_irq = %02x", (BX_HD_THIS channels[channel].drives[1]).controller.control.disable_irq));
+      BX_DEBUG(("ata%d: adapter control reg: disable irq = %d", channel,
+        (unsigned) (BX_SELECTED_CONTROLLER(channel).control.disable_irq) ? 1 : 0));
       break;
 
     default:
@@ -3276,7 +3256,6 @@ void bx_hard_drive_c::command_aborted(Bit8u channel, unsigned value)
   BX_SELECTED_CONTROLLER(channel).status.err = 1;
   BX_SELECTED_CONTROLLER(channel).error_register = 0x04; // command ABORTED
   BX_SELECTED_CONTROLLER(channel).status.drq = 0;
-  BX_SELECTED_CONTROLLER(channel).status.seek_complete = 0;
   BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
   BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
   raise_interrupt(channel);
