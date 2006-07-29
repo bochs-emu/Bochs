@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.60 2006-06-09 12:01:13 vruppert Exp $
+// $Id: textconfig.cc,v 1.61 2006-07-29 09:58:24 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -69,7 +69,7 @@ clean_string(char *s0)
 
 /* returns 0 on success, -1 on failure.  The value goes into out. */
 int 
-ask_uint(const char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
+ask_uint(const char *prompt, const char *help, Bit32u min, Bit32u max, Bit32u the_default, Bit32u *out, int base)
 {
   Bit32u n = max + 1;
   char buffer[1024];
@@ -86,11 +86,25 @@ ask_uint(const char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u 
       *out = the_default;
       return 0;
     }
+    if ((clean[0] == '?') && (strlen(help) > 0)) {
+      printf("\n%s\n", help);
+      if (base == 10) {
+        printf("Your choice must be an integer between %u and %u.\n\n", min, max);
+      } else {
+        printf("Your choice must be an integer between 0x%x and 0x%x.\n\n", min, max);
+      }
+      continue;
+    }
     const char *format = (base==10) ? "%d" : "%x";
     illegal = (1 != sscanf(buffer, format, &n));
     if (illegal || n<min || n>max) {
-      printf("Your choice (%s) was not an integer between %u and %u.\n\n",
-	  clean, min, max);
+      if (base == 10) {
+        printf("Your choice (%s) was not an integer between %u and %u.\n\n",
+               clean, min, max);
+      } else {
+        printf("Your choice (%s) was not an integer between 0x%x and 0x%x.\n\n",
+               clean, min, max);
+      }
     } else {
       // choice is okay
       *out = n;
@@ -101,7 +115,7 @@ ask_uint(const char *prompt, Bit32u min, Bit32u max, Bit32u the_default, Bit32u 
 
 // identical to ask_uint, but uses signed comparisons
 int 
-ask_int(const char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
+ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *out)
 {
   int n = max + 1;
   char buffer[1024];
@@ -117,6 +131,11 @@ ask_int(const char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *
       *out = the_default;
       return 0;
     }
+    if ((clean[0] == '?') && (strlen(help) > 0)) {
+      printf("\n%s\n", help);
+      printf("Your choice must be an integer between %u and %u.\n\n", min, max);
+      continue;
+    }
     illegal = (1 != sscanf(buffer, "%d", &n));
     if (illegal || n<min || n>max) {
       printf("Your choice (%s) was not an integer between %d and %d.\n\n",
@@ -130,7 +149,7 @@ ask_int(const char *prompt, Bit32s min, Bit32s max, Bit32s the_default, Bit32s *
 }
 
 int 
-ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int *out)
+ask_menu(const char *prompt, const char *help, int n_choices, char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
@@ -153,10 +172,13 @@ ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int
 	return 0;
       }
     }
-    if (clean[0] != '?')
+    if (clean[0] != '?') {
       printf("Your choice (%s) did not match any of the choices:\n", clean);
+    } else if (strlen(help) > 0) {
+      printf("\n%s\nValid values are: ", help);
+    }
     for (i=0; i<n_choices; i++) {
-      if (i>0) printf (", ");
+      if (i>0) printf(", ");
       printf("%s", choice[i]);
     }
     printf("\n");
@@ -164,7 +186,7 @@ ask_menu(const char *prompt, int n_choices, char *choice[], int the_default, int
 }
 
 int 
-ask_yn(const char *prompt, Bit32u the_default, Bit32u *out)
+ask_yn(const char *prompt, const char *help, Bit32u the_default, Bit32u *out)
 {
   char buffer[16];
   char *clean;
@@ -183,14 +205,20 @@ ask_yn(const char *prompt, Bit32u the_default, Bit32u *out)
     switch (tolower(clean[0])) {
       case 'y': *out=1; return 0;
       case 'n': *out=0; return 0;
+      case '?':
+        if (strlen(help) > 0) {
+          printf("\n%s\n", help);
+        }
+        break;
     }
-    printf ("Please type either yes or no.\n");
+    printf("Please type either yes or no.\n");
   }
 }
 
 // returns -1 on error (stream closed or  something)
 // returns 0 if default was taken
 // returns 1 if value changed
+// returns -2 if help requested
 int ask_string(const char *prompt, const char *the_default, char *out)
 {
   char buffer[1024];
@@ -201,6 +229,8 @@ int ask_string(const char *prompt, const char *the_default, char *out)
   if (fgets(buffer, sizeof(buffer), stdin) == NULL)
     return -1;
   clean = clean_string(buffer);
+  if (clean[0] == '?')
+    return -2;
   if (strlen(clean) < 1) {
     // empty line, use the default
     strcpy(out, the_default);
@@ -294,11 +324,11 @@ static char *save_state_prompt =
 #endif
 
 #define NOT_IMPLEMENTED(choice) \
-  fprintf (stderr, "ERROR: choice %d not implemented\n", choice);
+  fprintf(stderr, "ERROR: choice %d not implemented\n", choice);
 
 #define BAD_OPTION(menu,choice) \
-  do {fprintf (stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
-      assert (0); } while (0)
+  do {fprintf(stderr, "ERROR: menu %d has no choice %d\n", menu, choice); \
+      assert(0); } while (0)
 
 #ifndef WIN32
 void build_runtime_options_prompt(char *format, char *buf, int size)
@@ -325,11 +355,11 @@ void build_runtime_options_prompt(char *format, char *buf, int size)
   int device;
   for (Bit8u cdrom=0; cdrom<4; cdrom++) {
     if (!SIM->get_cdrom_options(cdrom, &cdromop, &device) || !SIM->get_param_bool("present", cdromop)->get())
-      sprintf (buffer[2+cdrom], "(not present)");
+      sprintf(buffer[2+cdrom], "(not present)");
     else
-      sprintf (buffer[2+cdrom], "(%s on ata%d) %s, %s",
+      sprintf(buffer[2+cdrom], "(%s on ata%d) %s, %s",
         device&1?"slave":"master", device/2, SIM->get_param_string("path", cdromop)->getptr(),
-        (SIM->get_param_enum("status", cdromop)->get () == BX_INSERTED)? "inserted" : "ejected");
+        (SIM->get_param_enum("status", cdromop)->get() == BX_INSERTED)? "inserted" : "ejected");
     }
 
   snprintf(buf, size, format, buffer[0], buffer[1], buffer[2],
@@ -402,9 +432,9 @@ int bx_config_interface(int menu)
 #endif
           }
 #if BX_SUPPORT_SAVE_RESTORE
-          if (ask_uint(startup_menu_prompt, 1, 7, default_choice, &choice, 10) < 0) return -1;
+          if (ask_uint(startup_menu_prompt, "", 1, 7, default_choice, &choice, 10) < 0) return -1;
 #else
-          if (ask_uint(startup_menu_prompt, 1, 6, default_choice, &choice, 10) < 0) return -1;
+          if (ask_uint(startup_menu_prompt, "", 1, 6, default_choice, &choice, 10) < 0) return -1;
 #endif
           switch (choice) {
             case 1:
@@ -427,7 +457,7 @@ int bx_config_interface(int menu)
 #if BX_SUPPORT_SAVE_RESTORE
             case 5:
               if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
-                if (strcmp (sr_path, "none")) {
+                if (strcmp(sr_path, "none")) {
                   SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
                   SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
                   bx_config_interface(BX_CI_START_SIMULATION);
@@ -445,7 +475,7 @@ int bx_config_interface(int menu)
         }
         break;
       case BX_CI_START_OPTS:
-        if (ask_uint(startup_options_prompt, 0, 14, 0, &choice, 10) < 0) return -1;
+        if (ask_uint(startup_options_prompt, "", 0, 14, 0, &choice, 10) < 0) return -1;
         switch (choice) {
           case 0: return 0;
           case 1: do_menu("log"); break;
@@ -474,7 +504,7 @@ int bx_config_interface(int menu)
 #else
           char prompt[1024];
           build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
-          if (ask_uint(prompt, 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+          if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
 #endif
           switch (choice) {
             case BX_CI_RT_FLOPPYA: 
@@ -530,7 +560,7 @@ int bx_config_interface(int menu)
                 ask_yn("\nThe save function currently doesn't handle the state of hard drive images,\n"
                        "so we don't recommend to continue, unless you are running a read-only\n"
                        "guest system (e.g. Live-CD).\n\n"
-                       "Do you want to continue? [no]", 0, &cont);
+                       "Do you want to continue? [no]", "", 0, &cont);
               }
             }
           }
@@ -545,8 +575,8 @@ int bx_config_interface(int menu)
         }
 #endif
       default:
-        fprintf (stderr, "Unknown config interface menu type.\n");
-        assert (menu >=0 && menu < BX_CI_N_MENUS);
+        fprintf(stderr, "Unknown config interface menu type.\n");
+        assert(menu >=0 && menu < BX_CI_N_MENUS);
     }
   }
 }
@@ -554,18 +584,18 @@ int bx_config_interface(int menu)
 static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
-  fprintf (stderr, "Current log settings:\n");
-  fprintf (stderr, "                 Debug      Info       Error       Panic       Pass\n");
-  fprintf (stderr, "ID    Device     Action     Action     Action      Action      Action\n");
-  fprintf (stderr, "----  ---------  ---------  ---------  ----------  ----------  ----------\n");
-  int i, j, imax=SIM->get_n_log_modules ();
+  fprintf(stderr, "Current log settings:\n");
+  fprintf(stderr, "                 Debug      Info       Error       Panic       Pass\n");
+  fprintf(stderr, "ID    Device     Action     Action     Action      Action      Action\n");
+  fprintf(stderr, "----  ---------  ---------  ---------  ----------  ----------  ----------\n");
+  int i, j, imax=SIM->get_n_log_modules();
   for (i=0; i<imax; i++) {
     if (strcmp(SIM->get_prefix(i), "[     ]")) {
-      fprintf (stderr, "%3d.  %s ", i, SIM->get_prefix (i));
-      for (j=0; j<SIM->get_max_log_level (); j++) {
-        fprintf (stderr, "%10s ", SIM->get_action_name (SIM->get_log_action (i, j)));
+      fprintf(stderr, "%3d.  %s ", i, SIM->get_prefix(i));
+      for (j=0; j<SIM->get_max_log_level(); j++) {
+        fprintf(stderr, "%10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
       }
-      fprintf (stderr, "\n");
+      fprintf(stderr, "\n");
     }
   }
 }
@@ -574,92 +604,92 @@ static char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to
 static char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
 static int log_level_n_choices_normal = 4;
 
-void bx_log_options (int individual)
+void bx_log_options(int individual)
 {
   if (individual) {
     int done = 0;
     while (!done) {
-      bx_print_log_action_table ();
+      bx_print_log_action_table();
       Bit32s id, level, action;
-      Bit32s maxid = SIM->get_n_log_modules ();
-      if (ask_int (log_options_prompt1, -1, maxid-1, -1, &id) < 0)
+      Bit32s maxid = SIM->get_n_log_modules();
+      if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
 	return;
       if (id < 0) return;
-      fprintf (stderr, "Editing log options for the device %s\n", SIM->get_prefix (id));
-      for (level=0; level<SIM->get_max_log_level (); level++) {
+      fprintf(stderr, "Editing log options for the device %s\n", SIM->get_prefix(id));
+      for (level=0; level<SIM->get_max_log_level(); level++) {
 	char prompt[1024];
-	int default_action = SIM->get_log_action (id, level);
-	sprintf (prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name (level), SIM->get_action_name(default_action));
+	int default_action = SIM->get_log_action(id, level);
+	sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
 	// don't show the no change choice (choices=3)
-	if (ask_menu (prompt, log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
+	if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
 	  return;
-	SIM->set_log_action (id, level, action);
+	SIM->set_log_action(id, level, action);
       }
     }
   } else {
     // provide an easy way to set log options for all devices at once
-    bx_print_log_action_table ();
-    for (int level=0; level<SIM->get_max_log_level (); level++) {
+    bx_print_log_action_table();
+    for (int level=0; level<SIM->get_max_log_level(); level++) {
       char prompt[1024];
       int action, default_action = 3;  // default to no change
-      sprintf (prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name (level));
+      sprintf(prompt, "Enter action for %s event on all devices: [no change] ", SIM->get_log_level_name(level));
 	// do show the no change choice (choices=4)
-      if (ask_menu (prompt, log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
+      if (ask_menu(prompt, "", log_level_n_choices_normal+1, log_level_choices, default_action, &action)<0)
 	return;
       if (action < 3) {
-	SIM->set_default_log_action (level, action);
-	SIM->set_log_action (-1, level, action);
+	SIM->set_default_log_action(level, action);
+	SIM->set_log_action(-1, level, action);
       }
     }
   }
 }
 
-int bx_read_rc (char *rc)
+int bx_read_rc(char *rc)
 {
-  if (rc && SIM->read_rc (rc) >= 0) return 0;
+  if (rc && SIM->read_rc(rc) >= 0) return 0;
   char oldrc[CI_PATH_LENGTH];
-  if (SIM->get_default_rc (oldrc, CI_PATH_LENGTH) < 0)
-    strcpy (oldrc, "none");
+  if (SIM->get_default_rc(oldrc, CI_PATH_LENGTH) < 0)
+    strcpy(oldrc, "none");
   char newrc[CI_PATH_LENGTH];
   while (1) {
-    if (ask_string ("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
-    if (!strcmp (newrc, "none")) return -1;
-    if (SIM->read_rc (newrc) >= 0) return 0;
-    fprintf (stderr, "The file '%s' could not be found.\n", newrc);
+    if (ask_string("\nWhat is the configuration file name?\nTo cancel, type 'none'. [%s] ", oldrc, newrc) < 0) return -1;
+    if (!strcmp(newrc, "none")) return -1;
+    if (SIM->read_rc(newrc) >= 0) return 0;
+    fprintf(stderr, "The file '%s' could not be found.\n", newrc);
   }
 }
 
-int bx_write_rc (char *rc)
+int bx_write_rc(char *rc)
 {
   char oldrc[CI_PATH_LENGTH], newrc[CI_PATH_LENGTH];
   if (rc == NULL) {
-    if (SIM->get_default_rc (oldrc, CI_PATH_LENGTH) < 0)
-      strcpy (oldrc, "none");
+    if (SIM->get_default_rc(oldrc, CI_PATH_LENGTH) < 0)
+      strcpy(oldrc, "none");
   } else {
-    strncpy (oldrc, rc, CI_PATH_LENGTH);
+    strncpy(oldrc, rc, CI_PATH_LENGTH);
   }
   while (1) {
-    if (ask_string ("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;
-    if (!strcmp (newrc, "none")) return 0;
+    if (ask_string("Save configuration to what file?  To cancel, type 'none'.\n[%s] ", oldrc, newrc) < 0) return -1;
+    if (!strcmp(newrc, "none")) return 0;
     // try with overwrite off first
-    int status = SIM->write_rc (newrc, 0);
+    int status = SIM->write_rc(newrc, 0);
     if (status >= 0) {
-      fprintf (stderr, "Wrote configuration to '%s'.\n", newrc);
+      fprintf(stderr, "Wrote configuration to '%s'.\n", newrc);
       return 0;
     } else if (status == -2) {
       // return code -2 indicates the file already exists, and overwrite
       // confirmation is required.
       Bit32u overwrite = 0;
       char prompt[256];
-      sprintf (prompt, "Configuration file '%s' already exists.  Overwrite it? [no] ", newrc);
-      if (ask_yn (prompt, 0, &overwrite) < 0) return -1;
+      sprintf(prompt, "Configuration file '%s' already exists.  Overwrite it? [no] ", newrc);
+      if (ask_yn(prompt, "", 0, &overwrite) < 0) return -1;
       if (!overwrite) continue;  // if "no", start loop over, asking for a different file
       // they confirmed, so try again with overwrite bit set
-      if (SIM->write_rc (newrc, 1) >= 0) {
-	fprintf (stderr, "Overwriting existing configuration '%s'.\n", newrc);
+      if (SIM->write_rc(newrc, 1) >= 0) {
+	fprintf(stderr, "Overwriting existing configuration '%s'.\n", newrc);
 	return 0;
       } else {
-	fprintf (stderr, "Write failed to '%s'.\n", newrc);
+	fprintf(stderr, "Write failed to '%s'.\n", newrc);
       }
     }
   }
@@ -669,7 +699,7 @@ char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug"
 int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
 
 BxEvent *
-config_interface_notify_callback (void *unused, BxEvent *event)
+config_interface_notify_callback(void *unused, BxEvent *event)
 {
   event->retcode = -1;
   switch (event->type)
@@ -683,28 +713,28 @@ config_interface_notify_callback (void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_ASK:
     {
       int level = event->u.logmsg.level;
-      fprintf (stderr, "========================================================================\n");
-      fprintf (stderr, "Event type: %s\n", SIM->get_log_level_name (level));
-      fprintf (stderr, "Device: %s\n", event->u.logmsg.prefix);
-      fprintf (stderr, "Message: %s\n\n", event->u.logmsg.msg);
-      fprintf (stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
-      fprintf (stderr, "  cont       - continue execution\n");
-      fprintf (stderr, "  alwayscont - continue execution, and don't ask again.\n");
-      fprintf (stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
-      fprintf (stderr, "  die        - stop execution now\n");
-      fprintf (stderr, "  abort      - dump core %s\n", 
+      fprintf(stderr, "========================================================================\n");
+      fprintf(stderr, "Event type: %s\n", SIM->get_log_level_name (level));
+      fprintf(stderr, "Device: %s\n", event->u.logmsg.prefix);
+      fprintf(stderr, "Message: %s\n\n", event->u.logmsg.msg);
+      fprintf(stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
+      fprintf(stderr, "  cont       - continue execution\n");
+      fprintf(stderr, "  alwayscont - continue execution, and don't ask again.\n");
+      fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
+      fprintf(stderr, "  die        - stop execution now\n");
+      fprintf(stderr, "  abort      - dump core %s\n", 
 	  BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
-      fprintf (stderr, "  debug      - continue and return to bochs debugger\n");
+      fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
 #endif
 #if BX_GDBSTUB
-      fprintf (stderr, "  debug      - hand control to gdb\n");
+      fprintf(stderr, "  debug      - hand control to gdb\n");
 #endif
 
       int choice;
 ask:
-      if (ask_menu ("Choose one of the actions above: [%s] ", 
-	    log_action_n_choices, log_action_ask_choices, 2, &choice) < 0) 
+      if (ask_menu("Choose one of the actions above: [%s] ", "",
+                   log_action_n_choices, log_action_ask_choices, 2, &choice) < 0) 
 	event->retcode = -1;
       // return 0 for continue, 1 for alwayscontinue, 2 for die, 3 for debug.
       if (!BX_HAVE_ABORT && choice==BX_LOG_ASK_CHOICE_DUMP_CORE) goto ask;
@@ -719,27 +749,27 @@ ask:
     // them.
     return event;
   default:
-    fprintf (stderr, "Control panel: notify callback called with event type %04x\n", event->type);
+    fprintf(stderr, "Control panel: notify callback called with event type %04x\n", event->type);
     return event;
   }
-  assert (0); // switch statement should return
+  assert(0); // switch statement should return
 }
 
-void bx_config_interface_init () {
-  SIM->set_notify_callback (config_interface_notify_callback, NULL);
+void bx_config_interface_init() {
+  SIM->set_notify_callback(config_interface_notify_callback, NULL);
 }
 
 /////////////////////////////////////////////////////////////////////
 // implement the text_* methods for bx_param types.
 
 void
-bx_param_num_c::text_print (FILE *fp)
+bx_param_num_c::text_print(FILE *fp)
 {
   if (get_long_format()) {
     fprintf(fp, get_long_format(), get());
   } else {
     char *format = "%s: %d"; 
-    assert (base==10 || base==16);
+    assert(base==10 || base==16);
     if (base==16) format = "%s: 0x%x";
     if (get_label()) {
       fprintf(fp, format, get_label(), get());
@@ -750,7 +780,7 @@ bx_param_num_c::text_print (FILE *fp)
 }
 
 void
-bx_param_bool_c::text_print (FILE *fp)
+bx_param_bool_c::text_print(FILE *fp)
 {
   if (get_format()) {
     fprintf(fp, get_format(), get() ? "yes" : "no");
@@ -765,10 +795,10 @@ bx_param_bool_c::text_print (FILE *fp)
 }
 
 void
-bx_param_enum_c::text_print (FILE *fp)
+bx_param_enum_c::text_print(FILE *fp)
 {
   int n = get();
-  assert (n >= min && n <= max);
+  assert(n >= min && n <= max);
   char *choice = choices[n - min];
   if (get_format()) {
     fprintf(fp, get_format(), choice);
@@ -783,10 +813,10 @@ bx_param_enum_c::text_print (FILE *fp)
 }
 
 void
-bx_param_string_c::text_print (FILE *fp)
+bx_param_string_c::text_print(FILE *fp)
 {
-  char *value = getptr ();
-  int opts = options->get ();
+  char *value = getptr();
+  int opts = options->get();
   if (opts & RAW_BYTES) {
     char buffer[1024];
     buffer[0] = 0;
@@ -795,11 +825,11 @@ bx_param_string_c::text_print (FILE *fp)
     sep_string[1] = 0;
     for (int i=0; i<maxsize; i++) {
       char eachbyte[16];
-      sprintf (eachbyte, "%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&val[i]);
-      strncat (buffer, eachbyte, sizeof(buffer));
+      sprintf(eachbyte, "%s%02x", (i>0)?sep_string : "", (unsigned int)0xff&val[i]);
+      strncat(buffer, eachbyte, sizeof(buffer));
     }
-    if (strlen (buffer) > sizeof(buffer)-4) {
-      assert (0); // raw byte print buffer is probably overflowing. increase the max or make it dynamic
+    if (strlen(buffer) > sizeof(buffer)-4) {
+      assert(0); // raw byte print buffer is probably overflowing. increase the max or make it dynamic
     }
     value = buffer;
   }
@@ -815,17 +845,17 @@ bx_param_string_c::text_print (FILE *fp)
 }
 
 void
-bx_list_c::text_print (FILE *fp)
+bx_list_c::text_print(FILE *fp)
 {
-  fprintf (fp, "%s: ", get_name ());
+  fprintf(fp, "%s: ", get_name());
   for (int i=0; i<size; i++) {
-    assert (list[i] != NULL);
-    if (list[i]->get_enabled ()) {
-      if ((i>0) && (options->get () & SERIES_ASK))
-        fprintf (fp, ", ");
-      list[i]->text_print (fp);
-      if (!(options->get () & SERIES_ASK))
-        fprintf (fp, "\n");
+    assert(list[i] != NULL);
+    if (list[i]->get_enabled()) {
+      if ((i>0) && (options->get() & SERIES_ASK))
+        fprintf(fp, ", ");
+      list[i]->text_print(fp);
+      if (!(options->get() & SERIES_ASK))
+        fprintf(fp, "\n");
     }
   }
 }
@@ -836,16 +866,17 @@ bx_param_num_c::text_ask(FILE *fpin, FILE *fpout)
   fprintf(fpout, "\n");
   int status;
   const char *prompt = get_ask_format();
+  const char *help = get_description();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
     text_print(fpout);
     fprintf(fpout, "\n");
-    prompt = "Enter new value: [%d] ";
+    prompt = "Enter new value or '?' for help: [%d] ";
     if (base==16)
-      prompt = "Enter new value in hex: [%x] ";
+      prompt = "Enter new value in hex or '?' for help: [%x] ";
   }
   Bit32u n = get();
-  status = ask_uint(prompt, (Bit32u)min, (Bit32u)max, n, &n, base);
+  status = ask_uint(prompt, help, (Bit32u)min, (Bit32u)max, n, &n, base);
   if (status < 0) return status;
   set(n);
   return 0;
@@ -857,6 +888,7 @@ bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
   fprintf(fpout, "\n");
   int status;
   const char *prompt = get_ask_format();
+  const char *help = get_description();
   char buffer[512];
   if (prompt == NULL) {
     if (get_label() != NULL) {
@@ -869,7 +901,7 @@ bx_param_bool_c::text_ask(FILE *fpin, FILE *fpout)
     }
   }
   Bit32u n = get();
-  status = ask_yn(prompt, n, &n);
+  status = ask_yn(prompt, help, n, &n);
   if (status < 0) return status;
   set(n);
   return 0;
@@ -880,15 +912,16 @@ bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
 {
   fprintf(fpout, "\n");
   const char *prompt = get_ask_format();
+  const char *help = get_description();
   if (prompt == NULL) {
     // default prompt, if they didn't set an ask format string
     fprintf(fpout, "%s = ", get_name());
     text_print(fpout);
     fprintf(fpout, "\n");
-    prompt = "Enter new value: [%s] ";
+    prompt = "Enter new value or '?' for help: [%s] ";
   }
   Bit32s n = (Bit32s)(get() - min);
-  int status = ask_menu(prompt, (Bit32u)(max-min+1), choices, n, &n);
+  int status = ask_menu(prompt, help, (Bit32u)(max-min+1), choices, n, &n);
   if (status < 0) return status;
   n += (Bit32s)min;
   set(n);
@@ -897,7 +930,6 @@ bx_param_enum_c::text_ask(FILE *fpin, FILE *fpout)
 
 int parse_raw_bytes(char *dest, char *src, int destsize, char separator)
 {
-  //printf ("parsing src='%s'\n", src);
   int i;
   unsigned int n;
   for (i=0; i<destsize; i++) 
@@ -927,11 +959,15 @@ bx_param_string_c::text_ask(FILE *fpin, FILE *fpout)
     // default prompt, if they didn't set an ask format string
     text_print(fpout);
     fprintf(fpout, "\n");
-    prompt = "Enter a new value, or press return for no change.\n";
+    prompt = "Enter a new value, '?' for help, or press return for no change.\n";
   }
   while (1) {
     char buffer[1024];
     status = ask_string(prompt, getptr(), buffer);
+    if (status == -2) {
+      fprintf(fpout, "\n%s\n", get_description());
+      continue;
+    }
     if (status < 0) return status;
     int opts = options->get();
     char buffer2[1024];
@@ -955,25 +991,25 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
   bx_list_c *child;
 
   char *my_title = title->getptr();
-  fprintf (fpout, "\n");
-  int i, imax = strlen (my_title);
-  for (i=0; i<imax; i++) fprintf (fpout, "-");
-  fprintf (fpout, "\n%s\n", my_title);
-  for (i=0; i<imax; i++) fprintf (fpout, "-");
   fprintf(fpout, "\n");
-  if (options->get () & SERIES_ASK) {
+  int i, imax = strlen(my_title);
+  for (i=0; i<imax; i++) fprintf(fpout, "-");
+  fprintf(fpout, "\n%s\n", my_title);
+  for (i=0; i<imax; i++) fprintf(fpout, "-");
+  fprintf(fpout, "\n");
+  if (options->get() & SERIES_ASK) {
     for (int i=0; i<size; i++) {
       if (list[i]->get_enabled()) {
         if (!SIM->get_init_done() || list[i]->get_runtime_param()) {
-          list[i]->text_ask (fpin, fpout);
+          list[i]->text_ask(fpin, fpout);
         }
       }
     }
   } else {
-    if (options->get () & SHOW_PARENT)
-      fprintf (fpout, "0. Return to previous menu\n");
+    if (options->get() & SHOW_PARENT)
+      fprintf(fpout, "0. Return to previous menu\n");
     for (int i=0; i<size; i++) {
-      assert (list[i] != NULL);
+      assert(list[i] != NULL);
       fprintf(fpout, "%d. ", i+1);
       if (list[i]->get_enabled()) {
         if (list[i]->get_type() == BXT_LIST) {
@@ -994,11 +1030,11 @@ int bx_list_c::text_ask(FILE *fpin, FILE *fpout)
         }
       }
     }
-    fprintf (fpout, "\n");
+    fprintf(fpout, "\n");
     Bit32u n = choice->get();
     int min = (options->get() & SHOW_PARENT) ? 0 : 1;
     int max = size;
-    int status = ask_uint("Please choose one: [%d] ", min, max, n, &n, 10);
+    int status = ask_uint("Please choose one: [%d] ", "", min, max, n, &n, 10);
     if (status < 0) return status;
     choice->set(n);
   }
@@ -1035,10 +1071,9 @@ static int ci_callback(void *userdata, ci_command_t command)
 
 // if I can make things compile without this module linked in, then
 // this file can become a plugin too.
-int init_text_config_interface ()
+int init_text_config_interface()
 {
-  //fprintf (stderr, "plugin_init for textconfig.cc\n");
-  SIM->register_configuration_interface ("textconfig", ci_callback, NULL);
+  SIM->register_configuration_interface("textconfig", ci_callback, NULL);
   return 0;  // success
 }
 
