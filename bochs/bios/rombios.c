@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.163 2006-07-07 16:10:37 vruppert Exp $
+// $Id: rombios.c,v 1.164 2006-07-30 09:37:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -932,7 +932,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.163 $ $Date: 2006-07-07 16:10:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.164 $ $Date: 2006-07-30 09:37:33 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4208,10 +4208,31 @@ ASM_END
 int16_function(DI, SI, BP, SP, BX, DX, CX, AX, FLAGS)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX, FLAGS;
 {
-  Bit8u scan_code, ascii_code, shift_flags, count;
+  Bit8u scan_code, ascii_code, shift_flags, led_flags, count;
   Bit16u kbd_code, max;
 
   BX_DEBUG_INT16("int16: AX=%04x BX=%04x CX=%04x DX=%04x \n", AX, BX, CX, DX);
+
+  shift_flags = read_byte(0x0040, 0x17);
+  led_flags = read_byte(0x0040, 0x97);
+  if ((((shift_flags >> 4) & 0x07) ^ (led_flags & 0x07)) != 0) {
+ASM_START
+    cli
+ASM_END
+    outb(0x60, 0xed);
+    while ((inb(0x64) & 0x01) == 0) outb(0x80, 0x21);
+    if ((inb(0x60) == 0xfa)) {
+      led_flags &= 0xf8;
+      led_flags |= ((shift_flags >> 4) & 0x07);
+      outb(0x60, led_flags & 0x07);
+      while ((inb(0x64) & 0x01) == 0) outb(0x80, 0x21);
+      inb(0x60);
+      write_byte(0x0040, 0x97, led_flags);
+    }
+ASM_START
+    sti
+ASM_END
+  }
 
   switch (GET_AH()) {
     case 0x00: /* read keyboard input */
@@ -4464,7 +4485,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   Bit16u DI, SI, BP, SP, BX, DX, CX, AX;
 {
   Bit8u scancode, asciicode, shift_flags;
-  Bit8u mf2_flags, mf2_state, led_flags;
+  Bit8u mf2_flags, mf2_state;
 
   //
   // DS has been set to F000 before call
@@ -4482,7 +4503,6 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
   shift_flags = read_byte(0x0040, 0x17);
   mf2_flags = read_byte(0x0040, 0x18);
   mf2_state = read_byte(0x0040, 0x96);
-  led_flags = read_byte(0x0040, 0x97);
   asciicode = 0;
 
   switch (scancode) {
@@ -4490,9 +4510,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       shift_flags ^= 0x40;
       write_byte(0x0040, 0x17, shift_flags);
       mf2_flags |= 0x40;
-      led_flags ^= 0x04;
       write_byte(0x0040, 0x18, mf2_flags);
-      write_byte(0x0040, 0x97, led_flags);
       break;
     case 0xba: /* Caps Lock release */
       mf2_flags &= ~0x40;
@@ -4572,9 +4590,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
         mf2_flags |= 0x20;
         write_byte(0x0040, 0x18, mf2_flags);
         shift_flags ^= 0x20;
-        led_flags ^= 0x02;
         write_byte(0x0040, 0x17, shift_flags);
-        write_byte(0x0040, 0x97, led_flags);
       }
       break;
     case 0xc5: /* Num Lock release */
@@ -4588,9 +4604,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
       mf2_flags |= 0x10;
       write_byte(0x0040, 0x18, mf2_flags);
       shift_flags ^= 0x10;
-      led_flags ^= 0x01;
       write_byte(0x0040, 0x17, shift_flags);
-      write_byte(0x0040, 0x97, led_flags);
       break;
 
     case 0xc6: /* Scroll Lock release */
