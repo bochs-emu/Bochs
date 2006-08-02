@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.179 2006-07-26 19:09:51 vruppert Exp $
+// $Id: harddrv.cc,v 1.180 2006-08-02 17:47:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.179 2006-07-26 19:09:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.180 2006-08-02 17:47:09 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1996,8 +1996,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       // Writes to the command register clear the IRQ
       DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
 
-      if (BX_SELECTED_CONTROLLER(channel).status.busy)
-        BX_PANIC(("hard disk: command sent, controller BUSY"));
+      if (BX_SELECTED_CONTROLLER(channel).status.busy) {
+        BX_ERROR(("ata%d: command 0x%02x sent, controller BSY bit set", channel, value));
+        break;
+      }
       if ( (value & 0xf0) == 0x10 )
         value = 0x10;
       BX_SELECTED_CONTROLLER(channel).status.err = 0;
@@ -2105,12 +2107,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("ata%d-%d: write command: BSY bit set",
-              channel, BX_SLAVE_SELECTED(channel)));
-            command_aborted(channel, value);
-            break;
-          }
           if (value == 0xC5) {
             if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
               command_aborted(channel, value);
@@ -2136,24 +2132,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x90: // EXECUTE DEVICE DIAGNOSTIC
-          if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_ERROR(("ata%d-%d: diagnostic command: BSY bit set",
-              channel, BX_SLAVE_SELECTED(channel)));
-            command_aborted(channel, value);
-            break;
-          }
           set_signature(channel, BX_SLAVE_SELECTED(channel));
           BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
           break;
 
         case 0x91: // INITIALIZE DRIVE PARAMETERS
-          if (BX_SELECTED_CONTROLLER(channel).status.busy) {
-            BX_PANIC(("ata%d-%d: init drive parameters command: BSY bit set",
-              channel, BX_SLAVE_SELECTED(channel)));
-            command_aborted(channel, value);
-            break;
-          }
           if (!BX_SELECTED_IS_HD(channel)) {
             BX_INFO(("ata%d-%d: initialize drive parameters issued to non-disk",
               channel, BX_SLAVE_SELECTED(channel)));
@@ -2176,14 +2160,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
           if (BX_SELECTED_CONTROLLER(channel).sector_count != BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
-            BX_PANIC(("ata%d-%d: init drive params: sector count doesnt match %d!=%d", channel, BX_SLAVE_SELECTED(channel),
-              BX_SELECTED_CONTROLLER(channel).sector_count, BX_SELECTED_DRIVE(channel).hard_drive->sectors));
+            BX_ERROR(("ata%d-%d: init drive params: logical sector count %d not supported", channel, BX_SLAVE_SELECTED(channel),
+              BX_SELECTED_CONTROLLER(channel).sector_count));
             command_aborted(channel, value);
             break;
           }
           if ( BX_SELECTED_CONTROLLER(channel).head_no != (BX_SELECTED_DRIVE(channel).hard_drive->heads-1) ) {
-            BX_PANIC(("ata%d-%d: init drive params: head number doesn't match %d != %d", channel, BX_SLAVE_SELECTED(channel),
-              BX_SELECTED_CONTROLLER(channel).head_no, BX_SELECTED_DRIVE(channel).hard_drive->heads-1));
+            BX_ERROR(("ata%d-%d: init drive params: max. logical head number %d not supported", channel, BX_SLAVE_SELECTED(channel),
+              BX_SELECTED_CONTROLLER(channel).head_no));
             command_aborted(channel, value);
             break;
           }
