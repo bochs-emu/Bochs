@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.32 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.33 2006-08-03 21:03:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -742,7 +742,7 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           break;
         case BX_INSTR_SUB16:
         case BX_INSTR_SBB16:
-          of = GET_ADD_OVERFLOW(BX_CPU_THIS_PTR oszapc.op1_16, BX_CPU_THIS_PTR oszapc.op2_16,
+          of = GET_SUB_OVERFLOW(BX_CPU_THIS_PTR oszapc.op1_16, BX_CPU_THIS_PTR oszapc.op2_16,
                                 BX_CPU_THIS_PTR oszapc.result_16, 0x8000);
           break;
         case BX_INSTR_SUB32:
