@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.31 2006-02-22 19:43:55 vruppert Exp $
+// $Id: carbon.cc,v 1.32 2006-08-03 16:01:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -186,7 +186,9 @@ pascal OSStatus CEvtHandleApplicationMenus      (EventHandlerCallRef nextHandler
 
 // Event handlers
 OSStatus HandleKey(EventRef theEvent, Bit32u keyState);
-static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event);
+static BxEvent * CarbonSiminterfaceCallback(void *theClass, BxEvent *event);
+static bxevent_handler old_callback = NULL;
+static void *old_callback_arg = NULL;
 
 // Show/hide UI elements
 void HidePointer(void);
@@ -218,6 +220,8 @@ class bx_carbon_gui_c : public bx_gui_c {
 public:
   bx_carbon_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+  virtual void beep_on(float frequency);
+  virtual void beep_off();
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -836,6 +840,8 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, u
   
   GetMouse(&prevPt);
 
+  // redirect notify callback to X11 specific code
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
   SIM->set_notify_callback(CarbonSiminterfaceCallback, NULL);
   
   UNUSED(argc);
@@ -2054,9 +2060,19 @@ unsigned char reverse_bitorder(unsigned char b)
   return(ret);
 }
 
-  void
-bx_carbon_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_carbon_gui_c::mouse_enabled_changed_specific (bx_bool val)
 {
+}
+
+void bx_carbon_gui_c::beep_on(float frequency)
+{
+  AlertSoundPlay();
+  BX_INFO(( "Carbon Beep ON (frequency=%.2f)",frequency));
+}
+
+void bx_carbon_gui_c::beep_off()
+{
+  BX_INFO(( "Carbon Beep OFF"));
 }
 
 // we need to handle "ask" events so that PANICs are properly reported
@@ -2141,6 +2157,10 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
       }
   }
 #endif
-  return event;
+  if (old_callback != NULL) {
+    return (*old_callback)(old_callback_arg, event);
+  } else {
+    return event;
+  }
 }
 #endif /* if BX_WITH_CARBON */
