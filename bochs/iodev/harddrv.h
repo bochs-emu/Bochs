@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.43 2006-07-19 19:18:42 vruppert Exp $
+// $Id: harddrv.h,v 1.44 2006-08-05 07:49:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -236,16 +236,18 @@ private:
       Bit8u model_no[41];
       int statusbar_id;
       int iolight_counter;
-      } drives[2];
+      Bit8u device_num; // for ATAPI identify & inquiry
+    } drives[2];
     unsigned drive_select;
 
     Bit16u ioaddr1;
     Bit16u ioaddr2;
     Bit8u  irq;
 
-    } channels[BX_MAX_ATA_CHANNEL];
+  } channels[BX_MAX_ATA_CHANNEL];
 
   int iolight_timer_index;
+  Bit8u cdrom_count;
 };
 
 #endif

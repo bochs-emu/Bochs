@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.180 2006-08-02 17:47:09 vruppert Exp $
+// $Id: harddrv.cc,v 1.181 2006-08-05 07:49:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.180 2006-08-02 17:47:09 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.181 2006-08-05 07:49:31 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -201,6 +201,7 @@ void bx_hard_drive_c::init(void)
   }
 
   channel = 0;
+  BX_HD_THIS cdrom_count = 0;
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       sprintf(ata_name, "ata.%d.%s", channel, (device==0)?"master":"slave");
@@ -411,7 +412,9 @@ void bx_hard_drive_c::init(void)
         sprintf(sbtext, "CD:%d-%s", channel, device?"S":"M");
         BX_HD_THIS channels[channel].drives[device].statusbar_id =
           bx_gui->register_statusitem(sbtext);
-	
+	BX_HD_THIS cdrom_count++;
+        BX_HD_THIS channels[channel].drives[device].device_num = BX_HD_THIS cdrom_count + 48;
+
         // Check bit fields
         BX_CONTROLLER(channel,device).sector_count = 0;
         BX_CONTROLLER(channel,device).interrupt_reason.c_d = 1;
@@ -1602,9 +1605,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     BX_SELECTED_CONTROLLER(channel).buffer[8+i] = vendor_id[i];
 
                   // Product ID
-                  const char* product_id = "Bochs CD-ROM    ";
+                  const char* product_id = "Generic CD-ROM  ";
                   for (i = 0; i < 16; i++)
                     BX_SELECTED_CONTROLLER(channel).buffer[16+i] = product_id[i];
+                  if (BX_HD_THIS cdrom_count > 1) {
+                    BX_SELECTED_CONTROLLER(channel).buffer[31] = BX_SELECTED_DRIVE(channel).device_num;
+                  }
 
                   // Product Revision level
                   const char* rev_level = "1.0 ";
@@ -2642,8 +2648,7 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
 	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   strcpy(serial_number, "BXCD00000           ");
-  serial_number[7] = channel + 49;
-  serial_number[8] = BX_HD_THIS channels[channel].drive_select + 49;
+  serial_number[8] = BX_SELECTED_DRIVE(channel).device_num;
   for (i = 0; i < 10; i++) {
     BX_SELECTED_DRIVE(channel).id_drive[10+i] = (serial_number[i*2] << 8) |
       serial_number[i*2 + 1];
