@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.h,v 1.4 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: pcidev.h,v 1.5 2006-08-05 20:04:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*  
@@ -31,17 +31,15 @@
 #  define BX_PCIDEV_THIS_ this
 #endif
 
-#define PCIDEV_IRQ 11
+struct region_struct {
+  Bit32u config_value;
+  Bit32u start; // can change
+  Bit32u size;
+  Bit32u host_start; // never changes!!!
+  class bx_pcidev_c *pcidev;
+};
 
-  struct region_struct {
-	unsigned long config_value;
-	unsigned long start; // can change
-	unsigned long end; // can change
-	unsigned long host_start; // never changes!!!
-	class bx_pcidev_c *pcidev;
-  };
-
-class bx_pcidev_c : public bx_pci_device_stub_c {
+class bx_pcidev_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
   bx_pcidev_c();
   virtual ~bx_pcidev_c();
@@ -55,7 +53,9 @@ public:
 
   // resource mapping
   struct region_struct regions[6];
-  int irq;
+  Bit8u devfunc;
+  Bit8u intpin;
+  Bit8u irq;
 
 private:
   static Bit32u read_handler(void *param, Bit32u address, unsigned io_len);
