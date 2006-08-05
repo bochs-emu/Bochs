@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.24 2006-04-25 22:52:38 mcb30 Exp $
+// $Id: eth_tuntap.cc,v 1.25 2006-08-05 15:53:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,9 @@
 #include <signal.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
+#ifndef __APPLE__
 #include <sys/poll.h>
+#endif
 #include <sys/time.h>
 #include <sys/resource.h>
 #ifdef __linux__
