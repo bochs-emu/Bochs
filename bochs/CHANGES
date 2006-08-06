@@ -52,29 +52,33 @@ Changes in 2.3 (not yet released):
   - Configuration parameter handling rewritten to a parameter tree. This is
     required for dynamic menus/dialogs, user-defined options and save/restore.
   - Support for user-defined bochsrc options added
+  - help support at the parameter prompt in textconfig added
 
 - I/O devices (Volker)
   - Floppy
     - partial sector transfers fixed
   - Hard drive / cdrom
-    - several fixes to the IDE register behaviour in case of a channel with
-      only one drive connected
+    - several fixes to the IDE register behaviour (e.g. in case of a channel
+      with only one drive connected)
     - fixed data alignment of 'growing' hard drive images (sharing images
       between Windows and Linux now possible)
     - disk geometry autodetection now supported by most of the image types
       (unsupported: external, dll and compressed modes)
     - multi sector read/write commands implemented
     - hard disk now reporting ATA-3 supported
+    - ATAPI 'inquiry' now returns a unique device name
   - Keyboard
     - reset sent to keyboard has no effect on the 8042 (scancode translation)
   - PCI
     - forward PIRQ register changes to the I/O APIC (if present)
+    - attempt to fix and update the emulation part of 'pcidev' (untested)
 
 - System BIOS (Volker)
   - enable interrupts before executing INT 19h
   - fixed ATA device detection in case of one drive only connected to controller
   - improved INT 15h function AX=E820h
   - real mode PCI BIOS now returns IRQ routing information (function 0Eh)
+  - keyboard LED flags handling fixed and improved
 
 - SF patches applied
  [1455958] call/jmp through call gate in 64-bit mode
@@ -82,6 +86,10 @@ Changes in 2.3 (not yet released):
  [1386671] Combined dual core and hyper-threading patch
 
 - these S.F. bugs were closed
+ [1424355] bochs-2.2.6 ata failure in windoze 98se
+ [1533979] wrong disassembly of IN instruction
+  [620059] paste won't stop
+ [1164904] status bar doesn't show num/caps/scroll lock status
  [1061720] ATA Support level for HD
  [1522196] Broken CHANGES link in main page
  [1438415] crash if screen scrolled downwards
