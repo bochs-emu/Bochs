@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.32 2006-08-03 16:01:23 vruppert Exp $
+// $Id: carbon.cc,v 1.33 2006-08-08 17:10:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2082,59 +2082,67 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
   
   if( event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
   {
-  DialogRef                     alertDialog;
-  CFStringRef                   title;
-  CFStringRef                   exposition;
-  DialogItemIndex               index;
-  AlertStdCFStringAlertParamRec alertParam = {0};
+    DialogRef                     alertDialog;
+    CFStringRef                   title;
+    CFStringRef                   exposition;
+    DialogItemIndex               index;
+    AlertStdCFStringAlertParamRec alertParam = {0};
 
-  if( event->u.logmsg.prefix != NULL )
-  {
-    title      = CFStringCreateWithCString(NULL, event->u.logmsg.prefix, kCFStringEncodingASCII);
-    exposition = CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
-  }
-  else
-  {
-    title      = CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
-    exposition = NULL;
-  }
-  
-  alertParam.version       = kStdCFStringAlertVersionOne;
-  alertParam.defaultText   = CFSTR("Continue");
-  alertParam.cancelText    = CFSTR("Quit");
-  alertParam.position      = kWindowDefaultPosition;
-  alertParam.defaultButton = kAlertStdAlertOKButton;
-  alertParam.cancelButton  = kAlertStdAlertCancelButton;
+    if( event->u.logmsg.prefix != NULL )
+    {
+      title      = CFStringCreateWithCString(NULL, event->u.logmsg.prefix, kCFStringEncodingASCII);
+      exposition = CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
+    }
+    else
+    {
+      title      = CFStringCreateWithCString(NULL, event->u.logmsg.msg, kCFStringEncodingASCII);
+      exposition = NULL;
+    }
 
-  CreateStandardAlert(
-    kAlertCautionAlert,
-    title,
-    exposition,       /* can be NULL */
-    &alertParam,             /* can be NULL */
-    &alertDialog);
-  
-  RunStandardAlert(
-   alertDialog,
-   NULL,       /* can be NULL */
-   &index);
+    alertParam.version       = kStdCFStringAlertVersionOne;
+    alertParam.defaultText   = CFSTR("Continue");
+    alertParam.cancelText    = CFSTR("Quit");
+    alertParam.position      = kWindowDefaultPosition;
+    alertParam.defaultButton = kAlertStdAlertOKButton;
+    alertParam.cancelButton  = kAlertStdAlertCancelButton;
 
-  CFRelease( title );
+    CreateStandardAlert(
+      kAlertCautionAlert,
+      title,
+      exposition,       /* can be NULL */
+      &alertParam,             /* can be NULL */
+      &alertDialog);
 
-  if( exposition != NULL )
-  {
-    CFRelease( exposition );
-  }
-  
-  // continue
-  if( index == kAlertStdAlertOKButton )
-  {
-    event->retcode = 0;
-  }
-  // quit
-  else if( index == kAlertStdAlertCancelButton )
-  {
-    event->retcode = 2;
-  }
+    RunStandardAlert(
+      alertDialog,
+      NULL,       /* can be NULL */
+      &index);
+
+    CFRelease( title );
+
+    if( exposition != NULL )
+    {
+      CFRelease( exposition );
+    }
+
+    // continue
+    if( index == kAlertStdAlertOKButton )
+    {
+      event->retcode = 0;
+    }
+    // quit
+    else if( index == kAlertStdAlertCancelButton )
+    {
+      event->retcode = 2;
+    }
+#if 0
+    if( event->u.logmsg.prefix != NULL )
+    {
+      BX_INFO(("Callback log:     Prefix: %s", event->u.logmsg.prefix));
+    }
+    BX_INFO(("Callback log:     Message: %s", event->u.logmsg.msg));
+#endif
+    return event;
   }
 
 #if 0
@@ -2147,14 +2155,6 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
     default:
       BX_INFO(("Callback tracing: Evt: %d (%s)", event->type,
         ((BX_EVT_IS_ASYNC(event->type))?"async":"sync")));
-      if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
-      {
-        if( event->u.logmsg.prefix != NULL )
-        {
-        BX_INFO(("Callback log:     Prefix: %s", event->u.logmsg.prefix));
-        }
-        BX_INFO(("Callback log:     Message: %s", event->u.logmsg.msg));
-      }
   }
 #endif
   if (old_callback != NULL) {
