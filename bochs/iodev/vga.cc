@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.132 2006-07-11 07:49:23 vruppert Exp $
+// $Id: vga.cc,v 1.133 2006-08-09 17:52:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3152,7 +3152,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           if ( (value == VBE_DISPI_ID0) ||
                (value == VBE_DISPI_ID1) ||
                (value == VBE_DISPI_ID2) ||
-               (value == VBE_DISPI_ID3) )
+               (value == VBE_DISPI_ID3) ||
+               (value == VBE_DISPI_ID4) )
           {
             // allow backwards compatible with previous dispi bioses
             BX_VGA_THIS s.vbe_cur_dispi=value;
@@ -3399,21 +3400,25 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         case VBE_DISPI_INDEX_Y_OFFSET:
         {
           BX_DEBUG(("VBE offset y %d",value));
-          BX_VGA_THIS s.vbe_offset_y=(Bit16u)value;
-          BX_VGA_THIS s.vbe_virtual_start = BX_VGA_THIS s.vbe_offset_y * BX_VGA_THIS s.line_offset;
+
+          Bit32u new_screen_start = value * BX_VGA_THIS s.line_offset;
           if (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4) {
-            if ((BX_VGA_THIS s.vbe_virtual_start + BX_VGA_THIS s.vbe_visible_screen_size) > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
+            if ((new_screen_start + BX_VGA_THIS s.vbe_visible_screen_size) > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
             {
               BX_PANIC(("VBE offset y %d out of bounds",value));
+              break;
             }
-            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x * BX_VGA_THIS s.vbe_bpp_multiplier);
+            new_screen_start += (BX_VGA_THIS s.vbe_offset_x * BX_VGA_THIS s.vbe_bpp_multiplier);
           } else {
-            if ((BX_VGA_THIS s.vbe_virtual_start + BX_VGA_THIS s.vbe_visible_screen_size) > (VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / 4))
+            if ((new_screen_start + BX_VGA_THIS s.vbe_visible_screen_size) > (VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / 4))
             {
               BX_PANIC(("VBE offset y %d out of bounds",value));
+              break;
             }
-            BX_VGA_THIS s.vbe_virtual_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
+            new_screen_start += (BX_VGA_THIS s.vbe_offset_x >> 3);
           }
+          BX_VGA_THIS s.vbe_virtual_start = new_screen_start;
+          BX_VGA_THIS s.vbe_offset_y = (Bit16u)value;
           needs_update = 1;
         } break;
 
