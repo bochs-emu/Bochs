@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.99 2006-06-26 21:07:44 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.100 2006-08-11 17:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ static BxExecutePtr_tR BxResolve64Mod0[16] = {
   &BX_CPU_C::Resolve64Mod0Rm9,
   &BX_CPU_C::Resolve64Mod0Rm10,
   &BX_CPU_C::Resolve64Mod0Rm11,
-  &BX_CPU_C::Resolve64Mod0Rm12,
+  NULL, // escape to 2-byte
   &BX_CPU_C::Resolve64Mod0Rm13,
   &BX_CPU_C::Resolve64Mod0Rm14,
   &BX_CPU_C::Resolve64Mod0Rm15
@@ -144,7 +144,7 @@ static BxExecutePtr_tR BxResolve64Mod1or2[16] = {
   &BX_CPU_C::Resolve64Mod1or2Rm9,
   &BX_CPU_C::Resolve64Mod1or2Rm10,
   &BX_CPU_C::Resolve64Mod1or2Rm11,
-  &BX_CPU_C::Resolve64Mod1or2Rm12,
+  NULL, // escape to 2-byte
   &BX_CPU_C::Resolve64Mod1or2Rm13,
   &BX_CPU_C::Resolve64Mod1or2Rm14,
   &BX_CPU_C::Resolve64Mod1or2Rm15
@@ -2146,7 +2146,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   // remain must be at least 1
 
   unsigned b1, b2, ilen=0, attr, lock=0;
-  unsigned imm_mode, offset, rex_r,rex_x,rex_b;
+  unsigned imm_mode, offset, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
 #if BX_SUPPORT_SSE >= 4
   unsigned b3 = 0;
@@ -2158,9 +2158,6 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   unsigned sse_prefix = SSE_PREFIX_NONE;
 
   offset = 512*1;
-  rex_r = 0;
-  rex_x = 0;
-  rex_b = 0;
   instruction->ResolveModrm = NULL;
   instruction->initMetaInfo(BX_SEG_REG_NULL,
                   /*os32*/ 1, 	// operand size 32 override defaults to 1
@@ -2306,7 +2303,7 @@ fetch_b1:
     mod = b2 & 0xc0;
     nnn = ((b2 >> 3) & 0x07) | rex_r;
     rm  = b2 & 0x07;
-    instruction->modRMForm.modRMData = (b2<<20);
+    instruction->modRMForm.modRMData  = (b2<<20);
     instruction->modRMForm.modRMData |= mod;
     instruction->modRMForm.modRMData |= (nnn<<8);
 
@@ -2325,12 +2322,12 @@ fetch_b1:
     instruction->modRMForm.modRMData |= rm;
     if (instruction->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
-      if (rm != 4) { // no s-i-b byte
+      if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
           instruction->ResolveModrm = BxResolve64Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
-          if (rm == 5) {
+          if ((rm & 0x7) == 5) {
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
               iptr += 4;
@@ -2377,7 +2374,7 @@ get_32bit_displ_1:
         else {
           return(0);
         }
-        base = (sib & 0x07) | rex_b; sib >>= 3;
+        base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
         instruction->modRMForm.modRMData |= (base<<12);
@@ -2387,7 +2384,7 @@ get_32bit_displ_1:
           instruction->ResolveModrm = BxResolve64Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
-          if (base == 0x05)
+          if ((base & 0x7) == 5)
             goto get_32bit_displ_1;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
@@ -2406,13 +2403,13 @@ get_32bit_displ_1:
       }
     }
     else {
-     // 32-bit addressing modes; note that mod==11b handled above
-      if (rm != 4) { // no s-i-b byte
+      // 32-bit addressing modes; note that mod==11b handled above
+      if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
           instruction->ResolveModrm = BxResolve32Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
-          if (rm == 5) {
+          if ((rm & 0x7) == 5) {
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
               iptr += 4;
@@ -2469,7 +2466,7 @@ get_32bit_displ:
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
-          if (base == 0x05)
+          if ((base & 0x7) == 5)
             goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
@@ -2511,10 +2508,10 @@ modrm_done:
       
        switch(Group) {
          case BxGroupN:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
              break;
          case BxRMGroup:
-             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
+             OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
              break;
 #if BX_SUPPORT_SSE >= 4
          case Bx3ByteOpTable:
@@ -2540,7 +2537,7 @@ modrm_done:
              break;
          case BxFPGroup:
              if (mod != 0xc0)  // mod != 11b
-                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn]);
+                OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[nnn & 0x7]);
              else
              {
                 int index = (b1-0xD8)*64 + (0x3f & b2);

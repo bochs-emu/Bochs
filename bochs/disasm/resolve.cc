@@ -1,8 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.12 2006-06-26 21:06:26 sshwarts Exp $
+// $Id: resolve.cc,v 1.13 2006-08-11 17:22:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <assert.h>
 #include "disasm.h"
 
 void disassembler::decode_modrm(x86_insn *insn)
@@ -27,7 +28,7 @@ void disassembler::decode_modrm(x86_insn *insn)
         switch (insn->mod) {
           case 0:
             resolve_modrm = &disassembler::resolve64_mod0;
-            if (insn->rm == 5) /* no reg, 32-bit displacement */
+            if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
               insn->displacement.displ32 = fetch_dword();
             break;
           case 1:
@@ -45,11 +46,13 @@ void disassembler::decode_modrm(x86_insn *insn)
       else { /* rm == 4, s-i-b byte follows */
         insn->sib = fetch_byte();
         BX_DECODE_SIB(insn->sib, insn->scale, insn->index, insn->base);
+        insn->base  |= insn->rex_b;
+        insn->index |= insn->rex_x;
 
         switch (insn->mod) {
           case 0:
             resolve_modrm = &disassembler::resolve64_mod0_rm4;
-            if (insn->base == 5)
+            if ((insn->base & 7) == 5)
               insn->displacement.displ32 = fetch_dword();
             break;
           case 1:
@@ -73,7 +76,7 @@ void disassembler::decode_modrm(x86_insn *insn)
         switch (insn->mod) {
           case 0:
             resolve_modrm = &disassembler::resolve32_mod0;
-            if (insn->rm == 5) /* no reg, 32-bit displacement */
+            if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
               insn->displacement.displ32 = fetch_dword();
             break;
           case 1:
@@ -97,7 +100,7 @@ void disassembler::decode_modrm(x86_insn *insn)
         switch (insn->mod) {
           case 0:
             resolve_modrm = &disassembler::resolve32_mod0_rm4;
-            if (insn->base == 5)
+            if ((insn->base & 7) == 5)
               insn->displacement.displ32 = fetch_dword();
             break;
           case 1:
@@ -112,6 +115,9 @@ void disassembler::decode_modrm(x86_insn *insn)
       } /* s-i-b byte follows */
     }
     else {
+      assert(insn->rex_b == 0);
+      assert(insn->rex_x == 0);
+      assert(insn->rex_r == 0);
       /* 16 bit addressing modes. */
       switch (insn->mod) {
         case 0:
@@ -169,7 +175,7 @@ void disassembler::resolve32_mod0(const x86_insn *insn, unsigned mode)
   else
     seg = segment_name[DS_REG];
 
-  if (insn->rm == 5) /* no reg, 32-bit displacement */
+  if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
     print_memory_access(mode, seg, NULL, NULL, 0, insn->displacement.displ32);
   else
     print_memory_access(mode, seg, general_32bit_regname[insn->rm], NULL, 0, 0);
@@ -198,15 +204,13 @@ void disassembler::resolve32_mod0_rm4(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod00_base32[insn->base];
 
-  if (insn->base != 5)
+  if ((insn->base & 7) != 5)
     base = general_32bit_regname[insn->base];
   else
     disp32 = insn->displacement.displ32;
   
   if (insn->index != 4)
-  {
     index = general_32bit_regname[insn->index];
-  }
     
   print_memory_access(mode, seg, base, index, insn->scale, disp32);
 }
@@ -221,9 +225,7 @@ void disassembler::resolve32_mod1or2_rm4(const x86_insn *insn, unsigned mode)
     seg = sreg_mod01or10_base32[insn->base];
 
   if (insn->index != 4)
-  {
     index = general_32bit_regname[insn->index];
-  }
 
   print_memory_access(mode, seg,
       general_32bit_regname[insn->base], index, insn->scale, insn->displacement.displ32);
@@ -241,7 +243,7 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned mode)
   if (intel_mode) rip_regname = "rip";
   else rip_regname = "%rip";
 
-  if (insn->rm == 5) /* no reg, 32-bit displacement */
+  if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
     print_memory_access(mode, seg, rip_regname, NULL, 0, insn->displacement.displ32);
   else
     print_memory_access(mode, seg, general_64bit_regname[insn->rm], NULL, 0, 0);
@@ -270,15 +272,13 @@ void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
   else
     seg = sreg_mod00_base32[insn->base];
 
-  if (insn->base != 5)
+  if ((insn->base & 7) != 5)
     base = general_64bit_regname[insn->base];
   else
     disp32 = insn->displacement.displ32;
   
   if (insn->index != 4)
-  {
     index = general_64bit_regname[insn->index];
-  }
     
   print_memory_access(mode, seg, base, index, insn->scale, disp32);
 }
@@ -293,9 +293,7 @@ void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
     seg = sreg_mod01or10_base32[insn->base];
 
   if (insn->index != 4)
-  {
     index = general_64bit_regname[insn->index];
-  }
 
   print_memory_access(mode, seg,
       general_64bit_regname[insn->base], index, insn->scale, insn->displacement.displ32);

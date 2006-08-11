@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.155 2006-06-26 21:07:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.156 2006-08-11 17:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,7 +95,8 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
     BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
 
   if (!real_mode() && CPL!=0) {
-    BX_ERROR(("HLT: priveledge check failed, generate #GP(0)"));
+    BX_ERROR(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
+        cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), CPL));
     exception(BX_GP_EXCEPTION, 0, 0);
     return;
   }

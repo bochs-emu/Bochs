@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.8 2006-03-06 22:03:02 sshwarts Exp $
+// $Id: resolve64.cc,v 1.9 2006-08-11 17:23:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,22 +90,16 @@ BX_CPU_C::Resolve64Mod0Rm11(bxInstruction_c *i)
   RMAddr(i) = R11;
 }
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::Resolve64Mod0Rm12(bxInstruction_c *i)
-{
-  RMAddr(i) = R12;
-}
-  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm13(bxInstruction_c *i)
 {
-  RMAddr(i) = R13;
+  // eip hasn't been bumped yet when this is called.  must choose the saved value.
+  RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s)i->displ32u();
 }
-
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm14(bxInstruction_c *i)
 {
   RMAddr(i) = R14;
 }
-
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Rm15(bxInstruction_c *i)
 {
@@ -169,11 +163,6 @@ BX_CPU_C::Resolve64Mod1or2Rm11(bxInstruction_c *i)
   RMAddr(i) = R11 + (Bit32s) i->displ32u();
 }
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::Resolve64Mod1or2Rm12(bxInstruction_c *i)
-{
-  RMAddr(i) = R12 + (Bit32s) i->displ32u();
-}
-  void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod1or2Rm13(bxInstruction_c *i)
 {
   RMAddr(i) = R13 + (Bit32s) i->displ32u();
@@ -188,7 +177,6 @@ BX_CPU_C::Resolve64Mod1or2Rm15(bxInstruction_c *i)
 {
   RMAddr(i) = R15 + (Bit32s) i->displ32u();
 }
-
 
 
   void  BX_CPP_AttrRegparmN(1)
@@ -234,9 +222,8 @@ BX_CPU_C::Resolve64Mod0Base4(bxInstruction_c *i)
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::Resolve64Mod0Base5(bxInstruction_c *i)
 {
-  if (i->sibIndex() != 4) {
+  if (i->sibIndex() != 4)
     RMAddr(i) = (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
-    }
   else
     RMAddr(i) = (Bit32s) i->displ32u();
 }
