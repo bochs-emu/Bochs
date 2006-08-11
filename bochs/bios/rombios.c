@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.165 2006-08-07 20:26:17 vruppert Exp $
+// $Id: rombios.c,v 1.166 2006-08-11 17:34:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -932,7 +932,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.165 $ $Date: 2006-08-07 20:26:17 $";
+static char bios_cvs_version_string[] = "$Revision: 1.166 $ $Date: 2006-08-11 17:34:12 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3650,9 +3650,10 @@ ASM_END
       regs.u.r8.al = inb_cmos(0x30);
       regs.u.r8.ah = inb_cmos(0x31);
 
-      // limit to 15M
-      if(regs.u.r16.ax > 0x3c00)
-        regs.u.r16.ax = 0x3c00;
+      // According to Ralf Brown's interrupt the limit should be 15M,
+      // but real machines mostly return max. 63M.
+      if(regs.u.r16.ax > 0xffc0)
+        regs.u.r16.ax = 0xffc0;
 
       CLEAR_CF();
 #endif
