@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.101 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: floppy.cc,v 1.102 2006-08-12 11:22:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.101 2006-05-29 22:33:38 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.102 2006-08-12 11:22:40 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -723,7 +723,8 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 #if BX_DMA_FLOPPY_IO
     case 0x3F7: /* diskette controller configuration control register */
-      BX_INFO(("io_write: config control register: 0x%02x", value));
+      if ((value & 0x03) != BX_FD_THIS s.data_rate)
+        BX_INFO(("io_write: config control register: 0x%02x", value));
       BX_FD_THIS s.data_rate = value & 0x03;
       switch (BX_FD_THIS s.data_rate) {
         case 0: BX_DEBUG(("  500 Kbps")); break;
@@ -731,7 +732,6 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 2: BX_DEBUG(("  250 Kbps")); break;
         case 3: BX_DEBUG(("  1 Mbps")); break;
       }
-      return;
       break;
 
    default:
