@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.32 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.33 2006-08-13 09:40:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -420,7 +420,12 @@ void disassembler::OP_O(const x86_insn *insn, unsigned size)
 
   print_datasize(size);
 
-  if (insn->as_32) {
+  if (insn->as_64) {
+    Bit64u imm64 = fetch_qword();
+    dis_sprintf("%s:0x%08x%08x", seg,
+        (unsigned)(imm64>>32), (unsigned)(imm64 & 0xffffffff));
+  }
+  else if (insn->as_32) {
     Bit32u imm32 = fetch_dword();
     dis_sprintf("%s:0x%x", seg, (unsigned) imm32);
   }
