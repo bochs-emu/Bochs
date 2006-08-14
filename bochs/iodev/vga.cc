@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.133 2006-08-09 17:52:06 vruppert Exp $
+// $Id: vga.cc,v 1.134 2006-08-14 20:31:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3331,21 +3331,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               }
               bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0, depth);
               BX_VGA_THIS s.last_bpp = depth;
-              // some test applications expect these standard VGA settings
-              BX_VGA_THIS s.CRTC.reg[9] = 0x00;
-              BX_VGA_THIS s.attribute_ctrl.mode_ctrl.graphics_alpha = 1;
-              BX_VGA_THIS s.graphics_ctrl.memory_mapping = 1;
-              BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select = 1;
-              BX_VGA_THIS s.CRTC.reg[18] = (BX_VGA_THIS s.vbe_yres - 1) & 0xff;
-              BX_VGA_THIS s.CRTC.reg[7] &= ~0x42;
-              if ((BX_VGA_THIS s.vbe_yres - 1) & 0x0100) {
-                BX_VGA_THIS s.CRTC.reg[7] |= 0x02;
-              }
-              if ((BX_VGA_THIS s.vbe_yres - 1) & 0x0200) {
-                BX_VGA_THIS s.CRTC.reg[7] |= 0x40;
-              }
-              BX_VGA_THIS s.sequencer.map_mask = 0x0f;
-              BX_VGA_THIS s.sequencer.chain_four = 1;
             }
           }
           else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS s.vbe_enabled)
