@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.55 2006-08-09 17:52:06 vruppert Exp $
+// $Id: vga.h,v 1.56 2006-08-15 16:48:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -48,12 +48,13 @@
 
 #if BX_SUPPORT_VBE
   #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB 8
+  #define VBE_DISPI_4BPP_PLANE_SHIFT      21
 
   #define VBE_DISPI_BANK_ADDRESS          0xA0000
   #define VBE_DISPI_BANK_SIZE_KB          64
 
-  #define VBE_DISPI_MAX_XRES              1024
-  #define VBE_DISPI_MAX_YRES              768
+  #define VBE_DISPI_MAX_XRES              1600
+  #define VBE_DISPI_MAX_YRES              1200
   #define VBE_DISPI_MAX_BPP               32
 
   #define VBE_DISPI_IOPORT_INDEX          0x01CE
@@ -96,8 +97,8 @@
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
   
-#define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB		(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)  
-#define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)  
+#define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB		(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
+#define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
 
 #define BX_MAX_XRES VBE_DISPI_MAX_XRES
 #define BX_MAX_YRES VBE_DISPI_MAX_YRES

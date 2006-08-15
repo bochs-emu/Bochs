@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.134 2006-08-14 20:31:18 vruppert Exp $
+// $Id: vga.cc,v 1.135 2006-08-15 16:48:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1474,7 +1474,7 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           case 0x14:
           case 0x17:
 #if BX_SUPPORT_VBE
-            if (!BX_VGA_THIS s.vbe_enabled)
+            if (!BX_VGA_THIS s.vbe_enabled || (BX_VGA_THIS s.vbe_bpp == VBE_DISPI_BPP_4))
 #endif
             {
               // Line offset change
@@ -1904,10 +1904,10 @@ void bx_vga_c::update(void)
 #if BX_SUPPORT_VBE  
           if (BX_VGA_THIS s.vbe_enabled)
           {
-            plane0 = &BX_VGA_THIS s.vbe_memory[0<<20];
-            plane1 = &BX_VGA_THIS s.vbe_memory[1<<20];
-            plane2 = &BX_VGA_THIS s.vbe_memory[2<<20];
-            plane3 = &BX_VGA_THIS s.vbe_memory[3<<20];
+            plane0 = &BX_VGA_THIS s.vbe_memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane1 = &BX_VGA_THIS s.vbe_memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane2 = &BX_VGA_THIS s.vbe_memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
+            plane3 = &BX_VGA_THIS s.vbe_memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
             start_addr = BX_VGA_THIS s.vbe_virtual_start;
             line_compare = 0xffff;
           }
@@ -2245,10 +2245,10 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
 #if BX_SUPPORT_VBE  
   if (BX_VGA_THIS s.vbe_enabled)
   {
-    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
   }
   else
 #endif
@@ -2458,10 +2458,10 @@ void bx_vga_c::mem_write(Bit32u addr, Bit8u value)
 #if BX_SUPPORT_VBE
   if (BX_VGA_THIS s.vbe_enabled)
   {
-    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
-    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<20) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane0 = &BX_VGA_THIS s.vbe_memory[(0<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane1 = &BX_VGA_THIS s.vbe_memory[(1<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane2 = &BX_VGA_THIS s.vbe_memory[(2<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
+    plane3 = &BX_VGA_THIS s.vbe_memory[(3<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
   }
   else
 #endif
