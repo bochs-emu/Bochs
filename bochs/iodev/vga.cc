@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.135 2006-08-15 16:48:23 vruppert Exp $
+// $Id: vga.cc,v 1.136 2006-08-17 17:06:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2201,7 +2201,7 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
 #endif  
 
 #if defined(VGA_TRACE_FEATURE)
-//	BX_DEBUG(("8-bit memory read from %08x", addr));
+//  BX_DEBUG(("8-bit memory read from 0x%08x", addr));
 #endif
 
 #ifdef __OS2__
@@ -2221,26 +2221,24 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
   switch (BX_VGA_THIS s.graphics_ctrl.memory_mapping) {
     case 1: // 0xA0000 .. 0xAFFFF
       if (addr > 0xAFFFF) return 0xff;
-      offset = addr - 0xA0000;
+      offset = addr & 0xFFFF;
       break;
     case 2: // 0xB0000 .. 0xB7FFF
       if ((addr < 0xB0000) || (addr > 0xB7FFF)) return 0xff;
-      return BX_VGA_THIS s.vga_memory[addr - 0xB0000];
+      offset = addr & 0x7FFF;
       break;
     case 3: // 0xB8000 .. 0xBFFFF
       if (addr < 0xB8000) return 0xff;
-      return BX_VGA_THIS s.vga_memory[addr - 0xB8000];
+      offset = addr & 0x7FFF;
       break;
     default: // 0xA0000 .. 0xBFFFF
-      return BX_VGA_THIS s.vga_memory[addr - 0xA0000];
+      offset = addr & 0x1FFFF;
     }
 
-  // addr between 0xA0000 and 0xAFFFF
   if ( BX_VGA_THIS s.sequencer.chain_four ) {
-
     // Mode 13h: 320 x 200 256 color mode: chained pixel representation
     return BX_VGA_THIS s.vga_memory[(offset & ~0x03) + (offset % 4)*65536];
-    }
+  }
 
 #if BX_SUPPORT_VBE  
   if (BX_VGA_THIS s.vbe_enabled)
