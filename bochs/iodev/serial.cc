@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.71 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: serial.cc,v 1.72 2006-08-18 16:57:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -304,23 +304,24 @@ bx_serial_c::init(void)
           WORD wVersionRequested;
           WSADATA wsaData;
           int err;
-          wVersionRequested = MAKEWORD (2, 0);
-          err = WSAStartup (wVersionRequested, &wsaData);
+          wVersionRequested = MAKEWORD(2, 0);
+          err = WSAStartup(wVersionRequested, &wsaData);
           if (err != 0)
-            BX_PANIC (("WSAStartup failed"));
+            BX_PANIC(("WSAStartup failed"));
           winsock_init = true;
         }
 #endif
 
-        char *substr = strtok(dev, ":");
+        strcpy(host, dev);
+        char *substr = strtok(host, ":");
         strcpy(host, substr);
         substr = strtok(NULL, ":");
         if (!substr) {
           BX_PANIC(("com%d: inet address is wrong (%s)", i+1, dev));
         }
-        port = atoi (substr);
+        port = atoi(substr);
 
-        hp = gethostbyname (host);
+        hp = gethostbyname(host);
         if (!hp) {
           BX_PANIC(("com%d: gethostbyname failed (%s)", i+1, host));
         }
