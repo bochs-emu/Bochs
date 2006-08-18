@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.56 2006-08-15 16:48:23 vruppert Exp $
+// $Id: vga.h,v 1.57 2006-08-18 15:43:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -258,7 +258,6 @@ protected:
     struct {
       Bit8u   index;
       Bit8u   map_mask;
-      bx_bool map_mask_bit[4];
       bx_bool reset1;
       bx_bool reset2;
       Bit8u   reg1;
@@ -276,7 +275,8 @@ protected:
     unsigned line_compare;
     unsigned vertical_display_end;
     bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
-    Bit8u vga_memory[256 * 1024];
+    Bit8u *memory;
+    Bit32u memsize;
     Bit8u text_snapshot[128 * 1024]; // current text snapshot
     Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address;
@@ -285,7 +285,6 @@ protected:
     Bit8u last_bpp;
 
 #if BX_SUPPORT_VBE    
-    Bit8u   *vbe_memory;
     Bit16u  vbe_cur_dispi;
     Bit16u  vbe_xres;
     Bit16u  vbe_yres;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.33 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.34 2006-08-18 15:43:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -236,15 +236,9 @@ void libvga_LTX_plugin_fini(void)
 bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
 {
   put("CLVGA");
-  vidmem = NULL;
 }
 
-bx_svga_cirrus_c::~bx_svga_cirrus_c()
-{
-  if (vidmem != NULL) {
-    delete [] vidmem;
-  }
-}
+bx_svga_cirrus_c::~bx_svga_cirrus_c() {}
 
 void bx_svga_cirrus_c::init(void)
 {
@@ -321,8 +315,8 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS hw_cursor.size = 0;
 
   // memory allocation.
-  if (BX_CIRRUS_THIS vidmem == NULL)
-    BX_CIRRUS_THIS vidmem = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
+  if (BX_CIRRUS_THIS s.memory == NULL)
+    BX_CIRRUS_THIS s.memory = new Bit8u[CIRRUS_VIDEO_MEMORY_BYTES];
 
   // set some registers.
 
@@ -336,7 +330,7 @@ void bx_svga_cirrus_c::svga_init_members()
     BX_CIRRUS_THIS sequencer.reg[0x0F] = 0x98;
     BX_CIRRUS_THIS sequencer.reg[0x17] = CIRRUS_BUSTYPE_PCI;
     BX_CIRRUS_THIS sequencer.reg[0x15] = 0x04; // memory size 4MB
-    BX_CIRRUS_THIS memsize = (4 << 20);
+    BX_CIRRUS_THIS s.memsize = (4 << 20);
   } else
 #endif
   {
@@ -345,14 +339,14 @@ void bx_svga_cirrus_c::svga_init_members()
     BX_CIRRUS_THIS sequencer.reg[0x0F] = CIRRUS_MEMSIZE_2M;
     BX_CIRRUS_THIS sequencer.reg[0x17] = CIRRUS_BUSTYPE_ISA;
     BX_CIRRUS_THIS sequencer.reg[0x15] = 0x03; // memory size 2MB
-    BX_CIRRUS_THIS memsize = (2 << 20);
+    BX_CIRRUS_THIS s.memsize = (2 << 20);
   }
 
   BX_CIRRUS_THIS hidden_dac.lockindex = 5;
   BX_CIRRUS_THIS hidden_dac.data = 0;
 
-  memset(BX_CIRRUS_THIS vidmem, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
-  BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem;
+  memset(BX_CIRRUS_THIS s.memory, 0xff, CIRRUS_VIDEO_MEMORY_BYTES);
+  BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory;
 }
 
 void bx_svga_cirrus_c::reset(unsigned type)
@@ -373,7 +367,7 @@ void bx_svga_cirrus_c::register_state(void)
   char name[6];
   bx_list_c *reg;
 
-  if (BX_CIRRUS_THIS vidmem != NULL) {
+  if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
     bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "svga_cirrus", "Cirrus SVGA State", 18);
     bx_list_c *crtc = new bx_list_c(list, "crtc");
     new bx_shadow_num_c(crtc, "index", &BX_CIRRUS_THIS crtc.index, BASE_HEX);
@@ -420,7 +414,6 @@ void bx_svga_cirrus_c::register_state(void)
     new bx_shadow_num_c(cursor, "x", &BX_CIRRUS_THIS hw_cursor.x, BASE_HEX);
     new bx_shadow_num_c(cursor, "y", &BX_CIRRUS_THIS hw_cursor.y, BASE_HEX);
     new bx_shadow_num_c(cursor, "size", &BX_CIRRUS_THIS hw_cursor.size, BASE_HEX);
-    new bx_shadow_data_c(list, "vidmem", BX_CIRRUS_THIS vidmem, BX_CIRRUS_THIS memsize);
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
     if (BX_CIRRUS_THIS pci_enabled) {
       bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
@@ -512,7 +505,7 @@ void bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u
   Bit8u val = value;
   Bit8u *dst;
 
-  dst = BX_CIRRUS_THIS vidmem + offset;
+  dst = BX_CIRRUS_THIS s.memory + offset;
   for (int x = 0; x < 8; x++) {
     if (val & 0x80) {
       *dst = BX_CIRRUS_THIS control.shadow_reg1;
@@ -529,7 +522,7 @@ void bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8
   Bit8u val = value;
   Bit8u *dst;
 
-  dst = BX_CIRRUS_THIS vidmem + offset;
+  dst = BX_CIRRUS_THIS s.memory + offset;
   for (int x = 0; x < 8; x++) {
     if (val & 0x80) {
       *dst = BX_CIRRUS_THIS control.shadow_reg1;
@@ -594,7 +587,7 @@ Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
         }
       }
 
-      ptr = BX_CIRRUS_THIS vidmem;
+      ptr = BX_CIRRUS_THIS s.memory;
       offset = addr - BX_CIRRUS_THIS pci_memaddr;
       if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
         offset <<= 4;
@@ -650,8 +643,8 @@ Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS memsize - 1);
-      return *(BX_CIRRUS_THIS vidmem + offset);
+      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      return *(BX_CIRRUS_THIS s.memory + offset);
     }
     else {
       return 0xff;
@@ -728,7 +721,7 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
       }
       mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
       if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
-        *(BX_CIRRUS_THIS vidmem + offset) = value;
+        *(BX_CIRRUS_THIS s.memory + offset) = value;
       } else {
         if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) != 0x14) {
           mem_write_mode4and5_8bpp(mode, offset, value);
@@ -785,10 +778,10 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      offset &= (BX_CIRRUS_THIS memsize - 1);
+      offset &= (BX_CIRRUS_THIS s.memsize - 1);
       mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
       if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
-        *(BX_CIRRUS_THIS vidmem + offset) = value;
+        *(BX_CIRRUS_THIS s.memory + offset) = value;
       } else {
         if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) != 0x14) {
           mem_write_mode4and5_8bpp(mode, offset, value);
@@ -1088,7 +1081,7 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
   BX_CIRRUS_THIS svga_yres = iHeight;
   BX_CIRRUS_THIS svga_bpp = iBpp;
   BX_CIRRUS_THIS svga_dispbpp = iDispBpp;
-  BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS vidmem + iTopOffset;
+  BX_CIRRUS_THIS disp_ptr = BX_CIRRUS_THIS s.memory + iTopOffset;
 }
 
 void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
@@ -1115,7 +1108,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     if (info->bpp == 15) info->bpp = 16;
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
-    plane0_ptr = BX_CIRRUS_THIS vidmem + BX_CIRRUS_THIS memsize - 16384;
+    plane0_ptr = BX_CIRRUS_THIS s.memory + BX_CIRRUS_THIS s.memsize - 16384;
 
     switch (BX_CIRRUS_THIS hw_cursor.size) {
       case 32:
@@ -1531,11 +1524,11 @@ void bx_svga_cirrus_c::update_bank_ptr(Bit8u bank_index)
   else
     offset <<= 12;
 
-  if (BX_CIRRUS_THIS memsize <= offset) {
+  if (BX_CIRRUS_THIS s.memsize <= offset) {
     limit = 0;
     BX_ERROR(("bank offset %08x is invalid",offset));
   } else {
-    limit = BX_CIRRUS_THIS memsize - offset;
+    limit = BX_CIRRUS_THIS s.memsize - offset;
   }
 
   if (!BX_CIRRUS_THIS banking_is_dual() && (bank_index != 0)) {
@@ -2504,14 +2497,14 @@ void bx_svga_cirrus_c::svga_bitblt()
   ReadHostWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x26],tmp16);
   BX_CIRRUS_THIS bitblt.srcpitch = (int)tmp16 & (int)0x1fff;
   ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x28],tmp32);
-  dstaddr = tmp32 & (BX_CIRRUS_THIS memsize - 1);
+  dstaddr = tmp32 & (BX_CIRRUS_THIS s.memsize - 1);
   ReadHostDWordFromLittleEndian(&BX_CIRRUS_THIS control.reg[0x2c],tmp32);
-  srcaddr = tmp32 & (BX_CIRRUS_THIS memsize - 1);
+  srcaddr = tmp32 & (BX_CIRRUS_THIS s.memsize - 1);
   BX_CIRRUS_THIS bitblt.srcaddr = srcaddr;
   BX_CIRRUS_THIS bitblt.bltmode = BX_CIRRUS_THIS control.reg[0x30];
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
   BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
-  offset = dstaddr - (BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS vidmem);
+  offset = dstaddr - (BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
   BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
   BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
   BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
@@ -2561,7 +2554,7 @@ void bx_svga_cirrus_c::svga_bitblt()
                              CIRRUS_BLTMODE_COLOREXPAND)) == 
       (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
     BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
-    BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS vidmem + dstaddr;
+    BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
     svga_solidfill();
   } else {
 
@@ -2601,7 +2594,7 @@ void bx_svga_cirrus_c::svga_setup_bitblt_cputovideo(Bit32u dstaddr,Bit32u srcadd
 
   BX_CIRRUS_THIS bitblt.bltmode &= ~CIRRUS_BLTMODE_MEMSYSSRC;
 
-  BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS vidmem + dstaddr;
+  BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
   BX_CIRRUS_THIS bitblt.src = NULL;
 
   BX_CIRRUS_THIS bitblt.memsrc_ptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
@@ -2646,7 +2639,7 @@ void bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcadd
 
 #if 0
   BX_CIRRUS_THIS bitblt.dst = NULL;
-  BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + srcaddr;
+  BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS s.memory + srcaddr;
 
   BX_CIRRUS_THIS bitblt.memdst_ptr = &BX_CIRRUS_THIS bitblt.memdst[0];
   BX_CIRRUS_THIS bitblt.memdst_endptr = &BX_CIRRUS_THIS bitblt.memdst[0];
@@ -2666,14 +2659,14 @@ void bx_svga_cirrus_c::svga_setup_bitblt_videotocpu(Bit32u dstaddr,Bit32u srcadd
 
 void bx_svga_cirrus_c::svga_setup_bitblt_videotovideo(Bit32u dstaddr,Bit32u srcaddr)
 {
-  BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS vidmem + dstaddr;
+  BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
 
   if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_patterncopy_static;
-    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + (srcaddr & ~0x07);
+    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS s.memory + (srcaddr & ~0x07);
   } else {
     BX_CIRRUS_THIS bitblt.bitblt_ptr = svga_simplebitblt_static;
-    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS vidmem + srcaddr;
+    BX_CIRRUS_THIS bitblt.src = BX_CIRRUS_THIS s.memory + srcaddr;
   }
 
   (*BX_CIRRUS_THIS bitblt.bitblt_ptr)();
