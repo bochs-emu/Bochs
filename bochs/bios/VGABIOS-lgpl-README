@@ -90,6 +90,17 @@ For any information on qemu, visit the website http://fabrice.bellard.free.fr/qe
 
 History
 -------
+vgabios-0.6a : Aug 19 2006
+  - Volker
+    . added minimal support for the video parameter table (VPT)
+    . Cirrus SVGA now supports the "no clear" bit in Cirrus and VESA mode
+    . Bochs VBE protected mode interface improved
+    . save/restore video state support for Bochs VBE and standard VGA added
+    . generate vbetables.h dynamicly
+    . VBE video memory increased to 8 MB (VBE dispi ID changed to B0C4)
+    . lots of 4bpp VBE fixes (all 4bpp VBE modes now enabled)
+    . VGA compatible setup for VBE modes added
+
 vgabios-0.5d : Dec 29 2005
   - Volker
     . Bochs VBE protected mode interface added (based on a patch by malc@pulsesoft.com)
