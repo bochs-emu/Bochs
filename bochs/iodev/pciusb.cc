@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.39 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: pciusb.cc,v 1.40 2006-08-20 09:19:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -38,10 +38,17 @@
      I have been doing.  Many BX_INFO()'s here and there.
    - My purpose of coding this emulation was/is to learn about the USB.
      It has been a challenge, but I have learned a lot.
-   - 
-   -
-   -
    - If I forget, there are a lot of BX_INFO's that can be changed to BX_DEBUG's.
+   - 31 July 2006:
+     I now have a Beagle USB Protocol Analyzer from Total Phase for my research.
+     (http://www.totalphase.com/products/beagle/usb/)
+     With this device, I plan on doing a lot of research and development to get this
+     code to a state where it is actually very useful.  I plan on adding support
+     of many "plug-in" type modules so that you can simply add a plug-in for your
+     specific device without having to modify the root code.
+     I hope to have some working code to upload to the CVS as soon as possible.
+     Thanks to Total Phase for their help in my research and the development of
+     this project.
   */
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
