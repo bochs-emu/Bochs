@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.cc,v 1.11 2006-08-05 20:04:23 vruppert Exp $
+// $Id: pcidev.cc,v 1.12 2006-08-20 09:12:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*  
@@ -178,14 +178,14 @@ void bx_pcidev_c::init(void)
   if (ioctl(fd, PCIDEV_IOCTL_FIND, &find) == -1) {
     switch (errno) {
     case ENOENT:
-	    BX_ERROR(("PCI device not found on host system."));
-    	    break;
+      BX_PANIC(("PCI device not found on host system."));
+      break;
     case EBUSY:
-	    BX_ERROR(("PCI device already used by another kernel module."));
-	    break;
+      BX_PANIC(("PCI device already used by another kernel module."));
+      break;
     default:
-	    perror("ioctl");
-	    break;
+      perror("ioctl");
+      break;
     }
     close(fd);
     BX_PCIDEV_THIS pcidev_fd = -1;
@@ -209,18 +209,18 @@ void bx_pcidev_c::init(void)
   }
 
   for (int idx = 0; idx < PCIDEV_COUNT_RESOURCES; idx++) {
+    BX_PCIDEV_THIS regions[idx].start = 0; // emulated device not yet initialized
     if (!find.resources[idx].start)
       continue;
     BX_INFO(("PCI resource @ %x-%x (%s)", (unsigned)find.resources[idx].start,
              (unsigned)find.resources[idx].end,
              (find.resources[idx].flags & PCIDEV_RESOURCE_IO ? "I/O" : "Mem")));
-    BX_PCIDEV_THIS regions[idx].start = 0; // emulated device not yet initialized
     BX_PCIDEV_THIS regions[idx].size = find.resources[idx].end - find.resources[idx].start + 1;
-    BX_PCIDEV_THIS regions[idx].host_start = find.resources[idx].start; // we start with an identical mapping
+    BX_PCIDEV_THIS regions[idx].host_start = find.resources[idx].start;
     struct pcidev_io_struct io;
     io.address = PCI_BASE_ADDRESS_0 + idx * 4;
     if (ioctl(fd, PCIDEV_IOCTL_READ_CONFIG_DWORD, &io) == -1)
-      BX_ERROR(("Error reading a base address config reg."));
+      BX_ERROR(("Error reading a base address config reg"));
     BX_PCIDEV_THIS regions[idx].config_value = io.value;
     /*
      * We will use &region[idx] as parameter for our I/O or memory
@@ -281,11 +281,11 @@ Bit32u bx_pcidev_c::pci_read_handler(Bit8u address, unsigned io_len)
     io.value = (io.value & 0xffffff00) | (BX_PCIDEV_THIS irq & 0xff);
   }
   if (PCI_BASE_ADDRESS_0 <= address && address <= PCI_BASE_ADDRESS_5) {
-	BX_INFO(("Reading pcidev base address %d.", 
-				(address - PCI_BASE_ADDRESS_0) / 4));
-	if (address & 3)
-		BX_ERROR(("base address not aligned!"));
-	io.value = BX_PCIDEV_THIS regions[(address - PCI_BASE_ADDRESS_0) >> 2].config_value;
+    BX_INFO(("Reading pcidev base address #%d", (address - PCI_BASE_ADDRESS_0) / 4));
+    io.value = BX_PCIDEV_THIS regions[(address - PCI_BASE_ADDRESS_0) >> 2].config_value;
+    if (address & 3) {
+      io.value >>= (8 * (address & 3));
+    }
   }
 
   return io.value;
@@ -297,6 +297,7 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
 {
   int ret = -1;
   Bit8u *iomask;
+  Bit32u bitmask;
 
   if (io_len > 4 || io_len == 0) {
     BX_DEBUG(("Experimental PCIDEV write register 0x%02x, len=%u !",
@@ -316,60 +317,64 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     return;
   }
   if ((PCI_BASE_ADDRESS_0 <= address) && (address <= PCI_BASE_ADDRESS_5)) {
-	/*
-	 * Two things to do here:
-	 * - update the cached config space value via a probe
-	 * - remap the I/O or memory handler if required
-	 */
-	BX_INFO(("Changing pcidev base address %d. New value: %#x", 
-				(address - PCI_BASE_ADDRESS_0) / 4, value));
-	if (address & 3) {
-		BX_ERROR(("base address not aligned!"));
-		return;
-	}
-	int io_reg_idx = (address - PCI_BASE_ADDRESS_0) >> 2;
-	struct pcidev_io_struct io;
-	io.address = address;
-	io.value = value;
-	ret = ioctl(fd, PCIDEV_IOCTL_PROBE_CONFIG_DWORD, &io);
-	if (ret == -1) {
-	  BX_ERROR(("Error probing a base address reg!"));
-	  return;
-	}
-	unsigned long base = io.value;
-	BX_PCIDEV_THIS regions[io_reg_idx].config_value = base;
-	/* remap the I/O or memory handler if required using io.value
-	 * We assume that an I/O memory region will stay and I/O memory
-	 * region. And that an I/O port region also will stay an I/O port 
-	 * region.
-	 */
-        if ((base & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_MEMORY) {
-          if (DEV_pci_set_base_mem(&(BX_PCIDEV_THIS regions[io_reg_idx]),
-                pcidev_mem_read_handler,
-                pcidev_mem_write_handler,
-                &BX_PCIDEV_THIS regions[io_reg_idx].start,
-                (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
-                BX_PCIDEV_THIS regions[io_reg_idx].size)) {
+    /*
+     * Two things to do here:
+     * - update the cached config space value via a probe
+     * - remap the I/O or memory handler if required
+     */
+    int io_reg_idx = (address - PCI_BASE_ADDRESS_0) >> 2;
+    switch (io_len) {
+      case 1: bitmask = 0xff; break;
+      case 2: bitmask = 0xffff; break;
+      default: bitmask = 0xffffffff;
+    }
+    bitmask <<= (8 * (address & 3));
+    value <<= (8 * (address & 3));
+    value |= BX_PCIDEV_THIS regions[io_reg_idx].config_value & ~bitmask;
+    BX_INFO(("Changing pcidev base address #%d - New value: %#x",
+      (address - PCI_BASE_ADDRESS_0) / 4, value));
+    struct pcidev_io_struct io;
+    io.address = address;
+    io.value = value;
+    ret = ioctl(fd, PCIDEV_IOCTL_PROBE_CONFIG_DWORD, &io);
+    if (ret == -1) {
+      BX_ERROR(("Error probing a base address reg!"));
+      return;
+    }
+    unsigned long base = io.value;
+    BX_PCIDEV_THIS regions[io_reg_idx].config_value = base;
+    /* remap the I/O or memory handler if required using io.value
+     * We assume that an I/O memory region will stay and I/O memory
+     * region. And that an I/O port region also will stay an I/O port 
+     * region.
+     */
+    if ((base & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_MEMORY) {
+      if (DEV_pci_set_base_mem(&(BX_PCIDEV_THIS regions[io_reg_idx]),
+          pcidev_mem_read_handler,
+          pcidev_mem_write_handler,
+          &BX_PCIDEV_THIS regions[io_reg_idx].start,
+          (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
+          BX_PCIDEV_THIS regions[io_reg_idx].size)) {
             BX_INFO(("new base #%d memory address: 0x%08x", io_reg_idx,
                      BX_PCIDEV_THIS regions[io_reg_idx].start));
-          }
-        } else {
-          /*
-           * Remap our I/O port handlers here.
-           */
-          iomask = (Bit8u*)malloc(BX_PCIDEV_THIS regions[io_reg_idx].size);
-          memset(iomask, 7, BX_PCIDEV_THIS regions[io_reg_idx].size);
-          if (DEV_pci_set_base_io(&(BX_PCIDEV_THIS regions[io_reg_idx]),
-                read_handler, write_handler,
-                &BX_PCIDEV_THIS regions[io_reg_idx].start,
-                (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
-                BX_PCIDEV_THIS regions[io_reg_idx].size, iomask, "pcidev")) {
-            BX_INFO(("new base #%d i/o address: 0x%04x", io_reg_idx,
-                     (Bit16u)BX_PCIDEV_THIS regions[io_reg_idx].start));
-          }
-          free(iomask);
-        }
-	return;
+      }
+    } else {
+      /*
+       * Remap our I/O port handlers here.
+       */
+      iomask = (Bit8u*)malloc(BX_PCIDEV_THIS regions[io_reg_idx].size);
+      memset(iomask, 7, BX_PCIDEV_THIS regions[io_reg_idx].size);
+      if (DEV_pci_set_base_io(&(BX_PCIDEV_THIS regions[io_reg_idx]),
+            read_handler, write_handler,
+            &BX_PCIDEV_THIS regions[io_reg_idx].start,
+            (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
+            BX_PCIDEV_THIS regions[io_reg_idx].size, iomask, "pcidev")) {
+        BX_INFO(("new base #%d i/o address: 0x%04x", io_reg_idx,
+                 (Bit16u)BX_PCIDEV_THIS regions[io_reg_idx].start));
+      }
+      free(iomask);
+    }
+    return;
   }
 
   struct pcidev_io_struct io;
