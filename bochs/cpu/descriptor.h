@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.14 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: descriptor.h,v 1.15 2006-08-22 19:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ union {
   } tss;
   struct {
     bx_address base;       /* 286=24 386+ =32/64 bit LDT base */
-    Bit16u  limit;         /* 286+ =16 bit LDT limit */
+    Bit32u  limit;         /* 286+ =16 bit LDT limit */
   } ldt;
 } u;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.48 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.49 2006-08-22 19:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -278,14 +278,13 @@ void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     BX_INFO(("SLDT: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
+
+  Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
+  if (i->modC0()) {
+    BX_WRITE_16BIT_REG(i->rm(), val16);
+  }
   else {
-    Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), val16);
-    }
-    else {
-      write_virtual_word(i->seg(), RMAddr(i), &val16);
-    }
+    write_virtual_word(i->seg(), RMAddr(i), &val16);
   }
 }
 
@@ -297,14 +296,13 @@ void BX_CPU_C::STR_Ew(bxInstruction_c *i)
     BX_INFO(("STR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
+
+  Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
+  if (i->modC0()) {
+    BX_WRITE_16BIT_REG(i->rm(), val16);
+  }
   else {
-    Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), val16);
-    }
-    else {
-      write_virtual_word(i->seg(), RMAddr(i), &val16);
-    }
+    write_virtual_word(i->seg(), RMAddr(i), &val16);
   }
 }
 
@@ -312,18 +310,21 @@ void BX_CPU_C::STR_Ew(bxInstruction_c *i)
 
 void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 {
-  if (real_mode() || v8086_mode()) {
-    BX_INFO(("LLDT: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
-  }
-
-  invalidate_prefetch_q();
-
   /* protected mode */
   bx_descriptor_t  descriptor;
   bx_selector_t    selector;
   Bit16u raw_selector;
   Bit32u dword1, dword2;
+#if BX_SUPPORT_X86_64
+  Bit32u dword3;
+#endif
+
+  if (real_mode() || v8086_mode()) {
+    BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
+    UndefinedOpcode(i);
+  }
+
+  invalidate_prefetch_q();
 
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
@@ -335,7 +336,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-      read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
   }
 
   /* if selector is NULL, invalidate and done */
@@ -354,18 +355,20 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
 
-  if ((selector.index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
-    BX_PANIC(("LLDT: GDT: index > limit"));
-    exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
-    return;
-  }
-
-  access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8,     4, 0,
-      BX_READ, &dword1);
-  access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0,
-      BX_READ, &dword2);
-
+  /* fetch 2 dwords of descriptor; call handles out of limits checks */
+  fetch_raw_descriptor(&selector, &dword1, &dword2, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &descriptor);
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    // set upper 32 bits of tss base
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
+    descriptor.u.ldt.base |= ((Bit64u)dword3 << 32);
+    BX_INFO(("64 bit LDT base = 0x%08x%08x",
+       (Bit32u)(descriptor.u.ldt.base >> 32),
+       (Bit32u) descriptor.u.ldt.base));
+  }
+#endif
 
   /* if selector doesn't point to an LDT descriptor #GP(selector) */
   if (descriptor.valid == 0 || descriptor.segment ||
@@ -388,14 +391,6 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
 void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 {
-  if (real_mode() || v8086_mode()) {
-    BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
-  }
-
-  // protected mode
-  invalidate_prefetch_q();
-
   bx_descriptor_t descriptor;
   bx_selector_t selector;
   Bit16u raw_selector;
@@ -403,6 +398,13 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   Bit32u dword3;
 #endif
+
+  if (real_mode() || v8086_mode()) {
+    BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
+    UndefinedOpcode(i);
+  }
+
+  invalidate_prefetch_q();
 
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
@@ -460,16 +462,6 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     BX_ERROR(("LTR: LDT descriptor not present!"));
     exception(BX_NP_EXCEPTION, raw_selector & 0xfffc, 0);
   }
-
-/*
-  // the real hardware CPU allow loading of tss with limit < minimum
-  if (descriptor.type==1 && descriptor.u.tss286.limit<43) {
-    BX_PANIC(("LTR:286TSS: loading tr.limit < 43"));
-  }
-  else if (descriptor.type==9 && descriptor.u.tss386.limit_scaled<103) {
-    BX_PANIC(("LTR:386TSS: loading tr.limit < 103"));
-  }
-*/
 
   BX_CPU_THIS_PTR tr.selector = selector;
   BX_CPU_THIS_PTR tr.cache    = descriptor;
@@ -650,8 +642,7 @@ void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    /* undefined opcode exception */
-    BX_INFO(("SGDT_Ms: use of register is undefined opcode."));
+    BX_INFO(("SGDT_Ms: use of register is undefined opcode"));
     UndefinedOpcode(i);
   }
 
@@ -689,8 +680,7 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    /* undefined opcode exception */
-    BX_INFO(("SIDT: use of register is undefined opcode."));
+    BX_INFO(("SIDT: use of register is undefined opcode"));
     UndefinedOpcode(i);
   }
 

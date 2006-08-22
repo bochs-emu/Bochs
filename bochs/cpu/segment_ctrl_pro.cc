@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.65 2006-06-12 19:51:31 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.66 2006-08-22 19:06:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -343,8 +343,7 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
   }
 
   if (d->segment) {
-    val = ((d->u.segment.base & 0xffff) << 16) |
-          (d->u.segment.limit & 0xffff);
+    val = ((d->u.segment.base & 0xffff) << 16) | (d->u.segment.limit & 0xffff);
     return(val);
   }
   else {
@@ -357,12 +356,11 @@ BX_CPU_C::get_descriptor_l(const bx_descriptor_t *d)
       case BX_SYS_SEGMENT_BUSY_286_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
-        val = ((d->u.tss.base & 0xffff) << 16) |
-               (d->u.tss.limit & 0xffff);
+        val = ((d->u.tss.base & 0xffff) << 16) | (d->u.tss.limit & 0xffff);
         return(val);
 
       case BX_SYS_SEGMENT_LDT:
-        val = ((d->u.ldt.base & 0xffff) << 16) | d->u.ldt.limit;
+        val = ((d->u.ldt.base & 0xffff) << 16) | (d->u.ldt.limit & 0xffff);
         return(val);
 
       default:
@@ -430,6 +428,7 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
               (d->type << 8) |
               (d->dpl << 13) |
               (d->p << 15) |
+              (d->u.ldt.limit & 0xf0000) |
               (d->u.ldt.base & 0xff000000);
         return(val);
 
@@ -612,12 +611,10 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->valid       = 1;
         break;
       case BX_SYS_SEGMENT_LDT:
-        temp->u.ldt.base = (dword1 >> 16) | ((dword2 & 0xFF) << 16);
-#if BX_CPU_LEVEL >= 3
-        temp->u.ldt.base |= (dword2 & 0xff000000);
-#endif
-        temp->u.ldt.limit = (dword1 & 0xffff);
-        temp->valid    = 1;
+        temp->u.ldt.base  = (dword1 >> 16) |
+                           ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
+        temp->u.ldt.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
+        temp->valid       = 1;
         break;
       case BX_286_CALL_GATE:
       case BX_286_INTERRUPT_GATE:
@@ -636,9 +633,8 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
       case BX_SYS_SEGMENT_BUSY_386_TSS:
         temp->u.tss.base  = (dword1 >> 16) |
-                               ((dword2 & 0xff) << 16) |
-                               (dword2 & 0xff000000);
-        temp->u.tss.limit = (dword1 & 0x0000ffff) | (dword2 & 0x000f0000);
+                           ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
+        temp->u.tss.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
         temp->u.tss.g     = (dword2 & 0x00800000) > 0;
         temp->u.tss.avl   = (dword2 & 0x00100000) > 0;
         if (temp->u.tss.g)
@@ -682,9 +678,8 @@ BX_CPU_C::load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor)
   BX_CPU_THIS_PTR ldtr.cache = *descriptor; /* whole structure copy */
   BX_CPU_THIS_PTR ldtr.selector = *selector;
 
-  if (BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit < 7) {
+  if (BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit < 7)
     BX_PANIC(("load_ldtr(): ldtr.limit < 7"));
-  }
 
   BX_CPU_THIS_PTR ldtr.cache.valid = 1;
 }
@@ -715,14 +710,15 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
                         Bit32u *dword1, Bit32u *dword2, unsigned exception_no)
 {
+  Bit32u index = selector->index;
+
   if (selector->ti == 0) { /* GDT */
-    if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
+    if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor: GDT: index (%x)%x > limit (%x)",
-          (selector->index*8 + 7), selector->index,
-          BX_CPU_THIS_PTR gdtr.limit));
+          (selector->index*8 + 7), index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + index*8;
     access_linear(offset,     4, 0, BX_READ, dword1);
     access_linear(offset + 4, 4, 0, BX_READ, dword2);
   }
@@ -731,13 +727,12 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
       debug(BX_CPU_THIS_PTR prev_eip);
     }
-    if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
+    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
-          (selector->index*8 + 7), selector->index,
-          BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+          (index*8 + 7), index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;
     access_linear(offset,     4, 0, BX_READ, dword1);
     access_linear(offset + 4, 4, 0, BX_READ, dword2);
   }
@@ -746,10 +741,12 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, Bit32u *dword2)
 {
+  Bit32u index = selector->index;
+
   if (selector->ti == 0) { /* GDT */
-    if ((selector->index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
+    if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit)
       return(0);
-    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + index*8;
     access_linear(offset,     4, 0, BX_READ, dword1);
     access_linear(offset + 4, 4, 0, BX_READ, dword2);
     return(1);
@@ -759,9 +756,9 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
       BX_PANIC(("fetch_raw_descriptor2: LDTR.valid=0"));
       return(0);
     }
-    if ((selector->index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit)
+    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit)
       return(0);
-    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;
     access_linear(offset,     4, 0, BX_READ, dword1);
     access_linear(offset + 4, 4, 0, BX_READ, dword2);
     return(1);
@@ -772,16 +769,16 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
 void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
            Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no)
 {
+  Bit32u index = selector->index;
   Bit32u dword4;
 
   if (selector->ti == 0) { /* GDT */
-    if ((selector->index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
+    if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
-          (selector->index*8 + 15), selector->index,
-          BX_CPU_THIS_PTR gdtr.limit));
+          (index*8 + 15), index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address offset = BX_CPU_THIS_PTR gdtr.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR gdtr.base + index*8;
     access_linear(offset,      4, 0, BX_READ,  dword1);
     access_linear(offset +  4, 4, 0, BX_READ,  dword2);
     access_linear(offset +  8, 4, 0, BX_READ,  dword3);
@@ -792,13 +789,12 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
       debug(BX_CPU_THIS_PTR prev_eip);
     }
-    if ((selector->index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
+    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
-          (selector->index*8 + 15), selector->index,
-          BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+          (index*8 + 15), index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
-    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + selector->index*8;
+    bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;
     access_linear(offset,      4, 0, BX_READ,  dword1);
     access_linear(offset +  4, 4, 0, BX_READ,  dword2);
     access_linear(offset +  8, 4, 0, BX_READ,  dword3);
