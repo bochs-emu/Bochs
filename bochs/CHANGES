@@ -12,6 +12,7 @@ Changes in 2.3 (not yet released):
   - Added emulation of SSE4 instructions (Stanislav Shwarstman)
   - Save and restore FPU opcode, FIP and FDP in FXSAVE/FRSTOR instructions
   - Fixed bug in MOVD_EdVd opcode (always generated #UD exception)
+  - Fixed critical issue, Bochs was not supporting > 16 bit LDT.LIMIT values
   - Many fixes in Bochs debugger and disassembler
 
 - CPU x86-64 fixes
@@ -88,7 +89,7 @@ Changes in 2.3 (not yet released):
 
 - SF patches applied
  [1340111] fixes and updates to usb support by Ben Lunt
- [1539420]  minor addition to pci_usb code by Ben Lunt
+ [1539420] minor addition to pci_usb code by Ben Lunt
  [1455958] call/jmp through call gate in 64-bit mode
  [1433107] PATCH: fix compile with wxwindows 2.6 (unicode / utf8) by jwrdegoede
  [1386671] Combined dual core and hyper-threading patch
