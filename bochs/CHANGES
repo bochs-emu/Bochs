@@ -72,6 +72,10 @@ Changes in 2.3 (not yet released):
   - PCI
     - forward PIRQ register changes to the I/O APIC (if present)
     - attempt to fix and update the emulation part of 'pcidev' (untested)
+  - VGA
+    - VBE memory size increased to 8MB and several VBE fixes
+    - VGA memory read access fixed (bit plane access and read mode)
+    - VGA memory is now a part of the common video memory
 
 - System BIOS (Volker)
   - enable interrupts before executing INT 19h
@@ -79,13 +83,22 @@ Changes in 2.3 (not yet released):
   - improved INT 15h function AX=E820h
   - real mode PCI BIOS now returns IRQ routing information (function 0Eh)
   - keyboard LED flags handling fixed and improved
+  - fixed handling of extended keys in INT 09h
+  - Updated LGPL'd VGABIOS to version 0.6a
 
 - SF patches applied
+ [1340111] fixes and updates to usb support by Ben Lunt
+ [1539420]  minor addition to pci_usb code by Ben Lunt
  [1455958] call/jmp through call gate in 64-bit mode
  [1433107] PATCH: fix compile with wxwindows 2.6 (unicode / utf8) by jwrdegoede
  [1386671] Combined dual core and hyper-threading patch
 
 - these S.F. bugs were closed
+ [1540241] include missing in osdep.cc
+ [1539373] Incorrect disasm for "mov moffset,bla" in 64bit
+ [1538419] incorrect disassembly of [rip+disp] with rex.b
+ [1535432] shift+cursor key maps to a digit
+ [1504891] Knoopix 5.0.1 error
  [1424355] bochs-2.2.6 ata failure in windoze 98se
  [1533979] wrong disassembly of IN instruction
   [620059] paste won't stop
