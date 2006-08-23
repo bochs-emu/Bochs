@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.181 2006-08-05 07:49:31 vruppert Exp $
+// $Id: harddrv.cc,v 1.182 2006-08-23 17:19:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.181 2006-08-05 07:49:31 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.182 2006-08-23 17:19:03 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1199,31 +1199,27 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
     }
   }
 
-  if (bx_dbg.disk || (BX_SELECTED_IS_CD(channel) && bx_dbg.cdrom)) {
-	switch (io_len) {
-	      case 1:
-		    BX_INFO(("8-bit write to %04x = %02x {%s}",
-			      (unsigned) address, (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
-		    break;
-		    
-	      case 2:
-		    BX_INFO(("16-bit write to %04x = %04x {%s}",
-			      (unsigned) address, (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
-		    break;
+  switch (io_len) {
+    case 1:
+      BX_DEBUG(("8-bit write to %04x = %02x {%s}",
+                address, value, BX_SELECTED_TYPE_STRING(channel)));
+      break;
 
-	      case 4:
-		    BX_INFO(("32-bit write to %04x = %08x {%s}",
-			      (unsigned) address, (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
-		    break;
+    case 2:
+      BX_DEBUG(("16-bit write to %04x = %04x {%s}",
+                address, value, BX_SELECTED_TYPE_STRING(channel)));
+      break;
 
-	      default:
-		    BX_INFO(("unknown-size write to %04x = %08x {%s}",
-			      (unsigned) address, (unsigned) value, BX_SELECTED_TYPE_STRING(channel)));
-		    break;
-	}
+    case 4:
+      BX_DEBUG(("32-bit write to %04x = %08x {%s}",
+                address, value, BX_SELECTED_TYPE_STRING(channel)));
+      break;
+
+    default:
+      BX_DEBUG(("unknown-size write to %04x = %08x {%s}",
+                address, value, BX_SELECTED_TYPE_STRING(channel)));
+      break;
   }
-
-  BX_DEBUG(("IO write to %04x = %02x", (unsigned) address, (unsigned) value));
 
   switch (port) {
     case 0x00: // 0x1f0
@@ -1307,9 +1303,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xa0: // PACKET
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE)
             BX_PANIC(("IO write(0x%04x): buffer_index >= PACKET_SIZE", address));
-          BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index] = value;
-          BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (value >> 8);
-          BX_SELECTED_CONTROLLER(channel).buffer_index += 2;
+
+          switch (io_len) {
+            case 4:
+              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+3] = (Bit8u)(value >> 24);
+              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+2] = (Bit8u)(value >> 16);
+            case 2:
+              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index+1] = (Bit8u)(value >> 8);
+              BX_SELECTED_CONTROLLER(channel).buffer[BX_SELECTED_CONTROLLER(channel).buffer_index]   = (Bit8u) value;
+          }
+          BX_SELECTED_CONTROLLER(channel).buffer_index += io_len;
 
           /* if packet completely writtten */
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= PACKET_SIZE) {
@@ -1317,8 +1320,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             Bit8u atapi_command = BX_SELECTED_CONTROLLER(channel).buffer[0];
             BX_SELECTED_CONTROLLER(channel).buffer_size = 2048;
 
-            if (bx_dbg.cdrom)
-              BX_INFO(("cdrom: ATAPI command 0x%x started", atapi_command));
+            BX_DEBUG(("ata%d-%d: ATAPI command 0x%02x started", channel,
+                      BX_SLAVE_SELECTED(channel), atapi_command));
 
             switch (atapi_command) {
               case 0x00: // test unit ready
