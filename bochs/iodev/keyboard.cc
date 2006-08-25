@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.120 2006-07-30 14:40:41 vruppert Exp $
+// $Id: keyboard.cc,v 1.121 2006-08-25 18:26:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,7 +108,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.120 2006-07-30 14:40:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.121 2006-08-25 18:26:27 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -162,6 +162,7 @@ void bx_keyb_c::init(void)
   BX_KEY_THIS s.kbd_controller.timer_pending = 0;
 
   // Mouse initialization stuff
+  BX_KEY_THIS s.mouse.captured        = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   BX_KEY_THIS s.mouse.type            = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
   BX_KEY_THIS s.mouse.sample_rate     = 100; // reports per second
   BX_KEY_THIS s.mouse.resolution_cpmm = 4;   // 4 counts per millimeter
@@ -1595,6 +1596,7 @@ void bx_keyb_c::mouse_enabled_changed(bx_bool enabled)
   BX_KEY_THIS s.mouse.delayed_dx=0;
   BX_KEY_THIS s.mouse.delayed_dy=0;
   BX_KEY_THIS s.mouse.delayed_dz=0;
+  BX_KEY_THIS s.mouse.captured = enabled;
   BX_DEBUG(("PS/2 mouse %s", enabled?"enabled":"disabled"));
 }
 
@@ -1604,7 +1606,7 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
 
   // If mouse events are disabled on the GUI headerbar, don't
   // generate any mouse data
-  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get() == 0)
+  if (!BX_KEY_THIS s.mouse.captured)
     return;
 
   // if type == serial, redirect mouse data to the serial device

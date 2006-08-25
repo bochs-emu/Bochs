@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.35 2006-07-30 14:40:41 vruppert Exp $
+// $Id: keyboard.h,v 1.36 2006-08-25 18:26:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,6 +116,7 @@ private:
     } kbd_controller;
 
     struct mouseStruct {
+      bx_bool captured; // host mouse capture enabled
       Bit8u   type;
       Bit8u   sample_rate;
       Bit8u   resolution_cpmm; // resolution in counts per mm
