@@ -16,7 +16,7 @@ Should we accept donations ? What could we do with the money ?
 - bounties for somebody write optimized win9x/NT/XFree/linux/*BSD 
   drivers for our vga/net/ide cards
 - other ?
-Status in Bochs 2.2.5:
+Status in Bochs 2.3:
 No decisions about this yet.
 
 1. Speed
@@ -48,10 +48,12 @@ the new card will be detected automatically.
 This will allow for example developing of plugins separately from Bochs.
 2.3 Michael Brown wrote :
 If the configuration interface is to be reworked, could we also make it so 
-that plugins are self-contained, rather than needing to pollute main.cc 
+that plugins are self-contained, rather than needing to pollute config.cc 
 with code for defining and parsing plugin-specific options
 Status:
-These items are not done yet.
+A little bit of the basic work is done now: The config parameter handling has
+been rewritten to a parameter tree and user-defined bochsrc options are now
+supported. The main plugin architecture rewrite is not done yet.
 
 3. PCI host<->guest proxy
 Being able to use a real pci device from inside Bochs would be a 
@@ -60,7 +62,8 @@ documented cards, or one could even use a real spare vga card.
 Frank Cornellis has done a great job on this subject, and we began
 integrating his changes. 
 Status:
-The pcidev device is present in CVS, but the status is unknown.
+The pcidev device is present in CVS and it has been updated for the new PCI
+infrastructure, but the new code is untested yet.
 
 4. Subdirectories in iodev
 The iodev directory contains the various implemented iodevice.
@@ -130,8 +133,8 @@ Not done yet.
 8.5 extend redolog-disk specification to add coherency check of the flat 
 image file, by storing its fstat-mtime field in the redolog.
 Status:
-Autodetection works for flat type image created with bximage.
-The other items are not done yet.
+Autodetection now works for all image types created with bximage and vmware3
+images. The other items are not done yet.
 
 9. net
 9.1 bootable ethernet rom ? 
@@ -164,7 +167,8 @@ There is a very nice parameter table in 3dfx banshee document
 http://www2.lm-sensors.nu/~lm78/pdfs/Banshee_2d_spec.PDF
 see also http://www.xyzzy.claranet.de/dos/vgacrt.c
 Status:
-Not done yet.
+The new version 0.6a of the LGPL'd VGABIOS has minimal support for the video
+parameter table.
 
 12. Optimized Guest drivers still needed : VGA, IDE, NET
 We have a specific VGA driver for winNT/2K, but still
@@ -238,7 +242,7 @@ e.g. the main menu is static while it could be generated at run-time...
 the main menu text lives somewhere in a file... while it should be generated 
 at run-time by iterating the main menu objects
 Status:
-Not done yet.
+The config options handling has been rewritten to a parameter tree.
 
 19. Save/Restore
 We already have a specific branch in the cvs with a save/restore
@@ -248,7 +252,8 @@ restart the emulation, or create "checkpoints"  to restart the
 emulation from a known state. We can also give a look on how
 integrate commitable harddisks with the save/restore strategy.
 Status:
-Not done yet.
+Save/restore of config and log options and the hardware state is supported now.
+Harddisk images are not handled yet.
 
 20. ACPI support
 Bochs 2.2.6 is the first real SMP release, with changes made in Bochs 2.2.6
