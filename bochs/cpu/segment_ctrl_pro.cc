@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.66 2006-08-22 19:06:03 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.67 2006-08-25 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -429,6 +429,8 @@ BX_CPU_C::get_descriptor_h(const bx_descriptor_t *d)
               (d->dpl << 13) |
               (d->p << 15) |
               (d->u.ldt.limit & 0xf0000) |
+              (d->u.ldt.avl << 20) |
+              (d->u.ldt.g << 23) |
               (d->u.ldt.base & 0xff000000);
         return(val);
 
@@ -461,6 +463,12 @@ BX_CPU_C::get_segment_ar_data(const bx_descriptor_t *d)  // used for SMM
 
   switch (d->type) {
     case BX_SYS_SEGMENT_LDT:
+        val = (d->type) |
+              (d->dpl << 5) |
+              (d->p << 7) |
+              (d->u.ldt.avl << 12) |
+              (d->u.ldt.g << 15);
+        return(val);
     case BX_SYS_SEGMENT_AVAIL_286_TSS:
     case BX_SYS_SEGMENT_BUSY_286_TSS:
         val = (d->type) |
@@ -520,8 +528,14 @@ bx_bool BX_CPU_C::set_segment_ar_data(bx_segment_reg_t *seg,
     switch(d->type) {
       case BX_SYS_SEGMENT_LDT:
         d->valid       = 1;
+        d->u.ldt.avl   = (ar_data >> 12) & 0x01;
+        d->u.ldt.g     = (ar_data >> 15) & 0x01;
         d->u.ldt.base  = base;
         d->u.ldt.limit = limit;
+        if (d->u.ldt.g)
+          d->u.ldt.limit_scaled = (d->u.ldt.limit << 12) | 0x0fff;
+        else
+          d->u.ldt.limit_scaled = (d->u.ldt.limit);
         break;
 
       case BX_SYS_SEGMENT_AVAIL_286_TSS:
@@ -614,6 +628,12 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->u.ldt.base  = (dword1 >> 16) |
                            ((dword2 & 0xff) << 16) | (dword2 & 0xff000000);
         temp->u.ldt.limit = (dword1 & 0x0000ffff)  | (dword2 & 0x000f0000);
+        temp->u.ldt.g     = (dword2 & 0x00800000) > 0;
+        temp->u.ldt.avl   = (dword2 & 0x00100000) > 0;
+        if (temp->u.ldt.g)
+          temp->u.ldt.limit_scaled = (temp->u.ldt.limit << 12) | 0x0fff;
+        else
+          temp->u.ldt.limit_scaled = (temp->u.ldt.limit);
         temp->valid       = 1;
         break;
       case BX_286_CALL_GATE:
@@ -640,7 +660,7 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         if (temp->u.tss.g)
           temp->u.tss.limit_scaled = (temp->u.tss.limit << 12) | 0x0fff;
         else
-          temp->u.tss.limit_scaled = temp->u.tss.limit;
+          temp->u.tss.limit_scaled = (temp->u.tss.limit);
         temp->valid = 1;
         break;
 
@@ -660,28 +680,6 @@ BX_CPU_C::parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         temp->valid = 0;
     }
   }
-}
-
-  void BX_CPP_AttrRegparmN(2)
-BX_CPU_C::load_ldtr(bx_selector_t *selector, bx_descriptor_t *descriptor)
-{
-  /* check for null selector, if so invalidate LDTR */
-  if ( (selector->value & 0xfffc)==0 ) {
-    BX_CPU_THIS_PTR ldtr.selector = *selector;
-    BX_CPU_THIS_PTR ldtr.cache.valid = 0;
-    return;
-  }
-
-  if (!descriptor)
-    BX_PANIC(("load_ldtr(): descriptor == NULL !"));
-
-  BX_CPU_THIS_PTR ldtr.cache = *descriptor; /* whole structure copy */
-  BX_CPU_THIS_PTR ldtr.selector = *selector;
-
-  if (BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit < 7)
-    BX_PANIC(("load_ldtr(): ldtr.limit < 7"));
-
-  BX_CPU_THIS_PTR ldtr.cache.valid = 1;
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -715,7 +713,7 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 7) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor: GDT: index (%x)%x > limit (%x)",
-          (selector->index*8 + 7), index, BX_CPU_THIS_PTR gdtr.limit));
+          index*8 + 7, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     bx_address offset = BX_CPU_THIS_PTR gdtr.base + index*8;
@@ -727,9 +725,9 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
       debug(BX_CPU_THIS_PTR prev_eip);
     }
-    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
+    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
-          (index*8 + 7), index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+          index*8 + 7, index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;
@@ -756,7 +754,7 @@ BX_CPU_C::fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, B
       BX_PANIC(("fetch_raw_descriptor2: LDTR.valid=0"));
       return(0);
     }
-    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit)
+    if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled)
       return(0);
     bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;
     access_linear(offset,     4, 0, BX_READ, dword1);
@@ -775,7 +773,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   if (selector->ti == 0) { /* GDT */
     if ((index*8 + 15) > BX_CPU_THIS_PTR gdtr.limit) {
       BX_ERROR(("fetch_raw_descriptor64: GDT: index (%x)%x > limit (%x)",
-          (index*8 + 15), index, BX_CPU_THIS_PTR gdtr.limit));
+          index*8 + 15, index, BX_CPU_THIS_PTR gdtr.limit));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     bx_address offset = BX_CPU_THIS_PTR gdtr.base + index*8;
@@ -789,9 +787,9 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
       debug(BX_CPU_THIS_PTR prev_eip);
     }
-    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit) {
+    if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",
-          (index*8 + 15), index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit));
+          index*8 + 15, index, BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled));
       exception(exception_no, selector->value & 0xfffc, 0);
     }
     bx_address offset = BX_CPU_THIS_PTR ldtr.cache.u.ldt.base + index*8;

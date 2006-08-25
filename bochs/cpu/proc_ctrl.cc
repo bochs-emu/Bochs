@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.156 2006-08-11 17:23:36 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.157 2006-08-25 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1052,8 +1052,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
       BX_INFO(("         AR byte = %02x", (unsigned) access));
       BX_PANIC(("loadall: LDTR descriptor cache loaded with non system segment"));
     }
-    if (BX_CPU_THIS_PTR ldtr.cache.type != 2) {
-      BX_PANIC(("loadall: LDTR.type(%u) != 2", (unsigned) (access & 0x0f)));
+    if (BX_CPU_THIS_PTR ldtr.cache.type != BX_SYS_SEGMENT_LDT) {
+      BX_PANIC(("loadall: LDTR.type(%u) != LDT", (unsigned) (access & 0x0f)));
     }
   }
 

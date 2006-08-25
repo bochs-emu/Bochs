@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.72 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.73 2006-08-25 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -771,6 +771,16 @@ bx_bool BX_CPU_C::dbg_set_cpu(bx_dbg_cpu_t *cpu)
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  |= (cpu->ldtr.des_h & 0xff) << 16;
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.base  |= (cpu->ldtr.des_h & 0xff000000);
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit  = (cpu->ldtr.des_l & 0xffff);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit |= (cpu->ldtr.des_h & 0x000f0000);
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.g      = (cpu->ldtr.des_h >> 23) & 0x01;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.avl    = (cpu->ldtr.des_h >> 20) & 0x01;
+
+  if (BX_CPU_THIS_PTR ldtr.cache.u.ldt.g)
+    BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled = 
+       (BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit << 12) | 0x0fff;
+  else
+    BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled = 
+       (BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit);
 
   // TR
   type = (cpu->tr.des_h >> 8) & 0x0f;

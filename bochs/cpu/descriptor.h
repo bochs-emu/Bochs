@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: descriptor.h,v 1.15 2006-08-22 19:06:03 sshwarts Exp $
+// $Id: descriptor.h,v 1.16 2006-08-25 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,7 +147,7 @@ union {
   } taskgate;
   struct {
     bx_address base;       /* 24 (tss286) or 32/64 (tss386) bit TSS base */
-    Bit32u  limit;         /* 16 (tss286) or 20 (tss386) bit TSS limit */
+    Bit32u  limit;         /* 16/32 bit TSS limit */
 #if BX_CPU_LEVEL >= 3
     Bit32u  limit_scaled;  // Same notes as for 'segment' field
     bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
@@ -155,8 +155,13 @@ union {
 #endif
   } tss;
   struct {
-    bx_address base;       /* 286=24 386+ =32/64 bit LDT base */
-    Bit32u  limit;         /* 286+ =16 bit LDT limit */
+    bx_address base;       /* 286=24 386+ = 32/64 bit LDT base */
+    Bit32u  limit;         /* 286+ = 16/32 bit LDT limit */
+#if BX_CPU_LEVEL >= 3
+    Bit32u  limit_scaled;  // Same notes as for 'segment' field
+    bx_bool g;             /* granularity: 0=byte, 1=4K (page) */
+    bx_bool avl;           /* available for use by system */
+#endif
   } ldt;
 } u;
 

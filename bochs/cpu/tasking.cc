@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.35 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: tasking.cc,v 1.36 2006-08-25 19:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -471,6 +471,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // with values only as they are validated.
   BX_CPU_THIS_PTR ldtr.cache.valid = 0;
   BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
+  BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit_scaled = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid = 0;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 0;
