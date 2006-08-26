@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.119 2006-08-25 19:56:03 sshwarts Exp $
+// $Id: init.cc,v 1.120 2006-08-26 07:35:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -462,7 +462,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
 #endif
 
-  bx_list_c *LDTR = new bx_list_c (list, "LDTR", 4);
+  bx_list_c *LDTR = new bx_list_c (list, "LDTR", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.ldt.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.ldt.limit);
