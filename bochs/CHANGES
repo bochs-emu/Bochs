@@ -1,5 +1,16 @@
 Changes in 2.3 (not yet released):
 
+Brief summary :
+- limited save/restore support added (config + log options, hardware state)
+- configuration parameter handling rewritten to a parameter tree
+- lots of cpu and internal debugger fixes
+- hard disk geometry autodetection now supported by most of the image types
+- hard disk emulation now supports ATA-3 (multiple sector transfers)
+- VBE memory size increased to 8MB and several VGA/VBE fixes
+- updated LGPL'd VGABIOS to version 0.6a
+
+Detailed change log :
+
 - CPU and internal debugger fixes
   - Fixed bug in FSTENV instruction (Stanislav Shwartsman)
   - Recognize #XF exception (19) when SSE is enabled
@@ -95,6 +106,9 @@ Changes in 2.3 (not yet released):
  [1386671] Combined dual core and hyper-threading patch
 
 - these S.F. bugs were closed
+  [833927] TTD: System Error TNT.40025: Unexpected processor exception
+  [789230] Sending code that shows lock up when setting idt
+  [909670] Problems with Symantec Ghost
  [1540241] include missing in osdep.cc
  [1539373] Incorrect disasm for "mov moffset,bla" in 64bit
  [1538419] incorrect disassembly of [rip+disp] with rex.b
