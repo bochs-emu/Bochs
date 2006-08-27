@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.217 2006-06-25 12:20:34 vruppert Exp $
+$Id: user.dbk,v 1.218 2006-08-27 07:06:01 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -1167,6 +1167,10 @@ The tag tells which release you want, and it can be one of the following:
       </row>
     </thead>
     <tbody>
+      <row>
+        <entry>2.3</entry>
+        <entry>REL_2_3_FINAL</entry>
+      </row>
       <row>
         <entry>2.2.6 (intermediate2)</entry>
         <entry>REL_2_2_6_FINAL</entry>
