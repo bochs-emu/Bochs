@@ -7,7 +7,37 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.2.6</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3</font><BR><BR>
+
+About seven months after the last intermediate one we have a new stable release.
+Here is the list of changes since version 2.2.6:
+<ul>
+<li> limited save/restore support added (config + log options, hardware state)
+<li> configuration parameter handling rewritten to a parameter tree
+<li> lots of cpu and internal debugger fixes
+<li> hard disk geometry autodetection now supported by most of the image types
+<li> hard disk emulation now supports ATA-3 (multiple sector transfers)
+<li> VBE memory size increased to 8MB and several VGA/VBE fixes
+<li> updated LGPL'd VGABIOS to version 0.6a
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> Pentium III emulation with all optimizations enabled
+<li> devices: NE2000, SB16, PCI and USB
+<li> video: Bochs VBE and Cirrus SVGA
+<li> Linux display libraries: nogui, rfb, sdl, term, x
+<li> Windows display libraries: nogui, rfb, win32
+</ul>
+
+<BR/>
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_FINAL">
+Details on what has changed since version 2.2.6
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.2.6</font><BR><BR>
 
 Version 2.2.6 is an intermediate (bugfix+) release. It includes a lot of bugfixes and a few new features.<BR>
 Here is the list of changes since version 2.2.5:
@@ -50,42 +80,9 @@ generated #GP(0) fault
 </ul>
 </ul>
 
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> Pentium III emulation with all optimizations enabled
-<li> devices: NE2000, SB16, PCI and USB
-<li> video: Bochs VBE and Cirrus SVGA
-<li> Linux display libraries: nogui, rfb, sdl, term, x
-<li> Windows display libraries: nogui, rfb, win32
-</ul>
-
-Note that some configuration file options are deprecated now and some other
-options have been modified or improved. See the sample config file and the
-user documentation for more information.<BR>
-
 <BR/>
 <a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_2_6_FINAL">
 Details on what has changed since version 2.2.5
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.2.5</font><BR><BR>
-
-Version 2.2.5 is an intermediate (bugfix+) release. It includes lots of bugfixes and a few new features.<BR>
-Here is a list of the most important changes :
-<ul>
-<li> added virtual 8086 mode extensions (VME) implementation
-<li> several fixes/improvements in x86-64 emulation, debugger and disassembler
-<li> new serial mode 'socket' connects a network socket
-<li> IDE busmaster DMA feature for harddisks and cdroms completed and enabled
-<li> many improvements in Bochs emulated I/O devices (e.g. floppy, cdrom)
-<li> Updated LGPL'd VGABIOS to version 0.5d
-</ul>
-
-<BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_2_5_FINAL">
-Details on what has changed since version 2.2.1
 </a>
 
 
