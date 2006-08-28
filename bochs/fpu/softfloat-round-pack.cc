@@ -441,8 +441,10 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
     zSigExact = zSig0;
     zSig0 += roundIncrement;
     if (zSig0 < roundIncrement) {
+        // Basically scale by shifting right and keep overflow
         ++zExp;
         zSig0 = BX_CONST64(0x8000000000000000);
+        zSigExact >>= 1; // must scale also, or else later tests will fail
     }
     roundIncrement = roundMask + 1;
     if (roundNearestEven && (roundBits<<1 == roundIncrement))
@@ -512,6 +514,7 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
         if (zSig0 == 0) {
             zExp++;
             zSig0 = BX_CONST64(0x8000000000000000);
+            zSigExact >>= 1;  // must scale also, or else later tests will fail
         }
         else {
             zSig0 &= ~(((Bit64u) (zSig1<<1) == 0) & roundNearestEven);
