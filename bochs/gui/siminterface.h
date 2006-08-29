@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.199 2006-06-21 20:42:26 sshwarts Exp $
+// $Id: siminterface.h,v 1.200 2006-08-29 20:10:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -849,7 +849,8 @@ public:
     IS_FILENAME = 2,       // 1=yes it's a filename, 0=not a filename.
                            // Some guis have a file browser. This
                            // bit suggests that they use it.
-    SAVE_FILE_DIALOG = 4   // Use save dialog opposed to open file dialog
+    SAVE_FILE_DIALOG = 4,  // Use save dialog opposed to open file dialog
+    SELECT_FOLDER_DLG = 8  // Use folder selection dialog
   } bx_string_opt_bits;
   bx_param_string_c(bx_param_c *parent,
       const char *name,
@@ -1087,7 +1088,7 @@ BOCHSAPI extern int clock_sync_n_names;
 
 #include <setjmp.h>
 
-enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SAVE_RESTORE, CI_SHUTDOWN };
+enum ci_command_t { CI_START, CI_RUNTIME_CONFIG, CI_SHUTDOWN };
 enum ci_return_t { 
   CI_OK,                  // normal return value 
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.84 2006-05-07 09:49:16 vruppert Exp $
+// $Id: wx.cc,v 1.85 2006-08-29 20:10:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -917,7 +917,7 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
 #endif
 
   new_gfx_api = 1;
-  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT;
+  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
 }
 
 // ::HANDLE_EVENTS()
@@ -934,17 +934,20 @@ void bx_wx_gui_c::handle_events(void)
     switch(event_queue[i].type) {
       case BX_ASYNC_EVT_TOOLBAR:
         switch (event_queue[i].u.toolbar.button) {
-          case BX_TOOLBAR_FLOPPYA: floppyA_handler (); break;
-          case BX_TOOLBAR_FLOPPYB: floppyB_handler (); break;
-          case BX_TOOLBAR_CDROMD: cdromD_handler (); break;
-          case BX_TOOLBAR_RESET: reset_handler (); break;
-          case BX_TOOLBAR_POWER: power_handler (); break;
-          case BX_TOOLBAR_COPY: copy_handler (); break;
-          case BX_TOOLBAR_PASTE: paste_handler (); break;
-          case BX_TOOLBAR_SNAPSHOT: snapshot_handler (); break;
-          case BX_TOOLBAR_CONFIG: config_handler (); break;
-          case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse (true); break;
-          case BX_TOOLBAR_USER: userbutton_handler (); break;
+          case BX_TOOLBAR_FLOPPYA: floppyA_handler(); break;
+          case BX_TOOLBAR_FLOPPYB: floppyB_handler(); break;
+          case BX_TOOLBAR_CDROMD: cdromD_handler(); break;
+          case BX_TOOLBAR_RESET: reset_handler(); break;
+          case BX_TOOLBAR_POWER: power_handler(); break;
+#if BX_SUPPORT_SAVE_RESTORE
+          case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
+#endif
+          case BX_TOOLBAR_COPY: copy_handler(); break;
+          case BX_TOOLBAR_PASTE: paste_handler(); break;
+          case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;
+          case BX_TOOLBAR_CONFIG: config_handler(); break;
+          case BX_TOOLBAR_MOUSE_EN: thePanel->ToggleMouse(true); break;
+          case BX_TOOLBAR_USER: userbutton_handler(); break;
           default:
             wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
         }

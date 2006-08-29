@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.h,v 1.6 2006-06-07 19:40:15 vruppert Exp $
+// $Id: textconfig.h,v 1.7 2006-08-29 20:10:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -18,9 +18,6 @@ enum {
   BX_CI_START_OPTS_MISC,
   BX_CI_START_SIMULATION,
   BX_CI_RUNTIME,
-#if BX_SUPPORT_SAVE_RESTORE
-  BX_CI_SAVE_RESTORE,
-#endif
   BX_CI_N_MENUS
 };
 

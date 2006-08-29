@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.48 2006-06-08 17:02:51 vruppert Exp $
+// $Id: win32dialog.cc,v 1.49 2006-08-29 20:10:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -78,7 +78,7 @@ int BrowseDir(const char *Title, char *result)
 {
   BROWSEINFO browseInfo;
   LPITEMIDLIST ItemIDList;
-  int r = 0;
+  int r = -1;
 
   memset(&browseInfo,0,sizeof(BROWSEINFO));
   browseInfo.hwndOwner = GetActiveWindow();
@@ -90,7 +90,7 @@ int BrowseDir(const char *Title, char *result)
   if (ItemIDList != NULL) {
     *result = 0;
     if (SHGetPathFromIDList(ItemIDList, result)) {
-      if (result[0]) r = 1;
+      if (result[0]) r = 0;
     }
     // free memory used
     IMalloc * imalloc = 0;
@@ -891,28 +891,6 @@ int RuntimeOptionsDialog()
   return retcode;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
-bx_bool win32SaveState()
-{
-  char sr_path[MAX_PATH];
-  int ret;
-
-  sr_path[0] = 0;
-  if (BrowseDir("Select folder for save/restore data", sr_path)) {
-    if (SIM->save_state(sr_path)) {
-      ret = MessageBox(GetBochsWindow(), "The save function currently doesn't handle the state of hard drive images,\n"
-                       "so we don't recommend to continue, unless you are running a read-only\n"
-                       "guest system (e.g. Live-CD).\n\nDo you want to continue?",
-                       "WARNING", MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
-      if (ret == IDNO) {
-        return 0;
-      }
-    }
-  }
-  return 1;
-}
-#endif
-
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {
   int opts;
@@ -931,7 +909,9 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         sparam = (bx_param_string_c *)param;
         opts = sparam->get_options()->get();
         if (opts & sparam->IS_FILENAME) {
-          if (param->get_parent() == NULL) {
+          if (opts & sparam->SELECT_FOLDER_DLG) {
+            event->retcode = BrowseDir(sparam->get_label(), sparam->getptr());
+          } else if (param->get_parent() == NULL) {
             event->retcode = AskFilename(GetBochsWindow(), (bx_param_filename_c *)sparam, "txt");
           } else {
             event->retcode = FloppyDialog((bx_param_filename_c *)sparam);

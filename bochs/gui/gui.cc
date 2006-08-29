@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.97 2006-06-07 19:40:14 vruppert Exp $
+// $Id: gui.cc,v 1.98 2006-08-29 20:10:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -601,8 +601,25 @@ void bx_gui_c::userbutton_handler(void)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_gui_c::save_restore_handler(void)
 {
+  int ret;
+  char sr_path[BX_PATHNAME_LEN];
+
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_SAVE_RESTORE) {
-    SIM->configuration_interface(NULL, CI_SAVE_RESTORE);
+    sr_path[0] = 0;
+    ret = SIM->ask_filename(sr_path, sizeof(sr_path),
+                            "Save Bochs state to folder...", "none",
+                            bx_param_string_c::SELECT_FOLDER_DLG);
+    if ((ret >= 0) && (strcmp(sr_path, "none"))) {
+      if (SIM->save_state(sr_path)) {
+        if (!SIM->ask_yes_no("WARNING",
+              "The save function currently doesn't handle the state of hard drive images,\n"
+              "so we don't recommend to continue, unless you are running a read-only\n"
+              "guest system (e.g. Live-CD).\n\n"
+              "Do you want to continue?", 0)) {
+          power_handler();
+        }
+      }
+    }
   }
 }
 #endif
