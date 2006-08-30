@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.62 2006-08-29 20:10:26 vruppert Exp $
+// $Id: textconfig.cc,v 1.63 2006-08-30 17:49:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -46,6 +46,7 @@ void bx_config_interface_init();
 int bx_read_rc(char *rc);
 int bx_write_rc(char *rc);
 void bx_log_options(int individual);
+int bx_atexit();
 
 /******************************************************************/
 /* lots of code stolen from bximage.c */
@@ -540,6 +541,7 @@ int bx_config_interface(int menu)
             case BX_CI_RT_QUIT:
               fprintf(stderr, "You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
+              bx_atexit();
               SIM->quit_sim(1);
               return -1;
             default: fprintf(stderr, "Menu choice %d not implemented.\n", choice);
