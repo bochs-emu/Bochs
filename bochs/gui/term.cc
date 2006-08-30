@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.35 2006-03-05 10:24:29 vruppert Exp $
+// $Id: term.cc,v 1.36 2006-08-30 18:16:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -144,24 +144,27 @@ bx_term_gui_c::get_sighandler_mask ()
 void
 bx_term_gui_c::sighandler(int signo)
 {
-	switch(signo) {
-	case SIGINT:
-		do_scan(BX_KEY_C,0,1,0);
-		break;
+  switch(signo) {
+    case SIGINT:
+      do_scan(BX_KEY_C,0,1,0);
+      break;
 #ifdef SIGSTOP
-	case SIGSTOP:
-		do_scan(BX_KEY_S,0,1,0);
-		break;
+    case SIGSTOP:
+      do_scan(BX_KEY_S,0,1,0);
+      break;
 #endif
 #ifdef SIGTSTP
-	case SIGTSTP:
-		do_scan(BX_KEY_Z,0,1,0);
-		break;
+    case SIGTSTP:
+      do_scan(BX_KEY_Z,0,1,0);
+      break;
 #endif
-	default:
-		BX_INFO(("sig %d caught",signo));
-		break;
-	}
+    case SIGHUP:
+      BX_PANIC(("Received SIGHUP: quit simulation"));
+      break;
+    default:
+      BX_INFO(("sig %d caught",signo));
+      break;
+  }
 }
 
 // ::SPECIFIC_INIT()
