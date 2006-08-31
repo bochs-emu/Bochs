@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.52 2006-04-27 06:09:56 sshwarts Exp $
+// $Id: sse_move.cc,v 1.53 2006-08-31 18:18:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -142,7 +142,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (i->os64L()) /* 64 bit operand size mode */
   {
-    xmm.xmm64u(1) = BX_CPU_THIS_PTR the_i387.fip;
+    xmm.xmm64u(1) = (BX_CPU_THIS_PTR the_i387.fip);
   }
   else
 #endif
@@ -166,7 +166,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   if (i->os64L()) /* 64 bit operand size mode */
   {
-    xmm.xmm64u(0) = BX_CPU_THIS_PTR the_i387.fdp;
+    xmm.xmm64u(0) = (BX_CPU_THIS_PTR the_i387.fdp);
   }
   else
 #endif
@@ -201,8 +201,11 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* store XMM register file */
   for(index=0; index < BX_XMM_REGISTERS; index++)
   {
-    writeVirtualDQwordAligned(i->seg(), 
+    // save XMM8-XMM15 only in 64-bit mode
+    if (index < 8 || Is64BitMode()) {
+       writeVirtualDQwordAligned(i->seg(), 
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+    }
   }
 #endif
 
@@ -350,8 +353,11 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     /* load XMM register file */
     for(index=0; index < BX_XMM_REGISTERS; index++)
     {
-      readVirtualDQwordAligned(i->seg(),
-           RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+      // restore XMM8-XMM15 only in 64-bit mode
+      if (index < 8 || Is64BitMode()) {
+         readVirtualDQwordAligned(i->seg(),
+             RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
+      }
     }
   }
 #endif

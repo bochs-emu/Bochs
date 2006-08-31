@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.157 2006-08-25 19:56:03 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.158 2006-08-31 18:18:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -980,13 +980,13 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr.cache.segment     = (access & 0x10) >> 4;
   // don't allow busy bit in tr.cache.type, so bit 2 is masked away too.
   BX_CPU_THIS_PTR tr.cache.type        = (access & 0x0d);
-  BX_CPU_THIS_PTR tr.cache.u.tss.base  = (base_23_16 << 16) | base_15_0;
-  BX_CPU_THIS_PTR tr.cache.u.tss.limit = limit;
+  BX_CPU_THIS_PTR tr.cache.u.system.base  = (base_23_16 << 16) | base_15_0;
+  BX_CPU_THIS_PTR tr.cache.u.system.limit = limit;
 
   if ((BX_CPU_THIS_PTR tr.selector.value & 0xfffc) == 0) {
     BX_CPU_THIS_PTR tr.cache.valid = 0;
   }
-  if (BX_CPU_THIS_PTR tr.cache.u.tss.limit < 43 ||
+  if (BX_CPU_THIS_PTR tr.cache.u.system.limit < 43 ||
       BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_286_TSS ||
       BX_CPU_THIS_PTR tr.cache.segment)
   {
@@ -998,8 +998,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR tr.selector.index    = 0;
     BX_CPU_THIS_PTR tr.selector.ti       = 0;
     BX_CPU_THIS_PTR tr.selector.rpl      = 0;
-    BX_CPU_THIS_PTR tr.cache.u.tss.base  = 0;
-    BX_CPU_THIS_PTR tr.cache.u.tss.limit = 0;
+    BX_CPU_THIS_PTR tr.cache.u.system.base  = 0;
+    BX_CPU_THIS_PTR tr.cache.u.system.limit = 0;
     BX_CPU_THIS_PTR tr.cache.p           = 0;
   }
 
@@ -1023,8 +1023,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR ldtr.cache.p       = 0;
     BX_CPU_THIS_PTR ldtr.cache.segment = 0;
     BX_CPU_THIS_PTR ldtr.cache.type    = 0;
-    BX_CPU_THIS_PTR ldtr.cache.u.ldt.base = 0;
-    BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = 0;
+    BX_CPU_THIS_PTR ldtr.cache.u.system.base = 0;
+    BX_CPU_THIS_PTR ldtr.cache.u.system.limit = 0;
     BX_CPU_THIS_PTR ldtr.selector.value = 0;
     BX_CPU_THIS_PTR ldtr.selector.index = 0;
     BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
@@ -1039,8 +1039,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR ldtr.cache.dpl        = (access >> 5) & 0x03;
     BX_CPU_THIS_PTR ldtr.cache.segment    = (access >> 4) & 0x01;
     BX_CPU_THIS_PTR ldtr.cache.type       = (access & 0x0f);
-    BX_CPU_THIS_PTR ldtr.cache.u.ldt.base = (base_23_16 << 16) | base_15_0;
-    BX_CPU_THIS_PTR ldtr.cache.u.ldt.limit = limit;
+    BX_CPU_THIS_PTR ldtr.cache.u.system.base = (base_23_16 << 16) | base_15_0;
+    BX_CPU_THIS_PTR ldtr.cache.u.system.limit = limit;
 
     if (access == 0) {
       BX_PANIC(("loadall: LDTR case access byte=0."));

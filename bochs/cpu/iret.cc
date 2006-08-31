@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.15 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: iret.cc,v 1.16 2006-08-31 18:18:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     if (BX_CPU_THIS_PTR tr.cache.valid==0)
       BX_PANIC(("IRET: TR not valid"));
-    Bit32u base32 = BX_CPU_THIS_PTR tr.cache.u.tss.base;
+    Bit32u base32 = BX_CPU_THIS_PTR tr.cache.u.system.base;
 
     // examine back link selector in TSS addressed by current TR:
     access_linear(base32, 2, 0, BX_READ, &raw_link_selector);
