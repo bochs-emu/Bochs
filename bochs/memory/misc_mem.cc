@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.94 2006-06-06 16:46:08 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.95 2006-09-01 18:14:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,8 +89,10 @@ BX_MEM_C::~BX_MEM_C()
     vector = NULL;
     delete [] memory_handlers;
     memory_handlers = NULL;
-  }
-  else {
+#if BX_DEBUGGER
+    delete [] BX_MEM_THIS dbg_dirty_pages;
+#endif
+  } else {
     BX_DEBUG(("Memory not freed as it wasn't allocated !"));
   }
 }
@@ -99,31 +101,36 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.94 2006-06-06 16:46:08 sshwarts Exp $"));
-  // you can pass 0 if memory has been allocated already through
-  // the constructor, or the desired size of memory if it hasn't
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.95 2006-09-01 18:14:13 vruppert Exp $"));
 
-  if (BX_MEM_THIS vector == NULL) {
-    // memory not already allocated, do now...
-    alloc_vector_aligned (memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
-    BX_MEM_THIS len  = memsize;
-    BX_MEM_THIS megabytes = memsize / (1024*1024);
-    BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
-    BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
-    BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
+  if (BX_MEM_THIS vector != NULL) {
+    delete [] BX_MEM_THIS actual_vector;
+    BX_MEM_THIS actual_vector = NULL;
+    BX_MEM_THIS vector = NULL;
+    delete [] BX_MEM_THIS memory_handlers;
+    BX_MEM_THIS memory_handlers = NULL;
 #if BX_DEBUGGER
-    unsigned pages = get_num_allocated_pages();
-    BX_MEM_THIS dbg_dirty_pages = new Bit8u[pages];
-    memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
+    delete [] BX_MEM_THIS dbg_dirty_pages;
 #endif
-    memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
-    memset(BX_MEM_THIS bogus, 0xff, 4096);
-    for (idx = 0; idx < 1024 * 1024; idx++)
-      BX_MEM_THIS memory_handlers[idx] = NULL;
-    for (idx = 0; idx < 65; idx++)
-      BX_MEM_THIS rom_present[idx] = 0;
-    BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
   }
+
+  alloc_vector_aligned (memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
+  BX_MEM_THIS len  = memsize;
+  BX_MEM_THIS megabytes = memsize / (1024*1024);
+  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
+  BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
+  BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
+#if BX_DEBUGGER
+  unsigned pages = get_num_allocated_pages();
+  BX_MEM_THIS dbg_dirty_pages = new Bit8u[pages];
+  memset(BX_MEM_THIS dbg_dirty_pages, 0, pages);
+#endif
+  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
+  memset(BX_MEM_THIS bogus, 0xff, 4096);
+  for (idx = 0; idx < 1024 * 1024; idx++)
+    BX_MEM_THIS memory_handlers[idx] = NULL;
+  for (idx = 0; idx < 65; idx++)
+    BX_MEM_THIS rom_present[idx] = 0;
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get();
   BX_MEM_THIS smram_available = 0;
   BX_MEM_THIS smram_enable = 0;
@@ -131,6 +138,7 @@ void BX_MEM_C::init_memory(int memsize)
 
   // accept only memory size which is multiply of 1M
   BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
+  BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
 
 #if BX_SUPPORT_SAVE_RESTORE
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "memory", "Memory State");
