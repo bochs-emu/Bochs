@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.57 2006-06-01 20:05:15 sshwarts Exp $
+// $Id: memory.cc,v 1.58 2006-09-02 12:08:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     }
   }
 
-  memory_handler = memory_handlers[a20addr >> 20];
+  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
@@ -109,22 +109,22 @@ mem_write:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
       if (len == 8) {
-        WriteHostQWordToLittleEndian(&vector[a20addr], *(Bit64u*)data);
+        WriteHostQWordToLittleEndian(&BX_MEM_THIS vector[a20addr], *(Bit64u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 4) {
-        WriteHostDWordToLittleEndian(&vector[a20addr], *(Bit32u*)data);
+        WriteHostDWordToLittleEndian(&BX_MEM_THIS vector[a20addr], *(Bit32u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 2) {
-        WriteHostWordToLittleEndian(&vector[a20addr], *(Bit16u*)data);
+        WriteHostWordToLittleEndian(&BX_MEM_THIS vector[a20addr], *(Bit16u*)data);
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
       if (len == 1) {
-        * ((Bit8u *) (&vector[a20addr])) = * (Bit8u *) data;
+        * ((Bit8u *) (&BX_MEM_THIS vector[a20addr])) = * (Bit8u *) data;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
         return;
       }
@@ -141,7 +141,7 @@ write_one:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
       // addr *not* in range 000A0000 .. 000FFFFF
-      vector[a20addr] = *data_ptr;
+      BX_MEM_THIS vector[a20addr] = *data_ptr;
       BX_DBG_DIRTY_PAGE(a20addr >> 12);
 inc_one:
       if (len == 1) return;
@@ -161,7 +161,7 @@ inc_one:
     if (a20addr <= 0x000bffff) {
       // devices are not allowed to access SMMRAM under VGA memory
       if (cpu) {
-        vector[a20addr] = *data_ptr;
+        BX_MEM_THIS vector[a20addr] = *data_ptr;
         BX_DBG_DIRTY_PAGE(a20addr >> 12);
       }
       goto inc_one;
@@ -173,12 +173,12 @@ inc_one:
     // ignore write to ROM
 #else
     // Write Based on 440fx Programming
-    if (pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
+    if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_wr_memtype(a20addr)) {
         case 0x1:   // Writes to ShadowRAM
           BX_DEBUG(("Writing to ShadowRAM: address %08x, data %02x", (unsigned) a20addr, *data_ptr));
-          vector[a20addr] = *data_ptr;
+          BX_MEM_THIS vector[a20addr] = *data_ptr;
           BX_DBG_DIRTY_PAGE(a20addr >> 12);
           goto inc_one;
 
@@ -244,7 +244,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, voi
     }
   }
 
-  memory_handler = memory_handlers[a20addr >> 20];
+  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20addr &&
           memory_handler->end >= a20addr &&
@@ -262,19 +262,19 @@ mem_read:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
       if (len == 8) {
-        ReadHostQWordFromLittleEndian(&vector[a20addr], * (Bit64u*) data);
+        ReadHostQWordFromLittleEndian(&BX_MEM_THIS vector[a20addr], * (Bit64u*) data);
         return;
       }
       if (len == 4) {
-        ReadHostDWordFromLittleEndian(&vector[a20addr], * (Bit32u*) data);
+        ReadHostDWordFromLittleEndian(&BX_MEM_THIS vector[a20addr], * (Bit32u*) data);
         return;
       }
       if (len == 2) {
-        ReadHostWordFromLittleEndian(&vector[a20addr], * (Bit16u*) data);
+        ReadHostWordFromLittleEndian(&BX_MEM_THIS vector[a20addr], * (Bit16u*) data);
         return;
       }
       if (len == 1) {
-        * (Bit8u *) data = * ((Bit8u *) (&vector[a20addr]));
+        * (Bit8u *) data = * ((Bit8u *) (&BX_MEM_THIS vector[a20addr]));
         return;
       }
       // len == other case can just fall thru to special cases handling
@@ -290,7 +290,7 @@ read_one:
     if ((a20addr & 0xfff80000) != 0x00080000 || (a20addr <= 0x0009ffff))
     {
       // addr *not* in range 00080000 .. 000FFFFF
-      *data_ptr = vector[a20addr];
+      *data_ptr = BX_MEM_THIS vector[a20addr];
 inc_one:
       if (len == 1) return;
       len--;
@@ -308,26 +308,26 @@ inc_one:
     // SMMRAM
     if (a20addr <= 0x000bffff) {
       // devices are not allowed to access SMMRAM under VGA memory
-      if (cpu) *data_ptr = vector[a20addr];
+      if (cpu) *data_ptr = BX_MEM_THIS vector[a20addr];
       goto inc_one;
     }
 
 #if BX_SUPPORT_PCI
-    if (pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
+    if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000))
     {
       switch (DEV_pci_rd_memtype(a20addr)) {
         case 0x0:  // Read from ROM
           if ((a20addr & 0xfffe0000) == 0x000e0000)
           {
-            *data_ptr = rom[a20addr & BIOS_MASK];
+            *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
           }
           else
           {
-            *data_ptr = rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+            *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
           }
           goto inc_one;
         case 0x1:  // Read from ShadowRAM
-          *data_ptr = vector[a20addr];
+          *data_ptr = BX_MEM_THIS vector[a20addr];
           goto inc_one;
         default:
           BX_PANIC(("readPhysicalPage: default case"));
@@ -338,15 +338,15 @@ inc_one:
 #endif  // #if BX_SUPPORT_PCI
     {
       if ((a20addr & 0xfffc0000) != 0x000c0000) {
-        *data_ptr = vector[a20addr];
+        *data_ptr = BX_MEM_THIS vector[a20addr];
       }
       else if ((a20addr & 0xfffe0000) == 0x000e0000)
       {
-        *data_ptr = rom[a20addr & BIOS_MASK];
+        *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
       }
       else
       {
-        *data_ptr = rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
+        *data_ptr = BX_MEM_THIS rom[(a20addr & EXROM_MASK) + BIOSROMSZ];
       }
       goto inc_one;
     }
@@ -362,7 +362,7 @@ inc_one:
 
     for (unsigned i = 0; i < len; i++) {
       if (a20addr >= (bx_phy_address)~BIOS_MASK)
-        *data_ptr = rom[a20addr & BIOS_MASK];
+        *data_ptr = BX_MEM_THIS rom[a20addr & BIOS_MASK];
       else
         *data_ptr = 0xff;
       addr++;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.38 2006-05-31 17:20:52 sshwarts Exp $
+// $Id: memory.h,v 1.39 2006-09-02 12:08:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,8 +28,6 @@
 
 #ifndef BX_MEM_H
 #  define BX_MEM_H 1
-
-#define BX_USE_MEM_SMF 0
 
 #if BX_USE_MEM_SMF
 // if static member functions on, then there is only one memory
