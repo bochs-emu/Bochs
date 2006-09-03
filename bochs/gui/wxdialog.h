@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.65 2006-09-03 05:52:53 vruppert Exp $
+// $Id: wxdialog.h,v 1.66 2006-09-03 11:06:53 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -78,8 +78,8 @@ public:
   { wxT("Continue"), wxT("Kill Sim"), wxT("Dump Core"), wxT("Debugger"), wxT("Help") }
 #define LOG_MSG_DONT_ASK_STRING \
   wxT("Don't ask about future messages like this")
-#define LOG_MSG_CONTEXT wxT("Context: %s")
-#define LOG_MSG_MSG wxT("Message: %s")
+#define LOG_MSG_CONTEXT wxT("Context: ")
+#define LOG_MSG_MSG wxT("Message: ")
 private:
   wxStaticText *context, *message;
   wxCheckBox *dontAsk;

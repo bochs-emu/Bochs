@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.143 2006-08-29 20:10:27 vruppert Exp $
+// $Id: wxmain.cc,v 1.144 2006-09-03 11:06:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -102,6 +102,11 @@ MyPanel *thePanel = NULL;
 // any events that might reference parts of the GUI or create new dialogs.
 bool wxBochsClosing = false;
 
+// The wxBochsStopSim flag is used to select the right way when the simulation
+// thread stops. It is set to 'true' when the stop simulation menu item is
+// clicked instead of the power button.
+bool wxBochsStopSim = false;
+
 bool isSimThread() {
   if (wxThread::IsMain()) return false;
   wxThread *current = wxThread::This();
@@ -168,7 +173,6 @@ static int ci_callback(void *userdata, ci_command_t command)
   switch (command)
   {
     case CI_START:
-      // fprintf(stderr, "wxmain.cc: start\n");
 #ifdef __WXMSW__
       // on Windows only, wxEntry needs some data that is passed into WinMain.
       // So, in main.cc we define WinMain and fill in the bx_startup_flags
@@ -908,6 +912,7 @@ MyFrame::DebugCommand(const char *cmd)
 void MyFrame::OnQuit(wxCommandEvent& event)
 {
   wxBochsClosing = true;
+  bx_user_quit = 1;
   if (!sim_thread) {
     // no simulation thread is running. Just close the window.
     Close( TRUE );
@@ -1069,10 +1074,14 @@ void MyFrame::OnKillSim(wxCommandEvent& WXUNUSED(event))
   DebugCommand("quit");
 #endif
   if (sim_thread) {
+    wxBochsStopSim = true;
     sim_thread->Delete();
     // Next time the simulator reaches bx_real_sim_c::periodic() it
     // will quit.  This is better than killing the thread because it
     // gives it a chance to clean up after itself.
+  }
+  if (!wxBochsClosing) {
+    theFrame->simStatusChanged(theFrame->Stop, true);
   }
 }
 
@@ -1379,7 +1388,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   bx_toolbar_buttons which = BX_TOOLBAR_UNDEFINED;
   int id = event.GetId();
   switch (id) {
-    case ID_Toolbar_Power:which = BX_TOOLBAR_POWER; break;
+    case ID_Toolbar_Power: which = BX_TOOLBAR_POWER; wxBochsStopSim = false; break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
 #if BX_SUPPORT_SAVE_RESTORE
     case ID_Toolbar_SaveRestore: which = BX_TOOLBAR_SAVE_RESTORE; break;
@@ -1461,8 +1470,10 @@ SimThread::Entry(void)
   wxLogDebug(wxT("SimThread::Entry: get gui mutex"));
   wxMutexGuiEnter();
   if (!wxBochsClosing) {
-    wxLogDebug(wxT("SimThread::Entry: sim thread ending.  call simStatusChanged"));
-    theFrame->simStatusChanged(theFrame->Stop, true);
+    if (!wxBochsStopSim) {
+      wxLogDebug(wxT("SimThread::Entry: sim thread ending.  call simStatusChanged"));
+      theFrame->simStatusChanged(theFrame->Stop, true);
+    }
   } else {
     wxLogMessage(wxT("SimThread::Entry: the gui is waiting for sim to finish.  Now that it has finished, I will close the frame."));
     theFrame->Close(TRUE);
