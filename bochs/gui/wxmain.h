@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.h,v 1.57 2006-08-29 20:10:27 vruppert Exp $
+// $Id: wxmain.h,v 1.58 2006-09-03 16:55:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 // This file defines variables and classes that the wxWidgets .cc files 
 // share.  It should be included only by wx.cc and wxmain.cc.  
@@ -219,6 +219,7 @@ private:
   wxMenu *menuDebug;
   wxMenu *menuLog;
   wxMenu *menuHelp;
+  wxToolBar *bxToolBar;
   ParamDialog *showCpu, *showKbd;
 #if BX_DEBUGGER
   DebugLogDialog *showDebugLog;

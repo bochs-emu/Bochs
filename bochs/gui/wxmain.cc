@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.144 2006-09-03 11:06:54 vruppert Exp $
+// $Id: wxmain.cc,v 1.145 2006-09-03 16:55:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -514,11 +514,11 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   sb->SetStatusWidths(12, sbwidth);
 
   CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
-  wxToolBar *tb = GetToolBar();
-  tb->SetToolBitmapSize(wxSize(32, 32));
+  bxToolBar = GetToolBar();
+  bxToolBar->SetToolBitmapSize(wxSize(32, 32));
 
 #define BX_ADD_TOOL(id, xpm_name, tooltip) do { \
-    tb->AddTool(id, wxBitmap(xpm_name), tooltip); \
+    bxToolBar->AddTool(id, wxBitmap(xpm_name), tooltip); \
   } while (0)
 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change Floppy A"));
@@ -539,7 +539,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable/disable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
 
-  tb->Realize();
+  bxToolBar->Realize();
 
   // create a MyPanel that covers the whole frame
   panel = new MyPanel(this, -1);
@@ -999,11 +999,14 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   // during simulation, certain menu options like the floppy disk
   // can be modified under some circumstances.  A floppy drive can
   // only be edited if it was enabled at boot time.
-  bx_param_c *param;
-  param = SIM->get_param(BXPN_FLOPPYA);
-  menuEdit->Enable(ID_Edit_FD_0, canConfigure || param->get_enabled());
-  param = SIM->get_param(BXPN_FLOPPYB);
-  menuEdit->Enable(ID_Edit_FD_1, canConfigure || param->get_enabled());
+  Bit64u value;
+  value = SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get();
+  menuEdit->Enable(ID_Edit_FD_0, canConfigure || (value != BX_FLOPPY_NONE));
+  bxToolBar->EnableTool(ID_Edit_FD_0, canConfigure || (value != BX_FLOPPY_NONE));
+  value = SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get();
+  menuEdit->Enable(ID_Edit_FD_1, canConfigure || (value != BX_FLOPPY_NONE));
+  bxToolBar->EnableTool(ID_Edit_FD_1, canConfigure || (value != BX_FLOPPY_NONE));
+  bxToolBar->EnableTool(ID_Edit_Cdrom, canConfigure || (SIM->get_first_cdrom() != NULL));
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
