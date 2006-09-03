@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.85 2006-08-29 20:10:27 vruppert Exp $
+// $Id: wx.cc,v 1.86 2006-09-03 05:52:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -1045,6 +1045,7 @@ bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
   char status_text[10];
 #endif
 
+  wxMutexGuiEnter();
   if (element < 0) {
     for (unsigned i = 0; i < statusitem_count; i++) {
       if (active) {
@@ -1073,6 +1074,7 @@ bx_wx_gui_c::statusbar_setitem(int element, bx_bool active)
       theFrame->SetStatusText(wxT(""), element+1);
     }
   }
+  wxMutexGuiLeave();
 }
 
 // ::FLUSH()
@@ -1637,8 +1639,10 @@ bx_wx_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
+  wxMutexGuiEnter();
   sprintf(ips_text, "IPS: %9u", ips_count);
   theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
+  wxMutexGuiLeave();
 }
 #endif
 

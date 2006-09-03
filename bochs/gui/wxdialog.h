@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.64 2006-03-26 15:52:31 vruppert Exp $
+// $Id: wxdialog.h,v 1.65 2006-09-03 05:52:53 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -168,8 +168,8 @@ DECLARE_EVENT_TABLE()
 class FloppyConfigDialog: public wxDialog
 {
 public:
-#define FLOPPY_CONFIG_TITLE wxT("Configure %s")
-#define FLOPPY_CONFIG_INSTRS wxT("Select the device or image to use when simulating %s.")
+#define FLOPPY_CONFIG_TITLE wxT("Configure ")
+#define FLOPPY_CONFIG_INSTRS wxT("Select the device or image to use when simulating ")
 #define FLOPPY_CONFIG_CAP wxT("What is the capacity of this disk?")
 #define FLOPPY_CONFIG_HINT wxT("To create a disk image, choose the file name and capacity, then click on \"Create Image\".\n\n" \
                            "Clicking OK signals a media change for this drive.")
