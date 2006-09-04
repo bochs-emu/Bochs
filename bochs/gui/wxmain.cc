@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.145 2006-09-03 16:55:35 vruppert Exp $
+// $Id: wxmain.cc,v 1.146 2006-09-04 18:36:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -951,6 +951,9 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
       menuSimulate->Enable(ID_Simulate_PauseResume, FALSE);
       menuSimulate->Enable(ID_Simulate_Stop, FALSE);
       menuSimulate->SetLabel(ID_Simulate_PauseResume, wxT("&Pause"));
+#if BX_DEBUGGER
+      showDebugLog->Show(FALSE);
+#endif
       // This should only be used if the simulation stops due to error.
       // Obviously if the user asked it to stop, they don't need to be told.
       if (popupNotify)
