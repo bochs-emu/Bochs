@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.62 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: pc_system.cc,v 1.63 2006-09-07 18:50:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,8 +82,8 @@ bx_pc_system_c::bx_pc_system_c()
 
 void bx_pc_system_c::initialize(Bit32u ips)
 {
+  ticksTotal = 0;
   HRQ = 0;
-
   kill_bochs_request = 0;
 
   // parameter 'ips' is the processor speed in Instructions-Per-Second
@@ -214,13 +214,7 @@ Bit8u bx_pc_system_c::IAC(void)
 
 void bx_pc_system_c::exit(void)
 {
-  if (DEV_cmos_present())
-    DEV_cmos_save_image();
-  if (DEV_hd_present())
-    DEV_hd_close_harddrive();
-
-  BX_INFO(("Last time is %u", (unsigned) DEV_cmos_get_timeval()));
-
+  bx_devices.exit();
   if (bx_gui) bx_gui->exit();
 }
 

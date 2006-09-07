@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.200 2006-08-29 20:10:26 vruppert Exp $
+// $Id: siminterface.h,v 1.201 2006-09-07 18:50:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -964,6 +964,7 @@ public:
   void set_parent(bx_param_c *newparent);
   bx_param_c *get_parent() { return parent; }
   virtual void reset();
+  virtual void clear();
 #if BX_USE_TEXTCONFIG
   virtual void text_print(FILE *);
   virtual int text_ask(FILE *fpin, FILE *fpout);
@@ -1231,6 +1232,7 @@ public:
   virtual Bit32s save_user_options(FILE *fp) {return -1;}
 #if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
+  virtual void init_save_restore() {}
   virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
   virtual bx_bool restore_config() {return 0;}
   virtual bx_bool restore_logopts() {return 0;}

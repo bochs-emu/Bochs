@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.165 2006-09-04 18:36:47 vruppert Exp $
+// $Id: siminterface.cc,v 1.166 2006-09-07 18:50:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -144,6 +144,7 @@ public:
   virtual Bit32s save_user_options(FILE *fp);
 #if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
+  virtual void init_save_restore();
   virtual bx_bool save_state(const char *checkpoint_path);
   virtual bx_bool restore_config();
   virtual bx_bool restore_logopts();
@@ -274,16 +275,6 @@ void bx_init_siminterface()
       "bochs",
       "list of top level bochs parameters", 
       30);
-#if BX_SUPPORT_SAVE_RESTORE
-    bx_list_c *list = new bx_list_c(root_param,
-        "save_restore",
-        "subtree for save/restore", 
-        30);
-    new bx_list_c(list,
-        "cpu",
-        "CPU State", 
-        BX_MAX_SMP_THREADS_SUPPORTED);
-#endif
   }
 }
 
@@ -362,14 +353,8 @@ void bx_real_sim_c::quit_sim(int code) {
   if (quit_context != NULL) {
     longjmp(*quit_context, 1);
     BX_PANIC(("in bx_real_sim_c::quit_sim, longjmp should never return"));
-  }
-  if (SIM->is_wx_selected()) {
-    // in wxWidgets, the whole simulator is running in a separate thread.
-    // our only job is to end the thread as soon as possible, NOT to shut
-    // down the whole application with an exit.
-    bx_stop_simulation();
   } else {
-    // just a single thread.  Use exit() to stop the application.
+    // use exit() to stop the application.
     if (!code)
       BX_PANIC(("Quit simulation command"));
     ::exit(exit_code);
@@ -611,13 +596,6 @@ void bx_real_sim_c::periodic()
     refresh_ci();
     refresh_counter = 0;
   }
-#if 0
-  // watch for memory leaks.  Allocate a small block of memory, print the
-  // pointer that is returned, then free.
-  BxEvent *memcheck = new BxEvent ();
-  BX_INFO(("memory allocation at %p", memcheck));
-  delete memcheck;
-#endif
 }
 
 // create a disk image file called filename, size=512 bytes * sectors.
@@ -872,6 +850,24 @@ Bit32s bx_real_sim_c::save_user_options(FILE *fp)
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
+void bx_real_sim_c::init_save_restore()
+{
+  bx_list_c *list;
+
+  if ((list = get_sr_root()) != NULL) {
+    list->clear();
+  } else {
+    list = new bx_list_c(root_param,
+      "save_restore",
+      "subtree for save/restore", 
+      30);
+  }
+  new bx_list_c(list,
+    "cpu",
+    "CPU State", 
+    BX_MAX_SMP_THREADS_SUPPORTED);
+}
+
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
 {
   char sr_file[BX_PATHNAME_LEN];
@@ -2056,4 +2052,15 @@ void bx_list_c::reset()
   for (i=0; i<imax; i++) {
     get(i)->reset();
   }
+}
+
+void bx_list_c::clear()
+{
+  int i, imax = get_size();
+  bx_param_c *param;
+  for (i=0; i<imax; i++) {
+    param = get(i);
+    delete param;
+  }
+  this->size = 0;
 }

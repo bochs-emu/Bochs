@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.75 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: iodev.h,v 1.76 2006-09-07 18:50:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -389,6 +389,8 @@ public:
   // The types of reset conditions are defined in bochs.h:
   // power-on, hardware, or software.
   void reset(unsigned type);
+  // Cleanup the devices when the simulation quits.
+  void exit(void);
 #if BX_SUPPORT_SAVE_RESTORE
   void register_state(void);
   void after_restore_state(void);
