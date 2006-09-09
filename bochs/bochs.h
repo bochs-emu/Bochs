@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.195 2006-05-28 17:07:56 sshwarts Exp $
+// $Id: bochs.h,v 1.196 2006-09-09 11:28:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -318,6 +318,7 @@ public:
 	void init_log(const char *fn);
 	void init_log(int fd);
 	void init_log(FILE *fs);
+	void exit_log();
 	void set_log_prefix(const char *prefix);
 	int get_n_logfns () { return n_logfn; }
 	logfunc_t *get_logfn (int index) { return logfn_list[index]; }

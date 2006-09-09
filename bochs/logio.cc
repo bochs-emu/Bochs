@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.55 2006-06-12 19:51:31 sshwarts Exp $
+// $Id: logio.cc,v 1.56 2006-09-09 11:28:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,6 +125,17 @@ void iofunctions::init_log(int fd)
   init_log(tmpfd);
 };
 
+void iofunctions::exit_log()
+{
+  flush();
+  if (logfd != stderr) {
+    fclose(logfd);
+    logfd = stderr;
+    free(logfn);
+    logfn = "/dev/stderr";
+  }
+}
+
 // all other functions may use genlog safely.
 #define LOG_THIS genlog->
 
@@ -154,11 +165,6 @@ void iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list
     case LOGLEV_DEBUG: c='d'; break;
     default: break;
   }
-
-  //fprintf(logfd, "-%c",c);
-
-  //if(prefix != NULL)
-  //        fprintf(logfd, "%s ", prefix);
 
   s=logprefix;
   while(*s) {
@@ -571,15 +577,6 @@ void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int ex
   fprintf(stderr, "%s ", prefix);
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n%s\n", divider);
-#endif
-#if 0 && defined(WIN32)
-#error disabled because it is not working yet!
-  // wait for a keypress before quitting.  Depending on how bochs is
-  // installed, the console window can disappear before the user has
-  // a chance to read the final message.
-  fprintf(stderr, "\n\nPress Enter to exit...\n");
-  char buf[8];
-  fgets(buf, 8, stdin);
 #endif
 #if !BX_DEBUGGER
   BX_EXIT(exit_status);
