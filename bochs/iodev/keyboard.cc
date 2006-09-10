@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.122 2006-09-10 09:13:47 vruppert Exp $
+// $Id: keyboard.cc,v 1.123 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,12 +77,18 @@ int libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
 void libkeyboard_LTX_plugin_fini(void)
 {
   theKeyboard->exit();
+  delete theKeyboard;
 }
 
 bx_keyb_c::bx_keyb_c()
 {
   put("KBD");
   settype(KBDLOG);
+}
+
+bx_keyb_c::~bx_keyb_c()
+{
+  BX_DEBUG(("Exit"));
 }
 
 // flush internal buffer and reset keyboard settings to power-up condition
@@ -108,7 +114,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.122 2006-09-10 09:13:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.123 2006-09-10 17:18:44 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");

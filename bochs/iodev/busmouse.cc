@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.5 2006-05-28 17:07:57 sshwarts Exp $
+// $Id: busmouse.cc,v 1.6 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -40,11 +40,10 @@
 
 bx_busm_c *theBusMouse = NULL;
 
-  int
-libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
   // Create one instance of the busmouse device object.
-  theBusMouse = new bx_busm_c ();
+  theBusMouse = new bx_busm_c();
   // Before this plugin was loaded, pluginBusMouse pointed to a stub.
   // Now make it point to the real thing.
   bx_devices.pluginBusMouse = theBusMouse;
@@ -55,7 +54,7 @@ libbusmouse_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
 
 void libbusmouse_LTX_plugin_fini(void)
 {
-  BX_INFO(("busmouse plugin_fini"));
+  delete theBusMouse;
 }
 
 bx_busm_c::bx_busm_c()
@@ -66,12 +65,12 @@ bx_busm_c::bx_busm_c()
 
 bx_busm_c::~bx_busm_c()
 {
-  BX_DEBUG(("Exit."));
+  BX_DEBUG(("Exit"));
 }
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.5 2006-05-28 17:07:57 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.6 2006-09-10 17:18:44 vruppert Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -107,10 +106,6 @@ void bx_busm_c::init(void)
   BX_BUSM_THIS control_val             = 0;
 
   BX_INFO(("Initialized BusMouse"));
-}
-
-void bx_busm_c::reset(unsigned type)
-{
 }
 
 #if BX_SUPPORT_SAVE_RESTORE

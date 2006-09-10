@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.h,v 1.4 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: busmouse.h,v 1.5 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ public:
   virtual ~bx_busm_c();
 
   virtual void init(void);
-  virtual void reset(unsigned type);
+  virtual void reset(unsigned type) {}
   virtual void bus_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);

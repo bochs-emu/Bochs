@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.103 2006-09-10 09:13:47 vruppert Exp $
+// $Id: devices.cc,v 1.104 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,17 @@ bx_devices_c::bx_devices_c()
 
   read_port_to_handler = NULL;
   write_port_to_handler = NULL;
+  init_stubs();
+}
+
+bx_devices_c::~bx_devices_c()
+{
+  // nothing needed for now
+  timer_handle = BX_NULL_TIMER_HANDLE;
+}
+
+void bx_devices_c::init_stubs()
+{
 #if BX_SUPPORT_PCI
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
@@ -95,17 +106,11 @@ bx_devices_c::bx_devices_c()
 #endif
 }
 
-bx_devices_c::~bx_devices_c()
-{
-  // nothing needed for now
-  timer_handle = BX_NULL_TIMER_HANDLE;
-}
-
 void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.103 2006-09-10 09:13:47 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.104 2006-09-10 17:18:44 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -381,8 +386,6 @@ void bx_devices_c::after_restore_state()
 
 void bx_devices_c::exit()
 {
-  if (DEV_cmos_present())
-    DEV_cmos_save_image();
   if (DEV_hd_present())
     DEV_hd_close_harddrive();
 #if BX_SUPPORT_PCI
@@ -390,8 +393,6 @@ void bx_devices_c::exit()
     pluginPciBridge->print_i440fx_state();
   }
 #endif
-
-  BX_INFO(("Last time is %u", (unsigned) DEV_cmos_get_timeval()));
 
   PLUG_unload_plugin(unmapped);
   PLUG_unload_plugin(biosdev);
@@ -405,6 +406,7 @@ void bx_devices_c::exit()
   PLUG_unload_plugin(pci2isa);
 #endif
   bx_unload_plugins();
+  init_stubs();
 }
 
 Bit32u bx_devices_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.137 2006-08-18 15:43:20 vruppert Exp $
+// $Id: vga.cc,v 1.138 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -81,16 +81,14 @@ bx_vga_c *theVga = NULL;
 unsigned old_iHeight = 0, old_iWidth = 0, old_MSL = 0;
 
 #if BX_SUPPORT_CLGD54XX
-  void
-libvga_set_smf_pointer(bx_vga_c *theVga_ptr)
+void libvga_set_smf_pointer(bx_vga_c *theVga_ptr)
 {
   theVga = theVga_ptr;
 }
 #else // BX_SUPPORT_CLGD54XX
-  int
-libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theVga = new bx_vga_c ();
+  theVga = new bx_vga_c();
   bx_devices.pluginVgaDevice = theVga;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
   return(0); // Success
@@ -98,6 +96,7 @@ libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
 
 void libvga_LTX_plugin_fini(void)
 {
+  delete theVga;
 }
 #endif // BX_SUPPORT_CLGD54XX
 
@@ -115,7 +114,9 @@ bx_vga_c::~bx_vga_c()
 {
   if (s.memory != NULL) {
     delete [] s.memory;
+    s.memory = NULL;
   }
+  BX_DEBUG(("Exit"));
 }
 
 void bx_vga_c::init(void)

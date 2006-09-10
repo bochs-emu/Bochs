@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.16 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: cmos.h,v 1.17 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,6 +42,7 @@ public:
   virtual ~bx_cmos_c();
 
   virtual void init(void);
+  virtual void exit(void);
   virtual void checksum_cmos(void);
   virtual void reset(unsigned type);
   virtual void save_image(void);

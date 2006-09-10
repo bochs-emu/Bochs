@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.h,v 1.12 2006-03-07 21:11:20 sshwarts Exp $
+// $Id: unmapped.h,v 1.13 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,7 +40,7 @@ public:
   bx_unmapped_c();
   virtual ~bx_unmapped_c();
   virtual void init(void);
-  virtual void reset (unsigned type);
+  virtual void reset(unsigned type) {}
 
 private:
 

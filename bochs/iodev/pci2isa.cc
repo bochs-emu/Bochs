@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.36 2006-08-21 21:29:16 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.37 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,13 +42,16 @@ bx_piix3_c *thePci2IsaBridge = NULL;
 
 int libpci2isa_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePci2IsaBridge = new bx_piix3_c ();
+  thePci2IsaBridge = new bx_piix3_c();
   bx_devices.pluginPci2IsaBridge = thePci2IsaBridge;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePci2IsaBridge, BX_PLUGIN_PCI2ISA);
   return(0); // Success
 }
 
-void libpci2isa_LTX_plugin_fini(void) {}
+void libpci2isa_LTX_plugin_fini(void)
+{
+  delete thePci2IsaBridge;
+}
 
 bx_piix3_c::bx_piix3_c()
 {
@@ -58,7 +61,7 @@ bx_piix3_c::bx_piix3_c()
 
 bx_piix3_c::~bx_piix3_c()
 {
-  // nothing for now
+  BX_DEBUG(("Exit"));
 }
 
 void bx_piix3_c::init(void)

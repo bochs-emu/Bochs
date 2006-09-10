@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.43 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pic.cc,v 1.44 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -38,7 +38,7 @@ bx_pic_c *thePic = NULL;
 
 int libpic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePic = new bx_pic_c ();
+  thePic = new bx_pic_c();
   bx_devices.pluginPicDevice = thePic;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePic, BX_PLUGIN_PIC);
   return(0); // Success
@@ -46,6 +46,7 @@ int libpic_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *
 
 void libpic_LTX_plugin_fini(void)
 {
+  delete thePic;
 }
 
 bx_pic_c::bx_pic_c(void)
@@ -56,7 +57,7 @@ bx_pic_c::bx_pic_c(void)
 
 bx_pic_c::~bx_pic_c(void)
 {
-  // nothing for now
+  BX_DEBUG(("Exit"));
 }
 
 void bx_pic_c::init(void)

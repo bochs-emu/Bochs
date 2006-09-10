@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.34 2006-08-18 15:43:19 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.35 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -219,10 +219,9 @@
 
 static bx_svga_cirrus_c *theSvga = NULL;
 
-  int
-libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theSvga = new bx_svga_cirrus_c ();
+  theSvga = new bx_svga_cirrus_c();
   libvga_set_smf_pointer(theSvga);
   bx_devices.pluginVgaDevice = theSvga;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_VGA);
@@ -231,6 +230,7 @@ libvga_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv
 
 void libvga_LTX_plugin_fini(void)
 {
+  delete theSvga;
 }
 
 bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
@@ -238,7 +238,10 @@ bx_svga_cirrus_c::bx_svga_cirrus_c() : bx_vga_c ()
   put("CLVGA");
 }
 
-bx_svga_cirrus_c::~bx_svga_cirrus_c() {}
+bx_svga_cirrus_c::~bx_svga_cirrus_c()
+{
+  BX_DEBUG(("Exit"));
+}
 
 void bx_svga_cirrus_c::init(void)
 {

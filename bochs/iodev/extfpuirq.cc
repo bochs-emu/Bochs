@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extfpuirq.cc,v 1.7 2006-03-07 18:16:40 sshwarts Exp $
+// $Id: extfpuirq.cc,v 1.8 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -39,10 +39,9 @@
 
 bx_extfpuirq_c *theExternalFpuIrq = NULL;
 
-  int
-libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theExternalFpuIrq = new bx_extfpuirq_c ();
+  theExternalFpuIrq = new bx_extfpuirq_c();
   bx_devices.pluginExtFpuIrq = theExternalFpuIrq;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theExternalFpuIrq, BX_PLUGIN_EXTFPUIRQ);
   return(0); // Success
@@ -50,6 +49,7 @@ libextfpuirq_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char
 
 void libextfpuirq_LTX_plugin_fini(void)
 {
+  delete theExternalFpuIrq;
 }
 
 bx_extfpuirq_c::bx_extfpuirq_c(void)
@@ -60,7 +60,7 @@ bx_extfpuirq_c::bx_extfpuirq_c(void)
 
 bx_extfpuirq_c::~bx_extfpuirq_c(void)
 {
-  // nothing for now
+  BX_DEBUG(("Exit"));
 }
 
 void bx_extfpuirq_c::init(void)

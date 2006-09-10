@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.56 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: cmos.cc,v 1.57 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -101,7 +101,7 @@ Bit8u bin_to_bcd(Bit8u value, bx_bool is_binary)
 
 int libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theCmosDevice = new bx_cmos_c ();
+  theCmosDevice = new bx_cmos_c();
   bx_devices.pluginCmosDevice = theCmosDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theCmosDevice, BX_PLUGIN_CMOS);
   return(0); // Success
@@ -109,6 +109,8 @@ int libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
 
 void libcmos_LTX_plugin_fini(void)
 {
+  theCmosDevice->exit();
+  delete theCmosDevice;
 }
 
 bx_cmos_c::bx_cmos_c(void)
@@ -123,11 +125,14 @@ bx_cmos_c::bx_cmos_c(void)
   s.uip_timer_index = BX_NULL_TIMER_HANDLE;
 }
 
-bx_cmos_c::~bx_cmos_c() {}
+bx_cmos_c::~bx_cmos_c(void)
+{
+  BX_DEBUG(("Exit"));
+}
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.56 2006-05-29 22:33:38 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.57 2006-09-10 17:18:44 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -262,6 +267,12 @@ void bx_cmos_c::reset(unsigned type)
 
   // handle periodic interrupt rate select
   BX_CMOS_THIS CRA_change();
+}
+
+void bx_cmos_c::exit(void)
+{
+  BX_CMOS_THIS save_image();
+  BX_INFO(("Last time is %u", (unsigned) BX_CMOS_THIS get_timeval()));
 }
 
 void bx_cmos_c::save_image(void)

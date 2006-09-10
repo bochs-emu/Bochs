@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.26 2006-06-14 16:44:33 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.27 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,10 +42,9 @@ bx_pci_ide_c *thePciIdeController = NULL;
 
 const Bit8u bmdma_iomask[16] = {1, 0, 1, 0, 4, 0, 0, 0, 1, 0, 1, 0, 4, 0, 0, 0};
 
-  int
-libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  thePciIdeController = new bx_pci_ide_c ();
+  thePciIdeController = new bx_pci_ide_c();
   bx_devices.pluginPciIdeController = thePciIdeController;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, thePciIdeController, BX_PLUGIN_PCI_IDE);
   return(0); // Success
@@ -53,6 +52,7 @@ libpci_ide_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *
 
 void libpci_ide_LTX_plugin_fini(void)
 {
+  delete thePciIdeController;
 }
 
 bx_pci_ide_c::bx_pci_ide_c()
@@ -73,7 +73,7 @@ bx_pci_ide_c::~bx_pci_ide_c()
   if (s.bmdma[1].buffer != NULL) {
     delete [] s.bmdma[1].buffer;
   }
-  BX_DEBUG(("Exit."));
+  BX_DEBUG(("Exit"));
 }
 
 void bx_pci_ide_c::init(void)

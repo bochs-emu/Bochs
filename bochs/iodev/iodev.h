@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.77 2006-09-10 09:13:47 vruppert Exp $
+// $Id: iodev.h,v 1.78 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -382,6 +382,8 @@ class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c(void);
  ~bx_devices_c(void);
+  // Initialize the device stubs (in constructur and exit())
+  void init_stubs(void);
   // Register I/O addresses and IRQ lines. Initialize any internal
   // structures.  init() is called only once, even if the simulator
   // reboots or is restarted.

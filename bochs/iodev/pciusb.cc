@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.40 2006-08-20 09:19:59 vruppert Exp $
+// $Id: pciusb.cc,v 1.41 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -68,7 +68,7 @@ const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
 
 int libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theUSBDevice = new bx_pciusb_c ();
+  theUSBDevice = new bx_pciusb_c();
   bx_devices.pluginPciUSBAdapter = theUSBDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUSBDevice, BX_PLUGIN_PCIUSB);
   return 0; // Success
@@ -76,6 +76,7 @@ int libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, cha
 
 void libpciusb_LTX_plugin_fini(void)
 {
+  delete theUSBDevice;
 }
 
 bx_pciusb_c::bx_pciusb_c()
@@ -93,7 +94,7 @@ bx_pciusb_c::~bx_pciusb_c()
     if (BX_USB_THIS hub[0].device[i].fd > -1) 
       ::close(BX_USB_THIS hub[0].device[i].fd);
 
-  BX_DEBUG(("Exit."));
+  BX_DEBUG(("Exit"));
 }
 
 void bx_pciusb_c::init(void)

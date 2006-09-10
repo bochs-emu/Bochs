@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.23 2004-06-19 15:20:14 sshwarts Exp $
+// $Id: unmapped.cc,v 1.24 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,51 +38,44 @@
 
 bx_unmapped_c *theUnmappedDevice = NULL;
 
-  int
-libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libunmapped_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theUnmappedDevice = new bx_unmapped_c ();
+  theUnmappedDevice = new bx_unmapped_c();
   bx_devices.pluginUnmapped = theUnmappedDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theUnmappedDevice, BX_PLUGIN_UNMAPPED);
   return(0); // Success
 }
 
-  void
-libunmapped_LTX_plugin_fini(void)
+void libunmapped_LTX_plugin_fini(void)
 {
+  delete theUnmappedDevice;
 }
 
 bx_unmapped_c::bx_unmapped_c(void)
 {
   put("UNMP");
   settype(UNMAPLOG);
+}
+
+bx_unmapped_c::~bx_unmapped_c(void)
+{
+  BX_DEBUG(("Exit"));
+}
+
+void bx_unmapped_c::init(void)
+{
+  DEV_register_default_ioread_handler(this, read_handler, "Unmapped", 7);
+  DEV_register_default_iowrite_handler(this, write_handler, "Unmapped", 7);
+
   s.port80 = 0x00;
   s.port8e = 0x00;
   s.shutdown = 0;
 }
 
-bx_unmapped_c::~bx_unmapped_c(void)
-{
-  // Nothing yet
-}
-
-  void
-bx_unmapped_c::init(void)
-{
-  DEV_register_default_ioread_handler(this, read_handler, "Unmapped", 7);
-  DEV_register_default_iowrite_handler(this, write_handler, "Unmapped", 7);
-}
-
-  void
-bx_unmapped_c::reset(unsigned type)
-{
-}
-
   // static IO port read callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  Bit32u
-bx_unmapped_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
+Bit32u bx_unmapped_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_UM_SMF
   bx_unmapped_c *class_ptr = (bx_unmapped_c *) this_ptr;
@@ -90,8 +83,7 @@ bx_unmapped_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
   return( class_ptr->read(address, io_len) );
 }
 
-  Bit32u
-bx_unmapped_c::read(Bit32u address, unsigned io_len)
+Bit32u bx_unmapped_c::read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -180,8 +172,7 @@ bx_unmapped_c::read(Bit32u address, unsigned io_len)
   // static IO port write callback handler
   // redirects to non-static class handler to avoid virtual functions
 
-  void
-bx_unmapped_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
+void bx_unmapped_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
 #if !BX_USE_UM_SMF
   bx_unmapped_c *class_ptr = (bx_unmapped_c *) this_ptr;
@@ -189,8 +180,7 @@ bx_unmapped_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsig
   class_ptr->write(address, value, io_len);
 }
 
-  void
-bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: speaker.cc,v 1.9 2006-08-03 16:01:23 vruppert Exp $
+// $Id: speaker.cc,v 1.10 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright 2003 by David N. Welton <davidw@dedasys.com>.
@@ -39,21 +39,21 @@
 
 bx_speaker_c *theSpeaker= NULL;
 
-  int
-libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
+int libspeaker_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theSpeaker = new bx_speaker_c ();
+  theSpeaker = new bx_speaker_c();
   bx_devices.pluginSpeaker = theSpeaker;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSpeaker, BX_PLUGIN_SPEAKER);
   return(0); // Success
 }
 
-  void
-libspeaker_LTX_plugin_fini(void)
+void libspeaker_LTX_plugin_fini(void)
 {
+  delete theSpeaker;
 }
 
-bx_speaker_c::bx_speaker_c() {
+bx_speaker_c::bx_speaker_c()
+{
   put("SPEAKER");
   settype(SPEAKERLOG);
 
@@ -64,17 +64,18 @@ bx_speaker_c::bx_speaker_c() {
 #endif
 }
 
-bx_speaker_c::~bx_speaker_c() {
+bx_speaker_c::~bx_speaker_c()
+{
 #ifdef __linux__
-  if (consolefd) {
+  if (consolefd >= 0) {
     ioctl(consolefd, KIOCSOUND, 0);
     close(consolefd);
   }
 #endif
+  BX_DEBUG(("Exit"));
 }
 
-void
-bx_speaker_c::init(void) 
+void bx_speaker_c::init(void) 
 {
 #ifdef __linux__
   if (consolefd != -1) {
@@ -88,8 +89,7 @@ bx_speaker_c::init(void)
   this->beep_off();
 }
 
-void
-bx_speaker_c::reset(unsigned type) 
+void bx_speaker_c::reset(unsigned type) 
 {
   beep_off();
 }

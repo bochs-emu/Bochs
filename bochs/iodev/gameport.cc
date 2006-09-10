@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.10 2006-05-28 18:14:05 sshwarts Exp $
+// $Id: gameport.cc,v 1.11 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -61,7 +61,7 @@ bx_gameport_c *theGameport = NULL;
 
 int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theGameport = new bx_gameport_c ();
+  theGameport = new bx_gameport_c();
   bx_devices.pluginGameport = theGameport;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theGameport, BX_PLUGIN_GAMEPORT);
   return(0); // Success
@@ -69,6 +69,7 @@ int libgameport_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
 
 void libgameport_LTX_plugin_fini(void)
 {
+  delete theGameport;
 }
 
 bx_gameport_c::bx_gameport_c()
@@ -80,7 +81,7 @@ bx_gameport_c::bx_gameport_c()
 bx_gameport_c::~bx_gameport_c()
 {
   if (joyfd >= 0) close(joyfd);
-  BX_DEBUG(("Exit."));
+  BX_DEBUG(("Exit"));
 }
 
 void bx_gameport_c::init(void)

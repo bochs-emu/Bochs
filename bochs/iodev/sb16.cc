@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.50 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: sb16.cc,v 1.51 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ bx_sb16_c *theSB16Device = NULL;
 
 int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theSB16Device = new bx_sb16_c ();
+  theSB16Device = new bx_sb16_c();
   bx_devices.pluginSB16Device = theSB16Device;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSB16Device, BX_PLUGIN_SB16);
   return(0); // Success
@@ -52,6 +52,7 @@ int libsb16_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
 
 void libsb16_LTX_plugin_fini(void)
 {
+  delete theSB16Device;
 }
 
 // some shortcuts to save typing
@@ -121,6 +122,8 @@ bx_sb16_c::~bx_sb16_c(void)
 
   if ((SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get() > 0) && LOGFILE)
     fclose(LOGFILE);
+
+  BX_DEBUG(("Exit"));
 }
 
 void bx_sb16_c::init(void)

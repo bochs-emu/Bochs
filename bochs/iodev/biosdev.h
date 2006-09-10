@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: biosdev.h,v 1.7 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: biosdev.h,v 1.8 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ public:
   virtual ~bx_biosdev_c();
 
   virtual void init(void);
-  virtual void reset (unsigned type);
+  virtual void reset(unsigned type) {}
 
 private:
 

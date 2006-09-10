@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.30 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: parallel.cc,v 1.31 2006-09-10 17:18:44 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ bx_parallel_c *theParallelDevice = NULL;
 
 int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
-  theParallelDevice = new bx_parallel_c ();
+  theParallelDevice = new bx_parallel_c();
   bx_devices.pluginParallelDevice = theParallelDevice;
   BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theParallelDevice, BX_PLUGIN_PARALLEL);
   return(0); // Success
@@ -49,6 +49,7 @@ int libparallel_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
 
 void libparallel_LTX_plugin_fini(void)
 {
+  delete theParallelDevice;
 }
 
 bx_parallel_c::bx_parallel_c()
@@ -66,6 +67,7 @@ bx_parallel_c::~bx_parallel_c()
     if (s[i].output != NULL)
       fclose(s[i].output);
   }
+  BX_DEBUG(("Exit"));
 }
 
 void bx_parallel_c::init(void)
@@ -75,7 +77,7 @@ void bx_parallel_c::init(void)
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.30 2006-05-29 22:33:38 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.31 2006-09-10 17:18:44 vruppert Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);
