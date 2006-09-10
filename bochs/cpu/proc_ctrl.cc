@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.158 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.159 2006-09-10 16:56:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,7 +131,6 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    return;
   }
 
   BX_CPU_THIS_PTR cr0.ts = 0;
@@ -194,8 +193,8 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_DdRd: v8086 mode causes #GP(0)"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -212,12 +211,6 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     BX_PANIC(("MOV_DdRd(): rm field not a register!"));
 
   invalidate_prefetch_q();
-
-  /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_DdRd: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
 
   val_32 = BX_READ_32BIT_REG(i->rm());
   if (bx_dbg.dreg)
@@ -329,8 +322,8 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 {
   Bit32u val_32;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_RdDd: v8086 mode causes #GP(0)"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("MOV_RdDd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -339,12 +332,6 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RdDd(): rm field not a register!"));
-
-  /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && (CPL!=0)) {
-    BX_INFO(("MOV_RdDd: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
 
   if (bx_dbg.dreg)
     BX_INFO(("MOV_RdDd: DR%u not implemented yet", i->nnn()));
@@ -591,8 +578,8 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
   // mov general register data to control register
   Bit32u val_32;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_CdRd: v8086 mode causes #GP(0)"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("MOV_CdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -609,12 +596,6 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
     BX_PANIC(("MOV_CdRd(): rm field not a register!"));
 
   invalidate_prefetch_q();
-
-  /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_CdRd: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
 
   val_32 = BX_READ_32BIT_REG(i->rm());
 
@@ -658,8 +639,8 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
   // mov control register data to register
   Bit32u val_32;
 
-  if (v8086_mode()) {
-    BX_INFO(("MOV_RdCd: v8086 mode causes #GP(0)"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("MOV_RdCd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -674,12 +655,6 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
-
-  /* #GP(0) if CPL is not 0 */
-  if (protected_mode() && CPL!=0) {
-    BX_INFO(("MOV_RdCd: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
@@ -861,11 +836,9 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  if (protected_mode() || v8086_mode()) {
-    if (CPL != 0) {
-      BX_INFO(("LMSW: CPL != 0, CPL=%u", (unsigned) CPL));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("LMSW: CPL!=0 not in real mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   if (i->modC0()) {
@@ -1542,13 +1515,8 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   invalidate_prefetch_q();
 
-  if (v8086_mode()) {
-    BX_INFO(("RDMSR: Invalid in virtual 8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  if (protected_mode() && CPL != 0) {
-    BX_INFO(("RDMSR: CPL != 0"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("RDMSR: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1686,13 +1654,8 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   invalidate_prefetch_q();
 
-  if (v8086_mode()) {
-    BX_INFO(("WRMSR: Invalid in virtual 8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  if (protected_mode() && CPL != 0) {
-    BX_INFO(("WDMSR: CPL != 0"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("WRMSR: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -2314,6 +2277,8 @@ SYSRET_NON_64BIT_MODE:
 void BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
   Bit64u temp_GS_base;
+
+  BX_ASSERT(protected_mode());
 
   if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0, 0);
