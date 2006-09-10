@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.76 2006-09-07 18:50:51 vruppert Exp $
+// $Id: iodev.h,v 1.77 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,6 +85,7 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void init_mem(BX_MEM_C *) {}
   virtual void init(void) {}
   virtual void reset(unsigned type) {}
+  virtual void exit(void) {}
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void) {}
   virtual void after_restore_state(void) {}

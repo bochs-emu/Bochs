@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.52 2006-05-27 15:54:47 sshwarts Exp $
+// $Id: plugin.h,v 1.53 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -56,6 +56,7 @@ extern "C" {
 #define DEV_register_state() {bx_devices.register_state(); }
 #define DEV_after_restore_state() {bx_devices.after_restore_state(); }
 #define PLUG_load_plugin(name,type) {bx_load_plugin(#name,type);}
+#define PLUG_unload_plugin(name) {bx_unload_plugin(#name);}
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -80,6 +81,7 @@ extern "C" {
 // When plugins are off, PLUG_load_plugin will call the plugin_init function
 // directly.
 #define PLUG_load_plugin(name,type) {lib##name##_LTX_plugin_init(NULL,type,0,NULL);}
+#define PLUG_unload_plugin(name) {lib##name##_LTX_plugin_fini();}
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
 #define DEV_unregister_ioread_handler(b,c,d,e)  bx_devices.unregister_io_read_handler(b,c,d,e)
@@ -253,11 +255,11 @@ typedef struct _device_t
 
 extern device_t *devices;
 
-void plugin_startup (void);
-void plugin_load (char *name, char *args, plugintype_t);
-plugin_t *plugin_unload (plugin_t *plugin);
-void plugin_init_all (void);
-void plugin_fini_all (void);
+void plugin_startup(void);
+void plugin_load(char *name, char *args, plugintype_t);
+plugin_t *plugin_unload(plugin_t *plugin);
+void plugin_init_all(void);
+void plugin_fini_all(void);
 
 /* === Device Stuff === */
 typedef void (*deviceInitMem_t)(BX_MEM_C *);
@@ -335,8 +337,10 @@ BOCHSAPI extern Bit8u    (*pluginWr_memType)(Bit32u addr);
 void plugin_abort(void);
 
 int bx_load_plugin(const char *name, plugintype_t type);
+extern void bx_unload_plugin(const char *name);
 extern void bx_init_plugins(void);
 extern void bx_reset_plugins(unsigned);
+extern void bx_unload_plugins(void);
 #if BX_SUPPORT_SAVE_RESTORE
 extern void bx_plugins_register_state();
 extern void bx_plugins_after_restore_state();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.18 2006-05-27 15:54:47 sshwarts Exp $
+// $Id: plugin.cc,v 1.19 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -325,45 +325,41 @@ plugin_init_one(plugin_t *plugin)
 }
 
 
-  plugin_t *
-plugin_unload(plugin_t *plugin)
+plugin_t *plugin_unload(plugin_t *plugin)
 {
     plugin_t *dead_plug;
 
     if (plugin->initialized)
-        plugin->plugin_fini ();
+        plugin->plugin_fini();
 
-    lt_dlclose (plugin->handle);
-    free (plugin->name);
-    free (plugin->args);
+    lt_dlclose(plugin->handle);
+    delete [] plugin->name;
 
     dead_plug = plugin;
     plugin = plugin->next;
-    free (dead_plug);
+    free(dead_plug);
 
     return plugin;
 }
 
 
-void
-plugin_fini_all (void)
+void plugin_fini_all (void)
 {
     plugin_t *plugin;
 
-    for (plugin = plugins; plugin; plugin = plugin_unload (plugin));
+    for (plugin = plugins; plugin; plugin = plugin_unload(plugin));
 
     return;
 }
 
-  void
-plugin_load (char *name, char *args, plugintype_t type)
+void plugin_load(char *name, char *args, plugintype_t type)
 {
     plugin_t *plugin;
 
-    plugin = (plugin_t *)malloc (sizeof (plugin_t));
+    plugin = (plugin_t *)malloc (sizeof(plugin_t));
     if (!plugin)
     {
-      BX_PANIC (("malloc plugin_t failed"));
+      BX_PANIC(("malloc plugin_t failed"));
     }
 
     plugin->type = type;
@@ -372,7 +368,7 @@ plugin_load (char *name, char *args, plugintype_t type)
     plugin->initialized = 0;
 
     char plugin_filename[BX_PATHNAME_LEN], buf[BX_PATHNAME_LEN];
-    sprintf (buf, PLUGIN_FILENAME_FORMAT, name);
+    sprintf(buf, PLUGIN_FILENAME_FORMAT, name);
     sprintf(plugin_filename, "%s%s", PLUGIN_PATH, buf);
 
     // Set context so that any devices that the plugin registers will
@@ -437,8 +433,7 @@ plugin_load (char *name, char *args, plugintype_t type)
     return;
 }
 
-void
-plugin_abort (void)
+void plugin_abort(void)
 {
     pluginlog->panic("plugin load aborted");
 }
@@ -562,13 +557,33 @@ bx_bool pluginDevicePresent(char *name)
 /* Plugin system: Load one plugin                                       */
 /************************************************************************/
 
-int bx_load_plugin (const char *name, plugintype_t type)
+int bx_load_plugin(const char *name, plugintype_t type)
 {
   char *namecopy = new char[1+strlen(name)];
-  strcpy (namecopy, name);
-  plugin_load (namecopy, "", type);
+  strcpy(namecopy, name);
+  plugin_load(namecopy, "", type);
   return 0;
 }
+
+void bx_unload_plugin(const char *name)
+{
+  plugin_t *plugin, *prev = NULL;
+
+  for (plugin = plugins; plugin; plugin = plugin->next) {
+    if (!strcmp(plugin->name, name)) {
+      plugin = plugin_unload(plugin);
+      if (prev == NULL) {
+        plugins = plugin;
+      } else {
+        prev->next = plugin;
+      }
+      break;
+    } else {
+      prev = plugin;
+    }
+  }
+}
+
 #endif   /* end of #if BX_PLUGINS */
 
 /*************************************************************************/
@@ -605,6 +620,30 @@ void bx_reset_plugins(unsigned signal)
       pluginlog->info("reset of '%s' plugin device by virtual method",device->name);
       device->devmodel->reset(signal);
     }
+}
+
+/*******************************************************/
+/* Plugin system: Unload all registered plugin-devices */
+/*******************************************************/
+
+void bx_unload_plugins()
+{
+  device_t *device, *next;
+
+  device = devices;
+  do {
+    if (device->plugin != NULL) {
+#if BX_PLUGINS
+      bx_unload_plugin(device->name);
+#endif
+    } else {
+      device->devmodel->exit();
+    }
+    next = device->next;
+    free(device);
+    device = next;
+  } while (device != NULL);
+  devices = NULL;
 }
 
 #if BX_SUPPORT_SAVE_RESTORE

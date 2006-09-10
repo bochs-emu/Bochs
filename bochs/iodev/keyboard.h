@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.36 2006-08-25 18:26:27 vruppert Exp $
+// $Id: keyboard.h,v 1.37 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,6 +53,7 @@ public:
   // implement bx_devmodel_c interface
   virtual void init(void);
   virtual void reset(unsigned type);
+  virtual void exit(void);
   // override stubs from bx_keyb_stub_c
   virtual void gen_scancode(Bit32u key);
   virtual void paste_bytes(Bit8u *data, Bit32s length);

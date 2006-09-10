@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.102 2006-09-07 18:50:51 vruppert Exp $
+// $Id: devices.cc,v 1.103 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,7 +105,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.102 2006-09-07 18:50:51 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.103 2006-09-10 09:13:47 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -385,8 +385,26 @@ void bx_devices_c::exit()
     DEV_cmos_save_image();
   if (DEV_hd_present())
     DEV_hd_close_harddrive();
+#if BX_SUPPORT_PCI
+  if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
+    pluginPciBridge->print_i440fx_state();
+  }
+#endif
 
   BX_INFO(("Last time is %u", (unsigned) DEV_cmos_get_timeval()));
+
+  PLUG_unload_plugin(unmapped);
+  PLUG_unload_plugin(biosdev);
+  PLUG_unload_plugin(cmos);
+  PLUG_unload_plugin(dma);
+  PLUG_unload_plugin(pic);
+  PLUG_unload_plugin(vga);
+  PLUG_unload_plugin(floppy);
+#if BX_SUPPORT_PCI
+  PLUG_unload_plugin(pci);
+  PLUG_unload_plugin(pci2isa);
+#endif
+  bx_unload_plugins();
 }
 
 Bit32u bx_devices_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)

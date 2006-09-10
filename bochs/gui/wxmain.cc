@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.147 2006-09-09 08:05:07 vruppert Exp $
+// $Id: wxmain.cc,v 1.148 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -832,10 +832,16 @@ void MyFrame::OnShowCpu(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnShowKeyboard(wxCommandEvent& WXUNUSED(event))
 {
-  if (SIM->get_param(BXPN_WX_KBD_STATE) == NULL) {
+  bx_list_c *list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
+  int list_size = 0;
+
+  if (list != NULL) {
+    list_size = list->get_size();
+  }
+  if (list_size == 0) {
     // if params not initialized yet, then give up
     wxMessageBox(wxT("Cannot show the debugger window until the simulation has begun."),
-                 wxT("Sim not started"), wxOK | wxICON_ERROR, this );
+                 wxT("Sim not running"), wxOK | wxICON_ERROR, this );
     return;
   }
   if (showKbd == NULL) {

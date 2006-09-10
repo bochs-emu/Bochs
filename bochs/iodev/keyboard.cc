@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.121 2006-08-25 18:26:27 vruppert Exp $
+// $Id: keyboard.cc,v 1.122 2006-09-10 09:13:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ int libkeyboard_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, c
 
 void libkeyboard_LTX_plugin_fini(void)
 {
-  BX_INFO(("keyboard plugin_fini"));
+  theKeyboard->exit();
 }
 
 bx_keyb_c::bx_keyb_c()
@@ -108,7 +108,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.121 2006-08-25 18:26:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.122 2006-09-10 09:13:47 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -198,10 +198,14 @@ void bx_keyb_c::init(void)
 
 #if BX_WITH_WX
   bx_param_num_c *param;
+  bx_list_c *list;
   if (SIM->get_param("wxdebug") != NULL) {
     // register shadow params (Experimental, not a complete list by far)
-    bx_list_c *list = new bx_list_c(SIM->get_param("wxdebug"), "keyboard",
-                                    "Keyboard State", 20);
+    list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
+    if (list == NULL) {
+      list = new bx_list_c(SIM->get_param("wxdebug"), "keyboard",
+                           "Keyboard State", 20);
+    }
     new bx_shadow_bool_c(list, "irq1_req",
           "Keyboard IRQ1 requested",
           &BX_KEY_THIS s.kbd_controller.irq1_requested);
@@ -250,6 +254,22 @@ void bx_keyb_c::reset(unsigned type)
   if (BX_KEY_THIS pastebuf != NULL) {
     BX_KEY_THIS stop_paste = 1;
   }
+}
+
+void bx_keyb_c::exit(void)
+{
+  // remove runtime parameter handler
+  SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set_handler(NULL);
+  SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->set_handler(NULL);
+  if (BX_KEY_THIS pastebuf != NULL) {
+    delete [] BX_KEY_THIS pastebuf;
+  }
+#if BX_WITH_WX
+  bx_list_c *list = (bx_list_c*)SIM->get_param(BXPN_WX_KBD_STATE);
+  if (list != NULL) {
+    list->clear();
+  }
+#endif
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
