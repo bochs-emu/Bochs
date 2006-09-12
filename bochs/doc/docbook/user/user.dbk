@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.218 2006-08-27 07:06:01 vruppert Exp $
+$Id: user.dbk,v 1.219 2006-09-12 19:26:12 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3978,14 +3978,14 @@ the NE2000 just comment out the ne2k line.
 <para>
 Examples:
 <screen>
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0 #macosx
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
-ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
-ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
-ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0 #macosx
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=win32, ethdev=<replaceable>MYCARD</replaceable>
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vde, ethdev="/tmp/vde.ctl"
+ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:01, ethmod=vnet, ethdev="c:/temp"
+ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tuntap, ethdev=/dev/net/tun0, script=./tunconfig
 
 ioaddr, irq: You probably won't need to change ioaddr and irq, unless there
 are IRQ conflicts. These parameters are ignored if the NE2000 is assigned to
@@ -5808,13 +5808,13 @@ one that's closest to what you need, add it to your bochsrc file, and
 edit the values if necessary.
 <screen>
   # sample for Mac OS X
-  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0
+  ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=en0
   # sample for FreeBSD
-  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
+  ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=fbsd, ethdev=xl0
   # sample for Linux
-  ne2k: ioaddr=0x240, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+  ne2k: ioaddr=0x300, irq=9, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
   # sample for Windows
-  ne2k: ioaddr=0x240, irq=9, mac=00:c4:3B:00:C3:00, ethmod=win32, ethdev=NE2000
+  ne2k: ioaddr=0x300, irq=9, mac=00:c4:3B:00:C3:00, ethmod=win32, ethdev=NE2000
 </screen>
 You see the pattern.  Usually you won't need to change the I/O address, IRQ
 number, or MAC address.  The <varname>ethmod</varname> value depends on your
@@ -5844,8 +5844,8 @@ begin.  DLX Linux should boot in the Bochs window, and you should see
 that Linux detects the NE2000 card.  Eventually it gets to a login prompt.
 <screen>
   ne.c:v1.10 9/23/94 Donald Becker (becker@cesdis.gsfc.nasa.gov)
-  NE*000 ethercard probe at 0x280: b0 c4 20 00 00 00
-  eth0: NE2000 found at 0x280, using IRQ 9.
+  NE*000 ethercard probe at 0x300: b0 c4 20 00 00 00
+  eth0: NE2000 found at 0x300, using IRQ 9.
 </screen>
 </para>
 
@@ -5991,7 +5991,7 @@ Some of the other options in this group is probably also needed,
                 (see <xref linkend="compiling">)
         </para>
         <para>edit your <replaceable>.bochsrc</replaceable> configuration file and add something like :
-                <screen>  ne2k: ioaddr=0x240, irq=9, mac=fe:fd:00:00:00:01, 
+                <screen>  ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, 
                           ethmod=tuntap, ethdev=/dev/net/tun0, script=<replaceable>/path/to/tunconfig</replaceable>
                 </screen>
         </para>
@@ -8365,7 +8365,7 @@ mouse: enabled=0
 private_colormap: enabled=0
 fullscreen: enabled=0
 screenmode: name="sample"
-ne2k: ioaddr=0x280, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
+ne2k: ioaddr=0x300, irq=9, mac=fe:fd:00:00:00:01, ethmod=tap, ethdev=tap0
 keyboard_mapping: enabled=0, map=
 keyboard_type: xt
 i440fxsupport: enabled=0
@@ -10640,7 +10640,7 @@ step took just over eight hours!  (BTW, it was MUCH longer in version 1.4.1.  Gr
 <para>
 After the install finishes, you will need to change the following lines in .bochsrc file:
 <programlisting>
-ne2k: ioaddr=0x280, irq=10, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
+ne2k: ioaddr=0x300, irq=10, mac=b0:c4:20:00:00:00, ethmod=linux, ethdev=eth0
 boot: disk
 </programlisting>
 Obviously, if you're not using Linux, the ethmode and ethdev values on the ne2k line will be different.

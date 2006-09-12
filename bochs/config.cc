@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.109 2006-06-21 20:42:26 sshwarts Exp $
+// $Id: config.cc,v 1.110 2006-09-12 19:26:12 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1376,7 +1376,7 @@ void bx_init_options()
     "NE2K I/O Address",
     "I/O base address of the emulated NE2K device",
     0, 0xffff,
-    0x240);
+    0x300);
   ioaddr->set_base(16);
   irq = new bx_param_num_c(menu,
     "irq",
