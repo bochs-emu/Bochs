@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.11 2006-09-10 17:18:44 vruppert Exp $
+// $Id: gameport.cc,v 1.12 2006-09-12 13:05:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -75,7 +75,8 @@ void libgameport_LTX_plugin_fini(void)
 bx_gameport_c::bx_gameport_c()
 {
   put("GAME");
-  settype(EXTFPUIRQLOG);
+  settype(GAMELOG);
+  joyfd = -1;
 }
 
 bx_gameport_c::~bx_gameport_c()

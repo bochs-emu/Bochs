@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.19 2006-09-10 09:13:47 vruppert Exp $
+// $Id: plugin.cc,v 1.20 2006-09-12 13:05:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -631,7 +631,7 @@ void bx_unload_plugins()
   device_t *device, *next;
 
   device = devices;
-  do {
+  while (device != NULL) {
     if (device->plugin != NULL) {
 #if BX_PLUGINS
       bx_unload_plugin(device->name);
@@ -642,7 +642,7 @@ void bx_unload_plugins()
     next = device->next;
     free(device);
     device = next;
-  } while (device != NULL);
+  };
   devices = NULL;
 }
 

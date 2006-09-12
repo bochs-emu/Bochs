@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.86 2006-09-03 05:52:52 vruppert Exp $
+// $Id: wx.cc,v 1.87 2006-09-12 13:05:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -112,6 +112,7 @@ static struct {
 wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events = 0;
+static bx_bool mouse_captured = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
 #endif
@@ -233,7 +234,7 @@ void MyPanel::OnMouse(wxMouseEvent& event)
     return;
   }
 
-  if (!SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get()) 
+  if (!mouse_captured) 
     return;  // mouse disabled, ignore the event
 
   // process buttons and motion together
@@ -902,8 +903,10 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init trying to get lock. wxScreen=%p", wxScreen)));
   wxCriticalSectionLocker lock(wxScreen_lock);
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen)));
-  wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
-  memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  if (wxScreen == NULL) {
+    wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
+    memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  }
 
   wxTileX = tilewidth;
   wxTileY = tileheight;
@@ -1581,15 +1584,14 @@ bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 // Called before bochs terminates, to allow for a graceful
 // exit from the native GUI mechanism.
 
-  void
-bx_wx_gui_c::exit(void)
+void bx_wx_gui_c::exit(void)
 {
-  BX_INFO(("bx_wx_gui_c::exit() not implemented yet."));
+  clear_screen();
 }
 
-  void
-bx_wx_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_wx_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
+  mouse_captured = val;
 }
 
 

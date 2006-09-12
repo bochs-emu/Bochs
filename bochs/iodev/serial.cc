@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.73 2006-09-10 17:18:44 vruppert Exp $
+// $Id: serial.cc,v 1.74 2006-09-12 13:05:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -70,6 +70,7 @@ bx_serial_c::bx_serial_c(void)
   put("SER");
   settype(SERLOG);
   for (int i=0; i<BX_SERIAL_MAXDEV; i++) {
+    s[i].io_mode = BX_SER_MODE_NULL;
     s[i].tty_id = -1;
     s[i].tx_timer_index = BX_NULL_TIMER_HANDLE;
     s[i].rx_timer_index = BX_NULL_TIMER_HANDLE;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.196 2006-09-09 11:28:52 vruppert Exp $
+// $Id: bochs.h,v 1.197 2006-09-12 13:05:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -294,7 +294,7 @@ enum {
   CPU10LOG, CPU11LOG, CPU12LOG, CPU13LOG, CPU14LOG, CPU15LOG, CTRLLOG,
   UNMAPLOG, SERRLOG, BIOSLOG, PIT81LOG, PIT82LOG, IODEBUGLOG, PCI2ISALOG,
   PLUGINLOG, EXTFPUIRQLOG , PCIVGALOG, PCIUSBLOG, VTIMERLOG, STIMERLOG,
-  PCIIDELOG, PCIDEVLOG, PCIPNICLOG, SPEAKERLOG, BUSMLOG
+  PCIIDELOG, PCIDEVLOG, PCIPNICLOG, SPEAKERLOG, BUSMLOG, GAMELOG
 };
 
 class BOCHSAPI iofunctions {
