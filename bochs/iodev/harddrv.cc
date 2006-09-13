@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.183 2006-09-10 17:18:44 vruppert Exp $
+// $Id: harddrv.cc,v 1.184 2006-09-13 18:51:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -145,7 +145,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.183 2006-09-10 17:18:44 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.184 2006-09-13 18:51:25 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -177,7 +177,7 @@ void bx_hard_drive_c::init(void)
     sprintf(string ,"ATA%d", channel);
 
     if (BX_HD_THIS channels[channel].irq != 0) 
-      DEV_register_irq(BX_HD_THIS channels[channel].irq, strdup(string));
+      DEV_register_irq(BX_HD_THIS channels[channel].irq, string);
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
       DEV_register_ioread_handler(this, read_handler,
