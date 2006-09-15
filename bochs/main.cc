@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.341 2006-09-10 09:13:47 vruppert Exp $
+// $Id: main.cc,v 1.342 2006-09-15 17:02:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1145,6 +1145,8 @@ int bx_atexit(void)
       if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
   }
 #endif
+
+  BX_MEM(0)->cleanup_memory();
 
 #if BX_PROVIDE_DEVICE_MODELS==1
   bx_pc_system.exit();

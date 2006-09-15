@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.96 2006-09-02 12:08:28 vruppert Exp $
+// $Id: misc_mem.cc,v 1.97 2006-09-15 17:02:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -83,41 +83,19 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
 
 BX_MEM_C::~BX_MEM_C()
 {
-  if (BX_MEM_THIS vector != NULL) {
-    delete [] BX_MEM_THIS actual_vector;
-    BX_MEM_THIS actual_vector = NULL;
-    BX_MEM_THIS vector = NULL;
-    delete [] BX_MEM_THIS memory_handlers;
-    BX_MEM_THIS memory_handlers = NULL;
-#if BX_DEBUGGER
-    delete [] BX_MEM_THIS dbg_dirty_pages;
-#endif
-  } else {
-    BX_DEBUG(("Memory not freed as it wasn't allocated !"));
-  }
+  cleanup_memory();
 }
 
 void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.96 2006-09-02 12:08:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.97 2006-09-15 17:02:52 vruppert Exp $"));
 
-  if (BX_MEM_THIS vector != NULL) {
-    delete [] BX_MEM_THIS actual_vector;
-    BX_MEM_THIS actual_vector = NULL;
-    BX_MEM_THIS vector = NULL;
-    delete [] BX_MEM_THIS memory_handlers;
-    BX_MEM_THIS memory_handlers = NULL;
-#if BX_DEBUGGER
-    delete [] BX_MEM_THIS dbg_dirty_pages;
-#endif
-  }
-
-  alloc_vector_aligned (memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
+  alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
   BX_MEM_THIS megabytes = memsize / (1024*1024);
-  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[1024 * 1024];
+  BX_MEM_THIS memory_handlers = new struct memory_handler_struct *[4096];
   BX_MEM_THIS rom = &BX_MEM_THIS vector[memsize];
   BX_MEM_THIS bogus = &BX_MEM_THIS vector[memsize + BIOSROMSZ + EXROMSIZE];
 #if BX_DEBUGGER
@@ -127,7 +105,7 @@ void BX_MEM_C::init_memory(int memsize)
 #endif
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
   memset(BX_MEM_THIS bogus, 0xff, 4096);
-  for (idx = 0; idx < 1024 * 1024; idx++)
+  for (idx = 0; idx < 4096; idx++)
     BX_MEM_THIS memory_handlers[idx] = NULL;
   for (idx = 0; idx < 65; idx++)
     BX_MEM_THIS rom_present[idx] = 0;
@@ -144,6 +122,33 @@ void BX_MEM_C::init_memory(int memsize)
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "memory", "Memory State");
   new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS len);
 #endif
+}
+
+void BX_MEM_C::cleanup_memory()
+{
+  unsigned idx;
+
+  if (BX_MEM_THIS vector != NULL) {
+    delete [] BX_MEM_THIS actual_vector;
+    BX_MEM_THIS actual_vector = NULL;
+    BX_MEM_THIS vector = NULL;
+    if (BX_MEM_THIS memory_handlers != NULL) {
+      for (idx = 0; idx < 4096; idx++) {
+        struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[idx];
+        struct memory_handler_struct *prev = NULL;
+        while (memory_handler) {
+          prev = memory_handler;
+          memory_handler = memory_handler->next;
+          delete prev;
+        }
+      }
+      delete [] BX_MEM_THIS memory_handlers;
+      BX_MEM_THIS memory_handlers = NULL;
+    }
+#if BX_DEBUGGER
+    delete [] BX_MEM_THIS dbg_dirty_pages;
+#endif
+  }
 }
 
 #if BX_SUPPORT_APIC

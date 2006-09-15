@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.39 2006-09-02 12:08:28 vruppert Exp $
+// $Id: memory.h,v 1.40 2006-09-15 17:02:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,6 +85,7 @@ public:
  ~BX_MEM_C();
   BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
   BX_MEM_SMF void    init_memory(int memsize);
+  BX_MEM_SMF void    cleanup_memory(void);
   BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);
   BX_MEM_SMF bx_bool is_smram_accessible(void);
