@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.h,v 1.11 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: slowdown_timer.h,v 1.12 2006-09-16 19:30:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,6 +45,7 @@ public:
   bx_slowdown_timer_c();
 
   void init(void);
+  void exit(void);
 #if BX_SUPPORT_SAVE_RESTORE
   void after_restore_state(void);
 #endif

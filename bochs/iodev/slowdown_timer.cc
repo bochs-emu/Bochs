@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.25 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: slowdown_timer.cc,v 1.26 2006-09-16 19:30:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -82,6 +82,11 @@ void bx_slowdown_timer_c::init(void)
   }
   bx_pc_system.deactivate_timer(s.timer_handle);
   bx_pc_system.activate_timer(s.timer_handle,(Bit32u)s.Q,0);
+}
+
+void bx_slowdown_timer_c::exit(void)
+{
+  s.timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
