@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.105 2006-09-13 18:51:25 vruppert Exp $
+// $Id: devices.cc,v 1.106 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,7 +114,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.105 2006-09-13 18:51:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.106 2006-09-16 14:47:40 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -391,8 +391,6 @@ void bx_devices_c::after_restore_state()
 
 void bx_devices_c::exit()
 {
-  if (DEV_hd_present())
-    DEV_hd_close_harddrive();
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
     pluginPciBridge->print_i440fx_state();

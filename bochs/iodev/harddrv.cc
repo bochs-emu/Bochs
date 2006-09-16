@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.184 2006-09-13 18:51:25 vruppert Exp $
+// $Id: harddrv.cc,v 1.185 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,6 +123,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       if (channels[channel].drives[device].hard_drive != NULL) {
+        channels[channel].drives[device].hard_drive->close();
         delete channels[channel].drives[device].hard_drive;
         channels[channel].drives[device].hard_drive = NULL;
       }
@@ -145,7 +146,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.184 2006-09-13 18:51:25 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.185 2006-09-16 14:47:40 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2578,16 +2579,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_PANIC(("hard drive: io write to address %x = %02x",
         (unsigned) address, (unsigned) value));
     }
-}
-
-void bx_hard_drive_c::close_harddrive(void)
-{
-  for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
-    if(BX_HD_THIS channels[channel].drives[0].hard_drive != NULL)
-      BX_HD_THIS channels[channel].drives[0].hard_drive->close();
-    if(BX_HD_THIS channels[channel].drives[1].hard_drive != NULL)
-      BX_HD_THIS channels[channel].drives[1].hard_drive->close();
-  }
 }
 
   bx_bool BX_CPP_AttrRegparmN(2)

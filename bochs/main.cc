@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.342 2006-09-15 17:02:52 vruppert Exp $
+// $Id: main.cc,v 1.343 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,7 +73,6 @@ bx_bool bx_gui_sighandler = 0;
 Bit32u bx_unmapped_io_read_handler(Bit32u address, unsigned io_len);
 void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
                                     unsigned io_len);
-void   bx_close_harddrive(void);
 #endif
 
 void bx_init_bx_dbg (void);

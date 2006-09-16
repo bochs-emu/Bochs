@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.53 2006-09-10 09:13:47 vruppert Exp $
+// $Id: plugin.h,v 1.54 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -107,7 +107,6 @@ extern "C" {
 #define DEV_cmos_set_reg(a,b) (bx_devices.pluginCmosDevice->set_reg(a,b))
 #define DEV_cmos_checksum() (bx_devices.pluginCmosDevice->checksum_cmos())
 #define DEV_cmos_get_timeval() (bx_devices.pluginCmosDevice->get_timeval())
-#define DEV_cmos_save_image() (bx_devices.pluginCmosDevice->save_image())
 #define DEV_cmos_present() (bx_devices.pluginCmosDevice != &bx_devices.stubCmos)
 
 ///////// keyboard macros
@@ -133,7 +132,6 @@ extern "C" {
     (bx_devices.pluginHardDrive->get_cd_media_status(handle))
 #define DEV_hd_set_cd_media_status(handle, status) \
     (bx_devices.pluginHardDrive->set_cd_media_status(handle, status))
-#define DEV_hd_close_harddrive()  bx_devices.pluginHardDrive->close_harddrive()
 #define DEV_hd_present() (bx_devices.pluginHardDrive != &bx_devices.stubHardDrive)
 #define DEV_hd_bmdma_read_sector(a,b,c) bx_devices.pluginHardDrive->bmdma_read_sector(a,b,c)
 #define DEV_hd_bmdma_write_sector(a,b) bx_devices.pluginHardDrive->bmdma_write_sector(a,b)

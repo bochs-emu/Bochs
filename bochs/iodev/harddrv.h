@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.44 2006-08-05 07:49:31 vruppert Exp $
+// $Id: harddrv.h,v 1.45 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -161,7 +161,6 @@ class bx_hard_drive_c : public bx_hard_drive_stub_c {
 public:
   bx_hard_drive_c();
   virtual ~bx_hard_drive_c();
-  virtual void   close_harddrive(void);
   virtual void   init();
   virtual void   reset(unsigned type);
   virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device);

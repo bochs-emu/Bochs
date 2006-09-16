@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.79 2006-09-13 18:51:25 vruppert Exp $
+// $Id: iodev.h,v 1.80 2006-09-16 14:47:40 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,7 +85,6 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void init_mem(BX_MEM_C *) {}
   virtual void init(void) {}
   virtual void reset(unsigned type) {}
-  virtual void exit(void) {}
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void) {}
   virtual void after_restore_state(void) {}
@@ -135,9 +134,6 @@ public:
 
 class BOCHSAPI bx_hard_drive_stub_c : public bx_devmodel_c {
 public:
-  virtual void   close_harddrive(void) {
-    STUBFUNC(HD, close_harddrive);
-  }
   virtual void   init() {
     STUBFUNC(HD, init);
   }
@@ -199,9 +195,6 @@ public:
   }
   virtual void checksum_cmos(void) {
     STUBFUNC(cmos, checksum);
-  }
-  virtual void save_image(void) {
-    STUBFUNC(cmos, save_image);
   }
 };
 
