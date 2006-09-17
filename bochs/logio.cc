@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.56 2006-09-09 11:28:52 vruppert Exp $
+// $Id: logio.cc,v 1.57 2006-09-17 18:09:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,6 +69,21 @@ void iofunctions::add_logfn(logfunc_t *fn)
 {
   assert(n_logfn < MAX_LOGFNS);
   logfn_list[n_logfn++] = fn;
+}
+
+void iofunctions::remove_logfn(logfunc_t *fn)
+{
+  assert(n_logfn > 0);
+  int i = 0;
+  while ((fn != logfn_list[i]) && (i < n_logfn)) {
+    i++;
+  };
+  if (i < n_logfn) {
+    for (int j=i; j<n_logfn-1; j++) {
+      logfn_list[j] = logfn_list[j+1];
+    }
+    n_logfn--;
+  }
 }
 
 void iofunctions::set_log_action(int loglevel, int action)
@@ -287,6 +302,7 @@ logfunctions::logfunctions(iofunc_t *iofunc)
 
 logfunctions::~logfunctions()
 {
+  this->logio->remove_logfn(this);
   if (prefix) free(prefix);
 }
 

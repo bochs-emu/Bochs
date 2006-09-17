@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.197 2006-09-12 13:05:07 vruppert Exp $
+// $Id: bochs.h,v 1.198 2006-09-17 18:09:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -320,10 +320,11 @@ public:
 	void init_log(FILE *fs);
 	void exit_log();
 	void set_log_prefix(const char *prefix);
-	int get_n_logfns () { return n_logfn; }
-	logfunc_t *get_logfn (int index) { return logfn_list[index]; }
-	void add_logfn (logfunc_t *fn);
-	void set_log_action (int loglevel, int action);
+	int get_n_logfns() { return n_logfn; }
+	logfunc_t *get_logfn(int index) { return logfn_list[index]; }
+	void add_logfn(logfunc_t *fn);
+	void remove_logfn(logfunc_t *fn);
+	void set_log_action(int loglevel, int action);
 	const char *getlevel(int i) {
 		static const char *loglevel[N_LOGLEV] = {
 			"DEBUG",

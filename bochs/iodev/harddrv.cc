@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.185 2006-09-16 14:47:40 vruppert Exp $
+// $Id: harddrv.cc,v 1.186 2006-09-17 18:09:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -110,7 +110,7 @@ bx_hard_drive_c::bx_hard_drive_c()
   for (Bit8u channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     for (Bit8u device=0; device<2; device ++) {
       channels[channel].drives[device].hard_drive =  NULL;
-#ifdef LOWLOVEL_CDROM
+#ifdef LOWLEVEL_CDROM
       channels[channel].drives[device].cdrom.cd =  NULL;
 #endif
     }
@@ -127,7 +127,7 @@ bx_hard_drive_c::~bx_hard_drive_c()
         delete channels[channel].drives[device].hard_drive;
         channels[channel].drives[device].hard_drive = NULL;
       }
-#ifdef LOWLOVEL_CDROM
+#ifdef LOWLEVEL_CDROM
       if (channels[channel].drives[device].cdrom.cd != NULL) {
         delete channels[channel].drives[device].cdrom.cd;
         channels[channel].drives[device].cdrom.cd = NULL;
@@ -146,7 +146,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.185 2006-09-16 14:47:40 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.186 2006-09-17 18:09:33 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
