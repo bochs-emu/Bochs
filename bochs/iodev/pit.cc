@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.cc,v 1.23 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: pit.cc,v 1.24 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,25 +142,21 @@ bx_pit_c bx_pit;
 #endif
 
 
-bx_pit_c::bx_pit_c( void )
+bx_pit_c::bx_pit_c(void)
 {
   put("PIT");
   settype(PITLOG);
   memset(&s, 0, sizeof(s));
 
   /* 8254 PIT (Programmable Interval Timer) */
-
-  BX_PIT_THIS s.timer_handle[1] = BX_NULL_TIMER_HANDLE;
-  BX_PIT_THIS s.timer_handle[2] = BX_NULL_TIMER_HANDLE;
 }
 
-bx_pit_c::~bx_pit_c( void )
+bx_pit_c::~bx_pit_c(void)
 {
 }
 
 
-  int
-bx_pit_c::init( void )
+int bx_pit_c::init(void)
 {
   DEV_register_irq(0, "8254 PIT");
   DEV_register_ioread_handler(this, read_handler, 0x0040, "8254 PIT", 1);
@@ -221,6 +217,10 @@ bx_pit_c::init( void )
   BX_PIT_THIS s.timer[2].active      = 0;
 
   return(1);
+}
+
+int bx_pit_c::exit(void)
+{
 }
 
 void bx_pit_c::reset(unsigned type)

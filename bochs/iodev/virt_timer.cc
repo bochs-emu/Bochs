@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.31 2006-05-29 22:33:38 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.32 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,16 +135,7 @@ bx_virt_timer_c::bx_virt_timer_c()
   put("VTIMER");
   settype(VTIMERLOG);
 
-  numTimers = 0;
-  current_timers_time = 0;
-  timers_next_event_time = BX_MAX_VIRTUAL_TIME;
-  last_sequential_time = 0;
-  in_timer_handler = 0;
-  virtual_next_event_time = BX_MAX_VIRTUAL_TIME;
-  current_virtual_time = 0;
-
-  use_virtual_timers = BX_USE_VIRTUAL_TIMERS;
-  init_done = 0;
+  reset();
 }
 
 const Bit64u bx_virt_timer_c::NullTimerInterval = BX_MAX_VIRTUAL_TIME;
@@ -382,6 +373,20 @@ void bx_virt_timer_c::next_event_time_update(void)
 				(Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 				0);
   }
+}
+
+void bx_virt_timer_c::reset(void)
+{
+  numTimers = 0;
+  current_timers_time = 0;
+  timers_next_event_time = BX_MAX_VIRTUAL_TIME;
+  last_sequential_time = 0;
+  in_timer_handler = 0;
+  virtual_next_event_time = BX_MAX_VIRTUAL_TIME;
+  current_virtual_time = 0;
+
+  use_virtual_timers = BX_USE_VIRTUAL_TIMERS;
+  init_done = 0;
 }
 
 void bx_virt_timer_c::init(void)

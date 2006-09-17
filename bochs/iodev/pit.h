@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.15 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pit.h,v 1.16 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,6 +65,7 @@ public:
   bx_pit_c();
   virtual ~bx_pit_c();
   BX_PIT_SMF int init(void);
+  BX_PIT_SMF void exit(void);
   BX_PIT_SMF void reset( unsigned type);
   BX_PIT_SMF bx_bool periodic( Bit32u   usec_delta );
 #if BX_SUPPORT_SAVE_RESTORE
@@ -84,7 +85,6 @@ private:
     bx_pit_t timer[3];
     Bit8u   speaker_data_on;
     bx_bool refresh_clock_div2;
-    int  timer_handle[3];
   } s;
 
   BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );

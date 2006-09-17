@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.24 2006-05-27 15:54:49 sshwarts Exp $
+// $Id: pit_wrap.h,v 1.25 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ public:
   bx_pit_c();
   virtual ~bx_pit_c() {}
   BX_PIT_SMF int init(void);
+  BX_PIT_SMF void exit(void);
   BX_PIT_SMF void reset(unsigned type);
   BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);
 #if BX_SUPPORT_SAVE_RESTORE

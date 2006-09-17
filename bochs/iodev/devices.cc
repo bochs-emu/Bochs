@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.107 2006-09-16 19:30:56 vruppert Exp $
+// $Id: devices.cc,v 1.108 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -114,7 +114,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.107 2006-09-16 19:30:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.108 2006-09-17 19:19:15 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -391,6 +391,8 @@ void bx_devices_c::after_restore_state()
 
 void bx_devices_c::exit()
 {
+  pit->exit();
+  bx_virt_timer.reset();
   bx_slowdown_timer.exit();
 
 #if BX_SUPPORT_PCI

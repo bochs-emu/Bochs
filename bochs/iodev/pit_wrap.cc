@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.62 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.63 2006-09-17 19:19:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -124,7 +124,7 @@ int bx_pit_c::init(void)
   BX_DEBUG(("pit: RESETting timer."));
   bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
   BX_DEBUG(("deactivated timer."));
-  if(BX_PIT_THIS s.timer.get_next_event_time()) {
+  if (BX_PIT_THIS s.timer.get_next_event_time()) {
     bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
 				(Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
@@ -144,6 +144,12 @@ int bx_pit_c::init(void)
   BX_DEBUG(("s.last_next_event_time=%d",BX_PIT_THIS s.last_next_event_time));
 
   return(1);
+}
+
+void bx_pit_c::exit(void)
+{
+  BX_PIT_THIS s.timer_handle[0] = BX_NULL_TIMER_HANDLE;
+  BX_PIT_THIS s.timer.init();
 }
 
 void bx_pit_c::reset(unsigned type)
