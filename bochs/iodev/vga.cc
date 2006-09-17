@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.138 2006-09-10 17:18:44 vruppert Exp $
+// $Id: vga.cc,v 1.139 2006-09-17 20:39:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -116,6 +116,7 @@ bx_vga_c::~bx_vga_c()
     delete [] s.memory;
     s.memory = NULL;
   }
+  SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL)->set_handler(NULL);
   BX_DEBUG(("Exit"));
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.51 2006-09-10 17:18:44 vruppert Exp $
+// $Id: sb16.cc,v 1.52 2006-09-17 20:39:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,6 +122,9 @@ bx_sb16_c::~bx_sb16_c(void)
 
   if ((SIM->get_param_num(BXPN_SB16_LOGLEVEL)->get() > 0) && LOGFILE)
     fclose(LOGFILE);
+
+  SIM->get_param_num(BXPN_SB16_DMATIMER)->set_handler(NULL);
+  SIM->get_param_num(BXPN_SB16_LOGLEVEL)->set_handler(NULL);
 
   BX_DEBUG(("Exit"));
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.41 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pciusb.cc,v 1.42 2006-09-17 20:39:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -93,6 +93,9 @@ bx_pciusb_c::~bx_pciusb_c()
   for (int i=0; i<USB_CUR_DEVS; i++)
     if (BX_USB_THIS hub[0].device[i].fd > -1) 
       ::close(BX_USB_THIS hub[0].device[i].fd);
+
+  SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(NULL);
+  SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(NULL);
 
   BX_DEBUG(("Exit"));
 }
