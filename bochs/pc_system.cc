@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.64 2006-09-16 19:30:56 vruppert Exp $
+// $Id: pc_system.cc,v 1.65 2006-09-17 20:37:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -217,7 +217,10 @@ void bx_pc_system_c::exit(void)
   // delete all registered timers (exception: null timer and APIC timer)
   numTimers = 1 + BX_SUPPORT_APIC;
   bx_devices.exit();
-  if (bx_gui) bx_gui->exit();
+  if (bx_gui) {
+    bx_gui->cleanup();
+    bx_gui->exit();
+  }
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
