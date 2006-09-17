@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.76 2006-08-31 18:18:14 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.77 2006-09-17 07:12:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ unsigned dbg_cpu = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
-bx_param_bool_c *sim_running;
+static bx_param_bool_c *sim_running = NULL;
 
 static char bx_debug_rc_fname[BX_MAX_PATH];
 static char tmp_buf[512];
@@ -212,11 +212,14 @@ int bx_dbg_main(int argc, char *argv[])
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
   // some parts of the GUI.
-  bx_list_c *base = (bx_list_c*) SIM->get_param("general");
-  sim_running = new bx_param_bool_c(base,
-      "debug_running",
-      "Simulation is running", "", 0);
-
+  if (sim_running == NULL) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param("general");
+    sim_running = new bx_param_bool_c(base,
+        "debug_running",
+        "Simulation is running", "", 0);
+  } else {
+    sim_running->set(0);
+  }
   // setup Ctrl-C handler
   if (!SIM->is_wx_selected()) {
     signal(SIGINT, bx_debug_ctrlc_handler);
