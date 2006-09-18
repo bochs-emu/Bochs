@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.167 2006-09-09 11:28:52 vruppert Exp $
+// $Id: siminterface.cc,v 1.168 2006-09-18 20:31:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1973,7 +1973,11 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, char *title, bx_param
 
 bx_list_c::~bx_list_c()
 {
-  if (list != NULL) delete [] list;
+  if (list != NULL) {
+    for (int i=0; i<this->size; i++) {
+      delete list[i];
+    }
+  }
   if (title != NULL) delete title;
   if (options != NULL) delete options;
   if (choice != NULL) delete choice;
