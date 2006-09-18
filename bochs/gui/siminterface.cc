@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.168 2006-09-18 20:31:37 vruppert Exp $
+// $Id: siminterface.cc,v 1.169 2006-09-18 21:24:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -1977,6 +1977,7 @@ bx_list_c::~bx_list_c()
     for (int i=0; i<this->size; i++) {
       delete list[i];
     }
+    delete [] list;
   }
   if (title != NULL) delete title;
   if (options != NULL) delete options;
