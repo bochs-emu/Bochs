@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.32 2006-09-17 19:19:15 vruppert Exp $
+// $Id: virt_timer.cc,v 1.33 2006-09-18 18:10:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ bx_virt_timer_c::bx_virt_timer_c()
   put("VTIMER");
   settype(VTIMERLOG);
 
-  reset();
+  setup();
 }
 
 const Bit64u bx_virt_timer_c::NullTimerInterval = BX_MAX_VIRTUAL_TIME;
@@ -375,7 +375,7 @@ void bx_virt_timer_c::next_event_time_update(void)
   }
 }
 
-void bx_virt_timer_c::reset(void)
+void bx_virt_timer_c::setup(void)
 {
   numTimers = 0;
   current_timers_time = 0;

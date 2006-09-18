@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci.cc,v 1.52 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pci.cc,v 1.53 2006-09-18 18:10:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -61,6 +61,7 @@ bx_pci_bridge_c::bx_pci_bridge_c()
 
 bx_pci_bridge_c::~bx_pci_bridge_c()
 {
+  print_i440fx_state();
   BX_DEBUG(("Exit"));
 }
 
