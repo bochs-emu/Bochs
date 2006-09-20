@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.109 2006-09-18 18:10:48 vruppert Exp $
+// $Id: devices.cc,v 1.110 2006-09-20 18:24:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,10 @@ bx_devices_c::bx_devices_c()
 
   read_port_to_handler = NULL;
   write_port_to_handler = NULL;
+  io_read_handlers.next = NULL;
+  io_read_handlers.handler_name = NULL;
+  io_write_handlers.next = NULL;
+  io_write_handlers.handler_name = NULL;
   init_stubs();
 
   for (unsigned i=0; i < BX_MAX_IRQS; i++) {
@@ -113,14 +117,16 @@ void bx_devices_c::init_stubs()
 void bx_devices_c::init(BX_MEM_C *newmem)
 {
   unsigned i;
+  const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.109 2006-09-18 18:10:48 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.110 2006-09-20 18:24:17 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
   io_read_handlers.next = &io_read_handlers;
   io_read_handlers.prev = &io_read_handlers;
-  io_read_handlers.handler_name  = "Default";
+  io_read_handlers.handler_name = new char[strlen(def_name)+1];
+  strcpy(io_read_handlers.handler_name, def_name);
   io_read_handlers.funct         = (void *)&default_read_handler;
   io_read_handlers.this_ptr      = NULL;
   io_read_handlers.usage_count = 0; // not used with the default handler
@@ -128,16 +134,17 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   
   io_write_handlers.next = &io_write_handlers;
   io_write_handlers.prev = &io_write_handlers;
-  io_write_handlers.handler_name = "Default";
+  io_write_handlers.handler_name = new char[strlen(def_name)+1];
+  strcpy(io_write_handlers.handler_name, def_name);
   io_write_handlers.funct        = (void *)&default_write_handler;
   io_write_handlers.this_ptr     = NULL;
   io_write_handlers.usage_count = 0; // not used with the default handler
   io_write_handlers.mask         = 7;
 
   if (read_port_to_handler)
-	  delete [] read_port_to_handler;
+    delete [] read_port_to_handler;
   if (write_port_to_handler)
-	  delete [] write_port_to_handler;
+    delete [] write_port_to_handler;
   read_port_to_handler = new struct io_handler_struct *[PORTS];
   write_port_to_handler = new struct io_handler_struct *[PORTS];
 
@@ -391,6 +398,27 @@ void bx_devices_c::after_restore_state()
 
 void bx_devices_c::exit()
 {
+  // delete i/o handlers before unloading plugins
+  struct io_handler_struct *io_read_handler = io_read_handlers.next;
+  struct io_handler_struct *curr = NULL;
+  while (io_read_handler != &io_read_handlers) {
+    io_read_handler->prev->next = io_read_handler->next;
+    io_read_handler->next->prev = io_read_handler->prev;
+    curr = io_read_handler;
+    io_read_handler = io_read_handler->next;
+    delete [] curr->handler_name;
+    delete curr;
+  }
+  struct io_handler_struct *io_write_handler = io_write_handlers.next;
+  while (io_write_handler != &io_write_handlers) {
+    io_write_handler->prev->next = io_write_handler->next;
+    io_write_handler->next->prev = io_write_handler->prev;
+    curr = io_write_handler;
+    io_write_handler = io_write_handler->next;
+    delete [] curr->handler_name;
+    delete curr;
+  }
+
   pit->exit();
   bx_virt_timer.setup();
   bx_slowdown_timer.exit();
@@ -538,7 +566,7 @@ bx_bool bx_devices_c::unregister_irq(unsigned irq, const char *name)
 }
 
 bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
-                                       Bit32u addr, const char *name, Bit8u mask)
+                                               Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0x0000ffff;
 
@@ -573,7 +601,8 @@ bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t
     io_read_handler = new struct io_handler_struct;
     io_read_handler->funct = (void *)f;
     io_read_handler->this_ptr = this_ptr;
-    io_read_handler->handler_name = name;
+    io_read_handler->handler_name = new char[strlen(name)+1];
+    strcpy(io_read_handler->handler_name, name);
     io_read_handler->mask = mask;
     io_read_handler->usage_count = 0;
     // add the handler to the double linked list of handlers
@@ -589,7 +618,7 @@ bx_bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t
 }
 
 bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t f,
-                                        Bit32u addr, const char *name, Bit8u mask)
+                                                Bit32u addr, const char *name, Bit8u mask)
 {
   addr &= 0x0000ffff;
 
@@ -624,7 +653,8 @@ bx_bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler
     io_write_handler = new struct io_handler_struct;
     io_write_handler->funct = (void *)f;
     io_write_handler->this_ptr = this_ptr;
-    io_write_handler->handler_name = name;
+    io_write_handler->handler_name = new char[strlen(name)+1];
+    strcpy(io_write_handler->handler_name, name);
     io_write_handler->mask = mask;
     io_write_handler->usage_count = 0;
     // add the handler to the double linked list of handlers
@@ -686,7 +716,8 @@ bx_bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_han
     io_read_handler = new struct io_handler_struct;
     io_read_handler->funct = (void *)f;
     io_read_handler->this_ptr = this_ptr;
-    io_read_handler->handler_name = name;
+    io_read_handler->handler_name = new char[strlen(name)+1];
+    strcpy(io_read_handler->handler_name, name);
     io_read_handler->mask = mask;
     io_read_handler->usage_count = 0;
     // add the handler to the double linked list of handlers
@@ -749,7 +780,8 @@ bx_bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_h
     io_write_handler = new struct io_handler_struct;
     io_write_handler->funct = (void *)f;
     io_write_handler->this_ptr = this_ptr;
-    io_write_handler->handler_name = name;
+    io_write_handler->handler_name = new char[strlen(name)+1];
+    strcpy(io_write_handler->handler_name, name);
     io_write_handler->mask = mask;
     io_write_handler->usage_count = 0;
     // add the handler to the double linked list of handlers
@@ -772,7 +804,11 @@ bx_bool bx_devices_c::register_default_io_read_handler(void *this_ptr, bx_read_h
 {
   io_read_handlers.funct = (void *)f;
   io_read_handlers.this_ptr = this_ptr;
-  io_read_handlers.handler_name = name;
+  if (io_read_handlers.handler_name) {
+    delete [] io_read_handlers.handler_name;
+  }
+  io_read_handlers.handler_name = new char[strlen(name)+1];
+  strcpy(io_read_handlers.handler_name, name);
   io_read_handlers.mask = mask;
   return 1; 
 }
@@ -782,7 +818,11 @@ bx_bool bx_devices_c::register_default_io_write_handler(void *this_ptr, bx_write
 {
   io_write_handlers.funct = (void *)f;
   io_write_handlers.this_ptr = this_ptr;
-  io_write_handlers.handler_name = name;
+  if (io_write_handlers.handler_name) {
+    delete [] io_write_handlers.handler_name;
+  }
+  io_write_handlers.handler_name = new char[strlen(name)+1];
+  strcpy(io_write_handlers.handler_name, name);
   io_write_handlers.mask = mask;
   return 1; 
 }
@@ -827,6 +867,7 @@ bx_bool bx_devices_c::unregister_io_read_handler(void *this_ptr, bx_read_handler
   if (!io_read_handler->usage_count) { // kill this handler entry
     io_read_handler->prev->next = io_read_handler->next;
     io_read_handler->next->prev = io_read_handler->prev;
+    delete [] io_read_handler->handler_name;
     delete io_read_handler;
   }
   return 1;
@@ -860,6 +901,7 @@ bx_bool bx_devices_c::unregister_io_write_handler(void *this_ptr, bx_write_handl
   if (!io_write_handler->usage_count) { // kill this handler entry
     io_write_handler->prev->next = io_write_handler->next;
     io_write_handler->next->prev = io_write_handler->prev;
+    delete [] io_write_handler->handler_name;
     delete io_write_handler;
   }
   return 1;

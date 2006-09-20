@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.80 2006-09-16 14:47:40 vruppert Exp $
+// $Id: iodev.h,v 1.81 2006-09-20 18:24:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -392,28 +392,28 @@ public:
   void after_restore_state(void);
 #endif
   BX_MEM_C *mem;  // address space associated with these devices
-  bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f, 
-		  Bit32u addr, const char *name, Bit8u mask );
-  bx_bool unregister_io_read_handler( void *this_ptr, bx_read_handler_t f,
-                                        Bit32u addr, Bit8u mask );
-  bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f, Bit32u addr, const char *name, Bit8u mask );
-  bx_bool unregister_io_write_handler( void *this_ptr, bx_write_handler_t f,
-                                        Bit32u addr, Bit8u mask );
-  bx_bool register_io_read_handler_range( void *this_ptr, bx_read_handler_t f,
-		  Bit32u begin_addr, Bit32u end_addr, 
-		  const char *name, Bit8u mask );
-  bx_bool register_io_write_handler_range( void *this_ptr, bx_write_handler_t f,
-		  Bit32u begin_addr, Bit32u end_addr, 
-		  const char *name, Bit8u mask );
-  bx_bool unregister_io_read_handler_range( void *this_ptr, bx_read_handler_t f,
-                                        Bit32u begin, Bit32u end, Bit8u mask );
-  bx_bool unregister_io_write_handler_range( void *this_ptr, bx_write_handler_t f,
-                                        Bit32u begin, Bit32u end, Bit8u mask );
-  bx_bool register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name, Bit8u mask );
-  bx_bool register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name, Bit8u mask );
+  bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f,
+                                   Bit32u addr, const char *name, Bit8u mask);
+  bx_bool unregister_io_read_handler(void *this_ptr, bx_read_handler_t f,
+                                     Bit32u addr, Bit8u mask);
+  bx_bool register_io_write_handler(void *this_ptr, bx_write_handler_t f,
+                                    Bit32u addr, const char *name, Bit8u mask);
+  bx_bool unregister_io_write_handler(void *this_ptr, bx_write_handler_t f,
+                                      Bit32u addr, Bit8u mask );
+  bx_bool register_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+                                         Bit32u begin_addr, Bit32u end_addr,
+                                         const char *name, Bit8u mask);
+  bx_bool register_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+                                          Bit32u begin_addr, Bit32u end_addr,
+                                          const char *name, Bit8u mask );
+  bx_bool unregister_io_read_handler_range(void *this_ptr, bx_read_handler_t f,
+                                           Bit32u begin, Bit32u end, Bit8u mask);
+  bx_bool unregister_io_write_handler_range(void *this_ptr, bx_write_handler_t f,
+                                            Bit32u begin, Bit32u end, Bit8u mask);
+  bx_bool register_default_io_read_handler(void *this_ptr, bx_read_handler_t f, const char *name, Bit8u mask);
+  bx_bool register_default_io_write_handler(void *this_ptr, bx_write_handler_t f, const char *name, Bit8u mask);
   bx_bool register_irq(unsigned irq, const char *name);
   bx_bool unregister_irq(unsigned irq, const char *name);
-  void iodev_init(void);
   Bit32u inp(Bit16u addr, unsigned io_len) BX_CPP_AttrRegparmN(2);
   void   outp(Bit16u addr, Bit32u value, unsigned io_len) BX_CPP_AttrRegparmN(3);
 
@@ -498,7 +498,7 @@ private:
 	struct io_handler_struct *prev;	
 	void *funct; // C++ type checking is great, but annoying
 	void *this_ptr;
-	const char *handler_name;  // name of device
+	char *handler_name;  // name of device
 	int usage_count;
 	Bit8u mask;          // io_len mask
   };

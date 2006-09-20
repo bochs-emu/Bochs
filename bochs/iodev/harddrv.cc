@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.186 2006-09-17 18:09:33 vruppert Exp $
+// $Id: harddrv.cc,v 1.187 2006-09-20 18:24:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.186 2006-09-17 18:09:33 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.187 2006-09-20 18:24:17 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -182,14 +182,14 @@ void bx_hard_drive_c::init(void)
 
     if (BX_HD_THIS channels[channel].ioaddr1 != 0) {
       DEV_register_ioread_handler(this, read_handler,
-                           BX_HD_THIS channels[channel].ioaddr1, strdup(string), 6);
+                           BX_HD_THIS channels[channel].ioaddr1, string, 6);
       DEV_register_iowrite_handler(this, write_handler,
-                           BX_HD_THIS channels[channel].ioaddr1, strdup(string), 6);
+                           BX_HD_THIS channels[channel].ioaddr1, string, 6);
       for (unsigned addr=0x1; addr<=0x7; addr++) {
         DEV_register_ioread_handler(this, read_handler,
-                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
+                             BX_HD_THIS channels[channel].ioaddr1+addr, string, 1);
         DEV_register_iowrite_handler(this, write_handler,
-                             BX_HD_THIS channels[channel].ioaddr1+addr, strdup(string), 1);
+                             BX_HD_THIS channels[channel].ioaddr1+addr, string, 1);
       }
     }
 
@@ -197,9 +197,9 @@ void bx_hard_drive_c::init(void)
     if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
         DEV_register_ioread_handler(this, read_handler,
-                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
+                              BX_HD_THIS channels[channel].ioaddr2+addr, string, 1);
         DEV_register_iowrite_handler(this, write_handler,
-                              BX_HD_THIS channels[channel].ioaddr2+addr, strdup(string), 1);
+                              BX_HD_THIS channels[channel].ioaddr2+addr, string, 1);
       }
     }
      
