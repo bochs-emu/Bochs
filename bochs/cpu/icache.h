@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.17 2006-05-19 20:04:33 sshwarts Exp $
+// $Id: icache.h,v 1.18 2006-09-20 20:52:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,6 +55,9 @@ public:
 
   BX_CPP_INLINE void alloc(Bit32u memSize)
   {
+    if (memSizeInBytes > 0) {
+      delete [] pageWriteStampTable;
+    }
     memSizeInBytes = memSize;
     pageWriteStampTable = new Bit32u [memSizeInBytes>>12];
     resetWriteStamps();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.89 2006-09-10 17:18:44 vruppert Exp $
+// $Id: ne2k.cc,v 1.90 2006-09-20 20:52:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -66,11 +66,15 @@ bx_ne2k_c::bx_ne2k_c()
   put("NE2K");
   settype(NE2KLOG);
   s.tx_timer_index = BX_NULL_TIMER_HANDLE;
+  ethdev = NULL;
 }
 
 
 bx_ne2k_c::~bx_ne2k_c()
 {
+  if (ethdev != NULL) {
+    delete ethdev;
+  }
   BX_DEBUG(("Exit"));
 }
 
@@ -1404,7 +1408,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.89 2006-09-10 17:18:44 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.90 2006-09-20 20:52:23 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
