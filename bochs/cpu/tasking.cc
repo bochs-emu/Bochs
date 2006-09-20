@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.37 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: tasking.cc,v 1.38 2006-09-20 17:02:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,18 +195,14 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     BX_INFO(("TASK SWITCH: switching to the same TSS !"));
   }
 
-#if BX_SUPPORT_PAGING
   // Check that old TSS, new TSS, and all segment descriptors
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.pg)
   {
-    // Old TSS
-    (void) dtranslate_linear(obase32, 0, BX_WRITE);
-    (void) dtranslate_linear(obase32 + old_TSS_max, 0, BX_WRITE);
-
-    // New TSS
-    (void) dtranslate_linear(nbase32, 0, BX_READ);
-    (void) dtranslate_linear(nbase32 + new_TSS_max, 0, BX_READ);
+    dtranslate_linear(obase32, 0, BX_WRITE); // new TSS
+    dtranslate_linear(obase32 + old_TSS_max, 0, BX_WRITE);
+    dtranslate_linear(nbase32, 0, BX_READ);  // old TSS
+    dtranslate_linear(nbase32 + new_TSS_max, 0, BX_READ);
 
     // ??? Humm, we check the new TSS region with READ above,
     // but sometimes we need to write the link field in that
@@ -215,13 +211,12 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     // the written state consistent (ie, we don't encounter a
     // page fault in the middle).
 
-    if (source==BX_TASK_FROM_CALL_OR_INT)
+    if (source == BX_TASK_FROM_CALL_OR_INT)
     {
-      (void) dtranslate_linear(nbase32,     0, BX_WRITE);
-      (void) dtranslate_linear(nbase32 + 2, 0, BX_WRITE);
+      dtranslate_linear(nbase32,     0, BX_WRITE);
+      dtranslate_linear(nbase32 + 2, 0, BX_WRITE);
     }
   }
-#endif // BX_SUPPORT_PAGING
 
   // Privilege and busy checks done in CALL, JUMP, INT, IRET
 

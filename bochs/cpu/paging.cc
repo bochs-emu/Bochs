@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.76 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: paging.cc,v 1.77 2006-09-20 17:02:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,8 +276,6 @@
 // - Pentium Pro+ processors maintain separate 4K and 4M TLBs.
 #endif
 
-#if BX_SUPPORT_PAGING
-
 #define BX_INVALID_TLB_ENTRY 0xffffffff
 
 #if BX_USE_QUICK_TLB_INVALIDATE
@@ -291,6 +289,8 @@
 #else
 #  define BX_PRIV_CHECK_SIZE 16
 #endif
+
+static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 // The 'priv_check' array is used to decide if the current access
 // has the proper paging permissions.  An index is formed, based
@@ -372,17 +372,7 @@
 #define TLB_ReadUserPtrOK     0x02
 #define TLB_ReadSysPtrOK      0x01
 
-
-
-#ifdef __GNUC__
-#warning "Move priv_check to CPU fields, or init.cc"
-#endif
-
-static unsigned priv_check[BX_PRIV_CHECK_SIZE];
-
-
 #define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
-
 
 // === TLB Instrumentation section ==============================
 
@@ -474,22 +464,25 @@ BX_CPU_C::CR3_change(bx_phy_address value)
     BX_CPU_THIS_PTR cr3_masked = value & 0xfffff000;
 }
 
+// Called to initialize the TLB upon startup.
+// Unconditional initialization of all TLB entries.
 void BX_CPU_C::TLB_init(void)
 {
-  // Called to initialize the TLB upon startup.
-  // Unconditional initialization of all TLB entries.
+  unsigned i, wp, us_combined, rw_combined, us_current, rw_current;
 
 #if BX_USE_TLB
-  unsigned i;
-  unsigned wp, us_combined, rw_combined, us_current, rw_current;
-
   for (i=0; i<BX_TLB_SIZE; i++)
     BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
+
+#if BX_USE_QUICK_TLB_INVALIDATE
+  BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
+#endif
+
+#endif  // #if BX_USE_TLB
 
   //
   // Setup privilege check matrix.
   //
-
   for (i=0; i<BX_PRIV_CHECK_SIZE; i++) {
     wp          = (i & 0x10) >> 4;
     us_current  = (i & 0x08) >> 3;
@@ -518,12 +511,6 @@ void BX_CPU_C::TLB_init(void)
       }
     }
   }
-
-#if BX_USE_QUICK_TLB_INVALIDATE
-  BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
-#endif
-
-#endif  // #if BX_USE_TLB
 }
 
 void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
@@ -1417,35 +1404,3 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
     }
   }
 }
-
-#else   // BX_SUPPORT_PAGING
-
-// stub functions for non-support of paging
-
-void BX_CPU_C::CR3_change(bx_phy_address value32)
-{
-  BX_INFO(("CR3_change(): flush TLB cache"));
-  BX_INFO(("Page Directory Base %08x", (unsigned) value32));
-}
-
-void BX_CPU_C::access_linear(Bit32u laddr, unsigned length, unsigned pl,
-    unsigned rw, void *data)
-{
-  /* perhaps put this check before all code which calls this function,
-   * so we don't have to here
-   */
-  if (BX_CPU_THIS_PTR cr0.pg == 0) {
-    if (rw == BX_READ)
-      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, length, data);
-    else
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, length, data);
-    return;
-  }
-
-  BX_PANIC(("access_linear: paging not supported"));
-}
-
-void BX_CPU_C::INVLPG(bxInstruction_c* i)
-{}
-
-#endif  // BX_SUPPORT_PAGING

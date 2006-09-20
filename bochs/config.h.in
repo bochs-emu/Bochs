@@ -135,7 +135,6 @@
 //   When there are collisions, the old entry is overwritten with
 //   one for the newest access.
 
-#define BX_SUPPORT_PAGING 1
 #define BX_USE_TLB 1
 
 #define BX_TLB_SIZE 1024
