@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.87 2006-09-12 13:05:07 vruppert Exp $
+// $Id: wx.cc,v 1.88 2006-09-21 21:07:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -905,8 +905,10 @@ bx_wx_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned t
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::specific_init got lock. wxScreen=%p", wxScreen)));
   if (wxScreen == NULL) {
     wxScreen = (char *)malloc(wxScreenX * wxScreenY * 3);
-    memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
+  } else {
+    wxScreen = (char *)realloc(wxScreen, wxScreenX * wxScreenY * 3);
   }
+  memset(wxScreen, 0, wxScreenX * wxScreenY * 3);
 
   wxTileX = tilewidth;
   wxTileY = tileheight;
