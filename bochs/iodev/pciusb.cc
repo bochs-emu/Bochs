@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.42 2006-09-17 20:39:36 vruppert Exp $
+// $Id: pciusb.cc,v 1.43 2006-09-23 12:59:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -352,13 +352,8 @@ void bx_pciusb_c::init_device(Bit8u port, char *devname)
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
-    connected = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
-    if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_USB) {
-      BX_USB_THIS mouse_connected = connected;
-    } else if (connected) {
-      BX_ERROR(("USB mouse connect ignored, since other mouse type is configured"));
-      connected = 0;
-    }
+    connected = 1;
+    BX_USB_THIS mouse_connected = 1;
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
     connected = 1;
@@ -1644,14 +1639,11 @@ void bx_pciusb_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
   BX_DEBUG(("USB PCI write register 0x%02x                   value 0x%s", address, szTmp));
 }
 
-void bx_pciusb_c::usb_mouse_enable(bx_bool enable)
+void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
 {
-  BX_USB_THIS mouse_connected = enable;
-  if (BX_USB_THIS last_connect != enable) {
-    for (int i=0; i<USB_NUM_PORTS; i++)
-      usb_set_connect_status(i, USB_DEV_TYPE_MOUSE, enable);
-    BX_USB_THIS last_connect = enable;
-  }
+  BX_USB_THIS mouse_delayed_dx=0;
+  BX_USB_THIS mouse_delayed_dy=0;
+  BX_USB_THIS mouse_delayed_dz=0;
 }
 
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)

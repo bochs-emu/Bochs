@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.54 2006-09-16 14:47:40 vruppert Exp $
+// $Id: plugin.h,v 1.55 2006-09-23 12:59:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -214,8 +214,8 @@ extern "C" {
 #if BX_SUPPORT_PCIUSB
 #define DEV_usb_mouse_enq(dx, dy, dz, state) \
     (bx_devices.pluginPciUSBAdapter->usb_mouse_enq(dx, dy, dz, state))
-#define DEV_usb_mouse_enable(enable) \
-    (bx_devices.pluginPciUSBAdapter->usb_mouse_enable(enable))
+#define DEV_usb_mouse_enabled_changed(enable) \
+    (bx_devices.pluginPciUSBAdapter->usb_mouse_enabled_changed(enable))
 #define DEV_usb_key_enq(scan_code) \
     (bx_devices.pluginPciUSBAdapter->usb_key_enq(scan_code))
 #define DEV_usb_keyboard_connected() \
