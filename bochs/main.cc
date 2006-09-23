@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.344 2006-09-20 17:02:19 sshwarts Exp $
+// $Id: main.cc,v 1.345 2006-09-23 09:07:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1130,9 +1130,7 @@ void bx_init_bx_dbg(void)
 
 int bx_atexit(void)
 {
-  static bx_bool been_here = 0;
-  if (been_here) return 1;   // protect from reentry
-  been_here = 1;
+  if (!SIM->get_init_done()) return 1; // protect from reentry
 
   // in case we ended up in simulation mode, change back to config mode
   // so that the user can see any messages left behind on the console.
@@ -1162,6 +1160,8 @@ int bx_atexit(void)
   signal(SIGALRM, SIG_DFL);
 #endif
 #endif
+
+  SIM->set_init_done(0);
 
   return 0;
 }

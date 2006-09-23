@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.149 2006-09-17 07:12:50 vruppert Exp $
+// $Id: wxmain.cc,v 1.150 2006-09-23 09:07:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1051,6 +1051,7 @@ void MyFrame::OnStartSim(wxCommandEvent& event)
         wxT("2nd time warning"), wxOK | wxICON_WARNING, this);
   }
   num_events = 0;  // clear the queue of events for bochs to handle
+  wxBochsStopSim = false;
   sim_thread = new SimThread(this);
   sim_thread->Create();
   sim_thread->Run();                                                        
