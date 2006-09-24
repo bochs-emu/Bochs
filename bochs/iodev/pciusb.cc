@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.43 2006-09-23 12:59:57 vruppert Exp $
+// $Id: pciusb.cc,v 1.44 2006-09-24 10:10:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -343,12 +343,12 @@ void bx_pciusb_c::after_restore_state(void)
 }
 #endif
 
-void bx_pciusb_c::init_device(Bit8u port, char *devname)
+void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 {
   Bit8u type = USB_DEV_TYPE_NONE;
   bx_bool connected = 0;
 
-  if (!strlen(devname)) return;
+  if (!strlen(devname) || !strcmp(devname, "none")) return;
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
@@ -1709,6 +1709,11 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         BX_USB_THIS hub[0].usb_port[port].low_speed = 0;
         BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
         BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+        if (type == USB_DEV_TYPE_MOUSE) {
+          BX_USB_THIS mouse_connected = 0;
+        } else if (type == USB_DEV_TYPE_KEYPAD) {
+          BX_USB_THIS keyboard_connected = 0;
+        }
       }
     }
   }
@@ -1895,16 +1900,30 @@ bx_bool bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out)
 
 const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
 {
+  Bit8u type;
+
   // handler for USB runtime parameters
   if (set) {
     char pname[BX_PATHNAME_LEN];
     param->get_param_path(pname, BX_PATHNAME_LEN);
     if (!strcmp(pname, BXPN_USB1_PORT1)) {
-      BX_ERROR(("USB port #1 device change not implemented yet"));
+      BX_INFO(("USB port #1 experimental device change"));
+      if (!strcmp(val, "none") && BX_USB_THIS hub[0].usb_port[0].status) {
+        type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[0].device_num].dev_type;
+        usb_set_connect_status(0, type, 0);
+      } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[0].status) {
+        init_device(0, val);
+      }
     } else if (!strcmp(pname, BXPN_USB1_OPTION1)) {
       BX_ERROR(("USB port #1 option change not implemented yet"));
     } else if (!strcmp(pname, BXPN_USB1_PORT2)) {
-      BX_ERROR(("USB port #2 device change not implemented yet"));
+      BX_INFO(("USB port #2 experimental device change"));
+      if (!strcmp(val, "none") && BX_USB_THIS hub[0].usb_port[1].status) {
+        type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[1].device_num].dev_type;
+        usb_set_connect_status(1, type, 0);
+      } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[1].status) {
+        init_device(1, val);
+      }
     } else if (!strcmp(pname, BXPN_USB1_OPTION2)) {
       BX_ERROR(("USB port #2 option change not implemented yet"));
     } else {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.19 2006-09-23 12:59:57 vruppert Exp $
+// $Id: pciusb.h,v 1.20 2006-09-24 10:10:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -384,7 +384,7 @@ private:
   bx_bool  mouse_connected;
   bx_bool  flash_connected;
 
-  static void init_device(Bit8u port, char *devname);
+  static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
 
   static void usb_timer_handler(void *);
