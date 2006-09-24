@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.111 2006-09-20 20:52:23 vruppert Exp $
+// $Id: devices.cc,v 1.112 2006-09-24 16:58:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,6 +73,7 @@ void bx_devices_c::init_stubs()
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = &stubPciIde;
+  pluginACPIController = NULL;
 #if BX_SUPPORT_PCIVGA
     pluginPciVgaAdapter = NULL;
 #endif
@@ -119,7 +120,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.111 2006-09-20 20:52:23 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.112 2006-09-24 16:58:13 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -195,6 +196,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     PLUG_load_plugin(pci, PLUGTYPE_CORE);
     PLUG_load_plugin(pci2isa, PLUGTYPE_CORE);
     PLUG_load_plugin(pci_ide, PLUGTYPE_OPTIONAL);
+    PLUG_load_plugin(acpi, PLUGTYPE_OPTIONAL);
 #if BX_SUPPORT_PCIVGA
     if ((DEV_is_pci_device("pcivga")) &&
         (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "vbe"))) {

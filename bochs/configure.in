@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.325 2006-08-27 15:36:39 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.326 2006-09-24 16:58:13 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -679,7 +679,7 @@ AC_ARG_ENABLE(pci,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_PCI, 1)
     pci=1
-    PCI_OBJ='pci.o pci2isa.o pci_ide.o pcivga.o'
+    PCI_OBJ='pci.o pci2isa.o pci_ide.o pcivga.o acpi.o'
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_PCI, 0)
