@@ -34891,10 +34891,10 @@ _ACEOF
    fi
 else
 
-    echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
+    echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SAVE_RESTORE 0
+#define BX_SUPPORT_SAVE_RESTORE 1
 _ACEOF
 
 
@@ -39526,9 +39526,10 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Add them.
-  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
+  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
+  #    will be set to the directory where LIBOBJS objects are built.
+  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
