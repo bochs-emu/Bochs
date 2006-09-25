@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.74 2006-08-31 18:18:14 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.75 2006-09-25 20:13:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,6 +27,7 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
+#include "bx_debug/debug.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
