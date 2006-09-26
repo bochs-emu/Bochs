@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.h,v 1.1 2006-09-24 16:58:13 vruppert Exp $
+// $Id: acpi.h,v 1.2 2006-09-26 18:43:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -57,6 +57,9 @@ private:
     Bit8u devfunc;
     Bit32u pm_base;
     Bit32u sm_base;
+    Bit16u pmsts;
+    Bit16u pmen;
+    Bit16u pmcntrl;
   } s;
 };
 

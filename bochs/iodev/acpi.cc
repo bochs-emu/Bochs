@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.1 2006-09-24 16:58:13 vruppert Exp $
+// $Id: acpi.cc,v 1.2 2006-09-26 18:43:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -36,7 +36,7 @@
 bx_acpi_ctrl_c* theACPIController = NULL;
 
 // FIXME
-const Bit8u acpi_pm_iomask[64] = {7, 7, 7, 7, 7, 7, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
+const Bit8u acpi_pm_iomask[64] = {2, 0, 2, 0, 2, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
                                   7, 7, 7, 7, 1, 1, 0, 0, 7, 7, 0, 0, 7, 7, 7, 7,
                                   7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
                                   1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -111,6 +111,9 @@ void bx_acpi_ctrl_c::reset(unsigned type)
       // PM base 0x40 - 0x43
       { 0x40, 0x01 }, { 0x41, 0x00 },
       { 0x42, 0x00 }, { 0x43, 0x00 },
+      // device resources
+      { 0x5f, 0x90 }, { 0x63, 0x60 },
+      { 0x67, 0x98 },
       // SM base 0x90 - 0x93
       { 0x90, 0x01 }, { 0x91, 0x00 },
       { 0x92, 0x00 }, { 0x93, 0x00 }
@@ -118,6 +121,10 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
     BX_ACPI_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
+
+  BX_ACPI_THIS s.pmsts = 0;
+  BX_ACPI_THIS s.pmen = 0;
+  BX_ACPI_THIS s.pmcntrl = 0;
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
@@ -127,6 +134,9 @@ void bx_acpi_ctrl_c::register_state(void)
   char name[6];
 
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State");
+  BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
+  BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
+  BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
   bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
   for (i=0; i<256; i++) {
     sprintf(name, "0x%02x", i);
@@ -173,9 +183,27 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_ACPI_SMF
+  Bit8u reg = address & 0x3f;
+  Bit32u value = 0xffffffff;
 
-  BX_INFO(("ACPI read from 0x%04x not implemented yet", address));
-  return 0xffffffff;
+  if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
+    switch (reg) {
+      case 0x00:
+        value = BX_ACPI_THIS s.pmsts;
+        break;
+      case 0x02:
+        value = BX_ACPI_THIS s.pmen;
+        break;
+      case 0x04:
+        value = BX_ACPI_THIS s.pmcntrl;
+        break;
+      default:
+        BX_INFO(("ACPI read from PM register 0x%02x not implemented yet", reg));
+    }
+  } else {
+    BX_INFO(("ACPI read from SM register 0x%02x not implemented yet", reg));
+  }
+  return value;
 }
 
 // static IO port write callback handler
@@ -193,8 +221,25 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif // !BX_USE_ACPI_SMF
+  Bit8u reg = address & 0x3f;
 
-  BX_INFO(("ACPI write to 0x%04x not implemented yet", address));
+  if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
+    switch (reg) {
+      case 0x00:
+        BX_ACPI_THIS s.pmsts &= ~value;
+        break;
+      case 0x02:
+        BX_ACPI_THIS s.pmen = value;
+        break;
+      case 0x04:
+        BX_ACPI_THIS s.pmcntrl = value;
+        break;
+      default:
+        BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
+    }
+  } else {
+    BX_INFO(("ACPI write to SM register 0x%02x not implemented yet", reg));
+  }
 }
 
 // pci configuration space read callback handler
