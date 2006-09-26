@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.167 2006-09-25 20:13:51 sshwarts Exp $
+// $Id: cpu.cc,v 1.168 2006-09-26 19:16:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,6 @@
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
-#include "bx_debug/debug.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 

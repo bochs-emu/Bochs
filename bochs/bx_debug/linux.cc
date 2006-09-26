@@ -1,11 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.6 2006-09-25 20:13:51 sshwarts Exp $
+// $Id: linux.cc,v 1.7 2006-09-26 19:16:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
 
 #include "bochs.h"
-#include "bx_debug/debug.h"
 #include "cpu/cpu.h"
 
 #if BX_DEBUGGER
