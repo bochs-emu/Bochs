@@ -1,4 +1,22 @@
-/* biossums.c  --- written by Eike W. */
+/*
+ * $Id: biossums.c,v 1.3 2006-09-28 17:39:25 vruppert Exp $
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+ */
+
+/* biossums.c  --- written by Eike W. for the Bochs BIOS */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -66,31 +84,38 @@ void chksum__pir_set_value(  byte* data, long offset, byte value );
 
 
 byte bios_data[LEN_BIOS_DATA];
+long bios_len;
 
 
-int main( int argc, char* argv[] ) {
+int main(int argc, char* argv[]) {
 
   FILE* stream;
   long  offset, tmp_offset;
   byte  cur_val = 0, new_val = 0;
-  int   hits;
+  int   arg = 1, hits, pad = 0;
 
 
-  if( argc != 2 ) {
-    printf( "Error. Need a file-name as an argument.\n" );
-    exit( EXIT_FAILURE );
+  if ((argc == 3) && (!strcmp(argv[1], "-pad"))) {
+    pad = 1;
+    arg = 2;
+  } else if (argc != 2) {
+    printf("Error. Need a file-name as an argument.\n");
+    exit(EXIT_FAILURE);
   }
+  memset(bios_data, 0xff, LEN_BIOS_DATA);
 
-  if(( stream = fopen( argv[1], "rb" )) == NULL ) {
-    printf( "Error opening %s for reading.\n", argv[1] );
-    exit( EXIT_FAILURE );
+  if ((stream = fopen(argv[arg], "rb")) == NULL) {
+    printf("Error opening %s for reading.\n", argv[arg]);
+    exit(EXIT_FAILURE);
   }
-  if( fread( bios_data, 1, LEN_BIOS_DATA, stream ) < LEN_BIOS_DATA ) {
-    printf( "Error reading 64KBytes from %s.\n", argv[1] );
-    fclose( stream );
-    exit( EXIT_FAILURE );
+  bios_len = fread(bios_data, 1, LEN_BIOS_DATA, stream);
+  if ((bios_len < LEN_BIOS_DATA) && (pad == 0)) {
+    printf("Error reading 64KBytes from %s.\n", argv[arg]);
+    fclose(stream);
+    exit(EXIT_FAILURE);
   }
-  fclose( stream );
+  fclose(stream);
+  if (pad == 1) goto write_bios;
 
   hits   = 0;
   offset = 0L;
@@ -197,27 +222,27 @@ int main( int argc, char* argv[] ) {
   }
   printf( "\n" );
 
-
-  if(( stream = fopen( argv[1], "wb" )) == NULL ) {
-    printf( "Error opening %s for writing.\n", argv[1] );
-    exit( EXIT_FAILURE );
+write_bios:
+  if ((stream = fopen(argv[arg], "wb")) == NULL) {
+    printf("Error opening %s for writing.\n", argv[arg]);
+    exit(EXIT_FAILURE);
   }
-  if( fwrite( bios_data, 1, LEN_BIOS_DATA, stream ) < LEN_BIOS_DATA ) {
-    printf( "Error writing 64KBytes to %s.\n", argv[1] );
-    fclose( stream );
-    exit( EXIT_FAILURE );
+  if (fwrite(bios_data, 1, LEN_BIOS_DATA, stream) < LEN_BIOS_DATA) {
+    printf("Error writing 64KBytes to %s.\n", argv[arg]);
+    fclose(stream);
+    exit(EXIT_FAILURE);
   }
-  fclose( stream );
+  fclose(stream);
 
-  return( EXIT_SUCCESS );
+  return(EXIT_SUCCESS);
 }
 
 
-void check( int okay, char* message ) {
+void check(int okay, char* message) {
 
-  if( !okay ) {
-    printf( "\n\nError. %s.\n", message );
-    exit( EXIT_FAILURE );
+  if (!okay) {
+    printf("\n\nError. %s.\n", message);
+    exit(EXIT_FAILURE);
   }
 }
 
