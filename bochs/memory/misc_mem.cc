@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.97 2006-09-15 17:02:52 vruppert Exp $
+// $Id: misc_mem.cc,v 1.98 2006-09-28 18:56:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.97 2006-09-15 17:02:52 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.98 2006-09-28 18:56:20 vruppert Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -151,7 +151,7 @@ void BX_MEM_C::cleanup_memory()
   }
 }
 
-#if BX_SUPPORT_APIC
+#if 0
 void put_8bit(Bit8u **pp, Bit8u value)
 {
   Bit8u *p = *pp;
@@ -318,7 +318,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   }
   close(fd);
   offset -= (unsigned long)stat_buf.st_size;
-  if ((romaddress != 0xe0000) ||
+  if (((romaddress & 0xfffff) != 0xe0000) ||
       ((BX_MEM_THIS rom[offset] == 0x55) && (BX_MEM_THIS rom[offset] == 0xaa))) {
     Bit8u checksum = 0;
     for (i = 0; i < stat_buf.st_size; i++) {
@@ -332,7 +332,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       }
     }
   }
-#if BX_SUPPORT_APIC
+#if 0
   if (is_bochs_bios) {
     Bit8u* pcmp_ptr = &BX_MEM_THIS rom[0xFB000 & BIOS_MASK];
     Bit8u* p = pcmp_ptr;

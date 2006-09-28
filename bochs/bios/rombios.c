@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.166 2006-08-11 17:34:12 vruppert Exp $
+// $Id: rombios.c,v 1.167 2006-09-28 18:56:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
 
-// ROM BIOS for use with Bochs/Plex x86 emulation environment
+// ROM BIOS for use with Bochs/Plex86/QEMU emulation environment
 
 
 // ROM BIOS compatability entry points:
@@ -143,6 +143,7 @@
 #define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
+#define BX_ROMBIOS32     1
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -159,6 +160,9 @@
 #define BIOS_REVISION    1
 #define BIOS_CONFIG_TABLE 0xe6f5
 
+/* define it to include QEMU specific code */
+//#define BX_QEMU
+
 #ifndef BIOS_BUILD_DATE
 #  define BIOS_BUILD_DATE "06/23/99"
 #endif
@@ -170,7 +174,9 @@
 #define BASE_MEM_IN_K   (640 - EBDA_SIZE)
 
   // Define the application NAME
-#ifdef PLEX86
+#if defined(BX_QEMU)
+#  define BX_APPNAME "QEMU"
+#elif defined(PLEX86)
 #  define BX_APPNAME "Plex86"
 #else
 #  define BX_APPNAME "Bochs"
@@ -932,7 +938,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.166 $ $Date: 2006-08-11 17:34:12 $";
+static char bios_cvs_version_string[] = "$Revision: 1.167 $ $Date: 2006-09-28 18:56:20 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1825,6 +1831,9 @@ print_bios_banner()
 #endif
 #ifdef BX_ELTORITO_BOOT
   "eltorito "
+#endif
+#ifdef BX_ROMBIOS32
+  "rombios32 "
 #endif
   "\n\n");
 }
@@ -4085,6 +4094,24 @@ ASM_END
          case 0x20: // coded by osmaker aka K.J.
             if(regs.u.r32.edx == 0x534D4150)
             {
+                extended_memory_size = inb_cmos(0x35);
+                extended_memory_size <<= 8;
+                extended_memory_size |= inb_cmos(0x34);
+                extended_memory_size *= 64;
+                // greater than EFF00000???
+                if(extended_memory_size > 0x3bc000) {
+                    extended_memory_size = 0x3bc000; // everything after this is reserved memory until we get to 0x100000000
+                }
+                extended_memory_size *= 1024;
+                extended_memory_size += (16L * 1024 * 1024);
+                
+                if(extended_memory_size <= (16L * 1024 * 1024)) {
+                    extended_memory_size = inb_cmos(0x31);
+                    extended_memory_size <<= 8;
+                    extended_memory_size |= inb_cmos(0x30);
+                    extended_memory_size *= 1024;
+                }
+
                 switch(regs.u.r16.bx)
                 {
                     case 0:
@@ -4115,27 +4142,9 @@ ASM_END
                         return;
                         break;
                     case 3:
-                        extended_memory_size = inb_cmos(0x35);
-                        extended_memory_size <<= 8;
-                        extended_memory_size |= inb_cmos(0x34);
-                        extended_memory_size *= 64;
-                        if(extended_memory_size > 0x3bc000) // greater than EFF00000???
-                        {
-                            extended_memory_size = 0x3bc000; // everything after this is reserved memory until we get to 0x100000000
-                        }
-                        extended_memory_size *= 1024;
-                        extended_memory_size += (16L * 1024 * 1024);
-
-                        if(extended_memory_size <= (16L * 1024 * 1024))
-                        {
-                            extended_memory_size = inb_cmos(0x31);
-                            extended_memory_size <<= 8;
-                            extended_memory_size |= inb_cmos(0x30);
-                            extended_memory_size *= 1024;
-                        }
-
                         set_e820_range(ES, regs.u.r16.di, 
-                                       0x00100000L, extended_memory_size, 1);
+                                       0x00100000L, 
+                                       extended_memory_size - 0x10000L, 1);
                         regs.u.r32.ebx = 4;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
@@ -4143,6 +4152,16 @@ ASM_END
                         return;
                         break;
                     case 4:
+                        set_e820_range(ES, regs.u.r16.di, 
+                                       extended_memory_size - 0x10000L, 
+                                       extended_memory_size, 3); // ACPI RAM
+                        regs.u.r32.ebx = 5;
+                        regs.u.r32.eax = 0x534D4150;
+                        regs.u.r32.ecx = 0x14;
+                        CLEAR_CF();
+                        return;
+                        break;
+                    case 5:
                         /* 256KB BIOS area at the end of 4 GB */
                         set_e820_range(ES, regs.u.r16.di, 
                                        0xfffc0000L, 0x00000000L, 2);
@@ -8757,6 +8776,9 @@ bios32_entry_point:
 unknown_service:
   mov al, #0x80
 bios32_end:
+#ifdef BX_QEMU
+  and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
+#endif
   popf
   retf
 
@@ -8868,6 +8890,9 @@ pci_pro_unknown:
 pci_pro_fail:
   pop edi
   pop esi
+#ifdef BX_QEMU
+  and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
+#endif
   popf
   stc
   retf
@@ -8875,6 +8900,9 @@ pci_pro_ok:
   xor ah, ah
   pop edi
   pop esi
+#ifdef BX_QEMU
+  and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
+#endif
   popf
   clc
   retf
@@ -9405,6 +9433,117 @@ pci_init_end:
   ret
 #endif // BX_PCIBIOS
 
+#if BX_ROMBIOS32
+rombios32_init:
+  ;; save a20 and enable it
+  in al, 0x92
+  push ax
+  or al, #0x02
+  out 0x92, al
+
+  ;; save SS:SP to the BDA
+  xor ax, ax
+  mov ds, ax
+  mov 0x0469, ss
+  mov 0x0467, sp
+
+  SEG CS
+    lidt [pmode_IDT_info]
+  SEG CS
+    lgdt [rombios32_gdt_48]
+  ;; set PE bit in CR0
+  mov  eax, cr0
+  or   al, #0x01
+  mov  cr0, eax
+  ;; start protected mode code: ljmpl 0x10:rombios32_init1
+  db 0x66, 0xea
+  dw rombios32_05
+  dw 0x000f       ;; high 16 bit address
+  dw 0x0010
+
+use32 386
+rombios32_05:
+  ;; init data segments
+  mov eax, #0x18
+  mov ds, ax
+  mov es, ax
+  mov ss, ax
+  xor eax, eax
+  mov fs, ax
+  mov gs, ax
+  cld
+
+  ;; copy rombios32 code to ram (ram offset = 1MB)
+  mov esi, #0xfffe0000
+  mov edi, #0x00040000
+  mov ecx, #0x10000 / 4
+  rep 
+    movsd
+
+  ;; init the stack pointer
+  mov esp, #0x00080000
+
+  ;; call rombios32 code
+  mov eax, #0x00040000
+  call eax
+
+  ;; return to 16 bit protected mode first
+  db 0xea
+  dd rombios32_10
+  dw 0x20
+
+use16 386
+rombios32_10:
+  ;; restore data segment limits to 0xffff
+  mov ax, #0x28
+  mov ds, ax
+  mov es, ax
+  mov ss, ax
+  mov fs, ax
+  mov gs, ax
+
+  ;; reset PE bit in CR0
+  mov  eax, cr0
+  and  al, #0xFE
+  mov  cr0, eax
+
+  ;; far jump to flush CPU queue after transition to real mode
+  JMP_AP(0xf000, rombios32_real_mode)
+
+rombios32_real_mode:
+  ;; restore IDT to normal real-mode defaults
+  SEG CS
+    lidt [rmode_IDT_info]
+
+  xor ax, ax
+  mov ds, ax
+  mov es, ax
+  mov fs, ax
+  mov gs, ax
+
+  ;; restore SS:SP from the BDA
+  mov ss, 0x0469
+  mov sp, 0x0467
+  ;; restore a20
+  pop ax
+  out 0x92, al
+  ret
+
+rombios32_gdt_48:
+  dw 0x30
+  dw rombios32_gdt                  
+  dw 0x000f
+
+rombios32_gdt:
+  dw 0, 0, 0, 0
+  dw 0, 0, 0, 0
+  dw 0xffff, 0, 0x9b00, 0x00cf ; 32 bit flat code segment (0x10)
+  dw 0xffff, 0, 0x9300, 0x00cf ; 32 bit flat data segment (0x18)
+  dw 0xffff, 0, 0x9b0f, 0x0000 ; 16 bit code segment base=0xf0000 limit=0xffff
+  dw 0xffff, 0, 0x9300, 0x0000 ; 16 bit data segment base=0x0 limit=0xffff
+#endif
+
+
 ; parallel port detection: base address in DX, index in BX, timeout in CL
 detect_parport:
   push dx
@@ -9535,10 +9674,17 @@ rom_scan_increment:
 ;; DATA_SEG_DEFS_HERE
 
 
+;; the following area can be used to write dynamically generated tables
+  .align 16
+bios_table_area_start:
+  dd 0xaafb4442
+  dd bios_table_area_end - bios_table_area_start - 8;
+
 ;--------
 ;- POST -
 ;--------
 .org 0xe05b ; POST Entry Point
+bios_table_area_end:
 post:
 
   xor ax, ax
@@ -9802,9 +9948,12 @@ post_default_ints:
 #endif
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
+#if BX_ROMBIOS32
+  call rombios32_init
+#else
   call pcibios_init_iomem_bases
   call pcibios_init_irqs
-
+#endif
   call rom_scan
 
   call _print_bios_banner 
