@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.167 2006-09-28 18:56:20 vruppert Exp $
+// $Id: rombios.c,v 1.168 2006-09-29 12:23:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,7 +143,7 @@
 #define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
-#define BX_ROMBIOS32     1
+#define BX_ROMBIOS32     0
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -938,7 +938,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.167 $ $Date: 2006-09-28 18:56:20 $";
+static char bios_cvs_version_string[] = "$Revision: 1.168 $ $Date: 2006-09-29 12:23:34 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1823,16 +1823,16 @@ print_bios_banner()
   printf(BX_APPNAME" BIOS - build: %s\n%s\nOptions: ",
     BIOS_BUILD_DATE, bios_cvs_version_string);
   printf(
-#ifdef BX_APM
+#if BX_APM
   "apmbios "
 #endif
-#ifdef BX_PCIBIOS
+#if BX_PCIBIOS
   "pcibios "
 #endif
-#ifdef BX_ELTORITO_BOOT
+#if BX_ELTORITO_BOOT
   "eltorito "
 #endif
-#ifdef BX_ROMBIOS32
+#if BX_ROMBIOS32
   "rombios32 "
 #endif
   "\n\n");
@@ -9211,6 +9211,7 @@ pci_routing_table_structure_start:
   db 0 ;; reserved
 pci_routing_table_structure_end:
 
+#if !BX_ROMBIOS32
 pci_irq_list:
   db 11, 10, 9, 5;
 
@@ -9431,6 +9432,7 @@ pci_init_end:
   pop  bp
   pop  ds
   ret
+#endif // BX_ROMBIOS32
 #endif // BX_PCIBIOS
 
 #if BX_ROMBIOS32
