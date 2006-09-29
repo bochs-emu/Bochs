@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.2 2006-09-29 12:23:34 vruppert Exp $
+// $Id: rombios32.c,v 1.3 2006-09-29 17:37:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -842,9 +842,6 @@ static void mptable_init(void)
     uint8_t *mp_config_table, *q, *float_pointer_struct;
     int ioapic_id, i, len;
     int mp_config_table_size;
-
-    if (smp_cpus <= 1)
-        return;
 
 #ifdef BX_USE_EBDA_TABLES
     mp_config_table = (uint8_t *)(ram_size - ACPI_DATA_SIZE - MPTABLE_MAX_SIZE);

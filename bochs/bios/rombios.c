@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.168 2006-09-29 12:23:34 vruppert Exp $
+// $Id: rombios.c,v 1.169 2006-09-29 17:37:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -143,7 +143,7 @@
 #define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
-#define BX_ROMBIOS32     0
+#define BX_ROMBIOS32     1
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -938,7 +938,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.168 $ $Date: 2006-09-29 12:23:34 $";
+static char bios_cvs_version_string[] = "$Revision: 1.169 $ $Date: 2006-09-29 17:37:08 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
