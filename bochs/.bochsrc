@@ -67,16 +67,16 @@
 # The ROM BIOS controls what the PC does when it first powers on.
 # Normally, you can use a precompiled BIOS in the source or binary
 # distribution called BIOS-bochs-latest. The ROM BIOS is usually loaded
-# starting at address 0xf0000, and it is exactly 64k long.
+# starting at address 0xf0000, and it is exactly 64k long. Another option
+# is 128k BIOS which is loaded at address 0xe0000.
 # You can also use the environment variable $BXSHARE to specify the
 # location of the BIOS.
 # The usage of external large BIOS images (up to 512k) at memory top is
 # now supported, but we still recommend to use the BIOS distributed with
 # Bochs. Now the start address can be calculated from image size.
 #=======================================================================
-romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
+romimage: file=$BXSHARE/BIOS-bochs-latest 
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
-#romimage: file=mybios.bin # calculate start address from image size
 
 #=======================================================================
 # CPU:
