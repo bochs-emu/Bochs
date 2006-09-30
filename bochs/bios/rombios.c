@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.169 2006-09-29 17:37:08 vruppert Exp $
+// $Id: rombios.c,v 1.170 2006-09-30 11:22:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@
 //
 //   BCC Bug: find a generic way to handle the bug of #asm after an "if"  (fixed in 0.16.7)
 
-#define DEBUG_ROMBIOS      0
+#include "rombios.h"
 
 #define DEBUG_ATA          0
 #define DEBUG_INT13_HD     0
@@ -143,7 +143,6 @@
 #define BX_FLOPPY_ON_CNT 37   /* 2 seconds */
 #define BX_PCIBIOS       1
 #define BX_APM           1
-#define BX_ROMBIOS32     1
 
 #define BX_USE_ATADRV    1
 #define BX_ELTORITO_BOOT 1
@@ -159,9 +158,6 @@
 #define SYS_SUBMODEL_ID  0x00
 #define BIOS_REVISION    1
 #define BIOS_CONFIG_TABLE 0xe6f5
-
-/* define it to include QEMU specific code */
-//#define BX_QEMU
 
 #ifndef BIOS_BUILD_DATE
 #  define BIOS_BUILD_DATE "06/23/99"
@@ -198,11 +194,6 @@
 #if BX_APM && BX_CPU<3
 #    error APM BIOS can only be used with 386+ cpu
 #endif
-
-#define PANIC_PORT  0x400
-#define PANIC_PORT2 0x401
-#define INFO_PORT   0x402
-#define DEBUG_PORT  0x403
 
 // define this if you want to make PCIBIOS working on a specific bridge only
 // undef enables PCIBIOS when at least one PCI device is found
@@ -938,29 +929,9 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.169 $ $Date: 2006-09-29 17:37:08 $";
+static char bios_cvs_version_string[] = "$Revision: 1.170 $ $Date: 2006-09-30 11:22:53 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
-
-#define BIOS_PRINTF_HALT     1
-#define BIOS_PRINTF_SCREEN   2
-#define BIOS_PRINTF_INFO     4
-#define BIOS_PRINTF_DEBUG    8
-#define BIOS_PRINTF_ALL      (BIOS_PRINTF_SCREEN | BIOS_PRINTF_INFO)
-#define BIOS_PRINTF_DEBHALT  (BIOS_PRINTF_SCREEN | BIOS_PRINTF_INFO | BIOS_PRINTF_HALT)
-
-#define printf(format, p...)  bios_printf(BIOS_PRINTF_SCREEN, format, ##p)
-
-// Defines the output macros. 
-// BX_DEBUG goes to INFO port until we can easily choose debug info on a 
-// per-device basis. Debug info are sent only in debug mode
-#if DEBUG_ROMBIOS
-#  define BX_DEBUG(format, p...)  bios_printf(BIOS_PRINTF_INFO, format, ##p)    
-#else
-#  define BX_DEBUG(format, p...) 
-#endif
-#define BX_INFO(format, p...)   bios_printf(BIOS_PRINTF_INFO, format, ##p)
-#define BX_PANIC(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)

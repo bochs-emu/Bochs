@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.3 2006-09-29 17:37:08 vruppert Exp $
+// $Id: rombios32.c,v 1.4 2006-09-30 11:22:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -21,6 +21,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 
+#include "rombios.h"
+
 typedef signed char  int8_t;
 typedef short int16_t;
 typedef int   int32_t;
@@ -30,9 +32,6 @@ typedef unsigned short uint16_t;
 typedef unsigned int   uint32_t;
 typedef unsigned long long uint64_t;
 
-/* define it to include QEMU specific code */
-//#define BX_QEMU
-
 /* if true, put the MP float table and ACPI RSDT in EBDA and the MP
    table in RAM. Unfortunately, Linux has bugs with that, so we prefer
    to modify the BIOS in shadow RAM */
@@ -40,10 +39,6 @@ typedef unsigned long long uint64_t;
 
 /* define it if the (emulated) hardware supports SMM mode */
 #define BX_USE_SMM
-
-#define BX_INFO(fmt, args...) bios_printf(0, fmt, ## args);
-
-#define INFO_PORT   0x402
 
 #define cpuid(index, eax, ebx, ecx, edx) \
   asm volatile ("cpuid" \
@@ -357,12 +352,12 @@ void bios_printf(int flags, const char *fmt, ...)
     va_end(ap);
 }
 
-/* approximative ! */
 void delay_ms(int n)
 {
     int i, j, r1, r2;
     for(i = 0; i < n; i++) {
 #if BX_QEMU
+        /* approximative ! */
         for(j = 0; j < 1000000; j++);
 #else
         j = 66;
@@ -862,7 +857,7 @@ static void mptable_init(void)
     putstr(&q, "0.1         "); /* vendor id */
     putle32(&q, 0); /* OEM table ptr */
     putle16(&q, 0); /* OEM table size */
-    putle16(&q, 20); /* entry count */
+    putle16(&q, smp_cpus + 18); /* entry count */
     putle32(&q, 0xfee00000); /* local APIC addr */
     putle16(&q, 0); /* ext table length */
     putb(&q, 0); /* ext table checksum */
