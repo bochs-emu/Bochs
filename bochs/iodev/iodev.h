@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.83 2006-09-24 16:58:13 vruppert Exp $
+// $Id: iodev.h,v 1.84 2006-10-01 19:51:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -362,6 +362,13 @@ public:
 };
 #endif
 
+#if BX_SUPPORT_ACPI
+class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
+public:
+  virtual void generate_smi() {}
+};
+#endif
+
 #if BX_SUPPORT_BUSMOUSE
 class BOCHSAPI bx_busm_stub_c : public bx_devmodel_c {
 public:
@@ -427,7 +434,7 @@ public:
   bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
-  bx_devmodel_c     *pluginACPIController;
+  bx_acpi_ctrl_stub_c *pluginACPIController;
   bx_devmodel_c     *pluginPciVgaAdapter;
   bx_devmodel_c     *pluginPciDevAdapter;
   bx_devmodel_c     *pluginPciPNicAdapter;
@@ -438,7 +445,7 @@ public:
   bx_cmos_stub_c    *pluginCmosDevice;
   bx_serial_stub_c  *pluginSerialDevice;
 #if BX_SUPPORT_PCIUSB
-  bx_pci_usb_stub_c     *pluginPciUSBAdapter;
+  bx_pci_usb_stub_c *pluginPciUSBAdapter;
 #endif
   bx_devmodel_c     *pluginParallelDevice;
   bx_devmodel_c     *pluginUnmapped;
@@ -479,7 +486,10 @@ public:
   bx_speaker_stub_c stubSpeaker;
   bx_serial_stub_c  stubSerial;
 #if BX_SUPPORT_PCIUSB
-  bx_pci_usb_stub_c     stubUsbAdapter;
+  bx_pci_usb_stub_c stubUsbAdapter;
+#endif
+#if BX_SUPPORT_ACPI
+  bx_acpi_ctrl_stub_c stubACPIController;
 #endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows

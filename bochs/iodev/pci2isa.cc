@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.38 2006-10-01 13:47:26 vruppert Exp $
+// $Id: pci2isa.cc,v 1.39 2006-10-01 19:51:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -296,9 +296,10 @@ void bx_piix3_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
-      BX_ERROR(("write %08x: APM command register not supported yet", value));
 #if BX_SUPPORT_ACPI
-      // TODO: generate SMI
+      DEV_acpi_generate_smi();
+#else
+      BX_ERROR(("write %08x: APM command register not supported yet", value));
 #endif
       BX_P2I_THIS s.apmc = value & 0xff;
       break;
