@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.h,v 1.2 2006-09-26 18:43:42 vruppert Exp $
+// $Id: acpi.h,v 1.3 2006-10-01 13:47:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -22,9 +22,11 @@
 #define BX_IODEV_ACPI_H
 
 #if BX_USE_ACPI_SMF
+#  define BX_ACPI_SMF static
 #  define BX_ACPI_THIS theACPIController->
 #  define BX_ACPI_THIS_PTR theACPIController
 #else
+#  define BX_ACPI_SMF
 #  define BX_ACPI_THIS this->
 #  define BX_ACPI_THIS_PTR this
 #endif
@@ -49,9 +51,15 @@ public:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  BX_ACPI_SMF void timer(void);
 
 private:
-  static void set_irq_level(bx_bool level);
+  BX_ACPI_SMF void set_irq_level(bx_bool level);
+  BX_ACPI_SMF Bit32u get_pmtmr(void);
+  BX_ACPI_SMF Bit16u get_pmsts(void);
+  BX_ACPI_SMF void pm_update_sci(void);
+  static void timer_handler(void *);
+
   struct {
     Bit8u pci_conf[256];
     Bit8u devfunc;
@@ -60,6 +68,8 @@ private:
     Bit16u pmsts;
     Bit16u pmen;
     Bit16u pmcntrl;
+    Bit64u tmr_overflow_time;
+    int timer_index;
   } s;
 };
 

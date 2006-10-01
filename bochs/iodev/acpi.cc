@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.2 2006-09-26 18:43:42 vruppert Exp $
+// $Id: acpi.cc,v 1.3 2006-10-01 13:47:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -36,11 +36,22 @@
 bx_acpi_ctrl_c* theACPIController = NULL;
 
 // FIXME
-const Bit8u acpi_pm_iomask[64] = {2, 0, 2, 0, 2, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
+const Bit8u acpi_pm_iomask[64] = {2, 0, 2, 0, 2, 0, 0, 0, 4, 0, 0, 0, 7, 7, 7, 7,
                                   7, 7, 7, 7, 1, 1, 0, 0, 7, 7, 0, 0, 7, 7, 7, 7,
                                   7, 7, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7, 7, 7,
                                   1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0};
 const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0};
+
+#define PM_FREQ 3579545
+
+#define RTC_EN (1 << 10)
+#define PWRBTN_EN (1 << 8)
+#define GBL_EN (1 << 5)
+#define TMROF_EN (1 << 0)
+
+#define SCI_EN (1 << 0)
+
+#define SUS_EN (1 << 13)
 
 int libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -55,10 +66,35 @@ void libacpi_LTX_plugin_fini(void)
   delete theACPIController;
 }
 
+/* ported from QEMU: compute with 96 bit intermediate result: (a*b)/c */
+Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
+{
+    union {
+        Bit64u ll;
+        struct {
+#ifdef WORDS_BIGENDIAN
+            Bit32u high, low;
+#else
+            Bit32u low, high;
+#endif            
+        } l;
+    } u, res;
+    Bit64u rl, rh;
+
+    u.ll = a;
+    rl = (Bit64u)u.l.low * (Bit64u)b;
+    rh = (Bit64u)u.l.high * (Bit64u)b;
+    rh += (rl >> 32);
+    res.l.high = rh / c;
+    res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
+    return res.ll;
+}
+
 bx_acpi_ctrl_c::bx_acpi_ctrl_c()
 {
   put("ACPI");
   settype(ACPILOG);
+  s.timer_index = BX_NULL_TIMER_HANDLE;
 }
 
 bx_acpi_ctrl_c::~bx_acpi_ctrl_c()
@@ -75,6 +111,11 @@ void bx_acpi_ctrl_c::init(void)
   BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(1, 3);
   DEV_register_pci_handlers(this, &BX_ACPI_THIS s.devfunc, BX_PLUGIN_ACPI,
                             "ACPI Controller");
+
+  if (BX_ACPI_THIS s.timer_index == BX_NULL_TIMER_HANDLE) {
+    BX_ACPI_THIS s.timer_index =
+      bx_pc_system.register_timer(this, timer_handler, 1000, 0, 0, "ACPI");
+  }
 
   for (i=0; i<256; i++) {
     BX_ACPI_THIS s.pci_conf[i] = 0x0;
@@ -125,6 +166,7 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
   BX_ACPI_THIS s.pmcntrl = 0;
+  BX_ACPI_THIS s.tmr_overflow_time = 0xffffff;
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
@@ -137,6 +179,7 @@ void bx_acpi_ctrl_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
+  BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
   bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
   for (i=0; i<256; i++) {
     sprintf(name, "0x%02x", i);
@@ -168,6 +211,36 @@ void bx_acpi_ctrl_c::set_irq_level(bx_bool level)
   DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS s.pci_conf[0x3d], level);
 }
 
+Bit32u bx_acpi_ctrl_c::get_pmtmr(void)
+{
+  Bit64u value = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+  return (Bit32u)(value & 0xffffff);
+}
+
+Bit16u bx_acpi_ctrl_c::get_pmsts(void)
+{
+  Bit16u pmsts = BX_ACPI_THIS s.pmsts;
+  Bit64u value = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+  if (value >= BX_ACPI_THIS s.tmr_overflow_time)
+    BX_ACPI_THIS s.pmsts |= TMROF_EN;
+  return pmsts;
+}
+
+void bx_acpi_ctrl_c::pm_update_sci(void)
+{
+  Bit16u pmsts = get_pmsts();
+  bx_bool sci_level = (((pmsts & BX_ACPI_THIS s.pmen) & 
+                      (RTC_EN | PWRBTN_EN | GBL_EN | TMROF_EN)) != 0);
+  BX_ACPI_THIS set_irq_level(sci_level);
+  // schedule a timer interruption if needed
+  if ((BX_ACPI_THIS s.pmen & TMROF_EN) && !(pmsts & TMROF_EN)) {
+    Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ);
+      bx_pc_system.activate_timer(BX_ACPI_THIS s.timer_index, expire_time, 0);
+    } else {
+      bx_pc_system.deactivate_timer(BX_ACPI_THIS s.timer_index);
+    }
+}
+
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
 
@@ -189,7 +262,7 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
     switch (reg) {
       case 0x00:
-        value = BX_ACPI_THIS s.pmsts;
+        value = BX_ACPI_THIS get_pmsts();
         break;
       case 0x02:
         value = BX_ACPI_THIS s.pmen;
@@ -197,9 +270,13 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
       case 0x04:
         value = BX_ACPI_THIS s.pmcntrl;
         break;
+      case 0x08:
+        value = BX_ACPI_THIS get_pmtmr();
+        break;
       default:
         BX_INFO(("ACPI read from PM register 0x%02x not implemented yet", reg));
     }
+    BX_DEBUG(("ACPI read from PM register 0x%02x returns 0x%08x", reg, value));
   } else {
     BX_INFO(("ACPI read from SM register 0x%02x not implemented yet", reg));
   }
@@ -224,15 +301,41 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u reg = address & 0x3f;
 
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
+    BX_DEBUG(("ACPI write to PM register 0x%02x, value = 0x%04x", reg, value));
     switch (reg) {
       case 0x00:
-        BX_ACPI_THIS s.pmsts &= ~value;
+        {
+          Bit16u pmsts = BX_ACPI_THIS get_pmsts();
+          if (pmsts & value & TMROF_EN) {
+            // if TMRSTS is reset, then compute the new overflow time
+            Bit64u d = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+            BX_ACPI_THIS s.tmr_overflow_time = (d + 0x800000LL) & ~0x7fffffLL;
+          }
+          BX_ACPI_THIS s.pmsts &= ~value;
+          BX_ACPI_THIS pm_update_sci();
+        }
         break;
       case 0x02:
         BX_ACPI_THIS s.pmen = value;
+        BX_ACPI_THIS pm_update_sci();
         break;
       case 0x04:
-        BX_ACPI_THIS s.pmcntrl = value;
+        {
+          BX_ACPI_THIS s.pmcntrl = value & ~(SUS_EN);
+          if (value & SUS_EN) {
+            // change suspend type
+            Bit16u sus_typ = (value >> 10) & 3;
+            switch (sus_typ) {
+              case 0: // soft power off
+                bx_user_quit = 1;
+                LOG_THIS setonoff(LOGLEV_PANIC, ACT_FATAL);
+                BX_PANIC(("ACPI control: soft power off"));
+                break;
+              default:
+                break;
+            }
+          }
+        }
         break;
       default:
         BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
@@ -240,6 +343,17 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   } else {
     BX_INFO(("ACPI write to SM register 0x%02x not implemented yet", reg));
   }
+}
+
+void bx_acpi_ctrl_c::timer_handler(void *this_ptr)
+{
+  bx_acpi_ctrl_c *class_ptr = (bx_acpi_ctrl_c *) this_ptr;
+  class_ptr->timer();
+}
+
+void bx_acpi_ctrl_c::timer()
+{
+  BX_ACPI_THIS pm_update_sci();
 }
 
 // pci configuration space read callback handler
