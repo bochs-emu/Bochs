@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.170 2006-09-30 11:22:53 vruppert Exp $
+// $Id: rombios.c,v 1.171 2006-10-01 16:39:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.170 $ $Date: 2006-09-30 11:22:53 $";
+static char bios_cvs_version_string[] = "$Revision: 1.171 $ $Date: 2006-10-01 16:39:18 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4115,7 +4115,7 @@ ASM_END
                     case 3:
                         set_e820_range(ES, regs.u.r16.di, 
                                        0x00100000L, 
-                                       extended_memory_size - 0x10000L, 1);
+                                       extended_memory_size - ACPI_DATA_SIZE, 1);
                         regs.u.r32.ebx = 4;
                         regs.u.r32.eax = 0x534D4150;
                         regs.u.r32.ecx = 0x14;
@@ -4124,7 +4124,7 @@ ASM_END
                         break;
                     case 4:
                         set_e820_range(ES, regs.u.r16.di, 
-                                       extended_memory_size - 0x10000L, 
+                                       extended_memory_size - ACPI_DATA_SIZE, 
                                        extended_memory_size, 3); // ACPI RAM
                         regs.u.r32.ebx = 5;
                         regs.u.r32.eax = 0x534D4150;
@@ -8723,7 +8723,7 @@ bios32_structure:
 
 .align 16
 bios32_entry_point:
-  pushf
+  pushfd
   cmp eax, #0x49435024 ;; "$PCI"
   jne unknown_service
   mov eax, #0x80000000
@@ -8750,12 +8750,12 @@ bios32_end:
 #ifdef BX_QEMU
   and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
 #endif
-  popf
+  popfd
   retf
 
 .align 16
 pcibios_protected:
-  pushf
+  pushfd
   cli
   push esi
   push edi
@@ -8864,7 +8864,7 @@ pci_pro_fail:
 #ifdef BX_QEMU
   and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
 #endif
-  popf
+  popfd
   stc
   retf
 pci_pro_ok:
@@ -8874,7 +8874,7 @@ pci_pro_ok:
 #ifdef BX_QEMU
   and dword ptr[esp+8],0xfffffffc ;; reset CS.RPL for kqemu
 #endif
-  popf
+  popfd
   clc
   retf
 

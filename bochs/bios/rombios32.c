@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.4 2006-09-30 11:22:53 vruppert Exp $
+// $Id: rombios32.c,v 1.5 2006-10-01 16:39:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -55,13 +55,10 @@ typedef unsigned long long uint64_t;
 
 #define APIC_ENABLED 0x0100
 
-#define CPU_COUNT_ADDR 0xf000
 #define AP_BOOT_ADDR 0x10000
 
 #define MPTABLE_MAX_SIZE  0x00002000
-#define ACPI_DATA_SIZE    0x00010000
 #define SMI_CMD_IO_ADDR   0xb2
-#define PM_IO_BASE        0xb000
 
 #define BIOS_TMP_STORAGE  0x00030000 /* 64 KB used to copy the BIOS to shadow RAM */
 
@@ -354,21 +351,24 @@ void bios_printf(int flags, const char *fmt, ...)
 
 void delay_ms(int n)
 {
-    int i, j, r1, r2;
+    int i, j;
     for(i = 0; i < n; i++) {
-#if BX_QEMU
+#ifdef BX_QEMU
         /* approximative ! */
         for(j = 0; j < 1000000; j++);
 #else
-        j = 66;
-        r1 = inb(0x61) & 0x10;
-        do {
+        {
+          int r1, r2;
+          j = 66;
+          r1 = inb(0x61) & 0x10;
+          do {
             r2 = inb(0x61) & 0x10;
             if (r1 != r2) {
-                j--;
-                r1 = r2;
+              j--;
+              r1 = r2;
             }
-        } while (j > 0);
+          } while (j > 0);
+        }
 #endif
     }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.1 2006-09-30 11:22:53 vruppert Exp $
+// $Id: rombios.h,v 1.2 2006-10-01 16:39:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -48,3 +48,7 @@
 #endif
 #define BX_INFO(format, p...)   bios_printf(BIOS_PRINTF_INFO, format, ##p)
 #define BX_PANIC(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)
+
+#define ACPI_DATA_SIZE    0x00010000L
+#define PM_IO_BASE        0xb000
+#define CPU_COUNT_ADDR    0xf000
