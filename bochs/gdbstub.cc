@@ -373,7 +373,7 @@ static int access_linear(Bit64u laddress,
    if (!valid) return(0);
    
    if (rw == BX_READ) {
-       valid = BX_MEM(0)->dbg_fetch_mem(phys, len, data);
+       valid = BX_MEM(0)->dbg_fetch_mem(BX_CPU(0), phys, len, data);
    }
    else {
        valid = BX_MEM(0)->dbg_set_mem(phys, len, data);
