@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.114 2006-10-01 19:51:49 vruppert Exp $
+// $Id: devices.cc,v 1.115 2006-10-02 10:14:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -73,7 +73,9 @@ void bx_devices_c::init_stubs()
   pluginPciBridge = &stubPci;
   pluginPci2IsaBridge = &stubPci2Isa;
   pluginPciIdeController = &stubPciIde;
+#if BX_SUPPORT_ACPI
   pluginACPIController = &stubACPIController;
+#endif
 #if BX_SUPPORT_PCIVGA
     pluginPciVgaAdapter = NULL;
 #endif
@@ -120,7 +122,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.114 2006-10-01 19:51:49 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.115 2006-10-02 10:14:07 vruppert Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.84 2006-10-01 19:51:49 vruppert Exp $
+// $Id: iodev.h,v 1.85 2006-10-02 10:14:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -434,7 +434,9 @@ public:
   bx_pci_bridge_stub_c *pluginPciBridge;
   bx_pci2isa_stub_c *pluginPci2IsaBridge;
   bx_pci_ide_stub_c *pluginPciIdeController;
+#if BX_SUPPORT_ACPI
   bx_acpi_ctrl_stub_c *pluginACPIController;
+#endif
   bx_devmodel_c     *pluginPciVgaAdapter;
   bx_devmodel_c     *pluginPciDevAdapter;
   bx_devmodel_c     *pluginPciPNicAdapter;
@@ -548,7 +550,9 @@ private:
 #include "iodev/pci.h"
 #include "iodev/pci2isa.h"
 #include "iodev/pci_ide.h"
+#if BX_SUPPORT_ACPI
 #include "iodev/acpi.h"
+#endif
 #if BX_SUPPORT_PCIVGA
 #include "iodev/pcivga.h"
 #endif
