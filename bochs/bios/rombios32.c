@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.6 2006-10-02 06:29:37 vruppert Exp $
+// $Id: rombios32.c,v 1.7 2006-10-02 20:29:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -651,7 +651,7 @@ static void smm_init(PCIDevice *d)
     while (inb(0xb3) != 0x00);
 
     /* enable the SMM memory window */
-    pci_config_writeb(&i440_pcidev, 0x72, 0x02 | 0x40);
+    pci_config_writeb(&i440_pcidev, 0x72, 0x02 | 0x48);
 
     /* copy the SMM code */
     memcpy((void *)0xa8000, &smm_code_start,
