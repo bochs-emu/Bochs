@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.33 2006-06-05 05:39:21 sshwarts Exp $
+// $Id: apic.h,v 1.34 2006-10-02 21:49:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,11 +35,6 @@
 
 #if BX_SUPPORT_APIC
 
-typedef enum {
-  APIC_TYPE_IOAPIC,
-  APIC_TYPE_LOCAL_APIC
-} bx_apic_type_t;
-
 #define APIC_LEVEL_TRIGGERED	1
 #define APIC_EDGE_TRIGGERED	0
 
@@ -63,7 +58,6 @@ public:
   virtual void read_aligned(bx_phy_address address, Bit32u *data) = 0;
   void write(bx_phy_address address, void *value, unsigned len);
   virtual void write_aligned(bx_phy_address address, Bit32u *data) = 0;
-  virtual bx_apic_type_t get_type() = 0;
 };
 
 #ifdef BX_INCLUDE_LOCAL_APIC
@@ -77,12 +71,8 @@ public:
 #endif
 
 #define BX_LAPIC_BASE_ADDR  0xfee00000  // default Local APIC address
-
-#define BX_NUM_LOCAL_APICS BX_SMP_PROCESSORS
-
-#define BX_APIC_FIRST_VECTOR	0x10
-#define BX_APIC_LAST_VECTOR	0xfe
-#define BX_LOCAL_APIC_MAX_INTS  256
+#define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
+#define BX_LAPIC_MAX_INTS   256
 
 class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c 
 {
@@ -96,15 +86,15 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 
   // ISR=in-service register.  When an IRR bit is cleared, the corresponding
   // bit in ISR is set.
-  Bit8u isr[BX_LOCAL_APIC_MAX_INTS];
+  Bit8u isr[BX_LAPIC_MAX_INTS];
   // TMR=trigger mode register.  Cleared for edge-triggered interrupts
   // and set for level-triggered interrupts. If set, local APIC must send
   // EOI message to all other APICs.
-  Bit8u tmr[BX_LOCAL_APIC_MAX_INTS];
+  Bit8u tmr[BX_LAPIC_MAX_INTS];
   // IRR=interrupt request register. When an interrupt is triggered by
   // the I/O APIC or another processor, it sets a bit in irr. The bit is
   // cleared when the interrupt is acknowledged by the processor.
-  Bit8u irr[BX_LOCAL_APIC_MAX_INTS];
+  Bit8u irr[BX_LAPIC_MAX_INTS];
 
 #define APIC_ERR_ILLEGAL_ADDR    0x80
 #define APIC_ERR_RX_ILLEGAL_VEC  0x40
@@ -158,10 +148,9 @@ class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 public:
   bx_bool INTR;
   bx_local_apic_c(BX_CPU_C *cpu);
-  virtual ~bx_local_apic_c(void) { }
+  virtual ~bx_local_apic_c() { }
   virtual void reset(void);
   virtual void init(void);
-  BX_CPU_C *get_cpu() { return cpu; }
   void set_id(Bit8u newid);   // redefine to set cpu->name
   virtual void write_aligned(bx_phy_address addr, Bit32u *data);
   virtual void read_aligned(bx_phy_address address, Bit32u *data);
@@ -179,7 +168,6 @@ public:
   void service_local_apic(void);
   void print_status(void);
   bx_bool match_logical_addr (Bit8u address);
-  virtual bx_apic_type_t get_type(void) { return APIC_TYPE_LOCAL_APIC; }
   bx_bool deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode);
   Bit8u get_tpr(void);
   void  set_tpr(Bit8u tpr);
