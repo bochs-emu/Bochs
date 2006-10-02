@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.32 2006-06-05 05:39:21 sshwarts Exp $
+// $Id: ioapic.cc,v 1.33 2006-10-02 15:08:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -42,7 +42,7 @@ static bx_bool ioapic_read(unsigned long a20addr, unsigned long len, void *data,
 static bx_bool ioapic_write(unsigned long a20addr, unsigned long len, void *data, void *param)
 {
   if (len != 4) {
-    BX_PANIC (("I/O apic write with len=%d (should be 4)", len));
+    BX_PANIC (("I/O apic write with len=%ld (should be 4)", len));
   }
   bx_ioapic.write(a20addr, (Bit32u*) data, len);
   return 1;
@@ -217,6 +217,7 @@ void bx_ioapic_c::receive_eoi(Bit8u vector)
 void bx_ioapic_c::service_ioapic()
 {
   static unsigned int stuck = 0;
+  Bit8u vector = 0;
   // look in IRR and deliver any interrupts that are not masked.
   BX_DEBUG(("IOAPIC: servicing"));
   for (unsigned bit=0; bit < BX_IOAPIC_NUM_PINS; bit++) {
@@ -226,9 +227,11 @@ void bx_ioapic_c::service_ioapic()
       if (! entry->is_masked()) {
         // clear irr bit and deliver
         if (entry->delivery_mode() == 7) {
-          BX_PANIC(("ExtINT not implemented yet"));
+          vector = DEV_pic_iac();
+        } else {
+          vector = entry->vector();
         }
-        bx_bool done = apic_bus_deliver_interrupt(entry->vector(), entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode());
+        bx_bool done = apic_bus_deliver_interrupt(vector, entry->destination(), entry->delivery_mode(), entry->destination_mode(), entry->pin_polarity(), entry->trigger_mode());
         if (done) {
           if (! entry->trigger_mode())
             irr &= ~mask;
@@ -238,7 +241,7 @@ void bx_ioapic_c::service_ioapic()
           entry->set_delivery_status();
           stuck++;
           if (stuck > 5)
-            BX_INFO(("vector %#x stuck?", entry->vector()));
+            BX_INFO(("vector %#x stuck?", vector));
         }
       }
       else {
