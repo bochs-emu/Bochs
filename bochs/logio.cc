@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.57 2006-09-17 18:09:33 vruppert Exp $
+// $Id: logio.cc,v 1.58 2006-10-02 17:07:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -574,7 +574,9 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 
 void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int exit_status)
 {
+#if !BX_DEBUGGER
   bx_atexit();
+#endif
 #if BX_WITH_CARBON
   if(!isatty(STDIN_FILENO) && !SIM->get_init_done())
   {
