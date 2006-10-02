@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.h,v 1.1 2006-04-05 17:44:04 sshwarts Exp $
+// $Id: smm.h,v 1.2 2006-10-02 18:50:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -32,7 +32,8 @@
 #if BX_SUPPORT_X86_64 
 
 // for x86-64 configuration using AMD Athlon 64 512-byte SMM save state map
-#define SMM_REVISION_ID (0x00000000 | SMM_SMBASE_RELOCATION)
+// revision ID according to QEMU/Bochs BIOS
+#define SMM_REVISION_ID (0x00000064 | SMM_SMBASE_RELOCATION)
 
 #define SMRAM_OFFSET_RAX_HI32  0x7ffc
 #define SMRAM_OFFSET_RAX_LO32  0x7ff8
