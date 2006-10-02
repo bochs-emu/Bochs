@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.80 2006-09-26 19:16:09 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.81 2006-10-02 17:40:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -732,7 +732,7 @@ next_page:
 
   paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
-    if (! BX_MEM(0)->dbg_fetch_mem(paddr, read_len, buf)) {
+    if (! BX_MEM(0)->dbg_fetch_mem(BX_CPU(which_cpu), paddr, read_len, buf)) {
       dbg_printf("bx_dbg_read_linear: physical memory read error (phy=0x%08x, lin=0x" FMT_ADDRX "\n", paddr, laddr);
       return 0;
     }
@@ -778,7 +778,7 @@ void bx_dbg_where_command()
     // bp = [bp];
     bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr);
     if (paddr_valid) {
-      if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, buf)) {
         bp = conv_4xBit8u_to_Bit32u(buf);
       } else {
         dbg_printf("(%d) Physical memory read error (BP)\n", i);
@@ -792,7 +792,7 @@ void bx_dbg_where_command()
     // ip = [bp + 4];
     paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp + 4, &paddr);
     if (paddr_valid) {
-      if (BX_MEM(0)->dbg_fetch_mem(paddr, 4, buf)) {
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, buf)) {
         ip = conv_4xBit8u_to_Bit32u(buf);
       } else {
         dbg_printf("(%d) Physical memory read error (IP)\n", i);
@@ -1144,7 +1144,7 @@ void bx_dbg_watch(int read, Bit32u address)
     int i;
     for (i = 0; i < num_read_watchpoints; i++) {
       Bit8u buf[2];
-      if (BX_MEM(0)->dbg_fetch_mem(read_watchpoint[i], 2, buf))
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
         dbg_printf("read   %08x   (%04x)\n",
             read_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
       else
@@ -1152,7 +1152,7 @@ void bx_dbg_watch(int read, Bit32u address)
     }
   for (i = 0; i < num_write_watchpoints; i++) {
     Bit8u buf[2];
-    if (BX_MEM(0)->dbg_fetch_mem(write_watchpoint[i], 2, buf))
+    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
       dbg_printf("write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
     else
       dbg_printf("write  %08x   (read error)\n", write_watchpoint[i]);
@@ -2130,7 +2130,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
     }
     else {
       // address is already physical address
-      BX_MEM(0)->dbg_fetch_mem(addr, data_size, databuf);
+      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), addr, data_size, databuf);
     }
 
     //FIXME HanishKVC The char display for data to be properly integrated
@@ -2931,7 +2931,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 
     for (unsigned i = from; i <= to; i++)
     { 
-      BX_MEM(0)->dbg_fetch_mem(idtr.base + i * 4, sizeof(buff), buff);
+      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), idtr.base + i * 4, sizeof(buff), buff);
 #ifdef BX_LITTLE_ENDIAN
       seg = *(Bit16u*)(&buff[2]);
       off = *(Bit16u*)(&buff[0]);
@@ -2939,7 +2939,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
       seg = (buff[3] << 8) | buff[2];
       off = (buff[1] << 8) | buff[0];
 #endif
-      BX_MEM(0)->dbg_fetch_mem(idtr.base + ((seg << 4) + off), sizeof(buff), buff);
+      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), idtr.base + ((seg << 4) + off), sizeof(buff), buff);
       dbg_printf("INT# %02x > %04X:%04X (" FMT_ADDRX ") %s%s\n", i, seg, off, 
          idtr.base + ((seg << 4) + off), bx_dbg_ivt_desc(i), 
          (buff[0] == 0xcf) ? " ; dummy iret" : "");
