@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.5 2006-10-01 16:39:18 vruppert Exp $
+// $Id: rombios32.c,v 1.6 2006-10-02 06:29:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -632,13 +632,23 @@ extern uint8_t smm_relocation_start, smm_relocation_end;
 extern uint8_t smm_code_start, smm_code_end;
 
 #ifdef BX_USE_SMM
-static void smm_init(void)
+static void smm_init(PCIDevice *d)
 {
     /* copy the SMM relocation code */
     memcpy((void *)0x38000, &smm_relocation_start,
            &smm_relocation_end - &smm_relocation_start);
+
+    /* enable SMI generation when writing to the APMC register */
+    pci_config_writel(d, 0x58, pci_config_readl(d, 0x58) | (1 << 25));
+
+    /* init APM status port */
+    outb(0xb3, 0x01);
+
     /* raise an SMI interrupt */
-    outb(0xb2, 00);
+    outb(0xb2, 0x01);
+
+    /* wait until SMM code executed */
+    while (inb(0xb3) != 0x00);
 
     /* enable the SMM memory window */
     pci_config_writeb(&i440_pcidev, 0x72, 0x02 | 0x40);
@@ -743,7 +753,7 @@ static void pci_bios_init_device(PCIDevice *d)
         pci_config_writeb(d, 0x80, 0x01); /* enable PM io space */
         pm_sci_int = pci_config_readb(d, PCI_INTERRUPT_LINE);
 #ifdef BX_USE_SMM
-        smm_init();
+        smm_init(d);
 #endif
         acpi_enabled = 1;
     }

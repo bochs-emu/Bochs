@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32start.S,v 1.2 2006-10-01 16:39:18 vruppert Exp $
+// $Id: rombios32start.S,v 1.3 2006-10-02 06:29:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -61,6 +61,10 @@ smm_relocation_start:
 2:
   movl $0xa0000, %eax
   addr32 movl %eax, (%ebx)
+  /* indicate to the BIOS that the SMM code was executed */
+  mov $0x00, %al
+  movw $0xb3, %dx
+  outb %al, %dx
   rsm                
 smm_relocation_end:
         
