@@ -714,9 +714,19 @@ i440fxsupport: enabled=1
 #cmosimage: file=cmos.img, rtc_init=time0
 
 #=======================================================================
-# other stuff
+# MAGIC_BREAK:
+# This enables the "magic breakpoint" feature when using the debugger.
+# The useless cpu instruction XCHG BX, BX causes Bochs to enter the
+# debugger mode. This might be useful for software development.
+#
+# Example:
+#   magic_break: enabled=1
 #=======================================================================
 #magic_break: enabled=1
+
+#=======================================================================
+# other stuff
+#=======================================================================
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
 #text_snapshot_check: enable
