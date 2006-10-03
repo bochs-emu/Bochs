@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.h,v 1.2 2006-10-02 18:50:34 sshwarts Exp $
+// $Id: smm.h,v 1.3 2006-10-03 22:41:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -77,7 +77,7 @@
 #define SMRAM_OFFSET_DR7       0x7f60
 // Hi32 part of 64-bit CR0     0x7f5c    (always zero)
 #define SMRAM_OFFSET_CR0       0x7f58
-// Hi32 part of 64-bit CR3     0x7f54    (always zerom, 32-bit physical address)
+// Hi32 part of 64-bit CR3     0x7f54    (always zero, 32-bit physical address)
 #define SMRAM_OFFSET_CR3       0x7f50
 // Hi32 part of 64-bit CR4     0x7f4c    (always zero)
 #define SMRAM_OFFSET_CR4       0x7f48
