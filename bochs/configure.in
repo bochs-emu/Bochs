@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.327 2006-09-24 17:15:02 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.328 2006-10-03 21:45:17 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -671,6 +671,23 @@ AC_ARG_ENABLE(ne2000,
     ]
   )
 AC_SUBST(NE2K_OBJS)
+
+AC_MSG_CHECKING(for ACPI support)
+AC_ARG_ENABLE(acpi,
+  [  --enable-acpi                     enable ACPI support],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_ACPI, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_ACPI, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_ACPI, 0)
+    ]
+  )
+AC_SUBST(BX_SUPPORT_ACPI)
 
 AC_MSG_CHECKING(for i440FX PCI support)
 AC_ARG_ENABLE(pci,
