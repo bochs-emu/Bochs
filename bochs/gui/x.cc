@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.103 2006-04-14 13:27:17 vruppert Exp $
+// $Id: x.cc,v 1.104 2006-10-03 08:13:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1993,10 +1993,20 @@ void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
 
 int x11_ask_dialog(BxEvent *event)
 {
+#if !BX_DEBUGGER
   const int button_x[3] = { 81, 166, 251 };
   const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
                             BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
                             BX_LOG_ASK_CHOICE_DIE };
+ const int num_ctrls = 3;
+#else
+  const int button_x[4] = { 36, 121, 206, 291 };
+  const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
+                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
+                            BX_LOG_ASK_CHOICE_ENTER_DEBUG,
+                            BX_LOG_ASK_CHOICE_DIE };
+ const int num_ctrls = 4;
+#endif
   Window dialog;
   XSizeHints hint;
   XEvent xevent;
@@ -2004,7 +2014,7 @@ int x11_ask_dialog(BxEvent *event)
   KeySym key;
   int done, i, level, cpos;
   int retcode = -1;
-  int valid = 0, control = 2, oldctrl = -1;
+  int valid = 0, control = num_ctrls - 1, oldctrl = -1;
   unsigned long black_pixel, white_pixel;
   char name[16], text[10], device[16], message[512];
 
@@ -2059,11 +2069,15 @@ int x11_ask_dialog(BxEvent *event)
                              gc, 20, 45, message, strlen(message));
           }
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 83, 80, 65, 20, "Continue");
+                            gc, button_x[0] + 2, 80, 65, 20, "Continue");
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 168, 80, 65, 20, "Alwayscont");
+                            gc, button_x[1] + 2, 80, 65, 20, "Alwayscont");
+#if BX_DEBUGGER
           x11_create_button(xevent.xexpose.display, dialog,
-                            gc, 253, 80, 65, 20, "Quit");
+                            gc, button_x[2] + 2, 80, 65, 20, "Debugger");
+#endif
+          x11_create_button(xevent.xexpose.display, dialog,
+                            gc, button_x[num_ctrls-1] + 2, 80, 65, 20, "Quit");
           oldctrl = control - 1;
           if (oldctrl < 0) oldctrl = 1;
         }
@@ -2071,15 +2085,20 @@ int x11_ask_dialog(BxEvent *event)
       case ButtonPress:
         if (xevent.xbutton.button == Button1) {
           if ((xevent.xbutton.y > 80) && (xevent.xbutton.y < 100)) {
-            if ((xevent.xbutton.x > 83) && (xevent.xbutton.x < 148)) {
+            if ((xevent.xbutton.x > (button_x[0] + 2)) && (xevent.xbutton.x < (button_x[0] + 68))) {
               control = 0;
               valid = 1;
-            } else if ((xevent.xbutton.x > 168) && (xevent.xbutton.x < 233)) {
+            } else if ((xevent.xbutton.x > (button_x[1] + 2)) && (xevent.xbutton.x < (button_x[1] + 68))) {
               control = 1;
               valid = 1;
-            } else if ((xevent.xbutton.x > 253) && (xevent.xbutton.x < 318)) {
+            } else if ((xevent.xbutton.x > (button_x[2] + 2)) && (xevent.xbutton.x < (button_x[2] + 68))) {
               control = 2;
               valid = 1;
+#if BX_DEBUGGER
+            } else if ((xevent.xbutton.x > (button_x[3] + 2)) && (xevent.xbutton.x < (button_x[3] + 68))) {
+              control = 3;
+              valid = 1;
+#endif
             }
           }
         }
@@ -2093,9 +2112,9 @@ int x11_ask_dialog(BxEvent *event)
         i = XLookupString((XKeyEvent *)&xevent, text, 10, &key, 0);
         if (key == XK_Tab) {
           control++;
-          if (control == 3) control = 0;
+          if (control >= num_ctrls) control = 0;
         } else if (key == XK_Escape) {
-          control = 2;
+          control = num_ctrls - 1;
           done = 1;
         } else if ((key == XK_space) || (key == XK_Return)) {
           done = 1;
@@ -2110,6 +2129,7 @@ int x11_ask_dialog(BxEvent *event)
   }
   retcode = ask_code[control];
   XFreeGC(bx_x_display, gc);
+  XFreeGC(bx_x_display, gc_inv);
   XDestroyWindow(bx_x_display, dialog);
   return retcode;
 }
@@ -2244,6 +2264,7 @@ int x11_string_dialog(bx_param_string_c *param)
   if (control == 1) param->set(value);
   if (control == 2) control = -1;
   XFreeGC(bx_x_display, gc);
+  XFreeGC(bx_x_display, gc_inv);
   XDestroyWindow(bx_x_display, dialog);
   return control;
 }
