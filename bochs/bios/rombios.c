@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.171 2006-10-01 16:39:18 vruppert Exp $
+// $Id: rombios.c,v 1.172 2006-10-03 21:03:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.171 $ $Date: 2006-10-01 16:39:18 $";
+static char bios_cvs_version_string[] = "$Revision: 1.172 $ $Date: 2006-10-03 21:03:47 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9496,6 +9496,7 @@ rombios32_real_mode:
 
   ;; restore SS:SP from the BDA
   mov ss, 0x0469
+  mov esp, #0x00000000
   mov sp, 0x0467
   ;; restore a20
   pop ax
