@@ -57,7 +57,7 @@ BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-bios: biossums BIOS-bochs-latest 
+bios: biossums BIOS-bochs-latest BIOS-bochs-legacy 
 
 clean:
 	@RMCOMMAND@ *.o *.a *.s _rombios*_.c rombios*.txt rombios*.sym
@@ -70,7 +70,18 @@ dist-clean: clean
 bios-clean:
 	@RMCOMMAND@ BIOS-bochs-*
 
-rombios16.bin: rombios.c apmbios.S biossums
+BIOS-bochs-legacy: rombios.c apmbios.S biossums rombios.h
+	$(GCC) $(BIOS_BUILD_DATE) -DLEGACY -E -P $< > _rombiosl_.c
+	$(BCC) -o rombiosl.s -C-c -D__i86__ -0 -S _rombiosl_.c
+	sed -e 's/^\.text//' -e 's/^\.data//' rombiosl.s > _rombiosl_.s
+	$(AS86) _rombiosl_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombiosl.txt
+	-perl ${srcdir}/makesym.perl < rombiosl.txt > rombiosl.sym
+	mv tmp.bin $@
+	./biossums $@
+	@RMCOMMAND@ _rombiosl_.s
+
+
+rombios16.bin: rombios.c apmbios.S biossums rombios.h
 	$(GCC) $(BIOS_BUILD_DATE) -E -P $< > _rombios_.c
 	$(BCC) -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
@@ -81,7 +92,7 @@ rombios16.bin: rombios.c apmbios.S biossums
 	@RMCOMMAND@ _rombios_.s
 
 
-rombios32.bin: rombios32.out
+rombios32.bin: rombios32.out rombios.h
 	objcopy -O binary $< $@
 	./biossums -pad $@
 

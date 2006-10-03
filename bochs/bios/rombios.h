@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.2 2006-10-01 16:39:18 vruppert Exp $
+// $Id: rombios.h,v 1.3 2006-10-03 20:27:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -21,7 +21,11 @@
 /* define it to include QEMU specific code */
 //#define BX_QEMU
 
-#define BX_ROMBIOS32     1
+#ifndef LEGACY
+#  define BX_ROMBIOS32     1
+#else
+#  define BX_ROMBIOS32     0
+#endif
 #define DEBUG_ROMBIOS    0
 
 #define PANIC_PORT  0x400
