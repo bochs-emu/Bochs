@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.12 2006-06-12 16:58:26 sshwarts Exp $
+// $Id: call_far.cc,v 1.13 2006-10-04 19:08:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -121,7 +121,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     }
 
 #if BX_SUPPORT_X86_64
-    if (IsLongMode()) {
+    if (long_mode()) {
       if (gate_descriptor.type != BX_386_CALL_GATE) {
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);

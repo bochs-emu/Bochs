@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.303 2006-08-25 19:56:03 sshwarts Exp $
+// $Id: cpu.h,v 1.304 2006-10-04 19:08:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,11 +331,9 @@ const char* cpu_mode_string(unsigned cpu_mode);
 #if BX_SUPPORT_X86_64
 #define Is64BitMode()       (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
 #define StackAddrSize64()   (Is64BitMode())
-#define IsLongMode()        (BX_CPU_THIS_PTR msr.lma)
 #else
 #define Is64BitMode()       (0)
 #define StackAddrSize64()   (0)
-#define IsLongMode()        (0)
 #endif
 
 #if BX_SUPPORT_APIC
@@ -443,7 +441,7 @@ typedef struct {
     set_VM(0);                                                        \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                   \
-    if (IsLongMode()) return;                                         \
+    if (long_mode()) return;                                         \
     if (val) {                                                        \
        BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                   \
        BX_CPU_THIS_PTR eflags.VM_cached = 1;                          \
@@ -2917,6 +2915,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool smm_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool protected_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
+  BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
 
 #if BX_CPU_LEVEL >= 5
@@ -3094,6 +3093,15 @@ BX_CPP_INLINE bx_bool BX_CPU_C::v8086_mode(void)
 BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_IA32_PROTECTED);
+}
+
+BX_CPP_INLINE unsigned BX_CPU_C::long_mode(void)
+{
+#if BX_SUPPORT_X86_64
+  return BX_CPU_THIS_PTR msr.lma;
+#else
+  return 0;
+#endif
 }
 
 BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)

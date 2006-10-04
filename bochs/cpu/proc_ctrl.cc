@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.159 2006-09-10 16:56:55 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.160 2006-10-04 19:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,12 +142,9 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
-  // protected or v8086 mode
-  if (BX_CPU_THIS_PTR cr0.pe) {
-    if (CPL!=0) {
-      BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   BX_DEBUG(("INVD: Flush caches and TLB !"));
@@ -168,11 +165,9 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 4
   invalidate_prefetch_q();
 
-  if (BX_CPU_THIS_PTR cr0.pe) {
-    if (CPL!=0) {
-      BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   BX_DEBUG(("WBINVD: Flush caches and TLB !"));

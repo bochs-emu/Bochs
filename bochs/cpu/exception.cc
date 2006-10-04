@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.85 2006-09-26 19:16:10 sshwarts Exp $
+// $Id: exception.cc,v 1.86 2006-10-04 19:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -789,11 +789,11 @@ void BX_CPU_C::interrupt(Bit8u vector, bx_bool is_INT, bx_bool is_error_code, Bi
   BX_CPU_THIS_PTR save_esp = RSP;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma) {
+  if (long_mode()) {
     long_mode_int(vector, is_INT, is_error_code, error_code);
     return;
   }
-#endif  // #if BX_SUPPORT_X86_64
+#endif
 
   if(real_mode()) {
     real_mode_int(vector, is_INT, is_error_code, error_code);

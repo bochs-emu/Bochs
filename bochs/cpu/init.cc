@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.124 2006-09-20 17:02:20 sshwarts Exp $
+// $Id: init.cc,v 1.125 2006-10-04 19:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1168,7 +1168,7 @@ void BX_CPU_C::assert_checks(void)
 
 #if BX_SUPPORT_X86_64
   // VM should be OFF in long mode
-  if (IsLongMode()) {
+  if (long_mode()) {
     if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("assert_checks: VM is set in long mode !"));
   }
 

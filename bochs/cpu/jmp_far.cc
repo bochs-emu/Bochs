@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.7 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.8 2006-10-04 19:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -84,7 +84,7 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     }
 
 #if BX_SUPPORT_X86_64
-    if (IsLongMode()) {
+    if (long_mode()) {
       if (descriptor.type != BX_386_CALL_GATE) {
         BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);

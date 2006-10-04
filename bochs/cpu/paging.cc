@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.77 2006-09-20 17:02:20 sshwarts Exp $
+// $Id: paging.cc,v 1.78 2006-10-04 19:08:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -437,7 +437,7 @@ BX_CPU_C::pagingCR4Changed(Bit32u oldCR4, Bit32u newCR4)
 
 #if BX_SUPPORT_PAE
   if ((oldCR4 & 0x00000020) != (newCR4 & 0x00000020)) {
-    if (BX_CPU_THIS_PTR cr4.get_PAE())
+    if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
       BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xffffffe0;
     else
       BX_CPU_THIS_PTR cr3_masked = BX_CPU_THIS_PTR cr3 & 0xfffff000;
@@ -457,7 +457,7 @@ BX_CPU_C::CR3_change(bx_phy_address value)
   TLB_flush(0); // 0 = Don't flush Global entries.
   BX_CPU_THIS_PTR cr3 = value;
 #if BX_SUPPORT_PAE
-  if (BX_CPU_THIS_PTR cr4.get_PAE())
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && !long_mode())
     BX_CPU_THIS_PTR cr3_masked = value & 0xffffffe0;
   else
 #endif
@@ -557,18 +557,9 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
     UndefinedOpcode(i);
   }
 
-  // Can not be executed in v8086 mode
-  if (v8086_mode()) {
-    BX_ERROR(("INVLPG: cannot be executed in v8086 mode"));
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("INVLPG: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  // Protected instruction: CPL0 only
-  if (BX_CPU_THIS_PTR cr0.pe) {
-    if (CPL!=0) {
-      BX_ERROR(("INVLPG: #GP(0) in protected mode with CPL != 0"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
   }
 
 #if BX_USE_TLB
@@ -612,7 +603,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE())
   {
-    bx_address pde, pdp;
+    Bit64u pde, pdp, pte;
     bx_phy_address pde_addr;
     bx_phy_address pdp_addr;
 
@@ -641,16 +632,15 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     InstrTLB_Increment(tlbMisses);
 
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR msr.lma)
+    if (long_mode())
     {
       Bit64u pml4;
-
       // Get PML4 entry
       bx_phy_address pml4_addr = BX_CPU_THIS_PTR cr3_masked |
                   ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
 
-      if ( !(pml4 & 0x01) ) {
+      if (!(pml4 & 0x01)) {
         goto page_fault_not_present; // PML4 Entry NOT present
       }
       if (pml4 & PAGE_DIRECTORY_NX_BIT) {
@@ -659,25 +649,29 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         else if (access_type == CODE_ACCESS)
           goto page_fault_access;
       }
-      if ( !(pml4 & 0x20) )
+      if (!(pml4 & 0x20))
       {
         pml4 |= 0x20;
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       }
 
+      if (pml4 & BX_CONST64(0x7fffffff00000000)) {
+        BX_PANIC(("PML4: Only 32 bit physical address space is emulated !"));
+      }
+
       // Get PDP entry
-      pdp_addr = (pml4 & 0xfffff000) |
-                 ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
+      pdp_addr = (pml4 & 0xfffff000) +
+                ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
     }
     else
 #endif
     {
-      pdp_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27);
+      pdp_addr = BX_CPU_THIS_PTR cr3_masked + ((laddr & 0xc0000000) >> 27);
     }
 
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, 8, &pdp);
 
-    if ( !(pdp & 0x01) ) {
+    if (!(pdp & 0x01)) {
       goto page_fault_not_present; // PDP Entry NOT present
     }
 #if BX_SUPPORT_X86_64
@@ -691,17 +685,21 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       }
     }
 #endif
-    if ( !(pdp & 0x20) ) {
+    if (!(pdp & 0x20)) {
       pdp |= 0x20;
-      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pdp_addr, sizeof(bx_address), &pdp);
+      BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pdp_addr, 8, &pdp);
+    }
+
+    if (pdp & BX_CONST64(0x7fffffff00000000)) {
+      BX_PANIC(("PAE PDP: Only 32 bit physical address space is emulated !"));
     }
 
     // Get page dir entry
-    pde_addr = (pdp & 0xfffff000) | ((laddr & 0x3fe00000) >> 18);
+    pde_addr = (pdp & 0xfffff000) + ((laddr & 0x3fe00000) >> 18);
 
-    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
+    BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
 
-    if ( !(pde & 0x01) ) {
+    if (!(pde & 0x01)) {
       goto page_fault_not_present; // Page Directory Entry NOT present
     }
 
@@ -714,16 +712,19 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     }
 #endif
 
+    if (pde & BX_CONST64(0x7fffffff00000000)) {
+      BX_PANIC(("PAE PDE: Only 32 bit physical address space is emulated !"));
+    }
+
 #if BX_SUPPORT_4MEG_PAGES
-    // (KPL) Weird.  I would think the processor would consult CR.PSE?
-    // if ((pde & 0x80) && (BX_CPU_THIS_PTR cr4.get_PSE())) {}
+    // Ignore CR4.PSE in PAE mode
     if (pde & 0x80) {
       // 4M pages are enabled, and this is a 4Meg page.
 
       // Combined access is just access from the pde (no pte involved).
       combined_access = pde & 0x06; // U/S and R/W
       // Make up the physical page frame address.
-      ppf = (pde & 0xffe00000) | (laddr & 0x001ff000);
+      ppf = (pde & 0xffe00000) + (laddr & 0x001ff000);
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
@@ -742,23 +743,20 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       if (!priv_check[priv_index]) goto page_fault_access;
 
       // Update PDE if A/D bits if needed.
-      if ( ((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)) )
+      if (((pde & 0x20)==0) || (isWrite && ((pde&0x40)==0)))
       {
         pde |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
       }
     }
     else
 #endif
-    { // 4k pages.
-      bx_address pte;
+    { // 4k pages, Get page table entry
+      bx_phy_address pte_addr = (pde & 0xfffff000) + ((laddr & 0x001ff000) >> 9);
 
-      // Get page table entry
-      bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x001ff000) >> 9);
+      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
 
-      BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
-
-      if ( !(pte & 0x01) ) {
+      if (!(pte & 0x01)) {
         goto page_fault_not_present; 
       }
 
@@ -770,6 +768,10 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
           goto page_fault_access;
       }
 #endif
+
+      if (pte & BX_CONST64(0x7fffffff00000000)) {
+        BX_PANIC(("PAE PTE: Only 32 bit physical address space is emulated !"));
+      }
 
       combined_access = (pde & pte) & 0x06; // U/S and R/W
 
@@ -793,16 +795,16 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       if (!priv_check[priv_index]) goto page_fault_access;
 
       // Update PDE A bit if needed.
-      if ( (pde & 0x20)==0 ) {
+      if (!(pde & 0x20)) {
         pde |= 0x20; // Update A bit.
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, sizeof(bx_address), &pde);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
       }
 
       // Update PTE A/D bits if needed.
       if (((pte & 0x20)==0) || (isWrite && ((pte&0x40)==0))) 
       {
         pte |= (0x20 | (isWrite<<6)); // Update A and possibly D bits
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, sizeof(bx_address), &pte);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
       }
     }
   }
@@ -835,15 +837,15 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
     InstrTLB_Increment(tlbMisses);
 
-    Bit32u pde;
+    Bit32u pde, pte;
     bx_phy_address pde_addr;
 
     // Get page dir entry
-    pde_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xffc00000) >> 20);
+    pde_addr = BX_CPU_THIS_PTR cr3_masked + ((laddr & 0xffc00000) >> 20);
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
 
-    if ( !(pde & 0x01) ) {
+    if (!(pde & 0x01)) {
       goto page_fault_not_present; // Page Directory Entry NOT present
     }
 
@@ -859,7 +861,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       // Combined access is just access from the pde (no pte involved).
       combined_access = pde & 0x006; // {US,RW}
       // make up the physical frame number
-      ppf = (pde & 0xFFC00000) | (laddr & 0x003FF000);
+      ppf = (pde & 0xffc00000) + (laddr & 0x003ff000);
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE()) { // PGE==1
@@ -884,25 +886,21 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
       }
     }
-    else // Else normal 4Kbyte page...
+    else // else normal 4K page...
 #endif
     {
-      Bit32u pte;
-
-#if (BX_CPU_LEVEL < 6)
       // update PDE if A bit was not set before
-      if ( !(pde & 0x20) ) {
+      if (!(pde & 0x20)) {
         pde |= 0x20;
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
       }
-#endif
 
       // Get page table entry
-      bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
+      bx_phy_address pte_addr = (pde & 0xfffff000) + ((laddr & 0x003ff000) >> 10);
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
 
-      if ( !(pte & 0x01) ) {
+      if (!(pte & 0x01)) {
         goto page_fault_not_present; // Page Table Entry NOT present
       }
 
@@ -1082,7 +1080,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     Bit64u pt_address;
     int levels = 3;
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR msr.lme)
+    if (long_mode())
       levels = 4;
 #endif
     pt_address = BX_CPU_THIS_PTR cr3_masked;
