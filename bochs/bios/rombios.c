@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.172 2006-10-03 21:03:47 vruppert Exp $
+// $Id: rombios.c,v 1.173 2006-10-04 18:59:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.172 $ $Date: 2006-10-03 21:03:47 $";
+static char bios_cvs_version_string[] = "$Revision: 1.173 $ $Date: 2006-10-04 18:59:36 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -7571,12 +7571,12 @@ ASM_START
     push bp
     mov  bp, sp
 
-    mov  ax, #0x0000
+    xor  ax, ax
     mov  _int19_function.status + 2[bp], ax
     mov  dl, _int19_function.bootdrv + 2[bp]
     mov  ax, _int19_function.bootseg + 2[bp]
     mov  es, ax         ;; segment
-    mov  bx, #0x0000    ;; offset
+    xor  bx, bx         ;; offset
     mov  ah, #0x02      ;; function 2, read diskette sector
     mov  al, #0x01      ;; read 1 sector
     mov  ch, #0x00      ;; track 0
@@ -8164,7 +8164,7 @@ int1c_handler: ;; User Timer Tick
 ;- POST: Floppy Drive -
 ;----------------------
 floppy_drive_post:
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
 
   mov  al, #0x00
@@ -8246,7 +8246,7 @@ hard_drive_post:
   mov  dx, #0x03f6
   out  dx, al
 
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   mov  0x0474, al /* hard disk status of last operation */
   mov  0x0477, al /* hard disk port offset (XT only ???) */
@@ -8771,7 +8771,7 @@ pci_pro_f02: ;; find pci device
   jne pci_pro_f08
   shl ecx, #16
   mov cx, dx
-  mov bx, #0x0000
+  xor bx, bx
   mov di, #0x00
 pci_pro_devloop:
   call pci_pro_select_reg
@@ -8934,7 +8934,7 @@ pci_real_f02: ;; find pci device
   jne pci_real_f08
   shl ecx, #16
   mov cx, dx
-  mov bx, #0x0000
+  xor bx, bx
   mov di, #0x00
 pci_real_devloop:
   call pci_real_select_reg
@@ -9496,7 +9496,7 @@ rombios32_real_mode:
 
   ;; restore SS:SP from the BDA
   mov ss, 0x0469
-  mov esp, #0x00000000
+  xor esp, esp
   mov sp, 0x0467
   ;; restore a20
   pop ax
@@ -9727,7 +9727,7 @@ normal_post:
   cli
   mov  ax, #0xfffe
   mov  sp, ax
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   mov  ss, ax
 
@@ -9742,7 +9742,7 @@ normal_post:
   call _log_bios_start
 
   ;; set all interrupts to default handler
-  mov  bx, #0x0000    ;; offset index
+  xor  bx, bx         ;; offset index
   mov  cx, #0x0100    ;; counter (256 interrupts)
   mov  ax, #dummy_iret_handler
   mov  dx, #0xF000
@@ -10078,7 +10078,7 @@ db 0x00
 int14_handler:
   push ds
   pusha
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   call _int14_function
   popa
@@ -10269,7 +10269,7 @@ int0e_loop2:
   je int0e_loop2
 int0e_normal:
   push ds
-  mov  ax, #0x0000 ;; segment 0000
+  xor  ax, ax ;; segment 0000
   mov  ds, ax
   call eoi_master_pic
   mov  al, 0x043e
@@ -10306,7 +10306,7 @@ db  0x08
 int17_handler:
   push ds
   pusha
-  mov  ax, #0x0000
+  xor  ax, ax
   mov  ds, ax
   call _int17_function
   popa
