@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.104 2006-10-03 08:13:27 vruppert Exp $
+// $Id: x.cc,v 1.105 2006-10-07 10:01:20 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -544,6 +544,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
       &class_hints);
   XFree(windowName.value);
   XFree(iconName.value);
+  Atom wm_delete = XInternAtom(bx_x_display, "WM_DELETE_WINDOW", 1);
+  XSetWMProtocols(bx_x_display, win, &wm_delete, 1);
   }
 
   /* Select event types wanted */
@@ -923,6 +925,12 @@ bx_x_gui_c::handle_events(void)
        * requests before window mapped
        */
       //retval = 1;
+      break;
+
+    case ClientMessage:
+      if (!strcmp(XGetAtomName(bx_x_display, report.xclient.message_type), "WM_PROTOCOLS")) {
+        bx_stop_simulation();
+      }
       break;
 
     default:
@@ -2032,6 +2040,8 @@ int x11_ask_dialog(BxEvent *event)
   dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
     hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
   XSetStandardProperties(bx_x_display, dialog, name, name, None, NULL, 0, &hint);
+  Atom wm_delete = XInternAtom(bx_x_display, "WM_DELETE_WINDOW", 1);
+  XSetWMProtocols(bx_x_display, dialog, &wm_delete, 1);
 
   gc = XCreateGC(bx_x_display, dialog, 0, 0);
   gc_inv = XCreateGC(bx_x_display, dialog, 0, 0);
@@ -2120,6 +2130,12 @@ int x11_ask_dialog(BxEvent *event)
           done = 1;
         }
         break;
+      case ClientMessage:
+        if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
+          control = num_ctrls - 1;
+          done = 1;
+        }
+        break;
     }
     if (control != oldctrl) {
       XDrawRectangle(bx_x_display, dialog, gc_inv, button_x[oldctrl], 78, 69, 24);
@@ -2158,6 +2174,8 @@ int x11_string_dialog(bx_param_string_c *param)
   dialog = XCreateSimpleWindow(bx_x_display, RootWindow(bx_x_display,bx_x_screen_num),
     hint.x, hint.y, hint.width, hint.height, 4, black_pixel, white_pixel);
   XSetStandardProperties(bx_x_display, dialog, name, name, None, NULL, 0, &hint);
+  Atom wm_delete = XInternAtom(bx_x_display, "WM_DELETE_WINDOW", 1);
+  XSetWMProtocols(bx_x_display, dialog, &wm_delete, 1);
 
   gc = XCreateGC(bx_x_display, dialog, 0, 0);
   gc_inv = XCreateGC(bx_x_display, dialog, 0, 0);
@@ -2242,6 +2260,12 @@ int x11_string_dialog(bx_param_string_c *param)
             strcat(value, text);
             oldctrl = -1;
           }
+        }
+        break;
+      case ClientMessage:
+        if (!strcmp(XGetAtomName(bx_x_display, xevent.xclient.message_type), "WM_PROTOCOLS")) {
+          control = 2;
+          done = 1;
         }
         break;
     }
