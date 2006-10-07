@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.4 2006-10-01 19:51:49 vruppert Exp $
+// $Id: acpi.cc,v 1.5 2006-10-07 08:59:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -45,6 +45,8 @@ const Bit8u acpi_pm_iomask[64] = {2, 0, 2, 0, 2, 0, 0, 0, 4, 0, 0, 0, 7, 7, 7, 7
 const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0};
 
 #define PM_FREQ 3579545
+
+#define ACPI_DBG_IO_ADDR  0xb044
 
 #define RTC_EN (1 << 10)
 #define PWRBTN_EN (1 << 8)
@@ -118,6 +120,7 @@ void bx_acpi_ctrl_c::init(void)
     BX_ACPI_THIS s.timer_index =
       bx_pc_system.register_timer(this, timer_handler, 1000, 0, 0, "ACPI");
   }
+  DEV_register_iowrite_handler(this, write_handler, ACPI_DBG_IO_ADDR, "ACPI", 4);
 
   for (i=0; i<256; i++) {
     BX_ACPI_THIS s.pci_conf[i] = 0x0;
@@ -269,6 +272,9 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
   Bit32u value = 0xffffffff;
 
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
+    if ((BX_ACPI_THIS s.pci_conf[0x80] & 0x01) == 0) {
+      return value;
+    }
     switch (reg) {
       case 0x00:
         value = BX_ACPI_THIS get_pmsts();
@@ -287,6 +293,9 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
     }
     BX_DEBUG(("ACPI read from PM register 0x%02x returns 0x%08x", reg, value));
   } else {
+    if ((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) {
+      return value;
+    }
     BX_INFO(("ACPI read from SM register 0x%02x not implemented yet", reg));
   }
   return value;
@@ -310,6 +319,9 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u reg = address & 0x3f;
 
   if ((address & 0xffc0) == BX_ACPI_THIS s.pm_base) {
+    if ((BX_ACPI_THIS s.pci_conf[0x80] & 0x01) == 0) {
+      return;
+    }
     BX_DEBUG(("ACPI write to PM register 0x%02x, value = 0x%04x", reg, value));
     switch (reg) {
       case 0x00:
@@ -349,8 +361,13 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       default:
         BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
     }
-  } else {
+  } else if ((address & 0xffe0) == BX_ACPI_THIS s.sm_base) {
+    if ((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) {
+      return;
+    }
     BX_INFO(("ACPI write to SM register 0x%02x not implemented yet", reg));
+  } else {
+    BX_DEBUG(("DBG: 0x%08x", value));
   }
 }
 
