@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.35 2006-09-10 17:18:44 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.36 2006-10-08 15:21:26 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -270,6 +270,7 @@ void bx_svga_cirrus_c::init(void)
     }
     BX_CIRRUS_THIS extension_init = 1;
   } else {
+    BX_CIRRUS_THIS sequencer.reg[0x07] = 0x00; // Cirrus extension disabled
     // initialize VGA read/write handlers and timer
     BX_CIRRUS_THIS bx_vga_c::init_iohandlers(
         bx_vga_c::read_handler, bx_vga_c::write_handler);
