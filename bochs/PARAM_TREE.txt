@@ -1,191 +1,148 @@
-$Id: PARAM_TREE.txt,v 1.11 2006-03-05 10:24:27 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.12 2006-10-08 10:18:50 vruppert Exp $
 
-I'm trying to organize the parameters into a tree structure instead of
-a huge flat list.  Once the parameter code is improved, I hope to use
-parameters to implement save/restore, and to give access to device
-state from within the debugger.
--Bryce
+In Bochs 2.3 are the parameters are organized in a tree structure instead of
+a huge flat list. The parameter tree was required for implementing the
+save/restore feature, and it gives access to the device state from within
+the debugger.
+-Volker
 
+Current organization of parameters in the tree
 
-Notes:
-- get rid of bx_id enumerated type and parameter id numbers (e.g.
-  BXP_FLOPPYA_PATH) These id numbers are ok for scalar parameters like
-  "memory size in megabytes" but very bad for parameters of replicated 
-  devices, like com1,2,3,4, ata1,2,3,4, with master and slave, etc.  The only
-  reason that we have id numbers at all is to be able to find the pointer to a
-  parameter.  In a tree structure, the parameters will be found by name
-  instead.
-- when creating a bx_param_c object, specify the parent object.  The
-  parent must be bx_list_c type.  In the constructor, the child is
-  added to the parent's list of children, and (optionally) the child
-  keeps a pointer to the parent.
-- parameters can then be located by their position in the tree, for
-  example: memory.rom.address.  That means to find the bx_list_c called
-  "memory" in the list of top level objects, then get the bx_list_c called
-  "rom" in memory's list of children, then get the child called "address"
-  in rom's list of children.
-- alternative notation: memory/rom/address, ata>1>slave>cylinders,
-  memory'optional_rom'path
-
-- parameters have additional information inside them, like the name,
-  description, min, max, initial value.  Do we need a way to name
-  this stuff?  Invent syntax.... PARAM'FIELD means field FIELD of parameter
-  PARAM. 
-    memory.ram.size = 32
-    memory.ram.size'type = BXT_PARAM_NUM
-    memory.ram.size'max = 4
-    memory.ram.size'min = 256
-    memory.ram.size'initial_value = 256
-    memory.ram.size'parent refers to parameter memory.ram
-    memory.ram'parent refers to parameter memory
-    etc.
-  I'm not sure if this will ever be needed.
-- also I don't know if any form of relative pathname would be useful/needed.
-  If so, probably using slash notation and ".."'s would look the most
-  familiar to people.
-- we need to be able to handle arrays of objects, but I think it can be
-  done with just another list with names 0, 1, 2, 3, etc.
-    floppy
-    floppy.cmd_delay=50
-    floppy.0.devtype=1
-    floppy.0.path=/dev/fd0
-    floppy.1.devtype=1
-    floppy.1.path=/dev/fd1
-- I have written all the parameter names in "C variable name" style, 
-  lowercase with underscores instead of spaces.  But for display purposes
-  it may be k
-
-
-Proposed organizion of parameters into a tree
+general
+  config_interface
+  start_mode
+  restore
+  restore_path
+  debug_running
 
 cpu
-  n_processors          BXP_CPU_NPROCESSORS,
-  n_cores               BXP_CPU_NCORES,
-  n_threads             BXP_CPU_NTHREADS,
-  ips                   BXP_IPS,
-  reset_on_triple_fault BXP_RESET_ON_TRIPLE_FAULT,
+  n_processors
+  n_cores
+  n_threads
+  ips
+  quantum
+  reset_on_triple_fault
 
 memory
   standard
     ram
-      size              BXP_MEM_SIZE,
+      size
     rom
-      path              BXP_ROM_PATH,
-      address           BXP_ROM_ADDRESS,
+      path
+      address
     vgarom
-      path              BXP_VGA_ROM_PATH,
+      path
   optrom
     0
-      path              BXP_OPTROM1_PATH,
-      addr              BXP_OPTROM1_ADDRESS,
+      path
+      addr
     1
-      path              BXP_OPTROM2_PATH,
-      addr              BXP_OPTROM2_ADDRESS,
+      path
+      addr
     2
-      path              BXP_OPTROM3_PATH,
-      addr              BXP_OPTROM3_ADDRESS,
+      path
+      addr
     3
-      path              BXP_OPTROM4_PATH,
-      addr              BXP_OPTROM4_ADDRESS,
+      path
+      addr
   optram
     0
-      path              BXP_OPTRAM1_PATH,
-      addr              BXP_OPTRAM1_ADDRESS,
+      path
+      addr
     1
-      path              BXP_OPTRAM2_PATH,
-      addr              BXP_OPTRAM2_ADDRESS,
+      path
+      addr
     2
-      path              BXP_OPTRAM3_PATH,
-      addr              BXP_OPTRAM3_ADDRESS,
+      path
+      addr
     3
-      path              BXP_OPTRAM4_PATH,
-      addr              BXP_OPTRAM4_ADDRESS,
+      path
+      addr
 
 clock_cmos
-  clock_sync            BXP_CLOCK_SYNC,
-  time0                 BXP_CLOCK_TIME0,
+  clock_sync
+  time0
   cmosimage
-    enabled             BXP_CMOSIMAGE_ENABLED,
-    path                BXP_CMOSIMAGE_PATH,
-    rtc_init            BXP_CMOSIMAGE_RTC_INIT,
+    enabled
+    path
+    rtc_init
 
 pci
-  i440fx_support        BXP_I440FX_SUPPORT,
+  i440fx_support
   slot
-    1                   BXP_PCISLOT1_DEVNAME,
-    2                   BXP_PCISLOT2_DEVNAME,
-    3                   BXP_PCISLOT3_DEVNAME,
-    4                   BXP_PCISLOT4_DEVNAME,
-    5                   BXP_PCISLOT5_DEVNAME,
+    1
+    2
+    3
+    4
+    5
   pcidev
-    vendor              BXP_PCIDEV_VENDOR,
-    device              BXP_PCIDEV_DEVICE,
+    vendor
+    device
 
 display
-  config_interface      BXP_SEL_CONFIG_INTERFACE,
-  display_library       BXP_SEL_DISPLAY_LIBRARY,
-  displaylib_options    BXP_DISPLAYLIB_OPTIONS,
-  private_colormap      BXP_PRIVATE_COLORMAP,
-  fullscreen            BXP_FULLSCREEN,
-  screenmode            BXP_SCREENMODE,
-  vga_extension         BXP_VGA_EXTENSION,
-  vga_update_interval   BXP_VGA_UPDATE_INTERVAL,
+  display_library
+  displaylib_options
+  private_colormap
+  fullscreen
+  screenmode
+  vga_extension
+  vga_update_interval
 
 keyboard_mouse
-  keyboard              BXP_KEYBOARD,
-    type                BXP_KBD_TYPE,
-    serial_delay        BXP_KBD_SERIAL_DELAY,
-    paste_delay         BXP_KBD_PASTE_DELAY,
-    use_mapping         BXP_KEYBOARD_USEMAPPING,
-    keymap              BXP_KEYBOARD_MAP,
-    user_shortcut       BXP_USER_SHORTCUT,
+  keyboard
+    type
+    serial_delay
+    paste_delay
+    use_mapping
+    keymap
+    user_shortcut
   mouse
-    type                BXP_MOUSE_TYPE,
-    enabled             BXP_MOUSE_ENABLED,
+    type
+    enabled
 
 boot_params          
-  boot_drive1           BXP_BOOTDRIVE1,
-  boot_drive2           BXP_BOOTDRIVE2,
-  boot_drive3           BXP_BOOTDRIVE3,
-  floppy_sig_check      BXP_FLOPPYSIGCHECK,
-  load32bitos           BXP_LOAD32BITOS,
-    which               BXP_LOAD32BITOS_WHICH,
-    path                BXP_LOAD32BITOS_PATH,
-    iolog               BXP_LOAD32BITOS_IOLOG,
-    initrd              BXP_LOAD32BITOS_INITRD,
+  boot_drive1
+  boot_drive2
+  boot_drive3
+  floppy_sig_check
+  load32bitos
+    which
+    path
+    iolog
+    initrd
 
 floppy
-  0                     BXP_FLOPPYA,
-    devtype             BXP_FLOPPYA_DEVTYPE,
-    path                BXP_FLOPPYA_PATH,
-    type                BXP_FLOPPYA_TYPE,
-    status              BXP_FLOPPYA_STATUS,
-  1                     BXP_FLOPPYB,
-    devtype             BXP_FLOPPYB_DEVTYPE,
-    path                BXP_FLOPPYB_PATH,
-    type                BXP_FLOPPYB_TYPE,
-    status              BXP_FLOPPYB_STATUS,
+  0
+    devtype
+    path
+    type
+    status
+  1
+    devtype
+    path
+    type
+    status
 
 ata
-  0                     BXP_ATA0_MENU
-    resources           BXP_ATA0
-      enabled           BXP_ATA0_PRESENT,
-      ioaddr1           BXP_ATA0_IOADDR1,
-      ioaddr2           BXP_ATA0_IOADDR2,
-      irq               BXP_ATA0_IRQ,
-    master              BXP_ATA0_MASTER
-      present           BXP_ATA0_MASTER_PRESENT
-      type              BXP_ATA0_MASTER_TYPE
-      path              BXP_ATA0_MASTER_PATH
-      mode              BXP_ATA0_MASTER_MODE
-      journal           BXP_ATA0_MASTER_JOURNAL
-      cylinders         BXP_ATA0_MASTER_CYLINDERS
-      heads             BXP_ATA0_MASTER_HEADS
-      spt               BXP_ATA0_MASTER_SPT
-      status            BXP_ATA0_MASTER_STATUS
-      model             BXP_ATA0_MASTER_MODEL
-      biosdetect        BXP_ATA0_MASTER_BIOSDETECT
-      translation       BXP_ATA0_MASTER_TRANSLATION
+  0
+    resources
+      enabled
+      ioaddr1
+      ioaddr2
+      irq
+    master
+      present
+      type
+      path
+      mode
+      journal
+      cylinders
+      heads
+      spt
+      status
+      model
+      biosdetect
+      translation
     slave
       (same options as master)
   1
@@ -198,9 +155,9 @@ ata
 ports
   serial
     1
-      enabled           BXP_COM1_ENABLED
-      mode              BXP_COM1_MODE
-      path              BXP_COM1_PATH
+      enabled
+      mode
+      dev
     2
       (same options as ports.serial.1)
     3
@@ -209,47 +166,47 @@ ports
       (same options as ports.serial.1)
   parallel
     1
-      enabled           BXP_PARPORT1_ENABLED,
-      outfile           BXP_PARPORT1_OUTFILE,
+      enabled
+      outfile
     2
       (same options as ports.parallel.1)
   usb
     1
-      enabled           BXP_USB1_ENABLED,
-      port1             BXP_USB1_PORT1,
-      option1           BXP_USB1_OPTION1,
-      port2             BXP_USB1_PORT2,
-      option2           BXP_USB1_OPTION2,
+      enabled
+      port1
+      option1
+      port2
+      option2
 
 network
-  ne2k                  BXP_NE2K,
-    enabled             BXP_NE2K_ENABLED,
-    ioaddr              BXP_NE2K_IOADDR,
-    irq                 BXP_NE2K_IRQ,
-    macaddr             BXP_NE2K_MACADDR,
-    ethmod              BXP_NE2K_ETHMOD,
-    ethdev              BXP_NE2K_ETHDEV,
-    script              BXP_NE2K_SCRIPT,
-  pnic                  BXP_PNIC,
-    enabled             BXP_PNIC_ENABLED,
-    macaddr             BXP_PNIC_MACADDR,
-    ethmod              BXP_PNIC_ETHMOD,
-    ethdev              BXP_PNIC_ETHDEV,
-    script              BXP_PNIC_SCRIPT,
+  ne2k
+    enabled
+    ioaddr
+    irq
+    macaddr
+    ethmod
+    ethdev
+    script
+  pnic
+    enabled
+    macaddr
+    ethmod
+    ethdev
+    script
 
 sound
-  sb16                  BXP_SB16,
-    enabled             BXP_SB16_ENABLED,
-    midifile            BXP_SB16_MIDIFILE,
-    wavefile            BXP_SB16_WAVEFILE,
-    logfile             BXP_SB16_LOGFILE,
-    midimode            BXP_SB16_MIDIMODE,
-    wavemode            BXP_SB16_WAVEMODE,
-    loglevel            BXP_SB16_LOGLEVEL,
-    dmatimer            BXP_SB16_DMATIMER,
+  sb16
+    enabled
+    midifile
+    wavefile
+    logfile
+    midimode
+    wavemode
+    loglevel
+    dmatimer
 
 misc
-  text_snapshot_check   BXP_TEXT_SNAPSHOT_CHECK,
+  text_snapshot_check
   gdbstub
     port
     text_base
@@ -257,20 +214,19 @@ misc
     bss_base
 
 log
-  filename              BXP_LOG_FILENAME,
-  prefix                BXP_LOG_PREFIX,
-  debugger_filename     BXP_DEBUGGER_LOG_FILENAME,
-
-general
-  start_mode            BXP_BOCHS_START,
-  debug_running         BXP_DEBUG_RUNNING,
+  filename
+  prefix
+  debugger_filename
 
 menu
-  disk                  BXP_MENU_DISK,
-  memory                BXP_MENU_MEMORY,
-  runtime               BXP_MENU_RUNTIME,
+  disk
+  memory
+  runtime
 
 save_restore
   (special subtree for save/restore Bochs state)
 
-(updated Mar  5, 2006 by vruppert)
+wxdebug
+  (special subtree for wxBochs debugger)
+
+(updated Oct  8, 2006 by vruppert)

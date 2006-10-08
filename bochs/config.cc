@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.110 2006-09-12 19:26:12 vruppert Exp $
+// $Id: config.cc,v 1.111 2006-10-08 10:18:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -334,6 +334,24 @@ void bx_init_options()
   // general options subtree
   menu = new bx_list_c(root_param, "general", "");
 
+ // config interface option, set in bochsrc or command line
+  static char *config_interface_list[] = {
+#if BX_USE_TEXTCONFIG
+    "textconfig",
+#endif
+#if BX_WITH_WX
+    "wx",
+#endif
+    NULL
+  };
+  bx_param_enum_c *sel_config = new bx_param_enum_c(menu,
+    "config_interface", "Configuration interface",
+    "Select configuration interface",
+    config_interface_list,
+    0,
+    0);
+  sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
+
   // quick start option, set by command line arg
   new bx_param_enum_c(menu,
       "start_mode",
@@ -637,26 +655,7 @@ void bx_init_options()
   pcidev->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::USE_BOX_TITLE);
 
   // display subtree
-  bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 8);
-
-  // display & interface options
-  static char *config_interface_list[] = {
-#if BX_USE_TEXTCONFIG
-    "textconfig",
-#endif
-#if BX_WITH_WX
-    "wx",
-#endif
-    NULL
-  };
-  bx_param_enum_c *sel_config = new bx_param_enum_c(display,
-    "config_interface", "Configuration interface",
-    "Select configuration interface",
-    config_interface_list,
-    0,
-    0);
-  sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
-  sel_config->set_ask_format("Choose which configuration interface to use: [%s] ");
+  bx_list_c *display = new bx_list_c(root_param, "display", "Bochs Display & Interface Options", 7);
 
   // this is a list of gui libraries that are known to be available at
   // compile time.  The one that is listed first will be the default,

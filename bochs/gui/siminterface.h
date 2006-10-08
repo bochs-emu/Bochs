@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.201 2006-09-07 18:50:51 vruppert Exp $
+// $Id: siminterface.h,v 1.202 2006-10-08 10:18:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -120,6 +120,11 @@ typedef enum {
 // define parameter path names.  These names give the location in the
 // parameter tree where each can be found.  The names correspond to
 // the old BXP_* enum values, which have been eliminated.
+#define BXPN_SEL_CONFIG_INTERFACE        "general.config_interface"
+#define BXPN_BOCHS_START                 "general.start_mode"
+#define BXPN_RESTORE_FLAG                "general.restore"
+#define BXPN_RESTORE_PATH                "general.restore_path"
+#define BXPN_DEBUG_RUNNING               "general.debug_running"
 #define BXPN_CPU_NPROCESSORS             "cpu.n_processors"
 #define BXPN_CPU_NCORES                  "cpu.n_cores"
 #define BXPN_CPU_NTHREADS                "cpu.n_threads"
@@ -154,7 +159,6 @@ typedef enum {
 #define BXPN_I440FX_SUPPORT              "pci.i440fx_support"
 #define BXPN_PCIDEV_VENDOR               "pci.pcidev.vendor"
 #define BXPN_PCIDEV_DEVICE               "pci.pcidev.device"
-#define BXPN_SEL_CONFIG_INTERFACE        "display.config_interface"
 #define BXPN_SEL_DISPLAY_LIBRARY         "display.display_library"
 #define BXPN_DISPLAYLIB_OPTIONS          "display.displaylib_options"
 #define BXPN_PRIVATE_COLORMAP            "display.private_colormap"
@@ -222,10 +226,6 @@ typedef enum {
 #define BXPN_LOG_FILENAME                "log.filename"
 #define BXPN_LOG_PREFIX                  "log.prefix"
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
-#define BXPN_BOCHS_START                 "general.start_mode"
-#define BXPN_DEBUG_RUNNING               "general.debug_running"
-#define BXPN_RESTORE_FLAG                "general.restore"
-#define BXPN_RESTORE_PATH                "general.restore_path"
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_MEMORY                 "menu.memory"
 #define BXPN_MENU_RUNTIME                "menu.runtime"
