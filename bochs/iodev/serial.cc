@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.74 2006-09-12 13:05:07 vruppert Exp $
+// $Id: serial.cc,v 1.75 2006-10-08 10:59:21 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -255,8 +255,11 @@ bx_serial_c::init(void)
             BX_SER_THIS s[i].io_mode = BX_SER_MODE_TERM;
             BX_DEBUG(("com%d tty_id: %d", i+1, BX_SER_THIS s[i].tty_id));
             tcgetattr(BX_SER_THIS s[i].tty_id, &BX_SER_THIS s[i].term_orig);
-            bcopy((caddr_t) &BX_SER_THIS s[i].term_orig, (caddr_t) &BX_SER_THIS s[i].term_new, sizeof(struct termios));
-            cfmakeraw(&BX_SER_THIS s[i].term_new);
+            memcpy(&BX_SER_THIS s[i].term_orig, &BX_SER_THIS s[i].term_new, sizeof(struct termios));
+            BX_SER_THIS s[i].term_new.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+            BX_SER_THIS s[i].term_new.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+            BX_SER_THIS s[i].term_new.c_cflag &= ~(CSIZE|PARENB);
+            BX_SER_THIS s[i].term_new.c_cflag |= CS8;
             BX_SER_THIS s[i].term_new.c_oflag |= OPOST | ONLCR;  // Enable NL to CR-NL translation
 #ifndef TRUE_CTLC
             // ctl-C will exit Bochs, or trap to the debugger
@@ -315,7 +318,6 @@ bx_serial_c::init(void)
 
         strcpy(host, dev);
         char *substr = strtok(host, ":");
-        strcpy(host, substr);
         substr = strtok(NULL, ":");
         if (!substr) {
           BX_PANIC(("com%d: inet address is wrong (%s)", i+1, dev));
