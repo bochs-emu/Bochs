@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: symbols.cc,v 1.6 2006-09-26 19:16:10 sshwarts Exp $
+// $Id: symbols.cc,v 1.7 2006-10-11 14:54:40 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,6 +28,7 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 
+#if BX_DEBUGGER
 #if !((BX_HAVE_HASH_MAP || BX_HAVE_HASH_MAP_H) && (BX_HAVE_SET || BX_HAVE_SET_H))
 
 static char *BX_HAVE_HASH_MAP_ERR = "context not implemented because BX_HAVE_HASH_MAP=0\n";
@@ -414,4 +415,5 @@ int bx_dbg_lbreakpoint_symbol_command(char *Symbol)
  dbg_printf ("Symbol not found\n");
  return -1;
 }
+#endif
 #endif
