@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.67 2006-02-22 19:18:28 vruppert Exp $
+// $Id: sdl.cc,v 1.68 2006-10-13 17:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -425,17 +425,17 @@ void bx_sdl_gui_c::text_update(
     unsigned nrows)
 {
   Bit8u *pfont_row, *old_line, *new_line, *text_base;
-  unsigned int cs_y, x, y;
+  unsigned int cs_y, i, x, y;
   unsigned int curs, hchars, offset;
   Bit8u fontline, fontpixels, fontrows;
-  int rows, fgcolor_ndx, bgcolor_ndx;
-  Uint32 fgcolor;
-  Uint32 bgcolor;
+  int rows;
+  Uint32 fgcolor, bgcolor;
   Uint32 *buf, *buf_row, *buf_char;
   Uint32 disp;
   Bit16u font_row, mask;
   Bit8u cfstart, cfwidth, cfheight, split_fontrows, split_textrow;
   bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
+  Uint32 text_palette[16];
 
   UNUSED(nrows);
   forceUpdate = 0;
@@ -443,6 +443,10 @@ void bx_sdl_gui_c::text_update(
   {
     forceUpdate = 1;
     charmap_updated = 0;
+  }
+  for (i=0; i<16; i++)
+  {
+    text_palette[i] = palette[DEV_vga_get_actl_pal_idx(i)];
   }
   if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning))
   {
@@ -545,12 +549,10 @@ void bx_sdl_gui_c::text_update(
       {
 
 	// Get Foreground/Background pixel colors
-	fgcolor_ndx = DEV_vga_get_actl_pal_idx(new_text[1] & 0x0F);
-	bgcolor_ndx = DEV_vga_get_actl_pal_idx((new_text[1] >> 4) & 0x0F);
-	fgcolor = palette[fgcolor_ndx];
-	bgcolor = palette[bgcolor_ndx];
-	invert = ( (offset == curs) && (cursor_visible) );
-	gfxcharw9 = ( (tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0) );
+	fgcolor = text_palette[new_text[1] & 0x0F];
+	bgcolor = text_palette[(new_text[1] >> 4) & 0x0F];
+	invert = ((offset == curs) && (cursor_visible));
+	gfxcharw9 = ((tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
 
 	// Display this one char
 	fontrows = cfheight;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.105 2006-10-07 10:01:20 vruppert Exp $
+// $Id: x.cc,v 1.106 2006-10-13 17:55:53 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1175,17 +1175,13 @@ xkeypress(KeySym keysym, int press_release)
 }
 
 
-  void
-bx_x_gui_c::clear_screen(void)
+void bx_x_gui_c::clear_screen(void)
 {
   XClearArea(bx_x_display, win, 0, bx_headerbar_y, dimension_x, dimension_y, 0);
 }
 
 
-
-
-  void
-bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
                       bx_vga_tminfo_t tm_info, unsigned nrows)
 {
@@ -1197,6 +1193,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, split_screen;
   unsigned char cell[64];
+  unsigned long text_palette[16];
 
   UNUSED(nrows);
   if (charmap_updated) {
@@ -1231,6 +1228,9 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     }
     forceUpdate = 1;
     charmap_updated = 0;
+  }
+  for (i=0; i<16; i++) {
+    text_palette[i] = col_vals[DEV_vga_get_actl_pal_idx(i)];
   }
 
   if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
@@ -1329,14 +1329,14 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         new_foreground = new_text[1] & 0x0f;
         new_background = (new_text[1] & 0xf0) >> 4;
 
-        XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
-        XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
+        XSetForeground(bx_x_display, gc, text_palette[new_foreground]);
+        XSetBackground(bx_x_display, gc, text_palette[new_background]);
 
         XCopyPlane(bx_x_display, vgafont[cChar], win, gc, font_col, font_row, cfwidth, cfheight,
                    xc, yc, 1);
         if (offset == curs) {
-          XSetForeground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_background)]);
-          XSetBackground(bx_x_display, gc, col_vals[DEV_vga_get_actl_pal_idx(new_foreground)]);
+          XSetForeground(bx_x_display, gc, text_palette[new_background]);
+          XSetBackground(bx_x_display, gc, text_palette[new_foreground]);
           if (font_row == 0) {
             yc2 = yc + tm_info.cs_start;
             font_row2 = tm_info.cs_start;
@@ -1388,8 +1388,7 @@ bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   XFlush(bx_x_display);
 }
 
-  int
-bx_x_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_x_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   int len;
   Bit8u *tmp = (Bit8u *)XFetchBytes (bx_x_display, &len);
@@ -1404,8 +1403,7 @@ bx_x_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   return 1;
 }
 
-  int
-bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   // this writes data to the clipboard.
   BX_INFO (("storing %d bytes to X windows clipboard", len));
@@ -1415,8 +1413,7 @@ bx_x_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 }
 
 
-  void
-bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
+void bx_x_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   unsigned x, y, y_size;
   unsigned color, offset;
