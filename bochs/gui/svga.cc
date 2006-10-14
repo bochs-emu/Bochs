@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.11 2004-06-19 15:20:09 sshwarts Exp $
+// $Id: svga.cc,v 1.12 2006-10-14 15:53:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -60,6 +60,11 @@ GraphicsContext *screen = NULL;
 static int save_vga_mode;
 static int save_vga_pal[256 * 3];
 static Bit8u fontbuffer[0x2000];
+
+static bx_bool ctrll_pressed = 0;
+static unsigned int text_rows=25, text_cols=80;
+static unsigned prev_cursor_x=0;
+static unsigned prev_cursor_y=0;
 
 void keyboard_handler(int scancode, int press);
 void mouse_handler(int button, int dx, int dy, int dz, 
@@ -137,16 +142,16 @@ void bx_svga_gui_c::text_update(
     unsigned long cursor_x,
     unsigned long cursor_y,
     bx_vga_tminfo_t tm_info,
-    unsigned rows)
+    unsigned nrows)
 {
-   unsigned x, y, i, j;
-   unsigned chars, cols;
-   char s[] = " ";
-   static unsigned int previ;
-   unsigned int cursori;
-   int fg, bg;
-   bx_bool force_update = 0;
-   
+  Bit8u *old_line, *new_line;
+  unsigned int curs, hchars, i, j, offset, rows, x, y;
+  char s[] = " ";
+  int fg, bg;
+  bx_bool force_update = 0;
+  int text_palette[16];
+
+  UNUSED(nrows);
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d", fontheight));
     for (unsigned c = 0; c<256; c++) {
@@ -162,31 +167,56 @@ void bx_svga_gui_c::text_update(
     force_update = 1;
     charmap_updated = 0;
   }
-   cols = res_x/fontwidth;
+  for (i=0; i<16; i++) {
+    text_palette[i] = DEV_vga_get_actl_pal_idx(i);
+  }
 
-   cursori = (cursor_y*cols + cursor_x) * 2;
-   
-   chars = cols*rows;
-   
-   for (i=0; i<chars*2; i+=2) {
-        if (i == cursori || i == previ || old_text[i] != new_text[i] ||
-	    old_text[i+1] != new_text[i+1] || force_update) {
-	    
-	s[0] = new_text[i];
-	x = (i/2) % cols;
-	y = (i/2) / cols;
+  // first invalidate character at previous and new cursor location
+  if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
+    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  }
+  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < fontheight) &&
+     (cursor_y < text_rows) && (cursor_x < text_cols)) {
+    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  } else {
+    curs = 0xffff;
+  }
 
-	fg = DEV_vga_get_actl_pal_idx(new_text[i+1] & 0x0F);
-	bg = DEV_vga_get_actl_pal_idx((new_text[i+1] & 0xF0) >> 4);
-	if (i == cursori) {
-	    gl_setfontcolors(fg, bg);
-	} else {
-	    gl_setfontcolors(bg, fg);
-	}
-	gl_write(x * fontwidth, y * fontheight, s);
-	}
-    }
-    previ = cursori;
+  rows = text_rows;
+  y = 0;
+  do {
+    hchars = text_cols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    offset = y * tm_info.line_offset;
+    do {
+      if (force_update || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
+        s[0] = new_text[0];
+        fg = text_palette[new_text[1] & 0x0F];
+        bg = text_palette[(new_text[1] & 0xF0) >> 4];
+        if (offset == curs) {
+          gl_setfontcolors(fg, bg);
+        } else {
+          gl_setfontcolors(bg, fg);
+        }
+        gl_write(x * fontwidth, y * fontheight, s);
+      }
+      x++;
+      new_text+=2;
+      old_text+=2;
+      offset+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
+
+  prev_cursor_x = cursor_x;
+  prev_cursor_y = cursor_y;
 }
 
   int
@@ -216,6 +246,7 @@ void bx_svga_gui_c::graphics_tile_update(
 
 static Bit32u vga_to_bx_key(int key)
 {
+    ctrll_pressed = 0;
     switch (key) {
 	case SCANCODE_ESCAPE: return BX_KEY_ESC;
 	case SCANCODE_1: return BX_KEY_1;
@@ -249,7 +280,9 @@ static Bit32u vga_to_bx_key(int key)
 	case SCANCODE_BRACKET_RIGHT: return BX_KEY_RIGHT_BRACKET;
 
 	case SCANCODE_ENTER: return BX_KEY_ENTER;
-	case SCANCODE_LEFTCONTROL: return BX_KEY_CTRL_L;
+	case SCANCODE_LEFTCONTROL:
+          ctrll_pressed = 1;
+          return BX_KEY_CTRL_L;
 
 	case SCANCODE_A: return BX_KEY_A;
 	case SCANCODE_S: return BX_KEY_S;
@@ -368,33 +401,40 @@ void keyboard_handler(int scancode, int press)
 void mouse_handler(int button, int dx, int dy, int dz, 
 		    int drx, int dry, int drz)
 {
-    int buttons = 0;
+  int buttons = 0;
 
-    if (button & MOUSE_LEFTBUTTON) {
-	buttons |= 0x01;
-    }
-
-    if (button & MOUSE_RIGHTBUTTON) {
-	buttons |= 0x02;
-    }
+  if (button & MOUSE_LEFTBUTTON) {
+    buttons |= 0x01;
+  }
+  if (button & MOUSE_RIGHTBUTTON) {
+    buttons |= 0x02;
+  }
+  if (button & MOUSE_MIDDLEBUTTON) {
+    buttons |= 0x04;
+  }
+  if (ctrll_pressed && ((buttons == 0x04) || (buttons == 0x05))) {
+    bx_bool old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(!old);
+  } else {
     DEV_mouse_motion((int) (0.25 * dx), (int) -(0.25 * dy), buttons);
+  }
 }
 
 void bx_svga_gui_c::handle_events(void)
 {
-    keyboard_update();
-    keyboard_clearstate();
-    mouse_update();
+  keyboard_update();
+  keyboard_clearstate();
+  mouse_update();
 }
 
 void bx_svga_gui_c::flush(void)
 {
-    gl_copyscreen(screen);
+  gl_copyscreen(screen);
 }
 
 void bx_svga_gui_c::clear_screen(void)
 {
-    gl_clearscreen(0);
+  gl_clearscreen(0);
 }
 
 bx_bool bx_svga_gui_c::palette_change(
@@ -432,6 +472,8 @@ void bx_svga_gui_c::dimension_update(
   }
   if( fheight > 0 )
   {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
     fontheight = fheight;
     if (fwidth != 8) {
       x = x * 8 / fwidth;
