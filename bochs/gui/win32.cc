@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.108 2006-07-23 11:09:15 vruppert Exp $
+// $Id: win32.cc,v 1.109 2006-10-15 16:23:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -113,6 +113,21 @@ static HDC MemoryDC = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 
+// Text mode screen stuff
+static unsigned prev_cursor_x = 0;
+static unsigned prev_cursor_y = 0;
+static HBITMAP vgafont[256];
+static int xChar = 8, yChar = 16;
+static unsigned int text_rows=25, text_cols=80;
+static Bit8u text_pal_idx[16];
+#if !BX_USE_WINDOWS_FONTS
+static Bit8u h_panning = 0, v_panning = 0;
+static Bit16u line_compare = 1023;
+#else
+static HFONT hFont[3];
+static int FontId = 2;
+#endif
+
 // Headerbar stuff
 HWND hwndTB, hwndSB;
 unsigned bx_bitmap_entries;
@@ -150,21 +165,9 @@ bx_bool SB_Active[BX_MAX_STATUSITEMS];
 static unsigned dimension_x, dimension_y, current_bpp;
 static unsigned stretched_x, stretched_y;
 static unsigned stretch_factor=1;
-static unsigned prev_cursor_x = 0;
-static unsigned prev_cursor_y = 0;
-static HBITMAP vgafont[256];
-static int xChar = 8, yChar = 16;
-static unsigned int text_rows=25, text_cols=80;
 static BOOL BxTextMode = TRUE;
 static BOOL legacyF12 = FALSE;
 static BOOL fix_size = FALSE;
-#if !BX_USE_WINDOWS_FONTS
-static Bit8u h_panning = 0, v_panning = 0;
-static Bit16u line_compare = 1023;
-#else
-static HFONT hFont[3];
-static int FontId = 2;
-#endif
 
 static char *szMouseEnable = "CTRL + 3rd button enables mouse ";
 static char *szMouseDisable = "CTRL + 3rd button disables mouse";
@@ -659,7 +662,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
   bitmap_info->bmiHeader.biSize=sizeof(BITMAPINFOHEADER);
   bitmap_info->bmiHeader.biWidth=x_tilesize;
   // Height is negative for top-down bitmap
-  bitmap_info->bmiHeader.biHeight= -y_tilesize;
+  bitmap_info->bmiHeader.biHeight= -(LONG)y_tilesize;
   bitmap_info->bmiHeader.biPlanes=1;
   bitmap_info->bmiHeader.biBitCount=8;
   bitmap_info->bmiHeader.biCompression=BI_RGB;
@@ -937,7 +940,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       GetEffectiveClientRect( hwnd, &R, rect_data );
       MoveWindow(stInfo.simWnd, R.left, R.top, R.right - R.left, R.bottom - R.top, TRUE);
       GetClientRect(stInfo.simWnd, &R);
-      if (((R.right - R.left) != stretched_x) || ((R.bottom - R.top) != stretched_y)) {
+      if (((R.right - R.left) != (int)stretched_x) || ((R.bottom - R.top) != (int)stretched_y)) {
         BX_ERROR(("Sim window's client size(%d, %d) was different from the stretched size(%d, %d) !!", (R.right - R.left), (R.bottom - R.top), stretched_x, stretched_y));
         fix_size = TRUE;
       }
@@ -1395,12 +1398,17 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 {
   HDC hdc;
   unsigned char data[64];
-  Bit8u *old_line, *new_line, *text_base;
+  Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
-  unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
+  unsigned int curs, hchars, i, offset, rows, x, y, xc, yc;
+  BOOL forceUpdate = FALSE;
+#if !BX_USE_WINDOWS_FONTS
+  Bit8u *text_base;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
-  BOOL forceUpdate = FALSE, split_screen;
+  unsigned int yc2, cs_y;
+  BOOL split_screen;
+#endif
 
   if (!stInfo.UIinited) return;
 
@@ -1412,7 +1420,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if (char_changed[c]) {
         memset(data, 0, sizeof(data));
         BOOL gfxchar = tm_info.line_graphics && ((c & 0xE0) == 0xC0);
-        for (unsigned i=0; i<(unsigned)yChar; i++) {
+        for (i=0; i<(unsigned)yChar; i++) {
           data[i*2] = vga_charmap[c*32+i];
           if (gfxchar) {
             data[i*2+1] = (data[i*2] << 7);
@@ -1424,6 +1432,9 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     }
     forceUpdate = TRUE;
     charmap_updated = 0;
+  }
+  for (i=0; i<16; i++) {
+    text_pal_idx[i] = DEV_vga_get_actl_pal_idx(i);
   }
 
   hdc = GetDC(stInfo.simWnd);
@@ -1991,13 +2002,14 @@ unsigned char reverse_bitorder(unsigned char b) {
 
 COLORREF GetColorRef(unsigned char attr)
 {
-  return RGB(cmap_index[attr].rgbRed, cmap_index[attr].rgbGreen,
-             cmap_index[attr].rgbBlue);
+  Bit8u pal_idx = text_pal_idx[attr];
+  return RGB(cmap_index[pal_idx].rgbRed, cmap_index[pal_idx].rgbGreen,
+             cmap_index[pal_idx].rgbBlue);
 }
 
 
-void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
-                 int height, int fcol, int frow, DWORD dwRop, unsigned char cColor) {
+void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
+                int height, int fcol, int frow, DWORD dwRop, unsigned char cColor) {
   BITMAP bm;
   HDC hdcMem;
   POINT ptSize, ptOrg;
@@ -2020,19 +2032,17 @@ void DrawBitmap (HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-//Colors taken from Ralf Browns interrupt list.
-//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
-//The highest background bit usually means blinking characters. No idea
-//how to implement that so for now it's just implemented as color.
-//Note: it is also possible to program the VGA controller to have the
-//high bit for the foreground color enable blinking characters.
+  // The highest background bit usually means blinking characters. No idea
+  // how to implement that so for now it's just implemented as color.
+  // Note: it is also possible to program the VGA controller to have the
+  // high bit for the foreground color enable blinking characters.
 
-	COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx((cColor>>4)&0xf)));
-	COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx(cColor&0xf)));
-	BitBlt (MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-		  ptOrg.y, dwRop);
-	SetBkColor(MemoryDC, crBack);
-	SetTextColor(MemoryDC, crFore);
+  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
+  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
+  BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
+         ptOrg.y, dwRop);
+  SetBkColor(MemoryDC, crBack);
+  SetTextColor(MemoryDC, crFore);
 
   SelectObject(MemoryDC, oldObj);
 
@@ -2083,9 +2093,9 @@ void alarm(int time)
 #endif
 #endif
 
-void bx_win32_gui_c::mouse_enabled_changed_specific (bx_bool val)
+void bx_win32_gui_c::mouse_enabled_changed_specific(bx_bool val)
 {
-  if ((val != mouseCaptureMode) && !mouseToggleReq) {
+  if ((val != (bx_bool)mouseCaptureMode) && !mouseToggleReq) {
     mouseToggleReq = TRUE;
     mouseCaptureNew = val;
   }
@@ -2131,15 +2141,13 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
   hFontOld=(HFONT)SelectObject(MemoryDC, hFont[FontId]);
 
-//Colors taken from Ralf Browns interrupt list.
-//(0=black, 1=blue, 2=red, 3=purple, 4=green, 5=cyan, 6=yellow, 7=white)
-//The highest background bit usually means blinking characters. No idea
-//how to implement that so for now it's just implemented as color.
-//Note: it is also possible to program the VGA controller to have the
-//high bit for the foreground color enable blinking characters.
+  // The highest background bit usually means blinking characters. No idea
+  // how to implement that so for now it's just implemented as color.
+  // Note: it is also possible to program the VGA controller to have the
+  // high bit for the foreground color enable blinking characters.
 
-  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx(cColor&0xf)));
-  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(DEV_vga_get_actl_pal_idx((cColor>>4)&0xf)));
+  COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(cColor&0xf));
+  COLORREF crBack = SetBkColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
   str[0]=c;
   str[1]=0;
 
