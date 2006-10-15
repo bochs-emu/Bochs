@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.345 2006-09-23 09:07:15 vruppert Exp $
+// $Id: main.cc,v 1.346 2006-10-15 10:45:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -396,15 +396,17 @@ int split_string_into_argv (
 // It creates a console window.
 //
 // NOTE: It could probably be written so that it can safely be called for all
-// win32 builds.  Right now it appears to have absolutely no error checking:
-// for example if AllocConsole returns false we should probably return early.
-void RedirectIOToConsole()
+// win32 builds.
+int RedirectIOToConsole()
 {
   int hConHandle;
   long lStdHandle;
   FILE *fp;
   // allocate a console for this app
-  AllocConsole();
+  if (!AllocConsole()) {
+    MessageBox(NULL, "Failed to create text console", "Error", MB_ICONERROR);
+    return 0;
+  }
   // redirect unbuffered STDOUT to the console
   lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
   hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
@@ -423,6 +425,7 @@ void RedirectIOToConsole()
   fp = _fdopen( hConHandle, "w" );
   *stderr = *fp;
   setvbuf(stderr, NULL, _IONBF, 0);
+  return 1;
 }
 #endif  /* if defined(__WXMSW__) || (BX_WITH_SDL && defined(WIN32)) */
 
@@ -439,7 +442,10 @@ int WINAPI WinMain(
   bx_startup_flags.hPrevInstance = hPrevInstance;
   bx_startup_flags.m_lpCmdLine = m_lpCmdLine;
   bx_startup_flags.nCmdShow = nCmdShow;
-  RedirectIOToConsole ();
+  if (!RedirectIOToConsole()) {
+    return 1;
+  }
+  SetConsoleTitle("Bochs for Windows (wxWidgets port) - Console");
   int max_argv = 20;
   bx_startup_flags.argv = (char**) malloc (max_argv * sizeof (char*));
   split_string_into_argv(m_lpCmdLine, &bx_startup_flags.argc, bx_startup_flags.argv, max_argv);
@@ -456,7 +462,9 @@ int main (int argc, char *argv[])
   bx_startup_flags.argv = argv;
 #if BX_WITH_SDL && defined(WIN32)
   // if SDL/win32, try to create a console window.
-  RedirectIOToConsole ();
+  if (!RedirectIOToConsole()) {
+    return 1;
+  }
 #endif
 #if defined(WIN32)
   SetConsoleTitle("Bochs for Windows - Console");
