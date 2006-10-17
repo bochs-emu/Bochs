@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.173 2006-10-04 18:59:36 vruppert Exp $
+// $Id: rombios.c,v 1.174 2006-10-17 16:48:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.173 $ $Date: 2006-10-04 18:59:36 $";
+static char bios_cvs_version_string[] = "$Revision: 1.174 $ $Date: 2006-10-17 16:48:05 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -7815,7 +7815,11 @@ int1a_function(regs, ds, iret_addr)
       } else if (regs.u.r8.bl == 0x83) {
         BX_INFO("bad PCI vendor ID %04x\n", regs.u.r16.dx);
       } else if (regs.u.r8.bl == 0x86) {
-        BX_INFO("PCI device %04x:%04x not found at index %d\n", regs.u.r16.dx, regs.u.r16.cx, regs.u.r16.si);
+        if (regs.u.r8.al == 0x02) {
+          BX_INFO("PCI device %04x:%04x not found at index %d\n", regs.u.r16.dx, regs.u.r16.cx, regs.u.r16.si);
+        } else {
+          BX_INFO("no PCI device with class code 0x%02x%04x found at index %d\n", regs.u.r8.cl, regs.u.r16.dx, regs.u.r16.si);
+        }
       }
       regs.u.r8.ah = regs.u.r8.bl;
       SetCF(iret_addr.flags);
@@ -8931,7 +8935,7 @@ pci_real_f02: ;; find pci device
   push esi
   push edi
   cmp al, #0x02
-  jne pci_real_f08
+  jne pci_real_f03
   shl ecx, #16
   mov cx, dx
   xor bx, bx
@@ -8951,7 +8955,15 @@ pci_real_nextdev:
   jne pci_real_devloop
   mov dx, cx
   shr ecx, #16
-  mov ah, #0x86
+  mov ax, #0x8602
+  jmp pci_real_fail
+pci_real_f03: ;; find class code
+  cmp al, #0x03
+  jne pci_real_f08
+  ; TODO
+  mov dx, cx
+  shr ecx, #16
+  mov ax, #0x8603
   jmp pci_real_fail
 pci_real_f08: ;; read configuration byte
   cmp al, #0x08
