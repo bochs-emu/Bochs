@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.18 2006-05-30 19:46:31 sshwarts Exp $
+// $Id: parser.y,v 1.19 2006-10-18 20:07:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -436,7 +436,7 @@ breakpoint_command:
         bx_dbg_vbreakpoint_command(bkAtIP, 0, 0);
         free($1);
       }
-    | BX_TOKEN_VBREAKPOINT vexpression ':' expression '\n'
+    | BX_TOKEN_VBREAKPOINT vexpression ':' vexpression '\n'
       {
         bx_dbg_vbreakpoint_command(bkRegular, $2, $4);
         free($1);
