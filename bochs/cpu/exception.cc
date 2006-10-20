@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.86 2006-10-04 19:08:40 sshwarts Exp $
+// $Id: exception.cc,v 1.87 2006-10-20 15:38:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -314,7 +314,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
   if ((gate_descriptor.valid==0) || gate_descriptor.segment) {
-    BX_ERROR(("interrupt(): gate descriptor is not valid sys seg"));
+    BX_DEBUG(("interrupt(): gate descriptor is not valid sys seg (vector=0x%02x)", vector));
     exception(BX_GP_EXCEPTION, vector*8 + 2, 0);
   }
 
