@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.81 2006-10-02 17:40:19 vruppert Exp $
+// $Id: dbg_main.cc,v 1.82 2006-10-21 21:28:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2553,21 +2553,28 @@ scanf_error:
   return;
 }
 
-void bx_dbg_disassemble_command(const char *format, bx_num_range range)
+void bx_dbg_disassemble_current(const char *format)
+{
+  Bit64u addr = bx_dbg_get_laddr(bx_dbg_get_selector_value(BX_DBG_SREG_CS), BX_CPU(dbg_cpu)->get_ip());
+  bx_dbg_disassemble_command(format, addr, addr);
+}
+
+void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
 {
   int numlines = INT_MAX;
 
-  if (range.from == EMPTY_ARG) {
-    range.from = bx_dbg_get_laddr(bx_dbg_get_selector_value(1), BX_CPU(dbg_cpu)->get_ip());
-    range.to = range.from;
+  if (from > to) {
+     int temp = from;
+     from = to;
+     to = temp;
   }
 
   if (format) {
     // format always begins with '/' (checked in lexer)
     // so we won't bother checking it here second time.
     numlines = atoi(format + 1);
-    if (range.to == range.from)
-      range.to = BX_MAX_BIT64S; // Disassemble just X lines
+    if (to == from)
+      to = BX_MAX_BIT64U; // Disassemble just X lines
   }
 
   unsigned dis_size = bx_debugger.disassemble_size;
@@ -2582,14 +2589,14 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
   do {
     numlines--;
 
-    if (! bx_dbg_read_linear(dbg_cpu, (Bit32u)range.from, 16, bx_disasm_ibuf)) break;
+    if (! bx_dbg_read_linear(dbg_cpu, from, 16, bx_disasm_ibuf)) break;
 
     unsigned ilen = bx_disassemble.disasm(dis_size==32, dis_size==64,
        (bx_address)(-1), (bx_address)(-1), bx_disasm_ibuf, bx_disasm_tbuf);
 
-    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)range.from, 0);
+    char *Sym=bx_dbg_disasm_symbolic_address((Bit32u)from, 0);
 
-    dbg_printf("%08x: ", (unsigned) range.from);
+    dbg_printf("%08x: ", (unsigned) from);
     dbg_printf("(%20s): ", Sym?Sym:"");
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
 
@@ -2597,8 +2604,8 @@ void bx_dbg_disassemble_command(const char *format, bx_num_range range)
       dbg_printf("%02x", (unsigned) bx_disasm_ibuf[j]);
     dbg_printf("\n");
 
-    range.from += ilen;
-  } while ((range.from < range.to) && numlines > 0);
+    from += ilen;
+  } while ((from < to) && numlines > 0);
 }
 
 void bx_dbg_instrument_command(const char *comm)
@@ -2642,12 +2649,12 @@ void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
   Bit32u crc1;
 
   if (addr1 >= addr2) {
-    dbg_printf("Error: crc: invalid range.\n");
+    dbg_printf("Error: crc32: invalid range\n");
     return;
   }
 
   if (!BX_MEM(0)->dbg_crc32(addr1, addr2, &crc1)) {
-    dbg_printf("could not CRC memory\n");
+    dbg_printf("Error: could not crc32 memory\n");
     return;
   }
   dbg_printf("0x%lx\n", crc1);
@@ -2996,14 +3003,6 @@ void bx_dbg_info_tss_command(void)
   bx_phy_address paddr = 0;
   BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
-}
-
-bx_num_range make_num_range(Bit64s from, Bit64s to)
-{
-  bx_num_range x;
-  x.from = from;
-  x.to = to;
-  return x;
 }
 
 void bx_dbg_info_control_regs_command(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.28 2006-06-22 19:53:58 sshwarts Exp $
+// $Id: debug.h,v 1.29 2006-10-21 21:28:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -203,10 +203,6 @@ void bx_add_lex_input(char *buf);
 extern int bxparse(void);
 extern void bxerror(char *s);
 
-typedef struct {
-  Bit64s from;
-  Bit64s to;
-} bx_num_range;
 #define EMPTY_ARG (-1)
 
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);
@@ -225,7 +221,6 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value);
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value);
 Bit32u bx_dbg_get_laddr(Bit16u sel, Bit32u ofs);
 void bx_dbg_step_over_command(void);
-bx_num_range make_num_range(Bit64s from, Bit64s to);
 void bx_dbg_trace_command(bx_bool enable);
 void bx_dbg_trace_reg_command(bx_bool enable);
 void bx_dbg_ptime_command(void);
@@ -282,7 +277,8 @@ void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
 void bx_dbg_set_cpu_command(void);
-void bx_dbg_disassemble_command(const char *,bx_num_range);
+void bx_dbg_disassemble_current(const char *);
+void bx_dbg_disassemble_command(const char *, Bit64u from, Bit64u to);
 void bx_dbg_instrument_command(const char *);
 void bx_dbg_doit_command(unsigned);
 void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);

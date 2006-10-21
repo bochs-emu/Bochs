@@ -239,10 +239,9 @@ typedef union YYSTYPE {
   char    *sval;
   Bit64u   uval;
   bx_bool  bval;
-  bx_num_range uval_range;
 } YYSTYPE;
 /* Line 1252 of yacc.c.  */
-#line 246 "y.tab.h"
+#line 245 "y.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
