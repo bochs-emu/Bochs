@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.83 2006-10-21 22:06:39 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.84 2006-10-21 22:18:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3065,6 +3065,15 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
   dbg_printf("    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
 #endif   /* BX_CPU_LEVEL >= 4 */
+#if BX_SUPPORT_X86_64
+  Bit32u efer = BX_CPU(dbg_cpu)->get_EFER();
+  dbg_printf("EFER=0x%08x\n", efer);
+  dbg_printf("    SCE=SYSCALL/SYSRET support=%d\n", (efer>>0) & 1);
+  dbg_printf("    LME=long mode enabled=%d\n", (efer>>8) & 1);
+  dbg_printf("    LMA=long mode activated=%d\n", (efer>>10) & 1);
+  dbg_printf("    NXE=non-execuable page protection=%d\n", (efer>>11) & 1);
+  dbg_printf("    FFXSR=OS support for fast FXSAVE/FXRSTOR=%d\n", (efer>>14) & 1);
+#endif
 }
 
 /*
