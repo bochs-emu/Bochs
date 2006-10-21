@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.82 2006-10-21 21:28:20 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.83 2006-10-21 22:06:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1340,19 +1340,8 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
     // from here. (eks)
-    if(BX_CPU(dbg_cpu)->trace_reg) {
-      dbg_printf (
-        "eax: %08X\tecx: %08X\tedx: %08X\tebx: %08X\nesp: %08X\tebp: %08X\tesi: %08X\tedi: %08X\n",
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EAX),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ECX),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDX),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBX),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESP),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EBP),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_ESI),
-        BX_CPU(which_cpu)->get_reg32(BX_32BIT_REG_EDI));
-      dbg_printf("eflags: "); bx_dbg_info_flags();
-    }
+    if(BX_CPU(dbg_cpu)->trace_reg)
+      bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
 
     if (print_time)
       dbg_printf("(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
@@ -1805,124 +1794,159 @@ void bx_dbg_take_command(const char *what, unsigned n)
 
 void bx_dbg_info_registers_command(int which_regs_mask)
 {
-  Bit32u reg;
-  bx_dbg_cpu_t cpu;
+  bx_address reg;
 
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    if (which_regs_mask & BX_INFO_CPU_REGS) {
-      memset(&cpu, 0, sizeof(cpu));
-      BX_CPU(i)->dbg_get_cpu(&cpu);
-
+  if (which_regs_mask & BX_INFO_CPU_REGS) {
 #if BX_SUPPORT_SMP
-      dbg_printf("%s:\n", BX_CPU(i)->name);
+    dbg_printf("%s:\n", BX_CPU(dbg_cpu)->name);
 #endif
-      reg = cpu.eax;
-      dbg_printf("eax: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.ecx;
-      dbg_printf("ecx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.edx;
-      dbg_printf("edx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.ebx;
-      dbg_printf("ebx: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.esp;
-      dbg_printf("esp: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.ebp;
-      dbg_printf("ebp: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.esi;
-      dbg_printf("esi: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.edi;
-      dbg_printf("edi: 0x%-8x %d\n", (unsigned) reg, (int) reg);
-      reg = cpu.eip;
-      dbg_printf("eip: 0x%-8x\n", (unsigned) reg);
-      reg = cpu.eflags;
-      dbg_printf("eflags 0x%-8x\n", (unsigned) reg);
-      reg = cpu.cs.sel;
-      dbg_printf("cs:  0x%-8x\n", (unsigned) reg);
-      reg = cpu.ss.sel;
-      dbg_printf("ss:  0x%-8x\n", (unsigned) reg);
-      reg = cpu.ds.sel;
-      dbg_printf("ds:  0x%-8x\n", (unsigned) reg);
-      reg = cpu.es.sel;
-      dbg_printf("es:  0x%-8x\n", (unsigned) reg);
-      reg = cpu.fs.sel;
-      dbg_printf("fs:  0x%-8x\n", (unsigned) reg);
-      reg = cpu.gs.sel;
-      dbg_printf("gs:  0x%-8x\n", (unsigned) reg);
-    }
+#if BX_SUPPORT_X86_64 == 0
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EAX);
+    dbg_printf("eax: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ECX);
+    dbg_printf("ecx: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDX);
+    dbg_printf("edx: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBX);
+    dbg_printf("ebx: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+    dbg_printf("esp: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
+    dbg_printf("ebp: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESI);
+    dbg_printf("esi: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDI);
+    dbg_printf("edi: 0x%08x %d\n", (unsigned) reg, (int) reg);
+    reg = bx_dbg_get_eip();
+    dbg_printf("eip: 0x%08x\n", (unsigned) reg);
+#else
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RAX);
+    dbg_printf("rax: 0x%08x:%08x ", 
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RCX);
+    dbg_printf("rcx: 0x%08x:%08x\n", 
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RDX);
+    dbg_printf("rdx: 0x%08x:%08x ", 
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RBX);
+    dbg_printf("rbx: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RSP);
+    dbg_printf("rsp: 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RBP);
+    dbg_printf("rbp: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RSI);
+    dbg_printf("rsi: 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RDI);
+    dbg_printf("rdi: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R8);
+    dbg_printf("r8 : 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R9);
+    dbg_printf("r9 : 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R10);
+    dbg_printf("r10: 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R11);
+    dbg_printf("r11: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R12);
+    dbg_printf("r12: 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R13);
+    dbg_printf("r13: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R14);
+    dbg_printf("r14: 0x%08x:%08x ",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R15);
+    dbg_printf("r15: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    reg = bx_dbg_get_instruction_pointer();
+    dbg_printf("rip: 0x%08x:%08x\n",
+        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+#endif
+    reg = BX_CPU(dbg_cpu)->read_eflags();
+    dbg_printf("eflags 0x%08x\n", (unsigned) reg);
+    bx_dbg_info_flags();
+  }
 #if BX_SUPPORT_FPU
-    if (which_regs_mask & BX_INFO_FPU_REGS) {
-      BX_CPU(i)->print_state_FPU();
-    }
+  if (which_regs_mask & BX_INFO_FPU_REGS) {
+    BX_CPU(i)->print_state_FPU();
+  }
 #endif
 #if BX_SUPPORT_SSE
-    if (which_regs_mask & BX_INFO_SSE_REGS) {
-      BX_CPU(i)->print_state_SSE();
-    }
-#endif
+  if (which_regs_mask & BX_INFO_SSE_REGS) {
+    BX_CPU(i)->print_state_SSE();
   }
+#endif
 }
 
 void bx_dbg_dump_cpu_command(void)
 {
   bx_dbg_cpu_t cpu;
 
-  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->dbg_get_cpu(&cpu);
+  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
 
 #if BX_SUPPORT_SMP
-    dbg_printf("CPU#%u\n", i);
+  dbg_printf("CPU#%u\n", i);
 #endif
-    dbg_printf("eax:0x%08x, ebx:0x%08x, ecx:0x%08x, edx:0x%08x\n", 
+  dbg_printf("eax:0x%08x, ebx:0x%08x, ecx:0x%08x, edx:0x%08x\n", 
       (unsigned) cpu.eax, (unsigned) cpu.ebx,
       (unsigned) cpu.ecx, (unsigned) cpu.edx);
-    dbg_printf("ebp:0x%08x, esp:0x%08x, esi:0x%08x, edi:0x%08x\n", 
+  dbg_printf("ebp:0x%08x, esp:0x%08x, esi:0x%08x, edi:0x%08x\n", 
       (unsigned) cpu.ebp, (unsigned) cpu.esp,
       (unsigned) cpu.esi, (unsigned) cpu.edi);
-    dbg_printf("eip:0x%08x, eflags:0x%08x, inhibit_mask:%u\n",
+  dbg_printf("eip:0x%08x, eflags:0x%08x, inhibit_mask:%u\n",
       (unsigned) cpu.eip, (unsigned) cpu.eflags, cpu.inhibit_mask);
 
-    dbg_printf("cs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("cs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.cs.sel, (unsigned) cpu.cs.des_l,
       (unsigned) cpu.cs.des_h, (unsigned) cpu.cs.valid);
-    dbg_printf("ss:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("ss:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ss.sel, (unsigned) cpu.ss.des_l,
       (unsigned) cpu.ss.des_h, (unsigned) cpu.ss.valid);
-    dbg_printf("ds:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("ds:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ds.sel, (unsigned) cpu.ds.des_l,
       (unsigned) cpu.ds.des_h, (unsigned) cpu.ds.valid);
-    dbg_printf("es:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("es:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.es.sel, (unsigned) cpu.es.des_l,
       (unsigned) cpu.es.des_h, (unsigned) cpu.es.valid);
-    dbg_printf("fs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("fs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.fs.sel, (unsigned) cpu.fs.des_l,
       (unsigned) cpu.fs.des_h, (unsigned) cpu.fs.valid);
-    dbg_printf("gs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("gs:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.gs.sel, (unsigned) cpu.gs.des_l,
       (unsigned) cpu.gs.des_h, (unsigned) cpu.gs.valid);
 
-    dbg_printf("ldtr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("ldtr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.ldtr.sel, (unsigned) cpu.ldtr.des_l,
       (unsigned) cpu.ldtr.des_h, (unsigned) cpu.ldtr.valid);
 
-    dbg_printf("tr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
+  dbg_printf("tr:s=0x%04x, dl=0x%08x, dh=0x%08x, valid=%u\n",
       (unsigned) cpu.tr.sel, (unsigned) cpu.tr.des_l,
       (unsigned) cpu.tr.des_h, (unsigned) cpu.tr.valid);
 
-    dbg_printf("gdtr:base=0x%08x, limit=0x%x\n",
+  dbg_printf("gdtr:base=0x%08x, limit=0x%x\n",
       (unsigned) cpu.gdtr.base, (unsigned) cpu.gdtr.limit);
-    dbg_printf("idtr:base=0x%08x, limit=0x%x\n",
+  dbg_printf("idtr:base=0x%08x, limit=0x%x\n",
       (unsigned) cpu.idtr.base, (unsigned) cpu.idtr.limit);
 
-    dbg_printf("dr0:0x%08x, dr1:0x%08x, dr2:0x%08x\n", 
+  dbg_printf("dr0:0x%08x, dr1:0x%08x, dr2:0x%08x\n", 
       (unsigned) cpu.dr0, (unsigned) cpu.dr1, (unsigned) cpu.dr2);
-    dbg_printf("dr3:0x%08x, dr6:0x%08x, dr7:0x%08x\n", 
+  dbg_printf("dr3:0x%08x, dr6:0x%08x, dr7:0x%08x\n", 
       (unsigned) cpu.dr3, (unsigned) cpu.dr6, (unsigned) cpu.dr7);
 
-    dbg_printf("cr0:0x%08x, cr1:0x%08x, cr2:0x%08x\n", 
+  dbg_printf("cr0:0x%08x, cr1:0x%08x, cr2:0x%08x\n", 
       (unsigned) cpu.cr0, (unsigned) cpu.cr1, (unsigned) cpu.cr2);
-    dbg_printf("cr3:0x%08x, cr4:0x%08x\n", 
+  dbg_printf("cr3:0x%08x, cr4:0x%08x\n", 
       (unsigned) cpu.cr3, (unsigned) cpu.cr4);
-  }
 
 #if BX_SUPPORT_PCI
   if (SIM->get_param_bool(BXPN_I440FX_SUPPORT)->get()) {
