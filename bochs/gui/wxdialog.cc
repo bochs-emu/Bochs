@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.100 2006-05-30 17:41:43 vruppert Exp $
+// $Id: wxdialog.cc,v 1.101 2006-10-21 15:36:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -130,7 +130,7 @@ void LogMsgAskDialog::Init()
 }
 
 // Event handler for dialog buttons. Just translate the wx ids into
-// enum values and return them with EndModel() to make the dialog
+// enum values and return them with EndModal() to make the dialog
 // go away.
 void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 {
@@ -469,13 +469,17 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   int devmax = SIM->get_n_log_modules(); 
   action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
-    action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
-    // name of device in first column
-    gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_prefix(dev), wxConvUTF8)));
-    // wxChoice in every other column
-    for (type=0; type < typemax; type++) {
-      action[dev][type] = makeLogOptionChoiceBox(scrollPanel, -1, type);
-      gridSizer->Add(action[dev][type], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 2);
+    if (strcmp(SIM->get_prefix(dev), "[     ]")) {
+      action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
+      // name of device in first column
+      gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_prefix(dev), wxConvUTF8)));
+      // wxChoice in every other column
+      for (type=0; type < typemax; type++) {
+        action[dev][type] = makeLogOptionChoiceBox(scrollPanel, -1, type);
+        gridSizer->Add(action[dev][type], 1, wxALL|wxGROW|wxADJUST_MINSIZE, 2);
+      }
+    } else {
+      action[dev] = NULL;
     }
   }
   headerSizer->Fit(this);
@@ -565,6 +569,7 @@ void AdvancedLogOptionsDialog::CopyGuiToParam() {
 }
 
 void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
+  if (action[dev] == NULL) return;
   // find the choice whose client data matches "act".
   int *ptr;
   // wxLogDebug(wxT("SetAction dev=%d type=%d act=%d"), dev, evtype, act);
@@ -584,6 +589,7 @@ void AdvancedLogOptionsDialog::SetAction(int dev, int evtype, int act) {
 }
 
 int AdvancedLogOptionsDialog::GetAction(int dev, int evtype) {
+  if (action[dev] == NULL) return LOG_OPTS_NO_CHANGE;
   int sel = action[dev][evtype]->GetSelection(); 
   int *ptrToChoice = (int*)action[dev][evtype]->GetClientData(sel);
   wxASSERT(ptrToChoice != NULL);
