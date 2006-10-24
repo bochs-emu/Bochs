@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.29 2006-10-21 21:28:20 sshwarts Exp $
+// $Id: debug.h,v 1.30 2006-10-24 17:53:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -457,7 +457,9 @@ typedef struct bx_guard_found_t {
 
 extern bx_guard_t bx_guard;
 
-int  bx_dbg_main(int argc, char *argv[]);
+void bx_dbg_init_infile(void);
+int  bx_dbg_set_rcfile(const char *rcfile);
+int  bx_dbg_main(void);
 void bx_dbg_user_input_loop(void);
 void bx_dbg_interpret_line(char *cmd);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.346 2006-10-15 10:45:15 vruppert Exp $
+// $Id: main.cc,v 1.347 2006-10-24 17:53:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,7 @@ void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
                                     unsigned io_len);
 #endif
 
-void bx_init_bx_dbg (void);
+void bx_init_bx_dbg(void);
 static char *divider = "========================================================================";
 static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
@@ -483,6 +483,9 @@ void print_usage()
 #if BX_SUPPORT_SAVE_RESTORE
     "  -r path          restore the Bochs state from path\n"
 #endif
+#if BX_DEBUGGER
+    "  -rc filename     execute debugger commands stored in file\n"
+#endif
     "  --help           display this help and exit\n\n"
     "For information on Bochs configuration file arguments, see the\n"
 #if (!defined(WIN32)) && !BX_WITH_MACOS
@@ -518,31 +521,31 @@ int bx_init_main (int argc, char *argv[])
   int arg = 1, load_rcfile=1;
   while (arg < argc) {
     // parse next arg
-    if (!strcmp ("--help", argv[arg]) || !strncmp ("-h", argv[arg], 2)
+    if (!strcmp("--help", argv[arg]) || !strncmp("-h", argv[arg], 2)
 #if defined(WIN32)
-        || !strncmp ("/?", argv[arg], 2)
+        || !strncmp("/?", argv[arg], 2)
 #endif
        ) {
       print_usage();
-      SIM->quit_sim (0);
+      SIM->quit_sim(0);
     }
-    else if (!strcmp ("-n", argv[arg])) {
+    else if (!strcmp("-n", argv[arg])) {
       load_rcfile = 0;
     }
-    else if (!strcmp ("-q", argv[arg])) {
+    else if (!strcmp("-q", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
     }
-    else if (!strcmp ("-f", argv[arg])) {
+    else if (!strcmp("-f", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-f must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
-    else if (!strcmp ("-qf", argv[arg])) {
+    else if (!strcmp("-qf", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
     }
 #if BX_SUPPORT_SAVE_RESTORE
-    else if (!strcmp ("-r", argv[arg])) {
+    else if (!strcmp("-r", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-r must be followed by a path"));
       else {
         SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
@@ -552,7 +555,7 @@ int bx_init_main (int argc, char *argv[])
     }
 #endif
 #if BX_WITH_CARBON
-    else if (!strncmp ("-psn", argv[arg], 4)) {
+    else if (!strncmp("-psn", argv[arg], 4)) {
       // "-psn" is passed if we are launched by double-clicking
       // ugly hack.  I don't know how to open a window to print messages in,
       // so put them in /tmp/early-bochs-out.txt.  Sorry. -bbd
@@ -569,6 +572,13 @@ int bx_init_main (int argc, char *argv[])
       for (int a=0; a<argc; a++) {
         BX_INFO (("argument %d is %s", a, argv[a]));
       }
+    }
+#endif
+#if BX_DEBUGGER
+    else if (!strcmp("-rc", argv[arg])) {
+      // process "-rc filename" option, if it exists
+      if (++arg >= argc) BX_PANIC(("-rc must be followed by a filename"));
+      else bx_dbg_set_rcfile(argv[arg]);
     }
 #endif
     else if (argv[arg][0] == '-') {
@@ -869,7 +879,7 @@ int bx_begin_simulation (int argc, char *argv[])
 #if BX_DEBUGGER
   // If using the debugger, it will take control and call
   // bx_init_hardware() and cpu_loop()
-  bx_dbg_main(argc, argv);
+  bx_dbg_main();
 #else 
 #if BX_GDBSTUB
   // If using gdbstub, it will take control and call
@@ -1101,6 +1111,9 @@ int bx_init_hardware()
 
 void bx_init_bx_dbg(void)
 {
+#if BX_DEBUGGER
+  bx_dbg_init_infile();
+#endif
   bx_dbg.floppy = 0;
   bx_dbg.keyboard = 0;
   bx_dbg.video = 0;

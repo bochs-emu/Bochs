@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.84 2006-10-21 22:18:39 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.85 2006-10-24 17:53:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,6 @@ extern const char* cpu_mode_string(unsigned cpu_mode);
 
 static bx_param_bool_c *sim_running = NULL;
 
-static char bx_debug_rc_fname[BX_MAX_PATH];
 static char tmp_buf[512];
 static char tmp_buf_prev[512];
 static char *tmp_buf_ptr;
@@ -131,11 +130,24 @@ void dbg_printf(const char *fmt, ...)
   SIM->debug_puts(buf); // send to debugger, which will free buf when done.
 }
 
-int bx_dbg_main(int argc, char *argv[])
+void bx_dbg_init_infile(void)
 {
-  int i, bochs_argc=0;
-  char **bochs_argv = NULL;
-  argc = 1;
+  bx_infile_stack_index = 0;
+  bx_infile_stack[0].fp = stdin;
+  bx_infile_stack[0].lineno = 0;
+}
+
+int bx_dbg_set_rcfile(const char *rcfile)
+{
+  strncpy(bx_infile_stack[0].fname, rcfile, BX_MAX_PATH);
+  bx_infile_stack[0].fname[BX_MAX_PATH-1] = 0;
+  BX_INFO(("debugger using rc file '%s'.", rcfile));
+  return bx_nest_infile((char*)rcfile);
+}
+
+int bx_dbg_main(void)
+{
+  int i;
   
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
@@ -155,41 +167,6 @@ int bx_dbg_main(int argc, char *argv[])
   bx_debugger.default_addr = 0;
   bx_debugger.next_bpoint_id = 1;
 
-  argv0 = strdup(argv[0]);
-
-  bx_debug_rc_fname[0] = '\0';
-
-  bochs_argv = (char **) &argv[0];
-  bochs_argc = 1;
-
-  // process "-rc pathname" option, if it exists
-  i = 1;
-  if ((argc >= 2) && !strcmp(argv[1], "-rc")) {
-    if(argc == 2) {
-      BX_ERROR(("%s: -rc option used, but no path specified.", argv[0]));
-      dbg_printf("usage: %s [-rc path]\n", argv0);
-      BX_EXIT(1);
-    }
-    strncpy(bx_debug_rc_fname, argv[2], BX_MAX_PATH-1);
-    i += 2; // skip past "-rc" and filename
-    bochs_argv = (char **) &argv[2];
-  }
-
-  bx_infile_stack_index = 0;
-  bx_infile_stack[0].fp = stdin;
-  strncpy(bx_infile_stack[0].fname, argv[0], BX_MAX_PATH);
-  bx_infile_stack[0].fname[BX_MAX_PATH-1] = 0;
-  bx_infile_stack[0].lineno = 0;
-
-  if (bx_debug_rc_fname[0] == '\0') {
-    BX_INFO(("Warning: no rc file specified."));
-  }
-  else {
-    BX_INFO(("%s: using rc file '%s'.", argv[0], bx_debug_rc_fname));
-    // if there's an error, the user will know about it before proceeding
-    (void) bx_nest_infile(bx_debug_rc_fname);
-  }
-
   // Open debugger log file if needed
   if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
    && (strcmp(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(), "-") != 0)) {
@@ -205,9 +182,6 @@ int bx_dbg_main(int argc, char *argv[])
   }
 
   memset(bx_disasm_ibuf, 0, sizeof(bx_disasm_ibuf));
-
-  // parse any remaining args in the usual way
-  bx_parse_cmdline(1, bochs_argc, bochs_argv);
 
   // create a boolean parameter that will tell if the simulation is
   // running (continue command) or waiting for user response.  This affects
