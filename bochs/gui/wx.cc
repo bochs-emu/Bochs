@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.88 2006-09-21 21:07:17 vruppert Exp $
+// $Id: wx.cc,v 1.89 2006-10-25 17:40:56 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -94,6 +94,7 @@ static char *wxScreen = NULL;
 wxCriticalSection wxScreen_lock;
 static long wxScreenX = 0;
 static long wxScreenY = 0;
+static bx_bool wxScreenCheckSize = 0;
 static unsigned wxTileX = 0;
 static unsigned wxTileY = 0;
 static unsigned long wxCursorX = 0;
@@ -154,10 +155,19 @@ MyPanel::~MyPanel ()
 
 void MyPanel::OnTimer(wxTimerEvent& WXUNUSED(event))
 {
-  IFDBG_VGA(wxLogDebug (wxT ("timer")));
+  int cx, cy;
+
+  if (wxScreenCheckSize) {
+    theFrame->GetClientSize(&cx, &cy);
+    if ((cx != wxScreenX) || (cy != wxScreenY)) {
+      theFrame->SetClientSize(wxScreenX, wxScreenY);
+    }
+    wxScreenCheckSize = 0;
+  }
+  IFDBG_VGA(wxLogDebug(wxT("timer")));
   if (needRefresh) {
-    IFDBG_VGA(wxLogDebug (wxT ("calling refresh")));
-    Refresh (FALSE);
+    IFDBG_VGA(wxLogDebug(wxT("calling refresh")));
+    Refresh(FALSE);
   }
 }
 
@@ -1443,7 +1453,7 @@ bx_wx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 bx_wx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  thePanel->MyRefresh ();
+  thePanel->MyRefresh();
 }
 
 // ::DIMENSION_UPDATE()
@@ -1494,13 +1504,12 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
 
   // this method is called from the simulation thread, so we must get the GUI
   // thread mutex first to be safe.
-  wxMutexGuiEnter ();
-  //theFrame->SetSize(-1, -1, wxScreenX + 6, wxScreenY + 100, 0);
-  //wxSize size = theFrame->GetToolBar()->GetToolSize();
-  theFrame->SetClientSize(wxScreenX, wxScreenY); // + size.GetHeight());
-  theFrame->Layout ();
-  wxMutexGuiLeave ();
-  thePanel->MyRefresh ();
+  wxMutexGuiEnter();
+  theFrame->SetClientSize(wxScreenX, wxScreenY);
+  theFrame->Layout();
+  wxMutexGuiLeave();
+  thePanel->MyRefresh();
+  wxScreenCheckSize = 1;
 }
 
 
