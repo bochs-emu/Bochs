@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.347 2006-10-24 17:53:47 vruppert Exp $
+// $Id: main.cc,v 1.348 2006-10-26 17:27:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -884,7 +884,7 @@ int bx_begin_simulation (int argc, char *argv[])
 #if BX_GDBSTUB
   // If using gdbstub, it will take control and call
   // bx_init_hardware() and cpu_loop()
-  if (bx_dbg.gdbstub_enabled) bx_gdbstub_init(argc, argv);
+  if (bx_dbg.gdbstub_enabled) bx_gdbstub_init();
   else
 #endif
   {

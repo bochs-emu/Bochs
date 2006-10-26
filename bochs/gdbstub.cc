@@ -1,3 +1,23 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id: gdbstub.cc,v 1.26 2006-10-26 17:27:04 vruppert Exp $
+/////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (C) 2002-2006  The Bochs Project Team
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301 USA
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -19,7 +39,7 @@
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
 
-#define LOG_THIS genlog->
+#define LOG_THIS gdbstublog->
 #define IFDBG(x) x
 
 static int last_stop_reason = GDBSTUB_STOP_NO_REASON;
@@ -31,6 +51,7 @@ static int last_stop_reason = GDBSTUB_STOP_NO_REASON;
 static bx_list_c *gdbstub_list;
 static int listen_socket_fd;
 static int socket_fd;
+static logfunctions *gdbstublog;
 
 static int hex(char ch)
 {
@@ -781,7 +802,7 @@ static void debug_loop(void)
 	    do_breakpoint(0, buffer+1);
 	    break;
           case 'k':
-            BX_PANIC(("Debugger asked us to quit\n"));
+            BX_PANIC(("Debugger asked us to quit"));
             break;
             
           default:
@@ -802,7 +823,7 @@ static void wait_for_connect(int portn)
    listen_socket_fd = socket(PF_INET, SOCK_STREAM, 0);
    if (listen_socket_fd == -1)
    {
-       BX_PANIC(("Failed to create socket\n"));
+       BX_PANIC(("Failed to create socket"));
        exit(1);
    }
    
@@ -815,7 +836,7 @@ static void wait_for_connect(int portn)
 #endif
    if (r == -1)
    {
-       BX_INFO(("setsockopt(SO_REUSEADDR) failed\n"));
+       BX_INFO(("setsockopt(SO_REUSEADDR) failed"));
    }
    
    memset (&sockaddr, '\000', sizeof sockaddr);
@@ -831,27 +852,27 @@ static void wait_for_connect(int portn)
    r = bind(listen_socket_fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
    if (r == -1)
    {
-       BX_PANIC(("Failed to bind socket\n"));
+       BX_PANIC(("Failed to bind socket"));
    }
 
    r = listen(listen_socket_fd, 0);
    if (r == -1)
    {
-       BX_PANIC(("Failed to listen on socket\n"));
+       BX_PANIC(("Failed to listen on socket"));
    }
    
    sockaddr_len = sizeof sockaddr;
    socket_fd = accept(listen_socket_fd, (struct sockaddr *)&sockaddr, &sockaddr_len);
    if (socket_fd == -1)
    {
-       BX_PANIC(("Failed to accept on socket\n"));
+       BX_PANIC(("Failed to accept on socket"));
    }
    close(listen_socket_fd);
    
    protoent = getprotobyname ("tcp");
    if (!protoent)
    {
-       BX_INFO(("getprotobyname (\"tcp\") failed\n"));
+       BX_INFO(("getprotobyname (\"tcp\") failed"));
        return;
    }
 
@@ -864,12 +885,16 @@ static void wait_for_connect(int portn)
 #endif
    if (r == -1)
    {
-       BX_INFO(("setsockopt(TCP_NODELAY) failed\n"));
+       BX_INFO(("setsockopt(TCP_NODELAY) failed"));
    }
 }
 
-void bx_gdbstub_init(int argc, char* argv[])
+void bx_gdbstub_init(void)
 {
+   gdbstublog = new logfunctions();
+   gdbstublog->put("GDBST");
+   gdbstublog->setonoff(LOGLEV_PANIC, ACT_FATAL);
+
    gdbstub_list = (bx_list_c*) SIM->get_param(BXPN_GDBSTUB);
    int portn = SIM->get_param_num("port", gdbstub_list)->get();
 
