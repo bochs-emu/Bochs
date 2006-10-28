@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.79 2006-10-04 19:47:24 sshwarts Exp $
+// $Id: paging.cc,v 1.80 2006-10-28 12:31:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -646,10 +646,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         goto page_fault_not_present; // PML4 Entry NOT present
       }
       if (pml4 & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe)
+        if (! BX_CPU_THIS_PTR msr.nxe) {
+          BX_DEBUG(("PML4: NX bit set when EFER.NXE is disabled"));
           goto page_fault_reserved;
-        else if (access_type == CODE_ACCESS)
+        }
+        if (access_type == CODE_ACCESS) {
+          BX_DEBUG(("PML4: non-executable page fault occured"));
           goto page_fault_access;
+        }
       }
       if (!(pml4 & 0x20))
       {
@@ -680,10 +684,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     if (BX_CPU_THIS_PTR msr.lma)
     {
       if (pdp & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe)
+        if (! BX_CPU_THIS_PTR msr.nxe) {
+          BX_DEBUG(("PAE PDP: NX bit set when EFER.NXE is disabled"));
           goto page_fault_reserved;
-        else if (access_type == CODE_ACCESS)
+        }
+        if (access_type == CODE_ACCESS) {
+          BX_DEBUG(("PAE PDP: non-executable page fault occured"));
           goto page_fault_access;
+        }
       }
     }
 #endif
@@ -707,10 +715,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_SUPPORT_X86_64
     if (pde & PAGE_DIRECTORY_NX_BIT) {
-      if (! BX_CPU_THIS_PTR msr.nxe)
+      if (! BX_CPU_THIS_PTR msr.nxe) {
+        BX_DEBUG(("PAE PDE: NX bit set when EFER.NXE is disabled"));
         goto page_fault_reserved;
-      else if (access_type == CODE_ACCESS)
+      }
+      if (access_type == CODE_ACCESS) {
+        BX_DEBUG(("PAE PDE: non-executable page fault occured"));
         goto page_fault_access;
+      }
     }
 #endif
 
@@ -764,10 +776,14 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
 #if BX_SUPPORT_X86_64
       if (pte & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe)
+        if (! BX_CPU_THIS_PTR msr.nxe) {
+          BX_DEBUG(("PAE PTE: NX bit set when EFER.NXE is disabled"));
           goto page_fault_reserved;
-        else if (access_type == CODE_ACCESS)
+        }
+        if (access_type == CODE_ACCESS) {
+          BX_DEBUG(("PAE PTE: non-executable page fault occured"));
           goto page_fault_access;
+        }
       }
 #endif
 
