@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.305 2006-10-21 22:06:39 sshwarts Exp $
+// $Id: cpu.h,v 1.306 2006-10-29 08:48:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1198,10 +1198,6 @@ public: // for now...
   bx_guard_found_t guard_found;
 #endif
   Bit8u trace;
-
-#if BX_GDBSTUB
-  Bit8u ispanic;
-#endif
 
   // for paging
 #if BX_USE_TLB

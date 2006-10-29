@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.58 2006-10-02 17:07:36 vruppert Exp $
+// $Id: logio.cc,v 1.59 2006-10-29 08:48:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -517,6 +517,10 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
       // instruction, it should notice the user interrupt and return to
       // the debugger.
       bx_debug_break();
+      break;
+#elif BX_GDBSTUB
+    case BX_LOG_ASK_CHOICE_ENTER_DEBUG:
+      bx_gdbstub_break();
       break;
 #endif
     default:

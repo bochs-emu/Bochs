@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.202 2006-10-26 17:27:04 vruppert Exp $
+// $Id: bochs.h,v 1.203 2006-10-29 08:48:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -393,6 +393,7 @@ BOCHSAPI extern logfunc_t *genlog;
 #if BX_GDBSTUB
 // defines for GDB stub
 void bx_gdbstub_init(void);
+void bx_gdbstub_break(void);
 int bx_gdbstub_check(unsigned int eip);
 #define GDBSTUB_STOP_NO_REASON   (0xac0)
 

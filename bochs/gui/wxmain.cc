@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.150 2006-09-23 09:07:15 vruppert Exp $
+// $Id: wxmain.cc,v 1.151 2006-10-29 08:48:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1280,7 +1280,7 @@ void MyFrame::OnLogMsg(BxEvent *be) {
     wxASSERT(be->type == BX_SYNC_EVT_LOG_ASK);
   wxString levelName(SIM->get_log_level_name(be->u.logmsg.level), wxConvUTF8);
   LogMsgAskDialog dlg(this, -1, levelName);  // panic, error, etc.
-#if !BX_DEBUGGER
+#if !BX_DEBUGGER && !BX_GDBSTUB
   dlg.EnableButton(dlg.DEBUG, FALSE);
 #endif
   dlg.SetContext(wxString(be->u.logmsg.prefix, wxConvUTF8));

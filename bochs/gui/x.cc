@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.106 2006-10-13 17:55:53 vruppert Exp $
+// $Id: x.cc,v 1.107 2006-10-29 08:48:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1998,19 +1998,19 @@ void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
 
 int x11_ask_dialog(BxEvent *event)
 {
-#if !BX_DEBUGGER
-  const int button_x[3] = { 81, 166, 251 };
-  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
-                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
-                            BX_LOG_ASK_CHOICE_DIE };
- const int num_ctrls = 3;
-#else
+#if BX_DEBUGGER || BX_GDBSTUB
   const int button_x[4] = { 36, 121, 206, 291 };
   const int ask_code[4] = { BX_LOG_ASK_CHOICE_CONTINUE,
                             BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
                             BX_LOG_ASK_CHOICE_ENTER_DEBUG,
                             BX_LOG_ASK_CHOICE_DIE };
- const int num_ctrls = 4;
+  const int num_ctrls = 4;
+#else
+  const int button_x[3] = { 81, 166, 251 };
+  const int ask_code[3] = { BX_LOG_ASK_CHOICE_CONTINUE,
+                            BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS,
+                            BX_LOG_ASK_CHOICE_DIE };
+  const int num_ctrls = 3;
 #endif
   Window dialog;
   XSizeHints hint;
@@ -2079,7 +2079,7 @@ int x11_ask_dialog(BxEvent *event)
                             gc, button_x[0] + 2, 80, 65, 20, "Continue");
           x11_create_button(xevent.xexpose.display, dialog,
                             gc, button_x[1] + 2, 80, 65, 20, "Alwayscont");
-#if BX_DEBUGGER
+#if BX_DEBUGGER || BX_GDBSTUB
           x11_create_button(xevent.xexpose.display, dialog,
                             gc, button_x[2] + 2, 80, 65, 20, "Debugger");
 #endif
@@ -2101,7 +2101,7 @@ int x11_ask_dialog(BxEvent *event)
             } else if ((xevent.xbutton.x > (button_x[2] + 2)) && (xevent.xbutton.x < (button_x[2] + 68))) {
               control = 2;
               valid = 1;
-#if BX_DEBUGGER
+#if BX_DEBUGGER || BX_GDBSTUB
             } else if ((xevent.xbutton.x > (button_x[3] + 2)) && (xevent.xbutton.x < (button_x[3] + 68))) {
               control = 3;
               valid = 1;
