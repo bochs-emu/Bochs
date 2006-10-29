@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.27 2006-10-29 08:48:29 vruppert Exp $
+// $Id: gdbstub.cc,v 1.28 2006-10-29 18:44:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -447,7 +447,7 @@ static void debug_loop(void)
   while (ne == 0)
   {
     get_command(buffer);
-    BX_DEBUG (("get_buffer %s", buffer));
+    BX_DEBUG(("get_buffer %s", buffer));
 
     switch (buffer[0])
     {
@@ -563,7 +563,7 @@ static void debug_loop(void)
 
         addr = strtoull(&buffer[1], &ebuf, 16);
         len = strtoul(ebuf + 1, NULL, 16);
-        BX_INFO(("addr %x len %x", addr, len));
+        BX_INFO(("addr %Lx len %x", addr, len));
 
         access_linear(addr, len, BX_READ, mem);
         mem2hex((char *)mem, obuf, len);
@@ -581,7 +581,7 @@ static void debug_loop(void)
 	++ebuf;
         value = read_little_endian_hex(ebuf);
 
-        BX_INFO(("reg %d set to %llx", reg, value));
+        BX_INFO(("reg %d set to %Lx", reg, value));
 #if !BX_SUPPORT_X86_64                 
         switch (reg)
         {
@@ -800,7 +800,7 @@ static void debug_loop(void)
       case 'q':
         if (buffer[1] == 'C')
         {
-          sprintf(obuf,"%Lx", 1);
+          sprintf(obuf,"%Lx", (Bit64u)1);
           put_reply(obuf);
         }
         else if (strncmp(&buffer[1], "Offsets", strlen("Offsets")) == 0)
@@ -869,7 +869,7 @@ static void wait_for_connect(int portn)
 #endif
   sockaddr.sin_family = AF_INET;
   sockaddr.sin_port = htons(portn);
-  sockaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+  sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   r = bind(listen_socket_fd, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
   if (r == -1)
@@ -909,6 +909,8 @@ static void wait_for_connect(int portn)
   {
     BX_INFO(("setsockopt(TCP_NODELAY) failed"));
   }
+  Bit32u ip = sockaddr.sin_addr.s_addr;
+  printf("Connected to %d.%d.%d.%d\n", ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
 }
 
 void bx_gdbstub_init(void)
@@ -926,7 +928,7 @@ void bx_gdbstub_init(void)
 #endif
 
   /* Wait for connect */
-  printf("Waiting for gdb connection on localhost:%d\n", portn);
+  printf("Waiting for gdb connection on port %d\n", portn);
   wait_for_connect(portn);
 
   /* Do debugger command loop */
