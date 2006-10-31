@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.203 2006-10-29 08:48:29 vruppert Exp $
+// $Id: bochs.h,v 1.204 2006-10-31 19:26:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,6 +50,23 @@ extern "C" {
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__sun__)
+#undef EAX
+#undef ECX
+#undef EDX
+#undef EBX
+#undef ESP
+#undef EBP
+#undef ESI
+#undef EDI
+#undef EIP
+#undef CS
+#undef DS
+#undef ES
+#undef SS
+#undef FS
+#undef GS
+#endif
 #include <assert.h>
 #include <errno.h>
 
