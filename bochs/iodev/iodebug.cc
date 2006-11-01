@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.21 2006-03-06 22:03:16 sshwarts Exp $
+// $Id: iodebug.cc,v 1.22 2006-11-01 15:44:38 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -21,15 +21,15 @@ bx_iodebug_c bx_iodebug;
 
 bx_iodebug_c::bx_iodebug_c()
 {
-  put("IODEBUG");
+  put("IODBG");
   settype(IODEBUGLOG);
 }
 
 void bx_iodebug_c::init(void)
 {
-  DEV_register_ioread_handler(this, read_handler, 0x8A00,"BOCHS IODEBUG", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x8A00,"BOCHS IODEBUG", 7);
-  DEV_register_iowrite_handler(this, write_handler, 0x8A01,"BOCHS IODEBUG", 7);
+  DEV_register_ioread_handler(this, read_handler, 0x8A00,"BOCHS IODEBUG", 2);
+  DEV_register_iowrite_handler(this, write_handler, 0x8A00,"BOCHS IODEBUG", 2);
+  DEV_register_iowrite_handler(this, write_handler, 0x8A01,"BOCHS IODEBUG", 2);
 
   bx_iodebug_s.enabled = 0;
   bx_iodebug_s.register_select = 0;
@@ -48,7 +48,7 @@ Bit32u bx_iodebug_c::read_handler(void *this_ptr, Bit32u addr, unsigned io_len)
 
 Bit32u bx_iodebug_c::read(Bit32u addr, unsigned io_len)
 {
-  if(bx_iodebug_s.enabled) return(0x8A00);
+  if (bx_iodebug_s.enabled) return 0x8A00;
   return(0);
 }
 
@@ -62,16 +62,16 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 {
 //  fprintf(stderr, "IODEBUG addr: %4x\tdvalue: %8x\tio_len: %8x\n", (unsigned) addr, (unsigned) dvalue, io_len);
 
-  if(addr == 0x8A01 && io_len == 2)
+  if (addr == 0x8A01)
   {
       bx_iodebug_s.registers[bx_iodebug_s.register_select] =
         (bx_iodebug_s.registers[bx_iodebug_s.register_select] << 16) +
 	(dvalue & 0xFFFF);
   }
 
-  if((addr != 0x8A00) || (io_len != 2)) return;
+  if (addr != 0x8A00) return;
 
-  if(! bx_iodebug_s.enabled)
+  if (!bx_iodebug_s.enabled)
   {
     if(dvalue == 0x8A00)
     {
