@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.24 2006-07-11 22:17:28 vruppert Exp $
+$Id: development.dbk,v 1.25 2006-11-01 17:06:03 vruppert Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -2049,6 +2049,169 @@ as an example.
       &FIXME;
       </para>
       </section>
+<section id="iodebug"><title>I/O Interface to Bochs Debugger</title>
+<para>
+This device was added by Dave Poirier (eks@void-core.2y.net). 
+</para>
+<para>
+Compiling Bochs with iodebug support
+<screen>
+./configure --enable-iodebug
+make
+</screen>
+Other optional fields may be added to the ./configure line, see Bochs documentation for all the information.
+</para>
+
+<para>
+<screen>
+Using the I/O Interface to the debugger
+
+port range:  0x8A00 - 0x8A01
+
+Port 0x8A00 servers as command register. You can use it to enable the i/o interface,
+change which data register is active, etc.
+
+Port 0x8A01 is used as data register for the memory monitoring.
+</screen>
+</para>
+<section><title>Commands supported by port 0x8A00</title>
+<para>
+<screen>
+
+0x8A00
+
+ Used to enable the device. Any I/O to the debug module before this command is sent
+ is sent will simply be ignored.
+
+
+0x8A01
+
+ Selects register 0: Memory monitoring range start address (inclusive)
+
+
+0x8A02
+
+ Selects register 1: Memory monitoring range end address (exclusive)
+
+
+0x8A80
+
+ Enable address range memory monitoring as indicated by register 0 and 1 and
+ clears both registers
+
+
+0x8AE0 - Return to Debugger Prompt
+
+ If the debugger is enabled (via --enable-debugger), sending 0x8AE0 to port 0x8A00
+ after the device has been enabled will return the Bochs to the debugger prompt.
+ Basically the same as doing CTRL+C.
+
+
+0x8AE2 - Instruction Trace Disable
+
+ If the debugger is enabled (via --enable-debugger), sending 0x8AE2 to port 0x8A00
+ after the device has been enabled will disable instruction tracing
+
+
+0x8AE3 - Instruction Trace Enable
+
+ If the debugger is enabled (via --enable-debugger), sending 0x8AE3 to port 0x8A00
+ after the device has been enabled will enable instruction tracing
+
+
+0x8AE4 - Register Trace Disable
+
+ If the debugger is enabled (via --enable-debugger), sending 0x8AE4 to port 0x8A00
+ after the device has been enabled will disable register tracing.
+
+
+0x8AE5 - Register Trace Enable
+
+ If the debugger is enabled (via --enable-debugger), sending 0x8AE5 to port 0x8A00
+ after the device has been enabled will enable register tracing. This currently
+ output the value of all the registers for each instruction traced.
+ Note: instruction tracing must be enabled to view the register tracing
+
+
+0x8AFF
+
+ Disable the I/O interface to the debugger and the memory monitoring functions.
+</screen>
+<note><para>all accesses must be done using word</para></note>
+<note><para>reading this register will return 0x8A00 if currently activated, otherwise 0</para></note>
+</para>
+</section>
+<section><title>Access to port 0x8A01 (write-only)</title>
+<para>
+All accesses to this port must be done using words. Writing to this port will shift
+to the left by 16 the current value of the register and add the provided value to it.
+<screen>
+Sample:
+
+reg0 = 0x01234567
+
+out port: 0x8A01 data: 0xABCD
+
+reg0 = 0x4567ABCD
+</screen>
+</para>
+</section>
+<section><title>Sample</title>
+<para>
+Enable memory monitoring on first page of text screen (0xb8000-0xb8fa0):
+add in bochrc file: <command>optromimage1: file=&quot;asmio.rom&quot;, address=0xd0000</command>
+<screen>
+/*
+ *      Make asmio ROM file:
+ *      gcc -c asmio.S
+ *      objcopy -O binary asmio.o asmio.rom
+ */
+        .text
+        .global start
+        .code16
+
+/* ROM Header */
+        .byte 0x55
+        .byte 0xAA
+        .byte 1                 /* 512 bytes long */
+
+start:
+/* Monitor memory access on first page of text screen */
+        mov     $0x8A00,%dx     /* Enable iodebug (0x8A00->0x8A00) */
+        mov     %dx,%ax
+        out     %ax,%dx
+        mov     $0x8A01,%ax     /* Select register 0 start addr (0x8A01->0x8A00) */
+        out     %ax,%dx
+        mov     $0x8A01,%dx     /* Write start addr 0xB8000 (high word first) */
+        mov     $0xB,%ax
+        out     %ax,%dx
+        mov     $0x8000,%ax     /* Write start addr (low word) */
+        out     %ax,%dx
+
+        mov     $0x8A02,%ax     /* Select register 1 end addr (0x8A02->0x8A00) */
+        mov     $0x8A00,%dx
+        out     %ax,%dx
+        mov     $0x8A01,%dx     /* Write end addr 0xB8FA0 (high word first) */
+        mov     $0xB,%ax
+        out     %ax,%dx
+        mov     $0x8FA0,%ax     /* Write end addr (low word) */
+        out     %ax,%dx
+
+        mov     $0x8A00,%dx     /* Enable addr range memory monitoring (0x8A80->0x8A00) */
+        mov     $0x8A80,%ax
+        out     %ax,%dx
+
+        mov     $0x8A00,%dx     /* Return to Bochs Debugger Prompt (0x8AE0->0x8A00) */
+        mov     $0x8AE0,%ax
+        out     %ax,%dx
+        lret
+
+        .byte 0x6b              /* Checksum (code dependent!, update it as needed) */
+        .align 512              /* NOP follow */
+</screen>
+</para>
+</section>
+</section>
 </chapter>
 
 <chapter id="coding"><title>Coding</title>
@@ -2056,7 +2219,7 @@ as an example.
 <para>
 <itemizedlist>
 <listitem><para><command>Don't make use of any external C++ classes.</command></para>
-<para>They are not offered on all platforms and this would make bochs non-portable.
+<para>They are not offered on all platforms and this would make Bochs non-portable.
 There is use of such classes in the optional debugger. I plan on removing this use.
 </para></listitem>
 <listitem><para><command>Don't use fancy C++ features.</command></para>

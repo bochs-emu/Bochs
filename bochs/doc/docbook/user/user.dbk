@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.219 2006-09-12 19:26:12 vruppert Exp $
+$Id: user.dbk,v 1.220 2006-11-01 17:06:03 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2281,9 +2281,8 @@ turn it off.
       features of the debugger.  You only want this option if you are 
       developing guest OS code for use in Bochs.  In other words, most people
       don't.  Also, it should only be used with --enable-debugger.  See the
-      <ulink url="http://bochs.sourceforge.net/docs-html/iodebug.html">old documentation</ulink> for
-      details.
-      <footnote><para>&FIXME; move iodebug.html to the new developer docs</para></footnote>
+      <ulink url="http://bochs.sourceforge.net/doc/docbook/development/iodebug.html">
+      developer documentation</ulink> for details.
       </entry>
     </row>
     <row>
@@ -4181,6 +4180,18 @@ The rtc_init parameter controls whether initialize the RTC with values stored
 in the image. By default the time0 argument given to the
 <link linkend="bochsopt-clock">clock option</link> is used. With 'rtc_init=image'
 the image is the source for the initial time.
+</para>
+</section>
+
+<section><title>magic_break</title>
+<para>
+Example:
+<screen>
+  magic_break: enabled=1
+</screen>
+This enables the "magic breakpoint" feature when using the debugger.
+The useless cpu instruction XCHG BX, BX causes Bochs to enter the
+debugger mode. This might be useful for software development.
 </para>
 </section>
 
@@ -6537,7 +6548,7 @@ Enable the <link linkend="bochsopt-gdbstub">gdbstub option</link> in <filename>b
 <section>
 <title>Running GDB</title>
 <para>
-Bochs GDB stub waits for a connection on port 1234 on localhost (127.0.0.1). Just start GDB like this:
+Bochs GDB stub waits for a connection on TCP port 1234. Just start GDB like this:
 
 <screen>
   $ gdb YOUR-KERNEL
