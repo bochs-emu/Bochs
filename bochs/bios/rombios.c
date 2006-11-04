@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.174 2006-10-17 16:48:05 vruppert Exp $
+// $Id: rombios.c,v 1.175 2006-11-04 18:06:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.174 $ $Date: 2006-10-17 16:48:05 $";
+static char bios_cvs_version_string[] = "$Revision: 1.175 $ $Date: 2006-11-04 18:06:36 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -8772,7 +8772,7 @@ pcibios_protected:
   jmp pci_pro_ok
 pci_pro_f02: ;; find pci device
   cmp al, #0x02
-  jne pci_pro_f08
+  jne pci_pro_f03
   shl ecx, #16
   mov cx, dx
   xor bx, bx
@@ -8790,6 +8790,27 @@ pci_pro_nextdev:
   inc bx
   cmp bx, #0x0100
   jne pci_pro_devloop
+  mov ah, #0x86
+  jmp pci_pro_fail
+pci_pro_f03: ;; find class code
+  cmp al, #0x03
+  jne pci_pro_f08
+  xor bx, bx
+  mov di, #0x08
+pci_pro_devloop2:
+  call pci_pro_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  shr eax, #8
+  cmp eax, ecx
+  jne pci_pro_nextdev2
+  cmp si, #0
+  je  pci_pro_ok
+  dec si
+pci_pro_nextdev2:
+  inc bx
+  cmp bx, #0x0100
+  jne pci_pro_devloop2
   mov ah, #0x86
   jmp pci_pro_fail
 pci_pro_f08: ;; read configuration byte
@@ -8960,7 +8981,22 @@ pci_real_nextdev:
 pci_real_f03: ;; find class code
   cmp al, #0x03
   jne pci_real_f08
-  ; TODO
+  xor bx, bx
+  mov di, #0x08
+pci_real_devloop2:
+  call pci_real_select_reg
+  mov dx, #0x0cfc
+  in  eax, dx
+  shr eax, #8
+  cmp eax, ecx
+  jne pci_real_nextdev2
+  cmp si, #0
+  je  pci_real_ok
+  dec si
+pci_real_nextdev2:
+  inc bx
+  cmp bx, #0x0100
+  jne pci_real_devloop2
   mov dx, cx
   shr ecx, #16
   mov ax, #0x8603
