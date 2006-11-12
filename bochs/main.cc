@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.348 2006-10-26 17:27:04 vruppert Exp $
+// $Id: main.cc,v 1.349 2006-11-12 21:25:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -185,30 +185,31 @@ static void carbonFatalDialog(const char *error, const char *exposition)
 }
 #endif
 
+#if BX_DEBUGGER
 void print_tree(bx_param_c *node, int level)
 {
   int i;
   char tmpstr[BX_PATHNAME_LEN], tmpbyte[4];
 
   for (i=0; i<level; i++)
-    printf ("  ");
+    dbg_printf("  ");
   if (node == NULL) {
-      printf("NULL pointer\n");
+      dbg_printf("NULL pointer\n");
       return;
   }
   switch (node->get_type()) {
     case BXT_PARAM_NUM:
       if (((bx_param_num_c*)node)->get_base() == BASE_DEC) {
-        printf("%s = " FMT_LL "d (number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
+        dbg_printf("%s = " FMT_LL "d (number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
       } else {
-        printf("%s = 0x" FMT_LL "x (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
+        dbg_printf("%s = 0x" FMT_LL "x (hex number)\n", node->get_name(), ((bx_param_num_c*)node)->get64());
       }
       break;
     case BXT_PARAM_BOOL:
-      printf("%s = %s (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
+      dbg_printf("%s = %s (boolean)\n", node->get_name(), ((bx_param_bool_c*)node)->get()?"true":"false");
       break;
     case BXT_PARAM_ENUM:
-      printf("%s = '%s' (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
+      dbg_printf("%s = '%s' (enum)\n", node->get_name(), ((bx_param_enum_c*)node)->get_selected());
       break;
     case BXT_PARAM_STRING:
       if (((bx_param_string_c*)node)->get_options()->get() & bx_param_string_c::RAW_BYTES) {
@@ -222,14 +223,14 @@ void print_tree(bx_param_c *node, int level)
           sprintf(tmpbyte, "%02x", (Bit8u)((bx_param_string_c*)node)->getptr()[i]);
           strcat(tmpstr, tmpbyte);
         }
-        printf("%s = '%s' (raw byte string)\n", node->get_name(), tmpstr);
+        dbg_printf("%s = '%s' (raw byte string)\n", node->get_name(), tmpstr);
       } else {
-        printf("%s = '%s' (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
+        dbg_printf("%s = '%s' (string)\n", node->get_name(), ((bx_param_string_c*)node)->getptr());
       }
       break;
     case BXT_LIST:
       {
-	printf("%s = \n", node->get_name());
+	dbg_printf("%s = \n", node->get_name());
 	bx_list_c *list = (bx_list_c*)node;
 	for (i=0; i < list->get_size(); i++) {
 	   print_tree(list->get(i), level+1);
@@ -238,13 +239,14 @@ void print_tree(bx_param_c *node, int level)
       }
 #if BX_SUPPORT_SAVE_RESTORE
     case BXT_PARAM_DATA:
-      printf("%s = 'size=%d' (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());
+      dbg_printf("%s = 'size=%d' (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());
       break;
 #endif
     default:
-      printf("%s (unknown parameter type)\n", node->get_name());
+      dbg_printf("%s (unknown parameter type)\n", node->get_name());
   }
 }
+#endif
 
 int bxmain () {
 #ifdef HAVE_LOCALE_H

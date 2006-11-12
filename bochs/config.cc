@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.111 2006-10-08 10:18:50 vruppert Exp $
+// $Id: config.cc,v 1.112 2006-11-12 21:25:06 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1612,10 +1612,6 @@ void bx_init_options()
   };
   menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);
   menu->get_options()->set(bx_list_c::SHOW_PARENT | bx_list_c::SHOW_GROUP_NAME);
-
-// param-tree test output
-//printf("parameter tree:\n");
-//print_tree(root_param, 0);
 }
 
 void bx_reset_options()
