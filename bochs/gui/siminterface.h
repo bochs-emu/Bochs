@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.202 2006-10-08 10:18:51 vruppert Exp $
+// $Id: siminterface.h,v 1.203 2006-11-12 10:07:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1220,7 +1220,8 @@ public:
     is_sim_thread_func = func;
   }
   virtual bx_bool is_sim_thread() {return 1;}
-  virtual bx_bool is_wx_selected() {return 0;}
+  virtual void set_debug_gui(bx_bool val) {}
+  virtual bx_bool has_debug_gui() {return 0;}
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}

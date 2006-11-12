@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.49 2006-08-29 20:10:26 vruppert Exp $
+// $Id: win32dialog.cc,v 1.50 2006-11-12 10:07:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -23,6 +23,9 @@ const char log_choices[5][16] = {"ignore", "log", "ask user", "end simulation", 
 static int retcode = 0;
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
+#if BX_DEBUGGER
+static char debug_msg[1024];
+#endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
 
@@ -30,7 +33,7 @@ HWND GetBochsWindow()
 {
   HWND hwnd;
 
-  hwnd = FindWindow("Bochs for Windows - Display", NULL);
+  hwnd = FindWindow("Bochs for Windows", NULL);
   if (hwnd == NULL) {
     hwnd = GetForegroundWindow();
   }
@@ -891,6 +894,60 @@ int RuntimeOptionsDialog()
   return retcode;
 }
 
+#if BX_DEBUGGER
+static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  static char *buffer;
+  int i, j;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      buffer = (char *)lParam;
+      for (i = 0; i < lstrlen(debug_msg); i++) {
+        if (debug_msg[i] == 10) {
+          for (j = lstrlen(debug_msg); j >= i; j--) debug_msg[j+1] = debug_msg[j];
+          debug_msg[i] = 13;
+          i++;
+        }
+      }
+      SendMessage(GetDlgItem(hDlg, DEBUG_MSG), WM_SETTEXT, 0, (LPARAM)debug_msg);
+      debug_msg[0] = 0;
+      SetFocus(GetDlgItem(hDlg, DEBUG_CMD));
+      return FALSE;
+      break;
+    case WM_CLOSE:
+      lstrcpy(buffer, "q");
+      EndDialog(hDlg, 0);
+      break;
+    case WM_COMMAND:
+      switch (LOWORD(wParam)) {
+        case IDOK:
+          GetDlgItemText(hDlg, DEBUG_CMD, buffer, 512);
+          if (lstrlen(buffer) > 0) {
+            EndDialog(hDlg, 1);
+          } else {
+            SetFocus(GetDlgItem(hDlg, DEBUG_CMD));
+          }
+          break;
+      }
+  }
+  return FALSE;
+}
+
+
+int DebugControlDialog(char *buffer)
+{
+  return DialogBoxParam(NULL, MAKEINTRESOURCE(DEBUGGER_DLG), GetBochsWindow(),
+                   (DLGPROC)DebuggerDlgProc, (LPARAM)buffer);
+}
+
+void RefreshDebugDialog()
+{
+  // TODO: implement modeless dialog box with cpu registers and add some code
+  // here to update the controls
+}
+#endif
+
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {
   int opts;
@@ -903,6 +960,25 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_ASK:
       LogAskDialog(event);
       return event;
+#if BX_DEBUGGER
+    case BX_SYNC_EVT_GET_DBG_COMMAND:
+      {
+        char *cmd = new char[512];
+        DebugControlDialog(cmd);
+        event->u.debugcmd.command = cmd;
+        event->retcode = 1;
+        return event;
+      }
+    case BX_ASYNC_EVT_DBG_MSG:
+      if (lstrlen(debug_msg) + lstrlen((char*)event->u.logmsg.msg) < 1023) {
+        lstrcat(debug_msg, (char*)event->u.logmsg.msg);
+      } else {
+        lstrcpy(debug_msg, (char*)event->u.logmsg.msg);
+      }
+      // free the char* which was allocated in dbg_printf
+      delete [] ((char*)event->u.logmsg.msg);
+      return event;
+#endif
     case BX_SYNC_EVT_ASK_PARAM:
       param = event->u.param.param;
       if (param->get_type() == BXT_PARAM_STRING) {
@@ -933,8 +1009,12 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         event->retcode = 0;
         return event;
       }
+    case BX_ASYNC_EVT_REFRESH:
+#if BX_DEBUGGER
+      RefreshDebugDialog();
+      return event;
+#endif
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.
-    case BX_ASYNC_EVT_REFRESH: // called when some bx_param_c parameters have changed.
       // fall into default case
     default:
       return (*old_callback)(old_callback_arg, event);
@@ -943,6 +1023,9 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 
 void win32_init_notify_callback()
 {
+#if BX_DEBUGGER
+  debug_msg[0] = 0;
+#endif
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(win32_notify_callback, NULL);

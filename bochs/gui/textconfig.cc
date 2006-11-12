@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.64 2006-10-02 17:07:36 vruppert Exp $
+// $Id: textconfig.cc,v 1.65 2006-11-12 10:07:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -316,15 +316,6 @@ static char *runtime_menu_prompt =
 "13. Quit now\n"
 "\n"
 "Please choose one:  [12] ";
-
-#if BX_SUPPORT_SAVE_RESTORE
-static char *save_state_prompt =
-"----------------\n"
-"Save Bochs State\n"
-"----------------\n\n"
-"What is the path to save the Bochs state to?\n"
-"To cancel, type 'none'. [%s] ";
-#endif
 #endif
 
 #define NOT_IMPLEMENTED(choice) \

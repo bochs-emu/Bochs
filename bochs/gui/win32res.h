@@ -76,3 +76,6 @@
 #define IDUSBOPT1  2630
 #define IDUSBDEV2  2640
 #define IDUSBOPT2  2650
+#define DEBUGGER_DLG 3000
+#define DEBUG_MSG  3010
+#define DEBUG_CMD  3020

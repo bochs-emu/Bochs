@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.171 2006-09-26 19:16:10 sshwarts Exp $
+// $Id: siminterface.cc,v 1.172 2006-11-12 10:07:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -128,8 +128,9 @@ public:
   virtual int begin_simulation (int argc, char *argv[]);
   virtual void set_sim_thread_func(is_sim_thread_func_t func) {}
   virtual bx_bool is_sim_thread();
-  bx_bool wxsel;
-  virtual bx_bool is_wx_selected() { return wxsel; }
+  bx_bool debug_gui;
+  virtual void set_debug_gui(bx_bool val) { debug_gui = val; }
+  virtual bx_bool has_debug_gui() { return debug_gui; }
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {
@@ -285,7 +286,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback = NULL;
   ci_callback_data = NULL;
   is_sim_thread_func = NULL;
-  wxsel = 0;
+  debug_gui = 0;
   
   enabled = 1;
   init_done = 0;
@@ -658,11 +659,11 @@ int bx_real_sim_c::create_disk_image(
 }
 
 void bx_real_sim_c::refresh_ci() {
-  if (SIM->is_wx_selected()) {
+  if (SIM->has_debug_gui()) {
     // presently, only wxWidgets interface uses these events
     // It's an async event, so allocate a pointer and send it.
     // The event will be freed by the recipient.
-    BxEvent *event = new BxEvent ();
+    BxEvent *event = new BxEvent();
     event->type = BX_ASYNC_EVT_REFRESH;
     sim_to_ci_event(event);
   }
@@ -721,12 +722,12 @@ char *bx_real_sim_c::debug_get_next_command()
 
 void bx_real_sim_c::debug_puts(const char *text)
 {
-  if (SIM->is_wx_selected()) {
+  if (SIM->has_debug_gui()) {
     // send message to the wxWidgets debugger
     BxEvent *event = new BxEvent();
     event->type = BX_ASYNC_EVT_DBG_MSG;
     event->u.logmsg.msg = text;
-    sim_to_ci_event (event);
+    sim_to_ci_event(event);
     // the event will be freed by the recipient
   } else {
     // text mode debugger: just write to console
@@ -759,9 +760,9 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     return -1;
   }
   if (!strcmp(name, "wx")) 
-    wxsel = 1;
+    debug_gui = 1;
   else
-    wxsel = 0;
+    debug_gui = 0;
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);

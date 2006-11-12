@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.86 2006-11-07 08:24:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.87 2006-11-12 10:07:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,7 +195,7 @@ int bx_dbg_main(void)
     sim_running->set(0);
   }
   // setup Ctrl-C handler
-  if (!SIM->is_wx_selected()) {
+  if (!SIM->has_debug_gui()) {
     signal(SIGINT, bx_debug_ctrlc_handler);
     BX_INFO(("set SIGINT handler to bx_debug_ctrlc_handler"));
   }
@@ -297,7 +297,7 @@ void bx_get_command(void)
   if (bx_infile_stack_index == 0) {
     sprintf(prompt, "<bochs:%d> ", bx_infile_stack[bx_infile_stack_index].lineno);
   }
-  if (SIM->is_wx_selected() && bx_infile_stack_index == 0) {
+  if (SIM->has_debug_gui() && bx_infile_stack_index == 0) {
     // wait for wxWidgets to send another debugger command
     charptr_ret = SIM->debug_get_next_command();
     if (charptr_ret) {
@@ -440,7 +440,7 @@ void bxerror(char *s)
 void bx_debug_ctrlc_handler(int signum)
 {
   UNUSED(signum);
-  if (SIM->is_wx_selected()) {
+  if (SIM->has_debug_gui()) {
     // in a multithreaded environment, a signal such as SIGINT can be sent to all
     // threads.  This function is only intended to handle signals in the
     // simulator thread.  It will simply return if called from any other thread.
