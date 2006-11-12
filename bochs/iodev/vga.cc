@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.139 2006-09-17 20:39:37 vruppert Exp $
+// $Id: vga.cc,v 1.140 2006-11-12 18:26:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ bx_vga_c::~bx_vga_c()
 
 void bx_vga_c::init(void)
 {
-  unsigned i,string_i;
+  unsigned i,len,string_i;
   unsigned x,y;
 #if BX_SUPPORT_VBE  
   Bit16u max_xres, max_yres, max_bpp;
@@ -238,8 +238,11 @@ void bx_vga_c::init(void)
   memset(argv, 0, sizeof(argv));
   argc = 1;
   argv[0] = "bochs";
-  if (strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr())) {
-    ptr = strtok(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr(), ",");
+  len = strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
+  if (len > 0) {
+    char *options = new char[len + 1];
+    strcpy(options, SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
+    ptr = strtok(options, ",");
     while (ptr) {
       string_i = 0;
       for (i=0; i<strlen(ptr); i++) {
@@ -257,9 +260,10 @@ void bx_vga_c::init(void)
       }
       ptr = strtok(NULL, ",");
     }
+    delete [] options;
   }
   bx_gui->init(argc, argv, BX_VGA_THIS s.x_tilesize, BX_VGA_THIS s.y_tilesize);
-  for (i = 1; i < 16; i++)
+  for (i = 1; i < (unsigned)argc; i++)
   {
     if ( argv[i] != NULL )
     {
