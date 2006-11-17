@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.h,v 1.10 2006-08-29 20:10:27 vruppert Exp $
+// $Id: win32dialog.h,v 1.11 2006-11-17 16:50:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -7,6 +7,9 @@
 #if BX_USE_TEXTCONFIG && defined(WIN32)
 
 int RuntimeOptionsDialog();
+#if BX_DEBUGGER
+void InitDebugDialog(HWND mainwnd);
+#endif
 void win32_init_notify_callback();
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.110 2006-11-12 10:07:18 vruppert Exp $
+// $Id: win32.cc,v 1.111 2006-11-17 16:50:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -168,6 +168,9 @@ static unsigned stretch_factor=1;
 static BOOL BxTextMode = TRUE;
 static BOOL legacyF12 = FALSE;
 static BOOL fix_size = FALSE;
+#if BX_DEBUGGER
+static BOOL windebug = FALSE;
+#endif
 
 static char *szMouseEnable = "CTRL + 3rd button enables mouse ";
 static char *szMouseDisable = "CTRL + 3rd button disables mouse";
@@ -634,6 +637,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned
         legacyF12 = TRUE;
 #if BX_DEBUGGER
       } else if (!strcmp(argv[i], "windebug")) {
+        windebug = TRUE;
         SIM->set_debug_gui(1);
 #endif
       } else {
@@ -855,7 +859,12 @@ VOID UIThread(PVOID pvoid) {
 
     if (MemoryBitmap && MemoryDC) {
       resize_main_window();
-      ShowWindow (stInfo.mainWnd, SW_SHOW);
+      ShowWindow(stInfo.mainWnd, SW_SHOW);
+#if BX_DEBUGGER
+      if (windebug) {
+        InitDebugDialog(stInfo.mainWnd);
+      }
+#endif
       stInfo.UIinited = TRUE;
 
       bx_gui->clear_screen();

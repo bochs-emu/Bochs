@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.50 2006-11-12 10:07:18 vruppert Exp $
+// $Id: win32dialog.cc,v 1.51 2006-11-17 16:50:39 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -24,7 +24,9 @@ static int retcode = 0;
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
 #if BX_DEBUGGER
-static char debug_msg[1024];
+static HWND hDebugDialog = NULL;
+static char *debug_cmd = NULL;
+static BOOL debug_cmd_ready = FALSE;
 #endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
@@ -897,48 +899,61 @@ int RuntimeOptionsDialog()
 #if BX_DEBUGGER
 static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  static char *buffer;
-  int i, j;
+  int idx, lines;
 
   switch (msg) {
     case WM_INITDIALOG:
-      buffer = (char *)lParam;
-      for (i = 0; i < lstrlen(debug_msg); i++) {
-        if (debug_msg[i] == 10) {
-          for (j = lstrlen(debug_msg); j >= i; j--) debug_msg[j+1] = debug_msg[j];
-          debug_msg[i] = 13;
-          i++;
-        }
-      }
-      SendMessage(GetDlgItem(hDlg, DEBUG_MSG), WM_SETTEXT, 0, (LPARAM)debug_msg);
-      debug_msg[0] = 0;
-      SetFocus(GetDlgItem(hDlg, DEBUG_CMD));
-      return FALSE;
+      return TRUE;
       break;
     case WM_CLOSE:
-      lstrcpy(buffer, "q");
-      EndDialog(hDlg, 0);
+      bx_user_quit = 1;
+      SIM->debug_break();
+      DestroyWindow(hDebugDialog);
+      hDebugDialog = NULL;
       break;
     case WM_COMMAND:
       switch (LOWORD(wParam)) {
-        case IDOK:
-          GetDlgItemText(hDlg, DEBUG_CMD, buffer, 512);
-          if (lstrlen(buffer) > 0) {
-            EndDialog(hDlg, 1);
+        case IDEXEC:
+          GetDlgItemText(hDlg, DEBUG_CMD, debug_cmd, 512);
+          if (lstrlen(debug_cmd) > 0) {
+            debug_cmd_ready = TRUE;
           } else {
             SetFocus(GetDlgItem(hDlg, DEBUG_CMD));
           }
           break;
+        case IDSTOP:
+          SIM->debug_break();
+          break;
       }
+    case WM_USER:
+      if (wParam == 0x1234) {
+        EnableWindow(GetDlgItem(hDlg, DEBUG_CMD), lParam > 0);
+        EnableWindow(GetDlgItem(hDlg, IDEXEC), lParam > 0);
+        EnableWindow(GetDlgItem(hDlg, IDSTOP), lParam == 0);
+        SetFocus(GetDlgItem(hDlg, (lParam > 0)?DEBUG_CMD:IDSTOP));
+      } else if (wParam == 0x5678) {
+        lines = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_GETLINECOUNT, 0, 0);
+        if (lines > 100) {
+          idx = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINEINDEX, 1, 0);
+          SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_SETSEL, 0, idx);
+          SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_REPLACESEL, 0, (LPARAM)"");
+          lines--;
+        }
+        idx = SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINEINDEX, lines - 1, 0);
+        idx += SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_LINELENGTH, idx, 0);
+        SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_SETSEL, idx, idx);
+        SendMessage(GetDlgItem(hDlg, DEBUG_MSG), EM_REPLACESEL, 0, lParam);
+      }
+      break;
   }
   return FALSE;
 }
 
-
-int DebugControlDialog(char *buffer)
+void InitDebugDialog(HWND mainwnd)
 {
-  return DialogBoxParam(NULL, MAKEINTRESOURCE(DEBUGGER_DLG), GetBochsWindow(),
-                   (DLGPROC)DebuggerDlgProc, (LPARAM)buffer);
+  hDebugDialog = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DEBUGGER_DLG), mainwnd,
+                              (DLGPROC)DebuggerDlgProc);
+  ShowWindow(hDebugDialog, SW_SHOW);
 }
 
 void RefreshDebugDialog()
@@ -950,9 +965,12 @@ void RefreshDebugDialog()
 
 BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 {
-  int opts;
+  int opts, i, j;
   bx_param_c *param;
   bx_param_string_c *sparam;
+#if BX_DEBUGGER
+  char debug_msg[1024];
+#endif
 
   event->retcode = -1;
   switch (event->type)
@@ -963,18 +981,31 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 #if BX_DEBUGGER
     case BX_SYNC_EVT_GET_DBG_COMMAND:
       {
-        char *cmd = new char[512];
-        DebugControlDialog(cmd);
-        event->u.debugcmd.command = cmd;
+        debug_cmd = new char[512];
+        SendMessage(hDebugDialog, WM_USER, 0x1234, 1);
+        debug_cmd_ready = FALSE;
+        while (!debug_cmd_ready && (hDebugDialog != NULL)) {
+          Sleep(10);
+        }
+        if (hDebugDialog == NULL) {
+          lstrcpy(debug_cmd, "q");
+        } else {
+          SendMessage(hDebugDialog, WM_USER, 0x1234, 0);
+        }
+        event->u.debugcmd.command = debug_cmd;
         event->retcode = 1;
         return event;
       }
     case BX_ASYNC_EVT_DBG_MSG:
-      if (lstrlen(debug_msg) + lstrlen((char*)event->u.logmsg.msg) < 1023) {
-        lstrcat(debug_msg, (char*)event->u.logmsg.msg);
-      } else {
-        lstrcpy(debug_msg, (char*)event->u.logmsg.msg);
+      lstrcpy(debug_msg, (char*)event->u.logmsg.msg);
+      for (i = 0; i < lstrlen(debug_msg); i++) {
+        if (debug_msg[i] == 10) {
+          for (j = lstrlen(debug_msg); j >= i; j--) debug_msg[j+1] = debug_msg[j];
+          debug_msg[i] = 13;
+          i++;
+        }
       }
+      SendMessage(hDebugDialog, WM_USER, 0x5678, (LPARAM)debug_msg);
       // free the char* which was allocated in dbg_printf
       delete [] ((char*)event->u.logmsg.msg);
       return event;
@@ -1023,9 +1054,6 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
 
 void win32_init_notify_callback()
 {
-#if BX_DEBUGGER
-  debug_msg[0] = 0;
-#endif
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(win32_notify_callback, NULL);

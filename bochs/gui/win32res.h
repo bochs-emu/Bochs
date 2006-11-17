@@ -79,3 +79,5 @@
 #define DEBUGGER_DLG 3000
 #define DEBUG_MSG  3010
 #define DEBUG_CMD  3020
+#define IDEXEC     3030
+#define IDSTOP     3040
