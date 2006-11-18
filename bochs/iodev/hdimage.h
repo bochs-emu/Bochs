@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.6 2006-06-16 07:29:33 vruppert Exp $
+// $Id: hdimage.h,v 1.7 2006-11-18 11:51:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -133,22 +133,22 @@ class device_image_t
       device_image_t();
 
       // Open a image. Returns non-negative if successful.
-      virtual int open (const char* pathname) = 0;
+      virtual int open(const char* pathname) = 0;
 
       // Close the image.
-      virtual void close () = 0;
+      virtual void close() = 0;
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      virtual off_t lseek (off_t offset, int whence) = 0;
+      virtual Bit64s lseek(Bit64s offset, int whence) = 0;
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      virtual ssize_t read (void* buf, size_t count) = 0;
+      virtual ssize_t read(void* buf, size_t count) = 0;
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      virtual ssize_t write (const void* buf, size_t count) = 0;
+      virtual ssize_t write(const void* buf, size_t count) = 0;
 
       unsigned cylinders;
       unsigned heads;
@@ -161,25 +161,25 @@ class default_image_t : public device_image_t
 {
   public:
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Open an image with specific flags. Returns non-negative if successful.
-      int open (const char* pathname, int flags);
+      int open(const char* pathname, int flags);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       int fd;
@@ -246,22 +246,22 @@ class sparse_image_t : public device_image_t
       sparse_image_t();
 
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
  int fd;
@@ -283,23 +283,23 @@ class sparse_image_t : public device_image_t
  int     pagesize_shift;
  Bit32u  pagesize_mask;
 
- off_t   data_start;
- off_t   underlying_filesize;
+ Bit64s  data_start;
+ Bit64s  underlying_filesize;
 
  char *  pathname;
 
- off_t position;
+ Bit64s position;
 
  Bit32u position_virtual_page;
  Bit32u position_physical_page;
  Bit32u position_page_offset;
 
- off_t underlying_current_filepos;
+ Bit64s underlying_current_filepos;
 
- off_t total_size;
+ Bit64s total_size;
 
  void panic(const char * message);
- off_t get_physical_offset();
+ Bit64s get_physical_offset();
  void set_virtual_page(Bit32u new_virtual_page);
  void read_header();
  ssize_t read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf);
@@ -316,22 +316,22 @@ class dll_image_t : public device_image_t
 {
   public:
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       int vunit,vblk;
@@ -476,25 +476,25 @@ class z_ro_image_t : public device_image_t
       z_ro_image_t();
 
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
-      off_t offset;
+      Bit64s offset;
       int fd;
       gzFile gzfile;
 
@@ -508,22 +508,22 @@ class z_undoable_image_t : public device_image_t
       z_undoable_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       redolog_t       *redolog;       // Redolog instance
@@ -540,22 +540,22 @@ class z_volatile_image_t : public device_image_t
       z_volatile_image_t(Bit64u size, const char* redolog_name);
 
       // Open a image. Returns non-negative if successful.
-      int open (const char* pathname);
+      int open(const char* pathname);
 
       // Close the image.
-      void close ();
+      void close();
 
       // Position ourselves. Return the resulting offset from the
       // beginning of the file.
-      off_t lseek (off_t offset, int whence);
+      Bit64s lseek(Bit64s offset, int whence);
 
       // Read count bytes to the buffer buf. Return the number of
       // bytes read (count).
-      ssize_t read (void* buf, size_t count);
+      ssize_t read(void* buf, size_t count);
 
       // Write count bytes from buf. Return the number of bytes
       // written (count).
-      ssize_t write (const void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       redolog_t       *redolog;       // Redolog instance

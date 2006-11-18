@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.8 2006-06-16 08:56:13 vruppert Exp $
+// $Id: hdimage.cc,v 1.9 2006-11-18 11:51:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -87,9 +87,9 @@ void default_image_t::close()
   }
 }
 
-off_t default_image_t::lseek(off_t offset, int whence)
+Bit64s default_image_t::lseek(Bit64s offset, int whence)
 {
-  return ::lseek(fd, offset, whence);
+  return (Bit64s)::lseek(fd, (off_t)offset, whence);
 }
 
 ssize_t default_image_t::read(void* buf, size_t count)
@@ -223,7 +223,7 @@ Bit64s concat_image_t::lseek(Bit64s offset, int whence)
   }
 
   seek_was_last_op = 1;
-  return ::lseek(fd, (off_t)offset, whence);
+  return (Bit64s)::lseek(fd, (off_t)offset, whence);
 }
 
 ssize_t concat_image_t::read(void* buf, size_t count)
@@ -461,7 +461,7 @@ void sparse_image_t::close()
  }
 }
 
-off_t sparse_image_t::lseek (off_t offset, int whence)
+Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
 {
  //showpagetable(pagetable, header.numpages);
 
@@ -486,10 +486,10 @@ off_t sparse_image_t::lseek (off_t offset, int whence)
  return 0;
 }
 
-inline off_t sparse_image_t::get_physical_offset()
+inline Bit64s sparse_image_t::get_physical_offset()
 {
- off_t physical_offset = data_start;
- physical_offset += ((off_t)position_physical_page << pagesize_shift);
+ Bit64s physical_offset = data_start;
+ physical_offset += ((Bit64s)position_physical_page << pagesize_shift);
  physical_offset += position_page_offset;
 
  return physical_offset;
@@ -524,11 +524,11 @@ ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read
  }
  else
  {
-   off_t physical_offset = get_physical_offset();
+   Bit64s physical_offset = get_physical_offset();
 
    if (physical_offset != underlying_current_filepos)
    {
-     off_t ret = ::lseek(fd, physical_offset, SEEK_SET);
+     off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
      // underlying_current_filepos update deferred
      if (ret == -1)
        panic(strerror(errno));
@@ -628,7 +628,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      // We just add on another page at the end of the file
      // Reclamation, compaction etc should currently be done off-line
 
-     off_t  data_size = underlying_filesize - data_start;
+     Bit64s data_size = underlying_filesize - data_start;
      BX_ASSERT((data_size % pagesize) == 0);
 
 
@@ -638,7 +638,7 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
      pagetable[position_virtual_page] = htod32(next_data_page);
      position_physical_page = next_data_page;
 
-     off_t page_file_start = data_start + ((off_t)position_physical_page << pagesize_shift);
+     Bit64s page_file_start = data_start + ((Bit64s)position_physical_page << pagesize_shift);
 
      if (parent_image != NULL)
      {
@@ -703,11 +703,11 @@ ssize_t sparse_image_t::write (const void* buf, size_t count)
 
    BX_ASSERT(position_physical_page != SPARSE_PAGE_NOT_ALLOCATED);
 
-   off_t physical_offset = get_physical_offset();
+   Bit64s physical_offset = get_physical_offset();
 
    if (physical_offset != underlying_current_filepos)
    {
-     off_t ret = ::lseek(fd, physical_offset, SEEK_SET);
+     off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
      // underlying_current_filepos update deferred
      if (ret == -1)
        panic(strerror(errno));
@@ -828,9 +828,9 @@ void dll_image_t::close ()
    }
 }
 
-off_t dll_image_t::lseek (off_t offset, int whence)
+Bit64s dll_image_t::lseek(Bit64s offset, int whence)
 {
-      vblk = offset >> 9;
+      vblk = (int)(offset >> 9);
       return 0;
 }
 
@@ -1109,7 +1109,7 @@ Bit64s redolog_t::lseek(Bit64s offset, int whence)
     BX_PANIC( ("redolog : lseek HD with whence not SEEK_SET"));
     return -1;
   }
-  if (offset > (off_t)dtoh64(header.specific.disk))
+  if (offset > (Bit64s)dtoh64(header.specific.disk))
   {
     BX_PANIC(("redolog : lseek to byte %ld failed", (long)offset));
     return -1;
@@ -1123,143 +1123,140 @@ Bit64s redolog_t::lseek(Bit64s offset, int whence)
   return offset;
 }
 
-ssize_t
-redolog_t::read (void* buf, size_t count)
+ssize_t redolog_t::read(void* buf, size_t count)
 {
-        off_t bloc_offset, bitmap_offset;
+  Bit64s bloc_offset, bitmap_offset;
 
-        if (count != 512)
-                BX_PANIC( ("redolog : read HD with count not 512"));
+  if (count != 512)
+    BX_PANIC( ("redolog : read HD with count not 512"));
 
-        BX_DEBUG(("redolog : reading index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
+  BX_DEBUG(("redolog : reading index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
 
-        if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
-        {
-                // page not allocated
-                return 0;
-        }
+  if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
+  {
+    // page not allocated
+    return 0;
+  }
 
-        bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
-        bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
-        bloc_offset    = bitmap_offset + ((off_t)512 * (bitmap_blocs + extent_offset));
+  bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+  bitmap_offset += (Bit64s)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs);
+  bloc_offset    = bitmap_offset + ((Bit64s)512 * (bitmap_blocs + extent_offset));
 
-        BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
-        BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
+  BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
+  BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
 
+  // FIXME if same extent_index as before we can skip bitmap read
 
-        // FIXME if same extent_index as before we can skip bitmap read
+  ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
 
-        ::lseek(fd, bitmap_offset, SEEK_SET);
+  if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
+  {
+    BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
+    return 0;
+  }
 
-        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
-        {
-                BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
-                return 0;
-        }
+  if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
+  {
+    BX_DEBUG(("read not in redolog"));
 
-        if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
-        {
-                BX_DEBUG(("read not in redolog"));
+    // bitmap says bloc not in reloglog
+    return 0;
+  }
 
-                // bitmap says bloc not in reloglog
-                return 0;
-        }
-        
-        ::lseek(fd, bloc_offset, SEEK_SET);
+  ::lseek(fd, (off_t)bloc_offset, SEEK_SET);
 
-        return (::read(fd, buf, count));
+  return (::read(fd, buf, count));
 }
 
-ssize_t
-redolog_t::write (const void* buf, size_t count)
+ssize_t redolog_t::write(const void* buf, size_t count)
 {
-        Bit32u i;
-        off_t bloc_offset, bitmap_offset, catalog_offset;
-        ssize_t written;
-        bx_bool update_catalog = 0;
+  Bit32u i;
+  Bit64s bloc_offset, bitmap_offset, catalog_offset;
+  ssize_t written;
+  bx_bool update_catalog = 0;
 
-        if (count != 512)
-                BX_PANIC( ("redolog : write HD with count not 512"));
+  if (count != 512)
+    BX_PANIC( ("redolog : write HD with count not 512"));
 
-        BX_DEBUG(("redolog : writing index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
-        if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
-        {
-                if(extent_next >= dtoh32(header.specific.catalog))
-                {
-                        BX_PANIC(("redolog : can't allocate new extent... catalog is full"));
-                        return 0;
-                }
+  BX_DEBUG(("redolog : writing index %d, mapping to %d", extent_index, dtoh32(catalog[extent_index])));
+  if (dtoh32(catalog[extent_index]) == REDOLOG_PAGE_NOT_ALLOCATED)
+  {
+    if (extent_next >= dtoh32(header.specific.catalog))
+    {
+      BX_PANIC(("redolog : can't allocate new extent... catalog is full"));
+      return 0;
+    }
 
-                BX_DEBUG(("redolog : allocating new extent at %d", extent_next));
+    BX_DEBUG(("redolog : allocating new extent at %d", extent_next));
 
-                // Extent not allocated, allocate new
-                catalog[extent_index] = htod32(extent_next);
-                
-                extent_next += 1;
+    // Extent not allocated, allocate new
+    catalog[extent_index] = htod32(extent_next);
 
-                char *zerobuffer = (char*)malloc(512);
-                memset(zerobuffer, 0, 512);
+    extent_next += 1;
 
-                // Write bitmap
-                bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
-                bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
-                ::lseek(fd, bitmap_offset, SEEK_SET);
-                for(i=0; i<bitmap_blocs; i++)
-                {
-                        ::write(fd, zerobuffer, 512);
-                }
-                // Write extent
-                for(i=0; i<extent_blocs; i++)
-                {
-                        ::write(fd, zerobuffer, 512);
-                }
+    char *zerobuffer = (char*)malloc(512);
+    memset(zerobuffer, 0, 512);
 
-                free(zerobuffer);
+    // Write bitmap
+    bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+    bitmap_offset += (Bit64s)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs);
+    ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
+    for (i=0; i<bitmap_blocs; i++)
+    {
+      ::write(fd, zerobuffer, 512);
+    }
+    // Write extent
+    for (i=0; i<extent_blocs; i++)
+    {
+      ::write(fd, zerobuffer, 512);
+    }
 
-                update_catalog = 1;
-        }
+    free(zerobuffer);
 
-        bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
-        bitmap_offset += (off_t)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs); 
-        bloc_offset    = bitmap_offset + ((off_t)512 * (bitmap_blocs + extent_offset));
+    update_catalog = 1;
+  }
 
-        BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
-        BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
+  bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+  bitmap_offset += (Bit64s)512 * dtoh32(catalog[extent_index]) * (extent_blocs + bitmap_blocs);
+  bloc_offset    = bitmap_offset + ((Bit64s)512 * (bitmap_blocs + extent_offset));
 
-        // Write bloc
-        ::lseek(fd, bloc_offset, SEEK_SET);
-        written = ::write(fd, buf, count);
+  BX_DEBUG(("redolog : bitmap offset is %x", (Bit32u)bitmap_offset));
+  BX_DEBUG(("redolog : bloc offset is %x", (Bit32u)bloc_offset));
 
-        // Write bitmap
-        // FIXME if same extent_index as before we can skip bitmap read
-        ::lseek(fd, bitmap_offset, SEEK_SET);
-        if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
-        {
-                BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
-                return 0;
-        }
+  // Write bloc
+  ::lseek(fd, (off_t)bloc_offset, SEEK_SET);
+  written = ::write(fd, buf, count);
 
-        // If bloc does not belong to extent yet
-        if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
-        {
-                bitmap[extent_offset/8] |= 1 << (extent_offset%8);
-                ::lseek(fd, bitmap_offset, SEEK_SET);
-                ::write(fd, bitmap,  dtoh32(header.specific.bitmap));
-        }
+  // Write bitmap
+  // FIXME if same extent_index as before we can skip bitmap read
+  ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
+  if (::read(fd, bitmap,  dtoh32(header.specific.bitmap)) != (ssize_t)dtoh32(header.specific.bitmap))
+  {
+    BX_PANIC(("redolog : failed to read bitmap for extent %d", extent_index));
+    return 0;
+  }
 
-        // Write catalog
-        if (update_catalog)
-        {
-                // FIXME if mmap
-                catalog_offset  = (off_t)STANDARD_HEADER_SIZE + (extent_index * sizeof(Bit32u));
+  // If bloc does not belong to extent yet
+  if ( ((bitmap[extent_offset/8] >> (extent_offset%8)) & 0x01) == 0x00 )
+  {
+    bitmap[extent_offset/8] |= 1 << (extent_offset%8);
+    ::lseek(fd, (off_t)bitmap_offset, SEEK_SET);
+    ::write(fd, bitmap,  dtoh32(header.specific.bitmap));
+  }
 
-                BX_DEBUG(("redolog : writing catalog at offset %x", (Bit32u)catalog_offset));
+  // Write catalog
+  if (update_catalog)
+  {
+    // FIXME if mmap
+    catalog_offset  = (Bit64s)STANDARD_HEADER_SIZE + (extent_index * sizeof(Bit32u));
 
-                ::lseek(fd, catalog_offset, SEEK_SET);
-                ::write(fd, &catalog[extent_index], sizeof(Bit32u));
-        }
+    BX_DEBUG(("redolog : writing catalog at offset %x", (Bit32u)catalog_offset));
 
-        return written;
+    ::lseek(fd, (off_t)catalog_offset, SEEK_SET);
+    ::write(fd, &catalog[extent_index], sizeof(Bit32u));
+  }
+
+  return written;
 }
 
 
@@ -1370,7 +1367,7 @@ void undoable_image_t::close ()
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
 {
   redolog->lseek(offset, whence);
-  return ro_disk->lseek((off_t)offset, whence);
+  return ro_disk->lseek(offset, whence);
 }
 
 ssize_t undoable_image_t::read(void* buf, size_t count)
@@ -1492,7 +1489,7 @@ ssize_t volatile_image_t::write(const void* buf, size_t count)
 
 z_ro_image_t::z_ro_image_t()
 {
-  offset = (off_t)0;
+  offset = (Bit64s)0;
 }
 
 int z_ro_image_t::open (const char* pathname)
@@ -1521,7 +1518,7 @@ void z_ro_image_t::close ()
   }
 }
 
-off_t z_ro_image_t::lseek (off_t _offset, int whence)
+Bit64s z_ro_image_t::lseek(Bit64s _offset, int whence)
 {
   // Only SEEK_SET supported
   if (whence != SEEK_SET)
@@ -1610,7 +1607,7 @@ void z_undoable_image_t::close ()
           free(redolog_name);
 }
 
-off_t z_undoable_image_t::lseek (off_t offset, int whence)
+Bit64s z_undoable_image_t::lseek(Bit64s offset, int whence)
 {
       redolog->lseek(offset, whence);
       return ro_disk->lseek(offset, whence);
@@ -1711,7 +1708,7 @@ void z_volatile_image_t::close ()
           free(redolog_name);
 }
 
-off_t z_volatile_image_t::lseek (off_t offset, int whence)
+Bit64s z_volatile_image_t::lseek(Bit64s offset, int whence)
 {
       redolog->lseek(offset, whence);
       return ro_disk->lseek(offset, whence);

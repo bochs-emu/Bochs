@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.187 2006-09-20 18:24:17 vruppert Exp $
+// $Id: harddrv.cc,v 1.188 2006-11-18 11:51:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.187 2006-09-20 18:24:17 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.188 2006-11-18 11:51:07 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -1179,7 +1179,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #else
   UNUSED(this_ptr);
 #endif  // !BX_USE_HD_SMF
-  off_t logical_sector;
+  Bit64s logical_sector;
   bx_bool prev_control_reset;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
@@ -2582,9 +2582,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 }
 
   bx_bool BX_CPP_AttrRegparmN(2)
-bx_hard_drive_c::calculate_logical_address(Bit8u channel, off_t *sector)
+bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 {
-  off_t logical_sector;
+  Bit64s logical_sector;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
     logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
@@ -2615,7 +2615,7 @@ bx_hard_drive_c::increment_address(Bit8u channel)
   BX_SELECTED_CONTROLLER(channel).sector_count--;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-    off_t current_address;
+    Bit64s current_address;
     calculate_logical_address(channel, &current_address);
     current_address++;
     BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
@@ -3432,8 +3432,8 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
 
 bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
-  off_t logical_sector;
-  off_t ret;
+  Bit64s logical_sector;
+  Bit64s ret;
 
   int sector_count = (buffer_size / 512);
   Bit8u *bufptr = buffer;
@@ -3468,8 +3468,8 @@ bx_bool bx_hard_drive_c::ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u bu
 
 bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size)
 {
-  off_t logical_sector;
-  off_t ret;
+  Bit64s logical_sector;
+  Bit64s ret;
 
   int sector_count = (buffer_size / 512);
   Bit8u *bufptr = buffer;
