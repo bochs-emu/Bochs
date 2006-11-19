@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.32 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.33 2006-11-19 16:16:35 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -222,6 +222,14 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
   //
   if (ioctl(this->bpf_fd, BIOCPROMISC, NULL) < 0) {
     BX_PANIC(("eth_freebsd: could not enable promisc mode: %s", strerror(errno)));
+    close(this->bpf_fd);
+    this->bpf_fd = -1;
+    return;
+  }
+
+  v = 1;
+  if (ioctl(this->bpf_fd, BIOCIMMEDIATE, &v) < 0) {
+    BX_PANIC(("eth_freebsd: could not enable immediate mode"));
     close(this->bpf_fd);
     this->bpf_fd = -1;
     return;
