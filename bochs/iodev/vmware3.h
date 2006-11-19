@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.h,v 1.10 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: vmware3.h,v 1.11 2006-11-19 09:55:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -34,11 +34,11 @@ class vmware3_image_t : public device_image_t
   public:
       vmware3_image_t() : FL_SHIFT(25), FL_MASK(0xFE000000)
       { };
-      int open (const char* pathname);
+      int open(const char* pathname);
       void close();
-      off_t lseek (off_t offset, int whence);
-      ssize_t read (void* buf, size_t count);
-      ssize_t write (const void* buf, size_t count);
+      Bit64s lseek(Bit64s offset, int whence);
+      ssize_t read(void* buf, size_t count);
+      ssize_t write(const void* buf, size_t count);
 
   private:
       static const off_t INVALID_OFFSET;

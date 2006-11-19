@@ -1,6 +1,6 @@
 /*
  * misc/bximage.c
- * $Id: bxcommit.c,v 1.11 2005-11-06 11:07:01 vruppert Exp $
+ * $Id: bxcommit.c,v 1.12 2006-11-19 09:55:23 vruppert Exp $
  *
  * Commits a redolog file in a flat file for bochs images.
  *
@@ -49,7 +49,7 @@ int snprintf (char *s, size_t maxlen, const char *format, ...)
 #include "../iodev/hdimage.h"
 
 char *EOF_ERR = "ERROR: End of input";
-char *rcsid = "$Id: bxcommit.c,v 1.11 2005-11-06 11:07:01 vruppert Exp $";
+char *rcsid = "$Id: bxcommit.c,v 1.12 2006-11-19 09:55:23 vruppert Exp $";
 char *divider = "========================================================================";
 
 void myexit (int code)
@@ -301,11 +301,11 @@ int commit_redolog (char *flatname, char *redologname )
           
           if (dtoh32(catalog[i]) != REDOLOG_PAGE_NOT_ALLOCATED) 
           {
-                  off_t bitmap_offset;
+                  Bit64s bitmap_offset;
                   Bit32u bitmap_size, j;
 
-                  bitmap_offset  = (off_t)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
-                  bitmap_offset += (off_t)512 * dtoh32(catalog[i]) * (extent_blocs + bitmap_blocs);
+                  bitmap_offset  = (Bit64s)STANDARD_HEADER_SIZE + (dtoh32(header.specific.catalog) * sizeof(Bit32u));
+                  bitmap_offset += (Bit64s)512 * dtoh32(catalog[i]) * (extent_blocs + bitmap_blocs);
 
                   // Read bitmap
                   lseek(redologfd, bitmap_offset, SEEK_SET);
@@ -322,19 +322,19 @@ int commit_redolog (char *flatname, char *redologname )
                           {
                                   if ( (bitmap[j] & (1<<bit)) != 0)
                                   {
-                                          off_t flat_offset, bloc_offset;
+                                          Bit64s flat_offset, bloc_offset;
 
-                                          bloc_offset  = bitmap_offset + ((off_t)512 * (bitmap_blocs + ((j*8)+bit)));
+                                          bloc_offset  = bitmap_offset + ((Bit64s)512 * (bitmap_blocs + ((j*8)+bit)));
                                           
-                                          lseek(redologfd, bloc_offset, SEEK_SET);
+                                          lseek(redologfd, (off_t)bloc_offset, SEEK_SET);
                                           
                                           if (read(redologfd, buffer, 512) != 512)
                                                 fatal ("\nERROR: while reading bloc from redolog !");
 
-                                          flat_offset  = (off_t)i * (dtoh32(header.specific.extent));
-                                          flat_offset += (off_t)512 * ((j * 8) + bit);
+                                          flat_offset  = (Bit64s)i * (dtoh32(header.specific.extent));
+                                          flat_offset += (Bit64s)512 * ((j * 8) + bit);
                                           
-                                          lseek(flatfd, flat_offset, SEEK_SET);
+                                          lseek(flatfd, (off_t)flat_offset, SEEK_SET);
 
                                           if (write(flatfd, buffer, 512) != 512)
                                                 fatal ("\nERROR: while writing bloc in flatfile !");
@@ -359,19 +359,19 @@ int main()
   char redologname[256];
   int  remove;
 
-  print_banner ();
+  print_banner();
   filename[0] = 0;
   redologname[0] = 0;
 
-  if (ask_string ("\nWhat is the flat image name?\n", "c.img", filename) < 0)
+  if (ask_string("\nWhat is the flat image name?\n", "c.img", filename) < 0)
     fatal (EOF_ERR);
 
   snprintf(tmplogname,256,"%s%s", filename, UNDOABLE_REDOLOG_EXTENSION);
 
-  if (ask_string ("\nWhat is the redolog name?\n", tmplogname, redologname) < 0)
+  if (ask_string("\nWhat is the redolog name?\n", tmplogname, redologname) < 0)
     fatal (EOF_ERR);
 
-  if (ask_yn ("\nShall I remove the redolog afterwards?\n", 1, &remove) < 0)
+  if (ask_yn("\nShall I remove the redolog afterwards?\n", 1, &remove) < 0)
     fatal (EOF_ERR);
 
   commit_redolog(filename, redologname);

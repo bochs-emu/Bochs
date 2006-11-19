@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.15 2006-06-15 09:44:37 vruppert Exp $
+// $Id: vmware3.cc,v 1.16 2006-11-19 09:55:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -479,14 +479,14 @@ ssize_t vmware3_image_t::write(const void * buf, size_t count)
     return total;
 }
 
-off_t vmware3_image_t::lseek(off_t offset, int whence)
+Bit64s vmware3_image_t::lseek(Bit64s offset, int whence)
 {
     if(whence == SEEK_SET)
-        requested_offset = offset;
+        requested_offset = (off_t)offset;
     else if (whence == SEEK_CUR)
-        requested_offset += offset;
+        requested_offset += (off_t)offset;
     else if (whence == SEEK_END)
-        requested_offset = (off_t)(current->header.total_sectors_in_disk * 512) + offset;
+        requested_offset = (off_t)(current->header.total_sectors_in_disk * 512) + (off_t)offset;
     else
     {
         BX_DEBUG(("unknown 'whence' value (%d) when trying to seek vmware3 COW image", whence));
