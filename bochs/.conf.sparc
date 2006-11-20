@@ -19,9 +19,7 @@ export CXX
 export CFLAGS
 export CXXFLAGS
 
-./configure --enable-cdrom \
-            --enable-ne2000 \
-	    --enable-vbe \
+./configure --enable-ne2000 \
 	    --enable-all-optimizations \
 	    --enable-cpu-level=6 \
 	    --enable-sse=1 \

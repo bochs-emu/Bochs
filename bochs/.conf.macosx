@@ -20,10 +20,8 @@ export CPPFLAGS
 export CXXFLAGS
 export LDFLAGS
 
-./configure --enable-cdrom \
-	    --enable-sb16 \
+./configure --enable-sb16 \
 	    --enable-ne2000 \
-	    --enable-vbe \
 	    --enable-all-optimizations \
             --enable-cpu-level=6 \
             --enable-sse=1 \

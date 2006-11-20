@@ -16,7 +16,6 @@ export CFLAGS
 export CXXFLAGS
 
 ./configure --with-sdl \
-   --enable-cdrom \
    --enable-ne2000 \
    --enable-all-optimizations \
-   --enable-vbe
+   --enable-pci

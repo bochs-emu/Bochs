@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.330 2006-11-06 17:00:10 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.331 2006-11-20 18:54:34 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1444,8 +1444,11 @@ AC_ARG_ENABLE(vbe,
     AC_DEFINE(BX_SUPPORT_VBE, 0)
    fi],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_VBE, 0)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_VBE, 1)
+    if test "$pci" = 1; then
+      AC_DEFINE(BX_SUPPORT_PCIVGA, 1)
+    fi
     ]
   )
 
@@ -1471,14 +1474,12 @@ AC_ARG_ENABLE(clgd54xx,
 support_fpu=1
 AC_MSG_CHECKING(for FPU emulation)
 FPU_VAR=''
-FPU_GLUE_OBJ=''
 AC_ARG_ENABLE(fpu,
   [  --enable-fpu                      compile in FPU emulation],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
     FPU_VAR='$(FPU_LIB)'
-    FPU_GLUE_OBJ='$(FPU_GLUE_OBJ)'
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_FPU, 0)
@@ -1493,11 +1494,9 @@ AC_ARG_ENABLE(fpu,
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
     FPU_VAR='$(FPU_LIB)'
-    FPU_GLUE_OBJ='$(FPU_GLUE_OBJ)'
     ]
   )
 AC_SUBST(FPU_VAR)
-AC_SUBST(FPU_GLUE_OBJ)
 
 AC_MSG_CHECKING(for VME support)
 AC_ARG_ENABLE(vme,

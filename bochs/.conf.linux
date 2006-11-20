@@ -26,10 +26,8 @@ case $which_config in
     # configuration 1 for release binary RPMs
     # Include a few standard options, speed optimizations, X11 only.
     #######################################################################
-    ./configure --enable-cdrom \
-                --enable-sb16 \
+    ./configure --enable-sb16 \
                 --enable-ne2000 \
-                --enable-vbe \
                 --enable-all-optimizations \
                 --enable-cpu-level=6 \
                 --enable-sse=1 \
@@ -45,10 +43,8 @@ case $which_config in
     # configuration 2 for release binary RPMs
     # Include plugins, every possible gui.
     #######################################################################
-    ./configure --enable-cdrom \
-                --enable-sb16 \
+    ./configure --enable-sb16 \
                 --enable-ne2000 \
-                --enable-vbe \
                 --enable-all-optimizations \
                 --enable-cpu-level=6 \
                 --enable-sse=1 \

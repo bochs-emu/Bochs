@@ -3,10 +3,8 @@
 set echo
 
 ./configure --target=pentium-windows \
-            --enable-cdrom \
             --enable-sb16 \
             --enable-ne2000 \
-            --enable-vbe \
             --enable-all-optimizations \
             --enable-cpu-level=6 \
             --enable-sse=1 \
