@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.27 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_tap.cc,v 1.28 2006-11-23 17:21:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -275,37 +275,38 @@ bx_tap_pktmover_c::sendpkt(void *buf, unsigned io_len)
   Bit8u txbuf[BX_PACKET_BUFSIZE];
   txbuf[0] = 0;
   txbuf[1] = 0;
-#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__APPLE__)  // Should be fixed for other *BSD
-  memcpy (txbuf, buf, io_len);
-  unsigned int size = write (fd, txbuf, io_len);
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || \
+   defined(__APPLE__)  || defined(__OpenBSD__) // Should be fixed for other *BSD
+  memcpy(txbuf, buf, io_len);
+  unsigned int size = write(fd, txbuf, io_len);
   if (size != io_len) {
 #else
-  memcpy (txbuf+2, buf, io_len);
-  unsigned int size = write (fd, txbuf, io_len+2);
+  memcpy(txbuf+2, buf, io_len);
+  unsigned int size = write(fd, txbuf, io_len+2);
   if (size != io_len+2) {
 #endif
-    BX_PANIC (("write on tap device: %s", strerror (errno)));
+    BX_PANIC(("write on tap device: %s", strerror(errno)));
   } else {
-    BX_DEBUG (("wrote %d bytes + 2 byte pad on tap", io_len));
+    BX_DEBUG(("wrote %d bytes + 2 byte pad on tap", io_len));
   }
 #if BX_ETH_TAP_LOGGING
-  BX_DEBUG (("sendpkt length %u", io_len));
+  BX_DEBUG(("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed, io_len = %u", io_len));
+  int n = fwrite(buf, io_len, 1, txlog);
+  if (n != 1) BX_ERROR(("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf(txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<(int)io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (txlog_txt, "\n");
-    fprintf (txlog_txt, "%02x ", charbuf[n]);
+      fprintf(txlog_txt, "\n");
+    fprintf(txlog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (txlog_txt, "\n--\n");
+  fprintf(txlog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (txlog);
-  fflush (txlog_txt);
+  fflush(txlog);
+  fflush(txlog_txt);
 #endif
 }
 

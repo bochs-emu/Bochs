@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.25 2006-08-05 15:53:52 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.26 2006-11-23 17:21:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,7 +62,7 @@
 #include <linux/if_tun.h>
 #else
 #include <net/if.h>
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
 #include <net/if_tap.h>
 #endif
 #endif
