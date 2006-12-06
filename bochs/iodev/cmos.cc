@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.58 2006-09-16 14:47:40 vruppert Exp $
+// $Id: cmos.cc,v 1.59 2006-12-06 14:27:02 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -108,8 +108,10 @@ int libcmos_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char 
 }
 
 void libcmos_LTX_plugin_fini(void)
-{
-  delete theCmosDevice;
+{ if (theCmosDevice != NULL)
+  { delete theCmosDevice;
+    theCmosDevice = NULL;
+  }
 }
 
 bx_cmos_c::bx_cmos_c(void)
@@ -138,7 +140,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.58 2006-09-16 14:47:40 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.59 2006-12-06 14:27:02 akrisak Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
