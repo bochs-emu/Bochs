@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.51 2006-11-17 16:50:39 vruppert Exp $
+// $Id: win32dialog.cc,v 1.52 2006-12-06 15:05:08 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -78,6 +78,10 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   }
   return 0;
 }
+
+#ifndef BIF_NEWDIALOGSTYLE
+#define BIF_NEWDIALOGSTYLE 0
+#endif
 
 int BrowseDir(const char *Title, char *result)
 {
