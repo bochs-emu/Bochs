@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.172 2006-11-12 10:07:17 vruppert Exp $
+// $Id: siminterface.cc,v 1.173 2006-12-10 13:03:25 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -709,12 +709,11 @@ void bx_real_sim_c::debug_interpret_cmd(char *cmd)
 
 char *bx_real_sim_c::debug_get_next_command()
 {
-  fprintf(stderr, "begin debug_get_next_command\n");
   BxEvent event;
   event.type = BX_SYNC_EVT_GET_DBG_COMMAND;
-  BX_INFO(("asking for next debug command"));
+  BX_DEBUG(("asking for next debug command"));
   sim_to_ci_event (&event);
-  BX_INFO(("received next debug command: '%s'", event.u.debugcmd.command));
+  BX_DEBUG(("received next debug command: '%s'", event.u.debugcmd.command));
   if (event.retcode >= 0)
     return event.u.debugcmd.command;
   return NULL;

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.66 2006-09-03 11:06:53 vruppert Exp $
+// $Id: wxdialog.h,v 1.67 2006-12-10 13:03:25 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -517,7 +517,7 @@ class CpuRegistersDialog : public ParamDialog
     "EBP", "ESI", "EDI", "ESP", \
     NULL }
 #define CPU_REGS_MAIN_REGS2     \
-  { "EIP", "CS", "SS", "DS"     \
+  { "EIP", "CS", "SS", "DS",    \
     "ES", "FS", "GS", "EFLAGS", \
     NULL }
 #define CPU_REGS_MAIN_REGS3     \
