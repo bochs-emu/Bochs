@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.188 2006-11-18 11:51:07 vruppert Exp $
+// $Id: harddrv.cc,v 1.189 2006-12-13 16:59:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -146,7 +146,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.188 2006-11-18 11:51:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.189 2006-12-13 16:59:29 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2273,13 +2273,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x40: // READ VERIFY SECTORS
+        case 0x41: // READ VERIFY SECTORS NO RETRY
           if (!BX_SELECTED_IS_HD(channel)) {
             BX_INFO(("ata%d-%d: read verify issued to non-disk",
               channel,BX_SLAVE_SELECTED(channel)));
             command_aborted(channel, value);
             break;
           }
-          BX_INFO(("ata%d-%d: verify command : 0x40 !", channel,BX_SLAVE_SELECTED(channel)));
+          BX_INFO(("ata%d-%d: verify command : 0x%02x !", channel,BX_SLAVE_SELECTED(channel), value));
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
@@ -2471,7 +2472,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(channel, 0x3A); break;
 	case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(channel, 0x3B); break;
 	case 0x3F: BX_ERROR(("write cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(channel, 0x3F); break;
-	case 0x41: BX_ERROR(("write cmd 0x41 (READ VERIFY SECTORS NO RETRY) not supported")); command_aborted(channel, 0x41); break;
 	case 0x42: BX_ERROR(("write cmd 0x42 (READ VERIFY SECTORS EXT) not supported"));command_aborted(channel, 0x42); break;
 	case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(channel, 0x50); break;
 	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(channel, 0x51); break;
