@@ -99,6 +99,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   svga_cirrus.o \
   hdimage.o \
   vmware3.o \
+  vmware4.o \
   $(CDROM_OBJS) \
   $(SOUNDLOW_OBJS) \
   $(NETLOW_OBJS)
@@ -133,8 +134,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link $(CXX) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_harddrv.la: harddrv.lo hdimage.lo vmware3.lo $(CDROM_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link $(CXX) -module harddrv.lo hdimage.lo vmware3.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
+libbx_harddrv.la: harddrv.lo hdimage.lo vmware3.lo vmware4.lo $(CDROM_OBJS:.o=.lo)
+	$(LIBTOOL) --mode=link $(CXX) -module harddrv.lo hdimage.lo vmware3.lo vmware4.lo $(CDROM_OBJS:.o=.lo) -o libbx_harddrv.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link $(CXX) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
@@ -162,8 +163,8 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins that require more than one object file
-bx_harddrv.dll: harddrv.o hdimage.o vmware3.o $(CDROM_OBJS)
-	$(CXX) $(CXXFLAGS) -shared -o bx_harddrv.dll harddrv.o hdimage.o vmware3.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
+bx_harddrv.dll: harddrv.o hdimage.o vmware3.o vmware4.o $(CDROM_OBJS)
+	$(CXX) $(CXXFLAGS) -shared -o bx_harddrv.dll harddrv.o hdimage.o vmware3.o vmware4.o $(CDROM_OBJS) $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_keyboard.dll: keyboard.o scancodes.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_keyboard.dll keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -427,7 +428,7 @@ harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../iodev/virt_timer.h ../iodev/serial.h ../iodev/sb16.h \
   ../iodev/unmapped.h ../iodev/ne2k.h ../iodev/guest2host.h \
   ../iodev/slowdown_timer.h ../iodev/extfpuirq.h ../iodev/gameport.h \
-  hdimage.h vmware3.h cdrom.h
+  hdimage.h vmware3.h vmware4.h cdrom.h
 hdimage.o: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -796,6 +797,11 @@ vmware3.o: vmware3.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h hdimage.h vmware3.h
+vmware4.o: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h hdimage.h vmware4.h
 biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -1016,7 +1022,7 @@ harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../iodev/virt_timer.h ../iodev/serial.h ../iodev/sb16.h \
   ../iodev/unmapped.h ../iodev/ne2k.h ../iodev/guest2host.h \
   ../iodev/slowdown_timer.h ../iodev/extfpuirq.h ../iodev/gameport.h \
-  hdimage.h vmware3.h cdrom.h
+  hdimage.h vmware3.h vmware4.h cdrom.h
 hdimage.lo: hdimage.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
@@ -1385,3 +1391,8 @@ vmware3.lo: vmware3.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
   ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
   ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h hdimage.h vmware3.h
+vmware4.lo: vmware4.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+  ../bx_debug/debug.h ../config.h ../osdep.h ../bxversion.h \
+  ../gui/siminterface.h ../memory/memory.h ../pc_system.h ../plugin.h \
+  ../extplugin.h ../gui/gui.h ../gui/textconfig.h ../config.h \
+  ../gui/keymap.h ../instrument/stubs/instrument.h hdimage.h vmware4.h

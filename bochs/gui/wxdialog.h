@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////
-// $Id: wxdialog.h,v 1.67 2006-12-10 13:03:25 vruppert Exp $
+// $Id: wxdialog.h,v 1.68 2006-12-17 08:17:28 vruppert Exp $
 ////////////////////////////////////////////////////////////////////
 //
 // wxWidgets dialogs for Bochs
@@ -198,7 +198,7 @@ public:
   void SetFilename(wxString f);
   // Use char* instead of wxString because the array we use is already
   // expressed as a char *[].
-  void SetCapacityChoices(int n, char *choices[]);
+  void SetCapacityChoices(char *choices[]);
   void SetCapacity(int cap);
   int GetRadio();
   int GetCapacity() { return capacity->GetSelection(); }

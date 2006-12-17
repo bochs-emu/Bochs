@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.101 2006-10-21 15:36:07 vruppert Exp $
+// $Id: wxdialog.cc,v 1.102 2006-12-17 08:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -118,12 +118,10 @@ void LogMsgAskDialog::Init()
     btnSizer->Add(btn, 1, wxALL, 5);
   }
   wxSize ms = message->GetSize();
-  // wxLogMessage(wxT("message size is %d,%d"), ms.GetWidth(), ms.GetHeight());
   SetAutoLayout(TRUE);
   SetSizer(vertSizer);
   vertSizer->Fit(this);
   wxSize size = vertSizer->GetMinSize();
-  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 10;
   SetSizeHints (size.GetWidth () + margin, size.GetHeight () + margin);
   Center ();
@@ -134,22 +132,21 @@ void LogMsgAskDialog::Init()
 // go away.
 void LogMsgAskDialog::OnEvent(wxCommandEvent& event)
 {
-  int id = event.GetId ();
+  int id = event.GetId();
   int ret = -1;
   switch (id) {
     case ID_Continue:   ret = BX_LOG_ASK_CHOICE_CONTINUE;  break;
     case ID_Die:        ret = BX_LOG_ASK_CHOICE_DIE;   break;
     case ID_DumpCore:   ret = BX_LOG_ASK_CHOICE_DUMP_CORE;  break;
     case ID_Debugger:   ret = BX_LOG_ASK_CHOICE_ENTER_DEBUG; break;
-    case wxID_HELP: ShowHelp (); return;
+    case wxID_HELP: ShowHelp(); return;
     default:
       return;  // without EndModal
   }
-  // wxLogMessage(wxT("you pressed button id=%d, return value=%d"), id, ret);
-  EndModal (ret);
+  EndModal(ret);
 }
 
-void LogMsgAskDialog::ShowHelp ()
+void LogMsgAskDialog::ShowHelp()
 {
   wxMessageBox(MSG_NO_HELP, MSG_NO_HELP_CAPTION, wxOK | wxICON_ERROR, this );
 }
@@ -247,20 +244,23 @@ void FloppyConfigDialog::AddRadio (
   n_rbtns++;
 }
 
-void FloppyConfigDialog::SetDriveName (wxString name)
+void FloppyConfigDialog::SetDriveName(wxString name)
 {
   SetTitle(wxString(FLOPPY_CONFIG_TITLE) + name);
   ChangeStaticText(vertSizer, instr, wxString(FLOPPY_CONFIG_INSTRS) + name +
     wxT("."));
 }
 
-void FloppyConfigDialog::SetCapacityChoices(int n, char *choices[])
+void FloppyConfigDialog::SetCapacityChoices(char *choices[])
 {
-  for (int i=0; i<n; i++)
+  int i = 0;
+  while (choices[i] != NULL) {
     capacity->Append(wxString(choices[i], wxConvUTF8));
+    i++;
+  }
 }
 
-void FloppyConfigDialog::SetCapacity (int cap)
+void FloppyConfigDialog::SetCapacity(int cap)
 {
   capacity->SetSelection(cap);
   CreateBtn->Enable(floppy_type_n_sectors[cap] > 0);
@@ -279,7 +279,6 @@ void FloppyConfigDialog::Init()
   SetSizer(vertSizer);
   vertSizer->Fit(this);
   wxSize size = vertSizer->GetMinSize();
-  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
   SetSizeHints (size.GetWidth() + margin, size.GetHeight() + margin);
   Center();
@@ -534,7 +533,6 @@ void AdvancedLogOptionsDialog::Init()
   SetSizer(vertSizer);
   vertSizer->Fit(this);
   wxSize size = vertSizer->GetMinSize();
-  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
   SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
   Center();
@@ -599,7 +597,6 @@ int AdvancedLogOptionsDialog::GetAction(int dev, int evtype) {
 void AdvancedLogOptionsDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId();
-  // wxLogMessage(wxT("you pressed button id=%d"), id);
   switch (id) {
     case ID_Browse:
       BrowseTextCtrl(logfile);
@@ -707,7 +704,6 @@ void DebugLogDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit(this);
   wxSize size = mainSizer->GetMinSize();
-  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
   SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
   Center();
@@ -771,7 +767,6 @@ void DebugLogDialog::AppendText (wxString text) {
 void DebugLogDialog::OnEvent(wxCommandEvent& event)
 {
   int id = event.GetId();
-  //wxLogMessage(wxT("event was from id=%d, type=%d"), id, (int)event.GetEventType ());
   switch (id) {
     case wxID_OK:
       Show(FALSE);
@@ -863,7 +858,6 @@ void ParamDialog::Init()
   SetSizer(mainSizer);
   mainSizer->Fit(this);
   wxSize size = mainSizer->GetMinSize();
-  // wxLogMessage(wxT("minsize is %d,%d"), size.GetWidth(), size.GetHeight());
   int margin = 5;
   SetSizeHints(size.GetWidth() + margin, size.GetHeight() + margin);
   Center();
@@ -1454,10 +1448,9 @@ void ParamDialog::CopyParamToGui ()
 
 void ParamDialog::OnEvent(wxCommandEvent& event)
 {
-  int id = event.GetId ();
-  //wxLogMessage ("event was from id=%d", id);
-  if (isGeneratedId (id)) {
-    ParamStruct *pstr = (ParamStruct*) idHash->Get (id);
+  int id = event.GetId();
+  if (isGeneratedId(id)) {
+    ParamStruct *pstr = (ParamStruct*) idHash->Get(id);
     if (pstr == NULL) {
       wxLogDebug(wxT("ParamStruct not found for id=%d"), id);
       return;

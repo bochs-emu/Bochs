@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.203 2006-11-12 10:07:17 vruppert Exp $
+// $Id: siminterface.h,v 1.204 2006-12-17 08:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1040,12 +1040,13 @@ enum {
 #define BX_ATA_MODE_DLL_HD      3
 #define BX_ATA_MODE_SPARSE      4
 #define BX_ATA_MODE_VMWARE3     5
-#define BX_ATA_MODE_UNDOABLE    6
-#define BX_ATA_MODE_GROWING     7
-#define BX_ATA_MODE_VOLATILE    8
-#define BX_ATA_MODE_Z_UNDOABLE  9
-#define BX_ATA_MODE_Z_VOLATILE  10
-#define BX_ATA_MODE_LAST        10
+#define BX_ATA_MODE_VMWARE4     6
+#define BX_ATA_MODE_UNDOABLE    7
+#define BX_ATA_MODE_GROWING     8
+#define BX_ATA_MODE_VOLATILE    9
+#define BX_ATA_MODE_Z_UNDOABLE  10
+#define BX_ATA_MODE_Z_VOLATILE  11
+#define BX_ATA_MODE_LAST        11
 
 #define BX_CLOCK_SYNC_NONE     0
 #define BX_CLOCK_SYNC_REALTIME 1
@@ -1057,30 +1058,18 @@ enum {
 #define BX_CLOCK_TIME0_UTC       2
 
 BOCHSAPI extern char *bochs_start_names[];
-BOCHSAPI extern int n_bochs_start_names;
 BOCHSAPI extern char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
-BOCHSAPI extern int n_floppy_type_names;
 BOCHSAPI extern char *floppy_status_names[];
-BOCHSAPI extern int n_floppy_status_names;
 BOCHSAPI extern char *bochs_bootdisk_names[];
-BOCHSAPI extern int n_bochs_bootdisk_names;
 BOCHSAPI extern char *loader_os_names[];
-BOCHSAPI extern int n_loader_os_names;
 BOCHSAPI extern char *keyboard_type_names[];
-BOCHSAPI extern int n_keyboard_type_names;
 BOCHSAPI extern char *atadevice_type_names[];
-BOCHSAPI extern int n_atadevice_type_names;
 BOCHSAPI extern char *atadevice_mode_names[];
-BOCHSAPI extern int n_atadevice_mode_names;
 BOCHSAPI extern char *atadevice_status_names[];
-BOCHSAPI extern int n_atadevice_status_names;
 BOCHSAPI extern char *atadevice_biosdetect_names[];
-BOCHSAPI extern int n_atadevice_biosdetect_names;
 BOCHSAPI extern char *atadevice_translation_names[];
-BOCHSAPI extern int n_atadevice_translation_names;
 BOCHSAPI extern char *clock_sync_names[];
-BOCHSAPI extern int clock_sync_n_names;
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.

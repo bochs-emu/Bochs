@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.151 2006-10-29 08:48:30 vruppert Exp $
+// $Id: wxmain.cc,v 1.152 2006-12-17 08:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -1314,7 +1314,7 @@ void MyFrame::editFloppyConfig(int drive)
 {
   FloppyConfigDialog dlg(this, -1);
   dlg.SetDriveName(wxString(drive==0? BX_FLOPPY0_NAME : BX_FLOPPY1_NAME, wxConvUTF8));
-  dlg.SetCapacityChoices(n_floppy_type_names, floppy_type_names);
+  dlg.SetCapacityChoices(floppy_type_names);
   bx_list_c *list = (bx_list_c*) SIM->get_param((drive==0)? BXPN_FLOPPYA : BXPN_FLOPPYB);
   if (!list) { wxLogError(wxT("floppy object param is null")); return; }
   bx_param_filename_c *fname = (bx_param_filename_c*) list->get_by_name("path");
@@ -1350,13 +1350,10 @@ void MyFrame::editFloppyConfig(int drive)
     // otherwise the SetFilename() should have done the right thing.
   }
   int n = dlg.ShowModal();
-  wxLogMessage(wxT("floppy config returned %d"), n);
   if (n==wxID_OK) {
     char filename[1024];
     wxString fn(dlg.GetFilename());
     strncpy(filename, fn.mb_str(wxConvUTF8), sizeof(filename));
-    wxLogMessage(wxT("filename is '%s'"), filename);
-    wxLogMessage(wxT("capacity = %d (%s)"), dlg.GetCapacity(), floppy_type_names[dlg.GetCapacity()]);
     fname->set(filename);
     disktype->set(disktype->get_min() + dlg.GetCapacity());
     if (sim_thread == NULL) {

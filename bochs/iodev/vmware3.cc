@@ -1,10 +1,10 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.16 2006-11-19 09:55:23 vruppert Exp $
+// $Id: vmware3.cc,v 1.17 2006-12-17 08:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
  * This file provides support for VMWare's virtual disk image
- * format.
+ * format version 3.
  *
  * Author: Sharvil Nanavati, for Net Integration Technologies, Inc.
  * Contact: snrrrub@yahoo.com

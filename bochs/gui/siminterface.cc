@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.173 2006-12-10 13:03:25 vruppert Exp $
+// $Id: siminterface.cc,v 1.174 2006-12-17 08:17:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -446,34 +446,22 @@ int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
 }
 
 char *bochs_start_names[] = { "quick", "load", "edit", "run" };
-int n_bochs_start_names = 3;
 
 char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
-int n_floppy_type_names = 10;
-
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
-int n_floppy_status_names = 2;
+
 char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", NULL };
-int n_bochs_bootdisk_names = 4;
 char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
-int n_loader_os_names = 3;
 char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
-int n_keyboard_type_names = 3;
 
 char *atadevice_type_names[] = { "disk", "cdrom", NULL };
-int n_atadevice_type_names = 2;
-//char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "undoable", "growing", "volatile", "z-undoable", "z-volatile", NULL };
-char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "undoable", "growing", "volatile", NULL };
-int n_atadevice_mode_names = 9;
+//char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", "z-undoable", "z-volatile", NULL };
+char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", NULL };
 char *atadevice_status_names[] = { "ejected", "inserted", NULL };
-int n_atadevice_status_names = 2;
 char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
-int n_atadevice_biosdetect_names = 3;
 char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
-int n_atadevice_translation_names = 5;
 char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
-int clock_sync_n_names=4;
 
 
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
