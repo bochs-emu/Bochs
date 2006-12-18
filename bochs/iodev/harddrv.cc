@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.190 2006-12-17 08:17:28 vruppert Exp $
+// $Id: harddrv.cc,v 1.191 2006-12-18 17:56:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -147,7 +147,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.190 2006-12-17 08:17:28 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.191 2006-12-18 17:56:05 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2888,7 +2888,11 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // Word 1: number of user-addressable cylinders in
   //   default translation mode.  If the value in words 60-61
   //   exceed 16,515,072, this word shall contain 16,383.
-  BX_SELECTED_DRIVE(channel).id_drive[1] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+  if (BX_SELECTED_DRIVE(channel).hard_drive->cylinders > 16383) {
+    BX_SELECTED_DRIVE(channel).id_drive[1] = 16383;
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[1] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+  }
 
   // Word 2: reserved
   BX_SELECTED_DRIVE(channel).id_drive[2] = 0;
