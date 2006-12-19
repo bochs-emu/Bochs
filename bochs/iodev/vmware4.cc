@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.1 2006-12-17 08:17:28 vruppert Exp $
+// $Id: vmware4.cc,v 1.2 2006-12-19 16:42:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -72,7 +72,7 @@ int vmware4_image_t::open(const char * pathname)
     if(!read_header())
         BX_PANIC(("unable to read vmware4 virtual disk header from file '%s'", pathname));
 
-    tlb = new Bit8u [header.tlb_size_sectors * SECTOR_SIZE];
+    tlb = new Bit8u[(unsigned)header.tlb_size_sectors * SECTOR_SIZE];
     if(tlb == 0)
         BX_PANIC(("unable to allocate %lld bytes for vmware4 image's tlb", header.tlb_size_sectors * SECTOR_SIZE));
 
@@ -81,7 +81,7 @@ int vmware4_image_t::open(const char * pathname)
     is_dirty = false;
 
     hd_size = header.total_sectors * SECTOR_SIZE;
-    cylinders = hd_size / (16 * 63);
+    cylinders = (unsigned)hd_size / (16 * 63);
     heads = 16;
     sectors = 63;
 
@@ -138,11 +138,11 @@ ssize_t vmware4_image_t::read(void * buf, size_t count)
         }
 
         off_t copysize = (count > readable) ? readable : count;
-        memcpy(buf, tlb + current_offset - tlb_offset, copysize);
+        memcpy(buf, tlb + current_offset - tlb_offset, (size_t)copysize);
 
         current_offset += copysize;
-        total += copysize;
-        count -= copysize;
+        total += (long)copysize;
+        count -= (size_t)copysize;
     }
     return total;
 }
@@ -160,11 +160,11 @@ ssize_t vmware4_image_t::write(const void * buf, size_t count)
         }
 
         off_t writesize = (count > writable) ? writable : count;
-        memcpy(tlb + current_offset - tlb_offset, buf, writesize);
+        memcpy(tlb + current_offset - tlb_offset, buf, (size_t)writesize);
 
         current_offset += writesize;
-        total += writesize;
-        count -= writesize;
+        total += (long)writesize;
+        count -= (size_t)writesize;
         is_dirty = true;
     }
     return total;
@@ -272,15 +272,15 @@ off_t vmware4_image_t::perform_seek()
         //
         // Allocate a new tlb
         //
-        memset(tlb, 0, header.tlb_size_sectors * SECTOR_SIZE);
+        memset(tlb, 0, (size_t)header.tlb_size_sectors * SECTOR_SIZE);
 
         //
         // Instead of doing a write to increase the file size, we could use
         // ftruncate but it is not portable.
         //
         off_t eof = ((::lseek(file_descriptor, 0, SEEK_END) + SECTOR_SIZE - 1) / SECTOR_SIZE) * SECTOR_SIZE;
-        ::write(file_descriptor, tlb, header.tlb_size_sectors * SECTOR_SIZE);
-        tlb_sector = eof / SECTOR_SIZE;
+        ::write(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
+        tlb_sector = (Bit32u)eof / SECTOR_SIZE;
 
         write_block_index(slb_sector, slb_index, tlb_sector);
         write_block_index(slb_copy_sector, slb_index, tlb_sector);
@@ -290,7 +290,7 @@ off_t vmware4_image_t::perform_seek()
     else
     {
         ::lseek(file_descriptor, tlb_sector * SECTOR_SIZE, SEEK_SET);
-        ::read(file_descriptor, tlb, header.tlb_size_sectors * SECTOR_SIZE);
+        ::read(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
         ::lseek(file_descriptor, tlb_sector * SECTOR_SIZE, SEEK_SET);
     }
 
@@ -306,7 +306,7 @@ void vmware4_image_t::flush()
     // Write dirty sectors to disk first. Assume that the file is already at the
     // position for the current tlb.
     //
-    ::write(file_descriptor, tlb, header.tlb_size_sectors * SECTOR_SIZE);
+    ::write(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
     is_dirty = false;
 }
 
