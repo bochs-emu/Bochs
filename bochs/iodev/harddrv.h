@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.46 2006-11-18 11:51:07 vruppert Exp $
+// $Id: harddrv.h,v 1.47 2006-12-25 09:34:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,7 +56,7 @@ typedef struct {
     bx_bool index_pulse;
     unsigned index_pulse_count;
     bx_bool err;
-    } status;
+  } status;
   Bit8u    error_register;
   Bit8u    head_no;
   union {
@@ -92,10 +92,19 @@ typedef struct {
   struct {
     bx_bool reset;       // 0=normal, 1=reset controller
     bx_bool disable_irq; // 0=allow irq, 1=disable irq
-    } control;
+  } control;
   Bit8u    reset_in_progress;
   Bit8u    features;
-  } controller_t;
+  struct {
+    Bit8u  feature;
+    Bit8u  nsector;
+    Bit8u  sector;
+    Bit8u  lcyl;
+    Bit8u  hcyl;
+  } hob;
+  Bit32u   num_sectors;
+  bx_bool  lba48;
+} controller_t;
 
 struct sense_info_t {
   sense_t sense_key;
@@ -213,6 +222,7 @@ private:
   BX_HD_SMF void set_signature(Bit8u channel, Bit8u id);
   BX_HD_SMF bx_bool ide_read_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
   BX_HD_SMF bx_bool ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u buffer_size);
+  BX_HD_SMF void lba48_transform(Bit8u channel, bx_bool lba48);
 
   // FIXME:
   // For each ATA channel we should have one controller struct

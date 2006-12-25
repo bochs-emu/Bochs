@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.191 2006-12-18 17:56:05 vruppert Exp $
+// $Id: harddrv.cc,v 1.192 2006-12-25 09:34:32 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -77,11 +77,28 @@
 #define BX_SELECTED_MODEL(c) (BX_HD_THIS channels[(c)].drives[BX_HD_THIS channels[(c)].drive_select].model_no)
 #define BX_SELECTED_TYPE_STRING(channel) ((BX_SELECTED_IS_CD(channel)) ? "CD-ROM" : "DISK")
 
-#define WRITE_FEATURES(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).features = _a; BX_CONTROLLER((c),1).features = _a; } while(0)
-#define WRITE_SECTOR_COUNT(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).sector_count = _a; BX_CONTROLLER((c),1).sector_count = _a; } while(0)
-#define WRITE_SECTOR_NUMBER(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).sector_no = _a; BX_CONTROLLER((c),1).sector_no = _a; } while(0)
-#define WRITE_CYLINDER_LOW(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).cylinder_no = (BX_CONTROLLER((c),0).cylinder_no & 0xff00) | _a; BX_CONTROLLER((c),1).cylinder_no = (BX_CONTROLLER((c),1).cylinder_no & 0xff00) | _a; } while(0)
-#define WRITE_CYLINDER_HIGH(c,a) do { Bit16u _a = a; BX_CONTROLLER((c),0).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),0).cylinder_no & 0xff); BX_CONTROLLER((c),1).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),1).cylinder_no & 0xff); } while(0)
+#define WRITE_FEATURES(c,a) do { Bit8u _a = a; \
+  BX_CONTROLLER((c),0).hob.feature = BX_CONTROLLER((c),0).features; \
+  BX_CONTROLLER((c),1).hob.feature = BX_CONTROLLER((c),1).features; \
+  BX_CONTROLLER((c),0).features = _a; BX_CONTROLLER((c),1).features = _a; } while(0)
+#define WRITE_SECTOR_COUNT(c,a) do { Bit8u _a = a; \
+  BX_CONTROLLER((c),0).hob.nsector = BX_CONTROLLER((c),0).sector_count; \
+  BX_CONTROLLER((c),1).hob.nsector = BX_CONTROLLER((c),1).sector_count; \
+  BX_CONTROLLER((c),0).sector_count = _a; BX_CONTROLLER((c),1).sector_count = _a; } while(0)
+#define WRITE_SECTOR_NUMBER(c,a) do { Bit8u _a = a; \
+  BX_CONTROLLER((c),0).hob.sector = BX_CONTROLLER((c),0).sector_no; \
+  BX_CONTROLLER((c),1).hob.sector = BX_CONTROLLER((c),1).sector_no; \
+  BX_CONTROLLER((c),0).sector_no = _a; BX_CONTROLLER((c),1).sector_no = _a; } while(0)
+#define WRITE_CYLINDER_LOW(c,a) do { Bit8u _a = a; \
+  BX_CONTROLLER((c),0).hob.lcyl = (Bit8u)(BX_CONTROLLER((c),0).cylinder_no & 0xff); \
+  BX_CONTROLLER((c),1).hob.lcyl = (Bit8u)(BX_CONTROLLER((c),1).cylinder_no & 0xff); \
+  BX_CONTROLLER((c),0).cylinder_no = (BX_CONTROLLER((c),0).cylinder_no & 0xff00) | _a; \
+  BX_CONTROLLER((c),1).cylinder_no = (BX_CONTROLLER((c),1).cylinder_no & 0xff00) | _a; } while(0)
+#define WRITE_CYLINDER_HIGH(c,a) do { Bit16u _a = a; \
+  BX_CONTROLLER((c),0).hob.hcyl = (Bit8u)(BX_CONTROLLER((c),0).cylinder_no >> 8); \
+  BX_CONTROLLER((c),1).hob.hcyl = (Bit8u)(BX_CONTROLLER((c),1).cylinder_no >> 8); \
+  BX_CONTROLLER((c),0).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),0).cylinder_no & 0xff); \
+  BX_CONTROLLER((c),1).cylinder_no = (_a << 8) | (BX_CONTROLLER((c),1).cylinder_no & 0xff); } while(0)
 #define WRITE_HEAD_NO(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
 #define WRITE_LBA_MODE(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
@@ -147,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.191 2006-12-18 17:56:05 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.192 2006-12-25 09:34:32 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -647,7 +664,7 @@ void bx_hard_drive_c::register_state(void)
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
-        drive = new bx_list_c(chan, dname, 20);
+        drive = new bx_list_c(chan, dname, 26);
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status", 9);
         new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
@@ -676,6 +693,12 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
         new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
         new bx_shadow_num_c(drive, "mdma_mode", &BX_CONTROLLER(i, j).mdma_mode, BASE_HEX);
+        new bx_shadow_num_c(drive, "hob_feature", &BX_CONTROLLER(i, j).hob.feature, BASE_HEX);
+        new bx_shadow_num_c(drive, "hob_nsector", &BX_CONTROLLER(i, j).hob.nsector, BASE_HEX);
+        new bx_shadow_num_c(drive, "hob_sector", &BX_CONTROLLER(i, j).hob.sector, BASE_HEX);
+        new bx_shadow_num_c(drive, "hob_lcyl", &BX_CONTROLLER(i, j).hob.lcyl, BASE_HEX);
+        new bx_shadow_num_c(drive, "hob_hcyl", &BX_CONTROLLER(i, j).hob.hcyl, BASE_HEX);
+        new bx_shadow_num_c(drive, "num_sectors", &BX_CONTROLLER(i, j).num_sectors, BASE_HEX);
         new bx_shadow_bool_c(drive, "cdrom_locked", &BX_HD_THIS channels[i].drives[j].cdrom.locked);
       }
     }
@@ -772,6 +795,8 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
         case 0xC4: // READ MULTIPLE SECTORS
+        case 0x24: // READ SECTORS EXT
+        case 0x29: // READ MULTIPLE EXT
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size)
             BX_PANIC(("IO read(0x%04x): buffer_index >= %d", address, BX_SELECTED_CONTROLLER(channel).buffer_size));
 
@@ -816,11 +841,12 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             // drive, head, status
             // if there are more sectors, read next one in...
             //
-            if (BX_SELECTED_CONTROLLER(channel).current_command == 0xC4) {
-              if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
+            if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC4) ||
+                (BX_SELECTED_CONTROLLER(channel).current_command == 0x29)) {
+              if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
                 BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
               } else {
-                BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).sector_count * 512;
+                BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
               }
             }
 
@@ -831,7 +857,7 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
             BX_SELECTED_CONTROLLER(channel).status.corrected_data = 0;
             BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
-            if (BX_SELECTED_CONTROLLER(channel).sector_count==0) {
+            if (BX_SELECTED_CONTROLLER(channel).num_sectors==0) {
               BX_SELECTED_CONTROLLER(channel).status.drq = 0;
             } else { /* read next one into controller buffer */
               BX_SELECTED_CONTROLLER(channel).status.drq = 1;
@@ -992,11 +1018,9 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
 	case 0x10: BX_ERROR(("read cmd 0x10 (RECALIBRATE) not supported")); command_aborted(channel, 0x10); break;
 	case 0x22: BX_ERROR(("read cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
 	case 0x23: BX_ERROR(("read cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
-	case 0x24: BX_ERROR(("read cmd 0x24 (READ SECTORS EXT) not supported")); command_aborted(channel, 0x24); break;
 	case 0x25: BX_ERROR(("read cmd 0x25 (READ DMA EXT) not supported")); command_aborted(channel, 0x25); break;
 	case 0x26: BX_ERROR(("read cmd 0x26 (READ DMA QUEUED EXT) not supported")); command_aborted(channel, 0x26); break;
 	case 0x27: BX_ERROR(("read cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported")); command_aborted(channel, 0x27); break;
-	case 0x29: BX_ERROR(("read cmd 0x29 (READ MULTIPLE EXT) not supported")); command_aborted(channel, 0x29); break;
 	case 0x2A: BX_ERROR(("read cmd 0x2A (READ STREAM DMA) not supported")); command_aborted(channel, 0x2A); break;
 	case 0x2B: BX_ERROR(("read cmd 0x2B (READ STREAM PIO) not supported")); command_aborted(channel, 0x2B); break;
 	case 0x2F: BX_ERROR(("read cmd 0x2F (READ LOG EXT) not supported")); command_aborted(channel, 0x2F); break;
@@ -1188,6 +1212,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_HD_SMF
   Bit64s logical_sector;
   bx_bool prev_control_reset;
+  bx_bool lba48 = 0;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
   Bit32u port = 0xff; // undefined
@@ -1239,6 +1264,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       switch (BX_SELECTED_CONTROLLER(channel).current_command) {
         case 0x30: // WRITE SECTORS
         case 0xC5: // WRITE MULTIPLE SECTORS
+        case 0x34: // WRITE SECTORS EXT
+        case 0x39: // WRITE MULTIPLE EXT
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size)
             BX_PANIC(("IO write(0x%04x): buffer_index >= %d", address, BX_SELECTED_CONTROLLER(channel).buffer_size));
 
@@ -1280,11 +1307,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           if (BX_SELECTED_CONTROLLER(channel).buffer_index >= BX_SELECTED_CONTROLLER(channel).buffer_size) {
             if (ide_write_sector(channel, BX_SELECTED_CONTROLLER(channel).buffer,
                                  BX_SELECTED_CONTROLLER(channel).buffer_size)) {
-              if (BX_SELECTED_CONTROLLER(channel).current_command == 0xC5) {
-                if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
+              if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC5) ||
+                  (BX_SELECTED_CONTROLLER(channel).current_command == 0x39)) {
+                if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
                   BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
                 } else {
-                  BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).sector_count * 512;
+                  BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
                 }
               }
               BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
@@ -1295,7 +1323,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                * clears BSY bit, and issues IRQ 
                */
 
-              if (BX_SELECTED_CONTROLLER(channel).sector_count!=0) {
+              if (BX_SELECTED_CONTROLLER(channel).num_sectors != 0) {
                 BX_SELECTED_CONTROLLER(channel).status.busy = 0;
                 BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
                 BX_SELECTED_CONTROLLER(channel).status.drq = 1;
@@ -2057,6 +2085,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           raise_interrupt(channel);
           break;
 
+        case 0x24: // READ SECTORS EXT
+        case 0x29: // READ MULTIPLE EXT
+          lba48 = 1;
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
         case 0xC4: // READ MULTIPLE SECTORS
@@ -2085,15 +2116,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             break;
           }
 
-          if (value == 0xC4) {
+          lba48_transform(channel, lba48);
+          if ((value == 0xC4) || (value == 0x29)) {
             if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
               command_aborted(channel, value);
               break;
             }
-            if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
+            if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
               BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
             } else {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).sector_count * 512;
+              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
             }
           } else {
             BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
@@ -2113,6 +2145,9 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
 
+        case 0x34: // WRITE SECTORS EXT
+        case 0x39: // WRITE MULTIPLE EXT
+          lba48 = 1;
         case 0x30: // WRITE SECTORS, with retries
         case 0xC5: // WRITE MULTIPLE SECTORS
           /* update sector_no, always points to current sector
@@ -2129,15 +2164,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
-          if (value == 0xC5) {
+          lba48_transform(channel, lba48);
+          if ((value == 0xC5) || (value ==0x39)) {
             if (BX_SELECTED_CONTROLLER(channel).multiple_sectors == 0) {
               command_aborted(channel, value);
               break;
             }
-            if (BX_SELECTED_CONTROLLER(channel).sector_count > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
+            if (BX_SELECTED_CONTROLLER(channel).num_sectors > BX_SELECTED_CONTROLLER(channel).multiple_sectors) {
               BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).multiple_sectors * 512;
             } else {
-              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).sector_count * 512;
+              BX_SELECTED_CONTROLLER(channel).buffer_size = BX_SELECTED_CONTROLLER(channel).num_sectors * 512;
             }
           } else {
             BX_SELECTED_CONTROLLER(channel).buffer_size = 512;
@@ -2279,6 +2315,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
 
+        case 0x42: // READ VERIFY SECTORS EXT
+          lba48 = 1;
         case 0x40: // READ VERIFY SECTORS
         case 0x41: // READ VERIFY SECTORS NO RETRY
           if (!BX_SELECTED_IS_HD(channel)) {
@@ -2287,6 +2325,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
             command_aborted(channel, value);
             break;
           }
+          lba48_transform(channel, lba48);
           BX_INFO(("ata%d-%d: verify command : 0x%02x !", channel,BX_SLAVE_SELECTED(channel), value));
           BX_SELECTED_CONTROLLER(channel).status.busy = 0;
           BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
@@ -2429,27 +2468,33 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   	  }
           break;
 
+        case 0x25: // READ DMA EXT
+          lba48 = 1;
         case 0xC8: // READ DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
+            lba48_transform(channel, lba48);
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
             BX_SELECTED_CONTROLLER(channel).current_command = value;
           } else {
-            BX_ERROR(("write cmd 0xC8 (READ DMA) not supported"));
-            command_aborted(channel, 0xC8);
+            BX_ERROR(("write cmd 0x%02x (READ DMA) not supported", value));
+            command_aborted(channel, value);
           }
           break;
 
+        case 0x35: // WRITE DMA EXT
+          lba48 = 1;
         case 0xCA: // WRITE DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
+            lba48_transform(channel, lba48);
             BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
             BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
             BX_SELECTED_CONTROLLER(channel).status.drq   = 1;
             BX_SELECTED_CONTROLLER(channel).current_command = value;
           } else {
-            BX_ERROR(("write cmd 0xCA (WRITE DMA) not supported"));
-            command_aborted(channel, 0xCA);
+            BX_ERROR(("write cmd 0x%02x (WRITE DMA) not supported", value));
+            command_aborted(channel, value);
           }
           break;
 
@@ -2459,27 +2504,20 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	// BX_ERROR, which is non-fatal, and the command will be aborted.
 	case 0x22: BX_ERROR(("write cmd 0x22 (READ LONG) not supported")); command_aborted(channel, 0x22); break;
 	case 0x23: BX_ERROR(("write cmd 0x23 (READ LONG NO RETRY) not supported")); command_aborted(channel, 0x23); break;
-	case 0x24: BX_ERROR(("write cmd 0x24 (READ SECTORS EXT) not supported"));command_aborted(channel, 0x24); break;
-	case 0x25: BX_ERROR(("write cmd 0x25 (READ DMA EXT) not supported"));command_aborted(channel, 0x25); break;
 	case 0x26: BX_ERROR(("write cmd 0x26 (READ DMA QUEUED EXT) not supported"));command_aborted(channel, 0x26); break;
 	case 0x27: BX_ERROR(("write cmd 0x27 (READ NATIVE MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x27); break;
-	case 0x29: BX_ERROR(("write cmd 0x29 (READ MULTIPLE EXT) not supported"));command_aborted(channel, 0x29); break;
 	case 0x2A: BX_ERROR(("write cmd 0x2A (READ STREAM DMA) not supported"));command_aborted(channel, 0x2A); break;
 	case 0x2B: BX_ERROR(("write cmd 0x2B (READ STREAM PIO) not supported"));command_aborted(channel, 0x2B); break;
 	case 0x2F: BX_ERROR(("write cmd 0x2F (READ LOG EXT) not supported"));command_aborted(channel, 0x2F); break;
 	case 0x31: BX_ERROR(("write cmd 0x31 (WRITE SECTORS NO RETRY) not supported")); command_aborted(channel, 0x31); break;
 	case 0x32: BX_ERROR(("write cmd 0x32 (WRITE LONG) not supported")); command_aborted(channel, 0x32); break;
 	case 0x33: BX_ERROR(("write cmd 0x33 (WRITE LONG NO RETRY) not supported")); command_aborted(channel, 0x33); break;
-	case 0x34: BX_ERROR(("write cmd 0x34 (WRITE SECTORS EXT) not supported"));command_aborted(channel, 0x34); break;
-	case 0x35: BX_ERROR(("write cmd 0x35 (WRITE DMA EXT) not supported"));command_aborted(channel, 0x35); break;
 	case 0x36: BX_ERROR(("write cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(channel, 0x36); break;
 	case 0x37: BX_ERROR(("write cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x37); break;
 	case 0x38: BX_ERROR(("write cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(channel, 0x38); break;
-	case 0x39: BX_ERROR(("write cmd 0x39 (WRITE MULTIPLE EXT) not supported"));command_aborted(channel, 0x39); break;
 	case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(channel, 0x3A); break;
 	case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(channel, 0x3B); break;
 	case 0x3F: BX_ERROR(("write cmd 0x3F (WRITE LOG EXT) not supported"));command_aborted(channel, 0x3F); break;
-	case 0x42: BX_ERROR(("write cmd 0x42 (READ VERIFY SECTORS EXT) not supported"));command_aborted(channel, 0x42); break;
 	case 0x50: BX_ERROR(("write cmd 0x50 (FORMAT TRACK) not supported")); command_aborted(channel, 0x50); break;
 	case 0x51: BX_ERROR(("write cmd 0x51 (CONFIGURE STREAM) not supported"));command_aborted(channel, 0x51); break;
 	case 0x87: BX_ERROR(("write cmd 0x87 (CFA TRANSLATE SECTOR) not supported"));command_aborted(channel, 0x87); break;
@@ -2594,9 +2632,17 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
   Bit64s logical_sector;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
-    logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
-      ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
-      (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
+    if (!BX_SELECTED_CONTROLLER(channel).lba48) {
+      logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).head_no) << 24 |
+        ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
+        (Bit32u)BX_SELECTED_CONTROLLER(channel).sector_no;
+    } else {
+      logical_sector = ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.hcyl) << 40 |
+        ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.lcyl) << 32 |
+        ((Bit64u)BX_SELECTED_CONTROLLER(channel).hob.sector) << 24 |
+        ((Bit64u)BX_SELECTED_CONTROLLER(channel).cylinder_no) << 8 |
+        (Bit64u)BX_SELECTED_CONTROLLER(channel).sector_no;
+    }
   } else {
     logical_sector = ((Bit32u)BX_SELECTED_CONTROLLER(channel).cylinder_no * BX_SELECTED_DRIVE(channel).hard_drive->heads *
       BX_SELECTED_DRIVE(channel).hard_drive->sectors) +
@@ -2620,14 +2666,23 @@ bx_hard_drive_c::calculate_logical_address(Bit8u channel, Bit64s *sector)
 bx_hard_drive_c::increment_address(Bit8u channel)
 {
   BX_SELECTED_CONTROLLER(channel).sector_count--;
+  BX_SELECTED_CONTROLLER(channel).num_sectors--;
 
   if (BX_SELECTED_CONTROLLER(channel).lba_mode) {
     Bit64s current_address;
     calculate_logical_address(channel, &current_address);
     current_address++;
-    BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
-    BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
-    BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+    if (!BX_SELECTED_CONTROLLER(channel).lba48) {
+      BX_SELECTED_CONTROLLER(channel).head_no = (Bit8u)((current_address >> 24) & 0xf);
+      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
+      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+    } else {
+      BX_SELECTED_CONTROLLER(channel).hob.hcyl = (Bit8u)((current_address >> 40) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).hob.lcyl = (Bit8u)((current_address >> 32) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).hob.sector = (Bit8u)((current_address >> 24) & 0xff);
+      BX_SELECTED_CONTROLLER(channel).cylinder_no = (Bit16u)((current_address >> 8) & 0xffff);
+      BX_SELECTED_CONTROLLER(channel).sector_no = (Bit8u)((current_address) & 0xff);
+    }
   } else {
     BX_SELECTED_CONTROLLER(channel).sector_no++;
     if (BX_SELECTED_CONTROLLER(channel).sector_no > BX_SELECTED_DRIVE(channel).hard_drive->sectors) {
@@ -2752,6 +2807,7 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   char serial_number[21];
   Bit32u temp32;
   Bit16u temp16;
+  Bit64u num_sects;
 
 #if defined(CONNER_CFA540A)
   BX_SELECTED_DRIVE(channel).id_drive[0] = 0x0c5a;
@@ -3024,9 +3080,12 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // addressable sectors.  This value does not depend on the current
   // drive geometry.  If the drive does not support LBA mode, these
   // words shall be set to 0.
-  Bit32u num_sects = BX_SELECTED_DRIVE(channel).hard_drive->cylinders * BX_SELECTED_DRIVE(channel).hard_drive->heads * BX_SELECTED_DRIVE(channel).hard_drive->sectors;
-  BX_SELECTED_DRIVE(channel).id_drive[60] = num_sects & 0xffff; // LSW
-  BX_SELECTED_DRIVE(channel).id_drive[61] = num_sects >> 16; // MSW
+  if (BX_SELECTED_DRIVE(channel).hard_drive->hd_size > 0)
+    num_sects = (BX_SELECTED_DRIVE(channel).hard_drive->hd_size >> 9);
+  else
+    num_sects = BX_SELECTED_DRIVE(channel).hard_drive->cylinders * BX_SELECTED_DRIVE(channel).hard_drive->heads * BX_SELECTED_DRIVE(channel).hard_drive->sectors;
+  BX_SELECTED_DRIVE(channel).id_drive[60] = (Bit16u)(num_sects & 0xffff); // LSW
+  BX_SELECTED_DRIVE(channel).id_drive[61] = (Bit16u)(num_sects >> 16); // MSW
 
   // Word 62: 15-8 single word DMA transfer mode active
   //           7-0 single word DMA transfer modes supported
@@ -3080,13 +3139,56 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   //           1 supports securite mode feature set
   //           0 support SMART feature set
   BX_SELECTED_DRIVE(channel).id_drive[82] = 1 << 14;
-  BX_SELECTED_DRIVE(channel).id_drive[83] = 1 << 14;
+
+  // Word 83: 15 shall be ZERO
+  //          14 shall be ONE
+  //          13 FLUSH CACHE EXT command supported
+  //          12 FLUSH CACHE command supported
+  //          11 Device configuration overlay supported
+  //          10 48-bit Address feature set supported
+  //           9 Automatic acoustic management supported
+  //           8 SET MAX security supported
+  //           7 reserved for 1407DT PARTIES
+  //           6 SetF sub-command Power-Up supported
+  //           5 Power-Up in standby feature set supported
+  //           4 Removable media notification supported
+  //           3 APM feature set supported
+  //           2 CFA feature set supported
+  //           1 READ/WRITE DMA QUEUED commands supported
+  //           0 Download MicroCode supported
+  BX_SELECTED_DRIVE(channel).id_drive[83] = (1 << 14) | (1 << 10);
   BX_SELECTED_DRIVE(channel).id_drive[84] = 1 << 14;
   BX_SELECTED_DRIVE(channel).id_drive[85] = 1 << 14;
-  BX_SELECTED_DRIVE(channel).id_drive[86] = 0;
+
+  // Word 86: 15 shall be ZERO
+  //          14 shall be ONE
+  //          13 FLUSH CACHE EXT command enabled
+  //          12 FLUSH CACHE command enabled
+  //          11 Device configuration overlay enabled
+  //          10 48-bit Address feature set enabled
+  //           9 Automatic acoustic management enabled
+  //           8 SET MAX security enabled
+  //           7 reserved for 1407DT PARTIES
+  //           6 SetF sub-command Power-Up enabled
+  //           5 Power-Up in standby feature set enabled
+  //           4 Removable media notification enabled
+  //           3 APM feature set enabled
+  //           2 CFA feature set enabled
+  //           1 READ/WRITE DMA QUEUED commands enabled
+  //           0 Download MicroCode enabled
+  BX_SELECTED_DRIVE(channel).id_drive[86] = (1 << 14) | (1 << 10);
   BX_SELECTED_DRIVE(channel).id_drive[87] = 1 << 14;
 
-  for (i=88; i<=127; i++)
+  for (i=88; i<=99; i++)
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+
+  // Word 100-103: 48-bit total number of sectors
+  BX_SELECTED_DRIVE(channel).id_drive[100] = (Bit16u)(num_sects & 0xffff);
+  BX_SELECTED_DRIVE(channel).id_drive[101] = (Bit16u)(num_sects >> 16);
+  BX_SELECTED_DRIVE(channel).id_drive[102] = (Bit16u)(num_sects >> 32);
+  BX_SELECTED_DRIVE(channel).id_drive[103] = (Bit16u)(num_sects >> 48);
+
+  for (i=104; i<=127; i++)
     BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   // Word 128-159 Vendor unique
@@ -3356,7 +3458,8 @@ bx_bool bx_hard_drive_c::bmdma_present(void)
 #if BX_SUPPORT_PCI
 bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u *sector_size)
 {
-  if (BX_SELECTED_CONTROLLER(channel).current_command == 0xC8) {
+  if ((BX_SELECTED_CONTROLLER(channel).current_command == 0xC8) ||
+      (BX_SELECTED_CONTROLLER(channel).current_command == 0x25)) {
     *sector_size = 512;
     if (!ide_read_sector(channel, buffer, 512)) {
       return 0;
@@ -3396,8 +3499,9 @@ bx_bool bx_hard_drive_c::bmdma_read_sector(Bit8u channel, Bit8u *buffer, Bit32u 
 
 bx_bool bx_hard_drive_c::bmdma_write_sector(Bit8u channel, Bit8u *buffer)
 {
-  if (BX_SELECTED_CONTROLLER(channel).current_command != 0xCA) {
-    BX_ERROR(("command 0xCA (WRITE DMA) not active"));
+  if ((BX_SELECTED_CONTROLLER(channel).current_command != 0xCA) &&
+      (BX_SELECTED_CONTROLLER(channel).current_command != 0x35)) {
+    BX_ERROR(("DMA write not active"));
     command_aborted (channel, BX_SELECTED_CONTROLLER(channel).current_command);
     return 0;
   }
@@ -3511,6 +3615,24 @@ bx_bool bx_hard_drive_c::ide_write_sector(Bit8u channel, Bit8u *buffer, Bit32u b
     bufptr += 512;
   } while (--sector_count > 0);
   return 1;
+}
+
+void bx_hard_drive_c::lba48_transform(Bit8u channel, bx_bool lba48)
+{
+  BX_SELECTED_CONTROLLER(channel).lba48 = lba48;
+
+  if (!BX_SELECTED_CONTROLLER(channel).lba48) {
+    if (!BX_SELECTED_CONTROLLER(channel).sector_count)
+      BX_SELECTED_CONTROLLER(channel).num_sectors = 256;
+    else
+      BX_SELECTED_CONTROLLER(channel).num_sectors = BX_SELECTED_CONTROLLER(channel).sector_count;
+  } else {
+    if (!BX_SELECTED_CONTROLLER(channel).sector_count && !BX_SELECTED_CONTROLLER(channel).hob.nsector)
+      BX_SELECTED_CONTROLLER(channel).num_sectors = 65536;
+    else
+      BX_SELECTED_CONTROLLER(channel).num_sectors = (BX_SELECTED_CONTROLLER(channel).hob.nsector << 8) |
+                                                    BX_SELECTED_CONTROLLER(channel).sector_count;
+  }
 }
 
 error_recovery_t::error_recovery_t()
