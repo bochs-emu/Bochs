@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.16 2006-03-07 21:11:16 sshwarts Exp $
+// $Id: eth.h,v 1.17 2006-12-27 15:21:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,6 +72,7 @@ public:
 				char *script);
 protected:
   eth_locator_c(const char *type);
+  virtual ~eth_locator_c() {}
   virtual eth_pktmover_c *allocate(const char *netif,
 				const char *macaddr,
 				eth_rx_handler_t rxh, 

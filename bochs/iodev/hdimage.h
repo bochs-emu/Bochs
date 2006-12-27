@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.7 2006-11-18 11:51:07 vruppert Exp $
+// $Id: hdimage.h,v 1.8 2006-12-27 15:21:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -131,6 +131,7 @@ class device_image_t
   public:
       // Default constructor
       device_image_t();
+      virtual ~device_image_t() {}
 
       // Open a image. Returns non-negative if successful.
       virtual int open(const char* pathname) = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.cc,v 1.19 2006-04-10 19:02:30 sshwarts Exp $
+// $Id: keymap.cc,v 1.20 2006-12-27 15:21:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002 MandrakeSoft S.A.
@@ -198,7 +198,7 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
 {
   FILE   *keymapFile;
   char baseSym[256], modSym[256], hostSym[256]; 
-  Bit32s ascii;
+  Bit32s ascii = 0;
   Bit32u baseKey, modKey, hostKey;
   struct stat status;
 
@@ -230,7 +230,7 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
       hostKey = stringToSymbol(hostSym);
 
     BX_DEBUG(("baseKey='%s' (%d), modSym='%s' (%d), ascii=%d, guisym='%s' (%d)", baseSym, baseKey, modSym, modKey, ascii, hostSym, hostKey));
-       
+
     // Check if data is valid
     if (baseKey==BX_KEYMAP_UNKNOWN) {
       BX_PANIC (("line %d: unknown BX_KEY constant '%s'",lineCount,baseSym));
@@ -243,7 +243,7 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
     }
 
     keymapTable=(BXKeyEntry*)realloc(keymapTable,(keymapCount+1) * sizeof(BXKeyEntry));
-      
+
     if (keymapTable==NULL) 
       BX_PANIC(("Can not allocate memory for keymap table."));
 
@@ -251,7 +251,7 @@ void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*), const char* fil
     keymapTable[keymapCount].modKey=modKey;
     keymapTable[keymapCount].ascii=ascii;
     keymapTable[keymapCount].hostKey=hostKey;
-    
+
     keymapCount++;
   }
 

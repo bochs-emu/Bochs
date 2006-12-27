@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.204 2006-12-17 08:17:28 vruppert Exp $
+// $Id: siminterface.h,v 1.205 2006-12-27 15:21:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1101,6 +1101,7 @@ enum disp_mode_t { DISP_MODE_CONFIG=100, DISP_MODE_SIM };
 class BOCHSAPI bx_simulator_interface_c {
 public:
   bx_simulator_interface_c() {}
+  virtual ~bx_simulator_interface_c() {}
   virtual void set_quit_context(jmp_buf *context) {}
   virtual int get_init_done() { return -1; }
   virtual int set_init_done(int n) {return -1;}

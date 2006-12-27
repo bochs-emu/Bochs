@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.49 2006-02-21 21:35:08 vruppert Exp $
+// $Id: rfb.cc,v 1.50 2006-12-27 15:21:03 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -100,13 +100,13 @@ static unsigned short rfbPort;
 
 // Headerbar stuff
 unsigned rfbBitmapCount = 0;
-struct {
+static struct {
     char     *bmap;
     unsigned xdim;
     unsigned ydim;
 } rfbBitmaps[BX_MAX_PIXMAPS];
 
-unsigned rfbHeaderbarBitmapCount = 0;
+static unsigned rfbHeaderbarBitmapCount = 0;
 struct {
     unsigned int index;
     unsigned int xorigin;
@@ -119,7 +119,7 @@ struct {
 #define KEYBOARD true
 #define MOUSE    false
 #define MAX_KEY_EVENTS 512
-struct {
+static struct {
     bool type;
     int  key;
     int  down;
@@ -130,7 +130,7 @@ static unsigned long rfbKeyboardEvents = 0;
 static bool          bKeyboardInUse = false;
 
 // Misc Stuff
-struct {
+static struct {
     unsigned int x;
     unsigned int y;
     unsigned int width;
