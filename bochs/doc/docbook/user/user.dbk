@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.220 2006-11-01 17:06:03 vruppert Exp $
+$Id: user.dbk,v 1.221 2006-12-28 08:43:42 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -8572,6 +8572,15 @@ If the files mentioned in <filename>config.sys</filename> and
 pathname, like <filename>c:\windows\himem.sys</filename>.
 </para>
 
+<section><title>Bootdisks of early DOS versions</title>
+<para>
+On the Web there are bootdisks available for most of the DOS versions ever released,
+but some of them have been reported to fail in Bochs. The bootdisk for MS-DOS 1.25
+contains a boot sector of a newer DOS version, so it would fail on real hardware,
+too. The floppy image for MS-DOS 2.11 has a boot sector that tries to boot from
+hard disk instead of the floppy.
+</para>
+</section>
 </section>
 </section>
 
