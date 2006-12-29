@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.112 2006-11-12 21:25:06 vruppert Exp $
+// $Id: config.cc,v 1.113 2006-12-29 18:47:58 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2261,6 +2261,8 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
       SIM->get_param_num("heads", base)->set(heads);
       SIM->get_param_num("spt", base)->set(sectors);
       SIM->get_param_num("biosdetect", base)->set(biosdetect);
+    } else {
+      SIM->get_param_bool("present", base)->set(0);
     }
 
     // if enabled, check if device ok
