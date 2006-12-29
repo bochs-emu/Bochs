@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.58 2006-09-02 12:08:28 vruppert Exp $
+// $Id: memory.cc,v 1.59 2006-12-29 08:02:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -196,7 +196,7 @@ inc_one:
   }
   else {
     // access outside limits of physical memory, ignore
-    BX_DEBUG(("Write outside the limits of physical memory (ignore)"));
+    BX_DEBUG(("Write outside the limits of physical memory (0x%08x) (ignore)", a20addr));
   }
 }
 
