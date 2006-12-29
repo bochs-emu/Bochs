@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.48 2006-12-26 17:08:12 vruppert Exp $
+// $Id: harddrv.h,v 1.49 2006-12-29 11:57:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,6 +89,7 @@ typedef struct {
   Bit8u    lba_mode;
   bx_bool  packet_dma;
   Bit8u    mdma_mode;
+  Bit8u    udma_mode;
   struct {
     bx_bool reset;       // 0=normal, 1=reset controller
     bx_bool disable_irq; // 0=allow irq, 1=disable irq

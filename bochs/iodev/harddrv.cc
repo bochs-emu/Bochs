@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.193 2006-12-26 17:08:11 vruppert Exp $
+// $Id: harddrv.cc,v 1.194 2006-12-29 11:57:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.193 2006-12-26 17:08:11 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.194 2006-12-29 11:57:04 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -259,6 +259,7 @@ void bx_hard_drive_c::init(void)
 
       BX_CONTROLLER(channel,device).features            = 0;
       BX_CONTROLLER(channel,device).mdma_mode           = 0;
+      BX_CONTROLLER(channel,device).udma_mode           = 0;
 
       // If not present
       BX_HD_THIS channels[channel].drives[device].device_type           = IDE_NONE;
@@ -665,7 +666,7 @@ void bx_hard_drive_c::register_state(void)
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
-        drive = new bx_list_c(chan, dname, 26);
+        drive = new bx_list_c(chan, dname, 27);
         new bx_shadow_data_c(drive, "buffer", BX_CONTROLLER(i, j).buffer, MAX_MULTIPLE_SECTORS * 512);
         status = new bx_list_c(drive, "status", 9);
         new bx_shadow_bool_c(status, "busy", &BX_CONTROLLER(i, j).status.busy);
@@ -694,6 +695,7 @@ void bx_hard_drive_c::register_state(void)
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
         new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
         new bx_shadow_num_c(drive, "mdma_mode", &BX_CONTROLLER(i, j).mdma_mode, BASE_HEX);
+        new bx_shadow_num_c(drive, "udma_mode", &BX_CONTROLLER(i, j).udma_mode, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_feature", &BX_CONTROLLER(i, j).hob.feature, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_nsector", &BX_CONTROLLER(i, j).hob.nsector, BASE_HEX);
         new bx_shadow_num_c(drive, "hob_sector", &BX_CONTROLLER(i, j).hob.sector, BASE_HEX);
@@ -2284,13 +2286,15 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           switch(BX_SELECTED_CONTROLLER(channel).features) {
             case 0x03: // Set Transfer Mode
               {
+                Bit8u type = (BX_SELECTED_CONTROLLER(channel).sector_count >> 3);
                 Bit8u mode = BX_SELECTED_CONTROLLER(channel).sector_count & 0x07;
-                switch (BX_SELECTED_CONTROLLER(channel).sector_count >> 3) {
+                switch (type) {
                   case 0x00: // PIO default
                   case 0x01: // PIO mode
                     BX_INFO(("ata%d-%d: set transfer mode to PIO", channel,
                              BX_SLAVE_SELECTED(channel)));
                     BX_SELECTED_CONTROLLER(channel).mdma_mode = 0x00;
+                    BX_SELECTED_CONTROLLER(channel).udma_mode = 0x00;
                     BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
                     BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
                     raise_interrupt(channel);
@@ -2299,11 +2303,21 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     BX_INFO(("ata%d-%d: set transfer mode to MDMA%d", channel,
                              BX_SLAVE_SELECTED(channel), mode));
                     BX_SELECTED_CONTROLLER(channel).mdma_mode = (1 << mode);
+                    BX_SELECTED_CONTROLLER(channel).udma_mode = 0x00;
+                    BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
+                    BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
+                    raise_interrupt(channel);
+                    break;
+                  case 0x08: // UDMA mode
+                    BX_SELECTED_CONTROLLER(channel).mdma_mode = 0x00;
+                    BX_SELECTED_CONTROLLER(channel).udma_mode = (1 << mode);
                     BX_SELECTED_CONTROLLER(channel).status.drive_ready = 1;
                     BX_SELECTED_CONTROLLER(channel).status.seek_complete = 1;
                     raise_interrupt(channel);
                     break;
                   default:
+                    BX_ERROR(("ata%d-%d: unknown transfer mode type 0x%02x", channel,
+                             BX_SLAVE_SELECTED(channel), type));
                     command_aborted(channel, value);
                 }
                 BX_SELECTED_DRIVE(channel).identify_set = 0;
@@ -2731,6 +2745,8 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   unsigned i;
   char serial_number[21];
 
+  memset(&BX_SELECTED_DRIVE(channel).id_drive, 0, 512);
+
   BX_SELECTED_DRIVE(channel).id_drive[0] = (2 << 14) | (5 << 8) | (1 << 7) | (2 << 5) | (0 << 0); // Removable CDROM, 50us response, 12 byte packets
 
   for (i = 1; i <= 9; i++)
@@ -2807,18 +2823,6 @@ void bx_hard_drive_c::identify_ATAPI_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[87] = 0;
   BX_SELECTED_DRIVE(channel).id_drive[88] = 0;
 
-  for (i = 89; i <= 126; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
-
-  BX_SELECTED_DRIVE(channel).id_drive[127] = 0;
-  BX_SELECTED_DRIVE(channel).id_drive[128] = 0;
-
-  for (i = 129; i <= 159; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
-
-  for (i = 160; i <= 255; i++)
-	BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
-
   BX_SELECTED_DRIVE(channel).identify_set = 1;
 }
 
@@ -2828,6 +2832,8 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   char serial_number[21];
   Bit32u temp32;
   Bit64u num_sects;
+
+  memset(&BX_SELECTED_DRIVE(channel).id_drive, 0, 512);
 
   // Identify Drive command return values definition
   //
@@ -2867,7 +2873,6 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   }
 
   // Word 2: reserved
-  BX_SELECTED_DRIVE(channel).id_drive[2] = 0;
 
   // Word 3: number of user-addressable heads in default
   //   translation mode
@@ -2882,8 +2887,6 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[6] = BX_SELECTED_DRIVE(channel).hard_drive->sectors;
 
   // Word 7-9: Vendor specific
-  for (i=7; i<=9; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   // Word 10-19: Serial number (20 ASCII characters, 0000h=not specified)
   // This field is right justified and padded with spaces (20h).
@@ -2922,12 +2925,10 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
 
   // Word 27..46: Model number (40 ascii chars, 0000h=not specified)
   // This field is left justified and padded with spaces (20h)
-//  for (i=27; i<=46; i++)
-//    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
   for (i=0; i<20; i++) {
     BX_SELECTED_DRIVE(channel).id_drive[27+i] = (BX_SELECTED_MODEL(channel)[i*2] << 8) |
                                   BX_SELECTED_MODEL(channel)[i*2 + 1];
-    }
+  }
 
   // Word 47: 15-8 Vendor unique
   //           7-0 00h= read/write multiple commands not implemented
@@ -2951,7 +2952,6 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   }
 
   // Word 50: Reserved
-  BX_SELECTED_DRIVE(channel).id_drive[50] = 0;
 
   // Word 51: 15-8 PIO data transfer cycle timing mode
   //           7-0 Vendor unique
@@ -2962,9 +2962,10 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[52] = 0x200;
 
   // Word 53: 15-1 Reserved
+  //             2 1=the fields reported in word 88 are valid
+  //             1 1=the fields reported in words 64-70 are valid
   //             0 1=the fields reported in words 54-58 are valid
-  //               0=the fields reported in words 54-58 may be valid
-  BX_SELECTED_DRIVE(channel).id_drive[53] = 0;
+  BX_SELECTED_DRIVE(channel).id_drive[53] = 0x07;
 
   // Word 54: # of user-addressable cylinders in curr xlate mode
   // Word 55: # of user-addressable heads in curr xlate mode
@@ -3023,20 +3024,27 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
     BX_SELECTED_DRIVE(channel).id_drive[63] = 0x0;
   }
 
-  // Word 64-79 Reserved
-  for (i=64; i<=79; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+  // Word 64 PIO modes supported
+  BX_SELECTED_DRIVE(channel).id_drive[64] = 0x00;
+
+  // Word 65-68 PIO/DMA cycle time (nanoseconds)
+  for (i=65; i<=68; i++)
+    BX_SELECTED_DRIVE(channel).id_drive[i] = 120;
+
+  // Word 69-79 Reserved
 
   // Word 80: 15-5 reserved
+  //             6 supports ATA/ATAPI-6
+  //             5 supports ATA/ATAPI-5
   //             4 supports ATA/ATAPI-4
   //             3 supports ATA-3
   //             2 supports ATA-2
   //             1 supports ATA-1
   //             0 reserved
-  BX_SELECTED_DRIVE(channel).id_drive[80] = (1 << 3) | (1 << 2) | (1 << 1);
+  BX_SELECTED_DRIVE(channel).id_drive[80] = 0x7e;
 
   // Word 81: Minor version number
-  BX_SELECTED_DRIVE(channel).id_drive[81] = 0;
+  BX_SELECTED_DRIVE(channel).id_drive[81] = 0x00;
 
   // Word 82: 15 obsolete
   //          14 NOP command supported
@@ -3095,8 +3103,12 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[86] = (1 << 14) | (1 << 13) | (1 << 12) | (1 << 10);
   BX_SELECTED_DRIVE(channel).id_drive[87] = 1 << 14;
 
-  for (i=88; i<=99; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
+  if (BX_HD_THIS bmdma_present()) {
+    BX_SELECTED_DRIVE(channel).id_drive[88] = 0x3f | (BX_SELECTED_CONTROLLER(channel).udma_mode << 8);
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[88] = 0x0;
+  }
+  BX_SELECTED_DRIVE(channel).id_drive[93] = 1 | (1 << 14) | 0x2000;
 
   // Word 100-103: 48-bit total number of sectors
   BX_SELECTED_DRIVE(channel).id_drive[100] = (Bit16u)(num_sects & 0xffff);
@@ -3104,16 +3116,8 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   BX_SELECTED_DRIVE(channel).id_drive[102] = (Bit16u)(num_sects >> 32);
   BX_SELECTED_DRIVE(channel).id_drive[103] = (Bit16u)(num_sects >> 48);
 
-  for (i=104; i<=127; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
-
   // Word 128-159 Vendor unique
-  for (i=128; i<=159; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
-
   // Word 160-255 Reserved
-  for (i=160; i<=255; i++)
-    BX_SELECTED_DRIVE(channel).id_drive[i] = 0;
 
   BX_SELECTED_DRIVE(channel).identify_set = 1;
 }
