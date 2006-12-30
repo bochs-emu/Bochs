@@ -1,3 +1,37 @@
+Changes after 2.3 release:
+
+- General
+  - 2nd simulation support in wxBochs now almost usable (simulation cleanup
+    code added and memory leaks fixed)
+
+- Configure and compile
+  - several fixes for MacOSX, OpenBSD and Solaris 10
+
+- I/O devices (Volker)
+  - initial support for the PIIX4 ACPI controller
+  - hard disk emulation now supports ATA-6 (LBA48 addressing, UDMA modes)
+  - VMWare version 4 disk image support added (patch by Sharvil Nanavati)
+  - experimental USB device change support added
+
+- Bochs internal debugger
+  - fixed broken debugger "rc file" option (execute debugger command from file)
+  - implementation of a gui frontend ("windebug") for win32 started
+  - gdbstub now accepts connection from any host
+  - several documentation updates
+
+- Configuration interface
+  - fixes and improvements to the save state dialog handling
+
+- Display libraries
+  - text mode color handling improved in some guis
+  - win32 fullscreen mode (patch by John Comeau)
+
+- System BIOS (Volker)
+  - 32-bit PM BIOS init code for ACPI, PCI, SMP and SMM (initial patches by
+    Fabrice Bellard)
+  - PCI BIOS function "find class code" implemented
+
+-------------------------------------------------------------------------
 Changes in 2.3 (August 27, 2006):
 
 Brief summary :
