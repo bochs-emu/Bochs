@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.113 2006-12-29 18:47:58 vruppert Exp $
+// $Id: config.cc,v 1.114 2006-12-31 11:56:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -810,6 +810,7 @@ void bx_init_options()
 #endif
     "serial",
     "serial_wheel",
+    "serial_msys",
     NULL
   };
   type = new bx_param_enum_c(mouse,

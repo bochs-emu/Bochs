@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.205 2006-12-27 15:21:03 vruppert Exp $
+// $Id: siminterface.h,v 1.206 2006-12-31 11:56:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -1002,7 +1002,8 @@ enum {
   BX_MOUSE_TYPE_USB,
 #endif
   BX_MOUSE_TYPE_SERIAL,
-  BX_MOUSE_TYPE_SERIAL_WHEEL
+  BX_MOUSE_TYPE_SERIAL_WHEEL,
+  BX_MOUSE_TYPE_SERIAL_MSYS
 };
 
 #define BX_FLOPPY_NONE   10 // floppy not present

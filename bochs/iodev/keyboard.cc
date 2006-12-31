@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.126 2006-09-23 12:59:56 vruppert Exp $
+// $Id: keyboard.cc,v 1.127 2006-12-31 11:56:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.126 2006-09-23 12:59:56 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.127 2006-12-31 11:56:14 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1641,7 +1641,8 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
 
   // if type == serial, redirect mouse data to the serial device
   if ((BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL) ||
-      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_WHEEL)) {
+      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_WHEEL) ||
+      (BX_KEY_THIS s.mouse.type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
     DEV_serial_mouse_enq(delta_x, delta_y, delta_z, button_state);
     return;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.h,v 1.30 2006-10-12 17:57:35 vruppert Exp $
+// $Id: serial.h,v 1.31 2006-12-31 11:56:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -216,6 +216,7 @@ private:
 
   int   detect_mouse;
   int   mouse_port;
+  int   mouse_type;
   int   mouse_delayed_dx;
   int   mouse_delayed_dy;
   int   mouse_delayed_dz;

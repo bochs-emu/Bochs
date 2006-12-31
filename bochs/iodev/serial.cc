@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.75 2006-10-08 10:59:21 vruppert Exp $
+// $Id: serial.cc,v 1.76 2006-12-31 11:56:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -124,6 +124,7 @@ bx_serial_c::init(void)
 
   BX_SER_THIS detect_mouse = 0;
   BX_SER_THIS mouse_port = -1;
+  BX_SER_THIS mouse_type = BX_MOUSE_TYPE_NONE;
   BX_SER_THIS mouse_internal_buffer.num_elements = 0;
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++)
     BX_SER_THIS mouse_internal_buffer.buffer[i] = 0;
@@ -294,6 +295,7 @@ bx_serial_c::init(void)
       } else if (!strcmp(mode, "mouse")) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_MOUSE;
         BX_SER_THIS mouse_port = i;
+        BX_SER_THIS mouse_type = SIM->get_param_enum(BXPN_MOUSE_TYPE)->get();
       } else if (!strcmp(mode, "socket")) {
         BX_SER_THIS s[i].io_mode = BX_SER_MODE_SOCKET;
         struct sockaddr_in  sin;
@@ -986,7 +988,8 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case BX_SER_MCR: /* MODEM control register */
       if ((BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) &&
-          (BX_SER_THIS s[port].line_cntl.wordlen_sel == 2)) {
+          ((BX_SER_THIS s[port].line_cntl.wordlen_sel == 2) ||
+           (BX_SER_THIS s[port].line_cntl.wordlen_sel == 3))) {
         if (new_b0 && !new_b1) BX_SER_THIS detect_mouse = 1;
         if (new_b0 && new_b1 && (BX_SER_THIS detect_mouse == 1)) BX_SER_THIS detect_mouse = 2;
       }
@@ -1065,12 +1068,12 @@ bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else {
         if (BX_SER_THIS s[port].io_mode == BX_SER_MODE_MOUSE) {
           if (BX_SER_THIS detect_mouse == 2) {
-            if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_SERIAL) {
+            if ((BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL) ||
+                (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_MSYS)) {
               BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 1;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
-            }
-            if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_SERIAL_WHEEL) {
+            } else if (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_WHEEL) {
               BX_SER_THIS mouse_internal_buffer.head = 0;
               BX_SER_THIS mouse_internal_buffer.num_elements = 6;
               BX_SER_THIS mouse_internal_buffer.buffer[0] = 'M';
@@ -1447,7 +1450,7 @@ bx_serial_c::fifo_timer(void)
 bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
   Bit8u b1, b2, b3, mouse_data[4];
-  int tail;
+  int bytes, tail;
 
   if (BX_SER_THIS mouse_port == -1) {
     BX_ERROR(("mouse not connected to a serial port"));
@@ -1498,20 +1501,32 @@ bx_serial_c::serial_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned bu
     BX_SER_THIS mouse_delayed_dy = 0;
   }
 
-  b1 = (Bit8u) delta_x;
-  b2 = (Bit8u) delta_y;
-  b3 = (Bit8u) -((Bit8s) delta_z);
 
-  mouse_data[0] = 0x40 | ((b1 & 0xc0) >> 6) | ((b2 & 0xc0) >> 4);
-  mouse_data[0] |= ((button_state & 0x01) << 5) | ((button_state & 0x02) << 3);
-  mouse_data[1] = b1 & 0x3f;
-  mouse_data[2] = b2 & 0x3f;
-  mouse_data[3] = b3 & 0x0f;
-  mouse_data[3] |= ((button_state & 0x04) << 2);
+  if (BX_SER_THIS mouse_type != BX_MOUSE_TYPE_SERIAL_MSYS) {
+    b1 = (Bit8u) delta_x;
+    b2 = (Bit8u) delta_y;
+    b3 = (Bit8u) -((Bit8s) delta_z);
+    mouse_data[0] = 0x40 | ((b1 & 0xc0) >> 6) | ((b2 & 0xc0) >> 4);
+    mouse_data[0] |= ((button_state & 0x01) << 5) | ((button_state & 0x02) << 3);
+    mouse_data[1] = b1 & 0x3f;
+    mouse_data[2] = b2 & 0x3f;
+    mouse_data[3] = b3 & 0x0f;
+    mouse_data[3] |= ((button_state & 0x04) << 2);
+    bytes = 3;
+    if (BX_SER_THIS mouse_type == BX_MOUSE_TYPE_SERIAL_WHEEL) bytes = 4;
+  } else {
+    b1 = (Bit8u) (delta_x / 2);
+    b2 = (Bit8u) -((Bit8s) (delta_y / 2));
+    mouse_data[0] = 0x80 | ((~button_state & 0x01) << 2);
+    mouse_data[0] |= ((~button_state & 0x06) >> 1);
+    mouse_data[1] = b1;
+    mouse_data[2] = b2;
+    mouse_data[3] = 0;
+    mouse_data[4] = 0;
+    bytes = 5;
+  }
 
   /* enqueue mouse data in multibyte internal mouse buffer */
-  int bytes = 3;
-  if (SIM->get_param_enum(BXPN_MOUSE_TYPE)->get() == BX_MOUSE_TYPE_SERIAL_WHEEL) bytes = 4;
   for (int i = 0; i < bytes; i++) {
     tail = (BX_SER_THIS mouse_internal_buffer.head + BX_SER_THIS mouse_internal_buffer.num_elements) %
       BX_MOUSE_BUFF_SIZE;
