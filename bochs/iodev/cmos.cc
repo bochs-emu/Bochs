@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.cc,v 1.59 2006-12-06 14:27:02 akrisak Exp $
+// $Id: cmos.cc,v 1.60 2007-01-02 16:37:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -140,7 +140,7 @@ bx_cmos_c::~bx_cmos_c(void)
 
 void bx_cmos_c::init(void)
 {
-  BX_DEBUG(("Init $Id: cmos.cc,v 1.59 2006-12-06 14:27:02 akrisak Exp $"));
+  BX_DEBUG(("Init $Id: cmos.cc,v 1.60 2007-01-02 16:37:11 vruppert Exp $"));
   // CMOS RAM & RTC
 
   DEV_register_ioread_handler(this, read_handler, 0x0070, "CMOS RAM", 1);
@@ -370,7 +370,7 @@ Bit32u bx_cmos_c::read(Bit32u address, unsigned io_len)
   switch (address) {
     case 0x0070:
       // this register is write-only on most machines
-      BX_INFO(("read of index port 0x70. returning 0xff"));
+      BX_DEBUG(("read of index port 0x70. returning 0xff"));
       return(0xff);
     case 0x0071:
       ret8 = BX_CMOS_THIS s.reg[BX_CMOS_THIS s.cmos_mem_address];
