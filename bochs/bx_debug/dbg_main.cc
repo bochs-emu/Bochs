@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.87 2006-11-12 10:07:17 vruppert Exp $
+// $Id: dbg_main.cc,v 1.88 2007-01-04 20:12:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -527,10 +527,9 @@ int timebp_queue_size = 0;
 
 void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
 {
-  Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
   Bit64u abs_time = (absolute) ? time : time + bx_pc_system.time_ticks();
 
-  if (time < bx_pc_system.time_ticks()) {
+  if (abs_time < bx_pc_system.time_ticks()) {
     dbg_printf("Request for time break point in the past. I can't let you do that.\n");
     return;
   }
@@ -539,12 +538,14 @@ void bx_dbg_timebp_command(bx_bool absolute, Bit64u time)
     dbg_printf("Too many time break points\n");
     return;
   }
-  
+
+  Bit64u diff = (absolute) ? time - bx_pc_system.time_ticks() : time;
+
   if (timebp_timer >= 0) {
     if (timebp_queue_size == 0 || abs_time < timebp_queue[0]) {
       /* first in queue */
       for (int i = timebp_queue_size; i >= 0; i--)
-      timebp_queue[i+1] = timebp_queue[i];
+        timebp_queue[i+1] = timebp_queue[i];
       timebp_queue[0] = abs_time;
       timebp_queue_size++;
       bx_pc_system.activate_timer_ticks(timebp_timer, diff, 1);
