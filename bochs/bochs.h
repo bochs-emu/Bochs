@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.204 2006-10-31 19:26:34 vruppert Exp $
+// $Id: bochs.h,v 1.205 2007-01-05 13:40:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -206,6 +206,12 @@ void print_tree(bx_param_c *node, int level = 0);
 #  define A20ADDR(x)                ((x) & bx_pc_system.a20_mask)
 #else
 #  define A20ADDR(x)                (x)
+#endif
+
+#if BX_SUPPORT_SMP
+#  define BX_TICK1_IF_SINGLE_PROCESSOR()
+#else
+#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
 #endif
 
 // you can't use static member functions on the CPU, if there are going

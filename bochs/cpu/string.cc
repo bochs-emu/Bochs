@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.35 2006-05-24 20:57:37 sshwarts Exp $
+// $Id: string.cc,v 1.36 2007-01-05 13:40:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,6 +38,9 @@
 #define RAX EAX
 #endif
 
+//
+// Repeat Speedups methods
+//
 
 #if BX_SupportRepeatSpeedups
 Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, unsigned dstSeg, bx_address dstOff, Bit32u count)
@@ -739,6 +742,35 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 }
 #endif
 
+//
+// REP MOVS methods
+//
+
+void BX_CPU_C::REP_MOVSB_XbYb(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSB_XbYb);
+}
+
+void BX_CPU_C::REP_MOVSW_XwYw(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSW_XwYw);
+}
+
+void BX_CPU_C::REP_MOVSD_XdYd(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSD_XdYd);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::MOVSQ_XqYq);
+}
+#endif
+
+//
+// MOVSB/MOVSW/MOVSD/MOVSQ methods
+//
 
 /* MOVSB ES:[EDI], DS:[ESI]   DS may be overridden
  *   mov string from DS:[ESI] into ES:[EDI]
@@ -1121,6 +1153,36 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
 
 #endif
 
+//
+// REP CMPS methods
+//
+
+void BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB_XbYb);
+}
+
+void BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW_XwYw);
+}
+
+void BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD_XdYd);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ_XqYq);
+}
+#endif
+
+//
+// CMPSB/CMPSW/CMPSD/CMPSQ methods
+//
+
 void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
@@ -1423,6 +1485,36 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
 #endif
 
+//
+// REP SCAS methods
+//
+
+void BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB_ALXb);
+}
+
+void BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW_AXXw);
+}
+
+void BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD_EAXXd);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ_RAXXq);
+}
+#endif
+
+//
+// SCASB/SCASW/SCASD/SCASQ methods
+//
+
 void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
@@ -1660,6 +1752,36 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
 }
 
 #endif
+
+//
+// REP STOS methods
+//
+
+void BX_CPU_C::REP_STOSB_YbAL(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSB_YbAL);
+}
+
+void BX_CPU_C::REP_STOSW_YwAX(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSW_YwAX);
+}
+
+void BX_CPU_C::REP_STOSD_YdEAX(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSD_YdEAX);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::STOSQ_YqRAX);
+}
+#endif
+
+//
+// STOSB/STOSW/STOSD/STOSQ methods
+//
 
 void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
 {
@@ -1905,6 +2027,36 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
 }
 
 #endif
+
+//
+// REP LODS methods
+//
+
+void BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB_ALXb);
+}
+
+void BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW_AXXw);
+}
+
+void BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD_EAXXd);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ_RAXXq);
+}
+#endif
+
+//
+// LODSB/LODSW/LODSD/LODSQ methods
+//
 
 void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
 {

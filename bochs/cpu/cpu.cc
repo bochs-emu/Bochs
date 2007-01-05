@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.168 2006-09-26 19:16:10 sshwarts Exp $
+// $Id: cpu.cc,v 1.169 2007-01-05 13:40:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,12 +111,6 @@ static unsigned iCacheMisses=0;
     count--;                          \
     if (count == 0) return;           \
   }
-
-#if BX_SUPPORT_SMP
-#  define BX_TICK1_IF_SINGLE_PROCESSOR()
-#else
-#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
-#endif
 
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
@@ -290,93 +284,9 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // decoding instruction compeleted -> continue with execution
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
-
-    if ( !(i->repUsedL() && i->repeatableL()) ) {
-      // non repeating instruction
-      BX_CPU_CALL_METHOD(execute, (i));
-    }
-    else {
-
-repeat_loop:
-
-      if (i->repeatableZFL()) {
-#if BX_SUPPORT_X86_64
-        if (i->as64L()) {
-          if (RCX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            RCX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto debugger_check;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto debugger_check;
-          if (RCX == 0) goto debugger_check;
-        }
-        else
-#endif
-        if (i->as32L()) {
-          if (ECX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            ECX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto debugger_check;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto debugger_check;
-          if (ECX == 0) goto debugger_check;
-        }
-        else {
-          if (CX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            CX --;
-          }
-          if ((i->repUsedValue()==3) && (get_ZF()==0)) goto debugger_check;
-          if ((i->repUsedValue()==2) && (get_ZF()!=0)) goto debugger_check;
-          if (CX == 0) goto debugger_check;
-        }
-      }
-      else { // normal repeat, no concern for ZF
-#if BX_SUPPORT_X86_64
-        if (i->as64L()) {
-          if (RCX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            RCX --;
-          }
-          if (RCX == 0) goto debugger_check;
-        }
-        else
-#endif
-        if (i->as32L()) {
-          if (ECX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            ECX --;
-          }
-          if (ECX == 0) goto debugger_check;
-        }
-        else { // 16bit addrsize
-          if (CX != 0) {
-            BX_CPU_CALL_METHOD(execute, (i));
-            BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-            CX --;
-          }
-          if (CX == 0) goto debugger_check;
-        }
-      }
-
-      BX_TICK1_IF_SINGLE_PROCESSOR();
-#if BX_DEBUGGER == 0
-      // when debugger is not enabled, directly jump to next iteration
-      if (! BX_CPU_THIS_PTR async_event) goto repeat_loop;
-#endif
-//    invalidate_prefetch_q(); // why do we need invalidate_prefetch_q ?
-      RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
-      goto debugger_check;
-    }
-
-debugger_check:
-    BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-    BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+    BX_CPU_CALL_METHOD(execute, (i)); // might iterate repeat instruction
+    BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
+    BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
     BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
@@ -404,6 +314,110 @@ debugger_check:
 #endif
 
   }  // while (1)
+}
+
+void BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_t execute)
+{
+  // non repeated instruction
+  if (! i->repUsedL()) {
+    BX_CPU_CALL_METHOD(execute, (i));
+    return;
+  }
+
+  while(1) {
+
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      if (RCX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        RCX --;
+      }
+      if (RCX == 0) return;
+    }
+    else
+#endif
+    if (i->as32L()) {
+      if (ECX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        ECX --;
+      }
+      if (ECX == 0) return;
+    }
+    else { // 16bit addrsize
+      if (CX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        CX --;
+      }
+      if (CX == 0) return;
+    }
+
+    BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+    if (BX_CPU_THIS_PTR async_event)
+#endif
+      break; // exit always if debugger enabled
+  }
+
+  RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
+}
+
+void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
+{
+  // non repeated instruction
+  if (! i->repUsedL()) {
+    BX_CPU_CALL_METHOD(execute, (i));
+    return;
+  }
+
+  while(1) {
+
+#if BX_SUPPORT_X86_64
+    if (i->as64L()) {
+      if (RCX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        RCX --;
+      }
+      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
+      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (RCX == 0) return;
+    }
+    else
+#endif
+    if (i->as32L()) {
+      if (ECX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        ECX --;
+      }
+      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
+      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (ECX == 0) return;
+    }
+    else {
+      if (CX != 0) {
+        BX_CPU_CALL_METHOD(execute, (i));
+        BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
+        CX --;
+      }
+      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
+      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (CX == 0) return;
+    }
+
+    BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+    if (BX_CPU_THIS_PTR async_event)
+#endif
+      break; // exit always if debugger enabled
+  }
+
+  RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
 }
 
 unsigned BX_CPU_C::handleAsyncEvent(void)

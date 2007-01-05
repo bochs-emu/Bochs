@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.306 2006-10-29 08:48:30 vruppert Exp $
+// $Id: cpu.h,v 1.307 2007-01-05 13:40:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -649,8 +649,8 @@ public:
   // 26..23  ilen (0..15).  Leave this one on top so no mask is needed.
   // 22..22  mod==c0 (modrm)
   // 21..13  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511.
-  // 12..12  BxRepeatableZF (pass-thru from fetchdecode attributes)
-  // 11..11  BxRepeatable   (pass-thru from fetchdecode attributes)
+  // 12..12  (unused)
+  // 11..11  (unused)
   // 10...9  repUsed (0=none, 2=0xF2, 3=0xF3).
   //  8...8  extend8bit
   //  7...7  as64
@@ -845,20 +845,6 @@ public:
   }
   BX_CPP_INLINE void setRepUsed(unsigned value) {
     metaInfo = (metaInfo & ~(3<<9)) | (value<<9);
-  }
-  BX_CPP_INLINE void setRepAttr(unsigned value) {
-    // value is expected to be masked, and only contain bits
-    // for BxRepeatable and BxRepeatableZF.  We don't need to
-    // keep masking out these bits before we add in new ones,
-    // since the fetch process won't start with repeatable attributes
-    // and then delete them.
-    metaInfo |= value;
-  }
-  BX_CPP_INLINE unsigned repeatableL(void) {
-    return metaInfo & (1<<11);
-  }
-  BX_CPP_INLINE unsigned repeatableZFL(void) {
-    return metaInfo & (1<<12);
   }
 
   BX_CPP_INLINE unsigned b1(void) {
@@ -1408,12 +1394,20 @@ public: // for now...
   BX_SMF void ARPL_EwGw(bxInstruction_c *);
   BX_SMF void PUSH_Id(bxInstruction_c *);
   BX_SMF void PUSH_Iw(bxInstruction_c *);
+
   BX_SMF void INSB_YbDX(bxInstruction_c *);
   BX_SMF void INSW_YwDX(bxInstruction_c *);
   BX_SMF void INSD_YdDX(bxInstruction_c *);
   BX_SMF void OUTSB_DXXb(bxInstruction_c *);
   BX_SMF void OUTSW_DXXw(bxInstruction_c *);
   BX_SMF void OUTSD_DXXd(bxInstruction_c *);
+
+  BX_SMF void REP_INSB_YbDX(bxInstruction_c *);
+  BX_SMF void REP_INSW_YwDX(bxInstruction_c *);
+  BX_SMF void REP_INSD_YdDX(bxInstruction_c *);
+  BX_SMF void REP_OUTSB_DXXb(bxInstruction_c *);
+  BX_SMF void REP_OUTSW_DXXw(bxInstruction_c *);
+  BX_SMF void REP_OUTSD_DXXd(bxInstruction_c *);
 
   BX_SMF void BOUND_GwMa(bxInstruction_c *);
   BX_SMF void BOUND_GdMa(bxInstruction_c *);
@@ -1480,6 +1474,22 @@ public: // for now...
   BX_SMF void STOSD_YdEAX(bxInstruction_c *);
   BX_SMF void LODSD_EAXXd(bxInstruction_c *);
   BX_SMF void SCASD_EAXXd(bxInstruction_c *);
+
+  BX_SMF void REP_MOVSB_XbYb(bxInstruction_c *);
+  BX_SMF void REP_MOVSW_XwYw(bxInstruction_c *);
+  BX_SMF void REP_MOVSD_XdYd(bxInstruction_c *);
+  BX_SMF void REP_CMPSB_XbYb(bxInstruction_c *);
+  BX_SMF void REP_CMPSW_XwYw(bxInstruction_c *);
+  BX_SMF void REP_CMPSD_XdYd(bxInstruction_c *);
+  BX_SMF void REP_STOSB_YbAL(bxInstruction_c *);
+  BX_SMF void REP_LODSB_ALXb(bxInstruction_c *);
+  BX_SMF void REP_SCASB_ALXb(bxInstruction_c *);
+  BX_SMF void REP_STOSW_YwAX(bxInstruction_c *);
+  BX_SMF void REP_LODSW_AXXw(bxInstruction_c *);
+  BX_SMF void REP_SCASW_AXXw(bxInstruction_c *);
+  BX_SMF void REP_STOSD_YdEAX(bxInstruction_c *);
+  BX_SMF void REP_LODSD_EAXXd(bxInstruction_c *);
+  BX_SMF void REP_SCASD_EAXXd(bxInstruction_c *);
 
   BX_SMF void RETnear32(bxInstruction_c *);
   BX_SMF void RETnear16(bxInstruction_c *);
@@ -2371,10 +2381,15 @@ public: // for now...
 
   BX_SMF void MOVSQ_XqYq(bxInstruction_c *);
   BX_SMF void CMPSQ_XqYq(bxInstruction_c *);
-
   BX_SMF void STOSQ_YqRAX(bxInstruction_c *);
   BX_SMF void LODSQ_RAXXq(bxInstruction_c *);
   BX_SMF void SCASQ_RAXXq(bxInstruction_c *);
+
+  BX_SMF void REP_MOVSQ_XqYq(bxInstruction_c *);
+  BX_SMF void REP_CMPSQ_XqYq(bxInstruction_c *);
+  BX_SMF void REP_STOSQ_YqRAX(bxInstruction_c *);
+  BX_SMF void REP_LODSQ_RAXXq(bxInstruction_c *);
+  BX_SMF void REP_SCASQ_RAXXq(bxInstruction_c *);
 
   BX_SMF void RETnear64(bxInstruction_c *);
   BX_SMF void ENTER64_IwIb(bxInstruction_c *);
@@ -2734,6 +2749,9 @@ public: // for now...
   BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, 
        Bit16u port, Bit32u wordCount);
 #endif
+
+  BX_SMF void repeat(bxInstruction_c *i, BxExecutePtr_t execute);
+  BX_SMF void repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute);
 
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
        unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
@@ -3323,9 +3341,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxAnother           0x0100 // bit  8
 #define BxLockable          0x0200 // bit  9
 #define Bx3ByteOpcode       0x0400 // bit 10
-
-#define BxRepeatable        0x0800 // bit 11 (pass through to metaInfo field)
-#define BxRepeatableZF      0x1000 // bit 12 (pass through to metaInfo field)
 
 #define BxGroup1          BxGroupN
 #define BxGroup2          BxGroupN
