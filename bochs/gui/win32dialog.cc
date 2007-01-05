@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.54 2006-12-17 18:14:59 vruppert Exp $
+// $Id: win32dialog.cc,v 1.55 2007-01-05 16:53:45 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -27,6 +27,8 @@ static void *old_callback_arg = NULL;
 static HWND hDebugDialog = NULL;
 static char *debug_cmd = NULL;
 static BOOL debug_cmd_ready = FALSE;
+static BOOL showCPU = FALSE;
+static bx_param_num_c *cpu_param[16];
 #endif
 
 int AskFilename(HWND hwnd, bx_param_filename_c *param, const char *ext);
@@ -903,12 +905,49 @@ int RuntimeOptionsDialog()
 }
 
 #if BX_DEBUGGER
+void RefreshDebugDialog()
+{
+#if BX_SUPPORT_SAVE_RESTORE
+  unsigned i;
+  char buffer[20];
+
+  if (showCPU) {
+    for (i = 0; i < 15; i++) {
+      sprintf(buffer, "%08X", cpu_param[i]->get());
+      SetDlgItemText(hDebugDialog, IDCPUVAL1+i, buffer);
+    }
+  }
+#endif
+}
+
 static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  unsigned i;
   int idx, lines;
+  static RECT R;
 
   switch (msg) {
     case WM_INITDIALOG:
+      GetWindowRect(hDlg, &R);
+#if BX_SUPPORT_SAVE_RESTORE
+      cpu_param[0] = SIM->get_param_num("cpu.0.EAX", SIM->get_sr_root());
+      cpu_param[1] = SIM->get_param_num("cpu.0.EBX", SIM->get_sr_root());
+      cpu_param[2] = SIM->get_param_num("cpu.0.ECX", SIM->get_sr_root());
+      cpu_param[3] = SIM->get_param_num("cpu.0.EDX", SIM->get_sr_root());
+      cpu_param[4] = SIM->get_param_num("cpu.0.ESP", SIM->get_sr_root());
+      cpu_param[5] = SIM->get_param_num("cpu.0.EBP", SIM->get_sr_root());
+      cpu_param[6] = SIM->get_param_num("cpu.0.ESI", SIM->get_sr_root());
+      cpu_param[7] = SIM->get_param_num("cpu.0.EDI", SIM->get_sr_root());
+      cpu_param[8] = SIM->get_param_num("cpu.0.EIP", SIM->get_sr_root());
+      cpu_param[9] = SIM->get_param_num("cpu.0.CS.selector", SIM->get_sr_root());
+      cpu_param[10] = SIM->get_param_num("cpu.0.DS.selector", SIM->get_sr_root());
+      cpu_param[11] = SIM->get_param_num("cpu.0.ES.selector", SIM->get_sr_root());
+      cpu_param[12] = SIM->get_param_num("cpu.0.FS.selector", SIM->get_sr_root());
+      cpu_param[13] = SIM->get_param_num("cpu.0.GS.selector", SIM->get_sr_root());
+      cpu_param[14] = SIM->get_param_num("cpu.0.EFLAGS", SIM->get_sr_root());
+#else
+      EnableWindow(GetDlgItem(hdlg, IDSHOWCPU), FALSE);
+#endif
       return TRUE;
       break;
     case WM_CLOSE:
@@ -929,6 +968,21 @@ static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           break;
         case IDSTOP:
           SIM->debug_break();
+          break;
+        case IDSHOWCPU:
+          showCPU = !showCPU;
+          if (showCPU) {
+            SetDlgItemText(hDlg, IDSHOWCPU, "Hide CPU <<");
+            MoveWindow(hDlg, R.left, R.top, R.right - R.left + 300, R.bottom - R.top, TRUE);
+            RefreshDebugDialog();
+          } else {
+            SetDlgItemText(hDlg, IDSHOWCPU, "Show CPU >>");
+            MoveWindow(hDlg, R.left, R.top, R.right - R.left, R.bottom - R.top, TRUE);
+          }
+          for (i = 0; i < 15; i++) {
+            ShowWindow(GetDlgItem(hDlg, IDCPULBL1+i), showCPU ? SW_SHOW : SW_HIDE);
+            ShowWindow(GetDlgItem(hDlg, IDCPUVAL1+i), showCPU ? SW_SHOW : SW_HIDE);
+          }
           break;
       }
     case WM_USER:
@@ -960,12 +1014,6 @@ void InitDebugDialog(HWND mainwnd)
   hDebugDialog = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE(DEBUGGER_DLG), mainwnd,
                               (DLGPROC)DebuggerDlgProc);
   ShowWindow(hDebugDialog, SW_SHOW);
-}
-
-void RefreshDebugDialog()
-{
-  // TODO: implement modeless dialog box with cpu registers and add some code
-  // here to update the controls
 }
 #endif
 
