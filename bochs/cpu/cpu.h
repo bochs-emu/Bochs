@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.307 2007-01-05 13:40:46 sshwarts Exp $
+// $Id: cpu.h,v 1.308 2007-01-12 22:47:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1448,12 +1448,12 @@ public: // for now...
   BX_SMF void SAHF(bxInstruction_c *);
   BX_SMF void LAHF(bxInstruction_c *);
 
-  BX_SMF void MOV_ALOb(bxInstruction_c *);
+  BX_SMF void MOV_ALOd(bxInstruction_c *);
   BX_SMF void MOV_EAXOd(bxInstruction_c *);
-  BX_SMF void MOV_AXOw(bxInstruction_c *);
-  BX_SMF void MOV_ObAL(bxInstruction_c *);
+  BX_SMF void MOV_AXOd(bxInstruction_c *);
+  BX_SMF void MOV_OdAL(bxInstruction_c *);
   BX_SMF void MOV_OdEAX(bxInstruction_c *);
-  BX_SMF void MOV_OwAX(bxInstruction_c *);
+  BX_SMF void MOV_OdAX(bxInstruction_c *);
   BX_SMF void TEST_ALIb(bxInstruction_c *);
   BX_SMF void TEST_EAXId(bxInstruction_c *);
   BX_SMF void TEST_AXIw(bxInstruction_c *);
@@ -3318,7 +3318,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxImmediate_Iw      0x0004 // 16 bits regardless
 #define BxImmediate_IvIw    0x0005 // call_Ap
 #define BxImmediate_IwIb    0x0006 // enter_IwIb
-#define BxImmediate_O       0x0007 // mov_ALOb, mov_ObAL, mov_eAXOv, mov_OveAX
+#define BxImmediate_O       0x0007 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
 #define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
 #define BxImmediate_BrOff16 0x0009 // Relative branch offset word
 #define BxImmediate_BrOff32 BxImmediate_Iv

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.25 2007-01-12 22:47:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,13 +85,7 @@ void BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_ALOq(bxInstruction_c *i)
 {
-  Bit8u temp_8;
-  bx_address addr = i->Iq();
-
-  read_virtual_byte(i->seg(), addr, &temp_8);
-
-  /* write to register */
-  RAX = temp_8;
+  read_virtual_byte(i->seg(), i->Iq(), &AL);
 }
 
 void BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
@@ -101,13 +95,7 @@ void BX_CPU_C::MOV_OqAL(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_AXOq(bxInstruction_c *i)
 {
-  Bit16u temp_16;
-  bx_address addr = i->Iq();
-
-  read_virtual_word(i->seg(), addr, &temp_16);
-
-  /* write to register */
-  AX = temp_16;
+  read_virtual_word(i->seg(), i->Iq(), &AX);
 }
 
 void BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
@@ -118,9 +106,8 @@ void BX_CPU_C::MOV_OqAX(bxInstruction_c *i)
 void BX_CPU_C::MOV_EAXOq(bxInstruction_c *i)
 {
   Bit32u temp_32;
-  bx_address addr = i->Iq();
 
-  read_virtual_dword(i->seg(), addr, &temp_32);
+  read_virtual_dword(i->seg(), i->Iq(), &temp_32);
 
   /* write to register */
   RAX = temp_32;

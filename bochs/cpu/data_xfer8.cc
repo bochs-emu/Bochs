@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.25 2006-05-24 20:57:37 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.26 2007-01-12 22:47:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,12 +63,12 @@ void BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);
 }
 
-void BX_CPU_C::MOV_ALOb(bxInstruction_c *i)
+void BX_CPU_C::MOV_ALOd(bxInstruction_c *i)
 {
   read_virtual_byte(i->seg(), i->Id(), &AL);
 }
 
-void BX_CPU_C::MOV_ObAL(bxInstruction_c *i)
+void BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 {
   write_virtual_byte(i->seg(), i->Id(), &AL);
 }

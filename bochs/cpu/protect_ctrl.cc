@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.50 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.51 2007-01-12 22:47:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -361,7 +361,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    // set upper 32 bits of tss base
+    // set upper 32 bits of ldt base
     access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.system.base |= ((Bit64u)dword3 << 32);
     BX_INFO(("64 bit LDT base = 0x%08x%08x",

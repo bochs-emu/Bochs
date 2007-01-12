@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.39 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.40 2007-01-12 22:47:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,12 +143,12 @@ void BX_CPU_C::LEA_GwM(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
 }
 
-void BX_CPU_C::MOV_AXOw(bxInstruction_c *i)
+void BX_CPU_C::MOV_AXOd(bxInstruction_c *i)
 {
   read_virtual_word(i->seg(), i->Id(), &AX);
 }
 
-void BX_CPU_C::MOV_OwAX(bxInstruction_c *i)
+void BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
 {
   write_virtual_word(i->seg(), i->Id(), &AX);
 }
