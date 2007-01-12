@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.32 2006-05-12 17:04:19 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.33 2007-01-12 21:53:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -61,6 +61,7 @@ unsigned disassembler::disasm(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
 x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_address ip, const Bit8u *instr, char *disbuf)
 {
+  if (is_64) is_32 = 1;
   x86_insn insn(is_32, is_64);
   const Bit8u *instruction_begin = instruction = instr;
   resolve_modrm = NULL;
