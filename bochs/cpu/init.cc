@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.125 2006-10-04 19:08:40 sshwarts Exp $
+// $Id: init.cc,v 1.126 2007-01-12 16:09:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -433,7 +433,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, DR6, dr6);
   BXRS_HEX_PARAM_FIELD(list, DR7, dr7);
 #endif
-  BXRS_HEX_PARAM_FIELD(list, cR0, cr0.val32);
+  BXRS_HEX_PARAM_FIELD(list, CR0, cr0.val32);
   BXRS_HEX_PARAM_FIELD(list, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(list, CR3, cr3);
 #if BX_CPU_LEVEL >= 4
