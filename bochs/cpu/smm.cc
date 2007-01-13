@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.22 2006-10-03 22:41:02 sshwarts Exp $
+// $Id: smm.cc,v 1.23 2007-01-13 10:43:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -215,21 +215,21 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 {
   // --- General Purpose Registers --- //
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RAX_HI32) = RAX >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RAX_LO32) = RAX & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RAX_LO32) = EAX;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RCX_HI32) = RCX >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RCX_LO32) = RCX & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RCX_LO32) = ECX;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDX_HI32) = RDX >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDX_LO32) = RDX & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDX_LO32) = EDX;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBX_HI32) = RBX >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBX_LO32) = RBX & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBX_LO32) = EBX;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSP_HI32) = RSP >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSP_LO32) = RSP & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSP_LO32) = ESP;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBP_HI32) = RBP >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBP_LO32) = RBP & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RBP_LO32) = EBP;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSI_HI32) = RSI >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSI_LO32) = RSI & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RSI_LO32) = ESI;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDI_HI32) = RDI >> 32;
-  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDI_LO32) = RDI & 0xffffffff;
+  SMRAM_FIELD(saved_state, SMRAM_OFFSET_RDI_LO32) = EDI;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_R8_HI32)  =  R8 >> 32;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_R8_LO32)  =  R8 & 0xffffffff;
   SMRAM_FIELD(saved_state, SMRAM_OFFSET_R9_HI32)  =  R9 >> 32;

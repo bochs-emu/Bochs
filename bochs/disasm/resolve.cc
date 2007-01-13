@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve.cc,v 1.13 2006-08-11 17:22:43 sshwarts Exp $
+// $Id: resolve.cc,v 1.14 2007-01-13 10:43:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -244,7 +244,7 @@ void disassembler::resolve64_mod0(const x86_insn *insn, unsigned mode)
   else rip_regname = "%rip";
 
   if ((insn->rm & 7) == 5) /* no reg, 32-bit displacement */
-    print_memory_access(mode, seg, rip_regname, NULL, 0, insn->displacement.displ32);
+    print_memory_access(mode, seg, rip_regname, NULL, 0, (Bit32s) insn->displacement.displ32, 1);
   else
     print_memory_access(mode, seg, general_64bit_regname[insn->rm], NULL, 0, 0);
 }
@@ -259,13 +259,13 @@ void disassembler::resolve64_mod1or2(const x86_insn *insn, unsigned mode)
     seg = sreg_mod01or10_rm32[insn->rm];
 
   print_memory_access(mode, seg, 
-      general_64bit_regname[insn->rm], NULL, 0, insn->displacement.displ32);
+      general_64bit_regname[insn->rm], NULL, 0, (Bit32s) insn->displacement.displ32, 1);
 }
 
 void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
 {
   const char *seg, *base = NULL, *index = NULL;
-  Bit32u disp32 = 0;
+  Bit32s disp32 = 0;
 
   if (insn->is_seg_override())
     seg = segment_name[insn->seg_override];
@@ -275,12 +275,12 @@ void disassembler::resolve64_mod0_rm4(const x86_insn *insn, unsigned mode)
   if ((insn->base & 7) != 5)
     base = general_64bit_regname[insn->base];
   else
-    disp32 = insn->displacement.displ32;
+    disp32 = (Bit32s) insn->displacement.displ32;
   
   if (insn->index != 4)
     index = general_64bit_regname[insn->index];
     
-  print_memory_access(mode, seg, base, index, insn->scale, disp32);
+  print_memory_access(mode, seg, base, index, insn->scale, disp32, 1);
 }
 
 void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
@@ -296,7 +296,7 @@ void disassembler::resolve64_mod1or2_rm4(const x86_insn *insn, unsigned mode)
     index = general_64bit_regname[insn->index];
 
   print_memory_access(mode, seg,
-      general_64bit_regname[insn->base], index, insn->scale, insn->displacement.displ32);
+      general_64bit_regname[insn->base], index, insn->scale, (Bit32s) insn->displacement.displ32, 1);
 }
 
 void disassembler::print_datasize(unsigned size)
@@ -366,9 +366,11 @@ void disassembler::print_memory_access16(int datasize,
 }
 
 void disassembler::print_memory_access(int datasize, 
-                const char *seg, const char *base, const char *index, int scale, Bit32u disp)
+        const char *seg, const char *base, const char *index, int scale, Bit32s disp, bx_bool disp64)
 {
   print_datasize(datasize);
+
+  scale = 1 << scale;
   
   if (intel_mode)
   {
@@ -380,19 +382,33 @@ void disassembler::print_memory_access(int datasize,
       }
       else
       {
-        if (scale != 0)
+        if (scale != 1)
         {
-          if (disp != 0)
-            dis_sprintf("%s:[%s*%d+0x%x]", seg, index, 1<<scale, (unsigned) disp);
+          if (disp != 0) {
+            if (disp64) {
+              dis_sprintf("%s:[%s*%d+0x%08x%08x]", seg, index, scale,
+                 GET32H(disp), GET32L(disp));
+            }
+            else {
+              dis_sprintf("%s:[%s*%d+0x%x]", seg, index, scale, (unsigned) disp);
+            }
+          }
           else
-            dis_sprintf("%s:[%s*%d]", seg, index, 1<<scale);
+            dis_sprintf("%s:[%s*%d]", seg, index, scale);
         }
         else
         {
-          if (disp != 0)
-            dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
-          else
+          if (disp != 0) {
+            if (disp64) {
+              dis_sprintf("%s:[%s+0x%08x%08x]", seg, index, GET32H(disp), GET32L(disp));
+            }
+            else {
+              dis_sprintf("%s:[%s+0x%x]", seg, index, (unsigned) disp);
+            }
+          }
+          else {
             dis_sprintf("%s:[%s]", seg, index);
+          }
         }
       }
     }
@@ -400,24 +416,45 @@ void disassembler::print_memory_access(int datasize,
     {
       if (index == NULL)
       {
-        if (disp != 0)
-          dis_sprintf("%s:[%s+0x%x]", seg, base, (unsigned) disp);
-        else
+        if (disp != 0) {
+          if (disp64) {
+            dis_sprintf("%s:[%s+0x%08x%08x]", seg, base, GET32H(disp), GET32L(disp));
+          }
+          else {
+            dis_sprintf("%s:[%s+0x%x]", seg, base, (unsigned) disp);
+          }
+        }
+        else {
           dis_sprintf("%s:[%s]", seg, base);
+        }
       }
       else
       {
-        if (scale != 0)
+        if (scale != 1)
         {
-          if (disp != 0)
-            dis_sprintf("%s:[%s+%s*%d+0x%x]", seg, base, index, 1<<scale, (unsigned) disp);
-          else
-            dis_sprintf("%s:[%s+%s*%d]", seg, base, index, 1<<scale);
+          if (disp != 0) {
+            if (disp64) {
+              dis_sprintf("%s:[%s+%s*%d+0x%08x%08x]", seg, base, index, scale, 
+                  GET32H(disp), GET32L(disp));
+            }
+            else {
+              dis_sprintf("%s:[%s+%s*%d+0x%x]", seg, base, index, scale, (unsigned) disp);
+            }
+          }
+          else {
+            dis_sprintf("%s:[%s+%s*%d]", seg, base, index, scale);
+          }
         }
         else
         {
-          if (disp != 0)
-            dis_sprintf("%s:[%s+%s+0x%x]", seg, base, index, (unsigned) disp);
+          if (disp != 0) {
+            if (disp64) {
+              dis_sprintf("%s:[%s+%s+0x%08x%08x]", seg, base, index, GET32H(disp), GET32L(disp));
+            }
+            else {
+              dis_sprintf("%s:[%s+%s+0x%x]", seg, base, index, (unsigned) disp);
+            }
+          }
           else
             dis_sprintf("%s:[%s+%s]", seg, base, index);
         }
@@ -430,31 +467,52 @@ void disassembler::print_memory_access(int datasize,
     {
       if (index == NULL)
       {
-        dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        if (disp64) {
+          dis_sprintf("%s:0x%x", seg, GET32H(disp), GET32L(disp));
+        } else {
+          dis_sprintf("%s:0x%x", seg, (unsigned) disp);
+        }
       }
       else
       {
-        if (disp != 0)
-          dis_sprintf("%s:0x%x(,%s,%d)", seg, (unsigned) disp, index, 1<<scale);
+        if (disp != 0) {
+          if (disp64) {
+            dis_sprintf("%s:0x%08x%08x(,%s,%d)", seg, GET32H(disp), GET32L(disp), index, scale);
+          } else {
+            dis_sprintf("%s:0x%x(,%s,%d)", seg, (unsigned) disp, index, scale);
+          }
+        }
         else
-          dis_sprintf("%s:(,%s,%d)", seg, index, 1<<scale);
+          dis_sprintf("%s:(,%s,%d)", seg, index, scale);
       }
     }
     else
     {
       if (index == NULL)
       {
-        if (disp != 0)
-          dis_sprintf("%s:0x%x(%s)", seg, (unsigned) disp, base);
+        if (disp != 0) {
+          if (disp64) {
+            dis_sprintf("%s:0x%08x%08x(%s)", seg, GET32H(disp), GET32L(disp), base);
+          }
+          else {
+            dis_sprintf("%s:0x%x(%s)", seg, (unsigned) disp, base);
+          }
+        }
         else
           dis_sprintf("%s:(%s)", seg, base);
       }
       else
       {
-        if (disp != 0)
-          dis_sprintf("%s:0x%x(%s,%s,%d)", seg, (unsigned) disp, base, index, 1<<scale);
+        if (disp != 0) {
+          if (disp64) {
+            dis_sprintf("%s:0x%08x%08x(%s,%s,%d)", seg, GET32H(disp), GET32L(disp), base, index, scale);
+          }
+          else {
+            dis_sprintf("%s:0x%x(%s,%s,%d)", seg, (unsigned) disp, base, index, scale);
+          }
+        }
         else
-          dis_sprintf("%s:(%s,%s,%d)", seg, base, index, 1<<scale);
+          dis_sprintf("%s:(%s,%s,%d)", seg, base, index, scale);
       }
     }
   }

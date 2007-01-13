@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.87 2006-10-20 15:38:39 vruppert Exp $
+// $Id: exception.cc,v 1.88 2007-01-13 10:43:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -184,7 +184,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
     if (! IsCanonical(RSP_for_cpl_x)) {
       BX_ERROR(("interrupt(long mode): canonical address failure %08x%08x",
-         (Bit32u)(RSP_for_cpl_x >> 32), (Bit32u)(RSP_for_cpl_x & 0xffffffff)));
+         GET32H(RSP_for_cpl_x), GET32L(RSP_for_cpl_x)));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 

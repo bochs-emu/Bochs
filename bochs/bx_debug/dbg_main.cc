@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.88 2007-01-04 20:12:32 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.89 2007-01-13 10:43:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1085,7 +1085,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
 #if BX_SUPPORT_X86_64
     if (len == 8) {
       dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x]\n", 
-        (unsigned)(linear_sp >> 32), (unsigned)(linear_sp & 0xffffffff),
+        GET_32H(linear_sp), GET32L(linear_sp),
         (unsigned) conv_4xBit8u_to_Bit32u(buf+4), 
         (unsigned) conv_4xBit8u_to_Bit32u(buf));
     }
@@ -1796,56 +1796,39 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("eip: 0x%08x\n", (unsigned) reg);
 #else
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RAX);
-    dbg_printf("rax: 0x%08x:%08x ", 
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rax: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RCX);
-    dbg_printf("rcx: 0x%08x:%08x\n", 
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rcx: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RDX);
-    dbg_printf("rdx: 0x%08x:%08x ", 
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rdx: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RBX);
-    dbg_printf("rbx: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rbx: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RSP);
-    dbg_printf("rsp: 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rsp: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RBP);
-    dbg_printf("rbp: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rbp: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RSI);
-    dbg_printf("rsi: 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rsi: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RDI);
-    dbg_printf("rdi: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rdi: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R8);
-    dbg_printf("r8 : 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r8 : 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R9);
-    dbg_printf("r9 : 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r9 : 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R10);
-    dbg_printf("r10: 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r10: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R11);
-    dbg_printf("r11: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r11: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R12);
-    dbg_printf("r12: 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r12: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R13);
-    dbg_printf("r13: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r13: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R14);
-    dbg_printf("r14: 0x%08x:%08x ",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r14: 0x%08x:%08x ", GET32H(reg), GET32L(reg));
     reg = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_R15);
-    dbg_printf("r15: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("r15: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
     reg = bx_dbg_get_instruction_pointer();
-    dbg_printf("rip: 0x%08x:%08x\n",
-        (unsigned)(reg>>32), (unsigned)(reg & 0xffffffff));
+    dbg_printf("rip: 0x%08x:%08x\n", GET32H(reg), GET32L(reg));
 #endif
     reg = BX_CPU(dbg_cpu)->read_eflags();
     dbg_printf("eflags 0x%08x\n", (unsigned) reg);
