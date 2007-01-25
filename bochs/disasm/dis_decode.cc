@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.34 2007-01-25 19:09:41 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.35 2007-01-25 21:54:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -282,7 +282,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
     }
 
     if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
-      if (! sse_prefix) {
+      if (attr != _GRPSSE) {
         const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
         dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
       }
