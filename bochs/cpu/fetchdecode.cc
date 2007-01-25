@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.101 2007-01-25 19:09:36 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.102 2007-01-25 21:44:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1307,13 +1307,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
 #if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
-  /* 0F 38 */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
+  /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
 #if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
-  /* 0F 3A */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
+  /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
 #endif

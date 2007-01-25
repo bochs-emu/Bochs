@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.55 2007-01-25 19:09:41 sshwarts Exp $
+// $Id: mmx.cc,v 1.56 2007-01-25 21:44:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -140,7 +140,7 @@ void BX_CPU_C::PSHUFB_PqQq(bxInstruction_c *i)
     if (mask & 0x80)
       result.mmxubyte(j) = 0;
     else
-      result.mmxubyte(j) = op1.mmxubyte(mask & 0xf);
+      result.mmxubyte(j) = op1.mmxubyte(mask & 0x7);
   }
 
   BX_WRITE_MMX_REG(i->nnn(), result);
