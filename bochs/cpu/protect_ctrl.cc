@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.53 2007-01-13 10:45:32 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.54 2007-01-25 19:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -324,8 +324,6 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     UndefinedOpcode(i);
   }
 
-  invalidate_prefetch_q();
-
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
     BX_INFO(("LLDT: The current priveledge level is not 0"));
@@ -338,6 +336,8 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
   else {
     read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
   }
+
+  invalidate_prefetch_q();
 
   /* if selector is NULL, invalidate and done */
   if ((raw_selector & 0xfffc) == 0) {
@@ -365,8 +365,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.system.base |= ((Bit64u)dword3 << 32);
     BX_INFO(("64 bit LDT base = 0x%08x%08x",
-       (Bit32u)(descriptor.u.system.base >> 32),
-       (Bit32u) descriptor.u.system.base));
+       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
   }
 #endif
 
@@ -443,8 +442,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.system.base |= ((Bit64u)dword3 << 32);
     BX_INFO(("64 bit tss base = 0x%08x%08x",
-       (Bit32u)(descriptor.u.system.base >> 32),
-       (Bit32u) descriptor.u.system.base));
+       GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
   }
 #endif
 

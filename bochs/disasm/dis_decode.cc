@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.33 2007-01-12 21:53:48 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.34 2007-01-25 19:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -77,6 +77,7 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 #define SSE_PREFIX_F2   2
 #define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
   unsigned sse_prefix = SSE_PREFIX_NONE;
+  unsigned rex_prefix = 0;
 
   for(;;)
   {
@@ -101,59 +102,63 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
       case 0x4E:
       case 0x4F:
         if (! is_64) break;
-        insn.extend8b = 1;
-        if (insn.b1 & 0x8) {
-          insn.os_64 = 1;
-          insn.os_32 = 1;
-        }
-        if (insn.b1 & 0x4) insn.rex_r = 8;
-        if (insn.b1 & 0x2) insn.rex_x = 8;
-        if (insn.b1 & 0x1) insn.rex_b = 8;
+        rex_prefix = insn.b1;
         continue;
 
       case 0x26:     // ES:
         if (! is_64) insn.seg_override = ES_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x2e:     // CS:
         if (! is_64) insn.seg_override = CS_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x36:     // SS:
         if (! is_64) insn.seg_override = SS_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x3e:     // DS:
         if (! is_64) insn.seg_override = DS_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x64:     // FS:
         insn.seg_override = FS_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x65:     // GS:
         insn.seg_override = GS_REG;
+        rex_prefix = 0;
         continue;
 
       case 0x66:     // operand size override
         if (!insn.os_64) insn.os_32 = !is_32;
         if (!sse_prefix) sse_prefix = SSE_PREFIX_66;
+        rex_prefix = 0;
         continue;
 
       case 0x67:     // address size override
         if (!is_64) insn.as_32 = !is_32;
         insn.as_64 = 0;
+        rex_prefix = 0;
         continue;
 
       case 0xf0:     // lock
+        rex_prefix = 0;
         continue;
 
       case 0xf2:     // repne
         if (!sse_prefix) sse_prefix = SSE_PREFIX_F2;
+        rex_prefix = 0;
         continue;
 
       case 0xf3:     // rep
         if (!sse_prefix) sse_prefix = SSE_PREFIX_F3;
+        rex_prefix = 0;
         continue;
 
       // no more prefixes
@@ -168,6 +173,17 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   if (insn.b1 == 0x0f)
   {
     insn.b1 = 0x100 | fetch_byte();
+  }
+
+  if (rex_prefix) {
+    insn.extend8b = 1;
+    if (rex_prefix & 0x8) {
+      insn.os_64 = 1;
+      insn.os_32 = 1;
+    }
+    if (rex_prefix & 0x4) insn.rex_r = 8;
+    if (rex_prefix & 0x2) insn.rex_x = 8;
+    if (rex_prefix & 0x1) insn.rex_b = 8;
   }
 
   const BxDisasmOpcodeTable_t *opcode_table, *entry;
@@ -260,10 +276,16 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
   {
     Bit8u prefix_byte = *(instr+i);
 
-    if (prefix_byte == 0xF3 || prefix_byte == 0xF2 || prefix_byte == 0xF0) 
-    {
+    if (prefix_byte == 0xF0) {
       const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
       dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
+    }
+
+    if (prefix_byte == 0xF3 || prefix_byte == 0xF2) {
+      if (! sse_prefix) {
+        const BxDisasmOpcodeTable_t *prefix = &(opcode_table[prefix_byte]);
+        dis_sprintf("%s ", OPCODE(prefix)->IntelOpcode);
+      }
     }
 
     // branch hint for jcc instructions

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.100 2007-01-12 22:47:20 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.101 2007-01-25 19:09:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -748,13 +748,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 35 */ { 0, &BX_CPU_C::SYSEXIT },
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1306,13 +1306,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F 35 */ { 0, &BX_CPU_C::SYSEXIT },
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1525,7 +1525,7 @@ BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain
   unsigned b1, b2, ilen=0, attr, os_32;
   unsigned imm_mode, offset;
   unsigned rm = 0, mod=0, nnn=0;
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   unsigned b3 = 0;
 #endif
 
@@ -1642,7 +1642,7 @@ fetch_b1:
 
   attr = BxOpcodeInfo[b1+offset].Attr;
 
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   // handle 3-byte escape
   if (attr & Bx3ByteOpcode) {
     if (ilen < remain) {
@@ -1821,7 +1821,7 @@ modrm_done:
          case BxRMGroup:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm]);
              break;
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
          case Bx3ByteOpTable:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
              break;

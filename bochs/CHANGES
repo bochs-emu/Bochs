@@ -1,9 +1,10 @@
 Changes after 2.3 release:
 
-- CPU and FPU
+- CPU
   - Fixed critical issue with 0x90 opcode (NOP) handling in x86-64 mode
   - Correctly detect inexact result by FPU
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
+  - Several disasm and internal debugger fixes (again)
 
 - General
   - 2nd simulation support in wxBochs now almost usable (simulation cleanup
@@ -12,6 +13,8 @@ Changes after 2.3 release:
 - Configure and compile
   - several fixes for MacOSX, OpenBSD and Solaris 10
   - enable save/restore feature by default for all configurations
+  - rename SSE4 option to match Intel(R) Programming Reference Manual
+    to enable Intel Core Duo 2 new instructions use --enable-sse3e
 
 - I/O devices (Volker)
   - initial support for the PIIX4 ACPI controller

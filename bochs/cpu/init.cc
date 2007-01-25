@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.126 2007-01-12 16:09:39 sshwarts Exp $
+// $Id: init.cc,v 1.127 2007-01-25 19:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -742,19 +742,8 @@ void BX_CPU_C::reset(unsigned source)
   ESP = 0;
 #endif
 
-  // all status flags at known values, use BX_CPU_THIS_PTR eflags structure
-  BX_CPU_THIS_PTR lf_flags_status = 0x000000;
-
   // status and control flags register set
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
-  BX_CPU_THIS_PTR clear_IF ();
-#if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR clear_RF ();
-  BX_CPU_THIS_PTR clear_VM ();
-#endif
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR clear_AC ();
-#endif
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR debug_trap = 0;

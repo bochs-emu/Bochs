@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.41 2006-05-16 16:20:26 sshwarts Exp $
+// $Id: sse.cc,v 1.42 2007-01-25 19:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -29,12 +29,12 @@
 /* SSE Integer Operations (128bit MMX extensions) */
 /* ********************************************** */
 
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
 
 /* 66 0F 38 00 */
 void BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -59,7 +59,7 @@ void BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PSHUFB_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PSHUFB_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -67,7 +67,7 @@ void BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 01 */
 void BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -93,7 +93,7 @@ void BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHADDW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -101,7 +101,7 @@ void BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 02 */
 void BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -122,7 +122,7 @@ void BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDD_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHADDD_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -130,7 +130,7 @@ void BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 03 */
 void BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -157,7 +157,7 @@ void BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHADDSW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHADDSW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -165,7 +165,7 @@ void BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 04 */
 void BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -190,7 +190,7 @@ void BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PMADDUBSW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PMADDUBSW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -198,7 +198,7 @@ void BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 05 */
 void BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -225,7 +225,7 @@ void BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBSW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHSUBSW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -233,7 +233,7 @@ void BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 05 */
 void BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -259,7 +259,7 @@ void BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHSUBW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -267,7 +267,7 @@ void BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 06 */
 void BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -288,7 +288,7 @@ void BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PHSUBD_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PHSUBD_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -296,7 +296,7 @@ void BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 08 */
 void BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -317,7 +317,7 @@ void BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGNB_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PSIGNB_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -325,7 +325,7 @@ void BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 09 */
 void BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -346,7 +346,7 @@ void BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGNW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PSIGNW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -354,7 +354,7 @@ void BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 0A */
 void BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -375,7 +375,7 @@ void BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
 
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PSIGND_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PSIGND_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -383,7 +383,7 @@ void BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 0B */
 void BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -409,7 +409,7 @@ void BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PMULHRSW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PMULHRSW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -417,7 +417,7 @@ void BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 1C */
 void BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -450,7 +450,7 @@ void BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSB_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PABSB_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -458,7 +458,7 @@ void BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 1D */
 void BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -483,7 +483,7 @@ void BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSW_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PABSW_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -491,7 +491,7 @@ void BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
 /* 66 0F 38 1E */
 void BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
@@ -512,7 +512,7 @@ void BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("PABSD_VdqWdq: required SSE4, use --enable-sse option"));
+  BX_INFO(("PABSD_VdqWdq: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -520,7 +520,7 @@ void BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
 /* 66 0F 3A 0F */
 void BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
@@ -574,12 +574,12 @@ void BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PALIGNR_VdqWdqIb: required SSE4, use --enable-sse option"));
+  BX_INFO(("PALIGNR_VdqWdqIb: required SSE3E, use --enable-sse3e option"));
   UndefinedOpcode(i);
 #endif
 }
 
-#endif /* BX_SUPPORT_SSE >= 4 */
+#endif /* #if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4 */
 
 /* 66 0F 63 */
 void BX_CPU_C::PACKSSWB_VdqWq(bxInstruction_c *i)

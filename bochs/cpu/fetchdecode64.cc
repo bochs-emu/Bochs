@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.102 2007-01-12 22:47:20 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.103 2007-01-25 19:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -871,13 +871,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1400,13 +1400,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1929,13 +1929,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -2148,7 +2148,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   unsigned b3 = 0;
 #endif
 #define SSE_PREFIX_NONE 0
@@ -2156,6 +2156,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 #define SSE_PREFIX_F2   2
 #define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
   unsigned sse_prefix = SSE_PREFIX_NONE;
+  unsigned rex_prefix = 0;
 
   offset = 512*1;
   instruction->ResolveModrm = NULL;
@@ -2172,6 +2173,7 @@ fetch_b1:
 
   if (attr & BxPrefix) {
     BX_INSTR_PREFIX(BX_CPU_ID, b1);
+    rex_prefix = 0;
     switch (b1) {
       case 0x66: // OpSize
         if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
@@ -2205,15 +2207,7 @@ fetch_b1:
       case 0x4D:
       case 0x4E:
       case 0x4F:
-        instruction->assertExtend8bit();
-        if (b1 & 0x8) {
-          instruction->assertOs64();
-          instruction->assertOs32();
-          offset = 512*2;
-        }
-        if (b1 & 0x4) rex_r = 8;
-        if (b1 & 0x2) rex_x = 8;
-        if (b1 & 0x1) rex_b = 8;
+        rex_prefix = b1;
         if (ilen < remain) {
           goto fetch_b1;
         }
@@ -2265,6 +2259,18 @@ fetch_b1:
     }
   }
 
+  if (rex_prefix) {
+    instruction->assertExtend8bit();
+    if (rex_prefix & 0x8) {
+      instruction->assertOs64();
+      instruction->assertOs32();
+      offset = 512*2;
+    }
+    if (rex_prefix & 0x4) rex_r = 8;
+    if (rex_prefix & 0x2) rex_x = 8;
+    if (rex_prefix & 0x1) rex_b = 8;
+  }
+
   // handle 2-byte escape
   if (b1 == 0x0f) {
     if (ilen < remain) {
@@ -2277,7 +2283,7 @@ fetch_b1:
 
   attr = BxOpcodeInfo64[b1+offset].Attr;
 
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
   // handle 3-byte escape
   if (attr & Bx3ByteOpcode) {
     if (ilen < remain) {
@@ -2512,7 +2518,7 @@ modrm_done:
          case BxRMGroup:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
              break;
-#if BX_SUPPORT_SSE >= 4
+#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
          case Bx3ByteOpTable:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
              break;
