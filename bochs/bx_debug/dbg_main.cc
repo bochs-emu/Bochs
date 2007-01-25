@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.89 2007-01-13 10:43:31 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.90 2007-01-25 19:21:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1085,7 +1085,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
 #if BX_SUPPORT_X86_64
     if (len == 8) {
       dbg_printf(" | STACK 0x%08x%08x [0x%08x:0x%08x]\n", 
-        GET_32H(linear_sp), GET32L(linear_sp),
+        GET32H(linear_sp), GET32L(linear_sp),
         (unsigned) conv_4xBit8u_to_Bit32u(buf+4), 
         (unsigned) conv_4xBit8u_to_Bit32u(buf));
     }
