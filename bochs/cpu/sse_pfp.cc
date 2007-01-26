@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.27 2006-04-05 17:31:33 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.28 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -386,7 +386,7 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
   {
     Bit32u result = float64_to_int32_round_to_zero(op, status_word);
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REG(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
 
 #else
@@ -432,7 +432,7 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
   {
     Bit32u result = float32_to_int32_round_to_zero(op, status_word);
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REG(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
 
 #else
@@ -560,7 +560,7 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
   {
     Bit32u result = float64_to_int32(op, status_word);
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REG(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
 
 #else
@@ -607,7 +607,7 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
   {
     Bit32u result = float32_to_int32(op, status_word);
     BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-    BX_WRITE_32BIT_REG(i->nnn(), result);
+    BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
 
 #else

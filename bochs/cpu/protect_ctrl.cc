@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.54 2007-01-25 19:09:41 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.55 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,8 +29,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_CPU_LEVEL >= 2
 
 void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
@@ -79,8 +77,6 @@ void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
   }
 }
 
-#endif
-
 void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
@@ -90,7 +86,7 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   Bit32u dword1, dword2;
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("LAR: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
     return;
   }
@@ -193,7 +189,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   Bit32u descriptor_dpl;
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("LSL: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
@@ -237,7 +233,6 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
           return;
         }
         goto lsl_ok;
-        break;
       default:
         clear_ZF();
         return;
@@ -263,50 +258,56 @@ lsl_ok:
   /* all checks pass, limit32 is now byte granular, write to op1 */
   assert_ZF();
 
-  if (i->os32L())
-    BX_WRITE_32BIT_REGZ(i->nnn(), limit32)
-  else
+  if (i->os32L()) {
+    BX_WRITE_32BIT_REGZ(i->nnn(), limit32);
+  }
+  else {
     // chop off upper 16 bits
-    BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) limit32)
+    BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) limit32);
+  }
 }
-
-#if BX_CPU_LEVEL >= 2
 
 void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("SLDT: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR ldtr.selector.value;
   if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), val16);
+    if (i->os32L()) {
+      BX_WRITE_32BIT_REGZ(i->rm(), val16);
+    }
+    else {
+      BX_WRITE_16BIT_REG(i->rm(), val16);
+    }
   }
   else {
     write_virtual_word(i->seg(), RMAddr(i), &val16);
   }
 }
 
-#endif
-
 void BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("STR: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
   Bit16u val16 = BX_CPU_THIS_PTR tr.selector.value;
   if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), val16);
+    if (i->os32L()) {
+      BX_WRITE_32BIT_REGZ(i->rm(), val16);
+    }
+    else {
+      BX_WRITE_16BIT_REG(i->rm(), val16);
+    }
   }
   else {
     write_virtual_word(i->seg(), RMAddr(i), &val16);
   }
 }
-
-#if BX_CPU_LEVEL >= 2
 
 void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 {
@@ -320,13 +321,13 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 #endif
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
-    BX_INFO(("LLDT: The current priveledge level is not 0"));
+    BX_ERROR(("LLDT: The current priveledge level is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -399,7 +400,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #endif
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("LTR: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
@@ -441,7 +442,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     // set upper 32 bits of tss base
     access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_INFO(("64 bit tss base = 0x%08x%08x",
+    BX_INFO(("64 bit TSS base = 0x%08x%08x",
        GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
   }
 #endif
@@ -474,8 +475,6 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
       BX_WRITE, &dword2);
 }
 
-#endif
-
 void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
 {
   /* for 16 bit operand size mode */
@@ -485,7 +484,7 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   Bit32u dword1, dword2;
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("VERR: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("VERR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
@@ -573,7 +572,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   Bit32u dword1, dword2;
 
   if (real_mode() || v8086_mode()) {
-    BX_INFO(("VERW: not recognized in real or virtual-8086 mode"));
+    BX_ERROR(("VERW: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
   }
 
@@ -634,115 +633,57 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   clear_ZF(); /* not accessible */
 }
 
-#if BX_CPU_LEVEL >= 2
-
 void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    BX_INFO(("SGDT_Ms: use of register is undefined opcode"));
+    BX_ERROR(("SGDT_Ms: use of register is undefined opcode"));
     UndefinedOpcode(i);
   }
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-  {
-    Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-    Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
+  Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+  Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
 
-    write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
-  }
-  else
-#endif
-  {
-    Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-    Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
-#if BX_CPU_LEVEL == 2
-    base_32 |= 0xff000000; /* ??? */
-#else /* 386+ */
-    /* 32bit processors always write 32bits of base */
-#endif
-    write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
-  }
-#endif
+  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
+  write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
 }
 
 void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL < 2
-  BX_PANIC(("SIDT_Ms: not supported on 8086!"));
-  UndefinedOpcode(i);
-#else
-
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    BX_INFO(("SIDT: use of register is undefined opcode"));
+    BX_ERROR(("SIDT_Ms: use of register is undefined opcode"));
     UndefinedOpcode(i);
   }
 
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-  {
-    Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
-    Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
+  Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
+  Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
 
-    write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
-  }
-  else
-#endif
-  {
-    Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
-    Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
-
-#if BX_CPU_LEVEL == 2
-    base_32 |= 0xff000000;
-#else /* 386+ */
-    /* regardless of operand size, all 32bits of base are stored */
-#endif
-
-    write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
-  }
+  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
+  write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
 }
 
 void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
+  /* operand might be a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("LGDT: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
   if (v8086_mode()) {
-    BX_INFO(("LGDT: not recognized in virtual-8086 mode"));
+    BX_ERROR(("LGDT: not recognized in virtual-8086 mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  if (!real_mode() && CPL!=0) {
+    BX_ERROR(("LGDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();
 
-  if (!real_mode() && CPL!=0) {
-    BX_INFO(("LGDT: CPL!=0 in protected mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_INFO(("LGDT: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
 #if BX_CPU_LEVEL >= 3
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-  {
-    Bit16u limit_16;
-    Bit64u base_64;
-
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
-
-    BX_CPU_THIS_PTR gdtr.limit = limit_16;
-    BX_CPU_THIS_PTR gdtr.base = base_64;
-  }
-  else
-#endif
   if (i->os32L()) {
     Bit16u limit_16;
     Bit32u base0_31;
@@ -771,41 +712,28 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
-  Bit16u limit_16;
-  Bit32u base_32;
-
-  if (v8086_mode()) {
-    BX_INFO(("LIDT: not recognized in virtual-8086 mode"));
-    exception(BX_GP_EXCEPTION, 0, 0);
+  /* operand might be a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("LIDT: must be memory reference"));
+    UndefinedOpcode(i);
   }
 
-  invalidate_prefetch_q();
+  if (v8086_mode()) {
+    BX_ERROR(("LIDT: not recognized in virtual-8086 mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LIDT: CPL!=0 in protected mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_INFO(("LIDT: must be memory reference"));
-    UndefinedOpcode(i);
-  }
+  invalidate_prefetch_q();
+
+  Bit16u limit_16;
+  Bit32u base_32;
 
 #if BX_CPU_LEVEL >= 3
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-  {
-    Bit64u base_64;
-
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
-
-    BX_CPU_THIS_PTR idtr.limit = limit_16;
-    BX_CPU_THIS_PTR idtr.base = base_64;
-  }
-  else 
-#endif
   if (i->os32L()) {
     read_virtual_word(i->seg(), RMAddr(i), &limit_16);
     read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
@@ -822,6 +750,92 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
     BX_CPU_THIS_PTR idtr.limit = limit_16;
     BX_CPU_THIS_PTR idtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
   }
+}
+
+#if BX_SUPPORT_X86_64
+
+void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
+{
+  /* op1 is a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("SGDT64_Ms: use of register is undefined opcode"));
+    UndefinedOpcode(i);
+  }
+
+  Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
+  Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
+
+  write_virtual_word (i->seg(), RMAddr(i), &limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
+}
+
+void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
+{
+  /* op1 is a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("SIDT64_Ms: use of register is undefined opcode"));
+    UndefinedOpcode(i);
+  }
+
+  Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
+  Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
+
+  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
+}
+
+void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
+{
+  BX_ASSERT(protected_mode());
+
+  /* operand might be a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("LGDT64_Ms: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  if (CPL!=0) {
+    BX_ERROR(("LGDT64_Ms: CPL != 0 in long mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  Bit16u limit_16;
+  Bit64u base_64;
+
+  read_virtual_word(i->seg(), RMAddr(i), &limit_16);
+  read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
+
+  BX_CPU_THIS_PTR gdtr.limit = limit_16;
+  BX_CPU_THIS_PTR gdtr.base = base_64;
+}
+
+void BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
+{
+  BX_ASSERT(protected_mode());
+
+  /* operand might be a register or memory reference */
+  if (i->modC0()) {
+    BX_ERROR(("LIDT64_Ms: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  if (CPL != 0) {
+    BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  Bit16u limit_16;
+  Bit64u base_64;
+
+  read_virtual_word(i->seg(), RMAddr(i), &limit_16);
+  read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
+
+  BX_CPU_THIS_PTR idtr.limit = limit_16;
+  BX_CPU_THIS_PTR idtr.base = base_64;
 }
 
 #endif

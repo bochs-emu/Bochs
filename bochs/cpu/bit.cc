@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.30 2006-06-26 20:28:00 sshwarts Exp $
+// $Id: bit.cc,v 1.31 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -526,7 +526,7 @@ void BX_CPU_C::BSWAP_ERX(bxInstruction_c *i)
   val32 = (b0<<24) | (b1<<16) | (b2<<8) | b3;  // zero extended
 
   // in 64-bit mode, hi-order 32 bits are not modified
-  BX_WRITE_32BIT_REG(i->opcodeReg(), val32);
+  BX_WRITE_32BIT_REGZ(i->opcodeReg(), val32);
 #else
   BX_INFO(("BSWAP_ERX: required CPU >= 4, use --enable-cpu-level=4 option"));
   UndefinedOpcode(i);

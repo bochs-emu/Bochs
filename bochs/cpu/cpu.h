@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.309 2007-01-25 19:09:36 sshwarts Exp $
+// $Id: cpu.h,v 1.310 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2488,6 +2488,11 @@ public: // for now...
   BX_SMF void POP64_FS(bxInstruction_c *);
   BX_SMF void PUSH64_GS(bxInstruction_c *);
   BX_SMF void POP64_GS(bxInstruction_c *);
+
+  BX_SMF void SGDT64_Ms(bxInstruction_c *);
+  BX_SMF void SIDT64_Ms(bxInstruction_c *);
+  BX_SMF void LGDT64_Ms(bxInstruction_c *);
+  BX_SMF void LIDT64_Ms(bxInstruction_c *);
 
   BX_SMF void SYSCALL(bxInstruction_c *i);
   BX_SMF void SYSRET(bxInstruction_c *i);

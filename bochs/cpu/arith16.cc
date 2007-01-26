@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.43 2006-03-26 18:58:00 sshwarts Exp $
+// $Id: arith16.cc,v 1.44 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -414,7 +414,6 @@ void BX_CPU_C::CBW(bxInstruction_c *i)
 void BX_CPU_C::CWD(bxInstruction_c *i)
 {
   /* CWD: no flags are affected */
-
   if (AX & 0x8000) {
     DX = 0xFFFF;
   }

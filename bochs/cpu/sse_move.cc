@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.53 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: sse_move.cc,v 1.54 2007-01-26 22:12:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -959,7 +959,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 
     /* destination is a register or memory reference */
     if (i->modC0()) {
-      BX_WRITE_32BIT_REG(i->rm(), op2);
+      BX_WRITE_32BIT_REGZ(i->rm(), op2);
     }
     else {
       /* pointer, segment address pair */
