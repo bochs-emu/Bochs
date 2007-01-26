@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.310 2007-01-26 22:12:05 sshwarts Exp $
+// $Id: cpu.h,v 1.311 2007-01-26 22:16:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -194,9 +194,11 @@
   BX_CPU_THIS_PTR gen_reg[index].word.rx = val; \
 }
 
+/*
 #define BX_WRITE_32BIT_REG(index, val) {\
   BX_CPU_THIS_PTR gen_reg[index].dword.erx = val; \
 }
+*/
 
 #if BX_SUPPORT_X86_64
 
