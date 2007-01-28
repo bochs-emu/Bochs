@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.104 2007-01-26 22:12:05 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.105 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -532,7 +532,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G15[8] = {
   /* 4 */ { 0, &BX_CPU_C::BxError },
   /* 5 */ { 0, &BX_CPU_C::NOP },      /* LFENCE */
   /* 6 */ { 0, &BX_CPU_C::NOP },      /* MFENCE */
-  /* 7 */ { 0, &BX_CPU_C::NOP }       /* SFENCE/CFLUSH */
+  /* 7 */ { 0, &BX_CPU_C::CLFLUSH }   /* SFENCE/CFLUSH */
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {

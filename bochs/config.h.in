@@ -748,6 +748,13 @@ typedef
 // if 1, don't do gpf on MSRs that we don't implement
 #define BX_IGNORE_BAD_MSR 0
 
+// CLFLUSH was introduced together with SSE2 instruction set
+#if BX_SUPPORT_SSE >= 2
+  #define BX_SUPPORT_CLFLUSH 1
+#else
+  #define BX_SUPPORT_CLFLUSH 0
+#endif
+
 #if (BX_SUPPORT_VME && BX_CPU_LEVEL < 5)
 #error With CPU level < 5, you must disable v8086 mode extensions !
 #endif

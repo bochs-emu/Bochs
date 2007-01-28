@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.169 2007-01-05 13:40:46 sshwarts Exp $
+// $Id: cpu.cc,v 1.170 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -167,7 +167,7 @@ BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStor
     ret = fetchDecode64(fetchPtr, i, maxFetch);
   else
 #endif
-    ret = fetchDecode(fetchPtr, i, maxFetch);
+    ret = fetchDecode32(fetchPtr, i, maxFetch);
 
   if (ret==0) {
     // return iStorage and leave icache entry invalid (do not cache instr)
@@ -757,7 +757,7 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
   else
 #endif
   {
-    ret = fetchDecode(fetchBuffer, i, 15);
+    ret = fetchDecode32(fetchBuffer, i, 15);
   }
 
   if (ret==0) {

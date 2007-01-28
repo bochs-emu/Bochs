@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.54 2007-01-26 22:12:05 sshwarts Exp $
+// $Id: sse_move.cc,v 1.55 2007-01-28 21:27:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -63,6 +63,11 @@ void BX_CPU_C::print_state_SSE(void)
 void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
+  if (i->modC0()) {
+    BX_ERROR(("LDMXCSR: memory reference required"));
+    UndefinedOpcode(i);
+  }
+
   BX_CPU_THIS_PTR prepareSSE();
 
   Bit32u new_mxcsr;
@@ -82,6 +87,11 @@ void BX_CPU_C::LDMXCSR(bxInstruction_c *i)
 void BX_CPU_C::STMXCSR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
+  if (i->modC0()) {
+    BX_ERROR(("STMXCSR: memory reference required"));
+    UndefinedOpcode(i);
+  }
+
   BX_CPU_THIS_PTR prepareSSE();
 
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
@@ -98,6 +108,11 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   unsigned index;
   BxPackedXmmRegister xmm;
+
+  if (i->modC0()) {
+    BX_ERROR(("FXSAVE: memory reference required"));
+    UndefinedOpcode(i);
+  }
 
   BX_DEBUG(("FXSAVE: save FPU/MMX/SSE state"));
 
@@ -222,6 +237,11 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 #if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BxPackedXmmRegister xmm;
   int index;
+
+  if (i->modC0()) {
+    BX_ERROR(("FXRSTOR: memory reference required"));
+    UndefinedOpcode(i);
+  }
 
   BX_DEBUG(("FXRSTOR: restore FPU/MMX/SSE state"));
 
@@ -713,13 +733,13 @@ void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
 void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
   if (i->modC0()) 
   {
     BX_INFO(("MOVLPS_MqVps: must be memory reference"));
     UndefinedOpcode(i);
   }
+
+  BX_CPU_THIS_PTR prepareSSE();
 
   write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_LO_QWORD(i->nnn()));
 
@@ -759,13 +779,13 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
   if (i->modC0()) 
   {
     BX_INFO(("MOVHPS_MqVps: must be memory reference"));
     UndefinedOpcode(i);
   }
+
+  BX_CPU_THIS_PTR prepareSSE();
 
   write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_HI_QWORD(i->nnn()));
 
@@ -779,13 +799,13 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 3
-  BX_CPU_THIS_PTR prepareSSE();
-
   /* source must be memory reference */
   if (i->modC0()) {
     BX_INFO(("LDDQU_VdqMdq: must be memory reference"));
     UndefinedOpcode(i);
   }
+
+  BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op;
 
@@ -1533,12 +1553,12 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
   if (i->modC0()) {
     BX_INFO(("MOVNTPS_MdqVps: must be memory reference"));
     UndefinedOpcode(i);
   }
+
+  BX_CPU_THIS_PTR prepareSSE();
 
   writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 

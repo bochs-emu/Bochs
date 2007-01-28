@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.160 2006-10-04 19:08:40 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.161 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,6 +53,10 @@ void BX_CPU_C::NOP(bxInstruction_c *i)
 void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
+  if (i->modC0()) {
+    BX_ERROR(("PREFETCH: use of register is undefined opcode"));
+    UndefinedOpcode(i);
+  }
   BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), RMAddr(i));
 #else
   UndefinedOpcode(i);
@@ -183,6 +187,22 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 #endif
 }
 
+void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    return; // SFENCE instruction
+  }
+
+#if BX_SUPPORT_CLFLUSH
+  // check if we could access the memory
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
+  read_virtual_checks(seg, RMAddr(i), 1);
+#else
+  BX_INFO(("CLFLUSH: not supported, enable with SSE2"));
+  UndefinedOpcode(i);
+#endif
+}
+
 #if BX_CPU_LEVEL >= 3
 void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
@@ -208,9 +228,6 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   val_32 = BX_READ_32BIT_REG(i->rm());
-  if (bx_dbg.dreg)
-    BX_INFO(("MOV_DdRd: DR[%u]=%08xh unhandled",
-      (unsigned) i->nnn(), (unsigned) val_32));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -328,9 +345,6 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   if (!i->modC0())
     BX_PANIC(("MOV_RdDd(): rm field not a register!"));
 
-  if (bx_dbg.dreg)
-    BX_INFO(("MOV_RdDd: DR%u not implemented yet", i->nnn()));
-
   switch (i->nnn()) {
     case 0: // DR0
       val_32 = BX_CPU_THIS_PTR dr0;
@@ -408,8 +422,6 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   }
 
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
-  if (bx_dbg.dreg)
-    BX_INFO(("MOV_DqRq: DR[%u]=%08xh unhandled", i->nnn(), (unsigned) val_64));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -516,9 +528,6 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
     BX_ERROR(("MOV_RqDq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-
-  if (bx_dbg.dreg)
-    BX_INFO(("MOV_RqDq: DR%u not implemented yet", i->nnn()));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -1248,12 +1257,12 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   bx_bool pg = (val_32 >> 31) & 0x01;
 
   if (pg && !pe) {
-    BX_INFO(("SetCR0: GP(0) when attempt to set CR0.PG with CR0.PE cleared !"));
+    BX_ERROR(("SetCR0: GP(0) when attempt to set CR0.PG with CR0.PE cleared !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   if (nw && !cd) {
-    BX_INFO(("SetCR0: GP(0) when attempt to set CR0.NW with CR0.CD cleared !"));
+    BX_ERROR(("SetCR0: GP(0) when attempt to set CR0.NW with CR0.CD cleared !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1263,7 +1272,6 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   // protection checks made already or forcing from debug
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
 
-  bx_bool prev_pe = BX_CPU_THIS_PTR cr0.pe;
 #if BX_SUPPORT_X86_64
   bx_bool prev_pg = BX_CPU_THIS_PTR cr0.pg;
 #endif
@@ -1298,18 +1306,9 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 #elif BX_CPU_LEVEL == 6
   newCR0 = (val_32 | 0x00000010) & 0xe005003f;
 #else
-#error "MOV_CdRd: implement reserved bits behaviour for this CPU_LEVEL"
+#error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
   BX_CPU_THIS_PTR cr0.val32 = newCR0;
-
-  if (prev_pe==0 && BX_CPU_THIS_PTR cr0.pe) {
-    BX_DEBUG(("Enter Protected Mode"));
-    BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
-  }
-  else if (prev_pe==1 && BX_CPU_THIS_PTR cr0.pe==0) {
-    BX_DEBUG(("Enter Real Mode"));
-    BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-  }
 
 #if BX_SUPPORT_X86_64
   if (prev_pg==0 && BX_CPU_THIS_PTR cr0.pg) {
@@ -1407,7 +1406,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
   // Need to GPF if trying to set undefined bits.
   if (val_32 & ~allowMask) {
-    BX_INFO(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val_32, allowMask));
+    BX_ERROR(("#GP(0): SetCR4: Write of 0x%08x not supported (allowMask=0x%x)", val_32, allowMask));
     return 0;
   }
 
@@ -1639,7 +1638,7 @@ do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #else  /* BX_CPU_LEVEL >= 5 */
-  BX_INFO(("RDMSR: Pentium CPU required"));
+  BX_INFO(("RDMSR: Pentium CPU required, use --enable-cpu-level=5"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1788,7 +1787,7 @@ do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #else  /* BX_CPU_LEVEL >= 5 */
-  BX_INFO(("RDMSR: Pentium CPU required"));
+  BX_INFO(("WRMSR: Pentium CPU required, use --enable-cpu-level=5"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1865,7 +1864,7 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
   if (CPL != 0) {
-    BX_INFO(("sysexit at non-zero cpl %u !", CPL));
+    BX_ERROR(("sysexit at non-zero cpl %u !", CPL));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 

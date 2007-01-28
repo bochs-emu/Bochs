@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.311 2007-01-26 22:16:59 sshwarts Exp $
+// $Id: cpu.h,v 1.312 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1551,6 +1551,7 @@ public: // for now...
   BX_SMF void CLTS(bxInstruction_c *);
   BX_SMF void INVD(bxInstruction_c *);
   BX_SMF void WBINVD(bxInstruction_c *);
+  BX_SMF void CLFLUSH(bxInstruction_c *);
 
   BX_SMF void MOV_CdRd(bxInstruction_c *);
   BX_SMF void MOV_DdRd(bxInstruction_c *);
@@ -2521,7 +2522,7 @@ public: // for now...
   BX_SMF void SYSENTER(bxInstruction_c *);
   BX_SMF void SYSEXIT(bxInstruction_c *);
 
-  BX_SMF unsigned fetchDecode(Bit8u *, bxInstruction_c *, unsigned);
+  BX_SMF unsigned fetchDecode32(Bit8u *, bxInstruction_c *, unsigned);
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
 #endif

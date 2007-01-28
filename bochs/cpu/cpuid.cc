@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.39 2007-01-25 19:09:36 sshwarts Exp $
+// $Id: cpuid.cc,v 1.40 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -167,6 +167,10 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
   features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
 #endif
 
+#if BX_SUPPORT_CLFLUSH
+  features |= (1<<19);  // Implement CLFLUSH instruction
+#endif
+
 #if BX_CPU_LEVEL >= 6
   features |= (1<<15);  // Implement CMOV instructions.
 #if BX_SUPPORT_APIC
@@ -249,7 +253,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [31:14] Reserved
       // EBX:      
       //   [7:0]   Brand ID
-      //   [15:8]  CFLUSH cache line size (value*8 = cache line size in bytes)
+      //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
       //   [23:16] Number of logical processors in one physical processor
       //   [31:24] Local Apic ID
       // ECX:       Feature Flags::Extended
@@ -296,10 +300,12 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [29:29] TM: Thermal Monitor
       //   [31:30] Reserved
       RAX = get_cpu_version_information();
-#if BX_SUPPORT_APIC
-      RBX = (BX_CPU_THIS_PTR local_apic.get_id() << 24);
-#else
       RBX = 0;
+#if BX_SUPPORT_APIC
+      RBX |= (BX_CPU_THIS_PTR local_apic.get_id() << 24);
+#endif
+#if BX_SUPPORT_CLFLUSH
+      RBX |= 8 << 8;  // 64 byte cache line size
 #endif
 #if BX_SUPPORT_SMP
       n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.102 2007-01-25 21:44:35 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.103 2007-01-28 21:27:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,7 +378,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG15[8] = {
   /* 4 */ { 0, &BX_CPU_C::BxError },
   /* 5 */ { 0, &BX_CPU_C::NOP },      /* LFENCE */
   /* 6 */ { 0, &BX_CPU_C::NOP },      /* MFENCE */
-  /* 7 */ { 0, &BX_CPU_C::NOP }       /* SFENCE/CFLUSH */
+  /* 7 */ { 0, &BX_CPU_C::CLFLUSH }   /* SFENCE/CFLUSH */
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfoG16[8] = {
@@ -1517,7 +1517,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
 };
 
   unsigned
-BX_CPU_C::fetchDecode(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain)
+BX_CPU_C::fetchDecode32(Bit8u *iptr, bxInstruction_c *instruction, unsigned remain)
 {
   // remain must be at least 1
 
