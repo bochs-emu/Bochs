@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.40 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: cpuid.cc,v 1.41 2007-01-29 17:56:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -227,8 +227,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
 #if BX_CPU_LEVEL <= 5
       RAX = 1;		// 486 and Pentium processors
 #else
-      RAX = 1;		// for Pentium Pro, Pentium II, Pentium 4 processors
-			// should be 2, still not implemented
+      RAX = 2;		// for Pentium Pro, Pentium II, Pentium 4 processors
 #endif
       // EBX: vendor ID string
       // EDX: vendor ID string
@@ -316,7 +315,15 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RDX = get_std_cpuid_features ();
       break;
 
-#if BX_CPU_LEVEL >= 6 && BX_SUPPORT_SSE >= 2
+#if BX_CPU_LEVEL >= 6 
+    case 2:
+      RAX = 0x00410601;  // for Pentium Pro compatibility
+      RBX = 0;
+      RCX = 0;
+      RDX = 0;
+      break;
+
+#if BX_SUPPORT_SSE >= 2
 
 #if BX_SUPPORT_X86_64
     // Extended information for AMD Athlon processor
@@ -398,7 +405,20 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = 0x00000000;
       RDX = 0x00000000;
       break;
-
+    case 0x80000005:
+      /* cache info (L1 cache) */
+      RAX = 0x01ff01ff;
+      RBX = 0x01ff01ff;
+      RCX = 0x40020140;
+      RDX = 0x40020140;
+      break;
+    case 0x80000006:
+      /* cache info (L2 cache) */
+      RAX = 0;
+      RBX = 0x42004200;
+      RCX = 0x02008140;
+      RDX = 0;
+      break;
     case 0x80000008:
       // virtual & phys address size in low 2 bytes.
       RAX = 0x00003020; // 48-bit virtual address and 32 bit physical
@@ -406,7 +426,9 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = 0;
       RDX = 0; // Reserved, undefined
       break;
-#else
+
+#else // BX_SUPPORT_X86_64
+
     // Extended information for Intel P4 processor
     case 0x80000000:
       // max function supported.
@@ -444,9 +466,11 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = 0x20202020; // "    "
       RDX = 0x00202020; // "    "
       break;
-#endif
+#endif // BX_SUPPORT_X86_64
 
-#endif
+#endif // BX_SUPPORT_SSE >= 2
+
+#endif // BX_CPU_LEVEL >= 6 
 
     default:
       RAX = 0;
@@ -455,6 +479,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RDX = 0; // Reserved, undefined
       break;
     }
+
 #else
   BX_INFO(("CPUID: not available on < late 486"));
   UndefinedOpcode(i);
