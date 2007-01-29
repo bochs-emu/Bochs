@@ -7,6 +7,7 @@ Changes after 2.3 release:
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
     'cmov' condition was false !
+  - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
   - Several disasm and internal debugger fixes (again)
 
 - General
