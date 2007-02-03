@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.115 2006-10-02 10:14:07 vruppert Exp $
+// $Id: devices.cc,v 1.116 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.115 2006-10-02 10:14:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.116 2007-02-03 17:56:35 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -1030,3 +1030,17 @@ bx_bool bx_devices_c::is_parallel_enabled()
   }
   return false;
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)
+{
+  unsigned i;
+  char name[6];
+
+  bx_list_c *pci = new bx_list_c(list, "pci_conf", 256);
+  for (i=0; i<256; i++) {
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(pci, name, &pci_conf[i], BASE_HEX);
+  }
+}
+#endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.27 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: vm8086.cc,v 1.28 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 
-  esp_laddr = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base + temp_ESP;
+  esp_laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP;
 
   // load SS:ESP from stack
   access_linear(esp_laddr + 12, 4, 0, BX_READ, &new_esp);

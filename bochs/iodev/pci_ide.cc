@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.27 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pci_ide.cc,v 1.28 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,20 +139,15 @@ void bx_pci_ide_c::reset(unsigned type)
 void bx_pci_ide_c::register_state(void)
 {
   char name[6];
-  unsigned i;
 
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci_ide", "PCI IDE Controller State");
 
-  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, name, &BX_PIDE_THIS s.pci_conf[i], BASE_HEX);
-  }
+  register_pci_state(list, BX_PIDE_THIS s.pci_conf);
 
   new bx_shadow_data_c(list, "buffer0", BX_PIDE_THIS s.bmdma[0].buffer, 0x20000);
   new bx_shadow_data_c(list, "buffer1", BX_PIDE_THIS s.bmdma[1].buffer, 0x20000);
 
-  for (i=0; i<2; i++) {
+  for (unsigned i=0; i<2; i++) {
     sprintf(name, "%d", i);
     bx_list_c *ctrl = new bx_list_c(list, name, 7);
     BXRS_PARAM_BOOL(ctrl, cmd_ssbm, BX_PIDE_THIS s.bmdma[i].cmd_ssbm);

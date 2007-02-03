@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.39 2006-10-01 19:51:49 vruppert Exp $
+// $Id: pci2isa.cc,v 1.40 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -155,11 +155,9 @@ void bx_piix3_c::register_state(void)
   char name[6];
 
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci2isa", "PCI-to-ISA Bridge State", 8);
-  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, name, &BX_P2I_THIS s.pci_conf[i], BASE_HEX);
-  }
+
+  register_pci_state(list, BX_P2I_THIS s.pci_conf);
+
   BXRS_HEX_PARAM_FIELD(list, elcr1, BX_P2I_THIS s.elcr1);
   BXRS_HEX_PARAM_FIELD(list, elcr2, BX_P2I_THIS s.elcr2);
   BXRS_HEX_PARAM_FIELD(list, apmc, BX_P2I_THIS s.apmc);

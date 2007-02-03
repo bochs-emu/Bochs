@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.90 2006-09-20 20:52:23 vruppert Exp $
+// $Id: ne2k.cc,v 1.91 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -226,11 +226,7 @@ void bx_ne2k_c::register_state(void)
   new bx_shadow_bool_c(list, "tx_timer_active", &BX_NE2K_THIS s.tx_timer_active);
 #if BX_SUPPORT_PCI
   if (BX_NE2K_THIS s.pci_enabled) {
-    bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-    for (i=0; i<256; i++) {
-      sprintf(name, "0x%02x", i);
-      new bx_shadow_num_c(pci_conf, name, &BX_NE2K_THIS s.pci_conf[i], BASE_HEX);
-    }
+    register_pci_state(list, BX_NE2K_THIS s.pci_conf);
   }
 #endif
 }
@@ -1408,7 +1404,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.90 2006-09-20 20:52:23 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.91 2007-02-03 17:56:35 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

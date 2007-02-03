@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcivga.cc,v 1.13 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pcivga.cc,v 1.14 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002,2003 Mike Nordell
@@ -114,15 +114,8 @@ void bx_pcivga_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_pcivga_c::register_state(void)
 {
-  unsigned i;
-  char name[6];
-
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pcivga", "PCI VGA Adapter State");
-  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, name, &BX_PCIVGA_THIS s.pci_conf[i], BASE_HEX);
-  }
+  register_pci_state(list, BX_PCIVGA_THIS s.pci_conf);
 }
 #endif
 

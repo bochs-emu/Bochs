@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.5 2006-10-07 08:59:15 vruppert Exp $
+// $Id: acpi.cc,v 1.6 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -177,19 +177,12 @@ void bx_acpi_ctrl_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_acpi_ctrl_c::register_state(void)
 {
-  unsigned i;
-  char name[6];
-
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State");
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State", 5);
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
   BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
-  bx_list_c *pci_conf = new bx_list_c(list, "pci_conf", 256);
-  for (i=0; i<256; i++) {
-    sprintf(name, "0x%02x", i);
-    new bx_shadow_num_c(pci_conf, name, &BX_ACPI_THIS s.pci_conf[i], BASE_HEX);
-  }
+  register_pci_state(list, BX_ACPI_THIS s.pci_conf);
 }
 
 void bx_acpi_ctrl_c::after_restore_state(void)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.88 2007-01-13 10:43:31 sshwarts Exp $
+// $Id: exception.cc,v 1.89 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,9 +67,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   bx_descriptor_t gate_descriptor, cs_descriptor;
   bx_selector_t cs_selector;
 
-  Bit16u gate_dest_selector;
-  Bit64u gate_dest_offset;
-
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*16 + 2 + EXT)
   idtindex = vector*16;
@@ -82,7 +79,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   // descriptor AR byte must indicate interrupt gate, trap gate,
-  // or task gate, else #GP(vector*8 + 2 + EXT)
+  // or task gate, else #GP(vector*16 + 2 + EXT)
   idtindex += BX_CPU_THIS_PTR idtr.base;
 
   access_linear(idtindex,     4, 0, BX_READ, &dword1);
@@ -106,21 +103,21 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
   }
 
   // if software interrupt, then gate descripor DPL must be >= CPL,
-  // else #GP(vector * 8 + 2 + EXT)
+  // else #GP(vector * 16 + 2 + EXT)
   if (is_INT && (gate_descriptor.dpl < CPL))
   {
     BX_ERROR(("interrupt(long mode): is_INT && (dpl < CPL)"));
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  // Gate must be present, else #NP(vector * 8 + 2 + EXT)
+  // Gate must be present, else #NP(vector * 16 + 2 + EXT)
   if (! IS_PRESENT(gate_descriptor)) {
     BX_ERROR(("interrupt(long mode): p == 0"));
     exception(BX_NP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
-  gate_dest_offset   = ((Bit64u)dword3 << 32) +
+  Bit16u gate_dest_selector = gate_descriptor.u.gate386.dest_selector;
+  Bit64u gate_dest_offset   = ((Bit64u)dword3 << 32) +
                        gate_descriptor.u.gate386.dest_offset;
 
   unsigned ist = gate_descriptor.u.gate386.dword_count & 0x7;

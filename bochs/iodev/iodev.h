@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.85 2006-10-02 10:14:07 vruppert Exp $
+// $Id: iodev.h,v 1.86 2007-02-03 17:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,7 +58,6 @@ class bx_g2h_c;
 #endif
 
 
-
 typedef Bit32u (*bx_read_handler_t)(void *, Bit32u, unsigned);
 typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 
@@ -95,6 +94,8 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
 // declare stubs for PCI devices
 //////////////////////////////////////////////////////////////////////
 
+class bx_list_c;
+
 // the best should be deriving of bx_pci_device_stub_c from bx_devmodel_c
 // but it make serious problems for cirrus_svga device
 class BOCHSAPI bx_pci_device_stub_c {
@@ -106,6 +107,10 @@ public:
   }
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
+
+#if BX_SUPPORT_SAVE_RESTORE
+  void register_pci_state(bx_list_c *list, Bit8u *pci_conf);
+#endif
 };
 
 //////////////////////////////////////////////////////////////////////
