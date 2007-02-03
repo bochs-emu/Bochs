@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.28 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: vm8086.cc,v 1.29 2007-02-03 21:36:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,14 +90,14 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
   esp_laddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP;
 
   // load SS:ESP from stack
-  access_linear(esp_laddr + 12, 4, 0, BX_READ, &new_esp);
-  access_linear(esp_laddr + 16, 2, 0, BX_READ, &raw_ss_selector);
+  read_virtual_dword(BX_SEG_REG_SS, temp_ESP+12, &new_esp);
+  read_virtual_word (BX_SEG_REG_SS, temp_ESP+16, &raw_ss_selector);
 
   // load ES,DS,FS,GS from stack
-  access_linear(esp_laddr + 20, 2, 0, BX_READ, &raw_es_selector);
-  access_linear(esp_laddr + 24, 2, 0, BX_READ, &raw_ds_selector);
-  access_linear(esp_laddr + 28, 2, 0, BX_READ, &raw_fs_selector);
-  access_linear(esp_laddr + 32, 2, 0, BX_READ, &raw_gs_selector);
+  read_virtual_word (BX_SEG_REG_SS, temp_ESP+20, &raw_es_selector);
+  read_virtual_word (BX_SEG_REG_SS, temp_ESP+24, &raw_ds_selector);
+  read_virtual_word (BX_SEG_REG_SS, temp_ESP+28, &raw_fs_selector);
+  read_virtual_word (BX_SEG_REG_SS, temp_ESP+32, &raw_gs_selector);
 
   writeEFlags(flags32, EFlagsValidMask);
 

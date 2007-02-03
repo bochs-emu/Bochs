@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.14 2007-01-13 10:43:31 sshwarts Exp $
+// $Id: call_far.cc,v 1.15 2007-02-03 21:36:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -258,7 +258,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           unsigned room_needed, param_count;
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
-          Bit32u   return_ss_base;
           Bit16u   parameter_word[32];
           Bit32u   parameter_dword[32];
           Bit32u   temp_ESP;
@@ -348,7 +347,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             return_ESP = ESP;
           else
             return_ESP =  SP;
-          return_ss_base = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS);
 
           // save return CS:eIP to be pushed on new stack
           return_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -359,14 +357,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           if (gate_descriptor.type==BX_286_CALL_GATE) {
             for (unsigned i=0; i<param_count; i++) {
-              access_linear(return_ss_base + return_ESP + i*2,
-                2, 0, BX_READ, &parameter_word[i]);
+              read_virtual_word (BX_SEG_REG_SS, return_ESP + i*2, &parameter_word[i]);
             }
           }
           else {
             for (unsigned i=0; i<param_count; i++) {
-              access_linear(return_ss_base + return_ESP + i*4,
-                4, 0, BX_READ, &parameter_dword[i]);
+              read_virtual_dword(BX_SEG_REG_SS, return_ESP + i*4, &parameter_dword[i]);
             }
           }
 

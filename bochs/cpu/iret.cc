@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.16 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: iret.cc,v 1.17 2007-02-03 21:36:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,12 +157,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     temp_ESP = SP;
 
   if (i->os32L()) {
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
-      4, CPL==3, BX_READ, &new_eip);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
-      4, CPL==3, BX_READ, &new_eflags);
+    read_virtual_word (BX_SEG_REG_SS, temp_ESP + 4, &raw_cs_selector);
+    read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0, &new_eip);
+    read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8, &new_eflags);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
     if (new_eflags & EFlagsVMMask) {
@@ -174,12 +171,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
   }
   else {
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 2,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
-      2, CPL==3, BX_READ, &new_ip);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
-      2, CPL==3, BX_READ, &new_flags);
+    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 2, &raw_cs_selector);
+    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0, &new_ip);
+    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4, &new_flags);
   }
 
   parse_selector(raw_cs_selector, &cs_selector);
@@ -259,8 +253,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     /* examine return SS selector and associated descriptor */
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + ss_offset,
-      2, 0, BX_READ, &raw_ss_selector);
+    read_virtual_word(BX_SEG_REG_SS, temp_ESP + ss_offset, &raw_ss_selector);
 
     /* selector must be non-null, else #GP(0) */
     if ( (raw_ss_selector & 0xfffc) == 0 ) {
@@ -307,21 +300,17 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     if (i->os32L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
-        4, 0, BX_READ, &new_eip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 8,
-        4, 0, BX_READ, &new_eflags);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 12,
-        4, 0, BX_READ, &new_esp);
+      read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  0, &new_eip);
+      read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  8, &new_eflags);
+      read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 12, &new_esp);
     }
     else {
       Bit16u new_sp = 0;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 0,
-        2, 0, BX_READ, &new_ip);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 4,
-        2, 0, BX_READ, &new_flags);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_ESP + 6,
-        2, 0, BX_READ, &new_sp);
+
+      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0, &new_ip);
+      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4, &new_flags);
+      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 6, &new_sp);
+
       new_eip = new_ip;
       new_esp = new_sp;
       new_eflags = new_flags;
@@ -404,12 +393,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
   if (i->os64L()) {
     Bit64u new_rflags = 0;
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-      8, CPL==3, BX_READ, &new_rip);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16,
-      8, CPL==3, BX_READ, &new_rflags);
+
+    read_virtual_word (BX_SEG_REG_SS, temp_RSP +  8, &raw_cs_selector);
+    read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0, &new_rip);
+    read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16, &new_rflags);
+
     new_eflags = (Bit32u) new_rflags;
     top_nbytes_outer = 40;
     ss_offset = 32;
@@ -422,12 +410,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     Bit32u return_EIP = 0;
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-      4, CPL==3, BX_READ, &return_EIP);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
-      4, CPL==3, BX_READ, &new_eflags);
+
+    read_virtual_word (BX_SEG_REG_SS, temp_RSP + 4, &raw_cs_selector);
+    read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0, &return_EIP);
+    read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8, &new_eflags);
+
     new_rip = return_EIP;
     top_nbytes_outer = 20;
     top_nbytes_same = 12;
@@ -441,12 +428,11 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     Bit16u return_IP = 0, new_flags = 0;
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 2,
-      2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-      2, CPL==3, BX_READ, &return_IP);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
-      2, CPL==3, BX_READ, &new_flags);
+
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2, &raw_cs_selector);
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0, &return_IP);
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4, &new_flags);
+
     new_rip = return_IP;
     new_eflags = (Bit32u) new_flags;
     top_nbytes_outer = 10;
@@ -528,8 +514,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     /* examine return SS selector and associated descriptor */
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + ss_offset,
-      2, 0, BX_READ, &raw_ss_selector);
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + ss_offset, &raw_ss_selector);
 
     if ((raw_ss_selector & 0xfffc) == 0) {
       if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
@@ -577,19 +562,16 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     if (i->os64L()) {
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24,
-        8, CPL==3, BX_READ, &new_rsp);
+      read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 24, &new_rsp);
     }
     else if (i->os32L()) {
-      Bit32u return_ESP;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12,
-        4, CPL==3, BX_READ, &return_ESP);
+      Bit32u return_ESP = 0;
+      read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12, &return_ESP);
       new_rsp = return_ESP;
     }
     else {
-      Bit16u return_SP;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6,
-        2, CPL==3, BX_READ, &return_SP);
+      Bit16u return_SP = 0;
+      read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6, &return_SP);
       new_rsp = return_SP;
     }
 

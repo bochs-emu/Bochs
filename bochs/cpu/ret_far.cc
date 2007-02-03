@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.8 2006-10-04 19:08:40 sshwarts Exp $
+// $Id: ret_far.cc,v 1.9 2007-02-03 21:36:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,10 +76,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       exception(BX_SS_EXCEPTION, 0, 0);
     }
 
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 8,
-        2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-        8, CPL==3, BX_READ, &return_RIP);
+    read_virtual_word (BX_SEG_REG_SS, temp_RSP + 8, &raw_cs_selector);
+    read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 0, &return_RIP);
 
     stack_param_offset = 16;
   } 
@@ -95,10 +93,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     Bit32u return_EIP = 0;
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4,
-        2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-        4, CPL==3, BX_READ, &return_EIP);
+    read_virtual_word (BX_SEG_REG_SS, temp_RSP + 4, &raw_cs_selector);
+    read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0, &return_EIP);
     return_RIP = return_EIP;
 
     stack_param_offset = 8;
@@ -113,10 +109,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     }
 
     Bit16u return_IP = 0;
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 2,
-        2, CPL==3, BX_READ, &raw_cs_selector);
-    access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 0,
-        2, CPL==3, BX_READ, &return_IP);
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2, &raw_cs_selector);
+    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0, &return_IP);
     return_RIP = return_IP;
 
     stack_param_offset = 4;
@@ -192,10 +186,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
         exception(BX_SS_EXCEPTION, 0, 0);
       }
 
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 24 + pop_bytes,
-        2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 16 + pop_bytes,
-        8, 0, BX_READ, &return_RSP);
+      read_virtual_word (BX_SEG_REG_SS, temp_RSP + 24 + pop_bytes, &raw_ss_selector);
+      read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16 + pop_bytes, &return_RSP);
     }
     else
 #endif
@@ -207,10 +199,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
 
       Bit32u return_ESP = 0;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 12 + pop_bytes,
-        2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP +  8 + pop_bytes,
-        4, 0, BX_READ, &return_ESP);
+      read_virtual_word (BX_SEG_REG_SS, temp_RSP + 12 + pop_bytes, &raw_ss_selector);
+      read_virtual_dword(BX_SEG_REG_SS, temp_RSP +  8 + pop_bytes, &return_ESP);
       return_RSP = return_ESP;
     }
     else {
@@ -221,10 +211,8 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
 
       Bit16u return_SP = 0;
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 6 + pop_bytes,
-        2, 0, BX_READ, &raw_ss_selector);
-      access_linear(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_SS) + temp_RSP + 4 + pop_bytes,
-        2, 0, BX_READ, &return_SP);
+      read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6 + pop_bytes, &raw_ss_selector);
+      read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4 + pop_bytes, &return_SP);
       return_RSP = return_SP;
     }
 
