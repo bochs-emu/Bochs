@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.28 2006-10-29 18:44:49 vruppert Exp $
+// $Id: gdbstub.cc,v 1.29 2007-02-07 17:53:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -549,7 +549,7 @@ static void debug_loop(void)
           }
           else
           {
-            put_reply("ENN");
+            put_reply("Eff");
           }
         }
         break;                    
@@ -793,7 +793,7 @@ static void debug_loop(void)
         }
         else
         {
-          put_reply("ENN");
+          put_reply("Eff");
         }
         break;
 
@@ -813,7 +813,7 @@ static void debug_loop(void)
         }
         else
         {
-          put_reply("ENN");
+          put_reply("Eff");
         }          
         break;
 
