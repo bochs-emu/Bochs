@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.h,v 1.29 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: floppy.h,v 1.30 2007-02-09 14:23:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,7 +123,6 @@ private:
     Bit8u    DIR[4]; // Digital Input Register:
                   // b7: 0=diskette is present and has not been changed
                   //     1=diskette missing or changed
-    bx_bool  non_dma;   // non-DMA mode
     bx_bool  lock;      // FDC lock status
     Bit8u    SRT;       // step rate time
     Bit8u    HUT;       // head unload time
@@ -151,6 +150,7 @@ private:
   BX_FD_SMF void   enter_result_phase(void);
   BX_FD_SMF Bit32u calculate_step_delay(Bit8u drive, Bit8u new_cylinder);
   BX_FD_SMF void   reset_changeline(void);
+  BX_FD_SMF bx_bool get_tc(void);
   static void      timer_handler(void *);
 
 public:
