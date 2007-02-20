@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.6 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: acpi.cc,v 1.7 2007-02-20 09:36:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -147,6 +147,8 @@ void bx_acpi_ctrl_c::init(void)
 
 void bx_acpi_ctrl_c::reset(unsigned type)
 {
+  unsigned i;
+
   static const struct reset_vals_t {
     unsigned      addr;
     unsigned char val;
@@ -164,7 +166,7 @@ void bx_acpi_ctrl_c::reset(unsigned type)
       { 0x90, 0x01 }, { 0x91, 0x00 },
       { 0x92, 0x00 }, { 0x93, 0x00 }
   };
-  for (unsigned i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
+  for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
     BX_ACPI_THIS s.pci_conf[reset_vals[i].addr] = reset_vals[i].val;
   }
 
@@ -172,16 +174,40 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS s.pmen = 0;
   BX_ACPI_THIS s.pmcntrl = 0;
   BX_ACPI_THIS s.tmr_overflow_time = 0xffffff;
+  BX_ACPI_THIS s.smbus.stat = 0;
+  BX_ACPI_THIS s.smbus.ctl = 0;
+  BX_ACPI_THIS s.smbus.cmd = 0;
+  BX_ACPI_THIS s.smbus.addr = 0;
+  BX_ACPI_THIS s.smbus.data0 = 0;
+  BX_ACPI_THIS s.smbus.data1 = 0;
+  BX_ACPI_THIS s.smbus.index = 0;
+  for (i = 0; i < 32; i++) {
+    BX_ACPI_THIS s.smbus.data[i] = 0;
+  }
 }
 
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_acpi_ctrl_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State", 5);
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State", 6);
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
   BXRS_HEX_PARAM_FIELD(list, tmr_overflow_time, BX_ACPI_THIS s.tmr_overflow_time);
+  bx_list_c *smbus = new bx_list_c(list, "smbus", "ACPI SMBus", 8);
+  BXRS_HEX_PARAM_FIELD(smbus, stat, BX_ACPI_THIS s.smbus.stat);
+  BXRS_HEX_PARAM_FIELD(smbus, ctl, BX_ACPI_THIS s.smbus.ctl);
+  BXRS_HEX_PARAM_FIELD(smbus, cmd, BX_ACPI_THIS s.smbus.cmd);
+  BXRS_HEX_PARAM_FIELD(smbus, addr, BX_ACPI_THIS s.smbus.addr);
+  BXRS_HEX_PARAM_FIELD(smbus, data0, BX_ACPI_THIS s.smbus.data0);
+  BXRS_HEX_PARAM_FIELD(smbus, data1, BX_ACPI_THIS s.smbus.data1);
+  BXRS_HEX_PARAM_FIELD(smbus, index, BX_ACPI_THIS s.smbus.index);
+  bx_list_c *data = new bx_list_c(smbus, "data", "ACPI SMBus data", 32);
+  for (unsigned i = 0; i < 32; i++) {
+    char name[6];
+    sprintf(name, "0x%02x", i);
+    new bx_shadow_num_c(data, name, &BX_ACPI_THIS s.smbus.data[i], BASE_HEX);
+  }
   register_pci_state(list, BX_ACPI_THIS s.pci_conf);
 }
 
@@ -286,10 +312,41 @@ Bit32u bx_acpi_ctrl_c::read(Bit32u address, unsigned io_len)
     }
     BX_DEBUG(("ACPI read from PM register 0x%02x returns 0x%08x", reg, value));
   } else {
-    if ((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) {
+    if (((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) &&
+        ((BX_ACPI_THIS s.pci_conf[0xd2] & 0x01) == 0)) {
       return value;
     }
-    BX_INFO(("ACPI read from SM register 0x%02x not implemented yet", reg));
+    switch (reg) {
+      case 0x00:
+        value = BX_ACPI_THIS s.smbus.stat;
+        break;
+      case 0x02:
+        BX_ACPI_THIS s.smbus.index = 0;
+        value = BX_ACPI_THIS s.smbus.ctl & 0x1f;
+        break;
+      case 0x03:
+        value = BX_ACPI_THIS s.smbus.cmd;
+        break;
+      case 0x04:
+        value = BX_ACPI_THIS s.smbus.addr;
+        break;
+      case 0x05:
+        value = BX_ACPI_THIS s.smbus.data0;
+        break;
+      case 0x06:
+        value = BX_ACPI_THIS s.smbus.data1;
+        break;
+      case 0x07:
+        value = BX_ACPI_THIS s.smbus.data[BX_ACPI_THIS s.smbus.index++];
+        if (BX_ACPI_THIS s.smbus.index > 31) {
+          BX_ACPI_THIS s.smbus.index = 0;
+        }
+        break;
+      default:
+        value = 0;
+        BX_INFO(("ACPI read from SMBus register 0x%02x not implemented yet", reg));
+    }
+    BX_DEBUG(("ACPI read from SMBus register 0x%02x returns 0x%08x", reg, value));
   }
   return value;
 }
@@ -355,10 +412,41 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
     }
   } else if ((address & 0xffe0) == BX_ACPI_THIS s.sm_base) {
-    if ((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) {
+    if (((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) &&
+        ((BX_ACPI_THIS s.pci_conf[0xd2] & 0x01) == 0)) {
       return;
     }
-    BX_INFO(("ACPI write to SM register 0x%02x not implemented yet", reg));
+    BX_DEBUG(("ACPI write to SMBus register 0x%02x, value = 0x%04x", reg, value));
+    switch (reg) {
+      case 0x00:
+        BX_ACPI_THIS s.smbus.stat = 0;
+        BX_ACPI_THIS s.smbus.index = 0;
+        break;
+      case 0x02:
+        BX_ACPI_THIS s.smbus.ctl = 0;
+        // TODO: execute SMBus command
+        break;
+      case 0x03:
+        BX_ACPI_THIS s.smbus.cmd = 0;
+        break;
+      case 0x04:
+        BX_ACPI_THIS s.smbus.addr = 0;
+        break;
+      case 0x05:
+        BX_ACPI_THIS s.smbus.data0 = 0;
+        break;
+      case 0x06:
+        BX_ACPI_THIS s.smbus.data1 = 0;
+        break;
+      case 0x07:
+        BX_ACPI_THIS s.smbus.data[BX_ACPI_THIS s.smbus.index++] = value;
+        if (BX_ACPI_THIS s.smbus.index > 31) {
+          BX_ACPI_THIS s.smbus.index = 0;
+        }
+        break;
+      default:
+        BX_INFO(("ACPI write to SMBus register 0x%02x not implemented yet", reg));
+    }
   } else {
     BX_DEBUG(("DBG: 0x%08x", value));
   }

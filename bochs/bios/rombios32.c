@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.8 2006-10-03 20:27:30 vruppert Exp $
+// $Id: rombios32.c,v 1.9 2007-02-20 09:36:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -383,7 +383,7 @@ unsigned long ram_size;
 unsigned long ebda_cur_addr;
 #endif
 int acpi_enabled;
-uint32_t pm_io_base;
+uint32_t pm_io_base, smb_io_base;
 int pm_sci_int;
 unsigned long bios_table_cur_addr;
 unsigned long bios_table_end_addr;
@@ -755,6 +755,9 @@ static void pci_bios_init_device(PCIDevice *d)
         pm_io_base = PM_IO_BASE;
         pci_config_writel(d, 0x40, pm_io_base | 1);
         pci_config_writeb(d, 0x80, 0x01); /* enable PM io space */
+        smb_io_base = SMB_IO_BASE;
+        pci_config_writel(d, 0x90, smb_io_base | 1);
+        pci_config_writeb(d, 0xd2, 0x09); /* enable SMBus io space */
         pm_sci_int = pci_config_readb(d, PCI_INTERRUPT_LINE);
 #ifdef BX_USE_SMM
         smm_init(d);

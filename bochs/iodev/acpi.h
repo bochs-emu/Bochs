@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.h,v 1.4 2006-10-01 19:51:49 vruppert Exp $
+// $Id: acpi.h,v 1.5 2007-02-20 09:36:55 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -71,6 +71,16 @@ private:
     Bit16u pmcntrl;
     Bit64u tmr_overflow_time;
     int timer_index;
+    struct {
+      Bit8u stat;
+      Bit8u ctl;
+      Bit8u cmd;
+      Bit8u addr;
+      Bit8u data0;
+      Bit8u data1;
+      Bit8u index;
+      Bit8u data[32];
+    } smbus;
   } s;
 };
 
