@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.34 2007-01-13 10:43:31 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.35 2007-02-22 17:43:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -563,7 +563,6 @@ void disassembler::Jw(const x86_insn *insn)
 {
   // Jw supported in 16-bit mode only
   assert(! insn->is_64);
-  assert(! insn->is_32);
 
   Bit16u imm16 = (Bit16s) fetch_word();
   dis_sprintf(".+0x%04x", (unsigned) imm16);
