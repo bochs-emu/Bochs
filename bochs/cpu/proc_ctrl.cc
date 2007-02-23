@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.161 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.162 2007-02-23 22:08:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1507,7 +1507,6 @@ void BX_CPU_C::RDTSCP(bxInstruction_c *i)
 void BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  invalidate_prefetch_q();
 
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("RDMSR: CPL!=0 not in real mode"));
