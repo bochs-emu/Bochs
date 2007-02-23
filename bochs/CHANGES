@@ -2,13 +2,13 @@ Changes after 2.3 release:
 
 - CPU
   - Fixed critical issue with 0x90 opcode (NOP) handling in x86-64 mode
-  - Correctly detect inexact result by FPU
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
     'cmov' condition was false !
   - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
-  - Several disasm and internal debugger fixes (again)
+  - Fixed detecting of inexact result by FPU
+  - Several disasm and internal debugger fixes
 
 - General
   - 2nd simulation support in wxBochs now almost usable (simulation cleanup
@@ -43,6 +43,50 @@ Changes after 2.3 release:
   - 32-bit PM BIOS init code for ACPI, PCI, SMP and SMM (initial patches by
     Fabrice Bellard)
   - PCI BIOS function "find class code" implemented
+
+- SF patches applied
+ [1641816] partial support for non-DMA access to floppy by John Comeau 
+ [1624032] shows where write outside of memory occurred by John Comeau
+ [1607793] allow fullscreen when app requests it by John Comeau
+ [1603013] Bugfix for major NOP problem on x64 by mvysin
+ [1600178] Make tap and tuntap compile on OpenBSD by Jonathan Gray
+ [1149659] improve gdbstub network efficiency by Avi Kivity 
+ [1554502] Trivial FPU exception handling fix  
+
+- these S.F. bugs were closed
+ [1665601] crash disassembling bootcode
+ [1657065] CVS sources won't compile
+ [1653805] bochs's gdbstub uses incorrect protocol
+ [1640737] ASM sti command frezzes guest OS
+ [1636439] latest CVS sources don't compile under Cygwin
+ [1634357] disasm incorrect (no sign ext) displacement in 64-bit mode
+ [1376453] pcidev segfaults bochs
+ [1180890] IOAPIC in BOCHS - WinXP 64 in MP version
+ [1597528] 2.3 fails to compile on amd64
+ [1526255] FLD1 broken when compaling with gcc 4.0.x
+ [1597451] eth_fbsd is broken under FreeBSD
+ [1571949] Bochs will not compile under Solaris
+ [1500216] Bochs fails to boot BeOs CD
+ [1458339] bochs-2.2.6 WinXP Binary ACPI error installing FreeBSD 6.0
+ [1440011] patches needed for FreeBSD 6.0 to compile Bochs
+  [431674] some devices don't have a prefix
+  [458150] QNX demo disk crashes with new pit
+  [818322] Bochs 2.1 cvs: OS/2 - read verify on non disk
+  [906840] KBD: bogus scan codes generated in set 3
+ [1005053] No keyboard codes translation
+ [1109374] Problem with Scancodeset 2
+ [1572345] Bochs won't continue
+ [1568153] Bochs looks for (and loads?) unspecified display libraries
+ [1563462] Errors in /iodev/harddrv.h
+ [1562172] TLB_init() fails to initialize priv_check array if USE_TLB 0
+ [1385303] debugger crashes after panic
+ [1438227] crc.cpp missing in bx_debug version 2.2.6
+ [1501825] debugger crashes on to high input
+ [1420959] Memory leak + buffer overflow in Bochs debugger
+ [1553289] Error in Dis-assembler
+  [542464] I cannot use FLAT
+ [1548270] Bochs won't die with its pseudo terminal
+ [1545588] roundAndPackFloatx80 does not detect round up correctly  
 
 -------------------------------------------------------------------------
 Changes in 2.3 (August 27, 2006):
