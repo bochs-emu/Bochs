@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.127 2006-12-31 11:56:14 vruppert Exp $
+// $Id: keyboard.cc,v 1.128 2007-02-25 13:18:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.127 2006-12-31 11:56:14 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.128 2007-02-25 13:18:33 vruppert Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -1529,7 +1529,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         // If PS/2 mouse present, send NACK for unknown commands, otherwise ignore
         if (is_ps2) {
           BX_ERROR(("[mouse] kbd_ctrl_to_mouse(): got value of 0x%02x", value));
-          kbd_enQ(0xFE); /* send NACK */
+          controller_enQ(0xFE, 1); /* send NACK */
         }
     }
   }
