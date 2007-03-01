@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.45 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: pciusb.cc,v 1.46 2007-03-01 18:29:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -250,7 +250,7 @@ void bx_pciusb_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_pciusb_c::register_state(void)
 {
-  unsigned i, j, n;
+  unsigned i, j;
   char hubnum[8], portnum[8], name[6];
   bx_list_c *hub, *usb_cmd, *usb_st, *usb_en, *port;
 
@@ -542,7 +542,7 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_USB_THIS hub[0].usb_status.host_halted = 0;
         BX_DEBUG(("Schedule bit set in Command register"));
       } else {
-        //BX_USB_THIS hub[0].usb_status.host_halted = 1;
+        BX_USB_THIS hub[0].usb_status.host_halted = 1;
         BX_DEBUG(("Schedule bit clear in Command register"));
       }
 
@@ -590,7 +590,7 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_DEBUG(("write to frame number register with bits 15:11 not zero: 0x%04x", value));
 
       if (BX_USB_THIS hub[0].usb_status.host_halted)
-        BX_USB_THIS hub[0].usb_frame_num.frame_num = value;
+        BX_USB_THIS hub[0].usb_frame_num.frame_num = (value & 0x07FF);
       else
         // ignored by the hardward, but lets report it anyway
         BX_DEBUG(("write to frame number register with STATUS.HALTED == 0"));
@@ -600,7 +600,7 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (value & 0xFFF)
         BX_PANIC(("write to frame base register with bits 11:0 not zero: 0x%08x", value));
 
-      BX_USB_THIS hub[0].usb_frame_base.frame_base = value;
+      BX_USB_THIS hub[0].usb_frame_base.frame_base = (value & ~0xfff);
       break;
 
     case 0x0C: // start of Frame Modify register (8-bit)
@@ -703,7 +703,7 @@ void bx_pciusb_c::usb_timer(void)
     BX_USB_THIS busy = 0;
   }
   if (BX_USB_THIS hub[0].usb_command.schedule) {
-    struct USB_DEVICE *dev = NULL;
+    //struct USB_DEVICE *dev = NULL;
     BX_USB_THIS busy = 1;
     bx_bool fire_int = 0;
     set_irq_level(0);  // make sure it is low
