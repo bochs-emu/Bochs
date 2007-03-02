@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.33 2006-06-12 16:58:27 sshwarts Exp $
+// $Id: stack32.cc,v 1.34 2007-03-02 21:03:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,60 +158,63 @@ void BX_CPU_C::POP32_SS(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 2
 void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 {
-  Bit32u temp_ESP;
-  Bit32u esp;
+  Bit32u temp_ESP = ESP;
+  Bit16u temp_SP  = SP;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_ESP = ESP;
+  {
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  4), &EAX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  8), &ECX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 12), &EDX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 16), &EBX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 20), &temp_ESP);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 24), &EBP);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 28), &ESI);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 32), &EDI);
+    ESP -= 32;
+  }
   else
-    temp_ESP = SP;
-
-  if (protected_mode()) {
-    if (! can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 32)) {
-        BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
-        exception(BX_SS_EXCEPTION, 0, 0);
-        return;
-    }
+  {
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP -  4), &EAX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP -  8), &ECX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 12), &EDX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 16), &EBX);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 20), &temp_ESP);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 24), &EBP);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 28), &ESI);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP - 32), &EDI);
+    SP -= 32;
   }
-  else {
-    if (temp_ESP < 32)
-      BX_PANIC(("pushad: eSP < 32"));
-  }
-
-  esp = ESP;
-
-  /* ??? optimize this by using virtual write, all checks passed */
-  push_32(EAX);
-  push_32(ECX);
-  push_32(EDX);
-  push_32(EBX);
-  push_32(esp);
-  push_32(EBP);
-  push_32(ESI);
-  push_32(EDI);
 }
 
 void BX_CPU_C::POPAD32(bxInstruction_c *i)
 {
-  Bit32u edi, esi, ebp, etmp, ebx, edx, ecx, eax;
+  Bit32u edi, esi, ebp, ebx, edx, ecx, eax;
 
-  if (protected_mode()) {
-    if ( !can_pop(32) ) {
-      BX_ERROR(("POPAD: not enough bytes on stack"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+  {
+    Bit32u temp_ESP = ESP;
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0), &edi);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4), &esi);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8), &ebp);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 16), &ebx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 20), &edx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 24), &ecx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 28), &eax);
+    ESP += 32;
   }
-
-  /* ??? optimize this */
-  pop_32(&edi);
-  pop_32(&esi);
-  pop_32(&ebp);
-  pop_32(&etmp); /* value for ESP discarded */
-  pop_32(&ebx);
-  pop_32(&edx);
-  pop_32(&ecx);
-  pop_32(&eax);
+  else
+  {
+    Bit16u temp_SP = SP;
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0), &edi);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4), &esi);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8), &ebp);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 16), &ebx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 20), &edx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 24), &ecx);
+    read_virtual_dword(BX_SEG_REG_SS, (Bit16u) (temp_SP + 28), &eax);
+    SP += 32;
+  }
 
   EDI = edi;
   ESI = esi;

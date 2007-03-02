@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.20 2006-03-06 22:03:04 sshwarts Exp $
+// $Id: stack16.cc,v 1.21 2007-03-02 21:03:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -140,63 +140,63 @@ void BX_CPU_C::POP_Ew(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 void BX_CPU_C::PUSHAD16(bxInstruction_c *i)
 {
-  Bit32u temp_ESP;
-  Bit16u sp;
+  Bit32u temp_ESP = ESP;
+  Bit16u temp_SP  = SP;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_ESP = ESP;
-  else
-    temp_ESP = SP;
-
-#if BX_CPU_LEVEL >= 2
-  if (protected_mode()) {
-    if ( !can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, temp_ESP, 16) ) {
-      BX_ERROR(("PUSHAD(): stack doesn't have enough room!"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
-  }
-  else
-#endif
   {
-    if (temp_ESP < 16)
-      BX_PANIC(("PUSHAD: eSP < 16"));
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  2), &AX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  4), &CX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  6), &DX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP -  8), &BX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 10), &temp_SP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 12), &BP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 14), &SI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP - 16), &DI);
+    ESP -= 16;
   }
-
-  sp = SP;
-
-  /* ??? optimize this by using virtual write, all checks passed */
-  push_16(AX);
-  push_16(CX);
-  push_16(DX);
-  push_16(BX);
-  push_16(sp);
-  push_16(BP);
-  push_16(SI);
-  push_16(DI);
+  else
+  {
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  2), &AX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  4), &CX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  6), &DX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP -  8), &BX);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 10), &temp_SP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 12), &BP);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 14), &SI);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP - 16), &DI);
+    SP -= 16;
+  }
 }
 
 void BX_CPU_C::POPAD16(bxInstruction_c *i)
 {
-  Bit16u di, si, bp, tmp, bx, dx, cx, ax;
+  Bit16u di, si, bp, bx, dx, cx, ax;
 
-  if (protected_mode()) {
-    if ( !can_pop(16) ) {
-      BX_ERROR(("POPA: not enough bytes on stack"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-      return;
-    }
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+  {
+    Bit32u temp_ESP = ESP;
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0), &di);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  2), &si);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4), &bp);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8), &bx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 10), &dx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12), &cx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 14), &ax);
+    ESP += 16;
   }
-
-  /* ??? optimize this */
-  pop_16(&di);
-  pop_16(&si);
-  pop_16(&bp);
-  pop_16(&tmp); /* value for SP discarded */
-  pop_16(&bx);
-  pop_16(&dx);
-  pop_16(&cx);
-  pop_16(&ax);
+  else
+  {
+    Bit16u temp_SP = SP;
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0), &di);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  2), &si);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4), &bp);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8), &bx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 10), &dx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12), &cx);
+    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 14), &ax);
+    SP += 16;
+  }
 
   DI = di;
   SI = si;
