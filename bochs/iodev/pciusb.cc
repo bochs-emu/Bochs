@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.46 2007-03-01 18:29:36 vruppert Exp $
+// $Id: pciusb.cc,v 1.47 2007-03-05 18:09:57 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -87,7 +87,7 @@ bx_pciusb_c::bx_pciusb_c()
 
 bx_pciusb_c::~bx_pciusb_c()
 {
-  //TODO:  free  BX_USB_THIS device_buffer
+  delete [] BX_USB_THIS device_buffer;
 
   // close any open handles
   for (int i=0; i<USB_CUR_DEVS; i++)
@@ -703,7 +703,6 @@ void bx_pciusb_c::usb_timer(void)
     BX_USB_THIS busy = 0;
   }
   if (BX_USB_THIS hub[0].usb_command.schedule) {
-    //struct USB_DEVICE *dev = NULL;
     BX_USB_THIS busy = 1;
     bx_bool fire_int = 0;
     set_irq_level(0);  // make sure it is low
@@ -955,7 +954,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
 
-            case 0x50: // USB Mass Storage ????
+            case 0x50: // USB Mass Storage
               Bit8u bulk_int_packet[1024];
               if (flash_stick(bulk_int_packet, maxlen, 0)) {
 
@@ -1034,7 +1033,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_PANIC(("Mouse received and OUT packet!"));
               break;
 
-            case 0x50: // USB Mass Storage ????
+            case 0x50: // USB Mass Storage
               if (flash_stick(bulk_int_packet, maxlen, 1)) {
 
               } else {
@@ -1350,15 +1349,12 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           }
           break;
         case 0xFE:
-          // The Kingston driver sends the control packet.
-          // At the moment, I haven't a clue to what it is.
-          //   are we ready.???
-          
-          dev->scratch = 0;
-          dev->function.in = (Bit8u *) &dev->scratch;
+          // FIXME: protocol type should be checked
+          BX_INFO(("Request: get max. LUN"));
+          *device_buffer = 0;
+          dev->function.in = device_buffer;
           dev->function.in_cnt = 1;
-          
-          BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           break;
         default:
           BX_PANIC((" **** illegal or unknown REQUEST sent to Host Controller:  %02x", data[1]));
@@ -1512,7 +1508,7 @@ void bx_pciusb_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer
   if (stalled || data_buffer_error || babble || nak || crc_time_out || bitstuff_error)
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field in there was an error
 }
- 
+
 // pci configuration space read callback handler
 Bit32u bx_pciusb_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
@@ -1709,6 +1705,8 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
           BX_USB_THIS mouse_connected = 0;
         } else if (type == USB_DEV_TYPE_KEYPAD) {
           BX_USB_THIS keyboard_connected = 0;
+        } else if (type == USB_DEV_TYPE_FLASH) {
+          BX_USB_THIS flash_connected = 0;
         }
       }
     }
@@ -1871,27 +1869,27 @@ void bx_pciusb_c::dump_packet(Bit8u *data, unsigned size)
 
 bx_bool bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out)
 {
+  unsigned ret = 0;
+
   // packet contains the SCSI interface command
   dump_packet(packet, size);
-  
+
   if (out) {
 
-      // TODO:
+    // TODO:
 
-      // From this point on, it is simply a SCSI command interface.
-      // We could set up the image so that we could use the existing
-      //  harddrv.cc and cdrom.cc code and our flash.img file.
-  
-      // At this point, I don't have the time to do this, but if someone
-      //  else would like to, please do.
+    // From this point on, it is simply a SCSI command interface.
+    // We could set up the image so that we could use the existing
+    //  harddrv.cc and cdrom.cc code and our flash.img file.
 
+    // At this point, I don't have the time to do this, but if someone
+    //  else would like to, please do.
   } else {
-    
+
     // For now, I will not implement the write part.
-    
+
   }
-  
-  return 1;
+  return ret;
 }
 
 const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
