@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.312 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: cpu.h,v 1.313 2007-03-06 17:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2666,6 +2666,10 @@ public: // for now...
   BX_SMF unsigned dbg_query_pending(void);
   BX_SMF bx_bool  dbg_check_begin_instr_bpoint(void);
   BX_SMF bx_bool  dbg_check_end_instr_bpoint(void);
+#endif
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+  BX_SMF bx_bool  dbg_instruction_prolog(void);
+  BX_SMF bx_bool  dbg_instruction_epilog(void);
 #endif
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy);

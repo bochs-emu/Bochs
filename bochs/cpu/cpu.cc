@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.170 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.171 2007-03-06 17:47:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -262,12 +262,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // or the boundary fetch (across pages), by this point.
     BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
-#if BX_DEBUGGER
-    if(dbg_check_begin_instr_bpoint()) return;
-#endif
-
-#if BX_EXTERNAL_DEBUGGER
-    bx_external_debugger(BX_CPU_THIS);
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+      if (dbg_instruction_prolog()) return;
 #endif
 
 #if BX_DISASM
@@ -293,16 +289,9 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // inform instrumentation about new instruction
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
-#if BX_DEBUGGER
-    // note instr generating exceptions never reach this point.
-    if (dbg_check_end_instr_bpoint()) return;
-#endif
-
-#if BX_GDBSTUB
-    if (bx_dbg.gdbstub_enabled) {
-      unsigned reason = bx_gdbstub_check(EIP);
-      if (reason != GDBSTUB_STOP_NO_REASON) return;
-    }
+      // note instr generating exceptions never reach this point
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+      if (dbg_instruction_epilog()) return;
 #endif
 
 #if BX_SUPPORT_SMP || BX_DEBUGGER
@@ -799,6 +788,37 @@ void BX_CPU_C::ask(int level, const char *prefix, const char *fmt, va_list ap)
   trap_debugger(1);
 }
 #endif
+
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+bx_bool BX_CPU_C::dbg_instruction_prolog(void)
+{
+#if BX_DEBUGGER
+  if(dbg_check_begin_instr_bpoint()) return 1;
+#endif
+
+#if BX_EXTERNAL_DEBUGGER
+  bx_external_debugger(BX_CPU_THIS);
+#endif
+
+  return 0;
+}
+
+bx_bool BX_CPU_C::dbg_instruction_epilog(void)
+{
+#if BX_DEBUGGER
+  if (dbg_check_end_instr_bpoint()) return 1;
+#endif
+
+#if BX_GDBSTUB
+  if (bx_dbg.gdbstub_enabled) {
+    unsigned reason = bx_gdbstub_check(EIP);
+    if (reason != GDBSTUB_STOP_NO_REASON) return 1;
+  }
+#endif
+
+  return 0;
+}
+#endif // BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
 
 #if BX_DEBUGGER
 extern unsigned dbg_show_mask;
