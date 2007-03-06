@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.91 2007-03-06 21:12:20 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.92 2007-03-06 21:18:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,6 +70,8 @@ static struct {
   Bit32u   default_addr;
   unsigned next_bpoint_id;
 } bx_debugger;
+
+#define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
 typedef struct {
   FILE    *fp;
@@ -1164,12 +1166,6 @@ void bx_dbg_unwatch(int read, Bit32u address)
   }
 }
 
-#if BX_SUPPORT_SMP
-  #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
-#else
-  #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 0
-#endif
-
 void bx_dbg_continue_command(void)
 {
   // continue executing, until a guard found
@@ -1220,28 +1216,30 @@ one_more:
       // "which" remembers which cpu set the stop flag.  If multiple
       // cpus set stop, too bad.
     }
-    // increment time tick only after all processors have had their chance.
-#if BX_SUPPORT_SMP == 0
-    // all ticks are handled inside the cpu loop
-#else
-    // We must tick by the number of instructions that were
-    // ACTUALLY executed, not the number that we asked it to
-    // execute.  Even this is tricky with SMP because one might
-    // have hit a breakpoint, while others executed the whole
-    // quantum.
-    int max_executed = 0;
-    for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
-      if (BX_CPU(cpu)->guard_found.icount > max_executed)
-        max_executed = BX_CPU(cpu)->guard_found.icount;
-    }
-    // potential deadlock if all processors are halted.  Then 
-    // max_executed will be 0, tick will be incremented by zero, and
-    // there will never be a timed event to wake them up.  To avoid this,
-    // always tick by a minimum of 1.
-    if (max_executed < 1) max_executed=1;
 
-    BX_TICKN(max_executed);
-#endif /* BX_SUPPORT_SMP */
+    // increment time tick only after all processors have had their chance.
+    if (BX_SMP_PROCESSORS == 1) {
+      // all ticks are handled inside the cpu loop
+    }
+    else {
+      // We must tick by the number of instructions that were
+      // ACTUALLY executed, not the number that we asked it to
+      // execute.  Even this is tricky with SMP because one might
+      // have hit a breakpoint, while others executed the whole
+      // quantum.
+      int max_executed = 0;
+      for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
+        if (BX_CPU(cpu)->guard_found.icount > max_executed)
+          max_executed = BX_CPU(cpu)->guard_found.icount;
+      }
+      // potential deadlock if all processors are halted.  Then 
+      // max_executed will be 0, tick will be incremented by zero, and
+      // there will never be a timed event to wake them up.  To avoid this,
+      // always tick by a minimum of 1.
+      if (max_executed < 1) max_executed=1;
+
+      BX_TICKN(max_executed);
+    }
   }
 
   sim_running->set(0);
