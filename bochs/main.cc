@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.350 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: main.cc,v 1.351 2007-03-06 21:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -890,28 +890,29 @@ int bx_begin_simulation (int argc, char *argv[])
   else
 #endif
   {
-#if BX_SUPPORT_SMP == 0
-    // only one processor, run as fast as possible by not messing with
-    // quantums and loops.
-    BX_CPU(0)->cpu_loop(0);
-    // for one processor, the only reason for cpu_loop to return is
-    // that kill_bochs_request was set by the GUI interface.
-#else
-    // SMP simulation: do a few instructions on each processor, then switch
-    // to another.  Increasing quantum speeds up overall performance, but
-    // reduces granularity of synchronization between processors.
-    int processor = 0;
-    int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
-    while (1) {
-      // do some instructions in each processor
-      BX_CPU(processor)->cpu_loop(quantum);
-      processor = (processor+1) % BX_SMP_PROCESSORS;
-      if (bx_pc_system.kill_bochs_request) 
-        break;
-      if (processor == 0) 
-        BX_TICKN(quantum);
+    if (BX_SMP_PROCESSORS == 1) {
+      // only one processor, run as fast as possible by not messing with
+      // quantums and loops.
+      BX_CPU(0)->cpu_loop(0);
+      // for one processor, the only reason for cpu_loop to return is
+      // that kill_bochs_request was set by the GUI interface.
     }
-#endif
+    else {
+      // SMP simulation: do a few instructions on each processor, then switch
+      // to another.  Increasing quantum speeds up overall performance, but
+      // reduces granularity of synchronization between processors.
+      int processor = 0;
+      int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+      while (1) {
+        // do some instructions in each processor
+        BX_CPU(processor)->cpu_loop(quantum);
+        processor = (processor+1) % BX_SMP_PROCESSORS;
+        if (bx_pc_system.kill_bochs_request) 
+          break;
+        if (processor == 0) 
+          BX_TICKN(quantum);
+      }
+    }
   }
 #endif /* BX_DEBUGGER == 0 */
   BX_INFO(("cpu loop quit, shutting down simulator"));

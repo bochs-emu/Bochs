@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.90 2007-01-25 19:21:20 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.91 2007-03-06 21:12:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,8 +70,6 @@ static struct {
   Bit32u   default_addr;
   unsigned next_bpoint_id;
 } bx_debugger;
-
-#define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
 typedef struct {
   FILE    *fp;
@@ -1165,6 +1163,12 @@ void bx_dbg_unwatch(int read, Bit32u address)
     }
   }
 }
+
+#if BX_SUPPORT_SMP
+  #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
+#else
+  #define BX_DBG_DEFAULT_ICOUNT_QUANTUM 0
+#endif
 
 void bx_dbg_continue_command(void)
 {
