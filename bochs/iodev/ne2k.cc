@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.91 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: ne2k.cc,v 1.92 2007-03-10 15:17:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1278,8 +1278,8 @@ void bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
  */
 void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
 {
-  unsigned pages;
-  unsigned avail;
+  int pages;
+  int avail;
   unsigned idx;
   int wrapped;
   int nextpage;
@@ -1404,7 +1404,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.91 2007-02-03 17:56:35 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.92 2007-03-10 15:17:31 vruppert Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
