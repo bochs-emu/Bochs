@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.8 2006-12-27 15:21:03 vruppert Exp $
+// $Id: hdimage.h,v 1.9 2007-03-10 12:53:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -376,6 +376,7 @@ class growing_image_t : public device_image_t
   public:
       // Contructor
       growing_image_t();
+      virtual ~growing_image_t();
 
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
@@ -405,6 +406,7 @@ class undoable_image_t : public device_image_t
   public:
       // Contructor
       undoable_image_t(const char* redolog_name);
+      virtual ~undoable_image_t();
 
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
@@ -437,6 +439,7 @@ class volatile_image_t : public device_image_t
   public:
       // Contructor
       volatile_image_t(const char* redolog_name);
+      virtual ~volatile_image_t();
 
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
@@ -507,6 +510,7 @@ class z_undoable_image_t : public device_image_t
   public:
       // Contructor
       z_undoable_image_t(Bit64u size, const char* redolog_name);
+      virtual ~z_undoable_image_t();
 
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
@@ -539,6 +543,7 @@ class z_volatile_image_t : public device_image_t
   public:
       // Contructor
       z_volatile_image_t(Bit64u size, const char* redolog_name);
+      virtual ~z_volatile_image_t();
 
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
