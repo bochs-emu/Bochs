@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.140 2006-11-12 18:26:58 vruppert Exp $
+// $Id: vga.cc,v 1.141 2007-03-11 09:43:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -545,6 +545,12 @@ void bx_vga_c::after_restore_state(void)
   old_iWidth = BX_MAX_XRES;
   old_iHeight = BX_MAX_YRES;
   BX_VGA_THIS redraw_area(0, 0, BX_MAX_XRES, BX_MAX_YRES);
+#if BX_SUPPORT_VBE
+  if (BX_VGA_THIS s.vbe_enabled) {
+    bx_gui->dimension_update(BX_VGA_THIS s.vbe_xres, BX_VGA_THIS s.vbe_yres, 0, 0,
+                             BX_VGA_THIS s.vbe_bpp);
+  }
+#endif
   BX_VGA_THIS update();
   bx_gui->flush();
 }
