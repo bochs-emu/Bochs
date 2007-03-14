@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.56 2007-01-28 21:27:31 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.57 2007-03-14 21:15:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -438,7 +438,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     Bit32u dword3;
     access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 8, 4, 0, BX_READ, &dword3);
     descriptor.u.system.base |= ((Bit64u)dword3 << 32);
-    BX_INFO(("64 bit TSS base = 0x%08x%08x",
+    BX_DEBUG(("64 bit TSS base = 0x%08x%08x",
        GET32H(descriptor.u.system.base), GET32L(descriptor.u.system.base)));
   }
 #endif

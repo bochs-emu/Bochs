@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.313 2007-03-06 17:47:18 sshwarts Exp $
+// $Id: cpu.h,v 1.314 2007-03-14 21:15:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2147,7 +2147,7 @@ public: // for now...
   // Although in implementation, these instructions are aliased to the
   // another function, it's nice to have them call a seperate function when
   // the decoder is being tested in stand-alone mode.
-#ifdef StandAloneDecoder
+#ifdef STAND_ALONE_DECODER
   BX_SMF void MOVUPD_VpdWpd(bxInstruction_c *);
   BX_SMF void MOVUPD_WpdVpd(bxInstruction_c *);
   BX_SMF void MOVAPD_VpdWpd(bxInstruction_c *);
@@ -2175,14 +2175,21 @@ public: // for now...
   BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *);
   BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *);
 #else
-#define MOVUPD_VpdWpd  /* 66 0f 10 */ MOVUPS_VpsWps    /*    0f 10 */
-#define MOVUPD_WpdVpd  /* 66 0f 11 */ MOVUPS_WpsVps    /*    0f 11 */
-#define MOVAPD_VpdWpd  /* 66 0f 28 */ MOVAPS_VpsWps    /*    0f 28 */
-#define MOVAPD_WpdVpd  /* 66 0f 29 */ MOVAPS_WpsVps    /*    0f 29 */
-#define MOVDQU_VdqWdq  /* f3 0f 6f */ MOVUPS_VpsWps    /*    0f 10 */
-#define MOVDQU_WdqVdq  /* f3 0f 7f */ MOVUPS_WpsVps    /*    0f 11 */
-#define MOVDQA_VdqWdq  /* 66 0f 6f */ MOVAPS_VpsWps    /*    0f 28 */
-#define MOVDQA_WdqVdq  /* 66 0f 7f */ MOVAPS_WpsVps    /*    0f 29 */
+
+#if BX_SUPPORT_SSE >= 2
+  #define SSE2_ALIAS(i) i
+#else
+  #define SSE2_ALIAS(i) BxError
+#endif
+
+#define MOVUPD_VpdWpd  /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps) /*    0f 10 */
+#define MOVUPD_WpdVpd  /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps) /*    0f 11 */
+#define MOVAPD_VpdWpd  /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps) /*    0f 28 */
+#define MOVAPD_WpdVpd  /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps) /*    0f 29 */
+#define MOVDQU_VdqWdq  /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps) /*    0f 10 */
+#define MOVDQU_WdqVdq  /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps) /*    0f 11 */
+#define MOVDQA_VdqWdq  /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps) /*    0f 28 */
+#define MOVDQA_WdqVdq  /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps) /*    0f 29 */
 
 #define UNPCKHPS_VpsWq /*    0f 15 */ PUNPCKHDQ_VdqWq  /* 66 0f 6a */
 #define UNPCKLPS_VpsWq /*    0f 14 */ PUNPCKLDQ_VdqWq  /* 66 0f 62 */
@@ -2199,14 +2206,15 @@ public: // for now...
 #define UNPCKHPD_VpdWq /* 66 0f 15 */ PUNPCKHQDQ_VdqWq /* 66 0f 6d */
 #define UNPCKLPD_VpdWq /* 66 0f 14 */ PUNPCKLQDQ_VdqWq /* 66 0f 6c */
 
-#define MOVLPD_VsdMq   /* 66 0f 12 */ MOVLPS_VpsMq     /*    0f 12 */
-#define MOVLPD_MqVsd   /* 66 0f 13 */ MOVLPS_MqVps     /*    0f 13 */
-#define MOVHPD_VsdMq   /* 66 0f 16 */ MOVHPS_VpsMq     /*    0f 16 */
-#define MOVHPD_MqVsd   /* 66 0f 17 */ MOVHPS_MqVps     /*    0f 17 */
+#define MOVLPD_VsdMq   /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)   /*    0f 12 */
+#define MOVLPD_MqVsd   /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)   /*    0f 13 */
+#define MOVHPD_VsdMq   /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)   /*    0f 16 */
+#define MOVHPD_MqVsd   /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)   /*    0f 17 */
 
-#define MOVNTPD_MdqVpd /* 66 0f 2b */ MOVNTPS_MdqVps   /*    0f 2b */
-#define MOVNTDQ_MdqVdq /* 66 0f e7 */ MOVNTPD_MdqVpd   /* 66 0f 2b */
-#endif  // #ifdef StandAloneDecoder
+#define MOVNTPD_MdqVpd /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MdqVps) /*    0f 2b */
+#define MOVNTDQ_MdqVdq /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MdqVps) /* 66 0f 2b */
+
+#endif  // #ifdef STAND_ALONE_DECODER
 
   /* SSE3 */
   BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *i);
@@ -2222,6 +2230,7 @@ public: // for now...
   /* SSE3 */
 
 #if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+  /* SSE3E */
   BX_SMF void PSHUFB_PqQq(bxInstruction_c *i);
   BX_SMF void PHADDW_PqQq(bxInstruction_c *i);
   BX_SMF void PHADDD_PqQq(bxInstruction_c *i);
@@ -2255,6 +2264,7 @@ public: // for now...
   BX_SMF void PABSW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PABSD_VdqWdq(bxInstruction_c *i);
   BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *i);
+  /* SSE3E */
 #endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);
@@ -2511,7 +2521,6 @@ public: // for now...
   BX_SMF void CMPXCHG16B(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
 
-  // mch added
   BX_SMF void INVLPG(bxInstruction_c *);
   BX_SMF void RSM(bxInstruction_c *);
 
@@ -2874,8 +2883,7 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF  void   fetch_raw_descriptor64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
-  BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector,
-                                   bx_address base, unsigned dpl);
+  BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector, unsigned dpl);
 #endif
   BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);
   BX_SMF void    push_32(Bit32u value32);
@@ -3312,9 +3320,6 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 //
 // For decoding...
 //
-
-#define BX_REPE_PREFIX  10
-#define BX_REPNE_PREFIX 11
 
 #define BX_TASK_FROM_JUMP         10
 #define BX_TASK_FROM_CALL_OR_INT  11

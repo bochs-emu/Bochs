@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.15 2005-11-14 18:25:41 sshwarts Exp $
+// $Id: instrument.cc,v 1.16 2007-03-14 21:15:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,8 +25,9 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 
-
 #include "bochs.h"
+
+#if BX_INSTRUMENTATION
 
 void bx_instr_init(unsigned cpu) {}
 void bx_instr_shutdown(unsigned cpu) {}
@@ -76,3 +77,5 @@ void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len) {}
 void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len) {}
 
 void bx_instr_wrmsr(unsigned cpu, unsigned addr, Bit64u value) {}
+
+#endif

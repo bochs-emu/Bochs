@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.55 2006-06-12 16:58:26 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.56 2007-03-14 21:15:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,7 +108,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     if (descriptor->u.segment.l) {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
       BX_DEBUG(("Long Mode Activated"));
-      loadSRegLMNominal(BX_SEG_REG_CS, selector->value, 0, cpl);
+      loadSRegLMNominal(BX_SEG_REG_CS, selector->value, cpl);
     }
     else {
       BX_DEBUG(("Compatibility Mode Activated"));

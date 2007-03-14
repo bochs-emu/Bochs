@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.68 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.69 2007-03-14 21:15:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -246,14 +246,13 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
 }
 
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, bx_address base,
-                            unsigned dpl)
+void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, unsigned dpl)
 {
   bx_segment_reg_t *seg = & BX_CPU_THIS_PTR sregs[segI];
 
   // Load a segment register in long-mode with nominal values,
   // so descriptor cache values are compatible with existing checks.
-  seg->cache.u.segment.base = base;
+  seg->cache.u.segment.base = 0;
   // I doubt we need limit_scaled.  If we do, it should be
   // of type bx_addr and be maxed to 64bits, not 32.
   seg->cache.u.segment.limit_scaled = 0xffffffff;
@@ -645,7 +644,7 @@ BX_CPU_C::load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-    loadSRegLMNominal(BX_SEG_REG_SS, selector->value, 0, cpl);
+    loadSRegLMNominal(BX_SEG_REG_SS, selector->value, cpl);
     return;
   }
 #endif
