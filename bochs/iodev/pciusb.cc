@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.47 2007-03-05 18:09:57 vruppert Exp $
+// $Id: pciusb.cc,v 1.48 2007-03-14 18:05:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -26,6 +26,7 @@
 
 // Experimental PCI USB adapter
 // Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
+// USB mass storage device support and SCSI emulation layer ported from Qemu
 
 /* Notes:
    - I have coded this to be able to use more than one HUB and each
@@ -58,6 +59,7 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+#include "hdimage.h"
 
 #define LOG_THIS theUSBDevice->
 
@@ -83,16 +85,24 @@ bx_pciusb_c::bx_pciusb_c()
 {
   put("USB");
   settype(PCIUSBLOG);
+  device_buffer = NULL;
 }
 
 bx_pciusb_c::~bx_pciusb_c()
 {
-  delete [] BX_USB_THIS device_buffer;
+  MSDState *s;
 
-  // close any open handles
-  for (int i=0; i<USB_CUR_DEVS; i++)
-    if (BX_USB_THIS hub[0].device[i].fd > -1) 
-      ::close(BX_USB_THIS hub[0].device[i].fd);
+  if (BX_USB_THIS device_buffer != NULL)
+    delete [] BX_USB_THIS device_buffer;
+
+  for (int i=0; i<USB_CUR_DEVS; i++) {
+    if (BX_USB_THIS hub[0].device[i].dev_type == USB_DEV_TYPE_DISK) {
+      s = (MSDState*)BX_USB_THIS hub[0].device[i].devstate;
+      if (s != NULL) {
+        delete s;
+      }
+    }
+  }
 
   SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(NULL);
   SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(NULL);
@@ -233,12 +243,11 @@ void bx_pciusb_c::reset(unsigned type)
   for (i=0; i<BX_USB_CONFDEV; i++)
     for (j=0; j<USB_CUR_DEVS; j++) {
       memset(&BX_USB_THIS hub[i].device[j], 0, sizeof(USB_DEVICE));
-      BX_USB_THIS hub[i].device[j].fd = -1;
     }
 
   BX_USB_THIS keyboard_connected = 0;
   BX_USB_THIS mouse_connected = 0;
-  BX_USB_THIS flash_connected = 0;
+  BX_USB_THIS disk_connected = 0;
 
   // include the device(s) initialize code
   #include "pciusb_devs.h"
@@ -354,10 +363,10 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
     type = USB_DEV_TYPE_KEYPAD;
     connected = 1;
     BX_USB_THIS keyboard_connected = 1;
-//} else if (!strcmp(devname, "flash")) {
-//  type = USB_DEV_TYPE_FLASH;
-//  connected = 1;
-//  BX_USB_THIS flash_connected = 1;
+  } else if (!strcmp(devname, "disk")) {
+    type = USB_DEV_TYPE_DISK;
+    connected = 1;
+    BX_USB_THIS disk_connected = 1;
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
     return;
@@ -765,7 +774,7 @@ void bx_pciusb_c::usb_timer(void)
               Bit16u r_actlen = (((td.dword1 & 0x7FF)+1) & 0x7FF);
               Bit16u r_maxlen = (((td.dword2>>21)+1) & 0x7FF);
               BX_DEBUG((" r_actlen = 0x%04X r_maxlen = 0x%04X", r_actlen, r_maxlen));
-              if (((td.dword2 & 0xFF) == TOKEN_IN) && spd && stk && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
+              if (((td.dword2 & 0xFF) == USB_TOKEN_IN) && spd && stk && (r_actlen < r_maxlen) && ((td.dword1 & 0x00FF0000) == 0)) {
                 shortpacket = 1;
                 td.dword1 |= (1<<29);
               }
@@ -821,7 +830,8 @@ void bx_pciusb_c::usb_timer(void)
 
     // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
     if (fire_int) {
-      BX_USB_THIS hub[0].usb_status.interrupt = 1 | ((stalled) ? 2 : 0);
+      BX_USB_THIS hub[0].usb_status.interrupt = 1;
+      BX_USB_THIS hub[0].usb_status.error_interrupt = stalled;
       set_irq_level(1);
     }
 
@@ -842,7 +852,7 @@ void bx_pciusb_c::usb_timer(void)
 
 bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
   
-  int i, j;
+  int i, j, len;
   Bit8u protocol = 0;
   bx_bool fnd;
 
@@ -854,7 +864,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
   struct REQUEST_PACKET *rp = (struct REQUEST_PACKET *) data;
 
   // if packet, read in the packet data
-  if (pid == TOKEN_SETUP) {
+  if (pid == USB_TOKEN_SETUP) {
     if (td->dword3) DEV_MEM_READ_PHYSICAL(td->dword3, 8, data);
     // the '8' above may need to be maxlen (unless maxlen == 0)
   }
@@ -883,23 +893,23 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
     }
   }
   if (!at_least_one) {
-    BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+    BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
     return 1;
   }
   if (dev == NULL) {
-    if ((pid == TOKEN_OUT) && (maxlen == 0x7FF) && (addr == 0)) {
+    if ((pid == USB_TOKEN_OUT) && (maxlen == 0x7FF) && (addr == 0)) {
       // This is the "keep awake" packet that Windows sends once a schedule cycle.
       // For now, let it pass through to the code below.
     } else {
       BX_PANIC(("Device not found for addr: %i", addr));
-      BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+      BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
       return 1;  // device not found
     }
   }
 
   // the device should remain in a stall state until the next setup packet is recieved
   // For some reason, this doesn't work yet.
-  //if (dev && dev->in_stall && (pid != TOKEN_SETUP))
+  //if (dev && dev->in_stall && (pid != USB_TOKEN_SETUP))
   //  return FALSE;
 
   maxlen++;
@@ -913,7 +923,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
   // parse and get command
   Bit16u cnt;
   switch (pid) {
-    case TOKEN_IN:   // Data came from HC to Host
+    case USB_TOKEN_IN:   // Data came from HC to Host
       // if an interrupt in / bulk in, do the protocol packet.
       if (endpt > 0) {
         fnd = 0;
@@ -955,11 +965,17 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               break;
 
             case 0x50: // USB Mass Storage
-              Bit8u bulk_int_packet[1024];
-              if (flash_stick(bulk_int_packet, maxlen, 0)) {
-
+              BX_USB_THIS usb_packet.pid = pid;
+              BX_USB_THIS usb_packet.devaddr = addr;
+              BX_USB_THIS usb_packet.devep = endpt;
+              BX_USB_THIS usb_packet.data = device_buffer;
+              BX_USB_THIS usb_packet.len = cnt;
+              len = usb_msd_handle_data((MSDState*)dev->devstate, &BX_USB_THIS usb_packet);
+              if (len >= 0) {
+                DEV_MEM_WRITE_PHYSICAL(td->dword3, len, device_buffer);
+                BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
               } else {
-
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, 0, 0, cnt-1);
               }
               break;
 
@@ -1005,7 +1021,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
         bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 0);
       }
       break;
-    case TOKEN_OUT: // data should go from Host to HC
+    case USB_TOKEN_OUT: // data should go from Host to HC
       // (remember that we will get an out once in a while with dev==NULL)
       if ((addr > 0) && (endpt > 0)) {
         fnd = 0;
@@ -1034,10 +1050,16 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               break;
 
             case 0x50: // USB Mass Storage
-              if (flash_stick(bulk_int_packet, maxlen, 1)) {
-
+              BX_USB_THIS usb_packet.pid = pid;
+              BX_USB_THIS usb_packet.devaddr = addr;
+              BX_USB_THIS usb_packet.devep = endpt;
+              BX_USB_THIS usb_packet.data = bulk_int_packet;
+              BX_USB_THIS usb_packet.len = maxlen;
+              len = usb_msd_handle_data((MSDState*)dev->devstate, &BX_USB_THIS usb_packet);
+              if (len >= 0) {
+                BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, maxlen-1);
               } else {
-
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, 0, 0, maxlen-1);
               }
               break;
               
@@ -1066,7 +1088,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
       }
       bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 0);
       break;
-    case TOKEN_SETUP:
+    case USB_TOKEN_SETUP:
       if (dev) dev->in_stall = 0;
 
       // as a debug check, stall on the first setup packet after boot up.
@@ -1083,40 +1105,40 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
         case GET_STATUS:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: GET_STATUS returned an error"));
               break;
             case STATE_ADDRESS:
               if (rp->index > 0) {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: GET_STATUS returned an error"));
                 break;
               } // else fall through
             case STATE_CONFIGURED:
-
-              BX_PANIC(("Request: GET_STATUS not implemented yet"));
-
               // If the interface or endpoint does not exist, return error
-
-              BX_DEBUG(("Request: GET_STATUS"));
+              device_buffer[0] = 0;
+              device_buffer[1] = 0;
+              dev->function.in = device_buffer;
+              dev->function.in_cnt = 2;
+              BX_INFO(("Request: GET_STATUS"));
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           }
           break;
         case CLEAR_FEATURE:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: CLEAR_FEATURE returned an error"));
               break;
             case STATE_ADDRESS:
               if (rp->index > 0) {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: CLEAR_FEATURE returned an error"));
                 break;
               } // else fall through
             case STATE_CONFIGURED:
               if (rp->length) {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: CLEAR_FEATURE returned an error:  length > 0"));
                 break;
               }
@@ -1133,21 +1155,20 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               if (((rp->index >> 8) == SET_FEATURE_TEST_MODE) && (rp->request_type == 0) && ((rp->index & 0xFF) == 0)) {
                 BX_DEBUG(("Request: SET_FEATURE in TEST MODE"));
               } else {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_FEATURE returned an error"));
               }
               break;
             case STATE_ADDRESS:
               if ((rp->index & 0xFF) > 0) {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_FEATURE returned an error"));
                 break;
               } // else fall through
             case STATE_CONFIGURED:
-
-              BX_PANIC(("Request: SET_FEATURE not implemented yet"));
-
-              BX_DEBUG(("Request: SET_FEATURE"));
+              // At this point, we don't implement features.  So until we do, there isn't anything
+              //  to set.  Just log an error and continue.
+              BX_ERROR(("Request: SET_FEATURE:  Not implemented yet."));
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           }
           break;
@@ -1162,7 +1183,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           (td->dword2 & 0xFFE00000)>>21, (td->dword2 & 0x00080000)?1:0, (td->dword2 & 0x00078000)>>15, (td->dword2 & 0x00007F00)>>8, td->dword2 & 0x000000FF,
           td->dword3));
           if ((rp->value > 127) || rp->index || rp->length) {
-            BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+            BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
             BX_ERROR(("Request: SET_ADDRESS returned an error"));
           } else {
             switch (dev->state) {
@@ -1183,7 +1204,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007);
                 break;
               case STATE_CONFIGURED:
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_ADDRESS returned an error"));
             }
           }
@@ -1205,14 +1226,14 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
             case STATE_CONFIGURED:
               unsigned ret;
               ret = BX_USB_THIS GetDescriptor(dev, rp);
-              BX_USB_THIS set_status(td, ret, 0, 0, 0, (ret && pid==TOKEN_SETUP)?1:0, 0, 0x007);
+              BX_USB_THIS set_status(td, ret, 0, 0, 0, (ret && pid==USB_TOKEN_SETUP)?1:0, 0, 0x007);
           }
           break;
         case SET_DESCRIPTOR:
           switch (dev->state) {
             case STATE_DEFAULT:
               BX_ERROR(("Request: SET_DESCRIPTOR returned an error"));
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_ADDRESS:
             case STATE_CONFIGURED:
@@ -1238,7 +1259,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           switch (dev->state) {
             case STATE_DEFAULT:
               BX_ERROR(("Request: GET_CONFIGURATION returned an error"));
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_ADDRESS:
               // must return zero if in the address state
@@ -1255,7 +1276,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
         case SET_CONFIGURATION:
           switch (dev->state) {
             case STATE_DEFAULT:
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: SET_CONFIGURATION: returned an error"));
               break;
             case STATE_CONFIGURED:
@@ -1277,7 +1298,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               }
               if (dev->config == 0xFF) {
                 dev->config = 0;
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
                 BX_ERROR(("Request: SET_CONFIGURATION: returned an error"));
               } else {
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
@@ -1290,13 +1311,13 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           switch (dev->state) {
             case STATE_DEFAULT:
             case STATE_ADDRESS:
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               BX_ERROR(("Request: GET_INTERFACE returned and error: not in configured state"));
               break;
             case STATE_CONFIGURED:
               if ((unsigned)(rp->index + 1) > dev->function.device_config[dev->config].interfaces) {
                 BX_PANIC(("GET_INTERFACE: wanted interface number is greater than interface count."));
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               }
               // The USB specs say that I can return a STALL if only one interface is used. (ie, no alternate)
               // However, Win98SE doesn't like it at all....
@@ -1310,7 +1331,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
                 BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
               //} else {
               //  BX_DEBUG(("Request: GET_INTERFACE  %02X  %02X  %02X (Only 1 interface, returning STALL)", rp->value >> 8, rp->value & 0xFF, rp->length));
-              //  BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              //  BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               //}
               break;
           }
@@ -1320,12 +1341,12 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
             case STATE_DEFAULT:
             case STATE_ADDRESS:
               BX_ERROR(("Request: SET_INTERFACE returned and error: not in configured state"));
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_CONFIGURED:
               if ((unsigned)(rp->index + 1) > dev->function.device_config[dev->config].interfaces) {
                 BX_PANIC(("SET_INTERFACE: wanted interface number is greater than interface count."));
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+                BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               }
               dev->Interface = (Bit8u) rp->index;
               dev->alt_interface = (Bit8u) rp->value;
@@ -1338,7 +1359,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
             case STATE_DEFAULT:
             case STATE_ADDRESS:
               BX_ERROR(("Request: SYNCH_FRAME returned and error: not in configured state"));
-              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
+              BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
               break;
             case STATE_CONFIGURED:
 
@@ -1356,6 +1377,14 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           dev->function.in_cnt = 1;
           BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           break;
+        case 0xFF:
+          // FIXME: protocol type should be checked
+          BX_INFO(("Request: mass storage reset"));
+          if (dev->devstate != NULL) {
+            ((MSDState*)dev->devstate)->mode = USB_MSDM_CBW;
+          }
+          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
+          break;
         default:
           BX_PANIC((" **** illegal or unknown REQUEST sent to Host Controller:  %02x", data[1]));
       }
@@ -1366,7 +1395,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
   // did it stall?, then set the "in_stall" state
   if (td->dword1 & (1<<22))
     if (dev) dev->in_stall = 1;
-  
+
   return 1;
 }
 
@@ -1640,6 +1669,9 @@ void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
 
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
+  MSDState *s;
+  char pname[BX_PATHNAME_LEN];
+
   if (BX_USB_THIS hub[0].usb_port[port].device_num > -1) {
     if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].dev_type == type) {
       if (connected) {
@@ -1674,25 +1706,26 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
           }
         }
 
-        // If the type is a flash stick, we need to close, then re open the file connected with it.
-        // **** We current assume the flash stick is on port1 ****
-        /*
-        if (type == USB_DEV_TYPE_FLASH) {
-          if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd > -1) 
-            ::close(BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd);
-          BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd = 
-            ::open(bx_options.usb[0].Opath1->getptr(), O_RDWR | O_BINARY);
-          if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd < 0)
-            BX_PANIC(("Could not open file for USB flash stick: %s", bx_options.usb[0].Opath1->getptr()));
-        
-          // look at size of image file to calculate disk geometry
-          struct stat stat_buf;
-          int ret = fstat(BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].fd, &stat_buf);
-          if (ret) BX_PANIC(("fstat() returns error!"));
-          if (stat_buf.st_size != (USB_FLASH_SIZE * 0x00100000))
-            BX_PANIC(("size of disk image must be %i Megs", USB_FLASH_SIZE));
+        if ((type == USB_DEV_TYPE_DISK) &&
+            (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate == NULL)) {
+          s = new MSDState;
+          memset(s, 0, sizeof(MSDState));
+          s->hdimage = new default_image_t();
+          if (port == 0) {
+            strcpy(pname, BXPN_USB1_OPTION1);
+          } else {
+            strcpy(pname, BXPN_USB1_OPTION2);
+          }
+          if (s->hdimage->open(SIM->get_param_string(pname)->getptr()) < 0) {
+            BX_ERROR(("could not open hard drive image file '%s'", SIM->get_param_string(pname)->getptr()));
+            usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
+          } else {
+            BX_INFO(("HD on USB port #%d: '%s'", port+1, SIM->get_param_string(pname)->getptr()));
+            s->scsi_dev = BX_USB_THIS scsi_disk_init(s->hdimage, 0, usb_msd_command_complete, (void*)s);
+            s->mode = USB_MSDM_CBW;
+            BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate = (void*)s;
+          }
         }
-        */
       } else {
         BX_USB_THIS hub[0].usb_port[port].status = 0;
         BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
@@ -1705,8 +1738,16 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
           BX_USB_THIS mouse_connected = 0;
         } else if (type == USB_DEV_TYPE_KEYPAD) {
           BX_USB_THIS keyboard_connected = 0;
-        } else if (type == USB_DEV_TYPE_FLASH) {
-          BX_USB_THIS flash_connected = 0;
+        } else if (type == USB_DEV_TYPE_DISK) {
+          BX_USB_THIS disk_connected = 0;
+          s = (MSDState*)BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate;
+          if (s != NULL) {
+            BX_USB_THIS scsi_disk_destroy(s->scsi_dev);
+            s->hdimage->close();
+            delete s->hdimage;
+            delete s;
+            BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate = NULL;
+	  }
         }
       }
     }
@@ -1862,36 +1903,667 @@ void bx_pciusb_c::dump_packet(Bit8u *data, unsigned size)
     BX_DEBUG(("%s", the_packet));
 }
 
-// usb flash stick support
-// packet is the data coming in/going out
-// size is the size of the data
-// out = 1 if Host to Device, 0 it Device to Host
+// USB mass storage device support
 
-bx_bool bx_pciusb_c::flash_stick(Bit8u *packet, Bit16u size, bx_bool out)
+enum scsi_reason {
+    SCSI_REASON_DONE,
+    SCSI_REASON_DATA
+};
+
+int bx_pciusb_c::usb_msd_handle_data(MSDState *s, USBPacket *p)
 {
-  unsigned ret = 0;
+  struct usb_msd_cbw cbw;
+  int ret = 0;
+  Bit8u devep = p->devep;
+  Bit8u *data = p->data;
+  int len = p->len;
 
-  // packet contains the SCSI interface command
-  dump_packet(packet, size);
+  switch (p->pid) {
+    case USB_TOKEN_OUT:
+      dump_packet(data, len);
+      if (devep != 2)
+        goto fail;
 
-  if (out) {
+      switch (s->mode) {
+        case USB_MSDM_CBW:
+          if (len != 31) {
+            BX_ERROR(("bad CBW len"));
+            goto fail;
+          }
+          memcpy(&cbw, data, 31);
+          if (dtoh32(cbw.sig) != 0x43425355) {
+            BX_ERROR(("bad signature %08x", dtoh32(cbw.sig)));
+            goto fail;
+          }
+          BX_DEBUG(("command on LUN %d", cbw.lun));
+          s->tag = dtoh32(cbw.tag);
+          s->data_len = dtoh32(cbw.data_len);
+          if (s->data_len == 0) {
+            s->mode = USB_MSDM_CSW;
+          } else if (cbw.flags & 0x80) {
+            s->mode = USB_MSDM_DATAIN;
+          } else {
+            s->mode = USB_MSDM_DATAOUT;
+          }
+          BX_DEBUG(("command tag 0x%x flags %08x len %d data %d",
+                   s->tag, cbw.flags, cbw.cmd_len, s->data_len));
+          s->residue = 0;
+          scsi_send_command(s->scsi_dev, s->tag, cbw.cmd, cbw.lun);
+          if (s->residue == 0) {
+            if (s->mode == USB_MSDM_DATAIN) {
+              scsi_read_data(s->scsi_dev, s->tag);
+            } else if (s->mode == USB_MSDM_DATAOUT) {
+              scsi_write_data(s->scsi_dev, s->tag);
+            }
+          }
+          ret = len;
+          break;
 
-    // TODO:
+        case USB_MSDM_DATAOUT:
+          BX_DEBUG(("data out %d/%d", len, s->data_len));
+          if (len > (int)s->data_len)
+            goto fail;
 
-    // From this point on, it is simply a SCSI command interface.
-    // We could set up the image so that we could use the existing
-    //  harddrv.cc and cdrom.cc code and our flash.img file.
+          s->usb_buf = data;
+          s->usb_len = len;
+          if (s->scsi_len) {
+            usb_msd_copy_data(s);
+          }
+          if (s->residue && s->usb_len) {
+            s->data_len -= s->usb_len;
+            if (s->data_len == 0)
+                s->mode = USB_MSDM_CSW;
+            s->usb_len = 0;
+          }
+          if (s->usb_len) {
+            BX_INFO(("deferring packet %p", p));
+            // TODO: defer packet
+            s->packet = p;
+            ret = USB_RET_ASYNC;
+          } else {
+            ret = len;
+          }
+          break;
 
-    // At this point, I don't have the time to do this, but if someone
-    //  else would like to, please do.
-  } else {
+        default:
+          BX_ERROR(("usb_msd_handle_data: unexpected mode at USB_TOKEN_OUT"));
+          goto fail;
+      }
+      break;
 
-    // For now, I will not implement the write part.
+    case USB_TOKEN_IN:
+      if (devep != 1)
+        goto fail;
 
+      switch (s->mode) {
+        case USB_MSDM_DATAOUT:
+          if (s->data_len != 0 || len < 13)
+            goto fail;
+          // TODO: defer packet
+          s->packet = p;
+          ret = USB_RET_ASYNC;
+          break;
+
+      case USB_MSDM_CSW:
+        BX_DEBUG(("command status %d tag 0x%x, len %d",
+                s->result, s->tag, len));
+        if (len < 13)
+          return ret;
+
+        s->usb_len = len;
+        s->usb_buf = data;
+        usb_msd_send_status(s);
+        s->mode = USB_MSDM_CBW;
+        ret = 13;
+        break;
+
+      case USB_MSDM_DATAIN:
+        BX_DEBUG(("data in %d/%d", len, s->data_len));
+        if (len > (int)s->data_len)
+            len = s->data_len;
+        s->usb_buf = data;
+        s->usb_len = len;
+        if (s->scsi_len) {
+          usb_msd_copy_data(s);
+        }
+        if (s->residue && s->usb_len) {
+          s->data_len -= s->usb_len;
+          memset(s->usb_buf, 0, s->usb_len);
+          if (s->data_len == 0)
+            s->mode = USB_MSDM_CSW;
+          s->usb_len = 0;
+        }
+        if (s->usb_len) {
+          BX_INFO(("deferring packet %p", p));
+          // TODO: defer packet
+          s->packet = p;
+          ret = USB_RET_ASYNC;
+        } else {
+            ret = len;
+        }
+        break;
+
+      default:
+        BX_ERROR(("usb_msd_handle_data: unexpected mode at USB_TOKEN_IN"));
+        goto fail;
+    }
+    if (ret > 0) dump_packet(data, ret);
+    break;
+
+    default:
+      BX_ERROR(("usb_msd_handle_data: bad token"));
+fail:
+      ret = USB_RET_STALL;
+      break;
   }
+
   return ret;
 }
 
+void bx_pciusb_c::usb_msd_copy_data(MSDState *s)
+{
+  Bit32u len = s->usb_len;
+  if (len > s->scsi_len)
+    len = s->scsi_len;
+  if (s->mode == USB_MSDM_DATAIN) {
+    memcpy(s->usb_buf, s->scsi_buf, len);
+  } else {
+    memcpy(s->scsi_buf, s->usb_buf, len);
+  }
+  s->usb_len -= len;
+  s->scsi_len -= len;
+  s->usb_buf += len;
+  s->scsi_buf += len;
+  s->data_len -= len;
+  if (s->scsi_len == 0) {
+    if (s->mode == USB_MSDM_DATAIN) {
+      scsi_read_data(s->scsi_dev, s->tag);
+    } else if (s->mode == USB_MSDM_DATAOUT) {
+      scsi_write_data(s->scsi_dev, s->tag);
+    }
+  }
+}
+
+void bx_pciusb_c::usb_msd_send_status(MSDState *s)
+{
+  struct usb_msd_csw csw;
+
+  csw.sig = htod32(0x53425355);
+  csw.tag = htod32(s->tag);
+  csw.residue = s->residue;
+  csw.status = s->result;
+  memcpy(s->usb_buf, &csw, 13);
+}
+
+void bx_pciusb_c::usb_msd_command_complete(void *opaque, int reason, Bit32u tag, Bit32u arg)
+{
+  MSDState *s = (MSDState *)opaque;
+  USBPacket *p = s->packet;
+
+  if (tag != s->tag) {
+    BX_ERROR(("usb-msd_command_complete: unexpected SCSI tag 0x%x", tag));
+  }
+  if (reason == SCSI_REASON_DONE) {
+    BX_DEBUG(("command complete %d", arg));
+    s->residue = s->data_len;
+    s->result = arg != 0;
+    if (s->packet) {
+      if (s->data_len == 0 && s->mode == USB_MSDM_DATAOUT) {
+        BX_USB_THIS usb_msd_send_status(s);
+        s->mode = USB_MSDM_CBW;
+      } else {
+        if (s->data_len) {
+          s->data_len -= s->usb_len;
+          if (s->mode == USB_MSDM_DATAIN)
+            memset(s->usb_buf, 0, s->usb_len);
+          s->usb_len = 0;
+        }
+        if (s->data_len == 0)
+          s->mode = USB_MSDM_CSW;
+      }
+      s->packet = NULL;
+    } else if (s->data_len == 0) {
+      s->mode = USB_MSDM_CSW;
+    }
+    return;
+  }
+  s->scsi_len = arg;
+  s->scsi_buf = BX_USB_THIS scsi_get_buf(s->scsi_dev, tag);
+  if (p) {
+    BX_USB_THIS usb_msd_copy_data(s);
+    if (s->usb_len == 0) {
+      BX_INFO(("packet complete %p", p));
+      s->packet = NULL;
+    }
+  }
+}
+
+// USB SCSI emulation layer
+
+static SCSIRequest *free_requests = NULL;
+
+SCSIRequest* bx_pciusb_c::scsi_new_request(SCSIDevice *s, Bit32u tag)
+{
+    SCSIRequest *r;
+
+  if (free_requests) {
+    r = free_requests;
+    free_requests = r->next;
+  } else {
+    r = new SCSIRequest;
+  }
+  r->dev = s;
+  r->tag = tag;
+  r->sector_count = 0;
+  r->buf_len = 0;
+
+  r->next = s->requests;
+  s->requests = r;
+  return r;
+}
+
+void bx_pciusb_c::scsi_remove_request(SCSIRequest *r)
+{
+  SCSIRequest *last;
+  SCSIDevice *s = r->dev;
+
+  if (s->requests == r) {
+    s->requests = r->next;
+  } else {
+    last = s->requests;
+    while (last != NULL) {
+      if (last->next != r)
+        last = last->next;
+      else
+        break;
+    }
+    if (last) {
+      last->next = r->next;
+    } else {
+      BX_ERROR(("orphaned request"));
+    }
+  }
+  r->next = free_requests;
+  free_requests = r;
+}
+
+SCSIRequest* bx_pciusb_c::scsi_find_request(SCSIDevice *s, Bit32u tag)
+{
+  SCSIRequest *r = s->requests;
+  while (r != NULL) {
+    if (r->tag != tag)
+      r = r->next;
+    else
+      break;
+  }
+  return r;
+}
+
+void bx_pciusb_c::scsi_command_complete(SCSIRequest *r, int sense)
+{
+  SCSIDevice *s = r->dev;
+  Bit32u tag;
+  BX_DEBUG(("command complete tag=0x%x sense=%d", r->tag, sense));
+  s->sense = sense;
+  tag = r->tag;
+  scsi_remove_request(r);
+  s->completion(s->opaque, SCSI_REASON_DONE, tag, sense);
+}
+
+void bx_pciusb_c::scsi_cancel_io(SCSIDevice *s, Bit32u tag)
+{
+  BX_DEBUG(("cancel tag=0x%x", tag));
+  SCSIRequest *r = scsi_find_request(s, tag);
+  if (r) {
+    scsi_remove_request(r);
+  }
+}
+
+void bx_pciusb_c::scsi_read_complete(void *opaque, int ret)
+{
+  SCSIRequest *r = (SCSIRequest *)opaque;
+  SCSIDevice *s = r->dev;
+
+  if (ret) {
+    BX_ERROR(("IO error"));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    return;
+  }
+  BX_DEBUG(("data ready tag=0x%x len=%d", r->tag, r->buf_len));
+
+  s->completion(s->opaque, SCSI_REASON_DATA, r->tag, r->buf_len);
+}
+
+void bx_pciusb_c::scsi_read_data(SCSIDevice *s, Bit32u tag)
+{
+  Bit32u n;
+  int ret;
+
+  SCSIRequest *r = scsi_find_request(s, tag);
+  if (!r) {
+    BX_ERROR(("bad read tag 0x%x", tag));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    return;
+  }
+  if (r->sector_count == -1) {
+    BX_DEBUG(("read buf_len=%d", r->buf_len));
+    r->sector_count = 0;
+    s->completion(s->opaque, SCSI_REASON_DATA, r->tag, r->buf_len);
+    return;
+  }
+  BX_DEBUG(("read sector_count=%d", r->sector_count));
+  if (r->sector_count == 0) {
+    scsi_command_complete(r, SENSE_NO_SENSE);
+    return;
+  }
+
+  n = r->sector_count;
+  if (n > SCSI_DMA_BUF_SIZE / 512)
+    n = SCSI_DMA_BUF_SIZE / 512;
+
+  r->buf_len = n * 512;
+  ret = s->hdimage->lseek(r->sector * 512, SEEK_SET);
+  if (ret < 0) {
+    BX_ERROR(("could not lseek() hard drive image file"));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+  }
+  ret = s->hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
+  if (ret < r->buf_len) {
+    BX_ERROR(("could not read() hard drive image file"));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+  } else {
+    scsi_read_complete((void*)r, 0);
+  }
+  r->sector += n;
+  r->sector_count -= n;
+}
+
+void bx_pciusb_c::scsi_write_complete(void *opaque, int ret)
+{
+  SCSIRequest *r = (SCSIRequest *)opaque;
+  SCSIDevice *s = r->dev;
+  Bit32u len;
+
+  if (ret) {
+    BX_ERROR(("IO error"));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    return;
+  }
+
+  if (r->sector_count == 0) {
+    scsi_command_complete(r, SENSE_NO_SENSE);
+  } else {
+    len = r->sector_count * 512;
+    if (len > SCSI_DMA_BUF_SIZE) {
+      len = SCSI_DMA_BUF_SIZE;
+    }
+    r->buf_len = len;
+    BX_DEBUG(("write complete tag=0x%x more=%d", r->tag, len));
+    s->completion(s->opaque, SCSI_REASON_DATA, r->tag, len);
+  }
+}
+
+int bx_pciusb_c::scsi_write_data(SCSIDevice *s, Bit32u tag)
+{
+  SCSIRequest *r;
+  Bit32u n;
+  int ret;
+
+  BX_DEBUG(("write data tag=0x%x", tag));
+  r = scsi_find_request(s, tag);
+  if (!r) {
+    BX_ERROR(("bad write tag 0x%x", tag));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    return 1;
+  }
+  n = r->buf_len / 512;
+  if (n) {
+    ret = s->hdimage->lseek(r->sector * 512, SEEK_SET);
+    if (ret < 0) {
+      BX_ERROR(("could not lseek() hard drive image file"));
+      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    }
+    ret = s->hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
+    if (ret < r->buf_len) {
+      BX_ERROR(("could not write() hard drive image file"));
+      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    } else {
+      scsi_write_complete((void*)r, 0);
+    }
+    r->sector += n;
+    r->sector_count -= n;
+  } else {
+    scsi_write_complete(r, 0);
+  }
+
+  return 0;
+}
+
+Bit8u* bx_pciusb_c::scsi_get_buf(SCSIDevice *s, Bit32u tag)
+{
+  SCSIRequest *r = scsi_find_request(s, tag);
+  if (!r) {
+    BX_ERROR(("bad buffer tag 0x%x", tag));
+    return NULL;
+  }
+  return r->dma_buf;
+}
+
+Bit32s bx_pciusb_c::scsi_send_command(SCSIDevice *s, Bit32u tag, Bit8u *buf, int lun)
+{
+  Bit64u nb_sectors;
+  Bit32u lba;
+  Bit32u len;
+  int cmdlen;
+  int is_write;
+  Bit8u command;
+  Bit8u *outbuf;
+  SCSIRequest *r;
+
+  command = buf[0];
+  r = scsi_find_request(s, tag);
+  if (r) {
+    BX_ERROR(("tag 0x%x already in use", tag));
+    scsi_cancel_io(s, tag);
+  }
+  r = scsi_new_request(s, tag);
+  outbuf = r->dma_buf;
+  is_write = 0;
+  BX_DEBUG(("command: lun=%d tag=0x%x data=0x%02x", lun, tag, buf[0]));
+  switch (command >> 5) {
+    case 0:
+        lba = buf[3] | (buf[2] << 8) | ((buf[1] & 0x1f) << 16);
+        len = buf[4];
+        cmdlen = 6;
+        break;
+    case 1:
+    case 2:
+        lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
+        len = buf[8] | (buf[7] << 8);
+        cmdlen = 10;
+        break;
+    case 4:
+        lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
+        len = buf[13] | (buf[12] << 8) | (buf[11] << 16) | (buf[10] << 24);
+        cmdlen = 16;
+        break;
+    case 5:
+        lba = buf[5] | (buf[4] << 8) | (buf[3] << 16) | (buf[2] << 24);
+        len = buf[9] | (buf[8] << 8) | (buf[7] << 16) | (buf[6] << 24);
+        cmdlen = 12;
+        break;
+    default:
+        BX_ERROR(("Unsupported command length, command %x", command));
+        goto fail;
+  }
+  if (lun || buf[1] >> 5) {
+    BX_ERROR(("unimplemented LUN %d", lun ? lun : buf[1] >> 5));
+    goto fail;
+  }
+  switch (command) {
+    case 0x0:
+	BX_DEBUG(("Test Unit Ready"));
+	break;
+    case 0x03:
+        BX_DEBUG(("request Sense (len %d)", len));
+        if (len < 4)
+            goto fail;
+        memset(buf, 0, 4);
+        outbuf[0] = 0xf0;
+        outbuf[1] = 0;
+        outbuf[2] = s->sense;
+        r->buf_len = 4;
+        break;
+    case 0x12:
+        BX_DEBUG(("inquiry (len %d)", len));
+        if (len < 36) {
+          BX_ERROR(("inquiry buffer too small (%d)", len));
+        }
+	memset(outbuf, 0, 36);
+        outbuf[0] = 0;
+        memcpy(&outbuf[16], "BOCHS HARDDISK ", 16);
+	memcpy(&outbuf[8], "BOCHS  ", 8);
+        memcpy(&outbuf[32], "1.0", 4);
+	outbuf[2] = 3;
+	outbuf[3] = 2;
+	outbuf[4] = 32;
+        outbuf[7] = 0x10 | (s->tcq ? 0x02 : 0);
+	r->buf_len = 36;
+	break;
+    case 0x16:
+        BX_INFO(("Reserve(6)"));
+        if (buf[1] & 1)
+            goto fail;
+        break;
+    case 0x17:
+        BX_INFO(("Release(6)"));
+        if (buf[1] & 1)
+            goto fail;
+        break;
+    case 0x1a:
+    case 0x5a:
+        {
+            Bit8u *p;
+            int page;
+
+            page = buf[2] & 0x3f;
+            BX_DEBUG(("mode sense (page %d, len %d)", page, len));
+            p = outbuf;
+            memset(p, 0, 4);
+            outbuf[1] = 0; /* Default media type.  */
+            outbuf[3] = 0; /* Block descriptor length.  */
+            p += 4;
+            if ((page == 8 || page == 0x3f)) {
+                /* Caching page.  */
+                p[0] = 8;
+                p[1] = 0x12;
+                p[2] = 4; /* WCE */
+                p += 19;
+            }
+            r->buf_len = p - outbuf;
+            outbuf[0] = r->buf_len - 4;
+            if (r->buf_len > (int)len)
+                r->buf_len = len;
+        }
+        break;
+    case 0x1b:
+        BX_INFO(("Start Stop Unit"));
+	break;
+    case 0x1e:
+        BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
+	break;
+    case 0x25:
+	BX_DEBUG(("Read Capacity"));
+        /* The normal LEN field for this command is zero.  */
+	memset(outbuf, 0, 8);
+	nb_sectors = s->hdimage->hd_size / 512;
+        /* Returned value is the address of the last sector.  */
+        if (nb_sectors) {
+            nb_sectors--;
+            outbuf[0] = (nb_sectors >> 24) & 0xff;
+            outbuf[1] = (nb_sectors >> 16) & 0xff;
+            outbuf[2] = (nb_sectors >> 8) & 0xff;
+            outbuf[3] = nb_sectors & 0xff;
+            outbuf[4] = 0;
+            outbuf[5] = 0;
+            outbuf[6] = s->cluster_size * 2;
+            outbuf[7] = 0;
+            r->buf_len = 8;
+        } else {
+            scsi_command_complete(r, SENSE_NOT_READY);
+            return 0;
+        }
+	break;
+    case 0x08:
+    case 0x28:
+        BX_DEBUG(("Read (sector %d, count %d)", lba, len));
+        r->sector = lba * s->cluster_size;
+        r->sector_count = len * s->cluster_size;
+        break;
+    case 0x0a:
+    case 0x2a:
+        BX_DEBUG(("Write (sector %d, count %d)", lba, len));
+        r->sector = lba * s->cluster_size;
+        r->sector_count = len * s->cluster_size;
+        is_write = 1;
+        break;
+    case 0x56:
+        BX_INFO(("Reserve(10)"));
+        if (buf[1] & 3)
+            goto fail;
+        break;
+    case 0x57:
+        BX_INFO(("Release(10)"));
+        if (buf[1] & 3)
+            goto fail;
+        break;
+    case 0xa0:
+        BX_INFO(("Report LUNs (len %d)", len));
+        if (len < 16)
+            goto fail;
+        memset(outbuf, 0, 16);
+        outbuf[3] = 8;
+        r->buf_len = 16;
+        break;
+    default:
+	BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
+    fail:
+        scsi_command_complete(r, SENSE_ILLEGAL_REQUEST);
+	return 0;
+  }
+  if (r->sector_count == 0 && r->buf_len == 0) {
+    scsi_command_complete(r, SENSE_NO_SENSE);
+  }
+  len = r->sector_count * 512 + r->buf_len;
+  if (is_write) {
+    return -len;
+  } else {
+    if (!r->sector_count)
+      r->sector_count = -1;
+    return len;
+  }
+}
+
+void bx_pciusb_c::scsi_disk_destroy(SCSIDevice *s)
+{
+  delete s;
+}
+
+SCSIDevice* bx_pciusb_c::scsi_disk_init(device_image_t *_hdimage, int tcq,
+                                        scsi_completionfn completion, void *opaque)
+{
+  SCSIDevice *s = new SCSIDevice;
+  memset(s, 0, sizeof(SCSIDevice));
+  s->hdimage = _hdimage;
+  s->tcq = tcq;
+  s->completion = completion;
+  s->opaque = opaque;
+  s->cluster_size = 1;
+  return s;
+}
+
+// USB runtime parameter handler
+ 
 const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
 {
   Bit8u type;

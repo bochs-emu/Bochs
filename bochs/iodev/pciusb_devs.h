@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb_devs.h,v 1.7 2007-03-05 18:09:57 vruppert Exp $
+// $Id: pciusb_devs.h,v 1.8 2007-03-14 18:05:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -34,9 +34,9 @@
 
 
 // defines
-#define USB_CYPRESS      1
-#define USB_KEYPAD       1
-#define USB_FLASH_STICK  1
+#define USB_CYPRESS     1
+#define USB_KEYPAD      1
+#define USB_HARD_DRIVE  1
 
 // don't forget to modify USB_CUR_DEVS to reflect devices
 
@@ -387,15 +387,11 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// Kingston USB 256meg flash stick.
-// WinXP supports this stick
-// Win98SE needs a driver found at www.kingston.com/drivers/dt198
-#if USB_FLASH_STICK
-
-#define USB_FLASH_SIZE 256
+// USB mass storage device
+#if USB_HARD_DRIVE
 
   BX_USB_THIS hub[0].device[2].connect_status = 0;
-  BX_USB_THIS hub[0].device[2].dev_type = USB_DEV_TYPE_FLASH;
+  BX_USB_THIS hub[0].device[2].dev_type = USB_DEV_TYPE_DISK;
 
   BX_USB_THIS hub[0].device[2].state = STATE_DEFAULT;
   BX_USB_THIS hub[0].device[2].address = 0;
@@ -418,10 +414,10 @@
   BX_USB_THIS hub[0].device[2].function.device_descr.subclass = 0;
   BX_USB_THIS hub[0].device[2].function.device_descr.protocol = 0;
   BX_USB_THIS hub[0].device[2].function.device_descr.max_packet_size = 64;
-  BX_USB_THIS hub[0].device[2].function.device_descr.vendorid = 0x0930;
-  BX_USB_THIS hub[0].device[2].function.device_descr.productid = 0x6532;
+  BX_USB_THIS hub[0].device[2].function.device_descr.vendorid = 0x0000;
+  BX_USB_THIS hub[0].device[2].function.device_descr.productid = 0x0000;
   BX_USB_THIS hub[0].device[2].function.device_descr.device_rel = 0x0100;
-  BX_USB_THIS hub[0].device[2].function.device_descr.manuf_indx = 0;
+  BX_USB_THIS hub[0].device[2].function.device_descr.manuf_indx = 1;
   BX_USB_THIS hub[0].device[2].function.device_descr.prod_indx = 2;
   BX_USB_THIS hub[0].device[2].function.device_descr.serial_indx = 3;
   BX_USB_THIS hub[0].device[2].function.device_descr.configs = 1;
@@ -483,8 +479,8 @@
   // string #1
   BX_USB_THIS hub[0].device[2].function.string[0].size = 36;
   BX_USB_THIS hub[0].device[2].function.string[0].type = 3;
-  Bit8u dev3_str_1[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'F', 0x00, 'l', 0x00, 'a', 0x00,
-    's', 0x00, 'h', 0x00, ' ', 0x00, 'S', 0x00, 't', 0x00, 'i', 0x00, 'c', 0x00, 'k', 0x00, '.', 0x00, 
+  Bit8u dev3_str_1[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
+    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
     '0', 0x00,
   };
   memcpy(BX_USB_THIS hub[0].device[2].function.string[0].unicode_str, dev3_str_1, 34);
@@ -492,8 +488,8 @@
   // string #2
   BX_USB_THIS hub[0].device[2].function.string[1].size = 36;
   BX_USB_THIS hub[0].device[2].function.string[1].type = 3;
-  Bit8u dev3_str_2[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'F', 0x00, 'l', 0x00, 'a', 0x00,
-    's', 0x00, 'h', 0x00, ' ', 0x00, 'S', 0x00, 't', 0x00, 'i', 0x00, 'c', 0x00, 'k', 0x00, '.', 0x00, 
+  Bit8u dev3_str_2[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
+    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
     '1', 0x00,
   };
   memcpy(BX_USB_THIS hub[0].device[2].function.string[1].unicode_str, dev3_str_2, 34);
@@ -501,8 +497,8 @@
   // string #3
   BX_USB_THIS hub[0].device[2].function.string[2].size = 36;
   BX_USB_THIS hub[0].device[2].function.string[2].type = 3;
-  Bit8u dev3_str_3[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'F', 0x00, 'l', 0x00, 'a', 0x00,
-    's', 0x00, 'h', 0x00, ' ', 0x00, 'S', 0x00, 't', 0x00, 'i', 0x00, 'c', 0x00, 'k', 0x00, '.', 0x00, 
+  Bit8u dev3_str_3[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
+    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
     '2', 0x00,
   };
   memcpy(BX_USB_THIS hub[0].device[2].function.string[2].unicode_str, dev3_str_3, 34);
@@ -510,8 +506,8 @@
   // string #4
   BX_USB_THIS hub[0].device[2].function.string[3].size = 36;
   BX_USB_THIS hub[0].device[2].function.string[3].type = 3;
-  Bit8u dev3_str_4[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'F', 0x00, 'l', 0x00, 'a', 0x00,
-    's', 0x00, 'h', 0x00, ' ', 0x00, 'S', 0x00, 't', 0x00, 'i', 0x00, 'c', 0x00, 'k', 0x00, '.', 0x00, 
+  Bit8u dev3_str_4[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
+    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
     '3', 0x00,
   };
   memcpy(BX_USB_THIS hub[0].device[2].function.string[3].unicode_str, dev3_str_4, 34);
@@ -519,8 +515,8 @@
   // string #5
   BX_USB_THIS hub[0].device[2].function.string[4].size = 36;
   BX_USB_THIS hub[0].device[2].function.string[4].type = 3;
-  Bit8u dev3_str_5[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'F', 0x00, 'l', 0x00, 'a', 0x00,
-    's', 0x00, 'h', 0x00, ' ', 0x00, 'S', 0x00, 't', 0x00, 'i', 0x00, 'c', 0x00, 'k', 0x00, '.', 0x00, 
+  Bit8u dev3_str_5[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
+    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
     '4', 0x00,
   };
   memcpy(BX_USB_THIS hub[0].device[2].function.string[3].unicode_str, dev3_str_5, 34);
@@ -529,10 +525,10 @@
   BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].lookup_cnt = 0;
   memset(&BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].lookup, 0, sizeof(struct KEYPAD) * KEYPAD_LEN);
 
-#endif // USB_FLASH_STICK
+  BX_USB_THIS hub[0].device[2].devstate = NULL;
+
+#endif // USB_HARD_DRIVE
 
 
 // Another device would go here.
-
-
 

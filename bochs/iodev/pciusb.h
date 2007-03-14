@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.20 2006-09-24 10:10:21 vruppert Exp $
+// $Id: pciusb.h,v 1.21 2007-03-14 18:05:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -43,9 +43,93 @@
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
 #define USB_CUR_DEVS    3
 
-#define TOKEN_IN    0x69
-#define TOKEN_OUT   0xE1
-#define TOKEN_SETUP 0x2D
+#define USB_TOKEN_IN    0x69
+#define USB_TOKEN_OUT   0xE1
+#define USB_TOKEN_SETUP 0x2D
+
+#define USB_RET_NODEV  (-1) 
+#define USB_RET_NAK    (-2)
+#define USB_RET_STALL  (-3)
+#define USB_RET_BABBLE (-4)
+#define USB_RET_ASYNC  (-5)
+
+typedef struct SCSIDevice SCSIDevice;
+typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
+                                  Bit32u arg);
+class device_image_t;
+
+struct USBPacket {
+  int pid;
+  Bit8u devaddr;
+  Bit8u devep;
+  Bit8u *data;
+  int len;
+};
+
+enum USBMSDMode {
+  USB_MSDM_CBW,
+  USB_MSDM_DATAOUT,
+  USB_MSDM_DATAIN,
+  USB_MSDM_CSW
+};
+
+typedef struct {
+  enum USBMSDMode mode;
+  Bit32u scsi_len;
+  Bit8u *scsi_buf;
+  Bit32u usb_len;
+  Bit8u *usb_buf;
+  Bit32u data_len;
+  Bit32u residue;
+  Bit32u tag;
+  int result;
+  device_image_t *hdimage;
+  SCSIDevice *scsi_dev;
+  USBPacket *packet;
+} MSDState;
+
+struct usb_msd_cbw {
+  Bit32u sig;
+  Bit32u tag;
+  Bit32u data_len;
+  Bit8u flags;
+  Bit8u lun;
+  Bit8u cmd_len;
+  Bit8u cmd[16];
+};
+
+struct usb_msd_csw {
+  Bit32u sig;
+  Bit32u tag;
+  Bit32u residue;
+  Bit8u status;
+};
+
+#define SENSE_NO_SENSE        0
+#define SENSE_HARDWARE_ERROR  4
+
+#define SCSI_DMA_BUF_SIZE    65536
+
+typedef struct SCSIRequest {
+  SCSIDevice *dev;
+  Bit32u tag;
+  int sector;
+  int sector_count;
+  int buf_len;
+  Bit8u dma_buf[SCSI_DMA_BUF_SIZE];
+  struct SCSIRequest *next;
+} SCSIRequest;
+
+struct SCSIDevice
+{
+  device_image_t *hdimage;
+  SCSIRequest *requests;
+  int cluster_size;
+  int sense;
+  int tcq;
+  scsi_completionfn completion;
+  void *opaque;
+};
 
 // device requests
 enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
@@ -85,7 +169,7 @@ struct KEYPAD {
 #define USB_DEV_TYPE_NONE    0
 #define USB_DEV_TYPE_MOUSE   1
 #define USB_DEV_TYPE_KEYPAD  2
-#define USB_DEV_TYPE_FLASH   3
+#define USB_DEV_TYPE_DISK    3
 
 // set it to 1 (align on byte) and save so we can pop it
 #pragma pack(push, 1)
@@ -100,7 +184,6 @@ struct USB_DEVICE {
   unsigned state;         // the state the device is in.  DEFAULT, ADDRESS, or CONFIGURED
   bx_bool low_speed;      // 1 = ls 
   Bit32u  scratch;        // 32-bit scratch area
-  int     fd;             // if this device accesses a file, this is the handle.
   bx_bool in_stall;       // is this device in a stall state?
   Bit8u   stall_once;     // some devices stall on the first setup packet after powerup
   struct {
@@ -180,6 +263,7 @@ struct USB_DEVICE {
       Bit8u  unicode_str[64];
     } string[6];
   } function;     // currently, we only support 1 function
+  void *devstate;
 };
 #pragma pack(pop)
 
@@ -382,7 +466,9 @@ private:
   bx_bool  last_connect;
   bx_bool  keyboard_connected;
   bx_bool  mouse_connected;
-  bx_bool  flash_connected;
+  bx_bool  disk_connected;
+
+  USBPacket usb_packet;
 
   static void init_device(Bit8u port, const char *devname);
   static void usb_set_connect_status(Bit8u port, int type, bx_bool connected);
@@ -391,7 +477,6 @@ private:
   void usb_timer(void);
   bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
   void dump_packet(Bit8u *data, unsigned size);
-  bx_bool flash_stick(Bit8u *packet, Bit16u size, bx_bool out);
   unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
@@ -402,6 +487,26 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  // USB mass storage device support
+  int usb_msd_handle_data(MSDState *s, USBPacket *p);
+  void usb_msd_copy_data(MSDState *s);
+  void usb_msd_send_status(MSDState *s);
+  static void usb_msd_command_complete(void *opaque, int reason, Bit32u tag, Bit32u arg);
+  // USB SCSI emulation layer
+  SCSIRequest* scsi_new_request(SCSIDevice *s, Bit32u tag);
+  void scsi_remove_request(SCSIRequest *r);
+  SCSIRequest *scsi_find_request(SCSIDevice *s, Bit32u tag);
+  void scsi_command_complete(SCSIRequest *r, int sense);
+  void scsi_cancel_io(SCSIDevice *s, Bit32u tag);
+  void scsi_read_complete(void *opaque, int ret);
+  void scsi_read_data(SCSIDevice *s, Bit32u tag);
+  void scsi_write_complete(void *opaque, int ret);
+  int scsi_write_data(SCSIDevice *s, Bit32u tag);
+  Bit8u* scsi_get_buf(SCSIDevice *s, Bit32u tag);
+  Bit32s scsi_send_command(SCSIDevice *s, Bit32u tag, Bit8u *buf, int lun);
+  void scsi_disk_destroy(SCSIDevice *s);
+  SCSIDevice* scsi_disk_init(device_image_t *_hdimage, int tcq,
+                             scsi_completionfn completion, void *opaque);
 };
 
 #endif
