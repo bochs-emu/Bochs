@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.21 2007-03-14 18:05:46 vruppert Exp $
+// $Id: pciusb.h,v 1.22 2007-03-16 18:23:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -53,9 +53,7 @@
 #define USB_RET_BABBLE (-4)
 #define USB_RET_ASYNC  (-5)
 
-typedef struct SCSIDevice SCSIDevice;
-typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
-                                  Bit32u arg);
+class scsi_device_t;
 class device_image_t;
 
 struct USBPacket {
@@ -84,7 +82,7 @@ typedef struct {
   Bit32u tag;
   int result;
   device_image_t *hdimage;
-  SCSIDevice *scsi_dev;
+  scsi_device_t *scsi_dev;
   USBPacket *packet;
 } MSDState;
 
@@ -103,32 +101,6 @@ struct usb_msd_csw {
   Bit32u tag;
   Bit32u residue;
   Bit8u status;
-};
-
-#define SENSE_NO_SENSE        0
-#define SENSE_HARDWARE_ERROR  4
-
-#define SCSI_DMA_BUF_SIZE    65536
-
-typedef struct SCSIRequest {
-  SCSIDevice *dev;
-  Bit32u tag;
-  int sector;
-  int sector_count;
-  int buf_len;
-  Bit8u dma_buf[SCSI_DMA_BUF_SIZE];
-  struct SCSIRequest *next;
-} SCSIRequest;
-
-struct SCSIDevice
-{
-  device_image_t *hdimage;
-  SCSIRequest *requests;
-  int cluster_size;
-  int sense;
-  int tcq;
-  scsi_completionfn completion;
-  void *opaque;
 };
 
 // device requests
@@ -488,25 +460,12 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   // USB mass storage device support
-  int usb_msd_handle_data(MSDState *s, USBPacket *p);
   void usb_msd_copy_data(MSDState *s);
   void usb_msd_send_status(MSDState *s);
   static void usb_msd_command_complete(void *opaque, int reason, Bit32u tag, Bit32u arg);
-  // USB SCSI emulation layer
-  SCSIRequest* scsi_new_request(SCSIDevice *s, Bit32u tag);
-  void scsi_remove_request(SCSIRequest *r);
-  SCSIRequest *scsi_find_request(SCSIDevice *s, Bit32u tag);
-  void scsi_command_complete(SCSIRequest *r, int sense);
-  void scsi_cancel_io(SCSIDevice *s, Bit32u tag);
-  void scsi_read_complete(void *opaque, int ret);
-  void scsi_read_data(SCSIDevice *s, Bit32u tag);
-  void scsi_write_complete(void *opaque, int ret);
-  int scsi_write_data(SCSIDevice *s, Bit32u tag);
-  Bit8u* scsi_get_buf(SCSIDevice *s, Bit32u tag);
-  Bit32s scsi_send_command(SCSIDevice *s, Bit32u tag, Bit8u *buf, int lun);
-  void scsi_disk_destroy(SCSIDevice *s);
-  SCSIDevice* scsi_disk_init(device_image_t *_hdimage, int tcq,
-                             scsi_completionfn completion, void *opaque);
+  int usb_msd_handle_data(MSDState *s, USBPacket *p);
+  void usb_msd_handle_destroy(MSDState *s);
+  MSDState* usb_msd_init(const char *filename);
 };
 
 #endif
