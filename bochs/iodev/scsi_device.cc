@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.1 2007-03-16 18:23:13 vruppert Exp $
+// $Id: scsi_device.cc,v 1.2 2007-03-18 11:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -28,6 +28,7 @@
 
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
+#if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "hdimage.h"
 #include "scsi_device.h"
 
@@ -46,6 +47,9 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   completion = _completion;
   dev = _dev;
   cluster_size = 1;
+
+  put("SCSI");
+  settype(PCIUSBLOG);
 }
 
 scsi_device_t::~scsi_device_t(void)
@@ -422,6 +426,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
         memset(outbuf, 0, 8);
         if (type == SCSIDEV_TYPE_CDROM) {
           // TODO: get cdrom capacity
+          nb_sectors = 0;
         } else {
           nb_sectors = hdimage->hd_size / 512;
         }
@@ -507,3 +512,5 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
     return len;
   }
 }
+
+#endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

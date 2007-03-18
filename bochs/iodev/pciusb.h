@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.22 2007-03-16 18:23:13 vruppert Exp $
+// $Id: pciusb.h,v 1.23 2007-03-18 11:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -25,6 +25,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 // Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
+// USB mass storage device support and SCSI emulation layer ported from Qemu
 
 #ifndef BX_IODEV_PCIUSB_H
 #define BX_IODEV_PCIUSB_H
@@ -41,11 +42,15 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    3
+#define USB_CUR_DEVS    2
 
 #define USB_TOKEN_IN    0x69
 #define USB_TOKEN_OUT   0xE1
 #define USB_TOKEN_SETUP 0x2D
+
+#define USB_MSG_ATTACH   0x100
+#define USB_MSG_DETACH   0x101
+#define USB_MSG_RESET    0x102
 
 #define USB_RET_NODEV  (-1) 
 #define USB_RET_NAK    (-2)
@@ -53,8 +58,68 @@
 #define USB_RET_BABBLE (-4)
 #define USB_RET_ASYNC  (-5)
 
-class scsi_device_t;
-class device_image_t;
+#define USB_SPEED_LOW   0
+#define USB_SPEED_FULL  1
+#define USB_SPEED_HIGH  2
+
+#define USB_STATE_NOTATTACHED 0
+#define USB_STATE_ATTACHED    1
+//#define USB_STATE_POWERED     2
+#define USB_STATE_DEFAULT     3
+//#define USB_STATE_ADDRESS     4
+//#define USB_STATE_CONFIGURED  5
+#define USB_STATE_SUSPENDED   6
+
+#define USB_DIR_OUT  0
+#define USB_DIR_IN   0x80
+
+#define USB_TYPE_MASK			(0x03 << 5)
+#define USB_TYPE_STANDARD		(0x00 << 5)
+#define USB_TYPE_CLASS			(0x01 << 5)
+#define USB_TYPE_VENDOR			(0x02 << 5)
+#define USB_TYPE_RESERVED		(0x03 << 5)
+
+#define USB_RECIP_MASK			0x1f
+#define USB_RECIP_DEVICE		0x00
+#define USB_RECIP_INTERFACE		0x01
+#define USB_RECIP_ENDPOINT		0x02
+#define USB_RECIP_OTHER			0x03
+
+#define DeviceRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
+#define DeviceOutRequest ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_DEVICE)<<8)
+#define InterfaceRequest \
+        ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+#define InterfaceOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_INTERFACE)<<8)
+#define EndpointRequest ((USB_DIR_IN|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+#define EndpointOutRequest \
+        ((USB_DIR_OUT|USB_TYPE_STANDARD|USB_RECIP_ENDPOINT)<<8)
+
+#define USB_REQ_GET_STATUS		0x00
+#define USB_REQ_CLEAR_FEATURE		0x01
+#define USB_REQ_SET_FEATURE		0x03
+#define USB_REQ_SET_ADDRESS		0x05
+#define USB_REQ_GET_DESCRIPTOR		0x06
+#define USB_REQ_SET_DESCRIPTOR		0x07
+#define USB_REQ_GET_CONFIGURATION	0x08
+#define USB_REQ_SET_CONFIGURATION	0x09
+#define USB_REQ_GET_INTERFACE		0x0A
+#define USB_REQ_SET_INTERFACE		0x0B
+#define USB_REQ_SYNCH_FRAME		0x0C
+
+#define USB_DEVICE_SELF_POWERED		0
+#define USB_DEVICE_REMOTE_WAKEUP	1
+
+// USB 1.1
+#define USB_DT_DEVICE			0x01
+#define USB_DT_CONFIG			0x02
+#define USB_DT_STRING			0x03
+#define USB_DT_INTERFACE		0x04
+#define USB_DT_ENDPOINT			0x05
+// USB 2.0
+#define USB_DT_DEVICE_QUALIFIER         0x06
+#define USB_DT_OTHER_SPEED_CONFIG       0x07
+#define USB_DT_INTERFACE_POWER          0x08
 
 struct USBPacket {
   int pid;
@@ -62,45 +127,6 @@ struct USBPacket {
   Bit8u devep;
   Bit8u *data;
   int len;
-};
-
-enum USBMSDMode {
-  USB_MSDM_CBW,
-  USB_MSDM_DATAOUT,
-  USB_MSDM_DATAIN,
-  USB_MSDM_CSW
-};
-
-typedef struct {
-  enum USBMSDMode mode;
-  Bit32u scsi_len;
-  Bit8u *scsi_buf;
-  Bit32u usb_len;
-  Bit8u *usb_buf;
-  Bit32u data_len;
-  Bit32u residue;
-  Bit32u tag;
-  int result;
-  device_image_t *hdimage;
-  scsi_device_t *scsi_dev;
-  USBPacket *packet;
-} MSDState;
-
-struct usb_msd_cbw {
-  Bit32u sig;
-  Bit32u tag;
-  Bit32u data_len;
-  Bit8u flags;
-  Bit8u lun;
-  Bit8u cmd_len;
-  Bit8u cmd[16];
-};
-
-struct usb_msd_csw {
-  Bit32u sig;
-  Bit32u tag;
-  Bit32u residue;
-  Bit8u status;
 };
 
 // device requests
@@ -113,11 +139,6 @@ enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR
 };
 
 #define SET_FEATURE_TEST_MODE 0 /////////TODO: I don't know yet what this value is to be
-
-// Descriptor types
-enum {  DEVICE=1, CONFIG, STRING, INTERFACE, ENDPOINT,         // USB 1.1
-        DEVICE_QUALIFIER, OTHER_SPEED_CONFIG, INTERFACE_POWER  // USB 2.0
-};
 
 #define STATE_DEFAULT    0
 #define STATE_ADDRESS    1
@@ -138,10 +159,50 @@ struct KEYPAD {
   Bit8u  keypad_packet[8];
 };
 
-#define USB_DEV_TYPE_NONE    0
-#define USB_DEV_TYPE_MOUSE   1
-#define USB_DEV_TYPE_KEYPAD  2
-#define USB_DEV_TYPE_DISK    3
+enum usbdev_type {
+  USB_DEV_TYPE_NONE=0,
+  USB_DEV_TYPE_MOUSE,
+  USB_DEV_TYPE_KEYPAD,
+  USB_DEV_TYPE_DISK
+};
+
+void usb_dump_packet(Bit8u *data, unsigned size);
+int set_usb_string(Bit8u *buf, const char *str);
+
+
+class usb_device_t : public logfunctions {
+public:
+  usb_device_t(void);
+  virtual ~usb_device_t(void) {}
+
+  virtual int handle_packet(USBPacket *p);
+  virtual void handle_reset() {}
+  virtual int handle_control(int request, int value, int index, int length, Bit8u *data) {return 0;}
+  virtual int handle_data(USBPacket *p) {return 0;}
+
+  bx_bool get_connected() {return d.connected;}
+  usbdev_type get_type() {return d.type;}
+  int get_speed() {return d.speed;}
+  Bit8u get_address() {return d.addr;}
+
+protected:
+  struct {
+    enum usbdev_type type;
+    bx_bool connected;
+    int speed;
+    Bit8u addr;
+    Bit8u config;
+    char devname[32];
+
+    int state;
+    Bit8u setup_buf[8];
+    Bit8u data_buf[1024];
+    int remote_wakeup;
+    int setup_state;
+    int setup_len;
+    int setup_index;
+  } d;
+};
 
 // set it to 1 (align on byte) and save so we can pop it
 #pragma pack(push, 1)
@@ -235,7 +296,6 @@ struct USB_DEVICE {
       Bit8u  unicode_str[64];
     } string[6];
   } function;     // currently, we only support 1 function
-  void *devstate;
 };
 #pragma pack(pop)
 
@@ -349,6 +409,7 @@ typedef struct {
   struct {
     // our data
     int     device_num;     // device number on this hub
+    usb_device_t *device;   // device connected to this port
 
     // bit reps of actual port
     bx_bool suspend;
@@ -438,7 +499,6 @@ private:
   bx_bool  last_connect;
   bx_bool  keyboard_connected;
   bx_bool  mouse_connected;
-  bx_bool  disk_connected;
 
   USBPacket usb_packet;
 
@@ -448,7 +508,6 @@ private:
   static void usb_timer_handler(void *);
   void usb_timer(void);
   bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
-  void dump_packet(Bit8u *data, unsigned size);
   unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
@@ -459,13 +518,7 @@ private:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
-  // USB mass storage device support
-  void usb_msd_copy_data(MSDState *s);
-  void usb_msd_send_status(MSDState *s);
-  static void usb_msd_command_complete(void *opaque, int reason, Bit32u tag, Bit32u arg);
-  int usb_msd_handle_data(MSDState *s, USBPacket *p);
-  void usb_msd_handle_destroy(MSDState *s);
-  MSDState* usb_msd_init(const char *filename);
+  void usb_send_msg(usb_device_t *dev, int msg);
 };
 
 #endif

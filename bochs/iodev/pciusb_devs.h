@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb_devs.h,v 1.8 2007-03-14 18:05:46 vruppert Exp $
+// $Id: pciusb_devs.h,v 1.9 2007-03-18 11:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -36,7 +36,6 @@
 // defines
 #define USB_CYPRESS     1
 #define USB_KEYPAD      1
-#define USB_HARD_DRIVE  1
 
 // don't forget to modify USB_CUR_DEVS to reflect devices
 
@@ -63,7 +62,7 @@
 
   // device descriptor
   BX_USB_THIS hub[0].device[0].function.device_descr.len = 18;
-  BX_USB_THIS hub[0].device[0].function.device_descr.type = DEVICE;
+  BX_USB_THIS hub[0].device[0].function.device_descr.type = USB_DT_DEVICE;
   BX_USB_THIS hub[0].device[0].function.device_descr.usb_ver = 0x0100;
   BX_USB_THIS hub[0].device[0].function.device_descr._class = 0;
   BX_USB_THIS hub[0].device[0].function.device_descr.subclass = 0;
@@ -79,7 +78,7 @@
 
   // config descriptor
   BX_USB_THIS hub[0].device[0].function.device_config[0].len = 9;
-  BX_USB_THIS hub[0].device[0].function.device_config[0].type = CONFIG;
+  BX_USB_THIS hub[0].device[0].function.device_config[0].type = USB_DT_CONFIG;
   BX_USB_THIS hub[0].device[0].function.device_config[0].tot_len = 34;   // size of config+interface+endpt+hid
   BX_USB_THIS hub[0].device[0].function.device_config[0].interfaces = 1;
   BX_USB_THIS hub[0].device[0].function.device_config[0].config_val = 1;
@@ -90,7 +89,7 @@
   // interface descriptor
   //    0x09, 0x04, 0x00, 0x00, 0x01, 0x03, 0x01, 0x02, 0x05,   // interface descriptor
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].size = 9;
-  BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].type = INTERFACE;
+  BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].type = USB_DT_INTERFACE;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].interface_num = 0;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].alternate = 0;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].num_endpts = 1;
@@ -102,7 +101,7 @@
   // endpoint descriptor
   //    0x07, 0x05, 0x81, 0x03, 0x03, 0x00, 0x0A,               // endpoint descriptor
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].size = 7;
-  BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].type = ENDPOINT;
+  BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].type = USB_DT_ENDPOINT;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].endpt = 0x81;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].attrib = 3;
   BX_USB_THIS hub[0].device[0].function.device_config[0].Interface[0].endpts[0].max_size = 3;
@@ -201,7 +200,7 @@
 
   // device descriptor
   BX_USB_THIS hub[0].device[1].function.device_descr.len = 18;
-  BX_USB_THIS hub[0].device[1].function.device_descr.type = DEVICE;
+  BX_USB_THIS hub[0].device[1].function.device_descr.type = USB_DT_DEVICE;
   BX_USB_THIS hub[0].device[1].function.device_descr.usb_ver = 0x0110;
   BX_USB_THIS hub[0].device[1].function.device_descr._class = 0;
   BX_USB_THIS hub[0].device[1].function.device_descr.subclass = 0;
@@ -217,7 +216,7 @@
 
   // config descriptor
   BX_USB_THIS hub[0].device[1].function.device_config[0].len = 9;
-  BX_USB_THIS hub[0].device[1].function.device_config[0].type = CONFIG;
+  BX_USB_THIS hub[0].device[1].function.device_config[0].type = USB_DT_CONFIG;
   BX_USB_THIS hub[0].device[1].function.device_config[0].tot_len = 59;   // size of config+interface+endpt+hid
   BX_USB_THIS hub[0].device[1].function.device_config[0].interfaces = 2;
   BX_USB_THIS hub[0].device[1].function.device_config[0].config_val = 1;
@@ -228,7 +227,7 @@
   // interface descriptor #1
   //    0x09, 0x04, 0x00, 0x00, 0x01, 0x03, 0x01, 0x01, 0x05,   // interface descriptor
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].size = 9;
-  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].type = INTERFACE;
+  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].type = USB_DT_INTERFACE;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].interface_num = 0;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].alternate = 0;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].num_endpts = 1;
@@ -262,7 +261,7 @@
   // endpoint descriptor #1
   //    0x07, 0x05, 0x81, 0x03, 0x08, 0x00, 0x0A,               // endpoint descriptor
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].size = 7;
-  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].type = ENDPOINT;
+  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].type = USB_DT_ENDPOINT;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].endpt = 0x81;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].attrib = 3;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[0].endpts[0].max_size = 8;
@@ -291,7 +290,7 @@
   // interface descriptor #2
   //    0x09, 0x04, 0x01, 0x00, 0x01, 0x03, 0x01, 0x02, 0x06,   // interface descriptor
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].size = 9;
-  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].type = INTERFACE;
+  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].type = USB_DT_INTERFACE;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].interface_num = 1;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].alternate = 0;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].num_endpts = 1;
@@ -325,7 +324,7 @@
   // endpoint descriptor #2
   //    0x07, 0x05, 0x82, 0x03, 0x05, 0x00, 0x0A,               // endpoint descriptor
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].size = 7;
-  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].type = ENDPOINT;
+  BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].type = USB_DT_ENDPOINT;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].endpt = 0x82;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].attrib = 3;
   BX_USB_THIS hub[0].device[1].function.device_config[0].Interface[1].endpts[0].max_size = 5;
@@ -384,151 +383,3 @@
 
 
 #endif // USB_KEYPAD
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// USB mass storage device
-#if USB_HARD_DRIVE
-
-  BX_USB_THIS hub[0].device[2].connect_status = 0;
-  BX_USB_THIS hub[0].device[2].dev_type = USB_DEV_TYPE_DISK;
-
-  BX_USB_THIS hub[0].device[2].state = STATE_DEFAULT;
-  BX_USB_THIS hub[0].device[2].address = 0;
-  BX_USB_THIS hub[0].device[2].alt_interface = 0;
-  BX_USB_THIS hub[0].device[2].Interface = 0;
-  BX_USB_THIS hub[0].device[2].config = 0;
-  BX_USB_THIS hub[0].device[2].endpt = 1;
-  BX_USB_THIS hub[0].device[2].function.direction = 0;
-  BX_USB_THIS hub[0].device[2].function.configs = 1; // only one config in this device
-  BX_USB_THIS hub[0].device[2].low_speed = 0;
-
-  BX_USB_THIS hub[0].device[2].in_stall = 0;
-  BX_USB_THIS hub[0].device[2].stall_once = 0x00;  // stall on the first setup packet (set bit 0)
-
-  // device descriptor
-  BX_USB_THIS hub[0].device[2].function.device_descr.len = 18;
-  BX_USB_THIS hub[0].device[2].function.device_descr.type = DEVICE;
-  BX_USB_THIS hub[0].device[2].function.device_descr.usb_ver = 0x0200;
-  BX_USB_THIS hub[0].device[2].function.device_descr._class = 0;
-  BX_USB_THIS hub[0].device[2].function.device_descr.subclass = 0;
-  BX_USB_THIS hub[0].device[2].function.device_descr.protocol = 0;
-  BX_USB_THIS hub[0].device[2].function.device_descr.max_packet_size = 64;
-  BX_USB_THIS hub[0].device[2].function.device_descr.vendorid = 0x0000;
-  BX_USB_THIS hub[0].device[2].function.device_descr.productid = 0x0000;
-  BX_USB_THIS hub[0].device[2].function.device_descr.device_rel = 0x0100;
-  BX_USB_THIS hub[0].device[2].function.device_descr.manuf_indx = 1;
-  BX_USB_THIS hub[0].device[2].function.device_descr.prod_indx = 2;
-  BX_USB_THIS hub[0].device[2].function.device_descr.serial_indx = 3;
-  BX_USB_THIS hub[0].device[2].function.device_descr.configs = 1;
-
-  // config descriptor
-  BX_USB_THIS hub[0].device[2].function.device_config[0].len = 9;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].type = CONFIG;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].tot_len = 39;   // size of config+interface+endpt+hid
-  BX_USB_THIS hub[0].device[2].function.device_config[0].interfaces = 1;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].config_val = 1;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].config_indx = 0;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].attrbs = 0x80;  //
-  BX_USB_THIS hub[0].device[2].function.device_config[0].max_power = 100;
-
-  // interface descriptor
-  //    0x09, 0x04, 0x00, 0x00, 0x03, 0x08, 0x06, 0x50, 0x00,   // interface descriptor
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].size = 9;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].type = INTERFACE;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].interface_num = 0;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].alternate = 0;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].num_endpts = 3;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].iclass = 8;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].subclass = 6;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].protocol = 0x50;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].str_indx = 0;
-
-  // endpoint descriptor
-  //    0x07, 0x05, 0x81, 0x02, 0x40, 0x00, 0x00,               // endpoint descriptor
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].size = 7;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].type = ENDPOINT;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].endpt = 0x81;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].attrib = 2;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].max_size = 64;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[0].interval = 0x00;
-
-  // endpoint descriptor
-  //    0x07, 0x05, 0x02, 0x02, 0x40, 0x00, 0x00,               // endpoint descriptor
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].size = 7;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].type = ENDPOINT;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].endpt = 0x02;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].attrib = 2;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].max_size = 64;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[1].interval = 0x00;
-
-  // endpoint descriptor
-  //    0x07, 0x05, 0x83, 0x03, 0x40, 0x00, 0x01,               // endpoint descriptor
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].size = 7;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].type = ENDPOINT;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].endpt = 0x83;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].attrib = 3;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].max_size = 64;
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].endpts[2].interval = 0x01;
-
-  // string descriptors
-  BX_USB_THIS hub[0].device[2].function.str_descriptor.size = 0x04;
-  BX_USB_THIS hub[0].device[2].function.str_descriptor.type = 0x03;
-  BX_USB_THIS hub[0].device[2].function.str_descriptor.langid[0] = 0x0409;
-
-  // string #1
-  BX_USB_THIS hub[0].device[2].function.string[0].size = 36;
-  BX_USB_THIS hub[0].device[2].function.string[0].type = 3;
-  Bit8u dev3_str_1[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
-    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
-    '0', 0x00,
-  };
-  memcpy(BX_USB_THIS hub[0].device[2].function.string[0].unicode_str, dev3_str_1, 34);
-
-  // string #2
-  BX_USB_THIS hub[0].device[2].function.string[1].size = 36;
-  BX_USB_THIS hub[0].device[2].function.string[1].type = 3;
-  Bit8u dev3_str_2[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
-    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
-    '1', 0x00,
-  };
-  memcpy(BX_USB_THIS hub[0].device[2].function.string[1].unicode_str, dev3_str_2, 34);
-
-  // string #3
-  BX_USB_THIS hub[0].device[2].function.string[2].size = 36;
-  BX_USB_THIS hub[0].device[2].function.string[2].type = 3;
-  Bit8u dev3_str_3[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
-    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
-    '2', 0x00,
-  };
-  memcpy(BX_USB_THIS hub[0].device[2].function.string[2].unicode_str, dev3_str_3, 34);
-
-  // string #4
-  BX_USB_THIS hub[0].device[2].function.string[3].size = 36;
-  BX_USB_THIS hub[0].device[2].function.string[3].type = 3;
-  Bit8u dev3_str_4[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
-    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
-    '3', 0x00,
-  };
-  memcpy(BX_USB_THIS hub[0].device[2].function.string[3].unicode_str, dev3_str_4, 34);
-
-  // string #5
-  BX_USB_THIS hub[0].device[2].function.string[4].size = 36;
-  BX_USB_THIS hub[0].device[2].function.string[4].type = 3;
-  Bit8u dev3_str_5[64] = { 'U', 0x00, 'S', 0x00, 'B', 0x00, ' ', 0x00, 'H', 0x00, 'a', 0x00, 'r', 0x00,
-    'd', 0x00, ' ', 0x00, 'D', 0x00, 'r', 0x00, 'i', 0x00, 'v', 0x00, 'e', 0x00, ' ', 0x00, 'S', 0x00,
-    '4', 0x00,
-  };
-  memcpy(BX_USB_THIS hub[0].device[2].function.string[3].unicode_str, dev3_str_5, 34);
-
-  // this device has no key conversion table
-  BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].lookup_cnt = 0;
-  memset(&BX_USB_THIS hub[0].device[2].function.device_config[0].Interface[0].lookup, 0, sizeof(struct KEYPAD) * KEYPAD_LEN);
-
-  BX_USB_THIS hub[0].device[2].devstate = NULL;
-
-#endif // USB_HARD_DRIVE
-
-
-// Another device would go here.
-

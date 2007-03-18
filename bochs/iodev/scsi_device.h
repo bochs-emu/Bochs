@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.1 2007-03-16 18:23:13 vruppert Exp $
+// $Id: scsi_device.h,v 1.2 2007-03-18 11:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -26,7 +26,6 @@
 typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
                                   Bit32u arg);
 class scsi_device_t;
-class device_image_t;
 
 enum scsidev_type {
     SCSIDEV_TYPE_DISK,

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.49 2007-03-16 18:23:13 vruppert Exp $
+// $Id: pciusb.cc,v 1.50 2007-03-18 11:17:28 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -59,8 +59,7 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
-#include "hdimage.h"
-#include "scsi_device.h"
+#include "usb_msd.h"
 
 #define LOG_THIS theUSBDevice->
 
@@ -68,6 +67,45 @@ bx_pciusb_c* theUSBDevice = NULL;
 
 const Bit8u usb_iomask[32] = {2, 1, 2, 1, 2, 1, 2, 0, 4, 0, 0, 0, 1, 0, 0, 0,
                               3, 1, 3, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+// Dumps the contents of a buffer to the log file
+void usb_dump_packet(Bit8u *data, unsigned size)
+{
+  char the_packet[256], str[16];
+  strcpy(the_packet, "Packet contents (in hex):");
+  unsigned offset = 0;
+  for (unsigned p=0; p<size; p++) {
+    if (!(p & 0x0F)) {
+      BX_DEBUG(("%s", the_packet));
+      sprintf(the_packet, "  0x%04X ", offset);
+      offset += 16;
+    }
+    sprintf(str, " %02X", data[p]);
+    strcat(the_packet, str);
+  }
+  if (strlen(the_packet))
+    BX_DEBUG(("%s", the_packet));
+}
+
+int set_usb_string(Bit8u *buf, const char *str)
+{
+  int len, i;
+  Bit8u *q;
+
+  q = buf;
+  len = strlen(str);
+  if (len > 32) {
+    *q = 0;
+    return 0;
+  }
+  *q++ = 2 * len + 2;
+  *q++ = 3;
+  for(i = 0; i < len; i++) {
+    *q++ = str[i];
+    *q++ = 0;
+  }
+  return q - buf;
+}
 
 int libpciusb_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -91,22 +129,21 @@ bx_pciusb_c::bx_pciusb_c()
 
 bx_pciusb_c::~bx_pciusb_c()
 {
-  MSDState *s;
-
   if (BX_USB_THIS device_buffer != NULL)
     delete [] BX_USB_THIS device_buffer;
 
-  for (int i=0; i<USB_CUR_DEVS; i++) {
-    if (BX_USB_THIS hub[0].device[i].dev_type == USB_DEV_TYPE_DISK) {
-      s = (MSDState*)BX_USB_THIS hub[0].device[i].devstate;
-      if (s != NULL) {
-        usb_msd_handle_destroy(s);
+  for (int i=0; i<BX_USB_CONFDEV; i++) {
+    for (int j=0; j<USB_NUM_PORTS; j++) {
+      if (BX_USB_THIS hub[i].usb_port[j].device != NULL) {
+        delete BX_USB_THIS hub[i].usb_port[j].device;
       }
     }
   }
 
   SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(NULL);
   SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(NULL);
+  SIM->get_param_string(BXPN_USB1_PORT2)->set_handler(NULL);
+  SIM->get_param_string(BXPN_USB1_OPTION2)->set_handler(NULL);
 
   BX_DEBUG(("Exit"));
 }
@@ -237,6 +274,10 @@ void bx_pciusb_c::reset(unsigned type)
       BX_USB_THIS hub[i].usb_port[j].able_changed = 0;
       BX_USB_THIS hub[i].usb_port[j].status = 0;
       BX_USB_THIS hub[i].usb_port[j].device_num = -1;
+      if (BX_USB_THIS hub[i].usb_port[j].device != NULL) {
+        delete BX_USB_THIS hub[i].usb_port[j].device;
+        BX_USB_THIS hub[i].usb_port[j].device = NULL;
+      }
     }
   }
 
@@ -248,7 +289,6 @@ void bx_pciusb_c::reset(unsigned type)
 
   BX_USB_THIS keyboard_connected = 0;
   BX_USB_THIS mouse_connected = 0;
-  BX_USB_THIS disk_connected = 0;
 
   // include the device(s) initialize code
   #include "pciusb_devs.h"
@@ -367,7 +407,7 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
   } else if (!strcmp(devname, "disk")) {
     type = USB_DEV_TYPE_DISK;
     connected = 1;
-    BX_USB_THIS disk_connected = 1;
+    BX_USB_THIS hub[0].usb_port[port].device = new usb_msd_device_t();
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
     return;
@@ -522,9 +562,14 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (BX_USB_THIS hub[0].usb_command.host_reset) {
         BX_USB_THIS reset(0);
         for (unsigned i=0; i<USB_NUM_PORTS; i++) {
-          if (BX_USB_THIS hub[0].usb_port[i].status)
-            usb_set_connect_status(i, BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[i].device_num].dev_type,
-              BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[i].device_num].connect_status);
+          if (BX_USB_THIS hub[0].usb_port[i].status) {
+            if (BX_USB_THIS hub[0].usb_port[i].device != NULL) {
+              BX_USB_THIS usb_send_msg(BX_USB_THIS hub[0].usb_port[i].device, USB_MSG_RESET);
+            } else {
+              usb_set_connect_status(i, BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[i].device_num].dev_type,
+                BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[i].device_num].connect_status);
+            }
+          }
           BX_USB_THIS hub[0].usb_port[i].connect_changed = 1;
           BX_USB_THIS hub[0].usb_port[i].enabled = 0;
           BX_USB_THIS hub[0].usb_port[i].able_changed = 1;
@@ -660,8 +705,15 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_USB_THIS hub[0].usb_port[port].enabled = 0;
           // are we are currently connected/disconnected
           if (BX_USB_THIS hub[0].usb_port[port].status) {
-            BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].connect_status = 0;
-            usb_set_connect_status(port, BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].dev_type, 1);
+            if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
+              BX_USB_THIS hub[0].usb_port[port].low_speed =
+                (BX_USB_THIS hub[0].usb_port[port].device->get_speed() == USB_SPEED_LOW);
+              usb_set_connect_status(port, BX_USB_THIS hub[0].usb_port[port].device->get_type(), 1);
+              BX_USB_THIS usb_send_msg(BX_USB_THIS hub[0].usb_port[port].device, USB_MSG_RESET);
+            } else {
+              BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].connect_status = 0;
+              usb_set_connect_status(port, BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].dev_type, 1);
+            }
           }
           BX_INFO(("Port%d: Reset", port+1));
         }
@@ -853,9 +905,10 @@ void bx_pciusb_c::usb_timer(void)
 
 bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
   
-  int i, j, len;
+  int i, j, len = 0, ret = 0;
   Bit8u protocol = 0;
   bx_bool fnd;
+  usb_device_t *newdev = NULL;
 
   Bit16u maxlen = (td->dword2 >> 21);
   Bit8u  addr   = (td->dword2 >> 8) & 0x7F;
@@ -893,11 +946,22 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
       break;
     }
   }
+  for (i=0; i<USB_NUM_PORTS; i++) {
+    if (BX_USB_THIS hub[0].usb_port[i].device != NULL) {
+      if (BX_USB_THIS hub[0].usb_port[i].device->get_connected()) {
+        at_least_one = 1;
+        if (BX_USB_THIS hub[0].usb_port[i].device->get_address() == addr) {
+          newdev = BX_USB_THIS hub[0].usb_port[i].device;
+          break;
+        }
+      }
+    }
+  }
   if (!at_least_one) {
     BX_USB_THIS set_status(td, 1, 0, 0, 0, (pid==USB_TOKEN_SETUP)?1:0, 0, 0x007); // an 8 byte packet was received, but stalled
     return 1;
   }
-  if (dev == NULL) {
+  if ((dev == NULL) && (newdev == NULL)) {
     if ((pid == USB_TOKEN_OUT) && (maxlen == 0x7FF) && (addr == 0)) {
       // This is the "keep awake" packet that Windows sends once a schedule cycle.
       // For now, let it pass through to the code below.
@@ -915,6 +979,48 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
 
   maxlen++;
   maxlen &= 0x7FF;
+
+  if (newdev != NULL) {
+    BX_USB_THIS usb_packet.pid = pid;
+    BX_USB_THIS usb_packet.devaddr = addr;
+    BX_USB_THIS usb_packet.devep = endpt;
+    BX_USB_THIS usb_packet.data = device_buffer;
+    BX_USB_THIS usb_packet.len = maxlen;
+    switch (pid) {
+      case USB_TOKEN_OUT:
+      case USB_TOKEN_SETUP:
+        if (maxlen > 0) {
+          DEV_MEM_READ_PHYSICAL(td->dword3, maxlen, device_buffer);
+        }
+        ret = newdev->handle_packet(&BX_USB_THIS usb_packet);
+        len = maxlen;
+        break;
+      case USB_TOKEN_IN:
+        ret = newdev->handle_packet(&BX_USB_THIS usb_packet);
+        if (ret >= 0) {
+          len = ret;
+          if (len > maxlen) {
+            len = maxlen;
+            ret = USB_RET_BABBLE;
+          }
+          if (len > 0) {
+            DEV_MEM_WRITE_PHYSICAL(td->dword3, len, device_buffer);
+          }
+        } else {
+          len = 0;
+        }
+        break;
+      default:
+        BX_USB_THIS hub[i].usb_status.host_error = 1;
+        BX_USB_THIS set_irq_level(1);
+    }
+    if (ret >= 0) {
+      BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
+    } else {
+      BX_USB_THIS set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
+    }
+    return 1;
+  }
   if (dev) {
     if (maxlen > dev->function.device_descr.max_packet_size)
       maxlen = dev->function.device_descr.max_packet_size;
@@ -965,21 +1071,6 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
 
-            case 0x50: // USB Mass Storage
-              BX_USB_THIS usb_packet.pid = pid;
-              BX_USB_THIS usb_packet.devaddr = addr;
-              BX_USB_THIS usb_packet.devep = endpt;
-              BX_USB_THIS usb_packet.data = device_buffer;
-              BX_USB_THIS usb_packet.len = cnt;
-              len = usb_msd_handle_data((MSDState*)dev->devstate, &BX_USB_THIS usb_packet);
-              if (len >= 0) {
-                DEV_MEM_WRITE_PHYSICAL(td->dword3, len, device_buffer);
-                BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, len-1);
-              } else {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, 0, 0, cnt-1);
-              }
-              break;
-
             default:
               BX_PANIC(("Unknown/unsupported endpt protocol issued an Interrupt In / Bulk packet.  protocol %i", protocol));
           }       
@@ -1013,7 +1104,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           bx_gui->statusbar_setitem(BX_USB_THIS hub[0].statusbar_id[0], 1);
           cnt = (dev->function.in_cnt < maxlen) ? dev->function.in_cnt : maxlen;
           DEV_MEM_WRITE_PHYSICAL(td->dword3, cnt, dev->function.in);
-          dump_packet(dev->function.in, cnt);
+          usb_dump_packet(dev->function.in, cnt);
           dev->function.in += cnt;
           dev->function.in_cnt -= cnt;
           BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
@@ -1050,20 +1141,6 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_PANIC(("Mouse received and OUT packet!"));
               break;
 
-            case 0x50: // USB Mass Storage
-              BX_USB_THIS usb_packet.pid = pid;
-              BX_USB_THIS usb_packet.devaddr = addr;
-              BX_USB_THIS usb_packet.devep = endpt;
-              BX_USB_THIS usb_packet.data = bulk_int_packet;
-              BX_USB_THIS usb_packet.len = maxlen;
-              len = usb_msd_handle_data((MSDState*)dev->devstate, &BX_USB_THIS usb_packet);
-              if (len >= 0) {
-                BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, maxlen-1);
-              } else {
-                BX_USB_THIS set_status(td, 1, 0, 0, 0, 0, 0, maxlen-1);
-              }
-              break;
-              
             default:
               BX_PANIC(("Unknown/unsupported endpt protocol issued an Interrupt Out / Bulk packet.  protocol %i", protocol));
           }       
@@ -1370,22 +1447,6 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
           }
           break;
-        case 0xFE:
-          // FIXME: protocol type should be checked
-          BX_INFO(("Request: get max. LUN"));
-          *device_buffer = 0;
-          dev->function.in = device_buffer;
-          dev->function.in_cnt = 1;
-          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
-          break;
-        case 0xFF:
-          // FIXME: protocol type should be checked
-          BX_INFO(("Request: mass storage reset"));
-          if (dev->devstate != NULL) {
-            ((MSDState*)dev->devstate)->mode = USB_MSDM_CBW;
-          }
-          BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, 0x007); // an 8 byte packet was received
-          break;
         default:
           BX_PANIC((" **** illegal or unknown REQUEST sent to Host Controller:  %02x", data[1]));
       }
@@ -1409,12 +1470,12 @@ unsigned bx_pciusb_c::GetDescriptor(struct USB_DEVICE *dev, struct REQUEST_PACKE
     packet->request, packet->request_type, packet->value, packet->length, packet->index));
     
   switch (packet->value >> 8) {
-    case DEVICE:
+    case USB_DT_DEVICE:
       dev->function.in = (Bit8u *) &dev->function.device_descr;
       dev->function.in_cnt = dev->function.device_descr.len;
       ret = 0;
       break;
-    case CONFIG:
+    case USB_DT_CONFIG:
       memcpy(p, &dev->function.device_config[dev->config], 9); p += 9;  // config descriptor
       for (i=0; i<dev->function.device_config[dev->config].interfaces; i++) {
         memcpy(p, &dev->function.device_config[dev->config].Interface[i], 9); p += 9;
@@ -1430,7 +1491,7 @@ unsigned bx_pciusb_c::GetDescriptor(struct USB_DEVICE *dev, struct REQUEST_PACKE
       dev->function.in_cnt = (p - device_buffer);
       ret = 0;
       break;
-    case STRING:
+    case USB_DT_STRING:
       switch (packet->value & 0xFF) {
         case 0: // string descriptor table
           dev->function.in = (Bit8u *) &dev->function.str_descriptor;
@@ -1448,17 +1509,17 @@ unsigned bx_pciusb_c::GetDescriptor(struct USB_DEVICE *dev, struct REQUEST_PACKE
           ret = 1;
       }
       break;
-    case INTERFACE:
+    case USB_DT_INTERFACE:
       BX_PANIC(("GET_DESCRIPTOR: INTERFACE not implemented yet."));
       ret = 1;
       break;
-    case ENDPOINT:
+    case USB_DT_ENDPOINT:
       BX_PANIC(("GET_DESCRIPTOR: ENDPOINT not implemented yet."));
       ret = 1;
       break;
-    case DEVICE_QUALIFIER:
+    case USB_DT_DEVICE_QUALIFIER:
       device_buffer[0] = 10;
-      device_buffer[1] = DEVICE_QUALIFIER;
+      device_buffer[1] = USB_DT_DEVICE_QUALIFIER;
       memcpy(device_buffer+2, &dev->function.device_descr+2, 6);
       device_buffer[8] = 1;
       device_buffer[9] = 0;
@@ -1466,11 +1527,11 @@ unsigned bx_pciusb_c::GetDescriptor(struct USB_DEVICE *dev, struct REQUEST_PACKE
       dev->function.in_cnt = 10;
       ret = 0;
       break;
-    case OTHER_SPEED_CONFIG:
+    case USB_DT_OTHER_SPEED_CONFIG:
       BX_PANIC(("GET_DESCRIPTOR: OTHER_SPEED_CONFIG not implemented yet."));
       ret = 1;
       break;
-    case INTERFACE_POWER:
+    case USB_DT_INTERFACE_POWER:
       BX_PANIC(("GET_DESCRIPTOR: INTERFACE_POWER not implemented yet."));
       ret = 1;
       break;
@@ -1676,9 +1737,70 @@ void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
 
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
-  MSDState *s;
   char pname[BX_PATHNAME_LEN];
 
+  if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
+    if (BX_USB_THIS hub[0].usb_port[port].device->get_type() == type) {
+      if (connected) {
+        if (!BX_USB_THIS hub[0].usb_port[port].device->get_connected()) {
+          BX_USB_THIS hub[0].usb_port[port].low_speed =
+            (BX_USB_THIS hub[0].usb_port[port].device->get_speed() == USB_SPEED_LOW);
+        }
+        if (BX_USB_THIS hub[0].usb_port[port].low_speed) {
+          BX_USB_THIS hub[0].usb_port[port].line_dminus = 1;  //  dminus=1 & dplus=0 = low speed  (at idle time)
+          BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+        } else {
+          BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
+          BX_USB_THIS hub[0].usb_port[port].line_dplus = 1;   //  dminus=0 & dplus=1 = high speed (at idle time)
+        }
+        BX_USB_THIS hub[0].usb_port[port].status = 1;       // 
+        BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
+        BX_USB_THIS hub[0].usb_port[port].able_changed = 1;
+
+        // if in suspend state, signal resume
+        if (BX_USB_THIS hub[0].usb_command.suspend) {
+          BX_USB_THIS hub[0].usb_port[port].resume = 1;
+          BX_USB_THIS hub[0].usb_status.resume = 1;
+          if (BX_USB_THIS hub[0].usb_enable.resume) {
+            BX_USB_THIS hub[0].usb_status.interrupt = 1;
+            set_irq_level(1);
+          }
+        }
+
+        if ((type == USB_DEV_TYPE_DISK) &&
+            (!BX_USB_THIS hub[0].usb_port[port].device->get_connected())) {
+          if (port == 0) {
+            strcpy(pname, BXPN_USB1_OPTION1);
+          } else {
+            strcpy(pname, BXPN_USB1_OPTION2);
+          }
+          if (!((usb_msd_device_t*)BX_USB_THIS hub[0].usb_port[port].device)->init(SIM->get_param_string(pname)->getptr())) {
+            usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
+          } else {
+            BX_INFO(("HD on USB port #%d: '%s'", port+1, SIM->get_param_string(pname)->getptr()));
+          }
+        }
+      } else {
+        BX_USB_THIS hub[0].usb_port[port].status = 0;
+        BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
+        BX_USB_THIS hub[0].usb_port[port].enabled = 0;
+        BX_USB_THIS hub[0].usb_port[port].able_changed = 1;
+        BX_USB_THIS hub[0].usb_port[port].low_speed = 0;
+        BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
+        BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
+        if (type == USB_DEV_TYPE_MOUSE) {
+          BX_USB_THIS mouse_connected = 0;
+        } else if (type == USB_DEV_TYPE_KEYPAD) {
+          BX_USB_THIS keyboard_connected = 0;
+        } else if (type == USB_DEV_TYPE_DISK) {
+          if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
+            delete BX_USB_THIS hub[0].usb_port[port].device;
+            BX_USB_THIS hub[0].usb_port[port].device = NULL;
+	  }
+        }
+      }
+    }
+  }
   if (BX_USB_THIS hub[0].usb_port[port].device_num > -1) {
     if (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].dev_type == type) {
       if (connected) {
@@ -1712,22 +1834,6 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
             set_irq_level(1);
           }
         }
-
-        if ((type == USB_DEV_TYPE_DISK) &&
-            (BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate == NULL)) {
-          if (port == 0) {
-            strcpy(pname, BXPN_USB1_OPTION1);
-          } else {
-            strcpy(pname, BXPN_USB1_OPTION2);
-          }
-          s = BX_USB_THIS usb_msd_init(SIM->get_param_string(pname)->getptr());
-          if (s == NULL) {
-            usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
-          } else {
-            BX_INFO(("HD on USB port #%d: '%s'", port+1, SIM->get_param_string(pname)->getptr()));
-            BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate = (void*)s;
-          }
-        }
       } else {
         BX_USB_THIS hub[0].usb_port[port].status = 0;
         BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
@@ -1740,13 +1846,6 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
           BX_USB_THIS mouse_connected = 0;
         } else if (type == USB_DEV_TYPE_KEYPAD) {
           BX_USB_THIS keyboard_connected = 0;
-        } else if (type == USB_DEV_TYPE_DISK) {
-          BX_USB_THIS disk_connected = 0;
-          s = (MSDState*)BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate;
-          if (s != NULL) {
-            BX_USB_THIS usb_msd_handle_destroy(s);
-            BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[port].device_num].devstate = NULL;
-	  }
         }
       }
     }
@@ -1883,277 +1982,159 @@ bx_bool bx_pciusb_c::usb_mouse_connected()
   return BX_USB_THIS mouse_connected;
 }
 
-// Dumps the contents of a buffer to the log file
-void bx_pciusb_c::dump_packet(Bit8u *data, unsigned size)
+// Send an internal message to a USB device
+void bx_pciusb_c::usb_send_msg(usb_device_t *dev, int msg)
 {
-  char the_packet[256], str[16];
-  strcpy(the_packet, "Packet contents (in hex):");
-  unsigned offset = 0;
-  for (unsigned p=0; p<size; p++) {
-    if (!(p & 0x0F)) {
-      BX_DEBUG(("%s", the_packet));
-      sprintf(the_packet, "  0x%04X ", offset);
-      offset += 16;
-    }
-    sprintf(str, " %02X", data[p]);
-    strcat(the_packet, str);
-  }
-  if (strlen(the_packet))
-    BX_DEBUG(("%s", the_packet));
+    USBPacket p;
+    memset(&p, 0, sizeof(p));
+    p.pid = msg;
+    dev->handle_packet(&p);
 }
 
-// USB mass storage device support
+// generic USB packet handler
 
-int bx_pciusb_c::usb_msd_handle_data(MSDState *s, USBPacket *p)
+#define SETUP_STATE_IDLE 0
+#define SETUP_STATE_DATA 1
+#define SETUP_STATE_ACK  2
+
+usb_device_t::usb_device_t(void)
 {
-  struct usb_msd_cbw cbw;
-  int ret = 0;
-  Bit8u devep = p->devep;
-  Bit8u *data = p->data;
+  memset((void*)&d, 0, sizeof(d));
+}
+
+int usb_device_t::handle_packet(USBPacket *p)
+{
+  int l, ret = 0;
   int len = p->len;
+  Bit8u *data = p->data;
 
-  switch (p->pid) {
-    case USB_TOKEN_OUT:
-      dump_packet(data, len);
-      if (devep != 2)
+  switch(p->pid) {
+    case USB_MSG_ATTACH:
+      d.state = USB_STATE_ATTACHED;
+      break;
+    case USB_MSG_DETACH:
+      d.state = USB_STATE_NOTATTACHED;
+      break;
+    case USB_MSG_RESET:
+      d.remote_wakeup = 0;
+      d.addr = 0;
+      d.state = USB_STATE_DEFAULT;
+      handle_reset();
+      break;
+    case USB_TOKEN_SETUP:
+      if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
+        return USB_RET_NODEV;
+      if (len != 8)
         goto fail;
-
-      switch (s->mode) {
-        case USB_MSDM_CBW:
-          if (len != 31) {
-            BX_ERROR(("bad CBW len"));
-            goto fail;
-          }
-          memcpy(&cbw, data, 31);
-          if (dtoh32(cbw.sig) != 0x43425355) {
-            BX_ERROR(("bad signature %08x", dtoh32(cbw.sig)));
-            goto fail;
-          }
-          BX_DEBUG(("command on LUN %d", cbw.lun));
-          s->tag = dtoh32(cbw.tag);
-          s->data_len = dtoh32(cbw.data_len);
-          if (s->data_len == 0) {
-            s->mode = USB_MSDM_CSW;
-          } else if (cbw.flags & 0x80) {
-            s->mode = USB_MSDM_DATAIN;
-          } else {
-            s->mode = USB_MSDM_DATAOUT;
-          }
-          BX_DEBUG(("command tag 0x%x flags %08x len %d data %d",
-                   s->tag, cbw.flags, cbw.cmd_len, s->data_len));
-          s->residue = 0;
-          s->scsi_dev->scsi_send_command(s->tag, cbw.cmd, cbw.lun);
-          if (s->residue == 0) {
-            if (s->mode == USB_MSDM_DATAIN) {
-              s->scsi_dev->scsi_read_data(s->tag);
-            } else if (s->mode == USB_MSDM_DATAOUT) {
-              s->scsi_dev->scsi_write_data(s->tag);
-            }
-          }
-          ret = len;
-          break;
-
-        case USB_MSDM_DATAOUT:
-          BX_DEBUG(("data out %d/%d", len, s->data_len));
-          if (len > (int)s->data_len)
-            goto fail;
-
-          s->usb_buf = data;
-          s->usb_len = len;
-          if (s->scsi_len) {
-            usb_msd_copy_data(s);
-          }
-          if (s->residue && s->usb_len) {
-            s->data_len -= s->usb_len;
-            if (s->data_len == 0)
-                s->mode = USB_MSDM_CSW;
-            s->usb_len = 0;
-          }
-          if (s->usb_len) {
-            BX_INFO(("deferring packet %p", p));
-            // TODO: defer packet
-            s->packet = p;
-            ret = USB_RET_ASYNC;
-          } else {
-            ret = len;
-          }
-          break;
-
-        default:
-          BX_ERROR(("usb_msd_handle_data: unexpected mode at USB_TOKEN_OUT"));
-          goto fail;
+      memcpy(d.setup_buf, data, 8);
+      d.setup_len = (d.setup_buf[7] << 8) | d.setup_buf[6];
+      d.setup_index = 0;
+      if (d.setup_buf[0] & USB_DIR_IN) {
+        ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
+                             (d.setup_buf[3] << 8) | d.setup_buf[2],
+                             (d.setup_buf[5] << 8) | d.setup_buf[4],
+                             d.setup_len, d.data_buf);
+        if (ret < 0)
+          return ret;
+        if (ret < d.setup_len)
+          d.setup_len = ret;
+        d.setup_state = SETUP_STATE_DATA;
+      } else {
+        if (d.setup_len == 0)
+          d.setup_state = SETUP_STATE_ACK;
+        else
+          d.setup_state = SETUP_STATE_DATA;
       }
       break;
-
     case USB_TOKEN_IN:
-      if (devep != 1)
-        goto fail;
-
-      switch (s->mode) {
-        case USB_MSDM_DATAOUT:
-          if (s->data_len != 0 || len < 13)
-            goto fail;
-          // TODO: defer packet
-          s->packet = p;
-          ret = USB_RET_ASYNC;
+      if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
+        return USB_RET_NODEV;
+      switch(p->devep) {
+        case 0:
+          switch(d.setup_state) {
+            case SETUP_STATE_ACK:
+              if (!(d.setup_buf[0] & USB_DIR_IN)) {
+                d.setup_state = SETUP_STATE_IDLE;
+                ret = handle_control((d.setup_buf[0] << 8) | d.setup_buf[1],
+                                     (d.setup_buf[3] << 8) | d.setup_buf[2],
+                                     (d.setup_buf[5] << 8) | d.setup_buf[4],
+                                     d.setup_len, d.data_buf);
+                if (ret > 0)
+                  ret = 0;
+              } else {
+                // return 0 byte
+              }
+              break;
+            case SETUP_STATE_DATA:
+              if (d.setup_buf[0] & USB_DIR_IN) {
+                l = d.setup_len - d.setup_index;
+                if (l > len)
+                  l = len;
+                memcpy(data, d.data_buf + d.setup_index, l);
+                d.setup_index += l;
+                if (d.setup_index >= d.setup_len)
+                  d.setup_state = SETUP_STATE_ACK;
+                ret = l;
+              } else {
+                d.setup_state = SETUP_STATE_IDLE;
+                goto fail;
+              }
+              break;
+            default:
+                goto fail;
+            }
+            break;
+        default:
+            ret = handle_data(p);
+            break;
+        }
+        break;
+    case USB_TOKEN_OUT:
+        if (d.state < USB_STATE_DEFAULT || p->devaddr != d.addr)
+          return USB_RET_NODEV;
+        switch(p->devep) {
+        case 0:
+          switch(d.setup_state) {
+            case SETUP_STATE_ACK:
+              if (d.setup_buf[0] & USB_DIR_IN) {
+                d.setup_state = SETUP_STATE_IDLE;
+                // transfer OK
+              } else {
+                // ignore additionnal output
+              }
+              break;
+            case SETUP_STATE_DATA:
+              if (!(d.setup_buf[0] & USB_DIR_IN)) {
+                l = d.setup_len - d.setup_index;
+                if (l > len)
+                  l = len;
+                memcpy(d.data_buf + d.setup_index, data, l);
+                d.setup_index += l;
+                if (d.setup_index >= d.setup_len)
+                  d.setup_state = SETUP_STATE_ACK;
+                ret = l;
+              } else {
+                d.setup_state = SETUP_STATE_IDLE;
+                goto fail;
+              }
+              break;
+            default:
+              goto fail;
+          }
           break;
-
-      case USB_MSDM_CSW:
-        BX_DEBUG(("command status %d tag 0x%x, len %d",
-                s->result, s->tag, len));
-        if (len < 13)
-          return ret;
-
-        s->usb_len = len;
-        s->usb_buf = data;
-        usb_msd_send_status(s);
-        s->mode = USB_MSDM_CBW;
-        ret = 13;
-        break;
-
-      case USB_MSDM_DATAIN:
-        BX_DEBUG(("data in %d/%d", len, s->data_len));
-        if (len > (int)s->data_len)
-            len = s->data_len;
-        s->usb_buf = data;
-        s->usb_len = len;
-        if (s->scsi_len) {
-          usb_msd_copy_data(s);
-        }
-        if (s->residue && s->usb_len) {
-          s->data_len -= s->usb_len;
-          memset(s->usb_buf, 0, s->usb_len);
-          if (s->data_len == 0)
-            s->mode = USB_MSDM_CSW;
-          s->usb_len = 0;
-        }
-        if (s->usb_len) {
-          BX_INFO(("deferring packet %p", p));
-          // TODO: defer packet
-          s->packet = p;
-          ret = USB_RET_ASYNC;
-        } else {
-            ret = len;
-        }
-        break;
-
-      default:
-        BX_ERROR(("usb_msd_handle_data: unexpected mode at USB_TOKEN_IN"));
-        goto fail;
-    }
-    if (ret > 0) dump_packet(data, ret);
-    break;
-
+        default:
+          ret = handle_data(p);
+          break;
+      }
+      break;
     default:
-      BX_ERROR(("usb_msd_handle_data: bad token"));
-fail:
+    fail:
       ret = USB_RET_STALL;
       break;
   }
-
   return ret;
 }
 
-void bx_pciusb_c::usb_msd_copy_data(MSDState *s)
-{
-  Bit32u len = s->usb_len;
-  if (len > s->scsi_len)
-    len = s->scsi_len;
-  if (s->mode == USB_MSDM_DATAIN) {
-    memcpy(s->usb_buf, s->scsi_buf, len);
-  } else {
-    memcpy(s->scsi_buf, s->usb_buf, len);
-  }
-  s->usb_len -= len;
-  s->scsi_len -= len;
-  s->usb_buf += len;
-  s->scsi_buf += len;
-  s->data_len -= len;
-  if (s->scsi_len == 0) {
-    if (s->mode == USB_MSDM_DATAIN) {
-      s->scsi_dev->scsi_read_data(s->tag);
-    } else if (s->mode == USB_MSDM_DATAOUT) {
-      s->scsi_dev->scsi_write_data(s->tag);
-    }
-  }
-}
-
-void bx_pciusb_c::usb_msd_send_status(MSDState *s)
-{
-  struct usb_msd_csw csw;
-
-  csw.sig = htod32(0x53425355);
-  csw.tag = htod32(s->tag);
-  csw.residue = s->residue;
-  csw.status = s->result;
-  memcpy(s->usb_buf, &csw, 13);
-}
-
-void bx_pciusb_c::usb_msd_command_complete(void *opaque, int reason, Bit32u tag, Bit32u arg)
-{
-  MSDState *s = (MSDState *)opaque;
-  USBPacket *p = s->packet;
-
-  if (tag != s->tag) {
-    BX_ERROR(("usb-msd_command_complete: unexpected SCSI tag 0x%x", tag));
-  }
-  if (reason == SCSI_REASON_DONE) {
-    BX_DEBUG(("command complete %d", arg));
-    s->residue = s->data_len;
-    s->result = arg != 0;
-    if (s->packet) {
-      if (s->data_len == 0 && s->mode == USB_MSDM_DATAOUT) {
-        BX_USB_THIS usb_msd_send_status(s);
-        s->mode = USB_MSDM_CBW;
-      } else {
-        if (s->data_len) {
-          s->data_len -= s->usb_len;
-          if (s->mode == USB_MSDM_DATAIN)
-            memset(s->usb_buf, 0, s->usb_len);
-          s->usb_len = 0;
-        }
-        if (s->data_len == 0)
-          s->mode = USB_MSDM_CSW;
-      }
-      s->packet = NULL;
-    } else if (s->data_len == 0) {
-      s->mode = USB_MSDM_CSW;
-    }
-    return;
-  }
-  s->scsi_len = arg;
-  s->scsi_buf = s->scsi_dev->scsi_get_buf(tag);
-  if (p) {
-    BX_USB_THIS usb_msd_copy_data(s);
-    if (s->usb_len == 0) {
-      BX_INFO(("packet complete %p", p));
-      s->packet = NULL;
-    }
-  }
-}
-
-void bx_pciusb_c::usb_msd_handle_destroy(MSDState *s)
-{
-  delete s->scsi_dev;
-  s->hdimage->close();
-  delete s->hdimage;
-  delete s;
-}
-
-MSDState* bx_pciusb_c::usb_msd_init(const char *filename)
-{
-  MSDState *s = new MSDState;
-  memset(s, 0, sizeof(MSDState));
-  s->hdimage = new default_image_t();
-  if (s->hdimage->open(filename) < 0) {
-    BX_ERROR(("could not open hard drive image file '%s'", filename));
-    return NULL;
-  } else {
-    s->scsi_dev = new scsi_device_t(s->hdimage, 0, usb_msd_command_complete, (void*)s);
-    s->mode = USB_MSDM_CBW;
-    return s;
-  }
-}
 
 // USB runtime parameter handler
  
@@ -2168,7 +2149,11 @@ const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, co
     if (!strcmp(pname, BXPN_USB1_PORT1)) {
       BX_INFO(("USB port #1 experimental device change"));
       if (!strcmp(val, "none") && BX_USB_THIS hub[0].usb_port[0].status) {
-        type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[0].device_num].dev_type;
+        if (BX_USB_THIS hub[0].usb_port[0].device != NULL) {
+          type = BX_USB_THIS hub[0].usb_port[0].device->get_type();
+        } else {
+          type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[0].device_num].dev_type;
+        }
         usb_set_connect_status(0, type, 0);
       } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[0].status) {
         init_device(0, val);
@@ -2178,7 +2163,11 @@ const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, co
     } else if (!strcmp(pname, BXPN_USB1_PORT2)) {
       BX_INFO(("USB port #2 experimental device change"));
       if (!strcmp(val, "none") && BX_USB_THIS hub[0].usb_port[1].status) {
-        type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[1].device_num].dev_type;
+        if (BX_USB_THIS hub[0].usb_port[1].device != NULL) {
+          type = BX_USB_THIS hub[0].usb_port[1].device->get_type();
+        } else {
+          type = BX_USB_THIS hub[0].device[BX_USB_THIS hub[0].usb_port[1].device_num].dev_type;
+        }
         usb_set_connect_status(1, type, 0);
       } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[1].status) {
         init_device(1, val);
