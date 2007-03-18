@@ -93,14 +93,10 @@ CAPTION "USB Options"
 FONT 8, "Helv"
 BEGIN
     LTEXT           "USB port #1 device", IDUSBLBL1, 10, 27, 70, 14
-    EDITTEXT        IDUSBDEV1, 85, 25, 70, 14
-    LTEXT           "USB port #1 option", IDUSBLBL2, 10, 47, 70, 14
-    EDITTEXT        IDUSBOPT1, 85, 45, 70, 14
-    LTEXT           "USB port #2 device", IDUSBLBL3, 10, 67, 70, 14
-    EDITTEXT        IDUSBDEV2, 85, 65, 70, 14
-    LTEXT           "USB port #2 option", IDUSBLBL4, 10, 87, 70, 14
-    EDITTEXT        IDUSBOPT2, 85, 85, 70, 14
-    LTEXT           "Under contruction - don't use these options yet !", IDUSBWARN, 10, 120, 155, 14
+    EDITTEXT        IDUSBDEV1, 85, 25, 100, 14, ES_AUTOHSCROLL
+    LTEXT           "USB port #2 device", IDUSBLBL2, 10, 47, 70, 14
+    EDITTEXT        IDUSBDEV2, 85, 45, 100, 14, ES_AUTOHSCROLL
+    LTEXT           "USB device change support is still experimental !", IDUSBWARN, 10, 120, 155, 14
 END
 
 RT_LOGOPT_DLG DIALOG 30, 30, 240, 180

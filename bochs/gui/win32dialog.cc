@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.55 2007-01-05 16:53:45 vruppert Exp $
+// $Id: win32dialog.cc,v 1.56 2007-03-18 17:52:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -553,18 +553,12 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       if (SIM->get_param_string(BXPN_USB1_PORT1)->get_enabled()) {
         SetDlgItemText(hDlg, IDUSBDEV1, SIM->get_param_string(BXPN_USB1_PORT1)->getptr());
-        SetDlgItemText(hDlg, IDUSBOPT1, SIM->get_param_string(BXPN_USB1_OPTION1)->getptr());
         SetDlgItemText(hDlg, IDUSBDEV2, SIM->get_param_string(BXPN_USB1_PORT2)->getptr());
-        SetDlgItemText(hDlg, IDUSBOPT2, SIM->get_param_string(BXPN_USB1_OPTION2)->getptr());
       } else {
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL1), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDUSBLBL2), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBLBL3), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBLBL4), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDUSBDEV1), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBOPT1), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDUSBDEV2), FALSE);
-        EnableWindow(GetDlgItem(hDlg, IDUSBOPT2), FALSE);
       }
       changed = FALSE;
       return TRUE;
@@ -575,12 +569,8 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           if ((psn->lParam == FALSE) && changed) { // Apply pressed & change in this dialog
             GetDlgItemText(hDlg, IDUSBDEV1, buffer, sizeof(buffer));
             SIM->get_param_string(BXPN_USB1_PORT1)->set(buffer);
-            GetDlgItemText(hDlg, IDUSBOPT1, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_USB1_OPTION1)->set(buffer);
             GetDlgItemText(hDlg, IDUSBDEV2, buffer, sizeof(buffer));
             SIM->get_param_string(BXPN_USB1_PORT2)->set(buffer);
-            GetDlgItemText(hDlg, IDUSBOPT2, buffer, sizeof(buffer));
-            SIM->get_param_string(BXPN_USB1_OPTION2)->set(buffer);
           }
           return PSNRET_NOERROR;
         case PSN_QUERYCANCEL:
@@ -594,9 +584,7 @@ static BOOL CALLBACK RTUSBdevDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         case EN_CHANGE:
           switch (LOWORD(wParam)) {
             case IDUSBDEV1:
-            case IDUSBOPT1:
             case IDUSBDEV2:
-            case IDUSBOPT2:
               changed = TRUE;
               SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)hDlg, 0);
               break;

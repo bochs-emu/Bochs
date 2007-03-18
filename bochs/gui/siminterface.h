@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.206 2006-12-31 11:56:14 vruppert Exp $
+// $Id: siminterface.h,v 1.207 2007-03-18 17:52:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -208,9 +208,7 @@ typedef enum {
 #define BXPN_ATA3_SLAVE                  "ata.3.slave"
 #define BXPN_USB1_ENABLED                "ports.usb.1.enabled"
 #define BXPN_USB1_PORT1                  "ports.usb.1.port1"
-#define BXPN_USB1_OPTION1                "ports.usb.1.option1"
 #define BXPN_USB1_PORT2                  "ports.usb.1.port2"
-#define BXPN_USB1_OPTION2                "ports.usb.1.option2"
 #define BXPN_NE2K                        "network.ne2k"
 #define BXPN_NE2K_ENABLED                "network.ne2k.enabled"
 #define BXPN_PNIC                        "network.pnic"

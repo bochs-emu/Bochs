@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.114 2006-12-31 11:56:13 vruppert Exp $
+// $Id: config.cc,v 1.115 2007-03-18 17:52:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1288,7 +1288,7 @@ void bx_init_options()
     enabled->set_dependent_list(deplist);
   }
 
-  bx_param_string_c *port, *option;
+  bx_param_string_c *port;
 
   // usb hubs
   bx_list_c *usb = new bx_list_c(ports, "usb", "USB Hub Options");
@@ -1309,24 +1309,12 @@ void bx_init_options()
       "Device connected to USB port #1",
       "", BX_PATHNAME_LEN);
     port->set_group(group);
-    option = new bx_param_string_c(menu,
-      "option1", 
-      "Port #1 device options", 
-      "Options for device on USB port #1",
-      "", BX_PATHNAME_LEN);
-    option->set_group(group);
     port = new bx_param_string_c(menu,
       "port2", 
       "Port #2 device", 
       "Device connected to USB port #2",
       "", BX_PATHNAME_LEN);
     port->set_group(group);
-    option = new bx_param_string_c(menu,
-      "option2", 
-      "Port #2 device options", 
-      "Options for device on USB port #2",
-      "", BX_PATHNAME_LEN);
-    option->set_group(group);
     enabled->set_dependent_list(menu->clone());
   }
 
@@ -1606,9 +1594,7 @@ void bx_init_options()
       SIM->get_param_num(BXPN_SB16_DMATIMER),
       SIM->get_param_num(BXPN_SB16_LOGLEVEL),
       SIM->get_param_string(BXPN_USB1_PORT1),
-      SIM->get_param_string(BXPN_USB1_OPTION1),
       SIM->get_param_string(BXPN_USB1_PORT2),
-      SIM->get_param_string(BXPN_USB1_OPTION2),
       NULL
   };
   menu = new bx_list_c(special_menus, "runtime", "Misc runtime options", runtime_init_list);
@@ -2698,11 +2684,11 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
       } else if (!strncmp(params[i], "port1=", 6)) {
         SIM->get_param_string("port1", base)->set(&params[i][6]);
       } else if (!strncmp(params[i], "option1=", 8)) {
-        SIM->get_param_string("option1", base)->set(&params[i][8]);
+        PARSE_WARN(("%s: usb port1 option is now deprecated", context));
       } else if (!strncmp(params[i], "port2=", 6)) {
         SIM->get_param_string("port2", base)->set(&params[i][6]);
       } else if (!strncmp(params[i], "option2=", 8)) {
-        SIM->get_param_string("option2", base)->set(&params[i][8]);
+        PARSE_WARN(("%s: usb port2 option is now deprecated", context));
       } else if (!strncmp(params[i], "ioaddr=", 7)) {
         PARSE_WARN(("%s: usb ioaddr is now DEPRECATED (assigned by BIOS).", context));
       } else if (!strncmp(params[i], "irq=", 4)) {
@@ -3159,10 +3145,8 @@ int bx_write_usb_options(FILE *fp, bx_list_c *base, int n)
 {
   fprintf(fp, "usb%d: enabled=%d", n, SIM->get_param_bool("enabled", base)->get());
   if (SIM->get_param_bool("enabled", base)->get()) {
-    fprintf(fp, ", port1=%s, option1=%s", SIM->get_param_string("port1", base)->getptr(),
-            SIM->get_param_string("option1", base)->getptr());
-    fprintf(fp, ", port2=%s, option2=%s", SIM->get_param_string("port2", base)->getptr(),
-            SIM->get_param_string("option2", base)->getptr());
+    fprintf(fp, ", port1=%s", SIM->get_param_string("port1", base)->getptr());
+    fprintf(fp, ", port2=%s", SIM->get_param_string("port2", base)->getptr());
   }
   fprintf(fp, "\n");
   return 0;

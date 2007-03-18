@@ -162,8 +162,8 @@ libbx_serial.la: serial.lo serial_raw.lo
 libbx_vga.la: vga.lo svga_cirrus.lo
 	$(LIBTOOL) --mode=link $(CXX) -module vga.lo svga_cirrus.lo -o libbx_vga.la -rpath $(PLUGIN_PATH)
 
-libbx_pciusb.la: pciusb.lo usb_msd.lo scsi_device.lo hdimage.lo
-	$(LIBTOOL) --mode=link $(CXX) -module pciusb.lo usb_msd.lo scsi_device.lo hdimage.lo -o libbx_pciusb.la -rpath $(PLUGIN_PATH)
+libbx_pciusb.la: pciusb.lo usb_msd.lo scsi_device.lo hdimage.lo cdrom.lo
+	$(LIBTOOL) --mode=link $(CXX) -module pciusb.lo usb_msd.lo scsi_device.lo hdimage.lo cdrom.lo -o libbx_pciusb.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32  (tested on cygwin only)
 bx_%.dll: %.o
@@ -197,8 +197,8 @@ bx_serial.dll: serial.o serial_raw.o
 bx_vga.dll: vga.o svga_cirrus.o
 	$(CXX) $(CXXFLAGS) -shared -o bx_vga.dll vga.o svga_cirrus.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_pciusb.dll: pciusb.o usb_msd.o scsi_device.o hdimage.o
-	$(CXX) $(CXXFLAGS) -shared -o bx_pciusb.dll pciusb.o usb_msd.o scsi_device.o hdimage.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_pciusb.dll: pciusb.o usb_msd.o scsi_device.o hdimage.o cdrom.o
+	$(CXX) $(CXXFLAGS) -shared -o bx_pciusb.dll pciusb.o usb_msd.o scsi_device.o hdimage.o cdrom.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 

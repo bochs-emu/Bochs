@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.50 2007-03-18 11:17:28 vruppert Exp $
+// $Id: pciusb.cc,v 1.51 2007-03-18 17:52:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -141,9 +141,7 @@ bx_pciusb_c::~bx_pciusb_c()
   }
 
   SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(NULL);
-  SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(NULL);
   SIM->get_param_string(BXPN_USB1_PORT2)->set_handler(NULL);
-  SIM->get_param_string(BXPN_USB1_OPTION2)->set_handler(NULL);
 
   BX_DEBUG(("Exit"));
 }
@@ -178,12 +176,8 @@ void bx_pciusb_c::init(void)
 
   SIM->get_param_string(BXPN_USB1_PORT1)->set_handler(usb_param_handler);
   SIM->get_param_string(BXPN_USB1_PORT1)->set_runtime_param(1);
-  SIM->get_param_string(BXPN_USB1_OPTION1)->set_handler(usb_param_handler);
-  SIM->get_param_string(BXPN_USB1_OPTION1)->set_runtime_param(1);
   SIM->get_param_string(BXPN_USB1_PORT2)->set_handler(usb_param_handler);
   SIM->get_param_string(BXPN_USB1_PORT2)->set_runtime_param(1);
-  SIM->get_param_string(BXPN_USB1_OPTION2)->set_handler(usb_param_handler);
-  SIM->get_param_string(BXPN_USB1_OPTION2)->set_runtime_param(1);
 
   //HACK: Turn on debug messages from the start
   //BX_USB_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
@@ -404,7 +398,7 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
     type = USB_DEV_TYPE_KEYPAD;
     connected = 1;
     BX_USB_THIS keyboard_connected = 1;
-  } else if (!strcmp(devname, "disk")) {
+  } else if (!strncmp(devname, "disk:", 5)) {
     type = USB_DEV_TYPE_DISK;
     connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_msd_device_t();
@@ -1738,6 +1732,7 @@ void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
 {
   char pname[BX_PATHNAME_LEN];
+  char fname[BX_PATHNAME_LEN];
 
   if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
     if (BX_USB_THIS hub[0].usb_port[port].device->get_type() == type) {
@@ -1770,14 +1765,15 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         if ((type == USB_DEV_TYPE_DISK) &&
             (!BX_USB_THIS hub[0].usb_port[port].device->get_connected())) {
           if (port == 0) {
-            strcpy(pname, BXPN_USB1_OPTION1);
+            strcpy(pname, BXPN_USB1_PORT1);
           } else {
-            strcpy(pname, BXPN_USB1_OPTION2);
+            strcpy(pname, BXPN_USB1_PORT2);
           }
-          if (!((usb_msd_device_t*)BX_USB_THIS hub[0].usb_port[port].device)->init(SIM->get_param_string(pname)->getptr())) {
+          strcpy(fname, SIM->get_param_string(pname)->getptr() + 5);
+          if (!((usb_msd_device_t*)BX_USB_THIS hub[0].usb_port[port].device)->init(fname)) {
             usb_set_connect_status(port, USB_DEV_TYPE_DISK, 0);
           } else {
-            BX_INFO(("HD on USB port #%d: '%s'", port+1, SIM->get_param_string(pname)->getptr()));
+            BX_INFO(("HD on USB port #%d: '%s'", port+1, fname));
           }
         }
       } else {
@@ -2158,8 +2154,6 @@ const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, co
       } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[0].status) {
         init_device(0, val);
       }
-    } else if (!strcmp(pname, BXPN_USB1_OPTION1)) {
-      BX_ERROR(("USB port #1 option change not implemented yet"));
     } else if (!strcmp(pname, BXPN_USB1_PORT2)) {
       BX_INFO(("USB port #2 experimental device change"));
       if (!strcmp(val, "none") && BX_USB_THIS hub[0].usb_port[1].status) {
@@ -2172,8 +2166,6 @@ const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, co
       } else if (strcmp(val, "none") && !BX_USB_THIS hub[0].usb_port[1].status) {
         init_device(1, val);
       }
-    } else if (!strcmp(pname, BXPN_USB1_OPTION2)) {
-      BX_ERROR(("USB port #2 option change not implemented yet"));
     } else {
       BX_PANIC(("usb_param_handler called with unexpected parameter '%s'", pname));
     }

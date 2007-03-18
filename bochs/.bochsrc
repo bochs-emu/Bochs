@@ -693,14 +693,14 @@ i440fxsupport: enabled=1
 # USB1:
 # This option controls the presence of the USB root hub which is a part
 # of the i440FX PCI chipset. With the portX option you can connect devices
-# to the hub (currently supported: 'mouse' and 'keypad'). If you connect
-# the mouse to one of the ports and use the mouse option 'type=usb' you'll
-# have a 3-button USB mouse.
-#
-# Example:
-#   usb1: enabled=1, port1=mouse, port2=keypad
+# to the hub (currently supported: 'mouse', 'keypad' and 'disk'). If you
+# connect the mouse to one of the ports and use the mouse option 'type=usb'
+# you'll have a 3-button USB mouse. To connect a flat image as an USB hardisk
+# you can use the 'disk' device with the path to the image separated with a
+# colon (see below).
 #=======================================================================
 #usb1: enabled=1
+#usb1: enabled=1, port1=mouse, port2=disk:usbdisk.img
 
 #=======================================================================
 # CMOSIMAGE:
