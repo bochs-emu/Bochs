@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.2 2007-03-18 11:17:28 vruppert Exp $
+// $Id: scsi_device.h,v 1.3 2007-03-18 15:18:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -26,15 +26,16 @@
 typedef void (*scsi_completionfn)(void *opaque, int reason, Bit32u tag,
                                   Bit32u arg);
 class scsi_device_t;
+class LOWLEVEL_CDROM;
 
 enum scsidev_type {
-    SCSIDEV_TYPE_DISK,
-    SCSIDEV_TYPE_CDROM
+  SCSIDEV_TYPE_DISK,
+  SCSIDEV_TYPE_CDROM
 };
 
 enum scsi_reason {
-    SCSI_REASON_DONE,
-    SCSI_REASON_DATA
+  SCSI_REASON_DONE,
+  SCSI_REASON_DATA
 };
 
 #define SENSE_NO_SENSE        0
@@ -59,6 +60,8 @@ class scsi_device_t : public logfunctions {
 public:
   scsi_device_t(device_image_t *_hdimage, int _tcq,
                scsi_completionfn _completion, void *_dev);
+  scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
+               scsi_completionfn _completion, void *_dev);
   virtual ~scsi_device_t(void);
 
   Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun);
@@ -77,6 +80,7 @@ protected:
 private:
   enum scsidev_type type;
   device_image_t *hdimage;
+  LOWLEVEL_CDROM *cdrom;
   SCSIRequest *requests;
   int cluster_size;
   int sense;

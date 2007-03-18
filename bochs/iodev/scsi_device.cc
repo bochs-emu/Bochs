@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.2 2007-03-18 11:17:28 vruppert Exp $
+// $Id: scsi_device.cc,v 1.3 2007-03-18 15:18:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -30,6 +30,7 @@
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
 #include "hdimage.h"
+#include "cdrom.h"
 #include "scsi_device.h"
 
 #define LOG_THIS
@@ -40,6 +41,7 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
                            scsi_completionfn _completion, void *_dev)
 {
   type = SCSIDEV_TYPE_DISK;
+  cdrom = NULL;
   hdimage = _hdimage;
   requests = NULL;
   sense = 0;
@@ -48,7 +50,24 @@ scsi_device_t::scsi_device_t(device_image_t *_hdimage, int _tcq,
   dev = _dev;
   cluster_size = 1;
 
-  put("SCSI");
+  put("SCSID");
+  settype(PCIUSBLOG);
+}
+
+scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
+                           scsi_completionfn _completion, void *_dev)
+{
+  type = SCSIDEV_TYPE_CDROM;
+  cdrom = _cdrom;
+  hdimage = NULL;
+  requests = NULL;
+  sense = 0;
+  tcq = _tcq;
+  completion = _completion;
+  dev = _dev;
+  cluster_size = 4;
+
+  put("SCSIC");
   settype(PCIUSBLOG);
 }
 
@@ -169,21 +188,24 @@ void scsi_device_t::scsi_read_data(Bit32u tag)
   }
 
   n = r->sector_count;
-  if (n > SCSI_DMA_BUF_SIZE / 512)
-    n = SCSI_DMA_BUF_SIZE / 512;
-
-  r->buf_len = n * 512;
-  ret = hdimage->lseek(r->sector * 512, SEEK_SET);
-  if (ret < 0) {
-    BX_ERROR(("could not lseek() hard drive image file"));
-    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
-  }
-  ret = hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
-  if (ret < r->buf_len) {
-    BX_ERROR(("could not read() hard drive image file"));
-    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+  if (n > (Bit32u)(SCSI_DMA_BUF_SIZE / (512 * cluster_size)))
+    n = SCSI_DMA_BUF_SIZE / (512 * cluster_size);
+  r->buf_len = n * 512 * cluster_size;
+  if (type == SCSIDEV_TYPE_CDROM) {
+    cdrom->read_block(r->dma_buf, r->sector, 2048);
   } else {
-    scsi_read_complete((void*)r, 0);
+    ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+    if (ret < 0) {
+      BX_ERROR(("could not lseek() hard drive image file"));
+      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    }
+    ret = hdimage->read((bx_ptr_t)r->dma_buf, r->buf_len);
+    if (ret < r->buf_len) {
+      BX_ERROR(("could not read() hard drive image file"));
+      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+    } else {
+      scsi_read_complete((void*)r, 0);
+    }
   }
   r->sector += n;
   r->sector_count -= n;
@@ -226,26 +248,30 @@ int scsi_device_t::scsi_write_data(Bit32u tag)
     scsi_command_complete(r, SENSE_HARDWARE_ERROR);
     return 1;
   }
-  n = r->buf_len / 512;
-  if (n) {
-    ret = hdimage->lseek(r->sector * 512, SEEK_SET);
-    if (ret < 0) {
-      BX_ERROR(("could not lseek() hard drive image file"));
-      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
-    }
-    ret = hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
-    if (ret < r->buf_len) {
-      BX_ERROR(("could not write() hard drive image file"));
-      scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+  if (type == SCSIDEV_TYPE_DISK) {
+    n = r->buf_len / 512;
+    if (n) {
+      ret = (int)hdimage->lseek(r->sector * 512, SEEK_SET);
+      if (ret < 0) {
+        BX_ERROR(("could not lseek() hard drive image file"));
+        scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+      }
+      ret = hdimage->write((bx_ptr_t)r->dma_buf, r->buf_len);
+      if (ret < r->buf_len) {
+        BX_ERROR(("could not write() hard drive image file"));
+        scsi_command_complete(r, SENSE_HARDWARE_ERROR);
+      } else {
+        scsi_write_complete((void*)r, 0);
+      }
+      r->sector += n;
+      r->sector_count -= n;
     } else {
-      scsi_write_complete((void*)r, 0);
+      scsi_write_complete(r, 0);
     }
-    r->sector += n;
-    r->sector_count -= n;
   } else {
-    scsi_write_complete(r, 0);
+    BX_ERROR(("CD-ROM: write not supported"));
+    scsi_command_complete(r, SENSE_HARDWARE_ERROR);
   }
-
   return 0;
 }
 
@@ -263,7 +289,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
 {
   Bit64u nb_sectors;
   Bit32u lba;
-  Bit32u len;
+  Bit32s len;
   int cmdlen;
   int is_write;
   Bit8u command;
@@ -312,198 +338,215 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
   }
   switch (command) {
     case 0x0:
-	BX_DEBUG(("Test Unit Ready"));
-	break;
+      BX_DEBUG(("Test Unit Ready"));
+      break;
     case 0x03:
-        BX_DEBUG(("request Sense (len %d)", len));
-        if (len < 4)
-            goto fail;
-        memset(buf, 0, 4);
-        outbuf[0] = 0xf0;
-        outbuf[1] = 0;
-        outbuf[2] = sense;
-        r->buf_len = 4;
-        break;
+      BX_DEBUG(("request Sense (len %d)", len));
+      if (len < 4)
+        goto fail;
+      memset(buf, 0, 4);
+      outbuf[0] = 0xf0;
+      outbuf[1] = 0;
+      outbuf[2] = sense;
+      r->buf_len = 4;
+      break;
     case 0x12:
-        BX_DEBUG(("inquiry (len %d)", len));
-        if (len < 36) {
-          BX_ERROR(("inquiry buffer too small (%d)", len));
-        }
-        memset(outbuf, 0, 36);
-        if (type == SCSIDEV_TYPE_CDROM) {
-          outbuf[0] = 5;
-          outbuf[1] = 0x80;
-          memcpy(&outbuf[16], "QEMU CD-ROM    ", 16);
-        } else {
-          outbuf[0] = 0;
-          memcpy(&outbuf[16], "BOCHS HARDDISK ", 16);
-        }
-        memcpy(&outbuf[8], "BOCHS  ", 8);
-        memcpy(&outbuf[32], "1.0", 4);
-        outbuf[2] = 3;
-        outbuf[3] = 2;
-        outbuf[4] = 32;
-        outbuf[7] = 0x10 | (tcq ? 0x02 : 0);
-        r->buf_len = 36;
-        break;
+      BX_DEBUG(("inquiry (len %d)", len));
+      if (len < 36) {
+        BX_ERROR(("inquiry buffer too small (%d)", len));
+      }
+      memset(outbuf, 0, 36);
+      if (type == SCSIDEV_TYPE_CDROM) {
+        outbuf[0] = 5;
+        outbuf[1] = 0x80;
+        memcpy(&outbuf[16], "BOCHS CD-ROM   ", 16);
+      } else {
+        outbuf[0] = 0;
+        memcpy(&outbuf[16], "BOCHS HARDDISK ", 16);
+      }
+      memcpy(&outbuf[8], "BOCHS  ", 8);
+      memcpy(&outbuf[32], "1.0", 4);
+      outbuf[2] = 3;
+      outbuf[3] = 2;
+      outbuf[4] = 32;
+      outbuf[7] = 0x10 | (tcq ? 0x02 : 0);
+      r->buf_len = 36;
+      break;
     case 0x16:
-        BX_INFO(("Reserve(6)"));
-        if (buf[1] & 1)
-            goto fail;
-        break;
+      BX_INFO(("Reserve(6)"));
+      if (buf[1] & 1)
+        goto fail;
+      break;
     case 0x17:
-        BX_INFO(("Release(6)"));
-        if (buf[1] & 1)
-            goto fail;
-        break;
+      BX_INFO(("Release(6)"));
+      if (buf[1] & 1)
+        goto fail;
+      break;
     case 0x1a:
     case 0x5a:
-        {
-          Bit8u *p;
-          int page;
+      {
+        Bit8u *p;
+        int page;
 
-          page = buf[2] & 0x3f;
-          BX_DEBUG(("mode sense (page %d, len %d)", page, len));
-          p = outbuf;
-          memset(p, 0, 4);
-          outbuf[1] = 0; /* Default media type.  */
-          outbuf[3] = 0; /* Block descriptor length.  */
-          if (type == SCSIDEV_TYPE_CDROM) {
-            outbuf[2] = 0x80; /* Readonly.  */
-          }
-          p += 4;
-          if ((page == 8 || page == 0x3f)) {
-            /* Caching page.  */
-            p[0] = 8;
-            p[1] = 0x12;
-            p[2] = 4; /* WCE */
-            p += 19;
-          }
-          if ((page == 0x3f || page == 0x2a)
-              && (type == SCSIDEV_TYPE_CDROM)) {
-            /* CD Capabilities and Mechanical Status page. */
-            p[0] = 0x2a;
-            p[1] = 0x14;
-            p[2] = 3; // CD-R & CD-RW read
-            p[3] = 0; // Writing not supported
-            p[4] = 0x7f; /* Audio, composite, digital out,
-                            mode 2 form 1&2, multi session */
-            p[5] = 0xff; /* CD DA, DA accurate, RW supported,
-                            RW corrected, C2 errors, ISRC,
-                            UPC, Bar code */
-            p[6] = 0x2d; // TODO: | (bdrv_is_locked(s->bdrv)? 2 : 0);
-            /* Locking supported, jumper present, eject, tray */
-            p[7] = 0; /* no volume & mute control, no changer */
-            p[8] = (50 * 176) >> 8; // 50x read speed
-            p[9] = (50 * 176) & 0xff;
-            p[10] = 0 >> 8; // No volume
-            p[11] = 0 & 0xff;
-            p[12] = 2048 >> 8; // 2M buffer
-            p[13] = 2048 & 0xff;
-            p[14] = (16 * 176) >> 8; // 16x read speed current
-            p[15] = (16 * 176) & 0xff;
-            p[18] = (16 * 176) >> 8; // 16x write speed
-            p[19] = (16 * 176) & 0xff;
-            p[20] = (16 * 176) >> 8; // 16x write speed current
-            p[21] = (16 * 176) & 0xff;
-            p += 21;
-          }
-          r->buf_len = p - outbuf;
-          outbuf[0] = r->buf_len - 4;
-          if (r->buf_len > (int)len)
-            r->buf_len = len;
-        }
-        break;
-    case 0x1b:
-        BX_INFO(("Start Stop Unit"));
-	break;
-    case 0x1e:
-        BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
-	break;
-    case 0x25:
-	BX_DEBUG(("Read Capacity"));
-        /* The normal LEN field for this command is zero.  */
-        memset(outbuf, 0, 8);
+        page = buf[2] & 0x3f;
+        BX_DEBUG(("mode sense (page %d, len %d)", page, len));
+        p = outbuf;
+        memset(p, 0, 4);
+        outbuf[1] = 0; /* Default media type.  */
+        outbuf[3] = 0; /* Block descriptor length.  */
         if (type == SCSIDEV_TYPE_CDROM) {
-          // TODO: get cdrom capacity
-          nb_sectors = 0;
-        } else {
-          nb_sectors = hdimage->hd_size / 512;
+          outbuf[2] = 0x80; /* Readonly.  */
         }
-        /* Returned value is the address of the last sector.  */
-        if (nb_sectors) {
-            nb_sectors--;
-            outbuf[0] = (nb_sectors >> 24) & 0xff;
-            outbuf[1] = (nb_sectors >> 16) & 0xff;
-            outbuf[2] = (nb_sectors >> 8) & 0xff;
-            outbuf[3] = nb_sectors & 0xff;
-            outbuf[4] = 0;
-            outbuf[5] = 0;
-            outbuf[6] = cluster_size * 2;
-            outbuf[7] = 0;
-            r->buf_len = 8;
-        } else {
-            scsi_command_complete(r, SENSE_NOT_READY);
-            return 0;
+        p += 4;
+        if ((page == 8 || page == 0x3f)) {
+          /* Caching page.  */
+          p[0] = 8;
+          p[1] = 0x12;
+          p[2] = 4; /* WCE */
+          p += 19;
         }
-	break;
+        if ((page == 0x3f || page == 0x2a)
+            && (type == SCSIDEV_TYPE_CDROM)) {
+          /* CD Capabilities and Mechanical Status page. */
+          p[0] = 0x2a;
+          p[1] = 0x14;
+          p[2] = 3; // CD-R & CD-RW read
+          p[3] = 0; // Writing not supported
+          p[4] = 0x7f; /* Audio, composite, digital out,
+                          mode 2 form 1&2, multi session */
+          p[5] = 0xff; /* CD DA, DA accurate, RW supported,
+                          RW corrected, C2 errors, ISRC,
+                          UPC, Bar code */
+          p[6] = 0x2d; // TODO: | (bdrv_is_locked(s->bdrv)? 2 : 0);
+          /* Locking supported, jumper present, eject, tray */
+          p[7] = 0; /* no volume & mute control, no changer */
+          p[8] = (50 * 176) >> 8; // 50x read speed
+          p[9] = (50 * 176) & 0xff;
+          p[10] = 0 >> 8; // No volume
+          p[11] = 0 & 0xff;
+          p[12] = 2048 >> 8; // 2M buffer
+          p[13] = 2048 & 0xff;
+          p[14] = (16 * 176) >> 8; // 16x read speed current
+          p[15] = (16 * 176) & 0xff;
+          p[18] = (16 * 176) >> 8; // 16x write speed
+          p[19] = (16 * 176) & 0xff;
+          p[20] = (16 * 176) >> 8; // 16x write speed current
+          p[21] = (16 * 176) & 0xff;
+          p += 21;
+        }
+        r->buf_len = p - outbuf;
+        outbuf[0] = r->buf_len - 4;
+        if (r->buf_len > (int)len)
+          r->buf_len = len;
+      }
+      break;
+    case 0x1b:
+      BX_INFO(("Start Stop Unit"));
+      break;
+    case 0x1e:
+      BX_INFO(("Prevent Allow Medium Removal (prevent = %d)", buf[4] & 3));
+      break;
+    case 0x25:
+      BX_DEBUG(("Read Capacity"));
+      // The normal LEN field for this command is zero
+      memset(outbuf, 0, 8);
+      if (type == SCSIDEV_TYPE_CDROM) {
+        nb_sectors = cdrom->capacity();
+      } else {
+        nb_sectors = hdimage->hd_size / 512;
+      }
+      /* Returned value is the address of the last sector.  */
+      if (nb_sectors) {
+        nb_sectors--;
+        outbuf[0] = (Bit8u)((nb_sectors >> 24) & 0xff);
+        outbuf[1] = (Bit8u)((nb_sectors >> 16) & 0xff);
+        outbuf[2] = (Bit8u)((nb_sectors >> 8) & 0xff);
+        outbuf[3] = (Bit8u)(nb_sectors & 0xff);
+        outbuf[4] = 0;
+        outbuf[5] = 0;
+        outbuf[6] = cluster_size * 2;
+        outbuf[7] = 0;
+        r->buf_len = 8;
+      } else {
+        scsi_command_complete(r, SENSE_NOT_READY);
+        return 0;
+      }
+      break;
     case 0x08:
     case 0x28:
-        BX_DEBUG(("Read (sector %d, count %d)", lba, len));
-        r->sector = lba * cluster_size;
-        r->sector_count = len * cluster_size;
-        break;
+      BX_DEBUG(("Read (sector %d, count %d)", lba, len));
+      r->sector = lba;
+      r->sector_count = len;
+      break;
     case 0x0a:
     case 0x2a:
-        BX_DEBUG(("Write (sector %d, count %d)", lba, len));
-        r->sector = lba * cluster_size;
-        r->sector_count = len * cluster_size;
-        is_write = 1;
-        break;
+      BX_DEBUG(("Write (sector %d, count %d)", lba, len));
+      r->sector = lba;
+      r->sector_count = len;
+      is_write = 1;
+      break;
     case 0x35:
-        BX_DEBUG(("Syncronise cache (sector %d, count %d)", lba, len));
-        // TODO: flush cache
-        break;
+      BX_DEBUG(("Syncronise cache (sector %d, count %d)", lba, len));
+      // TODO: flush cache
+      break;
     case 0x43:
-        BX_ERROR(("Read TOC not implemented yet"));
-        goto fail;
-        break;
+      {
+        int start_track, format, msf, toclen;
+
+        if (type == SCSIDEV_TYPE_CDROM) {
+          msf = buf[1] & 2;
+          format = buf[2] & 0xf;
+          start_track = buf[6];
+          BX_DEBUG(("Read TOC (track %d format %d msf %d)", start_track, format, msf >> 1));
+          cdrom->read_toc(outbuf, &toclen, msf, start_track, format);
+          if (toclen > 0) {
+            if (len > toclen)
+              len = toclen;
+            r->buf_len = len;
+            break;
+          }
+          BX_ERROR(("Read TOC error"));
+          goto fail;
+        } else {
+          goto fail;
+        }
+      }
     case 0x46:
-        BX_DEBUG(("Get Configuration (rt %d, maxlen %d)", buf[1] & 3, len));
-        memset(outbuf, 0, 8);
-        /* ??? This shoud probably return much more information.  For now
-           just return the basic header indicating the CD-ROM profile.  */
-        outbuf[7] = 8; // CD-ROM
-        r->buf_len = 8;
-        break;
+      BX_DEBUG(("Get Configuration (rt %d, maxlen %d)", buf[1] & 3, len));
+      memset(outbuf, 0, 8);
+      /* ??? This shoud probably return much more information.  For now
+         just return the basic header indicating the CD-ROM profile.  */
+      outbuf[7] = 8; // CD-ROM
+      r->buf_len = 8;
+      break;
     case 0x56:
-        BX_INFO(("Reserve(10)"));
-        if (buf[1] & 3)
-            goto fail;
-        break;
+      BX_INFO(("Reserve(10)"));
+      if (buf[1] & 3)
+        goto fail;
+      break;
     case 0x57:
-        BX_INFO(("Release(10)"));
-        if (buf[1] & 3)
-            goto fail;
-        break;
+      BX_INFO(("Release(10)"));
+      if (buf[1] & 3)
+        goto fail;
+      break;
     case 0xa0:
-        BX_INFO(("Report LUNs (len %d)", len));
-        if (len < 16)
-            goto fail;
-        memset(outbuf, 0, 16);
-        outbuf[3] = 8;
-        r->buf_len = 16;
-        break;
+      BX_INFO(("Report LUNs (len %d)", len));
+      if (len < 16)
+        goto fail;
+      memset(outbuf, 0, 16);
+      outbuf[3] = 8;
+      r->buf_len = 16;
+      break;
     default:
-	BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
+      BX_ERROR(("Unknown SCSI command (%2.2x)", buf[0]));
     fail:
-        scsi_command_complete(r, SENSE_ILLEGAL_REQUEST);
-	return 0;
+      scsi_command_complete(r, SENSE_ILLEGAL_REQUEST);
+      return 0;
   }
   if (r->sector_count == 0 && r->buf_len == 0) {
     scsi_command_complete(r, SENSE_NO_SENSE);
   }
-  len = r->sector_count * 512 + r->buf_len;
+  len = r->sector_count * 512 * cluster_size + r->buf_len;
   if (is_write) {
     return -len;
   } else {
