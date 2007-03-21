@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.51 2007-03-18 17:52:15 vruppert Exp $
+// $Id: pciusb.cc,v 1.52 2007-03-21 18:54:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -59,6 +59,7 @@
 
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+#include "usb_hid.h"
 #include "usb_msd.h"
 
 #define LOG_THIS theUSBDevice->
@@ -124,6 +125,9 @@ bx_pciusb_c::bx_pciusb_c()
 {
   put("USB");
   settype(PCIUSBLOG);
+  for (int i=0; i<BX_USB_CONFDEV; i++) {
+    memset((void*)&hub[i], 0, sizeof(bx_usb_t));
+  }
   device_buffer = NULL;
 }
 
@@ -221,17 +225,10 @@ void bx_pciusb_c::reset(unsigned type)
 
   // reset locals
   BX_USB_THIS busy = 0;
-  BX_USB_THIS last_connect = 0xFF;
   BX_USB_THIS global_reset = 0;
   BX_USB_THIS set_address_stk = 0;
   memset(BX_USB_THIS saved_key, 0, 8);
   memset(BX_USB_THIS key_pad_packet, 0, 8);
-
-  // mouse packet stuff
-  BX_USB_THIS mouse_delayed_dx = 0;
-  BX_USB_THIS mouse_delayed_dy = 0;
-  BX_USB_THIS mouse_delayed_dz = 0;
-  BX_USB_THIS button_state = 0;
 
   // Put the USB registers into their RESET state
   for (i=0; i<BX_USB_CONFDEV; i++) {
@@ -282,7 +279,7 @@ void bx_pciusb_c::reset(unsigned type)
     }
 
   BX_USB_THIS keyboard_connected = 0;
-  BX_USB_THIS mouse_connected = 0;
+  BX_USB_THIS mousedev = NULL;
 
   // include the device(s) initialize code
   #include "pciusb_devs.h"
@@ -344,14 +341,6 @@ void bx_pciusb_c::register_state(void)
   }
   new bx_shadow_bool_c(list, "busy", &BX_USB_THIS busy);
   new bx_shadow_num_c(list, "global_reset", &BX_USB_THIS global_reset);
-  new bx_shadow_num_c(list, "mouse_delayed_dx", &BX_USB_THIS mouse_delayed_dx);
-  new bx_shadow_num_c(list, "mouse_delayed_dy", &BX_USB_THIS mouse_delayed_dy);
-  new bx_shadow_num_c(list, "mouse_delayed_dz", &BX_USB_THIS mouse_delayed_dz);
-  new bx_shadow_num_c(list, "button_state", &BX_USB_THIS button_state);
-  new bx_shadow_num_c(list, "mouse_x", &BX_USB_THIS mouse_x);
-  new bx_shadow_num_c(list, "mouse_y", &BX_USB_THIS mouse_y);
-  new bx_shadow_num_c(list, "mouse_z", &BX_USB_THIS mouse_z);
-  new bx_shadow_num_c(list, "b_state", &BX_USB_THIS b_state);
   bx_list_c *svkey = new bx_list_c(list, "saved_key", 8);
   for (i=0; i<8; i++) {
     sprintf(name, "%d", i);
@@ -385,7 +374,7 @@ void bx_pciusb_c::after_restore_state(void)
 
 void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 {
-  Bit8u type = USB_DEV_TYPE_NONE;
+  usbdev_type type = USB_DEV_TYPE_NONE;
   bx_bool connected = 0;
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
@@ -393,7 +382,10 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
     connected = 1;
-    BX_USB_THIS mouse_connected = 1;
+    BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
+    if (BX_USB_THIS mousedev == NULL) {
+      BX_USB_THIS mousedev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
+    }
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
     connected = 1;
@@ -406,10 +398,12 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
     BX_PANIC(("unknown USB device: %s", devname));
     return;
   }
-  for (int i=0; i<USB_CUR_DEVS; i++) {
-    if (BX_USB_THIS hub[0].device[i].dev_type == type) {
-      BX_USB_THIS hub[0].usb_port[port].device_num = i;
-      BX_USB_THIS hub[0].device[i].stall_once &= ~0x80; // clear out the "stall once bit has happened"
+  if (BX_USB_THIS hub[0].usb_port[port].device == NULL) {
+    for (int i=0; i<USB_CUR_DEVS; i++) {
+      if (BX_USB_THIS hub[0].device[i].dev_type == type) {
+        BX_USB_THIS hub[0].usb_port[port].device_num = i;
+        BX_USB_THIS hub[0].device[i].stall_once &= ~0x80; // clear out the "stall once bit has happened"
+      }
     }
   }
   usb_set_connect_status(port, type, connected);
@@ -1048,23 +1042,6 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
               BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
               break;
 
-            case 2:  // mouse
-              if (!BX_USB_THIS mouse_x && !BX_USB_THIS mouse_y) {
-                // if there's no new movement, handle delayed one
-                BX_USB_THIS usb_mouse_enq(0, 0, BX_USB_THIS mouse_z, BX_USB_THIS b_state);
-              }
-              device_buffer[0] = (Bit8u) BX_USB_THIS b_state;
-              device_buffer[1] = (Bit8s) BX_USB_THIS mouse_x;
-              device_buffer[2] = (Bit8s) BX_USB_THIS mouse_y;
-              device_buffer[3] = (Bit8s) BX_USB_THIS mouse_z;  // if wheel mouse
-              BX_USB_THIS b_state = 0;
-              BX_USB_THIS mouse_x = 0;
-              BX_USB_THIS mouse_y = 0;
-              BX_USB_THIS mouse_z = 0;
-              DEV_MEM_WRITE_PHYSICAL(td->dword3, cnt, device_buffer);
-              BX_USB_THIS set_status(td, 0, 0, 0, 0, 0, 0, cnt-1);
-              break;
-
             default:
               BX_PANIC(("Unknown/unsupported endpt protocol issued an Interrupt In / Bulk packet.  protocol %i", protocol));
           }       
@@ -1129,10 +1106,6 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
           switch (protocol) {
             case 1:  // keypad
               BX_PANIC(("Keyboard received and OUT packet!"));
-              break;
-
-            case 2:  // mouse
-              BX_PANIC(("Mouse received and OUT packet!"));
               break;
 
             default:
@@ -1724,9 +1697,9 @@ void bx_pciusb_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
 
 void bx_pciusb_c::usb_mouse_enabled_changed(bx_bool enable)
 {
-  BX_USB_THIS mouse_delayed_dx=0;
-  BX_USB_THIS mouse_delayed_dy=0;
-  BX_USB_THIS mouse_delayed_dz=0;
+  if (enable && (BX_USB_THIS mousedev != NULL)) {
+    mousedev->handle_reset();
+  }
 }
 
 void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected)
@@ -1785,14 +1758,15 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
         BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
         if (type == USB_DEV_TYPE_MOUSE) {
-          BX_USB_THIS mouse_connected = 0;
+          if (BX_USB_THIS hub[0].usb_port[port].device == BX_USB_THIS mousedev) {
+            BX_USB_THIS mousedev = NULL;
+          }
         } else if (type == USB_DEV_TYPE_KEYPAD) {
           BX_USB_THIS keyboard_connected = 0;
-        } else if (type == USB_DEV_TYPE_DISK) {
-          if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
-            delete BX_USB_THIS hub[0].usb_port[port].device;
-            BX_USB_THIS hub[0].usb_port[port].device = NULL;
-	  }
+        }
+        if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
+          delete BX_USB_THIS hub[0].usb_port[port].device;
+          BX_USB_THIS hub[0].usb_port[port].device = NULL;
         }
       }
     }
@@ -1838,9 +1812,7 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         BX_USB_THIS hub[0].usb_port[port].low_speed = 0;
         BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
         BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
-        if (type == USB_DEV_TYPE_MOUSE) {
-          BX_USB_THIS mouse_connected = 0;
-        } else if (type == USB_DEV_TYPE_KEYPAD) {
+        if (type == USB_DEV_TYPE_KEYPAD) {
           BX_USB_THIS keyboard_connected = 0;
         }
       }
@@ -1850,45 +1822,9 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
 
 void bx_pciusb_c::usb_mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
-  // scale down the motion
-  if ( (delta_x < -1) || (delta_x > 1) )
-    delta_x /= 2;
-  if ( (delta_y < -1) || (delta_y > 1) )
-    delta_y /= 2;
-
-  if(delta_x>127) delta_x=127;
-  if(delta_y>127) delta_y=127;
-  if(delta_x<-128) delta_x=-128;
-  if(delta_y<-128) delta_y=-128;
-
-  BX_USB_THIS mouse_delayed_dx+=delta_x;
-  BX_USB_THIS mouse_delayed_dy-=delta_y;
-
-  if (BX_USB_THIS mouse_delayed_dx > 127) {
-    delta_x = 127;
-    BX_USB_THIS mouse_delayed_dx -= 127;
-  } else if (BX_USB_THIS mouse_delayed_dx < -128) {
-    delta_x = -128;
-    BX_USB_THIS mouse_delayed_dx += 128;
-  } else {
-    delta_x = BX_USB_THIS mouse_delayed_dx;
-    BX_USB_THIS mouse_delayed_dx = 0;
+  if (BX_USB_THIS mousedev != NULL) {
+    mousedev->mouse_enq(delta_x, delta_y, delta_z, button_state);
   }
-  if (BX_USB_THIS mouse_delayed_dy > 127) {
-    delta_y = 127;
-    BX_USB_THIS mouse_delayed_dy -= 127;
-  } else if (BX_USB_THIS mouse_delayed_dy < -128) {
-    delta_y = -128;
-    BX_USB_THIS mouse_delayed_dy += 128;
-  } else {
-    delta_y = BX_USB_THIS mouse_delayed_dy;
-    BX_USB_THIS mouse_delayed_dy = 0;
-  }
-
-  BX_USB_THIS mouse_x = (Bit8s) delta_x;
-  BX_USB_THIS mouse_y = (Bit8s) delta_y;
-  BX_USB_THIS mouse_z = (Bit8s) delta_z;
-  BX_USB_THIS b_state = (Bit8u) button_state;
 }
 
 bx_bool bx_pciusb_c::usb_key_enq(Bit8u *scan_code)
@@ -1975,7 +1911,7 @@ bx_bool bx_pciusb_c::usb_keyboard_connected()
 
 bx_bool bx_pciusb_c::usb_mouse_connected()
 {
-  return BX_USB_THIS mouse_connected;
+  return (BX_USB_THIS mousedev != NULL);
 }
 
 // Send an internal message to a USB device

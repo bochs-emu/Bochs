@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.23 2007-03-18 11:17:28 vruppert Exp $
+// $Id: pciusb.h,v 1.24 2007-03-21 18:54:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -42,7 +42,7 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    2
+#define USB_CUR_DEVS    1   /* old-style devices (keypad only) */
 
 #define USB_TOKEN_IN    0x69
 #define USB_TOKEN_OUT   0xE1
@@ -162,9 +162,12 @@ struct KEYPAD {
 enum usbdev_type {
   USB_DEV_TYPE_NONE=0,
   USB_DEV_TYPE_MOUSE,
+  USB_DEV_TYPE_TABLET,
   USB_DEV_TYPE_KEYPAD,
   USB_DEV_TYPE_DISK
 };
+
+class usb_hid_device_t;
 
 void usb_dump_packet(Bit8u *data, unsigned size);
 int set_usb_string(Bit8u *buf, const char *str);
@@ -478,15 +481,6 @@ private:
   bx_usb_t hub[BX_USB_CONFDEV];
   Bit8u    global_reset;
 
-  int      mouse_delayed_dx;
-  int      mouse_delayed_dy;
-  int      mouse_delayed_dz;
-  unsigned button_state;
-  Bit8s    mouse_x;
-  Bit8s    mouse_y;
-  Bit8s    mouse_z;
-  Bit8u    b_state;
-
   Bit8u    saved_key[8];
   Bit8u    key_pad_packet[8];
 
@@ -496,9 +490,8 @@ private:
   unsigned set_address_stk;
   Bit8u    set_address[128];
 
-  bx_bool  last_connect;
   bx_bool  keyboard_connected;
-  bx_bool  mouse_connected;
+  usb_hid_device_t *mousedev;
 
   USBPacket usb_packet;
 
