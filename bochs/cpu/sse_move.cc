@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.55 2007-01-28 21:27:31 sshwarts Exp $
+// $Id: sse_move.cc,v 1.56 2007-03-22 22:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1223,7 +1223,7 @@ void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
 /* UNPCKLPS:     0F 14 */
 /* PUNPCKLDQ: 66 0F 62 */
 
-void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
+void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1247,7 +1247,7 @@ void BX_CPU_C::PUNPCKLDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKLDQ_VdqWq: required SSE, use --enable-sse option"));
+  BX_INFO(("UNPCKLPS_VpsWq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1331,7 +1331,7 @@ void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
 /* UNPCKHPS:     0F 15 */
 /* PUNPCKHDQ: 66 0F 6A */
 
-void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
+void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1355,7 +1355,7 @@ void BX_CPU_C::PUNPCKHDQ_VdqWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("PUNPCKHDQ_VdqWq: required SSE, use --enable-sse option"));
+  BX_INFO(("UNPCKHPS_VpsWq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

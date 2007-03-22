@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.42 2007-01-25 19:09:41 sshwarts Exp $
+// $Id: sse.cc,v 1.43 2007-03-22 22:51:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1265,7 +1265,7 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
 /* ANDPD: 66 0F 54 */
 /* PAND:  66 0F DB */
 
-void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
+void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1287,7 +1287,7 @@ void BX_CPU_C::PAND_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PAND_VdqWdq: required SSE, use --enable-sse option"));
+  BX_INFO(("ANDPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1388,7 +1388,7 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
 /* ANDNPD: 66 0F 55 */
 /* PANDN:  66 0F DF */
 
-void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
+void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1410,7 +1410,7 @@ void BX_CPU_C::PANDN_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PANDN_VdqWdq: required SSE, use --enable-sse option"));
+  BX_INFO(("ANDNPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1775,7 +1775,7 @@ void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
 /* ORPD: 66 0F 56 */
 /* POR:  66 0F EB */
 
-void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
+void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1797,7 +1797,7 @@ void BX_CPU_C::POR_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("POR_VdqWdq: required SSE, use --enable-sse option"));
+  BX_INFO(("ORPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1903,7 +1903,7 @@ void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
 /* XORPD: 66 0F 57 */
 /* PXOR:  66 0F EF */
 
-void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
+void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
@@ -1925,7 +1925,7 @@ void BX_CPU_C::PXOR_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PXOR_VdqWdq: required SSE, use --enable-sse option"));
+  BX_INFO(("XORPS_VpsWps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
