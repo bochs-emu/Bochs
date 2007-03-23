@@ -17,9 +17,9 @@
 
 // will be used in future
 #define IA_286        0x00000001        /* 286+ instruction */
-#define IA_386        0x00000002        /* 386+ instruction */
-#define IA_486        0x00000004        /* 486+ instruction */
-#define IA_PENTIUM    0x00000008        /* Pentium+ instruction */
+#define IA_386        0x00000002        /* 386+ new instruction */
+#define IA_486        0x00000004        /* 486+ new instruction */
+#define IA_PENTIUM    0x00000008        /* Pentium+ mew instruction */
 #define IA_P6         0x00000010        /* P6 new instruction */
 #define IA_SYSTEM     0x00000020        /* system instruction (require CPL=0) */
 #define IA_LEGACY     0x00000040        /* legacy instruction */
@@ -30,8 +30,10 @@
 #define IA_SSE        0x00000800        /* SSE  instruction */
 #define IA_SSE2       0x00001000        /* SSE2 instruction */
 #define IA_SSE3       0x00002000        /* SSE3 instruction */
-#define IA_SSE4       0x00004000        /* SSE4 instruction */
-#define IA_X86_64     0x00008000        /* x86-64 instruction */
+#define IA_SSE3E      0x00004000        /* SSE3E instruction */
+#define IA_SSE4       0x00008000        /* SSE4 instruction */
+#define IA_X86_64     0x00010000        /* x86-64 instruction */
+#define IA_VMX        0x00020000        /* VMX instruction */
 
 /* general purpose bit register */
 enum {
