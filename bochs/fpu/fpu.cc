@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.21 2006-09-08 11:26:04 sshwarts Exp $
+// $Id: fpu.cc,v 1.22 2007-03-23 21:27:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

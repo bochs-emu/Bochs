@@ -34,7 +34,7 @@ these four paragraphs for those parts of this code that are retained.
 
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman (stl at fidonet.org.il)
+ *            Stanislav Shwartsman [sshwarts at sourceforge net]
  * ==========================================================================*/ 
 
 #define int16_indefinite ((Bit16s)0x8000)

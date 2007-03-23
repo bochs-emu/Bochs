@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.20 2006-05-22 21:17:27 sshwarts Exp $
+// $Id: xmm.h,v 1.21 2007-03-23 21:27:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_tags.cc,v 1.4 2005-05-12 18:07:46 sshwarts Exp $
+// $Id: fpu_tags.cc,v 1.5 2007-03-23 21:27:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

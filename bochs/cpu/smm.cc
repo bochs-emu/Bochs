@@ -1,9 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.23 2007-01-13 10:43:31 sshwarts Exp $
+// $Id: smm.cc,v 1.24 2007-03-23 21:27:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
-//          Written by Stanislav Shwartsman <stl at fidonet.org.il>
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

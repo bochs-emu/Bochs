@@ -29,7 +29,7 @@ these four paragraphs for those parts of this code that are retained.
 
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman (stl at fidonet.org.il)
+ *            Stanislav Shwartsman [sshwarts at sourceforge net]
  * ==========================================================================*/ 
 
 #ifndef _SOFTFLOAT_ROUND_PACK_H_
