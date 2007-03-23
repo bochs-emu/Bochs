@@ -1324,6 +1324,17 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG6[8] = {
   /* 7 */ { 0, &Ia_Invalid }
 }; 
 
+static BxDisasmOpcodeTable_t BxDisasmGroupG7M[8] = {
+  /* 0 */ { 0, &Ia_sgdt    },
+  /* 2 */ { 0, &Ia_sidt    },
+  /* 2 */ { 0, &Ia_lgdt    },
+  /* 3 */ { 0, &Ia_lidt    },
+  /* 4 */ { 0, &Ia_smsw_Ew },
+  /* 5 */ { 0, &Ia_Invalid },
+  /* 6 */ { 0, &Ia_lmsw_Ew },
+  /* 7 */ { 0, &Ia_invlpg  }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupRmINVLPG[8] = {
   /* 0 */ { 0, &Ia_swapgs  },
   /* 1 */ { 0, &Ia_rdtscp  },
@@ -1332,15 +1343,21 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmINVLPG[8] = {
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_Invalid },
+  /* 7 */ { 0, &Ia_Invalid }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupModINVLPG[2] = {
-  /* R */ { GRPRM(INVLPG) },
-  /* M */ { 0, &Ia_invlpg }
+static BxDisasmOpcodeTable_t BxDisasmGroupRmVMX[8] = {
+  /* 0 */ { 0, &Ia_Invalid  },
+  /* 1 */ { 0, &Ia_vmcall   },
+  /* 2 */ { 0, &Ia_vmlaunch },
+  /* 3 */ { 0, &Ia_vmresume },
+  /* 4 */ { 0, &Ia_vmxoff   },
+  /* 5 */ { 0, &Ia_Invalid  },
+  /* 6 */ { 0, &Ia_Invalid  },
+  /* 7 */ { 0, &Ia_Invalid  }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupRmSIDT[8] = {
+static BxDisasmOpcodeTable_t BxDisasmGroupRmMONITOR[8] = {
   /* 0 */ { 0, &Ia_monitor },
   /* 1 */ { 0, &Ia_mwait   },
   /* 2 */ { 0, &Ia_Invalid },
@@ -1348,24 +1365,24 @@ static BxDisasmOpcodeTable_t BxDisasmGroupRmSIDT[8] = {
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_Invalid },
+  /* 7 */ { 0, &Ia_Invalid }
 };
 
-static BxDisasmOpcodeTable_t BxDisasmGroupModSIDT[2] = {
-  /* R */ { GRPRM(SIDT)   },
-  /* M */ { 0, &Ia_sidt   }
-};
-
-static BxDisasmOpcodeTable_t BxDisasmGroupG7[8] = {
-  /* 0 */ { 0, &Ia_sgdt    },
-  /* 1 */ { GRPMOD(SIDT)   },
-  /* 2 */ { 0, &Ia_lgdt    },
-  /* 3 */ { 0, &Ia_lidt    },
+static BxDisasmOpcodeTable_t BxDisasmGroupG7R[8] = {
+  /* 0 */ { GRPRM(VMX)     },
+  /* 1 */ { GRPRM(MONITOR) },
+  /* 2 */ { 0, &Ia_Invalid },
+  /* 3 */ { 0, &Ia_Invalid },
   /* 4 */ { 0, &Ia_smsw_Ew },
   /* 5 */ { 0, &Ia_Invalid },
   /* 6 */ { 0, &Ia_lmsw_Ew },
-  /* 7 */ { GRPMOD(INVLPG) },
-}; 
+  /* 7 */ { GRPRM(INVLPG)  }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupModG7[2] = {
+  /* R */ { GRPN(G7R) },
+  /* M */ { GRPN(G7M) }
+};
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG8EwIb[8] = {
   /* 0 */ { 0, &Ia_Invalid },
@@ -1400,6 +1417,20 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG8EqIb[8] = {
   /* 7 */ { 0, &Ia_btcq_Eq_Ib }
 }; 
 
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX6[4] = {
+  /* -- */ { 0, &Ia_vmptrld_Mq },
+  /* 66 */ { 0, &Ia_vmclear_Mq },
+  /* F2 */ { 0, &Ia_Invalid  },
+  /* F3 */ { 0, &Ia_vmxon_Mq }
+};
+
+static BxDisasmOpcodeTable_t BxDisasmGroupSSE_G9VMX7[4] = {
+  /* -- */ { 0, &Ia_vmptrst_Mq },
+  /* 66 */ { 0, &Ia_Invalid },
+  /* F2 */ { 0, &Ia_Invalid },
+  /* F3 */ { 0, &Ia_Invalid }
+};
+
 static BxDisasmOpcodeTable_t BxDisasmGroupG9[8] = {
   /* 0 */ { 0, &Ia_Invalid },
   /* 1 */ { 0, &Ia_cmpxchg8b },
@@ -1407,8 +1438,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG9[8] = {
   /* 3 */ { 0, &Ia_Invalid },
   /* 4 */ { 0, &Ia_Invalid },
   /* 5 */ { 0, &Ia_Invalid },
-  /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_Invalid }
+  /* 6 */ { GRPSSE(G9VMX6) },
+  /* 7 */ { GRPSSE(G9VMX7) } 
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupG9q[8] = {
@@ -2745,7 +2776,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
-  /* 0F 01 */ { GRPN(G7)          },
+  /* 0F 01 */ { GRPMOD(G7)        },
   /* 0F 02 */ { 0, &Ia_larw_Gw_Ew },
   /* 0F 03 */ { 0, &Ia_lslw_Gw_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
@@ -2864,8 +2895,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes16[256*2] = {
   /* 0F 75 */ { GRPSSE(0f75) },
   /* 0F 76 */ { GRPSSE(0f76) },
   /* 0F 77 */ { 0, &Ia_emms  },
-  /* 0F 78 */ { 0, &Ia_Invalid },
-  /* 0F 79 */ { 0, &Ia_Invalid },
+  /* 0F 78 */ { 0, &Ia_vmread_Ed_Gd  },
+  /* 0F 79 */ { 0, &Ia_vmwrite_Gd_Ed },
   /* 0F 7A */ { 0, &Ia_Invalid },
   /* 0F 7B */ { 0, &Ia_Invalid },
   /* 0F 7C */ { GRPSSE(0f7c) },
@@ -3266,7 +3297,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
-  /* 0F 01 */ { GRPN(G7)          },
+  /* 0F 01 */ { GRPMOD(G7)        },
   /* 0F 02 */ { 0, &Ia_larl_Gd_Ew },
   /* 0F 03 */ { 0, &Ia_lsll_Gd_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
@@ -3385,8 +3416,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes32[256*2] = {
   /* 0F 75 */ { GRPSSE(0f75) },
   /* 0F 76 */ { GRPSSE(0f76) },
   /* 0F 77 */ { 0, &Ia_emms  },
-  /* 0F 78 */ { 0, &Ia_Invalid },
-  /* 0F 79 */ { 0, &Ia_Invalid },
+  /* 0F 78 */ { 0, &Ia_vmread_Ed_Gd  },
+  /* 0F 79 */ { 0, &Ia_vmwrite_Gd_Ed },
   /* 0F 7A */ { 0, &Ia_Invalid },
   /* 0F 7B */ { 0, &Ia_Invalid },
   /* 0F 7C */ { GRPSSE(0f7c) },
@@ -3787,7 +3818,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
-  /* 0F 01 */ { GRPN(G7)          },
+  /* 0F 01 */ { GRPMOD(G7)        },
   /* 0F 02 */ { 0, &Ia_larw_Gw_Ew },
   /* 0F 03 */ { 0, &Ia_lslw_Gw_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
@@ -3906,8 +3937,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
   /* 0F 75 */ { GRPSSE(0f75) },
   /* 0F 76 */ { GRPSSE(0f76) },
   /* 0F 77 */ { 0, &Ia_emms  },
-  /* 0F 78 */ { 0, &Ia_Invalid },
-  /* 0F 79 */ { 0, &Ia_Invalid },
+  /* 0F 78 */ { 0, &Ia_vmread_Eq_Gq  },
+  /* 0F 79 */ { 0, &Ia_vmwrite_Gq_Eq },
   /* 0F 7A */ { 0, &Ia_Invalid },
   /* 0F 7B */ { 0, &Ia_Invalid },
   /* 0F 7C */ { GRPSSE(0f7c) },
@@ -4305,7 +4336,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64d[256*2] = {
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
-  /* 0F 01 */ { GRPN(G7)          },
+  /* 0F 01 */ { GRPMOD(G7)        },
   /* 0F 02 */ { 0, &Ia_larl_Gd_Ew },
   /* 0F 03 */ { 0, &Ia_lsll_Gd_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
@@ -4424,8 +4455,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64d[256*2] = {
   /* 0F 75 */ { GRPSSE(0f75) },
   /* 0F 76 */ { GRPSSE(0f76) },
   /* 0F 77 */ { 0, &Ia_emms  },
-  /* 0F 78 */ { 0, &Ia_Invalid },
-  /* 0F 79 */ { 0, &Ia_Invalid },
+  /* 0F 78 */ { 0, &Ia_vmread_Eq_Gq  },
+  /* 0F 79 */ { 0, &Ia_vmwrite_Gq_Eq },
   /* 0F 7A */ { 0, &Ia_Invalid },
   /* 0F 7B */ { 0, &Ia_Invalid },
   /* 0F 7C */ { GRPSSE(0f7c) },
@@ -4823,7 +4854,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
-  /* 0F 01 */ { GRPN(G7)          },
+  /* 0F 01 */ { GRPMOD(G7)        },
   /* 0F 02 */ { 0, &Ia_larq_Gq_Ew },
   /* 0F 03 */ { 0, &Ia_lslq_Gq_Ew },
   /* 0F 04 */ { 0, &Ia_Invalid    },
@@ -4942,8 +4973,8 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64q[256*2] = {
   /* 0F 75 */ { GRPSSE(0f75) },
   /* 0F 76 */ { GRPSSE(0f76) },
   /* 0F 77 */ { 0, &Ia_emms  },
-  /* 0F 78 */ { 0, &Ia_Invalid },
-  /* 0F 79 */ { 0, &Ia_Invalid },
+  /* 0F 78 */ { 0, &Ia_vmread_Eq_Gq  },
+  /* 0F 79 */ { 0, &Ia_vmwrite_Gq_Eq },
   /* 0F 7A */ { 0, &Ia_Invalid },
   /* 0F 7B */ { 0, &Ia_Invalid },
   /* 0F 7C */ { GRPSSE(0f7c) },

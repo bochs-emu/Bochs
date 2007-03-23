@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.105 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.106 2007-03-23 14:35:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,7 +409,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G6[8] = {
 //  MOD == 11  7    1  |      #UD        |   RDTSCP
 //  MOD == 11  7   2-7 |      #UD        |    #UD
 
-static const BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
+static const BxOpcodeInfo_t opcodesGroup64RmINVLPG[8] = {
+  // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::SWAPGS  },
   /* 1 */ { 0, &BX_CPU_C::RDTSCP  },
   /* 2 */ { 0, &BX_CPU_C::BxError },
@@ -420,12 +421,20 @@ static const BxOpcodeInfo_t opcodesGroupRmINVLPG[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
-static const BxOpcodeInfo_t opcodesGroupModINVLPG[2] = {
-  /* M */ { 0, &BX_CPU_C::INVLPG },
-  /* R */ { BxRMGroup, NULL, opcodesGroupRmINVLPG }
+static const BxOpcodeInfo_t BxOpcodeInfo64G7R[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
+  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 6 */ { 0, &BX_CPU_C::LMSW_Ew },
+  /* 7 */ { BxRMGroup, NULL, opcodesGroup64RmINVLPG }
 };
 
-static const BxOpcodeInfo_t BxOpcodeInfo64G7[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
+  // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::SGDT64_Ms },
   /* 1 */ { 0, &BX_CPU_C::SIDT64_Ms },
   /* 2 */ { 0, &BX_CPU_C::LGDT64_Ms },
@@ -433,7 +442,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G7[8] = {
   /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
   /* 5 */ { 0, &BX_CPU_C::BxError },
   /* 6 */ { 0, &BX_CPU_C::LMSW_Ew },
-  /* 7 */ { BxSplitMod11b, NULL, opcodesGroupModINVLPG }
+  /* 7 */ { 0, &BX_CPU_C::INVLPG  }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfo64ModG7[2] = {
+  // attributes defined in main area
+  /* M */ { BxGroupN, NULL, BxOpcodeInfo64G7M },
+  /* R */ { BxGroupN, NULL, BxOpcodeInfo64G7R }
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G8EwIb[8] = {
@@ -811,7 +826,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FF */ { BxAnother | BxGroup5, NULL, BxOpcodeInfo64G5w },
 
   /* 0F 00 */ { BxAnother | BxGroup6, NULL, BxOpcodeInfo64G6 },
-  /* 0F 01 */ { BxAnother | BxGroup7, NULL, BxOpcodeInfo64G7 },
+  /* 0F 01 */ { BxAnother | BxSplitMod11b, NULL, BxOpcodeInfo64ModG7 },
   /* 0F 02 */ { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */ { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */ { 0, &BX_CPU_C::BxError },
@@ -1340,7 +1355,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FF */ { BxAnother | BxGroup5, NULL, BxOpcodeInfo64G5d },
 
   /* 0F 00 */ { BxAnother | BxGroup6, NULL, BxOpcodeInfo64G6 },
-  /* 0F 01 */ { BxAnother | BxGroup7, NULL, BxOpcodeInfo64G7 },
+  /* 0F 01 */ { BxAnother | BxSplitMod11b, NULL, BxOpcodeInfo64ModG7 },
   /* 0F 02 */ { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */ { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */ { 0, &BX_CPU_C::BxError },
@@ -1869,7 +1884,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FF */ { BxAnother | BxGroup5, NULL, BxOpcodeInfo64G5q },
 
   /* 0F 00 */ { BxAnother | BxGroup6, NULL, BxOpcodeInfo64G6 },
-  /* 0F 01 */ { BxAnother | BxGroup7, NULL, BxOpcodeInfo64G7 },
+  /* 0F 01 */ { BxAnother | BxSplitMod11b, NULL, BxOpcodeInfo64ModG7 },
   /* 0F 02 */ { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */ { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */ { 0, &BX_CPU_C::BxError },

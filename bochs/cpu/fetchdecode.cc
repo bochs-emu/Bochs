@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.103 2007-01-28 21:27:30 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.104 2007-03-23 14:35:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -293,7 +293,20 @@ static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
 
-static const BxOpcodeInfo_t BxOpcodeInfoG7[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
+  // attributes defined in main area
+  /* 0 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
+  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 6 */ { 0, &BX_CPU_C::LMSW_Ew },
+  /* 7 */ { 0, &BX_CPU_C::BxError }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfoG7M[8] = {
+  // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::SGDT_Ms },
   /* 1 */ { 0, &BX_CPU_C::SIDT_Ms },
   /* 2 */ { 0, &BX_CPU_C::LGDT_Ms },
@@ -303,6 +316,12 @@ static const BxOpcodeInfo_t BxOpcodeInfoG7[8] = {
   /* 6 */ { 0, &BX_CPU_C::LMSW_Ew },
   /* 7 */ { 0, &BX_CPU_C::INVLPG }
 }; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoModG7[2] = {
+  // attributes defined in main area
+  /* M */ { BxGroupN, NULL, BxOpcodeInfoG7M },
+  /* R */ { BxGroupN, NULL, BxOpcodeInfoG7R }
+};
 
 static const BxOpcodeInfo_t BxOpcodeInfoG8EwIb[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
@@ -670,7 +689,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* FF */ { BxAnother | BxGroup5, NULL, BxOpcodeInfoG5w },
 
   /* 0F 00 */ { BxAnother | BxGroup6, NULL, BxOpcodeInfoG6 },
-  /* 0F 01 */ { BxAnother | BxGroup7, NULL, BxOpcodeInfoG7 },
+  /* 0F 01 */ { BxAnother | BxSplitMod11b, NULL, BxOpcodeInfoModG7 },
   /* 0F 02 */ { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */ { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */ { 0, &BX_CPU_C::BxError },
@@ -1228,7 +1247,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* FF */ { BxAnother | BxGroup5, NULL, BxOpcodeInfoG5d },
 
   /* 0F 00 */ { BxAnother | BxGroup6, NULL, BxOpcodeInfoG6 },
-  /* 0F 01 */ { BxAnother | BxGroup7, NULL, BxOpcodeInfoG7 },
+  /* 0F 01 */ { BxAnother | BxSplitMod11b, NULL, BxOpcodeInfoModG7 },
   /* 0F 02 */ { BxAnother, &BX_CPU_C::LAR_GvEw },
   /* 0F 03 */ { BxAnother, &BX_CPU_C::LSL_GvEw },
   /* 0F 04 */ { 0, &BX_CPU_C::BxError },
