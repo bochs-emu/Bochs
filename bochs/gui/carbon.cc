@@ -1,5 +1,5 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.33 2006-08-08 17:10:30 vruppert Exp $
+////////////////////////////////////////////////////////////////////////
+// $Id: carbon.cc,v 1.34 2007-03-23 08:30:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,8 +108,8 @@ const MenuCommand kCommandReset = FOUR_CHAR_CODE ('RSET');
 #define SLEEP_TIME  0 // Number of ticks to surrender the processor during a WaitNextEvent()
 // Change this to 15 or higher if you don't want Bochs to hog the processor!
 
-#define FONT_WIDTH    8
-#define FONT_HEIGHT  16
+int font_width;
+int font_height;
 
 #define WINBITMAP(w)  GetPortBitMapForCopyBits(GetWindowPort(w))  //  (((GrafPtr)(w))->portBits)
 
@@ -208,7 +208,7 @@ void CreateTile(void);
 void CreateMenus(void);
 void CreateWindows(void);
 void CreateKeyMap(void);
-void CreateVGAFont(void);
+void CreateVGAFont(unsigned char *vga_charmap);
 BitMap *CreateBitMap(unsigned width,  unsigned height);
 PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
                           unsigned height, unsigned depth, CTabHandle clut);
@@ -246,7 +246,7 @@ pascal OSStatus CEvtHandleWindowToolCommand (EventHandlerCallRef nextHandler,
 
   theCommandID = commandStruct.commandID;
   
-  if(theCommandID < toolPixMaps ) {
+  if(theCommandID < toolPixMaps) {
     bx_tool_pixmap[theCommandID].f();
   }
   
@@ -289,10 +289,11 @@ pascal OSStatus CEvtHandleWindowEmulatorClick (EventHandlerCallRef nextHandler,
   GetEventParameter (theEvent, kEventParamKeyModifiers, typeUInt32,
                      NULL, sizeof(UInt32), NULL, &keyModifiers);
 
-//  if (!IsWindowActive(win))
-//  {
+//if (!IsWindowActive(win))
+//{
 //    SelectWindow(win);
-//  }
+//}
+
   if (keyModifiers & cmdKey)
     mouse_button_state |= 0x02;
   else
@@ -808,10 +809,15 @@ void CreateWindows(void)
 
 void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned tileheight,
   unsigned headerbar_y)
-{ 
+{
+  int i;
+
   put("MGUI");
   InitToolbox();
-  
+
+  font_width = 8;
+  font_height = 16;
+
   gheaderbar_y = headerbar_y + TOOL_MARGIN_SPACE + TOOL_MARGIN_SPACE;
   
   CreateKeyMap();
@@ -819,11 +825,13 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, u
   gCTable = GetCTable(128);
   BX_ASSERT (gCTable != NULL);
   CTabChanged(gCTable); //(*gCTable)->ctSeed = GetCTSeed(); 
-  SetRect(&srcTextRect, 0, 0, FONT_WIDTH, FONT_HEIGHT);
   SetRect(&srcTileRect, 0, 0, tilewidth, tileheight);
-  
+
+  for(i=0; i<256; i++) {
+    vgafont[i] = NULL;
+  }
   CreateMenus();
-  CreateVGAFont();
+  CreateVGAFont(vga_charmap);
   CreateTile();
   CreateWindows();
   
@@ -861,7 +869,7 @@ OSStatus HandleKey(EventRef theEvent, Bit32u keyState)
 {
   UInt32    key;
   UInt32    trans;
-  OSStatus    status;
+  OSStatus  status;
   UInt32    modifiers;
   
   static UInt32 transState = 0;
@@ -1161,6 +1169,11 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   OSErr         theError;
   
   screen_state = TEXT_MODE;
+
+  if( charmap_updated == 1 ) {
+    CreateVGAFont(vga_charmap);
+    charmap_updated = 0;
+  }
   
 /*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get ())
   {
@@ -1172,7 +1185,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   
   SetPortWindowPort(win);
 
-  ncols = width/8;
+  ncols = width/font_width;
 
   //current cursor position
   cursori = (cursor_y*ncols + cursor_x)*2;
@@ -1182,15 +1195,15 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   
   for (i=0; i<nchars*2; i+=2)
   {
-    if ( i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
+    if (i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
     {
       achar = new_text[i];
       
-//      fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
-//      bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
+//    fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
+//    bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
       
-//      RGBForeColor(&fgColor);
-//      RGBBackColor(&bgColor);
+//    RGBForeColor(&fgColor);
+//    RGBBackColor(&bgColor);
       
       if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
       {
@@ -1205,17 +1218,18 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         RGBForeColor(&fgColor);
         RGBBackColor(&bgColor);
       }
-      
-      x = ((i/2) % ncols)*FONT_WIDTH;
-      y = ((i/2) / ncols)*FONT_HEIGHT;
+
+      x = ((i/2) % ncols)*font_width;
+      y = ((i/2) / ncols)*font_height;
 
       SetRect(&destRect, x, y,
-        x+FONT_WIDTH, y+FONT_HEIGHT);
+        x+font_width, y+font_height);
         
       CopyBits( vgafont[achar], WINBITMAP(win),
         &srcTextRect, &destRect, srcCopy, NULL);
-  if ((theError = QDError()) != noErr)
-    BX_ERROR(("mac: CopyBits returned %hd", theError));
+
+      if ((theError = QDError()) != noErr)
+        BX_ERROR(("mac: CopyBits returned %hd", theError));
 
       if (i == cursori)   //invert the current cursor block
       {
@@ -1235,8 +1249,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   windowUpdatesPending = true;
 }
 
-  int
-bx_carbon_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
+int bx_carbon_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   ScrapRef         theScrap;
   ScrapFlavorFlags theScrapFlags;
@@ -1263,8 +1276,7 @@ bx_carbon_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
   return (err == noErr);
 }
 
-  int
-bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
+int bx_carbon_gui_c::set_clipboard_text(char *text_snapshot, Bit32u len)
 {
   ScrapRef theScrap;
   
@@ -1433,14 +1445,15 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     vga_bpp = bpp;
     CreateTile();
   }
+
   if (fheight > 0) {
-    if (fwidth != 8) {
-      x = x * 8 / fwidth;
-    }
-    if (fheight != 16) {
-      y = y * 16 / fheight;
+    if( fwidth != font_width || fheight != font_height ) {
+       font_width = fwidth;
+       font_height = fheight;
+       CreateVGAFont(vga_charmap);
     }
   }
+
   if (x != width || y != height)
   {
 #if 1
@@ -1495,7 +1508,7 @@ unsigned bx_carbon_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim
   long row_bytes, bytecount;
   
   bx_cicn[numPixMaps] = GetCIcon(numPixMaps+128);
-  BX_ASSERT(bx_cicn[numPixMaps]);
+//  BX_ASSERT(bx_cicn[numPixMaps]);
   
   numPixMaps++;
 
@@ -1524,8 +1537,8 @@ unsigned bx_carbon_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   
   toolPixMaps++;
   hb_index = toolPixMaps-1;
-//  bx_tool_pixmap[hb_index].pm = bx_pixmap[bmap_id];
-//  bx_tool_pixmap[hb_index].cicn = bx_cicn[bmap_id];
+//bx_tool_pixmap[hb_index].pm = bx_pixmap[bmap_id];
+//bx_tool_pixmap[hb_index].cicn = bx_cicn[bmap_id];
   bx_tool_pixmap[hb_index].alignment = alignment;
   bx_tool_pixmap[hb_index].f = f;
 
@@ -1533,13 +1546,13 @@ unsigned bx_carbon_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment,
   {
     bx_tool_pixmap[hb_index].xorigin = bx_bitmap_left_xorigin;
     bx_tool_pixmap[hb_index].yorigin = TOOL_MARGIN_SPACE;
-//    bx_bitmap_left_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
+//  bx_bitmap_left_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
     bx_bitmap_left_xorigin += 32 + TOOL_SPACING;
     xorigin = bx_tool_pixmap[hb_index].xorigin;
   }
   else
   {
-//    bx_bitmap_right_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
+//  bx_bitmap_right_xorigin += (**bx_pixmap[bmap_id]).bounds.right;
     bx_bitmap_right_xorigin += 32;
     bx_tool_pixmap[hb_index].xorigin = bx_bitmap_right_xorigin;
     bx_tool_pixmap[hb_index].yorigin = TOOL_MARGIN_SPACE;
@@ -1585,8 +1598,8 @@ void bx_carbon_gui_c::show_headerbar(void)
 
 void bx_carbon_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-//  bx_tool_pixmap[hbar_id].pm = bx_pixmap[bmap_id];
-//  bx_tool_pixmap[hbar_id].cicn = bx_cicn[bmap_id];
+//bx_tool_pixmap[hbar_id].pm = bx_pixmap[bmap_id];
+//bx_tool_pixmap[hbar_id].cicn = bx_cicn[bmap_id];
   ControlButtonContentInfo info;
 
   info.contentType = kControlContentCIconHandle;
@@ -1974,24 +1987,27 @@ void CreateKeyMap(void)
 //
 // Create an array of PixMaps for the PC screen font
 
-void CreateVGAFont(void)
+void CreateVGAFont(unsigned char *vga_charmap)
 {
   int i, x;
   unsigned char *fontData, curPixel;
   long row_bytes, bytecount;
-  
+
+  SetRect(&srcTextRect, 0, 0, font_width, font_height);
   for (i=0; i<256; i++)
   {
-    vgafont[i] = CreateBitMap(FONT_WIDTH, FONT_HEIGHT);
+    if(vgafont[i] != NULL) free(vgafont[i]);
+    vgafont[i] = CreateBitMap(font_width, font_height);
     row_bytes = (*(vgafont[i])).rowBytes;
-    bytecount = row_bytes * FONT_HEIGHT;
+    bytecount = row_bytes * font_height;
     fontData = (unsigned char *)NewPtrClear(bytecount);
 
-    for (x=0; x<16; x++)
+    for (x=0; x<font_height; x++)
     {
       //curPixel = ~(bx_vgafont[i].data[x]);
-      curPixel = (bx_vgafont[i].data[x]);
-      fontData[x*row_bytes] = reverse_bitorder(curPixel);
+                        curPixel = (vga_charmap[(i*32) + x]);
+      fontData[x*row_bytes] = curPixel;
+                        fontData[x*row_bytes + 1] = curPixel << 7;
     }
     vgafont[i]->baseAddr = Ptr(fontData);
   }
@@ -2021,7 +2037,7 @@ BitMap *CreateBitMap(unsigned width,  unsigned height)
 // CreatePixMap()
 // Allocate a new pixmap handle and fill in the fields with appropriate
 // values.
-
+/*
 PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
   unsigned height, unsigned depth, CTabHandle clut)
 {
@@ -2045,7 +2061,7 @@ PixMapHandle CreatePixMap(unsigned left, unsigned top, unsigned width,
   // use one we created earlier.
     
   return pm;
-}
+}*/
 
 unsigned char reverse_bitorder(unsigned char b)
 {
@@ -2080,7 +2096,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 {
   event->retcode = 0;  // default return code
   
-  if( event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
+  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
   {
     DialogRef                     alertDialog;
     CFStringRef                   title;
