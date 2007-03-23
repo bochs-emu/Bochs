@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.57 2007-03-14 21:15:15 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.58 2007-03-23 14:50:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -631,12 +631,6 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 
 void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("SGDT_Ms: use of register is undefined opcode"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
 
@@ -646,12 +640,6 @@ void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("SIDT_Ms: use of register is undefined opcode"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
 
@@ -661,12 +649,6 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 {
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("LGDT: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   if (v8086_mode()) {
     BX_ERROR(("LGDT: not recognized in virtual-8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -708,12 +690,6 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 {
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("LIDT: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   if (v8086_mode()) {
     BX_ERROR(("LIDT: not recognized in virtual-8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -752,12 +728,6 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 {
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("SGDT64_Ms: use of register is undefined opcode"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
@@ -767,12 +737,6 @@ void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
 void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 {
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("SIDT64_Ms: use of register is undefined opcode"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
 
@@ -810,12 +774,6 @@ void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 void BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
-
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("LIDT64_Ms: must be memory reference"));
-    UndefinedOpcode(i);
-  }
 
   if (CPL != 0) {
     BX_ERROR(("LIDT64_Ms: CPL != 0 in long mode"));
