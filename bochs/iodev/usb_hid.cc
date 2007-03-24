@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.1 2007-03-21 18:54:41 vruppert Exp $
+// $Id: usb_hid.cc,v 1.2 2007-03-24 11:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -114,6 +114,61 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_tablet_config_descriptor[] = {
+  /* one configuration */
+  0x09,       /*  u8  bLength; */
+  0x02,       /*  u8  bDescriptorType; Configuration */
+  0x22, 0x00, /*  u16 wTotalLength; */
+  0x01,       /*  u8  bNumInterfaces; (1) */
+  0x01,       /*  u8  bConfigurationValue; */
+  0x04,       /*  u8  iConfiguration; */
+  0xa0,       /*  u8  bmAttributes; 
+			 Bit 7: must be set,
+			     6: Self-powered,
+			     5: Remote wakeup,
+			     4..0: resvd */
+  50,         /*  u8  MaxPower; */
+
+  /* USB 1.1:
+   * USB 2.0, single TT organization (mandatory):
+   *   one interface, protocol 0
+   *
+   * USB 2.0, multiple TT organization (optional):
+   *   two interfaces, protocols 1 (like single TT)
+   *   and 2 (multiple TT mode) ... config is
+   *   sometimes settable
+   *   NOT IMPLEMENTED
+   */
+
+  /* one interface */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x00,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x05,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x01, 0x00,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  74, 0,       /*  u16 len */
+
+  /* one endpoint (status change endpoint) */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+};
+
 static const Bit8u bx_mouse_hid_report_descriptor[] = {
   0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 
   0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
@@ -124,10 +179,55 @@ static const Bit8u bx_mouse_hid_report_descriptor[] = {
   0xC0, 0xC0,
 };
 
+static const Bit8u bx_tablet_hid_report_descriptor[] = {
+  0x05, 0x01, /* Usage Page Generic Desktop */
+  0x09, 0x01, /* Usage Mouse */
+  0xA1, 0x01, /* Collection Application */
+  0x09, 0x01, /* Usage Pointer */
+  0xA1, 0x00, /* Collection Physical */
+  0x05, 0x09, /* Usage Page Button */
+  0x19, 0x01, /* Usage Minimum Button 1 */
+  0x29, 0x03, /* Usage Maximum Button 3 */
+  0x15, 0x00, /* Logical Minimum 0 */
+  0x25, 0x01, /* Logical Maximum 1 */
+  0x95, 0x03, /* Report Count 3 */
+  0x75, 0x01, /* Report Size 1 */
+  0x81, 0x02, /* Input (Data, Var, Abs) */
+  0x95, 0x01, /* Report Count 1 */
+  0x75, 0x05, /* Report Size 5 */
+  0x81, 0x01, /* Input (Cnst, Var, Abs) */
+  0x05, 0x01, /* Usage Page Generic Desktop */
+  0x09, 0x30, /* Usage X */
+  0x09, 0x31, /* Usage Y */
+  0x15, 0x00, /* Logical Minimum 0 */
+  0x26, 0xFF, 0x7F, /* Logical Maximum 0x7fff */
+  0x35, 0x00, /* Physical Minimum 0 */
+  0x46, 0xFE, 0x7F, /* Physical Maximum 0x7fff */
+  0x75, 0x10, /* Report Size 16 */
+  0x95, 0x02, /* Report Count 2 */
+  0x81, 0x02, /* Input (Data, Var, Abs) */
+  0x05, 0x01, /* Usage Page Generic Desktop */
+  0x09, 0x38, /* Usage Wheel */
+  0x15, 0x81, /* Logical Minimum -127 */
+  0x25, 0x7F, /* Logical Maximum 127 */
+  0x35, 0x00, /* Physical Minimum 0 (same as logical) */
+  0x45, 0x00, /* Physical Maximum 0 (same as logical) */
+  0x75, 0x08, /* Report Size 8 */
+  0x95, 0x01, /* Report Count 1 */
+  0x81, 0x02, /* Input (Data, Var, Rel) */
+  0xC0,       /* End Collection */
+  0xC0,       /* End Collection */
+};
+
 usb_hid_device_t::usb_hid_device_t(usbdev_type type)
 {
   d.type = type;
   d.speed = USB_SPEED_FULL;
+  if (d.type == USB_DEV_TYPE_MOUSE) {
+    strcpy(d.devname, "BOCHS USB Mouse");
+  } else if (d.type == USB_DEV_TYPE_TABLET) {
+    strcpy(d.devname, "BOCHS USB Tablet");
+  }
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
 
@@ -179,15 +279,24 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
     case DeviceRequest | USB_REQ_GET_DESCRIPTOR:
       switch(value >> 8) {
         case USB_DT_DEVICE:
-          memcpy(data, bx_mouse_dev_descriptor, 
-                 sizeof(bx_mouse_dev_descriptor));
-          ret = sizeof(bx_mouse_dev_descriptor);
+          if ((d.type == USB_DEV_TYPE_MOUSE) ||
+              (d.type == USB_DEV_TYPE_TABLET)) {
+            memcpy(data, bx_mouse_dev_descriptor, 
+                   sizeof(bx_mouse_dev_descriptor));
+            ret = sizeof(bx_mouse_dev_descriptor);
+	  } else {
+            goto fail;
+          }
           break;
         case USB_DT_CONFIG:
           if (d.type == USB_DEV_TYPE_MOUSE) {
             memcpy(data, bx_mouse_config_descriptor, 
 	           sizeof(bx_mouse_config_descriptor));
             ret = sizeof(bx_mouse_config_descriptor);
+          } else if (d.type == USB_DEV_TYPE_TABLET) {
+            memcpy(data, bx_tablet_config_descriptor, 
+	           sizeof(bx_tablet_config_descriptor));
+            ret = sizeof(bx_tablet_config_descriptor);
 	  } else {
             goto fail;
 	  }		
@@ -208,8 +317,8 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
               break;
             case 2:
               /* product description */
-              if (d.type == USB_DEV_TYPE_MOUSE) {
-                ret = set_usb_string(data, "BOCHS USB Mouse");
+              if (strlen(d.devname) > 0) {
+                ret = set_usb_string(data, d.devname);
               } else {
                 goto fail;
               }
@@ -254,6 +363,10 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_mouse_hid_report_descriptor, 
                    sizeof(bx_mouse_hid_report_descriptor));
             ret = sizeof(bx_mouse_hid_report_descriptor);
+          } else if (d.type == USB_DEV_TYPE_TABLET) {
+            memcpy(data, bx_tablet_hid_report_descriptor, 
+                   sizeof(bx_tablet_hid_report_descriptor));
+            ret = sizeof(bx_tablet_hid_report_descriptor);
           } else {
             goto fail;
 	  }
@@ -263,7 +376,8 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
         }
         break;
     case GET_REPORT:
-      if (d.type == USB_DEV_TYPE_MOUSE) {
+      if ((d.type == USB_DEV_TYPE_MOUSE) ||
+          (d.type == USB_DEV_TYPE_TABLET)) {
         ret = mouse_poll(data, length);
       } else {
         goto fail;
@@ -273,6 +387,7 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
       ret = 0;
       break;
     default:
+      BX_ERROR(("USB HID handle_control: unknown request"));
     fail:
       ret = USB_RET_STALL;
       break;
@@ -287,7 +402,8 @@ int usb_hid_device_t::handle_data(USBPacket *p)
   switch(p->pid) {
     case USB_TOKEN_IN:
       if (p->devep == 1) {
-        if (d.type == USB_DEV_TYPE_MOUSE) {
+        if ((d.type == USB_DEV_TYPE_MOUSE) ||
+            (d.type == USB_DEV_TYPE_TABLET)) {
           ret = mouse_poll(p->data, p->len);
         } else {
           goto fail;
@@ -307,66 +423,87 @@ int usb_hid_device_t::handle_data(USBPacket *p)
 
 int usb_hid_device_t::mouse_poll(Bit8u *buf, int len)
 {
-  int l;
+  int l = 0;
 
-  if (!s.mouse_x && !s.mouse_y) {
-    // if there's no new movement, handle delayed one
-    mouse_enq(0, 0, s.mouse_z, s.b_state);
-  }
-  buf[0] = (Bit8u) s.b_state;
-  buf[1] = (Bit8s) s.mouse_x;
-  buf[2] = (Bit8s) s.mouse_y;
-  s.b_state = 0;
-  s.mouse_x = 0;
-  s.mouse_y = 0;
-  l = 3;
-  if (len >= 4) {
-    buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
+  if (d.type == USB_DEV_TYPE_MOUSE) {
+    if (!s.mouse_x && !s.mouse_y) {
+      // if there's no new movement, handle delayed one
+      mouse_enq(0, 0, s.mouse_z, s.b_state);
+    }
+    buf[0] = (Bit8u) s.b_state;
+    buf[1] = (Bit8s) s.mouse_x;
+    buf[2] = (Bit8s) s.mouse_y;
+    s.b_state = 0;
+    s.mouse_x = 0;
+    s.mouse_y = 0;
+    l = 3;
+    if (len >= 4) {
+      buf[3] = (Bit8s) s.mouse_z; // if wheel mouse
+      s.mouse_z = 0;
+      l = 4;
+    }
+  } else if (d.type == USB_DEV_TYPE_TABLET) {
+    buf[0] = (Bit8u) s.b_state;
+    buf[1] = (Bit8u)(s.mouse_x & 0xff);
+    buf[2] = (Bit8u)(s.mouse_x >> 8);
+    buf[3] = (Bit8u)(s.mouse_y & 0xff);
+    buf[4] = (Bit8u)(s.mouse_y >> 8);
+    buf[5] = (Bit8s) s.mouse_z;
     s.mouse_z = 0;
-    l = 4;
+    l = 6;
   }
   return l;
 }
 
 void usb_hid_device_t::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state)
 {
-  // scale down the motion
-  if ( (delta_x < -1) || (delta_x > 1) )
-    delta_x /= 2;
-  if ( (delta_y < -1) || (delta_y > 1) )
-    delta_y /= 2;
+  if (d.type == USB_DEV_TYPE_MOUSE) {
+    // scale down the motion
+    if ((delta_x < -1) || (delta_x > 1))
+      delta_x /= 2;
+    if ((delta_y < -1) || (delta_y > 1))
+      delta_y /= 2;
 
-  if(delta_x>127) delta_x=127;
-  if(delta_y>127) delta_y=127;
-  if(delta_x<-128) delta_x=-128;
-  if(delta_y<-128) delta_y=-128;
+    if (delta_x>127) delta_x=127;
+    if (delta_y>127) delta_y=127;
+    if (delta_x<-128) delta_x=-128;
+    if (delta_y<-128) delta_y=-128;
 
-  s.mouse_delayed_dx+=delta_x;
-  s.mouse_delayed_dy-=delta_y;
+    s.mouse_delayed_dx+=delta_x;
+    s.mouse_delayed_dy-=delta_y;
 
-  if (s.mouse_delayed_dx > 127) {
-    delta_x = 127;
-    s.mouse_delayed_dx -= 127;
-  } else if (s.mouse_delayed_dx < -128) {
-    delta_x = -128;
-    s.mouse_delayed_dx += 128;
-  } else {
-    delta_x = s.mouse_delayed_dx;
-    s.mouse_delayed_dx = 0;
+    if (s.mouse_delayed_dx > 127) {
+      delta_x = 127;
+      s.mouse_delayed_dx -= 127;
+    } else if (s.mouse_delayed_dx < -128) {
+      delta_x = -128;
+      s.mouse_delayed_dx += 128;
+    } else {
+      delta_x = s.mouse_delayed_dx;
+      s.mouse_delayed_dx = 0;
+    }
+    if (s.mouse_delayed_dy > 127) {
+      delta_y = 127;
+      s.mouse_delayed_dy -= 127;
+    } else if (s.mouse_delayed_dy < -128) {
+      delta_y = -128;
+      s.mouse_delayed_dy += 128;
+    } else {
+      delta_y = s.mouse_delayed_dy;
+      s.mouse_delayed_dy = 0;
+    }
+
+    s.mouse_x = (Bit8s) delta_x;
+    s.mouse_y = (Bit8s) delta_y;
+  } else if (d.type == USB_DEV_TYPE_TABLET) {
+    // FIXME: Bochs gui should generate absolute x/y values if tablet connected
+    s.mouse_x += delta_x;
+    s.mouse_y -= delta_y;
+    if (s.mouse_x < 0)
+      s.mouse_x = 0;
+    if (s.mouse_y < 0)
+      s.mouse_y = 0;
   }
-  if (s.mouse_delayed_dy > 127) {
-    delta_y = 127;
-    s.mouse_delayed_dy -= 127;
-  } else if (s.mouse_delayed_dy < -128) {
-    delta_y = -128;
-    s.mouse_delayed_dy += 128;
-  } else {
-    delta_y = s.mouse_delayed_dy;
-    s.mouse_delayed_dy = 0;
-  }
-
-  s.mouse_x = (Bit8s) delta_x;
-  s.mouse_y = (Bit8s) delta_y;
   s.mouse_z = (Bit8s) delta_z;
   s.b_state = (Bit8u) button_state;
 }

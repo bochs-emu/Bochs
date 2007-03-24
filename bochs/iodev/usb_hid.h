@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.h,v 1.1 2007-03-21 18:54:41 vruppert Exp $
+// $Id: usb_hid.h,v 1.2 2007-03-24 11:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -41,8 +41,8 @@ private:
     int mouse_delayed_dx;
     int mouse_delayed_dy;
     int mouse_delayed_dz;
-    Bit8s mouse_x;
-    Bit8s mouse_y;
+    Bit16s mouse_x;
+    Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
   } s;

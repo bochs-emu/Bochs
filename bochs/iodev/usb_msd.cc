@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.1 2007-03-18 11:17:28 vruppert Exp $
+// $Id: usb_msd.cc,v 1.2 2007-03-24 11:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -124,7 +124,8 @@ usb_msd_device_t::usb_msd_device_t(void)
 {
   d.type = USB_DEV_TYPE_DISK;
   d.speed = USB_SPEED_FULL;
-  memset((void*)&s, 0, sizeof(MSDState));
+  strcpy(d.devname, "BOCHS USB HARDDRIVE");
+  memset((void*)&s, 0, sizeof(s));
 
   put("USBMS");
   settype(PCIUSBLOG);
@@ -214,7 +215,11 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
               break;
             case 2:
               // product description
-              ret = set_usb_string(data, "BOCHS USB HARDDRIVE");
+              if (strlen(d.devname) > 0) {
+                ret = set_usb_string(data, d.devname);
+              } else {
+                goto fail;
+              }
               break;
             case 3:
               // serial number
@@ -267,6 +272,7 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
       ret = 1;
       break;
     default:
+      BX_ERROR(("USB MSD handle_control: unknown request"));
     fail:
       ret = USB_RET_STALL;
       break;

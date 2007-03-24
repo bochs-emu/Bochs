@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.52 2007-03-21 18:54:41 vruppert Exp $
+// $Id: pciusb.cc,v 1.53 2007-03-24 11:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -381,6 +381,13 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
+    connected = 1;
+    BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
+    if (BX_USB_THIS mousedev == NULL) {
+      BX_USB_THIS mousedev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
+    }
+  } else if (!strcmp(devname, "tablet")) {
+    type = USB_DEV_TYPE_TABLET;
     connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
     if (BX_USB_THIS mousedev == NULL) {
@@ -1757,7 +1764,8 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         BX_USB_THIS hub[0].usb_port[port].low_speed = 0;
         BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
         BX_USB_THIS hub[0].usb_port[port].line_dplus = 0;   //  dminus=0 & dplus=1 = high speed (at idle time)
-        if (type == USB_DEV_TYPE_MOUSE) {
+        if ((type == USB_DEV_TYPE_MOUSE) ||
+            (type == USB_DEV_TYPE_TABLET)) {
           if (BX_USB_THIS hub[0].usb_port[port].device == BX_USB_THIS mousedev) {
             BX_USB_THIS mousedev = NULL;
           }

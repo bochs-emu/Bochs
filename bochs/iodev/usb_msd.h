@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.1 2007-03-18 11:17:28 vruppert Exp $
+// $Id: usb_msd.h,v 1.2 2007-03-24 11:43:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -32,21 +32,6 @@ enum USBMSDMode {
   USB_MSDM_CSW
 };
 
-typedef struct {
-  enum USBMSDMode mode;
-  Bit32u scsi_len;
-  Bit8u *scsi_buf;
-  Bit32u usb_len;
-  Bit8u *usb_buf;
-  Bit32u data_len;
-  Bit32u residue;
-  Bit32u tag;
-  int result;
-  device_image_t *hdimage;
-  scsi_device_t *scsi_dev;
-  USBPacket *packet;
-} MSDState;
-
 
 class usb_msd_device_t : public usb_device_t {
 public:
@@ -64,7 +49,20 @@ protected:
   void command_complete(int reason, Bit32u tag, Bit32u arg);
 
 private:
-  MSDState s;
+  struct {
+    enum USBMSDMode mode;
+    Bit32u scsi_len;
+    Bit8u *scsi_buf;
+    Bit32u usb_len;
+    Bit8u *usb_buf;
+    Bit32u data_len;
+    Bit32u residue;
+    Bit32u tag;
+    int result;
+    device_image_t *hdimage;
+    scsi_device_t *scsi_dev;
+    USBPacket *packet;
+  } s;
 };
 
 #endif
