@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.24 2007-03-21 18:54:41 vruppert Exp $
+// $Id: pciusb.h,v 1.25 2007-03-25 17:37:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -42,7 +42,6 @@
 #define BX_USB_CONFDEV  1   /* only 1 USB hub currently */
 
 #define USB_NUM_PORTS   2   /* UHCI supports 2 ports per root hub */
-#define USB_CUR_DEVS    1   /* old-style devices (keypad only) */
 
 #define USB_TOKEN_IN    0x69
 #define USB_TOKEN_OUT   0xE1
@@ -129,21 +128,6 @@ struct USBPacket {
   int len;
 };
 
-// device requests
-enum { GET_STATUS=0, CLEAR_FEATURE, SET_FEATURE=3, SET_ADDRESS=5, GET_DESCRIPTOR=6, SET_DESCRIPTOR,
-       GET_CONFIGURATION, SET_CONFIGURATION,
-// interface requests
-       GET_INTERFACE, SET_INTERFACE,
-// standard endpoint requests
-       SYNCH_FRAME
-};
-
-#define SET_FEATURE_TEST_MODE 0 /////////TODO: I don't know yet what this value is to be
-
-#define STATE_DEFAULT    0
-#define STATE_ADDRESS    1
-#define STATE_CONFIGURED 2
-
 // setup packets
 struct REQUEST_PACKET {
   Bit8u  request_type;
@@ -151,12 +135,6 @@ struct REQUEST_PACKET {
   Bit16u value;
   Bit16u index;
   Bit16u length;
-};
-
-#define KEYPAD_LEN   128
-struct KEYPAD {
-  Bit8u  scan_code[8];
-  Bit8u  keypad_packet[8];
 };
 
 enum usbdev_type {
@@ -206,101 +184,6 @@ protected:
     int setup_index;
   } d;
 };
-
-// set it to 1 (align on byte) and save so we can pop it
-#pragma pack(push, 1)
-struct USB_DEVICE {
-  int     dev_type;       // our device type
-  bx_bool connect_status; // is device connected
-  Bit8u   address;        // 7 bit address
-  Bit8u   config;         // which configuration to use
-  Bit8u   Interface;      // which interface to use
-  Bit8u   alt_interface;  // which alt interface to use
-  Bit8u   endpt;          // which endpt to use
-  unsigned state;         // the state the device is in.  DEFAULT, ADDRESS, or CONFIGURED
-  bx_bool low_speed;      // 1 = ls 
-  Bit32u  scratch;        // 32-bit scratch area
-  bx_bool in_stall;       // is this device in a stall state?
-  Bit8u   stall_once;     // some devices stall on the first setup packet after powerup
-  struct {
-    Bit8u   direction;
-    Bit8u   *in;
-    Bit8u   *out;
-    Bit16u  in_cnt;
-    Bit16u  out_cnt;
-    unsigned configs; ///// this is the same as configs below??????
-    struct {
-      Bit8u  len;
-      Bit8u  type;
-      Bit16u usb_ver;
-      Bit8u  _class;
-      Bit8u  subclass;
-      Bit8u  protocol;
-      Bit8u  max_packet_size;
-      Bit16u vendorid;
-      Bit16u productid;
-      Bit16u device_rel;
-      Bit8u  manuf_indx;
-      Bit8u  prod_indx;
-      Bit8u  serial_indx;
-      Bit8u  configs;
-    } device_descr;
-    struct {
-      Bit8u  len;
-      Bit8u  type;
-      Bit16u tot_len;
-      Bit8u  interfaces;
-      Bit8u  config_val;
-      Bit8u  config_indx;
-      Bit8u  attrbs;
-      Bit8u  max_power;
-      struct {
-        Bit8u  size;
-        Bit8u  type;
-        Bit8u  interface_num;
-        Bit8u  alternate;
-        Bit8u  num_endpts;
-        Bit8u  iclass;
-        Bit8u  subclass;
-        Bit8u  protocol;
-        Bit8u  str_indx;
-        struct {
-          Bit8u  size;
-          Bit8u  type;
-          Bit8u  endpt;
-          Bit8u  attrib;
-          Bit16u max_size;
-          Bit8u  interval;
-        } endpts[4];
-        struct {
-          Bit8u  size;
-          Bit8u  type;
-          Bit16u HID_class;
-          Bit8u  country_code;
-          Bit8u  num_descriptors;
-          struct {
-            Bit8u  type;
-            Bit16u len;
-            Bit8u  dev_hid_descript_report[128];
-          } descriptor[16];
-        } dev_hid_descript;
-        int lookup_cnt;
-        struct KEYPAD lookup[KEYPAD_LEN];
-      } Interface[4];
-    } device_config[4];
-    struct {
-      Bit8u  size;
-      Bit8u  type;
-      Bit16u langid[3];
-    } str_descriptor;
-    struct {
-      Bit8u  size;
-      Bit8u  type;
-      Bit8u  unicode_str[64];
-    } string[6];
-  } function;     // currently, we only support 1 function
-};
-#pragma pack(pop)
 
 typedef struct {
   Bit32u base_ioaddr;
@@ -430,8 +313,6 @@ typedef struct {
   Bit8u pci_conf[256];
   Bit8u devfunc;
 
-  struct USB_DEVICE device[USB_CUR_DEVS];  // two ports per hub, 127 devices per port (max)
-
   int statusbar_id[2]; // IDs of the status LEDs
 
 } bx_usb_t;
@@ -481,17 +362,11 @@ private:
   bx_usb_t hub[BX_USB_CONFDEV];
   Bit8u    global_reset;
 
-  Bit8u    saved_key[8];
-  Bit8u    key_pad_packet[8];
-
   static void set_irq_level(bx_bool level);
   Bit8u  *device_buffer;
 
-  unsigned set_address_stk;
-  Bit8u    set_address[128];
-
-  bx_bool  keyboard_connected;
   usb_hid_device_t *mousedev;
+  usb_hid_device_t *keybdev;
 
   USBPacket usb_packet;
 
@@ -501,7 +376,6 @@ private:
   static void usb_timer_handler(void *);
   void usb_timer(void);
   bx_bool DoTransfer(Bit32u address, Bit32u queue_num, struct TD *);
-  unsigned GetDescriptor(struct USB_DEVICE *, struct REQUEST_PACKET *);
   void set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
     bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len);
 

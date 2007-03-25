@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.2 2007-03-24 11:43:41 vruppert Exp $
+// $Id: usb_hid.cc,v 1.3 2007-03-25 17:37:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -26,8 +26,10 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+#include "pciusb.h"
 #include "usb_hid.h"
 
 #define LOG_THIS
@@ -36,8 +38,15 @@
 #define GET_REPORT   0xa101
 #define GET_IDLE     0xa102
 #define GET_PROTOCOL 0xa103
+#define SET_REPORT   0x2109
 #define SET_IDLE     0x210a
 #define SET_PROTOCOL 0x210b
+
+#define KEYPAD_LEN   128
+struct KEYPAD {
+  Bit8u  scan_code[8];
+  Bit8u  keypad_packet[8];
+};
 
 static const Bit8u bx_mouse_dev_descriptor[] = {
   0x12,       /*  u8 bLength; */
@@ -114,6 +123,16 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
 };
 
+static const Bit8u bx_mouse_hid_report_descriptor[] = {
+  0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 
+  0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
+  0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 
+  0x81, 0x02, 0x95, 0x01, 0x75, 0x05, 0x81, 0x01,
+  0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x15, 0x81, 
+  0x25, 0x7F, 0x75, 0x08, 0x95, 0x02, 0x81, 0x06,
+  0xC0, 0xC0,
+};
+
 static const Bit8u bx_tablet_config_descriptor[] = {
   /* one configuration */
   0x09,       /*  u8  bLength; */
@@ -128,17 +147,6 @@ static const Bit8u bx_tablet_config_descriptor[] = {
 			     5: Remote wakeup,
 			     4..0: resvd */
   50,         /*  u8  MaxPower; */
-
-  /* USB 1.1:
-   * USB 2.0, single TT organization (mandatory):
-   *   one interface, protocol 0
-   *
-   * USB 2.0, multiple TT organization (optional):
-   *   two interfaces, protocols 1 (like single TT)
-   *   and 2 (multiple TT mode) ... config is
-   *   sometimes settable
-   *   NOT IMPLEMENTED
-   */
 
   /* one interface */
   0x09,       /*  u8  if_bLength; */
@@ -167,16 +175,6 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x03,       /*  u8  ep_bmAttributes; Interrupt */
   0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
   0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
-};
-
-static const Bit8u bx_mouse_hid_report_descriptor[] = {
-  0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 
-  0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
-  0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 
-  0x81, 0x02, 0x95, 0x01, 0x75, 0x05, 0x81, 0x01,
-  0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x15, 0x81, 
-  0x25, 0x7F, 0x75, 0x08, 0x95, 0x02, 0x81, 0x06,
-  0xC0, 0xC0,
 };
 
 static const Bit8u bx_tablet_hid_report_descriptor[] = {
@@ -219,14 +217,150 @@ static const Bit8u bx_tablet_hid_report_descriptor[] = {
   0xC0,       /* End Collection */
 };
 
+static const Bit8u bx_keypad_dev_descriptor[] = {
+  0x12,       /*  u8 bLength; */
+  0x01,       /*  u8 bDescriptorType; Device */
+  0x10, 0x01, /*  u16 bcdUSB; v1.1 */
+
+  0x00,       /*  u8  bDeviceClass; */
+  0x00,       /*  u8  bDeviceSubClass; */
+  0x00,       /*  u8  bDeviceProtocol; [ low/full speeds only ] */
+  0x08,       /*  u8  bMaxPacketSize0; 8 Bytes */
+
+  0xB4, 0x04, /*  u16 idVendor; */
+  0x01, 0x01, /*  u16 idProduct; */
+  0x01, 0x00, /*  u16 bcdDevice */
+
+  0x03,       /*  u8  iManufacturer; */
+  0x02,       /*  u8  iProduct; */
+  0x01,       /*  u8  iSerialNumber; */
+  0x01        /*  u8  bNumConfigurations; */
+};
+
+static const Bit8u bx_keypad_config_descriptor[] = {
+  /* one configuration */
+  0x09,       /*  u8  bLength; */
+  0x02,       /*  u8  bDescriptorType; Configuration */
+  0x3B, 0x00, /*  u16 wTotalLength; */
+  0x02,       /*  u8  bNumInterfaces; (2) */
+  0x01,       /*  u8  bConfigurationValue; */
+  0x04,       /*  u8  iConfiguration; */
+  0xa0,       /*  u8  bmAttributes; 
+			 Bit 7: must be set,
+			     6: Self-powered,
+			     5: Remote wakeup,
+			     4..0: resvd */
+  50,         /*  u8  MaxPower; */
+
+  /* interface #1 of 2 */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x00,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x01,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x05,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  65, 0,       /*  u16 len */
+
+  /* one endpoint (status change endpoint) */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x81,       /*  u8  ep_bEndpointAddress; IN Endpoint 1 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+
+  /* interface #2 of 2 */
+  0x09,       /*  u8  if_bLength; */
+  0x04,       /*  u8  if_bDescriptorType; Interface */
+  0x01,       /*  u8  if_bInterfaceNumber; */
+  0x00,       /*  u8  if_bAlternateSetting; */
+  0x01,       /*  u8  if_bNumEndpoints; */
+  0x03,       /*  u8  if_bInterfaceClass; */
+  0x01,       /*  u8  if_bInterfaceSubClass; */
+  0x02,       /*  u8  if_bInterfaceProtocol; [usb1.1 or single tt] */
+  0x06,       /*  u8  if_iInterface; */
+
+  /* HID descriptor */
+  0x09,        /*  u8  bLength; */
+  0x21,        /*  u8 bDescriptorType; */
+  0x00, 0x01,  /*  u16 HID_class */
+  0x00,        /*  u8 country_code */
+  0x01,        /*  u8 num_descriptors */
+  0x22,        /*  u8 type; Report */
+  50, 0,       /*  u16 len */
+
+  /* one endpoint (status change endpoint) */
+  0x07,       /*  u8  ep_bLength; */
+  0x05,       /*  u8  ep_bDescriptorType; Endpoint */
+  0x82,       /*  u8  ep_bEndpointAddress; IN Endpoint 2 */
+  0x03,       /*  u8  ep_bmAttributes; Interrupt */
+  0x08, 0x00, /*  u16 ep_wMaxPacketSize; */
+  0x0a,       /*  u8  ep_bInterval; (255ms -- usb 2.0 spec) */
+};
+
+static const Bit8u bx_keypad_hid_report_descriptor1[] = {
+  0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x05, 0x07,
+  0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01,
+  0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01,
+  0x75, 0x08, 0x81, 0x01, 0x95, 0x03, 0x75, 0x01,
+  0x05, 0x08, 0x19, 0x01, 0x29, 0x03, 0x91, 0x02,
+  0x95, 0x05, 0x75, 0x01, 0x91, 0x01, 0x95, 0x06,
+  0x75, 0x08, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x05,
+  0x07, 0x19, 0x00, 0x2A, 0xFF, 0x00, 0x81, 0x00,
+  0xC0
+};
+
+static const Bit8u bx_keypad_hid_report_descriptor2[] = {
+  0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, 0x01,
+  0x19, 0x00, 0x2A, 0x3C, 0x02, 0x15, 0x00, 0x26,
+  0x3C, 0x02, 0x95, 0x01, 0x75, 0x10, 0x81, 0x00,
+  0xC0, 0x05, 0x01, 0x09, 0x80, 0xA1, 0x01, 0x85,
+  0x02, 0x19, 0x81, 0x29, 0x83, 0x25, 0x01, 0x75,
+  0x01, 0x95, 0x03, 0x81, 0x02, 0x95, 0x05, 0x81,
+  0x01, 0xC0
+};
+
+// this interface has a key conversion table of len = 18
+struct KEYPAD keypad_lookup[KEYPAD_LEN] = {
+  { { 0x6C,       }, { 0x00, 0x00, 0x5F, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 7
+  { { 0x6B,       }, { 0x00, 0x00, 0x5C, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 4
+  { { 0x69,       }, { 0x00, 0x00, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 1
+  { { 0x70,       }, { 0x00, 0x00, 0x62, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 0
+  { { 0xE0, 0x4A, }, { 0x00, 0x00, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // /
+  { { 0x75,       }, { 0x00, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 8
+  { { 0x73,       }, { 0x00, 0x00, 0x5D, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 5
+  { { 0x72,       }, { 0x00, 0x00, 0x5A, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 2
+  { { 0x7C,       }, { 0x00, 0x00, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // *
+  { { 0x7D,       }, { 0x00, 0x00, 0x61, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 9
+  { { 0x74,       }, { 0x00, 0x00, 0x5E, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 6
+  { { 0x7A,       }, { 0x00, 0x00, 0x5B, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // 3
+  { { 0x71,       }, { 0x00, 0x00, 0x63, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // -
+  { { 0x7B,       }, { 0x00, 0x00, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // +
+  { { 0x79,       }, { 0x00, 0x00, 0x57, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // .
+  { { 0xE0, 0x5A  }, { 0x00, 0x00, 0x58, 0x00, 0x00, 0x00, 0x00, 0x00 } },  // Enter
+};
+
 usb_hid_device_t::usb_hid_device_t(usbdev_type type)
 {
   d.type = type;
-  d.speed = USB_SPEED_FULL;
+  d.speed = USB_SPEED_LOW;
   if (d.type == USB_DEV_TYPE_MOUSE) {
-    strcpy(d.devname, "BOCHS USB Mouse");
+    strcpy(d.devname, "USB Mouse");
   } else if (d.type == USB_DEV_TYPE_TABLET) {
-    strcpy(d.devname, "BOCHS USB Tablet");
+    strcpy(d.devname, "USB Tablet");
+  } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+    strcpy(d.devname, "USB/PS2 Keypad");
   }
   d.connected = 1;
   memset((void*)&s, 0, sizeof(s));
@@ -284,6 +418,10 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_mouse_dev_descriptor, 
                    sizeof(bx_mouse_dev_descriptor));
             ret = sizeof(bx_mouse_dev_descriptor);
+          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+            memcpy(data, bx_keypad_dev_descriptor, 
+                   sizeof(bx_keypad_dev_descriptor));
+            ret = sizeof(bx_keypad_dev_descriptor);
 	  } else {
             goto fail;
           }
@@ -291,15 +429,19 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
         case USB_DT_CONFIG:
           if (d.type == USB_DEV_TYPE_MOUSE) {
             memcpy(data, bx_mouse_config_descriptor, 
-	           sizeof(bx_mouse_config_descriptor));
+                   sizeof(bx_mouse_config_descriptor));
             ret = sizeof(bx_mouse_config_descriptor);
           } else if (d.type == USB_DEV_TYPE_TABLET) {
             memcpy(data, bx_tablet_config_descriptor, 
-	           sizeof(bx_tablet_config_descriptor));
+                   sizeof(bx_tablet_config_descriptor));
             ret = sizeof(bx_tablet_config_descriptor);
-	  } else {
+          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+            memcpy(data, bx_keypad_config_descriptor, 
+                   sizeof(bx_keypad_config_descriptor));
+            ret = sizeof(bx_keypad_config_descriptor);
+          } else {
             goto fail;
-	  }		
+          }		
           break;
         case USB_DT_STRING:
           switch(value & 0xff) {
@@ -334,10 +476,12 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
               ret = set_usb_string(data, "Endpoint1 Interrupt Pipe");
               break;
             default:
+              BX_ERROR(("USB HID handle_control: unknown descriptor 0x%02x", value & 0xff));
               goto fail;
           }
           break;
         default:
+          BX_ERROR(("USB HID handle_control: unknown descriptor 0x%02x", value & 0xff));
           goto fail;
       }
       break;
@@ -367,11 +511,22 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
             memcpy(data, bx_tablet_hid_report_descriptor, 
                    sizeof(bx_tablet_hid_report_descriptor));
             ret = sizeof(bx_tablet_hid_report_descriptor);
+          } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+            if (index == 0) {
+              memcpy(data, bx_keypad_hid_report_descriptor1, 
+                     sizeof(bx_keypad_hid_report_descriptor1));
+              ret = sizeof(bx_keypad_hid_report_descriptor1);
+            } else {
+              memcpy(data, bx_keypad_hid_report_descriptor2, 
+                     sizeof(bx_keypad_hid_report_descriptor2));
+              ret = sizeof(bx_keypad_hid_report_descriptor2);
+            }
           } else {
             goto fail;
-	  }
-	  break;
+          }
+          break;
         default:
+          BX_ERROR(("USB HID handle_control: unknown HID descriptor 0x%02x", value & 0xff));
           goto fail;
         }
         break;
@@ -379,15 +534,26 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
       if ((d.type == USB_DEV_TYPE_MOUSE) ||
           (d.type == USB_DEV_TYPE_TABLET)) {
         ret = mouse_poll(data, length);
+      } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+        ret = keypad_poll(data, length);
+      } else {
+        goto fail;
+      }
+      break;
+    case SET_REPORT:
+      if ((d.type == USB_DEV_TYPE_KEYPAD) && (value = 0x200)) {
+        BX_INFO(("keypad NUMLOCK %s", (data[0] & 0x01) ? "on" : "off"));
+        ret = 0;
       } else {
         goto fail;
       }
       break;
     case SET_IDLE:
+    case SET_PROTOCOL:
       ret = 0;
       break;
     default:
-      BX_ERROR(("USB HID handle_control: unknown request"));
+      BX_ERROR(("USB HID handle_control: unknown request 0x%04x", request));
     fail:
       ret = USB_RET_STALL;
       break;
@@ -405,6 +571,14 @@ int usb_hid_device_t::handle_data(USBPacket *p)
         if ((d.type == USB_DEV_TYPE_MOUSE) ||
             (d.type == USB_DEV_TYPE_TABLET)) {
           ret = mouse_poll(p->data, p->len);
+        } else if (d.type == USB_DEV_TYPE_KEYPAD) {
+          ret = keypad_poll(p->data, p->len);
+        } else {
+          goto fail;
+        }
+      } else if (p->devep == 2) {
+        if (d.type == USB_DEV_TYPE_KEYPAD) {
+          ret = mouse_poll(p->data, p->len);
         } else {
           goto fail;
         }
@@ -413,6 +587,7 @@ int usb_hid_device_t::handle_data(USBPacket *p)
       }
       break;
     case USB_TOKEN_OUT:
+      BX_ERROR(("USB HID handle_data: unexpected pid TOKEN_OUT"));
     default:
     fail:
       ret = USB_RET_STALL;
@@ -425,7 +600,8 @@ int usb_hid_device_t::mouse_poll(Bit8u *buf, int len)
 {
   int l = 0;
 
-  if (d.type == USB_DEV_TYPE_MOUSE) {
+  if ((d.type == USB_DEV_TYPE_MOUSE) ||
+      (d.type == USB_DEV_TYPE_KEYPAD)) {
     if (!s.mouse_x && !s.mouse_y) {
       // if there's no new movement, handle delayed one
       mouse_enq(0, 0, s.mouse_z, s.b_state);
@@ -506,6 +682,68 @@ void usb_hid_device_t::mouse_enq(int delta_x, int delta_y, int delta_z, unsigned
   }
   s.mouse_z = (Bit8s) delta_z;
   s.b_state = (Bit8u) button_state;
+}
+
+int usb_hid_device_t::keypad_poll(Bit8u *buf, int len)
+{
+  int l = 0;
+
+  if (d.type == USB_DEV_TYPE_KEYPAD) {
+    memcpy(buf, s.key_pad_packet, len);
+    l = 8;
+  }
+  return l;
+}
+
+bx_bool usb_hid_device_t::key_enq(Bit8u *scan_code)
+{
+  bx_bool is_break_code = 0;
+  Bit8u our_scan_code[8];
+
+  memset(our_scan_code, 0, 8);
+  int os = 0;
+  for (int sc=0; sc<8; sc++) {
+    if ((scan_code[sc] == 0xF0) && ((sc == 0) || ((sc == 1) && (scan_code[0] == 0xE0)))) {
+      is_break_code = 1;
+    } else {
+      if (!(our_scan_code[os++] = scan_code[sc])) break;
+    }
+  }
+
+  // if it is the break code of the saved key, then clear our packet key.
+  if (is_break_code && !memcmp(s.saved_key, our_scan_code, 8)) {
+    memset(s.saved_key, 0, 8);
+    memset(s.key_pad_packet, 0, 8);
+    return 1; // tell the keyboard handler that we used it, and to return with out processing key
+  }
+
+  bx_bool fnd = 0;
+  for (int m = 0; m < 18; m++) {
+    if (!memcmp(keypad_lookup[m].scan_code, our_scan_code, 8)) {
+      memcpy(s.key_pad_packet, keypad_lookup[m].keypad_packet, 8);
+      fnd = 1;
+      break;
+    }
+  }
+  
+  if (!fnd) {
+    memset(s.key_pad_packet, 0, 8);
+    memset(s.saved_key, 0, 8);
+  } else {
+    memcpy(s.saved_key, our_scan_code, 8);
+    // print a debug line to the log file
+    char bx_debug_code[128] = "";
+    char value[8];
+    for (unsigned i=0; i<strlen((char *) our_scan_code); i++) {
+      sprintf(value, "0x%02x", our_scan_code[i]);
+      if (i) strcat(bx_debug_code, "  ");
+      strcat(bx_debug_code, value);
+    }
+    BX_DEBUG(("Re-routing scan code (%s) to USB keypad", bx_debug_code));
+  }
+
+  // tell the keyboard handler whether we used it or not.  (0 = no, 1 = yes and keyboard.cc ignores keystoke)
+  return fnd;
 }
 
 #endif // BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB

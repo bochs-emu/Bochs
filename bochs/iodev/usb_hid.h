@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.h,v 1.2 2007-03-24 11:43:41 vruppert Exp $
+// $Id: usb_hid.h,v 1.3 2007-03-25 17:37:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -33,8 +33,10 @@ public:
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
+  bx_bool key_enq(Bit8u *scan_code);
 protected:
   int mouse_poll(Bit8u *buf, int len);
+  int keypad_poll(Bit8u *buf, int len);
 
 private:
   struct {
@@ -45,6 +47,8 @@ private:
     Bit16s mouse_y;
     Bit8s mouse_z;
     Bit8u b_state;
+    Bit8u saved_key[8];
+    Bit8u key_pad_packet[8];
   } s;
 };
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.2 2007-03-24 11:43:41 vruppert Exp $
+// $Id: usb_msd.cc,v 1.3 2007-03-25 17:37:59 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -26,8 +26,10 @@
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
+#define NO_DEVICE_INCLUDES
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_PCIUSB
+#include "pciusb.h"
 #include "hdimage.h"
 #include "scsi_device.h"
 #include "usb_msd.h"
@@ -226,6 +228,7 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
               ret = set_usb_string(data, "1");
               break;
             default:
+              BX_ERROR(("USB MSD handle_control: unknown descriptor 0x%02x", value & 0xff));
               goto fail;
           }
           break;
@@ -272,7 +275,7 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
       ret = 1;
       break;
     default:
-      BX_ERROR(("USB MSD handle_control: unknown request"));
+      BX_ERROR(("USB MSD handle_control: unknown request 0x%04x", request));
     fail:
       ret = USB_RET_STALL;
       break;
