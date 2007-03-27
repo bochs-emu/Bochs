@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.25 2007-03-25 17:37:59 vruppert Exp $
+// $Id: pciusb.h,v 1.26 2007-03-27 17:47:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -25,7 +25,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 // Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
-// USB mass storage device support and SCSI emulation layer ported from Qemu
 
 #ifndef BX_IODEV_PCIUSB_H
 #define BX_IODEV_PCIUSB_H
@@ -126,15 +125,6 @@ struct USBPacket {
   Bit8u devep;
   Bit8u *data;
   int len;
-};
-
-// setup packets
-struct REQUEST_PACKET {
-  Bit8u  request_type;
-  Bit8u  request;
-  Bit16u value;
-  Bit16u index;
-  Bit16u length;
 };
 
 enum usbdev_type {
@@ -294,7 +284,6 @@ typedef struct {
   //  Can only write in WORD sizes (Read in byte sizes???)
   struct {
     // our data
-    int     device_num;     // device number on this hub
     usb_device_t *device;   // device connected to this port
 
     // bit reps of actual port

@@ -21,10 +21,19 @@ Changes after 2.3 release:
     to enable Intel Core Duo 2 new instructions use --enable-sse3e
 
 - I/O devices (Volker)
-  - initial support for the PIIX4 ACPI controller
-  - hard disk emulation now supports ATA-6 (LBA48 addressing, UDMA modes)
-  - VMWare version 4 disk image support added (patch by Sharvil Nanavati)
-  - experimental USB device change support added
+  - Floppy
+    - partial non-DMA mode support (patch by John Comeau)
+  - Hard drive / cdrom
+    - hard disk emulation now supports ATA-6 (LBA48 addressing, UDMA modes)
+    - VMWare version 4 disk image support added (patch by Sharvil Nanavati)
+  - PCI
+    - initial support for the PIIX4 ACPI controller
+  - Serial
+    - added support for 3-button mouse with Mousesystems protocol
+  - USB
+    - experimental USB device change support added
+    - rewrite of the existing USB devices code
+    - new USB devices 'disk' and 'tablet' (ported from the Qemu project)
 
 - Bochs internal debugger
   - fixed broken debugger "rc file" option (execute debugger command from file)

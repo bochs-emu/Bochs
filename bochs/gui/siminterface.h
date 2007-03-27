@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.207 2007-03-18 17:52:15 vruppert Exp $
+// $Id: siminterface.h,v 1.208 2007-03-27 17:47:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -995,9 +995,6 @@ enum {
   BX_MOUSE_TYPE_IMPS2,
 #if BX_SUPPORT_BUSMOUSE
   BX_MOUSE_TYPE_BUS,
-#endif
-#if BX_SUPPORT_PCIUSB
-  BX_MOUSE_TYPE_USB,
 #endif
   BX_MOUSE_TYPE_SERIAL,
   BX_MOUSE_TYPE_SERIAL_WHEEL,

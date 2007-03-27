@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.116 2007-03-18 22:27:37 sshwarts Exp $
+// $Id: config.cc,v 1.117 2007-03-27 17:47:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -805,9 +805,6 @@ void bx_init_options()
 #if BX_SUPPORT_BUSMOUSE
     "bus",
 #endif
-#if BX_SUPPORT_PCIUSB
-    "usb",
-#endif
     "serial",
     "serial_wheel",
     "serial_msys",
@@ -818,9 +815,6 @@ void bx_init_options()
       "The mouse type can be one of these: 'none', 'ps2', 'imps2', 'serial', 'serial_wheel'"
 #if BX_SUPPORT_BUSMOUSE
       ", 'bus'"
-#endif
-#if BX_SUPPORT_PCIUSB
-      ", 'usb'"
 #endif
       ,
       mouse_type_list,

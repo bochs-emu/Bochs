@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.222 2006-12-28 17:06:37 vruppert Exp $
+$Id: user.dbk,v 1.223 2007-03-27 17:47:14 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -426,7 +426,7 @@ currently work with.
   <row>
     <entry>Hard disk</entry>
     <entry>Yes</entry>
-    <entry>Emulates ATA-2/IDE hard drives via image files.  Physical
+    <entry>Emulates ATA-6/IDE hard drives via image files.  Physical
     hard disk access is supported on some architecture, but NOT recommended, primarily for safety reasons.
     Hard disk up to 127GB are supported, on any platform that support large files access.
     </entry>
@@ -513,9 +513,9 @@ currently work with.
   <row>
     <entry>USB</entry>
     <entry>incomplete</entry>
-    <entry>The USB root hub is available, USB mouse and keypad are implemented,
-    other devices are under construction. Access to real hardware and runtime
-    options to plug in or remove devices are not implemented yet.
+    <entry>The USB root hub and the devices 'mouse', 'tablet', 'keypad' and
+    'disk' are available. Plug in or removing devices at runtime is possible,
+    but still experimental. Access to real hardware is not implemented yet.
     </entry>
   </row>
   <row>
@@ -2317,7 +2317,8 @@ turn it off.
       <entry>--enable-usb</entry>
       <entry>no</entry>
       <entry>
-        Enable limited i440FX PCI USB support. This is not yet complete.
+        Enable limited i440FX PCI USB support. This is not yet complete (root hub
+        and 4 device types are available).
       </entry>
     </row>
     <row>
@@ -3275,7 +3276,7 @@ This defines the type and characteristics of all attached ata devices:
 <row> 
   <entry> mode  </entry> 
   <entry> image type, only valid for disks </entry> 
-  <entry> [flat | concat | external | dll | sparse | vmware3 | undoable | growing | volatile ]</entry> 
+  <entry> [flat | concat | external | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile ]</entry> 
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -3356,7 +3357,10 @@ dll : developer's specific, through a DLL
 sparse : stackable, commitable, rollbackable
 </para></listitem>
 <listitem><para>
-vmware3 : vmware3 disk support
+vmware3 : vmware version 3 disk support
+</para></listitem>
+<listitem><para>
+vmware4 : vmware version 4 disk support
 </para></listitem>
 <listitem><para>
 undoable : flat file with commitable redolog
@@ -3874,11 +3878,10 @@ mouse usage at runtime (see <link linkend="headerbar">headerbar</link>).
 <para>
   With the mouse type option you can select the type of mouse to emulate.
   The default value is 'ps2'. The other choices are 'imps2' (wheel mouse
-  on PS/2), 'serial', 'serial_wheel' (one com port requires setting
-  'mode=mouse', see <link linkend="bochsopt-com">com option</link>) and
-  'usb' (3-button mouse - one of the USB ports must be connected with the
-  'mouse' device, see <link linkend="bochsopt-usb1">usb1 option</link> -
-  requires PCI and USB support).
+  on PS/2), 'serial', 'serial_wheel' and 'serial_msys' (one com port requires
+  setting 'mode=mouse', see <link linkend="bochsopt-com">com option</link>).
+  To connect a mouse to an USB port, see the <link linkend="bochsopt-usb1">usb1 option</link>
+  (requires PCI and USB support).
 </para>
 </section>
 
@@ -3937,18 +3940,23 @@ located in the <constant>bochs/host/linux/pcidev/</constant> directory.
 
 <section id="bochsopt-usb1"><title>usb1</title>
 <para>
-Example:
+Examples:
 <screen>
   usb1: enabled=1, port1=mouse, port2=keypad
+  usb1: enabled=1, port1=tablet, port2=disk:usbdisk.img
 </screen>
 This option controls the presence of the USB root hub which is a part of the
 i440FX PCI chipset.
 </para>
 <para>
 With the port<replaceable>X</replaceable> option you can connect devices
-to the hub (currently supported: 'mouse' and 'keypad'). If you connect
-the mouse to one of the ports and use the <link linkend="bochsopt-mouse">mouse option</link>
-'type=usb' you'll have a 3-button USB mouse.
+to the hub (currently supported: 'mouse', 'tablet', 'keypad' and 'disk').
+If you connect the mouse or tablet to one of the ports, Bochs forwards the
+mouse movement data to the USB device instead of the selected mouse type.
+When connecting the keypad to one of the ports, Bochs forwards the input of
+the numeric keypad to the USB device instead of the PS/2 keyboard.
+To connect a flat image as an USB hardisk you can use the 'disk' device with
+the path to the image separated with a colon (see above).
 </para>
 <note><para>
 PCI support must be enabled.
@@ -7202,7 +7210,12 @@ If unspecified, the default "mode" is flat.
  </row>
  <row> <entry> vmware3 </entry> <entry> vmware3 disk support </entry> 
        <entry> 
-       vmware3 compatibility
+       vmware version 3 compatibility
+       </entry>
+ </row>
+ <row> <entry> vmware4 </entry> <entry> vmware4 disk support </entry> 
+       <entry> 
+       vmware version 4 compatibility
        </entry>
  </row>
  <row> <entry> undoable </entry> <entry> flat file with a commitable redolog </entry> 
@@ -7489,40 +7502,40 @@ No external tool support Sparse disk images yet.
 </section>
 </section>
 
-<section><title>vmware3</title>
+<section><title>vmware3/vmware4</title>
 <para>
 </para>
 <section><title>description</title>
 <para>
-Sharvil Nanavati has added vmware3 disk image support into Bochs
+Sharvil Nanavati has added vmware3/4 disk image support into Bochs
 for Net Integration Technologies, Inc. 
-You should be able to use disk images created by vmware3.
+You should be able to use disk images created by vmware version 3 and 4.
 </para>
 </section>
 <section><title>image creation</title>
 <para>
-Create such disk image with vmware3.
+Create such disk image with vmware version 3 or 4.
 </para>
 </section>
 <section><title>path</title>
 <para>
 The "path" option of the ataX-xxx directive in the configuration file
-must point to the vmware3 disk image.
+must point to the vmware3/4 disk image.
 </para>
 </section>
 <section><title>external tools</title>
 <para>
-&FIXME; give a look at vmware3 tools : disk image creation, etc.
+&FIXME; give a look at vmware3/4 tools : disk image creation, etc.
 </para>
 </section>
 <section><title>typical use</title>
 <para>
-If you want to use an existing vmware3 disk image.
+If you want to use an existing vmware3/4 disk image.
 </para>
 </section>
 <section><title>limitations</title>
 <para>
-Only vmware version 3 disk image files are supported.
+Only vmware versions 3 and 4 disk image files are supported.
 </para>
 </section>
 </section>

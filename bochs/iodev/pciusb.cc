@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.54 2007-03-25 17:37:59 vruppert Exp $
+// $Id: pciusb.cc,v 1.55 2007-03-27 17:47:15 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -26,7 +26,6 @@
 
 // Experimental PCI USB adapter
 // Benjamin D Lunt (fys at frontiernet net) coded most of this usb emulation.
-// USB mass storage device support and SCSI emulation layer ported from Qemu
 
 /* Notes:
    - I have coded this to be able to use more than one HUB and each
@@ -261,7 +260,6 @@ void bx_pciusb_c::reset(unsigned type)
       BX_USB_THIS hub[i].usb_port[j].enabled = 0;
       BX_USB_THIS hub[i].usb_port[j].able_changed = 0;
       BX_USB_THIS hub[i].usb_port[j].status = 0;
-      BX_USB_THIS hub[i].usb_port[j].device_num = -1;
       if (BX_USB_THIS hub[i].usb_port[j].device != NULL) {
         delete BX_USB_THIS hub[i].usb_port[j].device;
         BX_USB_THIS hub[i].usb_port[j].device = NULL;
