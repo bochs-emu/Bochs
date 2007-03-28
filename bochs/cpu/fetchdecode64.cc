@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.106 2007-03-23 14:35:50 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.107 2007-03-28 21:20:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -357,7 +357,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5w[8] = {
   // attributes defined in main area
   /* 0 */ { BxLockable, &BX_CPU_C::INC_Ew },
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_Ew },
-  /* 2 */ { 0, &BX_CPU_C::CALL_Ew },
+  /* 2 */ { 0, &BX_CPU_C::CALL_Eq },
   /* 3 */ { 0, &BX_CPU_C::CALL16_Ep },
   /* 4 */ { 0, &BX_CPU_C::JMP_Eq },
   /* 5 */ { 0, &BX_CPU_C::JMP16_Ep },

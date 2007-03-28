@@ -1319,6 +1319,17 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG5d[8] = {
   /* 7 */ { 0, &Ia_Invalid  }
 }; 
 
+static BxDisasmOpcodeTable_t BxDisasmGroup64G5w[8] = {
+  /* 0 */ { 0, &Ia_incw_Ew  },
+  /* 1 */ { 0, &Ia_decw_Ew  },
+  /* 2 */ { 0, &Ia_call_Eq  },
+  /* 3 */ { 0, &Ia_lcall_Mp },
+  /* 4 */ { 0, &Ia_jmp_Eq   },
+  /* 5 */ { 0, &Ia_ljmp_Mp  },
+  /* 6 */ { 0, &Ia_pushw_Ew },
+  /* 7 */ { 0, &Ia_Invalid  }
+}; 
+
 static BxDisasmOpcodeTable_t BxDisasmGroup64G5d[8] = {
   /* 0 */ { 0, &Ia_incl_Ed  },
   /* 1 */ { 0, &Ia_decl_Ed  },
@@ -3853,7 +3864,7 @@ static BxDisasmOpcodeTable_t BxDisasmOpcodes64w[256*2] = {
   /* FC */ { 0, &Ia_cld         },
   /* FD */ { 0, &Ia_std         },
   /* FE */ { GRPN(G4)           },
-  /* FF */ { GRPN(G5w)          },
+  /* FF */ { GRPN(64G5w)        },
 
   // 256 entries for two byte opcodes
   /* 0F 00 */ { GRPN(G6)          },
