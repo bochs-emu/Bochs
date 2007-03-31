@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.223 2007-03-27 17:47:14 vruppert Exp $
+$Id: user.dbk,v 1.224 2007-03-31 09:24:03 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -514,8 +514,9 @@ currently work with.
     <entry>USB</entry>
     <entry>incomplete</entry>
     <entry>The USB root hub and the devices 'mouse', 'tablet', 'keypad' and
-    'disk' are available. Plug in or removing devices at runtime is possible,
-    but still experimental. Access to real hardware is not implemented yet.
+    'disk' are available. Plugging in and removing devices at runtime is
+    possible, but still experimental. Access to real hardware is not
+    implemented yet.
     </entry>
   </row>
   <row>

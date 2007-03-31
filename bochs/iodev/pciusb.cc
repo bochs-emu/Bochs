@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.55 2007-03-27 17:47:15 vruppert Exp $
+// $Id: pciusb.cc,v 1.56 2007-03-31 09:24:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -311,7 +311,7 @@ void bx_pciusb_c::register_state(void)
     new bx_shadow_num_c(hub, "sof_timing", &BX_USB_THIS hub[i].usb_sof.sof_timing, BASE_HEX);
     for (j=0; j<USB_NUM_PORTS; j++) {
       sprintf(portnum, "port%d", j+1);
-      port = new bx_list_c(hub, portnum, 10);
+      port = new bx_list_c(hub, portnum, 11);
       new bx_shadow_bool_c(port, "suspend", &BX_USB_THIS hub[i].usb_port[j].suspend);
       new bx_shadow_bool_c(port, "reset", &BX_USB_THIS hub[i].usb_port[j].reset);
       new bx_shadow_bool_c(port, "low_speed", &BX_USB_THIS hub[i].usb_port[j].low_speed);
@@ -322,6 +322,8 @@ void bx_pciusb_c::register_state(void)
       new bx_shadow_bool_c(port, "enabled", &BX_USB_THIS hub[i].usb_port[j].enabled);
       new bx_shadow_bool_c(port, "connect_changed", &BX_USB_THIS hub[i].usb_port[j].connect_changed);
       new bx_shadow_bool_c(port, "status", &BX_USB_THIS hub[i].usb_port[j].status);
+      // empty list for USB device state
+      new bx_list_c(port, "device", 20);
     }
     register_pci_state(hub, BX_USB_THIS hub[i].pci_conf);
   }
@@ -346,6 +348,9 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
   bx_bool connected = 0;
+#if BX_SUPPORT_SAVE_RESTORE
+  char pname[BX_PATHNAME_LEN];
+#endif
 
   if (!strlen(devname) || !strcmp(devname, "none")) return;
 
@@ -378,6 +383,11 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
     BX_PANIC(("unknown USB device: %s", devname));
     return;
   }
+#if BX_SUPPORT_SAVE_RESTORE
+  sprintf(pname, "pciusb.hub1.port%d.device", port+1);
+  bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_sr_root());
+  BX_USB_THIS hub[0].usb_port[port].device->register_state(devlist);
+#endif
   usb_set_connect_status(port, type, connected);
 }
 
@@ -1176,6 +1186,11 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
         if (BX_USB_THIS hub[0].usb_port[port].device != NULL) {
           delete BX_USB_THIS hub[0].usb_port[port].device;
           BX_USB_THIS hub[0].usb_port[port].device = NULL;
+#if BX_SUPPORT_SAVE_RESTORE
+          sprintf(pname, "pciusb.hub1.port%d.device", port+1);
+          bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_sr_root());
+          devlist->clear();
+#endif
         }
       }
     }
@@ -1216,16 +1231,27 @@ void bx_pciusb_c::usb_send_msg(usb_device_t *dev, int msg)
     dev->handle_packet(&p);
 }
 
-// generic USB packet handler
-
-#define SETUP_STATE_IDLE 0
-#define SETUP_STATE_DATA 1
-#define SETUP_STATE_ACK  2
+// base class for USB devices
 
 usb_device_t::usb_device_t(void)
 {
   memset((void*)&d, 0, sizeof(d));
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void usb_device_t::register_state(bx_list_c *parent)
+{
+  new bx_shadow_num_c(parent, "addr", &d.addr);
+  new bx_shadow_num_c(parent, "state", &d.state);
+  new bx_shadow_num_c(parent, "remote_wakeup", &d.remote_wakeup);
+}
+#endif
+
+// generic USB packet handler
+
+#define SETUP_STATE_IDLE 0
+#define SETUP_STATE_DATA 1
+#define SETUP_STATE_ACK  2
 
 int usb_device_t::handle_packet(USBPacket *p)
 {

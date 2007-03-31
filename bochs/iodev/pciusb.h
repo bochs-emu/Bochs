@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.26 2007-03-27 17:47:15 vruppert Exp $
+// $Id: pciusb.h,v 1.27 2007-03-31 09:24:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -150,6 +150,9 @@ public:
   virtual void handle_reset() {}
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data) {return 0;}
   virtual int handle_data(USBPacket *p) {return 0;}
+#if BX_SUPPORT_SAVE_RESTORE
+  virtual void register_state(bx_list_c *parent);
+#endif
 
   bx_bool get_connected() {return d.connected;}
   usbdev_type get_type() {return d.type;}
