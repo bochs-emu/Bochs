@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.56 2007-03-31 09:24:04 vruppert Exp $
+// $Id: pciusb.cc,v 1.57 2007-04-01 11:15:47 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -281,7 +281,7 @@ void bx_pciusb_c::register_state(void)
   char hubnum[8], portnum[8];
   bx_list_c *hub, *usb_cmd, *usb_st, *usb_en, *port;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pciusb", "PCI USB Controller State", BX_USB_CONFDEV + 15);
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pciusb", "PCI USB Controller State", BX_USB_CONFDEV + 2);
   for (i=0; i<BX_USB_CONFDEV; i++) {
     sprintf(hubnum, "hub%d", i+1);
     hub = new bx_list_c(list, hubnum, USB_NUM_PORTS + 7);
@@ -329,7 +329,6 @@ void bx_pciusb_c::register_state(void)
   }
   new bx_shadow_bool_c(list, "busy", &BX_USB_THIS busy);
   new bx_shadow_num_c(list, "global_reset", &BX_USB_THIS global_reset);
-  new bx_shadow_data_c(list, "device_buffer", BX_USB_THIS device_buffer, 65536);
 }
 
 void bx_pciusb_c::after_restore_state(void)
@@ -1241,9 +1240,11 @@ usb_device_t::usb_device_t(void)
 #if BX_SUPPORT_SAVE_RESTORE
 void usb_device_t::register_state(bx_list_c *parent)
 {
-  new bx_shadow_num_c(parent, "addr", &d.addr);
-  new bx_shadow_num_c(parent, "state", &d.state);
-  new bx_shadow_num_c(parent, "remote_wakeup", &d.remote_wakeup);
+  bx_list_c *list = new bx_list_c(parent, "d", "Common USB Device State");
+  new bx_shadow_num_c(list, "addr", &d.addr);
+  new bx_shadow_num_c(list, "state", &d.state);
+  new bx_shadow_num_c(list, "remote_wakeup", &d.remote_wakeup);
+  register_state_specific(parent);
 }
 #endif
 
