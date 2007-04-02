@@ -7,6 +7,7 @@ Changes after 2.3 release:
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
     'cmov' condition was false !
   - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
+  - Fixed PUSHA/POPA instructions behavior in real mode
   - Fixed detecting of inexact result by FPU
   - Several disasm and internal debugger fixes
 
@@ -17,7 +18,7 @@ Changes after 2.3 release:
 - Configure and compile
   - several fixes for MacOSX, OpenBSD and Solaris 10
   - enable save/restore feature by default for all configurations
-  - rename SSE4 option to match Intel(R) Programming Reference Manual
+  - rename SSE4 option to match Intel(R) Programming Reference Manual,
     to enable Intel Core Duo 2 new instructions use --enable-sse3e
 
 - I/O devices (Volker)
@@ -54,6 +55,7 @@ Changes after 2.3 release:
   - PCI BIOS function "find class code" implemented
 
 - SF patches applied
+ [1573297] PUSHA/POPA real mode fix by Stanislav Shwartsman
  [1641816] partial support for non-DMA access to floppy by John Comeau 
  [1624032] shows where write outside of memory occurred by John Comeau
  [1607793] allow fullscreen when app requests it by John Comeau
@@ -63,6 +65,12 @@ Changes after 2.3 release:
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+  [876990] SA-RTL OS fails on PIC configuration
+ [1673582] save/restore didn't restore simulation correctly
+ [1586662] EDD int 13h bug, modify eax
+  [666618] POP_A Panic in DOS EMU
+ [1001485] panic: not enough bytes on stack
+ [1667336] delay times an order of magnitude slow  
  [1665601] crash disassembling bootcode
  [1657065] CVS sources won't compile
  [1653805] bochs's gdbstub uses incorrect protocol
