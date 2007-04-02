@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.177 2007-02-10 17:05:06 vruppert Exp $
+// $Id: rombios.c,v 1.178 2007-04-02 20:35:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.177 $ $Date: 2007-02-10 17:05:06 $";
+static char bios_cvs_version_string[] = "$Revision: 1.178 $ $Date: 2007-04-02 20:35:08 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4798,10 +4798,10 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
       segment = ES;
       offset  = BX;
 
-      if ( (count > 128) || (count == 0) ) {
-        BX_INFO("int13_harddisk: function %02x, count out of range!\n",GET_AH());
+      if ((count > 128) || (count == 0) || (sector == 0)) {
+        BX_INFO("int13_harddisk: function %02x, parameter out of range!\n",GET_AH());
         goto int13_fail;
-        }
+      }
 
       nlc   = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.cylinders);
       nlh   = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.heads);
@@ -6720,9 +6720,9 @@ BX_DEBUG_INT13_FL("floppy f00\n");
       head        = GET_DH();
       drive       = GET_ELDL();
 
-      if ( (drive > 1) || (head > 1) ||
-           (num_sectors == 0) || (num_sectors > 72) ) {
-BX_INFO("floppy: drive>1 || head>1 ...\n");
+      if ((drive > 1) || (head > 1) || (sector == 0) ||
+          (num_sectors == 0) || (num_sectors > 72)) {
+        BX_INFO("int13_diskette: read/write/verify: parameter out of range\n");
         SET_AH(1);
         set_diskette_ret_status(1);
         SET_AL(0); // no sectors read
