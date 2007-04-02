@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.107 2007-03-28 21:20:09 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.108 2007-04-02 10:46:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2620,7 +2620,6 @@ modrm_done:
         if (instruction->os32L()) {
           if ((ilen+3) < remain) {
             instruction->modRMForm.Id = FetchDWORD(iptr);
-            iptr += 4;
             ilen += 4;
           }
           else return(0);
@@ -2628,7 +2627,6 @@ modrm_done:
         else {
           if ((ilen+1) < remain) {
             instruction->modRMForm.Iw = FetchWORD(iptr);
-            iptr += 2;
             ilen += 2;
           }
           else return(0);

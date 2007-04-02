@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.44 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: sse.cc,v 1.45 2007-04-02 10:46:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1418,7 +1418,7 @@ void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
 /* 66 0F E0 */
 void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
+#if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1439,7 +1439,7 @@ void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PAVGB_VdqWdq: required SSE2, use --enable-sse option"));
+  BX_INFO(("PAVGB_VdqWdq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1557,7 +1557,7 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
 /* 66 0F E3 */
 void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_SSE >= 2
+#if BX_SUPPORT_SSE
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
@@ -1583,7 +1583,7 @@ void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
 #else
-  BX_INFO(("PAVGW_VdqWdq: required SSE2, use --enable-sse option"));
+  BX_INFO(("PAVGW_VdqWdq: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
