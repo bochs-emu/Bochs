@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.9 2007-03-23 21:27:13 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.10 2007-04-02 10:46:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -120,7 +120,7 @@ void BX_CPU_C::FCOM_STi(bxInstruction_c *i)
 
 void BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
+#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->b1() & 4;
@@ -154,13 +154,14 @@ void BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
   if (pop_stack)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
-  BX_INFO(("FCOMI(P)_ST0_STj: required FPU, configure --enable-fpu"));
+  BX_INFO(("FCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
+  UndefinedOpcode(i);
 #endif
 }
 
 void BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
 {
-#if BX_SUPPORT_FPU
+#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
   BX_CPU_THIS_PTR prepareFPU(i);
 
   int pop_stack = i->b1() & 4;
@@ -194,7 +195,8 @@ void BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
   if (pop_stack)
       BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
-  BX_INFO(("FUCOMI(P)_ST0_STj: required FPU, configure --enable-fpu"));
+  BX_INFO(("FUCOMI(P)_ST0_STj: required P6 FPU, configure --enable-fpu, cpu-level=6"));
+  UndefinedOpcode(i);
 #endif
 }
 
