@@ -142,7 +142,7 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2dQ[4] = {
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0f2e[4] = {
   /* -- */ { 0, &Ia_ucomiss_Vss_Wss },
-  /* 66 */ { 0, &Ia_ucomisd_Vsd_Wss },
+  /* 66 */ { 0, &Ia_ucomisd_Vsd_Wsd },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
 };
@@ -841,8 +841,8 @@ static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fed[4] = {
 };
 
 static BxDisasmOpcodeTable_t BxDisasmGroupSSE_0fee[4] = {
-  /* -- */ { 0, &Ia_pmaxuw_Pq_Qq   },
-  /* 66 */ { 0, &Ia_pmaxuw_Vdq_Wdq },
+  /* -- */ { 0, &Ia_pmaxsw_Pq_Qq   },
+  /* 66 */ { 0, &Ia_pmaxsw_Vdq_Wdq },
   /* F2 */ { 0, &Ia_Invalid },
   /* F3 */ { 0, &Ia_Invalid }
 };

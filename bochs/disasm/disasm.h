@@ -15,25 +15,27 @@
   base  =  sib_byte & 0x07;        \
 }
 
-// will be used in future
-#define IA_286        0x00000001        /* 286+ instruction */
-#define IA_386        0x00000002        /* 386+ new instruction */
-#define IA_486        0x00000004        /* 486+ new instruction */
-#define IA_PENTIUM    0x00000008        /* Pentium+ mew instruction */
-#define IA_P6         0x00000010        /* P6 new instruction */
-#define IA_SYSTEM     0x00000020        /* system instruction (require CPL=0) */
-#define IA_LEGACY     0x00000040        /* legacy instruction */
-#define IA_X87        0x00000080        /* FPU (X87) instruction */
-#define IA_MMX        0x00000100        /* MMX instruction */
-#define IA_3DNOW      0x00000200        /* 3DNow! instruction */
-#define IA_PREFETCH   0x00000400        /* Prefetch instruction */
-#define IA_SSE        0x00000800        /* SSE  instruction */
-#define IA_SSE2       0x00001000        /* SSE2 instruction */
-#define IA_SSE3       0x00002000        /* SSE3 instruction */
-#define IA_SSE3E      0x00004000        /* SSE3E instruction */
-#define IA_SSE4       0x00008000        /* SSE4 instruction */
-#define IA_X86_64     0x00010000        /* x86-64 instruction */
-#define IA_VMX        0x00020000        /* VMX instruction */
+/* Instruction set attributes */
+#define IA_386              0x00000000        /* 386 instruction */
+#define IA_486              0x00000001        /* 486 new instruction */
+#define IA_PENTIUM          0x00000002        /* Pentium+ mew instruction */
+#define IA_P6               0x00000004        /* P6 new instruction */
+#define IA_LEGACY           0x00000008        /* legacy instruction */
+#define IA_X87              0x00000010        /* FPU (X87) instruction */
+#define IA_MMX              0x00000020        /* MMX instruction */
+#define IA_3DNOW            0x00000040        /* 3DNow! instruction */
+#define IA_3DNOW_EXT        0x00000080        /* 3DNow! extensions */
+#define IA_MONITOR_MWAIT    0x00000100        /* MONITOR/MWAIT instruction */
+#define IA_CLFLUSH          0x00000200        /* CLFLUSH instruction */
+#define IA_SSE              0x00000400        /* SSE  instruction */
+#define IA_SSE2             0x00000800        /* SSE2 instruction */
+#define IA_SSE3             0x00001000        /* SSE3 instruction */
+#define IA_SSE3E            0x00002000        /* SSE3E instruction */
+#define IA_SSE4             0x00004000        /* SSE4 instruction */
+#define IA_X86_64           0x00008000        /* x86-64 instruction */
+#define IA_SYSCALL_SYSRET   0x00010000        /* SYSCALL/SYSRET instruction */
+#define IA_SYSENTER_SYSEXIT 0x00020000        /* SYSENTER/SYSEXIT instruction */
+#define IA_VMX              0x00040000        /* VMX instruction */
 
 /* general purpose bit register */
 enum {
@@ -72,6 +74,7 @@ struct BxDisasmOpcodeInfo_t
     BxDisasmPtr_t Operand1;
     BxDisasmPtr_t Operand2;
     BxDisasmPtr_t Operand3;
+    Bit32u Attr;
 };
 
 struct BxDisasmOpcodeTable_t
