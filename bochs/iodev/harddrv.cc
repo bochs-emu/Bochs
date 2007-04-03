@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.195 2007-02-27 18:16:20 vruppert Exp $
+// $Id: harddrv.cc,v 1.196 2007-04-03 22:38:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.195 2007-02-27 18:16:20 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.196 2007-04-03 22:38:48 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -659,10 +659,10 @@ void bx_hard_drive_c::register_state(void)
   char cname[4], dname[8];
   bx_list_c *chan, *drive, *status;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "hard_drive", "Hard Drive State");
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "hard_drive", "Hard Drive State", BX_MAX_ATA_CHANNEL);
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(cname, "%d", i);
-    chan = new bx_list_c(list, cname);
+    chan = new bx_list_c(list, cname, 2);
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
@@ -730,22 +730,21 @@ void bx_hard_drive_c::iolight_timer()
   }
 }
 
-#define GOTO_RETURN_VALUE  if(io_len==4){\
-                             goto return_value32;\
-                             }\
-                           else if(io_len==2){\
-                             value16=(Bit16u)value32;\
-                             goto return_value16;\
-                             }\
-                           else{\
-                             value8=(Bit8u)value32;\
-                             goto return_value8;\
-                             }
+#define GOTO_RETURN_VALUE  if(io_len==4) {            \
+                             goto return_value32;     \
+                           }                          \
+                           else if(io_len==2) {       \
+                             value16=(Bit16u)value32; \
+                             goto return_value16;     \
+                           }                          \
+                           else {                     \
+                             value8=(Bit8u)value32;   \
+                             goto return_value8;      \
+                           }
                            
 
-  // static IO port read callback handler
-  // redirects to non-static class handler to avoid virtual functions
-
+// static IO port read callback handler
+// redirects to non-static class handler to avoid virtual functions
 Bit32u bx_hard_drive_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_HD_SMF
@@ -3573,3 +3572,4 @@ Bit32u BX_CPP_AttrRegparmN(1) read_32bit(const Bit8u* buf)
 {
   return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 }
+ 

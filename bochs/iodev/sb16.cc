@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.52 2006-09-17 20:39:36 vruppert Exp $
+// $Id: sb16.cc,v 1.53 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -430,7 +430,7 @@ void bx_sb16_c::register_state(void)
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(mixer, name, &MIXER.reg[i], BASE_HEX);
   }
-  bx_list_c *emul = new bx_list_c(list, "emul");
+  bx_list_c *emul = new bx_list_c(list, "emul", 2);
   new bx_shadow_num_c(emul, "remaps", &EMUL.remaps);
   bx_list_c *remap = new bx_list_c(emul, "remaplist", 256);
   for (i=0; i<EMUL.remaps; i++) {

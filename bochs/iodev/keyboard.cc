@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.129 2007-03-21 18:54:41 vruppert Exp $
+// $Id: keyboard.cc,v 1.130 2007-04-03 22:38:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.129 2007-03-21 18:54:41 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.130 2007-04-03 22:38:48 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -333,7 +333,7 @@ void bx_keyb_c::register_state(void)
   BXRS_DEC_PARAM_FIELD(kbdbuf, repeat_rate, BX_KEY_THIS s.kbd_internal_buffer.repeat_rate);
   BXRS_DEC_PARAM_FIELD(kbdbuf, led_status, BX_KEY_THIS s.kbd_internal_buffer.led_status);
   BXRS_PARAM_BOOL(kbdbuf, scanning_enabled, BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled);
-  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
+  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer", 3);
   BXRS_DEC_PARAM_FIELD(mousebuf, num_elements, BX_KEY_THIS s.mouse_internal_buffer.num_elements);
   buffer = new bx_list_c(mousebuf, "buffer", BX_MOUSE_BUFF_SIZE);
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {

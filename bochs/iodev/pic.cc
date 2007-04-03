@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.44 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pic.cc,v 1.45 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -129,7 +129,7 @@ void bx_pic_c::register_state(void)
 {
   bx_list_c *ctrl;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pic", "PIC State");
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pic", "PIC State", 2);
   ctrl = new bx_list_c(list, "master", 17);
   new bx_shadow_num_c(ctrl, "interrupt_offset", &BX_PIC_THIS s.master_pic.interrupt_offset, BASE_HEX);
   new bx_shadow_num_c(ctrl, "auto_eoi", &BX_PIC_THIS s.master_pic.auto_eoi, BASE_HEX);

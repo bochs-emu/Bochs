@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gameport.cc,v 1.12 2006-09-12 13:05:07 vruppert Exp $
+// $Id: gameport.cc,v 1.13 2007-04-03 22:38:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ void bx_gameport_c::reset(unsigned type)
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_gameport_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "gameport", "Gameport State");
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "gameport", "Gameport State", 6);
   BXRS_HEX_PARAM_FIELD(list, port, BX_GAMEPORT_THIS port);
   BXRS_DEC_PARAM_FIELD(list, delay_x, BX_GAMEPORT_THIS delay_x);
   BXRS_DEC_PARAM_FIELD(list, delay_y, BX_GAMEPORT_THIS delay_y);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit.h,v 1.16 2006-09-17 19:19:15 vruppert Exp $
+// $Id: pit.h,v 1.17 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ public:
   BX_PIT_SMF int init(void);
   BX_PIT_SMF void exit(void);
   BX_PIT_SMF void reset( unsigned type);
-  BX_PIT_SMF bx_bool periodic( Bit32u   usec_delta );
+  BX_PIT_SMF bx_bool periodic(Bit32u usec_delta);
 #if BX_SUPPORT_SAVE_RESTORE
   BX_PIT_SMF void register_state(void);
 #endif
@@ -77,8 +77,8 @@ private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_PIT_SMF
-  Bit32u   read( Bit32u   addr, unsigned int len );
-  void write( Bit32u   addr, Bit32u   Value, unsigned int len );
+  Bit32u read(Bit32u   addr, unsigned len);
+  void   write(Bit32u  addr, Bit32u value, unsigned len);
 #endif
 
   struct s_type {
@@ -87,9 +87,9 @@ private:
     bx_bool refresh_clock_div2;
   } s;
 
-  BX_PIT_SMF void  write_count_reg( Bit8u   value, unsigned timerid );
-  BX_PIT_SMF Bit8u read_counter( unsigned timerid );
-  BX_PIT_SMF void  latch( unsigned timerid );
+  BX_PIT_SMF void  write_count_reg(Bit8u value, unsigned timerid);
+  BX_PIT_SMF Bit8u read_counter(unsigned timerid);
+  BX_PIT_SMF void  latch(unsigned timerid);
   BX_PIT_SMF void  set_GATE(unsigned pit_id, unsigned value);
   BX_PIT_SMF void  start(unsigned timerid);
 };

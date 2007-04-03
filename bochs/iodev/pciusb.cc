@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.57 2007-04-01 11:15:47 vruppert Exp $
+// $Id: pciusb.cc,v 1.58 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -294,14 +294,14 @@ void bx_pciusb_c::register_state(void)
     new bx_shadow_bool_c(usb_cmd, "reset", &BX_USB_THIS hub[i].usb_command.reset);
     new bx_shadow_bool_c(usb_cmd, "host_reset", &BX_USB_THIS hub[i].usb_command.host_reset);
     new bx_shadow_bool_c(usb_cmd, "schedule", &BX_USB_THIS hub[i].usb_command.schedule);
-    usb_st = new bx_list_c(hub, "usb_status");
+    usb_st = new bx_list_c(hub, "usb_status", 6);
     new bx_shadow_bool_c(usb_st, "host_halted", &BX_USB_THIS hub[i].usb_status.host_halted);
     new bx_shadow_bool_c(usb_st, "host_error", &BX_USB_THIS hub[i].usb_status.host_error);
     new bx_shadow_bool_c(usb_st, "pci_error", &BX_USB_THIS hub[i].usb_status.pci_error);
     new bx_shadow_bool_c(usb_st, "resume", &BX_USB_THIS hub[i].usb_status.resume);
     new bx_shadow_bool_c(usb_st, "error_interrupt", &BX_USB_THIS hub[i].usb_status.error_interrupt);
     new bx_shadow_bool_c(usb_st, "interrupt", &BX_USB_THIS hub[i].usb_status.interrupt);
-    usb_en = new bx_list_c(hub, "usb_enable");
+    usb_en = new bx_list_c(hub, "usb_enable", 4);
     new bx_shadow_bool_c(usb_en, "short_packet", &BX_USB_THIS hub[i].usb_enable.short_packet);
     new bx_shadow_bool_c(usb_en, "on_complete", &BX_USB_THIS hub[i].usb_enable.on_complete);
     new bx_shadow_bool_c(usb_en, "resume", &BX_USB_THIS hub[i].usb_enable.resume);

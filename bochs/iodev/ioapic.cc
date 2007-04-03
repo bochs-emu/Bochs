@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.33 2006-10-02 15:08:21 vruppert Exp $
+// $Id: ioapic.cc,v 1.34 2007-04-03 22:38:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -254,7 +254,7 @@ void bx_ioapic_c::service_ioapic()
 #if BX_SUPPORT_SAVE_RESTORE
 void bx_ioapic_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ioapic", "IOAPIC State");
+  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ioapic", "IOAPIC State", 4);
   BXRS_HEX_PARAM_SIMPLE(list, ioregsel);
   BXRS_HEX_PARAM_SIMPLE(list, intin);
   BXRS_HEX_PARAM_SIMPLE(list, irr);

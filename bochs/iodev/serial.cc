@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.76 2006-12-31 11:56:14 vruppert Exp $
+// $Id: serial.cc,v 1.77 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -394,15 +394,15 @@ void bx_serial_c::register_state(void)
     new bx_shadow_num_c(port, "rx_pollstate", &BX_SER_THIS s[i].rx_pollstate);
     new bx_shadow_num_c(port, "rxbuffer", &BX_SER_THIS s[i].rxbuffer, BASE_HEX);
     new bx_shadow_num_c(port, "thrbuffer", &BX_SER_THIS s[i].thrbuffer, BASE_HEX);
-    bx_list_c *int_en = new bx_list_c(port, "int_enable");
+    bx_list_c *int_en = new bx_list_c(port, "int_enable", 4);
     new bx_shadow_bool_c(int_en, "rxdata_enable", &BX_SER_THIS s[i].int_enable.rxdata_enable);
     new bx_shadow_bool_c(int_en, "txhold_enable", &BX_SER_THIS s[i].int_enable.txhold_enable);
     new bx_shadow_bool_c(int_en, "rxlstat_enable", &BX_SER_THIS s[i].int_enable.rxlstat_enable);
     new bx_shadow_bool_c(int_en, "modstat_enable", &BX_SER_THIS s[i].int_enable.modstat_enable);
-    bx_list_c *int_id = new bx_list_c(port, "int_ident");
+    bx_list_c *int_id = new bx_list_c(port, "int_ident", 2);
     new bx_shadow_bool_c(int_id, "ipending", &BX_SER_THIS s[i].int_ident.ipending);
     new bx_shadow_num_c(int_id, "int_ID", &BX_SER_THIS s[i].int_ident.int_ID, BASE_HEX);
-    bx_list_c *fifo = new bx_list_c(port, "fifo_cntl");
+    bx_list_c *fifo = new bx_list_c(port, "fifo_cntl", 2);
     new bx_shadow_bool_c(fifo, "enable", &BX_SER_THIS s[i].fifo_cntl.enable);
     new bx_shadow_num_c(fifo, "rxtrigger", &BX_SER_THIS s[i].fifo_cntl.rxtrigger, BASE_HEX);
     bx_list_c *lcntl = new bx_list_c(port, "line_cntl", 7);
@@ -413,7 +413,7 @@ void bx_serial_c::register_state(void)
     new bx_shadow_bool_c(lcntl, "stick_parity", &BX_SER_THIS s[i].line_cntl.stick_parity);
     new bx_shadow_bool_c(lcntl, "break_cntl", &BX_SER_THIS s[i].line_cntl.break_cntl);
     new bx_shadow_bool_c(lcntl, "dlab", &BX_SER_THIS s[i].line_cntl.dlab);
-    bx_list_c *mcntl = new bx_list_c(port, "modem_cntl");
+    bx_list_c *mcntl = new bx_list_c(port, "modem_cntl", 5);
     new bx_shadow_bool_c(mcntl, "dtr", &BX_SER_THIS s[i].modem_cntl.dtr);
     new bx_shadow_bool_c(mcntl, "rts", &BX_SER_THIS s[i].modem_cntl.rts);
     new bx_shadow_bool_c(mcntl, "out1", &BX_SER_THIS s[i].modem_cntl.out1);
@@ -456,7 +456,7 @@ void bx_serial_c::register_state(void)
   new bx_shadow_num_c(list, "mouse_delayed_dx", &BX_SER_THIS mouse_delayed_dx);
   new bx_shadow_num_c(list, "mouse_delayed_dy", &BX_SER_THIS mouse_delayed_dy);
   new bx_shadow_num_c(list, "mouse_delayed_dz", &BX_SER_THIS mouse_delayed_dz);
-  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer");
+  bx_list_c *mousebuf = new bx_list_c(list, "mouse_internal_buffer", 3);
   new bx_shadow_num_c(mousebuf, "num_elements", &BX_SER_THIS mouse_internal_buffer.num_elements);
   bx_list_c *buffer = new bx_list_c(mousebuf, "buffer", BX_MOUSE_BUFF_SIZE);
   for (i=0; i<BX_MOUSE_BUFF_SIZE; i++) {

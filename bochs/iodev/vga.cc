@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.141 2007-03-11 09:43:33 vruppert Exp $
+// $Id: vga.cc,v 1.142 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -416,14 +416,14 @@ void bx_vga_c::register_state(void)
   }
 #endif
   bx_list_c *list = new bx_list_c(parent, "vga", "VGA Adapter State", 17);
-  bx_list_c *misc = new bx_list_c(list, "misc_output");
+  bx_list_c *misc = new bx_list_c(list, "misc_output", 6);
   new bx_shadow_bool_c(misc, "color_emulation", &BX_VGA_THIS s.misc_output.color_emulation);
   new bx_shadow_bool_c(misc, "enable_ram", &BX_VGA_THIS s.misc_output.enable_ram);
   new bx_shadow_num_c(misc, "clock_select", &BX_VGA_THIS s.misc_output.clock_select);
   new bx_shadow_bool_c(misc, "select_high_bank", &BX_VGA_THIS s.misc_output.select_high_bank);
   new bx_shadow_bool_c(misc, "horiz_sync_pol", &BX_VGA_THIS s.misc_output.horiz_sync_pol);
   new bx_shadow_bool_c(misc, "vert_sync_pol", &BX_VGA_THIS s.misc_output.vert_sync_pol);
-  bx_list_c *crtc = new bx_list_c(list, "CRTC");
+  bx_list_c *crtc = new bx_list_c(list, "CRTC", 3);
   new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
   reg = new bx_list_c(crtc, "reg", 0x19);
   for (i=0; i<=0x18; i++) {
@@ -452,7 +452,7 @@ void bx_vga_c::register_state(void)
   new bx_shadow_bool_c(mode, "pixel_panning_compat", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat);
   new bx_shadow_bool_c(mode, "pixel_clock_select", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_clock_select);
   new bx_shadow_bool_c(mode, "internal_palette_size", &BX_VGA_THIS s.attribute_ctrl.mode_ctrl.internal_palette_size);
-  bx_list_c *pel = new bx_list_c(list, "pel");
+  bx_list_c *pel = new bx_list_c(list, "pel", 6);
   new bx_shadow_num_c(pel, "write_data_register", &BX_VGA_THIS s.pel.write_data_register, BASE_HEX);
   new bx_shadow_num_c(pel, "write_data_cycle", &BX_VGA_THIS s.pel.write_data_cycle);
   new bx_shadow_num_c(pel, "read_data_register", &BX_VGA_THIS s.pel.read_data_register, BASE_HEX);

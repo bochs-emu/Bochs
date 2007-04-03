@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.92 2007-03-10 15:17:31 vruppert Exp $
+// $Id: ne2k.cc,v 1.93 2007-04-03 22:38:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ void bx_ne2k_c::register_state(void)
   char name[6];
 
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ne2k", "NE2000 State", 31);
-  bx_list_c *CR = new bx_list_c(list, "CR");
+  bx_list_c *CR = new bx_list_c(list, "CR", 5);
   new bx_shadow_bool_c(CR, "stop", &BX_NE2K_THIS s.CR.stop);
   new bx_shadow_bool_c(CR, "start", &BX_NE2K_THIS s.CR.start);
   new bx_shadow_bool_c(CR, "tx_packet", &BX_NE2K_THIS s.CR.tx_packet);
@@ -158,14 +158,14 @@ void bx_ne2k_c::register_state(void)
   new bx_shadow_bool_c(IMR, "overw_inte", &BX_NE2K_THIS s.IMR.overw_inte);
   new bx_shadow_bool_c(IMR, "cofl_inte", &BX_NE2K_THIS s.IMR.cofl_inte);
   new bx_shadow_bool_c(IMR, "rdma_inte", &BX_NE2K_THIS s.IMR.rdma_inte);
-  bx_list_c *DCR = new bx_list_c(list, "DCR");
+  bx_list_c *DCR = new bx_list_c(list, "DCR", 6);
   new bx_shadow_bool_c(DCR, "wdsize", &BX_NE2K_THIS s.DCR.wdsize);
   new bx_shadow_bool_c(DCR, "endian", &BX_NE2K_THIS s.DCR.endian);
   new bx_shadow_bool_c(DCR, "longaddr", &BX_NE2K_THIS s.DCR.longaddr);
   new bx_shadow_bool_c(DCR, "loop", &BX_NE2K_THIS s.DCR.loop);
   new bx_shadow_bool_c(DCR, "auto_rx", &BX_NE2K_THIS s.DCR.auto_rx);
   new bx_shadow_num_c(DCR, "fifo_size", &BX_NE2K_THIS s.DCR.fifo_size);
-  bx_list_c *TCR = new bx_list_c(list, "TCR");
+  bx_list_c *TCR = new bx_list_c(list, "TCR", 4);
   new bx_shadow_bool_c(TCR, "crc_disable", &BX_NE2K_THIS s.TCR.crc_disable);
   new bx_shadow_num_c(TCR, "loop_cntl", &BX_NE2K_THIS s.TCR.loop_cntl);
   new bx_shadow_bool_c(TCR, "ext_stoptx", &BX_NE2K_THIS s.TCR.ext_stoptx);
@@ -178,7 +178,7 @@ void bx_ne2k_c::register_state(void)
   new bx_shadow_bool_c(TSR, "fifo_ur", &BX_NE2K_THIS s.TSR.fifo_ur);
   new bx_shadow_bool_c(TSR, "cd_hbeat", &BX_NE2K_THIS s.TSR.cd_hbeat);
   new bx_shadow_bool_c(TSR, "ow_coll", &BX_NE2K_THIS s.TSR.ow_coll);
-  bx_list_c *RCR = new bx_list_c(list, "RCR");
+  bx_list_c *RCR = new bx_list_c(list, "RCR", 6);
   new bx_shadow_bool_c(RCR, "errors_ok", &BX_NE2K_THIS s.RCR.errors_ok);
   new bx_shadow_bool_c(RCR, "runts_ok", &BX_NE2K_THIS s.RCR.runts_ok);
   new bx_shadow_bool_c(RCR, "broadcast", &BX_NE2K_THIS s.RCR.broadcast);
@@ -208,7 +208,7 @@ void bx_ne2k_c::register_state(void)
   new bx_shadow_num_c(list, "tallycnt_0", &BX_NE2K_THIS s.tallycnt_0, BASE_HEX);
   new bx_shadow_num_c(list, "tallycnt_1", &BX_NE2K_THIS s.tallycnt_1, BASE_HEX);
   new bx_shadow_num_c(list, "tallycnt_2", &BX_NE2K_THIS s.tallycnt_2, BASE_HEX);
-  bx_list_c *paddr = new bx_list_c(list, "physaddr");
+  bx_list_c *paddr = new bx_list_c(list, "physaddr", 6);
   for (i=0; i<6; i++) {
     sprintf(name, "0x%02x", i);
     new bx_shadow_num_c(paddr, name, &BX_NE2K_THIS s.physaddr[i], BASE_HEX);
@@ -1404,7 +1404,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.92 2007-03-10 15:17:31 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.93 2007-04-03 22:38:48 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

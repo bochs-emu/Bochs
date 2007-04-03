@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.63 2006-09-17 19:19:15 vruppert Exp $
+// $Id: pit_wrap.cc,v 1.64 2007-04-03 22:38:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -167,7 +167,7 @@ void bx_pit_c::register_state(void)
   new bx_shadow_num_c(list, "last_next_event_time", &BX_PIT_THIS s.last_next_event_time);
   new bx_shadow_num_c(list, "total_ticks", &BX_PIT_THIS s.total_ticks);
   new bx_shadow_num_c(list, "total_usec", &BX_PIT_THIS s.total_usec);
-  bx_list_c *counter = new bx_list_c(list, "counter");
+  bx_list_c *counter = new bx_list_c(list, "counter", 4);
   BX_PIT_THIS s.timer.register_state(counter);
 }
 #endif
