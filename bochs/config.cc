@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.117 2007-03-27 17:47:14 vruppert Exp $
+// $Id: config.cc,v 1.118 2007-04-03 15:47:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1717,6 +1717,8 @@ static int parse_bochsrc(const char *rcfile)
   FILE *fd = NULL;
   char *ret;
   char line[512];
+  char context[BX_PATHNAME_LEN];
+  Bit32u linenum = 1;
 
   // try several possibilities for the bochsrc before giving up
 
@@ -1733,12 +1735,14 @@ static int parse_bochsrc(const char *rcfile)
     if ((len>0) && (line[len-1] < ' '))
       line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {
-      if (parse_line_unformatted(rcfile, line) < 0) {
+      sprintf(context, "%s:%u", rcfile, linenum);
+      if (parse_line_unformatted(context, line) < 0) {
         retval = -1;
         break;  // quit parsing after first error
-        }
       }
-    } while (!feof(fd));
+    }
+    linenum++;
+  } while (!feof(fd));
   fclose(fd);
   bochsrc_include_count--;
   return retval;
