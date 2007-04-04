@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.95 2006-10-02 21:49:49 sshwarts Exp $
+// $Id: apic.cc,v 1.96 2007-04-04 16:55:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,9 +94,11 @@ int apic_bus_deliver_interrupt(Bit8u vector, Bit8u dest, Bit8u delivery_mode, Bi
 
 int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode, bx_bool broadcast)
 {
+  int i;
+
 #ifndef BX_IMPLEMENT_XAPIC
   // search for if focus processor exists
-  for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+  for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
     if(BX_CPU_APIC(i)->is_focus(vector)) {
       BX_CPU_APIC(i)->deliver(vector, APIC_DM_LOWPRI, trig_mode);
       return 1;
@@ -107,7 +109,7 @@ int apic_bus_deliver_lowest_priority(Bit8u vector, Bit8u dest, bx_bool trig_mode
   // focus processor not found, looking for lowest priority agent
   int lowest_priority_agent = -1, lowest_priority = 0x100;
 
-  for (int i=0; i<BX_NUM_LOCAL_APICS; i++) {
+  for (i=0; i<BX_NUM_LOCAL_APICS; i++) {
     if(broadcast || BX_CPU_APIC(i)->match_logical_addr(dest)) {
 #ifndef BX_IMPLEMENT_XAPIC
       int priority = BX_CPU_APIC(i)->get_apr();
