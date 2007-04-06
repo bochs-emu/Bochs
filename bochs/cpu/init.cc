@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.127 2007-01-25 19:09:41 sshwarts Exp $
+// $Id: init.cc,v 1.128 2007-04-06 15:22:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -644,7 +644,7 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
       BX_PANIC(("save/restore: CPUID mismatch"));
     }
   } else if (!strcmp(pname, "EFLAGS")) {
-    BX_CPU_THIS_PTR setEFlags(val);
+    BX_CPU_THIS_PTR setEFlags((Bit32u)val);
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
     BX_CPU_THIS_PTR msr.sce   = (val >> 0)  & 1;
@@ -676,10 +676,10 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
       bx_descriptor_t *d = &(segment->cache);
       bx_selector_t *selector = &(segment->selector);
       if (!strcmp(pname, "ar_byte")) {
-        set_ar_byte(d, val);
+        set_ar_byte(d, (Bit8u)val);
       }
       else if (!strcmp(pname, "selector")) {
-        parse_selector(val, selector);
+        parse_selector((Bit16u)val, selector);
         // validate the selector
         if ((selector->value & 0xfffc) != 0) d->valid = 1;
         else d->valid = 0;

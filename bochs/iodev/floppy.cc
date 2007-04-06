@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.105 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: floppy.cc,v 1.106 2007-04-06 15:22:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.105 2007-04-03 22:38:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.106 2007-04-06 15:22:17 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1948,7 +1948,7 @@ void bx_floppy_ctrl_c::reset_changeline(void)
 bx_bool bx_floppy_ctrl_c::get_tc(void)
 {
   Bit8u drive;
-  bool terminal_count;
+  bx_bool terminal_count;
   if (BX_FD_THIS s.main_status_reg & FD_MS_NDMA) {
     drive = BX_FD_THIS s.DOR & 0x03;
     /* figure out if we've sent all the data, in non-DMA mode...
@@ -1960,9 +1960,9 @@ bx_bool bx_floppy_ctrl_c::get_tc(void)
      *  >= 512 makes it more robust, but allows for sloppy code...
      *  pick your poison?
      * note: byte and head are 0-based; eot, sector, and heads are 1-based. */
-    terminal_count = (BX_FD_THIS s.floppy_buffer_index == 512 &&
-     BX_FD_THIS s.sector[drive] == BX_FD_THIS s.eot[drive]) &&
-     BX_FD_THIS s.head[drive] == BX_FD_THIS s.media[drive].heads - 1;
+    terminal_count = ((BX_FD_THIS s.floppy_buffer_index == 512) &&
+     (BX_FD_THIS s.sector[drive] == BX_FD_THIS s.eot[drive]) &&
+     (BX_FD_THIS s.head[drive] == (BX_FD_THIS s.media[drive].heads - 1)));
   } else {
     terminal_count = DEV_dma_get_tc();
   }

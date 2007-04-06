@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.7 2007-02-20 09:36:55 vruppert Exp $
+// $Id: acpi.cc,v 1.8 2007-04-06 15:22:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -73,25 +73,25 @@ void libacpi_LTX_plugin_fini(void)
 /* ported from QEMU: compute with 96 bit intermediate result: (a*b)/c */
 Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
 {
-    union {
-        Bit64u ll;
-        struct {
+  union {
+    Bit64u ll;
+    struct {
 #ifdef WORDS_BIGENDIAN
-            Bit32u high, low;
+      Bit32u high, low;
 #else
-            Bit32u low, high;
+      Bit32u low, high;
 #endif            
-        } l;
-    } u, res;
-    Bit64u rl, rh;
+    } l;
+  } u, res;
+  Bit64u rl, rh;
 
-    u.ll = a;
-    rl = (Bit64u)u.l.low * (Bit64u)b;
-    rh = (Bit64u)u.l.high * (Bit64u)b;
-    rh += (rl >> 32);
-    res.l.high = rh / c;
-    res.l.low = (((rh % c) << 32) + (rl & 0xffffffff)) / c;
-    return res.ll;
+  u.ll = a;
+  rl = (Bit64u)u.l.low * (Bit64u)b;
+  rh = (Bit64u)u.l.high * (Bit64u)b;
+  rh += (rl >> 32);
+  res.l.high = (Bit32u)(rh / c);
+  res.l.low = (Bit32u)(((rh % c) << 32) + (rl & 0xffffffff)) / c;
+  return res.ll;
 }
 
 bx_acpi_ctrl_c::bx_acpi_ctrl_c()
@@ -259,7 +259,7 @@ void bx_acpi_ctrl_c::pm_update_sci(void)
   // schedule a timer interruption if needed
   if ((BX_ACPI_THIS s.pmen & TMROF_EN) && !(pmsts & TMROF_EN)) {
     Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ);
-      bx_pc_system.activate_timer(BX_ACPI_THIS s.timer_index, expire_time, 0);
+      bx_pc_system.activate_timer(BX_ACPI_THIS s.timer_index, (Bit32u)expire_time, 0);
     } else {
       bx_pc_system.deactivate_timer(BX_ACPI_THIS s.timer_index);
     }
