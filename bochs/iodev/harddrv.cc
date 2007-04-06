@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.196 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: harddrv.cc,v 1.197 2007-04-06 07:13:19 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.196 2007-04-03 22:38:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.197 2007-04-06 07:13:19 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -662,7 +662,7 @@ void bx_hard_drive_c::register_state(void)
   bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "hard_drive", "Hard Drive State", BX_MAX_ATA_CHANNEL);
   for (i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(cname, "%d", i);
-    chan = new bx_list_c(list, cname, 2);
+    chan = new bx_list_c(list, cname, 3);
     for (j=0; j<2; j++) {
       if (BX_DRIVE_IS_PRESENT(i, j)) {
         sprintf(dname, "drive%d", i);
