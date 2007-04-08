@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.118 2007-04-03 15:47:23 vruppert Exp $
+// $Id: config.cc,v 1.119 2007-04-08 15:02:50 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3333,7 +3333,7 @@ int bx_write_configuration(const char *rc, int overwrite)
     if (SIM->get_param_num(BXPN_ROM_ADDRESS)->get() != 0)
       fprintf(fp, ", address=0x%08x\n", (unsigned int) SIM->get_param_num(BXPN_ROM_ADDRESS)->get());
     else
-      fprintf(fp, "\n", strptr);
+      fprintf(fp, "\n");
   }
   else {
     fprintf(fp, "# no romimage\n");
