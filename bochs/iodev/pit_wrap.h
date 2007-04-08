@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.h,v 1.25 2006-09-17 19:19:15 vruppert Exp $
+// $Id: pit_wrap.h,v 1.26 2007-04-08 21:57:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -28,9 +28,6 @@
 #define _BX_PIT_WRAP_H
 
 #include "bochs.h"
-
-#if BX_USE_NEW_PIT
-
 #include "pit82c54.h"
 
 #if BX_USE_PIT_SMF
@@ -94,5 +91,4 @@ private:
 
 extern bx_pit_c bx_pit;
 
-#endif  // #if BX_USE_NEW_PIT
 #endif  // #ifndef _BX_PIT_WRAP_H

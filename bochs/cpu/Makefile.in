@@ -227,7 +227,7 @@ cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/pcivga.h \
   ../iodev/vga.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
   ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -347,7 +347,7 @@ exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/pcivga.h \
   ../iodev/vga.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
   ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -404,7 +404,7 @@ io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/pcivga.h \
   ../iodev/vga.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
   ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -419,7 +419,7 @@ io_pro.o: io_pro.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/pcivga.h \
   ../iodev/vga.h ../iodev/biosdev.h ../iodev/cmos.h ../iodev/dma.h \
   ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \

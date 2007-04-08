@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.116 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: devices.cc,v 1.117 2007-04-08 21:57:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.116 2007-02-03 17:56:35 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.117 2007-04-08 21:57:06 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -502,18 +502,10 @@ void bx_devices_c::timer_handler(void *this_ptr)
 
 void bx_devices_c::timer()
 {
-#if (BX_USE_NEW_PIT==0)
-  if (pit->periodic(BX_IODEV_HANDLER_PERIOD)) {
-    // This is a hack to make the IRQ0 work
-    DEV_pic_lower_irq(0);
-    DEV_pic_raise_irq(0);
-  }
-#endif
-
   // separate calls to bx_gui->handle_events from the keyboard code.
   {
     static int multiple=0;
-    if ( ++multiple==10)
+    if (++multiple==10)
     {
       multiple=0;
       SIM->periodic();

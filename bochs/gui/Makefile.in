@@ -198,7 +198,7 @@ amigaos.o: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -211,7 +211,7 @@ beos.o: beos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -224,7 +224,7 @@ carbon.o: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debu
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -237,7 +237,7 @@ gui.o: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -259,7 +259,7 @@ macintosh.o: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -276,7 +276,7 @@ rfb.o: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -289,7 +289,7 @@ sdl.o: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -303,7 +303,7 @@ siminterface.o: siminterface.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -316,7 +316,7 @@ svga.o: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -329,7 +329,7 @@ term.o: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -344,7 +344,7 @@ win32.o: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -358,7 +358,7 @@ wx.o: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -379,7 +379,7 @@ x.o: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -393,7 +393,7 @@ amigaos.lo: amigaos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -406,7 +406,7 @@ beos.lo: beos.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -419,7 +419,7 @@ carbon.lo: carbon.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/deb
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -432,7 +432,7 @@ gui.lo: gui.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -454,7 +454,7 @@ macintosh.lo: macintosh.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -471,7 +471,7 @@ rfb.lo: rfb.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -484,7 +484,7 @@ sdl.lo: sdl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -498,7 +498,7 @@ siminterface.lo: siminterface.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -511,7 +511,7 @@ svga.lo: svga.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -524,7 +524,7 @@ term.lo: term.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -539,7 +539,7 @@ win32.lo: win32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -553,7 +553,7 @@ wx.lo: wx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \
@@ -574,7 +574,7 @@ x.lo: x.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../iodev/pciusb.h ../iodev/vga.h ../iodev/svga_cirrus.h \
   ../iodev/ioapic.h ../cpu/apic.h ../iodev/biosdev.h ../iodev/cmos.h \
   ../iodev/dma.h ../iodev/floppy.h ../iodev/harddrv.h ../iodev/keyboard.h \
-  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit.h ../iodev/pit_wrap.h \
+  ../iodev/parallel.h ../iodev/pic.h ../iodev/pit_wrap.h \
   ../iodev/pit82c54.h ../iodev/virt_timer.h ../iodev/serial.h \
   ../iodev/sb16.h ../iodev/unmapped.h ../iodev/ne2k.h \
   ../iodev/guest2host.h ../iodev/slowdown_timer.h ../iodev/extfpuirq.h \

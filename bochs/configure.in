@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.334 2007-03-21 18:54:41 vruppert Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.335 2007-04-08 21:57:05 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -387,23 +387,6 @@ if test "$with_all_libs" = yes; then
     with_nogui=yes
   fi
 fi    # end of if $with_all_libs = yes
-
-AC_MSG_CHECKING(for new PIT model)
-AC_ARG_ENABLE(new-pit,
-  [  --enable-new-pit                  use Greg Alexander's new PIT model],
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_NEW_PIT, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_NEW_PIT, 0)
-   fi],
-  [
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_USE_NEW_PIT, 1)
-    ]
-  )
-AC_SUBST(BX_USE_NEW_PIT)
 
 AC_MSG_CHECKING(for idle hack)
 AC_ARG_ENABLE(idle-hack,

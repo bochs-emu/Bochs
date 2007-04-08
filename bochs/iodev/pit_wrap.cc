@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.64 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.65 2007-04-08 21:57:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,8 +26,6 @@
 
 
 #include "iodev.h"
-
-#if BX_USE_NEW_PIT
 
 #include "speaker.h"
 
@@ -394,5 +392,3 @@ void bx_pit_c::irq_handler(bx_bool value)
     DEV_pic_lower_irq(0);
   }
 }
-
-#endif // #if BX_USE_NEW_PIT

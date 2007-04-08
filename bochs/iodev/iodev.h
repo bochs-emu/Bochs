@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.86 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: iodev.h,v 1.87 2007-04-08 21:57:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -586,7 +586,6 @@ private:
 #endif
 #include "iodev/parallel.h"
 #include "iodev/pic.h"
-#include "iodev/pit.h"
 #include "iodev/pit_wrap.h"
 #include "iodev/virt_timer.h"
 #include "iodev/serial.h"
