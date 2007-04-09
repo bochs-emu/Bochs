@@ -1,7 +1,7 @@
-Changes after 2.3 release:
+Changes in 2.3.5 release (coming soon):
 
 - CPU
-  - Fixed critical issue with 0x90 opcode (NOP) handling in x86-64 mode
+  - Fixed critical bug with 0x90 opcode (NOP) handling in x86-64 mode
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
@@ -9,7 +9,6 @@ Changes after 2.3 release:
   - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
   - Fixed PUSHA/POPA instructions behavior in real mode
   - Fixed detecting of inexact result by FPU
-  - Several disasm and internal debugger fixes
 
 - General
   - 2nd simulation support in wxBochs now almost usable (simulation cleanup
@@ -20,6 +19,8 @@ Changes after 2.3 release:
   - enable save/restore feature by default for all configurations
   - rename SSE4 option to match Intel(R) Programming Reference Manual,
     to enable Intel Core Duo 2 new instructions use --enable-sse3e
+  - removed old PIT, always use new PIT written by Greg Alexander,
+    removed configure option --enable-new-pit
 
 - I/O devices (Volker)
   - Floppy
@@ -41,6 +42,7 @@ Changes after 2.3 release:
   - implementation of a gui frontend ("windebug") for win32 started
   - gdbstub now accepts connection from any host
   - several documentation updates
+  - a lot of disasm and internal debugger x86_64 support fixes
 
 - Configuration interface
   - fixes and improvements to the save state dialog handling
@@ -65,6 +67,7 @@ Changes after 2.3 release:
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+ [1678395] Problem with zero sector...
   [876990] SA-RTL OS fails on PIC configuration
  [1673582] save/restore didn't restore simulation correctly
  [1586662] EDD int 13h bug, modify eax
