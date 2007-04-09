@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.3 2007-03-25 17:37:59 vruppert Exp $
+// $Id: usb_msd.cc,v 1.4 2007-04-09 09:04:54 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -35,6 +35,13 @@
 #include "usb_msd.h"
 
 #define LOG_THIS
+
+enum USBMSDMode {
+  USB_MSDM_CBW,
+  USB_MSDM_DATAOUT,
+  USB_MSDM_DATAIN,
+  USB_MSDM_CSW
+};
 
 struct usb_msd_cbw {
   Bit32u sig;
@@ -153,6 +160,20 @@ bx_bool usb_msd_device_t::init(const char *filename)
     return 1;
   }
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void usb_msd_device_t::register_state_specific(bx_list_c *parent)
+{
+  bx_list_c *list = new bx_list_c(parent, "s", "USB MSD Device State", 7);
+  new bx_shadow_num_c(list, "mode", &s.mode);
+  new bx_shadow_num_c(list, "scsi_len", &s.scsi_len);
+  new bx_shadow_num_c(list, "usb_len", &s.usb_len);
+  new bx_shadow_num_c(list, "data_len", &s.data_len);
+  new bx_shadow_num_c(list, "residue", &s.residue);
+  new bx_shadow_num_c(list, "tag", &s.tag);
+  new bx_shadow_num_c(list, "result", &s.result);
+}
+#endif
 
 void usb_msd_device_t::handle_reset()
 {
@@ -345,7 +366,7 @@ int usb_msd_device_t::handle_data(USBPacket *p)
           if (s.residue && s.usb_len) {
             s.data_len -= s.usb_len;
             if (s.data_len == 0)
-                s.mode = USB_MSDM_CSW;
+              s.mode = USB_MSDM_CSW;
             s.usb_len = 0;
           }
           if (s.usb_len) {
