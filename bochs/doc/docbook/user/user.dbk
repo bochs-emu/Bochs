@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.224 2007-03-31 09:24:03 vruppert Exp $
+$Id: user.dbk,v 1.225 2007-04-09 08:46:24 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -2066,16 +2066,6 @@ turn it off.
       Enables the standard PC gameport. This option is only necessary if you want to
       have a gameport, but no SB16 (see above). The connection to a real joystick is
       currently supported on Linux and win32 only.
-      </entry>
-    </row>
-    <row>
-      <entry>--enable-new-pit</entry>
-      <entry>yes</entry>
-      <entry>
-      Enables Greg Alexander's PIT model, written during Summer 2001.  This
-      model was written from scratch to be much more complete than the old
-      Bochs PIT model, which was missing many registers and features.
-      If you disable this option, the old PIT model will be used instead.
       </entry>
     </row>
     <row>

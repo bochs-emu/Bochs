@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.335 2007-04-08 21:57:05 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.336 2007-04-09 08:46:24 vruppert Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2744,7 +2744,7 @@ AC_MSG_CHECKING(for specified CMOS start time (deprecated))
 AC_ARG_ENABLE(time0,
   [  --enable-time0=n                  start at n (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated option - use runtime option 'clock' instead])
+   AC_MSG_ERROR([DEPRECATED - use runtime option 'clock' instead])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2754,7 +2754,7 @@ AC_MSG_CHECKING(for configuration interface (deprecated))
 AC_ARG_ENABLE(config-interface,
   [  --enable-config-interface         turns on/off configuration interface (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated option - configuration interface is always enabled])
+   AC_MSG_ERROR([DEPRECATED - configuration interface is always enabled])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2764,7 +2764,7 @@ AC_MSG_CHECKING(for control panel (deprecated))
 AC_ARG_ENABLE(control-panel,
   [  --enable-control-panel            turns on/off contol panel (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated option - configuration interface is always enabled])
+   AC_MSG_ERROR([DEPRECATED - configuration interface is always enabled])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2774,7 +2774,7 @@ AC_MSG_CHECKING(for VGA emulation (deprecated))
 AC_ARG_ENABLE(vga,
   [  --enable-vga                      use VGA emulation (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated option - standard VGA emulation is always enabled])
+   AC_MSG_ERROR([DEPRECATED - standard VGA emulation is always enabled])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2784,7 +2784,7 @@ AC_MSG_CHECKING(for number of processors (deprecated))
 AC_ARG_ENABLE(processors,
   [  --enable-processors               select number of processors (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated - use option --enable-smp instead])
+   AC_MSG_ERROR([DEPRECATED - use option --enable-smp instead])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2794,7 +2794,7 @@ AC_MSG_CHECKING(whether to reset on triple fault (deprecated))
 AC_ARG_ENABLE(reset-on-triple-fault,
   [  --enable-reset-on-triple-fault    reset when cpu detects a triple fault (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated - could be configured directly from .bochsrc instead])
+   AC_MSG_ERROR([DEPRECATED - could be configured directly from .bochsrc instead])
   ],
   [
    AC_MSG_RESULT(no)
@@ -2804,7 +2804,17 @@ AC_MSG_CHECKING(PNI support (deprecated))
 AC_ARG_ENABLE(--enable-pni,
   [  --enable-pni                      PNI support (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([deprecated - use --enable-sse=3 instead])
+   AC_MSG_ERROR([DEPRECATED - use --enable-sse=3 instead])
+  ],
+  [
+   AC_MSG_RESULT(no)
+  ])
+
+AC_MSG_CHECKING(for new PIT model (deprecated))
+AC_ARG_ENABLE(new-pit,
+  [  --enable-new-pit                  use Greg Alexander's new PIT model (deprecated)],
+  [AC_MSG_RESULT($enableval)
+   AC_MSG_ERROR([DEPRECATED - the new PIT model is always present and the old one has been removed])
   ],
   [
    AC_MSG_RESULT(no)

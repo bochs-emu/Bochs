@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.9 2002-10-26 13:14:11 bdenney Exp $
+# $Id: batch-build.perl,v 1.10 2007-04-09 08:46:24 vruppert Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -68,9 +68,9 @@ add_configuration ('plug-allgui',
 add_configuration ('plug-allgui-d',
   '--enable-plugins --with-all-libs --enable-debugger');
 add_configuration ('plug-smp',
-  '--enable-plugins --enable-processors=2');
+  '--enable-plugins --enable-smp');
 add_configuration ('plug-smp-d',
-  '--enable-plugins --enable-processors=2 --enable-debugger');
+  '--enable-plugins --enable-smp --enable-debugger');
 add_configuration ('plug-x86-64',
   '--enable-plugins --enable-x86-64');
 add_configuration ('plug-wx',
@@ -79,17 +79,11 @@ add_configuration ('plug-wx',
 
 if ($TEST_DEVICES) {
 add_configuration ('alldev',
-  '--enable-ne2000 --enable-pci --enable-dc2300-vlb-ide --enable-port-e9-hack --enable-cdrom --enable-iodebug');
-add_configuration ('oldpit',
-  '--disable-new-pit');
-add_configuration ('rtpit',
-  '--enable-realtime-pit');
+  '--enable-ne2000 --enable-pci --enable-port-e9-hack --enable-cdrom --enable-iodebug');
 add_configuration ('ne2000',
   '--enable-ne2000');
 add_configuration ('pci',
   '--enable-pci');
-add_configuration ('dc2300-vlb-ide',
-  '--enable-dc2300-vlb-ide');
 add_configuration ('port-e9-hack',
   '--enable-port-e9-hack');
 add_configuration ('cdrom',
@@ -152,14 +146,14 @@ add_configuration ('cpuall',
 
 if ($TEST_SMP) {
 # smp
-add_configuration ('smp2',
-  '--enable-processors=2');
-add_configuration ('smp2-d',
-  '--enable-processors=2 --enable-debugger');
-add_configuration ('smp4-wx',
-  '--enable-processors=4 --with-wx');
-add_configuration ('smp4-wx-d',
-  '--enable-processors=4 --with-wx --enable-debugger');
+add_configuration ('smp',
+  '--enable-smp');
+add_configuration ('smp-d',
+  '--enable-smp --enable-debugger');
+add_configuration ('smp-wx',
+  '--enable-smp --with-wx');
+add_configuration ('smp-wx-d',
+  '--enable-smp --with-wx --enable-debugger');
 }
 
 if ($TEST_X86_64) {
