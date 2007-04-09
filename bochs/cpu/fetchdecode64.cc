@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.109 2007-04-09 20:28:15 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.110 2007-04-09 21:14:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ static BxExecutePtr_tR BxResolve32Mod0[8] = {
   &BX_CPU_C::Resolve32Mod0Rm2,
   &BX_CPU_C::Resolve32Mod0Rm3,
   NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve32Mod0Rm5,
+  &BX_CPU_C::Resolve64Mod0Rip,
   &BX_CPU_C::Resolve32Mod0Rm6,
   &BX_CPU_C::Resolve32Mod0Rm7
 };
@@ -118,7 +118,7 @@ static BxExecutePtr_tR BxResolve64Mod0[16] = {
   &BX_CPU_C::Resolve64Mod0Rm2,
   &BX_CPU_C::Resolve64Mod0Rm3,
   NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod0Rm5,
+  &BX_CPU_C::Resolve64Mod0Rip,
   &BX_CPU_C::Resolve64Mod0Rm6,
   &BX_CPU_C::Resolve64Mod0Rm7,
   &BX_CPU_C::Resolve64Mod0Rm8,
@@ -126,7 +126,7 @@ static BxExecutePtr_tR BxResolve64Mod0[16] = {
   &BX_CPU_C::Resolve64Mod0Rm10,
   &BX_CPU_C::Resolve64Mod0Rm11,
   NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod0Rm13,
+  &BX_CPU_C::Resolve64Mod0Rip,
   &BX_CPU_C::Resolve64Mod0Rm14,
   &BX_CPU_C::Resolve64Mod0Rm15
 };
