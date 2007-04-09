@@ -43,3 +43,9 @@ TODO (know issues in CPU model):
 
 [!] CLFLUSH instructin should not crash in case of EXECUTE-ONLY segment
     access (according to AMD manuals)
+
+[!] AMD and Intel x86_64 implementations are different. 
+    Currently Bochs emulation is according to Intel version.
+    Do we need to support both ?
+
+[!] More flexible CPUID - vendor and etc

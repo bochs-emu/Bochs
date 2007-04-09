@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.315 2007-03-22 22:51:41 sshwarts Exp $
+// $Id: cpu.h,v 1.316 2007-04-09 20:28:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1614,11 +1614,16 @@ public: // for now...
   BX_SMF void BTC_EwIb(bxInstruction_c *);
   BX_SMF void BTC_EdIb(bxInstruction_c *);
 
-  BX_SMF void LES_GvMp(bxInstruction_c *);
-  BX_SMF void LDS_GvMp(bxInstruction_c *);
-  BX_SMF void LSS_GvMp(bxInstruction_c *);
-  BX_SMF void LFS_GvMp(bxInstruction_c *);
-  BX_SMF void LGS_GvMp(bxInstruction_c *);
+  BX_SMF void LES_GwMp(bxInstruction_c *);
+  BX_SMF void LDS_GwMp(bxInstruction_c *);
+  BX_SMF void LSS_GwMp(bxInstruction_c *);
+  BX_SMF void LFS_GwMp(bxInstruction_c *);
+  BX_SMF void LGS_GwMp(bxInstruction_c *);
+  BX_SMF void LES_GdMp(bxInstruction_c *);
+  BX_SMF void LDS_GdMp(bxInstruction_c *);
+  BX_SMF void LSS_GdMp(bxInstruction_c *);
+  BX_SMF void LFS_GdMp(bxInstruction_c *);
+  BX_SMF void LGS_GdMp(bxInstruction_c *);
 
   BX_SMF void MOVZX_GdEb(bxInstruction_c *);
   BX_SMF void MOVZX_GwEb(bxInstruction_c *);
@@ -2414,13 +2419,12 @@ public: // for now...
 
   BX_SMF void CALL_Aq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
+  BX_SMF void JCC_Jq(bxInstruction_c *);
 
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
   BX_SMF void MOV_RqCq(bxInstruction_c *);
   BX_SMF void MOV_RqDq(bxInstruction_c *);
-
-  BX_SMF void JCC_Jq(bxInstruction_c *);
 
   BX_SMF void SHLD_EqGq(bxInstruction_c *);
   BX_SMF void SHRD_EqGq(bxInstruction_c *);
@@ -2502,6 +2506,10 @@ public: // for now...
   BX_SMF void POP64_FS(bxInstruction_c *);
   BX_SMF void PUSH64_GS(bxInstruction_c *);
   BX_SMF void POP64_GS(bxInstruction_c *);
+
+  BX_SMF void LSS_GqMp(bxInstruction_c *);
+  BX_SMF void LFS_GqMp(bxInstruction_c *);
+  BX_SMF void LGS_GqMp(bxInstruction_c *);
 
   BX_SMF void SGDT64_Ms(bxInstruction_c *);
   BX_SMF void SIDT64_Ms(bxInstruction_c *);

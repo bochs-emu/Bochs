@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.104 2007-03-23 14:35:50 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.105 2007-04-09 20:28:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -615,8 +615,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* C1 */ { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Ew },
   /* C2 */ { BxImmediate_Iw, &BX_CPU_C::RETnear16_Iw },
   /* C3 */ { 0,              &BX_CPU_C::RETnear16 },
-  /* C4 */ { BxAnother, &BX_CPU_C::LES_GvMp },
-  /* C5 */ { BxAnother, &BX_CPU_C::LDS_GvMp },
+  /* C4 */ { BxAnother, &BX_CPU_C::LES_GwMp },
+  /* C5 */ { BxAnother, &BX_CPU_C::LDS_GwMp },
   /* C6 */ { BxAnother | BxImmediate_Ib, &BX_CPU_C::MOV_EbIb },
   /* C7 */ { BxAnother | BxImmediate_Iv, &BX_CPU_C::MOV_EwIw },
   /* C8 */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
@@ -897,10 +897,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F AF */ { BxAnother, &BX_CPU_C::IMUL_GwEw },
   /* 0F B0 */ { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */ { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EwGw },
-  /* 0F B2 */ { BxAnother, &BX_CPU_C::LSS_GvMp },
+  /* 0F B2 */ { BxAnother, &BX_CPU_C::LSS_GwMp },
   /* 0F B3 */ { BxAnother | BxLockable, &BX_CPU_C::BTR_EwGw },
-  /* 0F B4 */ { BxAnother, &BX_CPU_C::LFS_GvMp },
-  /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GvMp },
+  /* 0F B4 */ { BxAnother, &BX_CPU_C::LFS_GwMp },
+  /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GwMp },
   /* 0F B6 */ { BxAnother, &BX_CPU_C::MOVZX_GwEb },
   /* 0F B7 */ { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GwEw }, // MOVZX_GwEw
   /* 0F B8 */ { 0, &BX_CPU_C::BxError },
@@ -1173,8 +1173,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* C1 */ { BxAnother | BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Ed },
   /* C2 */ { BxImmediate_Iw, &BX_CPU_C::RETnear32_Iw },
   /* C3 */ { 0,              &BX_CPU_C::RETnear32 },
-  /* C4 */ { BxAnother, &BX_CPU_C::LES_GvMp },
-  /* C5 */ { BxAnother, &BX_CPU_C::LDS_GvMp },
+  /* C4 */ { BxAnother, &BX_CPU_C::LES_GdMp },
+  /* C5 */ { BxAnother, &BX_CPU_C::LDS_GdMp },
   /* C6 */ { BxAnother | BxImmediate_Ib, &BX_CPU_C::MOV_EbIb },
   /* C7 */ { BxAnother | BxImmediate_Iv, &BX_CPU_C::MOV_EdId },
   /* C8 */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
@@ -1455,10 +1455,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F AF */ { BxAnother, &BX_CPU_C::IMUL_GdEd },
   /* 0F B0 */ { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
   /* 0F B1 */ { BxAnother | BxLockable, &BX_CPU_C::CMPXCHG_EdGd },
-  /* 0F B2 */ { BxAnother, &BX_CPU_C::LSS_GvMp },
+  /* 0F B2 */ { BxAnother, &BX_CPU_C::LSS_GdMp },
   /* 0F B3 */ { BxAnother | BxLockable, &BX_CPU_C::BTR_EdGd },
-  /* 0F B4 */ { BxAnother, &BX_CPU_C::LFS_GvMp },
-  /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GvMp },
+  /* 0F B4 */ { BxAnother, &BX_CPU_C::LFS_GdMp },
+  /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GdMp },
   /* 0F B6 */ { BxAnother, &BX_CPU_C::MOVZX_GdEb },
   /* 0F B7 */ { BxAnother, &BX_CPU_C::MOVZX_GdEw },
   /* 0F B8 */ { 0, &BX_CPU_C::BxError },

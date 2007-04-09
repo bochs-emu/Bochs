@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.14 2006-03-06 22:03:02 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.15 2007-04-09 20:28:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,165 +33,237 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 
-void BX_CPU_C::LES_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_DEBUG(("invalid use of LES, must use memory reference!"));
+    BX_DEBUG(("LES_GwMp: invalid use of LES, must be memory reference!"));
     UndefinedOpcode(i);
   }
 
-#if BX_CPU_LEVEL > 2
-  if (i->os32L()) {
-    Bit16u es;
-    Bit32u reg_32;
+  Bit16u reg_16, es;
 
-    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
-    read_virtual_word(i->seg(), RMAddr(i) + 4, &es);
+  read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+  read_virtual_word(i->seg(), RMAddr(i) + 2, &es);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-    BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-  }
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-  { /* 16 bit mode */
-    Bit16u reg_16, es;
-
-    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &es);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
-
-    BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-  }
+  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
 }
 
-void BX_CPU_C::LDS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LES_GdMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_DEBUG(("invalid use of LDS, must use memory reference!"));
+    BX_DEBUG(("LES_GdMp: invalid use of LES, must be memory reference!"));
     UndefinedOpcode(i);
   }
 
-#if BX_CPU_LEVEL > 2
-  if (i->os32L()) {
-    Bit16u ds;
-    Bit32u reg_32;
+  Bit16u es;
+  Bit32u reg_32;
 
-    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
-    read_virtual_word(i->seg(), RMAddr(i) + 4, &ds);
+  read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+  read_virtual_word(i->seg(), RMAddr(i) + 4, &es);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
 
-    BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-  }
-  else
-#endif /* BX_CPU_LEVEL > 2 */
-    { /* 16 bit mode */
-    Bit16u reg_16, ds;
-
-    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &ds);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
-
-    BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-  }
+  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
 }
 
-#if BX_CPU_LEVEL >= 3
-
-void BX_CPU_C::LFS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LDS_GwMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_DEBUG(("invalid use of LFS, must use memory reference!"));
+    BX_DEBUG(("LDS_GwMp: invalid use of LDS, must be memory reference!"));
     UndefinedOpcode(i);
   }
 
-  if (i->os32L()) {
-    Bit32u reg_32;
-    Bit16u fs;
+  Bit16u reg_16, ds;
 
-    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
-    read_virtual_word(i->seg(), RMAddr(i) + 4, &fs);
+  read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+  read_virtual_word(i->seg(), RMAddr(i) + 2, &ds);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-    BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-  }
-  else { /* 16 bit operand size */
-    Bit16u reg_16;
-    Bit16u fs;
-
-    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &fs);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
-
-    BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-  }
+  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
 }
 
-void BX_CPU_C::LGS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LDS_GdMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_DEBUG(("invalid use of LGS, must use memory reference!"));
+    BX_DEBUG(("LDS_GdMp: invalid use of LDS, must be memory reference!"));
     UndefinedOpcode(i);
   }
 
-  if (i->os32L()) {
-    Bit32u reg_32;
-    Bit16u gs;
+  Bit16u ds;
+  Bit32u reg_32;
 
-    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
-    read_virtual_word(i->seg(), RMAddr(i) + 4, &gs);
+  read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+  read_virtual_word(i->seg(), RMAddr(i) + 4, &ds);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
-    BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-  }
-  else { /* 16 bit operand size */
-    Bit16u reg_16;
-    Bit16u gs;
-
-    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &gs);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
-
-    BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-  }
+  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
 }
 
-void BX_CPU_C::LSS_GvMp(bxInstruction_c *i)
+void BX_CPU_C::LFS_GwMp(bxInstruction_c *i)
 {
   if (i->modC0()) {
-    BX_DEBUG(("invalid use of LSS, must use memory reference!"));
+    BX_DEBUG(("LFS_GwMp: invalid use of LFS, must be memory reference!"));
     UndefinedOpcode(i);
   }
 
-  if (i->os32L()) {
-    Bit32u reg_32;
-    Bit16u ss_raw;
+  Bit16u reg_16, fs;
 
-    read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
-    read_virtual_word(i->seg(), RMAddr(i) + 4, &ss_raw);
+  read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+  read_virtual_word(i->seg(), RMAddr(i) + 2, &fs);
 
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
 
-    BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
-  }
-  else { /* 16 bit operand size */
-    Bit16u reg_16;
-    Bit16u ss_raw;
-
-    read_virtual_word(i->seg(), RMAddr(i), &reg_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &ss_raw);
-
-    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss_raw);
-
-    BX_WRITE_16BIT_REG(i->nnn(), reg_16);
-  }
+  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
 }
 
+void BX_CPU_C::LFS_GdMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LFS_GdMp: invalid use of LFS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit32u reg_32;
+  Bit16u fs;
+
+  read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+  read_virtual_word(i->seg(), RMAddr(i) + 4, &fs);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::LFS_GqMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LFS_GqMp: invalid use of LFS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit64u reg_64;
+  Bit16u fs;
+
+  read_virtual_qword(i->seg(), RMAddr(i), &reg_64);
+  read_virtual_word(i->seg(), RMAddr(i) + 8, &fs);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
+
+  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+}
+#endif
+
+void BX_CPU_C::LGS_GwMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LGS_GwMp: invalid use of LGS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit16u reg_16, gs;
+
+  read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+  read_virtual_word(i->seg(), RMAddr(i) + 2, &gs);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+
+  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+}
+
+void BX_CPU_C::LGS_GdMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LGS_GdMp: invalid use of LGS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit32u reg_32;
+  Bit16u gs;
+
+  read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+  read_virtual_word(i->seg(), RMAddr(i) + 4, &gs);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::LGS_GqMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LGS_GqMp: invalid use of LGS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit64u reg_64;
+  Bit16u gs;
+
+  read_virtual_qword(i->seg(), RMAddr(i), &reg_64);
+  read_virtual_word(i->seg(), RMAddr(i) + 8, &gs);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+
+  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+}
+#endif
+
+void BX_CPU_C::LSS_GwMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LSS_GwMp: invalid use of LSS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit16u reg_16, ss;
+
+  read_virtual_word(i->seg(), RMAddr(i), &reg_16);
+  read_virtual_word(i->seg(), RMAddr(i) + 2, &ss);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
+
+  BX_WRITE_16BIT_REG(i->nnn(), reg_16);
+}
+
+void BX_CPU_C::LSS_GdMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LSS_GdMp: invalid use of LSS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit32u reg_32;
+  Bit16u ss;
+
+  read_virtual_dword(i->seg(), RMAddr(i), &reg_32);
+  read_virtual_word(i->seg(), RMAddr(i) + 4, &ss);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), reg_32);
+}
+
+#if BX_SUPPORT_X86_64
+void BX_CPU_C::LSS_GqMp(bxInstruction_c *i)
+{
+  if (i->modC0()) {
+    BX_DEBUG(("LSS_GqMp: invalid use of LSS, must be memory reference!"));
+    UndefinedOpcode(i);
+  }
+
+  Bit64u reg_64;
+  Bit16u ss;
+
+  read_virtual_qword(i->seg(), RMAddr(i), &reg_64);
+  read_virtual_word(i->seg(), RMAddr(i) + 8, &ss);
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
+
+  BX_WRITE_64BIT_REG(i->nnn(), reg_64);
+}
 #endif
