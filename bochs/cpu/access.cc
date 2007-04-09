@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.66 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: access.cc,v 1.67 2007-04-09 21:55:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("Canonical Address Failure %08x%08x",(Bit32u)(offset >> 32),(Bit32u)(offset & 0xffffffff)));
+      BX_ERROR(("Canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     seg->cache.valid |= SegAccessWOK;
@@ -96,14 +96,13 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         }
         break;
 
-      case 6: case 7: /* read write, expand down */
+      case 6: case 7: /* read/write, expand down */
         if (seg->cache.u.segment.d_b)
           upper_limit = 0xffffffff;
         else
           upper_limit = 0x0000ffff;
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
-             (offset > upper_limit) ||
-             ((upper_limit - offset) < (length - 1)))
+             (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
           BX_ERROR(("write_virtual_checks(): write beyond limit, r/w ED"));
           exception(int_number(seg), 0, 0);
@@ -138,7 +137,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("Canonical Address Failure %08x%08x",(Bit32u)(offset >> 32),(Bit32u)(offset & 0xffffffff)));
+      BX_ERROR(("Canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     seg->cache.valid |= SegAccessROK;
@@ -160,6 +159,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 
     switch (seg->cache.type) {
       case 0: case 1: /* read only */
+      case 2: case 3: /* read/write */
       case 10: case 11: /* execute/read */
       case 14: case 15: /* execute/read-only, conforming */
         if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
@@ -176,37 +176,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         }
         break;
 
-      case 2: case 3: /* read/write */
-        if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
-            || (length-1 > seg->cache.u.segment.limit_scaled)) 
-        {
-          BX_ERROR(("read_virtual_checks(): read beyond limit"));
-          exception(int_number(seg), 0, 0);
-          return;
-        }
-        if (seg->cache.u.segment.limit_scaled >= 7)
-        {
-          // Mark cache as being OK type for succeeding reads. See notes for
-          // write checks; similar code.
-          seg->cache.valid |= SegAccessROK;
-        }
-        break;
-
       case 4: case 5: /* read only, expand down */
-        if (seg->cache.u.segment.d_b)
-          upper_limit = 0xffffffff;
-        else
-          upper_limit = 0x0000ffff;
-        if ((offset <= seg->cache.u.segment.limit_scaled) ||
-             (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
-        {
-          BX_ERROR(("read_virtual_checks(): read beyond limit"));
-          exception(int_number(seg), 0, 0);
-          return;
-        }
-        break;
-
-      case 6: case 7: /* read write, expand down */
+      case 6: case 7: /* read/write, expand down */
         if (seg->cache.u.segment.d_b)
           upper_limit = 0xffffffff;
         else
