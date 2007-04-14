@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.317 2007-04-09 21:14:59 sshwarts Exp $
+// $Id: cpu.h,v 1.318 2007-04-14 10:05:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -331,10 +331,8 @@
 
 const char* cpu_mode_string(unsigned cpu_mode);
 
-#define BX_CANONICAL_BITS   (48)
-
 #if BX_SUPPORT_X86_64
-#define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_CANONICAL_BITS-1)) + 1) < 2)
+#define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
 #else
 #define IsCanonical(offset) (0)
 #endif
