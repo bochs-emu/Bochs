@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.28 2007-04-01 11:15:47 vruppert Exp $
+// $Id: pciusb.h,v 1.29 2007-04-15 09:39:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -153,6 +153,7 @@ public:
 #if BX_SUPPORT_SAVE_RESTORE
   void register_state(bx_list_c *parent);
   virtual void register_state_specific(bx_list_c *parent) {}
+  virtual void after_restore_state() {}
 #endif
 
   bx_bool get_connected() {return d.connected;}

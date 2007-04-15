@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.58 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: pciusb.cc,v 1.59 2007-04-15 09:39:22 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -340,13 +340,19 @@ void bx_pciusb_c::after_restore_state(void)
   {
      BX_INFO(("new base address: 0x%04x", BX_USB_THIS hub[0].base_ioaddr));
   }
+  for (int i=0; i<BX_USB_CONFDEV; i++) {
+    for (int j=0; j<USB_NUM_PORTS; j++) {
+      if (BX_USB_THIS hub[i].usb_port[j].device != NULL) {
+        BX_USB_THIS hub[i].usb_port[j].device->after_restore_state();
+      }
+    }
+  }
 }
 #endif
 
 void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;
-  bx_bool connected = 0;
 #if BX_SUPPORT_SAVE_RESTORE
   char pname[BX_PATHNAME_LEN];
 #endif
@@ -355,28 +361,24 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
 
   if (!strcmp(devname, "mouse")) {
     type = USB_DEV_TYPE_MOUSE;
-    connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
     if (BX_USB_THIS mousedev == NULL) {
       BX_USB_THIS mousedev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
     }
   } else if (!strcmp(devname, "tablet")) {
     type = USB_DEV_TYPE_TABLET;
-    connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
     if (BX_USB_THIS mousedev == NULL) {
       BX_USB_THIS mousedev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
     }
   } else if (!strcmp(devname, "keypad")) {
     type = USB_DEV_TYPE_KEYPAD;
-    connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_hid_device_t(type);
     if (BX_USB_THIS keybdev == NULL) {
       BX_USB_THIS keybdev = (usb_hid_device_t*)BX_USB_THIS hub[0].usb_port[port].device;
     }
   } else if (!strncmp(devname, "disk:", 5)) {
     type = USB_DEV_TYPE_DISK;
-    connected = 1;
     BX_USB_THIS hub[0].usb_port[port].device = new usb_msd_device_t();
   } else {
     BX_PANIC(("unknown USB device: %s", devname));
@@ -387,7 +389,7 @@ void bx_pciusb_c::init_device(Bit8u port, const char *devname)
   bx_list_c *devlist = (bx_list_c*)SIM->get_param(pname, SIM->get_sr_root());
   BX_USB_THIS hub[0].usb_port[port].device->register_state(devlist);
 #endif
-  usb_set_connect_status(port, type, connected);
+  usb_set_connect_status(port, type, 1);
 }
 
 void bx_pciusb_c::set_irq_level(bx_bool level)
