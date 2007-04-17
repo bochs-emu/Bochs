@@ -170,9 +170,13 @@
 // emulate x86-64 instruction set?
 #define BX_SUPPORT_X86_64 0
 
-// Virtual 8086 mode emulation.
-//   1 = compile in support for v8086 mode.
-//   0 = don't compile in support for v8086 mode.
+// make it configurable through configuration interface
+#ifdef BX_SUPPORT_X86_64
+  #define BX_CPU_VECTOR_INTEL 0
+#else
+  #define BX_CPU_VECTOR_INTEL 1
+#endif
+
 #define BX_SUPPORT_V8086_MODE 1
 
 #define BX_HAVE_SLEEP 0

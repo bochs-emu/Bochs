@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.28 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: logical8.cc,v 1.29 2007-04-17 21:38:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,14 +73,14 @@ void BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
 
 void BX_CPU_C::XOR_ALIb(bxInstruction_c *i)
 {
-  Bit8u op1, op2, sum;
+  Bit8u op1, op2, result;
 
   op1 = AL;
   op2 = i->Ib();
-  sum = op1 ^ op2;
-  AL = sum;
+  result = op1 ^ op2;
+  AL = result;
 
-  SET_FLAGS_OSZAPC_RESULT_8(sum, BX_INSTR_LOGIC8);
+  SET_FLAGS_OSZAPC_RESULT_8(result, BX_INSTR_LOGIC8);
 }
 
 void BX_CPU_C::XOR_EbIb(bxInstruction_c *i)
@@ -348,10 +348,8 @@ void BX_CPU_C::TEST_EbGb(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 {
-  Bit8u op2, op1;
-
-  op1 = AL;
-  op2 = i->Ib();
+  Bit8u op1 = AL;
+  Bit8u op2 = i->Ib();
 
 #if defined(BX_HostAsm_Test8)
   Bit32u flags32;

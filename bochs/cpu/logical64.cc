@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.16 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: logical64.cc,v 1.17 2007-04-17 21:38:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -82,16 +82,15 @@ void BX_CPU_C::XOR_GqEq(bxInstruction_c *i)
 void BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
 {
   /* for 64 bit operand size mode */
-  Bit64u op1_64, op2_64, sum_64;
+  Bit64u op1_64, op2_64, result_64;
 
   op1_64 = RAX;
   op2_64 = (Bit32s) i->Id();
-  sum_64 = op1_64 ^ op2_64;
+  result_64 = op1_64 ^ op2_64;
 
-  /* now write sum back to destination */
-  RAX = sum_64;
+  RAX = result_64;
 
-  SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
+  SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
 void BX_CPU_C::XOR_EqId(bxInstruction_c *i)
@@ -203,16 +202,15 @@ void BX_CPU_C::OR_GqEq(bxInstruction_c *i)
 
 void BX_CPU_C::OR_RAXId(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64, sum_64;
+  Bit64u op1_64, op2_64, result_64;
 
   op1_64 = RAX;
   op2_64 = (Bit32s) i->Id();
-  sum_64 = op1_64 | op2_64;
+  result_64 = op1_64 | op2_64;
 
-  /* now write sum back to destination */
-  RAX = sum_64;
+  RAX = result_64;
 
-  SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
+  SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
 void BX_CPU_C::AND_EqGq(bxInstruction_c *i)
@@ -262,16 +260,15 @@ void BX_CPU_C::AND_GqEq(bxInstruction_c *i)
 
 void BX_CPU_C::AND_RAXId(bxInstruction_c *i)
 {
-  Bit64u op1_64, op2_64, sum_64;
+  Bit64u op1_64, op2_64, result_64;
 
   op1_64 = RAX;
   op2_64 = (Bit32s) i->Id();
-  sum_64 = op1_64 & op2_64;
+  result_64 = op1_64 & op2_64;
 
-  /* now write sum back to destination */
-  RAX = sum_64;
+  RAX = result_64;
 
-  SET_FLAGS_OSZAPC_RESULT_64(sum_64, BX_INSTR_LOGIC64);
+  SET_FLAGS_OSZAPC_RESULT_64(result_64, BX_INSTR_LOGIC64);
 }
 
 void BX_CPU_C::AND_EqId(bxInstruction_c *i)
