@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.318 2007-04-14 10:05:30 sshwarts Exp $
+// $Id: cpu.h,v 1.319 2007-04-19 16:12:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2006,7 +2006,7 @@ public: // for now...
   BX_SMF void PSHUFLW_VqWqIb(bxInstruction_c *i);
   BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void CMPSS_VssWssIb(bxInstruction_c *i);
-  BX_SMF void PINSRW_PqEdIb(bxInstruction_c *i);
+  BX_SMF void PINSRW_PqEwIb(bxInstruction_c *i);
   BX_SMF void PEXTRW_GdPqIb(bxInstruction_c *i);
   BX_SMF void SHUFPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void PMOVMSKB_GdPRq(bxInstruction_c *i);
@@ -2080,8 +2080,8 @@ public: // for now...
   BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *i);
   BX_SMF void MOVNTI_MdGd(bxInstruction_c *i);
-  BX_SMF void PINSRW_VdqEdIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_GdVRdqIb(bxInstruction_c *i);
+  BX_SMF void PINSRW_VdqEwIb(bxInstruction_c *i);
+  BX_SMF void PEXTRW_GdUdqIb(bxInstruction_c *i);
   BX_SMF void SHUFPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void PSRLW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSRLD_VdqWdq(bxInstruction_c *i);
@@ -2092,7 +2092,7 @@ public: // for now...
   BX_SMF void MOVQ_WqVq(bxInstruction_c *i);
   BX_SMF void MOVDQ2Q_PqVRq(bxInstruction_c *i);
   BX_SMF void MOVQ2DQ_VdqQq(bxInstruction_c *i);
-  BX_SMF void PMOVMSKB_GdVRdq(bxInstruction_c *i);
+  BX_SMF void PMOVMSKB_GdUdq(bxInstruction_c *i);
   BX_SMF void PSUBUSB_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSUBUSW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PMINUB_VdqWdq(bxInstruction_c *i);
@@ -2125,7 +2125,7 @@ public: // for now...
   BX_SMF void PMULUDQ_VdqWdq(bxInstruction_c *i);
   BX_SMF void PMADDWD_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSADBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MASKMOVDQU_VdqVRdq(bxInstruction_c *i);
+  BX_SMF void MASKMOVDQU_VdqUdq(bxInstruction_c *i);
   BX_SMF void PSUBB_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSUBW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PSUBD_VdqWdq(bxInstruction_c *i);
@@ -2146,7 +2146,7 @@ public: // for now...
   BX_SMF void PSLLDQ_UdqIb(bxInstruction_c *i);
   /* SSE2 */
 
-  /*** Duplicate SSE/SSE2 instructions ***/
+  /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the
   // another function, it's nice to have them call a separate function when
   // the decoder is being tested in stand-alone mode.
@@ -2177,6 +2177,7 @@ public: // for now...
   BX_SMF void MOVHPD_MqVsd(bxInstruction_c *);
   BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *);
   BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *);
+  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *i);
 #else
 
 #if BX_SUPPORT_SSE >= 2
@@ -2185,38 +2186,46 @@ public: // for now...
   #define SSE2_ALIAS(i) BxError
 #endif
 
-#define MOVUPD_VpdWpd    /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
-#define MOVUPD_WpdVpd    /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
-#define MOVAPD_VpdWpd    /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
-#define MOVAPD_WpdVpd    /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
-#define MOVDQU_VdqWdq    /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
-#define MOVDQU_WdqVdq    /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
-#define MOVDQA_VdqWdq    /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
-#define MOVDQA_WdqVdq    /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
+#if BX_SUPPORT_SSE >= 4
+  #define SSE4_ALIAS(i) i
+#else
+  #define SSE4_ALIAS(i) BxError
+#endif
 
-#define PUNPCKLDQ_VdqWq  /* 66 0f 62 */ SSE2_ALIAS(UNPCKLPS_VpsWq) /*  0f 14 */
-#define PUNPCKHDQ_VdqWq  /* 66 0f 6a */ SSE2_ALIAS(UNPCKHPS_VpsWq) /*  0f 15 */
+#define MOVUPD_VpdWpd   /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
+#define MOVUPD_WpdVpd   /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
+#define MOVAPD_VpdWpd   /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
+#define MOVAPD_WpdVpd   /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
+#define MOVDQU_VdqWdq   /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
+#define MOVDQU_WdqVdq   /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
+#define MOVDQA_VdqWdq   /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
+#define MOVDQA_WdqVdq   /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
 
-#define PAND_VdqWdq      /* 66 0f db */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
-#define PANDN_VdqWdq     /* 66 0f df */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
-#define POR_VdqWdq       /* 66 0f eb */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
-#define PXOR_VdqWdq      /* 66 0f ef */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
+#define PUNPCKLDQ_VdqWq /* 66 0f 62 */ SSE2_ALIAS(UNPCKLPS_VpsWq) /*  0f 14 */
+#define PUNPCKHDQ_VdqWq /* 66 0f 6a */ SSE2_ALIAS(UNPCKHPS_VpsWq) /*  0f 15 */
 
-#define ANDPD_VpdWpd     /* 66 0f 54 */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
-#define ANDNPD_VpdWpd    /* 66 0f 55 */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
-#define ORPD_VpdWpd      /* 66 0f 56 */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
-#define XORPD_VpdWpd     /* 66 0f 57 */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
+#define PAND_VdqWdq     /* 66 0f db */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
+#define PANDN_VdqWdq    /* 66 0f df */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
+#define POR_VdqWdq      /* 66 0f eb */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
+#define PXOR_VdqWdq     /* 66 0f ef */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
 
-#define MOVLPD_VsdMq     /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)   /*  0f 12 */
-#define MOVLPD_MqVsd     /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)   /*  0f 13 */
-#define MOVHPD_VsdMq     /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)   /*  0f 16 */
-#define MOVHPD_MqVsd     /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)   /*  0f 17 */
+#define ANDPD_VpdWpd    /* 66 0f 54 */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
+#define ANDNPD_VpdWpd   /* 66 0f 55 */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
+#define ORPD_VpdWpd     /* 66 0f 56 */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
+#define XORPD_VpdWpd    /* 66 0f 57 */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
 
-#define MOVNTPD_MdqVpd   /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MdqVps) /*  0f 2b */
-#define MOVNTDQ_MdqVdq   /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MdqVps) /*  0f 2b */
+#define MOVLPD_VsdMq    /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)   /*  0f 12 */
+#define MOVLPD_MqVsd    /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)   /*  0f 13 */
+#define MOVHPD_VsdMq    /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)   /*  0f 16 */
+#define MOVHPD_MqVsd    /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)   /*  0f 17 */
 
-#define UNPCKLPD_VpdWq   /* 66 0f 14 */ PUNPCKLQDQ_VdqWq /* 66 0f 6c */
-#define UNPCKHPD_VpdWq   /* 66 0f 15 */ PUNPCKHQDQ_VdqWq /* 66 0f 6d */
+#define MOVNTPD_MdqVpd  /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MdqVps) /*  0f 2b */
+#define MOVNTDQ_MdqVdq  /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MdqVps) /*  0f 2b */
+
+#define UNPCKLPD_VpdWq  /* 66 0f 14 */ PUNPCKLQDQ_VdqWq /* 66 0f 6c */
+#define UNPCKHPD_VpdWq  /* 66 0f 15 */ PUNPCKHQDQ_VdqWq /* 66 0f 6d */
+
+#define MOVNTDQA_VdqMdq /* 66 0f 38 2a */ SSE4_ALIAS(LDDQU_VdqMdq) /* f2 0f f0 */
 
 #endif  // #ifdef STAND_ALONE_DECODER
 
@@ -2233,7 +2242,7 @@ public: // for now...
   BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
   /* SSE3 */
 
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* SSE3E */
   BX_SMF void PSHUFB_PqQq(bxInstruction_c *i);
   BX_SMF void PHADDW_PqQq(bxInstruction_c *i);
@@ -2269,6 +2278,55 @@ public: // for now...
   BX_SMF void PABSD_VdqWdq(bxInstruction_c *i);
   BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *i);
   /* SSE3E */
+#endif
+
+#if BX_SUPPORT_SSE >= 4
+  BX_SMF void PBLENDVB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void BLENDVPS_VpsWps(bxInstruction_c *i);
+  BX_SMF void BLENDVPD_VpdWpd(bxInstruction_c *i);
+  BX_SMF void PTEST_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMULDQ_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PCMPEQQ_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PACKUSDW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMOVSXBW_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMOVSXBD_VdqWd(bxInstruction_c *i);
+  BX_SMF void PMOVSXBQ_VdqWw(bxInstruction_c *i);
+  BX_SMF void PMOVSXWD_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMOVSXWQ_VdqWd(bxInstruction_c *i);
+  BX_SMF void PMOVSXDQ_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMOVZXBW_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMOVZXBD_VdqWd(bxInstruction_c *i);
+  BX_SMF void PMOVZXBQ_VdqWw(bxInstruction_c *i);
+  BX_SMF void PMOVZXWD_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMOVZXWQ_VdqWd(bxInstruction_c *i);
+  BX_SMF void PMOVZXDQ_VdqWq(bxInstruction_c *i);
+  BX_SMF void PMINSB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMINSD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMINUW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMINUD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMAXSB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMAXSD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMAXUW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMAXUD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PMULLD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PHMINPOSUW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void ROUNDPS_VpsWpsIb(bxInstruction_c *i);
+  BX_SMF void ROUNDPD_VpdWpdIb(bxInstruction_c *i);
+  BX_SMF void ROUNDSS_VssWssIb(bxInstruction_c *i);
+  BX_SMF void ROUNDSD_VsdWsdIb(bxInstruction_c *i);
+  BX_SMF void BLENDPS_VpsWpsIb(bxInstruction_c *i);
+  BX_SMF void BLENDPD_VpdWpdIb(bxInstruction_c *i);
+  BX_SMF void PBLENDW_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void PEXTRB_HbdUdqIb(bxInstruction_c *i);
+  BX_SMF void PEXTRW_HwdUdqIb(bxInstruction_c *i);
+  BX_SMF void PEXTRD_HdUdqIb(bxInstruction_c *i);
+  BX_SMF void EXTRACTPS_HdUpsIb(bxInstruction_c *i);
+  BX_SMF void PINSRB_VdqEbIb(bxInstruction_c *i);
+  BX_SMF void INSERTPS_VpsWssIb(bxInstruction_c *i);
+  BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *i);
+  BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *i);
+  BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *i);
+  BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *i);
 #endif
 
   BX_SMF void CMPXCHG_XBTS(bxInstruction_c *);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.110 2007-04-09 21:14:59 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.111 2007-04-19 16:12:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -886,13 +886,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1415,13 +1415,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -1944,13 +1944,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 35 */ { 0, &BX_CPU_C::BxError },  // SYSENTER/SYSEXIT not recognized in long mode
   /* 0F 36 */ { 0, &BX_CPU_C::BxError },
   /* 0F 37 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 38 */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA4 }, // 3-byte escape
 #else
   /* 0F 38 */ { 0, &BX_CPU_C::BxError },
 #endif
   /* 0F 39 */ { 0, &BX_CPU_C::BxError },
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* 0F 3A */ { BxAnother | Bx3ByteOpcode | Bx3ByteOpTable, NULL, BxOpcode3ByteTableA5 }, // 3-byte escape
 #else
   /* 0F 3A */ { 0, &BX_CPU_C::BxError },
@@ -2163,7 +2163,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   unsigned b3 = 0;
 #endif
 #define SSE_PREFIX_NONE 0
@@ -2298,7 +2298,7 @@ fetch_b1:
 
   attr = BxOpcodeInfo64[b1+offset].Attr;
 
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   // handle 3-byte escape
   if (attr & Bx3ByteOpcode) {
     if (ilen < remain) {
@@ -2533,7 +2533,7 @@ modrm_done:
          case BxRMGroup:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[rm  & 0x7]);
              break;
-#if BX_SUPPORT_SSE3E || BX_SUPPORT_SSE >= 4
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
          case Bx3ByteOpTable:
              OpcodeInfoPtr = &(OpcodeInfoPtr->AnotherArray[b3 >> 4]);
              break;

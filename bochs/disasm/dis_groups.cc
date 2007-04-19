@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.35 2007-02-22 17:43:29 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.36 2007-04-19 16:12:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -154,6 +154,38 @@ void disassembler::Eq(const x86_insn *insn)
 {
   if (insn->mod == 3)
     dis_sprintf("%s", general_64bit_regname[insn->rm]);
+  else
+    (this->*resolve_modrm)(insn, Q_SIZE);
+}
+
+void disassembler::Hbd(const x86_insn *insn) 
+{
+  if (insn->mod == 3)
+    dis_sprintf("%s", general_32bit_regname[insn->nnn]);
+  else
+    (this->*resolve_modrm)(insn, B_SIZE);
+}
+
+void disassembler::Hwd(const x86_insn *insn) 
+{
+  if (insn->mod == 3)
+    dis_sprintf("%s", general_32bit_regname[insn->nnn]);
+  else
+    (this->*resolve_modrm)(insn, W_SIZE);
+}
+
+void disassembler::Hd(const x86_insn *insn) 
+{
+  if (insn->mod == 3)
+    dis_sprintf("%s", general_32bit_regname[insn->nnn]);
+  else
+    (this->*resolve_modrm)(insn, D_SIZE);
+}
+
+void disassembler::Hq(const x86_insn *insn) 
+{
+  if (insn->mod == 3)
+    dis_sprintf("%s", general_32bit_regname[insn->nnn]);
   else
     (this->*resolve_modrm)(insn, Q_SIZE);
 }
@@ -361,6 +393,32 @@ void disassembler::Vsd(const x86_insn *insn) { Vq(insn); }
 void disassembler::Vps(const x86_insn *insn) { Vq(insn); }
 void disassembler::Vpd(const x86_insn *insn) { Vq(insn); }
 
+void disassembler::Ww(const x86_insn *insn)
+{
+  if (insn->mod == 3)
+  {
+    if (intel_mode)
+      dis_sprintf  ("xmm%d", insn->rm);
+    else
+      dis_sprintf("%%xmm%d", insn->rm);
+  }
+  else
+    (this->*resolve_modrm)(insn, W_SIZE);
+}
+
+void disassembler::Wd(const x86_insn *insn)
+{
+  if (insn->mod == 3)
+  {
+    if (intel_mode)
+      dis_sprintf  ("xmm%d", insn->rm);
+    else
+      dis_sprintf("%%xmm%d", insn->rm);
+  }
+  else
+    (this->*resolve_modrm)(insn, D_SIZE);
+}
+
 void disassembler::Wq(const x86_insn *insn)
 {
   if (insn->mod == 3)
@@ -388,20 +446,7 @@ void disassembler::Wdq(const x86_insn *insn)
 }
 
 void disassembler::Wsd(const x86_insn *insn) { Wq(insn); }
-
-void disassembler::Wss(const x86_insn *insn)
-{ 
-  if (insn->mod == 3)
-  {
-    if (intel_mode)
-      dis_sprintf  ("xmm%d", insn->rm);
-    else
-      dis_sprintf("%%xmm%d", insn->rm);
-  }
-  else
-    (this->*resolve_modrm)(insn, D_SIZE);
-}
-
+void disassembler::Wss(const x86_insn *insn) { Wd(insn); }
 void disassembler::Wpd(const x86_insn *insn) { Wdq(insn); }
 void disassembler::Wps(const x86_insn *insn) { Wdq(insn); }
 

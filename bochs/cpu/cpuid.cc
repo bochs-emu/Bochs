@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.42 2007-04-14 10:05:30 sshwarts Exp $
+// $Id: cpuid.cc,v 1.43 2007-04-19 16:12:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -123,17 +123,39 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 /* Get CPU extended feature flags. */
 Bit32u BX_CPU_C::get_extended_cpuid_features()
 {
+  // [0:0]   SSE3: SSE3 Instructions
+  // [2:1]   reserved
+  // [3:3]   MONITOR/MWAIT support
+  // [4:4]   DS-CPL: CPL qualified debug store
+  // [5:5]   VMX: Virtual Machine Technology
+  // [6:6]   reserved
+  // [7:7]   EST: Enhanced Intel SpeedStep Technology
+  // [8:8]   TM2: Thermal Monitor 2
+  // [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
+  // [10:10] CNXT-ID: L1 context ID
+  // [12:11] reserved
+  // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
+  // [14:14] xTPR update control
+  // [18:15] reserved
+  // [19:19] SSE4: SSE4 Instructions
+  // [20:20] SSE4E: SSE4E Instructions
+  // [31:21] reserved
+
   Bit32u features = 0;
 
 #if BX_SUPPORT_SSE >= 3
-  features |= 0x1;      // report SSE3
+  features |= 0x1;      // support SSE3
 #endif
-#if BX_SUPPORT_SSE3E
-  features |= (1<<9);   // report SSE3E (Intel Core Duo 2 new instructions)
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+  features |= (1<<9);   // support SSE3E
 #endif
 
 #if BX_SUPPORT_X86_64
   features |= (1<<13);  // support CMPXCHG16B
+#endif
+
+#if BX_SUPPORT_SSE >= 4
+  features |= (1<<19);  // support SSE4
 #endif
   
   return features;
@@ -256,16 +278,23 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [23:16] Number of logical processors in one physical processor
       //   [31:24] Local Apic ID
       // ECX:       Feature Flags::Extended
-      //   [0:0]   SSE3
-      //   [2:1]   Reserved
-      //   [3:3]   MONITOR/MWAIT
-      //   [4:4]   CPL qualified debug store available
-      //   [6:5]   Reserved
-      //   [7:7]   Enchanced Intel Speedstep Technology
+      //   [0:0]   SSE3: SSE3 Instructions
+      //   [2:1]   reserved
+      //   [3:3]   MONITOR/MWAIT support
+      //   [4:4]   DS-CPL: CPL qualified debug store
+      //   [5:5]   VMX: Virtual Machine Technology
+      //   [6:6]   reserved
+      //   [7:7]   EST: Enhanced Intel SpeedStep Technology
       //   [8:8]   TM2: Thermal Monitor 2
-      //   [12:9]  Reserved
-      //   [13:13] CMPXCHG16B
-      //   [31:14] Reserved
+      //   [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
+      //   [10:10] CNXT-ID: L1 context ID
+      //   [12:11] reserved
+      //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
+      //   [14:14] xTPR update control
+      //   [18:15] reserved
+      //   [19:19] SSE4: SSE4 Instructions
+      //   [20:20] SSE4E: SSE4E Instructions
+      //   [31:21] reserved
       // EDX:       Feature Flags
       //   [0:0]   FPU on chip
       //   [1:1]   VME: Virtual-8086 Mode enhancements
@@ -291,13 +320,14 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [21:21] DS: Debug Store
       //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
       //   [23:23] MMX Technology
-      //   [24;24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+      //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //   [25:25] SSE: SSE Extensions
       //   [26:26] SSE2: SSE2 Extensions
       //   [27:27] Reserved
       //   [28:28] Hyper Threading Technology
       //   [29:29] TM: Thermal Monitor
-      //   [31:30] Reserved
+      //   [30:30] Reserved
+      //   [31:31] PBE: Pending Break Enable
       RAX = get_cpu_version_information();
       RBX = 0;
 #if BX_SUPPORT_APIC
@@ -365,7 +395,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //     [21:21] Reserved
       //     [22:22] AMD MMX Extensions
       // [*] [23:23] MMX Technology
-      // [*] [24;24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+      // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
       //     [25:25] Fast FXSAVE/FXRSTOR mode support
       //     [26:26] Reserved
       //     [27:27] Support RDTSCP Instruction

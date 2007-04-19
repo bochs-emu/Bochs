@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.11 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.12 2007-04-19 16:12:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -29,7 +29,7 @@
 
 #include "fpu/softfloat-specialize.h"
 
-BX_CPP_INLINE Float32 convert_to_QNaN(Float32 op)
+BX_CPP_INLINE float32 convert_to_QNaN(float32 op)
 {
   return op | 0x00400000;
 }
@@ -294,7 +294,7 @@ static Bit16u rcp_table[2048] = {
 };
 
 // approximate reciprocal of scalar single precision FP
-static Float32 approximate_rcp(Float32 op)
+static float32 approximate_rcp(float32 op)
 {
   float_class_t op_class = float32_class(op);
 
@@ -380,7 +380,7 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  Float32 op;
+  float32 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -391,7 +391,7 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op);
   }
 
-  Float32 result = approximate_rcp(op);
+  float32 result = approximate_rcp(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
 
 #else
@@ -668,7 +668,7 @@ Bit16u rsqrt_table1[1024] =
 
 
 // approximate reciprocal sqrt of scalar single precision FP
-static Float32 approximate_rsqrt(Float32 op)
+static float32 approximate_rsqrt(float32 op)
 {
   float_class_t op_class = float32_class(op);
 
@@ -729,7 +729,7 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  Float32 op;
+  float32 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -740,7 +740,7 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op);
   }
 
-  Float32 result = approximate_rsqrt(op);
+  float32 result = approximate_rsqrt(op);
   BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
 
 #else

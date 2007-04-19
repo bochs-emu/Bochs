@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.57 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: sse_move.cc,v 1.58 2007-04-19 16:12:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -665,7 +665,7 @@ void BX_CPU_C::MOVDDUP_VpdWq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 #else
-  BX_INFO(("MOVDDUP_VpdWq: required PNI, use --enable-pni option"));
+  BX_INFO(("MOVDDUP_VpdWq: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -694,7 +694,7 @@ void BX_CPU_C::MOVSLDUP_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("MOVSLDUP_VpsWps: required PNI, use --enable-pni option"));
+  BX_INFO(("MOVSLDUP_VpsWps: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -723,7 +723,7 @@ void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
-  BX_INFO(("MOVHLDUP_VpsWps: required PNI, use --enable-pni option"));
+  BX_INFO(("MOVHLDUP_VpsWps: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -814,19 +814,19 @@ void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), op);
 
 #else
-  BX_INFO(("LDDQU_VdqMdq: required PNI, use --enable-pni option"));
+  BX_INFO(("LDDQU_VdqMdq: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
 
 /* 66 0F F7 */
-void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
+void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
   if (! i->modC0()) {
-    BX_INFO(("MASKMOVDQU_VdqVRdq: unexpected memory reference"));
+    BX_INFO(("MASKMOVDQU_VdqUdq: unexpected memory reference"));
     UndefinedOpcode(i);
   }
 
@@ -855,7 +855,7 @@ void BX_CPU_C::MASKMOVDQU_VdqVRdq(bxInstruction_c *i)
   }
 
 #else
-  BX_INFO(("MASKMOVDQU_VdqVRdq: required SSE2, use --enable-sse option"));
+  BX_INFO(("MASKMOVDQU_VdqUdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1080,436 +1080,37 @@ void BX_CPU_C::MOVQ2DQ_VdqQq(bxInstruction_c *i)
 #endif
 }
 
-/* ****************************** */
-/* SSE: MEMORY SHUFFLE OPERATIONS */
-/* ****************************** */
-
-/* 0F C6 */
-void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-  Bit8u order = i->Ib();
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm32u(0) = op1.xmm32u((order >> 0) & 0x3);
-  result.xmm32u(1) = op1.xmm32u((order >> 2) & 0x3);
-  result.xmm32u(2) = op2.xmm32u((order >> 4) & 0x3);
-  result.xmm32u(3) = op2.xmm32u((order >> 6) & 0x3);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("SHUFPS_VpsWpsIb: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F C6 */
-void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
+/* 66 0F D7 */
+void BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-  Bit8u order = i->Ib();
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
+  Bit32u result = 0;
 
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm64u(0) = op1.xmm64u((order >> 0) & 0x1);
-  result.xmm64u(1) = op2.xmm64u((order >> 1) & 0x1);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("SHUFPD_VpdWpdIb: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F 60 */
-void BX_CPU_C::PUNPCKLBW_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmmubyte(0x0) = op1.xmmubyte(0);
-  result.xmmubyte(0x1) = op2.xmmubyte(0);
-  result.xmmubyte(0x2) = op1.xmmubyte(1);
-  result.xmmubyte(0x3) = op2.xmmubyte(1);
-  result.xmmubyte(0x4) = op1.xmmubyte(2);
-  result.xmmubyte(0x5) = op2.xmmubyte(2);
-  result.xmmubyte(0x6) = op1.xmmubyte(3);
-  result.xmmubyte(0x7) = op2.xmmubyte(3);
-  result.xmmubyte(0x8) = op1.xmmubyte(4);
-  result.xmmubyte(0x9) = op2.xmmubyte(4);
-  result.xmmubyte(0xA) = op1.xmmubyte(5);
-  result.xmmubyte(0xB) = op2.xmmubyte(5);
-  result.xmmubyte(0xC) = op1.xmmubyte(6);
-  result.xmmubyte(0xD) = op2.xmmubyte(6);
-  result.xmmubyte(0xE) = op1.xmmubyte(7);
-  result.xmmubyte(0xF) = op2.xmmubyte(7);
+  if(op.xmmubyte(0x0) & 0x80) result |= 0x0001; 
+  if(op.xmmubyte(0x1) & 0x80) result |= 0x0002; 
+  if(op.xmmubyte(0x2) & 0x80) result |= 0x0004; 
+  if(op.xmmubyte(0x3) & 0x80) result |= 0x0008; 
+  if(op.xmmubyte(0x4) & 0x80) result |= 0x0010; 
+  if(op.xmmubyte(0x5) & 0x80) result |= 0x0020; 
+  if(op.xmmubyte(0x6) & 0x80) result |= 0x0040; 
+  if(op.xmmubyte(0x7) & 0x80) result |= 0x0080; 
+  if(op.xmmubyte(0x8) & 0x80) result |= 0x0100; 
+  if(op.xmmubyte(0x9) & 0x80) result |= 0x0200; 
+  if(op.xmmubyte(0xA) & 0x80) result |= 0x0400; 
+  if(op.xmmubyte(0xB) & 0x80) result |= 0x0800; 
+  if(op.xmmubyte(0xC) & 0x80) result |= 0x1000; 
+  if(op.xmmubyte(0xD) & 0x80) result |= 0x2000; 
+  if(op.xmmubyte(0xE) & 0x80) result |= 0x4000; 
+  if(op.xmmubyte(0xF) & 0x80) result |= 0x8000; 
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_32BIT_REGZ(i->nnn(), result);
+  
 #else
-  BX_INFO(("PUNPCKLBW_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F 61 */
-void BX_CPU_C::PUNPCKLWD_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm16u(0) = op1.xmm16u(0);
-  result.xmm16u(1) = op2.xmm16u(0);
-  result.xmm16u(2) = op1.xmm16u(1);
-  result.xmm16u(3) = op2.xmm16u(1);
-  result.xmm16u(4) = op1.xmm16u(2);
-  result.xmm16u(5) = op2.xmm16u(2);
-  result.xmm16u(6) = op1.xmm16u(3);
-  result.xmm16u(7) = op2.xmm16u(3);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKLWD_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* UNPCKLPS:     0F 14 */
-/* PUNPCKLDQ: 66 0F 62 */
-
-void BX_CPU_C::UNPCKLPS_VpsWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm32u(0) = op1.xmm32u(0);
-  result.xmm32u(1) = op2.xmm32u(0);
-  result.xmm32u(2) = op1.xmm32u(1);
-  result.xmm32u(3) = op2.xmm32u(1);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("UNPCKLPS_VpsWq: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F 68 */
-void BX_CPU_C::PUNPCKHBW_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmmubyte(0x0) = op1.xmmubyte(0x8);
-  result.xmmubyte(0x1) = op2.xmmubyte(0x8);
-  result.xmmubyte(0x2) = op1.xmmubyte(0x9);
-  result.xmmubyte(0x3) = op2.xmmubyte(0x9);
-  result.xmmubyte(0x4) = op1.xmmubyte(0xA);
-  result.xmmubyte(0x5) = op2.xmmubyte(0xA);
-  result.xmmubyte(0x6) = op1.xmmubyte(0xB);
-  result.xmmubyte(0x7) = op2.xmmubyte(0xB);
-  result.xmmubyte(0x8) = op1.xmmubyte(0xC);
-  result.xmmubyte(0x9) = op2.xmmubyte(0xC);
-  result.xmmubyte(0xA) = op1.xmmubyte(0xD);
-  result.xmmubyte(0xB) = op2.xmmubyte(0xD);
-  result.xmmubyte(0xC) = op1.xmmubyte(0xE);
-  result.xmmubyte(0xD) = op2.xmmubyte(0xE);
-  result.xmmubyte(0xE) = op1.xmmubyte(0xF);
-  result.xmmubyte(0xF) = op2.xmmubyte(0xF);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHBW_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F 69 */
-void BX_CPU_C::PUNPCKHWD_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm16u(0) = op1.xmm16u(4);
-  result.xmm16u(1) = op2.xmm16u(4);
-  result.xmm16u(2) = op1.xmm16u(5);
-  result.xmm16u(3) = op2.xmm16u(5);
-  result.xmm16u(4) = op1.xmm16u(6);
-  result.xmm16u(5) = op2.xmm16u(6);
-  result.xmm16u(6) = op1.xmm16u(7);
-  result.xmm16u(7) = op2.xmm16u(7);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHWD_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* UNPCKHPS:     0F 15 */
-/* PUNPCKHDQ: 66 0F 6A */
-
-void BX_CPU_C::UNPCKHPS_VpsWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 1
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm32u(0) = op1.xmm32u(2);
-  result.xmm32u(1) = op2.xmm32u(2);
-  result.xmm32u(2) = op1.xmm32u(3);
-  result.xmm32u(3) = op2.xmm32u(3);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("UNPCKHPS_VpsWq: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* UNPCKLPD:   66 0F 14 */
-/* PUNPCKLQDQ: 66 0F 6C */
-
-void BX_CPU_C::PUNPCKLQDQ_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  op1.xmm64u(1) = op2.xmm64u(0);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op1);
-#else
-  BX_INFO(("PUNPCKLQDQ_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* UNPCKHPD:   66 0F 15 */
-/* PUNPCKHQDQ: 66 0F 6D */
-
-void BX_CPU_C::PUNPCKHQDQ_VdqWq(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
-
-  /* op2 is a register or memory reference */
-  if (i->modC0()) {
-    op2 = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
-  }
-
-  result.xmm64u(0) = op1.xmm64u(1);
-  result.xmm64u(1) = op2.xmm64u(1);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PUNPCKHQDQ_VdqWq: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* 66 0F 70 */
-void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op, result;
-  Bit8u order = i->Ib();
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
-  }
-
-  result.xmm32u(0) = op.xmm32u((order >> 0) & 0x3);
-  result.xmm32u(1) = op.xmm32u((order >> 2) & 0x3);
-  result.xmm32u(2) = op.xmm32u((order >> 4) & 0x3);
-  result.xmm32u(3) = op.xmm32u((order >> 6) & 0x3);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFD_VdqWdqIb: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* F2 0F 70 */
-void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op, result;
-  Bit8u order = i->Ib();
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
-  }
-
-  result.xmm64u(0) = op.xmm64u(0);
-  result.xmm16u(4) = op.xmm16u(4 + ((order >> 0) & 0x3));
-  result.xmm16u(5) = op.xmm16u(4 + ((order >> 2) & 0x3));
-  result.xmm16u(6) = op.xmm16u(4 + ((order >> 4) & 0x3));
-  result.xmm16u(7) = op.xmm16u(4 + ((order >> 6) & 0x3));
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFHW_VqWqIb: required SSE2, use --enable-sse option"));
-  UndefinedOpcode(i);
-#endif
-}
-
-/* F3 0F 70 */
-void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
-{
-#if BX_SUPPORT_SSE >= 2
-  BX_CPU_THIS_PTR prepareSSE();
-
-  BxPackedXmmRegister op, result;
-  Bit8u order = i->Ib();
-
-  /* op is a register or memory reference */
-  if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
-  }
-
-  result.xmm16u(0) = op.xmm16u((order >> 0) & 0x3);
-  result.xmm16u(1) = op.xmm16u((order >> 2) & 0x3);
-  result.xmm16u(2) = op.xmm16u((order >> 4) & 0x3);
-  result.xmm16u(3) = op.xmm16u((order >> 6) & 0x3);
-  result.xmm64u(1) = op.xmm64u(1);
-
-  /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), result);
-#else
-  BX_INFO(("PSHUFLW_VqWqIb: required SSE, use --enable-sse option"));
+  BX_INFO(("PMOVMSKB_GdUdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
@@ -1567,3 +1168,429 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
   UndefinedOpcode(i);                      
 #endif
 }
+
+/* ************************** */
+/* 3-BYTE-OPCODE INSTRUCTIONS */
+/* ************************** */
+
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+/* 66 0F 38 20 */
+void BX_CPU_C::PMOVSXBW_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm16u(0) = (Bit8s) (val64 & 0xFF);
+  result.xmm16u(1) = (Bit8s) ((val64 >>  8) & 0xFF);
+  result.xmm16u(2) = (Bit8s) ((val64 >> 16) & 0xFF);
+  result.xmm16u(3) = (Bit8s) ((val64 >> 24) & 0xFF);
+  result.xmm16u(4) = (Bit8s) ((val64 >> 32) & 0xFF);
+  result.xmm16u(5) = (Bit8s) ((val64 >> 40) & 0xFF);
+  result.xmm16u(6) = (Bit8s) ((val64 >> 48) & 0xFF);
+  result.xmm16u(7) = (Bit8s) (val64  >> 56);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXBW_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 21 */
+void BX_CPU_C::PMOVSXBD_VdqWd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit32u val32;
+
+  if (i->modC0())
+  {
+    val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &val32);
+  }
+
+  result.xmm32u(0) = (Bit8s) (val32 & 0xFF);
+  result.xmm32u(1) = (Bit8s) ((val32 >>  8) & 0xFF);
+  result.xmm32u(2) = (Bit8s) ((val32 >> 16) & 0xFF);
+  result.xmm32u(3) = (Bit8s) (val32  >> 24);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXBD_VdqWd: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 22 */
+void BX_CPU_C::PMOVSXBQ_VdqWw(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit16u val16;
+
+  if (i->modC0())
+  {
+    val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &val16);
+  }
+
+  result.xmm64u(0) = (Bit8s) (val16 & 0xFF);
+  result.xmm64u(1) = (Bit8s) (val16 >> 8);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXBQ_VdqWw: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 23 */
+void BX_CPU_C::PMOVSXWD_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm32u(0) = (Bit16s) (val64 & 0xFFFF);
+  result.xmm32u(1) = (Bit16s) ((val64 >> 16) & 0xFFFF);
+  result.xmm32u(2) = (Bit16s) ((val64 >> 32) & 0xFFFF);
+  result.xmm32u(3) = (Bit16s) (val64  >> 48);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXWD_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 24 */
+void BX_CPU_C::PMOVSXWQ_VdqWd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit32u val32;
+
+  if (i->modC0())
+  {
+    val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &val32);
+  }
+
+  result.xmm64u(0) = (Bit16s) (val32 & 0xFFFF);
+  result.xmm64u(1) = (Bit16s) (val32 >> 16);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXWQ_VdqWd: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 25 */
+void BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm64u(0) = (Bit32s) (val64 & 0xFFFFFFFF);
+  result.xmm64u(1) = (Bit32s) (val64 >> 32);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVSXDQ_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 30 */
+void BX_CPU_C::PMOVZXBW_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm16u(0) = val64 & 0xFF;
+  result.xmm16u(1) = (val64 >>  8) & 0xFF;
+  result.xmm16u(2) = (val64 >> 16) & 0xFF;
+  result.xmm16u(3) = (val64 >> 24) & 0xFF;
+  result.xmm16u(4) = (val64 >> 32) & 0xFF;
+  result.xmm16u(5) = (val64 >> 40) & 0xFF;
+  result.xmm16u(6) = (val64 >> 48) & 0xFF;
+  result.xmm16u(7) = val64 >> 56;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXBW_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 31 */
+void BX_CPU_C::PMOVZXBD_VdqWd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit32u val32;
+
+  if (i->modC0())
+  {
+    val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &val32);
+  }
+
+  result.xmm32u(0) = val32 & 0xFF;
+  result.xmm32u(1) = (val32 >>  8) & 0xFF;
+  result.xmm32u(2) = (val32 >> 16) & 0xFF;
+  result.xmm32u(3) = val32  >> 24;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXBD_VdqWd: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 32 */
+void BX_CPU_C::PMOVZXBQ_VdqWw(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit16u val16;
+
+  if (i->modC0())
+  {
+    val16 = BX_READ_XMM_REG_LO_WORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_word(i->seg(), RMAddr(i), &val16);
+  }
+
+  result.xmm64u(0) = val16 & 0xFF;
+  result.xmm64u(1) = val16 >> 8;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXBQ_VdqWw: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 33 */
+void BX_CPU_C::PMOVZXWD_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm32u(0) = val64 & 0xFFFF;
+  result.xmm32u(1) = (val64 >> 16) & 0xFFFF;
+  result.xmm32u(2) = (val64 >> 32) & 0xFFFF;
+  result.xmm32u(3) = val64  >> 48;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXWD_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 34 */
+void BX_CPU_C::PMOVZXWQ_VdqWd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit32u val32;
+
+  if (i->modC0())
+  {
+    val32 = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &val32);
+  }
+
+  result.xmm64u(0) = val32 & 0xFFFF;
+  result.xmm64u(1) = val32 >> 16;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXWQ_VdqWd: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 35 */
+void BX_CPU_C::PMOVZXDQ_VdqWq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+  BxPackedXmmRegister result;
+  Bit64u val64;
+
+  if (i->modC0())
+  {
+    val64 = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &val64);
+  }
+
+  result.xmm64u(0) = val64 & 0xFFFFFFFF;
+  result.xmm64u(1) = val64 >> 32;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PMOVZXDQ_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 3A 0F */
+void BX_CPU_C::PALIGNR_VdqWdqIb(bxInstruction_c *i)
+{
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, result;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  unsigned shift = i->Ib() * 8;
+
+  if(shift == 0) {
+    result.xmm64u(0) = op2.xmm64u(0);
+    result.xmm64u(1) = op2.xmm64u(1);
+  }
+  else if(shift < 64) {
+    result.xmm64u(0) = (op2.xmm64u(0) >> shift) | (op2.xmm64u(1) << (64-shift));
+    result.xmm64u(1) = (op2.xmm64u(1) >> shift) | (op1.xmm64u(0) << (64-shift));
+  }
+  else if(shift == 64) {
+    result.xmm64u(0) = op2.xmm64u(1);
+    result.xmm64u(1) = op1.xmm64u(0);
+  }
+  else if(shift < 128) {
+    shift -= 64;
+    result.xmm64u(0) = (op2.xmm64u(1) >> shift) | (op1.xmm64u(0) << (64-shift));
+    result.xmm64u(1) = (op1.xmm64u(0) >> shift) | (op1.xmm64u(1) << (64-shift));
+  }
+  else if(shift == 128) {
+    result.xmm64u(0) = op1.xmm64u(0);
+    result.xmm64u(1) = op1.xmm64u(1);
+  }
+  else if(shift < 192) {
+    shift -= 128;
+    result.xmm64u(0) = (op1.xmm64u(0) >> shift) | (op1.xmm64u(1) << (64-shift));
+    result.xmm64u(1) = (op1.xmm64u(1) >> shift);
+  }
+  else if(shift < 256) {
+    result.xmm64u(0) = op1.xmm64u(1) >> (shift - 192);
+    result.xmm64u(1) = 0;
+  }
+  else {
+    result.xmm64u(0) = 0;
+    result.xmm64u(1) = 0;
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("PALIGNR_VdqWdqIb: required SSE3E, use --enable-sse and --enable-sse-extension options"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif // BX_SUPPORT_SSE >= 4 || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)

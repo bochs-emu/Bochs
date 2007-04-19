@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_decode.cc,v 1.37 2007-03-23 22:07:49 sshwarts Exp $
+// $Id: dis_decode.cc,v 1.38 2007-04-19 16:12:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -255,6 +255,10 @@ x86_insn disassembler::decode(bx_bool is_32, bx_bool is_64, bx_address base, bx_
 
        case _GRP3BOP:
          entry = &(OPCODE_TABLE(entry)[b3 & 15]);
+         break;
+
+       case _GRP64B:
+         entry = &(OPCODE_TABLE(entry)[insn.os_64]);
          break;
 
        default:

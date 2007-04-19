@@ -32,10 +32,11 @@
 #define IA_SSE3             0x00001000        /* SSE3 instruction */
 #define IA_SSE3E            0x00002000        /* SSE3E instruction */
 #define IA_SSE4             0x00004000        /* SSE4 instruction */
-#define IA_X86_64           0x00008000        /* x86-64 instruction */
-#define IA_SYSCALL_SYSRET   0x00010000        /* SYSCALL/SYSRET instruction */
-#define IA_SYSENTER_SYSEXIT 0x00020000        /* SYSENTER/SYSEXIT instruction */
-#define IA_VMX              0x00040000        /* VMX instruction */
+#define IA_SSE4E            0x00008000        /* SSE4E instruction */
+#define IA_X86_64           0x00010000        /* x86-64 instruction */
+#define IA_SYSCALL_SYSRET   0x00020000        /* SYSCALL/SYSRET instruction */
+#define IA_SYSENTER_SYSEXIT 0x00040000        /* SYSENTER/SYSEXIT instruction */
+#define IA_VMX              0x00080000        /* VMX instruction */
 
 /* general purpose bit register */
 enum {
@@ -296,11 +297,14 @@ public:
  * D  - The reg field of the ModR/M byte selects a debug register.
  * E  - A ModR/M byte follows the opcode and specifies the operand. The 
  *      operand is either a general-purpose register or a memory address. 
- *      If it is a memory address, the address is computed from a segment 
- *      register and any of the following values: a base register, an
- *      index register, a scaling factor, a displacement.
+ *      In case of the register operand, the R/M field of the ModR/M byte
+ *      selects a general register.
  * F  - Flags Register.
  * G  - The reg field of the ModR/M byte selects a general register.
+ * H  - A ModR/M byte follows the opcode and specifies the operand. The 
+ *      operand is either a general-purpose register or a memory address. 
+ *      In case of the register operand, the reg field of the ModR/M byte 
+ *      selects a general register.
  * I  - Immediate data. The operand value is encoded in subsequent bytes of 
  *      the instruction.
  * J  - The instruction contains a relative offset to be added to the 
@@ -321,8 +325,8 @@ public:
  *      index register, a scaling factor, and a displacement.
  * R  - The mod field of the ModR/M byte may refer only to a general register.
  * S  - The reg field of the ModR/M byte selects a segment register.
- * U  - The R/M field of the ModR/M byte selects a 128-bit XMM register.
  * T  - The reg field of the ModR/M byte selects a test register.
+ * U  - The R/M field of the ModR/M byte selects a 128-bit XMM register.
  * V  - The reg field of the ModR/M byte selects a 128-bit XMM register.
  * W  - A ModR/M byte follows the opcode and specifies the operand. The 
  *      operand is either a 128-bit XMM register or a memory address. If 
@@ -419,6 +423,11 @@ public:
   void Gd(const x86_insn *insn);
   void Gq(const x86_insn *insn);
 
+  void Hbd(const x86_insn *insn);
+  void Hwd(const x86_insn *insn);
+  void  Hd(const x86_insn *insn);
+  void  Hq(const x86_insn *insn);
+
   // immediate
   void I1(const x86_insn *insn);
   void Ib(const x86_insn *insn);
@@ -462,7 +471,10 @@ public:
   void Vpd(const x86_insn *insn);
 
   // xmm register or memory operand
+  void Ww(const x86_insn *insn);
+  void Wd(const x86_insn *insn);
   void Wq(const x86_insn *insn);
+
   void Wdq(const x86_insn *insn);
   void Wss(const x86_insn *insn);
   void Wsd(const x86_insn *insn);

@@ -20,6 +20,7 @@
   --enable-mmx \
   --enable-fpu \
   --enable-sse=4 \
+  --enable-sse-extension \
   --enable-vme \
   --enable-sep \
   --enable-3dnow \

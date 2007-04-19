@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.29 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.30 2007-04-19 16:12:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -26,6 +26,8 @@
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_SSE
+
+#include "fpu/softfloat-specialize.h"
 
 void BX_CPU_C::check_exceptionsSSE(int exceptions_flags)
 {
@@ -73,7 +75,6 @@ static float32_compare_method compare32[4] = {
 };
 
 #if BX_SUPPORT_SSE >= 2
-
 /* Comparison predicate for CMPSD/CMPPD instructions */
 static float64_compare_method compare64[4] = {
   float64_eq, 
@@ -81,10 +82,9 @@ static float64_compare_method compare64[4] = {
   float64_le, 
   float64_unordered
 };
-
-#endif /* BX_SUPPORT_SSE >= 2 */
-
 #endif
+
+#endif // BX_SUPPORT_SSE
 
 /* 
  * Opcode: 0F 2A
@@ -170,7 +170,7 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  Float64 result;
+  float64 result;
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -227,7 +227,7 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
-  Float32 result;
+  float32 result;
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -297,8 +297,8 @@ void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  Float32 r0 = (Float32)(op & 0xFFFFFFFF);
-  Float32 r1 = (Float32)(op >> 32);
+  float32 r0 = (float32)(op & 0xFFFFFFFF);
+  float32 r1 = (float32)(op >> 32);
 
   MMXUD0(result) = float32_to_int32_round_to_zero(r0, status_word);
   MMXUD1(result) = float32_to_int32_round_to_zero(r1, status_word);
@@ -360,7 +360,7 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op;
+  float64 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -406,7 +406,7 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op;
+  float32 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -469,8 +469,8 @@ void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  Float32 r0 = (Float32)(op & 0xFFFFFFFF);
-  Float32 r1 = (Float32)(op >> 32);
+  float32 r0 = (float32)(op & 0xFFFFFFFF);
+  float32 r1 = (float32)(op >> 32);
 
   MMXUD0(result) = float32_to_int32(r0, status_word);
   MMXUD1(result) = float32_to_int32(r1, status_word);
@@ -534,7 +534,7 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op;
+  float64 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -581,7 +581,7 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op;
+  float32 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -641,8 +641,8 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  Float32 r0 = (Float32)(op & 0xFFFFFFFF);
-  Float32 r1 = (Float32)(op >> 32);
+  float32 r0 = (float32)(op & 0xFFFFFFFF);
+  float32 r1 = (float32)(op >> 32);
 
   if (MXCSR.get_DAZ()) {
     r0 = handleDAZ(r0);
@@ -722,8 +722,8 @@ void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op;
-  Float32 result;
+  float64 op;
+  float32 result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -757,8 +757,8 @@ void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op;
-  Float64 result;
+  float32 op;
+  float64 result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1034,7 +1034,7 @@ void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1073,7 +1073,7 @@ void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1112,7 +1112,7 @@ void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1151,7 +1151,7 @@ void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1260,10 +1260,8 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
     op.xmm64u(1) = handleDAZ(op.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_sqrt(op.xmm64u(0), status_word);
-  result.xmm64u(1) = 
-     float64_sqrt(op.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_sqrt(op.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_sqrt(op.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1284,7 +1282,7 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op, result;
+  float64 op, result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1318,7 +1316,7 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op, result;
+  float32 op, result;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1428,10 +1426,8 @@ void BX_CPU_C::ADDPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_add(op1.xmm64u(0), op2.xmm64u(0), status_word);
-  result.xmm64u(1) =              
-     float64_add(op1.xmm64u(1), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_add(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_add(op1.xmm64u(1), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1452,7 +1448,7 @@ void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1492,7 +1488,7 @@ void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1608,10 +1604,8 @@ void BX_CPU_C::MULPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_mul(op1.xmm64u(0), op2.xmm64u(0), status_word);
-  result.xmm64u(1) = 
-     float64_mul(op1.xmm64u(1), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_mul(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_mul(op1.xmm64u(1), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1632,7 +1626,7 @@ void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1672,7 +1666,7 @@ void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1788,10 +1782,8 @@ void BX_CPU_C::SUBPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_sub(op1.xmm64u(0), op2.xmm64u(0), status_word);
-  result.xmm64u(1) = 
-     float64_sub(op1.xmm64u(1), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_sub(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_sub(op1.xmm64u(1), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1812,7 +1804,7 @@ void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -1852,7 +1844,7 @@ void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2000,7 +1992,7 @@ void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2041,7 +2033,7 @@ void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2158,10 +2150,8 @@ void BX_CPU_C::DIVPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_div(op1.xmm64u(0), op2.xmm64u(0), status_word);
-  result.xmm64u(1) = 
-     float64_div(op1.xmm64u(1), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_div(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_div(op1.xmm64u(1), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2182,7 +2172,7 @@ void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2222,7 +2212,7 @@ void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2370,7 +2360,7 @@ void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2411,7 +2401,7 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2474,10 +2464,8 @@ void BX_CPU_C::HADDPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_add(op1.xmm64u(0), op1.xmm64u(1), status_word);
-  result.xmm64u(1) = 
-     float64_add(op2.xmm64u(0), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_add(op1.xmm64u(0), op1.xmm64u(1), status_word);
+  result.xmm64u(1) = float64_add(op2.xmm64u(0), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2574,10 +2562,8 @@ void BX_CPU_C::HSUBPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_sub(op1.xmm64u(0), op1.xmm64u(1), status_word);
-  result.xmm64u(1) = 
-     float64_sub(op2.xmm64u(0), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_sub(op1.xmm64u(0), op1.xmm64u(1), status_word);
+  result.xmm64u(1) = float64_sub(op2.xmm64u(0), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2794,7 +2780,7 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result = 0;
+  float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2853,7 +2839,7 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  Float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result = 0;
+  float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->nnn()), op2, result = 0;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) {
@@ -2934,10 +2920,8 @@ void BX_CPU_C::ADDSUBPD_VpdWpd(bxInstruction_c *i)
     op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
   }
 
-  result.xmm64u(0) = 
-     float64_sub(op1.xmm64u(0), op2.xmm64u(0), status_word);
-  result.xmm64u(1) = 
-     float64_add(op1.xmm64u(1), op2.xmm64u(1), status_word);
+  result.xmm64u(0) = float64_sub(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  result.xmm64u(1) = float64_add(op1.xmm64u(1), op2.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2984,14 +2968,10 @@ void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_sub(op1.xmm32u(0), op2.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_add(op1.xmm32u(1), op2.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_sub(op1.xmm32u(2), op2.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_add(op1.xmm32u(3), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_sub(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_add(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_sub(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_add(op1.xmm32u(3), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -3001,3 +2981,319 @@ void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
   UndefinedOpcode(i);
 #endif
 }
+
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+/* 66 0F 3A 08 */
+void BX_CPU_C::ROUNDPS_VpsWpsIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op, result;
+  Bit8u control = i->Ib();
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status_word.float_rounding_mode = control & 0x3;
+
+  if (MXCSR.get_DAZ()) {
+    op.xmm32u(0) = handleDAZ(op.xmm32u(0));
+    op.xmm32u(1) = handleDAZ(op.xmm32u(1));
+    op.xmm32u(2) = handleDAZ(op.xmm32u(2));
+    op.xmm32u(3) = handleDAZ(op.xmm32u(3));
+  }
+
+  for (unsigned j=0; j < 4; j++) {
+      if (float32_is_nan(op.xmm32u(0)))
+          result.xmm32u(j) = propagateFloat32NaN(op.xmm32u(j), status_word);
+      else
+          result.xmm32u(j) = float32_to_int32(op.xmm32u(j), status_word);
+  }
+
+  // ignore precision exception result
+  if (control & 0x8)
+      status_word.float_exception_flags &= ~float_flag_inexact;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("ROUNDPS_VpsWpsIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 3A 09 */
+void BX_CPU_C::ROUNDPD_VpdWpdIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op, result;
+  Bit8u control = i->Ib();
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status_word.float_rounding_mode = control & 0x3;
+
+  if (MXCSR.get_DAZ()) {
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+  }
+
+  for (unsigned j=0; j < 2; j++) {
+      if (float64_is_nan(op.xmm64u(0)))
+          result.xmm64u(j) = propagateFloat64NaN(op.xmm64u(j), status_word);
+      else
+          result.xmm64u(j) = float64_to_int64(op.xmm64u(j), status_word);
+  }
+
+  // ignore precision exception result
+  if (control & 0x8)
+      status_word.float_exception_flags &= ~float_flag_inexact;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), result);
+#else
+  BX_INFO(("ROUNDPD_VpdWpdIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 3A 0A */
+void BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  Bit32u result;
+  Bit8u control = i->Ib();
+  float32 op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG_LO_DWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &op);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status_word.float_rounding_mode = control & 0x3;
+
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
+
+  if (float32_is_nan(op))
+      result = propagateFloat32NaN(op, status_word);
+  else
+      result = float32_to_int32(op, status_word);
+
+  // ignore precision exception result
+  if (control & 0x8)
+      status_word.float_exception_flags &= ~float_flag_inexact;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+#else
+  BX_INFO(("ROUNDSS_VssWssIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 3A 0B */
+void BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  Bit64u result;
+  Bit8u control = i->Ib();
+  float64 op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_XMM_REG_LO_QWORD(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status_word.float_rounding_mode = control & 0x3;
+
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
+
+  if (float64_is_nan(op))
+      result = propagateFloat64NaN(op, status_word);
+  else
+      result = float64_to_int64(op, status_word);
+
+  // ignore precision exception result
+  if (control & 0x8)
+      status_word.float_exception_flags &= ~float_flag_inexact;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+#else
+  BX_INFO(("ROUNDSD_VsdWsdIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* Opcode: 66 0F 3A 40 
+ * Selectively multiply packed SP floating-point values from xmm1 with
+ * packed SP floating-point values from xmm2, add and selectively 
+ * store the packed SP floating-point values or zero values to xmm1
+ */
+void BX_CPU_C::DPPS_VpsWpsIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
+  Bit8u mask = i->Ib();
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) {
+    op1.xmm32u(0) = handleDAZ(op1.xmm32u(0));
+    op1.xmm32u(1) = handleDAZ(op1.xmm32u(1));
+    op1.xmm32u(2) = handleDAZ(op1.xmm32u(2));
+    op1.xmm32u(3) = handleDAZ(op1.xmm32u(3));
+
+    op2.xmm32u(0) = handleDAZ(op2.xmm32u(0));
+    op2.xmm32u(1) = handleDAZ(op2.xmm32u(1));
+    op2.xmm32u(2) = handleDAZ(op2.xmm32u(2));
+    op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
+  }
+
+  tmp.xmm64u(0) = tmp.xmm64u(1) = 0;
+
+  if (mask & 0x10)
+     tmp.xmm32u(0) = float32_mul(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  if (mask & 0x20)
+     tmp.xmm32u(1) = float32_mul(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  if (mask & 0x40)
+     tmp.xmm32u(2) = float32_mul(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  if (mask & 0x80)
+     tmp.xmm32u(3) = float32_mul(op1.xmm32u(3), op2.xmm32u(3), status_word);
+
+  float32 r1 = float32_add(tmp.xmm32u(0), tmp.xmm32u(1), status_word);
+  float32 r2 = float32_add(tmp.xmm32u(2), tmp.xmm32u(3), status_word);
+  float32 r  = float32_add(r1, r2, status_word);
+
+  op1.xmm64u(0) = op1.xmm64u(1) = 0;
+
+  if (mask & 0x01) op1.xmm32u(0) = r;
+  if (mask & 0x02) op1.xmm32u(1) = r;
+  if (mask & 0x04) op1.xmm32u(2) = r;
+  if (mask & 0x08) op1.xmm32u(3) = r;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("DPPS_VpsWpsIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* Opcode: 66 0F 3A 41
+ * Selectively multiply packed DP floating-point values from xmm1 with
+ * packed DP floating-point values from xmm2, add and selectively 
+ * store the packed DP floating-point values or zero values to xmm1
+ */
+void BX_CPU_C::DPPD_VpdWpdIb(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2, tmp;
+  Bit8u mask = i->Ib();
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_XMM_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
+  }
+
+  float_status_t status_word;
+  mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) {
+    op1.xmm64u(0) = handleDAZ(op1.xmm64u(0));
+    op1.xmm64u(1) = handleDAZ(op1.xmm64u(1));
+
+    op2.xmm64u(0) = handleDAZ(op2.xmm64u(0));
+    op2.xmm64u(1) = handleDAZ(op2.xmm64u(1));
+  }
+
+  tmp.xmm64u(0) = tmp.xmm64u(1) = 0;
+
+  if (mask & 0x10)
+     tmp.xmm64u(0) = float64_mul(op1.xmm64u(0), op2.xmm64u(0), status_word);
+  if (mask & 0x20)
+     tmp.xmm64u(1) = float64_mul(op1.xmm64u(1), op2.xmm64u(1), status_word);
+
+  float64 result = float64_add(tmp.xmm64u(0), tmp.xmm64u(1), status_word);
+
+  op1.xmm64u(0) = op1.xmm64u(1) = 0;
+
+  if (mask & 0x01) op1.xmm64u(0) = result;
+  if (mask & 0x02) op1.xmm64u(1) = result;
+
+  BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("DPPD_VpdWpdIb: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif // BX_SUPPORT_SSE >= 4 || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)

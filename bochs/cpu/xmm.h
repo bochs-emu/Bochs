@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.21 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: xmm.h,v 1.22 2007-04-19 16:12:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -78,6 +78,10 @@ typedef union bx_xmm_reg_t {
 /* read only low 32 bit of the register */
 #define BX_READ_XMM_REG_LO_DWORD(index) \
     ((BX_CPU_THIS_PTR xmm[index]).xmm32u(0))
+
+/* read only low 16 bit of the register */
+#define BX_READ_XMM_REG_LO_WORD(index) \
+    ((BX_CPU_THIS_PTR xmm[index]).xmm16u(0))
 
 /* short names for above macroses */
 #define BX_XMM_REG_HI_QWORD BX_READ_XMM_REG_HI_QWORD

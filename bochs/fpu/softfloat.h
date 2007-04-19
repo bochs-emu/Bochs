@@ -42,8 +42,8 @@ these four paragraphs for those parts of this code that are retained.
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
-typedef Bit32u float32, Float32;
-typedef Bit64u float64, Float64;
+typedef Bit32u float32;
+typedef Bit64u float64;
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point class.

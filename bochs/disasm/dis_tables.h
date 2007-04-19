@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.29 2006-04-27 15:11:45 sshwarts Exp $
+// $Id: dis_tables.h,v 1.30 2007-04-19 16:12:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -14,6 +14,7 @@
 #define _GRPRM         6
 #define _GRP3BOP       7
 #define _GRP3BTAB      8
+#define _GRP64B        9
 
 /* ************************************************************************ */
 #define GRPSSE(n)       _GRPSSE,   BxDisasmGroupSSE_##n
@@ -24,6 +25,7 @@
 #define GRP3DNOW        _GRP3DNOW, BxDisasm3DNowGroup
 #define GR3BOP(n)       _GRP3BOP,  BxDisasm3ByteOp##n
 #define GR3BTAB(n)      _GRP3BTAB, BxDisasm3ByteTable##n
+#define GR64BIT(n)      _GRP64B,   BxDisasmGrpOs64B_##n
 /* ************************************************************************ */
 
 #define Apw &disassembler::Apw
@@ -69,6 +71,11 @@
 #define  Gd &disassembler::Gd
 #define  Gq &disassembler::Gq
 
+#define  Hbd &disassembler::Hbd
+#define  Hwd &disassembler::Hwd
+#define   Hd &disassembler::Hd
+#define   Hq &disassembler::Hq
+
 #define  I1 &disassembler::I1
 #define  Ib &disassembler::Ib
 #define  Iw &disassembler::Iw
@@ -102,6 +109,8 @@
 #define Vpd &disassembler::Vpd
 #define Udq &disassembler::Udq
 
+#define  Ww &disassembler::Ww
+#define  Wd &disassembler::Wd
 #define  Wq &disassembler::Wq
 #define Wdq &disassembler::Wdq
 #define Wss &disassembler::Wss

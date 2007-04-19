@@ -1577,7 +1577,7 @@ Optional Features:
   --enable-mmx                      MMX support
   --enable-3dnow                    3DNow! support
   --enable-sse                      SSE support (--enable-sse=no|1|2|3|4)
-  --enable-sse3e                    extended SSE3 (Intel Core Duo 2 new instructions) support
+  --enable-sse-extension            support for SSE extensions
   --enable-daz                      denormals-are-zeroes support
   --enable-sep                      SYSENTER/SYSEXIT support
   --enable-x86-debugger             x86 debugger support
@@ -23110,7 +23110,7 @@ if test "$ac_x_libraries" = no; then
   # See if we find them without any special options.
   # Don't add to $LIBS permanently.
   ac_save_LIBS=$LIBS
-  LIBS="-lXt $LIBS"
+  LIBS="-lX11 $LIBS"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -39141,53 +39141,34 @@ _ACEOF
 
 fi
 
-{ echo "$as_me:$LINENO: checking for SSE3E support" >&5
-echo $ECHO_N "checking for SSE3E support... $ECHO_C" >&6; }
-# Check whether --enable-sse3e was given.
-if test "${enable_sse3e+set}" = set; then
-  enableval=$enable_sse3e; if test "$enableval" = yes; then
+{ echo "$as_me:$LINENO: checking for SSE extensions support" >&5
+echo $ECHO_N "checking for SSE extensions support... $ECHO_C" >&6; }
+# Check whether --enable-sse-extension was given.
+if test "${enable_sse_extension+set}" = set; then
+  enableval=$enable_sse_extension; if test "$enableval" = yes; then
     { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE3E 1
+#define BX_SUPPORT_SSE_EXTENSION 1
 _ACEOF
 
-    if test "$support_sse" -lt 3; then
-     { { echo "$as_me:$LINENO: error: SSE3E needs SSE3 support" >&5
-echo "$as_me: error: SSE3E needs SSE3 support" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
    elif test "$enableval" = no; then
-    if test "$support_sse" -ge 4; then
-     { { echo "$as_me:$LINENO: error: SSE4 and greater requires SSE3E support" >&5
-echo "$as_me: error: SSE4 and greater requires SSE3E support" >&2;}
-   { (exit 1); exit 1; }; }
-    fi
     { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
     cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE3E 0
+#define BX_SUPPORT_SSE_EXTENSION 0
 _ACEOF
 
    fi
 
 else
 
-    if test "$support_sse" -ge 4; then
-      { echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6; }
-      cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE3E 1
-_ACEOF
-
-    else
-      { echo "$as_me:$LINENO: result: no" >&5
+    { echo "$as_me:$LINENO: result: no" >&5
 echo "${ECHO_T}no" >&6; }
-      cat >>confdefs.h <<\_ACEOF
-#define BX_SUPPORT_SSE3E 0
+    cat >>confdefs.h <<\_ACEOF
+#define BX_SUPPORT_SSE_EXTENSION 0
 _ACEOF
 
-    fi
 
 
 fi

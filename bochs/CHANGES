@@ -2,6 +2,7 @@ Changes in 2.3.5 release (coming soon):
 
 - CPU
   - Fixed critical bug with 0x90 opcode (NOP) handling in x86-64 mode
+  - added emulation of SSE4 instructions (Stanislav)
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
@@ -17,8 +18,11 @@ Changes in 2.3.5 release (coming soon):
 - Configure and compile
   - several fixes for MacOSX, OpenBSD and Solaris 10
   - enable save/restore feature by default for all configurations
-  - rename SSE4 option to match Intel(R) Programming Reference Manual,
-    to enable Intel Core Duo 2 new instructions use --enable-sse3e
+  - reorganized SSE configure options to match Intel(R) Programming 
+    Reference Manual, new option introduced for SSE extensions enabling.
+    To enable Intel Core Duo 2 new instructions use 
+        --enable-sse=3 --enable-sse-extension
+    enabling of SSE4 (--enable-sse=4) will enable SSE3 exensions as well
   - removed old PIT, always use new PIT written by Greg Alexander,
     removed configure option --enable-new-pit
 
