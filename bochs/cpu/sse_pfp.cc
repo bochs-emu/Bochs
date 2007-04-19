@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.30 2007-04-19 16:12:20 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.31 2007-04-19 18:50:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -300,6 +300,11 @@ void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
   float32 r0 = (float32)(op & 0xFFFFFFFF);
   float32 r1 = (float32)(op >> 32);
 
+  if (MXCSR.get_DAZ()) {
+    r0 = handleDAZ(r0);
+    r1 = handleDAZ(r1);
+  }
+
   MMXUD0(result) = float32_to_int32_round_to_zero(r0, status_word);
   MMXUD1(result) = float32_to_int32_round_to_zero(r1, status_word);
 
@@ -338,6 +343,11 @@ void BX_CPU_C::CVTTPD2PI_PqWpd(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
+  if (MXCSR.get_DAZ()) {
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+  }
+
   MMXUD0(result) = float64_to_int32_round_to_zero(op.xmm64u(0), status_word);
   MMXUD1(result) = float64_to_int32_round_to_zero(op.xmm64u(1), status_word);
 
@@ -373,6 +383,8 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -419,6 +431,8 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
+
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -472,6 +486,11 @@ void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   float32 r0 = (float32)(op & 0xFFFFFFFF);
   float32 r1 = (float32)(op >> 32);
 
+  if (MXCSR.get_DAZ()) {
+    r0 = handleDAZ(r0);
+    r1 = handleDAZ(r1);
+  }
+
   MMXUD0(result) = float32_to_int32(r0, status_word);
   MMXUD1(result) = float32_to_int32(r1, status_word);
 
@@ -511,6 +530,11 @@ void BX_CPU_C::CVTPD2PI_PqWpd(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
+  if (MXCSR.get_DAZ()) {
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+  }
+
   MMXUD0(result) = float64_to_int32(op.xmm64u(0), status_word);
   MMXUD1(result) = float64_to_int32(op.xmm64u(1), status_word);
 
@@ -547,6 +571,7 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -594,6 +619,7 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
 
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
+  if (MXCSR.get_DAZ()) op = handleDAZ(op);
 
 #if BX_SUPPORT_X86_64 
   if (i->os64L())   /* 64 bit operand size mode */
@@ -649,10 +675,8 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
     r1 = handleDAZ(r1);
   }
 
-  result.xmm32u(0) = 
-     float32_to_float64(r0, status_word);
-  result.xmm32u(1) = 
-     float32_to_float64(r1, status_word);
+  result.xmm32u(0) = float32_to_float64(r0, status_word);
+  result.xmm32u(1) = float32_to_float64(r1, status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -692,13 +716,11 @@ void BX_CPU_C::CVTPD2PS_VpdWpd(bxInstruction_c *i)
   if (MXCSR.get_DAZ()) 
   {
     op.xmm64u(0) = handleDAZ(op.xmm64u(0));
-    op.xmm64u(0) = handleDAZ(op.xmm64u(1));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
   }
 
-  result.xmm32u(0) = 
-     float64_to_float32(op.xmm64u(0), status_word);
-  result.xmm32u(1) = 
-     float64_to_float32(op.xmm64u(1), status_word);
+  result.xmm32u(0) = float64_to_float32(op.xmm64u(0), status_word);
+  result.xmm32u(1) = float64_to_float32(op.xmm64u(1), status_word);
   result.xmm64u(1) = 0;
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
@@ -808,14 +830,10 @@ void BX_CPU_C::CVTDQ2PS_VpsWdq(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  result.xmm32u(0) = 
-      int32_to_float32(op.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-      int32_to_float32(op.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-      int32_to_float32(op.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-      int32_to_float32(op.xmm32u(3), status_word);
+  result.xmm32u(0) = int32_to_float32(op.xmm32u(0), status_word);
+  result.xmm32u(1) = int32_to_float32(op.xmm32u(1), status_word);
+  result.xmm32u(2) = int32_to_float32(op.xmm32u(2), status_word);
+  result.xmm32u(3) = int32_to_float32(op.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -851,14 +869,17 @@ void BX_CPU_C::CVTPS2DQ_VdqWps(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  result.xmm32u(0) = 
-      float32_to_int32(op.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-      float32_to_int32(op.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-      float32_to_int32(op.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-      float32_to_int32(op.xmm32u(3), status_word);
+  if (MXCSR.get_DAZ()) {
+    op.xmm32u(0) = handleDAZ(op.xmm32u(0));
+    op.xmm32u(1) = handleDAZ(op.xmm32u(1));
+    op.xmm32u(2) = handleDAZ(op.xmm32u(2));
+    op.xmm32u(3) = handleDAZ(op.xmm32u(3));
+  }
+
+  result.xmm32u(0) = float32_to_int32(op.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_to_int32(op.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_to_int32(op.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_to_int32(op.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -893,14 +914,17 @@ void BX_CPU_C::CVTTPS2DQ_VdqWps(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  result.xmm32u(0) = 
-      float32_to_int32_round_to_zero(op.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-      float32_to_int32_round_to_zero(op.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-      float32_to_int32_round_to_zero(op.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-      float32_to_int32_round_to_zero(op.xmm32u(3), status_word);
+  if (MXCSR.get_DAZ()) {
+    op.xmm32u(0) = handleDAZ(op.xmm32u(0));
+    op.xmm32u(1) = handleDAZ(op.xmm32u(1));
+    op.xmm32u(2) = handleDAZ(op.xmm32u(2));
+    op.xmm32u(3) = handleDAZ(op.xmm32u(3));
+  }
+
+  result.xmm32u(0) = float32_to_int32_round_to_zero(op.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_to_int32_round_to_zero(op.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_to_int32_round_to_zero(op.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_to_int32_round_to_zero(op.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -935,10 +959,13 @@ void BX_CPU_C::CVTTPD2DQ_VqWpd(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  result.xmm32u(0) = 
-      float64_to_int32_round_to_zero(op.xmm64u(0), status_word);
-  result.xmm32u(1) = 
-      float64_to_int32_round_to_zero(op.xmm64u(1), status_word);
+  if (MXCSR.get_DAZ()) {
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+  }
+
+  result.xmm32u(0) = float64_to_int32_round_to_zero(op.xmm64u(0), status_word);
+  result.xmm32u(1) = float64_to_int32_round_to_zero(op.xmm64u(1), status_word);
   result.xmm64u(1) = 0;
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
@@ -975,10 +1002,13 @@ void BX_CPU_C::CVTPD2DQ_VqWpd(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
 
-  result.xmm32u(0) = 
-      float64_to_int32(op.xmm64u(0), status_word);
-  result.xmm32u(1) = 
-      float64_to_int32(op.xmm64u(1), status_word);
+  if (MXCSR.get_DAZ()) {
+    op.xmm64u(0) = handleDAZ(op.xmm64u(0));
+    op.xmm64u(1) = handleDAZ(op.xmm64u(1));
+  }
+
+  result.xmm32u(0) = float64_to_int32(op.xmm64u(0), status_word);
+  result.xmm32u(1) = float64_to_int32(op.xmm64u(1), status_word);
   result.xmm64u(1) = 0;
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
@@ -1212,14 +1242,10 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
     op.xmm32u(3) = handleDAZ(op.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_sqrt(op.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_sqrt(op.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_sqrt(op.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_sqrt(op.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_sqrt(op.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_sqrt(op.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_sqrt(op.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_sqrt(op.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1376,14 +1402,10 @@ void BX_CPU_C::ADDPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_add(op1.xmm32u(0), op2.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_add(op1.xmm32u(1), op2.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_add(op1.xmm32u(2), op2.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_add(op1.xmm32u(3), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_add(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_add(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_add(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_add(op1.xmm32u(3), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1554,14 +1576,10 @@ void BX_CPU_C::MULPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_mul(op1.xmm32u(0), op2.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_mul(op1.xmm32u(1), op2.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_mul(op1.xmm32u(2), op2.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_mul(op1.xmm32u(3), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_mul(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_mul(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_mul(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_mul(op1.xmm32u(3), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -1732,14 +1750,10 @@ void BX_CPU_C::SUBPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_sub(op1.xmm32u(0), op2.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_sub(op1.xmm32u(1), op2.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_sub(op1.xmm32u(2), op2.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_sub(op1.xmm32u(3), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_sub(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_sub(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_sub(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_sub(op1.xmm32u(3), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2100,14 +2114,10 @@ void BX_CPU_C::DIVPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_div(op1.xmm32u(0), op2.xmm32u(0), status_word);
-  result.xmm32u(1) = 
-     float32_div(op1.xmm32u(1), op2.xmm32u(1), status_word);
-  result.xmm32u(2) = 
-     float32_div(op1.xmm32u(2), op2.xmm32u(2), status_word);
-  result.xmm32u(3) = 
-     float32_div(op1.xmm32u(3), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_div(op1.xmm32u(0), op2.xmm32u(0), status_word);
+  result.xmm32u(1) = float32_div(op1.xmm32u(1), op2.xmm32u(1), status_word);
+  result.xmm32u(2) = float32_div(op1.xmm32u(2), op2.xmm32u(2), status_word);
+  result.xmm32u(3) = float32_div(op1.xmm32u(3), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2512,14 +2522,10 @@ void BX_CPU_C::HADDPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_add(op1.xmm32u(0), op1.xmm32u(1), status_word);
-  result.xmm32u(1) = 
-     float32_add(op1.xmm32u(2), op1.xmm32u(3), status_word);
-  result.xmm32u(2) = 
-     float32_add(op2.xmm32u(0), op2.xmm32u(1), status_word);
-  result.xmm32u(3) = 
-     float32_add(op2.xmm32u(2), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_add(op1.xmm32u(0), op1.xmm32u(1), status_word);
+  result.xmm32u(1) = float32_add(op1.xmm32u(2), op1.xmm32u(3), status_word);
+  result.xmm32u(2) = float32_add(op2.xmm32u(0), op2.xmm32u(1), status_word);
+  result.xmm32u(3) = float32_add(op2.xmm32u(2), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
@@ -2610,14 +2616,10 @@ void BX_CPU_C::HSUBPS_VpsWps(bxInstruction_c *i)
     op2.xmm32u(3) = handleDAZ(op2.xmm32u(3));
   }
 
-  result.xmm32u(0) = 
-     float32_sub(op1.xmm32u(0), op1.xmm32u(1), status_word);
-  result.xmm32u(1) = 
-     float32_sub(op1.xmm32u(2), op1.xmm32u(3), status_word);
-  result.xmm32u(2) = 
-     float32_sub(op2.xmm32u(0), op2.xmm32u(1), status_word);
-  result.xmm32u(3) = 
-     float32_sub(op2.xmm32u(2), op2.xmm32u(3), status_word);
+  result.xmm32u(0) = float32_sub(op1.xmm32u(0), op1.xmm32u(1), status_word);
+  result.xmm32u(1) = float32_sub(op1.xmm32u(2), op1.xmm32u(3), status_word);
+  result.xmm32u(2) = float32_sub(op2.xmm32u(0), op2.xmm32u(1), status_word);
+  result.xmm32u(3) = float32_sub(op2.xmm32u(2), op2.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
   BX_WRITE_XMM_REG(i->nnn(), result);
