@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.31 2007-04-19 18:50:57 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.32 2007-04-19 19:09:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1220,7 +1220,7 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op, result;
+  BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1242,13 +1242,13 @@ void BX_CPU_C::SQRTPS_VpsWps(bxInstruction_c *i)
     op.xmm32u(3) = handleDAZ(op.xmm32u(3));
   }
 
-  result.xmm32u(0) = float32_sqrt(op.xmm32u(0), status_word);
-  result.xmm32u(1) = float32_sqrt(op.xmm32u(1), status_word);
-  result.xmm32u(2) = float32_sqrt(op.xmm32u(2), status_word);
-  result.xmm32u(3) = float32_sqrt(op.xmm32u(3), status_word);
+  op.xmm32u(0) = float32_sqrt(op.xmm32u(0), status_word);
+  op.xmm32u(1) = float32_sqrt(op.xmm32u(1), status_word);
+  op.xmm32u(2) = float32_sqrt(op.xmm32u(2), status_word);
+  op.xmm32u(3) = float32_sqrt(op.xmm32u(3), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 
 #else
   BX_INFO(("SQRTPS_VpsWps: required SSE, use --enable-sse option"));
@@ -1266,7 +1266,7 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op, result;
+  BxPackedXmmRegister op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1286,11 +1286,11 @@ void BX_CPU_C::SQRTPD_VpdWpd(bxInstruction_c *i)
     op.xmm64u(1) = handleDAZ(op.xmm64u(1));
   }
 
-  result.xmm64u(0) = float64_sqrt(op.xmm64u(0), status_word);
-  result.xmm64u(1) = float64_sqrt(op.xmm64u(1), status_word);
+  op.xmm64u(0) = float64_sqrt(op.xmm64u(0), status_word);
+  op.xmm64u(1) = float64_sqrt(op.xmm64u(1), status_word);
 
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG(i->nnn(), result);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 
 #else
   BX_INFO(("SQRTPD_VpdWpd: required SSE2, use --enable-sse option"));
@@ -1308,7 +1308,7 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  float64 op, result;
+  float64 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1322,9 +1322,9 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   if (MXCSR.get_DAZ()) op = handleDAZ(op);
-  result = float64_sqrt(op, status_word);
+  op = float64_sqrt(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), result);
+  BX_WRITE_XMM_REG_LO_QWORD(i->nnn(), op);
 
 #else
   BX_INFO(("SQRTSD_VsdWsd: required SSE2, use --enable-sse option"));
@@ -1342,7 +1342,7 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  float32 op, result;
+  float32 op;
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -1356,9 +1356,9 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
   float_status_t status_word;
   mxcsr_to_softfloat_status_word(status_word, MXCSR);
   if (MXCSR.get_DAZ()) op = handleDAZ(op);
-  result = float32_sqrt(op, status_word);
+  op = float32_sqrt(op, status_word);
   BX_CPU_THIS_PTR check_exceptionsSSE(status_word.float_exception_flags);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
 
 #else
   BX_INFO(("SQRTSS_VssWss: required SSE, use --enable-sse option"));
