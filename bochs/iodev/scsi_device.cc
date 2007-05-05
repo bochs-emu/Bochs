@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.3 2007-03-18 15:18:02 vruppert Exp $
+// $Id: scsi_device.cc,v 1.4 2007-05-05 12:30:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -74,6 +74,15 @@ scsi_device_t::scsi_device_t(LOWLEVEL_CDROM *_cdrom, int _tcq,
 scsi_device_t::~scsi_device_t(void)
 {
 }
+
+#if BX_SUPPORT_SAVE_RESTORE
+void scsi_device_t::register_state(bx_list_c *parent, const char *name)
+{
+  bx_list_c *list = new bx_list_c(parent, name, "", 1);
+  new bx_shadow_num_c(list, "sense", &sense);
+  // TODO: save/restore for SCSI requests
+}
+#endif
 
 SCSIRequest* scsi_device_t::scsi_new_request(Bit32u tag)
 {
@@ -344,7 +353,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       BX_DEBUG(("request Sense (len %d)", len));
       if (len < 4)
         goto fail;
-      memset(buf, 0, 4);
+      memset(outbuf, 0, 4);
       outbuf[0] = 0xf0;
       outbuf[1] = 0;
       outbuf[2] = sense;
@@ -368,7 +377,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
       memcpy(&outbuf[32], "1.0", 4);
       outbuf[2] = 3;
       outbuf[3] = 2;
-      outbuf[4] = 32;
+      outbuf[4] = 31;
       outbuf[7] = 0x10 | (tcq ? 0x02 : 0);
       r->buf_len = 36;
       break;
@@ -400,10 +409,11 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
         p += 4;
         if ((page == 8 || page == 0x3f)) {
           /* Caching page.  */
+          memset(p, 0, 20);
           p[0] = 8;
           p[1] = 0x12;
           p[2] = 4; /* WCE */
-          p += 19;
+          p += 20;
         }
         if ((page == 0x3f || page == 0x2a)
             && (type == SCSIDEV_TYPE_CDROM)) {
@@ -432,7 +442,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, int lun)
           p[19] = (16 * 176) & 0xff;
           p[20] = (16 * 176) >> 8; // 16x write speed current
           p[21] = (16 * 176) & 0xff;
-          p += 21;
+          p += 22;
         }
         r->buf_len = p - outbuf;
         outbuf[0] = r->buf_len - 4;

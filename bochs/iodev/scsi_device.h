@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.h,v 1.3 2007-03-18 15:18:02 vruppert Exp $
+// $Id: scsi_device.h,v 1.4 2007-05-05 12:30:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -64,6 +64,9 @@ public:
                scsi_completionfn _completion, void *_dev);
   virtual ~scsi_device_t(void);
 
+#if BX_SUPPORT_SAVE_RESTORE
+  void register_state(bx_list_c *parent, const char *name);
+#endif
   Bit32s scsi_send_command(Bit32u tag, Bit8u *buf, int lun);
   void scsi_command_complete(SCSIRequest *r, int sense);
   void scsi_cancel_io(Bit32u tag);

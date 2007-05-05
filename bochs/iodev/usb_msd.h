@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.h,v 1.3 2007-04-09 09:04:54 vruppert Exp $
+// $Id: usb_msd.h,v 1.4 2007-05-05 12:30:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -58,6 +58,9 @@ private:
     device_image_t *hdimage;
     scsi_device_t *scsi_dev;
     USBPacket *packet;
+#if BX_SUPPORT_SAVE_RESTORE
+    bx_list_c *sr_list;
+#endif
   } s;
 };
 
