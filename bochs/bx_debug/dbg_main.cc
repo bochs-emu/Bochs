@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.92 2007-03-06 21:18:00 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.93 2007-05-12 19:19:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2787,9 +2787,10 @@ void bx_dbg_info_idt_command(unsigned from, unsigned to)
     to = temp;
   }
 
-  dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX "):\n", idtr.base);
+  dbg_printf("Interrupt Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", idtr.base, idtr.limit);
   for (unsigned n = from; n<=to; n++) {
     Bit8u entry[8];
+    if (8*n + 7 > idtr.limit) break;
     if (bx_dbg_read_linear(dbg_cpu, idtr.base + 8*n, 8, entry)) {
       dbg_printf("IDT[0x%02x]=", n);
       bx_dbg_print_descriptor(entry, 0);
@@ -2823,15 +2824,16 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to)
     to = temp;
   }
 
-  dbg_printf("Global Descriptor Table (base=0x%08x):\n", gdtr.base);
+  dbg_printf("Global Descriptor Table (base=0x" FMT_ADDRX ", limit=%d):\n", gdtr.base, gdtr.limit);
   for (unsigned n = from; n<=to; n++) {
     Bit8u entry[8];
+    if (8*n + 7 > gdtr.limit) break;
     if (bx_dbg_read_linear(dbg_cpu, gdtr.base + 8*n, 8, entry)) {
       dbg_printf("GDT[0x%02x]=", n);
       bx_dbg_print_descriptor(entry, 0);
     }
     else {
-      dbg_printf("error: GDTR+8*%d points to invalid linear address 0x%-08x\n",
+      dbg_printf("error: GDTR+8*%d points to invalid linear address 0x " FMT_ADDRX "\n",
         n, gdtr.base);
     }
   }
