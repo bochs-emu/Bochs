@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.100 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.101 2007-05-15 12:48:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.100 2007-04-03 22:38:49 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.101 2007-05-15 12:48:59 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -319,7 +319,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   close(fd);
   offset -= (unsigned long)stat_buf.st_size;
   if (((romaddress & 0xfffff) != 0xe0000) ||
-      ((BX_MEM_THIS rom[offset] == 0x55) && (BX_MEM_THIS rom[offset] == 0xaa))) {
+      ((BX_MEM_THIS rom[offset] == 0x55) && (BX_MEM_THIS rom[offset+1] == 0xaa))) {
     Bit8u checksum = 0;
     for (i = 0; i < stat_buf.st_size; i++) {
       checksum += BX_MEM_THIS rom[offset + i];
