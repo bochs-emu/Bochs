@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.225 2007-04-09 08:46:24 vruppert Exp $
+$Id: user.dbk,v 1.226 2007-05-17 15:47:35 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -382,8 +382,9 @@ currently work with.
   <row>
     <entry>Enhanced BIOS</entry>
     <entry>Yes</entry>
-    <entry>Implements ElTorito, EDD v3.0, basic APM features, basic PCIBIOS features
-    and the PCI interrupt routing table.
+    <entry>Implements ElTorito, EDD v3.0, basic APM feature, PCIBIOS features
+    and the PCI interrupt routing table. The latest version of the Bochs BIOS
+    has a 32-bit init for ACPI, SMM and SMP.
     </entry>
   </row>
   <row>
@@ -1336,7 +1337,8 @@ DLX Linux screenshot.
 </thead>
 <tbody>
 
-<row><entry>BIOS-bochs-latest </entry> <entry> ROM BIOS image for Bochs </entry> </row>
+<row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
+<row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
@@ -1533,7 +1535,8 @@ description of each one.
 <row><entry>/usr/share/man/man1/* </entry> <entry> man pages for bochs, bochs-dlx, bximage and bxcommit</entry> </row>
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
-<row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> ROM BIOS image for Bochs </entry> </row>
+<row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
+<row><entry>/usr/share/bochs/BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
@@ -3109,19 +3112,21 @@ speed.</para></footnote>.
 <para>
 Examples:
 <screen>
-  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
-  romimage: file=$BXSHARE/BIOS-bochs-latest, address=0xf0000
+  romimage: file=bios/BIOS-bochs-latest, address=0xe0000
+  romimage: file=$BXSHARE/BIOS-bochs-legacy, address=0xf0000
   romimage: file=mybios.bin, address=0xfff80000
   romimage: file=mybios.bin
 </screen>
 The ROM BIOS controls what the PC does when it first powers on.  Normally, you
 can use a precompiled BIOS in the source or binary distribution called
-<filename>BIOS-bochs-latest</filename>.  The ROM BIOS is usually loaded
-starting at address 0xf0000, and it is exactly 64k long.
+<filename>BIOS-bochs-latest</filename>. The default ROM BIOS is usually loaded
+starting at address 0xe0000, and it is exactly 128k long. The legacy version of
+the Bochs BIOS is usually loaded starting at address 0xf0000, and it is exactly
+64k long.
 You can also use the environment variable $BXSHARE to specify the location of the BIOS.
 The usage of external large BIOS images (up to 512k) at memory top is
 now supported, but we still recommend to use the BIOS distributed with Bochs.
-Now the start address can be calculated from image size.
+The start address is now optional, since it can be calculated from image size.
 </para>
 </section>
 
@@ -5769,7 +5774,7 @@ structures are dynamicly created by Bochs.
 </para></listitem>
 <listitem><para> ACPI support is required to boot SMP system in most of modern
 operating systems. For example WinXP 64 bit require ACPI support even for 
-single processor configuration. Still not supported by Bochs.
+single processor configuration. Still not supported by Bochs. (FIXME)
 </para></listitem>
 </itemizedlist>
 </para>
@@ -8362,7 +8367,7 @@ on your home directory and edit it with your favorite editor (GNU Emacs, i hope 
 <para>For my image file I have the following configuration :
 
 <screen>
-romimage: file=/usr/share/bochs/BIOS-bochs-latest, address=0xf0000
+romimage: file=/usr/share/bochs/BIOS-bochs-latest
 megs: 128
 vgaromimage: file=/usr/share/bochs/VGABIOS-lgpl-latest
 floppya: 1_44=/dev/fd0, status=ejected
@@ -8705,7 +8710,7 @@ Setup your <filename>bochsrc</filename> file. For example:
   ata0-master: type=disk, path=62M.img, cylinders=940, heads=8, spt=17
   floppya: 1_44=1.44, status=inserted
   vgaromimage: file=bios/VGABIOS-lgpl-latest
-  romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+  romimage: file=bios/BIOS-bochs-latest
   log: ./bochs.out
   vga_update_interval: 300000
   keyboard_serial_delay: 200
@@ -9603,7 +9608,7 @@ megs: 64
 
 # Filename of ROM images go here.  Be sure to check your installation for the location
 # of these two files (type: man find).  Paths must be absolute.
-romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest, address=0xf0000
+romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest
 vgaromimage: file=/usr/local/etc/bochs/bios/VGABIOS-lgpl-latest
 
 # Floppies are commented out, but you may need them later.
@@ -9916,7 +9921,7 @@ megs: 64
 
 # Filename of ROM images go here.  Be sure to check your installation for the location
 # of these two files (type: man find).  Paths must be absolute.
-romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest, address=0xf0000
+romimage: file=/usr/local/etc/bochs/bios/BIOS-bochs-latest
 vgaromimage: file=/usr/local/etc/bochs/bios/VGABIOS-lgpl-latest
 
 # Floppies are commented out, but you may need them later.
@@ -10606,7 +10611,7 @@ ata0-slave: type=cdrom, path="/dev/cdrom", status=inserted, biosdetect=auto, mod
 ata1: enabled=0
 ata2: enabled=0
 ata3: enabled=0
-romimage: file=bios/BIOS-bochs-latest, address=0xf0000
+romimage: file=bios/BIOS-bochs-latest
 vgaromimage: file=bios/VGABIOS-lgpl-latest
 megs: 64
 parport1: enabled=1, file="lp.pipe"

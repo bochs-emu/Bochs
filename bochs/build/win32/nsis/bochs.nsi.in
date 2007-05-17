@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.13 2006-01-15 21:00:50 vruppert Exp $
+; $Id: bochs.nsi.in,v 1.14 2007-05-17 15:47:34 vruppert Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -93,7 +93,7 @@ Section "ROM Images (required)" SecROMs
 
   SetOutPath "$INSTDIR"
 
-  File "${SRCDIR}\BIOS-bochs-latest"
+  File "${SRCDIR}\BIOS-bochs-*"
   File "${SRCDIR}\VGABIOS-*"
 SectionEnd
 
