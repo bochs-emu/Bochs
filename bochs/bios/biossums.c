@@ -1,5 +1,5 @@
 /*
- * $Id: biossums.c,v 1.3 2006-09-28 17:39:25 vruppert Exp $
+ * $Id: biossums.c,v 1.4 2007-05-28 08:09:13 vruppert Exp $
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef unsigned char byte;
 
