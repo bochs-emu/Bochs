@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.164 2007-04-25 20:14:15 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.165 2007-06-08 09:25:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -94,10 +94,6 @@ void BX_CPU_C::shutdown(void)
 
 void BX_CPU_C::HLT(bxInstruction_c *i)
 {
-  // hack to panic if HLT comes from BIOS
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value == 0xf000)
-    BX_PANIC(("HALT instruction encountered in the BIOS ROM"));
-
   if (!real_mode() && CPL!=0) {
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
         cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), CPL));
