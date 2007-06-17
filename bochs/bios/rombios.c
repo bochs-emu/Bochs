@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.179 2007-05-28 07:54:03 vruppert Exp $
+// $Id: rombios.c,v 1.180 2007-06-17 07:36:34 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -929,7 +929,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.179 $ $Date: 2007-05-28 07:54:03 $";
+static char bios_cvs_version_string[] = "$Revision: 1.180 $ $Date: 2007-06-17 07:36:34 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -3865,13 +3865,35 @@ BX_DEBUG_INT15("case 2:\n");
 
         case 3: // Set Resolution
 BX_DEBUG_INT15("case 3:\n");
-          // BX:
+          // BH:
           //      0 =  25 dpi, 1 count  per millimeter
           //      1 =  50 dpi, 2 counts per millimeter
           //      2 = 100 dpi, 4 counts per millimeter
           //      3 = 200 dpi, 8 counts per millimeter
-          CLEAR_CF();
-          regs.u.r8.ah = 0;
+          comm_byte = inhibit_mouse_int_and_events(); // disable IRQ12 and packets
+          if (regs.u.r8.bh < 4) {
+            ret = send_to_mouse_ctrl(0xE8); // set resolution command
+            if (ret == 0) {
+              ret = get_mouse_data(&mouse_data1);
+              if (mouse_data1 != 0xfa)
+                BX_PANIC("Mouse status returned %02x (should be ack)\n", (unsigned)mouse_data1);
+              ret = send_to_mouse_ctrl(regs.u.r8.bh);
+              ret = get_mouse_data(&mouse_data1);
+              if (mouse_data1 != 0xfa)
+                BX_PANIC("Mouse status returned %02x (should be ack)\n", (unsigned)mouse_data1);
+              CLEAR_CF();
+              regs.u.r8.ah = 0;
+            } else {
+              // error
+              SET_CF();
+              regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+            }
+          } else {
+            // error
+            SET_CF();
+            regs.u.r8.ah = UNSUPPORTED_FUNCTION;
+          }
+          set_kbd_command_byte(comm_byte); // restore IRQ12 and serial enable
           break;
 
         case 4: // Get Device ID
