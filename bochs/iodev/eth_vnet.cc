@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.18 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.19 2007-07-01 07:28:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -27,6 +27,11 @@
 #define LOG_THIS bx_devices.pluginNE2kDevice->
 
 #define BX_ETH_VNET_LOGGING 1
+#define BX_ETH_VNET_PCAP_LOGGING 0
+
+#if BX_ETH_VNET_PCAP_LOGGING
+#include <pcap.h>
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // handler to send/receive packets
@@ -78,6 +83,7 @@ typedef void (*layer4_handler_t)(
 #define TFTP_DATA   3
 #define TFTP_ACK    4
 #define TFTP_ERROR  5
+#define TFTP_OPTACK 6
 
 #define TFTP_BUFFER_SIZE 512
 
@@ -190,7 +196,11 @@ private:
     Bit8u *buffer,
     unsigned sourceport, unsigned targetport,
     unsigned block_nr);
-    
+  void tftp_send_optack(
+    Bit8u *buffer,
+    unsigned sourceport, unsigned targetport,
+    unsigned tsize_option, unsigned blksize_option);
+
   char tftp_filename[BX_PATHNAME_LEN];
   char tftp_rootdir[BX_PATHNAME_LEN];
   bx_bool tftp_write;
@@ -216,6 +226,11 @@ private:
 #if BX_ETH_VNET_LOGGING
   FILE *pktlog_txt;
 #endif // BX_ETH_VNET_LOGGING
+#if BX_ETH_VNET_PCAP_LOGGING
+  pcap_t *pcapp;
+  pcap_dumper_t *pktlog_pcap;
+  struct pcap_pkthdr pcaphdr;
+#endif // BX_ETH_VNET_PCAP_LOGGING
 };
 
 class bx_vnet_locator_c : public eth_locator_c {
@@ -281,12 +296,33 @@ static Bit16u ip_checksum(const Bit8u *buf, unsigned buf_len)
 }
 
 
+// duplicate the part of tftp_send_data() that constructs the filename
+// but ignore errors since tftp_send_data() will respond for us
+static size_t get_file_size(const char *tpath, const char *tname)
+{
+  struct stat stbuf;
+  char path[BX_PATHNAME_LEN];
+
+  if (strlen(tname) == 0)
+    return 0;
+
+  if ((strlen(tpath) + strlen(tname)) > BX_PATHNAME_LEN)
+    return 0;
+
+  sprintf(path, "%s/%s", tpath, tname);
+  if (stat(path, &stbuf) < 0)
+    return 0;
+
+  BX_INFO(("tftp filesize: %lu", (unsigned long)stbuf.st_size));
+  return stbuf.st_size;
+}
+
+
 bx_vnet_pktmover_c::bx_vnet_pktmover_c()
 {
 }
 
-void
-bx_vnet_pktmover_c::pktmover_init(
+void bx_vnet_pktmover_c::pktmover_init(
   const char *netif, const char *macaddr,
   eth_rx_handler_t rxh, void *rxarg, char *script)
 {
@@ -311,7 +347,7 @@ bx_vnet_pktmover_c::pktmover_init(
 
   this->rx_timer_index = 
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
-				0, 0, "eth_vnet");
+                              	 0, 0, "eth_vnet");
 
 #if BX_ETH_VNET_LOGGING
   pktlog_txt = fopen ("ne2k-pktlog.txt", "wb");
@@ -328,16 +364,19 @@ bx_vnet_pktmover_c::pktmover_init(
   fprintf (pktlog_txt, "--\n");
   fflush (pktlog_txt);
 #endif
+#if BX_ETH_VNET_PCAP_LOGGING
+  pcapp = pcap_open_dead (DLT_EN10MB, BX_PACKET_BUFSIZE);
+  pktlog_pcap = pcap_dump_open (pcapp, "ne2k-pktlog.pcap");
+  if (pktlog_pcap == NULL) BX_PANIC (("ne2k-pktlog.pcap failed"));
+#endif
 }
 
-void
-bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
+void bx_vnet_pktmover_c::sendpkt(void *buf, unsigned io_len)
 {
   guest_to_host((const Bit8u *)buf,io_len);
 }
 
-void
-bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 {
 #if BX_ETH_VNET_LOGGING
   fprintf (pktlog_txt, "a packet from guest to host, length %u\n", io_len);
@@ -350,6 +389,17 @@ bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
   }
   fprintf (pktlog_txt, "\n--\n");
   fflush (pktlog_txt);
+#endif
+#if BX_ETH_VNET_PCAP_LOGGING
+  if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
+    Bit64u time = bx_pc_system.time_usec();
+    pcaphdr.ts.tv_usec = time % 1000000;
+    pcaphdr.ts.tv_sec = time / 1000000;
+    pcaphdr.caplen = io_len;
+    pcaphdr.len = io_len;
+    pcap_dump((u_char *)pktlog_pcap, &pcaphdr, buf);
+    fflush((FILE *)pktlog_pcap);
+  } 
 #endif
 
   this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
@@ -371,16 +421,14 @@ bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
 }
 
 // The receive poll process
-void
-bx_vnet_pktmover_c::rx_timer_handler(void *this_ptr)
+void bx_vnet_pktmover_c::rx_timer_handler(void *this_ptr)
 {
   bx_vnet_pktmover_c *class_ptr = (bx_vnet_pktmover_c *) this_ptr;
 
   class_ptr->rx_timer();
 }
 
-void
-bx_vnet_pktmover_c::rx_timer(void)
+void bx_vnet_pktmover_c::rx_timer(void)
 {
   this->rxh(this->rxarg, (void *)packet_buffer, packet_len);
 #if BX_ETH_VNET_LOGGING
@@ -395,10 +443,20 @@ bx_vnet_pktmover_c::rx_timer(void)
   fprintf (pktlog_txt, "\n--\n");
   fflush (pktlog_txt);
 #endif
+#if BX_ETH_VNET_PCAP_LOGGING
+  if (pktlog_pcap && !ferror((FILE *)pktlog_pcap)) {
+    Bit64u time = bx_pc_system.time_usec();
+    pcaphdr.ts.tv_usec = time % 1000000;
+    pcaphdr.ts.tv_sec = time / 1000000;
+    pcaphdr.caplen = packet_len;
+    pcaphdr.len = packet_len;
+    pcap_dump((u_char *)pktlog_pcap, &pcaphdr, packet_buffer);
+    fflush((FILE *)pktlog_pcap);
+  } 
+#endif
 }
 
-void
-bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
 {
   Bit8u localbuf[60];
 
@@ -424,8 +482,7 @@ bx_vnet_pktmover_c::host_to_guest(Bit8u *buf, unsigned io_len)
 // ARP
 /////////////////////////////////////////////////////////////////////////
 
-void
-bx_vnet_pktmover_c::process_arp(const Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::process_arp(const Bit8u *buf, unsigned io_len)
 {
   unsigned opcode;
   unsigned protocol;
@@ -485,8 +542,7 @@ bx_vnet_pktmover_c::process_arp(const Bit8u *buf, unsigned io_len)
   }
 }
 
-void
-bx_vnet_pktmover_c::host_to_guest_arp(Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::host_to_guest_arp(Bit8u *buf, unsigned io_len)
 {
   memcpy(&buf[0],&this->guest_macaddr[0],6);
   memcpy(&buf[6],&this->host_macaddr[0],6);
@@ -499,8 +555,7 @@ bx_vnet_pktmover_c::host_to_guest_arp(Bit8u *buf, unsigned io_len)
 // IPv4
 /////////////////////////////////////////////////////////////////////////
 
-void
-bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
 {
   unsigned total_len;
   unsigned packet_id;
@@ -575,8 +630,7 @@ bx_vnet_pktmover_c::process_ipv4(const Bit8u *buf, unsigned io_len)
   }
 }
 
-void
-bx_vnet_pktmover_c::host_to_guest_ipv4(Bit8u *buf, unsigned io_len)
+void bx_vnet_pktmover_c::host_to_guest_ipv4(Bit8u *buf, unsigned io_len)
 {
   unsigned l3header_len;
 
@@ -594,8 +648,7 @@ bx_vnet_pktmover_c::host_to_guest_ipv4(Bit8u *buf, unsigned io_len)
   host_to_guest(buf,io_len);
 }
 
-layer4_handler_t
-bx_vnet_pktmover_c::get_layer4_handler(
+layer4_handler_t bx_vnet_pktmover_c::get_layer4_handler(
   unsigned ipprotocol, unsigned port)
 {
   unsigned n;
@@ -608,8 +661,7 @@ bx_vnet_pktmover_c::get_layer4_handler(
   return (layer4_handler_t)NULL;
 }
 
-bx_bool
-bx_vnet_pktmover_c::register_layer4_handler(
+bx_bool bx_vnet_pktmover_c::register_layer4_handler(
   unsigned ipprotocol, unsigned port,layer4_handler_t func)
 {
   if (get_layer4_handler(ipprotocol,port) != (layer4_handler_t)NULL) {
@@ -641,8 +693,7 @@ bx_vnet_pktmover_c::register_layer4_handler(
   return true;
 }
 
-bx_bool
-bx_vnet_pktmover_c::unregister_layer4_handler(
+bx_bool bx_vnet_pktmover_c::unregister_layer4_handler(
   unsigned ipprotocol, unsigned port)
 {
   unsigned n;
@@ -659,8 +710,7 @@ bx_vnet_pktmover_c::unregister_layer4_handler(
   return false;
 }
 
-void
-bx_vnet_pktmover_c::process_icmpipv4(
+void bx_vnet_pktmover_c::process_icmpipv4(
   const Bit8u *ipheader, unsigned ipheader_len,
   const Bit8u *l4pkt, unsigned l4pkt_len)
 {
@@ -688,8 +738,7 @@ bx_vnet_pktmover_c::process_icmpipv4(
   }
 }
 
-void
-bx_vnet_pktmover_c::process_tcpipv4(
+void bx_vnet_pktmover_c::process_tcpipv4(
   const Bit8u *ipheader, unsigned ipheader_len,
   const Bit8u *l4pkt, unsigned l4pkt_len)
 {
@@ -698,8 +747,7 @@ bx_vnet_pktmover_c::process_tcpipv4(
   BX_INFO(("tcp packet - not implemented"));
 }
 
-void
-bx_vnet_pktmover_c::process_udpipv4(
+void bx_vnet_pktmover_c::process_udpipv4(
   const Bit8u *ipheader, unsigned ipheader_len,
   const Bit8u *l4pkt, unsigned l4pkt_len)
 {
@@ -722,8 +770,7 @@ bx_vnet_pktmover_c::process_udpipv4(
   }
 }
 
-void
-bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
+void bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
   unsigned target_port, unsigned source_port,
   const Bit8u *udpdata, unsigned udpdata_len)
 {
@@ -765,8 +812,7 @@ bx_vnet_pktmover_c::host_to_guest_udpipv4_packet(
 // ICMP/IPv4
 /////////////////////////////////////////////////////////////////////////
 
-void
-bx_vnet_pktmover_c::process_icmpipv4_echo(
+void bx_vnet_pktmover_c::process_icmpipv4_echo(
   const Bit8u *ipheader, unsigned ipheader_len,
   const Bit8u *l4pkt, unsigned l4pkt_len)
 {
@@ -792,8 +838,7 @@ bx_vnet_pktmover_c::process_icmpipv4_echo(
 // DHCP/UDP/IPv4
 /////////////////////////////////////////////////////////////////////////
 
-void
-bx_vnet_pktmover_c::udpipv4_dhcp_handler(
+void bx_vnet_pktmover_c::udpipv4_dhcp_handler(
   void *this_ptr,
   const Bit8u *ipheader, unsigned ipheader_len,
   unsigned sourceport, unsigned targetport,
@@ -803,8 +848,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler(
     ipheader,ipheader_len,sourceport,targetport,data,data_len);
 }
 
-void
-bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
+void bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
     const Bit8u *ipheader, unsigned ipheader_len,
     unsigned sourceport, unsigned targetport,
     const Bit8u *data, unsigned data_len)
@@ -912,10 +956,8 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
   memcpy(&replybuf[16],default_guest_ipv4addr,4);
   memcpy(&replybuf[20],host_ipv4addr,4);
   memcpy(&replybuf[28],&data[28],6);
-  replybuf[44] = 'v';
-  replybuf[45] = 'n';
-  replybuf[46] = 'e';
-  replybuf[47] = 't';
+  memcpy(&replybuf[44],"vnet",4);
+  memcpy(&replybuf[108],"pxelinux.0",10);
   replybuf[236] = 0x63;
   replybuf[237] = 0x82;
   replybuf[238] = 0x53;
@@ -1104,8 +1146,7 @@ bx_vnet_pktmover_c::udpipv4_dhcp_handler_ns(
     replybuf, opts_len);
 }
 
-void 
-bx_vnet_pktmover_c::udpipv4_tftp_handler(
+void bx_vnet_pktmover_c::udpipv4_tftp_handler(
   void *this_ptr,
   const Bit8u *ipheader, unsigned ipheader_len,
   unsigned sourceport, unsigned targetport,
@@ -1115,8 +1156,7 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler(
     ipheader,ipheader_len,sourceport,targetport,data,data_len);
 }
 
-void 
-bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
+void bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   const Bit8u *ipheader, unsigned ipheader_len,
   unsigned sourceport, unsigned targetport,
   const Bit8u *data, unsigned data_len)
@@ -1133,16 +1173,48 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
         strncpy((char*)buffer, (const char*)data + 2, data_len - 2);
         buffer[data_len - 4] = 0;
 
-        // transfer mode
+        // options
+        size_t tsize_option = 0;
+        int blksize_option = 0;
         if (strlen((char*)buffer) < data_len - 2) {
           const char *mode = (const char*)data + 2 + strlen((char*)buffer) + 1;
-          if (memcmp(mode, "octet\0", 6) != 0) {
+          int octet_option = 0;
+          while (mode < (const char*)data + data_len) {
+            if (memcmp(mode, "octet\0", 6) == 0) {
+              mode += 6;
+              octet_option = 1;
+            } else if (memcmp(mode, "tsize\0", 6) == 0) {
+              mode += 6;
+              tsize_option = 1;             // size needed
+              mode += strlen(mode)+1;
+            } else if (memcmp(mode, "blksize\0", 8) == 0) {
+              mode += 8;
+              blksize_option = atoi(mode);
+              mode += strlen(mode)+1;
+            } else {
+              BX_INFO(("tftp req: unknown option %s", mode));
+              break;
+            }
+          }
+          if (!octet_option) {
             tftp_send_error(buffer, sourceport, targetport, 4, "Unsupported transfer mode");
             return;
           }
         }
 
         strcpy(tftp_filename, (char*)buffer);
+        BX_INFO(("tftp req: %s", tftp_filename));
+        if (tsize_option) {
+          tsize_option = get_file_size(tftp_rootdir, tftp_filename);
+          if (tsize_option > 0) {
+            // if tsize requested and file exists, send optack and return
+            // optack ack will pick up where we leave off here.
+            // if blksize_option is less than TFTP_BUFFER_SIZE should
+            // probably use blksize_option...
+            tftp_send_optack(buffer, sourceport, targetport, tsize_option, TFTP_BUFFER_SIZE);
+            return;
+          }
+        }
         tftp_tid = sourceport;
         tftp_write = 0;
         tftp_send_data(buffer, sourceport, targetport, 1);
@@ -1170,12 +1242,12 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
         if (fp) {
           tftp_send_error(buffer, sourceport, targetport, 6, "File exists");
           fclose(fp);
-          return;  	
+          return;
         }
         fp = fopen(path, "wb");
         if (!fp) {
           tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
-          return;  	
+          return;
         }
         fclose(fp);
         tftp_tid = sourceport;
@@ -1197,11 +1269,11 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
           fp = fopen(path, "ab");
           if (!fp) {
             tftp_send_error(buffer, sourceport, targetport, 2, "Access violation");
-            return;  	
+            return;
           }
           if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
             tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
-            return;  	
+            return;
           }
           fwrite(buffer, 1, tftp_len, fp);
           fclose(fp);
@@ -1227,8 +1299,7 @@ bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
   } 
 }
 
-void 
-bx_vnet_pktmover_c::tftp_send_error(
+void bx_vnet_pktmover_c::tftp_send_error(
   Bit8u *buffer,
   unsigned sourceport, unsigned targetport,
   unsigned code, const char *msg)
@@ -1240,8 +1311,7 @@ bx_vnet_pktmover_c::tftp_send_error(
   tftp_tid = 0;
 }
 
-void 
-bx_vnet_pktmover_c::tftp_send_data(
+void bx_vnet_pktmover_c::tftp_send_data(
   Bit8u *buffer,
   unsigned sourceport, unsigned targetport,
   unsigned block_nr)
@@ -1265,12 +1335,12 @@ bx_vnet_pktmover_c::tftp_send_data(
   if (!fp) {
     sprintf(msg, "File not found: %s", tftp_filename);
     tftp_send_error(buffer, sourceport, targetport, 1, msg);
-    return;  	
+    return;
   }
   
   if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
     tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
-    return;  	
+    return;
   }
   
   rd = fread(buffer + 4, 1, TFTP_BUFFER_SIZE, fp);
@@ -1278,7 +1348,7 @@ bx_vnet_pktmover_c::tftp_send_data(
   
   if (rd < 0) {
     tftp_send_error(buffer, sourceport, targetport, 3, "Block not readable");
-    return;  	  	
+    return;
   }
   
   put_net2(buffer, TFTP_DATA);
@@ -1289,8 +1359,7 @@ bx_vnet_pktmover_c::tftp_send_data(
   }
 }
 
-void 
-bx_vnet_pktmover_c::tftp_send_ack(
+void bx_vnet_pktmover_c::tftp_send_ack(
   Bit8u *buffer,
   unsigned sourceport, unsigned targetport,
   unsigned block_nr)
@@ -1300,5 +1369,24 @@ bx_vnet_pktmover_c::tftp_send_ack(
   host_to_guest_udpipv4_packet(sourceport, targetport, buffer, 4);
 }
 
+void bx_vnet_pktmover_c::tftp_send_optack(
+  Bit8u *buffer,
+  unsigned sourceport, unsigned targetport,
+  size_t tsize_option, unsigned blksize_option)
+{
+  Bit8u *p = buffer;
+  put_net2(p, TFTP_OPTACK);
+  p += 2;
+  if (tsize_option > 0) {
+    *p++='t'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
+    sprintf((char *)p, "%lu", (unsigned long)tsize_option);
+    p += strlen((const char *)p) + 1;
+  }
+  if (blksize_option > 0) {
+    *p++='b'; *p++='l'; *p++='k'; *p++='s'; *p++='i'; *p++='z'; *p++='e'; *p++='\0';
+    sprintf((char *)p, "%d", blksize_option); p += strlen((const char *)p) + 1;
+  }
+  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, p - buffer);
+}
 
 #endif /* if BX_NETWORKING */
