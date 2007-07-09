@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.60 2007-04-19 16:12:19 sshwarts Exp $
+// $Id: mmx.cc,v 1.61 2007-07-09 15:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -94,10 +94,10 @@ void BX_CPU_C::print_state_MMX(void)
 
 void BX_CPU_C::prepareMMX(void)
 {
-  if(BX_CPU_THIS_PTR cr0.ts)
+  if(BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0, 0);
 
-  if(BX_CPU_THIS_PTR cr0.em)
+  if(BX_CPU_THIS_PTR cr0.get_EM())
     exception(BX_UD_EXCEPTION, 0, 0);
 
   /* cause transition from FPU to MMX technology state */

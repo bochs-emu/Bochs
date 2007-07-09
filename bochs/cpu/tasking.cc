@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.38 2006-09-20 17:02:20 sshwarts Exp $
+// $Id: tasking.cc,v 1.39 2007-07-09 15:16:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,7 +197,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
 
   // Check that old TSS, new TSS, and all segment descriptors
   // used in the task switch are paged in.
-  if (BX_CPU_THIS_PTR cr0.pg)
+  if (BX_CPU_THIS_PTR cr0.get_PG())
   {
     dtranslate_linear(obase32, 0, BX_WRITE); // new TSS
     dtranslate_linear(obase32 + old_TSS_max, 0, BX_WRITE);
@@ -331,7 +331,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     trap_word = 0; // keep compiler happy (not used)
   }
   else {
-    if (BX_CPU_THIS_PTR cr0.pg)
+    if (BX_CPU_THIS_PTR cr0.get_PG())
       access_linear(nbase32 + 0x1c, 4, 0, BX_READ, &newCR3);
     else
       newCR3 = 0;   // keep compiler happy (not used)
@@ -399,9 +399,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR tr.cache.type &= ~2;
 
   // Step 8: Set TS flag in the CR0 image stored in the new task TSS.
-
-  BX_CPU_THIS_PTR cr0.ts = 1;
-  BX_CPU_THIS_PTR cr0.val32 |= 0x00000008;
+  BX_CPU_THIS_PTR cr0.set_TS(1);
 
   // Task switch clears LE/L3/L2/L1/L0 in DR7
   BX_CPU_THIS_PTR dr7 &= ~0x00000155;
@@ -422,7 +420,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   //          EFLAGS, EIP, general purpose registers, and segment
   //          descriptor parts of the segment registers.
 
-  if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.pg) {
+  if ((tss_descriptor->type >= 9) && BX_CPU_THIS_PTR cr0.get_PG()) {
     // change CR3 only if it actually modified
     if (newCR3 != BX_CPU_THIS_PTR cr3) {
       CR3_change(newCR3); // Tell paging unit about new cr3 value

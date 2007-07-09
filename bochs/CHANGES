@@ -2,7 +2,7 @@ Changes in 2.3.5 release (coming soon):
 
 - CPU
   - Fixed critical bug with 0x90 opcode (NOP) handling in x86-64 mode
-  - added emulation of SSE4 instructions (Stanislav)
+  - Added emulation of SSE4 instructions (Stanislav)
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
@@ -10,6 +10,7 @@ Changes in 2.3.5 release (coming soon):
   - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
   - Fixed PUSHA/POPA instructions behavior in real mode
   - Fixed detecting of inexact result by FPU
+  - Fixed denormals-are-zero (DAZ) handling by SSE convert instructions
 
 - General
   - 2nd simulation support in wxBochs now almost usable (simulation cleanup

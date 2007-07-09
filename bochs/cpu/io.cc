@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.37 2007-01-05 13:40:47 sshwarts Exp $
+// $Id: io.cc,v 1.38 2007-07-09 15:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   write_virtual_checks(dstSegPtr, dstOff, 2);
 
   bx_address laddrDst = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_ES) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg)
+  if (BX_CPU_THIS_PTR cr0.get_PG())
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   else
     paddrDst = laddrDst;
@@ -178,7 +178,7 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   read_virtual_checks(srcSegPtr, srcOff, 2);
 
   bx_address laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
-  if (BX_CPU_THIS_PTR cr0.pg)
+  if (BX_CPU_THIS_PTR cr0.get_PG())
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   else
     paddrSrc = laddrSrc;
@@ -312,7 +312,7 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 {
   Bit8u value8=0;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
       BX_DEBUG(("INSB_YbDX: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -476,7 +476,7 @@ doIncr:
 // input doubleword from port to string
 void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 {
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
       BX_DEBUG(("INSD_YdDX: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -557,7 +557,7 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
   Bit8u value8;
   bx_address esi;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
       BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -607,7 +607,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
   bx_address esi;
   unsigned incr = 2;
 
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
       BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
@@ -705,7 +705,7 @@ doIncr:
 // output doubleword string to port
 void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
 {
-  if (BX_CPU_THIS_PTR cr0.pe && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
+  if (BX_CPU_THIS_PTR cr0.get_PE() && (BX_CPU_THIS_PTR get_VM() || (CPL>BX_CPU_THIS_PTR get_IOPL()))) {
     if (! BX_CPU_THIS_PTR allow_io(DX, 4)) {
       BX_DEBUG(("OUTSD_DXXd: I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);

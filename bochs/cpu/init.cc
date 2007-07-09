@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.128 2007-04-06 15:22:16 vruppert Exp $
+// $Id: init.cc,v 1.129 2007-07-09 15:16:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -293,7 +293,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
       DEFPARAM_NORMAL(CR2, cr2);
       DEFPARAM_NORMAL(CR3, cr3);
 #if BX_CPU_LEVEL >= 4
-      DEFPARAM_NORMAL(CR4, cr4.registerValue);
+      DEFPARAM_NORMAL(CR4, cr4.val32);
 #endif
 
       // segment registers require a handler function because they have
@@ -437,7 +437,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(list, CR3, cr3);
 #if BX_CPU_LEVEL >= 4
-  BXRS_HEX_PARAM_FIELD(list, CR4, cr4.registerValue);
+  BXRS_HEX_PARAM_FIELD(list, CR4, cr4.val32);
 #endif
 
   for(i=0; i<6; i++) {
@@ -909,28 +909,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR smbase = 0x30000;
 
-#if BX_CPU_LEVEL >= 2
-  // MSW (Machine Status Word), so called on 286
-  // CR0 (Control Register 0), so called on 386+
-  BX_CPU_THIS_PTR cr0.ts = 0; // no task switch
-  BX_CPU_THIS_PTR cr0.em = 0; // emulate math coprocessor
-  BX_CPU_THIS_PTR cr0.mp = 0; // wait instructions not trapped
-  BX_CPU_THIS_PTR cr0.pe = 0; // real mode
-  BX_CPU_THIS_PTR cr0.val32 = 0;
-
-#if BX_CPU_LEVEL >= 3
-  BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled
-  // no change to cr0.val32
-#endif
-
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr0.cd = 0;
-  BX_CPU_THIS_PTR cr0.nw = 0;
-  BX_CPU_THIS_PTR cr0.am = 0; // disable alignment check
-  BX_CPU_THIS_PTR cr0.wp = 0; // disable write-protect
-  BX_CPU_THIS_PTR cr0.ne = 0; // np exceptions through int 13H, DOS compat
-  BX_CPU_THIS_PTR cr0.val32 |= 0x00000000;
-#endif
+  BX_CPU_THIS_PTR cr0.setRegister(0);
 
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
@@ -940,10 +919,6 @@ void BX_CPU_C::reset(unsigned source)
   // bit 4 is hardwired to 1 on all x86
   BX_CPU_THIS_PTR cr0.val32 |= 0x00000010;
 #endif
-#endif // CPU >= 2
-
-  // CR0 paging might be modified
-  TLB_flush(1);
 
 #if BX_CPU_LEVEL >= 3
   BX_CPU_THIS_PTR cr1 = 0;
@@ -951,9 +926,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr3 = 0;
   BX_CPU_THIS_PTR cr3_masked = 0;
 #endif
+
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.setRegister(0);
 #endif
+
+  // CR0/CR4 paging might be modified
+  TLB_flush(1);
 
 /* initialise MSR registers to defaults */
 #if BX_CPU_LEVEL >= 5
@@ -1124,7 +1103,7 @@ void BX_CPU_C::assert_checks(void)
   // check CPU mode consistency
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
-    if (! BX_CPU_THIS_PTR cr0.pe) {
+    if (! BX_CPU_THIS_PTR cr0.get_PE()) {
       BX_PANIC(("assert_checks: EFER.LMA is set when CR0.PE=0 !"));
     }
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
@@ -1139,7 +1118,7 @@ void BX_CPU_C::assert_checks(void)
   else 
 #endif
   {
-    if (BX_CPU_THIS_PTR cr0.pe) {
+    if (BX_CPU_THIS_PTR cr0.get_PE()) {
       if (BX_CPU_THIS_PTR get_VM()) {
         if (BX_CPU_THIS_PTR cpu_mode != BX_MODE_IA32_V8086)
           BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_IA32_V8086 !"));
@@ -1154,6 +1133,15 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_IA32_REAL !"));
     }
   }
+
+  // check CR0 consistency
+  if (BX_CPU_THIS_PTR cr0.get_PG() && ! BX_CPU_THIS_PTR cr0.get_PE())
+    BX_PANIC(("assert_checks: CR0.PG=1 with CR0.PE=0 !"));
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPU_THIS_PTR cr0.get_NW() && ! BX_CPU_THIS_PTR cr0.get_CD())
+    BX_PANIC(("assert_checks: CR0.NW=1 with CR0.CD=0 !"));
+#endif
+
 
 #if BX_SUPPORT_X86_64
   // VM should be OFF in long mode
@@ -1199,37 +1187,6 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: TR is not TSS type !"));
     }
   }
-
-  // validate CR0 register
-  if (BX_CPU_THIS_PTR cr0.pe != (BX_CPU_THIS_PTR cr0.val32 & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.PE !"));
-  if (BX_CPU_THIS_PTR cr0.mp != ((BX_CPU_THIS_PTR cr0.val32 >>  1) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.MP !"));
-  if (BX_CPU_THIS_PTR cr0.em != ((BX_CPU_THIS_PTR cr0.val32 >>  2) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.EM !"));
-  if (BX_CPU_THIS_PTR cr0.ts != ((BX_CPU_THIS_PTR cr0.val32 >>  3) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.TS !"));
-#if BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR cr0.ne != ((BX_CPU_THIS_PTR cr0.val32 >>  5) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.NE !"));
-  if (BX_CPU_THIS_PTR cr0.wp != ((BX_CPU_THIS_PTR cr0.val32 >> 16) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.WP !"));
-  if (BX_CPU_THIS_PTR cr0.am != ((BX_CPU_THIS_PTR cr0.val32 >> 18) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.AM !"));
-  if (BX_CPU_THIS_PTR cr0.nw != ((BX_CPU_THIS_PTR cr0.val32 >> 29) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.NW !"));
-  if (BX_CPU_THIS_PTR cr0.cd != ((BX_CPU_THIS_PTR cr0.val32 >> 30) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.CD !"));
-#endif
-  if (BX_CPU_THIS_PTR cr0.pg != ((BX_CPU_THIS_PTR cr0.val32 >> 31) & 1))
-    BX_PANIC(("assert_checks: inconsistent CR0.PG !"));
-
-  if (BX_CPU_THIS_PTR cr0.pg && ! BX_CPU_THIS_PTR cr0.pe)
-    BX_PANIC(("assert_checks: CR0.PG=1 with CR0.PE=0 !"));
-#if BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR cr0.nw && ! BX_CPU_THIS_PTR cr0.cd)
-    BX_PANIC(("assert_checks: CR0.NW=1 with CR0.CD=0 !"));
-#endif
 }
 
 void BX_CPU_C::set_INTR(bx_bool value)

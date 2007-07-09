@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.36 2007-01-05 13:40:47 sshwarts Exp $
+// $Id: string.cc,v 1.37 2007-07-09 15:16:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 1);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
   else {
@@ -77,7 +77,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {
@@ -194,7 +194,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 2);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
   else {
@@ -211,7 +211,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {
@@ -332,7 +332,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 4);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
   else {
@@ -349,7 +349,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {
@@ -464,7 +464,7 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {
@@ -558,7 +558,7 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {
@@ -655,7 +655,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
   else {

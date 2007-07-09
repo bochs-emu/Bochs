@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.319 2007-04-19 16:12:18 sshwarts Exp $
+// $Id: cpu.h,v 1.320 2007-07-09 15:16:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -450,16 +450,16 @@ typedef struct {
     set_VM(0);                                                        \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                   \
-    if (long_mode()) return;                                         \
+    if (long_mode()) return;                                          \
     if (val) {                                                        \
        BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                   \
        BX_CPU_THIS_PTR eflags.VM_cached = 1;                          \
-       if (BX_CPU_THIS_PTR cr0.pe)                                    \
+       if (BX_CPU_THIS_PTR cr0.get_PE())                              \
          BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;               \
     } else {                                                          \
        BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                  \
        BX_CPU_THIS_PTR eflags.VM_cached = 0;                          \
-       if (BX_CPU_THIS_PTR cr0.pe)                                    \
+       if (BX_CPU_THIS_PTR cr0.get_PE())                              \
          BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;           \
     }                                                                 \
   }
@@ -508,14 +508,17 @@ typedef struct {
 
 } bx_flags_reg_t;
 
-#if BX_CPU_LEVEL >= 2
-typedef struct {
+struct bx_cr0_t {
   Bit32u  val32; // 32bit value of register
 
-  // bitfields broken out for efficient access
-#if BX_CPU_LEVEL >= 3
-  bx_bool pg; // paging
-#endif
+  // Accessors for all cr0 bitfields.
+#define IMPLEMENT_CR0_ACCESSORS(name,bitnum)                 \
+  BX_CPP_INLINE bx_bool get_##name () {                      \
+    return 1 & (val32 >> bitnum);                            \
+  }                                                          \
+  BX_CPP_INLINE void set_##name (Bit8u val) {                \
+    val32 = (val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
+  }
 
 // CR0 notes:
 //   Each x86 level has its own quirks regarding how it handles
@@ -536,33 +539,37 @@ typedef struct {
 //   Pentium: reserved bits retain value set using mov cr0, reg32
 //   486DX2/Pentium-II: reserved bits are hardwired to 0
 
+  IMPLEMENT_CR0_ACCESSORS(PE, 0);
+  IMPLEMENT_CR0_ACCESSORS(MP, 1);
+  IMPLEMENT_CR0_ACCESSORS(EM, 2);
+  IMPLEMENT_CR0_ACCESSORS(TS, 3);
 #if BX_CPU_LEVEL >= 4
-  bx_bool cd; // cache disable
-  bx_bool nw; // no write-through
-  bx_bool am; // alignment mask
-  bx_bool wp; // write-protect
-  bx_bool ne; // numerics exception
+  IMPLEMENT_CR0_ACCESSORS(ET, 4);
+  IMPLEMENT_CR0_ACCESSORS(NE, 5);
+  IMPLEMENT_CR0_ACCESSORS(AM, 18);
+  IMPLEMENT_CR0_ACCESSORS(WP, 16);
+  IMPLEMENT_CR0_ACCESSORS(CD, 29);
+  IMPLEMENT_CR0_ACCESSORS(NW, 30);
 #endif
+  IMPLEMENT_CR0_ACCESSORS(PG, 31);
 
-  bx_bool ts; // task switched
-  bx_bool em; // emulate math coprocessor
-  bx_bool mp; // monitor coprocessor
-  bx_bool pe; // protected mode enable
-} bx_cr0_t;
-#endif
+  BX_CPP_INLINE Bit32u getRegister() { return val32; }
+  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+};
 
 #if BX_CPU_LEVEL >= 4
-typedef struct {
-  Bit32u  registerValue; // 32bit value of register
+struct bx_cr4_t {
+  Bit32u  val32; // 32bit value of register
 
   // Accessors for all cr4 bitfields.
-#define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                                 \
-  BX_CPP_INLINE bx_bool get_##name () {                                      \
-    return 1 & (registerValue >> bitnum);                                    \
-  }                                                                          \
-  BX_CPP_INLINE void set_##name (Bit8u val) {                                \
-    registerValue = (registerValue&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
+#define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                 \
+  BX_CPP_INLINE bx_bool get_##name () {                      \
+    return 1 & (val32 >> bitnum);                            \
+  }                                                          \
+  BX_CPP_INLINE void set_##name (Bit8u val) {                \
+    val32 = (val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
   }
+
 #if BX_SUPPORT_VME
   IMPLEMENT_CR4_ACCESSORS(VME, 0);
   IMPLEMENT_CR4_ACCESSORS(PVI, 1);
@@ -576,9 +583,10 @@ typedef struct {
   IMPLEMENT_CR4_ACCESSORS(PCE, 8);
   IMPLEMENT_CR4_ACCESSORS(OSFXSR, 9);
   IMPLEMENT_CR4_ACCESSORS(OSXMMEXCPT, 10);
-  BX_CPP_INLINE Bit32u  getRegister() { return registerValue; }
-  BX_CPP_INLINE void    setRegister(Bit32u r) { registerValue = r; }
-} bx_cr4_t;
+
+  BX_CPP_INLINE Bit32u getRegister() { return val32; }
+  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
+};
 #endif  // #if BX_CPU_LEVEL >= 4
 
 #if BX_SUPPORT_VME

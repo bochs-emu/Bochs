@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.82 2007-03-23 14:50:45 sshwarts Exp $
+// $Id: paging.cc,v 1.83 2007-07-09 15:16:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -304,7 +304,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //    |  |  |  |  +---> r/w of current access
 //    |  |  +--+------> u/s,r/w combined of page dir & table (cached)
 //    |  +------------> u/s of current access
-//    +---------------> Current CR0.wp value
+//    +---------------> Current CR0.WP value
 
 
 // Each entry in the TLB cache has 3 entries:
@@ -743,11 +743,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
 #endif
-        (pl<<3) |                      // bit 3
-        (combined_access & 0x06) |     // bit 2,1
-        isWrite;                       // bit 0
+        (pl<<3) |                              // bit 3
+        (combined_access & 0x06) |             // bit 2,1
+        isWrite;                               // bit 0
 
       if (!priv_check[priv_index]) goto page_fault_access;
 
@@ -799,11 +799,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
 #endif
-        (pl<<3) |                      // bit 3
-        (combined_access & 0x06) |     // bit 2,1
-        isWrite;                       // bit 0
+        (pl<<3) |                              // bit 3
+        (combined_access & 0x06) |             // bit 2,1
+        isWrite;                               // bit 0
 
       if (!priv_check[priv_index]) goto page_fault_access;
 
@@ -859,11 +859,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
 #endif
-        (pl<<3) |                      // bit 3
-        (combined_access & 0x06) |     // bit 2,1
-        isWrite;                       // bit 0
+        (pl<<3) |                              // bit 3
+        (combined_access & 0x06) |             // bit 2,1
+        isWrite;                               // bit 0
 
       if (!priv_check[priv_index]) goto page_fault_access;
 
@@ -912,11 +912,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 
       priv_index =
 #if BX_CPU_LEVEL >= 4
-        (BX_CPU_THIS_PTR cr0.wp<<4) |  // bit 4
+        (BX_CPU_THIS_PTR cr0.get_WP() << 4) |  // bit 4
 #endif
-        (pl<<3) |                      // bit 3
-        (combined_access & 0x06) |     // bit 2,1
-        isWrite;                       // bit 0
+        (pl<<3) |                              // bit 3
+        (combined_access & 0x06) |             // bit 2,1
+        isWrite;                               // bit 0
 
       if (!priv_check[priv_index]) goto page_fault_access;
 
@@ -1043,7 +1043,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 {
   bx_address lpf, poffset, paddress;
 
-  if (BX_CPU_THIS_PTR cr0.pg == 0) {
+  if (BX_CPU_THIS_PTR cr0.get_PG() == 0) {
     *phy = laddr;
     return 1;
   }
@@ -1143,7 +1143,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
   unsigned xlate_rw = rw;
   if (rw==BX_RW) rw = BX_READ;
 
-  if (BX_CPU_THIS_PTR cr0.pg) {
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
     /* check for reference across multiple pages */
     if ( (pageOffset + length) <= 4096 ) {
       // Access within single page.

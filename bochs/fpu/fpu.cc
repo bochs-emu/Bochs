@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.22 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: fpu.cc,v 1.23 2007-07-09 15:16:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -37,7 +37,7 @@
 void BX_CPU_C::prepareFPU(bxInstruction_c *i, 
 	bx_bool check_pending_exceptions, bx_bool update_last_instruction)
 {
-  if (BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts)
+  if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     exception(BX_NM_EXCEPTION, 0, 0);
 
   if (check_pending_exceptions)
@@ -68,7 +68,7 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
      // NE=0 selects the original (backward compatible) FPU error
      // handling, which generates an IRQ 13 via the PIC chip.
 #if BX_CPU_LEVEL >= 4
-     if (BX_CPU_THIS_PTR cr0.ne != 0) {
+     if (BX_CPU_THIS_PTR cr0.get_NE() != 0) {
          exception(BX_MF_EXCEPTION, 0, 0);
      }
      else

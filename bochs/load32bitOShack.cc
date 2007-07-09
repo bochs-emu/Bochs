@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.21 2006-03-27 18:02:06 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.22 2007-07-09 15:16:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,7 +257,7 @@ void bx_load_null_kernel_hack(void)
   BX_CPU(0)->sregs[BX_SEG_REG_DS].cache.u.segment.d_b = 1; // 32bit
 
   // CR0 deltas
-  BX_CPU(0)->cr0.pe = 1; // protected mode
+  BX_CPU(0)->cr0.set_PE(1); // protected mode
 }
 
   Bit32u

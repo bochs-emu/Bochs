@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.36 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.37 2007-07-09 15:16:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,7 +409,7 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
   }
 
 #if BX_CPU_LEVEL >= 2
-  if (BX_CPU_THIS_PTR cr0.pe) {
+  if (BX_CPU_THIS_PTR cr0.get_PE()) {
     iret_protected(i);
     goto done;
   }

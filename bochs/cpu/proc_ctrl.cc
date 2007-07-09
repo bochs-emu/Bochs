@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.165 2007-06-08 09:25:30 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.166 2007-07-09 15:16:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -133,8 +133,7 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_CPU_THIS_PTR cr0.ts = 0;
-  BX_CPU_THIS_PTR cr0.val32 &= ~0x08;
+  BX_CPU_THIS_PTR cr0.set_TS(0);
 }
 
 void BX_CPU_C::INVD(bxInstruction_c *i)
@@ -850,7 +849,7 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE
 
   // LMSW cannot clear PE
-  if (BX_CPU_THIS_PTR cr0.pe)
+  if (BX_CPU_THIS_PTR cr0.get_PE())
     msw |= 0x0001; // adjust PE bit to current value of 1
 
   msw &= 0x000f; // LMSW only affects last 4 flags
@@ -864,10 +863,10 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
 
 #if BX_CPU_LEVEL == 2
   msw = 0xfff0; /* 80286 init value */
-  msw |= (BX_CPU_THIS_PTR cr0.ts << 3) |
-         (BX_CPU_THIS_PTR cr0.em << 2) |
-         (BX_CPU_THIS_PTR cr0.mp << 1) |
-         (BX_CPU_THIS_PTR cr0.pe);
+  msw |= (BX_CPU_THIS_PTR cr0.get_TS() << 3) |
+         (BX_CPU_THIS_PTR cr0.get_EM() << 2) |
+         (BX_CPU_THIS_PTR cr0.get_MP() << 1) |
+         (BX_CPU_THIS_PTR cr0.get_PE());
 #else /* 386+ */
   msw = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
 #endif
@@ -919,7 +918,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
 
-  if (BX_CPU_THIS_PTR cr0.pe) 
+  if (BX_CPU_THIS_PTR cr0.get_PE()) 
   {
     BX_PANIC(("LOADALL not yet supported for protected mode"));
   }
@@ -927,12 +926,12 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   BX_PANIC(("LOADALL: handle CR0.val32"));
   /* MSW */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x806, 2, &msw);
-  BX_CPU_THIS_PTR cr0.pe = (msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.mp = (msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.em = (msw & 0x01); msw >>= 1;
-  BX_CPU_THIS_PTR cr0.ts = (msw & 0x01);
+  BX_CPU_THIS_PTR cr0.set_PE(msw & 0x01); msw >>= 1;
+  BX_CPU_THIS_PTR cr0.set_MP(msw & 0x01); msw >>= 1;
+  BX_CPU_THIS_PTR cr0.set_EM(msw & 0x01); msw >>= 1;
+  BX_CPU_THIS_PTR cr0.set_TS(msw & 0x01);
 
-  if (BX_CPU_THIS_PTR cr0.pe || BX_CPU_THIS_PTR cr0.mp || BX_CPU_THIS_PTR cr0.em || BX_CPU_THIS_PTR cr0.ts)
+  if (BX_CPU_THIS_PTR cr0.get_PE() || BX_CPU_THIS_PTR cr0.get_MP() || BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
     BX_PANIC(("LOADALL set PE, MP, EM or TS bits in MSW!"));
 
   /* TR */
@@ -1212,7 +1211,7 @@ void BX_CPU_C::handleCpuModeChange(void)
 {
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR msr.lma) {
-    if (! BX_CPU_THIS_PTR cr0.pe) {
+    if (! BX_CPU_THIS_PTR cr0.get_PE()) {
       BX_PANIC(("change_cpu_mode: EFER.LMA is set when CR0.PE=0 !"));
     }
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
@@ -1227,7 +1226,7 @@ void BX_CPU_C::handleCpuModeChange(void)
   else 
 #endif
   {
-    if (BX_CPU_THIS_PTR cr0.pe) {
+    if (BX_CPU_THIS_PTR cr0.get_PE()) {
       if (BX_CPU_THIS_PTR get_VM()) {
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
         BX_DEBUG(("VM8086 Mode Activated"));
@@ -1261,52 +1260,32 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  if (pe && BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
+  if (pe && BX_CPU_THIS_PTR get_VM())BX_PANIC(("EFLAGS.VM=1, enter_PM"));
 
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
-  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32, newCR0;
+  Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.val32;
 
 #if BX_SUPPORT_X86_64
-  bx_bool prev_pg = BX_CPU_THIS_PTR cr0.pg;
-#endif
-
-  BX_CPU_THIS_PTR cr0.pe = pe;
-  BX_CPU_THIS_PTR cr0.mp = (val_32 >> 1) & 0x01;
-  BX_CPU_THIS_PTR cr0.em = (val_32 >> 2) & 0x01;
-  BX_CPU_THIS_PTR cr0.ts = (val_32 >> 3) & 0x01;
-  // cr0.et is hardwired to 1
-#if BX_CPU_LEVEL >= 4
-  BX_CPU_THIS_PTR cr0.ne = (val_32 >> 5)  & 0x01;
-  BX_CPU_THIS_PTR cr0.wp = (val_32 >> 16) & 0x01;
-  BX_CPU_THIS_PTR cr0.am = (val_32 >> 18) & 0x01;
-  BX_CPU_THIS_PTR cr0.nw = nw;
-  BX_CPU_THIS_PTR cr0.cd = cd;
-#endif
-  BX_CPU_THIS_PTR cr0.pg = pg;
-
-#if BX_CPU_LEVEL >= 4
-  if (BX_CPU_THIS_PTR cr0.am) {
-    BX_DEBUG(("WARNING: Alignment check enabled but not implemented !"));
-  }
+  bx_bool prev_pg = BX_CPU_THIS_PTR cr0.get_PG();
 #endif
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3
-  newCR0 = val_32 | 0x7ffffff0;
+  val_32 = val_32 | 0x7ffffff0;
 #elif BX_CPU_LEVEL == 4
-  newCR0 = (val_32 | 0x00000010) & 0xe005003f;
+  val_32 = (val_32 | 0x00000010) & 0xe005003f;
 #elif BX_CPU_LEVEL == 5
-  newCR0 = val_32 | 0x00000010;
+  val_32 = val_32 | 0x00000010;
 #elif BX_CPU_LEVEL == 6
-  newCR0 = (val_32 | 0x00000010) & 0xe005003f;
+  val_32 = (val_32 | 0x00000010) & 0xe005003f;
 #else
-#error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
+#error "SerCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
-  BX_CPU_THIS_PTR cr0.val32 = newCR0;
+  BX_CPU_THIS_PTR cr0.val32 = val_32;
 
 #if BX_SUPPORT_X86_64
-  if (prev_pg==0 && BX_CPU_THIS_PTR cr0.pg) {
+  if (prev_pg==0 && BX_CPU_THIS_PTR cr0.get_PG()) {
     if (BX_CPU_THIS_PTR msr.lme) {
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
         BX_ERROR(("SetCR0: attempt to enter x86-64 LONG mode without enabling CR4.PAE !"));
@@ -1315,7 +1294,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       BX_CPU_THIS_PTR msr.lma = 1;
     }
   }
-  else if (prev_pg==1 && BX_CPU_THIS_PTR cr0.pg==0) {
+  else if (prev_pg==1 && ! BX_CPU_THIS_PTR cr0.get_PG()) {
     if (BX_CPU_THIS_PTR msr.lma) {
       if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
@@ -1329,7 +1308,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 
   // Give the paging unit a chance to look for changes in bits
   // it cares about, like {PG,PE}, so it can flush cache entries etc.
-  pagingCR0Changed(oldCR0, newCR0);
+  pagingCR0Changed(oldCR0, val_32);
 }
 
 #if BX_CPU_LEVEL >= 4
@@ -1726,7 +1705,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       // GPF #0 if lme 0->1 and cr0.pg = 1
       // GPF #0 if lme 1->0 and cr0.pg = 1
       if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
-          (BX_CPU_THIS_PTR cr0.pg == 1))
+           BX_CPU_THIS_PTR cr0.get_PG())
       {
         BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
         exception(BX_GP_EXCEPTION, 0, 0);

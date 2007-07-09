@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.24 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: smm.cc,v 1.25 2007-07-09 15:16:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -128,11 +128,10 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 
   // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified
-  BX_CPU_THIS_PTR cr0.pe = 0; // real mode (bit 0)
-  BX_CPU_THIS_PTR cr0.em = 0; // emulate math coprocessor (bit 2)
-  BX_CPU_THIS_PTR cr0.ts = 0; // no task switch (bit 3)
-  BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled (bit 31)
-  BX_CPU_THIS_PTR cr0.val32 &= 0x7ffffff2;
+  BX_CPU_THIS_PTR cr0.set_PE(0); // real mode (bit 0)
+  BX_CPU_THIS_PTR cr0.set_EM(0); // emulate math coprocessor (bit 2)
+  BX_CPU_THIS_PTR cr0.set_TS(0); // no task switch (bit 3)
+  BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
 
@@ -386,9 +385,8 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   // hack CR0 to be able to back to long mode correctly
-  BX_CPU_THIS_PTR cr0.pe = 0; // real mode (bit 0)
-  BX_CPU_THIS_PTR cr0.pg = 0; // paging disabled (bit 31)
-  BX_CPU_THIS_PTR cr0.val32 &= 0x7ffffffe;
+  BX_CPU_THIS_PTR cr0.set_PE(0); // real mode (bit 0)
+  BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
   SetCR0(temp_cr0);
   setEFlags(temp_eflags);
 
