@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.93 2007-05-12 19:19:15 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.94 2007-07-09 14:57:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1838,12 +1838,12 @@ void bx_dbg_info_registers_command(int which_regs_mask)
   }
 #if BX_SUPPORT_FPU
   if (which_regs_mask & BX_INFO_FPU_REGS) {
-    BX_CPU(i)->print_state_FPU();
+    BX_CPU(dbg_cpu)->print_state_FPU();
   }
 #endif
 #if BX_SUPPORT_SSE
   if (which_regs_mask & BX_INFO_SSE_REGS) {
-    BX_CPU(i)->print_state_SSE();
+    BX_CPU(dbg_cpu)->print_state_SSE();
   }
 #endif
 }
@@ -1855,7 +1855,7 @@ void bx_dbg_dump_cpu_command(void)
   BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
 
 #if BX_SUPPORT_SMP
-  dbg_printf("CPU#%u\n", i);
+  dbg_printf("CPU#%u\n", dbg_cpu);
 #endif
   dbg_printf("eax:0x%08x, ebx:0x%08x, ecx:0x%08x, edx:0x%08x\n", 
       (unsigned) cpu.eax, (unsigned) cpu.ebx,
@@ -3215,7 +3215,7 @@ void bx_dbg_dump_table(void)
   Bit32u start_lin, start_phy;  // start of a valid translation interval
   bx_bool valid;
 
-  if (BX_CPU(dbg_cpu)->cr0.pg == 0) {
+  if (! BX_CPU(dbg_cpu)->cr0.get_PG()) {
     printf("paging off\n");
     return;
   }
