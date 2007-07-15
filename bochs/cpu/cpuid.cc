@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.43 2007-04-19 16:12:18 sshwarts Exp $
+// $Id: cpuid.cc,v 1.44 2007-07-15 19:03:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -368,9 +368,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       break;
 
     case 0x80000001:
-      // long mode supported.
-      features = get_std_cpuid_features ();
-      RAX = features;
+      RAX = get_cpu_version_information();
       // Many of the bits in EDX are the same as EAX [*]
       // [*] [0:0]   FPU on chip
       // [*] [1:1]   VME: Virtual-8086 Mode enhancements
@@ -403,6 +401,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //     [29:29] Long Mode
       //     [30:30] AMD 3DNow! Extensions
       //     [31:31] AMD 3DNow! Instructions
+      features = get_std_cpuid_features();
       features = features & 0x0183F3FF;
 
       RDX = features | (1 << 29) | (1 << 27) | (1 << 25) | 
@@ -411,8 +410,20 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
 
       // RCX:
       //     [0:0]   LAHF/SAHF available in 64-bit mode
-      //     [1:31]  Reserved
+      //     [1:1]   AMD CmpLegacy
+      //     [2:2]   AMD Secure Virtual Machine Technology
+      //     [3:3]   Extended APIC Space
+      //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8) 
+      //     [5:5]   LZCNT support
+      //     [6:6]   SSE4A support
+      //     [7:7]   Misaligned SSE support
+      //     [8:8]   3DNow! prefetch support
+      //     [9:9]   OS visible workarounds
+      //     [10:31] Reserved
       RCX = 1;
+#if BX_SUPPORT_MISALIGNED_SSE
+      RCX |= (1<<7);
+#endif
       break;
 
     // Processor Brand String, use the value given 

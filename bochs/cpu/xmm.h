@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.22 2007-04-19 16:12:21 sshwarts Exp $
+// $Id: xmm.h,v 1.23 2007-07-15 19:03:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -109,7 +109,7 @@ typedef union bx_xmm_reg_t {
 
 /* 31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16
  * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==  (reserved)
- *  0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0
+ *  0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0| 0|MM| 0
  *
  * 15|14|13|12|11|10| 9| 8| 7| 6| 5| 4| 3| 2| 1| 0
  * ==|==|=====|==|==|==|==|==|==|==|==|==|==|==|==
@@ -134,13 +134,16 @@ typedef union bx_xmm_reg_t {
  * PM 12    Precision Exception Mask                1
  * RC 13-14 Floating-Point Rounding Control         00
  * FZ 15    Flush-to-Zero for Masked Underflow      0
+ * RZ 16    Reserved                                0
+ * MM 17    Misaligned Exceptuion Mask              0
  */
 
-#define MXCSR_DAZ                    0x00000040
-#define MXCSR_EXCEPTIONS             0x0000003F
-#define MXCSR_MASKED_EXCEPTIONS      0x00001F80
-#define MXCSR_ROUNDING_CONTROL       0x00006000
-#define MXCSR_FLUSH_MASKED_UNDERFLOW 0x00008000
+#define MXCSR_EXCEPTIONS                 0x0000003F
+#define MXCSR_DAZ                        0x00000040
+#define MXCSR_MASKED_EXCEPTIONS          0x00001F80
+#define MXCSR_ROUNDING_CONTROL           0x00006000
+#define MXCSR_FLUSH_MASKED_UNDERFLOW     0x00008000
+#define MXCSR_MISALIGNED_EXCEPTION_MASK  0x00020000
 
 #define MXCSR_IE 0x00000001
 #define MXCSR_DE 0x00000002
@@ -174,6 +177,7 @@ struct BOCHSAPI bx_mxcsr_t
   IMPLEMENT_MXCSR_ACCESSOR(DAZ, MXCSR_DAZ, 6);
   IMPLEMENT_MXCSR_ACCESSOR(rounding_mode, MXCSR_ROUNDING_CONTROL, 13);
   IMPLEMENT_MXCSR_ACCESSOR(flush_masked_underflow, MXCSR_FLUSH_MASKED_UNDERFLOW, 15);
+  IMPLEMENT_MXCSR_ACCESSOR(misaligned_exception_mask, MXCSR_MISALIGNED_EXCEPTION_MASK, 17);
 
   IMPLEMENT_MXCSR_ACCESSOR(IE, MXCSR_IE, 0);
   IMPLEMENT_MXCSR_ACCESSOR(DE, MXCSR_DE, 1);
@@ -195,11 +199,10 @@ struct BOCHSAPI bx_mxcsr_t
 
 };
 
-#if BX_SUPPORT_DAZ
-#define MXCSR_MASK  0x0000FFFF  /* reset reserved bits */
-#else
-#define MXCSR_MASK  0x0000FFBF  /* reset reserved bits */
-#endif
+/* reset reserved bits */
+#define MXCSR_MASK (0x0000FFBF |                 \
+         (BX_SUPPORT_DAZ ? MXCSR_DAZ : 0) |      \
+         (BX_SUPPORT_MISALIGNED_SSE ? MXCSR_MISALIGNED_EXCEPTION_MASK : 0))
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 #define MXCSR (BX_CPU_THIS_PTR mxcsr)

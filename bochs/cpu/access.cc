@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.67 2007-04-09 21:55:07 sshwarts Exp $
+// $Id: access.cc,v 1.68 2007-07-15 19:03:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,8 +45,8 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("Canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      BX_ERROR(("write_virtual_checks(): canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
+      exception(int_number(seg), 0, 0);
     }
     seg->cache.valid |= SegAccessWOK;
     return;
@@ -137,8 +137,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("Canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
-      exception(BX_GP_EXCEPTION, 0, 0);
+      BX_ERROR(("read_virtual_checks(): canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
+      exception(int_number(seg), 0, 0);
     }
     seg->cache.valid |= SegAccessROK;
     return;
@@ -967,7 +967,11 @@ BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  if (offset & 0xf) {
+  if ((offset & 0xf)
+#if BX_SUPPORT_MISALIGNED_SSE
+        && !MXCSR.get_misaligned_exception_mask()
+#endif
+  ) {
     BX_DEBUG(("read_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -989,7 +993,11 @@ BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  if (offset & 0xf) {
+  if ((offset & 0xf)
+#if BX_SUPPORT_MISALIGNED_SSE
+        && !MXCSR.get_misaligned_exception_mask()
+#endif
+  ) {
     BX_DEBUG(("write_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
