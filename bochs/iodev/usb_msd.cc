@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.5 2007-05-05 12:30:23 vruppert Exp $
+// $Id: usb_msd.cc,v 1.6 2007-07-28 16:11:17 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -291,6 +291,9 @@ int usb_msd_device_t::handle_control(int request, int value, int index, int leng
       break;
       // Class specific requests
     case MassStorageReset:
+      // Ben: Hack for 0x21 | MassStorageReset
+      // 0x21 = (REQ_TYPE_CLASS | RECPT_INTERFACE);
+    case 0x21FF:
       s.mode = USB_MSDM_CBW;
       ret = 0;
       break;
