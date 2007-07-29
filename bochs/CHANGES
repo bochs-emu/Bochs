@@ -11,7 +11,7 @@ Changes in 2.3.5 release (coming soon):
     'cmov' condition was false !
   - Implemented CLFLUSH instruction, report non-zero cache size in CPUID
   - Fixed PUSHA/POPA instructions behavior in real mode
-  - Fixed detecting of inexact result by FPU
+  - Fixed detection of inexact result by FPU
   - Fixed denormals-are-zero (DAZ) handling by SSE convert instructions
   - Implemented Misaligned Exception Mask support for SSE (MXCSR[17])
 
@@ -26,7 +26,7 @@ Changes in 2.3.5 release (coming soon):
     Reference Manual, new option introduced for SSE extensions enabling.
     To enable Intel Core Duo 2 new instructions use 
         --enable-sse=3 --enable-sse-extension
-    enabling of SSE4 (--enable-sse=4) will enable SSE3 exensions as well
+    enabling of SSE4 (--enable-sse=4) will enable SSE3 extensions as well
   - removed old PIT, always use new PIT written by Greg Alexander,
     removed configure option --enable-new-pit
 
@@ -65,6 +65,10 @@ Changes in 2.3.5 release (coming soon):
   - PCI BIOS function "find class code" implemented
 
 - SF patches applied
+ [1695652] [PATCH] .pcap pktlog and vnet PXE boot by Duane Voth
+ [1741153] Add expansion-ROM boot support to the ROMBIOS
+ [1734159] Implemented INT15h, fn 0xC2 (mouse), subfn 3, set resolution
+ [1712970] bios_printf %s fix  
  [1573297] PUSHA/POPA real mode fix by Stanislav Shwartsman
  [1641816] partial support for non-DMA access to floppy by John Comeau 
  [1624032] shows where write outside of memory occurred by John Comeau
@@ -75,6 +79,11 @@ Changes in 2.3.5 release (coming soon):
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+ [1726640] Debugger displays incorrect segment for mov instruction
+ [1719156] Typo in misc_mem.cpp
+ [1715270] Debugger broken in/beyond 2.3
+ [1689107] v8086 mode priviledge check failed
+ [1704484] A few checks when CPU_LEVEL < 4  
  [1678395] Problem with zero sector...
   [876990] SA-RTL OS fails on PIC configuration
  [1673582] save/restore didn't restore simulation correctly
