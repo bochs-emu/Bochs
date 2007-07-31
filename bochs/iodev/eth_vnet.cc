@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.19 2007-07-01 07:28:14 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.20 2007-07-31 19:03:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -1372,7 +1372,7 @@ void bx_vnet_pktmover_c::tftp_send_ack(
 void bx_vnet_pktmover_c::tftp_send_optack(
   Bit8u *buffer,
   unsigned sourceport, unsigned targetport,
-  size_t tsize_option, unsigned blksize_option)
+  unsigned tsize_option, unsigned blksize_option)
 {
   Bit8u *p = buffer;
   put_net2(p, TFTP_OPTACK);
