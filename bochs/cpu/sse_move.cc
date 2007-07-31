@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.59 2007-07-09 15:16:13 sshwarts Exp $
+// $Id: sse_move.cc,v 1.60 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -166,7 +166,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(3) = (BX_CPU_THIS_PTR the_i387.fcs);
   }
  
-  writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
+  write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
 
   /* 
    * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
@@ -198,7 +198,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   xmm.xmm32u(3) = 0;
 #endif
 
-  writeVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
+  write_virtual_dqword_aligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
   /* store i387 register file */
   for(index=0; index < 8; index++)
@@ -209,7 +209,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm64u(1) = 0;
     xmm.xmm16u(4) = fp.exp;
     
-    writeVirtualDQwordAligned(i->seg(), RMAddr(i)+index*16+32, (Bit8u *) &xmm);
+    write_virtual_dqword_aligned(i->seg(), RMAddr(i)+index*16+32, (Bit8u *) &xmm);
   }
 
 #if BX_SUPPORT_SSE >= 1
@@ -218,7 +218,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   {
     // save XMM8-XMM15 only in 64-bit mode
     if (index < 8 || Is64BitMode()) {
-       writeVirtualDQwordAligned(i->seg(), 
+       write_virtual_dqword_aligned(i->seg(), 
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
     }
   }
@@ -253,7 +253,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0, 0);
 #endif
 
-  readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
+  read_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
   
   BX_CPU_THIS_PTR the_i387.cwd = xmm.xmm16u(0);
   BX_CPU_THIS_PTR the_i387.swd = xmm.xmm16u(1);
@@ -279,7 +279,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   Bit32u twd = 0, tag_byte = xmm.xmm16u(2);
 
   /* Restore x87 FPU DP */
-  readVirtualDQwordAligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
+  read_virtual_dqword_aligned(i->seg(), RMAddr(i) + 16, (Bit8u *) &xmm);
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) /* 64 bit operand size mode */
@@ -375,7 +375,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
     {
       // restore XMM8-XMM15 only in 64-bit mode
       if (index < 8 || Is64BitMode()) {
-         readVirtualDQwordAligned(i->seg(),
+         read_virtual_dqword_aligned(i->seg(),
              RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
       }
     }
@@ -410,7 +410,7 @@ void BX_CPU_C::MOVUPS_VpsWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+    read_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 
   /* now write result back to destination */
@@ -436,7 +436,7 @@ void BX_CPU_C::MOVUPS_WpsVps(bxInstruction_c *i)
     BX_WRITE_XMM_REG(i->rm(), op);
   }
   else {
-    writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+    write_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
   BX_INFO(("MOVUPS_WpsVps: required SSE, use --enable-sse option"));
@@ -460,7 +460,7 @@ void BX_CPU_C::MOVAPS_VpsWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+    read_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 
   /* now write result back to destination */
@@ -486,7 +486,7 @@ void BX_CPU_C::MOVAPS_WpsVps(bxInstruction_c *i)
     BX_WRITE_XMM_REG(i->rm(), op);
   }
   else {
-    writeVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+    write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 #else
   BX_INFO(("MOVAPS_WpsVps: required SSE, use --enable-sse option"));
@@ -809,7 +809,8 @@ void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
 
   BxPackedXmmRegister op;
 
-  readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+  read_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
+
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
 
@@ -1161,7 +1162,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareSSE();
 
-  writeVirtualDQword(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
+  write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 
 #else
   BX_INFO(("MOVNTPS_MdqVps: required SSE, use --enable-sse option"));

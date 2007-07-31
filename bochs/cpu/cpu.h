@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.320 2007-07-09 15:16:10 sshwarts Exp $
+// $Id: cpu.h,v 1.321 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,6 +428,27 @@ typedef struct {
     BX_CPU_THIS_PTR eflags.val32 =                                    \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((!!val)<<bitnum);  \
   }
+
+#if BX_SUPPORT_ALIGNMENT_CHECK
+
+#define DECLARE_EFLAG_ACCESSOR_AC(bitnum)                             \
+  BX_CPP_INLINE void    clear_AC ();                                  \
+  BX_CPP_INLINE Bit32u  get_AC();                                     \
+  BX_CPP_INLINE bx_bool getB_AC();                                    \
+
+#define IMPLEMENT_EFLAG_ACCESSOR_AC(bitnum)                           \
+  BX_CPP_INLINE void BX_CPU_C::clear_AC () {                          \
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                     \
+    BX_CPU_THIS_PTR alignment_check = 0;                              \
+  }                                                                   \
+  BX_CPP_INLINE Bit32u  BX_CPU_C::get_AC() {                          \
+    return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
+  }                                                                   \
+  BX_CPP_INLINE Bit32u  BX_CPU_C::getB_AC() {                         \
+    return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);              \
+  }
+
+#endif
 
 #define DECLARE_EFLAG_ACCESSOR_VM(bitnum)                             \
   BX_CPP_INLINE void    assert_VM();                                  \
@@ -1177,6 +1198,9 @@ public: // for now...
   unsigned cpu_mode;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  bx_bool  alignment_check;
+#endif
 
 #if BX_DEBUGGER
   Bit32u watchpoint;
@@ -2788,10 +2812,29 @@ public: // for now...
   BX_SMF void read_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
 #endif
 
-#define readVirtualDQword(s, off, data) read_virtual_dqword(s, off, data)
-#define readVirtualDQwordAligned(s, off, data) read_virtual_dqword_aligned(s, off, data)
-#define writeVirtualDQword(s, off, data) write_virtual_dqword(s, off, data)
-#define writeVirtualDQwordAligned(s, off, data) write_virtual_dqword_aligned(s, off, data)
+#if BX_SUPPORT_MISALIGNED_SSE
+
+#define readVirtualDQwordAligned(s, off, data)   \
+  if (! MXCSR.get_misaligned_exception_mask())   \
+    read_virtual_dqword_aligned(s, off, data);   \
+  else                                           \
+    read_virtual_dqword(s, off, data);
+
+#define writeVirtualDQwordAligned(s, off, data)  \
+  if (! MXCSR.get_misaligned_exception_mask())   \
+    write_virtual_dqword_aligned(s, off, data);  \
+  else                                           \
+    write_virtual_dqword(s, off, data);
+
+#else // BX_SUPPORT_MISALIGNED_SSE = 0
+
+#define readVirtualDQwordAligned(s, off, data)   \
+  read_virtual_dqword_aligned(s, off, data)
+
+#define writeVirtualDQwordAligned(s, off, data)  \
+  write_virtual_dqword_aligned(s, off, data)
+
+#endif
 
   BX_SMF void read_RMW_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void read_RMW_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
@@ -3014,15 +3057,19 @@ public: // for now...
   BX_CPP_INLINE Bit32u get_EFER(void);
 #endif
 
-  DECLARE_EFLAG_ACCESSOR   (DF,  10)
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
+#if BX_SUPPORT_ALIGNMENT_CHECK
+  DECLARE_EFLAG_ACCESSOR_AC(     18)
+#else
   DECLARE_EFLAG_ACCESSOR   (AC,  18)
+#endif
   DECLARE_EFLAG_ACCESSOR_VM(     17)
   DECLARE_EFLAG_ACCESSOR   (RF,  16)
   DECLARE_EFLAG_ACCESSOR   (NT,  14)
   DECLARE_EFLAG_ACCESSOR_IOPL(   12)
+  DECLARE_EFLAG_ACCESSOR   (DF,  10)
   DECLARE_EFLAG_ACCESSOR   (IF,   9)
   DECLARE_EFLAG_ACCESSOR   (TF,   8)
 
@@ -3375,15 +3422,19 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
   SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
 #endif
 
-IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
 IMPLEMENT_EFLAG_ACCESSOR   (VIP, 20)
 IMPLEMENT_EFLAG_ACCESSOR   (VIF, 19)
+#if BX_SUPPORT_ALIGNMENT_CHECK
+IMPLEMENT_EFLAG_ACCESSOR_AC(     18)
+#else
 IMPLEMENT_EFLAG_ACCESSOR   (AC,  18)
+#endif
 IMPLEMENT_EFLAG_ACCESSOR_VM(     17)
 IMPLEMENT_EFLAG_ACCESSOR   (RF,  16)
 IMPLEMENT_EFLAG_ACCESSOR   (NT,  14)
 IMPLEMENT_EFLAG_ACCESSOR_IOPL(   12)
+IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 

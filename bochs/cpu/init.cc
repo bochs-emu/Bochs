@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.129 2007-07-09 15:16:12 sshwarts Exp $
+// $Id: init.cc,v 1.130 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -906,6 +906,9 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR nmi_pending = 0;
   BX_CPU_THIS_PTR in_smm = 0;
   BX_CPU_THIS_PTR nmi_disable = 0;
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check = 0;
+#endif
 
   BX_CPU_THIS_PTR smbase = 0x30000;
 

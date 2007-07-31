@@ -730,6 +730,7 @@ typedef
 
 #define BX_SUPPORT_BUSMOUSE 0
 
+#define BX_SUPPORT_ALIGNMENT_CHECK 0
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
 #define BX_SUPPORT_3DNOW 0
@@ -762,6 +763,10 @@ typedef
   #define BX_SUPPORT_CLFLUSH 1
 #else
   #define BX_SUPPORT_CLFLUSH 0
+#endif
+
+#if (BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL < 4)
+#error Alignment exception check is not supported in i386 !
 #endif
 
 #if (BX_SUPPORT_VME && BX_CPU_LEVEL < 5)

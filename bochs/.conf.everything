@@ -21,7 +21,8 @@
   --enable-fpu \
   --enable-sse=4 \
   --enable-sse-extension \
-  --enable-mialigned-sse \
+  --enable-misaligned-sse \
+  --enable-alignment-check \
   --enable-vme \
   --enable-sep \
   --enable-3dnow \

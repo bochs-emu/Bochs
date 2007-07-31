@@ -29,12 +29,6 @@ TODO (know issues in CPU model):
     - NMI, SMI, INIT signals, LVT pins handling 
     - Filter interrupts according processor priority (PPR)
 
-[!] No support of AC flag (alignment checking) and #AC exception
-
-    #AC exception should be generated if trying to do unaligned memory 
-    access when 
-	CPL == 3 && CR.AM == 1 && EFLAGS.AC == 1
-
 [!] REP NOP is PAUSE (on P4/XEON)
 
     When running in SMP mode, this means that we are in a spin loop.

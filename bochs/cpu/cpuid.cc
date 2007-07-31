@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.44 2007-07-15 19:03:39 sshwarts Exp $
+// $Id: cpuid.cc,v 1.45 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,6 +139,8 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
   // [18:15] reserved
   // [19:19] SSE4: SSE4 Instructions
   // [20:20] SSE4E: SSE4E Instructions
+  // [21:22] Reserved
+  // [23:23] POPCNT instruction support
   // [31:21] reserved
 
   Bit32u features = 0;

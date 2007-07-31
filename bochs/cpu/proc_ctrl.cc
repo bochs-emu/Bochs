@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.166 2007-07-09 15:16:13 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.167 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1260,7 +1260,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  if (pe && BX_CPU_THIS_PTR get_VM())BX_PANIC(("EFLAGS.VM=1, enter_PM"));
+  if (pe && BX_CPU_THIS_PTR get_VM()) BX_PANIC(("EFLAGS.VM=1, enter_PM"));
 
   // from either MOV_CdRd() or debug functions
   // protection checks made already or forcing from debug
@@ -1280,9 +1280,16 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 #elif BX_CPU_LEVEL == 6
   val_32 = (val_32 | 0x00000010) & 0xe005003f;
 #else
-#error "SerCR0: implement reserved bits behaviour for this CPU_LEVEL"
+#error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
   BX_CPU_THIS_PTR cr0.val32 = val_32;
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC())
+    BX_CPU_THIS_PTR alignment_check = 1;
+  else 
+    BX_CPU_THIS_PTR alignment_check = 0;
+#endif
 
 #if BX_SUPPORT_X86_64
   if (prev_pg==0 && BX_CPU_THIS_PTR cr0.get_PG()) {

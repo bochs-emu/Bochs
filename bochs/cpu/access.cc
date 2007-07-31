@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.68 2007-07-15 19:03:39 sshwarts Exp $
+// $Id: access.cc,v 1.69 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,14 +55,12 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (protected_mode()) {
     if (seg->cache.valid==0) {
       BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      return;
+      exception(int_number(seg), 0, 0);
     }
 
     if (seg->cache.p == 0) { /* not present */
       BX_ERROR(("write_virtual_checks(): segment not present"));
       exception(int_number(seg), 0, 0);
-      return;
     }
 
     switch (seg->cache.type) {
@@ -73,8 +71,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       case 12: case 13: // execute only, conforming
       case 14: case 15: // execute/read-only, conforming
         BX_ERROR(("write_virtual_checks(): no write access to seg"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-        return;
+        exception(int_number(seg), 0, 0);
 
       case 2: case 3: /* read/write */
         if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
@@ -82,7 +79,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         {
           BX_ERROR(("write_virtual_checks(): write beyond limit, r/w"));
           exception(int_number(seg), 0, 0);
-          return;
         }
         if (seg->cache.u.segment.limit_scaled >= 7) {
           // Mark cache as being OK type for succeeding writes.  The limit
@@ -106,7 +102,6 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         {
           BX_ERROR(("write_virtual_checks(): write beyond limit, r/w ED"));
           exception(int_number(seg), 0, 0);
-          return;
         }
         break;
     }
@@ -147,14 +142,12 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (protected_mode()) {
     if (seg->cache.valid==0) {
       BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-      return;
+      exception(int_number(seg), 0, 0);
     }
 
     if (seg->cache.p == 0) { /* not present */
       BX_ERROR(("read_virtual_checks(): segment not present"));
       exception(int_number(seg), 0, 0);
-      return;
     }
 
     switch (seg->cache.type) {
@@ -167,7 +160,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         {
           BX_ERROR(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
-          return;
         }
         if (seg->cache.u.segment.limit_scaled >= 7) {
           // Mark cache as being OK type for succeeding reads. See notes for
@@ -187,7 +179,6 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         {
           BX_ERROR(("read_virtual_checks(): read beyond limit"));
           exception(int_number(seg), 0, 0);
-          return;
         }
         break;
 
@@ -195,8 +186,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       case 12: case 13: /* execute only, conforming */
         /* can't read or write an execute-only segment */
         BX_ERROR(("read_virtual_checks(): execute only"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-        return;
+        exception(int_number(seg), 0, 0);
     }
     return;
   }
@@ -481,6 +471,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 1) {
+          BX_ERROR(("write_virtual_word(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit16u *hostAddr = v2h_write_word(laddr, pl);
       if (hostAddr) {
@@ -512,6 +510,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 3) {
+          BX_ERROR(("write_virtual_dword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit32u *hostAddr = v2h_write_dword(laddr, pl);
       if (hostAddr) {
@@ -543,6 +549,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 7) {
+          BX_ERROR(("write_virtual_qword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit64u *hostAddr = v2h_write_qword(laddr, pl);
       if (hostAddr) {
@@ -604,6 +618,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_READ);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 1) {
+          BX_ERROR(("read_virtual_word(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit16u *hostAddr = v2h_read_word(laddr, pl);
       if (hostAddr) {
@@ -634,6 +656,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_READ);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 3) {
+          BX_ERROR(("read_virtual_dword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit32u *hostAddr = v2h_read_dword(laddr, pl);
       if (hostAddr) {
@@ -664,6 +694,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_READ);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 7) {
+          BX_ERROR(("read_virtual_qword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit64u *hostAddr = v2h_read_qword(laddr, pl);
       if (hostAddr) {
@@ -733,6 +771,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_RW);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 1) {
+          BX_ERROR(("read_RMW_virtual_word(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit16u *hostAddr = v2h_write_word(laddr, pl);
       if (hostAddr) {
@@ -765,6 +811,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_RW);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 3) {
+          BX_ERROR(("read_RMW_virtual_dword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit32u *hostAddr = v2h_write_dword(laddr, pl);
       if (hostAddr) {
@@ -797,6 +851,14 @@ accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
       BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_RW);
       pl = (CPL==3);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (pl && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 7) {
+          BX_ERROR(("read_RMW_virtual_qword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
 #if BX_SupportGuest2HostTLB
       Bit64u *hostAddr = v2h_write_qword(laddr, pl);
       if (hostAddr) {
@@ -967,11 +1029,8 @@ BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::read_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  if ((offset & 0xf)
-#if BX_SUPPORT_MISALIGNED_SSE
-        && !MXCSR.get_misaligned_exception_mask()
-#endif
-  ) {
+  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+  if (laddr & 0xf) {
     BX_DEBUG(("read_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -993,11 +1052,8 @@ BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
 BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *data)
 {
   // If double quadword access is unaligned, #GP(0).
-  if ((offset & 0xf)
-#if BX_SUPPORT_MISALIGNED_SSE
-        && !MXCSR.get_misaligned_exception_mask()
-#endif
-  ) {
+  bx_address laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
+  if (laddr & 0xf) {
     BX_DEBUG(("write_virtual_dqword_aligned: access not aligned to 16-byte"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.46 2007-04-19 16:12:20 sshwarts Exp $
+// $Id: sse.cc,v 1.47 2007-07-31 20:25:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1903,7 +1903,7 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+    read_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 
   result.xmm32u(0) = op.xmm32u((order >> 0) & 0x3);
@@ -1934,7 +1934,7 @@ void BX_CPU_C::PSHUFHW_VqWqIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+    read_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 
   result.xmm64u(0) = op.xmm64u(0);
@@ -1966,7 +1966,7 @@ void BX_CPU_C::PSHUFLW_VqWqIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    readVirtualDQword(i->seg(), RMAddr(i), (Bit8u *) &op);
+    read_virtual_dqword(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
 
   result.xmm16u(0) = op.xmm16u((order >> 0) & 0x3);
