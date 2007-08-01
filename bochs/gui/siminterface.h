@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.209 2007-04-08 21:57:05 sshwarts Exp $
+// $Id: siminterface.h,v 1.210 2007-08-01 17:09:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -276,6 +276,7 @@ typedef enum {
 #define BX_BOOT_FLOPPYA 1
 #define BX_BOOT_DISKC   2
 #define BX_BOOT_CDROM   3
+#define BX_BOOT_NETWORK 4
 
 // loader hack
 #define Load32bitOSNone        0

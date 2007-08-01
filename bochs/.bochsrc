@@ -293,14 +293,12 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 #=======================================================================
 # BOOT:
 # This defines the boot sequence. Now you can specify up to 3 boot drives.
-# You can either boot from 'floppy', 'disk' or 'cdrom'
+# You can either boot from 'floppy', 'disk', 'cdrom' or 'network'
 # legacy 'a' and 'c' are also supported
 # Examples:
 #   boot: floppy
-#   boot: disk
-#   boot: cdrom
-#   boot: c
-#   boot: a
+#   boot: cdrom, disk
+#   boot: network, disk
 #   boot: cdrom, floppy, disk
 #=======================================================================
 #boot: floppy

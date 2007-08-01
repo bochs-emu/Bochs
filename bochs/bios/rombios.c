@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.181 2007-06-30 07:14:50 vruppert Exp $
+// $Id: rombios.c,v 1.182 2007-08-01 17:09:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -927,7 +927,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.181 $ $Date: 2007-06-30 07:14:50 $";
+static char bios_cvs_version_string[] = "$Revision: 1.182 $ $Date: 2007-08-01 17:09:51 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -7690,7 +7690,7 @@ ASM_END
 
     /* Always check the signature on a HDD boot sector; on FDD, only do
      * the check if the CMOS doesn't tell us to skip it */
-    if (e.type != 0x00 || !((inb_cmos(0x38) & 0x01))) {
+    if ((e.type != 0x01) || !((inb_cmos(0x38) & 0x01))) {
       if (read_word(bootseg,0x1fe) != 0xaa55) {
         print_boot_failure(e.type, 0);
         return;

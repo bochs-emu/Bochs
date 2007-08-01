@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.174 2006-12-17 08:17:27 vruppert Exp $
+// $Id: siminterface.cc,v 1.175 2007-08-01 17:09:51 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -451,7 +451,7 @@ char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", 
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
 char *floppy_status_names[] = { "ejected", "inserted", NULL };
 
-char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", NULL };
+char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
 char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
 char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
 
