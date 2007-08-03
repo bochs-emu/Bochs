@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.10 2007-06-17 07:37:11 vruppert Exp $
+// $Id: rombios32.c,v 1.11 2007-08-03 13:56:13 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1197,7 +1197,7 @@ static void acpi_build_table_header(struct acpi_table_header *h,
 {
     memcpy(h->signature, sig, 4);
     h->length = cpu_to_le32(len);
-    h->revision = 0;
+    h->revision = 1;
 #ifdef BX_QEMU
     memcpy(h->oem_id, "QEMU  ", 6);
     memcpy(h->oem_table_id, "QEMU", 4);
