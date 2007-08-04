@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.h,v 1.5 2007-02-20 09:36:55 vruppert Exp $
+// $Id: acpi.h,v 1.6 2007-08-04 08:57:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -37,7 +37,7 @@ public:
   virtual ~bx_acpi_ctrl_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void generate_smi(void);
+  virtual void generate_smi(Bit8u value);
 #if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
   virtual void after_restore_state(void);

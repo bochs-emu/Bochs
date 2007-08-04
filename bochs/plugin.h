@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.h,v 1.57 2006-10-01 19:51:49 vruppert Exp $
+// $Id: plugin.h,v 1.58 2007-08-04 08:57:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file provides macros and types needed for plugins.  It is based on
@@ -194,7 +194,7 @@ extern "C" {
 #define DEV_pci_print_i440fx_state() bx_devices.pluginPciBridge->print_i440fx_state()
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
-#define DEV_acpi_generate_smi() bx_devices.pluginACPIController->generate_smi()
+#define DEV_acpi_generate_smi(a) bx_devices.pluginACPIController->generate_smi(a)
 
 ///////// NE2000 macro
 #define DEV_ne2k_print_info(file,page,reg,brief) \

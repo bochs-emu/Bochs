@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.87 2007-04-08 21:57:06 sshwarts Exp $
+// $Id: iodev.h,v 1.88 2007-08-04 08:57:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -370,7 +370,7 @@ public:
 #if BX_SUPPORT_ACPI
 class BOCHSAPI bx_acpi_ctrl_stub_c : public bx_devmodel_c, public bx_pci_device_stub_c {
 public:
-  virtual void generate_smi() {}
+  virtual void generate_smi(Bit8u value) {}
 };
 #endif
 
