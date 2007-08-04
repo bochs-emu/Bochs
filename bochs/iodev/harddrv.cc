@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.197 2007-04-06 07:13:19 vruppert Exp $
+// $Id: harddrv.cc,v 1.198 2007-08-04 17:01:04 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.197 2007-04-06 07:13:19 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.198 2007-08-04 17:01:04 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -3450,6 +3450,7 @@ void bx_hard_drive_c::set_signature(Bit8u channel, Bit8u id)
   BX_CONTROLLER(channel,id).sector_no     = 1;
   if (BX_DRIVE_IS_HD(channel,id)) {
     BX_CONTROLLER(channel,id).cylinder_no = 0;
+    BX_HD_THIS channels[channel].drive_select = 0;
   } else if (BX_DRIVE_IS_CD(channel,id)) {
     BX_CONTROLLER(channel,id).cylinder_no = 0xeb14;
   } else {
