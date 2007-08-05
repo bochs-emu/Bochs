@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.38 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.39 2007-08-05 10:46:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -438,7 +438,7 @@ void bx_svga_cirrus_c::after_restore_state(void)
                                cirrus_mem_write_handler,
                                &BX_CIRRUS_THIS pci_memaddr,
                                &BX_CIRRUS_THIS pci_conf[0x10],
-                               CIRRUS_PNPMEM_SIZE)) {
+                               0x2000000)) {
         BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
       }
       if (DEV_pci_set_base_mem(BX_CIRRUS_THIS_PTR, cirrus_mem_read_handler,
@@ -569,9 +569,14 @@ Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     if ((addr >= BX_CIRRUS_THIS pci_memaddr) &&
-        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256))) {
+        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
       Bit8u *ptr;
-      Bit32u offset;
+
+      Bit32u offset = addr & (BX_CIRRUS_THIS s.memsize - 1);
+      if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
+          ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
+        return svga_mmio_blt_read(offset & 0xff);
+      }
 
       // video-to-cpu BLT
       if (BX_CIRRUS_THIS bitblt.memdst_needed != 0) {
@@ -588,22 +593,17 @@ Bit8u bx_svga_cirrus_c::mem_read(Bit32u addr)
       }
 
       ptr = BX_CIRRUS_THIS s.memory;
-      offset = addr - BX_CIRRUS_THIS pci_memaddr;
       if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
         offset <<= 4;
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
+      offset &= (BX_CIRRUS_THIS s.memsize - 1);
       return *(ptr + offset);
-    } else if ((addr >= (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256)) &&
-               (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
-      Bit32u offset = addr - (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256);
-      return svga_mmio_blt_read(offset & 0xff);
     } else if ((addr >= BX_CIRRUS_THIS pci_mmioaddr) &&
       (addr < (BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE))) {
-      Bit32u offset;
 
-      offset = addr - BX_CIRRUS_THIS pci_mmioaddr;
+      Bit32u offset = addr & (CIRRUS_PNPMMIO_SIZE - 1);
       if (offset >= 0x100) {
         return svga_mmio_blt_read(offset - 0x100);
       } else {
@@ -699,9 +699,14 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
 #if BX_SUPPORT_PCI && BX_SUPPORT_CLGD54XX_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     if ((addr >= BX_CIRRUS_THIS pci_memaddr) &&
-        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256))) {
-      Bit32u offset;
-      Bit8u mode;
+        (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
+
+      Bit32u offset = addr & (BX_CIRRUS_THIS s.memsize - 1);
+      if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
+          ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
+        svga_mmio_blt_write(addr & 0xff, value);
+        return;
+      }
 
       // cpu-to-video BLT
       if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
@@ -712,14 +717,14 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
         return;
       }
 
-      offset = addr - BX_CIRRUS_THIS pci_memaddr;
       // BX_DEBUG(("write offset 0x%08x,value 0x%02x",offset,value));
       if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
         offset <<= 4;
       } else if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
         offset <<= 3;
       }
-      mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
+      offset &= (BX_CIRRUS_THIS s.memsize - 1);
+      Bit8u mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
       if ((mode < 4) || (mode > 5) || ((BX_CIRRUS_THIS control.reg[0x0b] & 0x4) == 0)) {
         *(BX_CIRRUS_THIS s.memory + offset) = value;
       } else {
@@ -733,18 +738,12 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
       SET_TILE_UPDATED(((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
                        (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
       return;
-    } else if ((addr >= (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256)) &&
-               (addr < (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE))) {
-      Bit32u offset = addr - (BX_CIRRUS_THIS pci_memaddr + CIRRUS_PNPMEM_SIZE - 256);
-      svga_mmio_blt_write(offset & 0xff, value);
-      return;
     } else if ((addr >= BX_CIRRUS_THIS pci_mmioaddr) &&
                (addr < (BX_CIRRUS_THIS pci_mmioaddr + CIRRUS_PNPMMIO_SIZE))) {
       // memory-mapped I/O.
-      Bit32u offset;
 
       // BX_DEBUG(("write mmio 0x%08x",addr));
-      offset = addr - BX_CIRRUS_THIS pci_mmioaddr;
+      Bit32u offset = addr & (CIRRUS_PNPMMIO_SIZE - 1);
       if (offset >= 0x100) {
         svga_mmio_blt_write(offset - 0x100, value);
       } else {
@@ -2442,7 +2441,7 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
                                cirrus_mem_write_handler,
                                &BX_CIRRUS_THIS pci_memaddr,
                                &BX_CIRRUS_THIS pci_conf[0x10],
-                               CIRRUS_PNPMEM_SIZE)) {
+                               0x2000000)) {
         BX_INFO(("new pci_memaddr: 0x%04x", BX_CIRRUS_THIS pci_memaddr));
       }
     }
