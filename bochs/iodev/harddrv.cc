@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.198 2007-08-04 17:01:04 vruppert Exp $
+// $Id: harddrv.cc,v 1.199 2007-08-09 14:04:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.198 2007-08-04 17:01:04 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.199 2007-08-09 14:04:51 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -429,6 +429,8 @@ void bx_hard_drive_c::init(void)
           } else {
             if (disk_size != BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size) {
               BX_PANIC(("ata%d/%d image size doesn't match specified geometry", channel, device));
+              // workaround large files problem with diskimages
+              BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size = disk_size;
             }
           }
         } else if (geometry_detect) {
