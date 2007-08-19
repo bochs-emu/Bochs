@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.11 2007-08-03 13:56:13 vruppert Exp $
+// $Id: rombios32.c,v 1.12 2007-08-19 07:50:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1285,6 +1285,7 @@ void acpi_bios_init(void)
     rsdp->checksum = acpi_checksum((void *)rsdp, 20);
     
     /* RSDT */
+    memset(rsdt, 0, sizeof(*rsdt));
     rsdt->table_offset_entry[0] = cpu_to_le32(fadt_addr);
     rsdt->table_offset_entry[1] = cpu_to_le32(madt_addr);
     acpi_build_table_header((struct acpi_table_header *)rsdt, 
