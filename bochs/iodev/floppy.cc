@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.106 2007-04-06 15:22:17 vruppert Exp $
+// $Id: floppy.cc,v 1.107 2007-08-21 14:18:16 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.106 2007-04-06 15:22:17 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.107 2007-08-21 14:18:16 vruppert Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -1785,7 +1785,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         }
         media->sectors = media->heads * media->tracks * media->sectors_per_track;
     }
-    return(1); // success
+    return (media->sectors > 0); // success
   }
 
   else if ( S_ISCHR(stat_buf.st_mode)
@@ -1805,7 +1805,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
       media->heads             = floppy_type[type_idx].hd;
       media->sectors_per_track = floppy_type[type_idx].spt;
       media->sectors           = floppy_type[type_idx].sectors;
-      return 1;
+      return (media->sectors > 0);
     }
     media->tracks            = floppy_geom.track;
     media->heads             = floppy_geom.head;
@@ -1822,7 +1822,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
     media->sectors_per_track = floppy_type[type_idx].spt;
     media->sectors           = floppy_type[type_idx].sectors;
 #endif
-    return 1; // success
+    return (media->sectors > 0); // success
   } else {
     // unknown file type
     BX_ERROR(("unknown mode type"));
