@@ -37,6 +37,7 @@
 #define IA_SYSCALL_SYSRET   0x00020000        /* SYSCALL/SYSRET instruction */
 #define IA_SYSENTER_SYSEXIT 0x00040000        /* SYSENTER/SYSEXIT instruction */
 #define IA_VMX              0x00080000        /* VMX instruction */
+#define IA_UNDOCUMENTED     0x80000000        /* instruction undocumented */
 
 /* general purpose bit register */
 enum {

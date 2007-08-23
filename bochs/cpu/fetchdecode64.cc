@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.112 2007-08-18 13:51:16 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.113 2007-08-23 16:47:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -550,17 +550,6 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G15[8] = {
   /* 7 */ { 0, &BX_CPU_C::CLFLUSH }   /* SFENCE/CFLUSH */
 };
 
-static const BxOpcodeInfo_t BxOpcodeInfo64G16[8] = {
-  /* 0 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_NTA */
-  /* 1 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_T0  */
-  /* 2 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_T1  */
-  /* 3 */ { 0, &BX_CPU_C::PREFETCH },           /* PREFETCH_T2  */
-  /* 4 */ { 0, &BX_CPU_C::BxError },
-  /* 5 */ { 0, &BX_CPU_C::BxError },
-  /* 6 */ { 0, &BX_CPU_C::BxError },
-  /* 7 */ { 0, &BX_CPU_C::BxError }
-};
-
 // 512 entries for 16bit operand size
 // 512 entries for 32bit operand size
 // 512 entries for 64bit operand size
@@ -854,7 +843,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */ { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */ { BxAnother, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
   /* 0F 19 */ { 0, &BX_CPU_C::BxError },
   /* 0F 1A */ { 0, &BX_CPU_C::BxError },
   /* 0F 1B */ { 0, &BX_CPU_C::BxError },
@@ -1383,7 +1372,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */ { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */ { BxAnother, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
   /* 0F 19 */ { 0, &BX_CPU_C::BxError },
   /* 0F 1A */ { 0, &BX_CPU_C::BxError },
   /* 0F 1B */ { 0, &BX_CPU_C::BxError },
@@ -1912,7 +1901,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 15 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 */ { BxAnother | BxGroup16, NULL, BxOpcodeInfo64G16 },
+  /* 0F 18 */ { BxAnother, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
   /* 0F 19 */ { 0, &BX_CPU_C::BxError },
   /* 0F 1A */ { 0, &BX_CPU_C::BxError },
   /* 0F 1B */ { 0, &BX_CPU_C::BxError },

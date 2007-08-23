@@ -1897,10 +1897,10 @@ static BxDisasmOpcodeTable_t BxDisasmGroupG16[8] =
   /* 1 */ { 0, &Ia_prefetcht0  },
   /* 2 */ { 0, &Ia_prefetcht1  },
   /* 3 */ { 0, &Ia_prefetcht2  },
-  /* 4 */ { 0, &Ia_Invalid },
-  /* 5 */ { 0, &Ia_Invalid },
-  /* 6 */ { 0, &Ia_Invalid },
-  /* 7 */ { 0, &Ia_Invalid }
+  /* 4 */ { 0, &Ia_prefetch_hint },
+  /* 5 */ { 0, &Ia_prefetch_hint },
+  /* 6 */ { 0, &Ia_prefetch_hint },
+  /* 7 */ { 0, &Ia_prefetch_hint }
 };
 
 /* ************************************************************************ */
