@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.56 2007-03-18 17:52:15 vruppert Exp $
+// $Id: win32dialog.cc,v 1.57 2007-08-25 13:11:53 akrisak Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -934,7 +934,7 @@ static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       cpu_param[13] = SIM->get_param_num("cpu.0.GS.selector", SIM->get_sr_root());
       cpu_param[14] = SIM->get_param_num("cpu.0.EFLAGS", SIM->get_sr_root());
 #else
-      EnableWindow(GetDlgItem(hdlg, IDSHOWCPU), FALSE);
+      EnableWindow(GetDlgItem(hDlg, IDSHOWCPU), FALSE);
 #endif
       return TRUE;
       break;
