@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.12 2007-08-19 07:50:18 vruppert Exp $
+// $Id: rombios32.c,v 1.13 2007-08-30 21:05:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -1193,11 +1193,11 @@ static int acpi_checksum(const uint8_t *data, int len)
 }
 
 static void acpi_build_table_header(struct acpi_table_header *h, 
-                                    char *sig, int len)
+                                    char *sig, int len, uint8_t rev)
 {
     memcpy(h->signature, sig, 4);
     h->length = cpu_to_le32(len);
-    h->revision = 1;
+    h->revision = rev;
 #ifdef BX_QEMU
     memcpy(h->oem_id, "QEMU  ", 6);
     memcpy(h->oem_table_id, "QEMU", 4);
@@ -1289,7 +1289,7 @@ void acpi_bios_init(void)
     rsdt->table_offset_entry[0] = cpu_to_le32(fadt_addr);
     rsdt->table_offset_entry[1] = cpu_to_le32(madt_addr);
     acpi_build_table_header((struct acpi_table_header *)rsdt, 
-                            "RSDT", sizeof(*rsdt));
+                            "RSDT", sizeof(*rsdt), 1);
     
     /* FADT */
     memset(fadt, 0, sizeof(*fadt));
@@ -1313,7 +1313,7 @@ void acpi_bios_init(void)
     /* WBINVD + PROC_C1 + PWR_BUTTON + SLP_BUTTON + FIX_RTC */
     fadt->flags = cpu_to_le32((1 << 0) | (1 << 2) | (1 << 4) | (1 << 5) | (1 << 6));
     acpi_build_table_header((struct acpi_table_header *)fadt, "FACP", 
-                            sizeof(*fadt));
+                            sizeof(*fadt), 1);
 
     /* FACS */
     memset(facs, 0, sizeof(*facs));
@@ -1348,7 +1348,7 @@ void acpi_bios_init(void)
         io_apic->interrupt = cpu_to_le32(0);
 
         acpi_build_table_header((struct acpi_table_header *)madt, 
-                                "APIC", madt_size);
+                                "APIC", madt_size, 1);
     }
 }
 
