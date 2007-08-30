@@ -67,6 +67,9 @@ Changes in 2.3.5 release (coming soon):
   - PCI BIOS function "find class code" implemented
 
 - SF patches applied
+ [1785204] Extend acpi_build_table_header to accept a revision number by Sebastian
+ [1766536] Partial Patch for Bug Report 1549873 by Ben Lunt
+ [1763578] ACPI Table Revision 0 -> 1  
  [1642490] implement alignment check and #AC exception by Stanislav Shwartsman
  [1695652] [PATCH] .pcap pktlog and vnet PXE boot by Duane Voth
  [1741153] Add expansion-ROM boot support to the ROMBIOS
@@ -82,6 +85,15 @@ Changes in 2.3.5 release (coming soon):
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+ [1767217] Debugger Faults including ud2
+ [1729822] Various security issues in io device emulation
+ [1675202] mptable hosed (bad entry count in header)
+ [1197141] 'make install' installs to bad location
+ [1157623] x86Solaris10 cannot recoginize ACPI RSD PTR
+ [1768254] large HDD in Bochs/bximage
+ [1496157] Windows Vista Beta2 dosn't boot
+ [1755915] Illegal Hard Disk Signature Output
+ [1717790] info gdt and info idt scrolls away, too long result  
  [1726640] Debugger displays incorrect segment for mov instruction
  [1719156] Typo in misc_mem.cpp
  [1715270] Debugger broken in/beyond 2.3
