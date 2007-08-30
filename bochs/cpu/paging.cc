@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.83 2007-07-09 15:16:13 sshwarts Exp $
+// $Id: paging.cc,v 1.84 2007-08-30 16:48:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -252,7 +252,6 @@
 //   0: fault caused by a nonpresent page
 //   1: fault caused by a page level protection violation
 
-
 // Some paging related notes:
 // ==========================
 //
@@ -274,6 +273,7 @@
 //
 // - Pentium+ processors have separate TLB's for data and instruction caches
 // - Pentium Pro+ processors maintain separate 4K and 4M TLBs.
+
 #endif
 
 #define BX_INVALID_TLB_ENTRY 0xffffffff
@@ -572,14 +572,42 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 #endif
 }
 
+// error checking order - page not present, reserved bits, protection
+#define ERROR_NOT_PRESENT       0x00
+#define ERROR_PROTECTION        0x01
+#define ERROR_RESERVED          0x08
+#define ERROR_CODE_ACCESS       0x10
+
+void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
+{
+  unsigned error_code = fault;
+
+  error_code |= (pl << 2) | (rw << 1);
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR msr.nxe && (access_type == CODE_ACCESS))
+    error_code |= ERROR_CODE_ACCESS; // I/D = 1
+#endif
+  BX_CPU_THIS_PTR cr2 = laddr;
+
+  TLB_invlpg(laddr); // Invalidate TLB entry
+
+#if BX_SUPPORT_X86_64
+  BX_DEBUG(("page fault for address %08x%08x @ %08x%08x",
+             GET32H(laddr), GET32L(laddr), GET32H(RIP), GET32L(RIP)));
+#else
+  BX_DEBUG(("page fault for address %08x @ %08x", laddr, EIP));
+#endif
+
+  exception(BX_PF_EXCEPTION, error_code, 0);
+}
+
 // Translate a linear address to a physical address, for
 // a data access (D)
 
-  bx_phy_address BX_CPP_AttrRegparmN(3)
-BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
+bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
 {
   bx_address lpf;
-  Bit32u   accessBits, combined_access = 0, error_code = 0;
+  Bit32u   accessBits, combined_access = 0;
   unsigned priv_index;
 
   InstrTLB_Increment(tlbLookups);
@@ -638,16 +666,16 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
 
       if (!(pml4 & 0x01)) {
-        goto page_fault_not_present; // PML4 Entry NOT present
+        page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PML4 Entry NOT present
       }
       if (pml4 & PAGE_DIRECTORY_NX_BIT) {
         if (! BX_CPU_THIS_PTR msr.nxe) {
           BX_DEBUG(("PML4: NX bit set when EFER.NXE is disabled"));
-          goto page_fault_reserved;
+          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
         if (access_type == CODE_ACCESS) {
           BX_DEBUG(("PML4: non-executable page fault occured"));
-          goto page_fault_access;
+          page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
       }
       if (!(pml4 & 0x20))
@@ -673,7 +701,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdp_addr, 8, &pdp);
 
     if (!(pdp & 0x01)) {
-      goto page_fault_not_present; // PDP Entry NOT present
+      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PDP Entry NOT present
     }
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR msr.lma)
@@ -681,11 +709,11 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       if (pdp & PAGE_DIRECTORY_NX_BIT) {
         if (! BX_CPU_THIS_PTR msr.nxe) {
           BX_DEBUG(("PAE PDP: NX bit set when EFER.NXE is disabled"));
-          goto page_fault_reserved;
+          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
         if (access_type == CODE_ACCESS) {
           BX_DEBUG(("PAE PDP: non-executable page fault occured"));
-          goto page_fault_access;
+          page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
       }
     }
@@ -705,18 +733,18 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
 
     if (!(pde & 0x01)) {
-      goto page_fault_not_present; // Page Directory Entry NOT present
+      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PDE Entry NOT present
     }
 
 #if BX_SUPPORT_X86_64
     if (pde & PAGE_DIRECTORY_NX_BIT) {
       if (! BX_CPU_THIS_PTR msr.nxe) {
         BX_DEBUG(("PAE PDE: NX bit set when EFER.NXE is disabled"));
-        goto page_fault_reserved;
+        page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
       }
       if (access_type == CODE_ACCESS) {
         BX_DEBUG(("PAE PDE: non-executable page fault occured"));
-        goto page_fault_access;
+        page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
       }
     }
 #endif
@@ -749,7 +777,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         (combined_access & 0x06) |             // bit 2,1
         isWrite;                               // bit 0
 
-      if (!priv_check[priv_index]) goto page_fault_access;
+      if (!priv_check[priv_index])
+         page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
 
       // Update PDE if A/D bits if needed.
       if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0)))
@@ -766,18 +795,18 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
 
       if (!(pte & 0x01)) {
-        goto page_fault_not_present; 
+        page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PTE Entry NOT present
       }
 
 #if BX_SUPPORT_X86_64
       if (pte & PAGE_DIRECTORY_NX_BIT) {
         if (! BX_CPU_THIS_PTR msr.nxe) {
           BX_DEBUG(("PAE PTE: NX bit set when EFER.NXE is disabled"));
-          goto page_fault_reserved;
+          page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
         if (access_type == CODE_ACCESS) {
           BX_DEBUG(("PAE PTE: non-executable page fault occured"));
-          goto page_fault_access;
+          page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
       }
 #endif
@@ -805,7 +834,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         (combined_access & 0x06) |             // bit 2,1
         isWrite;                               // bit 0
 
-      if (!priv_check[priv_index]) goto page_fault_access;
+      if (!priv_check[priv_index]) 
+        page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
 
       // Update PDE A bit if needed.
       if (!(pde & 0x20)) {
@@ -834,7 +864,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
 
     if (!(pde & 0x01)) {
-      goto page_fault_not_present; // Page Directory Entry NOT present
+      page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PDE Entry NOT present
     }
 
 #if BX_SUPPORT_4MEG_PAGES
@@ -865,7 +895,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         (combined_access & 0x06) |             // bit 2,1
         isWrite;                               // bit 0
 
-      if (!priv_check[priv_index]) goto page_fault_access;
+      if (!priv_check[priv_index]) page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
 
       // Update PDE if A/D bits if needed.
       if (((pde & 0x20)==0) || (isWrite && ((pde & 0x40)==0)))
@@ -890,7 +920,7 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
 
       if (!(pte & 0x01)) {
-        goto page_fault_not_present; // Page Table Entry NOT present
+        page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PTE Entry NOT present
       }
 
       // 386 and 486+ have different behaviour for combining
@@ -918,7 +948,8 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
         (combined_access & 0x06) |             // bit 2,1
         isWrite;                               // bit 0
 
-      if (!priv_check[priv_index]) goto page_fault_access;
+      if (!priv_check[priv_index])
+        page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
 
 #if BX_CPU_LEVEL >= 6
       // update PDE if A bit was not set before
@@ -989,40 +1020,6 @@ BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned 
 #endif
 
   return(paddress);
-
-// error checking order - page not present, reserved bits, protection
-#define ERROR_NOT_PRESENT       0x00
-#define ERROR_PROTECTION        0x01
-#define ERROR_RESERVED          0x08
-#define ERROR_CODE_ACCESS       0x10
-
-#if BX_SUPPORT_X86_64 // keep compiler happy
-page_fault_reserved:
-  error_code |= ERROR_RESERVED;   // RSVD = 1
-#endif
-
-page_fault_access:
-  error_code |= ERROR_PROTECTION; // P = 1
-
-page_fault_not_present:
-  error_code |= (pl << 2) | (isWrite << 1);
-#if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.nxe && (access_type == CODE_ACCESS))
-    error_code |= ERROR_CODE_ACCESS; // I/D = 1
-#endif
-  BX_CPU_THIS_PTR cr2 = laddr;
-  // Invalidate TLB entry.
-#if BX_USE_TLB
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
-#endif
-#if BX_SUPPORT_X86_64
-  BX_DEBUG(("page fault for address %08x%08x @ %08x%08x",
-             GET32H(laddr), GET32L(laddr), GET32H(RIP), GET32L(RIP)));
-#else
-  BX_DEBUG(("page fault for address %08x @ %08x", laddr, EIP));
-#endif
-  exception(BX_PF_EXCEPTION, error_code, 0);
-  return(0); // keep compiler happy
 }
 
   bx_phy_address BX_CPP_AttrRegparmN(3)
