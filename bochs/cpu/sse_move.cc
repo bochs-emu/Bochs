@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.60 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: sse_move.cc,v 1.61 2007-08-31 18:09:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1152,11 +1152,11 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 /* MOVNTPS:    0F 2B */
 /* MOVNTPD: 66 0F 2B */
 /* MOVNTDQ: 66 0F E7 */
-void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
+void BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   if (i->modC0()) {
-    BX_INFO(("MOVNTPS_MdqVps: must be memory reference"));
+    BX_INFO(("MOVNTPS_MpsVps: must be memory reference"));
     UndefinedOpcode(i);
   }
 
@@ -1165,7 +1165,7 @@ void BX_CPU_C::MOVNTPS_MdqVps(bxInstruction_c *i)
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 
 #else
-  BX_INFO(("MOVNTPS_MdqVps: required SSE, use --enable-sse option"));
+  BX_INFO(("MOVNTPS_MpsVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);                      
 #endif
 }

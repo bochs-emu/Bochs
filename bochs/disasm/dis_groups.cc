@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.36 2007-04-19 16:12:21 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.37 2007-08-31 18:09:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -504,6 +504,8 @@ void disassembler::Mt(const x86_insn *insn) { OP_M(insn, T_SIZE); }
 void disassembler::Mdq(const x86_insn *insn) { OP_M(insn, O_SIZE); }
 void disassembler::Mps(const x86_insn *insn) { OP_M(insn, O_SIZE); }
 void disassembler::Mpd(const x86_insn *insn) { OP_M(insn, O_SIZE); }
+void disassembler::Mss(const x86_insn *insn) { OP_M(insn, D_SIZE); }
+void disassembler::Msd(const x86_insn *insn) { OP_M(insn, Q_SIZE); }
 
 // string instructions
 void disassembler::OP_X(const x86_insn *insn, unsigned size)

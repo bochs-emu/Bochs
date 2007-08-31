@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.30 2007-04-19 16:12:21 sshwarts Exp $
+// $Id: dis_tables.h,v 1.31 2007-08-31 18:09:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -135,6 +135,8 @@
 #define Mdq &disassembler::Mdq
 #define Mps &disassembler::Mps
 #define Mpd &disassembler::Mpd
+#define Mss &disassembler::Mss
+#define Msd &disassembler::Msd
 
 #define  Xb &disassembler::Xb
 #define  Xw &disassembler::Xw

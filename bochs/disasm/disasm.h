@@ -31,12 +31,14 @@
 #define IA_SSE2             0x00000800        /* SSE2 instruction */
 #define IA_SSE3             0x00001000        /* SSE3 instruction */
 #define IA_SSE3E            0x00002000        /* SSE3E instruction */
-#define IA_SSE4             0x00004000        /* SSE4 instruction */
-#define IA_SSE4E            0x00008000        /* SSE4E instruction */
-#define IA_X86_64           0x00010000        /* x86-64 instruction */
-#define IA_SYSCALL_SYSRET   0x00020000        /* SYSCALL/SYSRET instruction */
-#define IA_SYSENTER_SYSEXIT 0x00040000        /* SYSENTER/SYSEXIT instruction */
-#define IA_VMX              0x00080000        /* VMX instruction */
+#define IA_SSE4_1           0x00004000        /* SSE4_1 instruction */
+#define IA_SSE4_2           0x00008000        /* SSE4_2 instruction */
+#define IA_SSE4A            0x00010000        /* SSE4A instruction */
+#define IA_SSE5             0x00020000        /* SSE5 instruction */
+#define IA_X86_64           0x00040000        /* x86-64 instruction */
+#define IA_SYSCALL_SYSRET   0x00080000        /* SYSCALL/SYSRET instruction */
+#define IA_SYSENTER_SYSEXIT 0x00100000        /* SYSENTER/SYSEXIT instruction */
+#define IA_VMX              0x00200000        /* VMX instruction */
 #define IA_UNDOCUMENTED     0x80000000        /* instruction undocumented */
 
 /* general purpose bit register */
@@ -503,6 +505,8 @@ public:
   void Mdq(const x86_insn *insn);
   void Mps(const x86_insn *insn);
   void Mpd(const x86_insn *insn);
+  void Mss(const x86_insn *insn);
+  void Msd(const x86_insn *insn);
 
   // string instructions
   void OP_X(const x86_insn *insn, unsigned size);
