@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.11 2007-08-10 17:34:01 vruppert Exp $
+// $Id: hdimage.cc,v 1.12 2007-09-04 07:56:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1624,7 +1624,7 @@ int z_undoable_image_t::open(const char* pathname)
     sprintf (logname, "%s%s", pathname, UNDOABLE_REDOLOG_EXTENSION);
   }
 
-  if (redolog->open(logname,REDOLOG_SUBTYPE_UNDOABLE,size) < 0)
+  if (redolog->open(logname, REDOLOG_SUBTYPE_UNDOABLE) < 0)
   {
     if (redolog->create(logname, REDOLOG_SUBTYPE_UNDOABLE, size) < 0)
     {
