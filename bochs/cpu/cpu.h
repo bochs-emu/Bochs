@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.323 2007-08-31 18:09:34 sshwarts Exp $
+// $Id: cpu.h,v 1.324 2007-09-10 16:00:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -529,93 +529,6 @@ typedef struct {
 
 } bx_flags_reg_t;
 
-struct bx_cr0_t {
-  Bit32u  val32; // 32bit value of register
-
-  // Accessors for all cr0 bitfields.
-#define IMPLEMENT_CR0_ACCESSORS(name,bitnum)                 \
-  BX_CPP_INLINE bx_bool get_##name () {                      \
-    return 1 & (val32 >> bitnum);                            \
-  }                                                          \
-  BX_CPP_INLINE void set_##name (Bit8u val) {                \
-    val32 = (val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
-  }
-
-// CR0 notes:
-//   Each x86 level has its own quirks regarding how it handles
-//   reserved bits.  I used DOS DEBUG.EXE in real mode on the
-//   following processors, tried to clear bits 1..30, then tried
-//   to set bits 1..30, to see how these bits are handled.
-//   I found the following:
-//
-//   Processor    try to clear bits 1..30    try to set bits 1..30
-//   386          7FFFFFF0                   7FFFFFFE
-//   486DX2       00000010                   6005003E
-//   Pentium      00000010                   7FFFFFFE
-//   Pentium-II   00000010                   6005003E
-//
-// My assumptions:
-//   All processors: bit 4 is hardwired to 1 (not true on all clones)
-//   386: bits 5..30 of CR0 are also hardwired to 1
-//   Pentium: reserved bits retain value set using mov cr0, reg32
-//   486DX2/Pentium-II: reserved bits are hardwired to 0
-
-  IMPLEMENT_CR0_ACCESSORS(PE, 0);
-  IMPLEMENT_CR0_ACCESSORS(MP, 1);
-  IMPLEMENT_CR0_ACCESSORS(EM, 2);
-  IMPLEMENT_CR0_ACCESSORS(TS, 3);
-#if BX_CPU_LEVEL >= 4
-  IMPLEMENT_CR0_ACCESSORS(ET, 4);
-  IMPLEMENT_CR0_ACCESSORS(NE, 5);
-  IMPLEMENT_CR0_ACCESSORS(AM, 18);
-  IMPLEMENT_CR0_ACCESSORS(WP, 16);
-  IMPLEMENT_CR0_ACCESSORS(CD, 29);
-  IMPLEMENT_CR0_ACCESSORS(NW, 30);
-#endif
-  IMPLEMENT_CR0_ACCESSORS(PG, 31);
-
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
-};
-
-#if BX_CPU_LEVEL >= 4
-struct bx_cr4_t {
-  Bit32u  val32; // 32bit value of register
-
-  // Accessors for all cr4 bitfields.
-#define IMPLEMENT_CR4_ACCESSORS(name,bitnum)                 \
-  BX_CPP_INLINE bx_bool get_##name () {                      \
-    return 1 & (val32 >> bitnum);                            \
-  }                                                          \
-  BX_CPP_INLINE void set_##name (Bit8u val) {                \
-    val32 = (val32&~(1<<bitnum)) | (val ? (1<<bitnum) : 0);  \
-  }
-
-#if BX_SUPPORT_VME
-  IMPLEMENT_CR4_ACCESSORS(VME, 0);
-  IMPLEMENT_CR4_ACCESSORS(PVI, 1);
-#endif
-  IMPLEMENT_CR4_ACCESSORS(TSD, 2);
-  IMPLEMENT_CR4_ACCESSORS(DE,  3);
-  IMPLEMENT_CR4_ACCESSORS(PSE, 4);
-  IMPLEMENT_CR4_ACCESSORS(PAE, 5);
-  IMPLEMENT_CR4_ACCESSORS(MCE, 6);
-  IMPLEMENT_CR4_ACCESSORS(PGE, 7);
-  IMPLEMENT_CR4_ACCESSORS(PCE, 8);
-  IMPLEMENT_CR4_ACCESSORS(OSFXSR, 9);
-  IMPLEMENT_CR4_ACCESSORS(OSXMMEXCPT, 10);
-
-  BX_CPP_INLINE Bit32u getRegister() { return val32; }
-  BX_CPP_INLINE void setRegister(Bit32u val) { val32 = val; }
-};
-#endif  // #if BX_CPU_LEVEL >= 4
-
-#if BX_SUPPORT_VME
-  #define CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
-#else
-  #define CR4_VME_ENABLED (0)
-#endif
-
 #if BX_CPU_LEVEL >= 5
 typedef struct
 {
@@ -658,6 +571,7 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
+#include "crregs.h"
 #include "descriptor.h"
 
 // <TAG-CLASS-INSTRUCTION-START>
