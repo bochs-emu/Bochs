@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.13 2007-08-30 21:05:22 sshwarts Exp $
+// $Id: rombios32.c,v 1.14 2007-09-10 15:10:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -409,7 +409,7 @@ void ram_probe(void)
 #ifdef BX_USE_EBDA_TABLES
     ebda_cur_addr = ((*(uint16_t *)(0x40e)) << 4) + 0x380;
 #endif
-    BX_INFO("ram_size=0x%08lx\n");
+    BX_INFO("ram_size=0x%08lx\n", ram_size);
 }
 
 /****************************************************/
