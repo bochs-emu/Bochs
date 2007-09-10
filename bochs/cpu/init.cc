@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.130 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: init.cc,v 1.131 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -647,11 +647,11 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
     BX_CPU_THIS_PTR setEFlags((Bit32u)val);
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
-    BX_CPU_THIS_PTR msr.sce   = (val >> 0)  & 1;
-    BX_CPU_THIS_PTR msr.lme   = (val >> 8)  & 1;
-    BX_CPU_THIS_PTR msr.lma   = (val >> 10) & 1;
-    BX_CPU_THIS_PTR msr.nxe   = (val >> 11) & 1;
-    BX_CPU_THIS_PTR msr.ffxsr = (val >> 14) & 1;
+    BX_CPU_THIS_PTR efer.sce   = (val >> 0)  & 1;
+    BX_CPU_THIS_PTR efer.lme   = (val >> 8)  & 1;
+    BX_CPU_THIS_PTR efer.lma   = (val >> 10) & 1;
+    BX_CPU_THIS_PTR efer.nxe   = (val >> 11) & 1;
+    BX_CPU_THIS_PTR efer.ffxsr = (val >> 14) & 1;
 #endif
   } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
@@ -946,9 +946,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.apicbase |= 0x900;
 #endif
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr.lme = BX_CPU_THIS_PTR msr.lma = 0;
-  BX_CPU_THIS_PTR msr.sce = BX_CPU_THIS_PTR msr.nxe = 0;
-  BX_CPU_THIS_PTR msr.ffxsr = 0;
+  BX_CPU_THIS_PTR efer.lme = BX_CPU_THIS_PTR efer.lma = 0;
+  BX_CPU_THIS_PTR efer.sce = BX_CPU_THIS_PTR efer.nxe = 0;
+  BX_CPU_THIS_PTR efer.ffxsr = 0;
+
   BX_CPU_THIS_PTR msr.star  = 0;
   BX_CPU_THIS_PTR msr.lstar = 0;
   BX_CPU_THIS_PTR msr.cstar = 0;
@@ -1105,7 +1106,7 @@ void BX_CPU_C::assert_checks(void)
 {
   // check CPU mode consistency
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma) {
+  if (BX_CPU_THIS_PTR efer.lma) {
     if (! BX_CPU_THIS_PTR cr0.get_PE()) {
       BX_PANIC(("assert_checks: EFER.LMA is set when CR0.PE=0 !"));
     }

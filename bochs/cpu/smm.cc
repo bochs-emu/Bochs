@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.25 2007-07-09 15:16:13 sshwarts Exp $
+// $Id: smm.cc,v 1.26 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -142,10 +142,10 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.setRegister(0);
 #endif
 
-  // EFER.LME = 0, EFER.LME = 1
+  // EFER.LME = 0, EFER.LME = 0
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr.lme = 0;
-  BX_CPU_THIS_PTR msr.lma = 0;
+  BX_CPU_THIS_PTR efer.lme = 0;
+  BX_CPU_THIS_PTR efer.lma = 0;
 #endif
 
   parse_selector(BX_CPU_THIS_PTR smbase >> 4,
@@ -359,26 +359,26 @@ bx_bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
     return 0;
   }
 
-  BX_CPU_THIS_PTR msr.sce   = (temp_efer >> 0)  & 1;
-  BX_CPU_THIS_PTR msr.lme   = (temp_efer >> 8)  & 1;
-  BX_CPU_THIS_PTR msr.lma   = (temp_efer >> 10) & 1;
-  BX_CPU_THIS_PTR msr.nxe   = (temp_efer >> 11) & 1;
-  BX_CPU_THIS_PTR msr.ffxsr = (temp_efer >> 14) & 1;
+  BX_CPU_THIS_PTR efer.sce   = (temp_efer >> 0)  & 1;
+  BX_CPU_THIS_PTR efer.lme   = (temp_efer >> 8)  & 1;
+  BX_CPU_THIS_PTR efer.lma   = (temp_efer >> 10) & 1;
+  BX_CPU_THIS_PTR efer.nxe   = (temp_efer >> 11) & 1;
+  BX_CPU_THIS_PTR efer.ffxsr = (temp_efer >> 14) & 1;
 
-  if (BX_CPU_THIS_PTR msr.lma) {
+  if (BX_CPU_THIS_PTR efer.lma) {
     if (temp_eflags & EFlagsVMMask) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 => RFLAGS.VM=0 !"));
       return 0;
     }
 
-    if (!BX_CPU_THIS_PTR cr4.get_PAE() || !pg || !pe || !BX_CPU_THIS_PTR msr.lme) {
+    if (!BX_CPU_THIS_PTR cr4.get_PAE() || !pg || !pe || !BX_CPU_THIS_PTR efer.lme) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return 0;
     }
   }
 
-  if (BX_CPU_THIS_PTR cr4.get_PAE() && pg && pe && BX_CPU_THIS_PTR msr.lme) {
-    if (! BX_CPU_THIS_PTR msr.lma) {
+  if (BX_CPU_THIS_PTR cr4.get_PAE() && pg && pe && BX_CPU_THIS_PTR efer.lme) {
+    if (! BX_CPU_THIS_PTR efer.lma) {
       BX_PANIC(("SMM restore: If EFER.LMA = 1 <=> CR4.PAE, CR0.PG, CR0.PE, EFER.LME=1 !"));
       return 0;
     }

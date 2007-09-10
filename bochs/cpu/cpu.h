@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.324 2007-09-10 16:00:14 sshwarts Exp $
+// $Id: cpu.h,v 1.325 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -537,13 +537,6 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_X86_64
-  // x86-64 EFER bits
-  bx_bool sce;		// system call extensions
-  bx_bool lme;		// long mode enable
-  bx_bool lma;		// long mode active
-  bx_bool nxe;		// no-execute enable
-  bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
-
   Bit64u star;
   Bit64u lstar;
   Bit64u cstar;
@@ -569,6 +562,17 @@ typedef struct
 
   /* TODO finish of the others */
 } bx_regs_msr_t;
+#endif
+
+#if BX_SUPPORT_X86_64
+typedef struct bx_efer_t {
+  // x86-64 EFER bits
+  bx_bool sce;		// system call extensions
+  bx_bool lme;		// long mode enable
+  bx_bool lma;		// long mode active
+  bx_bool nxe;		// no-execute enable
+  bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
+} bx_efer_t;
 #endif
 
 #include "crregs.h"
@@ -1035,6 +1039,10 @@ public: // for now...
 #if BX_CPU_LEVEL >= 4
   bx_cr4_t       cr4;
 #endif
+#endif
+
+#if BX_SUPPORT_X86_64
+  bx_efer_t efer;
 #endif
 
   /* SMM base register */
@@ -3145,11 +3153,11 @@ BX_CPP_INLINE void BX_CPU_C::set_reg64(unsigned reg, Bit64u val)
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE Bit32u BX_CPU_C::get_EFER(void)
 {
-   return (BX_CPU_THIS_PTR msr.sce   <<  0) |
-          (BX_CPU_THIS_PTR msr.lme   <<  8) |
-          (BX_CPU_THIS_PTR msr.lma   << 10) |
-          (BX_CPU_THIS_PTR msr.nxe   << 11) |
-          (BX_CPU_THIS_PTR msr.ffxsr << 14);
+   return (BX_CPU_THIS_PTR efer.sce   <<  0) |
+          (BX_CPU_THIS_PTR efer.lme   <<  8) |
+          (BX_CPU_THIS_PTR efer.lma   << 10) |
+          (BX_CPU_THIS_PTR efer.nxe   << 11) |
+          (BX_CPU_THIS_PTR efer.ffxsr << 14);
 }
 #endif
 
@@ -3176,7 +3184,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
 BX_CPP_INLINE unsigned BX_CPU_C::long_mode(void)
 {
 #if BX_SUPPORT_X86_64
-  return BX_CPU_THIS_PTR msr.lma;
+  return BX_CPU_THIS_PTR efer.lma;
 #else
   return 0;
 #endif

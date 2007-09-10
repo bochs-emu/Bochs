@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.18 2007-03-14 21:15:15 sshwarts Exp $
+// $Id: iret.cc,v 1.19 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,8 +46,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
   bx_descriptor_t cs_descriptor, ss_descriptor;
 
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma)
-  {
+  if (long_mode()) {
     long_iret(i);
     return;
   }

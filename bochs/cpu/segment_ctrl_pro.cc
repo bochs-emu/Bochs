@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.69 2007-03-14 21:15:15 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.70 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if ((new_value & 0xfffc) == 0) { /* null selector */
 #if BX_SUPPORT_X86_64
         // allow SS = 0 in 64 bit mode with cpl != 3
-        if (BX_CPU_THIS_PTR msr.lma && CPL != 3) {
+        if (BX_CPU_THIS_PTR efer.lma && CPL != 3) {
           seg->selector.index = 0;
           seg->selector.ti    = 0;
           seg->selector.rpl   = 0;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.167 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.168 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1210,7 +1210,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 void BX_CPU_C::handleCpuModeChange(void)
 {
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.lma) {
+  if (BX_CPU_THIS_PTR efer.lma) {
     if (! BX_CPU_THIS_PTR cr0.get_PE()) {
       BX_PANIC(("change_cpu_mode: EFER.LMA is set when CR0.PE=0 !"));
     }
@@ -1293,20 +1293,24 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 
 #if BX_SUPPORT_X86_64
   if (prev_pg==0 && BX_CPU_THIS_PTR cr0.get_PG()) {
-    if (BX_CPU_THIS_PTR msr.lme) {
+    if (BX_CPU_THIS_PTR efer.lme) {
       if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
-        BX_ERROR(("SetCR0: attempt to enter x86-64 LONG mode without enabling CR4.PAE !"));
+        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode without enabling CR4.PAE !"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR msr.lma = 1;
+      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+      BX_CPU_THIS_PTR efer.lma = 1;
     }
   }
   else if (prev_pg==1 && ! BX_CPU_THIS_PTR cr0.get_PG()) {
-    if (BX_CPU_THIS_PTR msr.lma) {
+    if (BX_CPU_THIS_PTR efer.lma) {
       if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
-      BX_CPU_THIS_PTR msr.lma = 0;
+      BX_CPU_THIS_PTR efer.lma = 0;
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1376,11 +1380,11 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
 #if BX_SUPPORT_X86_64
   // need to GP(0) if LMA=1 and PAE=1->0
-  if ((BX_CPU_THIS_PTR msr.lma)
+  if ((BX_CPU_THIS_PTR efer.lma)
       && (!(val_32 >> 5) & 1)
       && (BX_CPU_THIS_PTR cr4.get_PAE())) 
   {
-    BX_ERROR(("SetCR4: attempt to change PAE when LMA=1"));
+    BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
     return 0;
   }
 #endif
@@ -1711,16 +1715,16 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_EFER:
       // GPF #0 if lme 0->1 and cr0.pg = 1
       // GPF #0 if lme 1->0 and cr0.pg = 1
-      if ((BX_CPU_THIS_PTR msr.lme != ((EAX >> 8) & 1)) &&
+      if ((BX_CPU_THIS_PTR efer.lme != ((EAX >> 8) & 1)) &&
            BX_CPU_THIS_PTR cr0.get_PG())
       {
         BX_ERROR(("WRMSR: attempt to change LME when CR0.PG=1"));
         exception(BX_GP_EXCEPTION, 0, 0);
       }
-      BX_CPU_THIS_PTR msr.sce   = (EAX >> 0)  & 1;
-      BX_CPU_THIS_PTR msr.lme   = (EAX >> 8)  & 1;
-      BX_CPU_THIS_PTR msr.nxe   = (EAX >> 11) & 1;
-      BX_CPU_THIS_PTR msr.ffxsr = (EAX >> 14) & 1;
+      BX_CPU_THIS_PTR efer.sce   = (EAX >> 0)  & 1;
+      BX_CPU_THIS_PTR efer.lme   = (EAX >> 8)  & 1;
+      BX_CPU_THIS_PTR efer.nxe   = (EAX >> 11) & 1;
+      BX_CPU_THIS_PTR efer.ffxsr = (EAX >> 14) & 1;
       return;
 
     case BX_MSR_STAR:
@@ -1966,13 +1970,13 @@ SYSCALL_LEGACY_MODE:
 
   BX_DEBUG(("Execute SYSCALL instruction"));
 
-  if (!BX_CPU_THIS_PTR msr.sce) {
+  if (!BX_CPU_THIS_PTR efer.sce) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 
   invalidate_prefetch_q();
 
-  if (BX_CPU_THIS_PTR msr.lma)
+  if (BX_CPU_THIS_PTR efer.lma)
   {
     RCX = RIP;
     R11 = read_eflags() & ~(EFlagsRFMask);
@@ -2137,7 +2141,7 @@ SYSRET_NON_64BIT_MODE:
 
   BX_DEBUG(("Execute SYSRET instruction"));
 
-  if (!BX_CPU_THIS_PTR msr.sce) {
+  if (!BX_CPU_THIS_PTR efer.sce) {
     exception(BX_UD_EXCEPTION, 0, 0);
   }
 

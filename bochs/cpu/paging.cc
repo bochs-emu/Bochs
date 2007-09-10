@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.84 2007-08-30 16:48:10 sshwarts Exp $
+// $Id: paging.cc,v 1.85 2007-09-10 20:47:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -584,7 +584,7 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigne
 
   error_code |= (pl << 2) | (rw << 1);
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR msr.nxe && (access_type == CODE_ACCESS))
+  if (BX_CPU_THIS_PTR efer.nxe && (access_type == CODE_ACCESS))
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
 #endif
   BX_CPU_THIS_PTR cr2 = laddr;
@@ -669,7 +669,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
         page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PML4 Entry NOT present
       }
       if (pml4 & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe) {
+        if (! BX_CPU_THIS_PTR efer.nxe) {
           BX_DEBUG(("PML4: NX bit set when EFER.NXE is disabled"));
           page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
@@ -704,10 +704,10 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
       page_fault(ERROR_NOT_PRESENT, laddr, pl, isWrite, access_type); // PDP Entry NOT present
     }
 #if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR msr.lma)
+    if (BX_CPU_THIS_PTR efer.lma)
     {
       if (pdp & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe) {
+        if (! BX_CPU_THIS_PTR efer.nxe) {
           BX_DEBUG(("PAE PDP: NX bit set when EFER.NXE is disabled"));
           page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
@@ -738,7 +738,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
 
 #if BX_SUPPORT_X86_64
     if (pde & PAGE_DIRECTORY_NX_BIT) {
-      if (! BX_CPU_THIS_PTR msr.nxe) {
+      if (! BX_CPU_THIS_PTR efer.nxe) {
         BX_DEBUG(("PAE PDE: NX bit set when EFER.NXE is disabled"));
         page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
       }
@@ -800,7 +800,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
 
 #if BX_SUPPORT_X86_64
       if (pte & PAGE_DIRECTORY_NX_BIT) {
-        if (! BX_CPU_THIS_PTR msr.nxe) {
+        if (! BX_CPU_THIS_PTR efer.nxe) {
           BX_DEBUG(("PAE PTE: NX bit set when EFER.NXE is disabled"));
           page_fault(ERROR_RESERVED | ERROR_PROTECTION, laddr, pl, isWrite, access_type);
         }
@@ -854,7 +854,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
   else
 #endif  // #if BX_SUPPORT_PAE
   {
-    // CR4.PAE==0 (and MSR.LMA==0)
+    // CR4.PAE==0 (and EFER.LMA==0)
     Bit32u pde, pte;
     bx_phy_address pde_addr;
 
