@@ -30,8 +30,10 @@ case $which_config in
                 --enable-ne2000 \
                 --enable-all-optimizations \
                 --enable-cpu-level=6 \
-                --enable-sse=1 \
+                --enable-x86-64 \
+                --enable-sse=2 \
                 --enable-pci \
+                --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-save-restore \
@@ -47,8 +49,10 @@ case $which_config in
                 --enable-ne2000 \
                 --enable-all-optimizations \
                 --enable-cpu-level=6 \
-                --enable-sse=1 \
+                --enable-x86-64 \
+                --enable-sse=2 \
                 --enable-pci \
+                --enable-acpi \
                 --enable-clgd54xx \
                 --enable-usb \
                 --enable-save-restore \

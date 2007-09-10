@@ -91,7 +91,9 @@ be less than the protection and address translation code. We would have
 to try it to find out. I'm also sure there can be some nasty hurdles to 
 overcome.
 Status:
-Not done yet.
+Third party proup started a para-Bochs project exacly to reach above goals,
+some beta version is already released. 
+The home page of the project:
 
 6. CPU
 6.1 This was asked in the ml, and I believe it's a good idea to provide
@@ -134,7 +136,8 @@ Not done yet.
 image file, by storing its fstat-mtime field in the redolog.
 Status:
 Autodetection now works for all image types created with bximage and vmware3
-images. The other items are not done yet.
+images. LBA48 and vmware4 disk images support was added in Bochs 2.3.5 release.
+The other items are not done yet.
 
 9. net
 9.1 bootable ethernet rom ? 
@@ -151,10 +154,9 @@ The pnic device is present in CVS, but the status is unknown.
 10. Bios
 10.1 our bios is quite heavy on stack space (notably during int13 functions).
 Some parts can be rewritten in assembler, to save stack space and 
-make code smaller. A new BIOS project for Bochs has been started at
-http://bcos.hopto.org/bios.html.
+make code smaller.
 Status:
-Under construction.
+New BIOS supporting ACPI was introduced in Bochs 2.3.5 release.
 
 10.2 add "jump table placeholder" and log missing function calls in the bios. 
 Check completness with Ralf Brown interrupt list.
@@ -183,49 +185,8 @@ started and the runtime device change support should be completed.
 Status:
 Under construction.
 
-14. Patches / Bug reports
-There are dozens of patches floating around. Some are outdated,
-don't apply cleanly, are obsolete/unneeded. We could try to do 
-some clean-up, and keep only relevent ones.
-We should also clean up the SF bug tracker. Some bugreports are 
-very old and we asked for more information with no response.
-Status:
-There is some progress, but still a lot of work to do.
-
-15. Positions
-If you want to help without coding, here are available positions :
-16.1 Webmaster : update website (Jan Bruun Andersen offered to help)
-16.2 patch coordonator : look at incoming patches (sourceforge and 
-mailing list) and upload / update in the cvs patches directory.
-16.3 platform maintainers for macos / win32 
-16.4 disk image maintainer : create and maintain our collection
-of disk images. Usually, only the configuration file needs to be
-updated, and old bios files have to be removed.  Some packages 
-still contain very old bios files, they should definitely have
-to be removed.
-Status:
-More active developers are needed to do the things described above.
-
-16. Bochs demo cd/dvd
-With version 2.1, it is now technically possible to use disk images 
-on a read-only media, with a journal files on a read/write media. 
-It would be great to create a demo cd/dvd with executables for 
-supported platforms, configuration files and read-only disk 
-images, the journal files would be written in a temporary 
-directory on the harddisk.
-Status:
-Not done yet.
-
-17. Other CPU architectures : arm, ppc 
-This has been asked in the mailing list. I'm not really
-interested, but other people might be. Should we propose to 
-host the new CPUs code in our source tree, or should we let 
-people fork ?
-Status:
-Not done yet.
-
-18. Config file and dynamic menu
-18.1 Benjamen R. Meyer wrote :
+14. Config file and dynamic menu
+14.1 Benjamen R. Meyer wrote :
 I think we should rework the .bochsrc file to be more standard across all
 devices. I like how the USB configuration is done in it, and think we should
 put something similar together for everything else. In otherwords, create
@@ -237,14 +198,14 @@ something that is based on a standard approach to the configuration.
 The result should be something that would be able to easily auto-configured
 by another program (a configuration editor?) with minimal changes necessary
 when new devices/features are added.
-18.2  Franck Cornelis wrote : the config system needs some work... 
+14.2  Franck Cornelis wrote : the config system needs some work... 
 e.g. the main menu is static while it could be generated at run-time...
 the main menu text lives somewhere in a file... while it should be generated 
 at run-time by iterating the main menu objects
 Status:
 The config options handling has been rewritten to a parameter tree.
 
-19. Save/Restore
+15. Save/Restore
 We already have a specific branch in the cvs with a save/restore
 framework. The work still needs to be completed.
 I guess it would be useful to be able to stop and
@@ -255,28 +216,18 @@ Status:
 Save/restore of config and log options and the hardware state is supported now.
 Harddisk images are not handled yet.
 
-20. ACPI support
-Bochs 2.2.6 is the first real SMP release, with changes made in Bochs 2.2.6
-we able to boot linux SMP or WinNT SMP systems. But all modern OS'es require
-ACPI support even for single CPU configuration to boot up. The minimal ACPI
-support contains generation of ACPI tables (i.e. APIC tables) similar to the
-MP tables we have now. 
-More about ACPI required changes: http://bcos.hopto.org/acpi.html
-Status:
-Not done yet.
-
-21. add to the roadmap that we should find some ideas to check 
+16. add to the roadmap that we should find some ideas to check 
 correctness of instructions emulation, especially system instructions.  
 arithmetic instructions could be validated with simply random testing
 Status:
 Not done yet.
 
-22. lowlevel serial support for Windows.
+17. lowlevel serial support for Windows.
 Volker is currently working on this.
 Status:
 Not yet complete (transmit works, receive is losing data).
 
-23. Parallel port
+18. Parallel port
 Conn Clark wrote :
 I would like to see better parallel port support so I can use a dongle. 
 This is something I would find very useful as it would mean I wouldn't 
@@ -285,5 +236,46 @@ may require a kernel module be written, which is beyond my current
 skills.  I know others will find this useful as I have had to tell a 
 few people that their parallel port driven peripherals that require a 
 bidirectional parallel port won't work.
+Status:
+Not done yet.
+
+19. Patches / Bug reports
+There are dozens of patches floating around. Some are outdated,
+don't apply cleanly, are obsolete/unneeded. We could try to do 
+some clean-up, and keep only relevent ones.
+We should also clean up the SF bug tracker. Some bugreports are 
+very old and we asked for more information with no response.
+Status:
+There is some progress, but still a lot of work to do.
+
+20. Positions
+If you want to help without coding, here are available positions :
+20.1 Webmaster : update website (Jan Bruun Andersen offered to help)
+22.2 patch coordonator : look at incoming patches (sourceforge and 
+mailing list) and upload / update in the cvs patches directory.
+20.3 platform maintainers for macos / win32 
+20.4 disk image maintainer : create and maintain our collection
+of disk images. Usually, only the configuration file needs to be
+updated, and old bios files have to be removed.  Some packages 
+still contain very old bios files, they should definitely have
+to be removed.
+Status:
+More active developers are needed to do the things described above.
+
+21. Bochs demo cd/dvd
+With version 2.1, it is now technically possible to use disk images 
+on a read-only media, with a journal files on a read/write media. 
+It would be great to create a demo cd/dvd with executables for 
+supported platforms, configuration files and read-only disk 
+images, the journal files would be written in a temporary 
+directory on the harddisk.
+Status:
+Not done yet.
+
+22. Other CPU architectures : arm, ppc 
+This has been asked in the mailing list. I'm not really
+interested, but other people might be. Should we propose to 
+host the new CPUs code in our source tree, or should we let 
+people fork ?
 Status:
 Not done yet.

@@ -1,10 +1,19 @@
 Changes in 2.3.5 release (coming soon):
 
+Brief summary :
+- Critical problems fixed for x86-64 support in CPU and Bochs internal debugger
+- ACPI support
+- The release compiled with x86-64 and ACPI
+- Hard disk emulation supports ATA-6 (LBA48 addressing, UDMA modes)
+- Added emulation of Intel SSE4.1 instruction set
+
+Detailed change log :
+
 - CPU
   - Fixed critical bug with 0x90 opcode (NOP) handling in x86-64 mode
   - implied stack references where the stack address is not in canonical form 
     should causes a stack exception (#SS)
-  - Added emulation of SSE4 instructions (Stanislav)
+  - Added emulation of SSE4.1 instruction set (Stanislav)
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
   - Fixed zero upper 32-bit part of GPR in x86-64 mode
   - CMOV_GdEd should zero upper 32-bit part of GPR register even if the
@@ -28,7 +37,7 @@ Changes in 2.3.5 release (coming soon):
     Reference Manual, new option introduced for SSE extensions enabling.
     To enable Intel Core Duo 2 new instructions use 
         --enable-sse=3 --enable-sse-extension
-    enabling of SSE4 (--enable-sse=4) will enable SSE3 extensions as well
+    enabling of SSE4.1 (--enable-sse=4) will enable SSE3 extensions as well
   - removed old PIT, always use new PIT written by Greg Alexander,
     removed configure option --enable-new-pit
 
@@ -67,6 +76,8 @@ Changes in 2.3.5 release (coming soon):
   - PCI BIOS function "find class code" implemented
 
 - SF patches applied
+ [1791016] rombios32.c, ram_probe(), BX_INFO missing value by Sebastian
+ [1786429] typo in bochsrc.5 by Sebastian
  [1785204] Extend acpi_build_table_header to accept a revision number by Sebastian
  [1766536] Partial Patch for Bug Report 1549873 by Ben Lunt
  [1763578] ACPI Table Revision 0 -> 1  
@@ -85,6 +96,9 @@ Changes in 2.3.5 release (coming soon):
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+ [1787289] broken ABI for redolog class when enable-compressed-hd
+ [1787500] tftp_send_optack not 64bit clean
+ [1264540] Security issue with Bochs website  
  [1767217] Debugger Faults including ud2
  [1729822] Various security issues in io device emulation
  [1675202] mptable hosed (bad entry count in header)
@@ -163,7 +177,7 @@ Detailed change log :
   - Raise A20 line after system reset (Stanislav Shwartsman)
   - Implemented SMI and NMI delivery (APIC) and handling in CPU (Stanislav)
   - Experimental implementation of System Management Mode (Stanislav)
-  - Added emulation of SSE4 instructions (Stanislav Shwarstman)
+  - Added emulation of SSE3E instructions (Stanislav Shwarstman)
   - Save and restore FPU opcode, FIP and FDP in FXSAVE/FRSTOR instructions
   - Fixed bug in MOVD_EdVd opcode (always generated #UD exception)
   - Fixed critical issue, Bochs was not supporting > 16 bit LDT.LIMIT values

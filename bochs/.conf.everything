@@ -9,6 +9,7 @@
   --enable-all-optimizations \
   --enable-ne2000 \
   --enable-pci \
+  --enable-acpi \
   --enable-4meg-pages \
   --enable-pae \
   --enable-global-pages \
