@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.182 2007-08-01 17:09:51 vruppert Exp $
+// $Id: rombios.c,v 1.183 2007-09-10 20:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -927,7 +927,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.182 $ $Date: 2007-08-01 17:09:51 $";
+static char bios_cvs_version_string[] = "$Revision: 1.183 $ $Date: 2007-09-10 20:00:29 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -4124,10 +4124,10 @@ ASM_START
       ;; Get the count in eax
       mov  bx, sp
       SEG SS
-        mov  ax, _int15_function.CX [bx]
+        mov  ax, _int15_function32.CX [bx]
       shl  eax, #16
       SEG SS
-        mov  ax, _int15_function.DX [bx]
+        mov  ax, _int15_function32.DX [bx]
 
       ;; convert to numbers of 15usec ticks
       mov ebx, #15
