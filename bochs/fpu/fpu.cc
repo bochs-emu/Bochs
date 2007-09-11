@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.23 2007-07-09 15:16:14 sshwarts Exp $
+// $Id: fpu.cc,v 1.24 2007-09-11 13:11:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -506,8 +506,8 @@ void BX_CPU_C::print_state_FPU()
   reg = BX_CPU_THIS_PTR the_i387.get_control_word();
   fprintf(stderr, "control word: 0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.get_status_word();
-  fprintf(stderr, "status word:  0x%04x\n", reg);
-  fprintf(stderr, "        TOP:  %d\n", FPU_TOS&7);
+  fprintf(stderr, "status  word: 0x%04x\n", reg);
+  fprintf(stderr, "        TOS : %d\n", FPU_TOS&7);
   reg = BX_CPU_THIS_PTR the_i387.get_tag_word();
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
