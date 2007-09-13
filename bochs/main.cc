@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.351 2007-03-06 21:12:19 sshwarts Exp $
+// $Id: main.cc,v 1.352 2007-09-13 09:44:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -893,7 +893,11 @@ int bx_begin_simulation (int argc, char *argv[])
     if (BX_SMP_PROCESSORS == 1) {
       // only one processor, run as fast as possible by not messing with
       // quantums and loops.
-      BX_CPU(0)->cpu_loop(0);
+      while (1) {
+        BX_CPU(0)->cpu_loop(0);
+        if (bx_pc_system.kill_bochs_request) 
+          break;
+      }
       // for one processor, the only reason for cpu_loop to return is
       // that kill_bochs_request was set by the GUI interface.
     }
