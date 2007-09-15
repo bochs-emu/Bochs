@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.227 2007-09-10 16:18:09 sshwarts Exp $
+$Id: user.dbk,v 1.228 2007-09-15 16:00:19 vruppert Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -3394,13 +3394,13 @@ Default values are:
 Examples:
 <screen>
   boot: floppy
-  boot: disk
-  boot: cdrom
+  boot: cdrom, disk
+  boot: network, disk
   boot: cdrom, floppy, disk
 </screen>
 This defines the boot sequence. You can specify up to 3 boot drives,
-which can be 'floppy', 'disk' or 'cdrom'.
-'a' and 'c' are also accepted for historical reasons.
+which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
+Legacy 'a' and 'c' are also supported.
 </para>
 </section>
 
@@ -3471,6 +3471,7 @@ Starting with version 2.2, some display libraries support specific options:
   display_library: rfb, options="timeout=60"  # time to wait for client
   display_library: sdl, options="fullscreen"  # startup in fullscreen mode
   display_library: win32, options="legacyF12" # use F12 to toggle mouse
+  display_library: win32, options="windebug" # use experimental debugger gui
 </screen>
 </para>
 
@@ -4172,7 +4173,7 @@ Valid key names:
 <para>
 "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", and "win".
+"right", "shift", "space", "tab", "up", "win" and "print".
 </para>
 </section>
 

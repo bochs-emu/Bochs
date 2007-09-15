@@ -76,6 +76,7 @@ Detailed change log :
   - PCI BIOS function "find class code" implemented
 
 - SF patches applied
+ [1791000] 15h 8600h is reading the wrong stack frame by Sebastian
  [1791016] rombios32.c, ram_probe(), BX_INFO missing value by Sebastian
  [1786429] typo in bochsrc.5 by Sebastian
  [1785204] Extend acpi_build_table_header to accept a revision number by Sebastian
@@ -96,6 +97,7 @@ Detailed change log :
  [1554502] Trivial FPU exception handling fix  
 
 - these S.F. bugs were closed
+ [1316008] Double faults when it shouldn't - gcc 4.0.2
  [1787289] broken ABI for redolog class when enable-compressed-hd
  [1787500] tftp_send_optack not 64bit clean
  [1264540] Security issue with Bochs website  

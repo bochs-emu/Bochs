@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "12 Sep 2006" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Sep 2007" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -348,9 +348,9 @@ Examples:
 
 .TP
 .I "boot:"
-This defines the boot sequence. Now you can specify up to 3 boot drives.
-You can either boot from 'floppy', 'disk' or 'cdrom'
-(legacy 'a' and 'c' are also supported)
+This defines the boot sequence. Now you can specify up to 3 boot drives,
+which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
+Legacy 'a' and 'c' are also supported.
 
 Example:
   boot: cdrom, floppy, disk
@@ -764,7 +764,7 @@ Valid key names:
 
 "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup", "plus",
-"right", "shift", "space", "tab", "up", and "win".
+"right", "shift", "space", "tab", "up", "win" and "print".
 
 Example:
   user_shortcut: keys=ctrl-alt-del

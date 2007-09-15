@@ -59,6 +59,7 @@
 #display_library: sdl, options="fullscreen" # startup in fullscreen mode
 #display_library: term
 #display_library: win32, options="legacyF12" # use F12 to toggle mouse
+#display_library: win32, options="windebug" # use experimental debugger gui
 #display_library: wx
 #display_library: x
 
@@ -292,9 +293,9 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 
 #=======================================================================
 # BOOT:
-# This defines the boot sequence. Now you can specify up to 3 boot drives.
-# You can either boot from 'floppy', 'disk', 'cdrom' or 'network'
-# legacy 'a' and 'c' are also supported
+# This defines the boot sequence. Now you can specify up to 3 boot drives,
+# which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
+# Legacy 'a' and 'c' are also supported.
 # Examples:
 #   boot: floppy
 #   boot: cdrom, disk
@@ -667,7 +668,7 @@ keyboard_mapping: enabled=0, map=
 # Valid key names:
 # "alt", "bksl", "bksp", "ctrl", "del", "down", "end", "enter", "esc",
 # "f1", ... "f12", "home", "ins", "left", "menu", "minus", "pgdwn", "pgup",
-# "plus", "right", "shift", "space", "tab", "up", and "win".
+# "plus", "right", "shift", "space", "tab", "up", "win" and "print".
 #
 # Example:
 #   user_shortcut: keys=ctrl-alt-del
