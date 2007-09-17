@@ -7,7 +7,36 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3.5</font><BR><BR>
+
+About a year after the last stable one we have a new intermediate (bugfix+) release.
+Here is the list of changes since version 2.3:
+<ul>
+<li> Critical problems fixed for x86-64 support in CPU and Bochs internal debugger
+<li> ACPI support
+<li> The release compiled with x86-64 and ACPI
+<li> Hard disk emulation supports ATA-6 (LBA48 addressing, UDMA modes)
+<li> Added emulation of Intel SSE4.1 instruction set
+<li> Lots of bugfixes
+</ul>
+
+The binary packages for Linux and Windows are built with these featues :
+<ul>
+<li> x86-64 emulation with all optimizations enabled
+<li> devices: ACPI, NE2000, PCI, SB16 and USB
+<li> video: Bochs VBE and Cirrus SVGA
+<li> Linux display libraries: nogui, rfb, sdl, term, x
+<li> Windows display libraries: nogui, rfb, win32
+</ul>
+
+<BR/>
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_5_FINAL">
+Details on what has changed since version 2.3
+</a>
+
+<BR/><BR/>
+
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3</font><BR><BR>
 
 About seven months after the last intermediate one we have a new stable release.
 Here is the list of changes since version 2.2.6:
@@ -20,69 +49,9 @@ Here is the list of changes since version 2.2.6:
 <li> VBE memory size increased to 8MB and several VGA/VBE fixes
 <li> updated LGPL'd VGABIOS to version 0.6a
 </ul>
-
-The binary packages for Linux and Windows are built with these featues :
-<ul>
-<li> Pentium III emulation with all optimizations enabled
-<li> devices: NE2000, SB16, PCI and USB
-<li> video: Bochs VBE and Cirrus SVGA
-<li> Linux display libraries: nogui, rfb, sdl, term, x
-<li> Windows display libraries: nogui, rfb, win32
-</ul>
-
 <BR/>
 <a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_FINAL">
 Details on what has changed since version 2.2.6
-</a>
-
-<BR/><BR/>
-
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.2.6</font><BR><BR>
-
-Version 2.2.6 is an intermediate (bugfix+) release. It includes a lot of bugfixes and a few new features.<BR>
-Here is the list of changes since version 2.2.5:
-<ul>
-<li>first major SMP release !
-<ul>
-<li>several APIC and I/O APIC fixes make SMP Bochs booting Windows NT4.0 or
-Knoppix 4.0.2 without noapic kernel option in SMP configuration
-<li>critical APIC timer bug fixed
-<li>obsolete SMP BIOS images removed (MP tables created dynamicaly)
-<li>determine number of processors in SMP configuration through .bochsrc
-<ul>
-<li>new .bochsrc option 'CPU' allows to choose number of processors to emulate
-<li>new configure option --enable-smp to configure Bochs for SMP support,
-<li>the old --enable-processors=N option is deprecated
-</ul>
-</ul>
-<li>CPU and internal debugger fixes
-<ul>
-<li>enabled #PCE bit in CR4 register, previosly setting of this bit
-generated #GP(0) fault
-<li>enabled LAHF/SAHF instructions in x86-64 mode
-<li>fixed bug in PMULUDQ SSE2 instruction
-<li>fixes in Bochs debugger
-</ul>
-<li>configure and compile
-<ul>
-<li>enable VME (virtual 8086 mode extensions) by default if cpu-level >= 5
-<li>enable Bochs disassembler by default for all configurations
-<li>win32 installer script improvements
-<li>ips parameter moved to new 'CPU' option
-<li>show IPS value in status bar if BX_SHOW_IPS is enabled
-</ul>
-<li>Other
-<ul>
-<li>several fixes in the hard drive, keyboard, timer, usb and vga code
-<li>new user button shortcut "bksl" (backslash)
-<li>updated Bochs instrumentation examples
-<li>user and development documentation improved
-</ul>
-</ul>
-
-<BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_2_6_FINAL">
-Details on what has changed since version 2.2.5
 </a>
 
 
