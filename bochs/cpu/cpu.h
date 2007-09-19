@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.325 2007-09-10 20:47:08 sshwarts Exp $
+// $Id: cpu.h,v 1.326 2007-09-19 19:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2360,6 +2360,9 @@ public: // for now...
   BX_SMF void XCHG_RXAX(bxInstruction_c *);
   BX_SMF void XCHG_ERXEAX(bxInstruction_c *);
 
+  BX_SMF void POPCNT_GwEw(bxInstruction_c *);
+  BX_SMF void POPCNT_GdEd(bxInstruction_c *);
+
 #if BX_SUPPORT_X86_64
   // 64 bit extensions
   BX_SMF void ADD_EqGq(bxInstruction_c *);
@@ -2540,6 +2543,8 @@ public: // for now...
 
   BX_SMF void RDTSCP(bxInstruction_c *);
   BX_SMF void CMPXCHG16B(bxInstruction_c *);
+
+  BX_SMF void POPCNT_GqEq(bxInstruction_c *);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF void INVLPG(bxInstruction_c *);

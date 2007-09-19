@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_tables.h,v 1.31 2007-08-31 18:09:34 sshwarts Exp $
+// $Id: dis_tables.h,v 1.32 2007-09-19 19:38:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_DISASM_TABLES_
@@ -82,6 +82,7 @@
 #define  Id &disassembler::Id
 #define  Iq &disassembler::Iq
 
+#define IbIb &disassembler::IbIb
 #define IwIb &disassembler::IwIb
 
 #define sIbw &disassembler::sIbw

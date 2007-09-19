@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.45 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: cpuid.cc,v 1.46 2007-09-19 19:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,8 +137,8 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
   // [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // [14:14] xTPR update control
   // [18:15] reserved
-  // [19:19] SSE4: SSE4 Instructions
-  // [20:20] SSE4E: SSE4E Instructions
+  // [19:19] SSE4.1: SSE4.1 Instructions
+  // [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
   // [21:22] Reserved
   // [23:23] POPCNT instruction support
   // [31:21] reserved
@@ -159,6 +159,10 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
 #if BX_SUPPORT_SSE >= 4
   features |= (1<<19);  // support SSE4
 #endif
+
+#if BX_SUPPORT_POPCNT
+  features |= (1<<23);  // support POPCNT instruction
+#endif  
   
   return features;
 }
@@ -171,7 +175,6 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 #if BX_SUPPORT_FPU
   features |= (1<<0);
 #endif
-
 #if BX_SUPPORT_VME
   features |= (1<<1);
 #endif
@@ -422,7 +425,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //     [8:8]   3DNow! prefetch support
       //     [9:9]   OS visible workarounds
       //     [10:31] Reserved
-      RCX = 1;
+      RCX = 1 | (1<<8);
 #if BX_SUPPORT_MISALIGNED_SSE
       RCX |= (1<<7);
 #endif

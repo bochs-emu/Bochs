@@ -24,6 +24,7 @@
   --enable-sse-extension \
   --enable-misaligned-sse \
   --enable-alignment-check \
+  --enable-popcnt \
   --enable-vme \
   --enable-sep \
   --enable-3dnow \

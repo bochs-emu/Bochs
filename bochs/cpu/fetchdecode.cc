@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.108 2007-08-23 16:47:51 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.109 2007-09-19 19:38:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -891,7 +891,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GwMp },
   /* 0F B6 */ { BxAnother, &BX_CPU_C::MOVZX_GwEb },
   /* 0F B7 */ { BxAnother | BxSplitMod11b, NULL, opcodesMOV_GwEw }, // MOVZX_GwEw
-  /* 0F B8 */ { 0, &BX_CPU_C::BxError },
+  /* 0F B8 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8w },
   /* 0F B9 */ { BxAnother, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */ { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EwIb },
   /* 0F BB */ { BxAnother | BxLockable, &BX_CPU_C::BTC_EwGw },
@@ -1449,7 +1449,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F B5 */ { BxAnother, &BX_CPU_C::LGS_GdMp },
   /* 0F B6 */ { BxAnother, &BX_CPU_C::MOVZX_GdEb },
   /* 0F B7 */ { BxAnother, &BX_CPU_C::MOVZX_GdEw },
-  /* 0F B8 */ { 0, &BX_CPU_C::BxError },
+  /* 0F B8 */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8d },
   /* 0F B9 */ { BxAnother, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
   /* 0F BA */ { BxAnother | BxGroup8, NULL, BxOpcodeInfoG8EdIb },
   /* 0F BB */ { BxAnother | BxLockable, &BX_CPU_C::BTC_EdGd },

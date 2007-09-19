@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.37 2007-08-31 18:09:34 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.38 2007-09-19 19:38:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -231,6 +231,19 @@ void disassembler::Iw(const x86_insn *insn)
 {
   if (! intel_mode) dis_putc('$');
   dis_sprintf("0x%04x", (unsigned) fetch_word());
+}
+
+void disassembler::IbIb(const x86_insn *insn) 
+{
+  Bit8u ib1 = fetch_byte();
+  Bit8u ib2 = fetch_byte();
+
+  if (intel_mode) {
+     dis_sprintf("0x%02x, 0x%02x", ib1, ib2);
+  }
+  else {
+     dis_sprintf("$0x%02x, $0x%02x", ib2, ib1);
+  }
 }
 
 void disassembler::IwIb(const x86_insn *insn) 
