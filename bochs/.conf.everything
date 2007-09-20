@@ -10,9 +10,10 @@
   --enable-ne2000 \
   --enable-pci \
   --enable-acpi \
-  --enable-4meg-pages \
+  --enable-large-pages \
   --enable-pae \
   --enable-global-pages \
+  --enable-mtrr \
   --enable-ignore-bad-msr \
   --enable-port-e9-hack \
   --enable-debugger \

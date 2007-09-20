@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #####################################################################
-# $Id: batch-build.perl,v 1.10 2007-04-09 08:46:24 vruppert Exp $
+# $Id: batch-build.perl,v 1.11 2007-09-20 17:33:31 sshwarts Exp $
 #####################################################################
 #
 # Batch build tool for multiple configurations
@@ -128,8 +128,8 @@ add_configuration ('i586',
   '--enable-cpu-level=5');
 add_configuration ('i686',
   '--enable-cpu-level=6');
-add_configuration ('4meg-pages',
-  '--enable-4meg-pages');
+add_configuration ('large-pages',
+  '--enable-large-pages');
 add_configuration ('pae',
   '--enable-pae');
 add_configuration ('g2h-tlb',
@@ -141,7 +141,7 @@ add_configuration ('globalpg',
 add_configuration ('icache',
   '--enable-icache');
 add_configuration ('cpuall',
-  '--enable-4meg-pages --enable-pae --enable-global-pages --enable-all-optimizations');
+  '--enable-large-pages --enable-pae --enable-global-pages --enable-all-optimizations');
 }
 
 if ($TEST_SMP) {

@@ -170,15 +170,6 @@
 // emulate x86-64 instruction set?
 #define BX_SUPPORT_X86_64 0
 
-// make it configurable through configuration interface
-#ifdef BX_SUPPORT_X86_64
-  #define BX_CPU_VECTOR_INTEL 0
-#else
-  #define BX_CPU_VECTOR_INTEL 1
-#endif
-
-#define BX_SUPPORT_V8086_MODE 1
-
 #define BX_HAVE_SLEEP 0
 #define BX_HAVE_MSLEEP 0
 #define BX_HAVE_USLEEP 0
@@ -730,6 +721,7 @@ typedef
 
 #define BX_SUPPORT_BUSMOUSE 0
 
+#define BX_SUPPORT_V8086_MODE 1
 #define BX_SUPPORT_ALIGNMENT_CHECK 0
 #define BX_SUPPORT_FPU 0
 #define BX_SUPPORT_MMX 0
@@ -741,8 +733,9 @@ typedef
 #define BX_SUPPORT_SEP 0
 #define BX_SUPPORT_VME 0
 #define BX_SUPPORT_POPCNT 0
+#define BX_SUPPORT_MTRR 0
 
-#define BX_SUPPORT_4MEG_PAGES 0
+#define BX_SUPPORT_LARGE_PAGES 0
 #define BX_SUPPORT_GLOBAL_PAGES 0
 #define BX_SUPPORT_PAE 0
 
@@ -816,8 +809,15 @@ typedef
 #if (BX_CPU_LEVEL<6 && BX_SUPPORT_GLOBAL_PAGES)
 #error "Page Global Extension (PGE) only supported with CPU_LEVEL >= 6 !"
 #endif
-#if (BX_CPU_LEVEL<5 && BX_SUPPORT_4MEG_PAGES)
+#if (BX_CPU_LEVEL<5 && BX_SUPPORT_LARGE_PAGES)
 #error "Page Size Extension (PSE) only supported with CPU_LEVEL >= 5 !"
+#endif
+#if (BX_CPU_LEVEL<6 && BX_SUPPORT_MTRR)
+#error "MTRRs only supported with CPU_LEVEL >= 6 !"
+#endif
+
+#if (BX_SUPPORT_PAE && !BX_SUPPORT_LARGE_PAGES)
+#error "Physical Address Extensions (PAE) requires large pages support !"
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -835,7 +835,7 @@ typedef
 #if !BX_SUPPORT_GLOBAL_PAGES
 #error "X86-64 requires Page Global Extension (PGE) !"
 #endif
-#if !BX_SUPPORT_4MEG_PAGES
+#if !BX_SUPPORT_LARGE_PAGES
 #error "X86-64 requires Page Size Extension (PSE) !"
 #endif
 #endif

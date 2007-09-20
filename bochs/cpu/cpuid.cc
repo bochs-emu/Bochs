@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.46 2007-09-19 19:38:09 sshwarts Exp $
+// $Id: cpuid.cc,v 1.47 2007-09-20 17:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -214,18 +214,21 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 #endif
 #endif
 
-#if BX_SUPPORT_4MEG_PAGES
-  features |= (1<< 3);  // Support Page-Size Extension (4M pages)
+#if BX_SUPPORT_SEP
+  features |= (1<<11);  // SYSENTER/SYSEXIT
+#endif
+
+#if BX_SUPPORT_MTRR
+  features |= (1<<12);  // Implement MTRRs
+#endif
+#if BX_SUPPORT_LARGE_PAGES
+  features |= (1<< 3);  // Support Page-Size Extension (2M/4M pages)
 #endif
 #if BX_SUPPORT_GLOBAL_PAGES
   features |= (1<<13);  // Support Global pages
 #endif
 #if BX_SUPPORT_PAE
   features |= (1<<6);   // Support PAE
-#endif
-
-#if BX_SUPPORT_SEP
-  features |= (1<<11);  // SYSENTER/SYSEXIT
 #endif
 
 #if BX_SUPPORT_SMP

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.26 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.27 2007-09-20 17:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,22 +56,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
 {
-  Bit32u supportMask, newEFlags;
-  
   // Build a mask of the non-reserved bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-  supportMask = 0x00037fd5;
+  Bit32u supportMask = 0x00037fd5;
 #if BX_CPU_LEVEL >= 4
   supportMask |= (EFlagsIDMask | EFlagsACMask); // ID/AC
 #endif
 #if BX_SUPPORT_VME
-  supportMask |= (EFlagsVPMask | EFlagsVFMask); // VIP/VIF
+  supportMask |= (EFlagsVIPMask | EFlagsVIFMask); // VIP/VIF
 #endif
 
   // Screen out changing of any unsupported bits.
   changeMask &= supportMask;
 
-  newEFlags = (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) |
+  Bit32u newEFlags = (BX_CPU_THIS_PTR eflags.val32 & ~changeMask) |
               (flags & changeMask);
   setEFlags(newEFlags);
   // OSZAPC flags are known - done in setEFlags(newEFlags)

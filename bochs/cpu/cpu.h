@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.326 2007-09-19 19:38:09 sshwarts Exp $
+// $Id: cpu.h,v 1.327 2007-09-20 17:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,40 +276,50 @@
 #define BX_MSR_CTR0              0x0012
 #define BX_MSR_CTR1              0x0013
 #define BX_MSR_APICBASE          0x001b
-#define BX_MSR_EBL_CR_POWERON    0x002a
-#define BX_MSR_TEST_CTL          0x0033
-#define BX_MSR_BIOS_UPDT_TRIG    0x0079
-#define BX_MSR_BBL_CR_D0         0x0088
-#define BX_MSR_BBL_CR_D1         0x0089
-#define BX_MSR_BBL_CR_D2         0x008a
-#define BX_MSR_BBL_CR_D3         0x008b /* = BIOS_SIGN */
-#define BX_MSR_PERFCTR0          0x00c1
-#define BX_MSR_PERFCTR1          0x00c2
-#define BX_MSR_MTRRCAP           0x00fe
-#define BX_MSR_BBL_CR_ADDR       0x0116
-#define BX_MSR_BBL_DECC          0x0118
-#define BX_MSR_BBL_CR_CTL        0x0119
-#define BX_MSR_BBL_CR_TRIG       0x011a
-#define BX_MSR_BBL_CR_BUSY       0x011b
-#define BX_MSR_BBL_CR_CTL3       0x011e
+
 #if BX_SUPPORT_SEP
 #  define BX_MSR_SYSENTER_CS  0x0174
 #  define BX_MSR_SYSENTER_ESP 0x0175
 #  define BX_MSR_SYSENTER_EIP 0x0176
 #endif
-#define BX_MSR_MCG_CAP           0x0179
-#define BX_MSR_MCG_STATUS        0x017a
-#define BX_MSR_MCG_CTL           0x017b
-#define BX_MSR_EVNTSEL0          0x0186
-#define BX_MSR_EVNTSEL1          0x0187
+
 #define BX_MSR_DEBUGCTLMSR       0x01d9
 #define BX_MSR_LASTBRANCHFROMIP  0x01db
 #define BX_MSR_LASTBRANCHTOIP    0x01dc
 #define BX_MSR_LASTINTOIP        0x01dd
-#define BX_MSR_ROB_CR_BKUPTMPDR6 0x01e0
-#define BX_MSR_MTRRPHYSBASE0     0x0200
-#define BX_MSR_MTRRPHYSMASK0     0x0201
-#define BX_MSR_MTRRPHYSBASE1     0x0202
+
+#if BX_SUPPORT_MTRR
+  #define BX_MSR_MTRRCAP           0x00fe
+  #define BX_MSR_MTRRPHYSBASE0     0x0200
+  #define BX_MSR_MTRRPHYSMASK0     0x0201
+  #define BX_MSR_MTRRPHYSBASE1     0x0202
+  #define BX_MSR_MTRRPHYSMASK1     0x0203
+  #define BX_MSR_MTRRPHYSBASE2     0x0204
+  #define BX_MSR_MTRRPHYSMASK2     0x0205
+  #define BX_MSR_MTRRPHYSBASE3     0x0206
+  #define BX_MSR_MTRRPHYSMASK3     0x0207
+  #define BX_MSR_MTRRPHYSBASE4     0x0208
+  #define BX_MSR_MTRRPHYSMASK4     0x0209
+  #define BX_MSR_MTRRPHYSBASE5     0x020a
+  #define BX_MSR_MTRRPHYSMASK5     0x020b
+  #define BX_MSR_MTRRPHYSBASE6     0x020c
+  #define BX_MSR_MTRRPHYSMASK6     0x020d
+  #define BX_MSR_MTRRPHYSBASE7     0x020e
+  #define BX_MSR_MTRRPHYSMASK7     0x020f
+  #define BX_MSR_MTRRFIX64K_00000  0x0250
+  #define BX_MSR_MTRRFIX16K_80000  0x0258
+  #define BX_MSR_MTRRFIX16K_A0000  0x0259
+  #define BX_MSR_MTRRFIX4K_C0000   0x0268
+  #define BX_MSR_MTRRFIX4K_C8000   0x0269
+  #define BX_MSR_MTRRFIX4K_D0000   0x026a
+  #define BX_MSR_MTRRFIX4K_D8000   0x026b
+  #define BX_MSR_MTRRFIX4K_E0000   0x026c
+  #define BX_MSR_MTRRFIX4K_E8000   0x026d
+  #define BX_MSR_MTRRFIX4K_F0000   0x026e
+  #define BX_MSR_MTRRFIX4K_F8000   0x026f
+  #define BX_MSR_PAT               0x0277
+  #define BX_MSR_MTRR_DEFTYPE      0x02ff
+#endif
 
 #if BX_SUPPORT_X86_64
 #define BX_MSR_EFER             0xc0000080
@@ -339,11 +349,11 @@ const char* cpu_mode_string(unsigned cpu_mode);
 
 #if BX_SUPPORT_X86_64
 #define Is64BitMode()       (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-#define StackAddrSize64()   (Is64BitMode())
 #else
 #define Is64BitMode()       (0)
-#define StackAddrSize64()   (0)
 #endif
+
+#define StackAddrSize64() Is64BitMode()
 
 #if BX_SUPPORT_APIC
 #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR || BX_CPU_THIS_PTR local_apic.INTR)
@@ -512,8 +522,8 @@ typedef struct {
 #define EFlagsRFMask     (1 << 16)
 #define EFlagsVMMask     (1 << 17)
 #define EFlagsACMask     (1 << 18)
-#define EFlagsVFMask     (1 << 19)
-#define EFlagsVPMask     (1 << 20)
+#define EFlagsVIFMask    (1 << 19)
+#define EFlagsVIPMask    (1 << 20)
 #define EFlagsIDMask     (1 << 21)
 
 #define EFlagsOSZAPCMask \
@@ -521,9 +531,6 @@ typedef struct {
 
 #define EFlagsOSZAPMask  \
     (EFlagsPFMask | EFlagsAFMask | EFlagsZFMask | EFlagsSFMask | EFlagsOFMask)
-
-#define EFlagsVIFMask    EFlagsVFMask
-#define EFlagsVIPMask    EFlagsVPMask
 
 #define EFlagsValidMask  0x003f7fd5	// only supported bits for EFLAGS
 
@@ -542,7 +549,6 @@ typedef struct
   Bit64u cstar;
   Bit64u fmask;
   Bit64u kernelgsbase;
-
   Bit32u tsc_aux;
 #endif
 
@@ -558,6 +564,16 @@ typedef struct
   Bit32u sysenter_cs_msr;
   Bit32u sysenter_esp_msr;
   Bit32u sysenter_eip_msr;
+#endif
+
+#if BX_SUPPORT_MTRR
+  Bit64u mtrrphys[16];
+  Bit64u mtrrfix64k_00000;
+  Bit64u mtrrfix16k_80000;
+  Bit64u mtrrfix16k_a0000;
+  Bit64u mtrrfix4k[8];
+  Bit16u mtrr_deftype;
+  Bit64u pat;
 #endif
 
   /* TODO finish of the others */

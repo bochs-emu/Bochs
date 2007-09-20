@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.131 2007-09-10 20:47:08 sshwarts Exp $
+// $Id: init.cc,v 1.132 2007-09-20 17:33:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -486,7 +486,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(list, smbase);
 
 #if BX_CPU_LEVEL >= 5
-  bx_list_c *MSR = new bx_list_c(list, "msr", 12);
+  bx_list_c *MSR = new bx_list_c(list, "MSR", 45);
 
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
@@ -506,7 +506,40 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_esp_msr, msr.sysenter_esp_msr);
   BXRS_HEX_PARAM_FIELD(MSR, sysenter_eip_msr, msr.sysenter_eip_msr);
 #endif
+#if BX_SUPPORT_MTRR
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase0, msr.mtrrphys[0]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask0, msr.mtrrphys[1]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase1, msr.mtrrphys[2]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask1, msr.mtrrphys[3]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase2, msr.mtrrphys[4]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask2, msr.mtrrphys[5]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase3, msr.mtrrphys[6]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask3, msr.mtrrphys[7]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase4, msr.mtrrphys[8]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask4, msr.mtrrphys[9]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase5, msr.mtrrphys[10]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask5, msr.mtrrphys[11]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase6, msr.mtrrphys[12]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask6, msr.mtrrphys[13]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysbase7, msr.mtrrphys[14]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrphysmask7, msr.mtrrphys[15]);
 
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix64k_00000, msr.mtrrfix64k_00000);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_80000, msr.mtrrfix16k_80000);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix16k_a0000, msr.mtrrfix16k_a0000);
+
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c0000, msr.mtrrfix4k[0]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_c8000, msr.mtrrfix4k[1]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d0000, msr.mtrrfix4k[2]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_d8000, msr.mtrrfix4k[3]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e0000, msr.mtrrfix4k[4]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_e8000, msr.mtrrfix4k[5]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f0000, msr.mtrrfix4k[6]);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrrfix4k_f8000, msr.mtrrfix4k[7]);
+
+  BXRS_HEX_PARAM_FIELD(MSR, pat, msr.pat);
+  BXRS_HEX_PARAM_FIELD(MSR, mtrr_deftype, msr.mtrr_deftype);
+#endif
 #endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
@@ -711,6 +744,8 @@ BX_CPU_C::~BX_CPU_C()
 
 void BX_CPU_C::reset(unsigned source)
 {
+  unsigned i;
+
   UNUSED(source); // either BX_RESET_HARDWARE or BX_RESET_SOFTWARE
 
 #if BX_SUPPORT_X86_64
@@ -966,11 +1001,26 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = 0;
 #endif
 
+#if BX_SUPPORT_MTRR
+  for (int i=0;i<16;i++)
+    BX_CPU_THIS_PTR msr.mtrrphys[i] = 0;
+
+  BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
+  BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
+  BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
+
+  for (int i=0;i<8;i++)
+    BX_CPU_THIS_PTR msr.mtrrfix4k[i] = 0;
+
+  BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
+  BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
+#endif
+
   BX_CPU_THIS_PTR EXT = 0;
 
 #if BX_USE_TLB
   TLB_init();
-#endif // BX_USE_TLB
+#endif
 
   // invalidate the prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
@@ -995,10 +1045,10 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset XMM state
 #if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
-  for(unsigned index=0; index < BX_XMM_REGISTERS; index++)
+  for(i=0; i < BX_XMM_REGISTERS; i++)
   {
-    BX_CPU_THIS_PTR xmm[index].xmm64u(0) = 0;
-    BX_CPU_THIS_PTR xmm[index].xmm64u(1) = 0;
+    BX_CPU_THIS_PTR xmm[i].xmm64u(0) = 0;
+    BX_CPU_THIS_PTR xmm[i].xmm64u(1) = 0;
   }
 
   BX_CPU_THIS_PTR mxcsr.mxcsr = MXCSR_RESET;

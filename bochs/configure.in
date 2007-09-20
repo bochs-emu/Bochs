@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.342 2007-09-19 19:38:04 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.343 2007-09-20 17:33:31 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -863,27 +863,27 @@ fi
 AC_SUBST(NETLOW_OBJS)
 
 
-AC_MSG_CHECKING(for 4Meg pages support)
-AC_ARG_ENABLE(4meg-pages,
-  [  --enable-4meg-pages               support 4Megabyte pages extensions],
+AC_MSG_CHECKING(for large pages support)
+AC_ARG_ENABLE(large-pages,
+  [  --enable-large-pages               support for large pages (2M/4M pages)],
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
-    support_4M_pages=1
+    AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 1)
+    support_large_pages=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
-    support_4M_pages=0
+    AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 0)
+    support_large_pages=0
    fi],
   [
     if test "$bx_cpu_level" -gt 4; then
       AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 1)
-      support_4M_pages=1
+      AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 1)
+      support_large_pages=1
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_SUPPORT_4MEG_PAGES, 0)
-      support_4M_pages=0
+      AC_DEFINE(BX_SUPPORT_LARGE_PAGES, 0)
+      support_large_pages=0
     fi
     ]
   )
@@ -940,8 +940,8 @@ AC_ARG_ENABLE(global-pages,
     ]
   )
 
-if test "$bx_cpu_level" -lt 4 -a "$support_4M_pages" = 1; then
-  AC_MSG_ERROR([for 4M paging support the CPU level must be >= 4])
+if test "$bx_cpu_level" -lt 4 -a "$support_large_pages" = 1; then
+  AC_MSG_ERROR([for large paging support the CPU level must be >= 4])
 fi
 
 if test "$bx_cpu_level" -lt 5 -a "$support_pae" = 1; then
@@ -951,6 +951,22 @@ fi
 if test "$bx_cpu_level" -lt 5 -a "$support_global_pages" = 1; then
   AC_MSG_ERROR([for Global Pages support the CPU level must be >= 5])
 fi
+
+AC_MSG_CHECKING(for MTRRs support)
+AC_ARG_ENABLE(mtrr,
+  [  --enable-mtrr                     support for MTRRs],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_MTRR, 1)
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MTRR, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MTRR, 0)
+    ]
+  )
 
 AC_MSG_CHECKING(for guest to host TLB support)
 AC_ARG_ENABLE(guest2host-tlb,

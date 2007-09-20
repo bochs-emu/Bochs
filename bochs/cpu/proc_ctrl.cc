@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.168 2007-09-10 20:47:08 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.169 2007-09-20 17:33:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -732,6 +732,9 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     case 3: // CR3
       BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
+      if (val_64 & BX_CONST64(0xffffffff00000000)) {
+          BX_PANIC(("CR3 write: Only 32 bit physical address space is emulated !"));
+      }
       // Reserved bits take on value of MOV instruction
       CR3_change(val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
@@ -1352,7 +1355,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
 
   allowMask |= (1<<3);   /* DE  */
 
-#if BX_SUPPORT_4MEG_PAGES
+#if BX_SUPPORT_LARGE_PAGES
   allowMask |= (1<<4);
 #endif
 
@@ -1492,7 +1495,6 @@ void BX_CPU_C::RDTSCP(bxInstruction_c *i)
 void BX_CPU_C::RDMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("RDMSR: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -1518,6 +1520,68 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
       return;
 #endif 
 
+#if BX_SUPPORT_MTRR
+    case BX_MSR_MTRRCAP:   // read only MSR
+      RAX = 0x508;
+      RDX = 0; 
+      return;
+
+    case BX_MSR_MTRRPHYSBASE0:
+    case BX_MSR_MTRRPHYSMASK0:
+    case BX_MSR_MTRRPHYSBASE1:
+    case BX_MSR_MTRRPHYSMASK1:
+    case BX_MSR_MTRRPHYSBASE2:
+    case BX_MSR_MTRRPHYSMASK2:
+    case BX_MSR_MTRRPHYSBASE3:
+    case BX_MSR_MTRRPHYSMASK3:
+    case BX_MSR_MTRRPHYSBASE4:
+    case BX_MSR_MTRRPHYSMASK4:
+    case BX_MSR_MTRRPHYSBASE5:
+    case BX_MSR_MTRRPHYSMASK5:
+    case BX_MSR_MTRRPHYSBASE6:
+    case BX_MSR_MTRRPHYSMASK6:
+    case BX_MSR_MTRRPHYSBASE7:
+    case BX_MSR_MTRRPHYSMASK7:
+      RAX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] & 0xffffffff;
+      RDX = BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] >> 32;
+      return;
+
+    case BX_MSR_MTRRFIX64K_00000:
+      RAX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 & 0xffffffff;
+      RDX = BX_CPU_THIS_PTR msr.mtrrfix64k_00000 >> 32;
+      return;
+    case BX_MSR_MTRRFIX16K_80000:
+      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 & 0xffffffff;
+      RDX = BX_CPU_THIS_PTR msr.mtrrfix16k_80000 >> 32;
+      return;
+    case BX_MSR_MTRRFIX16K_A0000:
+      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 & 0xffffffff;
+      RAX = BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 >> 32;
+      return;
+
+    case BX_MSR_MTRRFIX4K_C0000:
+    case BX_MSR_MTRRFIX4K_C8000:
+    case BX_MSR_MTRRFIX4K_D0000:
+    case BX_MSR_MTRRFIX4K_D8000:
+    case BX_MSR_MTRRFIX4K_E0000:
+    case BX_MSR_MTRRFIX4K_E8000:
+    case BX_MSR_MTRRFIX4K_F0000:
+    case BX_MSR_MTRRFIX4K_F8000:
+      RAX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] & 0xffffffff;
+      RDX = BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] >> 32;
+      return;
+
+    case BX_MSR_PAT:
+      RAX = BX_CPU_THIS_PTR msr.pat & 0xffffffff;
+      RDX = BX_CPU_THIS_PTR msr.pat >> 32;
+      return;
+
+    case BX_MSR_MTRR_DEFTYPE:
+      RAX = BX_CPU_THIS_PTR msr.mtrr_deftype;
+      RDX = 0;
+      return;
+#endif
+
 #if BX_CPU_LEVEL == 5
     /* The following registers are defined for Pentium only */
     case BX_MSR_P5_MC_ADDR:
@@ -1539,7 +1603,7 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
     case BX_MSR_CESR:
     case BX_MSR_CTR0:
     case BX_MSR_CTR1:
-      goto do_exception;
+      exception(BX_GP_EXCEPTION, 0, 0);
 #endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
@@ -1618,7 +1682,6 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 #endif
   }
 
-do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #else  /* BX_CPU_LEVEL >= 5 */
@@ -1649,13 +1712,65 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       BX_CPU_THIS_PTR msr.sysenter_cs_msr  = EAX;
       return;
     }
-
     case BX_MSR_SYSENTER_ESP:
       BX_CPU_THIS_PTR msr.sysenter_esp_msr = EAX; 
       return;
-
     case BX_MSR_SYSENTER_EIP: 
       BX_CPU_THIS_PTR msr.sysenter_eip_msr = EAX; 
+      return;
+#endif
+
+#if BX_SUPPORT_MTRR
+    case BX_MSR_MTRRCAP:
+      BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+
+    case BX_MSR_MTRRPHYSBASE0:
+    case BX_MSR_MTRRPHYSMASK0:
+    case BX_MSR_MTRRPHYSBASE1:
+    case BX_MSR_MTRRPHYSMASK1:
+    case BX_MSR_MTRRPHYSBASE2:
+    case BX_MSR_MTRRPHYSMASK2:
+    case BX_MSR_MTRRPHYSBASE3:
+    case BX_MSR_MTRRPHYSMASK3:
+    case BX_MSR_MTRRPHYSBASE4:
+    case BX_MSR_MTRRPHYSMASK4:
+    case BX_MSR_MTRRPHYSBASE5:
+    case BX_MSR_MTRRPHYSMASK5:
+    case BX_MSR_MTRRPHYSBASE6:
+    case BX_MSR_MTRRPHYSMASK6:
+    case BX_MSR_MTRRPHYSBASE7:
+    case BX_MSR_MTRRPHYSMASK7:
+      BX_CPU_THIS_PTR msr.mtrrphys[ECX - BX_MSR_MTRRPHYSBASE0] = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_MTRRFIX64K_00000:
+      BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = ((Bit64u) EDX << 32) + EAX;
+      return;
+    case BX_MSR_MTRRFIX16K_80000:
+      BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = ((Bit64u) EDX << 32) + EAX;
+      return;
+    case BX_MSR_MTRRFIX16K_A0000:
+      BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_MTRRFIX4K_C0000:
+    case BX_MSR_MTRRFIX4K_C8000:
+    case BX_MSR_MTRRFIX4K_D0000:
+    case BX_MSR_MTRRFIX4K_D8000:
+    case BX_MSR_MTRRFIX4K_E0000:
+    case BX_MSR_MTRRFIX4K_E8000:
+    case BX_MSR_MTRRFIX4K_F0000:
+    case BX_MSR_MTRRFIX4K_F8000:
+      BX_CPU_THIS_PTR msr.mtrrfix4k[ECX - BX_MSR_MTRRFIX4K_C0000] = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_PAT:
+      BX_CPU_THIS_PTR msr.pat = ((Bit64u) EDX << 32) + EAX;
+      return;
+
+    case BX_MSR_MTRR_DEFTYPE:
+      BX_CPU_THIS_PTR msr.mtrr_deftype = EAX;
       return;
 #endif
 
@@ -1677,7 +1792,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
     case BX_MSR_CESR:
     case BX_MSR_CTR0:
     case BX_MSR_CTR1:
-      goto do_exception;
+      exception(BX_GP_EXCEPTION, 0, 0);
 #endif  /* BX_CPU_LEVEL == 5 */
 
     case BX_MSR_TSC:
@@ -1713,8 +1828,7 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_EFER:
-      // GPF #0 if lme 0->1 and cr0.pg = 1
-      // GPF #0 if lme 1->0 and cr0.pg = 1
+      // #GP(0) if changing EFER.LME when cr0.pg = 1
       if ((BX_CPU_THIS_PTR efer.lme != ((EAX >> 8) & 1)) &&
            BX_CPU_THIS_PTR cr0.get_PG())
       {
@@ -1767,7 +1881,6 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
   }
 
-do_exception:
   exception(BX_GP_EXCEPTION, 0, 0);
 
 #else  /* BX_CPU_LEVEL >= 5 */

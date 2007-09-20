@@ -1,3 +1,14 @@
+Changes after 2.3.5 release:
+
+- CPU
+  - Added POPCNT instruction emulation (SSE4A and SSE4.2 instruction)
+  - Implemented MTRR emulation
+
+- Configure and compile
+  - rename configure option --enable-4meg-pages to --enable-large-pages. The option
+    enables page size extensions (PSE) which refers to 2M pages as well.
+
+-------------------------------------------------------------------------
 Changes in 2.3.5 (September 16, 2007):
 
 Brief summary :
