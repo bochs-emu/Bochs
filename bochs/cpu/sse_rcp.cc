@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.12 2007-04-19 16:12:20 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.13 2007-09-20 22:55:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -391,8 +391,8 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op);
   }
 
-  float32 result = approximate_rcp(op);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+  op = approximate_rcp(op);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
 
 #else
   BX_INFO(("RCPSS_VssWss: required SSE, use --enable-sse option"));
@@ -740,8 +740,8 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op);
   }
 
-  float32 result = approximate_rsqrt(op);
-  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), result);
+  op = approximate_rsqrt(op);
+  BX_WRITE_XMM_REG_LO_DWORD(i->nnn(), op);
 
 #else
   BX_INFO(("RSQRTSS_VssWss: required SSE, use --enable-sse option"));
