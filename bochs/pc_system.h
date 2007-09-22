@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.39 2006-05-27 15:54:47 sshwarts Exp $
+// $Id: pc_system.h,v 1.40 2007-09-22 15:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -135,7 +135,7 @@ public:
 #if BX_DEBUGGER
   static void timebp_handler(void* this_ptr);
 #endif
-
+  static void benchmarkTimer(void* this_ptr);
 
   // ===========================
   // Non-timer oriented features

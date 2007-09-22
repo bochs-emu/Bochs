@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.210 2007-08-01 17:09:52 vruppert Exp $
+// $Id: siminterface.h,v 1.211 2007-09-22 15:59:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -122,6 +122,7 @@ typedef enum {
 // the old BXP_* enum values, which have been eliminated.
 #define BXPN_SEL_CONFIG_INTERFACE        "general.config_interface"
 #define BXPN_BOCHS_START                 "general.start_mode"
+#define BXPN_BOCHS_BENCHMARK             "general.benchmark"
 #define BXPN_RESTORE_FLAG                "general.restore"
 #define BXPN_RESTORE_PATH                "general.restore_path"
 #define BXPN_DEBUG_RUNNING               "general.debug_running"

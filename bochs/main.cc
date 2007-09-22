@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.355 2007-09-22 12:59:40 sshwarts Exp $
+// $Id: main.cc,v 1.356 2007-09-22 15:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -482,6 +482,7 @@ void print_usage()
     "  -n               no configuration file\n"
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
+    "  -benchmark n     run bochs in benchmark mode for millions of emulated ticks\n"
 #if BX_SUPPORT_SAVE_RESTORE
     "  -r path          restore the Bochs state from path\n"
 #endif
@@ -545,6 +546,11 @@ int bx_init_main (int argc, char *argv[])
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       if (++arg >= argc) BX_PANIC(("-qf must be followed by a filename"));
       else bochsrc_filename = argv[arg];
+    }
+    else if (!strcmp("-benchmark", argv[arg])) {
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      if (++arg >= argc) BX_PANIC(("-benchmark must be followed by a number"));
+      else SIM->get_param_num(BXPN_BOCHS_BENCHMARK)->set(atoi(argv[arg]));
     }
 #if BX_SUPPORT_SAVE_RESTORE
     else if (!strcmp("-r", argv[arg])) {
@@ -1018,6 +1024,16 @@ int bx_init_hardware()
   // Check if there is a romimage
   if (strcmp(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),"") == 0) {
     BX_ERROR(("No romimage to load. Is your bochsrc file loaded/valid ?"));
+  }
+
+  // set one shot timer for benchmark mode if needed, the timer will fire
+  // once and kill Bochs simulation after predefined amount of emulated
+  // ticks
+  int benchmark_mode = SIM->get_param_num(BXPN_BOCHS_BENCHMARK)->get();
+  if (benchmark_mode) {
+    BX_INFO(("Bochs benchmark mode is ON (~%d millions of ticks)", benchmark_mode));
+    bx_pc_system.register_timer_ticks(&bx_pc_system, bx_pc_system_c::benchmarkTimer,
+        (Bit64u) benchmark_mode * 1000000, 0, 1, "benchmark.timer");
   }
 
   // set up memory and CPU objects

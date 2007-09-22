@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.65 2006-09-17 20:37:27 vruppert Exp $
+// $Id: pc_system.cc,v 1.66 2007-09-22 15:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -418,6 +418,13 @@ void bx_pc_system_c::nullTimer(void* this_ptr)
 #if BX_SUPPORT_ICACHE
   purgeICaches();
 #endif
+}
+
+void bx_pc_system_c::benchmarkTimer(void* this_ptr)
+{
+  bx_pc_system_c *class_ptr = (bx_pc_system_c *) this_ptr;
+  class_ptr->kill_bochs_request = 1;
+  bx_user_quit = 1;
 }
 
 #if BX_DEBUGGER

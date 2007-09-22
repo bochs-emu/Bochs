@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.119 2007-04-08 15:02:50 vruppert Exp $
+// $Id: config.cc,v 1.120 2007-09-22 15:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -361,6 +361,14 @@ void bx_init_options()
       BX_RUN_START,
       BX_QUICK_START);
 
+  new bx_param_enum_c(menu,
+      "start_mode",
+      "Bochs start types",
+      "Bochs start types",
+      bochs_start_names,
+      BX_RUN_START,
+      BX_QUICK_START);
+
 #if BX_SUPPORT_SAVE_RESTORE
   new bx_param_bool_c(menu,
       "restore",
@@ -374,6 +382,13 @@ void bx_init_options()
     "",
     BX_PATHNAME_LEN);
 #endif
+
+  // benchmarking mode, set by command line arg
+  new bx_param_num_c(menu,
+      "benchmark",
+      "benchmark mode",
+      "set benchmark mode",
+      0, BX_MAX_BIT32U, 0);
 
   // subtree for special menus
   bx_list_c *special_menus = new bx_list_c(root_param, "menu", "");
