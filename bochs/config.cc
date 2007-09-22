@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.120 2007-09-22 15:59:40 sshwarts Exp $
+// $Id: config.cc,v 1.121 2007-09-22 16:04:47 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -353,14 +353,6 @@ void bx_init_options()
   sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
 
   // quick start option, set by command line arg
-  new bx_param_enum_c(menu,
-      "start_mode",
-      "Bochs start types",
-      "Bochs start types",
-      bochs_start_names,
-      BX_RUN_START,
-      BX_QUICK_START);
-
   new bx_param_enum_c(menu,
       "start_mode",
       "Bochs start types",
