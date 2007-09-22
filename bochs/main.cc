@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.354 2007-09-20 18:50:01 sshwarts Exp $
+// $Id: main.cc,v 1.355 2007-09-22 12:59:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -850,8 +850,8 @@ int bx_begin_simulation (int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NCORES)->get() *
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
-  BX_ASSERT(bx_cpu_count < BX_MAX_SMP_THREADS_SUPPORTED);
-  BX_ASSERT(bx_cpu_count > 0);
+  BX_ASSERT(bx_cpu_count <= BX_MAX_SMP_THREADS_SUPPORTED);
+  BX_ASSERT(bx_cpu_count >  0);
 
   bx_init_hardware();
 
