@@ -31,11 +31,12 @@ srcdir          = @srcdir@
 VPATH = @srcdir@
 bindir          = @bindir@
 libdir          = @libdir@
+datarootdir     = @datarootdir@
 mandir          = @mandir@
 man1dir         = $(mandir)/man1
 man5dir         = $(mandir)/man5
-docdir          = $(prefix)/share/doc/bochs
-sharedir        = $(prefix)/share/bochs
+docdir          = $(datarootdir)/doc/bochs
+sharedir        = $(datarootdir)/bochs
 top_builddir    = ..
 top_srcdir      = @top_srcdir@
 
