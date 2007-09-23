@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.65 2007-04-08 21:57:06 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.66 2007-09-23 08:44:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -354,13 +354,6 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
 bx_bool bx_pit_c::periodic(Bit32u usec_delta)
 {
   Bit32u ticks_delta = 0;
-
-#ifdef BX_SCHEDULED_DIE_TIME
-  if (bx_pc_system.time_ticks() > BX_SCHEDULED_DIE_TIME) {
-    BX_ERROR (("ticks exceeded scheduled die time, quitting"));
-    BX_EXIT (2);
-  }
-#endif
 
   BX_PIT_THIS s.total_usec += usec_delta;
   ticks_delta=(Bit32u)((USEC_TO_TICKS((Bit64u)(BX_PIT_THIS s.total_usec)))-BX_PIT_THIS s.total_ticks);
