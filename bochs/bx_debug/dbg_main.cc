@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.94 2007-07-09 14:57:33 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.95 2007-09-23 21:10:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -713,7 +713,7 @@ next_page:
     }
   }
   else {
-    dbg_printf("bx_dbg_read_linear: physical address not available for linear " FMT_ADDRX "\n", laddr);
+    dbg_printf("bx_dbg_read_linear: physical address not available for linear 0x" FMT_ADDRX "\n", laddr);
     return 0;
   }
 
@@ -811,6 +811,20 @@ static void dbg_print_guard_found(unsigned cpu_mode, Bit32u cs, bx_address eip, 
     dbg_printf("%04x:%08x (0x%08x)", cs, (unsigned) eip, (unsigned) laddr);
   else // real or v8086 mode
     dbg_printf("%04x:%04x (0x%08x)", cs, (unsigned) eip, (unsigned) laddr);
+}
+
+void bx_dbg_xlate_address(bx_lin_address laddr)
+{
+  bx_phy_address paddr;
+  laddr &= BX_CONST64(0xfffffffffffff000);
+
+  bx_bool paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
+  if (paddr_valid) {
+    dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x%08x\n", laddr, paddr);
+  }
+  else {
+    dbg_printf("physical address not available for linear 0x" FMT_ADDRX "\n", laddr);
+  }
 }
 
 unsigned dbg_show_mask = 0;
@@ -1227,7 +1241,7 @@ one_more:
       // execute.  Even this is tricky with SMP because one might
       // have hit a breakpoint, while others executed the whole
       // quantum.
-      int max_executed = 0;
+      Bit32u max_executed = 0;
       for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
         if (BX_CPU(cpu)->guard_found.icount > max_executed)
           max_executed = BX_CPU(cpu)->guard_found.icount;
@@ -2661,7 +2675,6 @@ void bx_dbg_print_descriptor(unsigned char desc[8], int verbose)
 {
   Bit32u lo = (desc[3] << 24) | (desc[2] << 16) | (desc[1] << 8) | (desc[0]);
   Bit32u hi = (desc[7] << 24) | (desc[6] << 16) | (desc[5] << 8) | (desc[4]);
-//dbg_printf("Descriptor hi,lo = %08x,%08x\n", hi, lo);
   Bit32u base = ((lo >> 16) & 0xffff)
              | ((hi << 16) & 0xff0000)
              | (hi & 0xff000000);
@@ -3220,7 +3233,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: " FMT_ADDRX "\n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x" FMT_ADDRX "\n", BX_CPU(dbg_cpu)->cr3);
 
   lin = 0; 
   phy = 0; 
@@ -3267,7 +3280,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    bpe, bpd, d|del|delete\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, u|disasm|disassemble, r|reg|regs|registers, setpmem, crc, info,\n");
-  dbg_printf("    set, dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+  dbg_printf("    page, set, dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
 }
 
 void bx_dbg_calc_command(Bit64u value)

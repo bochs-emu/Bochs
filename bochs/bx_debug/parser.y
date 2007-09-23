@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.20 2006-10-21 21:28:20 sshwarts Exp $
+// $Id: parser.y,v 1.21 2007-09-23 21:10:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -167,6 +167,7 @@ command:
     | modebp_command
     | print_stack_command
     | watch_point_command
+    | page_command
     | show_command
     | symbol_command
     | where_command
@@ -246,6 +247,14 @@ show_command:
     | BX_TOKEN_SHOW '\n'
       {
           bx_dbg_show_command(0);
+          free($1);
+      }
+    ;
+
+page_command:
+      BX_TOKEN_PAGE BX_TOKEN_NUMERIC '\n'
+      {
+          bx_dbg_xlate_address($2);
           free($1);
       }
     ;
@@ -990,6 +999,11 @@ help_command:
          dbg_printf("       every time execution stops\n");
          dbg_printf("set u|disasm|disassemble on  - same as 'set $auto_disassemble = 1'\n");
          dbg_printf("set u|disasm|disassemble off - same as 'set $auto_disassemble = 0'\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_PAGE '\n'
+       {
+         dbg_printf("page <laddr> - show linear to physical xlation for linear address laddr\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_INFO '\n'
