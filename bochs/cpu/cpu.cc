@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.172 2007-07-09 15:16:10 sshwarts Exp $
+// $Id: cpu.cc,v 1.173 2007-09-25 16:11:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,6 +116,7 @@ static unsigned iCacheMisses=0;
 #if BX_SUPPORT_X86_64==0
 #define RIP EIP
 #define RSP ESP
+#define RCX ECX
 #endif
 
 BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_address eipBiased)
@@ -330,7 +331,7 @@ void BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_t execute)
       if (ECX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        ECX --;
+        RCX = ECX - 1;
       }
       if (ECX == 0) return;
     }
@@ -381,7 +382,7 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
       if (ECX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
-        ECX --;
+        RCX = ECX - 1;
       }
       if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
       if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.70 2007-09-10 20:47:08 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.71 2007-09-25 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,10 +38,16 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
   {
     if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
     {
+      bx_selector_t ss_selector;
+      bx_descriptor_t descriptor;
+      Bit32u dword1, dword2;
+
+      parse_selector(new_value, &ss_selector);
+
       if ((new_value & 0xfffc) == 0) { /* null selector */
 #if BX_SUPPORT_X86_64
-        // allow SS = 0 in 64 bit mode with cpl != 3
-        if (BX_CPU_THIS_PTR efer.lma && CPL != 3) {
+        // allow SS = 0 in 64 bit mode only with cpl != 3 and rpl=cpl
+        if (Is64BitMode() && CPL != 3 && ss_selector.rpl == CPL) {
           seg->selector.index = 0;
           seg->selector.ti    = 0;
           seg->selector.rpl   = 0;
@@ -50,15 +56,10 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
           return;
         }
 #endif
-        BX_ERROR(("load_seg_reg(SS): new_value == 0"));
-        exception(BX_GP_EXCEPTION, 0, 0);
+        BX_ERROR(("load_seg_reg(SS): loading null selector"));
+        exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
       }
 
-      bx_descriptor_t descriptor;
-      Bit32u dword1, dword2;
-      bx_selector_t ss_selector;
-
-      parse_selector(new_value, &ss_selector);
       fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
 
       /* selector's RPL must = CPL, else #GP(selector) */
@@ -257,7 +258,7 @@ void BX_CPU_C::loadSRegLMNominal(unsigned segI, unsigned selector, unsigned dpl)
   // of type bx_addr and be maxed to 64bits, not 32.
   seg->cache.u.segment.limit_scaled = 0xffffffff;
   seg->cache.valid = 1;
-  seg->cache.dpl = dpl; // (KPL) Not sure if we need this.
+  seg->cache.dpl = dpl;
 
   seg->selector.value = selector;
 }

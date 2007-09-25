@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.38 2007-07-09 15:16:12 sshwarts Exp $
+// $Id: io.cc,v 1.39 2007-09-25 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -423,9 +423,9 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
       else
 #endif
       if (i->as32L())
-        ECX -= (wordCount-1);
+        RCX = ECX - (wordCount-1);
       else
-        CX  -= (wordCount-1);
+        CX -= (wordCount-1);
 
       incr = wordCount << 1; // count * 2.
       goto doIncr;
@@ -658,9 +658,9 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
       else
 #endif
       if (i->as32L())
-        ECX -= (wordCount-1);
+        RCX = ECX - (wordCount-1);
       else
-        CX  -= (wordCount-1);
+        CX -= (wordCount-1);
       incr = wordCount << 1; // count * 2.
       goto doIncr;
     }

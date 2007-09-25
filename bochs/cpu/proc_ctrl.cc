@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.169 2007-09-20 17:33:35 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.170 2007-09-25 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1223,6 +1223,9 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
+      if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
+        BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
+      }
       BX_DEBUG(("Compatibility Mode Activated"));
     }
   }
@@ -1309,6 +1312,10 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
     }
   }
   else if (prev_pg==1 && ! BX_CPU_THIS_PTR cr0.get_PG()) {
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      BX_ERROR(("SetCR0: attempt to leave 64 bit mode directly to legacy mode !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
     if (BX_CPU_THIS_PTR efer.lma) {
       if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
@@ -1433,8 +1440,8 @@ void BX_CPU_C::RDPMC(bxInstruction_c *i)
     // writes.  Misaligned etc...  But to monitor bochs, this
     // is easier done from the host.
 
-    EAX = 0;
-    EDX = 0; // if P4 and ECX & 0x10000000, then always 0 (short read 32 bits)
+    RAX = 0;
+    RDX = 0; // if P4 and ECX & 0x10000000, then always 0 (short read 32 bits)
 
     BX_ERROR(("RDPMC: Performance Counters Support not reasonably implemented yet"));
   } else {
