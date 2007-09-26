@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.173 2007-09-25 16:11:31 sshwarts Exp $
+// $Id: cpu.cc,v 1.174 2007-09-26 18:07:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,20 +98,6 @@ static unsigned iCacheMisses=0;
 
 #endif // BX_SUPPORT_ICACHE
 
-// notes:
-
-// The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
-// instructions and then return so that the other processors have a chance to
-// run.  This is used only when simulating multiple processors.
-// 
-// If maximum instructions have been executed, return. The zero-count
-// means run forever.
-#define CHECK_MAX_INSTRUCTIONS(count) \
-  if (count > 0) {                    \
-    count--;                          \
-    if (count == 0) return;           \
-  }
-
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
 #define RIP EIP
@@ -191,6 +177,23 @@ BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStor
   return i;
 }
 
+// The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
+// instructions and then return so that the other processors have a chance to
+// run.  This is used by bochs internal debugger or when simulating 
+// multiple processors.
+// 
+// If maximum instructions have been executed, return. The zero-count
+// means run forever.
+#if BX_SUPPORT_SMP || BX_DEBUGGER
+  #define CHECK_MAX_INSTRUCTIONS(count) \
+    if ((count) > 0) {                  \
+      (count)--;                        \
+      if ((count) == 0) return;         \
+    }
+#else
+  #define CHECK_MAX_INSTRUCTIONS(count)
+#endif
+
 void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 {
   bxInstruction_c iStorage BX_CPP_AlignN(32);
@@ -205,8 +208,12 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) 
   { 
-    // only from exception function can we get here ...
+    // only from exception function we can get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+    if (dbg_instruction_epilog()) return;
+#endif
+    CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #if BX_GDBSTUB
     if (bx_dbg.gdbstub_enabled) {
       return;
@@ -264,7 +271,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
 #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
-      if (dbg_instruction_prolog()) return;
+    if (dbg_instruction_prolog()) return;
 #endif
 
 #if BX_DISASM
@@ -290,19 +297,12 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // inform instrumentation about new instruction
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 
-      // note instr generating exceptions never reach this point
+    // note instructions generating exceptions never reach this point
 #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
-      if (dbg_instruction_epilog()) return;
+    if (dbg_instruction_epilog()) return;
 #endif
 
-#if BX_SUPPORT_SMP || BX_DEBUGGER
-    // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
-    // instructions and then return so that the other processors have a chance
-    // to run. This is used only when simulating multiple processors. If only
-    // one processor, don't waste any cycles on it!
     CHECK_MAX_INSTRUCTIONS(max_instr_count);
-#endif
-
   }  // while (1)
 }
 
@@ -827,7 +827,7 @@ extern unsigned dbg_show_mask;
 bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 { 
   Bit64u tt = bx_pc_system.time_ticks();
-  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
+  bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
@@ -929,13 +929,12 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 
 bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
 {
-  bx_address debug_eip = BX_CPU_THIS_PTR prev_eip;
   BX_CPU_THIS_PTR guard_found.icount++;
   BX_CPU_THIS_PTR guard_found.cs  = 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  BX_CPU_THIS_PTR guard_found.eip = debug_eip;
+  BX_CPU_THIS_PTR guard_found.eip = RIP;
   BX_CPU_THIS_PTR guard_found.laddr = 
-    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip;
+    BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + RIP;
   BX_CPU_THIS_PTR guard_found.is_32bit_code = 
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
