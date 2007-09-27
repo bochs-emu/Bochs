@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.89 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: exception.cc,v 1.90 2007-09-27 16:22:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,7 +142,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       IS_DATA_SEGMENT(cs_descriptor.type) ||
       cs_descriptor.dpl>CPL)
   {
-    BX_ERROR(("interrupt(long mode): not code segment"));
+    BX_ERROR(("interrupt(long mode): not accessable or not code segment"));
     exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
   }
 
@@ -432,7 +432,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         IS_DATA_SEGMENT(cs_descriptor.type) ||
         cs_descriptor.dpl>CPL)
     {
-      BX_ERROR(("interrupt(): not code segment"));
+      BX_ERROR(("interrupt(): not accessable or not code segment"));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 
@@ -815,7 +815,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   bx_dbg_exception(BX_CPU_ID, vector, error_code);
 #endif
 
-  BX_DEBUG(("exception(0x%02X)", (unsigned) vector));
+  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
 
   // if not initial error, restore previous register values from
   // previous attempt to handle exception
