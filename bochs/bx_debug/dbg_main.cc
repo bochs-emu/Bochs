@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.95 2007-09-23 21:10:06 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.96 2007-09-27 07:03:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2284,13 +2284,12 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
     is_OK = BX_CPU(dbg_cpu)->dbg_set_reg(BX_DBG_REG_GS, val);
   }
   else if ( !strcmp(symbol, "cpu") ) {
-#if BX_SUPPORT_SMP
-    if (val > BX_SMP_PROCESSORS) {
+    if (val >= BX_SMP_PROCESSORS) {
       dbg_printf("invalid cpu id number %d\n", val);
       return;
     }
     dbg_cpu = val;
-#endif
+    return;
   }
   else if ( !strcmp(symbol, "synchronous_dma") ) {
     bx_guard.async.dma = !val;
