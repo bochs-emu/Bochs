@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.47 2007-09-20 17:33:31 sshwarts Exp $
+// $Id: cpuid.cc,v 1.48 2007-09-27 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -300,8 +300,8 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
       //   [14:14] xTPR update control
       //   [18:15] reserved
-      //   [19:19] SSE4: SSE4 Instructions
-      //   [20:20] SSE4E: SSE4E Instructions
+      //   [19:19] SSE4.1: SSE4.1 Instructions
+      //   [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
       //   [31:21] reserved
       // EDX:       Feature Flags
       //   [0:0]   FPU on chip

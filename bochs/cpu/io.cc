@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.39 2007-09-25 16:11:32 sshwarts Exp $
+// $Id: io.cc,v 1.40 2007-09-27 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,6 +37,7 @@
 #define RDI EDI
 #define RSI ESI
 #define RAX EAX
+#define RCX ECX
 #endif
 
 //

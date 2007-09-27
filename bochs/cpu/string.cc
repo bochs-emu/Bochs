@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.38 2007-09-25 16:11:32 sshwarts Exp $
+// $Id: string.cc,v 1.39 2007-09-27 16:11:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,7 @@
 #define RSI ESI
 #define RDI EDI
 #define RAX EAX
+#define RCX ECX
 #endif
 
 //
