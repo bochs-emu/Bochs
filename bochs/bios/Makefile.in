@@ -41,6 +41,7 @@ RANLIB = @RANLIB@
 
 BCC = bcc
 GCC = gcc
+GCC32 = gcc -m32
 AS86 = as86
 
 BX_INCDIRS = -I.. -I$(srcdir)/.. -I../iodev -I$(srcdir)/../iodev
@@ -71,7 +72,7 @@ bios-clean:
 	@RMCOMMAND@ BIOS-bochs-*
 
 BIOS-bochs-legacy: rombios.c apmbios.S biossums rombios.h
-	$(GCC) $(BIOS_BUILD_DATE) -DLEGACY -E -P $< > _rombiosl_.c
+	$(GCC32) $(BIOS_BUILD_DATE) -DLEGACY -E -P $< > _rombiosl_.c
 	$(BCC) -o rombiosl.s -C-c -D__i86__ -0 -S _rombiosl_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombiosl.s > _rombiosl_.s
 	$(AS86) _rombiosl_.s -b tmpl.bin -u- -w- -g -0 -j -O -l rombiosl.txt
@@ -82,7 +83,7 @@ BIOS-bochs-legacy: rombios.c apmbios.S biossums rombios.h
 
 
 rombios16.bin: rombios.c apmbios.S biossums rombios.h
-	$(GCC) $(BIOS_BUILD_DATE) -E -P $< > _rombios_.c
+	$(GCC32) $(BIOS_BUILD_DATE) -E -P $< > _rombios_.c
 	$(BCC) -o rombios.s -C-c -D__i86__ -0 -S _rombios_.c
 	sed -e 's/^\.text//' -e 's/^\.data//' rombios.s > _rombios_.s
 	$(AS86) _rombios_.s -b tmp.bin -u- -w- -g -0 -j -O -l rombios.txt
@@ -100,7 +101,7 @@ rombios32.out: rombios32start.o rombios32.o rombios32.ld
 	ld -o $@ -T rombios32.ld rombios32start.o rombios32.o
 
 rombios32.o: rombios32.c acpi-dsdt.hex
-	$(GCC) -O2 -Wall -c -o $@ $<
+	$(GCC32) -O2 -Wall -c -o $@ $<
 
 ifeq ("1", "0")
 acpi-dsdt.hex: acpi-dsdt.dsl
@@ -108,7 +109,7 @@ acpi-dsdt.hex: acpi-dsdt.dsl
 endif
 
 rombios32start.o: rombios32start.S
-	$(GCC) -c -o $@ $<
+	$(GCC32) -c -o $@ $<
 
 BIOS-bochs-latest: rombios16.bin rombios32.bin
 	cat rombios32.bin rombios16.bin > $@
