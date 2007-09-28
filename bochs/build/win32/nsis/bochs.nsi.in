@@ -1,5 +1,5 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; $Id: bochs.nsi.in,v 1.14 2007-05-17 15:47:34 vruppert Exp $
+; $Id: bochs.nsi.in,v 1.15 2007-09-28 17:58:48 vruppert Exp $
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ; Setup Script for NSIS Installer
@@ -187,7 +187,7 @@ Section "Register .bxrc Extension" SecExtension
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Configure"
   WriteRegStr HKCR "BochsConfigFile\shell\Configure\command" "" '"$INSTDIR\Bochs.exe" -f "%1"'
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Edit"
-  WriteRegStr HKCR "BochsConfigFile\shell\Edit\command" "" 'C:\WINDOWS\NOTEPAD.EXE "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell\Edit\command" "" '$WINDIR\NOTEPAD.EXE "%1"'
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Debugger"
   WriteRegStr HKCR "BochsConfigFile\shell\Debugger\command" "" '"$INSTDIR\Bochsdbg.exe" -f "%1"'
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Run"
@@ -264,7 +264,7 @@ Section "Uninstall"
   Delete "$INSTDIR\*.txt"
   Delete "$INSTDIR\*.ico"
   Delete "$INSTDIR\keymaps\*"
-  Delete "$INSTDIR\BIOS-bochs-latest"
+  Delete "$INSTDIR\BIOS-bochs-*"
   Delete "$INSTDIR\VGABIOS-*"
   Delete "$INSTDIR\dlxlinux\*"
   Delete "$INSTDIR\docs\index.html"
