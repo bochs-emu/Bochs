@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.41 2006-10-02 17:40:20 vruppert Exp $
+// $Id: memory.h,v 1.42 2007-09-28 19:52:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,7 +104,8 @@ public:
 		  memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
-  BX_MEM_SMF Bit32u get_num_allocated_pages(void);
+  BX_MEM_SMF Bit32u  get_num_allocated_pages(void);
+  BX_MEM_SMF void    register_state(void);
 };
 
 #if BX_PROVIDE_CPU_MEMORY==1

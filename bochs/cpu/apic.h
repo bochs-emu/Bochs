@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.34 2006-10-02 21:49:49 sshwarts Exp $
+// $Id: apic.h,v 1.35 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -178,9 +178,7 @@ public:
   void periodic(void);
   void set_divide_configuration(Bit32u value);
   void set_initial_timer_count(Bit32u value);
-#if BX_SUPPORT_SAVE_RESTORE
   void register_state(bx_param_c *parent);
-#endif
 };
 
 #endif /* BX_INCLUDE_LOCAL_APIC */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.h,v 1.18 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pic.h,v 1.19 2007-09-28 19:52:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -78,9 +78,7 @@ public:
   virtual void set_mode(bx_bool ma_sl, Bit8u mode);
   virtual Bit8u IAC(void);
   virtual void show_pic_state(void);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
-#endif
 
 private:
   struct {

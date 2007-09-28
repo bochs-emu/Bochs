@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.54 2007-04-08 15:02:50 vruppert Exp $
+// $Id: sb16.cc,v 1.55 2007-09-28 19:52:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -316,14 +316,13 @@ void bx_sb16_c::reset(unsigned type)
 {
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_sb16_c::register_state(void)
 {
   unsigned i, j;
   char name[8];
   bx_list_c *chip, *ins_map, *item, *patch;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "sb16", "SB16 State", 8);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "sb16", "SB16 State", 8);
   bx_list_c *mpu = new bx_list_c(list, "mpu", 8);
   new bx_shadow_bool_c(mpu, "uartmode", &MPU.uartmode);
   new bx_shadow_bool_c(mpu, "irqpending", &MPU.irqpending);
@@ -449,9 +448,8 @@ void bx_sb16_c::after_restore_state(void)
 {
   set_irq_dma();
 }
-#endif
 
-  // the timer functions
+// the timer functions
 void bx_sb16_c::mpu_timer (void *this_ptr)
 {
   ((bx_sb16_c *) this_ptr)->mpu401.current_timer++;
@@ -483,9 +481,9 @@ void bx_sb16_c::opl_timer (void *this_ptr)
   ((bx_sb16_c *) this_ptr)->opl_timerevent();
 }
 
-  // the various IO handlers
+// the various IO handlers
 
-  // The DSP/FM music part
+// The DSP/FM music part
 
 // dsp_reset() resets the DSP after the sequence 1/0. Returns
 // 0xaa on the data port

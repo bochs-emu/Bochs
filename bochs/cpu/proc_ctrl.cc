@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.170 2007-09-25 16:11:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.171 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1714,8 +1714,6 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS: {
-      // not a bug according to book ... but very stOOpid
-      if (EAX & 3) BX_PANIC(("writing sysenter_cs_msr with non-kernel mode selector %X", EAX));
       BX_CPU_THIS_PTR msr.sysenter_cs_msr  = EAX;
       return;
     }

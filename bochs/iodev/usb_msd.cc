@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.6 2007-07-28 16:11:17 vruppert Exp $
+// $Id: usb_msd.cc,v 1.7 2007-09-28 19:52:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -155,16 +155,13 @@ bx_bool usb_msd_device_t::init(const char *filename)
     return 0;
   } else {
     s.scsi_dev = new scsi_device_t(s.hdimage, 0, usb_msd_command_complete, (void*)this);
-#if BX_SUPPORT_SAVE_RESTORE
     s.scsi_dev->register_state(s.sr_list, "scsidev");
-#endif
     s.mode = USB_MSDM_CBW;
     d.connected = 1;
     return 1;
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void usb_msd_device_t::register_state_specific(bx_list_c *parent)
 {
   s.sr_list = new bx_list_c(parent, "s", "USB MSD Device State", 8);
@@ -176,7 +173,6 @@ void usb_msd_device_t::register_state_specific(bx_list_c *parent)
   new bx_shadow_num_c(s.sr_list, "tag", &s.tag);
   new bx_shadow_num_c(s.sr_list, "result", &s.result);
 }
-#endif
 
 void usb_msd_device_t::handle_reset()
 {

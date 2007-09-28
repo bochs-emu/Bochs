@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scsi_device.cc,v 1.4 2007-05-05 12:30:23 vruppert Exp $
+// $Id: scsi_device.cc,v 1.5 2007-09-28 19:52:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -75,14 +75,12 @@ scsi_device_t::~scsi_device_t(void)
 {
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void scsi_device_t::register_state(bx_list_c *parent, const char *name)
 {
   bx_list_c *list = new bx_list_c(parent, name, "", 1);
   new bx_shadow_num_c(list, "sense", &sense);
   // TODO: save/restore for SCSI requests
 }
-#endif
 
 SCSIRequest* scsi_device_t::scsi_new_request(Bit32u tag)
 {

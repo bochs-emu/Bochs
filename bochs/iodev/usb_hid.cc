@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.5 2007-04-01 11:15:47 vruppert Exp $
+// $Id: usb_hid.cc,v 1.6 2007-09-28 19:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -374,7 +374,6 @@ usb_hid_device_t::~usb_hid_device_t(void)
 {
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void usb_hid_device_t::register_state_specific(bx_list_c *parent)
 {
   bx_list_c *key;
@@ -400,7 +399,6 @@ void usb_hid_device_t::register_state_specific(bx_list_c *parent)
     new bx_shadow_num_c(key, name, &s.key_pad_packet[i], BASE_HEX);
   }
 }
-#endif
 
 void usb_hid_device_t::handle_reset()
 {

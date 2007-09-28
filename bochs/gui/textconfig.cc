@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.65 2006-11-12 10:07:18 vruppert Exp $
+// $Id: textconfig.cc,v 1.66 2007-09-28 19:51:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -263,14 +263,9 @@ static char *startup_menu_prompt =
 "2. Read options from...\n"
 "3. Edit options\n"
 "4. Save options to...\n"
-#if BX_SUPPORT_SAVE_RESTORE
 "5. Restore the Bochs state from...\n"
 "6. Begin simulation\n"
 "7. Quit now\n"
-#else
-"5. Begin simulation\n"
-"6. Quit now\n"
-#endif
 "\n"
 "Please choose one: [%d] ";
 
@@ -398,9 +393,7 @@ void askparam(char *pname)
 int bx_config_interface(int menu)
 {
   Bit32u choice;
-#if BX_SUPPORT_SAVE_RESTORE
   char sr_path[CI_PATH_LENGTH];
-#endif
   while (1) {
     switch (menu) {
       case BX_CI_INIT:
@@ -420,17 +413,9 @@ int bx_config_interface(int menu)
             case BX_EDIT_START: 
               default_choice = 3; break;
             default: 
-#if BX_SUPPORT_SAVE_RESTORE
               default_choice = 6; break;
-#else
-              default_choice = 5; break;
-#endif
           }
-#if BX_SUPPORT_SAVE_RESTORE
           if (ask_uint(startup_menu_prompt, "", 1, 7, default_choice, &choice, 10) < 0) return -1;
-#else
-          if (ask_uint(startup_menu_prompt, "", 1, 6, default_choice, &choice, 10) < 0) return -1;
-#endif
           switch (choice) {
             case 1:
               fprintf(stderr, "I reset all options back to their factory defaults.\n\n");
@@ -449,7 +434,6 @@ int bx_config_interface(int menu)
               SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_RUN_START);
               break;
             case 4: bx_write_rc(NULL); break;
-#if BX_SUPPORT_SAVE_RESTORE
             case 5:
               if (ask_string("\nWhat is the path to restore the Bochs state from?\nTo cancel, type 'none'. [%s] ", "none", sr_path) >= 0) {
                 if (strcmp(sr_path, "none")) {
@@ -461,10 +445,6 @@ int bx_config_interface(int menu)
               break;
             case 6: bx_config_interface(BX_CI_START_SIMULATION); break;
             case 7: SIM->quit_sim(1); return -1;
-#else
-            case 5: bx_config_interface(BX_CI_START_SIMULATION); break;
-            case 6: SIM->quit_sim(1); return -1;
-#endif
             default: BAD_OPTION(menu, choice);
           }
         }

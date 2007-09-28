@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxmain.cc,v 1.152 2006-12-17 08:17:28 vruppert Exp $
+// $Id: wxmain.cc,v 1.153 2007-09-28 19:51:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxmain.cc implements the wxWidgets frame, toolbar, menus, and dialogs.
@@ -75,9 +75,7 @@
 #include "bitmaps/mouse.xpm"
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
-#if BX_SUPPORT_SAVE_RESTORE
 #include "bitmaps/saverestore.xpm"
-#endif
 #ifdef __WXGTK__
 #include "icon_bochs.xpm"
 #endif
@@ -358,9 +356,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Edit_Cdrom, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Reset, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Power, MyFrame::OnToolbarClick)
-#if BX_SUPPORT_SAVE_RESTORE
   EVT_TOOL(ID_Toolbar_SaveRestore, MyFrame::OnToolbarClick)
-#endif
   EVT_TOOL(ID_Toolbar_Copy, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Paste, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
@@ -505,7 +501,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Enable(ID_Edit_ATA2, BX_MAX_ATA_CHANNEL > 2);
   menuEdit->Enable(ID_Edit_ATA3, BX_MAX_ATA_CHANNEL > 3);
   // enable restore state if present
-  menuConfiguration->Enable(ID_State_Restore, BX_SUPPORT_SAVE_RESTORE);
+  menuConfiguration->Enable(ID_State_Restore, TRUE);
 
   CreateStatusBar();
   wxStatusBar *sb = GetStatusBar();
@@ -526,9 +522,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_Cdrom, cdromd_xpm, wxT("Change CDROM"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
   BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
-#if BX_SUPPORT_SAVE_RESTORE
   BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save simulation state"));
-#endif
 
   BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));
@@ -599,7 +593,6 @@ void MyFrame::OnConfigSave(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
 {
-#if BX_SUPPORT_SAVE_RESTORE
   char sr_path[512];
   // pass some initial dir to wxDirDialog
   wxString dirSaveRestore;
@@ -612,7 +605,6 @@ void MyFrame::OnStateRestore(wxCommandEvent& WXUNUSED(event))
     SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(1);
     SIM->get_param_string(BXPN_RESTORE_PATH)->set(sr_path);
   }
-#endif
 }
 
 void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
@@ -978,9 +970,8 @@ void MyFrame::simStatusChanged(StatusChange change, bx_bool popupNotify) {
   bool canConfigure = (change == Stop);
   menuConfiguration->Enable(ID_Config_New, canConfigure);
   menuConfiguration->Enable(ID_Config_Read, canConfigure);
-#if BX_SUPPORT_SAVE_RESTORE
   menuConfiguration->Enable(ID_State_Restore, canConfigure);
-#endif
+
   // only enabled ATA channels with a cdrom connected are available at runtime
   for (unsigned i=0; i<BX_MAX_ATA_CHANNEL; i++) {
     sprintf(ata_name, "ata.%d.resources", i);
@@ -1405,9 +1396,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
   switch (id) {
     case ID_Toolbar_Power: which = BX_TOOLBAR_POWER; wxBochsStopSim = false; break;
     case ID_Toolbar_Reset: which = BX_TOOLBAR_RESET; break;
-#if BX_SUPPORT_SAVE_RESTORE
     case ID_Toolbar_SaveRestore: which = BX_TOOLBAR_SAVE_RESTORE; break;
-#endif
     case ID_Edit_FD_0: 
       // floppy config dialog box
       editFloppyConfig(0);

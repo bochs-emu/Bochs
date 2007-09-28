@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.23 2006-10-02 21:49:49 sshwarts Exp $
+// $Id: ioapic.h,v 1.24 2007-09-28 19:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -68,9 +68,7 @@ public:
     hi = val_hi_part;
   }
   void sprintf_self(char *buf);
-#if BX_SUPPORT_SAVE_RESTORE
   void register_state(bx_param_c *parent);
-#endif
 };
 
 class bx_ioapic_c : public bx_generic_apic_c
@@ -95,9 +93,7 @@ public:
   void set_irq_level(Bit8u int_in, bx_bool level);
   void receive_eoi(Bit8u vector);
   void service_ioapic(void);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
-#endif
 };
 
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.356 2007-09-22 15:59:40 sshwarts Exp $
+// $Id: main.cc,v 1.357 2007-09-28 19:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -237,11 +237,9 @@ void print_tree(bx_param_c *node, int level)
 	}
 	break;
       }
-#if BX_SUPPORT_SAVE_RESTORE
     case BXT_PARAM_DATA:
       dbg_printf("%s = 'size=%d' (binary data)\n", node->get_name(), ((bx_shadow_data_c*)node)->get_size());
       break;
-#endif
     default:
       dbg_printf("%s (unknown parameter type)\n", node->get_name());
   }
@@ -483,9 +481,7 @@ void print_usage()
     "  -f configfile    specify configuration file\n"
     "  -q               quick start (skip configuration interface)\n"
     "  -benchmark n     run bochs in benchmark mode for millions of emulated ticks\n"
-#if BX_SUPPORT_SAVE_RESTORE
     "  -r path          restore the Bochs state from path\n"
-#endif
 #if BX_DEBUGGER
     "  -rc filename     execute debugger commands stored in file\n"
 #endif
@@ -552,7 +548,6 @@ int bx_init_main (int argc, char *argv[])
       if (++arg >= argc) BX_PANIC(("-benchmark must be followed by a number"));
       else SIM->get_param_num(BXPN_BOCHS_BENCHMARK)->set(atoi(argv[arg]));
     }
-#if BX_SUPPORT_SAVE_RESTORE
     else if (!strcmp("-r", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-r must be followed by a path"));
       else {
@@ -561,7 +556,6 @@ int bx_init_main (int argc, char *argv[])
         SIM->get_param_string(BXPN_RESTORE_PATH)->set(argv[arg]);
       }
     }
-#endif
 #if BX_WITH_CARBON
     else if (!strncmp("-psn", argv[arg], 4)) {
       // "-psn" is passed if we are launched by double-clicking
@@ -687,12 +681,10 @@ int bx_init_main (int argc, char *argv[])
 
   int norcfile = 1;
 
-#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     load_rcfile = 0;
     norcfile = 0;
   }
-#endif
   if (load_rcfile) {
     /* parse configuration file and command line arguments */
 #ifdef WIN32
@@ -724,15 +716,12 @@ int bx_init_main (int argc, char *argv[])
     SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_LOAD_START);
   }
 
-#if BX_SUPPORT_SAVE_RESTORE
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (arg < argc) {
       BX_ERROR(("WARNING: bochsrc options are ignored in restore mode!"));
     }
   }
-  else
-#endif
-  {
+  else {
     // parse the rest of the command line.  This is done after reading the
     // configuration file so that the command line arguments can override
     // the settings from the file.
@@ -837,7 +826,6 @@ bx_bool load_and_init_display_lib()
 
 int bx_begin_simulation (int argc, char *argv[])
 {
-#if BX_SUPPORT_SAVE_RESTORE
   SIM->init_save_restore();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (!SIM->restore_config()) {
@@ -845,7 +833,7 @@ int bx_begin_simulation (int argc, char *argv[])
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   }
-#endif
+
   // deal with gui selection
   if (!load_and_init_display_lib ()) {
     BX_PANIC (("no gui module was loaded"));
@@ -870,10 +858,9 @@ int bx_begin_simulation (int argc, char *argv[])
 
   // update headerbar buttons since drive status can change during init
   bx_gui->update_drive_status_buttons();
+
   // iniialize statusbar and set all items inactive
-#if BX_SUPPORT_SAVE_RESTORE
   if (!SIM->get_param_bool(BXPN_RESTORE_FLAG)->get())
-#endif
   {
     bx_gui->statusbar_setitem(-1, 0);
   }
@@ -940,7 +927,6 @@ void bx_stop_simulation()
   // the cpu loop will exit very soon after this condition is set.
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_sr_after_restore_state(void)
 {
 #if BX_SUPPORT_SMP == 0
@@ -952,7 +938,6 @@ void bx_sr_after_restore_state(void)
 #endif
   DEV_after_restore_state();
 }
-#endif
 
 int bx_init_hardware()
 {
@@ -1074,9 +1059,7 @@ int bx_init_hardware()
 #if BX_SUPPORT_SMP == 0
   BX_CPU(0)->initialize(BX_MEM(0));
   BX_CPU(0)->sanity_checks();
-#if BX_SUPPORT_SAVE_RESTORE
   BX_CPU(0)->register_state();
-#endif
   BX_INSTR_INIT(0);
 #else
   bx_cpu_array = new BX_CPU_C_PTR[BX_SMP_PROCESSORS];
@@ -1085,15 +1068,12 @@ int bx_init_hardware()
     BX_CPU(i) = new BX_CPU_C(i);
     BX_CPU(i)->initialize(BX_MEM(0));  // assign local apic id in 'initialize' method
     BX_CPU(i)->sanity_checks();
-#if BX_SUPPORT_SAVE_RESTORE
     BX_CPU(i)->register_state();
-#endif
     BX_INSTR_INIT(i);
   }
 #endif
 
   DEV_init_devices();
-#if BX_SUPPORT_SAVE_RESTORE
   bx_pc_system.register_state();
   DEV_register_state();
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
@@ -1102,10 +1082,10 @@ int bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   }
-#endif
+
   // will enable A20 line and reset CPU and devices
   bx_pc_system.Reset(BX_RESET_HARDWARE);
-#if BX_SUPPORT_SAVE_RESTORE
+
   if (SIM->get_param_bool(BXPN_RESTORE_FLAG)->get()) {
     if (SIM->restore_hardware()) {
       bx_sr_after_restore_state();
@@ -1114,7 +1094,7 @@ int bx_init_hardware()
       SIM->get_param_bool(BXPN_RESTORE_FLAG)->set(0);
     }
   }
-#endif
+
   bx_gui->init_signal_handlers();
   bx_pc_system.start_timers();
 

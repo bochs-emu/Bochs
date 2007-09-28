@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.45 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: pic.cc,v 1.46 2007-09-28 19:52:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -124,12 +124,11 @@ void bx_pic_c::init(void)
 
 void bx_pic_c::reset(unsigned type) {}
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_pic_c::register_state(void)
 {
   bx_list_c *ctrl;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pic", "PIC State", 2);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pic", "PIC State", 2);
   ctrl = new bx_list_c(list, "master", 17);
   new bx_shadow_num_c(ctrl, "interrupt_offset", &BX_PIC_THIS s.master_pic.interrupt_offset, BASE_HEX);
   new bx_shadow_num_c(ctrl, "auto_eoi", &BX_PIC_THIS s.master_pic.auto_eoi, BASE_HEX);
@@ -167,11 +166,9 @@ void bx_pic_c::register_state(void)
   new bx_shadow_bool_c(ctrl, "rotate_on_autoeoi", &BX_PIC_THIS s.slave_pic.rotate_on_autoeoi);
   new bx_shadow_num_c(ctrl, "edge_level", &BX_PIC_THIS s.slave_pic.edge_level, BASE_HEX);
 }
-#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
-
 Bit32u bx_pic_c::read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
 #if !BX_USE_PIC_SMF

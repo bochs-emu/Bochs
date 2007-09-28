@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.207 2007-04-19 16:12:12 sshwarts Exp $
+// $Id: bochs.h,v 1.208 2007-09-28 19:51:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,9 +135,8 @@ void print_tree(bx_param_c *node, int level = 0);
 // needed.
 //
 
-#if BX_SUPPORT_SAVE_RESTORE
-
-#define BXRS_PARAM_SPECIAL(parent, name, maxvalue, save_handler, restore_handler) { \
+#define BXRS_PARAM_SPECIAL(parent, name, maxvalue, save_handler, restore_handler) \
+{ \
   bx_param_num_c *param = new bx_param_num_c(parent, #name, "", "", 0, maxvalue, 0); \
   param->set_base(BASE_HEX); \
   param->set_sr_handlers(this, save_handler, restore_handler); \
@@ -164,8 +163,6 @@ void print_tree(bx_param_c *node, int level = 0);
 
 #define BXRS_PARAM_BOOL(parent, name, field) \
   new bx_shadow_bool_c(parent, #name, (bx_bool*)(&(field)))
-
-#endif
 
 // =-=-=-=-=-=-=- Normal optimized use -=-=-=-=-=-=-=-=-=-=-=-=-=-=
 // some pc_systems functions just redirect to the IO devices so optimize

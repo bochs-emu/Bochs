@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.33 2006-09-18 18:10:49 vruppert Exp $
+// $Id: virt_timer.cc,v 1.34 2007-09-28 19:52:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -426,10 +426,9 @@ void bx_virt_timer_c::init(void)
   init_done = 1;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_virt_timer_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "virt_timer", "Virtual Timer State", 17);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "virt_timer", "Virtual Timer State", 17);
   bx_list_c *vtimers = new bx_list_c(list, "timer", numTimers);
   for (unsigned i = 0; i < numTimers; i++) {
     char name[4];
@@ -459,7 +458,6 @@ void bx_virt_timer_c::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(list, ticks_per_second);
 
 }
-#endif
 
 void bx_virt_timer_c::timer_handler(void)
 {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.89 2006-10-25 17:40:56 vruppert Exp $
+// $Id: wx.cc,v 1.90 2007-09-28 19:51:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -954,9 +954,7 @@ void bx_wx_gui_c::handle_events(void)
           case BX_TOOLBAR_CDROMD: cdromD_handler(); break;
           case BX_TOOLBAR_RESET: reset_handler(); break;
           case BX_TOOLBAR_POWER: power_handler(); break;
-#if BX_SUPPORT_SAVE_RESTORE
           case BX_TOOLBAR_SAVE_RESTORE: save_restore_handler(); break;
-#endif
           case BX_TOOLBAR_COPY: copy_handler(); break;
           case BX_TOOLBAR_PASTE: paste_handler(); break;
           case BX_TOOLBAR_SNAPSHOT: snapshot_handler(); break;

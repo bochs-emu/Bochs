@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: devices.cc,v 1.117 2007-04-08 21:57:06 sshwarts Exp $
+// $Id: devices.cc,v 1.118 2007-09-28 19:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   unsigned i;
   const char def_name[] = "Default";
 
-  BX_DEBUG(("Init $Id: devices.cc,v 1.117 2007-04-08 21:57:06 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: devices.cc,v 1.118 2007-09-28 19:51:59 sshwarts Exp $"));
   mem = newmem;
 
   /* set no-default handlers, will be overwritten by the real default handler */
@@ -356,7 +356,6 @@ void bx_devices_c::reset(unsigned type)
   bx_reset_plugins(type);
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_devices_c::register_state()
 {
   bx_virt_timer.register_state();
@@ -392,7 +391,6 @@ void bx_devices_c::after_restore_state()
   pluginVgaDevice->after_restore_state();
   bx_plugins_after_restore_state();
 }
-#endif
 
 void bx_devices_c::exit()
 {
@@ -1023,7 +1021,6 @@ bx_bool bx_devices_c::is_parallel_enabled()
   return false;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)
 {
   unsigned i;
@@ -1035,4 +1032,3 @@ void bx_pci_device_stub_c::register_pci_state(bx_list_c *list, Bit8u *pci_conf)
     new bx_shadow_num_c(pci, name, &pci_conf[i], BASE_HEX);
   }
 }
-#endif

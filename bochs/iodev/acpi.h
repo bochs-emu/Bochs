@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.h,v 1.6 2007-08-04 08:57:42 vruppert Exp $
+// $Id: acpi.h,v 1.7 2007-09-28 19:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -38,10 +38,8 @@ public:
   virtual void init(void);
   virtual void reset(unsigned type);
   virtual void generate_smi(Bit8u value);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
   virtual void after_restore_state(void);
-#endif
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);

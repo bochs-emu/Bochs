@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.29 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.30 2007-09-28 19:52:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -135,12 +135,12 @@ void bx_pci_ide_c::reset(unsigned type)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
+// save/restore code begin
 void bx_pci_ide_c::register_state(void)
 {
   char name[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pci_ide", "PCI IDE Controller State", 5);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pci_ide", "PCI IDE Controller State", 5);
 
   register_pci_state(list, BX_PIDE_THIS s.pci_conf);
 
@@ -213,7 +213,7 @@ Bit64s bx_pci_ide_c::param_restore(bx_param_c *param, Bit64s val)
   }
   return val;
 }
-#endif
+// save/restore code end
 
 bx_bool bx_pci_ide_c::bmdma_present(void)
 {

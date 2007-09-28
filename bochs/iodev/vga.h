@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.57 2006-08-18 15:43:20 vruppert Exp $
+// $Id: vga.h,v 1.58 2007-09-28 19:52:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -144,10 +144,8 @@ public:
   virtual void   mem_write(Bit32u addr, Bit8u value);
   virtual void   trigger_timer(void *this_ptr);
   virtual void   dump_status(void);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void   register_state(void);
   virtual void   after_restore_state(void);
-#endif
 
 #if BX_SUPPORT_VBE
   BX_VGA_SMF Bit8u  vbe_mem_read(Bit32u addr) BX_CPP_AttrRegparmN(1);

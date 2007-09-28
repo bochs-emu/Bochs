@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.101 2007-05-15 12:48:59 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.102 2007-09-28 19:52:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.101 2007-05-15 12:48:59 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.102 2007-09-28 19:52:08 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -118,10 +118,13 @@ void BX_MEM_C::init_memory(int memsize)
   BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
 
-#if BX_SUPPORT_SAVE_RESTORE
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "memory", "Memory State", 1);
+  register_state();
+}
+
+void BX_MEM_C::register_state()
+{
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 1);
   new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS len);
-#endif
 }
 
 void BX_MEM_C::cleanup_memory()

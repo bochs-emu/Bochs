@@ -746,9 +746,6 @@ typedef
 
 #define BX_SUPPORT_ICACHE 0
 
-// save/restore support
-#define BX_SUPPORT_SAVE_RESTORE 0
-
 // if 1, don't do gpf on MSRs that we don't implement
 #define BX_IGNORE_BAD_MSR 0
 

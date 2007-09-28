@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.h,v 1.15 2006-05-27 15:54:48 sshwarts Exp $
+// $Id: pit82c54.h,v 1.16 2007-09-28 19:52:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -15,7 +15,6 @@
 typedef void (*out_handler_t)(bx_bool value);
 
 class pit_82C54 : public logfunctions {
-
 public:
   //Please do not use these.  They are public because they have to be
   // to compile on some platforms.  They are not to be used by other
@@ -108,12 +107,10 @@ private:
   void print_counter(counter_type & thisctr);
 
 public:
+  pit_82C54 (void);
   void init (void);
   void reset (unsigned type);
-  pit_82C54 (void);
-#if BX_SUPPORT_SAVE_RESTORE
   void register_state(bx_param_c *parent);
-#endif
 
   void clock_all(Bit32u cycles);
   void clock_multiple(Bit8u cnum, Bit32u cycles);
@@ -132,7 +129,6 @@ public:
   Bit16u get_inlatch(int countnum);
 
   void print_cnum(Bit8u cnum);
-
 };
 
 #endif

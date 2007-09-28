@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.h,v 1.4 2007-04-01 11:15:48 vruppert Exp $
+// $Id: usb_hid.h,v 1.5 2007-09-28 19:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -32,9 +32,7 @@ public:
   virtual void handle_reset();
   virtual int handle_control(int request, int value, int index, int length, Bit8u *data);
   virtual int handle_data(USBPacket *p);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state_specific(bx_list_c *parent);
-#endif
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state);
   bx_bool key_enq(Bit8u *scan_code);
 protected:

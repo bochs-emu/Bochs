@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: plugin.cc,v 1.21 2006-09-16 14:47:40 vruppert Exp $
+// $Id: plugin.cc,v 1.22 2007-09-28 19:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This file defines the plugin and plugin-device registration functions and
@@ -646,7 +646,6 @@ void bx_unload_plugins()
   devices = NULL;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 /**************************************************************************/
 /* Plugin system: Register device state of all registered plugin-devices  */
 /**************************************************************************/
@@ -673,6 +672,5 @@ void bx_plugins_after_restore_state()
       device->devmodel->after_restore_state();
     }
 }
-#endif
 
 }

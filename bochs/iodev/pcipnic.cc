@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.23 2007-02-03 17:56:35 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.24 2007-09-28 19:52:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -150,13 +150,12 @@ void bx_pcipnic_c::reset(unsigned type)
   set_irq_level(0);
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_pcipnic_c::register_state(void)
 {
   unsigned i;
   char name[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pcipnic", "PCI Pseudo NIC State", 11);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pcipnic", "PCI Pseudo NIC State", 11);
   new bx_shadow_num_c(list, "irqEnabled", &BX_PNIC_THIS s.irqEnabled);
   new bx_shadow_num_c(list, "rCmd", &BX_PNIC_THIS s.rCmd);
   new bx_shadow_num_c(list, "rStatus", &BX_PNIC_THIS s.rStatus);
@@ -183,7 +182,6 @@ void bx_pcipnic_c::after_restore_state(void)
     BX_INFO(("new base address: 0x%04x", BX_PNIC_THIS s.base_ioaddr));
   }
 }
-#endif
 
 void bx_pcipnic_c::set_irq_level(bx_bool level)
 {

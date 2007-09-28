@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.39 2006-09-16 14:47:40 vruppert Exp $
+// $Id: keyboard.h,v 1.40 2007-09-28 19:52:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,10 +57,8 @@ public:
   virtual void gen_scancode(Bit32u key);
   virtual void paste_bytes(Bit8u *data, Bit32s length);
   virtual void mouse_motion(int delta_x, int delta_y, int delta_z, unsigned button_state);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
   virtual void after_restore_state(void);
-#endif
 
   // runtime options
   static     Bit64s   kbd_param_handler(bx_param_c *param, int set, Bit64s val);

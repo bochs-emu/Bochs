@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.9 2007-08-04 08:57:42 vruppert Exp $
+// $Id: acpi.cc,v 1.10 2007-09-28 19:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -189,10 +189,9 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_acpi_ctrl_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "acpi", "ACPI Controller State", 6);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "acpi", "ACPI Controller State", 6);
   BXRS_HEX_PARAM_FIELD(list, pmsts, BX_ACPI_THIS s.pmsts);
   BXRS_HEX_PARAM_FIELD(list, pmen, BX_ACPI_THIS s.pmen);
   BXRS_HEX_PARAM_FIELD(list, pmcntrl, BX_ACPI_THIS s.pmcntrl);
@@ -231,7 +230,6 @@ void bx_acpi_ctrl_c::after_restore_state(void)
      BX_INFO(("new SM base address: 0x%04x", BX_ACPI_THIS s.sm_base));
   }
 }
-#endif
 
 void bx_acpi_ctrl_c::set_irq_level(bx_bool level)
 {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.175 2007-08-01 17:09:51 vruppert Exp $
+// $Id: siminterface.cc,v 1.176 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -143,19 +143,18 @@ public:
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func);
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []);
   virtual Bit32s save_user_options(FILE *fp);
-#if BX_SUPPORT_SAVE_RESTORE
+
   // save/restore support
   virtual void init_save_restore();
   virtual bx_bool save_state(const char *checkpoint_path);
   virtual bx_bool restore_config();
   virtual bx_bool restore_logopts();
   virtual bx_bool restore_hardware();
-  virtual bx_list_c *get_sr_root() {
-    return (bx_list_c*)get_param("save_restore", NULL);
+  virtual bx_list_c *get_bochs_root() {
+    return (bx_list_c*)get_param("bochs", NULL);
   }
 private:
   void save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
-#endif
 };
 
 // recursive function to find parameters from the path
@@ -838,16 +837,15 @@ Bit32s bx_real_sim_c::save_user_options(FILE *fp)
   return 0;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_real_sim_c::init_save_restore()
 {
   bx_list_c *list;
 
-  if ((list = get_sr_root()) != NULL) {
+  if ((list = get_bochs_root()) != NULL) {
     list->clear();
   } else {
     list = new bx_list_c(root_param,
-      "save_restore",
+      "bochs",
       "subtree for save/restore", 
       30);
   }
@@ -890,7 +888,7 @@ bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
   } else {
     return 0;
   }
-  bx_list_c *sr_list = get_sr_root();
+  bx_list_c *sr_list = get_bochs_root();
   ndev = sr_list->get_size();
   for (dev=0; dev<ndev; dev++) {
     sprintf(sr_file, "%s/%s", checkpoint_path, sr_list->get(dev)->get_name());
@@ -1001,7 +999,7 @@ bx_bool bx_real_sim_c::restore_hardware()
   bx_list_c *base;
   FILE *fp, *fp2;
 
-  bx_list_c *sr_list = get_sr_root();
+  bx_list_c *sr_list = get_bochs_root();
   ndev = sr_list->get_size();
   for (dev=0; dev<ndev; dev++) {
     sprintf(devstate, "%s/%s", get_param_string(BXPN_RESTORE_PATH)->getptr(), sr_list->get(dev)->get_name());
@@ -1181,8 +1179,6 @@ void bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
       BX_ERROR(("save_sr_param(): unknown parameter type"));
   }
 }
-#endif 
-
 
 /////////////////////////////////////////////////////////////////////////
 // define methods of bx_param_* and family
@@ -1317,10 +1313,8 @@ bx_param_num_c::bx_param_num_c(bx_param_c *parent,
   this->initial_val = initial_val;
   this->val.number = initial_val;
   this->handler = NULL;
-#if BX_SUPPORT_SAVE_RESTORE
   this->save_handler = NULL;
   this->restore_handler = NULL;
-#endif
   this->enable_handler = NULL;
   this->base = default_base;
   this->is_shadow = is_shadow;
@@ -1358,14 +1352,12 @@ void bx_param_num_c::set_handler(param_event_handler handler)
   //set (get ());
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_param_num_c::set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore)
 {
   this->sr_devptr = devptr; 
   this->save_handler = save; 
   this->restore_handler = restore; 
 }
-#endif
 
 void bx_param_num_c::set_enable_handler(param_enable_handler handler)
 { 
@@ -1379,11 +1371,9 @@ void bx_param_num_c::set_dependent_list(bx_list_c *l) {
 
 Bit64s bx_param_num_c::get64()
 {
-#if BX_SUPPORT_SAVE_RESTORE
   if (save_handler) {
     return (*save_handler)(sr_devptr, this, val.number);
   }
-#endif
   if (handler) {
     // the handler can decide what value to return and/or do some side effect
     return (*handler)(this, 0, val.number);
@@ -1403,12 +1393,10 @@ void bx_param_num_c::set(Bit64s newval)
     // just set the value.  This code does not check max/min.
     val.number = newval;
   }
-#if BX_SUPPORT_SAVE_RESTORE
   if (restore_handler) {
     val.number = newval;
     (*restore_handler)(sr_devptr, this, newval);
   }
-#endif
   if ((val.number < min || val.number > max) && (Bit64u)max != BX_MAX_BIT64U)
     BX_PANIC(("numerical parameter '%s' was set to " FMT_LL "d, which is out of range " FMT_LL "d to " FMT_LL "d", get_name (), val.number, min, max));
   if (dependent_list != NULL) update_dependents();
@@ -1872,7 +1860,6 @@ void bx_param_string_c::set_initial_val(const char *buf)
   set(initial_val);
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     const char *name,
     Bit8u *ptr_to_data,
@@ -1888,7 +1875,6 @@ bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     this->parent->add(this);
   }
 }
-#endif
 
 bx_list_c::bx_list_c(bx_param_c *parent, int maxsize)
   : bx_param_c(SIM->gen_param_id(), "list", "")

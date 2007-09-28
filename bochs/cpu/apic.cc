@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.96 2007-04-04 16:55:50 sshwarts Exp $
+// $Id: apic.cc,v 1.97 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -940,7 +940,6 @@ void bx_local_apic_c::set_initial_timer_count(Bit32u value)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_local_apic_c::register_state(bx_param_c *parent)
 {
   unsigned i;
@@ -987,6 +986,5 @@ void bx_local_apic_c::register_state(bx_param_c *parent)
   BXRS_HEX_PARAM_SIMPLE(lapic, ticksInitial);
   BXRS_PARAM_BOOL(lapic, INTR, INTR);
 }
-#endif
 
 #endif /* if BX_SUPPORT_APIC */

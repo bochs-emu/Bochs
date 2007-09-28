@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: slowdown_timer.cc,v 1.26 2006-09-16 19:30:56 vruppert Exp $
+// $Id: slowdown_timer.cc,v 1.27 2007-09-28 19:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -89,17 +89,14 @@ void bx_slowdown_timer_c::exit(void)
   s.timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_slowdown_timer_c::after_restore_state(void)
 {
   s.start_emulated_time = bx_pc_system.time_usec();
 }
-#endif
 
 void bx_slowdown_timer_c::timer_handler(void * this_ptr)
 {
   bx_slowdown_timer_c * class_ptr = (bx_slowdown_timer_c *) this_ptr;
-
   class_ptr->handle_timer();
 }
 

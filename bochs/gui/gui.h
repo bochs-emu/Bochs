@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.53 2006-09-17 20:37:28 vruppert Exp $
+// $Id: gui.h,v 1.54 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -148,9 +148,7 @@ protected:
   static void config_handler(void);
   static void toggle_mouse_enable(void);
   static void userbutton_handler(void);
-#if BX_SUPPORT_SAVE_RESTORE
   static void save_restore_handler(void);
-#endif
 
   bx_bool floppyA_status;
   bx_bool floppyB_status;
@@ -166,9 +164,7 @@ protected:
   unsigned config_bmap_id, config_hbar_id;
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
-#if BX_SUPPORT_SAVE_RESTORE
   unsigned save_restore_bmap_id, save_restore_hbar_id;
-#endif
 
   unsigned char vga_charmap[0x2000];
   bx_bool charmap_updated;
@@ -232,13 +228,8 @@ virtual void graphics_tile_update_in_place(unsigned x, unsigned y,          \
 
 #define BX_HEADER_BAR_Y 32
 
-#if BX_SUPPORT_SAVE_RESTORE
 #define BX_MAX_PIXMAPS 17
 #define BX_MAX_HEADERBAR_ENTRIES 12
-#else
-#define BX_MAX_PIXMAPS 16
-#define BX_MAX_HEADERBAR_ENTRIES 11
-#endif
 
 // align pixmaps towards left or right side of header bar
 #define BX_GRAVITY_LEFT 10

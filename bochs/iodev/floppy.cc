@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.107 2007-08-21 14:18:16 vruppert Exp $
+// $Id: floppy.cc,v 1.108 2007-09-28 19:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.107 2007-08-21 14:18:16 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.108 2007-09-28 19:51:59 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -384,14 +384,13 @@ void bx_floppy_ctrl_c::reset(unsigned type)
   enter_idle_phase();
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_floppy_ctrl_c::register_state(void)
 {
   unsigned i;
   char name[8];
   bx_list_c *drive;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "floppy", "Floppy State", 35);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "floppy", "Floppy State", 35);
   new bx_shadow_num_c(list, "data_rate", &BX_FD_THIS s.data_rate);
   bx_list_c *command = new bx_list_c(list, "command", 10);
   for (i=0; i<10; i++) {
@@ -442,7 +441,6 @@ void bx_floppy_ctrl_c::register_state(void)
     new bx_shadow_num_c(drive, "DIR", &BX_FD_THIS s.DIR[i], BASE_HEX);
   }
 }
-#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions

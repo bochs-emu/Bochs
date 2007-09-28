@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.34 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: ioapic.cc,v 1.35 2007-09-28 19:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -62,13 +62,11 @@ void bx_io_redirect_entry_t::sprintf_self(char *buf)
      (unsigned) vector());
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 {
   BXRS_HEX_PARAM_SIMPLE(parent, lo);
   BXRS_HEX_PARAM_SIMPLE(parent, hi);
 }
-#endif
 
 #define BX_IOAPIC_BASE_ADDR (0xfec00000)
 
@@ -251,10 +249,9 @@ void bx_ioapic_c::service_ioapic()
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_ioapic_c::register_state(void)
 {
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ioapic", "IOAPIC State", 4);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ioapic", "IOAPIC State", 4);
   BXRS_HEX_PARAM_SIMPLE(list, ioregsel);
   BXRS_HEX_PARAM_SIMPLE(list, intin);
   BXRS_HEX_PARAM_SIMPLE(list, irr);
@@ -267,6 +264,5 @@ void bx_ioapic_c::register_state(void)
     ioredtbl[i].register_state(entry);
   }
 }
-#endif
 
 #endif /* if BX_SUPPORT_APIC */

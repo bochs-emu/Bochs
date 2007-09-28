@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.93 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: ne2k.cc,v 1.94 2007-09-28 19:52:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -128,13 +128,12 @@ void bx_ne2k_c::reset(unsigned type)
   BX_NE2K_THIS s.ISR.reset = 1;
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_ne2k_c::register_state(void)
 {
   unsigned i;
   char name[6];
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "ne2k", "NE2000 State", 31);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "ne2k", "NE2000 State", 31);
   bx_list_c *CR = new bx_list_c(list, "CR", 5);
   new bx_shadow_bool_c(CR, "stop", &BX_NE2K_THIS s.CR.stop);
   new bx_shadow_bool_c(CR, "start", &BX_NE2K_THIS s.CR.start);
@@ -243,8 +242,6 @@ void bx_ne2k_c::after_restore_state(void)
     }
   }
 }
-#endif
-
 #endif
 
 //
@@ -1404,7 +1401,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.93 2007-04-03 22:38:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.94 2007-09-28 19:52:03 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);

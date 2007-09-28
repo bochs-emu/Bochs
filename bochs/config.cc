@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.121 2007-09-22 16:04:47 sshwarts Exp $
+// $Id: config.cc,v 1.122 2007-09-28 19:51:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -361,7 +361,6 @@ void bx_init_options()
       BX_RUN_START,
       BX_QUICK_START);
 
-#if BX_SUPPORT_SAVE_RESTORE
   new bx_param_bool_c(menu,
       "restore",
       "Restore Bochs session",
@@ -373,7 +372,6 @@ void bx_init_options()
     "Path to data for restore",
     "",
     BX_PATHNAME_LEN);
-#endif
 
   // benchmarking mode, set by command line arg
   new bx_param_num_c(menu,

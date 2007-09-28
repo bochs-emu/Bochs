@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.77 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: serial.cc,v 1.78 2007-09-28 19:52:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -368,14 +368,13 @@ void bx_serial_c::reset(unsigned type)
 {
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_serial_c::register_state(void)
 {
   unsigned i, j;
   char name[6];
   bx_list_c *port;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "serial", "Serial Port State", 9);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "serial", "Serial Port State", 9);
   for (i=0; i<BX_N_SERIAL_PORTS; i++) {
     sprintf(name, "%d", i);
     port = new bx_list_c(list, name, 28);
@@ -465,7 +464,6 @@ void bx_serial_c::register_state(void)
   }
   new bx_shadow_num_c(mousebuf, "head", &BX_SER_THIS mouse_internal_buffer.head);
 }
-#endif
 
 void bx_serial_c::lower_interrupt(Bit8u port)
 {

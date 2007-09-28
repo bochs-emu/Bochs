@@ -1,8 +1,8 @@
-$Id: PARAM_TREE.txt,v 1.12 2006-10-08 10:18:50 vruppert Exp $
+$Id: PARAM_TREE.txt,v 1.13 2007-09-28 19:51:36 sshwarts Exp $
 
-In Bochs 2.3 are the parameters are organized in a tree structure instead of
-a huge flat list. The parameter tree was required for implementing the
-save/restore feature, and it gives access to the device state from within
+Starting from Bochs 2.3 the parameters are organized in a tree structure
+instead of a huge flat list. The parameter tree was required for implementing
+the save/restore feature, and it gives access to the device state from within
 the debugger.
 -Volker
 
@@ -11,6 +11,7 @@ Current organization of parameters in the tree
 general
   config_interface
   start_mode
+  benchmark
   restore
   restore_path
   debug_running
@@ -223,8 +224,8 @@ menu
   memory
   runtime
 
-save_restore
-  (special subtree for save/restore Bochs state)
+bochs
+  (subtree containing Bochs state)
 
 wxdebug
   (special subtree for wxBochs debugger)

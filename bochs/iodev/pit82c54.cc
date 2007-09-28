@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.29 2007-04-03 22:38:49 sshwarts Exp $
+// $Id: pit82c54.cc,v 1.30 2007-09-28 19:52:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
@@ -188,11 +188,8 @@ pit_82C54::pit_82C54(void)
   init();
 }
 
-void pit_82C54::reset(unsigned type)
-{
-}
+void pit_82C54::reset(unsigned type) {}
 
-#if BX_SUPPORT_SAVE_RESTORE
 void pit_82C54::register_state(bx_param_c *parent)
 {
   char name[4];
@@ -224,7 +221,6 @@ void pit_82C54::register_state(bx_param_c *parent)
     new bx_shadow_num_c(tim, "next_change_time", &counter[i].next_change_time);
   }
 }
-#endif
 
 void  BX_CPP_AttrRegparmN(2)
 pit_82C54::decrement_multiple(counter_type &thisctr, Bit32u cycles)

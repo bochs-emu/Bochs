@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.211 2007-09-22 15:59:41 sshwarts Exp $
+// $Id: siminterface.h,v 1.212 2007-09-28 19:51:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -243,9 +243,7 @@ typedef enum {
   BX_TOOLBAR_CDROMD,
   BX_TOOLBAR_RESET,
   BX_TOOLBAR_POWER,
-#if BX_SUPPORT_SAVE_RESTORE
   BX_TOOLBAR_SAVE_RESTORE,
-#endif
   BX_TOOLBAR_COPY,
   BX_TOOLBAR_PASTE,
   BX_TOOLBAR_SNAPSHOT,
@@ -641,9 +639,7 @@ public:
 };
 
 typedef Bit64s (*param_event_handler)(class bx_param_c *, int set, Bit64s val);
-#if BX_SUPPORT_SAVE_RESTORE
 typedef Bit64s (*param_sr_handler)(void *devptr, class bx_param_c *, Bit64s val);
-#endif
 typedef int (*param_enable_handler)(class bx_param_c *, int en);
 
 class BOCHSAPI bx_param_num_c : public bx_param_c {
@@ -665,11 +661,9 @@ protected:
     bx_bool *pbool;  // used by bx_shadow_bool_c
   } val;
   param_event_handler handler;
-#if BX_SUPPORT_SAVE_RESTORE
   void *sr_devptr;
   param_sr_handler save_handler;
   param_sr_handler restore_handler;
-#endif
   param_enable_handler enable_handler;
   int base;
   Bit32u options;
@@ -688,9 +682,7 @@ public:
       bx_bool is_shadow = 0);
   virtual void reset();
   void set_handler(param_event_handler handler);
-#if BX_SUPPORT_SAVE_RESTORE
   void set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore);
-#endif
   void set_enable_handler(param_enable_handler handler);
   virtual bx_list_c *get_dependent_list() { return dependent_list; }
   void set_dependent_list(bx_list_c *l);
@@ -891,7 +883,6 @@ public:
       int maxsize=-1);
 };
 
-#if BX_SUPPORT_SAVE_RESTORE
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {
   Bit32u data_size;
   Bit8u *data_ptr;
@@ -903,7 +894,6 @@ public:
   Bit8u *getptr() {return data_ptr;}
   Bit32u get_size() const {return data_size;}
 };
-#endif
 
 #define BX_DEFAULT_LIST_SIZE 6
 
@@ -1219,15 +1209,13 @@ public:
   virtual bx_bool register_user_option(const char *keyword, user_option_parser_t parser, user_option_save_t save_func) {return 0;}
   virtual Bit32s parse_user_option(int idx, const char *context, int num_params, char *params []) {return -1;}
   virtual Bit32s save_user_options(FILE *fp) {return -1;}
-#if BX_SUPPORT_SAVE_RESTORE
   // save/restore support
   virtual void init_save_restore() {}
   virtual bx_bool save_state(const char *checkpoint_path) {return 0;}
   virtual bx_bool restore_config() {return 0;}
   virtual bx_bool restore_logopts() {return 0;}
   virtual bx_bool restore_hardware() {return 0;}
-  virtual bx_list_c *get_sr_root() {return NULL;}
-#endif 
+  virtual bx_list_c *get_bochs_root() {return NULL;}
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;

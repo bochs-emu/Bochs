@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.66 2007-09-22 15:59:40 sshwarts Exp $
+// $Id: pc_system.cc,v 1.67 2007-09-28 19:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -223,11 +223,10 @@ void bx_pc_system_c::exit(void)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_pc_system_c::register_state(void)
 {
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "pc_system", "PC System State", 8);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pc_system", "PC System State", 8);
   BXRS_PARAM_BOOL(list, enable_a20, enable_a20);
   BXRS_DEC_PARAM_SIMPLE(list, currCountdown);
   BXRS_DEC_PARAM_SIMPLE(list, currCountdownPeriod);
@@ -248,8 +247,6 @@ void bx_pc_system_c::register_state(void)
     BXRS_PARAM_BOOL(bxtimer, continuous, timer[i].continuous);
   }
 }
-#endif
-
 
 // ================================================
 // Bochs internal timer delivery framework features

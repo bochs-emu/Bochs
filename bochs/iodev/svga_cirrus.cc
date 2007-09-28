@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.39 2007-08-05 10:46:23 vruppert Exp $
+// $Id: svga_cirrus.cc,v 1.40 2007-09-28 19:52:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -364,7 +364,6 @@ void bx_svga_cirrus_c::reset(unsigned type)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_svga_cirrus_c::register_state(void)
 {
   unsigned i;
@@ -372,7 +371,7 @@ void bx_svga_cirrus_c::register_state(void)
   bx_list_c *reg;
 
   if (!strcmp(SIM->get_param_string(BXPN_VGA_EXTENSION)->getptr(), "cirrus")) {
-    bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "svga_cirrus", "Cirrus SVGA State", 18);
+    bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "svga_cirrus", "Cirrus SVGA State", 18);
     bx_list_c *crtc = new bx_list_c(list, "crtc", 2);
     new bx_shadow_num_c(crtc, "index", &BX_CIRRUS_THIS crtc.index, BASE_HEX);
     reg = new bx_list_c(crtc, "reg", CIRRUS_CRTC_MAX+1);
@@ -459,7 +458,6 @@ void bx_svga_cirrus_c::after_restore_state(void)
     BX_CIRRUS_THIS svga_update();
   }
 }
-#endif
 
 void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, 
                               unsigned width, unsigned height)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.132 2007-09-20 17:33:31 sshwarts Exp $
+// $Id: init.cc,v 1.133 2007-09-28 19:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -378,7 +378,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 #endif
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
+// save/restore functionality
 void BX_CPU_C::register_state(void)
 {
   unsigned i;
@@ -386,63 +386,63 @@ void BX_CPU_C::register_state(void)
 
   sprintf(cpu_name, "%d", BX_CPU_ID);
   sprintf(cpu_title, "CPU %d", BX_CPU_ID);
-  bx_list_c *list = new bx_list_c(SIM->get_param("save_restore.cpu"), 
+  bx_list_c *cpu = new bx_list_c(SIM->get_param("bochs.cpu"), 
            cpu_name, cpu_title, 60);
 
-  BXRS_PARAM_SPECIAL32(list, cpu_version, param_save_handler, param_restore_handler);
-  BXRS_PARAM_SPECIAL32(list, cpuid_std,   param_save_handler, param_restore_handler);
-  BXRS_PARAM_SPECIAL32(list, cpuid_ext,   param_save_handler, param_restore_handler);
-  BXRS_DEC_PARAM_SIMPLE(list, cpu_mode);
-  BXRS_HEX_PARAM_SIMPLE(list, inhibit_mask);
+  BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
+  BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
+  BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
+  BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
 #if BX_SUPPORT_X86_64
-  BXRS_HEX_PARAM_SIMPLE(list, RAX);
-  BXRS_HEX_PARAM_SIMPLE(list, RBX);
-  BXRS_HEX_PARAM_SIMPLE(list, RCX);
-  BXRS_HEX_PARAM_SIMPLE(list, RDX);
-  BXRS_HEX_PARAM_SIMPLE(list, RSP);
-  BXRS_HEX_PARAM_SIMPLE(list, RBP);
-  BXRS_HEX_PARAM_SIMPLE(list, RSI);
-  BXRS_HEX_PARAM_SIMPLE(list, RDI);
-  BXRS_HEX_PARAM_SIMPLE(list, R8);
-  BXRS_HEX_PARAM_SIMPLE(list, R9);
-  BXRS_HEX_PARAM_SIMPLE(list, R10);
-  BXRS_HEX_PARAM_SIMPLE(list, R11);
-  BXRS_HEX_PARAM_SIMPLE(list, R12);
-  BXRS_HEX_PARAM_SIMPLE(list, R13);
-  BXRS_HEX_PARAM_SIMPLE(list, R14);
-  BXRS_HEX_PARAM_SIMPLE(list, R15);
-  BXRS_HEX_PARAM_SIMPLE(list, RIP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RBX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RCX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RDX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RSP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RBP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RSI);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RDI);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R8);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R9);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R10);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R11);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R12);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R13);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R14);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R15);
+  BXRS_HEX_PARAM_SIMPLE(cpu, RIP);
 #else
-  BXRS_HEX_PARAM_SIMPLE(list, EAX);
-  BXRS_HEX_PARAM_SIMPLE(list, EBX);
-  BXRS_HEX_PARAM_SIMPLE(list, ECX);
-  BXRS_HEX_PARAM_SIMPLE(list, EDX);
-  BXRS_HEX_PARAM_SIMPLE(list, ESP);
-  BXRS_HEX_PARAM_SIMPLE(list, EBP);
-  BXRS_HEX_PARAM_SIMPLE(list, ESI);
-  BXRS_HEX_PARAM_SIMPLE(list, EDI);
-  BXRS_HEX_PARAM_SIMPLE(list, EIP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EAX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EBX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, ECX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EDX);
+  BXRS_HEX_PARAM_SIMPLE(cpu, ESP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EBP);
+  BXRS_HEX_PARAM_SIMPLE(cpu, ESI);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EDI);
+  BXRS_HEX_PARAM_SIMPLE(cpu, EIP);
 #endif
-  BXRS_PARAM_SPECIAL32(list, EFLAGS, 
+  BXRS_PARAM_SPECIAL32(cpu, EFLAGS, 
          param_save_handler, param_restore_handler);
 #if BX_CPU_LEVEL >= 3
-  BXRS_HEX_PARAM_FIELD(list, DR0, dr0);
-  BXRS_HEX_PARAM_FIELD(list, DR1, dr1);
-  BXRS_HEX_PARAM_FIELD(list, DR2, dr2);
-  BXRS_HEX_PARAM_FIELD(list, DR3, dr3);
-  BXRS_HEX_PARAM_FIELD(list, DR6, dr6);
-  BXRS_HEX_PARAM_FIELD(list, DR7, dr7);
+  BXRS_HEX_PARAM_FIELD(cpu, DR0, dr0);
+  BXRS_HEX_PARAM_FIELD(cpu, DR1, dr1);
+  BXRS_HEX_PARAM_FIELD(cpu, DR2, dr2);
+  BXRS_HEX_PARAM_FIELD(cpu, DR3, dr3);
+  BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6);
+  BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7);
 #endif
-  BXRS_HEX_PARAM_FIELD(list, CR0, cr0.val32);
-  BXRS_HEX_PARAM_FIELD(list, CR2, cr2);
-  BXRS_HEX_PARAM_FIELD(list, CR3, cr3);
+  BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
+  BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
 #if BX_CPU_LEVEL >= 4
-  BXRS_HEX_PARAM_FIELD(list, CR4, cr4.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
 #endif
 
   for(i=0; i<6; i++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[i];
-    bx_list_c *sreg = new bx_list_c(list, strseg(segment), 9);
+    bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 9);
     BXRS_PARAM_SPECIAL16(sreg, selector, 
            param_save_handler, param_restore_handler);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
@@ -459,13 +459,13 @@ void BX_CPU_C::register_state(void)
   }
 
 #if BX_CPU_LEVEL >= 2
-  BXRS_HEX_PARAM_FIELD(list, GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
-  BXRS_HEX_PARAM_FIELD(list, GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
-  BXRS_HEX_PARAM_FIELD(list, IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
-  BXRS_HEX_PARAM_FIELD(list, IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
 #endif
 
-  bx_list_c *LDTR = new bx_list_c (list, "LDTR", 7);
+  bx_list_c *LDTR = new bx_list_c (cpu, "LDTR", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
@@ -474,7 +474,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
 
-  bx_list_c *TR = new bx_list_c (list, "TR", 7);
+  bx_list_c *TR = new bx_list_c (cpu, "TR", 7);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
@@ -483,10 +483,10 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(TR, granularity, tr.cache.u.system.g);
   BXRS_PARAM_BOOL(TR, avl, tr.cache.u.system.avl);
 
-  BXRS_HEX_PARAM_SIMPLE(list, smbase);
+  BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
 #if BX_CPU_LEVEL >= 5
-  bx_list_c *MSR = new bx_list_c(list, "MSR", 45);
+  bx_list_c *MSR = new bx_list_c(cpu, "MSR", 45);
 
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
@@ -543,7 +543,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
-  bx_list_c *fpu = new bx_list_c(list, "FPU", 17);
+  bx_list_c *fpu = new bx_list_c(cpu, "FPU", 17);
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
   BXRS_HEX_PARAM_FIELD(fpu, swd, the_i387.swd);
   BXRS_HEX_PARAM_FIELD(fpu, twd, the_i387.twd);
@@ -562,7 +562,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_SSE
-  bx_list_c *sse = new bx_list_c(list, "SSE", 2*BX_XMM_REGISTERS+1);
+  bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);
@@ -573,17 +573,17 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_APIC
-  local_apic.register_state(list);
+  local_apic.register_state(cpu);
 #endif
 
-  BXRS_PARAM_BOOL(list, EXT, EXT);
-  BXRS_PARAM_BOOL(list, async_event, async_event);
-  BXRS_PARAM_BOOL(list, INTR, INTR);
-  BXRS_PARAM_BOOL(list, smi_pending, smi_pending);
-  BXRS_PARAM_BOOL(list, nmi_pending, nmi_pending);
-  BXRS_PARAM_BOOL(list, in_smm, in_smm);
-  BXRS_PARAM_BOOL(list, nmi_disable, nmi_disable);
-  BXRS_PARAM_BOOL(list, trace, trace);
+  BXRS_PARAM_BOOL(cpu, EXT, EXT);
+  BXRS_PARAM_BOOL(cpu, async_event, async_event);
+  BXRS_PARAM_BOOL(cpu, INTR, INTR);
+  BXRS_PARAM_BOOL(cpu, smi_pending, smi_pending);
+  BXRS_PARAM_BOOL(cpu, nmi_pending, nmi_pending);
+  BXRS_PARAM_BOOL(cpu, in_smm, in_smm);
+  BXRS_PARAM_BOOL(cpu, nmi_disable, nmi_disable);
+  BXRS_PARAM_BOOL(cpu, trace, trace);
 }
 
 Bit64s BX_CPU_C::param_save_handler(void *devptr, bx_param_c *param, Bit64s val)
@@ -734,7 +734,7 @@ void BX_CPU_C::after_restore_state(void)
   invalidate_prefetch_q();
   debug(RIP);
 }
-#endif
+// end of save/restore functionality
 
 BX_CPU_C::~BX_CPU_C()
 {

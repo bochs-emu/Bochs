@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.40 2007-09-22 15:59:40 sshwarts Exp $
+// $Id: pc_system.h,v 1.41 2007-09-28 19:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -176,9 +176,7 @@ public:
   bx_bool get_enable_a20(void);
   void    MemoryMappingChanged(void); // flush TLB in all CPUs
   void    exit(void);
-#if BX_SUPPORT_SAVE_RESTORE
   void    register_state(void);
-#endif
 };
 
 #endif

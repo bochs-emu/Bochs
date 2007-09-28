@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/development/development.dbk
-$Id: development.dbk,v 1.25 2006-11-01 17:06:03 vruppert Exp $
+$Id: development.dbk,v 1.26 2007-09-28 19:51:44 sshwarts Exp $
 
 This is the top level file for the Bochs Developers Manual.
 ================================================================
@@ -498,7 +498,7 @@ In the config interface it is used for menus/dialogs.</entry>
 <section id="save-restore"><title>The save/restore feature</title>
 <para>
 The save/restore feature is based on an extension to the parameter tree concept.
-A subtree (list) called "save_restore" appears in the root of the parameter tree
+A subtree (list) called "bochs" appears in the root of the parameter tree
 and some new "shadow" parameter types store pointers to values instead of the values
 itself. All the hardware objects have register_state() methods to register pointers
 to the device registers and switches that need to be saved. The simulator interface

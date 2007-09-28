@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cmos.h,v 1.18 2006-09-16 14:47:40 vruppert Exp $
+// $Id: cmos.h,v 1.19 2007-09-28 19:51:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -45,10 +45,8 @@ public:
   virtual void checksum_cmos(void);
   virtual void reset(unsigned type);
   virtual void save_image(void);
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void);
   virtual void after_restore_state(void);
-#endif
 
   virtual Bit32u get_reg(unsigned reg) {
     return s.reg[reg];

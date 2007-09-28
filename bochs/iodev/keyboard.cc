@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.cc,v 1.130 2007-04-03 22:38:48 sshwarts Exp $
+// $Id: keyboard.cc,v 1.131 2007-09-28 19:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -126,7 +126,7 @@ void bx_keyb_c::resetinternals(bx_bool powerup)
 
 void bx_keyb_c::init(void)
 {
-  BX_DEBUG(("Init $Id: keyboard.cc,v 1.130 2007-04-03 22:38:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: keyboard.cc,v 1.131 2007-09-28 19:52:02 sshwarts Exp $"));
   Bit32u   i;
 
   DEV_register_irq(1, "8042 Keyboard controller");
@@ -274,14 +274,13 @@ void bx_keyb_c::reset(unsigned type)
   }
 }
 
-#if BX_SUPPORT_SAVE_RESTORE
 void bx_keyb_c::register_state(void)
 {
   int i;
   char name[4];
   bx_list_c *buffer;
 
-  bx_list_c *list = new bx_list_c(SIM->get_sr_root(), "keyboard", "Keyboard State", 7);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "keyboard", "Keyboard State", 7);
   bx_list_c *ctrl = new bx_list_c(list, "controller", 23);
   BXRS_PARAM_BOOL(ctrl, tim, BX_KEY_THIS s.kbd_controller.tim);
   BXRS_PARAM_BOOL(ctrl, auxb, BX_KEY_THIS s.kbd_controller.auxb);
@@ -359,7 +358,6 @@ void bx_keyb_c::after_restore_state(void)
     bx_gui->statusbar_setitem(BX_KEY_THIS statusbar_id[2], value & 0x01);
   }
 }
-#endif
 
 Bit64s bx_keyb_c::kbd_param_handler(bx_param_c *param, int set, Bit64s val)
 {

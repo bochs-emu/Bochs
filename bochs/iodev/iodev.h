@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.88 2007-08-04 08:57:42 vruppert Exp $
+// $Id: iodev.h,v 1.89 2007-09-28 19:52:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -84,10 +84,8 @@ class BOCHSAPI bx_devmodel_c : public logfunctions {
   virtual void init_mem(BX_MEM_C *) {}
   virtual void init(void) {}
   virtual void reset(unsigned type) {}
-#if BX_SUPPORT_SAVE_RESTORE
   virtual void register_state(void) {}
   virtual void after_restore_state(void) {}
-#endif
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -108,9 +106,7 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len) {}
 
-#if BX_SUPPORT_SAVE_RESTORE
   void register_pci_state(bx_list_c *list, Bit8u *pci_conf);
-#endif
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -399,10 +395,8 @@ public:
   void reset(unsigned type);
   // Cleanup the devices when the simulation quits.
   void exit(void);
-#if BX_SUPPORT_SAVE_RESTORE
   void register_state(void);
   void after_restore_state(void);
-#endif
   BX_MEM_C *mem;  // address space associated with these devices
   bx_bool register_io_read_handler(void *this_ptr, bx_read_handler_t f,
                                    Bit32u addr, const char *name, Bit8u mask);
