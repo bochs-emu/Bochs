@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.344 2007-09-28 19:51:42 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.345 2007-09-28 20:26:33 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2780,41 +2780,11 @@ fi
 
 dnl // DEPRECATED configure options - force users to remove them
 
-AC_MSG_CHECKING(for specified CMOS start time (deprecated))
-AC_ARG_ENABLE(time0,
-  [  --enable-time0=n                  start at n (deprecated)],
+AC_MSG_CHECKING(for save/restore (deprecated))
+AC_ARG_ENABLE(save-restore,
+  [  --enable-save-restore             enables save/restore (deprecated)],
   [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - use runtime option 'clock' instead])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for configuration interface (deprecated))
-AC_ARG_ENABLE(config-interface,
-  [  --enable-config-interface         turns on/off configuration interface (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - configuration interface is always enabled])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for control panel (deprecated))
-AC_ARG_ENABLE(control-panel,
-  [  --enable-control-panel            turns on/off contol panel (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - configuration interface is always enabled])
-  ],
-  [
-   AC_MSG_RESULT(no)
-  ])
-
-AC_MSG_CHECKING(for VGA emulation (deprecated))
-AC_ARG_ENABLE(vga,
-  [  --enable-vga                      use VGA emulation (deprecated)],
-  [AC_MSG_RESULT($enableval)
-   AC_MSG_ERROR([DEPRECATED - standard VGA emulation is always enabled])
+   AC_MSG_ERROR([DEPRECATED - save/restore feature is always enabled])
   ],
   [
    AC_MSG_RESULT(no)
