@@ -35,7 +35,6 @@
   --enable-instrumentation=instrument/example1 \
   --enable-iodebug \
   --enable-show-ips \
-  --enable-save_restore \
   --enable-clgd54xx \
   --enable-usb \
   --with-all-libs
