@@ -13,7 +13,6 @@ set echo
             --enable-acpi \
             --enable-clgd54xx \
             --enable-usb \
-            --enable-save-restore \
             --disable-readline \
             --without-x \
             --enable-cpp \
