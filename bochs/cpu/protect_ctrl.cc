@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.59 2007-09-25 16:11:32 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.60 2007-09-30 18:47:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,46 +34,35 @@ void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16;
 
-  if (protected_mode()) {
-    /* op1_16 is a register or memory reference */
-    if (i->modC0()) {
-      op1_16 = BX_READ_16BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    }
+  if (real_mode() || v8086_mode()) {
+    BX_ERROR(("ARPL: not recognized in real or virtual-8086 mode"));
+    UndefinedOpcode(i);
+  }
 
-    op2_16 = BX_READ_16BIT_REG(i->nnn());
-
-    if ((op1_16 & 0x03) < (op2_16 & 0x03)) {
-      op1_16 = (op1_16 & 0xfffc) | (op2_16 & 0x03);
-      /* now write back to destination */
-      if (i->modC0()) {
-        if (i->os32L()) {
-          // if 32bit opsize, then 0xff3f is or'd into
-          // upper 16bits of register
-          Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
-          op1_32 = (op1_32 & 0xffff0000) | op1_16;
-          op1_32 |= 0xff3f0000;
-          BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-        }
-        else {
-          BX_WRITE_16BIT_REG(i->rm(), op1_16);
-        }
-      }
-      else {
-        write_RMW_virtual_word(op1_16);
-      }
-      set_ZF(1);
-    }
-    else {
-      set_ZF(0);
-    }
+  /* op1_16 is a register or memory reference */
+  if (i->modC0()) {
+    op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
-    UndefinedOpcode(i);
+    /* pointer, segment address pair */
+    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  }
+
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+
+  if ((op1_16 & 0x03) < (op2_16 & 0x03)) {
+    op1_16 = (op1_16 & 0xfffc) | (op2_16 & 0x03);
+    /* now write back to destination */
+    if (i->modC0()) {
+      BX_WRITE_16BIT_REG(i->rm(), op1_16);
+    }
+    else {
+      write_RMW_virtual_word(op1_16);
+    }
+    set_ZF(1);
+  }
+  else {
+    set_ZF(0);
   }
 }
 
