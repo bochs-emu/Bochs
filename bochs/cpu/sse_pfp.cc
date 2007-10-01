@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.34 2007-09-27 16:23:29 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.35 2007-10-01 19:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -2972,6 +2972,7 @@ void BX_CPU_C::ADDSUBPS_VpsWps(bxInstruction_c *i)
 #endif
 }
 
+// for 3-byte opcodes
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
 
 /* 66 0F 3A 08 */

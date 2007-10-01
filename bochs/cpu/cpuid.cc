@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.48 2007-09-27 16:11:32 sshwarts Exp $
+// $Id: cpuid.cc,v 1.49 2007-10-01 19:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
   features |= (1<<19);  // support SSE4
 #endif
 
-#if BX_SUPPORT_POPCNT
+#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<23);  // support POPCNT instruction
 #endif  
   

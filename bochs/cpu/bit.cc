@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.32 2007-09-19 19:38:08 sshwarts Exp $
+// $Id: bit.cc,v 1.33 2007-10-01 19:59:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1276,9 +1276,10 @@ void BX_CPU_C::BTR_EqIb(bxInstruction_c *i)
 }
 #endif
 
+/* 0F B8 */
 void BX_CPU_C::POPCNT_GwEw(bxInstruction_c *i)
 {
-#if BX_SUPPORT_POPCNT
+#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit16u op1_16, op2_16;
 
   /* op2_16 is a register or memory reference */
@@ -1296,8 +1297,8 @@ void BX_CPU_C::POPCNT_GwEw(bxInstruction_c *i)
     op2_16 >>= 1;
   }
 
-  Bit32u flags32 = op1_16 ? 0 : EFlagsZFMask;
-  setEFlagsOSZAPC(flags32);
+  Bit32u flags = op1_16 ? 0 : EFlagsZFMask;
+  setEFlagsOSZAPC(flags);
 
   /* now write result back to destination */
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
@@ -1307,9 +1308,10 @@ void BX_CPU_C::POPCNT_GwEw(bxInstruction_c *i)
 #endif
 }
 
+/* 0F B8 */
 void BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
 {
-#if BX_SUPPORT_POPCNT
+#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit32u op1_32, op2_32;
 
   /* op2_16 is a register or memory reference */
@@ -1327,8 +1329,8 @@ void BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
     op2_32 >>= 1;
   }
 
-  Bit32u flags32 = op1_32 ? 0 : EFlagsZFMask;
-  setEFlagsOSZAPC(flags32);
+  Bit32u flags = op1_32 ? 0 : EFlagsZFMask;
+  setEFlagsOSZAPC(flags);
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -1339,9 +1341,10 @@ void BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
 }
 
 #if BX_SUPPORT_X86_64
+/* 0F B8 */
 void BX_CPU_C::POPCNT_GqEq(bxInstruction_c *i)
 {
-#if BX_SUPPORT_POPCNT
+#if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   Bit64u op1_64, op2_64;
 
   /* op2_16 is a register or memory reference */
@@ -1359,8 +1362,8 @@ void BX_CPU_C::POPCNT_GqEq(bxInstruction_c *i)
     op2_64 >>= 1;
   }
 
-  Bit32u flags32 = op1_64 ? 0 : EFlagsZFMask;
-  setEFlagsOSZAPC(flags32);
+  Bit32u flags = op1_64 ? 0 : EFlagsZFMask;
+  setEFlagsOSZAPC(flags);
 
   /* now write result back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
@@ -1369,6 +1372,158 @@ void BX_CPU_C::POPCNT_GqEq(bxInstruction_c *i)
   UndefinedOpcode(i);
 #endif
 }
-#endif
+#endif // BX_SUPPORT_X86_64
 
-#endif /* BX_CPU_LEVEL >= 3 */
+// 3-byte opcodes
+#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+#define CRC32_POLYNOMIAL BX_CONST64(0x11edc6f41)
+
+#if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+// primitives for CRC32 usage
+static Bit8u BitReflect8(Bit8u val8)
+{
+   return ((val8 & 0x80) >> 7) |
+          ((val8 & 0x40) >> 5) |
+          ((val8 & 0x20) >> 3) |
+          ((val8 & 0x10) >> 1) |
+          ((val8 & 0x08) << 1) |
+          ((val8 & 0x04) << 3) |
+          ((val8 & 0x02) << 5) |
+          ((val8 & 0x01) << 7);
+}
+
+BX_CPP_INLINE Bit16u BitReflect16(Bit16u val16)
+{
+   return ((Bit16u)(BitReflect8(val16 & 0xff)) << 8) | BitReflect8(val16 >> 8);
+}
+
+BX_CPP_INLINE Bit32u BitReflect32(Bit32u val32)
+{
+   return ((Bit32u)(BitReflect16(val32 & 0xffff)) << 16) | BitReflect16(val32 >> 16);
+}
+
+static Bit32u mod2_64bit(Bit64u divisor, Bit64u dividend)
+{
+    Bit64u remainder = dividend >> 32;
+
+    for (int bitpos=31; bitpos>=0; bitpos--)
+    {
+	// copy one more bit from the dividend
+	remainder = (remainder << 1) | ((dividend >> bitpos) & 1);
+
+	// if MSB is set, then XOR divisor and get new remainder
+	if (((remainder >> 32) & 1) == 1)
+	{
+	    remainder ^= divisor;
+	}
+    }
+
+    return remainder;
+}
+#endif // (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+void BX_CPU_C::CRC32_GdEb(bxInstruction_c *i)
+{
+#if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+  Bit8u  op1;
+
+  if (i->modC0()) {
+    op1 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+  }
+  else {
+    read_virtual_byte(i->seg(), RMAddr(i), &op1);
+  }
+
+  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  op2 = BitReflect32(op2);
+
+  Bit64u tmp1 = ((Bit64u) BitReflect8 (op1)) << 32;
+  Bit64u tmp2 = ((Bit64u) op2) <<  8;
+  Bit64u tmp3 = tmp1 ^ tmp2;
+  op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
+
+  /* now write result back to destination */
+  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+#else
+  BX_INFO(("CRC32_GdEb: required SSE4_2 support, required SSE4.2, use --enable-sse and --enable-sse-extension options"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
+{
+#if (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+  Bit32u op2 = BX_READ_32BIT_REG(i->nnn());
+  op2 = BitReflect32(op2);
+
+#if BX_SUPPORT_X86_64
+  if (i->os64L())   /* 64 bit operand size */
+  {
+    Bit64u op1;
+
+    if (i->modC0()) {
+      op1 = BX_READ_64BIT_REG(i->rm());
+    }
+    else {
+      read_virtual_qword(i->seg(), RMAddr(i), &op1);
+    }
+
+    Bit64u tmp1 = ((Bit64u) BitReflect32(op1 & 0xffffffff)) << 32;
+    Bit64u tmp2 = ((Bit64u) op2) << 32;
+    Bit64u tmp3 = tmp1 ^ tmp2;
+    op2  = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
+    tmp1 = ((Bit64u) BitReflect32(op1 >> 32)) << 32;
+    tmp2 = ((Bit64u) op2) << 32;
+    tmp3 = tmp1 ^ tmp2;
+    op2  = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
+  }
+  else
+#endif
+  {
+    if (i->os32L()) /* 32 bit operand size */
+    {
+      Bit32u op1;
+
+      if (i->modC0()) {
+        op1 = BX_READ_32BIT_REG(i->rm());
+      }
+      else {
+        read_virtual_dword(i->seg(), RMAddr(i), &op1);
+      }
+
+      Bit64u tmp1 = ((Bit64u) BitReflect32(op1)) << 32;
+      Bit64u tmp2 = ((Bit64u) op2) << 32;
+      Bit64u tmp3 = tmp1 ^ tmp2;
+      op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
+    }
+    else {          /* 16 bit operand size */
+      Bit16u op1;
+
+      if (i->modC0()) {
+        op1 = BX_READ_16BIT_REG(i->rm());
+      }
+      else {
+        read_virtual_word(i->seg(), RMAddr(i), &op1);
+      }
+
+      Bit64u tmp1 = ((Bit64u) BitReflect16(op1)) << 32;
+      Bit64u tmp2 = ((Bit64u) op2) << 16;
+      Bit64u tmp3 = tmp1 ^ tmp2;
+      op2 = mod2_64bit(CRC32_POLYNOMIAL, tmp3);
+    }
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
+  
+#else
+  BX_INFO(("CRC32_GdEv: required SSE4_2 support, required SSE4.2, use --enable-sse and --enable-sse-extension options"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif // (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
+
+#endif // (BX_CPU_LEVEL >= 3)

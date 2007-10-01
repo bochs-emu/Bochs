@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.60 2007-09-30 18:47:41 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.61 2007-10-01 19:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,7 +77,6 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   if (real_mode() || v8086_mode()) {
     BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
     UndefinedOpcode(i);
-    return;
   }
 
   if (i->modC0()) {

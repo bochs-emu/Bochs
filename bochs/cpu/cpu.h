@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.328 2007-09-28 19:51:44 sshwarts Exp $
+// $Id: cpu.h,v 1.329 2007-10-01 19:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1971,7 +1971,7 @@ public: // for now...
   BX_SMF void MAXPS_VpsWps(bxInstruction_c *i);
   BX_SMF void MAXSS_VssWss(bxInstruction_c *i);
   BX_SMF void PSHUFW_PqQqIb(bxInstruction_c *i);
-  BX_SMF void PSHUFLW_VqWqIb(bxInstruction_c *i);
+  BX_SMF void PSHUFLW_VdqWdqIb(bxInstruction_c *i);
   BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void CMPSS_VssWssIb(bxInstruction_c *i);
   BX_SMF void PINSRW_PqEwIb(bxInstruction_c *i);
@@ -2023,23 +2023,23 @@ public: // for now...
   BX_SMF void DIVSD_VsdWsd(bxInstruction_c *i);
   BX_SMF void MAXPD_VpdWpd(bxInstruction_c *i);
   BX_SMF void MAXSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void PUNPCKLBW_VdqWq(bxInstruction_c *i);
-  BX_SMF void PUNPCKLWD_VdqWq(bxInstruction_c *i);
-  BX_SMF void UNPCKLPS_VpsWq(bxInstruction_c *i);
-  BX_SMF void PACKSSWB_VdqWq(bxInstruction_c *i);
-  BX_SMF void PCMPGTB_VdqWq(bxInstruction_c *i);
-  BX_SMF void PCMPGTW_VdqWq(bxInstruction_c *i);
+  BX_SMF void PUNPCKLBW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PUNPCKLWD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void UNPCKLPS_VpsWdq(bxInstruction_c *i);
+  BX_SMF void PACKSSWB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PCMPGTB_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PCMPGTW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PCMPGTD_VdqWdq(bxInstruction_c *i);
   BX_SMF void PACKUSWB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHBW_VdqWq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHWD_VdqWq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPS_VpsWq(bxInstruction_c *i);
+  BX_SMF void PUNPCKHBW_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PUNPCKHWD_VdqWdq(bxInstruction_c *i);
+  BX_SMF void UNPCKHPS_VpsWdq(bxInstruction_c *i);
   BX_SMF void PACKSSDW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKLQDQ_VdqWq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHQDQ_VdqWq(bxInstruction_c *i);
+  BX_SMF void PUNPCKLQDQ_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PUNPCKHQDQ_VdqWdq(bxInstruction_c *i);
   BX_SMF void MOVD_VdqEd(bxInstruction_c *i);
   BX_SMF void PSHUFD_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PSHUFHW_VqWqIb(bxInstruction_c *i);
+  BX_SMF void PSHUFHW_VdqWdqIb(bxInstruction_c *i);
   BX_SMF void PCMPEQB_VdqWdq(bxInstruction_c *i);
   BX_SMF void PCMPEQW_VdqWdq(bxInstruction_c *i);
   BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *i);
@@ -2127,6 +2127,7 @@ public: // for now...
   BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
   /* SSE3 */
 
+  // 3-byte opcodes
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* SSE3E */
   BX_SMF void PSHUFB_PqQq(bxInstruction_c *i);
@@ -2163,9 +2164,7 @@ public: // for now...
   BX_SMF void PABSD_VdqWdq(bxInstruction_c *i);
   BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *i);
   /* SSE3E */
-#endif
 
-#if BX_SUPPORT_SSE >= 4
   /* SSE4.1 */
   BX_SMF void PBLENDVB_VdqWdq(bxInstruction_c *i);
   BX_SMF void BLENDVPS_VpsWps(bxInstruction_c *i);
@@ -2214,6 +2213,16 @@ public: // for now...
   BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *i);
   /* SSE4.1 */
+
+  /* SSE4.2 */
+  BX_SMF void CRC32_GdEb(bxInstruction_c *i);
+  BX_SMF void CRC32_GdEv(bxInstruction_c *i);
+  BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *i);
+  BX_SMF void PCMPESTRM_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void PCMPESTRI_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *i);
+  /* SSE4.2 */
 #endif
 
   /*** Duplicate SSE instructions ***/
@@ -2229,8 +2238,8 @@ public: // for now...
   BX_SMF void MOVDQU_WdqVdq(bxInstruction_c *);
   BX_SMF void MOVDQA_VdqWdq(bxInstruction_c *);
   BX_SMF void MOVDQA_WdqVdq(bxInstruction_c *);
-  BX_SMF void PUNPCKHDQ_VdqWq(bxInstruction_c *);
-  BX_SMF void PUNPCKLDQ_VdqWq(bxInstruction_c *);
+  BX_SMF void PUNPCKHDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKLDQ_VdqWdq(bxInstruction_c *);
   BX_SMF void ANDPD_VpdWpd(bxInstruction_c *);
   BX_SMF void ANDNPD_VpdWpd(bxInstruction_c *);
   BX_SMF void ORPD_VpdWpd(bxInstruction_c *);
@@ -2239,8 +2248,8 @@ public: // for now...
   BX_SMF void PANDN_VdqWdq(bxInstruction_c *);
   BX_SMF void POR_VdqWdq(bxInstruction_c *);
   BX_SMF void PXOR_VdqWdq(bxInstruction_c *);
-  BX_SMF void UNPCKHPD_VpdWq(bxInstruction_c *);
-  BX_SMF void UNPCKLPD_VpdWq(bxInstruction_c *);
+  BX_SMF void UNPCKHPD_VpdWdq(bxInstruction_c *);
+  BX_SMF void UNPCKLPD_VpdWdq(bxInstruction_c *);
   BX_SMF void MOVLPD_VsdMq(bxInstruction_c *);
   BX_SMF void MOVLPD_MqVsd(bxInstruction_c *);
   BX_SMF void MOVHPD_VsdMq(bxInstruction_c *);
@@ -2262,40 +2271,40 @@ public: // for now...
   #define SSE4_ALIAS(i) BxError
 #endif
 
-#define MOVUPD_VpdWpd   /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
-#define MOVUPD_WpdVpd   /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
-#define MOVAPD_VpdWpd   /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
-#define MOVAPD_WpdVpd   /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
-#define MOVDQU_VdqWdq   /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps)  /*  0f 10 */
-#define MOVDQU_WdqVdq   /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps)  /*  0f 11 */
-#define MOVDQA_VdqWdq   /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps)  /*  0f 28 */
-#define MOVDQA_WdqVdq   /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps)  /*  0f 29 */
+#define MOVUPD_VpdWpd    /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)   /*  0f 10 */
+#define MOVUPD_WpdVpd    /* 66 0f 11 */ SSE2_ALIAS(MOVUPS_WpsVps)   /*  0f 11 */
+#define MOVAPD_VpdWpd    /* 66 0f 28 */ SSE2_ALIAS(MOVAPS_VpsWps)   /*  0f 28 */
+#define MOVAPD_WpdVpd    /* 66 0f 29 */ SSE2_ALIAS(MOVAPS_WpsVps)   /*  0f 29 */
+#define MOVDQU_VdqWdq    /* f3 0f 6f */ SSE2_ALIAS(MOVUPS_VpsWps)   /*  0f 10 */
+#define MOVDQU_WdqVdq    /* f3 0f 7f */ SSE2_ALIAS(MOVUPS_WpsVps)   /*  0f 11 */
+#define MOVDQA_VdqWdq    /* 66 0f 6f */ SSE2_ALIAS(MOVAPS_VpsWps)   /*  0f 28 */
+#define MOVDQA_WdqVdq    /* 66 0f 7f */ SSE2_ALIAS(MOVAPS_WpsVps)   /*  0f 29 */
 
-#define PUNPCKLDQ_VdqWq /* 66 0f 62 */ SSE2_ALIAS(UNPCKLPS_VpsWq) /*  0f 14 */
-#define PUNPCKHDQ_VdqWq /* 66 0f 6a */ SSE2_ALIAS(UNPCKHPS_VpsWq) /*  0f 15 */
+#define PUNPCKLDQ_VdqWdq /* 66 0f 62 */ SSE2_ALIAS(UNPCKLPS_VpsWdq) /*  0f 14 */
+#define PUNPCKHDQ_VdqWdq /* 66 0f 6a */ SSE2_ALIAS(UNPCKHPS_VpsWdq) /*  0f 15 */
 
-#define PAND_VdqWdq     /* 66 0f db */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
-#define PANDN_VdqWdq    /* 66 0f df */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
-#define POR_VdqWdq      /* 66 0f eb */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
-#define PXOR_VdqWdq     /* 66 0f ef */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
+#define PAND_VdqWdq      /* 66 0f db */ SSE2_ALIAS(ANDPS_VpsWps)    /*  0f 54 */
+#define PANDN_VdqWdq     /* 66 0f df */ SSE2_ALIAS(ANDNPS_VpsWps)   /*  0f 55 */
+#define POR_VdqWdq       /* 66 0f eb */ SSE2_ALIAS(ORPS_VpsWps)     /*  0f 56 */
+#define PXOR_VdqWdq      /* 66 0f ef */ SSE2_ALIAS(XORPS_VpsWps)    /*  0f 57 */
 
-#define ANDPD_VpdWpd    /* 66 0f 54 */ SSE2_ALIAS(ANDPS_VpsWps)   /*  0f 54 */
-#define ANDNPD_VpdWpd   /* 66 0f 55 */ SSE2_ALIAS(ANDNPS_VpsWps)  /*  0f 55 */
-#define ORPD_VpdWpd     /* 66 0f 56 */ SSE2_ALIAS(ORPS_VpsWps)    /*  0f 56 */
-#define XORPD_VpdWpd    /* 66 0f 57 */ SSE2_ALIAS(XORPS_VpsWps)   /*  0f 57 */
+#define ANDPD_VpdWpd     /* 66 0f 54 */ SSE2_ALIAS(ANDPS_VpsWps)    /*  0f 54 */
+#define ANDNPD_VpdWpd    /* 66 0f 55 */ SSE2_ALIAS(ANDNPS_VpsWps)   /*  0f 55 */
+#define ORPD_VpdWpd      /* 66 0f 56 */ SSE2_ALIAS(ORPS_VpsWps)     /*  0f 56 */
+#define XORPD_VpdWpd     /* 66 0f 57 */ SSE2_ALIAS(XORPS_VpsWps)    /*  0f 57 */
 
-#define MOVLPD_VsdMq    /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)   /*  0f 12 */
-#define MOVLPD_MqVsd    /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)   /*  0f 13 */
-#define MOVHPD_VsdMq    /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)   /*  0f 16 */
-#define MOVHPD_MqVsd    /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)   /*  0f 17 */
+#define MOVLPD_VsdMq     /* 66 0f 12 */ SSE2_ALIAS(MOVLPS_VpsMq)    /*  0f 12 */
+#define MOVLPD_MqVsd     /* 66 0f 13 */ SSE2_ALIAS(MOVLPS_MqVps)    /*  0f 13 */
+#define MOVHPD_VsdMq     /* 66 0f 16 */ SSE2_ALIAS(MOVHPS_VpsMq)    /*  0f 16 */
+#define MOVHPD_MqVsd     /* 66 0f 17 */ SSE2_ALIAS(MOVHPS_MqVps)    /*  0f 17 */
 
-#define MOVNTPD_MpdVpd  /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MpsVps) /*  0f 2b */
-#define MOVNTDQ_MdqVdq  /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MpsVps) /*  0f 2b */
+#define MOVNTPD_MpdVpd   /* 66 0f 2b */ SSE2_ALIAS(MOVNTPS_MpsVps)  /*  0f 2b */
+#define MOVNTDQ_MdqVdq   /* 66 0f e7 */ SSE2_ALIAS(MOVNTPS_MpsVps)  /*  0f 2b */
 
-#define UNPCKLPD_VpdWq  /* 66 0f 14 */ PUNPCKLQDQ_VdqWq /* 66 0f 6c */
-#define UNPCKHPD_VpdWq  /* 66 0f 15 */ PUNPCKHQDQ_VdqWq /* 66 0f 6d */
+#define UNPCKLPD_VpdWdq  /* 66 0f 14 */ PUNPCKLQDQ_VdqWdq /* 66 0f 6c */
+#define UNPCKHPD_VpdWdq  /* 66 0f 15 */ PUNPCKHQDQ_VdqWdq /* 66 0f 6d */
 
-#define MOVNTDQA_VdqMdq /* 66 0f 38 2a */ SSE4_ALIAS(LDDQU_VdqMdq) /* f2 0f f0 */
+#define MOVNTDQA_VdqMdq  /* 66 0f 38 2a */ SSE4_ALIAS(LDDQU_VdqMdq) /* f2 0f f0 */
 
 #endif  // #ifdef STAND_ALONE_DECODER
 
