@@ -1,7 +1,10 @@
 Changes after 2.3.5 release:
 
 - CPU
-  - Added POPCNT instruction emulation (SSE4A and SSE4.2 instruction)
+  - Added emulation of SSE4.2 instruction set, to enable use
+        --enable-sse=4 --enable-sse-extension configure options
+    to enable POPCNT instruction only use configure option
+        --enable-popcnt
   - Implemented MTRR emulation, to enable use --enable-mtrr configure
     option
   - Many minor bugfixes in x86-64 CPU emulation

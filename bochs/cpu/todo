@@ -44,4 +44,4 @@ TODO (know issues in CPU model):
 
 [!] More flexible CPUID - vendor and etc
 
-[!] SSE4.2, SSE4A, SSE5, VMX, SVM
+[!] SSE4A, SSE5, VMX, SVM

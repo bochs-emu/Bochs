@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.17 2006-03-06 22:03:01 sshwarts Exp $
+// $Id: mult64.cc,v 1.18 2007-10-01 21:08:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -333,7 +333,7 @@ void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
   /* check MIN_INT divided by -1 case */
   if (op2_64 == -1)
   {
-    if ((op1_128.hi == BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
+    if ((op1_128.hi == (Bit64s) BX_CONST64(0x8000000000000000)) && (!op1_128.lo))
       exception(BX_DE_EXCEPTION, 0, 0);
   }
 
@@ -344,8 +344,8 @@ void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
   long_idiv(&quotient_128,&remainder_64,&op1_128,op2_64);
   quotient_64l = quotient_128.lo;
 
-  if ((!(quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != 0) ||
-        (quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != BX_CONST64(0xffffffffffffffff))
+  if ((!(quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != (Bit64s) 0) ||
+        (quotient_128.lo & BX_CONST64(0x8000000000000000)) && quotient_128.hi != (Bit64s) BX_CONST64(0xffffffffffffffff))
   {
     exception(BX_DE_EXCEPTION, 0, 0);
   }
