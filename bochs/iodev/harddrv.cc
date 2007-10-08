@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.201 2007-09-28 19:52:01 sshwarts Exp $
+// $Id: harddrv.cc,v 1.202 2007-10-08 19:33:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -164,7 +164,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.201 2007-09-28 19:52:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.202 2007-10-08 19:33:08 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2976,7 +2976,11 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   // Word 54: # of user-addressable cylinders in curr xlate mode
   // Word 55: # of user-addressable heads in curr xlate mode
   // Word 56: # of user-addressable sectors/track in curr xlate mode
-  BX_SELECTED_DRIVE(channel).id_drive[54] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+  if (BX_SELECTED_DRIVE(channel).hard_drive->cylinders > 16383) {
+    BX_SELECTED_DRIVE(channel).id_drive[54] = 16383;
+  } else {
+    BX_SELECTED_DRIVE(channel).id_drive[54] = BX_SELECTED_DRIVE(channel).hard_drive->cylinders;
+  }
   BX_SELECTED_DRIVE(channel).id_drive[55] = BX_SELECTED_DRIVE(channel).hard_drive->heads;
   BX_SELECTED_DRIVE(channel).id_drive[56] = BX_SELECTED_DRIVE(channel).hard_drive->sectors;
 
