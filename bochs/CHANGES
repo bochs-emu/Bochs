@@ -6,7 +6,7 @@ Changes after 2.3.5 release:
     to enable POPCNT instruction only use configure option
         --enable-popcnt
   - Implemented MTRR emulation, to enable use --enable-mtrr configure
-    option
+    option. MTRRs is enabled by default when cpu-level >= 6.
   - Many minor bugfixes in x86-64 CPU emulation
   - Many fixes in Bochs internal debugger and disassembler
 
