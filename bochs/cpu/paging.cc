@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.86 2007-09-20 17:33:32 sshwarts Exp $
+// $Id: paging.cc,v 1.87 2007-10-08 20:45:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1061,15 +1061,14 @@ BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
 
 bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 {
-  bx_address lpf, poffset, paddress;
-
   if (BX_CPU_THIS_PTR cr0.get_PG() == 0) {
     *phy = laddr;
     return 1;
   }
 
-  lpf       = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
-  poffset   = laddr & 0x00000fff; // physical offset
+  bx_address lpf     = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
+  bx_address poffset = laddr & 0x00000fff; // physical offset
+  bx_phy_address paddress;
 
   // see if page is in the TLB first
 #if BX_USE_TLB
@@ -1083,16 +1082,16 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   }
 #endif
 
+  bx_phy_address pt_address = BX_CPU_THIS_PTR cr3_masked;
+  bx_address offset_mask = 0xfff;
+
 #if BX_SUPPORT_PAE
   if (BX_CPU_THIS_PTR cr4.get_PAE()) {
-    Bit64u pt_address;
     int levels = 3;
 #if BX_SUPPORT_X86_64
     if (long_mode())
       levels = 4;
 #endif
-    pt_address = BX_CPU_THIS_PTR cr3_masked;
-    Bit64u offset_mask = 0xfff;
     for (int level = levels - 1; level >= 0; --level) {
       Bit64u pte;
       pt_address += 8 * ((laddr >> (12 + 9*level)) & 511);
@@ -1110,8 +1109,6 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   else   // not PAE
 #endif
   {
-    Bit32u pt_address = BX_CPU_THIS_PTR cr3_masked;
-    Bit32u offset_mask = 0xfff;
     for (int level = 1; level >= 0; --level) {
       Bit32u pte;
       pt_address += 4 * ((laddr >> (12 + 10*level)) & 1023);
