@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.31 2007-09-23 21:10:06 sshwarts Exp $
+// $Id: debug.h,v 1.32 2007-10-09 19:49:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,8 +238,8 @@ void bx_dbg_xlate_address(bx_lin_address address);
 void bx_dbg_show_command(const char*);
 void bx_dbg_show_param_command(char *param);
 void bx_dbg_print_stack_command(unsigned nwords);
-void bx_dbg_watch(int read, Bit32u address);
-void bx_dbg_unwatch(int read, Bit32u address);
+void bx_dbg_watch(int read, bx_phy_address address);
+void bx_dbg_unwatch(int read, bx_phy_address address);
 void bx_dbg_continue_command(void);
 void bx_dbg_stepN_command(Bit32u count);
 void bx_dbg_set_auto_disassemble(bx_bool enable);
@@ -255,7 +255,7 @@ bx_bool bx_dbg_del_lbreak(unsigned handle);
 bx_bool bx_dbg_del_vbreak(unsigned handle);
 int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip);
 int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
-int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress);
+int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
 #define BX_INFO_CPU_REGS 1   /* bitmasks - choices for bx_dbg_info_registers_command */
@@ -272,8 +272,8 @@ void bx_dbg_info_control_regs_command(void);
 void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
-                    Bit32u addr, bx_bool addr_passed);
-void bx_dbg_setpmem_command(Bit32u addr, unsigned len, Bit32u val);
+                    bx_address addr, bx_bool addr_passed);
+void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit32u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
@@ -282,7 +282,7 @@ void bx_dbg_disassemble_current(const char *);
 void bx_dbg_disassemble_command(const char *, Bit64u from, Bit64u to);
 void bx_dbg_instrument_command(const char *);
 void bx_dbg_doit_command(unsigned);
-void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2);
+void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2);
 extern bx_bool watchpoint_continue;
 void bx_dbg_linux_syscall(unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
@@ -314,10 +314,10 @@ char* bx_dbg_disasm_symbolic_address(Bit32u eip, Bit32u base);
 // Read/write watchpoint hack
 #define MAX_WRITE_WATCHPOINTS 16
 #define MAX_READ_WATCHPOINTS 16
-extern int num_write_watchpoints;
-extern Bit32u write_watchpoint[MAX_WRITE_WATCHPOINTS];
-extern int num_read_watchpoints;
-extern Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
+extern unsigned num_write_watchpoints;
+extern bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
+extern unsigned num_read_watchpoints;
+extern bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
 
 typedef enum {
       STOP_NO_REASON = 0,
@@ -398,7 +398,7 @@ typedef struct {
 #if BX_DBG_SUPPORT_PHY_BPOINT
     unsigned num_physical;
     struct {
-      Bit32u addr; // physical address in 32 bits only
+      bx_phy_address addr; // physical address is 32 bits only
       unsigned bpoint_id;
       bx_bool enabled;
     } phy[BX_DBG_MAX_PHY_BPOINTS];
@@ -500,10 +500,10 @@ typedef struct {
     unsigned inhibit_mask;
 } bx_dbg_cpu_t;
 
-void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val);
+void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val);
 void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
-void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
+void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_disassemble_current(int which_cpu, int print_time);
 

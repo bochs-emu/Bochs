@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.97 2007-09-28 19:51:43 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.98 2007-10-09 19:49:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,11 +101,11 @@ static struct {
   unsigned this_many; // batch this many max before posting events
   unsigned Qsize;     // this many have been batched
   struct {
-    Bit32u   addr;    // address of DMA op
-    unsigned len;     // number of bytes in op
-    unsigned what;    // BX_READ or BX_WRITE
-    Bit32u   val;     // value of DMA op
-    Bit64u   time;    // system time at this dma op
+    bx_phy_address addr; // address of DMA op
+    unsigned len;        // number of bytes in op
+    unsigned what;       // BX_READ or BX_WRITE
+    Bit32u   val;        // value of DMA op
+    Bit64u   time;       // system time at this dma op
   } Q[BX_BATCH_DMA_BUFSIZE];
 } bx_dbg_batch_dma;
 
@@ -703,7 +703,6 @@ static bx_bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned
 next_page:
   remainsInPage = 0x1000 - (laddr & 0xfff);
   read_len = (remainsInPage < len) ? remainsInPage : len;
-  paddr_valid = 0;
 
   paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
@@ -747,7 +746,7 @@ void bx_dbg_where_command()
   dbg_printf("(%d) 0x%08x\n", 0, ip);
   for (int i = 1; i < 50; i++) {
     // Up
-    Bit32u paddr;
+    bx_phy_address paddr;
     Bit8u buf[4];
 
     // bp = [bp];
@@ -1116,17 +1115,17 @@ void bx_dbg_print_stack_command(unsigned nwords)
   }
 }
 
-int num_write_watchpoints = 0;
-int num_read_watchpoints = 0;
-Bit32u write_watchpoint[MAX_WRITE_WATCHPOINTS];
-Bit32u read_watchpoint[MAX_READ_WATCHPOINTS];
+unsigned num_write_watchpoints = 0;
+unsigned num_read_watchpoints = 0;
+bx_phy_address write_watchpoint[MAX_WRITE_WATCHPOINTS];
+bx_phy_address read_watchpoint[MAX_READ_WATCHPOINTS];
 bx_bool watchpoint_continue = 0;
 
-void bx_dbg_watch(int read, Bit32u address)
+void bx_dbg_watch(int read, bx_phy_address address)
 {
   if (read == -1) {
     // print watch point info
-    int i;
+    unsigned i;
     for (i = 0; i < num_read_watchpoints; i++) {
       Bit8u buf[2];
       if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i], 2, buf))
@@ -1135,33 +1134,33 @@ void bx_dbg_watch(int read, Bit32u address)
       else
         dbg_printf("read   %08x   (read error)\n", read_watchpoint[i]);
     }
-  for (i = 0; i < num_write_watchpoints; i++) {
-    Bit8u buf[2];
-    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
-      dbg_printf("write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
-    else
-      dbg_printf("write  %08x   (read error)\n", write_watchpoint[i]);
-  }
+    for (i = 0; i < num_write_watchpoints; i++) {
+      Bit8u buf[2];
+      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i], 2, buf))
+        dbg_printf("write  %08x   (%04x)\n", write_watchpoint[i], (int)buf[0] | ((int)buf[1] << 8));
+      else
+        dbg_printf("write  %08x   (read error)\n", write_watchpoint[i]);
+    }
   } else {
     if (read) {
-        if (num_read_watchpoints == MAX_READ_WATCHPOINTS) {
+      if (num_read_watchpoints == MAX_READ_WATCHPOINTS) {
         dbg_printf("Too many read watchpoints\n");
         return;
       }
       read_watchpoint[num_read_watchpoints++] = address;
-      dbg_printf("Read watchpoint at %08x inserted\n", address);
+      dbg_printf("Read watchpoint at 0x%08x inserted\n", address);
     } else {
       if (num_write_watchpoints == MAX_WRITE_WATCHPOINTS) {
         dbg_printf("Too many write watchpoints\n");
         return;
       }
       write_watchpoint[num_write_watchpoints++] = address;
-      dbg_printf("Write watchpoint at %08x inserted\n", address);
+      dbg_printf("Write watchpoint at 0x%08x inserted\n", address);
     }
   }
 }
 
-void bx_dbg_unwatch(int read, Bit32u address)
+void bx_dbg_unwatch(int read, bx_phy_address address)
 {
   if (read == -1) {
     // unwatch all
@@ -1661,7 +1660,7 @@ int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress)
 #endif
 }
 
-int bx_dbg_pbreakpoint_command(BreakpointKind bk, Bit32u paddress)
+int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress)
 {
 #if BX_DBG_SUPPORT_PHY_BPOINT
   if (bk != bkRegular) {
@@ -1949,7 +1948,7 @@ void dbg_printf_binary(char *format, Bit32u data, int bits)
 }
 
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
-               Bit32u addr, bx_bool addr_passed)
+               bx_address addr, bx_bool addr_passed)
 {
   unsigned repeat_count, i;
   char ch, display_format, unit_size;
@@ -2108,9 +2107,9 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
       if (i!=1)
         dbg_printf("\n");
       if (memory_dump)
-        dbg_printf("%08X  ", addr);
+        dbg_printf("0x" FMT_ADDRX ":", addr);
       else
-        dbg_printf("0x%08x <bogus+%8u>:", addr, offset);
+        dbg_printf("0x" FMT_ADDRX " <bogus+%8u>:", addr, offset);
       columns = 1;
     }
 
@@ -2222,7 +2221,7 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
   dbg_printf("\n");
 }
 
-void bx_dbg_setpmem_command(Bit32u paddr, unsigned len, Bit32u val)
+void bx_dbg_setpmem_command(bx_phy_address paddr, unsigned len, Bit32u val)
 {
   Bit8u buf[4];
 
@@ -2637,7 +2636,7 @@ void bx_dbg_doit_command(unsigned n)
   bx_dbg.exceptions = n;
 }
 
-void bx_dbg_crc_command(Bit32u addr1, Bit32u addr2)
+void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2)
 {
   Bit32u crc1;
 
@@ -3099,31 +3098,31 @@ void bx_dbg_a20_report(unsigned val)
   }
 }
 
-void bx_dbg_io_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
+void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.io) {
     dbg_printf("event at t=" FMT_LL "d IO addr=0x%x size=%u op=%s val=0x%x\n",
       bx_pc_system.time_ticks(),
-      (unsigned) addr,
+      port,
       size,
       (op==BX_READ) ? "read" : "write",
       (unsigned) val);
   }
 }
 
-void bx_dbg_ucmem_report(Bit32u addr, unsigned size, unsigned op, Bit32u val)
+void bx_dbg_ucmem_report(bx_address addr, unsigned size, unsigned op, Bit32u val)
 {
   if (bx_guard.report.ucmem) {
-    dbg_printf("event at t=" FMT_LL "d UCmem addr=0x%x size=%u op=%s val=0x%x\n",
+    dbg_printf("event at t=" FMT_LL "d UCmem addr=0x" FMT_ADDRX " size=%u op=%s val=0x%x\n",
       bx_pc_system.time_ticks(),
-      (unsigned) addr,
+      addr,
       size,
       (op==BX_READ) ? "read" : "write",
       (unsigned) val);
   }
 }
 
-void bx_dbg_dma_report(Bit32u addr, unsigned len, unsigned what, Bit32u val)
+void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val)
 {
   if (bx_dbg_batch_dma.this_many == 0) {
     dbg_printf("%s: DMA batch this_many=0.\n", argv0);
@@ -3218,9 +3217,8 @@ void bx_dbg_post_dma_reports(void)
 
 void bx_dbg_dump_table(void)
 {
-  Bit32u lin; // show only low 32 bit
-  Bit32u phy;
-  Bit32u start_lin, start_phy;  // start of a valid translation interval
+  Bit32u lin, start_lin; // show only low 32 bit
+  bx_phy_address phy, start_phy; // start of a valid translation interval
   bx_bool valid;
 
   if (! BX_CPU(dbg_cpu)->cr0.get_PG()) {

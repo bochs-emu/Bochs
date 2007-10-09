@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dma.cc,v 1.43 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: dma.cc,v 1.44 2007-10-09 19:49:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ unsigned bx_dma_c::get_TC(void)
 void bx_dma_c::init(void)
 {
   unsigned c, i, j;
-  BX_DEBUG(("Init $Id: dma.cc,v 1.43 2007-09-28 19:51:59 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: dma.cc,v 1.44 2007-10-09 19:49:23 sshwarts Exp $"));
 
   /* 8237 DMA controller */
 
@@ -676,7 +676,7 @@ void bx_dma_c::control_HRQ(bx_bool ma_sl)
 void bx_dma_c::raise_HLDA(void)
 {
   unsigned channel;
-  Bit32u phy_addr;
+  bx_phy_address phy_addr;
   bx_bool count_expired = 0;
   bx_bool ma_sl = 0;
 
