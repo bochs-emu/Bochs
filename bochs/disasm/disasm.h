@@ -78,6 +78,7 @@ struct BxDisasmOpcodeInfo_t
     BxDisasmPtr_t Operand1;
     BxDisasmPtr_t Operand2;
     BxDisasmPtr_t Operand3;
+    BxDisasmPtr_t Operand4;
     Bit32u Attr;
 };
 
