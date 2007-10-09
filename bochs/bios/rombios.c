@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.184 2007-10-07 21:09:15 sshwarts Exp $
+// $Id: rombios.c,v 1.185 2007-10-09 16:49:23 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -657,8 +657,7 @@ typedef struct {
     Bit8u  device;       // Detected type of attached devices (hd/cd/none)
     Bit8u  removable;    // Removable device flag
     Bit8u  lock;         // Locks for removable devices
-    // Bit8u  lba_capable;  // LBA capable flag - always yes for bochs devices
-    Bit8u  mode;         // transfert mode : PIO 16/32 bits - IRQ - ISADMA - PCIDMA
+    Bit8u  mode;         // transfer mode : PIO 16/32 bits - IRQ - ISADMA - PCIDMA
     Bit16u blksize;      // block size
 
     Bit8u  translation;  // type of translation
@@ -758,8 +757,8 @@ typedef struct {
     Bit32u  sector_count1;
     Bit32u  sector_count2;
     Bit16u  blksize;
-    Bit16u  dpte_segment;
     Bit16u  dpte_offset;
+    Bit16u  dpte_segment;
     Bit16u  key;
     Bit8u   dpi_length;
     Bit8u   reserved1;
@@ -927,7 +926,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.184 $ $Date: 2007-10-07 21:09:15 $";
+static char bios_cvs_version_string[] = "$Revision: 1.185 $ $Date: 2007-10-09 16:49:23 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1579,9 +1578,27 @@ bios_printf(action, s)
           }
         else if (c == 'l') {
           s++;
+          c = read_byte(get_CS(), s); /* is it ld,lx,lu? */
           arg_ptr++; /* increment to next arg */
           hibyte = read_word(arg_seg, arg_ptr);
-          put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
+          if (format_width == 0)
+            format_width = 8;
+          if (c == 'd') {
+            if (arg & 0x8000)
+              put_luint(action, 0L-(((Bit32u) hibyte << 16) | arg), format_width-1, 1);
+            else
+              put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
+           }
+          else if (c == 'u') {
+            put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
+           }
+          else /* c == 'x' */
+           {
+          for (i=format_width-1; i>=0; i--) {
+            nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
+            send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
+            }
+           }
           }
         else if (c == 'd') {
           if (arg & 0x8000)
@@ -4980,13 +4997,13 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
     case 0x15: /* read disk drive size */
 
-      // Get physical geometry from table
-      npc   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.cylinders);
-      nph   = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.heads);
-      npspt = read_word(ebda_seg, &EbdaData->ata.devices[device].pchs.spt);
+      // Get logical geometry from table
+      nlc   = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.cylinders);
+      nlh   = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.heads);
+      nlspt = read_word(ebda_seg, &EbdaData->ata.devices[device].lchs.spt);
 
       // Compute sector count seen by int13
-      lba = (Bit32u)(npc - 1) * (Bit32u)nph * (Bit32u)npspt;
+      lba = (Bit32u)(nlc - 1) * (Bit32u)nlh * (Bit32u)nlspt;
       CX = lba >> 16;
       DX = lba & 0xffff;
 
@@ -5074,8 +5091,16 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         blksize = read_word(ebda_seg, &EbdaData->ata.devices[device].blksize);
 
         write_word(DS, SI+(Bit16u)&Int13DPT->size, 0x1a);
-        write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x02); // geometry is valid
-        write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, (Bit32u)npc);
+        if ((lba/npspt)/nph > 0x3fff)
+        {
+          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x00); // geometry is invalid
+          write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, 0x3fff);
+        }
+        else
+        {
+          write_word(DS, SI+(Bit16u)&Int13DPT->infos, 0x02); // geometry is valid
+          write_dword(DS, SI+(Bit16u)&Int13DPT->cylinders, (Bit32u)npc);
+        }
         write_dword(DS, SI+(Bit16u)&Int13DPT->heads, (Bit32u)nph);
         write_dword(DS, SI+(Bit16u)&Int13DPT->spt, (Bit32u)npspt);
         write_dword(DS, SI+(Bit16u)&Int13DPT->sector_count1, lba);  // FIXME should be Bit64
@@ -5101,14 +5126,14 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         mode = read_byte(ebda_seg, &EbdaData->ata.devices[device].mode);
         translation = read_byte(ebda_seg, &EbdaData->ata.devices[device].translation);
 
-        options  = (translation==ATA_TRANSLATION_NONE?0:1<<3); // chs translation
+        options  = (translation==ATA_TRANSLATION_NONE?0:1)<<3; // chs translation
         options |= (1<<4); // lba translation
-        options |= (mode==ATA_MODE_PIO32?1:0<<7);
-        options |= (translation==ATA_TRANSLATION_LBA?1:0<<9);
-        options |= (translation==ATA_TRANSLATION_RECHS?3:0<<9);
+        options |= (mode==ATA_MODE_PIO32?1:0)<<7;
+        options |= (translation==ATA_TRANSLATION_LBA?1:0)<<9;
+        options |= (translation==ATA_TRANSLATION_RECHS?3:0)<<9;
 
         write_word(ebda_seg, &EbdaData->ata.dpte.iobase1, iobase1);
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2);
+        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2 + ATA_CB_DC);
         write_byte(ebda_seg, &EbdaData->ata.dpte.prefix, (0xe | (device % 2))<<4 );
         write_byte(ebda_seg, &EbdaData->ata.dpte.unused, 0xcb );
         write_byte(ebda_seg, &EbdaData->ata.dpte.irq, irq );
@@ -5117,7 +5142,10 @@ int13_harddisk(EHAX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         write_byte(ebda_seg, &EbdaData->ata.dpte.pio, 0 );
         write_word(ebda_seg, &EbdaData->ata.dpte.options, options);
         write_word(ebda_seg, &EbdaData->ata.dpte.reserved, 0);
-        write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
+        if (size >=0x42)
+          write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
+        else
+          write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x10);
 
         checksum=0;
         for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
@@ -5456,7 +5484,7 @@ int13_cdrom_rme_end:
         options |= (mode==ATA_MODE_PIO32?1:0<<7);
 
         write_word(ebda_seg, &EbdaData->ata.dpte.iobase1, iobase1);
-        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2);
+        write_word(ebda_seg, &EbdaData->ata.dpte.iobase2, iobase2 + ATA_CB_DC);
         write_byte(ebda_seg, &EbdaData->ata.dpte.prefix, (0xe | (device % 2))<<4 );
         write_byte(ebda_seg, &EbdaData->ata.dpte.unused, 0xcb );
         write_byte(ebda_seg, &EbdaData->ata.dpte.irq, irq );
@@ -5468,7 +5496,7 @@ int13_cdrom_rme_end:
         write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
 
         checksum=0;
-        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
+        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, (&EbdaData->ata.dpte) + i);
         checksum = ~checksum;
         write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
         }
@@ -6481,6 +6509,7 @@ get_hd_geometry(drive, hd_cylinders, hd_heads, hd_sectors)
 
 #endif //else BX_USE_ATADRV
 
+#if BX_SUPPORT_FLOPPY
 
 //////////////////////
 // FLOPPY functions //
@@ -6754,7 +6783,6 @@ floppy_drive_exists(drive)
     return(1);
 }
 
-#if BX_SUPPORT_FLOPPY
   void
 int13_diskette_function(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit16u DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS;
