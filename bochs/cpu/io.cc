@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.40 2007-09-27 16:11:32 sshwarts Exp $
+// $Id: io.cc,v 1.41 2007-10-10 22:20:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -390,8 +390,7 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
   Bit16u value16=0;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -432,8 +431,7 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
       goto doIncr;
     }
   }
-#endif  // (BX_DEBUGGER == 0)
-#endif  // #if BX_SupportRepeatSpeedups
+#endif
 
   // Write a zero to memory, to trigger any segment or page
   // faults before reading from IO port.
@@ -445,10 +443,8 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
   write_virtual_word(BX_SEG_REG_ES, edi, &value16);
   incr = 2;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
 doIncr:
-#endif
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -627,8 +623,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 
   Bit16u value16=0;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -667,17 +662,14 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
     }
   }
 
-#endif  // (BX_DEBUGGER == 0)
-#endif  // #if BX_SupportRepeatSpeedups
+#endif
 
   read_virtual_word(i->seg(), esi, &value16);
   BX_OUTP(DX, value16, 2);
   incr = 2;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
 doIncr:
-#endif
 #endif
 
 #if BX_SUPPORT_X86_64

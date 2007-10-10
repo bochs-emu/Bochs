@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.39 2007-09-27 16:11:32 sshwarts Exp $
+// $Id: string.cc,v 1.40 2007-10-10 22:20:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -834,8 +834,7 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
     Bit16u si = SI;
     Bit16u di = DI;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time */
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
@@ -856,20 +855,17 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         CX -= (byteCount-1);
 
         incr = byteCount;
-        goto doIncr16;
+        goto doIncr;
       }
     }
-#endif  // (BX_DEBUGGER == 0)
-#endif  // BX_SupportRepeatSpeedups
+#endif
 
     read_virtual_byte(i->seg(), si, &temp8);
     write_virtual_byte(BX_SEG_REG_ES, di, &temp8);
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
-doIncr16:
-#endif  // (BX_DEBUGGER == 0)
-#endif  // BX_SupportRepeatSpeedups
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+doIncr:
+#endif
 
     if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement SI, DI */
@@ -942,8 +938,7 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     Bit16u si = SI;
     Bit16u di = DI;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
      */
@@ -965,19 +960,16 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
         CX -= (wordCount-1);
 
         incr = wordCount << 1; // count * 2
-        goto doIncr16;
+        goto doIncr;
       }
     }
-#endif  // (BX_DEBUGGER == 0)
-#endif  // BX_SupportRepeatSpeedups
+#endif
 
     read_virtual_word(i->seg(), si, &temp16);
     write_virtual_word(BX_SEG_REG_ES, di, &temp16);
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
-doIncr16:
-#endif
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+doIncr:
 #endif
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1030,8 +1022,7 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
     Bit32u esi = ESI;
     Bit32u edi = EDI;
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
      */
@@ -1053,19 +1044,16 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
         RCX = ECX - (dwordCount-1);
 
         incr = dwordCount << 2; // count * 4
-        goto doIncr32;
+        goto doIncr;
       }
     }
-#endif  // (BX_DEBUGGER == 0)
-#endif  // BX_SupportRepeatSpeedups
+#endif
 
     read_virtual_dword(i->seg(), esi, &temp32);
     write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
-doIncr32:
-#endif
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+doIncr:
 #endif
 
     if (BX_CPU_THIS_PTR get_DF()) {
@@ -1817,8 +1805,7 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
       edi = DI;
     }
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time.
      */
@@ -1849,18 +1836,15 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
           CX -= (byteCount-1);
 
         incr = byteCount;
-        goto doIncr16;
+        goto doIncr;
       }
     }
-#endif  // (BX_DEBUGGER == 0)
-#endif  // BX_SupportRepeatSpeedups
+#endif
 
     write_virtual_byte(BX_SEG_REG_ES, edi, &al);
 
-#if BX_SupportRepeatSpeedups
-#if (BX_DEBUGGER == 0)
-doIncr16:
-#endif
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+doIncr:
 #endif
 
     if (BX_CPU_THIS_PTR get_DF()) {
