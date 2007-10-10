@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.185 2007-10-09 16:49:23 vruppert Exp $
+// $Id: rombios.c,v 1.186 2007-10-10 17:11:41 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -926,7 +926,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.185 $ $Date: 2007-10-09 16:49:23 $";
+static char bios_cvs_version_string[] = "$Revision: 1.186 $ $Date: 2007-10-10 17:11:41 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1581,8 +1581,6 @@ bios_printf(action, s)
           c = read_byte(get_CS(), s); /* is it ld,lx,lu? */
           arg_ptr++; /* increment to next arg */
           hibyte = read_word(arg_seg, arg_ptr);
-          if (format_width == 0)
-            format_width = 8;
           if (c == 'd') {
             if (arg & 0x8000)
               put_luint(action, 0L-(((Bit32u) hibyte << 16) | arg), format_width-1, 1);
@@ -1594,10 +1592,12 @@ bios_printf(action, s)
            }
           else /* c == 'x' */
            {
-          for (i=format_width-1; i>=0; i--) {
-            nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
-            send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
-            }
+            if (format_width == 0)
+              format_width = 8;
+            for (i=format_width-1; i>=0; i--) {
+              nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
+              send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
+              }
            }
           }
         else if (c == 'd') {
@@ -5496,7 +5496,7 @@ int13_cdrom_rme_end:
         write_byte(ebda_seg, &EbdaData->ata.dpte.revision, 0x11);
 
         checksum=0;
-        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, (&EbdaData->ata.dpte) + i);
+        for (i=0; i<15; i++) checksum+=read_byte(ebda_seg, ((Bit8u*)(&EbdaData->ata.dpte)) + i);
         checksum = ~checksum;
         write_byte(ebda_seg, &EbdaData->ata.dpte.checksum, checksum);
         }
