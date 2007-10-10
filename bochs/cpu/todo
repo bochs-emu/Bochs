@@ -35,9 +35,6 @@ TODO (know issues in CPU model):
     This processor should yield to the other one, as we are anyhow waiting
     for a lock, and any other processor is responsible for this.
 
-[!] CLFLUSH instructin should not crash in case of EXECUTE-ONLY segment
-    access (according to AMD manuals)
-
 [!] AMD and Intel x86_64 implementations are different. 
     Currently Bochs emulation is according to Intel version.
     Do we need to support both ?

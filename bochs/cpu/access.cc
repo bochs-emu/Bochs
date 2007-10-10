@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.69 2007-07-31 20:25:52 sshwarts Exp $
+// $Id: access.cc,v 1.70 2007-10-10 21:48:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -45,7 +47,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("write_virtual_checks(): canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
+      BX_ERROR(("write_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(int_number(seg), 0, 0);
     }
     seg->cache.valid |= SegAccessWOK;
@@ -132,7 +134,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
     // do canonical checks
     if (!IsCanonical(offset)) {
-      BX_ERROR(("read_virtual_checks(): canonical Failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
+      BX_ERROR(("read_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(int_number(seg), 0, 0);
     }
     seg->cache.valid |= SegAccessROK;
@@ -195,6 +197,93 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         || (length-1 > seg->cache.u.segment.limit_scaled))
     {
       BX_DEBUG(("read_virtual_checks(): read beyond limit (real mode)"));
+      exception(int_number(seg), 0, 0);
+    }
+    if (seg->cache.u.segment.limit_scaled >= 7) {
+      // Mark cache as being OK type for succeeding reads. See notes for
+      // write checks; similar code.
+      seg->cache.valid |= SegAccessROK;
+    }
+  }
+}
+
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
+                              unsigned length)
+{
+  Bit32u upper_limit;
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+    // do canonical checks
+    if (!IsCanonical(offset)) {
+      BX_ERROR(("execute_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
+      exception(int_number(seg), 0, 0);
+    }
+    seg->cache.valid |= SegAccessROK;
+    return;
+  }
+#endif
+  if (protected_mode()) {
+    if (seg->cache.valid==0) {
+      BX_DEBUG(("execute_virtual_checks(): segment descriptor not valid"));
+      exception(int_number(seg), 0, 0);
+    }
+
+    if (seg->cache.p == 0) { /* not present */
+      BX_ERROR(("execute_virtual_checks(): segment not present"));
+      exception(int_number(seg), 0, 0);
+    }
+
+    switch (seg->cache.type) {
+      case 0: case 1: /* read only */
+      case 2: case 3: /* read/write */
+      case 10: case 11: /* execute/read */
+      case 14: case 15: /* execute/read-only, conforming */
+        if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
+            || (length-1 > seg->cache.u.segment.limit_scaled))
+        {
+          BX_ERROR(("execute_virtual_checks(): read beyond limit"));
+          exception(int_number(seg), 0, 0);
+        }
+        if (seg->cache.u.segment.limit_scaled >= 7) {
+          // Mark cache as being OK type for succeeding reads. See notes for
+          // write checks; similar code.
+          seg->cache.valid |= SegAccessROK;
+        }
+        break;
+
+      case 8: case 9: /* execute only */
+      case 12: case 13: /* execute only, conforming */
+        if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
+            || (length-1 > seg->cache.u.segment.limit_scaled))
+        {
+          BX_ERROR(("execute_virtual_checks(): read beyond limit"));
+          exception(int_number(seg), 0, 0);
+        }
+        break;
+
+      case 4: case 5: /* read only, expand down */
+      case 6: case 7: /* read/write, expand down */
+        if (seg->cache.u.segment.d_b)
+          upper_limit = 0xffffffff;
+        else
+          upper_limit = 0x0000ffff;
+        if ((offset <= seg->cache.u.segment.limit_scaled) ||
+             (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
+        {
+          BX_ERROR(("read_virtual_checks(): read beyond limit"));
+          exception(int_number(seg), 0, 0);
+        }
+        break;
+    }
+    return;
+  }
+  else { /* real mode */
+    if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
+        || (length-1 > seg->cache.u.segment.limit_scaled))
+    {
+      BX_DEBUG(("execute_virtual_checks(): read beyond limit (real mode)"));
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
