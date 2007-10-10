@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.70 2007-10-10 21:48:46 sshwarts Exp $
+// $Id: access.cc,v 1.71 2007-10-10 22:00:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,8 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       BX_ERROR(("write_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(int_number(seg), 0, 0);
     }
-    seg->cache.valid |= SegAccessWOK;
+    // Mark cache as being OK type for succeeding reads/writes
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return;
   }
 #endif
@@ -83,14 +84,14 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
           exception(int_number(seg), 0, 0);
         }
         if (seg->cache.u.segment.limit_scaled >= 7) {
-          // Mark cache as being OK type for succeeding writes.  The limit
-          // checks still needs to be done though, but is more simple.  We
+          // Mark cache as being OK type for succeeding read/writes. The limit
+          // checks still needs to be done though, but is more simple. We
           // could probably also optimize that out with a flag for the case
-          // when limit is the maximum 32bit value.  Limit should accomodate
+          // when limit is the maximum 32bit value. Limit should accomodate
           // at least a dword, since we subtract from it in the simple
           // limit check in other functions, and we don't want the value to roll.
           // Only normal segments (not expand down) are handled this way.
-          seg->cache.valid |= SegAccessWOK;
+          seg->cache.valid |= SegAccessROK | SegAccessWOK;
         }
         break;
 
@@ -118,8 +119,9 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
-      // Mark cache as being OK type for succeeding writes. See notes above.
-      seg->cache.valid |= SegAccessWOK;
+      // Mark cache as being OK type for succeeding reads/writes.
+      // See notes above.
+      seg->cache.valid |= SegAccessROK | SegAccessWOK;
     }
   }
 }
@@ -137,7 +139,8 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       BX_ERROR(("read_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(int_number(seg), 0, 0);
     }
-    seg->cache.valid |= SegAccessROK;
+    // Mark cache as being OK type for succeeding reads/writes
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return;
   }
 #endif
@@ -179,7 +182,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
-          BX_ERROR(("read_virtual_checks(): read beyond limit"));
+          BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
           exception(int_number(seg), 0, 0);
         }
         break;
@@ -200,9 +203,9 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
-      // Mark cache as being OK type for succeeding reads. See notes for
+      // Mark cache as being OK type for succeeding reads/writes. See notes for
       // write checks; similar code.
-      seg->cache.valid |= SegAccessROK;
+      seg->cache.valid |= SegAccessROK | SegAccessWOK;
     }
   }
 }
@@ -220,7 +223,8 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       BX_ERROR(("execute_virtual_checks(): canonical failure 0x%08x:%08x", GET32H(offset), GET32L(offset)));
       exception(int_number(seg), 0, 0);
     }
-    seg->cache.valid |= SegAccessROK;
+    // Mark cache as being OK type for succeeding reads/writes
+    seg->cache.valid |= SegAccessROK | SegAccessWOK;
     return;
   }
 #endif
@@ -258,7 +262,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if (offset > (seg->cache.u.segment.limit_scaled - length + 1)
             || (length-1 > seg->cache.u.segment.limit_scaled))
         {
-          BX_ERROR(("execute_virtual_checks(): read beyond limit"));
+          BX_ERROR(("execute_virtual_checks(): read beyond limit execute only"));
           exception(int_number(seg), 0, 0);
         }
         break;
@@ -272,7 +276,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
-          BX_ERROR(("read_virtual_checks(): read beyond limit"));
+          BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
           exception(int_number(seg), 0, 0);
         }
         break;
@@ -287,9 +291,9 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
       exception(int_number(seg), 0, 0);
     }
     if (seg->cache.u.segment.limit_scaled >= 7) {
-      // Mark cache as being OK type for succeeding reads. See notes for
+      // Mark cache as being OK type for succeeding reads/writes. See notes for
       // write checks; similar code.
-      seg->cache.valid |= SegAccessROK;
+      seg->cache.valid |= SegAccessROK | SegAccessWOK;
     }
   }
 }
