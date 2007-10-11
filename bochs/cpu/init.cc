@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.134 2007-10-11 18:11:59 sshwarts Exp $
+// $Id: init.cc,v 1.135 2007-10-11 22:44:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -788,12 +788,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_CPU_LEVEL < 2
   BX_CPU_THIS_PTR prev_eip = EIP = 0x00000000;
 #else /* from 286 up */
-  BX_CPU_THIS_PTR prev_eip =
-#if BX_SUPPORT_X86_64
-  RIP = 0x0000FFF0;
-#else
-  EIP = 0x0000FFF0;
-#endif
+  BX_CPU_THIS_PTR prev_eip = RIP = 0x0000FFF0;
 #endif
 
   /* CS (Code Segment) and descriptor cache */
@@ -1068,7 +1063,7 @@ void BX_CPU_C::reset(unsigned source)
     // it's an application processor, halt until IPI is heard.
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
-    BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_ACTIVE;
+    BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_WAIT_FOR_SIPI;
     debug_trap |= BX_DEBUG_TRAP_HALT_STATE;
     async_event = 1;
   }

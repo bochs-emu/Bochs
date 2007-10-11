@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.32 2007-10-01 19:59:36 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.33 2007-10-11 22:44:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -25,8 +25,16 @@
 #ifndef BX_COMMON_FETCHDECODE_TABLES_H
 #define BX_COMMON_FETCHDECODE_TABLES_H
 
+
+typedef struct BxOpcodeInfo_t {
+  Bit16u         Attr;
+  BxExecutePtr_t ExecutePtr;
+  const BxOpcodeInfo_t *AnotherArray;
+} BxOpcodeInfo_t;
+
+
 //
-// This file contains common IA-32/IA-64 opcode tables, like FPU opcode
+// This file contains common IA-32/X86-64 opcode tables, like FPU opcode
 // table, 3DNow! opcode table or SSE opcode groups (choose the opcode
 // according to instruction prefixes)
 //
