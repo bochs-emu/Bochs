@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.357 2007-09-28 19:51:42 sshwarts Exp $
+// $Id: main.cc,v 1.358 2007-10-11 21:28:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -991,6 +991,7 @@ int bx_init_hardware()
   BX_INFO(("  PSE support: %s",BX_SUPPORT_LARGE_PAGES?"yes":"no"));
   BX_INFO(("  x86-64 support: %s",BX_SUPPORT_X86_64?"yes":"no"));
   BX_INFO(("  SEP support: %s",BX_SUPPORT_SEP?"yes":"no"));
+  BX_INFO(("  MWAIT support: %s",BX_SUPPORT_MONITOR_MWAIT?"yes":"no"));
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  Guest2HostTLB support: %s",BX_SupportGuest2HostTLB?"yes":"no"));
   BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));

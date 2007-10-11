@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.332 2007-10-11 18:11:58 sshwarts Exp $
+// $Id: cpu.h,v 1.333 2007-10-11 21:28:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -586,17 +586,6 @@ typedef struct
 
   /* TODO finish of the others */
 } bx_regs_msr_t;
-#endif
-
-#if BX_SUPPORT_X86_64
-typedef struct bx_efer_t {
-  // x86-64 EFER bits
-  bx_bool sce;		// system call extensions
-  bx_bool lme;		// long mode enable
-  bx_bool lma;		// long mode active
-  bx_bool nxe;		// no-execute enable
-  bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
-} bx_efer_t;
 #endif
 
 #include "crregs.h"
@@ -2587,6 +2576,9 @@ public: // for now...
   BX_SMF void RDMSR(bxInstruction_c *);
   BX_SMF void SYSENTER(bxInstruction_c *);
   BX_SMF void SYSEXIT(bxInstruction_c *);
+
+  BX_SMF void MONITOR(bxInstruction_c *);
+  BX_SMF void MWAIT(bxInstruction_c *);
 
   BX_SMF unsigned fetchDecode32(Bit8u *, bxInstruction_c *, unsigned);
 #if BX_SUPPORT_X86_64

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.50 2007-10-01 21:08:26 sshwarts Exp $
+// $Id: cpuid.cc,v 1.51 2007-10-11 21:28:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,6 +41,7 @@
 #define RDX EDX
 #endif
 
+#define CACHE_LINE_SIZE 64
 
 /* Get CPU version information. */
 Bit32u BX_CPU_C::get_cpu_version_information()
@@ -147,6 +148,9 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
 
 #if BX_SUPPORT_SSE >= 3
   features |= 0x1;      // support SSE3
+#endif
+#if BX_SUPPORT_MONITOR_MWAIT
+  features |= (1<<3);   // support MONITOR/MWAIT
 #endif
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<9);   // support SSE3E
@@ -260,8 +264,10 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       // EAX: highest input value understood by CPUID
 #if BX_CPU_LEVEL <= 5
       RAX = 1;		// 486 and Pentium processors
+#elif BX_SUPPORT_MONITOR_MWAIT
+      RAX = 5;	        // support MONITOR/MWAIT leaf
 #else
-      RAX = 2;		// for Pentium Pro, Pentium II, Pentium 4 processors
+      RAX = 2;          // for Pentium Pro, Pentium II, Pentium 4 processors
 #endif
       // EBX: vendor ID string
       // EDX: vendor ID string
@@ -346,7 +352,7 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RBX |= (BX_CPU_THIS_PTR local_apic.get_id() << 24);
 #endif
 #if BX_SUPPORT_CLFLUSH
-      RBX |= 8 << 8;  // 64 byte cache line size
+      RBX |= (CACHE_LINE_SIZE / 8) << 8;
 #endif
 #if BX_SUPPORT_SMP
       n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
@@ -364,6 +370,30 @@ void BX_CPU_C::CPUID(bxInstruction_c *i)
       RCX = 0;
       RDX = 0;
       break;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+    case 3:
+    case 4:
+      RAX = 0;
+      RBX = 0;
+      RCX = 0;
+      RDX = 0;
+      break;
+
+    case 5:
+      // EAX - Smallest monitor-line size in bytes
+      // EBX - Largest  monitor-line size in bytes
+      // ECX -
+      //   [32:2] - reserved
+      //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+      //    [0:0] - MONITOR/MWAIT extensions are supported
+      // EDX - Reserved
+      RAX = CACHE_LINE_SIZE;
+      RBX = CACHE_LINE_SIZE;
+      RCX = 3;
+      RDX = 0;
+      break;
+#endif
 
 #if BX_SUPPORT_SSE >= 2
 

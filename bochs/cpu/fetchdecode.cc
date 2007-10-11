@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.109 2007-09-19 19:38:09 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.110 2007-10-11 21:28:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -282,7 +282,6 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5d[8] = {
 }; 
 
 static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::SLDT_Ew },
   /* 1 */ { 0, &BX_CPU_C::STR_Ew },
   /* 2 */ { 0, &BX_CPU_C::LLDT_Ew },
@@ -293,10 +292,20 @@ static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
 
+static const BxOpcodeInfo_t opcodesGroupRmMONITOR[8] = {
+  /* 0 */ { 0, &BX_CPU_C::MONITOR },
+  /* 1 */ { 0, &BX_CPU_C::MWAIT   },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::BxError },
+  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 6 */ { 0, &BX_CPU_C::BxError },
+  /* 7 */ { 0, &BX_CPU_C::BxError }
+};
+
 static const BxOpcodeInfo_t BxOpcodeInfoG7R[8] = {
-  // attributes defined in main area
   /* 0 */ { 0, &BX_CPU_C::BxError },
-  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { BxRMGroup, NULL, opcodesGroupRmMONITOR },
   /* 2 */ { 0, &BX_CPU_C::BxError },
   /* 3 */ { 0, &BX_CPU_C::BxError },
   /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },

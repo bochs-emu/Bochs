@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: crregs.h,v 1.2 2007-09-10 16:04:41 sshwarts Exp $
+// $Id: crregs.h,v 1.3 2007-10-11 21:28:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  MandrakeSoft S.A.
@@ -104,6 +104,17 @@ struct bx_cr4_t {
   #define CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
 #else
   #define CR4_VME_ENABLED (0)
+#endif
+
+#if BX_SUPPORT_X86_64
+typedef struct bx_efer_t {
+  // x86-64 EFER bits
+  bx_bool sce;		// system call extensions
+  bx_bool lme;		// long mode enable
+  bx_bool lma;		// long mode active
+  bx_bool nxe;		// no-execute enable
+  bx_bool ffxsr;	// fast FXSAVE/FXRSTOR
+} bx_efer_t;
 #endif
 
 #undef IMPLEMENT_CRREG_ACCESSORS

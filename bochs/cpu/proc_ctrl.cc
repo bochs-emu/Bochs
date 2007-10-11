@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.173 2007-10-11 18:12:00 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.174 2007-10-11 21:29:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1894,15 +1894,73 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
 }
 
+void BX_CPU_C::MONITOR(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MONITOR_MWAIT
+  // TODO: #UD when CPL > 0 and 
+  //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
+  BX_INFO(("MONITOR instruction executed"));
+
+  if (RCX != 0) {
+    BX_ERROR(("MONITOR: no optional extensions supported"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  bx_address addr;
+
+#if BX_SUPPORT_X86_64
+  if (i->as64L()) {
+     addr = RAX;
+  }
+  else
+#endif
+  if (i->as32L()) {
+     addr = EAX;
+  }
+  else {
+     addr =  AX;
+  }
+
+  read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], addr, 1);
+
+  // TODO: Implemented actual MONITOR functionality
+
+#else
+  BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
+  UndefinedOpcode (i);
+#endif
+}
+
+void BX_CPU_C::MWAIT(bxInstruction_c *i)
+{
+#if BX_SUPPORT_MONITOR_MWAIT
+  // TODO: #UD when CPL > 0 and 
+  //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
+  BX_INFO(("MWAIT instruction executed"));
+
+  // only one extension is supported
+  //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
+  if (RCX & ~((Bit64u)(1))) {
+    BX_ERROR(("MWAIT: incorrect optional extensions in RCX"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  // TODO: Implemented actual MWAIT functionality
+#else
+  BX_INFO(("MWAIT: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
+  UndefinedOpcode (i);
+#endif
+}
+
 void BX_CPU_C::SYSENTER(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode()) {
-    BX_ERROR(("sysenter not from protected mode !"));
+    BX_ERROR(("SYSENTER not from protected mode !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
-    BX_ERROR(("sysenter with zero sysenter_cs_msr !"));
+    BX_ERROR(("SYSENTER with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -1958,15 +2016,15 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SEP
   if (!protected_mode()) {
-    BX_ERROR(("sysexit not from protected mode !"));
+    BX_ERROR(("SYSEXIT not from protected mode !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
-    BX_ERROR(("sysexit with zero sysenter_cs_msr !"));
+    BX_ERROR(("SYSEXIT with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
   if (CPL != 0) {
-    BX_ERROR(("sysexit at non-zero cpl %u !", CPL));
+    BX_ERROR(("SYSEXIT at non-zero cpl %u !", CPL));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
@@ -2017,73 +2075,6 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::SYSCALL(bxInstruction_c *i)
 {
-
-/* pseudo code from AMD manual.
-
-SYSCALL_START:
-
-  IF (MSR_EFER.SCE = 0) // Check if syscall/sysret are enabled.
-    EXCEPTION [#UD]
-
-  IF (LONG_MODE)
-    SYSCALL_LONG_MODE
-  ELSE // (LEGACY_MODE)
-    SYSCALL_LEGACY_MODE
-
-
-SYSCALL_LONG_MODE:
-
-  RCX.q = next_RIP
-  R11.q = RFLAGS // with rf cleared
-
-  IF (64BIT_MODE)
-      temp_RIP.q = MSR_LSTAR
-  ELSE // (COMPATIBILITY_MODE)
-      temp_RIP.q = MSR_CSTAR
-
-  CS.sel = MSR_STAR.SYSCALL_CS AND 0xFFFC
-  CS.attr = 64-bit code,dpl0 // Always switch to 64-bit mode in long mode.
-  CS.base = 0x00000000
-  CS.limit = 0xFFFFFFFF
-
-  SS.sel = MSR_STAR.SYSCALL_CS + 8
-  SS.attr = 64-bit stack,dpl0
-  SS.base = 0x00000000
-  SS.limit = 0xFFFFFFFF
-
-  RFLAGS = RFLAGS AND ~MSR_SFMASK
-  RFLAGS.RF = 0
-
-  CPL = 0
-
-  RIP = temp_RIP
-  EXIT
-
-SYSCALL_LEGACY_MODE:
-
-  RCX.d = next_RIP
-
-  temp_RIP.d = MSR_STAR.EIP
-
-  CS.sel = MSR_STAR.SYSCALL_CS AND 0xFFFC
-  CS.attr = 32-bit code,dpl0 // Always switch to 32-bit mode in legacy mode.
-  CS.base = 0x00000000
-  CS.limit = 0xFFFFFFFF
-
-  SS.sel = MSR_STAR.SYSCALL_CS + 8
-  SS.attr = 32-bit stack,dpl0
-  SS.base = 0x00000000
-  SS.limit = 0xFFFFFFFF
-
-  RFLAGS.VM,IF,RF=0
-
-  CPL = 0
-
-  RIP = temp_RIP
-  EXIT
-
-*/
-
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSCALL instruction"));
@@ -2201,60 +2192,6 @@ SYSCALL_LEGACY_MODE:
 
 void BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
-/* from AMD manual
-
-SYSRET_START:
-
-  IF (MSR_EFER.SCE = 0) // Check if syscall/sysret are enabled.
-    EXCEPTION [#UD]
-
-  IF ((!PROTECTED_MODE) || (CPL != 0))
-    EXCEPTION [#GP(0)] // SYSRET requires protected mode, cpl0
-
-  IF (64BIT_MODE)
-    SYSRET_64BIT_MODE
-  ELSE // (!64BIT_MODE)
-    SYSRET_NON_64BIT_MODE
-
-SYSRET_64BIT_MODE:
-  IF (OPERAND_SIZE = 64) // Return to 64-bit mode.
-  {
-    CS.sel = (MSR_STAR.SYSRET_CS + 16) OR 3
-    CS.base = 0x00000000
-    CS.limit = 0xFFFFFFFF
-    CS.attr = 64-bit code,dpl3
-    temp_RIP.q = RCX
-  }
-  ELSE // Return to 32-bit compatibility mode.
-  {
-    CS.sel = MSR_STAR.SYSRET_CS OR 3
-    CS.base = 0x00000000
-    CS.limit = 0xFFFFFFFF
-    CS.attr = 32-bit code,dpl3
-    temp_RIP.d = RCX
-  }
-  SS.sel = MSR_STAR.SYSRET_CS + 8 // SS selector is changed,
-  // SS base, limit, attributes unchanged.
-  RFLAGS.q = R11 // RF=0,VM=0
-  CPL = 3
-  RIP = temp_RIP
-  EXIT
-
-SYSRET_NON_64BIT_MODE:
-  CS.sel = MSR_STAR.SYSRET_CS OR 3 // Return to 32-bit legacy protected mode.
-  CS.base = 0x00000000
-  CS.limit = 0xFFFFFFFF
-  CS.attr = 32-bit code,dpl3
-  temp_RIP.d = RCX
-  SS.sel = MSR_STAR.SYSRET_CS + 8 // SS selector is changed.
-  // SS base, limit, attributes unchanged.
-  RFLAGS.IF = 1
-  CPL = 3
-  RIP = temp_RIP
-  EXIT
-
-*/
-
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSRET instruction"));
