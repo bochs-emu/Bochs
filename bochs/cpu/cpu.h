@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.331 2007-10-10 21:48:46 sshwarts Exp $
+// $Id: cpu.h,v 1.332 2007-10-11 18:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -339,7 +339,15 @@
 #define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
-const char* cpu_mode_string(unsigned cpu_mode);
+extern const char* cpu_mode_string(unsigned cpu_mode);
+
+#define BX_CPU_STATE_ACTIVE        0x0
+#define BX_CPU_STATE_HLT           0x1
+#define BX_CPU_STATE_SHUTDOWN      0x2
+#define BX_CPU_STATE_WAIT_FOR_SIPI 0x3
+#define BX_CPU_STATE_MWAIT         0x4
+
+extern const char* cpu_state_string(unsigned cpu_state);
 
 #if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
@@ -1133,7 +1141,7 @@ public: // for now...
 #if BX_SUPPORT_ICACHE
   const Bit32u *currPageWriteStampPtr;
 #endif
-  unsigned cpu_mode;
+  unsigned cpu_mode, cpu_state;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK

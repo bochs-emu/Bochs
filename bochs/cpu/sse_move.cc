@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.61 2007-08-31 18:09:34 sshwarts Exp $
+// $Id: sse_move.cc,v 1.62 2007-10-11 18:12:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -45,11 +45,11 @@ void BX_CPU_C::prepareSSE(void)
 
 void BX_CPU_C::print_state_SSE(void)
 {
-  fprintf(stderr, "MXCSR: %08x\n", BX_MXCSR_REGISTER);
+  BX_DEBUG(("MXCSR: 0x%08x\n", BX_MXCSR_REGISTER));
   for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
     BxPackedXmmRegister xmm = BX_READ_XMM_REG(i);
-    fprintf(stderr, "XMM%02u: %08x%08x:%08x%08x\n", i,
-       xmm.xmm32u(3), xmm.xmm32u(2), xmm.xmm32u(1), xmm.xmm32u(0));
+    BX_DEBUG(("XMM%02u: %08x%08x:%08x%08x\n", i,
+       xmm.xmm32u(3), xmm.xmm32u(2), xmm.xmm32u(1), xmm.xmm32u(0)));
   }
 }
 

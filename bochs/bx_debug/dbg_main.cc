@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.98 2007-10-09 19:49:23 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.99 2007-10-11 18:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,6 +49,7 @@ extern "C" {
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
 unsigned dbg_cpu = 0;
+bx_list_c *dbg_cpu_list = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -147,8 +148,6 @@ int bx_dbg_set_rcfile(const char *rcfile)
 
 int bx_dbg_main(void)
 {
-  int i;
-  
   setbuf(stdout, NULL);
   setbuf(stderr, NULL);
 
@@ -166,6 +165,8 @@ int bx_dbg_main(void)
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
   bx_debugger.next_bpoint_id = 1;
+
+  dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu.0", SIM->get_bochs_root());
 
   // Open debugger log file if needed
   if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
@@ -203,7 +204,7 @@ int bx_dbg_main(void)
   // Print disassembly of the first instruction...  you wouldn't think it
   // would have to be so hard.  First initialize guard_found, since it is used
   // in the disassembly code to decide what instruction to print.
-  for (i=0; i<BX_SMP_PROCESSORS; i++) {
+  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->guard_found.cs = BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
     BX_CPU(i)->guard_found.eip = BX_CPU(i)->prev_eip;
     BX_CPU(i)->guard_found.laddr =
@@ -490,6 +491,76 @@ void bx_dbg_exit(int code)
 
   bx_atexit();
   BX_EXIT(code);
+}
+
+//
+// functions for browsing of cpu state
+//
+
+void bx_dbg_print_sse_state(void)
+{
+#if BX_SUPPORT_SSE
+  Bit32u mxcsr = SIM->get_param_num("sse.mxcsr", dbg_cpu_list)->get();
+  dbg_printf("MXCSR: 0x%08x\n", mxcsr);
+
+  char param_name[20];
+  for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
+    sprintf(param_name, "sse.xmm%02d_hi", i);
+    Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    sprintf(param_name, "sse.xmm%02d_lo", i);
+    Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    dbg_printf("XMM[%02u]: %08x%08x:%08x%08x\n", i,
+       GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
+  }
+#else
+  dbg_printf("The CPU doesn't support SSE state !");
+#endif
+}
+
+void bx_dbg_print_mmx_state(void)
+{
+#if BX_SUPPORT_MMX
+  char param_name[20];
+
+  for(unsigned i=0;i<8;i++) {
+    sprintf(param_name, "fpu.st%d.fraction", i);
+    Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get();
+    dbg_printf("MM[%d]: %08x:%08x\n", i, GET32H(mmreg), GET32L(mmreg));
+  }
+#else
+  dbg_printf("The CPU doesn't support MMX state !");
+#endif
+}
+
+void bx_dbg_print_fpu_state(void)
+{
+#if BX_SUPPORT_FPU
+  BX_CPU(dbg_cpu)->print_state_FPU();
+#else
+  dbg_printf("The CPU doesn't support FPU state !");
+#endif
+}
+
+void bx_dbg_info_flags(void)
+{
+  dbg_printf("IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
+    BX_CPU(dbg_cpu)->get_IOPL(),
+    BX_CPU(dbg_cpu)->get_ID() ? "ID" : "id",
+    BX_CPU(dbg_cpu)->get_VIP() ? "VIP" : "vip",
+    BX_CPU(dbg_cpu)->get_VIF() ? "VIF" : "vif",
+    BX_CPU(dbg_cpu)->get_AC() ? "AC" : "ac",
+    BX_CPU(dbg_cpu)->get_VM() ? "VM" : "vm",
+    BX_CPU(dbg_cpu)->get_RF() ? "RF" : "rf",
+    BX_CPU(dbg_cpu)->get_NT() ? "NT" : "nt",
+    BX_CPU(dbg_cpu)->get_OF() ? "OF" : "of",
+    BX_CPU(dbg_cpu)->get_DF() ? "DF" : "df",
+    BX_CPU(dbg_cpu)->get_IF() ? "IF" : "if",
+    BX_CPU(dbg_cpu)->get_TF() ? "TF" : "tf",
+    BX_CPU(dbg_cpu)->get_SF() ? "SF" : "sf",
+    BX_CPU(dbg_cpu)->get_ZF() ? "ZF" : "zf",
+    BX_CPU(dbg_cpu)->get_AF() ? "AF" : "af",
+    BX_CPU(dbg_cpu)->get_PF() ? "PF" : "pf",
+    BX_CPU(dbg_cpu)->get_CF() ? "CF" : "cf");
 }
 
 //
@@ -1845,16 +1916,20 @@ void bx_dbg_info_registers_command(int which_regs_mask)
     dbg_printf("eflags 0x%08x\n", (unsigned) reg);
     bx_dbg_info_flags();
   }
+
 #if BX_SUPPORT_FPU
   if (which_regs_mask & BX_INFO_FPU_REGS) {
-    BX_CPU(dbg_cpu)->print_state_FPU();
+    bx_dbg_print_fpu_state();
   }
 #endif
-#if BX_SUPPORT_SSE
+
+  if (which_regs_mask & BX_INFO_MMX_REGS) {
+    bx_dbg_print_mmx_state();
+  }
+
   if (which_regs_mask & BX_INFO_SSE_REGS) {
-    BX_CPU(dbg_cpu)->print_state_SSE();
+    bx_dbg_print_sse_state();
   }
-#endif
 }
 
 void bx_dbg_dump_cpu_command(void)
@@ -2283,6 +2358,9 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
       dbg_printf("invalid cpu id number %d\n", val);
       return;
     }
+    char cpu_param_name[10];
+    sprintf(cpu_param_name, "cpu.%d", val);
+    dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
     dbg_cpu = val;
     return;
   }
@@ -3574,28 +3652,6 @@ void bx_dbg_step_over_command()
   
   if (bx_dbg_del_lbreak (BpId))
     bx_dbg_breakpoint_changed();
-}
-
-void bx_dbg_info_flags(void)
-{
-  dbg_printf("IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n",
-    BX_CPU(dbg_cpu)->get_IOPL(),
-    BX_CPU(dbg_cpu)->get_ID() ? "ID" : "id",
-    BX_CPU(dbg_cpu)->get_VIP() ? "VIP" : "vip",
-    BX_CPU(dbg_cpu)->get_VIF() ? "VIF" : "vif",
-    BX_CPU(dbg_cpu)->get_AC() ? "AC" : "ac",
-    BX_CPU(dbg_cpu)->get_VM() ? "VM" : "vm",
-    BX_CPU(dbg_cpu)->get_RF() ? "RF" : "rf",
-    BX_CPU(dbg_cpu)->get_NT() ? "NT" : "nt",
-    BX_CPU(dbg_cpu)->get_OF() ? "OF" : "of",
-    BX_CPU(dbg_cpu)->get_DF() ? "DF" : "df",
-    BX_CPU(dbg_cpu)->get_IF() ? "IF" : "if",
-    BX_CPU(dbg_cpu)->get_TF() ? "TF" : "tf",
-    BX_CPU(dbg_cpu)->get_SF() ? "SF" : "sf",
-    BX_CPU(dbg_cpu)->get_ZF() ? "ZF" : "zf",
-    BX_CPU(dbg_cpu)->get_AF() ? "AF" : "af",
-    BX_CPU(dbg_cpu)->get_PF() ? "PF" : "pf",
-    BX_CPU(dbg_cpu)->get_CF() ? "CF" : "cf");
 }
 
 #endif /* if BX_DEBUGGER */

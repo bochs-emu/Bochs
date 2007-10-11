@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.172 2007-10-10 21:48:46 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.173 2007-10-11 18:12:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,13 +23,13 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+//
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 #if BX_SUPPORT_X86_64==0
 // Make life easier for merging code.
@@ -77,6 +77,7 @@ void BX_CPU_C::shutdown(void)
   BX_CPU_THIS_PTR clear_IF();
 
   // artificial trap bit, why use another variable.
+  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_SHUTDOWN;
   BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
@@ -86,8 +87,8 @@ void BX_CPU_C::shutdown(void)
   BX_INSTR_HLT(BX_CPU_ID);
 
 #if BX_USE_IDLE_HACK  
-  bx_gui->sim_is_idle ();
-#endif /* BX_USE_IDLE_HACK */  
+  bx_gui->sim_is_idle();
+#endif
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
@@ -98,7 +99,6 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
     BX_DEBUG(("HLT: %s priveledge check failed, CPL=%d, generate #GP(0)",
         cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), CPL));
     exception(BX_GP_EXCEPTION, 0, 0);
-    return;
   }
 
   if (! BX_CPU_THIS_PTR get_IF()) {
@@ -112,6 +112,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   // following HLT.
 
   // artificial trap bit, why use another variable.
+  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_HLT;
   BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
@@ -121,13 +122,12 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   BX_INSTR_HLT(BX_CPU_ID);
 
 #if BX_USE_IDLE_HACK  
-  bx_gui->sim_is_idle ();
-#endif /* BX_USE_IDLE_HACK */  
+  bx_gui->sim_is_idle();
+#endif
 }
 
 void BX_CPU_C::CLTS(bxInstruction_c *i)
 {
-  // #GP(0) if CPL is not 0
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("CLTS: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);

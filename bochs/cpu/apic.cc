@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.97 2007-09-28 19:51:44 sshwarts Exp $
+// $Id: apic.cc,v 1.98 2007-10-11 18:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -515,6 +515,7 @@ void bx_local_apic_c::startup_msg(Bit32u vector)
 {
   if(cpu->debug_trap & BX_DEBUG_TRAP_HALT_STATE) {
     cpu->debug_trap &= ~BX_DEBUG_TRAP_HALT_STATE;
+    cpu->cpu_state = BX_CPU_STATE_ACTIVE;
     cpu->dword.eip = 0;
     cpu->load_seg_reg(&cpu->sregs[BX_SEG_REG_CS], vector*0x100);
     BX_INFO(("%s started up at %04X:%08X by APIC", cpu->name, vector*0x100, cpu->dword.eip));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.133 2007-09-28 19:51:44 sshwarts Exp $
+// $Id: init.cc,v 1.134 2007-10-11 18:11:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -393,6 +393,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
+  BXRS_DEC_PARAM_SIMPLE(cpu, cpu_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
@@ -459,13 +460,13 @@ void BX_CPU_C::register_state(void)
   }
 
 #if BX_CPU_LEVEL >= 2
-  BXRS_HEX_PARAM_FIELD(cpu, GDTR_BASE, BX_CPU_THIS_PTR gdtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, GDTR_LIMIT, BX_CPU_THIS_PTR gdtr.limit);
-  BXRS_HEX_PARAM_FIELD(cpu, IDTR_BASE, BX_CPU_THIS_PTR idtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, IDTR_LIMIT, BX_CPU_THIS_PTR idtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, gdtr_base, BX_CPU_THIS_PTR gdtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, gdtr_limit, BX_CPU_THIS_PTR gdtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, idtr_base, BX_CPU_THIS_PTR idtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, idtr_limit, BX_CPU_THIS_PTR idtr.limit);
 #endif
 
-  bx_list_c *LDTR = new bx_list_c (cpu, "LDTR", 7);
+  bx_list_c *LDTR = new bx_list_c (cpu, "ldtr", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
@@ -474,7 +475,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
 
-  bx_list_c *TR = new bx_list_c (cpu, "TR", 7);
+  bx_list_c *TR = new bx_list_c (cpu, "tr", 7);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
@@ -486,7 +487,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
 #if BX_CPU_LEVEL >= 5
-  bx_list_c *MSR = new bx_list_c(cpu, "MSR", 45);
+  bx_list_c *MSR = new bx_list_c(cpu, "msr", 45);
 
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
@@ -543,7 +544,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
-  bx_list_c *fpu = new bx_list_c(cpu, "FPU", 17);
+  bx_list_c *fpu = new bx_list_c(cpu, "fpu", 17);
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
   BXRS_HEX_PARAM_FIELD(fpu, swd, the_i387.swd);
   BXRS_HEX_PARAM_FIELD(fpu, twd, the_i387.twd);
@@ -562,7 +563,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_SSE
-  bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
+  bx_list_c *sse = new bx_list_c(cpu, "sse", 2*BX_XMM_REGISTERS+1);
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);
@@ -936,6 +937,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
+  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_ACTIVE;
 
   BX_CPU_THIS_PTR smi_pending = 0;
   BX_CPU_THIS_PTR nmi_pending = 0;
@@ -1066,6 +1068,7 @@ void BX_CPU_C::reset(unsigned source)
     // it's an application processor, halt until IPI is heard.
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
+    BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_ACTIVE;
     debug_trap |= BX_DEBUG_TRAP_HALT_STATE;
     async_event = 1;
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.61 2007-07-09 15:16:12 sshwarts Exp $
+// $Id: mmx.cc,v 1.62 2007-10-11 18:11:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -88,7 +88,7 @@ void BX_CPU_C::print_state_MMX(void)
 {
   for(int i=0;i<8;i++) {
       BxPackedMmxRegister mm = BX_READ_MMX_REG(i);
-      fprintf(stderr, "MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm));
+      BX_DEBUG(("MM%d: %08x%08x\n", i, MMXUD1(mm), MMXUD0(mm)));
   }
 }
 

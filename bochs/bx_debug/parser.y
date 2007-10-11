@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.21 2007-09-23 21:10:06 sshwarts Exp $
+// $Id: parser.y,v 1.22 2007-10-11 18:11:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -54,6 +54,7 @@
 %token <sval> BX_TOKEN_CPU
 %token <sval> BX_TOKEN_FPU
 %token <sval> BX_TOKEN_SSE
+%token <sval> BX_TOKEN_MMX
 %token <sval> BX_TOKEN_ALL
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
@@ -520,6 +521,11 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_FPU '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+        free($1); free($2);
+      }
+    | BX_TOKEN_INFO BX_TOKEN_MMX '\n'
+      {
+        bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_SSE '\n'
@@ -1013,6 +1019,7 @@ help_command:
          dbg_printf("info r|reg|regs|registers - list of CPU integer registers and their contents\n");
          dbg_printf("info cpu - list of CPU registers and their contents\n");
          dbg_printf("info fpu - list of FPU registers and their contents\n");
+         dbg_printf("info mmx - list of MMX registers and their contents\n");
          dbg_printf("info sse - list of SSE registers and their contents\n");
          dbg_printf("info idt - show interrupt descriptor table\n");
          dbg_printf("info ivt - show interrupt vector table\n");

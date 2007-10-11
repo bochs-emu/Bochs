@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.77 2006-10-02 17:40:19 vruppert Exp $
+// $Id: debugstuff.cc,v 1.78 2007-10-11 18:11:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,9 +91,25 @@ const char* cpu_mode_string(unsigned cpu_mode)
   return cpu_mode_name[cpu_mode];
 }
 
+const char* cpu_state_string(unsigned cpu_state)
+{
+  static const char *cpu_state_name[] = {
+     "active",
+     "halted",
+     "in shutdown",
+     "waiting for SIPI",
+     "executing mwait",
+     "unknown state"
+  };
+
+  if(cpu_state >= 5) cpu_state = 5;
+  return cpu_state_name[cpu_state];
+}
+
 void BX_CPU_C::debug(bx_address offset)
 {
-  BX_INFO(("%s", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
+  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), 
+    cpu_state_string(BX_CPU_THIS_PTR cpu_state)));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",
@@ -242,7 +258,6 @@ void BX_CPU_C::debug(bx_address offset)
 #endif
 
 #endif // BX_SUPPORT_X86_64
-
 
 #if BX_DISASM
   debug_disasm_instruction(offset);
