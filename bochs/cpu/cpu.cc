@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.174 2007-09-26 18:07:39 sshwarts Exp $
+// $Id: cpu.cc,v 1.175 2007-10-12 22:11:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -862,7 +862,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 
   // see if debugger is looking for iaddr breakpoint of any type
   if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
       if ((BX_CPU_THIS_PTR guard_found.icount!=0) ||
           (tt != BX_CPU_THIS_PTR guard_found.time_tick))
@@ -881,7 +881,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
       }
     }
 #endif
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
       if ((BX_CPU_THIS_PTR guard_found.icount!=0) ||
           (tt != BX_CPU_THIS_PTR guard_found.time_tick))
@@ -899,7 +899,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
       }
     }
 #endif
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       bx_phy_address phy;
       bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy);

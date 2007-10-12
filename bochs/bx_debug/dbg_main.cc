@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.99 2007-10-11 18:11:58 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.100 2007-10-12 22:11:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1434,7 +1434,7 @@ void bx_dbg_print_guard_results(void)
   for (cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     unsigned long found = BX_CPU(cpu)->guard_found.guard_found;
     if (found & BX_DBG_GUARD_CTRL_C) { /* ... */ }
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_VIR) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
       dbg_printf("(%u) Breakpoint %u, in ");
@@ -1444,7 +1444,7 @@ void bx_dbg_print_guard_results(void)
       dbg_printf("\n");
     }
 #endif
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_LIN) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
       if (bx_guard.iaddr.lin[i].bpoint_id != 0)
@@ -1454,7 +1454,7 @@ void bx_dbg_print_guard_results(void)
             BX_CPU(cpu)->guard_found.laddr);
     }
 #endif
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
     else if (found & BX_DBG_GUARD_IADDR_PHY) {
       i = BX_CPU(cpu)->guard_found.iaddr_index;
       dbg_printf("(%u) Breakpoint %u, 0x" FMT_ADDRX " in ?? ()\n",
@@ -1506,21 +1506,21 @@ void bx_dbg_print_guard_results(void)
 
 void bx_dbg_breakpoint_changed(void)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   if (bx_guard.iaddr.num_virtual)
     bx_guard.guard_for |= BX_DBG_GUARD_IADDR_VIR;
   else
     bx_guard.guard_for &= ~BX_DBG_GUARD_IADDR_VIR;
 #endif
 
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   if (bx_guard.iaddr.num_linear)
     bx_guard.guard_for |= BX_DBG_GUARD_IADDR_LIN;
   else
     bx_guard.guard_for &= ~BX_DBG_GUARD_IADDR_LIN;
 #endif
 
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   if (bx_guard.iaddr.num_physical)
     bx_guard.guard_for |= BX_DBG_GUARD_IADDR_PHY;
   else
@@ -1530,19 +1530,19 @@ void bx_dbg_breakpoint_changed(void)
 
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bx_bool enable)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   if (bx_dbg_en_dis_vbreak(handle, enable))
-   goto done;
+    goto done;
 #endif
 
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   if (bx_dbg_en_dis_lbreak(handle, enable))
-   goto done;
+    goto done;
 #endif
 
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   if (bx_dbg_en_dis_pbreak(handle, enable))
-      goto done;
+    goto done;
 #endif
 
   dbg_printf("Error: breakpoint %u not found.\n", handle);
@@ -1554,7 +1554,7 @@ done:
 
 bx_bool bx_dbg_en_dis_pbreak(unsigned handle, bx_bool enable)
 {
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   // see if breakpoint is a physical breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
     if (bx_guard.iaddr.phy[i].bpoint_id == handle) {
@@ -1563,12 +1563,12 @@ bx_bool bx_dbg_en_dis_pbreak(unsigned handle, bx_bool enable)
     }
   }
 #endif
-  return (bx_bool)false;
+  return 0;
 }
 
 bx_bool bx_dbg_en_dis_lbreak(unsigned handle, bx_bool enable)
 {
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   // see if breakpoint is a linear breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
     if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
@@ -1582,7 +1582,7 @@ bx_bool bx_dbg_en_dis_lbreak(unsigned handle, bx_bool enable)
 
 bx_bool bx_dbg_en_dis_vbreak(unsigned handle, bx_bool enable)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   // see if breakpoint is a virtual breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
     if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
@@ -1596,17 +1596,17 @@ bx_bool bx_dbg_en_dis_vbreak(unsigned handle, bx_bool enable)
 
 void bx_dbg_del_breakpoint_command(unsigned handle)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   if (bx_dbg_del_vbreak(handle))
    goto done;
 #endif
 
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   if (bx_dbg_del_lbreak(handle))
    goto done;
 #endif
 
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   if (bx_dbg_del_pbreak(handle))
    goto done;
 #endif
@@ -1620,7 +1620,7 @@ done:
 
 bx_bool bx_dbg_del_pbreak(unsigned handle)
 {
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   // see if breakpoint is a physical breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_physical; i++) {
     if (bx_guard.iaddr.phy[i].bpoint_id == handle) {
@@ -1638,7 +1638,7 @@ bx_bool bx_dbg_del_pbreak(unsigned handle)
 
 bx_bool bx_dbg_del_lbreak(unsigned handle)
 {
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   // see if breakpoint is a linear breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
     if (bx_guard.iaddr.lin[i].bpoint_id == handle) {
@@ -1656,7 +1656,7 @@ bx_bool bx_dbg_del_lbreak(unsigned handle)
 
 bx_bool bx_dbg_del_vbreak(unsigned handle)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   // see if breakpoint is a virtual breakpoint
   for (unsigned i=0; i<bx_guard.iaddr.num_virtual; i++) {
     if (bx_guard.iaddr.vir[i].bpoint_id == handle) {
@@ -1674,7 +1674,7 @@ bx_bool bx_dbg_del_vbreak(unsigned handle)
 
 int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip)
 {
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   if (bk != bkRegular) {
     dbg_printf("Error: vbreak of this kind not implemented yet.\n");
     return -1;
@@ -1697,14 +1697,14 @@ int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip)
 
 #else
   dbg_printf("Error: virtual breakpoint support not compiled in.\n");
-  dbg_printf("Error: see BX_DBG_SUPPORT_VIR_BPOINT.\n");
+  dbg_printf("Error: make sure BX_DBG_MAX_VIR_BPOINTS > 0\n");
   return -1;
 #endif
 }
 
 int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress)
 {
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   if (bk == bkAtIP) {
     dbg_printf("Error: lbreak of this kind not implemented yet.\n");
     return -1;
@@ -1726,14 +1726,14 @@ int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress)
 
 #else
   dbg_printf("Error: linear breakpoint support not compiled in.\n");
-  dbg_printf("Error: see BX_DBG_SUPPORT_LIN_BPOINT.\n");
+  dbg_printf("Error: make sure BX_DBG_MAX_LIN_BPOINTS > 0\n");
   return -1;
 #endif
 }
 
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress)
 {
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   if (bk != bkRegular) {
     dbg_printf("Error: pbreak of this kind not implemented yet.\n");
     return -1;
@@ -1754,7 +1754,7 @@ int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress)
   return BpId;
 #else
   dbg_printf("Error: physical breakpoint support not compiled in.\n");
-  dbg_printf("Error: see BX_DBG_SUPPORT_PHY_BPOINT.\n");
+  dbg_printf("Error: make sure BX_DBG_MAX_PHY_BPOINTS > 0\n");
   return -1;
 #endif
 }
@@ -1766,7 +1766,7 @@ void bx_dbg_info_bpoints_command(void)
 // 1   breakpoint     keep y   0x00010664 in main at temp.c:7
 
   dbg_printf("Num Type           Disp Enb Address\n");
-#if BX_DBG_SUPPORT_VIR_BPOINT
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
   for (i=0; i<bx_guard.iaddr.num_virtual; i++) {
     dbg_printf("%3u ", bx_guard.iaddr.vir[i].bpoint_id);
     dbg_printf("vbreakpoint    ");
@@ -1778,7 +1778,7 @@ void bx_dbg_info_bpoints_command(void)
   }
 #endif
 
-#if BX_DBG_SUPPORT_LIN_BPOINT
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
   for (i=0; i<bx_guard.iaddr.num_linear; i++) {
     dbg_printf("%3u ", bx_guard.iaddr.lin[i].bpoint_id);
     dbg_printf("lbreakpoint    ");
@@ -1788,7 +1788,7 @@ void bx_dbg_info_bpoints_command(void)
   }
 #endif
 
-#if BX_DBG_SUPPORT_PHY_BPOINT
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
   for (i=0; i<bx_guard.iaddr.num_physical; i++) {
     dbg_printf("%3u ", bx_guard.iaddr.phy[i].bpoint_id);
     dbg_printf("pbreakpoint    ");

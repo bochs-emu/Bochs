@@ -319,14 +319,9 @@
 // =================================================================
 
 // Compile in support for virtual/linear/physical breakpoints.
-// Set to 1, only those you need.  Recommend using only linear
-// breakpoints, unless you need others.  Less supported means
+// Enable only those you need. Recommend using only linear
+// breakpoints, unless you need others. Less supported means
 // slightly faster execution time.
-#define BX_DBG_SUPPORT_VIR_BPOINT 1
-#define BX_DBG_SUPPORT_LIN_BPOINT 1
-#define BX_DBG_SUPPORT_PHY_BPOINT 1
-
-// max number of virtual/linear/physical breakpoints handled
 #define BX_DBG_MAX_VIR_BPOINTS 10
 #define BX_DBG_MAX_LIN_BPOINTS 10
 #define BX_DBG_MAX_PHY_BPOINTS 10
@@ -346,7 +341,6 @@
 // =================================================================
 // END: OPTIONAL DEBUGGER SECTION
 // =================================================================
-
 
 //////////////////////////////////////////////////////////////////////
 // END OF USER CONFIGURABLE OPTIONS : DON'T EDIT ANYTHING BELOW !!! //

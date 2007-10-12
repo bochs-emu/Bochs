@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.209 2007-10-09 19:49:23 sshwarts Exp $
+// $Id: bochs.h,v 1.210 2007-10-12 22:11:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -451,7 +451,7 @@ typedef struct {
   bx_bool cdrom;
 #if BX_MAGIC_BREAKPOINT
   bx_bool magic_break_enabled;
-#endif /* BX_MAGIC_BREAKPOINT */
+#endif
 #if BX_GDBSTUB
   bx_bool gdbstub_enabled;
 #endif
