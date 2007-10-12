@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.333 2007-10-11 21:28:58 sshwarts Exp $
+// $Id: cpu.h,v 1.334 2007-10-12 19:30:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -588,6 +588,16 @@ typedef struct
 } bx_regs_msr_t;
 #endif
 
+#define MAX_STD_CPUID_FUNCTION 8
+#define MAX_EXT_CPUID_FUNCTION 8
+
+struct cpuid_function_t {
+  Bit32u eax;
+  Bit32u ebx;
+  Bit32u ecx;
+  Bit32u edx;
+};
+
 #include "crregs.h"
 #include "descriptor.h"
 
@@ -967,6 +977,10 @@ public: // for now...
   char name[64];
 
   unsigned bx_cpuid;
+
+  // cpuid
+  cpuid_function_t cpuid_std_function[MAX_STD_CPUID_FUNCTION];
+  cpuid_function_t cpuid_ext_function[MAX_EXT_CPUID_FUNCTION];
 
   // General register set
   // eax: accumulator
@@ -2981,6 +2995,7 @@ public: // for now...
   BX_SMF Bit32u get_cpu_version_information(void);
   BX_SMF Bit32u get_extended_cpuid_features(void);
   BX_SMF Bit32u get_std_cpuid_features(void);
+  BX_SMF void set_cpuid_defaults(void);
 
   BX_SMF BX_CPP_INLINE unsigned which_cpu(void) { return BX_CPU_THIS_PTR bx_cpuid; }
   BX_SMF BX_CPP_INLINE const bx_gen_reg_t *get_gen_regfile() { return BX_CPU_THIS_PTR gen_reg; }

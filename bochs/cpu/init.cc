@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.135 2007-10-11 22:44:17 sshwarts Exp $
+// $Id: init.cc,v 1.136 2007-10-12 19:30:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -748,6 +748,9 @@ void BX_CPU_C::reset(unsigned source)
   unsigned i;
 
   UNUSED(source); // either BX_RESET_HARDWARE or BX_RESET_SOFTWARE
+
+  // initialize CPUID values
+  set_cpuid_defaults();
 
 #if BX_SUPPORT_X86_64
   RAX = 0; // processor passed test :-)

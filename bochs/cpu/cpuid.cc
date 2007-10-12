@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.51 2007-10-11 21:28:58 sshwarts Exp $
+// $Id: cpuid.cc,v 1.52 2007-10-12 19:30:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,6 +42,12 @@
 #endif
 
 #define CACHE_LINE_SIZE 64
+
+#if BX_SUPPORT_3DNOW
+  #define BX_CPU_VENDOR_INTEL 0
+#else
+  #define BX_CPU_VENDOR_INTEL 1
+#endif
 
 /* Get CPU version information. */
 Bit32u BX_CPU_C::get_cpu_version_information()
@@ -250,321 +256,431 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 void BX_CPU_C::CPUID(bxInstruction_c *i)
 {
-#if BX_SUPPORT_X86_64
-  unsigned features;
-#endif
-
-#if BX_SUPPORT_SMP
-  unsigned n_logical_processors;
-#endif
+  Bit32u function = EAX;
 
 #if BX_CPU_LEVEL >= 4
-  switch (EAX) {
-    case 0:
-      // EAX: highest input value understood by CPUID
-#if BX_CPU_LEVEL <= 5
-      RAX = 1;		// 486 and Pentium processors
-#elif BX_SUPPORT_MONITOR_MWAIT
-      RAX = 5;	        // support MONITOR/MWAIT leaf
-#else
-      RAX = 2;          // for Pentium Pro, Pentium II, Pentium 4 processors
-#endif
-      // EBX: vendor ID string
-      // EDX: vendor ID string
-      // ECX: vendor ID string
-#if BX_SUPPORT_X86_64
-      RBX = 0x68747541; // "Auth"
-      RDX = 0x69746e65; // "enti"
-      RCX = 0x444d4163; // "cAMD"
-#else
-      RBX = 0x756e6547; // "Genu"
-      RDX = 0x49656e69; // "ineI"
-      RCX = 0x6c65746e; // "ntel"
-#endif
-      break;
-
-    case 1:
-      // EAX:       CPU Version Information
-      //   [3:0]   Stepping ID
-      //   [7:4]   Model: starts at 1
-      //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
-      //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
-      //   [31:14] Reserved
-      // EBX:      
-      //   [7:0]   Brand ID
-      //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
-      //   [23:16] Number of logical processors in one physical processor
-      //   [31:24] Local Apic ID
-      // ECX:       Feature Flags::Extended
-      //   [0:0]   SSE3: SSE3 Instructions
-      //   [2:1]   reserved
-      //   [3:3]   MONITOR/MWAIT support
-      //   [4:4]   DS-CPL: CPL qualified debug store
-      //   [5:5]   VMX: Virtual Machine Technology
-      //   [6:6]   reserved
-      //   [7:7]   EST: Enhanced Intel SpeedStep Technology
-      //   [8:8]   TM2: Thermal Monitor 2
-      //   [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
-      //   [10:10] CNXT-ID: L1 context ID
-      //   [12:11] reserved
-      //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
-      //   [14:14] xTPR update control
-      //   [18:15] reserved
-      //   [19:19] SSE4.1: SSE4.1 Instructions
-      //   [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
-      //   [31:21] reserved
-      // EDX:       Feature Flags
-      //   [0:0]   FPU on chip
-      //   [1:1]   VME: Virtual-8086 Mode enhancements
-      //   [2:2]   DE: Debug Extensions (I/O breakpoints)
-      //   [3:3]   PSE: Page Size Extensions
-      //   [4:4]   TSC: Time Stamp Counter
-      //   [5:5]   MSR: RDMSR and WRMSR support
-      //   [6:6]   PAE: Physical Address Extensions
-      //   [7:7]   MCE: Machine Check Exception
-      //   [8:8]   CXS: CMPXCHG8B instruction
-      //   [9:9]   APIC: APIC on Chip
-      //   [10:10] Reserved
-      //   [11:11] SYSENTER/SYSEXIT support
-      //   [12:12] MTRR: Memory Type Range Reg
-      //   [13:13] PGE/PTE Global Bit
-      //   [14:14] MCA: Machine Check Architecture
-      //   [15:15] CMOV: Cond Mov/Cmp Instructions
-      //   [16:16] PAT: Page Attribute Table
-      //   [17:17] PSE: Page-Size Extensions
-      //   [18:18] Processor Serial Number
-      //   [19:19] CLFLUSH: CLFLUSH Instruction support
-      //   [20:20] Reserved
-      //   [21:21] DS: Debug Store
-      //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
-      //   [23:23] MMX Technology
-      //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-      //   [25:25] SSE: SSE Extensions
-      //   [26:26] SSE2: SSE2 Extensions
-      //   [27:27] Reserved
-      //   [28:28] Hyper Threading Technology
-      //   [29:29] TM: Thermal Monitor
-      //   [30:30] Reserved
-      //   [31:31] PBE: Pending Break Enable
-      RAX = get_cpu_version_information();
-      RBX = 0;
+  if(function < 0x80000000) {
+    if(function < MAX_STD_CPUID_FUNCTION) {
+      RAX = BX_CPU_THIS_PTR cpuid_std_function[function].eax;
+      RBX = BX_CPU_THIS_PTR cpuid_std_function[function].ebx;
+      RCX = BX_CPU_THIS_PTR cpuid_std_function[function].ecx;
+      RDX = BX_CPU_THIS_PTR cpuid_std_function[function].edx;
 #if BX_SUPPORT_APIC
-      RBX |= (BX_CPU_THIS_PTR local_apic.get_id() << 24);
+      if (function == 1) {
+        // if MSR_APICBASE APIC Global Enable bit has been cleared,
+        // the CPUID feature flag for the APIC is set to 0.
+        if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
+          RDX &= ~(1<<9); // APIC on chip
+      }
+#endif
+      return;
+    }
+  }
+  else {
+    function -= 0x80000000;
+    if(function < MAX_EXT_CPUID_FUNCTION) {
+      RAX = BX_CPU_THIS_PTR cpuid_ext_function[function].eax;
+      RBX = BX_CPU_THIS_PTR cpuid_ext_function[function].ebx;
+      RCX = BX_CPU_THIS_PTR cpuid_ext_function[function].ecx;
+      RDX = BX_CPU_THIS_PTR cpuid_ext_function[function].edx;
+#if BX_SUPPORT_APIC
+      if (EAX == 1) {
+        // if MSR_APICBASE APIC Global Enable bit has been cleared,
+        // the CPUID feature flag for the APIC is set to 0.
+        if ((BX_CPU_THIS_PTR msr.apicbase & 0x800) == 0)
+          RDX &= ~(1<<9); // APIC on chip
+      }
+#endif
+      return;
+    }
+  }
+
+  // unknown CPUID function
+  RAX = 0;
+  RBX = 0;
+  RCX = 0;
+  RDX = 0;
+#else
+  BX_INFO(("CPUID: not available on < 486"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::set_cpuid_defaults(void)
+{
+  cpuid_function_t *cpuid;
+  int i;
+
+  for (int i=0;i<MAX_STD_CPUID_FUNCTION;i++) {
+    BX_CPU_THIS_PTR cpuid_std_function[i].eax = 0;
+    BX_CPU_THIS_PTR cpuid_std_function[i].ebx = 0;
+    BX_CPU_THIS_PTR cpuid_std_function[i].ecx = 0;
+    BX_CPU_THIS_PTR cpuid_std_function[i].edx = 0;
+  }
+
+  for (i=0;i<MAX_EXT_CPUID_FUNCTION;i++) {
+    BX_CPU_THIS_PTR cpuid_ext_function[i].eax = 0;
+    BX_CPU_THIS_PTR cpuid_ext_function[i].ebx = 0;
+    BX_CPU_THIS_PTR cpuid_ext_function[i].ecx = 0;
+    BX_CPU_THIS_PTR cpuid_ext_function[i].edx = 0;
+  }
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000000
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[0]);
+
+  // EAX: highest input value understood by CPUID
+  // EBX: vendor ID string
+  // EDX: vendor ID string
+  // ECX: vendor ID string
+
+#if BX_CPU_LEVEL <= 5
+  // 486 and Pentium processors
+  cpuid->eax = 1;
+#else 
+  // for Pentium Pro, Pentium II, Pentium 4 processors
+  cpuid->eax = BX_SUPPORT_MONITOR_MWAIT ? 5 : 2;
+#endif
+
+#if BX_CPU_VENDOR_INTEL
+  cpuid->ebx = 0x756e6547; // "Genu"
+  cpuid->edx = 0x49656e69; // "ineI"
+  cpuid->ecx = 0x6c65746e; // "ntel"
+#else
+  cpuid->ebx = 0x68747541; // "Auth"
+  cpuid->edx = 0x69746e65; // "enti"
+  cpuid->ecx = 0x444d4163; // "cAMD"
+#endif
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000001
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[1]);
+
+  // EAX:       CPU Version Information
+  //   [3:0]   Stepping ID
+  //   [7:4]   Model: starts at 1
+  //   [11:8]  Family: 4=486, 5=Pentium, 6=PPro, ...
+  //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
+  //   [31:14] Reserved
+
+  cpuid->eax = get_cpu_version_information();
+
+  // EBX:      
+  //   [7:0]   Brand ID
+  //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
+  //   [23:16] Number of logical processors in one physical processor
+  //   [31:24] Local Apic ID
+
+  cpuid->ebx = 0;
+#if BX_SUPPORT_APIC
+  cpuid->ebx |= (BX_CPU_THIS_PTR local_apic.get_id() << 24);
 #endif
 #if BX_SUPPORT_CLFLUSH
-      RBX |= (CACHE_LINE_SIZE / 8) << 8;
+  cpuid->ebx |= (CACHE_LINE_SIZE / 8) << 8;
 #endif
 #if BX_SUPPORT_SMP
-      n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
-      if (n_logical_processors > 1)
-          RBX |= (n_logical_processors << 16);
+  unsigned n_logical_processors = SIM->get_param_num(BXPN_CPU_NCORES)->get()*SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
+  if (n_logical_processors > 1)
+    cpuid->ebx |= (n_logical_processors << 16);
 #endif
-      RCX = get_extended_cpuid_features ();
-      RDX = get_std_cpuid_features ();
-      break;
 
-#if BX_CPU_LEVEL >= 6 
-    case 2:
-      RAX = 0x00410601;  // for Pentium Pro compatibility
-      RBX = 0;
-      RCX = 0;
-      RDX = 0;
-      break;
+  // ECX:       Extended Feature Flags
+  //   [0:0]   SSE3: SSE3 Instructions
+  //   [2:1]   reserved
+  //   [3:3]   MONITOR/MWAIT support
+  //   [4:4]   DS-CPL: CPL qualified debug store
+  //   [5:5]   VMX: Virtual Machine Technology
+  //   [6:6]   reserved
+  //   [7:7]   EST: Enhanced Intel SpeedStep Technology
+  //   [8:8]   TM2: Thermal Monitor 2
+  //   [9:9]   SSE3E: SSE3E Instructions (Intel Core Duo 2 new instructions)
+  //   [10:10] CNXT-ID: L1 context ID
+  //   [12:11] reserved
+  //   [13:13] CMPXCHG16B: CMPXCHG16B instruction support
+  //   [14:14] xTPR update control
+  //   [18:15] reserved
+  //   [19:19] SSE4.1: SSE4.1 Instructions
+  //   [20:20] SSE4.2: SSE4.2 (SSE4E) Instructions
+  //   [31:21] reserved
+  cpuid->ecx = get_extended_cpuid_features();
+
+  // EDX:       Feature Flags
+  //   [0:0]   FPU on chip
+  //   [1:1]   VME: Virtual-8086 Mode enhancements
+  //   [2:2]   DE: Debug Extensions (I/O breakpoints)
+  //   [3:3]   PSE: Page Size Extensions
+  //   [4:4]   TSC: Time Stamp Counter
+  //   [5:5]   MSR: RDMSR and WRMSR support
+  //   [6:6]   PAE: Physical Address Extensions
+  //   [7:7]   MCE: Machine Check Exception
+  //   [8:8]   CXS: CMPXCHG8B instruction
+  //   [9:9]   APIC: APIC on Chip
+  //   [10:10] Reserved
+  //   [11:11] SYSENTER/SYSEXIT support
+  //   [12:12] MTRR: Memory Type Range Reg
+  //   [13:13] PGE/PTE Global Bit
+  //   [14:14] MCA: Machine Check Architecture
+  //   [15:15] CMOV: Cond Mov/Cmp Instructions
+  //   [16:16] PAT: Page Attribute Table
+  //   [17:17] PSE: Page-Size Extensions
+  //   [18:18] Processor Serial Number
+  //   [19:19] CLFLUSH: CLFLUSH Instruction support
+  //   [20:20] Reserved
+  //   [21:21] DS: Debug Store
+  //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
+  //   [23:23] MMX Technology
+  //   [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  //   [25:25] SSE: SSE Extensions
+  //   [26:26] SSE2: SSE2 Extensions
+  //   [27:27] Reserved
+  //   [28:28] Hyper Threading Technology
+  //   [29:29] TM: Thermal Monitor
+  //   [30:30] Reserved
+  //   [31:31] PBE: Pending Break Enable
+  cpuid->edx = get_std_cpuid_features();
+
+#if BX_CPU_LEVEL >= 6
+  // ------------------------------------------------------
+  // CPUID function 0x00000002
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[2]);
+
+  cpuid->eax = 0x00410601;  // for Pentium Pro compatibility
+  cpuid->ebx = 0;
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
 
 #if BX_SUPPORT_MONITOR_MWAIT
-    case 3:
-    case 4:
-      RAX = 0;
-      RBX = 0;
-      RCX = 0;
-      RDX = 0;
-      break;
+  // ------------------------------------------------------
+  // CPUID function 0x00000003
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[3]);
 
-    case 5:
-      // EAX - Smallest monitor-line size in bytes
-      // EBX - Largest  monitor-line size in bytes
-      // ECX -
-      //   [32:2] - reserved
-      //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
-      //    [0:0] - MONITOR/MWAIT extensions are supported
-      // EDX - Reserved
-      RAX = CACHE_LINE_SIZE;
-      RBX = CACHE_LINE_SIZE;
-      RCX = 3;
-      RDX = 0;
-      break;
+  cpuid->eax = 0;
+  cpuid->ebx = 0;
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000004
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[4]);
+
+  cpuid->eax = 0;
+  cpuid->ebx = 0;
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000005
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[5]);
+
+  // EAX - Smallest monitor-line size in bytes
+  // EBX - Largest  monitor-line size in bytes
+  // ECX -
+  //   [31:2] - reserved
+  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+  //    [0:0] - MONITOR/MWAIT extensions are supported
+  // EDX - Reserved
+  cpuid->eax = CACHE_LINE_SIZE;
+  cpuid->ebx = CACHE_LINE_SIZE;
+  cpuid->ecx = 3;
+  cpuid->edx = 0;
 #endif
 
-#if BX_SUPPORT_SSE >= 2
+#if BX_SUPPORT_SSE >= 2   // report Pentium 4 extended functions
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000000
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[0]);
+
+  // EAX: highest input value understood by CPUID
+  // EBX: vendor ID string
+  // EDX: vendor ID string
+  // ECX: vendor ID string
+  cpuid->eax = BX_SUPPORT_X86_64 ? 0x80000008 : 0x80000004;
+#if BX_CPU_VENDOR_INTEL
+  cpuid->ebx = 0x756e6547; // "Genu"
+  cpuid->edx = 0x49656e69; // "ineI"
+  cpuid->ecx = 0x6c65746e; // "ntel"
+#else
+  cpuid->ebx = 0x68747541; // "Auth"
+  cpuid->edx = 0x69746e65; // "enti"
+  cpuid->ecx = 0x444d4163; // "cAMD"
+#endif
 
 #if BX_SUPPORT_X86_64
-    // Extended information for AMD Athlon processor
+  // ------------------------------------------------------
+  // CPUID function 0x80000001
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[1]);
 
-    // x86-64 functions
-    case 0x80000000:
-      // max function supported.
-      RAX = 0x80000008;
-      RBX = 0x68747541; // "Auth"
-      RDX = 0x69746e65; // "enti"
-      RCX = 0x444d4163; // "cAMD"
-      break;
+  // EAX:       CPU Version Information
+  cpuid->eax = get_cpu_version_information();
 
-    case 0x80000001:
-      RAX = get_cpu_version_information();
-      // Many of the bits in EDX are the same as EAX [*]
-      // [*] [0:0]   FPU on chip
-      // [*] [1:1]   VME: Virtual-8086 Mode enhancements
-      // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
-      // [*] [3:3]   PSE: Page Size Extensions
-      // [*] [4:4]   TSC: Time Stamp Counter
-      // [*] [5:5]   MSR: RDMSR and WRMSR support
-      // [*] [6:6]   PAE: Physical Address Extensions
-      // [*] [7:7]   MCE: Machine Check Exception
-      // [*] [8:8]   CXS: CMPXCHG8B instruction
-      // [*] [9:9]   APIC: APIC on Chip
-      //     [10:10] Reserved
-      //     [11:11] SYSCALL/SYSRET support
-      // [*] [12:12] MTRR: Memory Type Range Reg
-      // [*] [13:13] PGE/PTE Global Bit
-      // [*] [14:14] MCA: Machine Check Architecture
-      // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
-      // [*] [16:16] PAT: Page Attribute Table
-      // [*] [17:17] PSE: Page-Size Extensions
-      //     [18:19] Reserved
-      //     [20:20] No-Execute page protection
-      //     [21:21] Reserved
-      //     [22:22] AMD MMX Extensions
-      // [*] [23:23] MMX Technology
-      // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-      //     [25:25] Fast FXSAVE/FXRSTOR mode support
-      //     [26:26] Reserved
-      //     [27:27] Support RDTSCP Instruction
-      //     [28:28] Reserved
-      //     [29:29] Long Mode
-      //     [30:30] AMD 3DNow! Extensions
-      //     [31:31] AMD 3DNow! Instructions
-      features = get_std_cpuid_features();
-      features = features & 0x0183F3FF;
+  // EBX:       Reserved
+  cpuid->ebx = 0;
 
-      RDX = features | (1 << 29) | (1 << 27) | (1 << 25) | 
-                       (1 << 22) | (1 << 20) | (1 << 11);
-      RBX = 0;
-
-      // RCX:
-      //     [0:0]   LAHF/SAHF available in 64-bit mode
-      //     [1:1]   AMD CmpLegacy
-      //     [2:2]   AMD Secure Virtual Machine Technology
-      //     [3:3]   Extended APIC Space
-      //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8) 
-      //     [5:5]   LZCNT support
-      //     [6:6]   SSE4A support
-      //     [7:7]   Misaligned SSE support
-      //     [8:8]   3DNow! prefetch support
-      //     [9:9]   OS visible workarounds
-      //     [10:31] Reserved
-      RCX = 1 | (1<<8);
+  // ECX:
+  //     [0:0]   LAHF/SAHF available in 64-bit mode
+  //     [1:1]   AMD CmpLegacy
+  //     [2:2]   AMD Secure Virtual Machine Technology
+  //     [3:3]   Extended APIC Space
+  //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8) 
+  //     [5:5]   LZCNT support
+  //     [6:6]   SSE4A support
+  //     [7:7]   Misaligned SSE support
+  //     [8:8]   3DNow! prefetch support
+  //     [9:9]   OS visible workarounds
+  //     [10:31] Reserved
+  cpuid->ecx = 1 | (1<<8);
 #if BX_SUPPORT_MISALIGNED_SSE
-      RCX |= (1<<7);
+  cpuid->ecx |= (1<<7);
 #endif
-      break;
 
-    // Processor Brand String, use the value given 
-    // in AMD manuals.
-    case 0x80000002:
-      RAX = 0x20444D41; // "AMD "
-      RBX = 0x6C687441; // "Athl"
-      RCX = 0x74286E6F; // "on(t"
-      RDX = 0x7020296D; // "m) p"
-      break;
-    case 0x80000003:
-      RAX = 0x65636F72; // "roce"
-      RBX = 0x726F7373; // "ssor"
-      RCX = 0x00000000;
-      RDX = 0x00000000;
-      break;
-    case 0x80000004:
-      RAX = 0x00000000;
-      RBX = 0x00000000;
-      RCX = 0x00000000;
-      RDX = 0x00000000;
-      break;
-    case 0x80000005:
-      /* cache info (L1 cache) */
-      RAX = 0x01ff01ff;
-      RBX = 0x01ff01ff;
-      RCX = 0x40020140;
-      RDX = 0x40020140;
-      break;
-    case 0x80000006:
-      /* cache info (L2 cache) */
-      RAX = 0;
-      RBX = 0x42004200;
-      RCX = 0x02008140;
-      RDX = 0;
-      break;
-    case 0x80000008:
-      // virtual & phys address size in low 2 bytes.
-      RAX = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH<<8);
-      RBX = 0;
-      RCX = 0;
-      RDX = 0; // Reserved, undefined
-      break;
+  // EDX: 
+  // Many of the bits in EDX are the same as EAX [*]
+  // [*] [0:0]   FPU on chip
+  // [*] [1:1]   VME: Virtual-8086 Mode enhancements
+  // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // [*] [3:3]   PSE: Page Size Extensions
+  // [*] [4:4]   TSC: Time Stamp Counter
+  // [*] [5:5]   MSR: RDMSR and WRMSR support
+  // [*] [6:6]   PAE: Physical Address Extensions
+  // [*] [7:7]   MCE: Machine Check Exception
+  // [*] [8:8]   CXS: CMPXCHG8B instruction
+  // [*] [9:9]   APIC: APIC on Chip
+  //     [10:10] Reserved
+  //     [11:11] SYSCALL/SYSRET support
+  // [*] [12:12] MTRR: Memory Type Range Reg
+  // [*] [13:13] PGE/PTE Global Bit
+  // [*] [14:14] MCA: Machine Check Architecture
+  // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
+  // [*] [16:16] PAT: Page Attribute Table
+  // [*] [17:17] PSE: Page-Size Extensions
+  //     [18:19] Reserved
+  //     [20:20] No-Execute page protection
+  //     [21:21] Reserved
+  //     [22:22] AMD MMX Extensions
+  // [*] [23:23] MMX Technology
+  // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+  //     [25:25] Fast FXSAVE/FXRSTOR mode support
+  //     [26:26] Reserved
+  //     [27:27] Support RDTSCP Instruction
+  //     [28:28] Reserved
+  //     [29:29] Long Mode
+  //     [30:30] AMD 3DNow! Extensions
+  //     [31:31] AMD 3DNow! Instructions
+  unsigned features = get_std_cpuid_features();
+           features = features & 0x0183F3FF;
 
-#else // BX_SUPPORT_X86_64
+  cpuid->edx = features | (1 << 29) | (1 << 27) | (1 << 25) | 
+                          (1 << 22) | (1 << 20) | (1 << 11);
+#else
+  // ------------------------------------------------------
+  // CPUID function 0x80000001
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[1]);
 
-    // Extended information for Intel P4 processor
-    case 0x80000000:
-      // max function supported.
-      RAX = 0x80000004;
-      RBX = 0;
-      RCX = 0;
-      RDX = 0;
-      break;
+  cpuid->eax = 0;
+  cpuid->ebx = 0;  // Reserved
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+#endif
 
-    case 0x80000001:    // Reserved
-      RAX = 0;
-      RBX = 0;
-      RCX = 0;
-      RDX = 0;
-      break;
+#if BX_CPU_VENDOR_INTEL
+  // Processor Brand String, use the value that is returned
+  // by the first processor in the Pentium 4 family 
+  // (according to Intel manual)
 
-    // Processor Brand String, use the value that is returned
-    // by the first processor in the Pentium 4 family 
-    // (according to Intel manual)
-    case 0x80000002:
-      RAX = 0x20202020; // "    "
-      RBX = 0x20202020; // "    "
-      RCX = 0x20202020; // "    "
-      RDX = 0x6E492020; // "  In"
-      break;
-    case 0x80000003:
-      RAX = 0x286C6574; // "tel("
-      RBX = 0x50202952; // "R) P"
-      RCX = 0x69746E65; // "enti"
-      RDX = 0x52286D75; // "um(R"
-      break;
-    case 0x80000004:
-      RAX = 0x20342029; // ") 4 "
-      RBX = 0x20555043; // "CPU "
-      RCX = 0x20202020; // "    "
-      RDX = 0x00202020; // "    "
-      break;
+  // ------------------------------------------------------
+  // CPUID function 0x80000002
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[2]);
+  cpuid->eax = 0x20202020; // "    "
+  cpuid->ebx = 0x20202020; // "    "
+  cpuid->ecx = 0x20202020; // "    "
+  cpuid->edx = 0x6E492020; // "  In"
+
+  // CPUID function 0x80000003
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
+  cpuid->eax = 0x286C6574; // "tel("
+  cpuid->ebx = 0x50202952; // "R) P"
+  cpuid->ecx = 0x69746E65; // "enti"
+  cpuid->edx = 0x52286D75; // "um(R"
+
+  // CPUID function 0x80000004
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
+  cpuid->eax = 0x20342029; // ") 4 "
+  cpuid->ebx = 0x20555043; // "CPU "
+  cpuid->ecx = 0x20202020; // "    "
+  cpuid->edx = 0x00202020; // "    "
+#else
+  // Processor Brand String, use the value given 
+  // in AMD manuals.
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000002
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[2]);
+  cpuid->eax = 0x20444D41; // "AMD "
+  cpuid->ebx = 0x6C687441; // "Athl"
+  cpuid->ecx = 0x74286E6F; // "on(t"
+  cpuid->edx = 0x7020296D; // "m) p"
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000003
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[3]);
+  cpuid->eax = 0x65636F72; // "roce"
+  cpuid->ebx = 0x726F7373; // "ssor"
+  cpuid->ecx = 0x00000000;
+  cpuid->edx = 0x00000000;
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000004
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[4]);
+  cpuid->eax = 0x00000000;
+  cpuid->ebx = 0x00000000;
+  cpuid->ecx = 0x00000000;
+  cpuid->edx = 0x00000000;
+#endif
+
+#if BX_SUPPORT_X86_64
+  // ------------------------------------------------------
+  // CPUID function 0x80000005
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[5]);
+
+  /* cache info (L1 cache) */
+  cpuid->eax = 0x01ff01ff;
+  cpuid->ebx = 0x01ff01ff;
+  cpuid->ecx = 0x40020140;
+  cpuid->edx = 0x40020140;
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000006
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[6]);
+
+  /* cache info (L2 cache) */
+  cpuid->eax = 0;
+  cpuid->ebx = 0x42004200;
+  cpuid->ecx = 0x02008140;
+  cpuid->edx = 0;
+
+  // ------------------------------------------------------
+  // CPUID function 0x00000007
+  cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[7]);
+
+  cpuid->eax = 0;
+  cpuid->ebx = 0;
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+
+  // ------------------------------------------------------
+  // CPUID function 0x80000008
+  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[8]);
+
+  // virtual & phys address size in low 2 bytes.
+  cpuid->eax = BX_PHY_ADDRESS_WIDTH | (BX_LIN_ADDRESS_WIDTH << 8);
+  cpuid->ebx = 0;
+  cpuid->ecx = 0; // Reserved, undefined
+  cpuid->edx = 0;
+
 #endif // BX_SUPPORT_X86_64
 
 #endif // BX_SUPPORT_SSE >= 2
 
-#endif // BX_CPU_LEVEL >= 6 
-
-    default:
-      RAX = 0;
-      RBX = 0;
-      RCX = 0;
-      RDX = 0; // Reserved, undefined
-      break;
-    }
-
-#else
-  BX_INFO(("CPUID: not available on < late 486"));
-  UndefinedOpcode(i);
-#endif
+#endif // BX_CPU_LEVEL >= 6
 }
