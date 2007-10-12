@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.52 2007-10-12 19:30:51 sshwarts Exp $
+// $Id: cpuid.cc,v 1.53 2007-10-12 21:45:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -106,7 +106,7 @@ Bit32u BX_CPU_C::get_cpu_version_information()
   stepping = 0;
 
 #if BX_SUPPORT_X86_64
-  model = 2;            // Hammer returns what?
+  model    = 2;         // Hammer returns what?
 #endif
 
 #else	                // Pentium Pro/Pentium II/Pentium III processor
@@ -441,17 +441,23 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
 #if BX_CPU_LEVEL >= 6
   // ------------------------------------------------------
-  // CPUID function 0x00000002
+  // CPUID function 0x00000002 - Cache and TLB Descriptors
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[2]);
 
+#if BX_CPU_VENDOR_INTEL
   cpuid->eax = 0x00410601;  // for Pentium Pro compatibility
   cpuid->ebx = 0;
   cpuid->ecx = 0;
   cpuid->edx = 0;
+#else
+  cpuid->eax = 0;           // ignore for AMD
+  cpuid->ebx = 0;
+  cpuid->ecx = 0;
+  cpuid->edx = 0;
+#endif
 
-#if BX_SUPPORT_MONITOR_MWAIT
   // ------------------------------------------------------
-  // CPUID function 0x00000003
+  // CPUID function 0x00000003 - Processor Serial Number
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[3]);
 
   cpuid->eax = 0;
@@ -460,7 +466,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->edx = 0;
 
   // ------------------------------------------------------
-  // CPUID function 0x00000004
+  // CPUID function 0x00000004 - Deterministic Cache Parameters
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[4]);
 
   cpuid->eax = 0;
@@ -468,6 +474,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ecx = 0;
   cpuid->edx = 0;
 
+#if BX_SUPPORT_MONITOR_MWAIT
   // ------------------------------------------------------
   // CPUID function 0x00000005
   cpuid = &(BX_CPU_THIS_PTR cpuid_std_function[5]);
@@ -497,24 +504,23 @@ void BX_CPU_C::set_cpuid_defaults(void)
   // ECX: vendor ID string
   cpuid->eax = BX_SUPPORT_X86_64 ? 0x80000008 : 0x80000004;
 #if BX_CPU_VENDOR_INTEL
-  cpuid->ebx = 0x756e6547; // "Genu"
-  cpuid->edx = 0x49656e69; // "ineI"
-  cpuid->ecx = 0x6c65746e; // "ntel"
+  cpuid->ebx = 0;
+  cpuid->edx = 0;          // Reserved for Intel
+  cpuid->ecx = 0;
 #else
   cpuid->ebx = 0x68747541; // "Auth"
   cpuid->edx = 0x69746e65; // "enti"
   cpuid->ecx = 0x444d4163; // "cAMD"
 #endif
 
-#if BX_SUPPORT_X86_64
   // ------------------------------------------------------
   // CPUID function 0x80000001
   cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[1]);
 
   // EAX:       CPU Version Information
-  cpuid->eax = get_cpu_version_information();
+  cpuid->eax = BX_CPU_VENDOR_INTEL ? 0 : get_cpu_version_information();
 
-  // EBX:       Reserved
+  // EBX:       Brand ID
   cpuid->ebx = 0;
 
   // ECX:
@@ -529,13 +535,15 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //     [8:8]   3DNow! prefetch support
   //     [9:9]   OS visible workarounds
   //     [10:31] Reserved
+#if BX_SUPPORT_X86_64
   cpuid->ecx = 1 | (1<<8);
+#endif
 #if BX_SUPPORT_MISALIGNED_SSE
   cpuid->ecx |= (1<<7);
 #endif
 
   // EDX: 
-  // Many of the bits in EDX are the same as EAX [*]
+  // Many of the bits in EDX are the same as EAX [*] for AMD
   // [*] [0:0]   FPU on chip
   // [*] [1:1]   VME: Virtual-8086 Mode enhancements
   // [*] [2:2]   DE: Debug Extensions (I/O breakpoints)
@@ -561,27 +569,21 @@ void BX_CPU_C::set_cpuid_defaults(void)
   // [*] [23:23] MMX Technology
   // [*] [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
   //     [25:25] Fast FXSAVE/FXRSTOR mode support
-  //     [26:26] Reserved
+  //     [26:26] 1G paging support
   //     [27:27] Support RDTSCP Instruction
   //     [28:28] Reserved
   //     [29:29] Long Mode
   //     [30:30] AMD 3DNow! Extensions
   //     [31:31] AMD 3DNow! Instructions
-  unsigned features = get_std_cpuid_features();
-           features = features & 0x0183F3FF;
-
-  cpuid->edx = features | (1 << 29) | (1 << 27) | (1 << 25) | 
-                          (1 << 22) | (1 << 20) | (1 << 11);
-#else
-  // ------------------------------------------------------
-  // CPUID function 0x80000001
-  cpuid = &(BX_CPU_THIS_PTR cpuid_ext_function[1]);
-
-  cpuid->eax = 0;
-  cpuid->ebx = 0;  // Reserved
-  cpuid->ecx = 0;
-  cpuid->edx = 0;
+  unsigned features  = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
+  features &= 0x0183F3FF;
+#if BX_SUPPORT_3DNOW
+  features |= (1 << 22);  // only AMD is interesting in AMD MMX extensions
 #endif
+#if BX_SUPPORT_X86_64
+  features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
+#endif
+  cpuid->edx = features;
 
 #if BX_CPU_VENDOR_INTEL
   // Processor Brand String, use the value that is returned
