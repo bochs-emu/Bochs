@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.139 2007-10-14 19:36:23 sshwarts Exp $
+// $Id: init.cc,v 1.140 2007-10-14 21:42:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -755,7 +755,12 @@ void BX_CPU_C::reset(unsigned source)
 {
   unsigned i;
 
-  UNUSED(source); // either BX_RESET_HARDWARE or BX_RESET_SOFTWARE
+  if (source == BX_RESET_HARDWARE)
+    BX_INFO(("cpu hardware reset"));
+  else if (source == BX_RESET_SOFTWARE)
+    BX_INFO(("cpu software reset"));
+  else
+    BX_INFO(("cpu reset"));
 
   // initialize CPUID values
   set_cpuid_defaults();
