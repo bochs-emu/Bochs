@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.34 2007-10-12 22:11:25 sshwarts Exp $
+// $Id: debug.h,v 1.35 2007-10-14 19:04:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,6 @@ void bx_dbg_where_command(void);
 void bx_dbg_print_string_command(bx_address addr);
 void bx_dbg_xlate_address(bx_lin_address address);
 void bx_dbg_show_command(const char*);
-void bx_dbg_show_param_command(char *param);
 void bx_dbg_print_stack_command(unsigned nwords);
 void bx_dbg_watch(int read, bx_phy_address address);
 void bx_dbg_unwatch(int read, bx_phy_address address);
@@ -278,7 +277,6 @@ void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit32u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
 void bx_dbg_dump_cpu_command(void);
-void bx_dbg_set_cpu_command(void);
 void bx_dbg_disassemble_current(const char *);
 void bx_dbg_disassemble_command(const char *, Bit64u from, Bit64u to);
 void bx_dbg_instrument_command(const char *);
@@ -294,6 +292,10 @@ void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code);
 void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code);
+
+// commands that work with Bochs param tree
+void bx_dbg_restore_command(const char *param_name, const char *path);
+void bx_dbg_show_param_command(char *param);
 
 int bx_dbg_show_symbolic(void);
 void bx_dbg_set_symbol_command(char *symbol, Bit32u val);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.177 2007-10-14 00:20:30 sshwarts Exp $
+// $Id: siminterface.cc,v 1.178 2007-10-14 19:04:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -58,7 +58,7 @@ public:
   virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
-  virtual Bit32u gen_param_id();
+  virtual Bit32u gen_param_id() { return param_id++; }
   virtual int get_n_log_modules();
   virtual char *get_prefix(int mod);
   virtual int get_log_action(int mod, int level);
@@ -71,7 +71,7 @@ public:
 	logfunctions::set_default_action(level, action);
   }
   virtual const char *get_log_level_name(int level);
-  virtual int get_max_log_level();
+  virtual int get_max_log_level() { return N_LOGLEV; }
   virtual void quit_sim(int code);
   virtual int get_exit_code() { return exit_code; }
   virtual int get_default_rc(char *path, int len);
@@ -153,9 +153,10 @@ public:
   virtual bx_list_c *get_bochs_root() {
     return (bx_list_c*)get_param("bochs", NULL);
   }
+  virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name);
+
 private:
   bx_bool save_sr_param(FILE *fp, bx_param_c *node, const char *sr_path, int level);
-  bx_bool restore_sr_param(bx_list_c *root, const char *sr_path, const char *restore_name);
 };
 
 // recursive function to find parameters from the path
@@ -259,11 +260,6 @@ bx_param_enum_c *bx_real_sim_c::get_param_enum(const char *pname, bx_param_c *ba
   return NULL;
 }
 
-Bit32u bx_real_sim_c::gen_param_id()
-{
-  return param_id++;
-}
-
 void bx_init_siminterface()
 {
   siminterface_log = new logfunctions();
@@ -340,11 +336,6 @@ char *bx_real_sim_c::get_action_name(int action)
 const char *bx_real_sim_c::get_log_level_name(int level)
 {
   return io->getlevel(level);
-}
-
-int bx_real_sim_c::get_max_log_level()
-{
-  return N_LOGLEV;
 }
 
 void bx_real_sim_c::quit_sim(int code) {
@@ -842,12 +833,8 @@ void bx_real_sim_c::init_save_restore()
     list = new bx_list_c(root_param,
       "bochs",
       "subtree for save/restore", 
-      30);
+      30 + BX_MAX_SMP_THREADS_SUPPORTED);
   }
-  new bx_list_c(list,
-    "cpu",
-    "CPU State", 
-    BX_MAX_SMP_THREADS_SUPPORTED);
 }
 
 bx_bool bx_real_sim_c::save_state(const char *checkpoint_path)
@@ -981,7 +968,7 @@ bx_bool bx_real_sim_c::restore_logopts()
   return 1;
 }
 
-bx_bool bx_real_sim_c::restore_sr_param(bx_list_c *root, const char *sr_path, const char *restore_name)
+bx_bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
   char line[512], buf[512], pname[80];
@@ -990,6 +977,11 @@ bx_bool bx_real_sim_c::restore_sr_param(bx_list_c *root, const char *sr_path, co
   unsigned n;
   bx_param_c *param = NULL;
   FILE *fp, *fp2;
+
+  if (root->get_by_name(restore_name) == NULL) {
+    BX_ERROR(("restore_bochs_param(): unknown parameter to restore"));
+    return 0;
+  }
 
   sprintf(devstate, "%s/%s", sr_path, restore_name);
   BX_INFO(("restoring '%s'", devstate));
@@ -1071,6 +1063,7 @@ bx_bool bx_real_sim_c::restore_sr_param(bx_list_c *root, const char *sr_path, co
     } while (!feof(fp));
     fclose(fp);
   } else {
+    BX_ERROR(("restore_bochs_param(): error in file open"));
     return 0;
   }
 
@@ -1082,7 +1075,7 @@ bx_bool bx_real_sim_c::restore_hardware()
   bx_list_c *sr_list = get_bochs_root();
   int ndev = sr_list->get_size();
   for (int dev=0; dev<ndev; dev++) {
-    if (!restore_sr_param(sr_list, get_param_string(BXPN_RESTORE_PATH)->getptr(), sr_list->get(dev)->get_name()))
+    if (!restore_bochs_param(sr_list, get_param_string(BXPN_RESTORE_PATH)->getptr(), sr_list->get(dev)->get_name()))
       return 0;
   }
   return 1;
@@ -1343,11 +1336,6 @@ Bit32u bx_param_num_c::set_default_base(Bit32u val)
   return old;
 }
 
-void bx_param_num_c::reset()
-{
-  this->val.number = initial_val;
-}
-
 void bx_param_num_c::set_handler(param_event_handler handler)
 { 
   this->handler = handler; 
@@ -1362,12 +1350,8 @@ void bx_param_num_c::set_sr_handlers(void *devptr, param_sr_handler save, param_
   this->restore_handler = restore; 
 }
 
-void bx_param_num_c::set_enable_handler(param_enable_handler handler)
-{ 
-  this->enable_handler = handler; 
-}
-
-void bx_param_num_c::set_dependent_list(bx_list_c *l) {
+void bx_param_num_c::set_dependent_list(bx_list_c *l)
+{
   dependent_list = l;
   update_dependents();
 }

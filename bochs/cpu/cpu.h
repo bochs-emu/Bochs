@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.334 2007-10-12 19:30:51 sshwarts Exp $
+// $Id: cpu.h,v 1.335 2007-10-14 19:04:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1263,8 +1263,11 @@ public: // for now...
   ~BX_CPU_C();
 #endif
   void initialize(BX_MEM_C *addrspace);
-  void register_state(void);
   void after_restore_state(void);
+  void register_state(void);
+#if BX_WITH_WX
+  void register_wx_state(void);
+#endif
   static  Bit64s param_save_handler(void *devptr, bx_param_c *param, Bit64s val);
   static  Bit64s param_restore_handler(void *devptr, bx_param_c *param, Bit64s val);
 #if !BX_USE_CPU_SMF
@@ -2726,7 +2729,6 @@ public: // for now...
   BX_SMF void     dbg_force_interrupt(unsigned vector);
   BX_SMF void     dbg_take_dma(void);
   BX_SMF bx_bool  dbg_get_cpu(bx_dbg_cpu_t *cpu);
-  BX_SMF bx_bool  dbg_set_cpu(bx_dbg_cpu_t *cpu);
   BX_SMF bx_bool  dbg_set_reg(unsigned reg, Bit32u val);
   BX_SMF Bit32u   dbg_get_reg(unsigned reg);
   BX_SMF bx_bool  dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);

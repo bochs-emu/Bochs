@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32dialog.cc,v 1.59 2007-09-28 19:51:57 sshwarts Exp $
+// $Id: win32dialog.cc,v 1.60 2007-10-14 19:04:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
@@ -916,32 +916,32 @@ static BOOL CALLBACK DebuggerDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       GetWindowRect(hDlg, &R);
 #if BX_SUPPORT_X86_64
-      cpu_param[0] = SIM->get_param_num("cpu.0.RAX", SIM->get_bochs_root());
-      cpu_param[1] = SIM->get_param_num("cpu.0.RBX", SIM->get_bochs_root());
-      cpu_param[2] = SIM->get_param_num("cpu.0.RCX", SIM->get_bochs_root());
-      cpu_param[3] = SIM->get_param_num("cpu.0.RDX", SIM->get_bochs_root());
-      cpu_param[4] = SIM->get_param_num("cpu.0.RSP", SIM->get_bochs_root());
-      cpu_param[5] = SIM->get_param_num("cpu.0.RBP", SIM->get_bochs_root());
-      cpu_param[6] = SIM->get_param_num("cpu.0.RSI", SIM->get_bochs_root());
-      cpu_param[7] = SIM->get_param_num("cpu.0.RDI", SIM->get_bochs_root());
-      cpu_param[8] = SIM->get_param_num("cpu.0.RIP", SIM->get_bochs_root());
+      cpu_param[0] = SIM->get_param_num("cpu0.RAX", SIM->get_bochs_root());
+      cpu_param[1] = SIM->get_param_num("cpu0.RBX", SIM->get_bochs_root());
+      cpu_param[2] = SIM->get_param_num("cpu0.RCX", SIM->get_bochs_root());
+      cpu_param[3] = SIM->get_param_num("cpu0.RDX", SIM->get_bochs_root());
+      cpu_param[4] = SIM->get_param_num("cpu0.RSP", SIM->get_bochs_root());
+      cpu_param[5] = SIM->get_param_num("cpu0.RBP", SIM->get_bochs_root());
+      cpu_param[6] = SIM->get_param_num("cpu0.RSI", SIM->get_bochs_root());
+      cpu_param[7] = SIM->get_param_num("cpu0.RDI", SIM->get_bochs_root());
+      cpu_param[8] = SIM->get_param_num("cpu0.RIP", SIM->get_bochs_root());
 #else
-      cpu_param[0] = SIM->get_param_num("cpu.0.EAX", SIM->get_bochs_root());
-      cpu_param[1] = SIM->get_param_num("cpu.0.EBX", SIM->get_bochs_root());
-      cpu_param[2] = SIM->get_param_num("cpu.0.ECX", SIM->get_bochs_root());
-      cpu_param[3] = SIM->get_param_num("cpu.0.EDX", SIM->get_bochs_root());
-      cpu_param[4] = SIM->get_param_num("cpu.0.ESP", SIM->get_bochs_root());
-      cpu_param[5] = SIM->get_param_num("cpu.0.EBP", SIM->get_bochs_root());
-      cpu_param[6] = SIM->get_param_num("cpu.0.ESI", SIM->get_bochs_root());
-      cpu_param[7] = SIM->get_param_num("cpu.0.EDI", SIM->get_bochs_root());
-      cpu_param[8] = SIM->get_param_num("cpu.0.EIP", SIM->get_bochs_root());
+      cpu_param[0] = SIM->get_param_num("cpu0.EAX", SIM->get_bochs_root());
+      cpu_param[1] = SIM->get_param_num("cpu0.EBX", SIM->get_bochs_root());
+      cpu_param[2] = SIM->get_param_num("cpu0.ECX", SIM->get_bochs_root());
+      cpu_param[3] = SIM->get_param_num("cpu0.EDX", SIM->get_bochs_root());
+      cpu_param[4] = SIM->get_param_num("cpu0.ESP", SIM->get_bochs_root());
+      cpu_param[5] = SIM->get_param_num("cpu0.EBP", SIM->get_bochs_root());
+      cpu_param[6] = SIM->get_param_num("cpu0.ESI", SIM->get_bochs_root());
+      cpu_param[7] = SIM->get_param_num("cpu0.EDI", SIM->get_bochs_root());
+      cpu_param[8] = SIM->get_param_num("cpu0.EIP", SIM->get_bochs_root());
 #endif
-      cpu_param[9] = SIM->get_param_num("cpu.0.CS.selector", SIM->get_bochs_root());
-      cpu_param[10] = SIM->get_param_num("cpu.0.DS.selector", SIM->get_bochs_root());
-      cpu_param[11] = SIM->get_param_num("cpu.0.ES.selector", SIM->get_bochs_root());
-      cpu_param[12] = SIM->get_param_num("cpu.0.FS.selector", SIM->get_bochs_root());
-      cpu_param[13] = SIM->get_param_num("cpu.0.GS.selector", SIM->get_bochs_root());
-      cpu_param[14] = SIM->get_param_num("cpu.0.EFLAGS", SIM->get_bochs_root());
+      cpu_param[9] = SIM->get_param_num("cpu0.CS.selector", SIM->get_bochs_root());
+      cpu_param[10] = SIM->get_param_num("cpu0.DS.selector", SIM->get_bochs_root());
+      cpu_param[11] = SIM->get_param_num("cpu0.ES.selector", SIM->get_bochs_root());
+      cpu_param[12] = SIM->get_param_num("cpu0.FS.selector", SIM->get_bochs_root());
+      cpu_param[13] = SIM->get_param_num("cpu0.GS.selector", SIM->get_bochs_root());
+      cpu_param[14] = SIM->get_param_num("cpu0.EFLAGS", SIM->get_bochs_root());
       return TRUE;
     case WM_CLOSE:
       bx_user_quit = 1;

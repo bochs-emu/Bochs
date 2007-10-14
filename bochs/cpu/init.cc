@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.137 2007-10-14 00:22:07 sshwarts Exp $
+// $Id: init.cc,v 1.138 2007-10-14 19:04:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 
 #define NEED_CPU_REG_SHORTCUTS 1
@@ -34,7 +36,6 @@
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
-
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 #if BX_SUPPORT_APIC
@@ -253,6 +254,13 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
   sprintf(name, "CPU %d", BX_CPU_ID);
 
 #if BX_WITH_WX
+  register_wx_state();
+#endif
+}
+
+#if BX_WITH_WX
+void BX_CPU_C::register_wx_state(void)
+{
   if (SIM->get_param(BXPN_WX_CPU_STATE) != NULL) {
     // Register some of the CPUs variables as shadow parameters so that
     // they can be visible in the config interface.
@@ -375,19 +383,21 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
       bx_param_num_c::set_default_format(oldfmt);
     }
   }
-#endif
 }
+#endif
 
 // save/restore functionality
 void BX_CPU_C::register_state(void)
 {
   unsigned i;
-  char cpu_name[10], cpu_title[10], name[10];
+  char name[10];
 
-  sprintf(cpu_name, "%d", BX_CPU_ID);
-  sprintf(cpu_title, "CPU %d", BX_CPU_ID);
-  bx_list_c *cpu = new bx_list_c(SIM->get_param("bochs.cpu"), 
-           cpu_name, cpu_title, 60);
+  if (BX_SMP_PROCESSORS < 2)
+    sprintf(name, "cpu");
+  else 
+    sprintf(name, "cpu%d", BX_CPU_ID);
+  
+  bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 60);
 
   BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
@@ -395,6 +405,7 @@ void BX_CPU_C::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
+  BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_SIMPLE(cpu, RAX);
   BXRS_HEX_PARAM_SIMPLE(cpu, RBX);
@@ -544,7 +555,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
-  bx_list_c *fpu = new bx_list_c(cpu, "fpu", 17);
+  bx_list_c *fpu = new bx_list_c(cpu, "FPU", 17);
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
   BXRS_HEX_PARAM_FIELD(fpu, swd, the_i387.swd);
   BXRS_HEX_PARAM_FIELD(fpu, twd, the_i387.twd);
@@ -563,7 +574,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_SSE
-  bx_list_c *sse = new bx_list_c(cpu, "sse", 2*BX_XMM_REGISTERS+1);
+  bx_list_c *sse = new bx_list_c(cpu, "SSE", 2*BX_XMM_REGISTERS+1);
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);

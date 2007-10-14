@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.101 2007-10-14 00:23:06 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.102 2007-10-14 19:04:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,6 +52,7 @@ unsigned dbg_cpu = 0;
 bx_list_c *dbg_cpu_list = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
+extern void bx_sr_after_restore_state(void);
 
 static bx_param_bool_c *sim_running = NULL;
 
@@ -166,7 +167,7 @@ int bx_dbg_main(void)
   bx_debugger.default_addr = 0;
   bx_debugger.next_bpoint_id = 1;
 
-  dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu.0", SIM->get_bochs_root());
+  dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu0", SIM->get_bochs_root());
 
   // Open debugger log file if needed
   if ((strlen(SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr()) > 0) 
@@ -500,14 +501,14 @@ void bx_dbg_exit(int code)
 void bx_dbg_print_sse_state(void)
 {
 #if BX_SUPPORT_SSE
-  Bit32u mxcsr = SIM->get_param_num("sse.mxcsr", dbg_cpu_list)->get();
+  Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
   dbg_printf("MXCSR: 0x%08x\n", mxcsr);
 
   char param_name[20];
   for(unsigned i=0;i<BX_XMM_REGISTERS;i++) {
-    sprintf(param_name, "sse.xmm%02d_hi", i);
+    sprintf(param_name, "SSE.xmm%02d_hi", i);
     Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get();
-    sprintf(param_name, "sse.xmm%02d_lo", i);
+    sprintf(param_name, "SSE.xmm%02d_lo", i);
     Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get();
     dbg_printf("XMM[%02u]: %08x%08x:%08x%08x\n", i,
        GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
@@ -521,9 +522,8 @@ void bx_dbg_print_mmx_state(void)
 {
 #if BX_SUPPORT_MMX
   char param_name[20];
-
   for(unsigned i=0;i<8;i++) {
-    sprintf(param_name, "fpu.st%d.fraction", i);
+    sprintf(param_name, "FPU.st%d.fraction", i);
     Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get();
     dbg_printf("MM[%d]: %08x:%08x\n", i, GET32H(mmreg), GET32L(mmreg));
   }
@@ -1094,9 +1094,6 @@ void bx_dbg_show_command(const char* arg)
 void bx_dbg_show_param_command(char *param)
 {
   // remove leading and trailing quotas
-  if (param[0]=='\"') param++;
-  unsigned len = strlen(param);
-  if (param[len - 1] == '\"') param[len - 1] = '\0';
   dbg_printf("show param name: <%s>\n", param);
   print_tree(SIM->get_param(param, SIM->get_bochs_root()), 0);
 }
@@ -2406,7 +2403,7 @@ void bx_dbg_set_symbol_command(char *symbol, Bit32u val)
       return;
     }
     char cpu_param_name[10];
-    sprintf(cpu_param_name, "cpu.%d", val);
+    sprintf(cpu_param_name, "cpu%d", val);
     dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
     dbg_cpu = val;
     return;
@@ -2464,209 +2461,17 @@ void bx_dbg_query_command(const char *what)
   }
 }
 
-void bx_dbg_set_cpu_command(void)
+void bx_dbg_restore_command(const char *param_name, const char *restore_path)
 {
-  FILE *fp;
-  int   reti;
-  char *rets;
-  bx_bool retb;
-  unsigned long ul1, ul2, ul3, ul4;
-
-  bx_dbg_cpu_t cpu;
-
-  fp = bx_infile_stack[bx_infile_stack_index].fp;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "eax:0x%lx", &ul1); cpu.eax = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ebx:0x%lx", &ul1); cpu.ebx = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ecx:0x%lx", &ul1); cpu.ecx = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "edx:0x%lx", &ul1); cpu.edx = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ebp:0x%lx", &ul1); cpu.ebp = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "esi:0x%lx", &ul1); cpu.esi = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "edi:0x%lx", &ul1); cpu.edi = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "esp:0x%lx", &ul1); cpu.esp = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "eflags:0x%lx", &ul1); cpu.eflags = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "eip:0x%lx", &ul1); cpu.eip = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cs:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.cs.sel   = (Bit16u) ul1;
-  cpu.cs.des_l = ul2;
-  cpu.cs.des_h = ul3;
-  cpu.cs.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ss:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.ss.sel   = (Bit16u) ul1;
-  cpu.ss.des_l = ul2;
-  cpu.ss.des_h = ul3;
-  cpu.ss.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ds:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.ds.sel   = (Bit16u) ul1;
-  cpu.ds.des_l = ul2;
-  cpu.ds.des_h = ul3;
-  cpu.ds.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "es:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.es.sel   = (Bit16u) ul1;
-  cpu.es.des_l = ul2;
-  cpu.es.des_h = ul3;
-  cpu.es.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "fs:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.fs.sel   = (Bit16u) ul1;
-  cpu.fs.des_l = ul2;
-  cpu.fs.des_h = ul3;
-  cpu.fs.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "gs:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.gs.sel   = (Bit16u) ul1;
-  cpu.gs.des_l = ul2;
-  cpu.gs.des_h = ul3;
-  cpu.gs.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "ldtr:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.ldtr.sel   = (Bit16u) ul1;
-  cpu.ldtr.des_l = ul2;
-  cpu.ldtr.des_h = ul3;
-  cpu.ldtr.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "tr:s=0x%lx, dl=0x%lx, dh=0x%lx, valid=%lu",
-                &ul1, &ul2, &ul3, &ul4);
-  cpu.tr.sel   = (Bit16u) ul1;
-  cpu.tr.des_l = ul2;
-  cpu.tr.des_h = ul3;
-  cpu.tr.valid = ul4;
-  if (reti != 4) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "gdtr:base=0x%lx, limit=0x%lx",
-                &ul1, &ul2);
-  cpu.gdtr.base  = ul1;
-  cpu.gdtr.limit = ul2;
-  if (reti != 2) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "idtr:base=0x%lx, limit=0x%lx",
-                &ul1, &ul2);
-  cpu.idtr.base  = ul1;
-  cpu.idtr.limit = ul2;
-  if (reti != 2) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr0:0x%lx", &ul1); cpu.dr0 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr1:0x%lx", &ul1); cpu.dr1 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr2:0x%lx", &ul1); cpu.dr2 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr3:0x%lx", &ul1); cpu.dr3 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr6:0x%lx", &ul1); cpu.dr6 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "dr7:0x%lx", &ul1); cpu.dr7 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cr0:0x%lx", &ul1); cpu.cr0 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cr1:0x%lx", &ul1); cpu.cr1 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cr2:0x%lx", &ul1); cpu.cr2 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cr3:0x%lx", &ul1); cpu.cr3 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "cr4:0x%lx", &ul1); cpu.cr4 = ul1;
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "inhibit_mask:%u", &cpu.inhibit_mask);
-  if (reti != 1) goto scanf_error;
-
-  rets = fgets(tmp_buf, 512, fp); if (!rets) goto eof_error;
-  reti = sscanf(tmp_buf, "done");
-  if (reti != 0) goto scanf_error;
-
-  retb = BX_CPU(dbg_cpu)->dbg_set_cpu(&cpu);
-  if (retb == 0)
-    dbg_printf("Error: dbg_set_cpu encountered error\n");
-  else
-    dbg_printf("OK\n");
-  return;
-
-eof_error:
-  dbg_printf("Error: EOF encountered in dbg_set_cpu input stream\n");
-  return;
-
-scanf_error:
-  dbg_printf("Error: scanf returned error in dbg_set_cpu input stream\n");
+  const char *path = (restore_path == NULL) ? "." : restore_path;
+  dbg_printf("restoring param (%s) state from file (%s/%s)\n", 
+      param_name, path, param_name);
+  if (! SIM->restore_bochs_param(SIM->get_bochs_root(), path, param_name)) {
+    dbg_printf("Error: error occured during restore\n");
+  }
+  else {
+    bx_sr_after_restore_state();
+  }
 }
 
 void bx_dbg_disassemble_current(const char *format)
@@ -3350,7 +3155,9 @@ void bx_dbg_print_help(void)
   dbg_printf("    bpe, bpd, d|del|delete\n");
   dbg_printf("-*- CPU and memory contents -*-\n");
   dbg_printf("    x, xp, u|disasm|disassemble, r|reg|regs|registers, setpmem, crc, info,\n");
-  dbg_printf("    page, set, dump_cpu, set_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+  dbg_printf("    page, set, dump_cpu, ptime, print-stack, watch, unwatch, ?|calc\n");
+  dbg_printf("-*- Working with bochs param tree -*-\n");
+  dbg_printf("    show \"param\", restore\n");
 }
 
 void bx_dbg_calc_command(Bit64u value)

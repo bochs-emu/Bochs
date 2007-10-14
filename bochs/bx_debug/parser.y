@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.22 2007-10-11 18:11:58 sshwarts Exp $
+// $Id: parser.y,v 1.23 2007-10-14 19:04:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -68,6 +68,7 @@
 %token <sval> BX_TOKEN_EXAMINE
 %token <sval> BX_TOKEN_XFORMAT
 %token <sval> BX_TOKEN_DISFORMAT
+%token <sval> BX_TOKEN_RESTORE
 %token <sval> BX_TOKEN_SETPMEM
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
@@ -76,7 +77,6 @@
 %token <sval> BX_TOKEN_DMA
 %token <sval> BX_TOKEN_IRQ
 %token <sval> BX_TOKEN_DUMP_CPU
-%token <sval> BX_TOKEN_SET_CPU
 %token <sval> BX_TOKEN_DISASSEMBLE
 %token <sval> BX_TOKEN_INSTRUMENT
 %token <sval> BX_TOKEN_STRING
@@ -151,10 +151,10 @@ command:
     | bpd_command
     | quit_command
     | examine_command
+    | restore_command
     | setpmem_command
     | query_command
     | take_command
-    | set_cpu_command
     | disassemble_command
     | instrument_command
     | doit_command
@@ -699,6 +699,14 @@ examine_command:
       }
     ;
 
+restore_command:
+      BX_TOKEN_RESTORE BX_TOKEN_STRING BX_TOKEN_STRING '\n'
+      {
+        bx_dbg_restore_command($2, $3);
+        free($1); free($2); free($3);
+      }
+    ;
+
 setpmem_command:
       BX_TOKEN_SETPMEM BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
       {
@@ -730,14 +738,6 @@ take_command:
       {
         bx_dbg_take_command($2, 1);
         free($1); free($2);
-      }
-    ;
-
-set_cpu_command:
-      BX_TOKEN_SET_CPU '\n'
-      {
-        bx_dbg_set_cpu_command();
-        free($1);
       }
     ;
 
@@ -896,9 +896,12 @@ help_command:
          dbg_printf("dump_cpu - dump complete cpu state\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_SET_CPU '\n'
+     | BX_TOKEN_HELP BX_TOKEN_RESTORE '\n'
        {
-         dbg_printf("set_cpu - set complete cpu state\n");
+         dbg_printf("restore <param_name> [path] - restore bochs root param from the file\n");
+         dbg_printf("for example:\n");
+         dbg_printf("restore \"cpu0\" - restore CPU #0 from file \"cpu0\" in current directory\n");
+         dbg_printf("restore \"cpu0\" \"/save\" - restore CPU #0 from file \"cpu0\" located in directory \"/save\"\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_PTIME '\n'

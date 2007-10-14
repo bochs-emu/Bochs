@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.212 2007-09-28 19:51:48 sshwarts Exp $
+// $Id: siminterface.h,v 1.213 2007-10-14 19:04:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -680,10 +680,10 @@ public:
       const char *description,
       Bit64s min, Bit64s max, Bit64s initial_val,
       bx_bool is_shadow = 0);
-  virtual void reset();
+  virtual void reset() { val.number = initial_val; }
   void set_handler(param_event_handler handler);
   void set_sr_handlers(void *devptr, param_sr_handler save, param_sr_handler restore);
-  void set_enable_handler(param_enable_handler handler);
+  void set_enable_handler(param_enable_handler handler) { enable_handler = handler; }
   virtual bx_list_c *get_dependent_list() { return dependent_list; }
   void set_dependent_list(bx_list_c *l);
   virtual void set_enabled(int enabled);
@@ -1216,6 +1216,7 @@ public:
   virtual bx_bool restore_logopts() {return 0;}
   virtual bx_bool restore_hardware() {return 0;}
   virtual bx_list_c *get_bochs_root() {return NULL;}
+  virtual bx_bool restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name) { return 0; }
 };
 
 BOCHSAPI extern bx_simulator_interface_c *SIM;
