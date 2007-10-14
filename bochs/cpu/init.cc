@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.136 2007-10-12 19:30:51 sshwarts Exp $
+// $Id: init.cc,v 1.137 2007-10-14 00:22:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,7 +466,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, idtr_limit, BX_CPU_THIS_PTR idtr.limit);
 #endif
 
-  bx_list_c *LDTR = new bx_list_c (cpu, "ldtr", 7);
+  bx_list_c *LDTR = new bx_list_c (cpu, "LDTR", 7);
   BXRS_PARAM_SPECIAL16(LDTR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(LDTR, base,  ldtr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(LDTR, limit, ldtr.cache.u.system.limit);
@@ -475,7 +475,7 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_BOOL(LDTR, granularity, ldtr.cache.u.system.g);
   BXRS_PARAM_BOOL(LDTR, avl, ldtr.cache.u.system.avl);
 
-  bx_list_c *TR = new bx_list_c (cpu, "tr", 7);
+  bx_list_c *TR = new bx_list_c (cpu, "TR", 7);
   BXRS_PARAM_SPECIAL16(TR, selector, param_save_handler, param_restore_handler);
   BXRS_HEX_PARAM_FIELD(TR, base,  tr.cache.u.system.base);
   BXRS_HEX_PARAM_FIELD(TR, limit, tr.cache.u.system.limit);
@@ -487,7 +487,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, smbase);
 
 #if BX_CPU_LEVEL >= 5
-  bx_list_c *MSR = new bx_list_c(cpu, "msr", 45);
+  bx_list_c *MSR = new bx_list_c(cpu, "MSR", 45);
 
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
