@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.138 2007-10-14 19:04:50 sshwarts Exp $
+// $Id: init.cc,v 1.139 2007-10-14 19:36:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,10 +392,7 @@ void BX_CPU_C::register_state(void)
   unsigned i;
   char name[10];
 
-  if (BX_SMP_PROCESSORS < 2)
-    sprintf(name, "cpu");
-  else 
-    sprintf(name, "cpu%d", BX_CPU_ID);
+  sprintf(name, "cpu%d", BX_CPU_ID);
   
   bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 60);
 
