@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.186 2007-10-10 17:11:41 vruppert Exp $
+// $Id: rombios.c,v 1.187 2007-10-14 08:11:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -926,7 +926,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.186 $ $Date: 2007-10-10 17:11:41 $";
+static char bios_cvs_version_string[] = "$Revision: 1.187 $ $Date: 2007-10-14 08:11:05 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1538,7 +1538,7 @@ bios_printf(action, s)
   bx_bool  in_format;
   short i;
   Bit16u  *arg_ptr;
-  Bit16u   arg_seg, arg, nibble, hibyte, shift_count, format_width;
+  Bit16u   arg_seg, arg, nibble, hibyte, shift_count, format_width, hexadd;
 
   arg_ptr = &s;
   arg_seg = get_SS();
@@ -1565,12 +1565,16 @@ bios_printf(action, s)
       else {
         arg_ptr++; // increment to next arg
         arg = read_word(arg_seg, arg_ptr);
-        if (c == 'x') {
+        if (c == 'x' || c == 'X') {
           if (format_width == 0)
             format_width = 4;
+          if (c == 'x')
+            hexadd = 'a';
+          else
+            hexadd = 'A';
           for (i=format_width-1; i>=0; i--) {
             nibble = (arg >> (4 * i)) & 0x000f;
-            send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
+            send (action, (nibble<=9)? (nibble+'0') : (nibble-10+hexadd));
             }
           }
         else if (c == 'u') {
@@ -1582,7 +1586,7 @@ bios_printf(action, s)
           arg_ptr++; /* increment to next arg */
           hibyte = read_word(arg_seg, arg_ptr);
           if (c == 'd') {
-            if (arg & 0x8000)
+            if (hibyte & 0x8000)
               put_luint(action, 0L-(((Bit32u) hibyte << 16) | arg), format_width-1, 1);
             else
               put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
@@ -1590,13 +1594,17 @@ bios_printf(action, s)
           else if (c == 'u') {
             put_luint(action, ((Bit32u) hibyte << 16) | arg, format_width, 0);
            }
-          else /* c == 'x' */
+          else if (c == 'x' || c == 'X')
            {
             if (format_width == 0)
               format_width = 8;
+            if (c == 'x')
+              hexadd = 'a';
+            else
+              hexadd = 'A';
             for (i=format_width-1; i>=0; i--) {
               nibble = ((((Bit32u) hibyte <<16) | arg) >> (4 * i)) & 0x000f;
-              send (action, (nibble<=9)? (nibble+'0') : (nibble-10+'A'));
+              send (action, (nibble<=9)? (nibble+'0') : (nibble-10+hexadd));
               }
            }
           }
@@ -2067,6 +2075,7 @@ debugger_off()
 // bits 7-4 of the device/head (CB_DH) reg
 #define ATA_CB_DH_DEV0 0xa0    // select device 0
 #define ATA_CB_DH_DEV1 0xb0    // select device 1
+#define ATA_CB_DH_LBA 0x40    // use LBA
 
 // status reg (CB_STAT and CB_ASTAT) bits
 #define ATA_CB_STAT_BSY  0x80  // busy
@@ -2116,6 +2125,7 @@ debugger_off()
 #define ATA_CMD_READ_SECTORS                 0x20
 #define ATA_CMD_READ_VERIFY_SECTORS          0x40
 #define ATA_CMD_RECALIBRATE                  0x10
+#define ATA_CMD_REQUEST_SENSE                0x03
 #define ATA_CMD_SEEK                         0x70
 #define ATA_CMD_SET_FEATURES                 0xEF
 #define ATA_CMD_SET_MULTIPLE_MODE            0xC6
@@ -2204,6 +2214,58 @@ void ata_init( )
 
   write_byte(ebda_seg,&EbdaData->ata.hdcount,0);
   write_byte(ebda_seg,&EbdaData->ata.cdcount,0);
+}
+
+#define TIMEOUT 0
+#define BSY 1
+#define NOT_BSY 2
+#define NOT_BSY_DRQ 3
+#define NOT_BSY_NOT_DRQ 4
+#define NOT_BSY_RDY 5
+
+#define IDE_TIMEOUT 32000u //32 seconds max for IDE ops
+
+int await_ide();
+static int await_ide(when_done,base,timeout)
+  Bit8u when_done;
+  Bit16u base;
+  Bit16u timeout;
+{
+  Bit32u time=0,last=0;
+  Bit16u status;
+  Bit8u result;
+  status = inb(base + ATA_CB_STAT); // for the times you're supposed to throw one away
+  for(;;) {
+    status = inb(base+ATA_CB_STAT);
+    time++;
+    if (when_done == BSY)
+      result = status & ATA_CB_STAT_BSY;
+    else if (when_done == NOT_BSY)
+      result = !(status & ATA_CB_STAT_BSY);
+    else if (when_done == NOT_BSY_DRQ)
+      result = !(status & ATA_CB_STAT_BSY) && (status & ATA_CB_STAT_DRQ);
+    else if (when_done == NOT_BSY_NOT_DRQ)
+      result = !(status & ATA_CB_STAT_BSY) && !(status & ATA_CB_STAT_DRQ);
+    else if (when_done == NOT_BSY_RDY)
+      result = !(status & ATA_CB_STAT_BSY) && (status & ATA_CB_STAT_RDY);
+    else if (when_done == TIMEOUT)
+      result = 0;
+
+    if (result) return 0;
+    if (time>>16 != last) // mod 2048 each 16 ms
+    {
+      last = time >>16;
+      BX_DEBUG_ATA("await_ide: (TIMEOUT,BSY,!BSY,!BSY_DRQ,!BSY_!DRQ,!BSY_RDY) %d time= %ld timeout= %d\n",when_done,time>>11, timeout);
+    }
+    if (status & ATA_CB_STAT_ERR)
+    {
+      BX_DEBUG_ATA("await_ide: ERROR (TIMEOUT,BSY,!BSY,!BSY_DRQ,!BSY_!DRQ,!BSY_RDY) %d time= %ld timeout= %d\n",when_done,time>>11, timeout);
+      return -1;
+    }
+    if ((timeout == 0) || ((time>>11) > timeout)) break;
+  }
+  BX_INFO("IDE time out\n");
+  return -1;
 }
 
 // ---------------------------------------------------------------------------
@@ -2506,6 +2568,7 @@ Bit16u device;
   Bit16u ebda_seg=read_word(0x0040,0x000E);
   Bit16u iobase1, iobase2;
   Bit8u  channel, slave, sn, sc;
+  Bit8u  type;
   Bit16u max;
 
   channel = device / 2;
@@ -2520,16 +2583,13 @@ Bit16u device;
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN | ATA_CB_DC_SRST);
 
 // 8.2.1 (b) -- wait for BSY
-  max=0xff;
-  while(--max>0) {
-    Bit8u status = inb(iobase1+ATA_CB_STAT);
-    if ((status & ATA_CB_STAT_BSY) != 0) break;
-  }
+  if (await_ide(BSY, iobase1, 20)) return;
 
 // 8.2.1 (f) -- clear SRST
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
 
-  if (read_byte(ebda_seg,&EbdaData->ata.devices[device].type) != ATA_TYPE_NONE) {
+  type=read_byte(ebda_seg,&EbdaData->ata.devices[device].type);
+  if (type != ATA_TYPE_NONE) {
 
 // 8.2.1 (g) -- check for sc==sn==0x01
     // select device
@@ -2538,21 +2598,14 @@ Bit16u device;
     sn = inb(iobase1+ATA_CB_SN);
 
     if ( (sc==0x01) && (sn==0x01) ) {
-
-// 8.2.1 (h) -- wait for not BSY
-      max=0xff;
-      while(--max>0) {
-        Bit8u status = inb(iobase1+ATA_CB_STAT);
-        if ((status & ATA_CB_STAT_BSY) == 0) break;
-        }
-      }
+    if (type == ATA_TYPE_ATA) //ATA
+      await_ide(NOT_BSY_RDY, iobase1, IDE_TIMEOUT);
+    else //ATAPI
+      await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
     }
 
-// 8.2.1 (i) -- wait for DRDY
-  max=0xfff;
-  while(--max>0) {
-    Bit8u status = inb(iobase1+ATA_CB_STAT);
-      if ((status & ATA_CB_STAT_RDY) != 0) break;
+// 8.2.1 (h) -- wait for not BSY
+    await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
   }
 
   // Enable interrupts
@@ -2597,14 +2650,13 @@ Bit32u lba;
   if (mode == ATA_MODE_PIO32) blksize>>=2;
   else blksize>>=1;
 
+  //!!FIXME!! this only works up to 28-bit LBA
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
     sector = (Bit16u) (lba & 0x000000ffL);
-    lba >>= 8;
-    cylinder = (Bit16u) (lba & 0x0000ffffL);
-    lba >>= 16;
-    head = ((Bit16u) (lba & 0x0000000fL)) | 0x40;
-    }
+    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+  }
 
   // Reset count of transferred data
   write_word(ebda_seg, &EbdaData->ata.trsfsectors,0);
@@ -2623,10 +2675,8 @@ Bit32u lba;
   outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
   outb(iobase1 + ATA_CB_CMD, command);
 
-  while (1) {
-    status = inb(iobase1 + ATA_CB_STAT);
-    if ( !(status & ATA_CB_STAT_BSY) ) break;
-    }
+  await_ide(NOT_BSY_DRQ, iobase1, IDE_TIMEOUT);
+  status = inb(iobase1 + ATA_CB_STAT);
 
   if (status & ATA_CB_STAT_ERR) {
     BX_DEBUG_ATA("ata_cmd_data_in : read error\n");
@@ -2686,6 +2736,7 @@ ASM_END
     current++;
     write_word(ebda_seg, &EbdaData->ata.trsfsectors,current);
     count--;
+    await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
     status = inb(iobase1 + ATA_CB_STAT);
     if (count == 0) {
       if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
@@ -2740,14 +2791,13 @@ Bit32u lba;
   if (mode == ATA_MODE_PIO32) blksize>>=2;
   else blksize>>=1;
 
+  //!!FIXME!! this only works up to 28-bit LBA
   // sector will be 0 only on lba access. Convert to lba-chs
   if (sector == 0) {
     sector = (Bit16u) (lba & 0x000000ffL);
-    lba >>= 8;
-    cylinder = (Bit16u) (lba & 0x0000ffffL);
-    lba >>= 16;
-    head = ((Bit16u) (lba & 0x0000000fL)) | 0x40;
-    }
+    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+  }
 
   // Reset count of transferred data
   write_word(ebda_seg, &EbdaData->ata.trsfsectors,0);
@@ -2766,10 +2816,8 @@ Bit32u lba;
   outb(iobase1 + ATA_CB_DH, (slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0) | (Bit8u) head );
   outb(iobase1 + ATA_CB_CMD, command);
 
-  while (1) {
-    status = inb(iobase1 + ATA_CB_STAT);
-    if ( !(status & ATA_CB_STAT_BSY) ) break;
-    }
+  await_ide(NOT_BSY_DRQ, iobase1, IDE_TIMEOUT);
+  status = inb(iobase1 + ATA_CB_STAT);
 
   if (status & ATA_CB_STAT_ERR) {
     BX_DEBUG_ATA("ata_cmd_data_out : read error\n");
@@ -2908,19 +2956,17 @@ Bit32u length;
   if (status & ATA_CB_STAT_BSY) return 2;
 
   outb(iobase2 + ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
-  // outb(iobase1 + ATA_CB_FR, 0x00);
-  // outb(iobase1 + ATA_CB_SC, 0x00);
-  // outb(iobase1 + ATA_CB_SN, 0x00);
+  outb(iobase1 + ATA_CB_FR, 0x00);
+  outb(iobase1 + ATA_CB_SC, 0x00);
+  outb(iobase1 + ATA_CB_SN, 0x00);
   outb(iobase1 + ATA_CB_CL, 0xfff0 & 0x00ff);
   outb(iobase1 + ATA_CB_CH, 0xfff0 >> 8);
   outb(iobase1 + ATA_CB_DH, slave ? ATA_CB_DH_DEV1 : ATA_CB_DH_DEV0);
   outb(iobase1 + ATA_CB_CMD, ATA_CMD_PACKET);
 
   // Device should ok to receive command
-  while (1) {
-    status = inb(iobase1 + ATA_CB_STAT);
-    if ( !(status & ATA_CB_STAT_BSY) ) break;
-    }
+  await_ide(NOT_BSY_DRQ, iobase1, IDE_TIMEOUT);
+  status = inb(iobase1 + ATA_CB_STAT);
 
   if (status & ATA_CB_STAT_ERR) {
     BX_DEBUG_ATA("ata_cmd_packet : error, status is %02x\n",status);
@@ -2956,27 +3002,33 @@ ASM_START
 ASM_END
 
   if (inout == ATA_DATA_NO) {
+    await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
     status = inb(iobase1 + ATA_CB_STAT);
     }
   else {
+        Bit16u loops = 0;
+        Bit8u sc;
   while (1) {
 
+      if (loops == 0) {//first time through
+        status = inb(iobase2 + ATA_CB_ASTAT);
+        await_ide(NOT_BSY_DRQ, iobase1, IDE_TIMEOUT);
+      }
+      else
+        await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
+      loops++;
+
       status = inb(iobase1 + ATA_CB_STAT);
+      sc = inb(iobase1 + ATA_CB_SC);
 
       // Check if command completed
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_DRQ) ) ==0 ) break;
+      if(((inb(iobase1 + ATA_CB_SC)&0x7)==0x3) && 
+         ((status & (ATA_CB_STAT_RDY | ATA_CB_STAT_ERR)) == ATA_CB_STAT_RDY)) break;
 
       if (status & ATA_CB_STAT_ERR) {
         BX_DEBUG_ATA("ata_cmd_packet : error (status %02x)\n",status);
         return 3;
       }
-
-      // Device must be ready to send data
-      if ( (status & (ATA_CB_STAT_BSY | ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ | ATA_CB_STAT_ERR) )
-            != (ATA_CB_STAT_RDY | ATA_CB_STAT_DRQ) ) {
-        BX_DEBUG_ATA("ata_cmd_packet : not ready (status %02x)\n", status);
-        return 4;
-        }
 
       // Normalize address
       bufseg += (bufoff / 16);
@@ -3136,24 +3188,23 @@ ASM_END
 // ---------------------------------------------------------------------------
 
   Bit16u
-atapi_get_sense(device)
+atapi_get_sense(device, seg, asc, ascq)
   Bit16u device;
 {
   Bit8u  atacmd[12];
-  Bit8u  buffer[16];
+  Bit8u  buffer[18];
   Bit8u i;
 
   memsetb(get_SS(),atacmd,0,12);
 
   // Request SENSE
-  atacmd[0]=0x03;
-  atacmd[4]=0x20;
-  if (ata_cmd_packet(device, 12, get_SS(), atacmd, 0, 16L, ATA_DATA_IN, get_SS(), buffer) != 0)
+  atacmd[0]=ATA_CMD_REQUEST_SENSE;
+  atacmd[4]=sizeof(buffer);
+  if (ata_cmd_packet(device, 12, get_SS(), atacmd, 0, 18L, ATA_DATA_IN, get_SS(), buffer) != 0)
     return 0x0002;
 
-  if ((buffer[0] & 0x7e) == 0x70) {
-    return (((Bit16u)buffer[2]&0x0f)*0x100)+buffer[12];
-    }
+  write_byte(seg,asc,buffer[12]);
+  write_byte(seg,ascq,buffer[13]);
 
   return 0;
 }
@@ -3162,24 +3213,78 @@ atapi_get_sense(device)
 atapi_is_ready(device)
   Bit16u device;
 {
-  Bit8u  atacmd[12];
-  Bit8u  buffer[];
+  Bit8u packet[12];
+  Bit8u buf[8];
+  Bit32u block_len;
+  Bit32u sectors;
+  Bit32u timeout; //measured in ms
+  Bit32u time;
+  Bit8u asc, ascq;
+  Bit8u in_progress;
+  Bit16u ebda_seg = read_word(0x0040,0x000E);
+  if (read_byte(ebda_seg,&EbdaData->ata.devices[device].type) != ATA_TYPE_ATAPI) {
+    printf("not implemented for non-ATAPI device\n");
+    return -1;
+  }
 
-  memsetb(get_SS(),atacmd,0,12);
+  BX_DEBUG_ATA("ata_detect_medium: begin\n");
+  memsetb(get_SS(),packet, 0, sizeof packet);
+  packet[0] = 0x25; /* READ CAPACITY */
 
-  // Test Unit Ready
-  if (ata_cmd_packet(device, 12, get_SS(), atacmd, 0, 0L, ATA_DATA_NO, get_SS(), buffer) != 0)
-    return 0x000f;
+  /* Retry READ CAPACITY 50 times unless MEDIUM NOT PRESENT
+   * is reported by the device. If the device reports "IN PROGRESS",
+   * 30 seconds is added. */
+  timeout = 5000;
+  time = 0;
+  in_progress = 0;
+  while (time < timeout) {
+    if (ata_cmd_packet(device, sizeof(packet), get_SS(), packet, 0, 8L, ATA_DATA_IN, get_SS(), buf) == 0)
+      goto ok;
 
-  if (atapi_get_sense(device) !=0 ) {
-    memsetb(get_SS(),atacmd,0,12);
-
-    // try to send Test Unit Ready again
-    if (ata_cmd_packet(device, 12, get_SS(), atacmd, 0, 0L, ATA_DATA_NO, get_SS(), buffer) != 0)
-      return 0x000f;
-
-    return atapi_get_sense(device);
+    if (atapi_get_sense(device, get_SS(), &asc, &ascq) == 0) {
+      if (asc == 0x3a) { /* MEDIUM NOT PRESENT */
+        BX_DEBUG_ATA("Device reports MEDIUM NOT PRESENT\n");
+        return -1;
+      }
+  
+      if (asc == 0x04 && ascq == 0x01 && !in_progress) {
+        /* IN PROGRESS OF BECOMING READY */
+        printf("Waiting for device to detect medium... ");
+        /* Allow 30 seconds more */
+        timeout = 30000;
+        in_progress = 1;
+      }
     }
+    time += 100;
+  }
+  BX_DEBUG_ATA("read capacity failed\n");
+  return -1;
+ok:
+
+  block_len = (Bit32u) buf[4] << 24
+    | (Bit32u) buf[5] << 16
+    | (Bit32u) buf[6] << 8
+    | (Bit32u) buf[7] << 0;
+  BX_DEBUG_ATA("block_len=%u\n", block_len);
+
+  if (block_len!= 2048 && block_len!= 512)
+  {
+    printf("Unsupported sector size %u\n", block_len);
+    return -1;
+  }
+  write_dword(ebda_seg,&EbdaData->ata.devices[device].blksize, block_len);
+
+  sectors = (Bit32u) buf[0] << 24
+    | (Bit32u) buf[1] << 16
+    | (Bit32u) buf[2] << 8
+    | (Bit32u) buf[3] << 0;
+
+  BX_DEBUG_ATA("sectors=%u\n", sectors);
+  if (block_len == 2048)
+    sectors <<= 2; /* # of sectors in 512-byte "soft" sector */
+  if (sectors != read_dword(ebda_seg,&EbdaData->ata.devices[device].sectors))
+    printf("%dMB medium detected\n", sectors>>(20-9));
+  write_dword(ebda_seg,&EbdaData->ata.devices[device].sectors, sectors);
   return 0;
 }
 
@@ -3256,6 +3361,9 @@ cdrom_boot()
   for (device=0; device<BX_MAX_ATA_DEVICES;device++) {
     if (atapi_is_cdrom(device)) break;
     }
+
+  if(error = atapi_is_ready(device) != 0)
+    BX_INFO("ata_is_ready returned %d\n",error);
 
   // if not found
   if(device >= BX_MAX_ATA_DEVICES) return 2;
@@ -5421,7 +5529,7 @@ int13_cdrom(EHBX, DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
         mov  bp, sp
 
         mov ah, #0x52
-        int 15
+        int #0x15
         mov _int13_cdrom.status + 2[bp], ah
         jnc int13_cdrom_rme_end
         mov _int13_cdrom.status, #1
@@ -10176,8 +10284,10 @@ post_default_ints:
 #if BX_ROMBIOS32
   call rombios32_init
 #else
+#if BX_PCIBIOS
   call pcibios_init_iomem_bases
   call pcibios_init_irqs
+#endif //BX_PCIBIOS
 #endif
 
   call _init_boot_vectors
