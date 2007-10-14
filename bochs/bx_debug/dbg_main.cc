@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.100 2007-10-12 22:11:25 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.101 2007-10-14 00:23:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -561,6 +561,53 @@ void bx_dbg_info_flags(void)
     BX_CPU(dbg_cpu)->get_AF() ? "AF" : "af",
     BX_CPU(dbg_cpu)->get_PF() ? "PF" : "pf",
     BX_CPU(dbg_cpu)->get_CF() ? "CF" : "cf");
+}
+
+void bx_dbg_info_control_regs_command(void)
+{
+  Bit32u cr0 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR0);
+  bx_address cr2 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR2);
+  Bit32u cr3 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR3);
+  dbg_printf("CR0=0x%08x\n", cr0);
+  dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
+  dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
+  dbg_printf("    NW=not write through=%d\n", (cr0>>29) & 1);
+  dbg_printf("    AM=alignment mask=%d\n", (cr0>>18) & 1);
+  dbg_printf("    WP=write protect=%d\n", (cr0>>16) & 1);
+  dbg_printf("    NE=numeric error=%d\n", (cr0>>5) & 1);
+  dbg_printf("    ET=extension type=%d\n", (cr0>>4) & 1);
+  dbg_printf("    TS=task switched=%d\n", (cr0>>3) & 1);
+  dbg_printf("    EM=FPU emulation=%d\n", (cr0>>2) & 1);
+  dbg_printf("    MP=monitor coprocessor=%d\n", (cr0>>1) & 1);
+  dbg_printf("    PE=protection enable=%d\n", (cr0>>0) & 1);
+  dbg_printf("CR2=page fault linear address=0x" FMT_ADDRX "\n", cr2);
+  dbg_printf("CR3=0x%08x\n", cr3);
+  dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
+  dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
+#if BX_CPU_LEVEL >= 4
+  Bit32u cr4 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR4);
+  dbg_printf("CR4=0x%08x\n", cr4);
+  dbg_printf("    VME=virtual-8086 mode extensions=%d\n", (cr4>>0) & 1);
+  dbg_printf("    PVI=protected-mode virtual interrupts=%d\n", (cr4>>1) & 1);
+  dbg_printf("    TSD=time stamp disable=%d\n", (cr4>>2) & 1);
+  dbg_printf("    DE=debugging extensions=%d\n", (cr4>>3) & 1);
+  dbg_printf("    PSE=page size extensions=%d\n", (cr4>>4) & 1);
+  dbg_printf("    PAE=physical address extension=%d\n", (cr4>>5) & 1);
+  dbg_printf("    MCE=machine check enable=%d\n", (cr4>>6) & 1);
+  dbg_printf("    PGE=page global enable=%d\n", (cr4>>7) & 1);
+  dbg_printf("    PCE=performance-monitor counter enable=%d\n", (cr4>>8) & 1);
+  dbg_printf("    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
+  dbg_printf("    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
+#endif   /* BX_CPU_LEVEL >= 4 */
+#if BX_SUPPORT_X86_64
+  Bit32u efer = BX_CPU(dbg_cpu)->get_EFER();
+  dbg_printf("EFER=0x%08x\n", efer);
+  dbg_printf("    SCE=SYSCALL/SYSRET support=%d\n", (efer>>0) & 1);
+  dbg_printf("    LME=long mode enabled=%d\n", (efer>>8) & 1);
+  dbg_printf("    LMA=long mode activated=%d\n", (efer>>10) & 1);
+  dbg_printf("    NXE=non-execuable page protection=%d\n", (efer>>11) & 1);
+  dbg_printf("    FFXSR=OS support for fast FXSAVE/FXRSTOR=%d\n", (efer>>14) & 1);
+#endif
 }
 
 //
@@ -2620,7 +2667,6 @@ eof_error:
 
 scanf_error:
   dbg_printf("Error: scanf returned error in dbg_set_cpu input stream\n");
-  return;
 }
 
 void bx_dbg_disassemble_current(const char *format)
@@ -3074,53 +3120,6 @@ void bx_dbg_info_tss_command(void)
   bx_phy_address paddr = 0;
   BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   bx_dbg_print_tss(BX_MEM(0)->vector+paddr, len);
-}
-
-void bx_dbg_info_control_regs_command(void)
-{
-  Bit32u cr0 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR0);
-  Bit32u cr2 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR2);
-  Bit32u cr3 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR3);
-  dbg_printf("CR0=0x%08x\n", cr0);
-  dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
-  dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
-  dbg_printf("    NW=not write through=%d\n", (cr0>>29) & 1);
-  dbg_printf("    AM=alignment mask=%d\n", (cr0>>18) & 1);
-  dbg_printf("    WP=write protect=%d\n", (cr0>>16) & 1);
-  dbg_printf("    NE=numeric error=%d\n", (cr0>>5) & 1);
-  dbg_printf("    ET=extension type=%d\n", (cr0>>4) & 1);
-  dbg_printf("    TS=task switched=%d\n", (cr0>>3) & 1);
-  dbg_printf("    EM=FPU emulation=%d\n", (cr0>>2) & 1);
-  dbg_printf("    MP=monitor coprocessor=%d\n", (cr0>>1) & 1);
-  dbg_printf("    PE=protection enable=%d\n", (cr0>>0) & 1);
-  dbg_printf("CR2=page fault linear address=0x%08x\n", cr2);
-  dbg_printf("CR3=0x%08x\n", cr3);
-  dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
-  dbg_printf("    PWT=page-level writes transparent=%d\n", (cr3>>3) & 1);
-#if BX_CPU_LEVEL >= 4
-  Bit32u cr4 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR4);
-  dbg_printf("CR4=0x%08x\n", cr4);
-  dbg_printf("    VME=virtual-8086 mode extensions=%d\n", (cr4>>0) & 1);
-  dbg_printf("    PVI=protected-mode virtual interrupts=%d\n", (cr4>>1) & 1);
-  dbg_printf("    TSD=time stamp disable=%d\n", (cr4>>2) & 1);
-  dbg_printf("    DE=debugging extensions=%d\n", (cr4>>3) & 1);
-  dbg_printf("    PSE=page size extensions=%d\n", (cr4>>4) & 1);
-  dbg_printf("    PAE=physical address extension=%d\n", (cr4>>5) & 1);
-  dbg_printf("    MCE=machine check enable=%d\n", (cr4>>6) & 1);
-  dbg_printf("    PGE=page global enable=%d\n", (cr4>>7) & 1);
-  dbg_printf("    PCE=performance-monitor counter enable=%d\n", (cr4>>8) & 1);
-  dbg_printf("    OXFXSR=OS support for FXSAVE/FXRSTOR=%d\n", (cr4>>9) & 1);
-  dbg_printf("    OSXMMEXCPT=OS support for unmasked SIMD FP exceptions=%d\n", (cr4>>10) & 1);
-#endif   /* BX_CPU_LEVEL >= 4 */
-#if BX_SUPPORT_X86_64
-  Bit32u efer = BX_CPU(dbg_cpu)->get_EFER();
-  dbg_printf("EFER=0x%08x\n", efer);
-  dbg_printf("    SCE=SYSCALL/SYSRET support=%d\n", (efer>>0) & 1);
-  dbg_printf("    LME=long mode enabled=%d\n", (efer>>8) & 1);
-  dbg_printf("    LMA=long mode activated=%d\n", (efer>>10) & 1);
-  dbg_printf("    NXE=non-execuable page protection=%d\n", (efer>>11) & 1);
-  dbg_printf("    FFXSR=OS support for fast FXSAVE/FXRSTOR=%d\n", (efer>>14) & 1);
-#endif
 }
 
 /*
