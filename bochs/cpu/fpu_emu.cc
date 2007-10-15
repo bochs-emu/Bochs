@@ -1,13 +1,9 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_emu.cc,v 1.4 2007-07-09 15:16:11 sshwarts Exp $
+// $Id: fpu_emu.cc,v 1.5 2007-10-15 22:07:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
-//  Copyright (C) 2004  MandrakeSoft S.A.
 //
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2004 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
