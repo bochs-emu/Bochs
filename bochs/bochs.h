@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.210 2007-10-12 22:11:24 sshwarts Exp $
+// $Id: bochs.h,v 1.211 2007-10-16 16:17:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -516,13 +516,9 @@ extern bx_bool bx_gui_sighandler;
   #define BX_SMP_PROCESSORS 1
 #endif
 
-void bx_init_options();
-
-void bx_center_print (FILE *file, char *line, int maxwidth);
+void bx_center_print(FILE *file, char *line, int maxwidth);
 
 #define BX_USE_PS2_MOUSE 1
-
-int bx_init_hardware ();
 
 #include "instrument.h"
 
@@ -534,7 +530,7 @@ int bx_init_hardware ();
 // instructions to help perform these operations more efficiently than C++.
 
 
-#ifdef __i386__
+#ifdef BX_LITTLE_ENDIAN
 
 #define WriteHostWordToLittleEndian(hostPtr,  nativeVar16) \
     *((Bit16u*)(hostPtr)) = (nativeVar16)

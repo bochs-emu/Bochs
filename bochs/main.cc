@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.358 2007-10-11 21:28:57 sshwarts Exp $
+// $Id: main.cc,v 1.359 2007-10-16 16:17:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -75,7 +75,10 @@ void   bx_unmapped_io_write_handler(Bit32u address, Bit32u value,
                                     unsigned io_len);
 #endif
 
+void bx_init_hardware(void);
+void bx_init_options(void);
 void bx_init_bx_dbg(void);
+
 static char *divider = "========================================================================";
 static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
@@ -252,11 +255,11 @@ int bxmain () {
   setlocale (LC_ALL, "");
 #endif
   bx_user_quit = 0;
-  bx_init_siminterface ();   // create the SIM object
+  bx_init_siminterface();   // create the SIM object
   static jmp_buf context;
   if (setjmp (context) == 0) {
     SIM->set_quit_context (&context);
-    if (bx_init_main (bx_startup_flags.argc, bx_startup_flags.argv) < 0) 
+    if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0) 
       return 0;
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
@@ -494,7 +497,7 @@ void print_usage()
 #endif
 }
 
-int bx_init_main (int argc, char *argv[])
+int bx_init_main(int argc, char *argv[])
 {
   // To deal with initialization order problems inherent in C++, use the macros
   // SAFE_GET_IOFUNC and SAFE_GET_GENLOG to retrieve "io" and "genlog" in all
@@ -939,7 +942,7 @@ void bx_sr_after_restore_state(void)
   DEV_after_restore_state();
 }
 
-int bx_init_hardware()
+void bx_init_hardware()
 {
   // all configuration has been read, now initialize everything.
 
@@ -1111,8 +1114,6 @@ int bx_init_hardware()
 #endif
   alarm( 1 );
 #endif
-
-  return(0);
 }
 
 void bx_init_bx_dbg(void)
