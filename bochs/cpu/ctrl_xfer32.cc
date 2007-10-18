@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.49 2006-06-09 22:29:06 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.50 2007-10-18 21:27:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,8 +85,9 @@ void BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 
   pop_32(&eip);
   pop_32(&ecs_raw);
-  EIP = eip;
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
+  EIP = eip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -115,8 +116,9 @@ void BX_CPU_C::RETfar32(bxInstruction_c *i)
 
   pop_32(&eip);
   pop_32(&ecs_raw); /* 32bit pop, MSW discarded */
-  EIP = eip;
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
+  EIP = eip;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
@@ -164,8 +166,9 @@ void BX_CPU_C::CALL32_Ap(bxInstruction_c *i)
 
   push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_32(EIP);
-  EIP = disp32;
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = disp32;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
@@ -326,13 +329,12 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
-    goto done;
+  }
+  else {
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = disp32;
   }
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-  EIP = disp32;
-
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
@@ -374,15 +376,14 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
-  if ( protected_mode() ) {
+  if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
-    goto done;
+  }
+  else {
+    load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+    EIP = op1_32;
   }
 
-  EIP = op1_32;
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
-
-done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }

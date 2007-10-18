@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.37 2007-07-09 15:16:11 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.38 2007-10-18 21:27:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,8 +103,8 @@ void BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
   pop_16(&ip);
   pop_16(&cs_raw);
 
-  EIP = (Bit32u) ip;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = (Bit32u) ip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -135,8 +135,9 @@ void BX_CPU_C::RETfar16(bxInstruction_c *i)
 
   pop_16(&ip);
   pop_16(&cs_raw);
-  EIP = (Bit32u) ip;
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = (Bit32u) ip;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
@@ -154,13 +155,11 @@ void BX_CPU_C::CALL_Aw(bxInstruction_c *i)
   new_EIP = EIP + (Bit32s) i->Id();
   new_EIP &= 0x0000ffff;
 
-#if BX_CPU_LEVEL >= 2
   if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
     BX_ERROR(("CALL_Aw: new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].limit"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
-#endif
 
   /* push 16 bit EA of next instruction */
   push_16(IP);
@@ -192,8 +191,9 @@ void BX_CPU_C::CALL16_Ap(bxInstruction_c *i)
 
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_16((Bit16u) EIP);
-  EIP = (Bit32u) disp16;
+
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = (Bit32u) disp16;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
@@ -248,7 +248,7 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
 
-  if ( protected_mode() ) {
+  if (protected_mode()) {
     BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_16);
     goto done;
   }
@@ -256,8 +256,8 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
   push_16(IP);
 
-  EIP = op1_16;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = op1_16;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
@@ -382,8 +382,8 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   }
 #endif
 
-  EIP = op1_16;
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
+  EIP = op1_16;
 
 done:
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
@@ -408,12 +408,10 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
     goto done;
   }
 
-#if BX_CPU_LEVEL >= 2
-  if (BX_CPU_THIS_PTR cr0.get_PE()) {
+  if (protected_mode()) {
     iret_protected(i);
     goto done;
   }
-#endif
 
   if (! can_pop(6)) {
     BX_ERROR(("IRET: top 6 bytes of stack not within stack limits"));

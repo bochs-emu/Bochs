@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.90 2007-09-27 16:22:14 sshwarts Exp $
+// $Id: exception.cc,v 1.91 2007-10-18 21:27:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,6 +197,12 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     parse_selector(0, &ss_selector);
     parse_descriptor(0, 0, &ss_descriptor);
 
+    // The follwoing push instructions might have a page fault which cannot
+    // be detected at this stage
+    BX_CPU_THIS_PTR except_chk = 1;
+    BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+    BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
 
@@ -216,6 +222,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     push_64(old_RIP);
     if (is_error_code)
       push_64(error_code);
+
+    BX_CPU_THIS_PTR except_chk = 0;
 
     // if INTERRUPT GATE set IF to 0
     if (!(gate_descriptor.type & 1)) // even is int-gate

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.15 2007-02-03 21:36:40 sshwarts Exp $
+// $Id: call_far.cc,v 1.16 2007-10-18 21:27:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -366,7 +366,8 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             }
           }
 
-          // Help for OS/2
+          // The follwoing push instructions might have a page fault which cannot
+          // be detected at this stage
           BX_CPU_THIS_PTR except_chk = 1;  
           BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
           BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
@@ -540,12 +541,17 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     parse_selector(0, &ss_selector);
     parse_descriptor(0, 0, &ss_descriptor);
 
+    // The following push instructions might have a page fault which cannot
+    // be detected at this stage
+    BX_CPU_THIS_PTR except_chk = 1;  
+    BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+    BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
 
     // set up null SS descriptor
     load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
-
     RSP = RSP_for_cpl_x;
 
     // push old stack long pointer onto new stack
@@ -554,6 +560,8 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     // push long pointer to return address onto new stack
     push_64(old_CS);
     push_64(old_RIP);
+
+    BX_CPU_THIS_PTR except_chk = 0;
   }
   else
   {
@@ -566,12 +574,20 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
+    // The following push instructions might have a page fault which cannot
+    // be detected at this stage
+    BX_CPU_THIS_PTR except_chk = 1;  
+    BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
+    BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
 
     // push return address onto stack
     push_64(old_CS);
     push_64(old_RIP);
+
+    BX_CPU_THIS_PTR except_chk = 0;
   }
 }
 #endif
