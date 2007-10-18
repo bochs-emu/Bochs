@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.175 2007-10-12 19:30:51 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.176 2007-10-18 22:44:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1223,7 +1223,7 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-      if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
+      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
         BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
       }
       BX_DEBUG(("Compatibility Mode Activated"));
@@ -1317,7 +1317,7 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
     if (BX_CPU_THIS_PTR efer.lma) {
-      if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
+      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
         BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
       }
       BX_CPU_THIS_PTR efer.lma = 0;

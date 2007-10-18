@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.8 2006-08-31 18:18:14 sshwarts Exp $
+//// $Id: plex86-interface.cc,v 1.9 2007-10-18 22:44:38 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -175,7 +175,7 @@ unsigned plex86ExecuteInVM(BX_CPU_C *cpu)
   plex86GuestCPU->eax = cpu->gen_reg[BX_32BIT_REG_EAX].dword.erx;
 
   plex86GuestCPU->eflags = cpu->eflags.val32;
-  plex86GuestCPU->eip = cpu->dword.eip;
+  plex86GuestCPU->eip = cpu->eip_reg.dword.eip;
 
   // ES/CS/SS/DS/FS/GS
   for (unsigned s=0; s<6; s++) {
@@ -302,7 +302,7 @@ void copyPlex86StateToBochs(BX_CPU_C *cpu)
   cpu->gen_reg[BX_32BIT_REG_EAX].dword.erx = plex86GuestCPU->eax;
 
   cpu->eflags.val32 = plex86GuestCPU->eflags;
-  cpu->dword.eip    = plex86GuestCPU->eip;
+  cpu->eip_reg.dword.eip    = plex86GuestCPU->eip;
 
   // Set fields used for exception processing.
   cpu->prev_eip = plex86GuestCPU->eip;

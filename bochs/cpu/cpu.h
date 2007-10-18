@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.335 2007-10-14 19:04:49 sshwarts Exp $
+// $Id: cpu.h,v 1.336 2007-10-18 22:44:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,7 +127,7 @@
 #define DI (BX_CPU_THIS_PTR gen_reg[7].word.rx)
 
 // access to 16 bit instruction pointer
-#define IP (* (Bit16u *) (((Bit8u *) &BX_CPU_THIS_PTR dword.eip) + BX_REG16_OFFSET))
+#define IP BX_CPU_THIS_PTR eip_reg.word.ip
 
 // accesss to 32 bit general registers
 #define EAX BX_CPU_THIS_PTR gen_reg[0].dword.erx
@@ -140,7 +140,7 @@
 #define EDI BX_CPU_THIS_PTR gen_reg[7].dword.erx
 
 // access to 32 bit instruction pointer
-#define EIP BX_CPU_THIS_PTR dword.eip
+#define EIP BX_CPU_THIS_PTR eip_reg.dword.eip
 
 #if BX_SUPPORT_X86_64
 // accesss to 64 bit general registers
@@ -162,7 +162,7 @@
 #define R15 BX_CPU_THIS_PTR gen_reg[15].rrx
 
 // access to 64 bit instruction pointer
-#define RIP BX_CPU_THIS_PTR rip
+#define RIP BX_CPU_THIS_PTR eip_reg.rip
 
 // access to 64 bit MSR registers
 #define MSR_FSBASE  (BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.u.segment.base)
@@ -861,8 +861,9 @@ typedef struct {
   Bit32u accessBits;  // Page Table Address for updating A & D bits
   bx_hostpageaddr_t hostPageAddr;
 } bx_TLB_entry;
-#endif  // #if BX_USE_TLB
+#endif
 
+// general purpose register
 #if BX_SUPPORT_X86_64
 
 #ifdef BX_BIG_ENDIAN
@@ -952,6 +953,71 @@ typedef struct {
 
 #endif  // #if BX_SUPPORT_X86_64
 
+// instruction pointer register
+#if BX_SUPPORT_X86_64
+
+#ifdef BX_BIG_ENDIAN
+typedef struct {
+  union {
+    struct {
+      Bit32u rip_upper;
+      Bit16u word_filler;
+      Bit16u ip;
+    } word;
+    Bit64u rip;
+    struct {
+      Bit32u rip_upper;  // hi 32 bits
+      Bit32u eip;        // lo 32 bits
+    } dword;
+  };
+} bx_eip_reg_t;
+#else
+typedef struct {
+  union {
+    struct {
+      Bit16u ip;
+      Bit16u word_filler;
+      Bit32u rip_upper;
+    } word;
+    Bit64u rip;
+    struct {
+      Bit32u eip;        // lo 32 bits
+      Bit32u rip_upper;  // hi 32 bits
+    } dword;
+  };
+} bx_eip_reg_t;
+#endif
+
+#else  // #if BX_SUPPORT_X86_64
+
+#ifdef BX_BIG_ENDIAN
+typedef struct {
+  union {
+    struct {
+      Bit32u eip;
+    } dword;
+    struct {
+      Bit16u word_filler;
+      Bit16u ip;
+    } word;
+  };
+} bx_eip_reg_t;
+#else
+typedef struct {
+  union {
+    struct {
+      Bit32u eip;
+    } dword;
+    struct {
+      Bit16u ip;
+      Bit16u word_filler;
+    } word;
+  };
+} bx_eip_reg_t;
+#endif
+
+#endif  // #if BX_SUPPORT_X86_64
+
 #if BX_SUPPORT_APIC
 #define BX_INCLUDE_LOCAL_APIC 1
 #include "apic.h"
@@ -994,26 +1060,7 @@ public: // for now...
   bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS];
 
   // instruction pointer
-#if BX_SUPPORT_X86_64
-  union {
-#ifdef BX_BIG_ENDIAN
-    struct {
-      Bit32u rip_upper;
-      Bit32u eip;
-    } dword;
-#else
-    struct {
-      Bit32u eip;
-      Bit32u rip_upper;
-    } dword;
-#endif
-    Bit64u rip;
-  };
-#else
-  union {
-    Bit32u eip;    // instruction pointer
-  } dword;
-#endif
+  bx_eip_reg_t eip_reg;
 
   // status and control flags register set
   Bit32u lf_flags_status;
@@ -2957,6 +3004,7 @@ public: // for now...
   BX_SMF bx_bool set_segment_ar_data(bx_segment_reg_t *seg, Bit16u raw_selector,
                          bx_address base, Bit32u limit, Bit16u ar_data);
   BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
+  // the basic assumption of the code that load_cs and load_ss cannot fail !
   BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void    fetch_raw_descriptor(const bx_selector_t *selector,
@@ -2969,7 +3017,7 @@ public: // for now...
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
   BX_SMF void    loadSRegLMNominal(unsigned seg, unsigned selector, unsigned dpl);
 #endif
-  BX_SMF void    push_16(Bit16u value16) BX_CPP_AttrRegparmN(1);
+  BX_SMF void    push_16(Bit16u value16);
   BX_SMF void    push_32(Bit32u value32);
   BX_SMF void    push_64(Bit64u value64);
   BX_SMF void    pop_16(Bit16u *value16_ptr);
@@ -3139,22 +3187,22 @@ BX_CPP_INLINE void BX_CPU_C::set_reg8h(unsigned reg, Bit8u val)
 #if BX_SUPPORT_X86_64
 BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
 {
-   return (BX_CPU_THIS_PTR rip);
+   return (BX_CPU_THIS_PTR eip_reg.rip);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
 {
-   BX_CPU_THIS_PTR rip = ip;
+   BX_CPU_THIS_PTR eip_reg.rip = ip;
 }
 #else
 BX_CPP_INLINE bx_address BX_CPU_C::get_ip(void)
 {
-   return (BX_CPU_THIS_PTR dword.eip);
+   return (BX_CPU_THIS_PTR eip_reg.dword.eip);
 }
 
 BX_CPP_INLINE void BX_CPU_C::set_ip(bx_address ip)
 {
-   BX_CPU_THIS_PTR dword.eip = ip;
+   BX_CPU_THIS_PTR eip_reg.dword.eip = ip;
 }
 #endif
 

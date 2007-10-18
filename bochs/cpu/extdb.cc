@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.21 2006-06-25 21:44:46 sshwarts Exp $
+// $Id: extdb.cc,v 1.22 2007-10-18 22:44:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -31,7 +31,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
        regs.debug_state = debug_step;
        break;
      case debug_skip:
-       if (cpu->dword.eip != regs.debug_eip ||
+       if (cpu->eip_reg.dword.eip != regs.debug_eip ||
            cpu->sregs[1].selector.value != regs.debug_cs) return;
        regs.debug_state = debug_step;
        break;
@@ -72,7 +72,7 @@ void bx_external_debugger(BX_CPU_C *cpu)
      regs.r13 = 0;
      regs.r14 = 0;
      regs.r15 = 0;
-     regs.rip = cpu->dword.eip;
+     regs.rip = cpu->eip_reg.dword.eip;
 #endif
      regs.rflags = cpu->read_eflags();
      regs.es = cpu->sregs[0].selector.value;

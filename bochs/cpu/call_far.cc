@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.16 2007-10-18 21:27:56 sshwarts Exp $
+// $Id: call_far.cc,v 1.17 2007-10-18 22:44:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -175,7 +175,9 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           BX_ERROR(("call_protected: TSS selector points to bad TSS"));
           exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
-        if (tss_descriptor.type!=9 && tss_descriptor.type!=1) {
+        if (tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS && 
+            tss_descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)
+        {
           BX_ERROR(("call_protected: TSS selector points to bad TSS"));
           exception(BX_GP_EXCEPTION, raw_tss_selector & 0xfffc, 0);
         }
@@ -378,7 +380,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           if (ss_descriptor.u.segment.d_b)
             ESP = ESP_for_cpl_x;
           else
-            SP =  (Bit16u) ESP_for_cpl_x;
+             SP = (Bit16u) ESP_for_cpl_x;
 
           /* load new CS:IP value from gate */
           /* load CS descriptor */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: load32bitOShack.cc,v 1.22 2007-07-09 15:16:09 sshwarts Exp $
+// $Id: load32bitOShack.cc,v 1.23 2007-10-18 22:44:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,7 @@ void bx_load_null_kernel_hack(void)
 
   // EIP deltas
   BX_CPU(0)->prev_eip =
-  BX_CPU(0)->dword.eip = 0x00100000;
+  BX_CPU(0)->eip_reg.dword.eip = 0x00100000;
 
   // CS deltas
   BX_CPU(0)->sregs[BX_SEG_REG_CS].cache.u.segment.base = 0x00000000;

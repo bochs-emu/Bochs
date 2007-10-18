@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.59 2007-10-18 21:27:56 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.60 2007-10-18 22:44:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -112,7 +112,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
       BX_DEBUG(("Compatibility Mode Activated"));
-      if (BX_CPU_THIS_PTR dword.rip_upper != 0) {
+      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
         BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
       }
     }

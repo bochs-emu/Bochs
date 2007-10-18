@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.60 2006-11-19 16:18:41 sshwarts Exp $
+// $Id: logio.cc,v 1.61 2007-10-18 22:44:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -196,7 +196,7 @@ void iofunctions::out(int f, int l, const char *prefix, const char *fmt, va_list
             break;
           case 'i':
 #if BX_SUPPORT_SMP == 0
-            fprintf(logfd, "%08x", BX_CPU(0)->dword.eip);
+            fprintf(logfd, "%08x", BX_CPU(0)->eip_reg.dword.eip);
 #endif
             break;
           case 'e':

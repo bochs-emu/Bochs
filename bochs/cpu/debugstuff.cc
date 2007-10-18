@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.79 2007-10-14 19:04:50 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.80 2007-10-18 22:44:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -230,7 +230,7 @@ void BX_CPU_C::debug(bx_address offset)
 
 #if BX_SUPPORT_X86_64
   BX_INFO(("| RIP=%08x%08x (%08x%08x)", 
-    (unsigned) BX_CPU_THIS_PTR dword.rip_upper, (unsigned) EIP,
+    (unsigned) BX_CPU_THIS_PTR eip_reg.dword.rip_upper, (unsigned) EIP,
     (unsigned) (BX_CPU_THIS_PTR prev_eip >> 32), 
     (unsigned) (BX_CPU_THIS_PTR prev_eip & 0xffffffff)));
   BX_INFO(("| CR0=0x%08x CR1=0x%x CR2=0x%08x%08x",

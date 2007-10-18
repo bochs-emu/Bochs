@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gdbstub.cc,v 1.29 2007-02-07 17:53:06 sshwarts Exp $
+// $Id: gdbstub.cc,v 1.30 2007-10-18 22:44:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002-2006  The Bochs Project Team
@@ -468,7 +468,7 @@ static void debug_loop(void)
 
           saved_eip = EIP;
 
-          BX_CPU(0)->dword.eip = new_eip;
+          BX_CPU(0)->eip_reg.dword.eip = new_eip;
         }
 
         stub_trace_flag = 0;
@@ -479,7 +479,7 @@ static void debug_loop(void)
         if (buffer[1] != 0)
         {
           bx_cpu.invalidate_prefetch_q();
-          BX_CPU_THIS_PTR dword.eip = saved_eip;
+          BX_CPU_THIS_PTR eip_reg.dword.eip = saved_eip;
         }
 
         BX_INFO(("stopped with %x", last_stop_reason));                               
