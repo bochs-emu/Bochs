@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.72 2007-10-17 18:09:42 sshwarts Exp $
+// $Id: access.cc,v 1.73 2007-10-19 10:14:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,8 +38,7 @@
 #endif
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
-                               unsigned length)
+BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length)
 {
   Bit32u upper_limit;
 
@@ -127,8 +126,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
-                              unsigned length)
+BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length)
 {
   Bit32u upper_limit;
 
@@ -211,8 +209,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
-                              unsigned length)
+BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length)
 {
   Bit32u upper_limit;
 
@@ -276,7 +273,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset,
         if ((offset <= seg->cache.u.segment.limit_scaled) ||
              (offset > upper_limit) || ((upper_limit - offset) < (length - 1)))
         {
-          BX_ERROR(("read_virtual_checks(): read beyond limit ED"));
+          BX_ERROR(("execute_virtual_checks(): read beyond limit ED"));
           exception(int_number(seg), 0, 0);
         }
         break;
@@ -315,10 +312,15 @@ BX_CPU_C::strseg(bx_segment_reg_t *seg)
 
 int BX_CPU_C::int_number(bx_segment_reg_t *seg)
 {
-  if (seg == &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS])
-    return(BX_SS_EXCEPTION);
-  else
-    return(BX_GP_EXCEPTION);
+  if (seg == &BX_CPU_THIS_PTR sregs[0]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[1]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[2]) return BX_SS_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[3]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[4]) return BX_GP_EXCEPTION;
+  if (seg == &BX_CPU_THIS_PTR sregs[5]) return BX_GP_EXCEPTION;
+
+  // imdefined segment, this must be new stack segment
+  return BX_SS_EXCEPTION;
 }
 
 #if BX_SupportGuest2HostTLB
@@ -1316,3 +1318,109 @@ BX_CPU_C::write_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 }
 
 #endif
+
+//
+// Write data to new stack, these methods are required for emulation
+// correctness but not performance critical.
+//
+
+// assuming the write happens in legacy mode
+void BX_CPU_C::write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit16u data)
+{
+  bx_address laddr;
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < seg->cache.u.segment.limit_scaled) {
+accessOK:
+      laddr = seg->cache.u.segment.base + offset;
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (user && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 1) {
+          BX_ERROR(("write_new_stack_word(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
+#if BX_SupportGuest2HostTLB
+      Bit16u *hostAddr = v2h_write_word(laddr, user);
+      if (hostAddr) {
+        WriteHostWordToLittleEndian(hostAddr, data);
+        return;
+      }
+#endif
+      access_linear(laddr, 2, user, BX_WRITE, (void *) &data);
+      return;
+    }
+  }
+  write_virtual_checks(seg, offset, 2);
+  goto accessOK;
+}
+
+// assuming the write happens in legacy mode
+void BX_CPU_C::write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit32u data)
+{
+  bx_address laddr;
+
+  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
+
+  if (seg->cache.valid & SegAccessWOK) {
+    if (offset < (seg->cache.u.segment.limit_scaled-2)) {
+accessOK:
+      laddr = seg->cache.u.segment.base + offset;
+      BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+      if (user && BX_CPU_THIS_PTR alignment_check) {
+        if (laddr & 3) {
+          BX_ERROR(("write_new_stack_dword(): misaligned access"));
+          exception(BX_AC_EXCEPTION, 0, 0);
+        }
+      }
+#endif
+#if BX_SupportGuest2HostTLB
+      Bit32u *hostAddr = v2h_write_dword(laddr, user);
+      if (hostAddr) {
+        WriteHostDWordToLittleEndian(hostAddr, data);
+        return;
+      }
+#endif
+      access_linear(laddr, 4, user, BX_WRITE, (void *) &data);
+      return;
+    }
+  }
+  write_virtual_checks(seg, offset, 4);
+  goto accessOK;
+}
+
+// assuming the write happens in 64-bit mode
+void BX_CPU_C::write_new_stack_qword(bx_address offset, Bit64u data)
+{
+  bx_address laddr = offset;
+
+  if (IsCanonical(offset)) {
+    unsigned pl = (CPL==3);
+    BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    if (pl && BX_CPU_THIS_PTR alignment_check) {
+      if (laddr & 7) {
+        BX_ERROR(("write_new_stack_qword(): misaligned access"));
+        exception(BX_AC_EXCEPTION, 0, 0);
+      }
+    }
+#endif
+#if BX_SupportGuest2HostTLB
+    Bit64u *hostAddr = v2h_write_qword(laddr, pl);
+    if (hostAddr) {
+      WriteHostQWordToLittleEndian(hostAddr, data);
+      return;
+    }
+#endif
+    access_linear(laddr, 8, pl, BX_WRITE, (void *) &data);
+  }
+  else {
+    BX_ERROR(("write_new_stack_qword(): canonical failure 0x%08x:%08x", GET32H(laddr), GET32L(laddr)));
+    exception(BX_SS_EXCEPTION, 0, 0);
+  }
+}

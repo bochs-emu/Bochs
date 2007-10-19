@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.17 2007-10-18 22:44:38 sshwarts Exp $
+// $Id: call_far.cc,v 1.18 2007-10-19 10:14:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -368,19 +368,58 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             }
           }
 
-          // The follwoing push instructions might have a page fault which cannot
-          // be detected at this stage
-          BX_CPU_THIS_PTR except_chk = 1;  
-          BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-          BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
+          // Prepare new stack segment
+          bx_segment_reg_t new_stack;
+          new_stack.selector = ss_selector;
+          new_stack.cache = ss_descriptor;
+          new_stack.selector.rpl = ss_descriptor.dpl;
+          // add cpl to the selector value
+          new_stack.selector.value = (0xfffc & new_stack.selector.value) |
+            new_stack.selector.rpl;
+          bx_bool user = (cs_descriptor.dpl == 3);
+
+          if (ss_descriptor.u.segment.d_b)
+            temp_ESP = ESP_for_cpl_x;
+          else
+            temp_ESP = (Bit16u) ESP_for_cpl_x;
+
+          // push pointer of old stack onto new stack
+          if (gate_descriptor.type==BX_386_CALL_GATE) {
+            write_new_stack_dword(&new_stack, temp_ESP-4, user, return_SS);
+            write_new_stack_dword(&new_stack, temp_ESP-8, user, return_ESP);
+            temp_ESP -= 8;
+
+            for (unsigned i=param_count; i>0; i--) {
+              temp_ESP -= 4;
+              write_new_stack_dword(&new_stack, temp_ESP, user, parameter_dword[i-1]);
+            }
+            // push return address onto new stack
+            write_new_stack_dword(&new_stack, temp_ESP-4, user, return_CS);
+            write_new_stack_dword(&new_stack, temp_ESP-8, user, return_EIP);
+            temp_ESP -= 8;
+          }
+          else {
+            write_new_stack_word(&new_stack, temp_ESP-2, user, return_SS);
+            write_new_stack_word(&new_stack, temp_ESP-4, user, (Bit16u) return_ESP);
+            temp_ESP -= 4;
+
+            for (unsigned i=param_count; i>0; i--) {
+              temp_ESP -= 2;
+              write_new_stack_word(&new_stack, temp_ESP, user, parameter_word[i-1]);
+            }
+            // push return address onto new stack
+            write_new_stack_word(&new_stack, temp_ESP-2, user, return_CS);
+            write_new_stack_word(&new_stack, temp_ESP-4, user, (Bit16u) return_EIP);
+            temp_ESP -= 4;
+          }
 
           /* load new SS:SP value from TSS */
           /* load SS descriptor */
           load_ss(&ss_selector, &ss_descriptor, ss_descriptor.dpl);
           if (ss_descriptor.u.segment.d_b)
-            ESP = ESP_for_cpl_x;
+            ESP = temp_ESP;
           else
-             SP = (Bit16u) ESP_for_cpl_x;
+             SP = (Bit16u) temp_ESP;
 
           /* load new CS:IP value from gate */
           /* load CS descriptor */
@@ -388,43 +427,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           /* set RPL of CS to CPL */
           load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
           EIP = new_EIP;
-
-          // push pointer of old stack onto new stack
-          if (gate_descriptor.type==BX_386_CALL_GATE) {
-            push_32(return_SS);
-            push_32(return_ESP);
-          }
-          else {
-            push_16(return_SS);
-            push_16((Bit16u) return_ESP);
-          }
-
-          /* get word count from call gate, mask to 5 bits */
-          /* copy parameters from old stack onto new stack */
-          if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-            temp_ESP = ESP;
-          else
-            temp_ESP =  SP;
-
-          if (gate_descriptor.type==BX_286_CALL_GATE) {
-            for (unsigned i=param_count; i>0; i--) {
-              push_16(parameter_word[i-1]);
-            }
-            // push return address onto new stack
-            push_16(return_CS);
-            push_16((Bit16u) return_EIP);
-          }
-          else {
-            for (unsigned i=param_count; i>0; i--) {
-              push_32(parameter_dword[i-1]);
-            }
-            // push return address onto new stack
-            push_32(return_CS);
-            push_32(return_EIP);
-          }
-
-          // Help for OS/2
-          BX_CPU_THIS_PTR except_chk = 0;
         }
         else   // CALL GATE TO SAME PRIVILEGE
         {
@@ -513,7 +515,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     exception(BX_NP_EXCEPTION, dest_selector & 0xfffc, 0);
   }
 
-  Bit16u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   Bit64u old_RIP = RIP;
 
   // CALL GATE TO MORE PRIVILEGE
@@ -533,9 +535,18 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-    Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+    Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
 
+    // push old stack long pointer onto new stack
+    write_new_stack_qword(RSP_for_cpl_x -  8, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, old_RSP);
+    // push long pointer to return address onto new stack
+    write_new_stack_qword(RSP_for_cpl_x - 24, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 32, old_RIP);
+    RSP_for_cpl_x -= 32;
+
+    // prepare new stack null SS selector
     bx_selector_t ss_selector;
     bx_descriptor_t ss_descriptor;
 
@@ -543,27 +554,12 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     parse_selector(0, &ss_selector);
     parse_descriptor(0, 0, &ss_descriptor);
 
-    // The following push instructions might have a page fault which cannot
-    // be detected at this stage
-    BX_CPU_THIS_PTR except_chk = 1;  
-    BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-    BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
-
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far64(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
 
     // set up null SS descriptor
     load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
     RSP = RSP_for_cpl_x;
-
-    // push old stack long pointer onto new stack
-    push_64(old_SS);
-    push_64(old_RSP);
-    // push long pointer to return address onto new stack
-    push_64(old_CS);
-    push_64(old_RIP);
-
-    BX_CPU_THIS_PTR except_chk = 0;
   }
   else
   {
@@ -576,20 +572,12 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-    // The following push instructions might have a page fault which cannot
-    // be detected at this stage
-    BX_CPU_THIS_PTR except_chk = 1;  
-    BX_CPU_THIS_PTR except_cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS];
-    BX_CPU_THIS_PTR except_ss = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS];
-
-    // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
-
     // push return address onto stack
     push_64(old_CS);
     push_64(old_RIP);
 
-    BX_CPU_THIS_PTR except_chk = 0;
+    // load CS:RIP (guaranteed to be in 64 bit mode)
+    branch_far64(&cs_selector, &cs_descriptor, new_RIP, CPL);
   }
 }
 #endif

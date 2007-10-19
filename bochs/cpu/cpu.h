@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.336 2007-10-18 22:44:38 sshwarts Exp $
+// $Id: cpu.h,v 1.337 2007-10-19 10:14:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1177,10 +1177,6 @@ public: // for now...
   bx_segment_reg_t save_ss;
   bx_address       save_eip;
   bx_address       save_esp;
-  // This help for OS/2
-  bx_bool          except_chk;
-  bx_segment_reg_t except_cs;
-  bx_segment_reg_t except_ss;
 
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;
@@ -2827,6 +2823,12 @@ public: // for now...
 #if BX_SUPPORT_FPU
   BX_SMF void read_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
 #endif
+  // write of word/dword to new stack could happen only in legacy mode
+  BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit16u data);
+  BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit32u data);
+  // write of qword to new stack could happen only in 64-bit mode
+  // (so stack segment is not relavant)
+  BX_SMF void write_new_stack_qword(bx_address offset, Bit64u data);
 
 #if BX_SUPPORT_MISALIGNED_SSE
 
