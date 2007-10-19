@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.92 2007-10-19 10:14:33 sshwarts Exp $
+// $Id: exception.cc,v 1.93 2007-10-19 10:59:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -185,10 +185,24 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
       exception(BX_GP_EXCEPTION, 0, 0);
     }
 
-    Bit16u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+    Bit64u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
     Bit64u old_RIP = RIP;
-    Bit16u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+    Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
+
+    // push old stack long pointer onto new stack
+    write_new_stack_qword(RSP_for_cpl_x -  8, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, read_eflags());
+    // push long pointer to return address onto new stack
+    write_new_stack_qword(RSP_for_cpl_x - 32, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 40, old_RIP);
+    RSP_for_cpl_x -= 40;
+
+    if (is_error_code) {
+      RSP_for_cpl_x -= 8;
+      write_new_stack_qword(RSP_for_cpl_x, error_code);
+    }
 
     bx_selector_t ss_selector;
     bx_descriptor_t ss_descriptor;
@@ -203,16 +217,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     // set up null SS descriptor
     load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
     RSP = RSP_for_cpl_x;
-
-    // push old stack long pointer onto new stack
-    push_64(old_SS);
-    push_64(old_RSP);
-    push_64(read_eflags());
-    // push long pointer to return address onto new stack
-    push_64(old_CS);
-    push_64(old_RIP);
-    if (is_error_code)
-      push_64(error_code);
 
     // if INTERRUPT GATE set IF to 0
     if (!(gate_descriptor.type & 1)) // even is int-gate
@@ -286,6 +290,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
   Bit16u gate_dest_selector;
   Bit32u gate_dest_offset;
+  Bit32u temp_ESP;
 
   // interrupt vector must be within IDT table limits,
   // else #GP(vector number*8 + 2 + EXT)
@@ -544,21 +549,89 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       old_EIP = EIP;
       old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
+      // Prepare new stack segment
+      bx_segment_reg_t new_stack;
+      new_stack.selector = ss_selector;
+      new_stack.cache = ss_descriptor;
+      new_stack.selector.rpl = cs_descriptor.dpl;
+      // add cpl to the selector value
+      new_stack.selector.value = (0xfffc & new_stack.selector.value) |
+        new_stack.selector.rpl;
+      bx_bool user = (cs_descriptor.dpl == 3);
+
+      if (ss_descriptor.u.segment.d_b)
+        temp_ESP = ESP_for_cpl_x;
+      else
+        temp_ESP = (Bit16u) ESP_for_cpl_x;
+
+      if (is_v8086_mode)
+      {
+        if (gate_descriptor.type>=14) { // 386 int/trap gate
+          write_new_stack_dword(&new_stack, temp_ESP-4,  user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+          write_new_stack_dword(&new_stack, temp_ESP-8,  user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+          write_new_stack_dword(&new_stack, temp_ESP-12, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+          write_new_stack_dword(&new_stack, temp_ESP-16, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+          temp_ESP -= 16;
+        }
+        else {
+          write_new_stack_word(&new_stack, temp_ESP-2, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+          write_new_stack_word(&new_stack, temp_ESP-4, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+          write_new_stack_word(&new_stack, temp_ESP-6, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+          write_new_stack_word(&new_stack, temp_ESP-8, user, 
+              BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+          temp_ESP -= 8;
+        }
+      }
+
+      if (gate_descriptor.type>=14) { // 386 int/trap gate
+        // push long pointer to old stack onto new stack
+        write_new_stack_dword(&new_stack, temp_ESP-4,  user, old_SS);
+        write_new_stack_dword(&new_stack, temp_ESP-8,  user, old_ESP);
+        write_new_stack_dword(&new_stack, temp_ESP-12, user, read_eflags());
+        write_new_stack_dword(&new_stack, temp_ESP-16, user, old_CS);
+        write_new_stack_dword(&new_stack, temp_ESP-20, user, old_EIP);
+        temp_ESP -= 20;
+
+        if (is_error_code) {
+          temp_ESP -= 4;
+          write_new_stack_dword(&new_stack, temp_ESP, user, error_code);
+        }
+      }
+      else {                          // 286 int/trap gate
+        // push long pointer to old stack onto new stack
+        write_new_stack_word(&new_stack, temp_ESP-2,  user, old_SS);
+        write_new_stack_word(&new_stack, temp_ESP-4,  user, (Bit16u) old_ESP);
+        write_new_stack_word(&new_stack, temp_ESP-6,  user, read_flags());
+        write_new_stack_word(&new_stack, temp_ESP-8,  user, old_CS);
+        write_new_stack_word(&new_stack, temp_ESP-10, user, (Bit16u) old_EIP);
+        temp_ESP -= 10;
+
+        if (is_error_code) {
+          temp_ESP -= 2;
+          write_new_stack_word(&new_stack, temp_ESP, user, error_code);
+        }
+      }
+
       // load new SS:SP values from TSS
       load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
       if (ss_descriptor.u.segment.d_b)
-        ESP = ESP_for_cpl_x;
+        ESP = temp_ESP;
       else
-        SP = ESP_for_cpl_x; // leave upper 16bits
+         SP = (Bit16u) temp_ESP;
 
       // load new CS:IP values from gate
       // set CPL to new code segment DPL
       // set RPL of CS to CPL
       load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
       EIP = gate_dest_offset;
-          
-      Bit32u eflags = read_eflags();
           
       // if INTERRUPT GATE set IF to 0
       if (!(gate_descriptor.type & 1)) // even is int-gate
@@ -570,19 +643,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
 
       if (is_v8086_mode)
       {
-        if (gate_descriptor.type>=14) { // 386 int/trap gate
-          push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-        }
-        else {
-          push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          push_16(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-        }
-
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid = 0;
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value = 0;
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid = 0;
@@ -591,37 +651,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value = 0;
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid = 0;
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value = 0;
-      }
-
-      if (gate_descriptor.type>=14) { // 386 int/trap gate
-        // push long pointer to old stack onto new stack
-        push_32(old_SS);
-        push_32(old_ESP);
-
-        // push EFLAGS
-        push_32(eflags);
-
-        // push long pointer to return address onto new stack
-        push_32(old_CS);
-        push_32(old_EIP);
-
-        if (is_error_code)
-          push_32(error_code);
-      }
-      else {                          // 286 int/trap gate
-        // push long pointer to old stack onto new stack
-        push_16(old_SS);
-        push_16(old_ESP); // ignores upper 16bits
-
-        // push FLAGS
-        push_16(eflags);  // ignores upper 16bits
-
-        // push return address onto new stack
-        push_16(old_CS);
-        push_16(old_EIP); // ignores upper 16bits
-
-        if (is_error_code)
-          push_16(error_code);
       }
 
       return;
@@ -638,7 +667,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
     if (IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
     {
       int bytes;
-      Bit32u temp_ESP;
 
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
         temp_ESP = ESP;

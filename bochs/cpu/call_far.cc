@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.18 2007-10-19 10:14:33 sshwarts Exp $
+// $Id: call_far.cc,v 1.19 2007-10-19 10:59:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -372,7 +372,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           bx_segment_reg_t new_stack;
           new_stack.selector = ss_selector;
           new_stack.cache = ss_descriptor;
-          new_stack.selector.rpl = ss_descriptor.dpl;
+          new_stack.selector.rpl = cs_descriptor.dpl;
           // add cpl to the selector value
           new_stack.selector.value = (0xfffc & new_stack.selector.value) |
             new_stack.selector.rpl;
@@ -415,7 +415,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           /* load new SS:SP value from TSS */
           /* load SS descriptor */
-          load_ss(&ss_selector, &ss_descriptor, ss_descriptor.dpl);
+          load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
           if (ss_descriptor.u.segment.d_b)
             ESP = temp_ESP;
           else
