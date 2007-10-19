@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.73 2007-10-19 10:14:33 sshwarts Exp $
+// $Id: access.cc,v 1.74 2007-10-19 12:40:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1395,15 +1395,14 @@ accessOK:
 }
 
 // assuming the write happens in 64-bit mode
-void BX_CPU_C::write_new_stack_qword(bx_address offset, Bit64u data)
+void BX_CPU_C::write_new_stack_qword(bx_address offset, bx_bool user, Bit64u data)
 {
   bx_address laddr = offset;
 
   if (IsCanonical(offset)) {
-    unsigned pl = (CPL==3);
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (pl && BX_CPU_THIS_PTR alignment_check) {
+    if (user && BX_CPU_THIS_PTR alignment_check) {
       if (laddr & 7) {
         BX_ERROR(("write_new_stack_qword(): misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
@@ -1411,13 +1410,13 @@ void BX_CPU_C::write_new_stack_qword(bx_address offset, Bit64u data)
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit64u *hostAddr = v2h_write_qword(laddr, pl);
+    Bit64u *hostAddr = v2h_write_qword(laddr, user);
     if (hostAddr) {
       WriteHostQWordToLittleEndian(hostAddr, data);
       return;
     }
 #endif
-    access_linear(laddr, 8, pl, BX_WRITE, (void *) &data);
+    access_linear(laddr, 8, user, BX_WRITE, (void *) &data);
   }
   else {
     BX_ERROR(("write_new_stack_qword(): canonical failure 0x%08x:%08x", GET32H(laddr), GET32L(laddr)));

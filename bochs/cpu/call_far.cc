@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.19 2007-10-19 10:59:39 sshwarts Exp $
+// $Id: call_far.cc,v 1.20 2007-10-19 12:40:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -537,13 +537,14 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
+    bx_bool user = (cs_descriptor.dpl == 3);
 
     // push old stack long pointer onto new stack
-    write_new_stack_qword(RSP_for_cpl_x -  8, old_SS);
-    write_new_stack_qword(RSP_for_cpl_x - 16, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x -  8, user, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, user, old_RSP);
     // push long pointer to return address onto new stack
-    write_new_stack_qword(RSP_for_cpl_x - 24, old_CS);
-    write_new_stack_qword(RSP_for_cpl_x - 32, old_RIP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, user, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 32, user, old_RIP);
     RSP_for_cpl_x -= 32;
 
     // prepare new stack null SS selector

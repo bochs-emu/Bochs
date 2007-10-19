@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.337 2007-10-19 10:14:33 sshwarts Exp $
+// $Id: cpu.h,v 1.338 2007-10-19 12:40:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2828,7 +2828,7 @@ public: // for now...
   BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit32u data);
   // write of qword to new stack could happen only in 64-bit mode
   // (so stack segment is not relavant)
-  BX_SMF void write_new_stack_qword(bx_address offset, Bit64u data);
+  BX_SMF void write_new_stack_qword(bx_address offset, bx_bool user, Bit64u data);
 
 #if BX_SUPPORT_MISALIGNED_SSE
 
