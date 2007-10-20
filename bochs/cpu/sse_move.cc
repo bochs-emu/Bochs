@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.62 2007-10-11 18:12:00 sshwarts Exp $
+// $Id: sse_move.cc,v 1.63 2007-10-20 17:03:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1350,6 +1350,31 @@ void BX_CPU_C::PMOVSXDQ_VdqWq(bxInstruction_c *i)
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
   BX_INFO(("PMOVSXDQ_VdqWq: required SSE4, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+/* 66 0F 38 2A */
+void BX_CPU_C::MOVNTDQA_VdqMdq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 4
+  /* source must be memory reference */
+  if (i->modC0()) {
+    BX_INFO(("MOVNTDQA_VdqMdq: must be memory reference"));
+    UndefinedOpcode(i);
+  }
+
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op;
+
+  read_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &op);
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op);
+
+#else
+  BX_INFO(("MOVNTDQA_VdqMdq: required SSE4, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }

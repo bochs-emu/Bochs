@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.338 2007-10-19 12:40:18 sshwarts Exp $
+// $Id: cpu.h,v 1.339 2007-10-20 17:03:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2269,6 +2269,7 @@ public: // for now...
   BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *i);
   BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *i);
   BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *i);
   /* SSE4.1 */
 
   /* SSE4.2 */
@@ -2313,19 +2314,12 @@ public: // for now...
   BX_SMF void MOVHPD_MqVsd(bxInstruction_c *);
   BX_SMF void MOVNTPD_MdqVpd(bxInstruction_c *);
   BX_SMF void MOVNTDQ_MdqVdq(bxInstruction_c *);
-  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *i);
 #else
 
 #if BX_SUPPORT_SSE >= 2
   #define SSE2_ALIAS(i) i
 #else
   #define SSE2_ALIAS(i) BxError
-#endif
-
-#if BX_SUPPORT_SSE >= 4
-  #define SSE4_ALIAS(i) i
-#else
-  #define SSE4_ALIAS(i) BxError
 #endif
 
 #define MOVUPD_VpdWpd    /* 66 0f 10 */ SSE2_ALIAS(MOVUPS_VpsWps)   /*  0f 10 */
@@ -2360,8 +2354,6 @@ public: // for now...
 
 #define UNPCKLPD_VpdWdq  /* 66 0f 14 */ PUNPCKLQDQ_VdqWdq /* 66 0f 6c */
 #define UNPCKHPD_VpdWdq  /* 66 0f 15 */ PUNPCKHQDQ_VdqWdq /* 66 0f 6d */
-
-#define MOVNTDQA_VdqMdq  /* 66 0f 38 2a */ SSE4_ALIAS(LDDQU_VdqMdq) /* f2 0f f0 */
 
 #endif  // #ifdef STAND_ALONE_DECODER
 
