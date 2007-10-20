@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.116 2007-10-11 22:44:17 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.117 2007-10-20 10:56:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2157,7 +2157,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
-#define SSE_PREFIX_F3   3      /* only one SSE prefix could be used */
+#define SSE_PREFIX_F3   3
   unsigned sse_prefix = SSE_PREFIX_NONE;
   unsigned rex_prefix = 0;
 
@@ -2216,14 +2216,14 @@ fetch_b1:
         }
         return(0);
       case 0xf2: // REPNE/REPNZ
-        if(!sse_prefix) sse_prefix = SSE_PREFIX_F2;
+        sse_prefix = SSE_PREFIX_F2;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
         }
         return(0);
       case 0xf3: // REP/REPE/REPZ
-        if(!sse_prefix) sse_prefix = SSE_PREFIX_F3;
+        sse_prefix = SSE_PREFIX_F3;
         instruction->setRepUsed(b1 & 3);
         if (ilen < remain) {
           goto fetch_b1;
