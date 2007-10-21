@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.40 2007-10-21 22:07:32 sshwarts Exp $
+// $Id: arith8.cc,v 1.41 2007-10-21 23:35:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -427,20 +427,20 @@ void BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
 
 void BX_CPU_C::NEG_Eb(bxInstruction_c *i)
 {
-  Bit8u op1_8, diff_8;
+  Bit8u op1_8;
 
   if (i->modC0()) {
     op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-    diff_8 = -op1_8;
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), diff_8);
+    op1_8 = -op1_8;
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
   }
   else {
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
-    diff_8 = -op1_8;
-    write_RMW_virtual_byte(diff_8);
+    op1_8 = -op1_8;
+    write_RMW_virtual_byte(op1_8);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_8(diff_8, BX_INSTR_NEG8);
+  SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_INSTR_NEG8);
 }
 
 void BX_CPU_C::INC_Eb(bxInstruction_c *i)

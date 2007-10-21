@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.28 2007-10-21 22:07:33 sshwarts Exp $
+// $Id: logical32.cc,v 1.29 2007-10-21 23:35:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,27 +37,27 @@
 
 void BX_CPU_C::XOR_EdGd(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 ^ op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 ^= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 ^ op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 ^= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::XOR_GdEd(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
   unsigned nnn = i->nnn();
 
   op1_32 = BX_READ_32BIT_REG(nnn);
@@ -69,105 +69,104 @@ void BX_CPU_C::XOR_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
   }
 
-  result_32 = op1_32 ^ op2_32;
+  op1_32 ^= op2_32;
 
-  BX_WRITE_32BIT_REGZ(nnn, result_32);
+  BX_WRITE_32BIT_REGZ(nnn, op1_32);
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::XOR_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
 
   op1_32 = EAX;
   op2_32 = i->Id();
+  op1_32 ^= op2_32;
+  RAX = op1_32;
 
-  result_32 = op1_32 ^ op2_32;
-  RAX = result_32;
-
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::XOR_EdId(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = i->Id();
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 ^ op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 ^= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 ^ op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 ^= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::OR_EdId(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = i->Id();
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 | op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 |= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 | op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 |= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::NOT_Ed(bxInstruction_c *i)
 {
-  Bit32u op1_32, result_32;
+  Bit32u op1_32;
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = ~op1_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 = ~op1_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = ~op1_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 = ~op1_32;
+    write_RMW_virtual_dword(op1_32);
   }
 }
 
 void BX_CPU_C::OR_EdGd(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 | op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 |= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 | op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 |= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::OR_GdEd(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
 
@@ -178,48 +177,49 @@ void BX_CPU_C::OR_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
   }
 
-  result_32 = op1_32 | op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  op1_32 |= op2_32;
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 
 void BX_CPU_C::OR_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
 
   op1_32 = EAX;
   op2_32 = i->Id();
-  result_32 = op1_32 | op2_32;
+  op1_32 |= op2_32;
 
-  RAX = result_32;
+  RAX = op1_32;
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::AND_EdGd(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 & op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 &= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 & op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 &= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::AND_GdEd(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
 
@@ -230,43 +230,44 @@ void BX_CPU_C::AND_GdEd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
   }
 
-  result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  op1_32 &= op2_32;
 
-  BX_WRITE_32BIT_REGZ(i->nnn(), result_32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
+
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 
 void BX_CPU_C::AND_EAXId(bxInstruction_c *i)
 {
-  Bit32u op1_32, op2_32, result_32;
+  Bit32u op1_32, op2_32;
 
   op1_32 = EAX;
   op2_32 = i->Id();
+  op1_32 &= op2_32;
 
-  result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 
-  RAX = result_32;
+  RAX = op1_32;
 }
 
 void BX_CPU_C::AND_EdId(bxInstruction_c *i)
 {
-  Bit32u op2_32, op1_32, result_32;
+  Bit32u op2_32, op1_32;
 
   op2_32 = i->Id();
 
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
-    result_32 = op1_32 & op2_32;
-    BX_WRITE_32BIT_REGZ(i->rm(), result_32);
+    op1_32 &= op2_32;
+    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    result_32 = op1_32 & op2_32;
-    write_RMW_virtual_dword(result_32);
+    op1_32 &= op2_32;
+    write_RMW_virtual_dword(op1_32);
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::TEST_EdGd(bxInstruction_c *i)
@@ -282,8 +283,9 @@ void BX_CPU_C::TEST_EdGd(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   }
 
-  Bit32u result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  op1_32 &= op2_32;
+
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
@@ -292,9 +294,9 @@ void BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
 
   op1_32 = EAX;
   op2_32 = i->Id();
+  op1_32 &= op2_32;
 
-  Bit32u result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
 
 void BX_CPU_C::TEST_EdId(bxInstruction_c *i)
@@ -310,6 +312,7 @@ void BX_CPU_C::TEST_EdId(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   }
 
-  Bit32u result_32 = op1_32 & op2_32;
-  SET_FLAGS_OSZAPC_RESULT_32(result_32, BX_INSTR_LOGIC32);
+  op1_32 &= op2_32;
+
+  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_LOGIC32);
 }
