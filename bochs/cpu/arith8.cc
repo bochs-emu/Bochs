@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.39 2006-03-26 18:58:00 sshwarts Exp $
+// $Id: arith8.cc,v 1.40 2007-10-21 22:07:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -279,14 +279,8 @@ void BX_CPU_C::CMP_EbGb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-#if defined(BX_HostAsm_Cmp8)
-  Bit32u flags32;
-  asmCmp8(op1_8, op2_8, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit8u diff_8 = op1_8 - op2_8;
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
-#endif
 }
 
 void BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
@@ -302,14 +296,8 @@ void BX_CPU_C::CMP_GbEb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
   }
 
-#if defined(BX_HostAsm_Cmp8)
-  Bit32u flags32;
-  asmCmp8(op1_8, op2_8, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit8u diff_8 = op1_8 - op2_8;
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
-#endif
 }
 
 void BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
@@ -317,14 +305,8 @@ void BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
   Bit8u op1_8 = AL;
   Bit8u op2_8 = i->Ib();
 
-#if defined(BX_HostAsm_Cmp8)
-  Bit32u flags32;
-  asmCmp8(op1_8, op2_8, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit8u diff_8 = op1_8 - op2_8;
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
-#endif
 }
 
 void BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
@@ -439,14 +421,8 @@ void BX_CPU_C::CMP_EbIb(bxInstruction_c *i)
     read_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-#if defined(BX_HostAsm_Cmp8)
-  Bit32u flags32;
-  asmCmp8(op1_8, op2_8, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit8u diff_8 = op1_8 - op2_8;
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
-#endif
 }
 
 void BX_CPU_C::NEG_Eb(bxInstruction_c *i)

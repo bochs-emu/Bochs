@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.339 2007-10-20 17:03:33 sshwarts Exp $
+// $Id: cpu.h,v 1.340 2007-10-21 22:07:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,7 +32,6 @@
 #include <setjmp.h>
 
 #include "cpu/lazy_flags.h"
-#include "cpu/hostasm.h"
 
 #if BX_DISASM
 #  include "disasm/disasm.h"
@@ -421,13 +420,15 @@ typedef struct {
   Bit32u VM_cached;
 
   // accessors for all eflags in bx_flags_reg_t
-  // The macro is used once for each flag bit.
+  // The macro is used once for each flag bit
+  // Do not use for arithmetic flags !
 #define DECLARE_EFLAG_ACCESSOR(name,bitnum)                           \
   BX_CPP_INLINE void    assert_##name ();                             \
   BX_CPP_INLINE void    clear_##name ();                              \
   BX_CPP_INLINE Bit32u  get_##name ();                                \
   BX_CPP_INLINE bx_bool getB_##name ();                               \
-  BX_CPP_INLINE void    set_##name (Bit8u val);
+  BX_CPP_INLINE void    set_##name (Bit8u val);                       \
+  BX_CPP_INLINE void    setB_##name (Bit8u val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                         \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {                     \
@@ -445,6 +446,10 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {               \
     BX_CPU_THIS_PTR eflags.val32 =                                    \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((!!val)<<bitnum);  \
+  }                                                                   \
+  BX_CPP_INLINE void BX_CPU_C::setB_##name (Bit8u val) {              \
+    BX_CPU_THIS_PTR eflags.val32 =                                    \
+      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);    \
   }
 
 #if BX_SUPPORT_ALIGNMENT_CHECK
@@ -1279,6 +1284,11 @@ public: // for now...
     BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<eflagsBitShift); \
     BX_CPU_THIS_PTR eflags.val32 |= ((!!val)<<eflagsBitShift); \
+  } \
+  BX_SMF void setB_##flag(bx_bool val) { \
+    BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
+    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<eflagsBitShift); \
+    BX_CPU_THIS_PTR eflags.val32 |= ((val)<<eflagsBitShift); \
   } \
   BX_SMF void clear_##flag(void) { \
     BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \

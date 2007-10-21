@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.24 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: shift8.cc,v 1.25 2007-10-21 22:07:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,8 +55,8 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   if ( (count & 0x07) == 0 ) {
     if ( count & 0x18 ) {
       unsigned bit0 = op1_8 & 1;
-      set_CF(bit0);
-      set_OF(bit0 ^ (op1_8 >> 7));
+      setB_CF(bit0);
+      setB_OF(bit0 ^ (op1_8 >> 7));
     }
     return;
   }
@@ -77,8 +77,8 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
    */
   bx_bool temp_CF = (result_8 & 0x01);
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_8 >> 7));
+  setB_CF(temp_CF);
+  setB_OF(temp_CF ^ (result_8 >> 7));
 }
 
 void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
@@ -106,8 +106,8 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     if ( count & 0x18 ) {
       unsigned bit6 = (op1_8 >> 6) & 1;
       unsigned bit7 = (op1_8 >> 7);
-      set_CF(bit7);
-      set_OF(bit7 ^ bit6);
+      setB_CF(bit7);
+      setB_OF(bit7 ^ bit6);
     }
     return;
   }
@@ -129,8 +129,8 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   bx_bool result_b7 = (result_8 & 0x80) != 0;
   bx_bool result_b6 = (result_8 & 0x40) != 0;
 
-  set_CF(result_b7);
-  set_OF(result_b7 ^ result_b6);
+  setB_CF(result_b7);
+  setB_OF(result_b7 ^ result_b6);
 }
 
 void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
@@ -179,8 +179,8 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
    */
   bx_bool temp_CF = (op1_8 >> (8 - count)) & 0x01;
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_8 >> 7));
+  setB_CF(temp_CF);
+  setB_OF(temp_CF ^ (result_8 >> 7));
 }
 
 void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
@@ -223,8 +223,8 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
    * RCR count affects the following flags: C, O
    */
 
-  set_CF((op1_8 >> (count - 1)) & 0x01);
-  set_OF((((result_8 << 1) ^ result_8) & 0x80) > 0);
+  setB_CF((op1_8 >> (count - 1)) & 0x01);
+  setB_OF((((result_8 << 1) ^ result_8) & 0x80) > 0);
 }
 
 void BX_CPU_C::SHL_Eb(bxInstruction_c *i)

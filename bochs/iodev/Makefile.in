@@ -223,7 +223,7 @@ acpi.o: acpi.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h 
   ../bxversion.h ../gui/siminterface.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/crregs.h \
-  ../cpu/lazy_flags.h ../cpu/hostasm.h ../disasm/disasm.h \
+  ../cpu/lazy_flags.h ../disasm/disasm.h \
   ../cpu/descriptor.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h iodev.h ../iodev/pci.h ../iodev/pci2isa.h \
@@ -464,7 +464,7 @@ iodebug.o: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
   ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/lazy_flags.h \
-  ../cpu/hostasm.h ../disasm/disasm.h ../cpu/descriptor.h ../cpu/icache.h \
+  ../disasm/disasm.h ../cpu/descriptor.h ../cpu/icache.h \
   ../cpu/apic.h ../cpu/i387.h ../cpu/crregs.h ../fpu/softfloat.h \
   ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h iodev.h \
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/acpi.h \
@@ -786,7 +786,7 @@ acpi.lo: acpi.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h
   ../bxversion.h ../gui/siminterface.h ../memory/memory.h ../pc_system.h \
   ../plugin.h ../extplugin.h ../ltdl.h ../gui/gui.h ../gui/textconfig.h \
   ../gui/keymap.h ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/crregs.h \
-  ../cpu/lazy_flags.h ../cpu/hostasm.h ../disasm/disasm.h \
+  ../cpu/lazy_flags.h ../disasm/disasm.h \
   ../cpu/descriptor.h ../cpu/icache.h ../cpu/apic.h ../cpu/i387.h \
   ../fpu/softfloat.h ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h \
   ../cpu/xmm.h iodev.h ../iodev/pci.h ../iodev/pci2isa.h \
@@ -1027,7 +1027,7 @@ iodebug.lo: iodebug.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h ../ltdl.h \
   ../gui/gui.h ../gui/textconfig.h ../gui/keymap.h \
   ../instrument/stubs/instrument.h ../cpu/cpu.h ../cpu/lazy_flags.h \
-  ../cpu/hostasm.h ../disasm/disasm.h ../cpu/descriptor.h ../cpu/icache.h \
+  ../disasm/disasm.h ../cpu/descriptor.h ../cpu/icache.h \
   ../cpu/apic.h ../cpu/i387.h ../cpu/crregs.h ../fpu/softfloat.h \
   ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h iodev.h \
   ../iodev/pci.h ../iodev/pci2isa.h ../iodev/pci_ide.h ../iodev/acpi.h \

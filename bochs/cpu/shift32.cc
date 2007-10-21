@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.31 2006-03-26 18:58:01 sshwarts Exp $
+// $Id: shift32.cc,v 1.32 2007-10-21 22:07:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,8 +149,8 @@ void BX_CPU_C::ROL_Ed(bxInstruction_c *i)
    */
   bx_bool temp_CF = (result_32 & 0x01);
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_32 >> 31));
+  setB_CF(temp_CF);
+  setB_OF(temp_CF ^ (result_32 >> 31));
 }
 
 void BX_CPU_C::ROR_Ed(bxInstruction_c *i)
@@ -192,8 +192,8 @@ void BX_CPU_C::ROR_Ed(bxInstruction_c *i)
   bx_bool result_b31 = (result_32 & 0x80000000) != 0;
   bx_bool result_b30 = (result_32 & 0x40000000) != 0;
 
-  set_CF(result_b31);
-  set_OF(result_b31 ^ result_b30);
+  setB_CF(result_b31);
+  setB_OF(result_b31 ^ result_b30);
 }
 
 void BX_CPU_C::RCL_Ed(bxInstruction_c *i)
@@ -240,8 +240,8 @@ void BX_CPU_C::RCL_Ed(bxInstruction_c *i)
    */
   bx_bool temp_CF = (op1_32 >> (32 - count)) & 0x01;
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_32 >> 31));
+  setB_CF(temp_CF);
+  setB_OF(temp_CF ^ (result_32 >> 31));
 }
 
 void BX_CPU_C::RCR_Ed(bxInstruction_c *i)
@@ -287,8 +287,8 @@ void BX_CPU_C::RCR_Ed(bxInstruction_c *i)
    * RCR count affects the following flags: C, O
    */
 
-  set_CF((op1_32 >> (count - 1)) & 0x01);
-  set_OF((((result_32 << 1) ^ result_32) & 0x80000000) > 0);
+  setB_CF((op1_32 >> (count - 1)) & 0x01);
+  setB_OF((((result_32 << 1) ^ result_32) & 0x80000000) > 0);
 }
 
 void BX_CPU_C::SHL_Ed(bxInstruction_c *i)
@@ -348,16 +348,10 @@ void BX_CPU_C::SHR_Ed(bxInstruction_c *i)
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   }
 
-    if (!count) return;
+  if (!count) return;
 
-#if defined(BX_HostAsm_Shr32)
-  Bit32u flags32;
-  asmShr32(result_32, op1_32, count, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   result_32 = (op1_32 >> count);
   SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHR32);
-#endif
 
   /* now write result back to destination */
   if (i->modC0()) {

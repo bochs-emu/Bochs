@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.17 2006-03-06 22:02:51 sshwarts Exp $
+// $Id: bcd.cc,v 1.18 2007-10-21 22:07:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -58,12 +58,12 @@ void BX_CPU_C::AAA(bxInstruction_c *)
   if ( ((AL & 0x0f) > 9) || get_AF() )
   {
     AX = AX + 0x106;
-    set_AF(1);
-    set_CF(1);
+    assert_AF();
+    assert_CF();
   }
   else {
-    set_AF(0);
-    set_CF(0);
+    clear_AF();
+    clear_CF();
   }
 
   AL = AL & 0x0f;
@@ -73,8 +73,8 @@ void BX_CPU_C::AAA(bxInstruction_c *)
 
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  set_OF(0);
-  set_SF(0); /* sign is always 0 because bits 4-7 of AL are zeroed */
+  clear_OF();
+  clear_SF(); /* sign is always 0 because bits 4-7 of AL are zeroed */
   set_ZF(AL == 0);
   set_PF_base(AL);
 }
@@ -86,12 +86,12 @@ void BX_CPU_C::AAS(bxInstruction_c *)
   if ( ((AL & 0x0F) > 0x09) || get_AF() )
   {
     AX = AX - 0x106;
-    set_AF(1);
-    set_CF(1);
+    assert_AF();
+    assert_CF();
   }
   else {
-    set_CF(0);
-    set_AF(0);
+    clear_CF();
+    clear_AF();
   }
 
   AL = AL & 0x0f;
@@ -101,8 +101,8 @@ void BX_CPU_C::AAS(bxInstruction_c *)
 
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  set_OF(0);
-  set_SF(0); /* sign is always 0 because bits 4-7 of AL are zeroed */
+  clear_OF();
+  clear_SF(); /* sign is always 0 because bits 4-7 of AL are zeroed */
   set_ZF(AL == 0);
   set_PF_base(AL);
 }
@@ -171,10 +171,10 @@ void BX_CPU_C::DAA(bxInstruction_c *)
   {
     tmpCF = ((AL > 0xF9) || get_CF());
     AL = AL + 0x06;
-    set_AF(1);
+    assert_AF();
   }
   else
-    set_AF(0);
+    clear_AF();
 
   if ((tmpAL > 0x99) || get_CF())
   {
@@ -184,7 +184,7 @@ void BX_CPU_C::DAA(bxInstruction_c *)
   else
     tmpCF = 0;
 
-  set_OF(0);	/* undocumented flag modification */
+  clear_OF();	/* undocumented flag modification */
   set_SF(AL >= 0x80);
   set_ZF(AL==0);
   set_PF_base(AL);
@@ -210,10 +210,10 @@ void BX_CPU_C::DAS(bxInstruction_c *)
   {
     tmpCF = (AL < 0x06) || get_CF();
     AL = AL - 0x06;
-    set_AF(1);
+    assert_AF();
   }
   else
-    set_AF(0);
+    clear_AF();
 
   if ((tmpAL > 0x99) || get_CF())
   {
@@ -221,7 +221,7 @@ void BX_CPU_C::DAS(bxInstruction_c *)
     tmpCF = 1;
   }
 
-  set_OF(0);	/* undocumented flag modification */
+  clear_OF();	/* undocumented flag modification */
   set_SF(AL >= 0x80);
   set_ZF(AL==0);
   set_PF_base(AL);

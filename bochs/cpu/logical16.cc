@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.26 2007-04-17 21:38:51 sshwarts Exp $
+// $Id: logical16.cc,v 1.27 2007-10-21 22:07:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,30 +40,16 @@ void BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if defined(BX_HostAsm_Xor16)
-    Bit32u flags32;
-    asmXor16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 ^ op2_16;
-#endif
     BX_WRITE_16BIT_REG(i->rm(), result_16);
   }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-#if defined(BX_HostAsm_Xor16)
-    Bit32u flags32;
-    asmXor16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 ^ op2_16;
-#endif
     write_RMW_virtual_word(result_16);
   }
 
-#if !defined(BX_HostAsm_Xor16)
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }
 
 void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
@@ -188,14 +174,8 @@ void BX_CPU_C::OR_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
   }
 
-#if defined(BX_HostAsm_Or16)
-  Bit32u flags32;
-  asmOr16(result_16, op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   result_16 = op1_16 | op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 }
@@ -220,34 +200,16 @@ void BX_CPU_C::AND_EwGw(bxInstruction_c *i)
 
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
-
-#if defined(BX_HostAsm_And16)
-    Bit32u flags32;
-    asmAnd16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 & op2_16;
-#endif
-
     BX_WRITE_16BIT_REG(i->rm(), result_16);
   }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-
-#if defined(BX_HostAsm_And16)
-    Bit32u flags32;
-    asmAnd16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 & op2_16;
-#endif
-
     write_RMW_virtual_word(result_16);
   }
 
-#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }
 
 void BX_CPU_C::AND_GwEw(bxInstruction_c *i)
@@ -263,14 +225,8 @@ void BX_CPU_C::AND_GwEw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op2_16);
   }
 
-#if defined(BX_HostAsm_And16)
-  Bit32u flags32;
-  asmAnd16(result_16, op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   result_16 = op1_16 & op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 
   BX_WRITE_16BIT_REG(i->nnn(), result_16);
 }
@@ -282,14 +238,8 @@ void BX_CPU_C::AND_AXIw(bxInstruction_c *i)
   op1_16 = AX;
   op2_16 = i->Iw();
 
-#if defined(BX_HostAsm_And16)
-  Bit32u flags32;
-  asmAnd16(result_16, op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   result_16 = op1_16 & op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 
   AX = result_16;
 }
@@ -303,33 +253,19 @@ void BX_CPU_C::AND_EwIw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
 
-#if defined(BX_HostAsm_And16)
-    Bit32u flags32;
-    asmAnd16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 & op2_16;
-#endif
 
     BX_WRITE_16BIT_REG(i->rm(), result_16);
   }
   else {
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
-#if defined(BX_HostAsm_And16)
-    Bit32u flags32;
-    asmAnd16(result_16, op1_16, op2_16, flags32);
-    setEFlagsOSZAPC(flags32);
-#else
     result_16 = op1_16 & op2_16;
-#endif
 
     write_RMW_virtual_word(result_16);
   }
 
-#if !defined(BX_HostAsm_And16)
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }
 
 void BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
@@ -345,14 +281,8 @@ void BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-#if defined(BX_HostAsm_Test16)
-  Bit32u flags32;
-  asmTest16(op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit16u result_16 = op1_16 & op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }
 
 void BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
@@ -362,14 +292,8 @@ void BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
   op1_16 = AX;
   op2_16 = i->Iw();
 
-#if defined(BX_HostAsm_Test16)
-  Bit32u flags32;
-  asmTest16(op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit16u result_16 = op1_16 & op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }
 
 void BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
@@ -385,12 +309,6 @@ void BX_CPU_C::TEST_EwIw(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-#if defined(BX_HostAsm_Test16)
-  Bit32u flags32;
-  asmTest16(op1_16, op2_16, flags32);
-  setEFlagsOSZAPC(flags32);
-#else
   Bit16u result_16 = op1_16 & op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(result_16, BX_INSTR_LOGIC16);
-#endif
 }

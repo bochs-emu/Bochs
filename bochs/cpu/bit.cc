@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.33 2007-10-01 19:59:35 sshwarts Exp $
+// $Id: bit.cc,v 1.34 2007-10-21 22:07:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -565,7 +565,7 @@ void BX_CPU_C::BT_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
     op2_16 &= 0x0f;
-    set_CF((op1_16 >> op2_16) & 0x01);
+    setB_CF((op1_16 >> op2_16) & 0x01);
     return;
   }
 
@@ -576,7 +576,7 @@ void BX_CPU_C::BT_EwGw(bxInstruction_c *i)
   /* pointer, segment address pair */
   read_virtual_word(i->seg(), op1_addr, &op1_16);
 
-  set_CF((op1_16 >> index) & 0x01);
+  setB_CF((op1_16 >> index) & 0x01);
 }
 
 void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
@@ -591,7 +591,7 @@ void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
     op2_32 &= 0x1f;
-    set_CF((op1_32 >> op2_32) & 0x01);
+    setB_CF((op1_32 >> op2_32) & 0x01);
     return;
   }
 
@@ -602,7 +602,7 @@ void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
   /* pointer, segment address pair */
   read_virtual_dword(i->seg(), op1_addr, &op1_32);
 
-  set_CF((op1_32 >> index) & 0x01);
+  setB_CF((op1_32 >> index) & 0x01);
 }
 
 #if BX_SUPPORT_X86_64
@@ -619,7 +619,7 @@ void BX_CPU_C::BT_EqGq(bxInstruction_c *i)
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
     op2_64 &= 0x3f;
-    set_CF((op1_64 >> op2_64) & 0x01);
+    setB_CF((op1_64 >> op2_64) & 0x01);
     return;
   }
 
@@ -630,7 +630,7 @@ void BX_CPU_C::BT_EqGq(bxInstruction_c *i)
   /* pointer, segment address pair */
   read_virtual_qword(i->seg(), op1_addr, &op1_64);
 
-  set_CF((op1_64 >> index) & 0x01);
+  setB_CF((op1_64 >> index) & 0x01);
 }
 #endif
 
@@ -646,7 +646,7 @@ void BX_CPU_C::BTS_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
     op2_16 &= 0x0f;
-    set_CF((op1_16 >> op2_16) & 0x01);
+    setB_CF((op1_16 >> op2_16) & 0x01);
     op1_16 |= (((Bit16u) 1) << op2_16);
 
     /* now write diff back to destination */
@@ -666,7 +666,7 @@ void BX_CPU_C::BTS_EwGw(bxInstruction_c *i)
 
   write_RMW_virtual_word(op1_16);
 
-  set_CF(bit_i);
+  setB_CF(bit_i);
 }
 
 void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
@@ -681,7 +681,7 @@ void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
     op2_32 &= 0x1f;
-    set_CF((op1_32 >> op2_32) & 0x01);
+    setB_CF((op1_32 >> op2_32) & 0x01);
     op1_32 |= (((Bit32u) 1) << op2_32);
 
     /* now write diff back to destination */
@@ -701,7 +701,7 @@ void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
 
   write_RMW_virtual_dword(op1_32);
 
-  set_CF(bit_i);
+  setB_CF(bit_i);
 }
 
 #if BX_SUPPORT_X86_64
@@ -718,7 +718,7 @@ void BX_CPU_C::BTS_EqGq(bxInstruction_c *i)
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
     op2_64 &= 0x3f;
-    set_CF((op1_64 >> op2_64) & 0x01);
+    setB_CF((op1_64 >> op2_64) & 0x01);
     op1_64 |= (((Bit64u) 1) << op2_64);
 
     /* now write diff back to destination */
@@ -738,7 +738,7 @@ void BX_CPU_C::BTS_EqGq(bxInstruction_c *i)
 
   write_RMW_virtual_qword(op1_64);
 
-  set_CF(bit_i);
+  setB_CF(bit_i);
 }
 #endif
 
@@ -754,7 +754,7 @@ void BX_CPU_C::BTR_EwGw(bxInstruction_c *i)
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->rm());
     op2_16 &= 0x0f;
-    set_CF((op1_16 >> op2_16) & 0x01);
+    setB_CF((op1_16 >> op2_16) & 0x01);
     op1_16 &= ~(((Bit16u) 1) << op2_16);
 
     /* now write diff back to destination */
@@ -775,7 +775,7 @@ void BX_CPU_C::BTR_EwGw(bxInstruction_c *i)
   /* now write back to destination */
   write_RMW_virtual_word(op1_16);
 
-  set_CF(temp_cf);
+  setB_CF(temp_cf);
 }
 
 void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
@@ -790,7 +790,7 @@ void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
   if (i->modC0()) {
     op1_32 = BX_READ_32BIT_REG(i->rm());
     op2_32 &= 0x1f;
-    set_CF((op1_32 >> op2_32) & 0x01);
+    setB_CF((op1_32 >> op2_32) & 0x01);
     op1_32 &= ~(((Bit32u) 1) << op2_32);
 
     /* now write diff back to destination */
@@ -811,7 +811,7 @@ void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
   /* now write back to destination */
   write_RMW_virtual_dword(op1_32);
 
-  set_CF(temp_cf);
+  setB_CF(temp_cf);
 }
 
 #if BX_SUPPORT_X86_64
@@ -827,7 +827,7 @@ void BX_CPU_C::BTR_EqGq(bxInstruction_c *i)
   if (i->modC0()) {
     op1_64 = BX_READ_64BIT_REG(i->rm());
     op2_64 &= 0x3f;
-    set_CF((op1_64 >> op2_64) & 0x01);
+    setB_CF((op1_64 >> op2_64) & 0x01);
     op1_64 &= ~(((Bit64u) 1) << op2_64);
 
     /* now write diff back to destination */
@@ -848,7 +848,7 @@ void BX_CPU_C::BTR_EqGq(bxInstruction_c *i)
   /* now write back to destination */
   write_RMW_virtual_qword(op1_64);
 
-  set_CF(temp_cf);
+  setB_CF(temp_cf);
 }
 #endif 
 
@@ -874,7 +874,7 @@ void BX_CPU_C::BTC_EwGw(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
   op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -884,7 +884,7 @@ void BX_CPU_C::BTC_EwGw(bxInstruction_c *i)
     write_RMW_virtual_word(op1_16);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 
 void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
@@ -909,7 +909,7 @@ void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
   op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -944,7 +944,7 @@ void BX_CPU_C::BTC_EqGq(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_64 >> index) & 0x01;
   op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -971,7 +971,7 @@ void BX_CPU_C::BT_EwIb(bxInstruction_c *i)
     read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-  set_CF((op1_16 >> op2_8) & 0x01);
+  setB_CF((op1_16 >> op2_8) & 0x01);
 }
 
 void BX_CPU_C::BT_EdIb(bxInstruction_c *i)
@@ -989,7 +989,7 @@ void BX_CPU_C::BT_EdIb(bxInstruction_c *i)
     read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   }
 
-  set_CF((op1_32 >> op2_8) & 0x01);
+  setB_CF((op1_32 >> op2_8) & 0x01);
 }
 
 #if BX_SUPPORT_X86_64
@@ -1008,7 +1008,7 @@ void BX_CPU_C::BT_EqIb(bxInstruction_c *i)
     read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   }
 
-  set_CF((op1_64 >> op2_8) & 0x01);
+  setB_CF((op1_64 >> op2_8) & 0x01);
 }
 #endif
 
@@ -1038,7 +1038,7 @@ void BX_CPU_C::BTS_EwIb(bxInstruction_c *i)
     write_RMW_virtual_word(op1_16);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 
 void BX_CPU_C::BTS_EdIb(bxInstruction_c *i)
@@ -1067,7 +1067,7 @@ void BX_CPU_C::BTS_EdIb(bxInstruction_c *i)
     write_RMW_virtual_dword(op1_32);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 
 #if BX_SUPPORT_X86_64
@@ -1097,7 +1097,7 @@ void BX_CPU_C::BTS_EqIb(bxInstruction_c *i)
     write_RMW_virtual_qword(op1_64);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 #endif
 
@@ -1118,7 +1118,7 @@ void BX_CPU_C::BTC_EwIb(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -1146,7 +1146,7 @@ void BX_CPU_C::BTC_EdIb(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -1175,7 +1175,7 @@ void BX_CPU_C::BTC_EqIb(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 
   /* now write diff back to destination */
   if (i->modC0()) {
@@ -1213,7 +1213,7 @@ void BX_CPU_C::BTR_EwIb(bxInstruction_c *i)
     write_RMW_virtual_word(op1_16);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 
 void BX_CPU_C::BTR_EdIb(bxInstruction_c *i)
@@ -1242,7 +1242,7 @@ void BX_CPU_C::BTR_EdIb(bxInstruction_c *i)
     write_RMW_virtual_dword(op1_32);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 
 #if BX_SUPPORT_X86_64
@@ -1272,7 +1272,7 @@ void BX_CPU_C::BTR_EqIb(bxInstruction_c *i)
     write_RMW_virtual_qword(op1_64);
   }
 
-  set_CF(temp_CF);
+  setB_CF(temp_CF);
 }
 #endif
 
