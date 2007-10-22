@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.340 2007-10-21 22:07:32 sshwarts Exp $
+// $Id: cpu.h,v 1.341 2007-10-22 17:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1558,8 +1558,8 @@ public: // for now...
   BX_SMF void OUT_IbAL(bxInstruction_c *);
   BX_SMF void OUT_IbAX(bxInstruction_c *);
   BX_SMF void OUT_IbEAX(bxInstruction_c *);
-  BX_SMF void CALL_Aw(bxInstruction_c *);
-  BX_SMF void CALL_Ad(bxInstruction_c *);
+  BX_SMF void CALL_Jw(bxInstruction_c *);
+  BX_SMF void CALL_Jd(bxInstruction_c *);
   BX_SMF void JMP_Jd(bxInstruction_c *);
   BX_SMF void JMP_Jw(bxInstruction_c *);
   BX_SMF void JMP_Ap(bxInstruction_c *);
@@ -2514,7 +2514,7 @@ public: // for now...
 
   BX_SMF void IRET64(bxInstruction_c *);
 
-  BX_SMF void CALL_Aq(bxInstruction_c *);
+  BX_SMF void CALL_Jq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
   BX_SMF void JCC_Jq(bxInstruction_c *);
 
@@ -3482,10 +3482,10 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxImmediate_IwIb    0x0006 // enter_IwIb
 #define BxImmediate_O       0x0007 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
 #define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
-#define BxImmediate_BrOff16 0x0009 // Relative branch offset word
-#define BxImmediate_BrOff32 BxImmediate_Iv
+#define BxImmediate_BrOff16 0x0009 // Relative branch offset word, not encodable in 64-bit mode
+#define BxImmediate_BrOff32 0x000A // Relative branch offset dword
 #if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x000A // 64 bit override
+#define BxImmediate_Iq      0x000B // 64 bit override
 #endif
 
 // Lookup for opcode and attributes in another opcode tables

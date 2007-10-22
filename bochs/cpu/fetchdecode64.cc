@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.117 2007-10-20 10:56:44 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.118 2007-10-22 17:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -788,8 +788,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* E5 */ { BxImmediate_Ib, &BX_CPU_C::IN_AXIb },
   /* E6 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbAL },
   /* E7 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbAX },
-  /* E8 */ { BxImmediate_BrOff16, &BX_CPU_C::CALL_Aw },
-  /* E9 */ { BxImmediate_BrOff16, &BX_CPU_C::JMP_Jq },
+  /* E8 */ { BxImmediate_BrOff32, &BX_CPU_C::CALL_Jq },
+  /* E9 */ { BxImmediate_BrOff32, &BX_CPU_C::JMP_Jq },
   /* EA */ { 0, &BX_CPU_C::BxError },
   /* EB */ { BxImmediate_BrOff8, &BX_CPU_C::JMP_Jq },
   /* EC */ { 0, &BX_CPU_C::IN_ALDX },
@@ -954,22 +954,22 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* 0F 7D */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7d }, 
   /* 0F 7E */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7e }, 
   /* 0F 7F */ { BxAnother | BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7f }, 
-  /* 0F 80 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 81 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 82 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 83 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 84 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 85 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 86 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 87 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 88 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 89 */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8A */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8B */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8C */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8D */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8E */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
-  /* 0F 8F */ { BxImmediate_BrOff16, &BX_CPU_C::JCC_Jq },
+  /* 0F 80 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 81 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 82 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 83 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 84 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 85 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 86 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 87 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 88 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 89 */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8A */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8B */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8C */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8D */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8E */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
+  /* 0F 8F */ { BxImmediate_BrOff32, &BX_CPU_C::JCC_Jq },
   /* 0F 90 */ { BxAnother, &BX_CPU_C::SETO_Eb },
   /* 0F 91 */ { BxAnother, &BX_CPU_C::SETNO_Eb },
   /* 0F 92 */ { BxAnother, &BX_CPU_C::SETB_Eb },
@@ -1317,7 +1317,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* E5 */ { BxImmediate_Ib, &BX_CPU_C::IN_EAXIb },
   /* E6 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbAL },
   /* E7 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbEAX },
-  /* E8 */ { BxImmediate_BrOff32, &BX_CPU_C::CALL_Aq },
+  /* E8 */ { BxImmediate_BrOff32, &BX_CPU_C::CALL_Jq },
   /* E9 */ { BxImmediate_BrOff32, &BX_CPU_C::JMP_Jq },
   /* EA */ { 0, &BX_CPU_C::BxError },
   /* EB */ { BxImmediate_BrOff8, &BX_CPU_C::JMP_Jq },
@@ -1846,7 +1846,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* E5 */ { BxImmediate_Ib, &BX_CPU_C::IN_EAXIb },
   /* E6 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbAL },
   /* E7 */ { BxImmediate_Ib, &BX_CPU_C::OUT_IbEAX },
-  /* E8 */ { BxImmediate_BrOff32, &BX_CPU_C::CALL_Aq },
+  /* E8 */ { BxImmediate_BrOff32, &BX_CPU_C::CALL_Jq },
   /* E9 */ { BxImmediate_BrOff32, &BX_CPU_C::JMP_Jq },
   /* EA */ { 0, &BX_CPU_C::BxError },
   /* EB */ { BxImmediate_BrOff8, &BX_CPU_C::JMP_Jq },
@@ -2604,7 +2604,7 @@ modrm_done:
           return(0);
         }
         break;
-      case BxImmediate_Iv: // same as BxImmediate_BrOff32
+      case BxImmediate_Iv:
         if (instruction->os32L()) {
           if ((ilen+3) < remain) {
             instruction->modRMForm.Id = FetchDWORD(iptr);
@@ -2674,10 +2674,10 @@ modrm_done:
           return(0);
         }
         break;
-      case BxImmediate_BrOff16:
-        if ((ilen+1) < remain) {
-          instruction->modRMForm.Id = (Bit16s) FetchWORD(iptr);
-          ilen += 2;
+      case BxImmediate_BrOff32:
+        if ((ilen+3) < remain) {
+          instruction->modRMForm.Id = (Bit32s) FetchDWORD(iptr);
+          ilen += 4;
         }
         else {
           return(0);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.49 2007-10-18 21:27:56 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.50 2007-10-22 17:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,7 +113,7 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
-void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
+void BX_CPU_C::CALL_Jq(bxInstruction_c *i)
 {
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
@@ -122,7 +122,7 @@ void BX_CPU_C::CALL_Aq(bxInstruction_c *i)
 #endif
 
   if (! IsCanonical(new_RIP)) {
-    BX_ERROR(("CALL_Aq: canonical RIP violation"));
+    BX_ERROR(("CALL_Jq: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
