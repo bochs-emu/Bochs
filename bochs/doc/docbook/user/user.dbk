@@ -1,7 +1,7 @@
 <!--
 ================================================================
 doc/docbook/user/user.dbk
-$Id: user.dbk,v 1.230 2007-09-29 09:01:02 vruppert Exp $
+$Id: user.dbk,v 1.231 2007-10-23 21:59:04 sshwarts Exp $
 
 This is the top level file for the Bochs Users Manual.
 ================================================================
@@ -6237,7 +6237,9 @@ From here, you may use the following commands:
   info cpu                     List of all CPU registers and their contents
   info fpu                     List of all FPU registers and their contents
   info sse                     List of all SSE registers and their contents
-  info cr                      Show CR0-4 registers and their contents
+  info mmx                     List of all MMX registers and their contents
+  info creg                    Show CR0-CR4 registers and their contents
+  info sreg                    Show segment registers and their contents
   info eflags                  Show decoded EFLAGS register
   info break                   Information about current breakpoint status
   info tab                     Show paging address translation
@@ -6261,59 +6263,6 @@ From here, you may use the following commands:
   regs
   reg
   r
-
-  dump_cpu          Dump complete CPU state
-  set_cpu           Set  complete CPU state
-
-    Format of "dump_cpu" and "set_cpu":
-    "eax:0x%x\n"
-    "ebx:0x%x\n"
-    "ecx:0x%x\n"
-    "edx:0x%x\n"
-    "ebp:0x%x\n"
-    "esi:0x%x\n"
-    "edi:0x%x\n"
-    "esp:0x%x\n"
-    "eflags:0x%x\n"
-    "eip:0x%x\n"
-    "cs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "ss:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "ds:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "es:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "fs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "gs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "ldtr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "tr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n"
-    "gdtr:base=0x%x, limit=0x%x\n"
-    "idtr:base=0x%x, limit=0x%x\n"
-    "dr0:0x%x\n"
-    "dr1:0x%x\n"
-    "dr2:0x%x\n"
-    "dr3:0x%x\n"
-    "dr4:0x%x\n"
-    "dr5:0x%x\n"
-    "dr6:0x%x\n"
-    "dr7:0x%x\n"
-    "cr0:0x%x\n"
-    "cr1:0x%x\n"
-    "cr2:0x%x\n"
-    "cr3:0x%x\n"
-    "cr4:0x%x\n"
-    "inhibit_int:%u\n"
-    "done\n"
-
-    Notes:
-      - s is the selector
-      - dl is the shadow descriptor low  dword (4 byte quantitiy)
-      - dh is the shadow descriptor high dword (4 byte quantitiy)
-      - valid denotes if the segment register holds a validated shadow descriptor
-      - inhibit_int is set if the previous instruction was one which delays the
-          acceptance of interrupts by one instruction (STI, MOV SS)
-      - any errors encountered by the set_cpu command, are reported by
-        "Error: ...".  They may be reported after any of the input lines,
-        or after the "done" line, during limit checks.
-      - A successful set_cpu command ends with the separate line:
-        "OK".
 </screen>
 </para>
 </section>
