@@ -1,6 +1,6 @@
 %{
 /////////////////////////////////////////////////////////////////////////
-// $Id: lexer.l,v 1.21 2007-10-14 19:04:49 sshwarts Exp $
+// $Id: lexer.l,v 1.22 2007-10-23 21:51:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdlib.h>
@@ -68,6 +68,8 @@ info            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_INFO); }
 cr		|
 creg		|
 cregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_CONTROL_REGS); }
+sreg		|
+sregs		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_SEGMENT_REGS); }
 r		|
 reg		|
 regs		|
@@ -85,7 +87,6 @@ tss		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TSS); }
 tab		{ bxlval.sval = strdup(bxtext); return(BX_TOKEN_TAB); }
 dirty           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DIRTY); }
 linux           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LINUX); }
-dump_cpu        { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DUMP_CPU); }
 delete          |
 del             |
 d               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DEL_BREAKPOINT); }
@@ -135,6 +136,7 @@ print-string    { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PRINT_STRING); }
 ne2k|ne2000     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_NE2000); }
 page            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PAGE); }
 vga             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_VGA); }
+pci             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_PCI); }
 al              { bxlval.uval = BX_DBG_REG8L_AL; return(BX_TOKEN_8BL_REG);}
 bl              { bxlval.uval = BX_DBG_REG8L_BL; return(BX_TOKEN_8BL_REG);}
 cl              { bxlval.uval = BX_DBG_REG8L_CL; return(BX_TOKEN_8BL_REG);}

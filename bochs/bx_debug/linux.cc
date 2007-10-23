@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: linux.cc,v 1.7 2006-09-26 19:16:10 sshwarts Exp $
+// $Id: linux.cc,v 1.8 2007-10-23 21:51:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 #include <stdio.h>
@@ -19,16 +19,17 @@
 void bx_dbg_info_linux_command (void)
 {
   BX_INFO (("Info linux"));
-  bx_dbg_cpu_t cpu;
-  BX_CPU(dbg_cpu)->dbg_get_cpu(&cpu);
+  bx_dbg_sreg_t cs;
+  Bit32u cr0 = BX_CPU(dbg_cpu)->dbg_get_reg(BX_DBG_REG_CR0);
+  BX_CPU(dbg_cpu)->dbg_get_sreg(&cs, BX_DBG_SREG_CS);
 
   int mode;
-  if (cpu.cr0 & 1) {
+  if (cr0 & 1) {
     // protected mode
-    if (cpu.cs.sel == KERNEL_CS) {
+    if (cs.sel == KERNEL_CS) {
       mode = 'k';
       fprintf (stderr, "Processor mode: kernel\n");
-    } else if (cpu.cs.sel == USER_CS) {
+    } else if (cs.sel == USER_CS) {
       fprintf (stderr, "Processor mode: user\n");
       mode = 'u';
     } else {
@@ -41,72 +42,6 @@ void bx_dbg_info_linux_command (void)
   }
   if (mode != 'u') return;
   /* user mode, look through registers and memory to find our process ID */
-
-#if 0
-  fprintf(stderr, "eax:0x%x\n", (unsigned) cpu.eax);
-  fprintf(stderr, "ebx:0x%x\n", (unsigned) cpu.ebx);
-  fprintf(stderr, "ecx:0x%x\n", (unsigned) cpu.ecx);
-  fprintf(stderr, "edx:0x%x\n", (unsigned) cpu.edx);
-  fprintf(stderr, "ebp:0x%x\n", (unsigned) cpu.ebp);
-  fprintf(stderr, "esi:0x%x\n", (unsigned) cpu.esi);
-  fprintf(stderr, "edi:0x%x\n", (unsigned) cpu.edi);
-  fprintf(stderr, "esp:0x%x\n", (unsigned) cpu.esp);
-  fprintf(stderr, "eflags:0x%x\n", (unsigned) cpu.eflags);
-  fprintf(stderr, "eip:0x%x\n", (unsigned) cpu.eip);
-
-  fprintf(stderr, "cs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.cs.sel, (unsigned) cpu.cs.des_l,
-    (unsigned) cpu.cs.des_h, (unsigned) cpu.cs.valid);
-
-  fprintf(stderr, "ss:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.ss.sel, (unsigned) cpu.ss.des_l,
-    (unsigned) cpu.ss.des_h, (unsigned) cpu.ss.valid);
-
-  fprintf(stderr, "ds:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.ds.sel, (unsigned) cpu.ds.des_l,
-    (unsigned) cpu.ds.des_h, (unsigned) cpu.ds.valid);
-
-  fprintf(stderr, "es:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.es.sel, (unsigned) cpu.es.des_l,
-    (unsigned) cpu.es.des_h, (unsigned) cpu.es.valid);
-
-  fprintf(stderr, "fs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.fs.sel, (unsigned) cpu.fs.des_l,
-    (unsigned) cpu.fs.des_h, (unsigned) cpu.fs.valid);
-
-  fprintf(stderr, "gs:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.gs.sel, (unsigned) cpu.gs.des_l,
-    (unsigned) cpu.gs.des_h, (unsigned) cpu.gs.valid);
-
-  fprintf(stderr, "ldtr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.ldtr.sel, (unsigned) cpu.ldtr.des_l,
-    (unsigned) cpu.ldtr.des_h, (unsigned) cpu.ldtr.valid);
-
-  fprintf(stderr, "tr:s=0x%x, dl=0x%x, dh=0x%x, valid=%u\n",
-    (unsigned) cpu.tr.sel, (unsigned) cpu.tr.des_l,
-    (unsigned) cpu.tr.des_h, (unsigned) cpu.tr.valid);
-
-  fprintf(stderr, "gdtr:base=0x%x, limit=0x%x\n",
-    (unsigned) cpu.gdtr.base, (unsigned) cpu.gdtr.limit);
-
-  fprintf(stderr, "idtr:base=0x%x, limit=0x%x\n",
-    (unsigned) cpu.idtr.base, (unsigned) cpu.idtr.limit);
-
-  fprintf(stderr, "dr0:0x%x\n", (unsigned) cpu.dr0);
-  fprintf(stderr, "dr1:0x%x\n", (unsigned) cpu.dr1);
-  fprintf(stderr, "dr2:0x%x\n", (unsigned) cpu.dr2);
-  fprintf(stderr, "dr3:0x%x\n", (unsigned) cpu.dr3);
-  fprintf(stderr, "dr6:0x%x\n", (unsigned) cpu.dr6);
-  fprintf(stderr, "dr7:0x%x\n", (unsigned) cpu.dr7);
-
-  fprintf(stderr, "cr0:0x%x\n", (unsigned) cpu.cr0);
-  fprintf(stderr, "cr1:0x%x\n", (unsigned) cpu.cr1);
-  fprintf(stderr, "cr2:0x%x\n", (unsigned) cpu.cr2);
-  fprintf(stderr, "cr3:0x%x\n", (unsigned) cpu.cr3);
-  fprintf(stderr, "cr4:0x%x\n", (unsigned) cpu.cr4);
-
-  fprintf(stderr, "inhibit_mask:%u\n", cpu.inhibit_mask);
-#endif
 }
 
 class syscall_names_t {

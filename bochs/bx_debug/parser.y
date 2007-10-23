@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parser.y,v 1.23 2007-10-14 19:04:49 sshwarts Exp $
+// $Id: parser.y,v 1.24 2007-10-23 21:51:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 %{
@@ -65,6 +65,7 @@
 %token <sval> BX_TOKEN_DIRTY
 %token <sval> BX_TOKEN_LINUX
 %token <sval> BX_TOKEN_CONTROL_REGS
+%token <sval> BX_TOKEN_SEGMENT_REGS
 %token <sval> BX_TOKEN_EXAMINE
 %token <sval> BX_TOKEN_XFORMAT
 %token <sval> BX_TOKEN_DISFORMAT
@@ -76,7 +77,6 @@
 %token <sval> BX_TOKEN_TAKE
 %token <sval> BX_TOKEN_DMA
 %token <sval> BX_TOKEN_IRQ
-%token <sval> BX_TOKEN_DUMP_CPU
 %token <sval> BX_TOKEN_DISASSEMBLE
 %token <sval> BX_TOKEN_INSTRUMENT
 %token <sval> BX_TOKEN_STRING
@@ -112,6 +112,7 @@
 %token <sval> BX_TOKEN_HELP
 %token <sval> BX_TOKEN_CALC
 %token <sval> BX_TOKEN_VGA
+%token <sval> BX_TOKEN_PCI
 %token <sval> BX_TOKEN_COMMAND
 %token <sval> BX_TOKEN_GENERIC
 %token BX_TOKEN_RSHIFT
@@ -145,7 +146,6 @@ command:
     | regs_command
     | blist_command
     | slist_command
-    | dump_cpu_command
     | delete_command
     | bpe_command
     | bpd_command
@@ -508,14 +508,9 @@ info_command:
         bx_dbg_info_bpoints_command();
         free($1); free($2);
       }
-    | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
-      {
-        bx_dbg_dump_cpu_command();
-        free($1); free($2);
-      }
     | BX_TOKEN_INFO BX_TOKEN_REGISTERS '\n'
       {
-        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
+        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_FPU '\n'
@@ -534,8 +529,9 @@ info_command:
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_ALL '\n'
+    | BX_TOKEN_INFO BX_TOKEN_CPU '\n'
       {
-        bx_dbg_info_registers_command(BX_INFO_CPU_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
+        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS | BX_INFO_FPU_REGS | BX_INFO_SSE_REGS);
         free($1); free($2);
       }
     | BX_TOKEN_INFO BX_TOKEN_DIRTY '\n'
@@ -598,6 +594,11 @@ info_command:
         bx_dbg_info_control_regs_command();
         free($1); free($2);
       }
+    | BX_TOKEN_INFO BX_TOKEN_SEGMENT_REGS '\n'
+      {
+        bx_dbg_info_segment_regs_command();
+        free($1); free($2);
+      }
     | BX_TOKEN_INFO BX_TOKEN_NE2000 '\n'
       {
         bx_dbg_info_ne2k(-1, -1);
@@ -623,6 +624,11 @@ info_command:
         bx_dbg_info_vga();
         free($1); free($2);
       }
+    | BX_TOKEN_INFO BX_TOKEN_PCI '\n'
+      {
+        bx_dbg_info_pci();
+        free($1); free($2);
+      }
     ;
 
 optional_numeric :
@@ -632,15 +638,7 @@ optional_numeric :
 regs_command:
       BX_TOKEN_REGISTERS '\n'
       {
-        bx_dbg_info_registers_command(BX_INFO_CPU_REGS);
-        free($1);
-      }
-    ;
-
-dump_cpu_command:
-      BX_TOKEN_DUMP_CPU '\n'
-      {
-        bx_dbg_dump_cpu_command();
+        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
         free($1);
       }
     ;
@@ -891,11 +889,6 @@ help_command:
          dbg_printf("trace-reg off - disable registers state tracing\n");
          free($1);free($2);
        }
-     | BX_TOKEN_HELP BX_TOKEN_DUMP_CPU '\n'
-       {
-         dbg_printf("dump_cpu - dump complete cpu state\n");
-         free($1);free($2);
-       }
      | BX_TOKEN_HELP BX_TOKEN_RESTORE '\n'
        {
          dbg_printf("restore <param_name> [path] - restore bochs root param from the file\n");
@@ -1029,12 +1022,14 @@ help_command:
          dbg_printf("info gdt - show global descriptor table\n");
          dbg_printf("info tss - show current task state segment\n");
          dbg_printf("info tab - show page tables\n");
-         dbg_printf("info cr - show CR0-4 registers\n");
+         dbg_printf("info creg - show CR0-CR4 registers\n");
+         dbg_printf("info sreg - show segment registers\n");
          dbg_printf("info eflags - show decoded EFLAGS register\n");
          dbg_printf("info symbols [string] - list symbols whose prefix is string\n");
          dbg_printf("info pic - show PICs registers\n");
          dbg_printf("info ne2000 - show NE2000 registers\n");
          dbg_printf("info vga - show vga registers\n");
+         dbg_printf("info pci - show i440fx PCI state\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_SHOW '\n'

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.80 2007-10-18 22:44:39 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.81 2007-10-23 21:51:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -427,88 +427,6 @@ void BX_CPU_C::dbg_get_idtr(bx_dbg_global_sreg_t *sreg)
 {
   sreg->base  = BX_CPU_THIS_PTR idtr.base;
   sreg->limit = BX_CPU_THIS_PTR idtr.limit;
-}
-
-bx_bool BX_CPU_C::dbg_get_cpu(bx_dbg_cpu_t *cpu)
-{
-  cpu->eax = EAX;
-  cpu->ebx = EBX;
-  cpu->ecx = ECX;
-  cpu->edx = EDX;
-  cpu->ebp = EBP;
-  cpu->esi = ESI;
-  cpu->edi = EDI;
-  cpu->esp = ESP;
-  cpu->eip = EIP;
-
-  cpu->eflags = BX_CPU_THIS_PTR read_eflags();
-
-  cpu->cs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-  cpu->cs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
-  cpu->cs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache);
-  cpu->cs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid;
-
-  cpu->ss.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  cpu->ss.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
-  cpu->ss.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache);
-  cpu->ss.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid;
-
-  cpu->ds.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value;
-  cpu->ds.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
-  cpu->ds.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache);
-  cpu->ds.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].cache.valid;
-
-  cpu->es.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value;
-  cpu->es.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
-  cpu->es.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache);
-  cpu->es.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].cache.valid;
-
-  cpu->fs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value;
-  cpu->fs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
-  cpu->fs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache);
-  cpu->fs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].cache.valid;
-
-  cpu->gs.sel   = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value;
-  cpu->gs.des_l = get_descriptor_l(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
-  cpu->gs.des_h = get_descriptor_h(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache);
-  cpu->gs.valid = BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.valid;
-
-  cpu->ldtr.sel   = BX_CPU_THIS_PTR ldtr.selector.value;
-  cpu->ldtr.des_l = get_descriptor_l(&BX_CPU_THIS_PTR ldtr.cache);
-  cpu->ldtr.des_h = get_descriptor_h(&BX_CPU_THIS_PTR ldtr.cache);
-  cpu->ldtr.valid = BX_CPU_THIS_PTR ldtr.cache.valid;
-
-  cpu->tr.sel   = BX_CPU_THIS_PTR tr.selector.value;
-  cpu->tr.des_l = get_descriptor_l(&BX_CPU_THIS_PTR tr.cache);
-  cpu->tr.des_h = get_descriptor_h(&BX_CPU_THIS_PTR tr.cache);
-  cpu->tr.valid = BX_CPU_THIS_PTR tr.cache.valid;
-
-  cpu->gdtr.base  = BX_CPU_THIS_PTR gdtr.base;
-  cpu->gdtr.limit = BX_CPU_THIS_PTR gdtr.limit;
-
-  cpu->idtr.base  = BX_CPU_THIS_PTR idtr.base;
-  cpu->idtr.limit = BX_CPU_THIS_PTR idtr.limit;
-
-  cpu->dr0 = BX_CPU_THIS_PTR dr0;
-  cpu->dr1 = BX_CPU_THIS_PTR dr1;
-  cpu->dr2 = BX_CPU_THIS_PTR dr2;
-  cpu->dr3 = BX_CPU_THIS_PTR dr3;
-  cpu->dr6 = BX_CPU_THIS_PTR dr6;
-  cpu->dr7 = BX_CPU_THIS_PTR dr7;
-
-#if BX_CPU_LEVEL >= 2
-  cpu->cr0 = BX_CPU_THIS_PTR cr0.val32;
-  cpu->cr1 = 0;
-  cpu->cr2 = BX_CPU_THIS_PTR cr2;
-  cpu->cr3 = BX_CPU_THIS_PTR cr3;
-#endif
-#if BX_CPU_LEVEL >= 4
-  cpu->cr4 = BX_CPU_THIS_PTR cr4.getRegister();
-#endif
-
-  cpu->inhibit_mask = BX_CPU_THIS_PTR inhibit_mask;
-
-  return(1);
 }
 
 #endif  // #if BX_DEBUGGER

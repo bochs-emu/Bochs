@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debug.h,v 1.35 2007-10-14 19:04:49 sshwarts Exp $
+// $Id: debug.h,v 1.36 2007-10-23 21:51:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -257,7 +257,7 @@ int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress);
 int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress);
 void bx_dbg_info_bpoints_command(void);
 void bx_dbg_quit_command(void);
-#define BX_INFO_CPU_REGS 1   /* bitmasks - choices for bx_dbg_info_registers_command */
+#define BX_INFO_GENERAL_PURPOSE_REGS 1 /* bitmasks - choices for bx_dbg_info_registers_command */
 #define BX_INFO_FPU_REGS 2
 #define BX_INFO_MMX_REGS 4
 #define BX_INFO_SSE_REGS 8
@@ -269,6 +269,7 @@ void bx_dbg_info_gdt_command(unsigned from, unsigned to);
 void bx_dbg_info_ldt_command(unsigned from, unsigned to);
 void bx_dbg_info_tss_command(void);
 void bx_dbg_info_control_regs_command(void);
+void bx_dbg_info_segment_regs_command(void);
 void bx_dbg_info_flags(void);
 void bx_dbg_info_linux_command(void);
 void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
@@ -276,7 +277,6 @@ void bx_dbg_examine_command(char *command, char *format, bx_bool format_passed,
 void bx_dbg_setpmem_command(bx_phy_address addr, unsigned len, Bit32u val);
 void bx_dbg_query_command(const char *);
 void bx_dbg_take_command(const char *, unsigned n);
-void bx_dbg_dump_cpu_command(void);
 void bx_dbg_disassemble_current(const char *);
 void bx_dbg_disassemble_command(const char *, Bit64u from, Bit64u to);
 void bx_dbg_instrument_command(const char *);
@@ -287,6 +287,7 @@ void bx_dbg_linux_syscall(unsigned which_cpu);
 void bx_dbg_info_ne2k(int page, int reg);
 void bx_dbg_info_pic(void);
 void bx_dbg_info_vga(void);
+void bx_dbg_info_pci(void);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
@@ -476,32 +477,6 @@ typedef struct {
   bx_address base;
   Bit16u limit;
 } bx_dbg_global_sreg_t;
-
-typedef struct {
-    Bit32u eax;
-    Bit32u ebx;
-    Bit32u ecx;
-    Bit32u edx;
-    Bit32u ebp;
-    Bit32u esi;
-    Bit32u edi;
-    Bit32u esp;
-    Bit32u eflags;
-    Bit32u eip;
-    bx_dbg_sreg_t cs;
-    bx_dbg_sreg_t ss;
-    bx_dbg_sreg_t ds;
-    bx_dbg_sreg_t es;
-    bx_dbg_sreg_t fs;
-    bx_dbg_sreg_t gs;
-    bx_dbg_sreg_t ldtr;
-    bx_dbg_sreg_t tr;
-    struct { Bit32u base, limit; } gdtr;
-    struct { Bit32u base, limit; } idtr;
-    Bit32u dr0, dr1, dr2, dr3, dr6, dr7;
-    Bit32u cr0, cr1, cr2, cr3, cr4;
-    unsigned inhibit_mask;
-} bx_dbg_cpu_t;
 
 void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val);
 void bx_dbg_iac_report(unsigned vector, unsigned irq);
