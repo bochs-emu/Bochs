@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.78 2007-09-28 19:52:05 sshwarts Exp $
+// $Id: serial.cc,v 1.79 2007-10-24 23:16:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -238,8 +238,8 @@ bx_serial_c::init(void)
       }
 
       BX_SER_THIS s[i].io_mode = BX_SER_MODE_NULL;
-      char *mode = SIM->get_param_enum("mode", base)->get_selected();
-      char *dev = SIM->get_param_string("dev", base)->getptr();
+      const char *mode = SIM->get_param_enum("mode", base)->get_selected();
+      const char *dev = SIM->get_param_string("dev", base)->getptr();
       if (!strcmp(mode, "file")) {
         if (strlen(dev) > 0) {
           BX_SER_THIS s[i].output = fopen(dev, "wb");

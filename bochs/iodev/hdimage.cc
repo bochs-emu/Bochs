@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.12 2007-09-04 07:56:09 vruppert Exp $
+// $Id: hdimage.cc,v 1.13 2007-10-24 23:16:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -341,7 +341,7 @@ void sparse_image_t::read_header()
 
  size_t  preamble_size = (sizeof(Bit32u) * numpages) + sizeof(header);
  data_start = 0;
- while (data_start < preamble_size) data_start += pagesize;
+ while ((size_t)data_start < preamble_size) data_start += pagesize;
 
  bx_bool did_mmap = 0;
 
@@ -358,8 +358,6 @@ void sparse_image_t::read_header()
    mmap_length = preamble_size;
    did_mmap = 1;
    pagetable = ((Bit32u *) (((Bit8u *) mmap_header) + sizeof(header)));
-
-//   system_pagesize = getpagesize();
    system_pagesize_mask = getpagesize() - 1;
  }
 #endif
@@ -447,14 +445,15 @@ int sparse_image_t::open (const char* pathname0)
  if (dtoh32(header.version) == SPARSE_HEADER_VERSION) {
    hd_size = dtoh64(header.disk);
  }
+
  return 0; // success.
 }
 
 void sparse_image_t::close()
 {
-  BX_DEBUG(("concat_image_t.close"));
-  if (pathname != NULL)
-  {
+ BX_DEBUG(("concat_image_t.close"));
+ if (pathname != NULL)
+ {
    free(pathname);
  }
 #ifdef _POSIX_MAPPED_FILES
@@ -466,9 +465,9 @@ void sparse_image_t::close()
  }
  pagetable = NULL; // We didn't malloc it
 #endif
-  if (fd > -1) {
+ if (fd > -1) {
     ::close(fd);
-  }
+ }
  if (pagetable != NULL)
  {
    delete [] pagetable;

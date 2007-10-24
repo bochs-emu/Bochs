@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.143 2007-09-28 19:52:07 sshwarts Exp $
+// $Id: vga.cc,v 1.144 2007-10-24 23:16:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -237,7 +237,7 @@ void bx_vga_c::init(void)
 
   memset(argv, 0, sizeof(argv));
   argc = 1;
-  argv[0] = "bochs";
+  argv[0] = (char *)"bochs";
   len = strlen(SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->getptr());
   if (len > 0) {
     char *options = new char[len + 1];

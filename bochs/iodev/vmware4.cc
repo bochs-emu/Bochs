@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware4.cc,v 1.2 2006-12-19 16:42:27 vruppert Exp $
+// $Id: vmware4.cc,v 1.3 2007-10-24 23:17:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -74,7 +74,7 @@ int vmware4_image_t::open(const char * pathname)
 
     tlb = new Bit8u[(unsigned)header.tlb_size_sectors * SECTOR_SIZE];
     if(tlb == 0)
-        BX_PANIC(("unable to allocate %lld bytes for vmware4 image's tlb", header.tlb_size_sectors * SECTOR_SIZE));
+        BX_PANIC(("unable to allocate " FMT_LL "d bytes for vmware4 image's tlb", header.tlb_size_sectors * SECTOR_SIZE));
 
     tlb_offset = INVALID_OFFSET;
     current_offset = 0;
@@ -86,7 +86,7 @@ int vmware4_image_t::open(const char * pathname)
     sectors = 63;
 
     BX_DEBUG(("VMware 4 disk geometry:"));
-    BX_DEBUG(("   .size      = %lld", hd_size));
+    BX_DEBUG(("   .size      = " FMT_LL "d", hd_size));
     BX_DEBUG(("   .cylinders = %d", cylinders));
     BX_DEBUG(("   .heads     = %d", heads));
     BX_DEBUG(("   .sectors   = %d", sectors));
@@ -100,7 +100,7 @@ void vmware4_image_t::close()
         return;
 
     flush();
-    delete [] tlb, tlb = 0;
+    delete [] tlb; tlb = 0;
 
     ::close(file_descriptor);
     file_descriptor = -1;
@@ -218,14 +218,14 @@ bool vmware4_image_t::read_header()
     BX_DEBUG(("VM4_Header (size=%d)", sizeof(VM4_Header)));
     BX_DEBUG(("   .version                    = %d", header.version));
     BX_DEBUG(("   .flags                      = %d", header.flags));
-    BX_DEBUG(("   .total_sectors              = %lld", header.total_sectors));
-    BX_DEBUG(("   .tlb_size_sectors           = %lld", header.tlb_size_sectors));
-    BX_DEBUG(("   .description_offset_sectors = %lld", header.description_offset_sectors));
-    BX_DEBUG(("   .description_size_sectors   = %lld", header.description_size_sectors));
+    BX_DEBUG(("   .total_sectors              = " FMT_LL "d", header.total_sectors));
+    BX_DEBUG(("   .tlb_size_sectors           = " FMT_LL "d", header.tlb_size_sectors));
+    BX_DEBUG(("   .description_offset_sectors = " FMT_LL "d", header.description_offset_sectors));
+    BX_DEBUG(("   .description_size_sectors   = " FMT_LL "d", header.description_size_sectors));
     BX_DEBUG(("   .slb_count                  = %d", header.slb_count));
-    BX_DEBUG(("   .flb_offset_sectors         = %lld", header.flb_offset_sectors));
-    BX_DEBUG(("   .flb_copy_offset_sectors    = %lld", header.flb_copy_offset_sectors));
-    BX_DEBUG(("   .tlb_offset_sectors         = %lld", header.tlb_offset_sectors));
+    BX_DEBUG(("   .flb_offset_sectors         = " FMT_LL "d", header.flb_offset_sectors));
+    BX_DEBUG(("   .flb_copy_offset_sectors    = " FMT_LL "d", header.flb_copy_offset_sectors));
+    BX_DEBUG(("   .tlb_offset_sectors         = " FMT_LL "d", header.tlb_offset_sectors));
 
     return true;
 }
