@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.h,v 1.4 2004-04-08 17:36:26 cbothamy Exp $
+// $Id: rfb.h,v 1.5 2007-10-24 23:08:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -255,7 +255,7 @@ typedef union {
 
 typedef struct {
         U32 id;
-        char *name;
+        const char *name;
 } rfbEncodingType;
 
 rfbEncodingType rfbEncodings[] = {

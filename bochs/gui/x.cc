@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.107 2006-10-29 08:48:30 vruppert Exp $
+// $Id: x.cc,v 1.108 2007-10-24 23:09:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -359,8 +359,8 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   unsigned i;
   int x, y;   /* window position */
   unsigned int border_width = 4;  /* four pixels */
-  char *window_name = BOCHS_WINDOW_NAME;
-  char *icon_name = "Bochs";
+  const char *window_name = BOCHS_WINDOW_NAME;
+  const char *icon_name = "Bochs";
   Pixmap icon_pixmap;
 #if BX_HAVE_XPM_H
   Pixmap icon_mask;
@@ -517,12 +517,12 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   /* These calls store window_name and icon_name into
    * XTextProperty structures and set their other
    * fields properly. */
-  if (XStringListToTextProperty(&window_name, 1, &windowName) == 0) {
+  if (XStringListToTextProperty((char **)&window_name, 1, &windowName) == 0) {
     BX_PANIC(("%s: structure allocation for windowName failed.",
         progname));
   }
 
-  if (XStringListToTextProperty(&icon_name, 1, &iconName) == 0) {
+  if (XStringListToTextProperty((char **)&icon_name, 1, &iconName) == 0) {
     BX_PANIC(("%s: structure allocation for iconName failed.",
         progname));
   }
@@ -537,7 +537,7 @@ bx_x_gui_c::specific_init(int argc, char **argv, unsigned tilewidth, unsigned ti
   wm_hints.flags = StateHint | IconPixmapHint | InputHint;
 #endif
   class_hints.res_name = progname;
-  class_hints.res_class = "Bochs";
+  class_hints.res_class = (char *)"Bochs";
 
   XSetWMProperties(bx_x_display, win, &windowName, &iconName,
       argv, argc, &size_hints, &wm_hints,
@@ -1990,10 +1990,10 @@ void bx_x_gui_c::show_ips(Bit32u ips_count)
 // X11 dialog box functions
 
 void x11_create_button(Display *display, Drawable dialog, GC gc, int x, int y,
-                       unsigned int width, unsigned int height, char *text)
+                       unsigned int width, unsigned int height, const char *text)
 {
   XDrawRectangle(display, dialog, gc, x, y, width, height);
-  XDrawImageString(display, dialog, gc, x+4, y+14, text, strlen(text));
+  XDrawImageString(display, dialog, gc, x+4, y+14, (char *)text, strlen(text));
 }
 
 int x11_ask_dialog(BxEvent *event)

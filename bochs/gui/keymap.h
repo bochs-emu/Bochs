@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keymap.h,v 1.9 2003-07-12 08:17:10 vruppert Exp $
+// $Id: keymap.h,v 1.10 2007-10-24 23:08:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ public:
 
   BXKeyEntry *findHostKey(Bit32u hostkeynum);
   BXKeyEntry *findAsciiChar(Bit8u ascii);
-  char *getBXKeyName(Bit32u key);
+  const char *getBXKeyName(Bit32u key);
 
 private:
   Bit32u convertStringToBXKey(const char *);

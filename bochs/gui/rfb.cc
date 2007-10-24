@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.50 2006-12-27 15:21:03 vruppert Exp $
+// $Id: rfb.cc,v 1.51 2007-10-24 23:08:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -107,7 +107,7 @@ static struct {
 } rfbBitmaps[BX_MAX_PIXMAPS];
 
 static unsigned rfbHeaderbarBitmapCount = 0;
-struct {
+struct _rfbHeaderbarBitmaps {
     unsigned int index;
     unsigned int xorigin;
     unsigned int yorigin;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: textconfig.cc,v 1.66 2007-09-28 19:51:57 sshwarts Exp $
+// $Id: textconfig.cc,v 1.67 2007-10-24 23:09:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // This is code for a text-mode configuration interface.  Note that this file
@@ -153,7 +153,7 @@ ask_int(const char *prompt, const char *help, Bit32s min, Bit32s max, Bit32s the
 }
 
 int 
-ask_menu(const char *prompt, const char *help, int n_choices, char *choice[], int the_default, int *out)
+ask_menu(const char *prompt, const char *help, int n_choices, const char *choice[], int the_default, int *out)
 {
   char buffer[1024];
   char *clean;
@@ -246,7 +246,7 @@ int ask_string(const char *prompt, const char *the_default, char *out)
 
 /******************************************************************/
 
-static char *startup_menu_prompt =
+static const char *startup_menu_prompt =
 "------------------------------\n"
 "Bochs Configuration: Main Menu\n"
 "------------------------------\n"
@@ -269,7 +269,7 @@ static char *startup_menu_prompt =
 "\n"
 "Please choose one: [%d] ";
 
-static char *startup_options_prompt =
+static const char *startup_options_prompt =
 "------------------\n"
 "Bochs Options Menu\n"
 "------------------\n"
@@ -292,7 +292,7 @@ static char *startup_options_prompt =
 "Please choose one: [0] ";
 
 #ifndef WIN32
-static char *runtime_menu_prompt =
+static const char *runtime_menu_prompt =
 "---------------------\n"
 "Bochs Runtime Options\n"
 "---------------------\n"
@@ -321,7 +321,7 @@ static char *runtime_menu_prompt =
       assert(0); } while (0)
 
 #ifndef WIN32
-void build_runtime_options_prompt(char *format, char *buf, int size)
+void build_runtime_options_prompt(const char *format, char *buf, int size)
 {
   bx_list_c *floppyop;
   bx_list_c *cdromop = NULL;
@@ -552,8 +552,8 @@ static void bx_print_log_action_table()
   }
 }
 
-static char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to return: [-1] ";
-static char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
+static const char *log_options_prompt1 = "Enter the ID of the device to edit, or -1 to return: [-1] ";
+static const char *log_level_choices[] = { "ignore", "report", "ask", "fatal", "no change" };
 static int log_level_n_choices_normal = 4;
 
 void bx_log_options(int individual)
@@ -647,7 +647,7 @@ int bx_write_rc(char *rc)
   }
 }
 
-char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
+const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
 int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
 
 BxEvent *
@@ -720,7 +720,7 @@ bx_param_num_c::text_print(FILE *fp)
   if (get_long_format()) {
     fprintf(fp, get_long_format(), get());
   } else {
-    char *format = "%s: %d"; 
+    const char *format = "%s: %d"; 
     assert(base==10 || base==16);
     if (base==16) format = "%s: 0x%x";
     if (get_label()) {
@@ -737,7 +737,7 @@ bx_param_bool_c::text_print(FILE *fp)
   if (get_format()) {
     fprintf(fp, get_format(), get() ? "yes" : "no");
   } else {
-    char *format = "%s: %s"; 
+    const char *format = "%s: %s"; 
     if (get_label()) {
       fprintf(fp, format, get_label(), get() ? "yes" : "no");
     } else {
@@ -751,11 +751,11 @@ bx_param_enum_c::text_print(FILE *fp)
 {
   int n = get();
   assert(n >= min && n <= max);
-  char *choice = choices[n - min];
+  const char *choice = choices[n - min];
   if (get_format()) {
     fprintf(fp, get_format(), choice);
   } else {
-    char *format = "%s: %s"; 
+    const char *format = "%s: %s"; 
     if (get_label()) {
       fprintf(fp, format, get_label(), choice);
     } else {

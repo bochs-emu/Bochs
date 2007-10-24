@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.cc,v 1.101 2007-09-28 19:51:44 sshwarts Exp $
+// $Id: gui.cc,v 1.102 2007-10-24 23:07:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ bx_gui_c *bx_gui = NULL;
 #define N_USER_KEYS 36
 
 typedef struct {
-  char *key;
+  const char *key;
   Bit32u symbol;
 } user_key_t;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.h,v 1.213 2007-10-14 19:04:51 sshwarts Exp $
+// $Id: siminterface.h,v 1.214 2007-10-24 23:09:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Intro to siminterface by Bryce Denney:
@@ -807,17 +807,17 @@ public:
 
 
 class BOCHSAPI bx_param_enum_c : public bx_param_num_c {
-  char **choices;
+  const char **choices;
 public:
   bx_param_enum_c(bx_param_c *parent,
       const char *name,
       const char *label,
       const char *description,
-      char **choices,
+      const char **choices,
       Bit64s initial_val,
       Bit64s value_base = 0);
-  char *get_choice(int n) { return choices[n]; }
-  char *get_selected() { return choices[val.number - min]; }
+  const char *get_choice(int n) { return choices[n]; }
+  const char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *string);
   bx_bool set_by_name(const char *string);
 #if BX_USE_TEXTCONFIG
@@ -940,8 +940,8 @@ public:
   } bx_listopt_bits;
   bx_list_c(bx_param_c *parent, int maxsize);
   bx_list_c(bx_param_c *parent, const char *name, int maxsize);
-  bx_list_c(bx_param_c *parent, const char *name, char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
-  bx_list_c(bx_param_c *parent, const char *name, char *title, bx_param_c **init_list);
+  bx_list_c(bx_param_c *parent, const char *name, const char *title, int maxsize = BX_DEFAULT_LIST_SIZE);
+  bx_list_c(bx_param_c *parent, const char *name, const char *title, bx_param_c **init_list);
   virtual ~bx_list_c();
   bx_list_c *clone();
   void add(bx_param_c *param);
@@ -1045,19 +1045,19 @@ enum {
 #define BX_CLOCK_TIME0_LOCAL     1
 #define BX_CLOCK_TIME0_UTC       2
 
-BOCHSAPI extern char *bochs_start_names[];
-BOCHSAPI extern char *floppy_type_names[];
+BOCHSAPI extern const char *bochs_start_names[];
+BOCHSAPI extern const char *floppy_type_names[];
 BOCHSAPI extern int floppy_type_n_sectors[];
-BOCHSAPI extern char *floppy_status_names[];
-BOCHSAPI extern char *bochs_bootdisk_names[];
-BOCHSAPI extern char *loader_os_names[];
-BOCHSAPI extern char *keyboard_type_names[];
-BOCHSAPI extern char *atadevice_type_names[];
-BOCHSAPI extern char *atadevice_mode_names[];
-BOCHSAPI extern char *atadevice_status_names[];
-BOCHSAPI extern char *atadevice_biosdetect_names[];
-BOCHSAPI extern char *atadevice_translation_names[];
-BOCHSAPI extern char *clock_sync_names[];
+BOCHSAPI extern const char *floppy_status_names[];
+BOCHSAPI extern const char *bochs_bootdisk_names[];
+BOCHSAPI extern const char *loader_os_names[];
+BOCHSAPI extern const char *keyboard_type_names[];
+BOCHSAPI extern const char *atadevice_type_names[];
+BOCHSAPI extern const char *atadevice_mode_names[];
+BOCHSAPI extern const char *atadevice_status_names[];
+BOCHSAPI extern const char *atadevice_biosdetect_names[];
+BOCHSAPI extern const char *atadevice_translation_names[];
+BOCHSAPI extern const char *clock_sync_names[];
 
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.
@@ -1157,9 +1157,9 @@ public:
   virtual int ask_param(const char *pname) {return -1;}
 
   // ask the user for a pathname
-  virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags) {return -1;}
+  virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags) {return -1;}
   // yes/no dialog
-  virtual int ask_yes_no(char *title, char *prompt, bx_bool the_default) {return -1;}
+  virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default) {return -1;}
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic() {}
   virtual int create_disk_image(const char *filename, int sectors, bx_bool overwrite) {return -3;}

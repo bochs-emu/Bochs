@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: siminterface.cc,v 1.178 2007-10-14 19:04:51 sshwarts Exp $
+// $Id: siminterface.cc,v 1.179 2007-10-24 23:08:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // See siminterface.h for description of the siminterface concept.
@@ -91,9 +91,9 @@ public:
   virtual int ask_param(bx_param_c *param);
   virtual int ask_param(const char *pname);
   // ask the user for a pathname
-  virtual int ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags);
+  virtual int ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags);
   // yes/no dialog
-  virtual int ask_yes_no(char *title, char *prompt, bx_bool the_default);
+  virtual int ask_yes_no(const char *title, const char *prompt, bx_bool the_default);
   // called at a regular interval, currently by the keyboard handler.
   virtual void periodic ();
   virtual int create_disk_image (const char *filename, int sectors, bx_bool overwrite);
@@ -435,23 +435,23 @@ int bx_real_sim_c::get_cdrom_options(int level, bx_list_c **out, int *where)
   return 0;
 }
 
-char *bochs_start_names[] = { "quick", "load", "edit", "run" };
+const char *bochs_start_names[] = { "quick", "load", "edit", "run" };
 
-char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
+const char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
-char *floppy_status_names[] = { "ejected", "inserted", NULL };
+const char *floppy_status_names[] = { "ejected", "inserted", NULL };
 
-char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
-char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
-char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
+const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
+const char *loader_os_names[] = { "none", "linux", "nullkernel", NULL };
+const char *keyboard_type_names[] = { "xt", "at", "mf", NULL };
 
-char *atadevice_type_names[] = { "disk", "cdrom", NULL };
-//char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", "z-undoable", "z-volatile", NULL };
-char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", NULL };
-char *atadevice_status_names[] = { "ejected", "inserted", NULL };
-char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
-char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
-char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
+const char *atadevice_type_names[] = { "disk", "cdrom", NULL };
+//const char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", "z-undoable", "z-volatile", NULL };
+const char *atadevice_mode_names[] = { "flat", "concat", "external", "dll", "sparse", "vmware3", "vmware4", "undoable", "growing", "volatile", NULL };
+const char *atadevice_status_names[] = { "ejected", "inserted", NULL };
+const char *atadevice_biosdetect_names[] = { "none", "auto", "cmos", NULL };
+const char *atadevice_translation_names[] = { "none", "lba", "large", "rechs", "auto", NULL };
+const char *clock_sync_names[] = { "none", "realtime", "slowdown", "both", NULL };
 
 
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
@@ -518,7 +518,7 @@ int bx_real_sim_c::ask_param(const char *pname)
   return event.retcode;
 }
 
-int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *the_default, int flags)
+int bx_real_sim_c::ask_filename(const char *filename, int maxlen, const char *prompt, const char *the_default, int flags)
 {
   BxEvent event;
   bx_param_string_c param(NULL, "filename", prompt, "", the_default, maxlen);
@@ -528,11 +528,11 @@ int bx_real_sim_c::ask_filename(char *filename, int maxlen, char *prompt, char *
   event.u.param.param = &param;
   sim_to_ci_event(&event);
   if (event.retcode >= 0)
-    memcpy(filename, param.getptr(), maxlen);
+    memcpy((char *)filename, param.getptr(), maxlen);
   return event.retcode;
 }
 
-int bx_real_sim_c::ask_yes_no(char *title, char *prompt, bx_bool the_default)
+int bx_real_sim_c::ask_yes_no(const char *title, const char *prompt, bx_bool the_default)
 {
   BxEvent event;
   char format[512];
@@ -724,7 +724,7 @@ void bx_real_sim_c::register_configuration_interface(
 int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t command)
 {
   bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
-  char *name = ci_param->get_selected();
+  const char *name = ci_param->get_selected();
   if (!ci_callback) {
     BX_PANIC(("no configuration interface was loaded"));
     return -1;
@@ -1695,7 +1695,7 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
       const char *name,
       const char *label,
       const char *description,
-      char **choices,
+      const char **choices,
       Bit64s initial_val,
       Bit64s value_base)
   : bx_param_num_c(parent, name, label, description, value_base, BX_MAX_BIT64S, initial_val)
@@ -1703,7 +1703,7 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
   set_type(BXT_PARAM_ENUM);
   this->choices = choices;
   // count number of choices, set max
-  char **p = choices;
+  const char **p = choices;
   while (*p != NULL) p++;
   this->min = value_base;
   // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
@@ -1714,7 +1714,7 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
 
 int bx_param_enum_c::find_by_name(const char *string)
 {
-  char **p;
+  const char **p;
   for (p=&choices[0]; *p; p++) {
     if (!strcmp(string, *p))
       return p-choices;
@@ -1895,7 +1895,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, int maxsize)
   init("");
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, char *title,
+bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title,
     int maxsize)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
@@ -1912,7 +1912,7 @@ bx_list_c::bx_list_c(bx_param_c *parent, const char *name, char *title,
   init(title);
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, char *title, bx_param_c **init_list)
+bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx_param_c **init_list)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_LIST);
