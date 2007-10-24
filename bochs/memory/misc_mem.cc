@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.102 2007-09-28 19:52:08 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.103 2007-10-24 23:00:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.102 2007-09-28 19:52:08 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.103 2007-10-24 23:00:01 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -551,7 +551,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ((addr & 0xfffc0000) != 0x000c0000 && (addr < ~BIOS_MASK))
+    else if ((addr & 0xfffc0000) != 0x000c0000 && (addr < (bx_phy_address)(~BIOS_MASK)))
     {
       BX_MEM_THIS vector[addr] = *buf;
     }
