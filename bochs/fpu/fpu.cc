@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.24 2007-09-11 13:11:03 sshwarts Exp $
+// $Id: fpu.cc,v 1.25 2007-10-24 23:29:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -532,7 +532,7 @@ void BX_CPU_C::print_state_FPU()
 #else
     f *= fp.fraction*scale_factor;
 #endif
-    fprintf(stderr, "%sFPR%d(%c):        %.10f (raw 0x%04x:%08x%08x)\n",
+    fprintf(stderr, "%sFPR%d(%c):        %.10f (raw 0x%04x:%08lx%08lx)\n",
           i==tos?"=>":"  ",
           i, 
           "v0s?"[BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7)],

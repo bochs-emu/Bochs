@@ -25,6 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "softfloatx80.h"
 #include "softfloat-round-pack.h"
+#define USE_estimateDiv128To64
 #include "softfloat-macros.h"
 
 /* executes single exponent reduction cycle */

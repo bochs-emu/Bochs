@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.360 2007-10-21 22:07:31 sshwarts Exp $
+// $Id: main.cc,v 1.361 2007-10-24 23:28:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -79,7 +79,7 @@ void bx_init_hardware(void);
 void bx_init_options(void);
 void bx_init_bx_dbg(void);
 
-static char *divider = "========================================================================";
+static const char *divider = "========================================================================";
 static logfunctions thePluginLog;
 logfunctions *pluginlog = &thePluginLog;
 
@@ -264,7 +264,7 @@ int bxmain () {
     // read a param to decide which config interface to start.
     // If one exists, start it.  If not, just begin.
     bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
-    char *ci_name = ci_param->get_selected();
+    const char *ci_name = ci_param->get_selected();
     if (!strcmp(ci_name, "textconfig")) {
 #if BX_USE_TEXTCONFIG
       init_text_config_interface();   // in textconfig.h
@@ -750,9 +750,9 @@ bx_bool load_and_init_display_lib()
   }
   BX_ASSERT(bx_gui == NULL);
   bx_param_enum_c *ci_param = SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE);
-  char *ci_name = ci_param->get_selected();
+  const char *ci_name = ci_param->get_selected();
   bx_param_enum_c *gui_param = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY);
-  char *gui_name = gui_param->get_selected();
+  const char *gui_name = gui_param->get_selected();
   if (!strcmp(ci_name, "wx")) {
     BX_ERROR(("change of the config interface to wx not implemented yet"));
   }
@@ -1166,7 +1166,10 @@ int bx_atexit(void)
 #if BX_DEBUGGER == 0
   if (SIM && SIM->get_init_done()) {
     for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
-      if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
+#if BX_SUPPORT_SMP
+      if (BX_CPU(cpu))
+#endif
+        BX_CPU(cpu)->atexit();
   }
 #endif
 

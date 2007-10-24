@@ -194,6 +194,7 @@ BX_CPP_INLINE void mul64To128(Bit64u a, Bit64u b, Bit64u *z0Ptr, Bit64u *z1Ptr)
 | unsigned integer is returned.
 *----------------------------------------------------------------------------*/
 
+#ifdef USE_estimateDiv128To64
 static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
 {
     Bit64u b0, b1;
@@ -214,6 +215,7 @@ static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
     z |= (b0<<32 <= rem0) ? 0xFFFFFFFF : rem0 / b0;
     return z;
 }
+#endif
 
 /*----------------------------------------------------------------------------
 | Returns an approximation to the square root of the 32-bit significand given
@@ -225,6 +227,7 @@ static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
 | value.
 *----------------------------------------------------------------------------*/
 
+#ifdef USE_estimateSqrt32
 static Bit32u estimateSqrt32(Bit16s aExp, Bit32u a)
 {
     static const Bit16u sqrtOddAdjustments[] = {
@@ -251,6 +254,7 @@ static Bit32u estimateSqrt32(Bit16s aExp, Bit32u a)
     }
     return ((Bit32u) ((((Bit64u) a)<<31) / z)) + (z>>1);
 }
+#endif
 
 /*----------------------------------------------------------------------------
 | Returns the number of leading 0 bits before the most-significant 1 bit of

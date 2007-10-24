@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.122 2007-09-28 19:51:37 sshwarts Exp $
+// $Id: config.cc,v 1.123 2007-10-24 23:27:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ int bochsrc_include_count = 0;
 
 extern bx_debug_t bx_dbg;
 
-static char *get_builtin_variable(char *varname);
+static const char *get_builtin_variable(const char *varname);
 static Bit32s parse_line_unformatted(const char *context, char *line);
 static Bit32s parse_line_formatted(const char *context, int num_params, char *params[]);
 static int parse_bochsrc(const char *rcfile);
@@ -335,7 +335,7 @@ void bx_init_options()
   menu = new bx_list_c(root_param, "general", "");
 
  // config interface option, set in bochsrc or command line
-  static char *config_interface_list[] = {
+  static const char *config_interface_list[] = {
 #if BX_USE_TEXTCONFIG
     "textconfig",
 #endif
@@ -460,7 +460,7 @@ void bx_init_options()
       "Pathname of ROM image to load",
       "", BX_PATHNAME_LEN);
   path->set_format("Name of ROM BIOS image: %s");
-  sprintf(name, "%s/BIOS-bochs-latest", get_builtin_variable("BXSHARE"));
+  sprintf(name, "%s/BIOS-bochs-latest", (char *)get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   bx_param_num_c *romaddr = new bx_param_num_c(rom,
       "addr",
@@ -666,7 +666,7 @@ void bx_init_options()
   // compile time.  The one that is listed first will be the default,
   // which is used unless the user overrides it on the command line or
   // in a configuration file.
-  static char *display_library_list[] = {
+  static const char *display_library_list[] = {
 #if BX_WITH_X11
     "x",
 #endif
@@ -803,7 +803,7 @@ void bx_init_options()
       "none", 20);
   user_shortcut->set_runtime_param(1);
 
-  static char *mouse_type_list[] = {
+  static const char *mouse_type_list[] = {
     "none",
     "ps2",
     "imps2",
@@ -987,17 +987,17 @@ void bx_init_options()
   bx_list_c *ata = new bx_list_c(root_param, "ata", "ATA/ATAPI Options");
 
   // disk options
-  char *s_atachannel[] = {
+  const char *s_atachannel[] = {
     "ATA channel 0",
     "ATA channel 1",
     "ATA channel 2",
     "ATA channel 3",
     };
-  char *s_atadevname[2] = {
+  const char *s_atadevname[2] = {
     "master",
     "slave",
   };
-  char *s_atadevice[4][2] = {
+  const char *s_atadevice[4][2] = {
     { "First HD/CD on channel 0",
       "Second HD/CD on channel 0" },
     { "First HD/CD on channel 1",
@@ -1250,7 +1250,7 @@ void bx_init_options()
     enabled->set_dependent_list(deplist);
   }
 
-  static char *serial_mode_list[] = {
+  static const char *serial_mode_list[] = {
     "null",
     "file",
     "term",
@@ -1322,7 +1322,7 @@ void bx_init_options()
   network->get_options()->set(bx_list_c::USE_TAB_WINDOW | bx_list_c::SHOW_PARENT);
 
   // ne2k & pnic options
-  static char *eth_module_list[] = {
+  static const char *eth_module_list[] = {
     "null",
 #if defined(ETH_LINUX)
     "linux",
@@ -1753,7 +1753,7 @@ static int parse_bochsrc(const char *rcfile)
   return retval;
 }
 
-static char *get_builtin_variable(char *varname)
+static const char *get_builtin_variable(const char *varname)
 {
 #ifdef WIN32
   int code;
@@ -1837,7 +1837,7 @@ static Bit32s parse_line_unformatted(const char *context, char *line)
         if (ptr[i] == '$') {
           char varname[512];
           char *pv = varname;
-          char *value;
+          const char *value;
           *pv = 0;
           i++;
           while (isalpha(ptr[i]) || ptr[i]=='_') {
@@ -1847,14 +1847,14 @@ static Bit32s parse_line_unformatted(const char *context, char *line)
           if (strlen(varname)<1 || !(value = getenv(varname))) {
             if ((value = get_builtin_variable(varname))) {
               // append value to the string
-              for (pv=value; *pv; pv++)
+              for (pv=(char *)value; *pv; pv++)
                   string[string_i++] = *pv;
             } else {
               BX_PANIC (("could not look up environment variable '%s'", varname));
             }
           } else {
             // append value to the string
-            for (pv=value; *pv; pv++)
+            for (pv=(char *)value; *pv; pv++)
                 string[string_i++] = *pv;
           }
         }
@@ -3047,7 +3047,7 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
 }
 
 
-static char *fdtypes[] = {
+static const char *fdtypes[] = {
   "none", "1_2", "1_44", "2_88", "720k", "360k", "160k", "180k", "320k"
 };
 

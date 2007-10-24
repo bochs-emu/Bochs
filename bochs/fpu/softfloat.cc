@@ -42,6 +42,8 @@ these four paragraphs for those parts of this code that are retained.
 | division and square root approximations. (Can be specialized to target
 | if desired).
 *----------------------------------------------------------------------------*/
+#define USE_estimateDiv128To64
+#define USE_estimateSqrt32
 #include "softfloat-macros.h"
 
 /*----------------------------------------------------------------------------
