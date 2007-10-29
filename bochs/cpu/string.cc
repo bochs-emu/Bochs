@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.40 2007-10-10 22:20:32 sshwarts Exp $
+// $Id: string.cc,v 1.41 2007-10-29 15:39:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -49,7 +49,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit32u bytesFitSrc, bytesFitDst;
   signed int pointerDelta;
   bx_address laddrDst, laddrSrc;
-  Bit32u     paddrDst, paddrSrc;
+  Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
@@ -61,6 +61,12 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 1);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrSrc = v2h_read_byte(laddrSrc, CPL==3);
+#else
+  bx_phy_address paddrSrc;
+  
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
@@ -70,14 +76,20 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrSrc = A20ADDR(paddrSrc);
-  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ, DATA_ACCESS);
+  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
+#endif
 
   if (! hostAddrSrc) return 0;
 
   write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -87,23 +99,23 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
-    bytesFitSrc = 1 + (paddrSrc & 0xfff);
-    bytesFitDst = 1 + (paddrDst & 0xfff);
+    bytesFitSrc = 1 + (laddrSrc & 0xfff);
+    bytesFitDst = 1 + (laddrDst & 0xfff);
     pointerDelta = (signed int) -1;
   }
   else {
     // Counting upward.
-    bytesFitSrc = (0x1000 - (paddrSrc & 0xfff));
-    bytesFitDst = (0x1000 - (paddrDst & 0xfff));
+    bytesFitSrc = (0x1000 - (laddrSrc & 0xfff));
+    bytesFitDst = (0x1000 - (laddrDst & 0xfff));
     pointerDelta = (signed int)  1;
   }
 
@@ -183,7 +195,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit32u wordsFitSrc, wordsFitDst;
   signed int pointerDelta;
   bx_address laddrDst, laddrSrc;
-  Bit32u     paddrDst, paddrSrc;
+  Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
@@ -195,6 +207,12 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 2);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrSrc = v2h_read_byte(laddrSrc, CPL==3);
+#else
+  bx_phy_address paddrSrc;
+  
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
@@ -204,14 +222,20 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrSrc = A20ADDR(paddrSrc);
-  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ, DATA_ACCESS);
+  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
+#endif
 
   if (! hostAddrSrc) return 0;
 
   write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -221,9 +245,9 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
@@ -231,16 +255,16 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st word must not cross page boundary.
-    if ( ((paddrSrc & 0xfff) > 0xffe) || ((paddrDst & 0xfff) > 0xffe) )
+    if ( ((laddrSrc & 0xfff) > 0xffe) || ((laddrDst & 0xfff) > 0xffe) )
        return 0;
-    wordsFitSrc = (2 + (paddrSrc & 0xfff)) >> 1;
-    wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
+    wordsFitSrc = (2 + (laddrSrc & 0xfff)) >> 1;
+    wordsFitDst = (2 + (laddrDst & 0xfff)) >> 1;
     pointerDelta = (signed int) -2;
   }
   else {
     // Counting upward.
-    wordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 1;
-    wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
+    wordsFitSrc = (0x1000 - (laddrSrc & 0xfff)) >> 1;
+    wordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 1;
     pointerDelta = (signed int)  2;
   }
 
@@ -321,7 +345,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   Bit32u dwordsFitSrc, dwordsFitDst;
   signed int pointerDelta;
   bx_address laddrDst, laddrSrc;
-  Bit32u     paddrDst, paddrSrc;
+  Bit8u *hostAddrSrc, *hostAddrDst;
 
   bx_segment_reg_t *srcSegPtr = &BX_CPU_THIS_PTR sregs[srcSeg];
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
@@ -333,6 +357,12 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // without generating an exception.
   read_virtual_checks(srcSegPtr, srcOff, 4);
   laddrSrc = BX_CPU_THIS_PTR get_segment_base(srcSeg) + srcOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrSrc = v2h_read_byte(laddrSrc, CPL==3);
+#else
+  bx_phy_address paddrSrc;
+  
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
   }
@@ -342,14 +372,20 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrSrc = A20ADDR(paddrSrc);
-  Bit8u *hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrSrc, BX_READ, DATA_ACCESS);
+  hostAddrSrc = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrSrc), BX_READ, DATA_ACCESS);
+#endif
 
   if (! hostAddrSrc) return 0;
 
   write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -359,9 +395,9 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
@@ -369,16 +405,16 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
-    if ( ((paddrSrc & 0xfff) > 0xffc) || ((paddrDst & 0xfff) > 0xffc) )
+    if ( ((laddrSrc & 0xfff) > 0xffc) || ((laddrDst & 0xfff) > 0xffc) )
       return 0;    
-    dwordsFitSrc = (4 + (paddrSrc & 0xfff)) >> 2;
-    dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
+    dwordsFitSrc = (4 + (laddrSrc & 0xfff)) >> 2;
+    dwordsFitDst = (4 + (laddrDst & 0xfff)) >> 2;
     pointerDelta = (signed int) -4;
   }
   else {
     // Counting upward.
-    dwordsFitSrc = (0x1000 - (paddrSrc & 0xfff)) >> 2;
-    dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
+    dwordsFitSrc = (0x1000 - (laddrSrc & 0xfff)) >> 2;
+    dwordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 2;
     pointerDelta = (signed int)  4;
   }
 
@@ -459,12 +495,18 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit32u bytesFitDst;
   signed int pointerDelta;
   bx_address laddrDst;
-  Bit32u     paddrDst;
+  Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
 
   write_virtual_checks(dstSegPtr, dstOff, 1);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -474,21 +516,21 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
-    bytesFitDst = 1 + (paddrDst & 0xfff);
+    bytesFitDst = 1 + (laddrDst & 0xfff);
     pointerDelta = (signed int) -1;
   }
   else {
     // Counting upward.
-    bytesFitDst = (0x1000 - (paddrDst & 0xfff));
+    bytesFitDst = (0x1000 - (laddrDst & 0xfff));
     pointerDelta = (signed int)  1;
   }
 
@@ -553,12 +595,18 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit32u wordsFitDst;
   signed int pointerDelta;
   bx_address laddrDst;
-  Bit32u     paddrDst;
+  Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
 
   write_virtual_checks(dstSegPtr, dstOff, 2);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -568,9 +616,9 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
@@ -578,13 +626,13 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st word must not cross page boundary.
-    if ((paddrDst & 0xfff) > 0xffe) return 0;
-    wordsFitDst = (2 + (paddrDst & 0xfff)) >> 1;
+    if ((laddrDst & 0xfff) > 0xffe) return 0;
+    wordsFitDst = (2 + (laddrDst & 0xfff)) >> 1;
     pointerDelta = (signed int) -2;
   }
   else {
     // Counting upward.
-    wordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 1;
+    wordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 1;
     pointerDelta = (signed int)  2;
   }
 
@@ -650,12 +698,18 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   Bit32u dwordsFitDst;
   signed int pointerDelta;
   bx_address laddrDst;
-  Bit32u     paddrDst;
+  Bit8u *hostAddrDst;
 
   bx_segment_reg_t *dstSegPtr = &BX_CPU_THIS_PTR sregs[dstSeg];
 
   write_virtual_checks(dstSegPtr, dstOff, 4);
   laddrDst = BX_CPU_THIS_PTR get_segment_base(dstSeg) + dstOff;
+
+#if BX_SupportGuest2HostTLB
+  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+#else
+  bx_phy_address paddrDst;
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
   }
@@ -665,9 +719,9 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
 
   // If we want to write directly into the physical memory array,
   // we need the A20 address.
-  paddrDst = A20ADDR(paddrDst);
-  Bit8u *hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
-            paddrDst, BX_WRITE, DATA_ACCESS);
+  hostAddrDst = BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
+            A20ADDR(paddrDst), BX_WRITE, DATA_ACCESS);
+#endif
 
   if (! hostAddrDst) return 0;
 
@@ -675,13 +729,13 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
-    if ((paddrDst & 0xfff) > 0xffc) return 0;    
-    dwordsFitDst = (4 + (paddrDst & 0xfff)) >> 2;
+    if ((laddrDst & 0xfff) > 0xffc) return 0;    
+    dwordsFitDst = (4 + (laddrDst & 0xfff)) >> 2;
     pointerDelta = (signed int) -4;
   }
   else {
     // Counting upward.
-    dwordsFitDst = (0x1000 - (paddrDst & 0xfff)) >> 2;
+    dwordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 2;
     pointerDelta = (signed int)  4;
   }
 
@@ -779,6 +833,7 @@ void BX_CPU_C::REP_MOVSQ_XqYq(bxInstruction_c *i)
 void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 {
   Bit8u temp8;
+  Bit32u incr = 1;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -806,44 +861,57 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
 #endif  // #if BX_SUPPORT_X86_64
   if (i->as32L())
   {
-    Bit32u esi = ESI;
-    Bit32u edi = EDI;
-
-    read_virtual_byte(i->seg(), esi, &temp8);
-    write_virtual_byte(BX_SEG_REG_ES, edi, &temp8);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      /* decrement ESI, EDI */
-      esi--;
-      edi--;
-    }
-    else {
-      /* increment ESI, EDI */
-      esi++;
-      edi++;
-    }
-
-    // zero extension of RSI/RDI
-    RSI = esi;
-    RDI = edi;
-  }
-  else
-  { /* 16 bit address mode */
-    unsigned incr = 1;
-
-    Bit16u si = SI;
-    Bit16u di = DI;
-
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
      * in a batch, rather than one instruction at a time */
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
-      Bit32u byteCount = CX;
-      BX_ASSERT(byteCount > 0);
-      byteCount = FastRepMOVSB(i, i->seg(), si, BX_SEG_REG_ES, di, byteCount);
-      if (byteCount)
-      {
+      Bit32u byteCount = FastRepMOVSB(i, i->seg(), ESI, BX_SEG_REG_ES, EDI, ECX);
+      if (byteCount) {
+        // Decrement the ticks count by the number of iterations, minus
+        // one, since the main cpu loop will decrement one.  Also,
+        // the count is predecremented before examined, so defintely
+        // don't roll it under zero.
+        BX_TICKN(byteCount-1);
+
+        // Decrement eCX. Note, the main loop will decrement 1 also, so
+        // decrement by one less than expected, like the case above.
+        RCX = ECX - (byteCount-1);
+
+        incr = byteCount;
+      }
+      else {
+        read_virtual_byte(i->seg(), ESI, &temp8);
+        write_virtual_byte(BX_SEG_REG_ES, EDI, &temp8);
+      }
+    }
+    else
+#endif
+    {
+      read_virtual_byte(i->seg(), ESI, &temp8);
+      write_virtual_byte(BX_SEG_REG_ES, EDI, &temp8);
+    }
+
+    if (BX_CPU_THIS_PTR get_DF()) {
+      /* decrement ESI, EDI */
+      RSI = ESI - incr;
+      RDI = EDI - incr;
+    }
+    else {
+      /* increment ESI, EDI */
+      RSI = ESI + incr;
+      RDI = EDI + incr;
+    }
+  }
+  else /* 16 bit address mode */
+  {
+#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
+    /* If conditions are right, we can transfer IO to physical memory
+     * in a batch, rather than one instruction at a time */
+    if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
+    {
+      Bit32u byteCount = FastRepMOVSB(i, i->seg(), SI, BX_SEG_REG_ES, DI, CX);
+      if (byteCount) {
         // Decrement the ticks count by the number of iterations, minus
         // one, since the main cpu loop will decrement one.  Also,
         // the count is predecremented before examined, so defintely
@@ -855,31 +923,29 @@ void BX_CPU_C::MOVSB_XbYb(bxInstruction_c *i)
         CX -= (byteCount-1);
 
         incr = byteCount;
-        goto doIncr;
+      }
+      else {
+        read_virtual_byte(i->seg(), SI, &temp8);
+        write_virtual_byte(BX_SEG_REG_ES, DI, &temp8);
       }
     }
+    else
 #endif
-
-    read_virtual_byte(i->seg(), si, &temp8);
-    write_virtual_byte(BX_SEG_REG_ES, di, &temp8);
-
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-doIncr:
-#endif
+    {
+      read_virtual_byte(i->seg(), SI, &temp8);
+      write_virtual_byte(BX_SEG_REG_ES, DI, &temp8);
+    }
 
     if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement SI, DI */
-      si -= incr;
-      di -= incr;
+      SI -= incr;
+      DI -= incr;
     }
     else {
       /* increment SI, DI */
-      si += incr;
-      di += incr;
+      SI += incr;
+      DI += incr;
     }
-
-    SI = si;
-    DI = di;
   }
 }
 
@@ -931,8 +997,8 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
     RSI = esi;
     RDI = edi;
   }
-  else
-  { /* 16bit address mode */
+  else /* 16bit address mode */
+  {
     unsigned incr = 2;
 
     Bit16u si = SI;
@@ -944,11 +1010,8 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
      */
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
-      Bit32u wordCount = CX;
-      BX_ASSERT(wordCount > 0);
-      wordCount = FastRepMOVSW(i, i->seg(), si, BX_SEG_REG_ES, di, wordCount);
-      if (wordCount)
-      {
+      Bit32u wordCount = FastRepMOVSW(i, i->seg(), si, BX_SEG_REG_ES, di, CX);
+      if (wordCount) {
         // Decrement the ticks count by the number of iterations, minus
         // one, since the main cpu loop will decrement one.  Also,
         // the count is predecremented before examined, so defintely
@@ -960,17 +1023,18 @@ void BX_CPU_C::MOVSW_XwYw(bxInstruction_c *i)
         CX -= (wordCount-1);
 
         incr = wordCount << 1; // count * 2
-        goto doIncr;
+      }
+      else {
+        read_virtual_word(i->seg(), si, &temp16);
+        write_virtual_word(BX_SEG_REG_ES, di, &temp16);
       }
     }
+    else
 #endif
-
-    read_virtual_word(i->seg(), si, &temp16);
-    write_virtual_word(BX_SEG_REG_ES, di, &temp16);
-
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-doIncr:
-#endif
+    {
+      read_virtual_word(i->seg(), si, &temp16);
+      write_virtual_word(BX_SEG_REG_ES, di, &temp16);
+    }
 
     if (BX_CPU_THIS_PTR get_DF()) {
       /* decrement SI, DI */
@@ -1028,11 +1092,8 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
      */
     if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
     {
-      Bit32u dwordCount = ECX;
-      BX_ASSERT(dwordCount > 0);
-      dwordCount = FastRepMOVSD(i, i->seg(), esi, BX_SEG_REG_ES, edi, dwordCount);
-      if (dwordCount)
-      {
+      Bit32u dwordCount = FastRepMOVSD(i, i->seg(), esi, BX_SEG_REG_ES, edi, ECX);
+      if (dwordCount) {
         // Decrement the ticks count by the number of iterations, minus
         // one, since the main cpu loop will decrement one.  Also,
         // the count is predecremented before examined, so defintely
@@ -1044,17 +1105,18 @@ void BX_CPU_C::MOVSD_XdYd(bxInstruction_c *i)
         RCX = ECX - (dwordCount-1);
 
         incr = dwordCount << 2; // count * 4
-        goto doIncr;
+      }
+      else {
+        read_virtual_dword(i->seg(), esi, &temp32);
+        write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
       }
     }
+    else
 #endif
-
-    read_virtual_dword(i->seg(), esi, &temp32);
-    write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
-
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-doIncr:
-#endif
+    {
+      read_virtual_dword(i->seg(), esi, &temp32);
+      write_virtual_dword(BX_SEG_REG_ES, edi, &temp32);
+    }
 
     if (BX_CPU_THIS_PTR get_DF()) {
       esi -= incr;
@@ -1816,12 +1878,10 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
       if (i->as32L())
         byteCount = ECX;
       else
-        byteCount = CX;
+        byteCount =  CX;
 
-      BX_ASSERT(byteCount);
       byteCount = FastRepSTOSB(i, BX_SEG_REG_ES, edi, al, byteCount);
-      if (byteCount)
-      {
+      if (byteCount) {
         // Decrement the ticks count by the number of iterations, minus
         // one, since the main cpu loop will decrement one.  Also,
         // the count is predecremented before examined, so defintely
@@ -1836,16 +1896,16 @@ void BX_CPU_C::STOSB_YbAL(bxInstruction_c *i)
           CX -= (byteCount-1);
 
         incr = byteCount;
-        goto doIncr;
+      }
+      else {
+        write_virtual_byte(BX_SEG_REG_ES, edi, &al);
       }
     }
+    else
 #endif
-
-    write_virtual_byte(BX_SEG_REG_ES, edi, &al);
-
-#if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
-doIncr:
-#endif
+    {
+      write_virtual_byte(BX_SEG_REG_ES, edi, &al);
+    }
 
     if (BX_CPU_THIS_PTR get_DF()) {
       edi -= incr;
