@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.75 2007-10-24 23:01:45 sshwarts Exp $
+// $Id: access.cc,v 1.76 2007-10-30 22:15:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,12 +30,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-#if BX_SUPPORT_X86_64
-#define LPFOf(laddr) ((laddr) & BX_CONST64(0xfffffffffffff000))
-#else
-#define LPFOf(laddr) ((laddr) & 0xfffff000)
-#endif
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length)

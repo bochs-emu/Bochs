@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.176 2007-10-14 19:04:49 sshwarts Exp $
+// $Id: cpu.cc,v 1.177 2007-10-30 22:15:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -306,42 +306,60 @@ void BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_t execute)
     return;
   }
 
-  while(1) {
-
 #if BX_SUPPORT_X86_64
-    if (i->as64L()) {
+  if (i->as64L()) {
+    while(1) {
       if (RCX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX --;
       }
       if (RCX == 0) return;
-    }
-    else
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
 #endif
-    if (i->as32L()) {
+        break; // exit always if debugger enabled
+    }
+  }
+  else
+#endif
+  if (i->as32L()) {
+    while(1) {
       if (ECX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX = ECX - 1;
       }
       if (ECX == 0) return;
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
+#endif
+        break; // exit always if debugger enabled
     }
-    else { // 16bit addrsize
+  }
+  else  // 16bit addrsize
+  {
+    while(1) {
       if (CX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         CX --;
       }
       if (CX == 0) return;
-    }
 
-    BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
-    if (BX_CPU_THIS_PTR async_event)
+      if (BX_CPU_THIS_PTR async_event)
 #endif
-      break; // exit always if debugger enabled
+        break; // exit always if debugger enabled
+    }
   }
 
   RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
@@ -355,10 +373,9 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
     return;
   }
 
-  while(1) {
-
 #if BX_SUPPORT_X86_64
-    if (i->as64L()) {
+  if (i->as64L()) {
+    while(1) {
       if (RCX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
@@ -367,10 +384,19 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
       if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
       if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
       if (RCX == 0) return;
-    }
-    else
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
 #endif
-    if (i->as32L()) {
+        break; // exit always if debugger enabled
+    }
+  }
+  else
+#endif
+  if (i->as32L()) {
+    while(1) {
       if (ECX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
@@ -379,8 +405,18 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
       if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
       if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
       if (ECX == 0) return;
+
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+
+#if BX_DEBUGGER == 0
+      if (BX_CPU_THIS_PTR async_event)
+#endif
+        break; // exit always if debugger enabled
     }
-    else {
+  }
+  else  // 16bit addrsize
+  {
+    while(1) {
       if (CX != 0) {
         BX_CPU_CALL_METHOD(execute, (i));
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
@@ -389,14 +425,14 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
       if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
       if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
       if (CX == 0) return;
-    }
 
-    BX_TICK1_IF_SINGLE_PROCESSOR();
+      BX_TICK1_IF_SINGLE_PROCESSOR();
 
 #if BX_DEBUGGER == 0
-    if (BX_CPU_THIS_PTR async_event)
+      if (BX_CPU_THIS_PTR async_event)
 #endif
-      break; // exit always if debugger enabled
+        break; // exit always if debugger enabled
+    }
   }
 
   RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP

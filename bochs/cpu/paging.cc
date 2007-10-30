@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.87 2007-10-08 20:45:30 sshwarts Exp $
+// $Id: paging.cc,v 1.88 2007-10-30 22:15:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -615,7 +615,6 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigne
 // Translate a linear address to a physical address
 bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
 {
-  bx_address lpf;
   Bit32u   accessBits, combined_access = 0;
   unsigned priv_index;
 
@@ -625,19 +624,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
   // note - we assume physical memory < 4gig so for brevity & speed, we'll use
   // 32 bit entries although cr3 is expanded to 64 bits.
   bx_phy_address paddress, ppf, poffset;
-
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
-
-#if BX_SUPPORT_PAE
-  if (BX_CPU_THIS_PTR cr4.get_PAE())
-    lpf = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
-  else
-#endif
-    lpf = laddr & 0xfffff000;
 
   poffset = laddr & 0x00000fff; // physical offset
 
 #if BX_USE_TLB
+  bx_address lpf = LPFOf(laddr);
   Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
@@ -1066,7 +1058,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
     return 1;
   }
 
-  bx_address lpf     = laddr & BX_CONST64(0xfffffffffffff000); // linear page frame
+  bx_address lpf = LPFOf(laddr); // linear page frame
   bx_address poffset = laddr & 0x00000fff; // physical offset
   bx_phy_address paddress;
 
@@ -1262,7 +1254,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-        Bit32u lpf = laddr & 0xfffff000;
+        bx_address lpf = LPFOf(laddr);
 
         if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, length, data);
@@ -1290,7 +1282,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         }
         else {
           // Got direct write pointer OK.  Mark for any operation to succeed.
-          tlbEntry->accessBits =(TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
+          tlbEntry->accessBits = (TLB_ReadSysOK | TLB_ReadUserOK | TLB_WriteSysOK | TLB_WriteUserOK |
             TLB_ReadSysPtrOK | TLB_ReadUserPtrOK | TLB_WriteSysPtrOK | TLB_WriteUserPtrOK);
         }
 #endif  // BX_SupportGuest2HostTLB
@@ -1303,7 +1295,7 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
-        Bit32u lpf = laddr & 0xfffff000;
+        bx_address lpf = LPFOf(laddr);
 
         if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
           BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, length, data);
