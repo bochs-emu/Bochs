@@ -2,7 +2,7 @@
 //
 // misc/niclist.c
 // by Don Becker <x-odus@iname.com>
-// $Id: niclist.c,v 1.13 2006-06-02 13:42:37 sshwarts Exp $
+// $Id: niclist.c,v 1.14 2007-10-31 13:10:04 sshwarts Exp $
 //
 // This program is for win32 only.  It lists the network interface cards
 // that you can use in the "ethdev" field of the ne2k line in your bochsrc.
@@ -87,9 +87,9 @@ int main(int argc, char **argv)
         dllVersion = PacketGetVersion();
         nDLLMajorVersion = -1;
         nDLLMinorVersion = -1;
-        for ( testString = strtok(dllVersion, ", ");
+        for ( testString = strtok(dllVersion, ",. ");
               testString != NULL;
-              testString = strtok(NULL, ", ") )
+              testString = strtok(NULL, ",. ") )
         {
                 // If Single Character, Convert
                 if ( strlen( testString ) == 1 )
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 
 	// If this is Windows NT ... And DLL Returns UNICODE
 	if(!(dwVersion >= 0x80000000 && dwMajorVersion >= 4) &&
-           !(nDLLMajorVersion >= 3 && nDLLMinorVersion >= 1))
+	   (nDLLMajorVersion < 3 || (nDLLMajorVersion == 3 && nDLLMinorVersion < 1)))
 	{
 		wstrName=(LPWSTR)AdapterInfo;
 
