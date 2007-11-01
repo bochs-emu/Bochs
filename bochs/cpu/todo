@@ -42,5 +42,3 @@ TODO (know issues in CPU model):
 [!] More flexible CPUID - vendor and etc
 
 [!] SSE4A, SSE5, VMX, SVM
-
-[!] MONITOR/MWAIT functionality
