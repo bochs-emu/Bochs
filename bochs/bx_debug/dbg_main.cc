@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.104 2007-10-23 21:59:04 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.105 2007-11-01 20:53:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1321,7 +1321,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
-    linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_64BIT_REG_RSP);
+    linear_sp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
     len = 8;
   }
   else 
@@ -1332,7 +1332,7 @@ void bx_dbg_print_stack_command(unsigned nwords)
       len = 4;
     }
     else {
-      linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_16BIT_REG_SP);
+      linear_sp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP);
       len = 2;
     }
   }
