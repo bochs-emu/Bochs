@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.81 2007-10-23 21:51:44 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.82 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,10 +95,10 @@ const char* cpu_state_string(unsigned cpu_state)
 {
   static const char *cpu_state_name[] = {
      "active",
-     "halted",
-     "in shutdown",
-     "waiting for SIPI",
      "executing mwait",
+     "waiting for SIPI",
+     "in shutdown",
+     "halted",
      "unknown state"
   };
 
@@ -108,8 +108,8 @@ const char* cpu_state_string(unsigned cpu_state)
 
 void BX_CPU_C::debug(bx_address offset)
 {
-  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode), 
-    cpu_state_string(BX_CPU_THIS_PTR cpu_state)));
+  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()), 
+    cpu_state_string(BX_CPU_THIS_PTR get_cpu_state())));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",

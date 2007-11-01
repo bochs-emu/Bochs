@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.177 2007-10-30 22:15:42 sshwarts Exp $
+// $Id: cpu.cc,v 1.178 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,14 +34,6 @@
 
 #if BX_EXTERNAL_DEBUGGER
 #include "extdb.h"
-#endif
-
-#if BX_PROVIDE_CPU_MEMORY
-#if BX_ADDRESS_SPACES==1
-BOCHSAPI BX_MEM_C bx_mem;
-#else
-BOCHSAPI BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
-#endif
 #endif
 
 #if BX_SUPPORT_ICACHE
@@ -443,7 +435,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //
   // This area is where we process special conditions and events.
   //
-  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT_STATE) {
+  if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) {
     // I made up the bitmask above to mean HALT state.
 #if BX_SUPPORT_SMP == 0
     // for one processor, pass the time as quickly as possible until
@@ -454,15 +446,19 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     while (1)
 #endif
     {
-      if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || 
+      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) || 
            BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
       {
         // interrupt ends the HALT condition
+#if BX_SUPPORT_MONITOR_MWAIT
+        if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT)
+          BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+#endif
         BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
         BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
         break;
       }
-      if ((BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT_STATE) == 0) {
+      if ((BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) == 0) {
         BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
         break;
       }
@@ -473,10 +469,14 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // must give the others a chance to simulate.  If an interrupt has 
     // arrived, then clear the HALT condition; otherwise just return from
     // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if ((BX_CPU_INTR && BX_CPU_THIS_PTR get_IF()) || 
+    if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) || 
          BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
     {
       // interrupt ends the HALT condition
+#if BX_SUPPORT_MONITOR_MWAIT
+      if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT)
+        BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+#endif
       BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
     } else {

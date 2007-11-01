@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.42 2007-09-28 19:52:08 sshwarts Exp $
+// $Id: memory.h,v 1.43 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,6 +69,11 @@ private:
   bx_bool smram_available;
   bx_bool smram_enable;
   bx_bool smram_restricted;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  bx_bool *monitor_active;
+  Bit32u   n_monitors;
+#endif
   
 public:
   Bit8u   *actual_vector;
@@ -105,18 +110,20 @@ public:
   BX_MEM_SMF bx_bool unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		  bx_phy_address begin_addr, bx_phy_address end_addr);
   BX_MEM_SMF Bit32u  get_num_allocated_pages(void);
-  BX_MEM_SMF void    register_state(void);
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  void    set_monitor(unsigned cpu);
+  void    clear_monitor(unsigned cpu);
+  bx_bool is_monitor(bx_phy_address begin_addr, unsigned len);
+  void    check_monitor(bx_phy_address addr, unsigned len);
+#endif
+
+  BX_MEM_SMF void register_state(void);
 };
 
 #if BX_PROVIDE_CPU_MEMORY==1
-
-#if BX_ADDRESS_SPACES==1
 BOCHSAPI extern BX_MEM_C bx_mem;
-#else
-BOCHSAPI extern BX_MEM_C bx_mem_array[BX_ADDRESS_SPACES];
-#endif  /* BX_ADDRESS_SPACES */
-
-#endif  /* BX_PROVIDE_CPU_MEMORY==1 */
+#endif
 
 #if BX_DEBUGGER
 #  define BX_DBG_DIRTY_PAGE(page) BX_MEM(0)->dbg_dirty_pages[page] = 1;

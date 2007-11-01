@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.103 2007-10-24 23:00:01 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.104 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.103 2007-10-24 23:00:01 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.104 2007-11-01 18:03:48 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -118,13 +118,31 @@ void BX_MEM_C::init_memory(int memsize)
   BX_ASSERT((BX_MEM_THIS len & 0xfffff) == 0);
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS megabytes)));
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_MEM_THIS monitor_active = new bx_bool[BX_SMP_PROCESSORS];
+  for (int i=0; i<BX_SMP_PROCESSORS;i++) {
+    BX_MEM_THIS monitor_active[i] = 0;
+  }
+  BX_MEM_THIS n_monitors = 0;
+#endif
+
   register_state();
 }
 
 void BX_MEM_C::register_state()
 {
-  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 1);
+  bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State", 3);
   new bx_shadow_data_c(list, "ram", BX_MEM_THIS vector, BX_MEM_THIS len);
+  BXRS_DEC_PARAM_FIELD(list, len, BX_MEM_THIS len);
+#if BX_SUPPORT_MONITOR_MWAIT
+  bx_list_c *monitors = new bx_list_c(list, "monitors", BX_SMP_PROCESSORS+1);
+  BXRS_PARAM_BOOL(monitors, n_monitors, BX_MEM_THIS n_monitors);
+  for (int i=0;i<BX_SMP_PROCESSORS;i++) {
+    char param_name[15];
+    sprintf(param_name, "cpu%d_monitor", i);
+    new bx_shadow_bool_c(monitors, param_name, &BX_MEM_THIS monitor_active[i]);
+  }
+#endif
 }
 
 void BX_MEM_C::cleanup_memory()
@@ -153,49 +171,6 @@ void BX_MEM_C::cleanup_memory()
 #endif
   }
 }
-
-#if 0
-void put_8bit(Bit8u **pp, Bit8u value)
-{
-  Bit8u *p = *pp;
-  *p++ = value;
-  *pp = p;
-}
-
-void put_16bit(Bit8u **pp, Bit16u value)
-{
-  Bit8u *p = *pp;
-  *p++ = value & 0xff;
-  *p++ = (value >> 8) & 0xff;
-  *pp = p;
-}
-
-void put_32bit(Bit8u **pp, Bit32u value)
-{
-  Bit8u *p = *pp;
-  *p++ = value & 0xff;
-  *p++ = (value >> 8) & 0xff;
-  *p++ = (value >> 16) & 0xff;
-  *p++ = (value >> 24) & 0xff;
-  *pp = p;
-}
-
-void put_string(Bit8u **pp, const char *str)
-{
-  Bit8u *p = *pp;
-  while (*str)
-    *p++ = *str++;
-  *pp = p;
-}
-
-Bit8u mp_checksum(const Bit8u *p, int len)
-{
-  Bit8u sum = 0;
-  for (int i = 0; i < len; i++)
-    sum += p[i];
-  return (Bit8u)(-sum);
-}
-#endif
 
 //
 // Values for type:
@@ -335,77 +310,6 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       }
     }
   }
-#if 0
-  if (is_bochs_bios) {
-    Bit8u* pcmp_ptr = &BX_MEM_THIS rom[0xFB000 & BIOS_MASK];
-    Bit8u* p = pcmp_ptr;
-    put_string(&p, "PCMP"); // signature
-    put_16bit(&p, 0); // table length
-    put_8bit(&p, 4); // version
-    put_8bit(&p, 0); // checksum
-    put_string(&p, "BOCHSCPU"); // OEM ID
-    put_string(&p, "0.1         "); // vendor ID
-    put_32bit(&p, 0); // OEM table pointer
-    put_16bit(&p, 0); // OEM table size
-    put_16bit(&p, 20); // entry count
-    put_32bit(&p, 0xfee00000); // local APIC addr
-    put_16bit(&p, 0); // ext table length
-    put_8bit(&p, 0); // ext table checksum
-    put_8bit(&p, 0); // reserved
-    for (i = 0; i < BX_SMP_PROCESSORS; i++) {
-      put_8bit(&p, 0); // entry type = processor
-      put_8bit(&p, (Bit8u)i); // APIC id
-      put_8bit(&p, BX_LAPIC_VERSION_ID & 0xff); // local APIC version number
-      put_8bit(&p, (i==0)?3:1); // cpu flags: enabled, cpu0 = bootstrap cpu
-      put_8bit(&p, 0); // cpu signature
-      put_8bit(&p, 0);
-      put_8bit(&p, 0);
-      put_8bit(&p, 0);
-      put_16bit(&p, 0x301); // feature flags: FPU, CX8, APIC
-      put_16bit(&p, 0);
-      put_16bit(&p, 0); // reserved
-      put_16bit(&p, 0);
-      put_16bit(&p, 0);
-      put_16bit(&p, 0);
-    }
-    put_8bit(&p, 1); // entry type = bus
-    put_8bit(&p, 0); // bus ID
-    put_string(&p, "ISA   ");
-    Bit8u ioapic_id = BX_SMP_PROCESSORS;
-    put_8bit(&p, 2); // entry type = I/O APIC
-    put_8bit(&p, ioapic_id); // apic id
-    put_8bit(&p, BX_IOAPIC_VERSION_ID & 0xff); // I/O APIC version number
-    put_8bit(&p, 1); // enabled
-    put_32bit(&p, 0xfec00000); // I/O APIC addr
-    for (i = 0; i < 16; i++) {
-      put_8bit(&p, 3); // entry type = I/O interrupt
-      put_8bit(&p, 0); // interrupt type = vectored interrupt
-      put_8bit(&p, 0); // flags: po=0, el=0
-      put_8bit(&p, 0);
-      put_8bit(&p, 0); // source bus ID = ISA
-      put_8bit(&p, i); // source bus IRQ
-      put_8bit(&p, ioapic_id); // dest I/O APIC ID
-      put_8bit(&p, i); // dest I/O APIC interrupt in
-    }
-    Bit16u len = (Bit16u)(p - pcmp_ptr);
-    pcmp_ptr[4] = (Bit8u)len;
-    pcmp_ptr[5] = (Bit8u)(len >> 8);
-    pcmp_ptr[7] = mp_checksum(pcmp_ptr, len);
-    Bit8u *fl_mp_ptr = &BX_MEM_THIS rom[0xFB000 & BIOS_MASK] + ((len + 15) & ~15);
-    p = fl_mp_ptr;
-    put_string(&p, "_MP_");
-    put_32bit(&p, 0xFB000); // pointer to MP config table
-    put_8bit(&p, 1); // length in 16 byte units
-    put_8bit(&p, 4); // MP spec revision
-    put_8bit(&p, 0); // checksum
-    put_8bit(&p, 0); // MP feature bytes 1-5
-    put_8bit(&p, 0);
-    put_8bit(&p, 0);
-    put_8bit(&p, 0);
-    put_8bit(&p, 0);
-    fl_mp_ptr[10] = mp_checksum(fl_mp_ptr, (int)(p - fl_mp_ptr));
-  }
-#endif
   BX_INFO(("rom at 0x%05x/%u ('%s')",
 			(unsigned) romaddress,
 			(unsigned) stat_buf.st_size,
@@ -620,6 +524,13 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
     }
   }
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (BX_MEM_THIS is_monitor(a20Addr & ~0xfff, 0x1000)) {
+     // Vetoed! Write monitored page !
+     if (op != BX_READ) return(NULL);
+  }
+#endif
+
   struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[a20Addr >> 20];
   while (memory_handler) {
     if (memory_handler->begin <= a20Addr &&
@@ -724,9 +635,9 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
   if (end_addr < begin_addr)
-    return false;
+    return 0;
   if (!read_handler || !write_handler)
-    return false;
+    return 0;
   BX_INFO(("Register memory access handlers: %08x-%08x", begin_addr, end_addr));
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = new struct memory_handler_struct;
@@ -738,14 +649,14 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
   }
-  return true;
+  return 1;
 }
 
   bx_bool 
 BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		bx_phy_address begin_addr, bx_phy_address end_addr)
 {
-  bx_bool ret = true;
+  bx_bool ret = 1;
   BX_INFO(("Memory access handlers unregistered: %08x-%08x", begin_addr, end_addr));
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
@@ -760,7 +671,7 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
       memory_handler = memory_handler->next;
     }
     if (!memory_handler) {
-      ret = false; // we should have found it
+      ret = 0;  // we should have found it
       continue; // anyway, try the other pages
     }
     if (prev)
@@ -792,3 +703,57 @@ bx_bool BX_MEM_C::is_smram_accessible(void)
   return(BX_MEM_THIS smram_available) &&
         (BX_MEM_THIS smram_enable || !BX_MEM_THIS smram_restricted);
 }
+
+#if BX_SUPPORT_MONITOR_MWAIT
+
+//
+// MONITOR/MWAIT - x86arch way to optimize idle loops in CPU
+//
+
+void BX_MEM_C::set_monitor(unsigned cpu)
+{
+  BX_ASSERT(cpu < BX_SMP_PROCESSORS);
+  if (! BX_MEM_THIS monitor_active[cpu]) {
+    BX_MEM_THIS monitor_active[cpu] = 1;
+    BX_MEM_THIS n_monitors++;
+    BX_DEBUG(("activate monitor for cpu=%d", cpu));
+  }
+  else {
+    BX_DEBUG(("monitor for cpu=%d already active !", cpu));
+  }
+}
+
+void BX_MEM_C::clear_monitor(unsigned cpu)
+{
+  BX_ASSERT(cpu < BX_SMP_PROCESSORS);
+  BX_MEM_THIS monitor_active[cpu] = 0;
+  BX_MEM_THIS n_monitors--;
+  BX_DEBUG(("deactivate monitor for cpu=%d", cpu));
+}
+
+bx_bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
+{
+  if (BX_MEM_THIS n_monitors == 0) return 0;
+  
+  for (int i=0; i<BX_SMP_PROCESSORS;i++) {
+    if (BX_MEM_THIS monitor_active[i]) {
+      if (BX_CPU(i)->is_monitor(begin_addr, len))
+        return 1;
+    }
+  }
+
+  return 0; // // this is NOT monitored page
+}
+
+void BX_MEM_C::check_monitor(bx_phy_address begin_addr, unsigned len)
+{
+  if (BX_MEM_THIS n_monitors == 0) return;
+
+  for (int i=0; i<BX_SMP_PROCESSORS;i++) {
+    if (BX_MEM_THIS monitor_active[i]) {
+      BX_CPU(i)->check_monitor(begin_addr, len);
+    }
+  }
+}
+
+#endif

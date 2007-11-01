@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.344 2007-10-30 22:15:42 sshwarts Exp $
+// $Id: cpu.h,v 1.345 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -339,13 +339,6 @@
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
-
-#define BX_CPU_STATE_ACTIVE        0x0
-#define BX_CPU_STATE_HLT           0x1
-#define BX_CPU_STATE_SHUTDOWN      0x2
-#define BX_CPU_STATE_WAIT_FOR_SIPI 0x3
-#define BX_CPU_STATE_MWAIT         0x4
-
 extern const char* cpu_state_string(unsigned cpu_state);
 
 #if BX_SUPPORT_X86_64
@@ -367,6 +360,8 @@ extern const char* cpu_state_string(unsigned cpu_state);
 #else
 #define BX_CPU_INTR  (BX_CPU_THIS_PTR INTR)
 #endif
+
+#define CACHE_LINE_SIZE 64
 
 class BX_CPU_C;
 class BX_MEM_C;
@@ -1041,6 +1036,19 @@ class BX_MEM_C;
 #include "cpu/xmm.h"
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+struct monitor_addr_t {
+    bx_phy_address monitor_begin;
+    bx_phy_address monitor_end;
+
+    // avoid false trigger when MONITOR was not set up properly
+    monitor_addr_t():
+      monitor_begin(0xffffffff), monitor_end(0xffffffff) {}
+    monitor_addr_t(bx_phy_address addr, unsigned len):
+      monitor_begin(addr), monitor_end(addr+len) {}
+};
+#endif
+
 class BOCHSAPI BX_CPU_C : public logfunctions {
 
 public: // for now...
@@ -1140,6 +1148,10 @@ public: // for now...
   bx_mxcsr_t mxcsr;
 #endif
 
+#if BX_SUPPORT_MONITOR_MWAIT
+  monitor_addr_t monitor;
+#endif
+
   // pointer to the address space that this processor uses.
   BX_MEM_C *mem;
 
@@ -1152,8 +1164,15 @@ public: // for now...
                 * 0 if current CS:IP caused exception */
   unsigned errorno;   /* signal exception during instruction emulation */
 
-#define BX_DEBUG_TRAP_HALT_STATE (0x80000000)
-  Bit32u   debug_trap; // holds DR6 value to be set as well
+#define BX_DEBUG_TRAP_HALT          (0x80000000)
+#define BX_DEBUG_TRAP_SHUTDOWN      (0x40000000)
+#define BX_DEBUG_TRAP_WAIT_FOR_SIPI (0x20000000)
+#define BX_DEBUG_TRAP_MWAIT         (0x10000000)
+#define BX_DEBUG_TRAP_MWAIT_IF      (0x18000000)
+// combine all possible states
+#define BX_DEBUG_TRAP_SPECIAL       (0xf8000000)
+
+  Bit32u   debug_trap; // holds DR6 value (16bit) to be set as well
   volatile bx_bool async_event;
   volatile bx_bool INTR;
   volatile bx_bool smi_pending;
@@ -1192,7 +1211,7 @@ public: // for now...
 #if BX_SUPPORT_ICACHE
   const Bit32u *currPageWriteStampPtr;
 #endif
-  unsigned cpu_mode, cpu_state;
+  unsigned cpu_mode;
   bx_bool  in_smm;
   bx_bool  nmi_disable;
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
@@ -3108,6 +3127,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
+  BX_SMF BX_CPP_INLINE unsigned get_cpu_state(void);
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
@@ -3135,6 +3155,11 @@ public: // for now...
   BX_SMF void prepareSSE(void);
   BX_SMF void check_exceptionsSSE(int);
   BX_SMF void print_state_SSE(void);
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_SMF bx_bool    is_monitor(bx_phy_address addr, unsigned len);
+  BX_SMF void    check_monitor(bx_phy_address addr, unsigned len);
 #endif
 };
 
@@ -3298,6 +3323,11 @@ BX_CPP_INLINE unsigned BX_CPU_C::long_mode(void)
 BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode);
+}
+
+BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_state(void)
+{
+  return (BX_CPU_THIS_PTR debug_trap >> 28); // 4 upper state bits in 32-bit debug_trap
 }
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];

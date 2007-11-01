@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.88 2007-10-30 22:15:42 sshwarts Exp $
+// $Id: paging.cc,v 1.89 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -550,9 +550,11 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
+#if BX_USE_TLB
   Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
+#endif
 }
 
 void BX_CPU_C::INVLPG(bxInstruction_c* i)

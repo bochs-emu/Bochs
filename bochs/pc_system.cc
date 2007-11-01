@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.cc,v 1.67 2007-09-28 19:51:42 sshwarts Exp $
+// $Id: pc_system.cc,v 1.68 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -185,6 +185,12 @@ void bx_pc_system_c::MemoryMappingChanged(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
     BX_CPU(i)->TLB_flush(1);
+}
+
+void bx_pc_system_c::invlpg(bx_address addr)
+{
+  for (unsigned i=0; i<BX_SMP_PROCESSORS; i++)
+    BX_CPU(i)->TLB_invlpg(addr);
 }
 
 int bx_pc_system_c::Reset(unsigned type)

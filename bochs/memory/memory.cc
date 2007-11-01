@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.61 2007-10-09 20:23:01 sshwarts Exp $
+// $Id: memory.cc,v 1.62 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -86,6 +86,10 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
         goto mem_write;
     }
   }
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  BX_MEM_THIS check_monitor(a20addr, len);
+#endif
 
   memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
   while (memory_handler) {

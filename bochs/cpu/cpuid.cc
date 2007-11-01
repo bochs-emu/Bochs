@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.54 2007-10-15 22:07:52 sshwarts Exp $
+// $Id: cpuid.cc,v 1.55 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -35,8 +35,6 @@
 #define RCX ECX
 #define RDX EDX
 #endif
-
-#define CACHE_LINE_SIZE 64
 
 #if BX_SUPPORT_3DNOW
   #define BX_CPU_VENDOR_INTEL 0

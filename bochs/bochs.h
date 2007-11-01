@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.213 2007-10-30 18:57:45 sshwarts Exp $
+// $Id: bochs.h,v 1.214 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -186,11 +186,7 @@ void print_tree(bx_param_c *node, int level = 0);
 #define BX_CPU(x)                   (&bx_cpu)
 #endif
 
-#if BX_ADDRESS_SPACES==1
 #define BX_MEM(x)                   (&bx_mem)
-#else
-#define BX_MEM(x)                   (&bx_mem_array[x])
-#endif
 
 #define BX_SET_ENABLE_A20(enabled)  bx_pc_system.set_enable_a20(enabled)
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()

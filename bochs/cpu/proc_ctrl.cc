@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.176 2007-10-18 22:44:39 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.177 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,8 +77,7 @@ void BX_CPU_C::shutdown(void)
   BX_CPU_THIS_PTR clear_IF();
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_SHUTDOWN;
-  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
+  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_SHUTDOWN; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
@@ -112,8 +111,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
   // following HLT.
 
   // artificial trap bit, why use another variable.
-  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_HLT;
-  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT_STATE; // artificial trap
+  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_HALT; // artificial trap
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
   // will remain in a halt state until one of the above conditions
@@ -319,8 +317,8 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
       break;
 
     default:
-      BX_PANIC(("MOV_DdRd: control register index out of range"));
-      break;
+      BX_ERROR(("MOV_DdRd: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
 }
 
@@ -336,8 +334,6 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
-  if (!i->modC0())
-    BX_PANIC(("MOV_RdDd(): rm field not a register!"));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -384,9 +380,10 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
       break;
 
     default:
-      BX_PANIC(("MOV_RdDd: control register index out of range"));
-      val_32 = 0;
+      BX_ERROR(("MOV_RdDd: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
+
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 }
 
@@ -404,8 +401,6 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
-  if (!i->modC0())
-    BX_PANIC(("MOV_DqRq(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
@@ -500,8 +495,8 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       break;
 
     default:
-      BX_PANIC(("MOV_DqRq: control register index out of range"));
-      break;
+      BX_ERROR(("MOV_DqRq: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
 }
 
@@ -514,8 +509,6 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
-  if (!i->modC0())
-    BX_PANIC(("MOV_RqDq(): rm field not a register!"));
 
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
@@ -564,9 +557,10 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       break;
 
     default:
-      BX_PANIC(("MOV_RqDq: control register index out of range"));
-      val_64 = 0;
+      BX_ERROR(("MOV_DqRq: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
+
   BX_WRITE_64BIT_REG(i->rm(), val_64);
 }
 #endif // #if BX_SUPPORT_X86_64
@@ -590,8 +584,6 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
-  if (!i->modC0())
-    BX_PANIC(("MOV_CdRd(): rm field not a register!"));
 
   invalidate_prefetch_q();
 
@@ -627,8 +619,8 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 #endif
       break;
     default:
-      BX_PANIC(("MOV_CdRd: control register index out of range"));
-      break;
+      BX_ERROR(("MOV_CdRd: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
 }
 
@@ -681,9 +673,10 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #endif
       break;
     default:
-      BX_PANIC(("MOV_RdCd: control register index out of range"));
-      val_32 = 0;
+      BX_ERROR(("MOV_RdCd: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
+
   BX_WRITE_32BIT_REGZ(i->rm(), val_32);
 }
 
@@ -758,8 +751,8 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       break;
 #endif
     default:
-      BX_PANIC(("MOV_CqRq: control register index out of range"));
-      break;
+      BX_ERROR(("MOV_CqRq: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
 }
 
@@ -819,8 +812,8 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
       break;
 #endif
     default:
-      BX_PANIC(("MOV_RqCq: control register index out of range"));
-      val_64 = 0;
+      BX_ERROR(("MOV_RqCq: #UD - control register index out of range"));
+      UndefinedOpcode(i);
   }
 
   BX_WRITE_64BIT_REG(i->rm(), val_64);
@@ -1894,6 +1887,28 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
 #endif
 }
 
+#if BX_SUPPORT_MONITOR_MWAIT
+bx_bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
+{
+  bx_phy_address end_addr = begin_addr + len;
+  if (begin_addr >= BX_CPU_THIS_PTR monitor.monitor_end || end_addr <= BX_CPU_THIS_PTR monitor.monitor_begin)
+    return 0;
+  else
+    return 1;
+}
+
+void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
+{
+  if (is_monitor(begin_addr, len)) {
+    // wakeup from MWAIT state
+    BX_ASSERT(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT);
+    BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
+    // clear monitor
+    BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+ }
+}
+#endif
+
 void BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1907,7 +1922,8 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  bx_address addr;
+  bx_address addr, laddr;
+  bx_phy_address paddr;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
@@ -1916,7 +1932,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
   else
 #endif
   if (i->as32L()) {
-     addr = EAX;
+     laddr = EAX;
   }
   else {
      addr =  AX;
@@ -1924,7 +1940,20 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], addr, 1);
 
-  // TODO: Implemented actual MONITOR functionality
+  // set MONITOR 
+  laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + addr;
+
+  if (BX_CPU_THIS_PTR cr0.get_PG()) {
+    paddr = dtranslate_linear(laddr, CPL==3, BX_READ);
+    paddr = A20ADDR(paddr);
+  }
+  else
+  {
+    paddr = A20ADDR(laddr);
+  }
+
+  BX_CPU_THIS_PTR monitor.monitor_begin = paddr;
+  BX_CPU_THIS_PTR monitor.monitor_end   = paddr + CACHE_LINE_SIZE;
 
 #else
   BX_INFO(("MONITOR: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
@@ -1941,12 +1970,43 @@ void BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   // only one extension is supported
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
-  if (RCX & ~((Bit64u)(1))) {
+  if (RCX & ~(BX_CONST64(1))) {
     BX_ERROR(("MWAIT: incorrect optional extensions in RCX"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  // TODO: Implemented actual MWAIT functionality
+  // Do not enter optimized state if MONITOR wasn't properly set
+  if (BX_CPU_THIS_PTR monitor.monitor_begin == BX_CPU_THIS_PTR monitor.monitor_end) {
+    BX_ERROR(("MWAIT: incorrect MONITOR settings"));
+    return;
+  }
+
+  bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_begin);
+  if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
+    bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
+  BX_DEBUG(("MWAIT for phys_addr=%08x", BX_CPU_THIS_PTR monitor.monitor_begin));
+  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
+
+  // stops instruction execution and places the processor in a optimized
+  // state.  Events that cause exit from MWAIT state are:
+  // A store from another processor to monitored range, any unmasked
+  // interrupt, including INTR, NMI, SMI, INIT or reset will resume
+  // the execution. Any far control transfer between MONITOR and MWAIT
+  // resets the monitoring logic.
+
+  // artificial trap bit, why use another variable.
+  BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_MWAIT; // artificial trap
+  if (ECX & 1)
+    BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_MWAIT_IF;
+  BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
+  // Execution of this instruction completes.  The processor
+  // will remain in a optimized state until one of the above 
+  // conditions is met.
+
+#if BX_USE_IDLE_HACK  
+  bx_gui->sim_is_idle();
+#endif
+
 #else
   BX_INFO(("MWAIT: use --enable-monitor-mwait to enable MONITOR/MWAIT support"));
   UndefinedOpcode (i);

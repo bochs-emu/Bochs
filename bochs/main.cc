@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.361 2007-10-24 23:28:11 sshwarts Exp $
+// $Id: main.cc,v 1.362 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -105,6 +105,10 @@ BOCHSAPI BX_CPU_C_PTR *bx_cpu_array = NULL;
 #else
 // single processor simulation, so there's one of everything
 BOCHSAPI BX_CPU_C bx_cpu;
+#endif
+
+#if BX_PROVIDE_CPU_MEMORY==1
+BOCHSAPI BX_MEM_C bx_mem;
 #endif
 
 char *bochsrc_filename = NULL;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.140 2007-10-14 21:42:50 sshwarts Exp $
+// $Id: init.cc,v 1.141 2007-11-01 18:03:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -400,7 +400,6 @@ void BX_CPU_C::register_state(void)
   BXRS_PARAM_SPECIAL32(cpu, cpuid_std,   param_save_handler, param_restore_handler);
   BXRS_PARAM_SPECIAL32(cpu, cpuid_ext,   param_save_handler, param_restore_handler);
   BXRS_DEC_PARAM_SIMPLE(cpu, cpu_mode);
-  BXRS_DEC_PARAM_SIMPLE(cpu, cpu_state);
   BXRS_HEX_PARAM_SIMPLE(cpu, inhibit_mask);
   BXRS_HEX_PARAM_SIMPLE(cpu, debug_trap);
 #if BX_SUPPORT_X86_64
@@ -468,10 +467,10 @@ void BX_CPU_C::register_state(void)
   }
 
 #if BX_CPU_LEVEL >= 2
-  BXRS_HEX_PARAM_FIELD(cpu, gdtr_base, BX_CPU_THIS_PTR gdtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, gdtr_limit, BX_CPU_THIS_PTR gdtr.limit);
-  BXRS_HEX_PARAM_FIELD(cpu, idtr_base, BX_CPU_THIS_PTR idtr.base);
-  BXRS_HEX_PARAM_FIELD(cpu, idtr_limit, BX_CPU_THIS_PTR idtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, gdtr_base, gdtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, gdtr_limit, gdtr.limit);
+  BXRS_HEX_PARAM_FIELD(cpu, idtr_base, idtr.base);
+  BXRS_HEX_PARAM_FIELD(cpu, idtr_limit, idtr.limit);
 #endif
 
   bx_list_c *LDTR = new bx_list_c (cpu, "LDTR", 7);
@@ -575,10 +574,16 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(sse, mxcsr, mxcsr.mxcsr);
   for (i=0; i<BX_XMM_REGISTERS; i++) {
     sprintf(name, "xmm%02d_hi", i);
-    new bx_shadow_num_c(sse, name, &BX_CPU_THIS_PTR xmm[i].xmm64u(1), BASE_HEX);
+    new bx_shadow_num_c(sse, name, &xmm[i].xmm64u(1), BASE_HEX);
     sprintf(name, "xmm%02d_lo", i);
-    new bx_shadow_num_c(sse, name, &BX_CPU_THIS_PTR xmm[i].xmm64u(0), BASE_HEX);
+    new bx_shadow_num_c(sse, name, &xmm[i].xmm64u(0), BASE_HEX);
   }
+#endif
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  bx_list_c *monitor_list = new bx_list_c(cpu, "MONITOR", 2);
+  BXRS_HEX_PARAM_FIELD(monitor_list, begin_addr, monitor.monitor_begin);
+  BXRS_HEX_PARAM_FIELD(monitor_list, end_addr,   monitor.monitor_end);
 #endif
 
 #if BX_SUPPORT_APIC
@@ -948,7 +953,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-  BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_ACTIVE;
 
   BX_CPU_THIS_PTR smi_pending = 0;
   BX_CPU_THIS_PTR nmi_pending = 0;
@@ -1079,8 +1083,7 @@ void BX_CPU_C::reset(unsigned source)
     // it's an application processor, halt until IPI is heard.
     BX_CPU_THIS_PTR msr.apicbase &= ~0x0100; /* clear bit 8 BSP */
     BX_INFO(("CPU[%d] is an application processor. Halting until IPI.", apic_id));
-    BX_CPU_THIS_PTR cpu_state = BX_CPU_STATE_WAIT_FOR_SIPI;
-    debug_trap |= BX_DEBUG_TRAP_HALT_STATE;
+    debug_trap |= BX_DEBUG_TRAP_WAIT_FOR_SIPI;
     async_event = 1;
   }
 #endif
@@ -1255,6 +1258,11 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: TR is not TSS type !"));
     }
   }
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (BX_CPU_THIS_PTR monitor.monitor_end < BX_CPU_THIS_PTR monitor.monitor_begin)
+    BX_PANIC(("assert_checks: MONITOR range is not set correctly !"));
+#endif
 }
 
 void BX_CPU_C::set_INTR(bx_bool value)
