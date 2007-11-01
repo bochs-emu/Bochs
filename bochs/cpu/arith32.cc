@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.52 2007-10-21 23:35:11 sshwarts Exp $
+// $Id: arith32.cc,v 1.53 2007-11-01 20:43:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -571,12 +571,12 @@ void BX_CPU_C::DEC_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
     op1_32--;
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-    }
+  }
   else {
     read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
     op1_32--;
     write_RMW_virtual_dword(op1_32);
-    }
+  }
 
   SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_DEC32);
 }

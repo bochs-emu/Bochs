@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.177 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.178 2007-11-01 20:43:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1904,7 +1904,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
     BX_ASSERT(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT);
     BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_TRAP_SPECIAL;
     // clear monitor
-    BX_MEM(0)->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
+    BX_CPU_THIS_PTR mem->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
  }
 }
 #endif
@@ -1985,7 +1985,7 @@ void BX_CPU_C::MWAIT(bxInstruction_c *i)
   if ((BX_CPU_THIS_PTR monitor.monitor_end & ~0xfff) != (BX_CPU_THIS_PTR monitor.monitor_begin & ~0xfff))
     bx_pc_system.invlpg(BX_CPU_THIS_PTR monitor.monitor_end);
   BX_DEBUG(("MWAIT for phys_addr=%08x", BX_CPU_THIS_PTR monitor.monitor_begin));
-  BX_MEM(0)->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
+  BX_CPU_THIS_PTR mem->set_monitor(BX_CPU_THIS_PTR bx_cpuid);
 
   // stops instruction execution and places the processor in a optimized
   // state.  Events that cause exit from MWAIT state are:
