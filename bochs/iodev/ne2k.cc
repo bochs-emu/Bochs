@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.94 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: ne2k.cc,v 1.95 2007-11-01 18:14:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1401,7 +1401,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.94 2007-09-28 19:52:03 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.95 2007-11-01 18:14:28 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1507,7 +1507,7 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
     
   // Attach to the simulated ethernet dev
-  char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
+  const char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
   BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
                                               SIM->get_param_string("ethdev", base)->getptr(),
                                               (const char *) SIM->get_param_string("macaddr", base)->getptr(),

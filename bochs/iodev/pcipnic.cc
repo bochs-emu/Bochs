@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.24 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.25 2007-11-01 18:14:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -78,7 +78,7 @@ void bx_pcipnic_c::init(void)
 
   // This code ripped wholesale from ne2k.cc:
   // Attach to the simulated ethernet dev
-  char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
+  const char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
   BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
                                               SIM->get_param_string("ethdev", base)->getptr(),
                                               (const char *) SIM->get_param_string("macaddr", base)->getptr(),
