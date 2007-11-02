@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wxdialog.cc,v 1.102 2006-12-17 08:17:28 vruppert Exp $
+// $Id: wxdialog.cc,v 1.103 2007-11-02 16:58:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
@@ -251,7 +251,7 @@ void FloppyConfigDialog::SetDriveName(wxString name)
     wxT("."));
 }
 
-void FloppyConfigDialog::SetCapacityChoices(char *choices[])
+void FloppyConfigDialog::SetCapacityChoices(const char *choices[])
 {
   int i = 0;
   while (choices[i] != NULL) {
@@ -989,7 +989,7 @@ void ParamDialog::AddParam (
 	if (!plain) sizer->Add (1, 1);  // spacer
 	// fill in the choices
 	int i=0;
-	char *ptr;
+	const char *ptr;
 	while (NULL != (ptr = param->get_choice(i++)))
 	  choice->Append(wxString(ptr, wxConvUTF8));
 	choice->SetSelection (param->get() - param->get_min());
