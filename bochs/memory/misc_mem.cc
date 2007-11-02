@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.104 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.105 2007-11-02 23:30:07 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(int memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.104 2007-11-01 18:03:48 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.105 2007-11-02 23:30:07 vruppert Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -437,7 +437,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
     // Write to standard PCI/ISA Video Mem / SMMRAM
     if ((addr & 0xfffe0000) == 0x000a0000) {
       if (BX_MEM_THIS smram_enable)
-        vector[addr] = *buf;
+        BX_MEM_THIS vector[addr] = *buf;
       else 
         DEV_vga_mem_write(addr, *buf);
     }
