@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.141 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: init.cc,v 1.142 2007-11-03 16:55:08 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -694,11 +694,11 @@ Bit64s BX_CPU_C::param_restore(bx_param_c *param, Bit64s val)
     BX_CPU_THIS_PTR setEFlags((Bit32u)val);
 #if BX_SUPPORT_X86_64
   } else if (!strcmp(pname, "EFER")) {
-    BX_CPU_THIS_PTR efer.sce   = (val >> 0)  & 1;
-    BX_CPU_THIS_PTR efer.lme   = (val >> 8)  & 1;
-    BX_CPU_THIS_PTR efer.lma   = (val >> 10) & 1;
-    BX_CPU_THIS_PTR efer.nxe   = (val >> 11) & 1;
-    BX_CPU_THIS_PTR efer.ffxsr = (val >> 14) & 1;
+    BX_CPU_THIS_PTR efer.sce   = (bx_bool)((val >> 0)  & 1);
+    BX_CPU_THIS_PTR efer.lme   = (bx_bool)((val >> 8)  & 1);
+    BX_CPU_THIS_PTR efer.lma   = (bx_bool)((val >> 10) & 1);
+    BX_CPU_THIS_PTR efer.nxe   = (bx_bool)((val >> 11) & 1);
+    BX_CPU_THIS_PTR efer.ffxsr = (bx_bool)((val >> 14) & 1);
 #endif
   } else if (!strcmp(pname, "ar_byte") || !strcmp(pname, "selector")) {
     segname = param->get_parent()->get_name();
@@ -1019,14 +1019,14 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_MTRR
-  for (int i=0;i<16;i++)
+  for (i=0; i<16; i++)
     BX_CPU_THIS_PTR msr.mtrrphys[i] = 0;
 
   BX_CPU_THIS_PTR msr.mtrrfix64k_00000 = 0; // all fix range MTRRs undefined according to manual
   BX_CPU_THIS_PTR msr.mtrrfix16k_80000 = 0;
   BX_CPU_THIS_PTR msr.mtrrfix16k_a0000 = 0;
 
-  for (int i=0;i<8;i++)
+  for (i=0; i<8; i++)
     BX_CPU_THIS_PTR msr.mtrrfix4k[i] = 0;
 
   BX_CPU_THIS_PTR msr.pat = BX_CONST64(0x0007040600070406);
@@ -1062,7 +1062,7 @@ void BX_CPU_C::reset(unsigned source)
 
   // Reset XMM state
 #if BX_SUPPORT_SSE >= 1  // unchanged on #INIT
-  for(i=0; i < BX_XMM_REGISTERS; i++)
+  for(i=0; i<BX_XMM_REGISTERS; i++)
   {
     BX_CPU_THIS_PTR xmm[i].xmm64u(0) = 0;
     BX_CPU_THIS_PTR xmm[i].xmm64u(1) = 0;
