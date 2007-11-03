@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.cc,v 1.20 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: serial_raw.cc,v 1.21 2007-11-03 16:47:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -43,7 +43,7 @@
 DWORD WINAPI RawSerialThread(VOID *this_ptr);
 #endif
 
-serial_raw::serial_raw(char *devname)
+serial_raw::serial_raw(const char *devname)
 {
 #ifdef WIN32
   char portstr[MAX_PATH];
@@ -96,7 +96,7 @@ serial_raw::serial_raw(char *devname)
   rxdata_count = 0;
 }
 
-serial_raw::~serial_raw (void)
+serial_raw::~serial_raw(void)
 {
   if (present) {
 #ifdef WIN32
@@ -113,8 +113,7 @@ serial_raw::~serial_raw (void)
   }
 }
 
-void 
-serial_raw::set_baudrate (int rate)
+void serial_raw::set_baudrate(int rate)
 {
   BX_DEBUG (("set_baudrate %d", rate));
 #ifdef WIN32
@@ -136,8 +135,7 @@ serial_raw::set_baudrate (int rate)
 #endif
 }
 
-void 
-serial_raw::set_data_bits (int val)
+void serial_raw::set_data_bits(int val)
 {
   BX_DEBUG (("set data bits (%d)", val));
 #ifdef WIN32
@@ -146,8 +144,7 @@ serial_raw::set_data_bits (int val)
 #endif
 }
 
-void 
-serial_raw::set_stop_bits (int val)
+void serial_raw::set_stop_bits(int val)
 {
   BX_DEBUG (("set stop bits (%d)", val));
 #ifdef WIN32
@@ -162,8 +159,7 @@ serial_raw::set_stop_bits (int val)
 #endif
 }
 
-void 
-serial_raw::set_parity_mode (int mode)
+void serial_raw::set_parity_mode(int mode)
 {
   BX_DEBUG (("set parity mode %d", mode));
 #ifdef WIN32
@@ -193,8 +189,7 @@ serial_raw::set_parity_mode (int mode)
 #endif
 }
 
-void 
-serial_raw::set_break (int mode)
+void serial_raw::set_break(int mode)
 {
   BX_DEBUG (("set break %s", mode?"on":"off"));
 #ifdef WIN32
@@ -206,8 +201,7 @@ serial_raw::set_break (int mode)
 #endif
 }
 
-void 
-serial_raw::set_modem_control (int ctrl)
+void serial_raw::set_modem_control(int ctrl)
 {
   BX_DEBUG (("set modem control 0x%02x", ctrl));
 #ifdef WIN32
@@ -216,8 +210,7 @@ serial_raw::set_modem_control (int ctrl)
 #endif
 }
 
-int 
-serial_raw::get_modem_status ()
+int serial_raw::get_modem_status()
 {
   int status = 0;
 
@@ -228,8 +221,7 @@ serial_raw::get_modem_status ()
   return status;
 }
 
-void 
-serial_raw::setup_port ()
+void serial_raw::setup_port()
 {
 #ifdef WIN32
   DWORD DErr;
@@ -248,8 +240,7 @@ serial_raw::setup_port ()
 #endif
 }
 
-void 
-serial_raw::transmit (Bit8u byte)
+void serial_raw::transmit(Bit8u byte)
 {
 #ifdef WIN32
   DWORD DErr, Len2;
@@ -280,15 +271,13 @@ serial_raw::transmit (Bit8u byte)
   }
 }
 
-bx_bool 
-serial_raw::ready_transmit ()
+bx_bool serial_raw::ready_transmit()
 {
   BX_DEBUG (("ready_transmit returning %d", present));
   return present;
 }
 
-bx_bool 
-serial_raw::ready_receive ()
+bx_bool serial_raw::ready_receive()
 {
 #ifdef WIN32_RECEIVE_RAW
   if ((rxdata_count == 0) && (thread_rxdata_count > 0)) {
@@ -300,8 +289,7 @@ serial_raw::ready_receive ()
   return (rxdata_count > 0);
 }
 
-int 
-serial_raw::receive ()
+int serial_raw::receive()
 {
 #ifdef WIN32
   int data;
@@ -365,8 +353,7 @@ DWORD WINAPI RawSerialThread(VOID *this_ptr)
   return 0;
 }
 
-void 
-serial_raw::serial_thread ()
+void serial_raw::serial_thread()
 {
   DWORD DErr, Len2;
   DWORD EvtMask, MSR, Temp;
@@ -485,8 +472,7 @@ serial_raw::serial_thread ()
   thread_active = FALSE;
 }
 
-void 
-serial_raw::enq_event (Bit16s event)
+void serial_raw::enq_event(Bit16s event)
 {
   if (thread_rxdata_count < THREAD_RX_BUFSIZE) {
     thread_rxdata_buffer[thread_rxdata_count++] = event;

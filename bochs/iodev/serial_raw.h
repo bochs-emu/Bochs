@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial_raw.h,v 1.12 2006-03-07 21:11:19 sshwarts Exp $
+// $Id: serial_raw.h,v 1.13 2007-11-03 16:47:49 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 
@@ -38,27 +38,27 @@
 
 class serial_raw : public logfunctions {
 public:
-    serial_raw (char *devname);
-    virtual ~serial_raw ();
-    void set_baudrate (int rate);
-    void set_data_bits (int );
-    void set_stop_bits (int);
-    void set_parity_mode (int mode);
-    void set_break (int mode);
-    void set_modem_control (int ctrl);
-    int get_modem_status ();
-    void transmit (Bit8u byte);
-    bx_bool ready_transmit ();
-    bx_bool ready_receive ();
+    serial_raw(const char *devname);
+    virtual ~serial_raw();
+    void set_baudrate(int rate);
+    void set_data_bits(int);
+    void set_stop_bits(int);
+    void set_parity_mode(int mode);
+    void set_break(int mode);
+    void set_modem_control(int ctrl);
+    int get_modem_status();
+    void transmit(Bit8u byte);
+    bx_bool ready_transmit();
+    bx_bool ready_receive();
     int receive ();
 #ifdef WIN32_RECEIVE_RAW
-    void serial_thread ();
+    void serial_thread();
 #endif
 
   private:
-    void setup_port ();
+    void setup_port();
 #ifdef WIN32_RECEIVE_RAW
-    void enq_event (Bit16s event);
+    void enq_event(Bit16s event);
 #endif
     bx_bool present;
     unsigned rxdata_count;
