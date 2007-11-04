@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.188 2007-10-19 10:26:49 sshwarts Exp $
+// $Id: rombios.c,v 1.189 2007-11-04 15:39:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -168,6 +168,13 @@
 #define EBDA_SEG           0x9FC0
 #define EBDA_SIZE          1              // In KiB
 #define BASE_MEM_IN_K   (640 - EBDA_SIZE)
+
+/* 256 bytes at 0x9ff00 -- 0x9ffff is used for the IPL boot table. */
+#define IPL_SEG              0x9ff0
+#define IPL_TABLE_OFFSET     0x0000
+#define IPL_TABLE_ENTRIES    8
+#define IPL_COUNT_OFFSET     0x0080  /* u16: number of valid table entries */
+#define IPL_SEQUENCE_OFFSET  0x0082  /* u16: next boot device */
 
   // Define the application NAME
 #if defined(BX_QEMU)
@@ -836,6 +843,14 @@ typedef struct {
   flags_t flags;
   } iret_addr_t;
 
+typedef struct {
+  Bit16u type;
+  Bit16u flags;
+  Bit32u vector;
+  Bit32u description;
+  Bit32u reserved;
+  } ipl_entry_t;
+
 
 
 static Bit8u          inb();
@@ -926,7 +941,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.188 $ $Date: 2007-10-19 10:26:49 $";
+static char bios_cvs_version_string[] = "$Revision: 1.189 $ $Date: 2007-11-04 15:39:37 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1860,25 +1875,11 @@ print_bios_banner()
 // http://www.phoenix.com/en/Customer+Services/White+Papers-Specs/pc+industry+specifications.htm
 //--------------------------------------------------------------------------
 
-/* 256 bytes at 0x9ff00 -- 0x9ffff is used for the IPL boot table. */
-#define IPL_SEG              0x9ff0
-#define IPL_TABLE_OFFSET     0x0000
-#define IPL_TABLE_ENTRIES    8
-#define IPL_COUNT_OFFSET     0x0080  /* u16: number of valid table entries */
-#define IPL_SEQUENCE_OFFSET  0x0082  /* u16: next boot device */
-
-struct ipl_entry {
-  Bit16u type;
-  Bit16u flags;
-  Bit32u vector;
-  Bit32u description;
-  Bit32u reserved;
-};
 
 static void
 init_boot_vectors() 
 {
-  struct ipl_entry e;
+  ipl_entry_t e;
   Bit16u count = 0;
   Bit16u ss = get_SS();
 
@@ -1910,7 +1911,7 @@ init_boot_vectors()
 
 static Bit8u
 get_boot_vector(i, e)
-Bit16u i; struct ipl_entry *e;
+Bit16u i; ipl_entry_t *e;
 {
   Bit16u count;
   Bit16u ss = get_SS();
@@ -7731,7 +7732,7 @@ Bit16u seq_nr;
   Bit16u bootip;
   Bit16u status;
 
-  struct ipl_entry e;
+  ipl_entry_t e;
 
   // if BX_ELTORITO_BOOT is not defined, old behavior
   //   check bit 5 in CMOS reg 0x2d.  load either 0x00 or 0x80 into DL
@@ -9973,7 +9974,8 @@ block_count_rounded:
   cmp  ax, #0x0000  ;; the Bootstrap Entry Vector, or zero if there is none.
   je   no_bev
 
-  ;; Found a device that thinks it can boot the system.  Record its BEV.
+  ;; Found a device that thinks it can boot the system.  Record its BEV and product name string.
+  mov  di, 0x10[bx]            ;; Pointer to the product name string or zero if none
   mov  bx, #IPL_SEG            ;; Go to the segment where the IPL table lives 
   mov  ds, bx
   mov  bx, IPL_COUNT_OFFSET    ;; Read the number of entries so far
@@ -9983,6 +9985,11 @@ block_count_rounded:
   mov  0[bx], #0x80            ;; This entry is a BEV device
   mov  6[bx], cx               ;; Build a far pointer from the segment...
   mov  4[bx], ax               ;; and the offset
+  cmp  di, #0x0000
+  je   no_prod_str
+  mov  0xA[bx], cx             ;; Build a far pointer from the segment...
+  mov  8[bx], di               ;; and the offset
+no_prod_str:
   shr  bx, #0x4                ;; Turn the offset back into a count
   inc  bx                      ;; We have one more entry now
   mov  IPL_COUNT_OFFSET, bx    ;; Remember that.
