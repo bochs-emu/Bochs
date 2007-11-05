@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.345 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: cpu.h,v 1.346 2007-11-05 16:28:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -339,7 +339,7 @@
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
-extern const char* cpu_state_string(unsigned cpu_state);
+extern const char* cpu_state_string();
 
 #if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
@@ -3127,7 +3127,6 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bx_bool v8086_mode(void);
   BX_SMF BX_CPP_INLINE bx_bool long_mode(void);
   BX_SMF BX_CPP_INLINE unsigned get_cpu_mode(void);
-  BX_SMF BX_CPP_INLINE unsigned get_cpu_state(void);
 
 #if BX_CPU_LEVEL >= 5
   BX_SMF Bit64u get_TSC();
@@ -3323,11 +3322,6 @@ BX_CPP_INLINE unsigned BX_CPU_C::long_mode(void)
 BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_mode(void)
 {
   return (BX_CPU_THIS_PTR cpu_mode);
-}
-
-BX_CPP_INLINE unsigned BX_CPU_C::get_cpu_state(void)
-{
-  return (BX_CPU_THIS_PTR debug_trap >> 28); // 4 upper state bits in 32-bit debug_trap
 }
 
 BOCHSAPI extern const bx_bool bx_parity_lookup[256];
