@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.83 2007-11-05 16:28:03 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.84 2007-11-05 16:36:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,12 +103,6 @@ const char* cpu_state_string()
      "halted",
      "unknown state"
   };
-
-#define BX_DEBUG_TRAP_HALT          (0x80000000)
-#define BX_DEBUG_TRAP_SHUTDOWN      (0x40000000)
-#define BX_DEBUG_TRAP_WAIT_FOR_SIPI (0x20000000)
-#define BX_DEBUG_TRAP_MWAIT         (0x10000000)
-#define BX_DEBUG_TRAP_MWAIT_IF      (0x18000000)
 
   if(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT) cpu_state = 4;
   else if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SHUTDOWN) cpu_state = 3;
