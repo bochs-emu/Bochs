@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.8 2006-10-04 19:08:40 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.9 2007-11-06 19:17:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -201,7 +201,7 @@ BX_CPU_C::jmp_call_gate16(bx_descriptor_t *gate_descriptor)
 
   // examine selector to code segment given in call gate descriptor
   // selector must not be null, else #GP(0)
-  Bit16u gate_cs_raw = gate_descriptor->u.gate286.dest_selector;
+  Bit16u gate_cs_raw = gate_descriptor->u.gate.dest_selector;
 
   if ((gate_cs_raw & 0xfffc) == 0) {
     BX_ERROR(("jump_protected: CS selector null"));
@@ -216,7 +216,7 @@ BX_CPU_C::jmp_call_gate16(bx_descriptor_t *gate_descriptor)
   // check code-segment descriptor
   check_cs(&gate_cs_descriptor, gate_cs_raw, 0, CPL);
 
-  Bit16u temp_IP = gate_descriptor->u.gate286.dest_offset;
+  Bit16u temp_IP = gate_descriptor->u.gate.dest_offset;
 
   branch_far32(&gate_cs_selector, &gate_cs_descriptor, temp_IP, CPL);
 }
@@ -232,7 +232,7 @@ BX_CPU_C::jmp_call_gate32(bx_descriptor_t *gate_descriptor)
 
   // examine selector to code segment given in call gate descriptor
   // selector must not be null, else #GP(0)
-  Bit16u gate_cs_raw = gate_descriptor->u.gate386.dest_selector;
+  Bit16u gate_cs_raw = gate_descriptor->u.gate.dest_selector;
 
   if ((gate_cs_raw & 0xfffc) == 0) {
     BX_ERROR(("jump_protected: CS selector null"));
@@ -247,7 +247,7 @@ BX_CPU_C::jmp_call_gate32(bx_descriptor_t *gate_descriptor)
   // check code-segment descriptor
   check_cs(&gate_cs_descriptor, gate_cs_raw, 0, CPL);
 
-  Bit32u temp_EIP = gate_descriptor->u.gate386.dest_offset;
+  Bit32u temp_EIP = gate_descriptor->u.gate.dest_offset;
 
   branch_far32(&gate_cs_selector, &gate_cs_descriptor, temp_EIP, CPL);
 }
@@ -266,7 +266,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
-  Bit16u dest_selector = gate_descriptor.u.gate386.dest_selector;
+  Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)
   if ( (dest_selector & 0xfffc) == 0 ) {
     BX_ERROR(("call_gate64: selector in gate null"));
@@ -280,7 +280,7 @@ BX_CPU_C::jmp_call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
-  Bit64u new_RIP = gate_descriptor.u.gate386.dest_offset;
+  Bit64u new_RIP = gate_descriptor.u.gate.dest_offset;
   new_RIP |= ((Bit64u)dword3 << 32);
 
   // AR byte of selected descriptor must indicate code segment,

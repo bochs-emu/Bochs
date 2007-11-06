@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.20 2007-10-19 12:40:18 sshwarts Exp $
+// $Id: call_far.cc,v 1.21 2007-11-06 19:17:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -208,16 +208,9 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
       case BX_286_CALL_GATE:
       case BX_386_CALL_GATE:
         // examine code segment selector in call gate descriptor
-        if (gate_descriptor.type == BX_286_CALL_GATE) {
-          BX_DEBUG(("call_protected: CALL 16bit call gate"));
-          dest_selector = gate_descriptor.u.gate286.dest_selector;
-          new_EIP = gate_descriptor.u.gate286.dest_offset;
-        }
-        else {
-          BX_DEBUG(("call_protected: CALL 32bit call gate"));
-          dest_selector = gate_descriptor.u.gate386.dest_selector;
-          new_EIP = gate_descriptor.u.gate386.dest_offset;
-        }
+        BX_DEBUG(("call_protected: call gate"));
+        dest_selector = gate_descriptor.u.gate.dest_selector;
+        new_EIP       = gate_descriptor.u.gate.dest_offset;
 
         // selector must not be null else #GP(0)
         if ( (dest_selector & 0xfffc) == 0 ) {
@@ -257,7 +250,7 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           Bit32u ESP_for_cpl_x;
           bx_selector_t   ss_selector;
           bx_descriptor_t ss_descriptor;
-          unsigned room_needed, param_count;
+          unsigned room_needed;
           Bit16u   return_SS, return_CS;
           Bit32u   return_ESP, return_EIP;
           Bit16u   parameter_word[32];
@@ -319,16 +312,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
             // new stack must have room for parameters plus 8 bytes
             room_needed =  8;
 
-          if (gate_descriptor.type==BX_286_CALL_GATE) {
-            // get word count from call gate, mask to 5 bits
-            param_count = gate_descriptor.u.gate286.word_count & 0x1f;
+          // get word count from call gate, mask to 5 bits
+          unsigned param_count = gate_descriptor.u.gate.param_count & 0x1f;
+
+          if (gate_descriptor.type==BX_286_CALL_GATE)
             room_needed += param_count*2;
-          }
-          else {
-            // get word count from call gate, mask to 5 bits
-            param_count = gate_descriptor.u.gate386.dword_count & 0x1f;
+          else
             room_needed += param_count*4;
-          }
 
           // new stack must have room for parameters plus return info
           //   else #SS(SS selector)
@@ -472,7 +462,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   fetch_raw_descriptor64(gate_selector, &dword1, &dword2, &dword3, BX_GP_EXCEPTION);
   parse_descriptor(dword1, dword2, &gate_descriptor);
 
-  Bit16u dest_selector = gate_descriptor.u.gate386.dest_selector;
+  Bit16u dest_selector = gate_descriptor.u.gate.dest_selector;
   // selector must not be null else #GP(0)
   if ( (dest_selector & 0xfffc) == 0 ) {
     BX_ERROR(("call_gate64: selector in gate null"));
@@ -486,7 +476,7 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
   parse_descriptor(dword1, dword2, &cs_descriptor);
 
   // find the RIP in the gate_descriptor
-  Bit64u new_RIP = gate_descriptor.u.gate386.dest_offset;
+  Bit64u new_RIP = gate_descriptor.u.gate.dest_offset;
   new_RIP |= ((Bit64u)dword3 << 32);
 
   // AR byte of selected descriptor must indicate code segment,
