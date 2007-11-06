@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.53 2007-11-01 20:43:52 sshwarts Exp $
+// $Id: arith32.cc,v 1.54 2007-11-06 08:39:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -76,7 +76,7 @@ void BX_CPU_C::ADD_EdGd(bxInstruction_c *i)
     write_RMW_virtual_dword(sum_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 }
 
 void BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
@@ -87,9 +87,8 @@ void BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
   op1_32 = BX_READ_32BIT_REG(nnn);
 
   read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-
   sum_32 = op1_32 + op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
 }
@@ -101,9 +100,9 @@ void BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
 
   op1_32 = BX_READ_32BIT_REG(nnn);
   op2_32 = BX_READ_32BIT_REG(i->rm());
-
   sum_32 = op1_32 + op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
   BX_WRITE_32BIT_REGZ(nnn, sum_32);
 }
@@ -118,7 +117,7 @@ void BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
 
   RAX = sum_32;
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 }
 
 void BX_CPU_C::ADC_EdGd(bxInstruction_c *i)
@@ -434,7 +433,7 @@ void BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 #else
   BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"));
   UndefinedOpcode(i);
@@ -446,11 +445,10 @@ void BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
   Bit32u op2_32, op1_32, sum_32;
 
   op2_32 = i->Id();
-
   read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-
   sum_32 = op1_32 + op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
   write_RMW_virtual_dword(sum_32);
 }
@@ -461,9 +459,9 @@ void BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
 
   op2_32 = i->Id();
   op1_32 = BX_READ_32BIT_REG(i->rm());
-
   sum_32 = op1_32 + op2_32;
-  SET_FLAGS_OSZAPC_32(op1_32, op2_32, sum_32, BX_INSTR_ADD32);
+
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
   BX_WRITE_32BIT_REGZ(i->rm(), sum_32);
 }

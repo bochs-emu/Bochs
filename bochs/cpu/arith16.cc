@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.46 2007-11-01 20:43:52 sshwarts Exp $
+// $Id: arith16.cc,v 1.47 2007-11-06 08:39:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,7 +60,7 @@ void BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
     write_RMW_virtual_word(sum_16);
   }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 }
 
 void BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
@@ -73,7 +73,7 @@ void BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i), &op2_16);
 
   sum_16 = op1_16 + op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 
   BX_WRITE_16BIT_REG(nnn, sum_16);
 }
@@ -85,9 +85,9 @@ void BX_CPU_C::ADD_GwEGw(bxInstruction_c *i)
 
   op1_16 = BX_READ_16BIT_REG(nnn);
   op2_16 = BX_READ_16BIT_REG(i->rm());
-
   sum_16 = op1_16 + op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 
   BX_WRITE_16BIT_REG(nnn, sum_16);
 }
@@ -102,7 +102,7 @@ void BX_CPU_C::ADD_AXIw(bxInstruction_c *i)
 
   AX = sum_16;
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 }
 
 void BX_CPU_C::ADC_EwGw(bxInstruction_c *i)
@@ -385,7 +385,7 @@ void BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
     BX_WRITE_16BIT_REG(i->nnn(), op1_16);
   }
 
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 #else
   BX_INFO(("XADD_EwGw: not supported on < 80486"));
   UndefinedOpcode(i);
@@ -399,9 +399,9 @@ void BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
   op2_16 = i->Iw();
 
   read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-
   sum_16 = op1_16 + op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 
   write_RMW_virtual_word(sum_16);
 }
@@ -411,11 +411,10 @@ void BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
   Bit16u op2_16, op1_16, sum_16;
 
   op2_16 = i->Iw();
-
   op1_16 = BX_READ_16BIT_REG(i->rm());
-
   sum_16 = op1_16 + op2_16;
-  SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD16);
+
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 
   BX_WRITE_16BIT_REG(i->rm(), sum_16);
 }

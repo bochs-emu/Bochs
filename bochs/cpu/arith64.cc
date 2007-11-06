@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.32 2007-10-21 23:35:11 sshwarts Exp $
+// $Id: arith64.cc,v 1.33 2007-11-06 08:39:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ void BX_CPU_C::ADD_EqGq(bxInstruction_c *i)
     write_RMW_virtual_qword(sum_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
+  SET_FLAGS_OSZAPC_S1_64(op1_64, sum_64, BX_INSTR_ADD64);
 }
 
 void BX_CPU_C::ADD_GqEq(bxInstruction_c *i)
@@ -78,7 +78,7 @@ void BX_CPU_C::ADD_GqEq(bxInstruction_c *i)
   /* now write sum back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), sum_64);
 
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
+  SET_FLAGS_OSZAPC_S1_64(op1_64, sum_64, BX_INSTR_ADD64);
 }
 
 void BX_CPU_C::ADD_RAXId(bxInstruction_c *i)
@@ -93,7 +93,7 @@ void BX_CPU_C::ADD_RAXId(bxInstruction_c *i)
   /* now write sum back to destination */
   RAX = sum_64;
 
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
+  SET_FLAGS_OSZAPC_S1_64(op1_64, sum_64, BX_INSTR_ADD64);
 }
 
 void BX_CPU_C::ADC_EqGq(bxInstruction_c *i)
@@ -427,7 +427,7 @@ void BX_CPU_C::XADD_EqGq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->nnn(), op1_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
+  SET_FLAGS_OSZAPC_S1_64(op1_64, sum_64, BX_INSTR_ADD64);
 }
 
 void BX_CPU_C::ADD_EqId(bxInstruction_c *i)
@@ -450,7 +450,7 @@ void BX_CPU_C::ADD_EqId(bxInstruction_c *i)
     write_RMW_virtual_qword(sum_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, op2_64, sum_64, BX_INSTR_ADD64);
+  SET_FLAGS_OSZAPC_S1_64(op1_64, sum_64, BX_INSTR_ADD64);
 }
 
 void BX_CPU_C::ADC_EqId(bxInstruction_c *i)
