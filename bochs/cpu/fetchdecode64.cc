@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.118 2007-10-22 17:41:41 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.119 2007-11-07 10:40:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2311,9 +2311,9 @@ fetch_b1:
     mod = b2 & 0xc0;
     nnn = ((b2 >> 3) & 0x07) | rex_r;
     rm  = b2 & 0x07;
-    instruction->modRMForm.modRMData  = (b2<<20);
-    instruction->modRMForm.modRMData |= mod;
-    instruction->modRMForm.modRMData |= (nnn<<8);
+    instruction->modRMForm.modRMData2  = (b2<<4);
+    instruction->modRMForm.modRMData1  = mod;
+    instruction->modRMForm.modRMData1 |= (nnn<<12);
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -2321,13 +2321,13 @@ fetch_b1:
 
     if (mod == 0xc0) { // mod == 11b
       rm |= rex_b;
-      instruction->modRMForm.modRMData |= rm;
-      instruction->metaInfo |= (1<<22); // (modC0)
+      instruction->modRMForm.modRMData1 |= rm;
+      instruction->assertModC0();
       goto modrm_done;
     }
 
     if (rm != 4) rm |= rex_b;
-    instruction->modRMForm.modRMData |= rm;
+    instruction->modRMForm.modRMData1 |= rm;
     if (instruction->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
@@ -2351,7 +2351,6 @@ fetch_b1:
           instruction->ResolveModrm = BxResolve64Mod1or2[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
-get_8bit_displ_1:
           if (ilen < remain) {
             // 8 sign extended to 32
             instruction->modRMForm.displ32u = (Bit8s) *iptr++;
@@ -2364,7 +2363,6 @@ get_8bit_displ_1:
         instruction->ResolveModrm = BxResolve64Mod1or2[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
-get_32bit_displ_1:
         if ((ilen+3) < remain) {
           instruction->modRMForm.displ32u = FetchDWORD(iptr);
           iptr += 4;
@@ -2385,15 +2383,15 @@ get_32bit_displ_1:
         base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
-        instruction->modRMForm.modRMData |= (base<<12);
-        instruction->modRMForm.modRMData |= (index<<16);
-        instruction->modRMForm.modRMData |= (scale<<4);
+        instruction->modRMForm.modRMData1 |= (base<<8);
+        instruction->modRMForm.modRMData2 |= (index);
+        instruction->modRMForm.modRMData1 |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
           instruction->ResolveModrm = BxResolve64Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
           if ((base & 0x7) == 5)
-            goto get_32bit_displ_1;
+            goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
@@ -2401,13 +2399,13 @@ get_32bit_displ_1:
           instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
-          goto get_8bit_displ_1;
+          goto get_8bit_displ;
         }
         // (mod == 0x80),  mod==10b, rm==4
         instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
-        goto get_32bit_displ_1;
+        goto get_32bit_displ;
       }
     }
     else {
@@ -2467,9 +2465,9 @@ get_32bit_displ:
         base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
         scale = sib;
-        instruction->modRMForm.modRMData |= (base<<12);
-        instruction->modRMForm.modRMData |= (index<<16);
-        instruction->modRMForm.modRMData |= (scale<<4);
+        instruction->modRMForm.modRMData1 |= (base<<8);
+        instruction->modRMForm.modRMData2 |= (index);
+        instruction->modRMForm.modRMData1 |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))

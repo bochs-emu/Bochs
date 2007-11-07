@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.89 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: paging.cc,v 1.90 2007-11-07 10:40:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1037,18 +1037,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
 #endif
 
   return paddress;
-}
-
-  bx_phy_address BX_CPP_AttrRegparmN(3)
-BX_CPU_C::dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
-{
-  return translate_linear(laddr, pl, rw, DATA_ACCESS);
-}
-
-  bx_phy_address BX_CPP_AttrRegparmN(2)
-BX_CPU_C::itranslate_linear(bx_address laddr, unsigned pl)
-{
-  return translate_linear(laddr, pl, BX_READ, CODE_ACCESS);
 }
 
 #if BX_DEBUGGER || BX_DISASM || BX_INSTRUMENTATION || BX_GDBSTUB

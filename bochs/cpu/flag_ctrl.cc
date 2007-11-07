@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.27 2007-10-21 22:07:32 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.28 2007-11-07 10:40:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -43,12 +43,7 @@ void BX_CPU_C::SAHF(bxInstruction_c *i)
 
 void BX_CPU_C::LAHF(bxInstruction_c *i)
 {
-  AH = (get_SF() ? 0x80 : 0) |
-       (get_ZF() ? 0x40 : 0) |
-       (get_AF() ? 0x10 : 0) |
-       (get_PF() ? 0x04 : 0) |
-       (0x02) |
-       (get_CF() ? 0x01 : 0);
+  AH = read_flags() & 0xFF;
 }
 
 void BX_CPU_C::CLC(bxInstruction_c *i)

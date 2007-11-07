@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.346 2007-11-05 16:28:02 sshwarts Exp $
+// $Id: cpu.h,v 1.347 2007-11-07 10:40:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -638,12 +638,14 @@ public:
       //        in the accessor.
       //  27..20 modRM   (modrm)
       //  19..16 index           (sib)
-      //  15..12 base            (sib)
-      //  11...8 nnn     (modrm)
+      Bit16u modRMData2;
+
+      //  15..12 nnn     (modrm)
+      //  11...8 base            (sib)
       //   7...6 mod     (modrm)
       //   5...4 scale           (sib)
       //   3...0 rm      (modrm)
-      Bit32u modRMData;
+      Bit16u modRMData1;
 
       union {
         Bit32u   Id;
@@ -699,8 +701,8 @@ public:
     // are aligned in the same place, so it doesn't matter.
     return IxForm.opcodeReg;
   }
-  BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData>>20) & 0xff; }
-  BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData & 0xc0; }
+  BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData2>>4) & 0xff; }
+  BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData1 & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
   {
     // This is a cheaper way to test for modRM instructions where
@@ -708,18 +710,22 @@ public:
     // it is quite common to be tested for.
     return metaInfo & (1<<22);
   }
-  BX_CPP_INLINE unsigned nnn() {
-    return (modRMForm.modRMData >> 8) & 0xf;
+  BX_CPP_INLINE unsigned assertModC0()
+  {
+    return metaInfo |= (1<<22);
   }
-  BX_CPP_INLINE unsigned rm()  { return modRMForm.modRMData & 0xf; }
+  BX_CPP_INLINE unsigned nnn() {
+    return (modRMForm.modRMData1 >> 12);
+  }
+  BX_CPP_INLINE unsigned rm()  { return modRMForm.modRMData1 & 0xf; }
   BX_CPP_INLINE unsigned sibScale()  {
-    return (modRMForm.modRMData >> 4) & 0x3;
+    return (modRMForm.modRMData1 >> 4) & 0x3;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return (modRMForm.modRMData >> 16) & 0xf;
+    return (modRMForm.modRMData2) & 0xf;
   }
   BX_CPP_INLINE unsigned sibBase()  {
-    return (modRMForm.modRMData >> 12) & 0xf;
+    return (modRMForm.modRMData1 >> 8) & 0xf;
   }
   BX_CPP_INLINE Bit32u   displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u   displ16u() { return modRMForm.displ16u; }
@@ -2939,8 +2945,14 @@ public: // for now...
        unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
-  BX_SMF bx_phy_address itranslate_linear(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF bx_phy_address dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw) BX_CPP_AttrRegparmN(3);
+  BX_SMF BX_CPP_INLINE bx_phy_address itranslate_linear(bx_address laddr, unsigned pl)
+  {
+    return translate_linear(laddr, pl, BX_READ, CODE_ACCESS);
+  }
+  BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
+  {
+    return translate_linear(laddr, pl, rw, DATA_ACCESS);
+  }
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
   BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void TLB_init(void);
