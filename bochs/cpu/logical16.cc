@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.28 2007-10-21 23:35:11 sshwarts Exp $
+// $Id: logical16.cc,v 1.29 2007-11-08 18:21:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,9 +55,8 @@ void BX_CPU_C::XOR_EwGw(bxInstruction_c *i)
 void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
-  unsigned nnn = i->nnn();
 
-  op1_16 = BX_READ_16BIT_REG(nnn);
+  op1_16 = BX_READ_16BIT_REG(i->nnn());
 
   if (i->modC0()) {
     op2_16 = BX_READ_16BIT_REG(i->rm());
@@ -68,7 +67,7 @@ void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 
   op1_16 ^= op2_16;
 
-  BX_WRITE_16BIT_REG(nnn, op1_16);
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
 }

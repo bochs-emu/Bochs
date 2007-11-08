@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.84 2007-11-05 16:36:37 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.85 2007-11-08 18:21:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,7 +91,7 @@ const char* cpu_mode_string(unsigned cpu_mode)
   return cpu_mode_name[cpu_mode];
 }
 
-const char* cpu_state_string()
+const char* cpu_state_string(Bit32u debug_trap)
 {
   unsigned cpu_state = 5; // unknown state
 
@@ -104,11 +104,11 @@ const char* cpu_state_string()
      "unknown state"
   };
 
-  if(BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_HALT) cpu_state = 4;
-  else if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SHUTDOWN) cpu_state = 3;
-  else if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_WAIT_FOR_SIPI) cpu_state = 2;
-  else if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT) cpu_state = 1;
-  else if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) cpu_state = 5;
+  if(debug_trap & BX_DEBUG_TRAP_HALT) cpu_state = 4;
+  else if (debug_trap & BX_DEBUG_TRAP_SHUTDOWN) cpu_state = 3;
+  else if (debug_trap & BX_DEBUG_TRAP_WAIT_FOR_SIPI) cpu_state = 2;
+  else if (debug_trap & BX_DEBUG_TRAP_MWAIT) cpu_state = 1;
+  else if (debug_trap & BX_DEBUG_TRAP_SPECIAL) cpu_state = 5;
   else cpu_state = 0;
   return cpu_state_name[cpu_state];
 }
@@ -116,7 +116,7 @@ const char* cpu_state_string()
 void BX_CPU_C::debug(bx_address offset)
 {
   BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()), 
-    cpu_state_string()));
+    cpu_state_string(BX_CPU_THIS_PTR debug_trap)));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
   BX_INFO(("SS.d_b = %u bit",

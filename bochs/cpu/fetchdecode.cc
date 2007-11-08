@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.114 2007-11-07 10:40:40 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.115 2007-11-08 18:21:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1678,14 +1678,15 @@ fetch_b1:
     mod = b2 & 0xc0; // leave unshifted
     nnn = (b2 >> 3) & 0x07;
     rm  = b2 & 0x07;
-    instruction->modRMForm.modRMData2 = (b2<<4);
-    instruction->modRMForm.modRMData1 = mod;
-    instruction->modRMForm.modRMData1 |= (nnn<<12);
-    instruction->modRMForm.modRMData1 |= rm;
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
+
+    instruction->modRMForm.modRMData1 = rm;
+    instruction->modRMForm.modRMData2 = mod;
+    instruction->modRMForm.modRMData3 = 0;
+    instruction->modRMForm.modRMData4 = nnn;
 
     if (mod == 0xc0) { // mod == 11b
       instruction->assertModC0();
@@ -1749,9 +1750,9 @@ get_32bit_displ:
         base  = sib & 0x07; sib >>= 3;
         index = sib & 0x07; sib >>= 3;
         scale = sib;
-        instruction->modRMForm.modRMData1 |= (base<<8);
-        instruction->modRMForm.modRMData2 |= (index);
-        instruction->modRMForm.modRMData1 |= (scale<<4);
+        instruction->modRMForm.modRMData2 |= (base);
+        instruction->modRMForm.modRMData3 |= (index);
+        instruction->modRMForm.modRMData2 |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
           instruction->ResolveModrm = BxResolve32Mod0Base[base];
           if (BX_NULL_SEG_REG(instruction->seg()))

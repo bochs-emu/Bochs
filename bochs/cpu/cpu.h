@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.347 2007-11-07 10:40:39 sshwarts Exp $
+// $Id: cpu.h,v 1.348 2007-11-08 18:21:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -339,7 +339,7 @@
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
-extern const char* cpu_state_string();
+extern const char* cpu_state_string(Bit32u debug_trap);
 
 #if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
@@ -634,18 +634,23 @@ public:
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
     struct {
-      //  Note: if you add more bits, mask the previously upper field,
-      //        in the accessor.
-      //  27..20 modRM   (modrm)
-      //  19..16 index           (sib)
-      Bit16u modRMData2;
 
-      //  15..12 nnn     (modrm)
+      //  31..28 (unused)
+      //  27..24 nnn     (modrm)
+      Bit8u modRMData4;
+
+      //  23..20 (unused)
+      //  19..16 index           (sib)
+      Bit8u modRMData3;
+
+      //  15..14 mod     (modrm)
+      //  13..12 scale           (sib)
       //  11...8 base            (sib)
-      //   7...6 mod     (modrm)
-      //   5...4 scale           (sib)
+      Bit8u modRMData2;
+
+      //   7...4 (unused)
       //   3...0 rm      (modrm)
-      Bit16u modRMData1;
+      Bit8u modRMData1;
 
       union {
         Bit32u   Id;
@@ -701,8 +706,11 @@ public:
     // are aligned in the same place, so it doesn't matter.
     return IxForm.opcodeReg;
   }
-  BX_CPP_INLINE unsigned modrm() { return (modRMForm.modRMData2>>4) & 0xff; }
-  BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData1 & 0xc0; }
+  // used in FPU only
+  BX_CPP_INLINE unsigned modrm() { 
+    return mod() | (rm() & 7) | ((nnn() & 7) << 3);
+  }
+  BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData2 & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
   {
     // This is a cheaper way to test for modRM instructions where
@@ -715,17 +723,19 @@ public:
     return metaInfo |= (1<<22);
   }
   BX_CPP_INLINE unsigned nnn() {
-    return (modRMForm.modRMData1 >> 12);
+    return modRMForm.modRMData4;
   }
-  BX_CPP_INLINE unsigned rm()  { return modRMForm.modRMData1 & 0xf; }
+  BX_CPP_INLINE unsigned rm() {
+    return modRMForm.modRMData1;
+  }
   BX_CPP_INLINE unsigned sibScale()  {
-    return (modRMForm.modRMData1 >> 4) & 0x3;
+    return (modRMForm.modRMData2 >> 4) & 0x3;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return (modRMForm.modRMData2) & 0xf;
+    return modRMForm.modRMData3;
   }
   BX_CPP_INLINE unsigned sibBase()  {
-    return (modRMForm.modRMData1 >> 8) & 0xf;
+    return (modRMForm.modRMData2) & 0xf;
   }
   BX_CPP_INLINE Bit32u   displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u   displ16u() { return modRMForm.displ16u; }
@@ -1271,11 +1281,11 @@ public: // for now...
 #endif
 
   struct {
-    bx_address  rm_addr; // The address offset after resolution.
-    Bit32u  paddress1;  // physical address after translation of 1st len1 bytes of data
-    Bit32u  paddress2;  // physical address after translation of 2nd len2 bytes of data
-    Bit32u  len1;       // Number of bytes in page 1
-    Bit32u  len2;       // Number of bytes in page 2
+    bx_address rm_addr; // The address offset after resolution.
+    bx_phy_address paddress1; // physical address after translation of 1st len1 bytes of data
+    bx_phy_address paddress2; // physical address after translation of 2nd len2 bytes of data
+    Bit32u len1;        // Number of bytes in page 1
+    Bit32u len2;        // Number of bytes in page 2
     bx_ptr_equiv_t pages;      // Number of pages access spans (1 or 2).  Also used
                         //   for the case when a native host pointer is
                         //   available for the R-M-W instructions.  The host
