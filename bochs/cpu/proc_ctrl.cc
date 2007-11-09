@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.178 2007-11-01 20:43:53 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.179 2007-11-09 12:06:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1914,8 +1914,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
 #if BX_SUPPORT_MONITOR_MWAIT
   // TODO: #UD when CPL > 0 and 
   //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
-  BX_DEBUG(("MONITOR instruction executed RAX = 0x%08x%08x", 
-          (unsigned) (RAX >> 32), (unsigned) EAX));
+  BX_DEBUG(("MONITOR instruction executed EAX = 0x08x", (unsigned) EAX));
 
   if (RCX != 0) {
     BX_ERROR(("MONITOR: no optional extensions supported"));
