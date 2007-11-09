@@ -206,15 +206,8 @@ Status:
 The config options handling has been rewritten to a parameter tree.
 
 15. Save/Restore
-We already have a specific branch in the cvs with a save/restore
-framework. The work still needs to be completed.
-I guess it would be useful to be able to stop and
-restart the emulation, or create "checkpoints"  to restart the
-emulation from a known state. We can also give a look on how
-integrate commitable harddisks with the save/restore strategy.
-Status:
-Save/restore of config and log options and the hardware state is supported now.
-Harddisk images are not handled yet.
+Save/restore of config and log options and the hardware state is supported
+in all Bochs configurations. Harddisk images are not handled yet.
 
 16. add to the roadmap that we should find some ideas to check 
 correctness of instructions emulation, especially system instructions.  
