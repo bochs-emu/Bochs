@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.362 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: main.cc,v 1.363 2007-11-09 21:14:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1224,6 +1224,7 @@ void bx_signal_handler(int signum)
 
 #if BX_SHOW_IPS
   static Bit64u ticks_count = 0;
+  static Bit64u counts = 0;
 
   if (signum == SIGALRM)
   {
@@ -1232,6 +1233,9 @@ void bx_signal_handler(int signum)
     if (ips_count) {
       bx_gui->show_ips((Bit32u) ips_count);
       ticks_count = bx_pc_system.time_ticks();
+      counts++;
+//    if ((counts % 10) == 0)
+//      BX_INFO(("average IPS: ticks_count/counts = %u (%u)", (unsigned) (ticks_count/counts), (unsigned) ips_count));
     }
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
     signal(SIGALRM, bx_signal_handler);

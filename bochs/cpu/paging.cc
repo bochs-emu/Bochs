@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.90 2007-11-07 10:40:40 sshwarts Exp $
+// $Id: paging.cc,v 1.91 2007-11-09 21:14:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -286,12 +286,6 @@
 
 #define BX_INVALID_TLB_ENTRY 0xffffffff
 
-#if BX_USE_QUICK_TLB_INVALIDATE
-#define BX_MAX_TLB_INVALIDATE 0xffe
-#endif
-
-#define BX_USE_TLB_GENERATION 1
-
 #if BX_CPU_LEVEL >= 4
 #  define BX_PRIV_CHECK_SIZE 32
 #else
@@ -481,12 +475,7 @@ void BX_CPU_C::TLB_init(void)
 #if BX_USE_TLB
   for (i=0; i<BX_TLB_SIZE; i++)
     BX_CPU_THIS_PTR TLB.entry[i].lpf = BX_INVALID_TLB_ENTRY;
-
-#if BX_USE_QUICK_TLB_INVALIDATE
-  BX_CPU_THIS_PTR TLB.tlb_invalidate = BX_MAX_TLB_INVALIDATE;
 #endif
-
-#endif  // #if BX_USE_TLB
 
   //
   // Setup privilege check matrix.
@@ -571,7 +560,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
   TLB_invlpg(laddr);
   InstrTLB_Increment(tlbEntryInvlpg);
-#endif // BX_USE_TLB
+#endif
 
   BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_INVLPG, 0);
 
