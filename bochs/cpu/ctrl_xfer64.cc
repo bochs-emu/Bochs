@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.50 2007-10-22 17:41:41 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.51 2007-11-11 21:26:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,6 +225,32 @@ void BX_CPU_C::JCC_Jq(bxInstruction_c *i)
   }
 
   if (condition) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JZ_Jq(bxInstruction_c *i)
+{
+  if (get_ZF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
+{
+  if (! get_ZF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
   }

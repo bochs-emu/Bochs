@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.352 2007-11-11 21:14:24 sshwarts Exp $
+// $Id: cpu.h,v 1.353 2007-11-11 21:26:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2561,6 +2561,8 @@ public: // for now...
   BX_SMF void CALL_Jq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
   BX_SMF void JCC_Jq(bxInstruction_c *);
+  BX_SMF void JZ_Jq(bxInstruction_c *);
+  BX_SMF void JNZ_Jq(bxInstruction_c *);
 
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
