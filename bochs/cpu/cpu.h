@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.349 2007-11-09 21:14:56 sshwarts Exp $
+// $Id: cpu.h,v 1.350 2007-11-11 20:44:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -708,7 +708,11 @@ public:
   }
   // used in FPU only
   BX_CPP_INLINE unsigned modrm() { 
+#if BX_SUPPORT_X86_64
     return mod() | (rm() & 7) | ((nnn() & 7) << 3);
+#else
+    return mod() | rm() | (nnn() << 3);
+#endif
   }
   BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData2 & 0xc0; }
   BX_CPP_INLINE unsigned modC0()

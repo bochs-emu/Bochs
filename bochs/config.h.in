@@ -131,7 +131,6 @@
 
 #define BX_TLB_SIZE 1024
 #define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
-#define BX_TLB_LPF_VALUE(lpf) (lpf)
 #define BX_TLB_INDEX_OF(lpf) (((lpf) & BX_TLB_MASK) >> 12)
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this

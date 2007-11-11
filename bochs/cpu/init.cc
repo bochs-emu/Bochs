@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.142 2007-11-03 16:55:08 vruppert Exp $
+// $Id: init.cc,v 1.143 2007-11-11 20:44:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -767,9 +767,6 @@ void BX_CPU_C::reset(unsigned source)
   else
     BX_INFO(("cpu reset"));
 
-  // initialize CPUID values
-  set_cpuid_defaults();
-
 #if BX_SUPPORT_X86_64
   RAX = 0; // processor passed test :-)
   RBX = 0;
@@ -1087,6 +1084,9 @@ void BX_CPU_C::reset(unsigned source)
     async_event = 1;
   }
 #endif
+
+  // initialize CPUID values - make sure apicbase already initialized
+  set_cpuid_defaults();
 
   BX_INSTR_RESET(BX_CPU_ID);
 }

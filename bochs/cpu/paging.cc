@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.91 2007-11-09 21:14:56 sshwarts Exp $
+// $Id: paging.cc,v 1.92 2007-11-11 20:44:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -624,7 +624,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
   Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) 
+  if (tlbEntry->lpf == lpf) 
   {
     paddress   = tlbEntry->ppf | poffset;
     accessBits = tlbEntry->accessBits;
@@ -976,7 +976,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
   paddress = ppf | poffset;
 
 #if BX_USE_TLB
-  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_TLB_LPF_VALUE(lpf);
+  BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = lpf;
   BX_CPU_THIS_PTR TLB.entry[TLB_index].ppf = ppf;
 #endif
 
@@ -1046,7 +1046,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
+  if (tlbEntry->lpf == lpf) {
     paddress = tlbEntry->ppf | poffset;
     *phy = paddress;
     return 1;
@@ -1235,13 +1235,13 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
-        if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
+        if (tlbEntry->lpf == lpf) {
           BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, length, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
-        tlbEntry->lpf = BX_TLB_LPF_VALUE(lpf);
+        tlbEntry->lpf = lpf;
         tlbEntry->ppf = lpf;
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
@@ -1276,14 +1276,13 @@ BX_CPU_C::access_linear(bx_address laddr, unsigned length, unsigned pl,
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
-        if (tlbEntry->lpf == BX_TLB_LPF_VALUE(lpf)) {
+        if (tlbEntry->lpf == lpf) {
           BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, length, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
-        tlbEntry->lpf = BX_TLB_LPF_VALUE(lpf);
-        tlbEntry->ppf = lpf;
+        tlbEntry->lpf = tlbEntry->ppf = lpf;
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
