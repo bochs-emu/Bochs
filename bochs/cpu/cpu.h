@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.351 2007-11-11 20:56:22 sshwarts Exp $
+// $Id: cpu.h,v 1.352 2007-11-11 21:14:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -616,20 +616,24 @@ public:
   void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
-  // 26..23  ilen (0..15).  Leave this one on top so no mask is needed.
-  // 22..22  mod==c0 (modrm)
-  // 21..13  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511.
-  // 12..12  (unused)
-  // 11..11  (unused)
-  // 10...9  repUsed (0=none, 2=0xF2, 3=0xF3).
-  //  8...8  extend8bit
-  //  7...7  as64
-  //  6...6  os64
-  //  5...5  as32
-  //  4...4  os32
-  //  3...3  (unused)
+  // 31..28  (unused)
+  // 27..19  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
+  //            (leave this one on top so no mask is needed)
+  // 18..18  mod==c0 (modrm)
+  // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3).
+  Bit16u metaInfo3;
+
+  // 15..12  (unused)
+  // 11...8  ilen (0..15)
+  Bit8u  metaInfo2;
+
+  //  7...7  extend8bit
+  //  6...6  as64
+  //  5...5  os64
+  //  4...4  as32
+  //  3...3  os32
   //  2...0  seg
-  Bit32u metaInfo;
+  Bit8u  metaInfo1;
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
@@ -720,11 +724,11 @@ public:
     // This is a cheaper way to test for modRM instructions where
     // the mod field is 0xc0.  FetchDecode flags this condition since
     // it is quite common to be tested for.
-    return metaInfo & (1<<22);
+    return metaInfo3 & (1<<2);
   }
   BX_CPP_INLINE unsigned assertModC0()
   {
-    return metaInfo |= (1<<22);
+    return metaInfo3 |= (1<<2);
   }
   BX_CPP_INLINE unsigned nnn() {
     return modRMForm.modRMData4;
@@ -760,47 +764,48 @@ public:
   BX_CPP_INLINE void initMetaInfo(unsigned os32, unsigned as32,
                                   unsigned os64, unsigned as64)
   {
-    metaInfo = BX_SEG_REG_NULL | (os32<<4) | (as32<<5) | (os64<<6) | (as64<<7);
+    metaInfo1 = BX_SEG_REG_NULL | (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
+    metaInfo2 = metaInfo3 = 0;
   }
   BX_CPP_INLINE unsigned seg(void) {
-    return metaInfo & 7;
+    return metaInfo1 & 7;
   }
   BX_CPP_INLINE void setSeg(unsigned val) {
-    metaInfo = (metaInfo & ~7) | val;
+    metaInfo1 = (metaInfo1 & ~7) | val;
   }
 
   BX_CPP_INLINE unsigned os32L(void) {
-    return metaInfo & (1<<4);
+    return metaInfo1 & (1<<3);
   }
   BX_CPP_INLINE unsigned os32B(void) {
-    return (metaInfo >> 4) & 1;
+    return (metaInfo1 >> 3) & 1;
   }
   BX_CPP_INLINE void setOs32B(unsigned bit) {
-    metaInfo = (metaInfo & ~(1<<4)) | (bit<<4);
+    metaInfo1 = (metaInfo1 & ~(1<<3)) | (bit<<3);
   }
   BX_CPP_INLINE void assertOs32(void) {
-    metaInfo |= (1<<4);
+    metaInfo1 |= (1<<3);
   }
 
   BX_CPP_INLINE unsigned as32L(void) {
-    return metaInfo & (1<<5);
+    return metaInfo1 & (1<<4);
   }
   BX_CPP_INLINE unsigned as32B(void) {
-    return (metaInfo >> 5) & 1;
+    return (metaInfo1 >> 4) & 1;
   }
   BX_CPP_INLINE void setAs32B(unsigned bit) {
-    metaInfo = (metaInfo & ~(1<<5)) | (bit<<5);
+    metaInfo1 = (metaInfo1 & ~(1<<4)) | (bit<<4);
   }
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) {
-    return metaInfo & (1<<6);
+    return metaInfo1 & (1<<5);
   }
   BX_CPP_INLINE void setOs64B(unsigned bit) {
-    metaInfo = (metaInfo & ~(1<<6)) | (bit<<6);
+    metaInfo1 = (metaInfo1 & ~(1<<5)) | (bit<<5);
   }
   BX_CPP_INLINE void assertOs64(void) {
-    metaInfo |= (1<<6);
+    metaInfo1 |= (1<<5);
   }
 #else
   BX_CPP_INLINE unsigned os64L(void) { return 0; }
@@ -808,10 +813,10 @@ public:
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned as64L(void) {
-    return metaInfo & (1<<7);
+    return metaInfo1 & (1<<6);
   }
   BX_CPP_INLINE void setAs64B(unsigned bit) {
-    metaInfo = (metaInfo & ~(1<<7)) | (bit<<7);
+    metaInfo1 = (metaInfo1 & ~(1<<6)) | (bit<<6);
   }
 #else
   BX_CPP_INLINE unsigned as64L(void) { return 0; }
@@ -819,37 +824,37 @@ public:
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned extend8bitL(void) {
-    return metaInfo & (1<<8);
+    return metaInfo1 & (1<<7);
   }
   BX_CPP_INLINE void assertExtend8bit(void) {
-    metaInfo |= (1<<8);
+    metaInfo1 |= (1<<7);
   }
 #endif
 
-  BX_CPP_INLINE unsigned repUsedL(void) {
-    return metaInfo & (3<<9);
+  BX_CPP_INLINE unsigned ilen(void) {
+    return metaInfo2;
   }
-  BX_CPP_INLINE unsigned repUsedValue(void) {
-    return (metaInfo >> 9) & 3;
-  }
-  BX_CPP_INLINE void setRepUsed(unsigned value) {
-    metaInfo = (metaInfo & ~(3<<9)) | (value<<9);
+  BX_CPP_INLINE void setILen(unsigned ilen) {
+    metaInfo2 = ilen;
   }
 
-  BX_CPP_INLINE unsigned b1(void) {
-    return (metaInfo >> 13) & 0x1ff;
+  BX_CPP_INLINE unsigned repUsedL(void) {
+    return metaInfo3 & 3;
   }
-  BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo = (metaInfo & ~(0x1ff<<13)) | (b1<<13);
+  BX_CPP_INLINE unsigned repUsedValue(void) {
+    return metaInfo3 & 3;
+  }
+  BX_CPP_INLINE void setRepUsed(unsigned value) {
+    metaInfo3 = (metaInfo3 & ~3) | (value);
   }
 
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
-  BX_CPP_INLINE unsigned ilen(void) {
-    return metaInfo >> 23;
+  BX_CPP_INLINE unsigned b1(void) {
+    return metaInfo3 >> 3;
   }
-  BX_CPP_INLINE void setILen(unsigned ilen) {
-    metaInfo |= (ilen<<23);
+  BX_CPP_INLINE void setB1(unsigned b1) {
+    metaInfo3 = (metaInfo3 & ~(0x1ff << 3)) | ((b1 & 0x1ff) << 3);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
