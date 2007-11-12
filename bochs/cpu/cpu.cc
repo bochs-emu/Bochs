@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.179 2007-11-01 20:43:52 sshwarts Exp $
+// $Id: cpu.cc,v 1.180 2007-11-12 18:20:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -245,10 +245,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
     // fetch and decode next instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
-    BxExecutePtr_tR resolveModRM = i->ResolveModrm; // Get as soon as possible for speculation
-    BxExecutePtr_t execute = i->execute; // fetch as soon as possible for speculation
-    if (resolveModRM)
-      BX_CPU_CALL_METHODR(resolveModRM, (i));
+
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     // An instruction will have been fetched using either the normal case,
     // or the boundary fetch (across pages), by this point.
@@ -272,7 +270,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // decoding instruction compeleted -> continue with execution
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
-    BX_CPU_CALL_METHOD(execute, (i)); // might iterate repeat instruction
+    BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
     BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
     BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
     BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);

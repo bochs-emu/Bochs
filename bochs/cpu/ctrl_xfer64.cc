@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.51 2007-11-11 21:26:10 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.52 2007-11-12 18:20:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -195,36 +195,48 @@ void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
-void BX_CPU_C::JCC_Jq(bxInstruction_c *i)
+void BX_CPU_C::JO_Jq(bxInstruction_c *i)
 {
-  bx_bool condition;
-
-  switch (i->b1() & 0x0f) {
-    case 0x00: /* JO */ condition = get_OF(); break;
-    case 0x01: /* JNO */ condition = !get_OF(); break;
-    case 0x02: /* JB */ condition = get_CF(); break;
-    case 0x03: /* JNB */ condition = !get_CF(); break;
-    case 0x04: /* JZ */ condition = get_ZF(); break;
-    case 0x05: /* JNZ */ condition = !get_ZF(); break;
-    case 0x06: /* JBE */ condition = get_CF() || get_ZF(); break;
-    case 0x07: /* JNBE */ condition = !get_CF() && !get_ZF(); break;
-    case 0x08: /* JS */ condition = get_SF(); break;
-    case 0x09: /* JNS */ condition = !get_SF(); break;
-    case 0x0A: /* JP */ condition = get_PF(); break;
-    case 0x0B: /* JNP */ condition = !get_PF(); break;
-    case 0x0C: /* JL */ condition = getB_SF() != getB_OF(); break;
-    case 0x0D: /* JNL */ condition = getB_SF() == getB_OF(); break;
-    case 0x0E: /* JLE */ condition = get_ZF() || (getB_SF() != getB_OF());
-      break;
-    case 0x0F: /* JNLE */ condition = (getB_SF() == getB_OF()) &&
-                            !get_ZF();
-      break;
-    default:
-      condition = 0; // For compiler...all targets should set condition.
-      break;
+  if (get_OF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
   }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
 
-  if (condition) {
+void BX_CPU_C::JNO_Jq(bxInstruction_c *i)
+{
+  if (! get_OF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JB_Jq(bxInstruction_c *i)
+{
+  if (get_CF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNB_Jq(bxInstruction_c *i)
+{
+  if (! get_CF()) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
   }
@@ -251,6 +263,136 @@ void BX_CPU_C::JZ_Jq(bxInstruction_c *i)
 void BX_CPU_C::JNZ_Jq(bxInstruction_c *i)
 {
   if (! get_ZF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JBE_Jq(bxInstruction_c *i)
+{
+  if (get_CF() || get_ZF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNBE_Jq(bxInstruction_c *i)
+{
+  if (! (get_CF() || get_ZF())) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JS_Jq(bxInstruction_c *i)
+{
+  if (get_SF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNS_Jq(bxInstruction_c *i)
+{
+  if (! get_SF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JP_Jq(bxInstruction_c *i)
+{
+  if (get_PF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNP_Jq(bxInstruction_c *i)
+{
+  if (! get_PF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JL_Jq(bxInstruction_c *i)
+{
+  if (getB_SF() != getB_OF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNL_Jq(bxInstruction_c *i)
+{
+  if (getB_SF() == getB_OF()) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JLE_Jq(bxInstruction_c *i)
+{
+  if (get_ZF() || (getB_SF() != getB_OF())) {
+    branch_near64(i);
+    BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
+  }
+#if BX_INSTRUMENTATION
+  else {
+    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+  }
+#endif
+}
+
+void BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
+{
+  if (! get_ZF() && (getB_SF() == getB_OF())) {
     branch_near64(i);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
   }

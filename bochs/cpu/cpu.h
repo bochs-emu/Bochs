@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.353 2007-11-11 21:26:10 sshwarts Exp $
+// $Id: cpu.h,v 1.354 2007-11-12 18:20:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1637,12 +1637,39 @@ public: // for now...
   BX_SMF void MOV_TdRd(bxInstruction_c *);
   BX_SMF void MOV_RdTd(bxInstruction_c *);
 
-  BX_SMF void JCC_Jd(bxInstruction_c *);
-  BX_SMF void JCC_Jw(bxInstruction_c *);
-  BX_SMF void JZ_Jd(bxInstruction_c *);
+  BX_SMF void JO_Jw(bxInstruction_c *);
+  BX_SMF void JNO_Jw(bxInstruction_c *);
+  BX_SMF void JB_Jw(bxInstruction_c *);
+  BX_SMF void JNB_Jw(bxInstruction_c *);
   BX_SMF void JZ_Jw(bxInstruction_c *);
-  BX_SMF void JNZ_Jd(bxInstruction_c *);
   BX_SMF void JNZ_Jw(bxInstruction_c *);
+  BX_SMF void JBE_Jw(bxInstruction_c *);
+  BX_SMF void JNBE_Jw(bxInstruction_c *);
+  BX_SMF void JS_Jw(bxInstruction_c *);
+  BX_SMF void JNS_Jw(bxInstruction_c *);
+  BX_SMF void JP_Jw(bxInstruction_c *);
+  BX_SMF void JNP_Jw(bxInstruction_c *);
+  BX_SMF void JL_Jw(bxInstruction_c *);
+  BX_SMF void JNL_Jw(bxInstruction_c *);
+  BX_SMF void JLE_Jw(bxInstruction_c *);
+  BX_SMF void JNLE_Jw(bxInstruction_c *);
+
+  BX_SMF void JO_Jd(bxInstruction_c *);
+  BX_SMF void JNO_Jd(bxInstruction_c *);
+  BX_SMF void JB_Jd(bxInstruction_c *);
+  BX_SMF void JNB_Jd(bxInstruction_c *);
+  BX_SMF void JZ_Jd(bxInstruction_c *);
+  BX_SMF void JNZ_Jd(bxInstruction_c *);
+  BX_SMF void JBE_Jd(bxInstruction_c *);
+  BX_SMF void JNBE_Jd(bxInstruction_c *);
+  BX_SMF void JS_Jd(bxInstruction_c *);
+  BX_SMF void JNS_Jd(bxInstruction_c *);
+  BX_SMF void JP_Jd(bxInstruction_c *);
+  BX_SMF void JNP_Jd(bxInstruction_c *);
+  BX_SMF void JL_Jd(bxInstruction_c *);
+  BX_SMF void JNL_Jd(bxInstruction_c *);
+  BX_SMF void JLE_Jd(bxInstruction_c *);
+  BX_SMF void JNLE_Jd(bxInstruction_c *);
 
   BX_SMF void SETO_Eb(bxInstruction_c *);
   BX_SMF void SETNO_Eb(bxInstruction_c *);
@@ -2560,9 +2587,23 @@ public: // for now...
 
   BX_SMF void CALL_Jq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
-  BX_SMF void JCC_Jq(bxInstruction_c *);
+
+  BX_SMF void JO_Jq(bxInstruction_c *);
+  BX_SMF void JNO_Jq(bxInstruction_c *);
+  BX_SMF void JB_Jq(bxInstruction_c *);
+  BX_SMF void JNB_Jq(bxInstruction_c *);
   BX_SMF void JZ_Jq(bxInstruction_c *);
   BX_SMF void JNZ_Jq(bxInstruction_c *);
+  BX_SMF void JBE_Jq(bxInstruction_c *);
+  BX_SMF void JNBE_Jq(bxInstruction_c *);
+  BX_SMF void JS_Jq(bxInstruction_c *);
+  BX_SMF void JNS_Jq(bxInstruction_c *);
+  BX_SMF void JP_Jq(bxInstruction_c *);
+  BX_SMF void JNP_Jq(bxInstruction_c *);
+  BX_SMF void JL_Jq(bxInstruction_c *);
+  BX_SMF void JNL_Jq(bxInstruction_c *);
+  BX_SMF void JLE_Jq(bxInstruction_c *);
+  BX_SMF void JNLE_Jq(bxInstruction_c *);
 
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
@@ -2695,6 +2736,8 @@ public: // for now...
   BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *, bx_address);
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *i);
+
+  BX_SMF void ResolveDummy(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void Resolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void Resolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
