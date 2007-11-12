@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.189 2007-11-04 15:39:37 vruppert Exp $
+// $Id: rombios.c,v 1.190 2007-11-12 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -941,7 +941,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.189 $ $Date: 2007-11-04 15:39:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.190 $ $Date: 2007-11-12 20:58:37 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2526,7 +2526,10 @@ void ata_detect( )
         case ATA_TYPE_ATA:
           printf("ata%d %s: ",channel,slave?" slave":"master");
           i=0; while(c=read_byte(get_SS(),model+i++)) printf("%c",c);
-          printf(" ATA-%d Hard-Disk (%lu MBytes)\n", version, sizeinmb);
+	  if (sizeinmb < (1UL<<16))
+            printf(" ATA-%d Hard-Disk (%4u MBytes)\n", version, (Bit16u)sizeinmb);
+	  else
+            printf(" ATA-%d Hard-Disk (%4u GBytes)\n", version, (Bit16u)(sizeinmb>>10));
           break;
         case ATA_TYPE_ATAPI:
           printf("ata%d %s: ",channel,slave?" slave":"master");
