@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.202 2007-10-08 19:33:08 sshwarts Exp $
+// $Id: harddrv.cc,v 1.203 2007-11-12 21:04:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,6 +102,16 @@
 #define WRITE_HEAD_NO(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).head_no = _a; BX_CONTROLLER((c),1).head_no = _a; } while(0)
 #define WRITE_LBA_MODE(c,a) do { Bit8u _a = a; BX_CONTROLLER((c),0).lba_mode = _a; BX_CONTROLLER((c),1).lba_mode = _a; } while(0)
 
+BX_CPP_INLINE Bit16u read_16bit(const Bit8u* buf)
+{
+  return (buf[0] << 8) | buf[1];
+}
+
+BX_CPP_INLINE Bit32u read_32bit(const Bit8u* buf)
+{
+  return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+}
+
 bx_hard_drive_c *theHardDrive = NULL;
 
 int libharddrv_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
@@ -164,7 +174,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.202 2007-10-08 19:33:08 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.203 2007-11-12 21:04:17 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -3135,55 +3145,50 @@ void bx_hard_drive_c::identify_drive(Bit8u channel)
   void BX_CPP_AttrRegparmN(3)
 bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy)
 {
-      // BX_SELECTED_CONTROLLER(channel).byte_count is a union of BX_SELECTED_CONTROLLER(channel).cylinder_no;
-      // lazy is used to force a data read in the buffer at the next read.
+  // BX_SELECTED_CONTROLLER(channel).byte_count is a union of BX_SELECTED_CONTROLLER(channel).cylinder_no;
+  // lazy is used to force a data read in the buffer at the next read.
 
-      if (BX_SELECTED_CONTROLLER(channel).byte_count == 0xffff)
-        BX_SELECTED_CONTROLLER(channel).byte_count = 0xfffe;
+  if (BX_SELECTED_CONTROLLER(channel).byte_count == 0xffff)
+    BX_SELECTED_CONTROLLER(channel).byte_count = 0xfffe;
 
-      if ((BX_SELECTED_CONTROLLER(channel).byte_count & 1)
-          && !(alloc_length <= BX_SELECTED_CONTROLLER(channel).byte_count)) {
-        BX_INFO(("Odd byte count (0x%04x) to ATAPI command 0x%02x, using 0x%04x", 
-		BX_SELECTED_CONTROLLER(channel).byte_count, command, BX_SELECTED_CONTROLLER(channel).byte_count - 1));
-        BX_SELECTED_CONTROLLER(channel).byte_count -= 1;
-      }
+  if ((BX_SELECTED_CONTROLLER(channel).byte_count & 1) &&
+     !(alloc_length <= BX_SELECTED_CONTROLLER(channel).byte_count))
+  {
+    BX_INFO(("Odd byte count (0x%04x) to ATAPI command 0x%02x, using 0x%04x", 
+      BX_SELECTED_CONTROLLER(channel).byte_count, command, BX_SELECTED_CONTROLLER(channel).byte_count - 1));
+    BX_SELECTED_CONTROLLER(channel).byte_count -= 1;
+  }
 
-      if (BX_SELECTED_CONTROLLER(channel).byte_count == 0)
-	    BX_PANIC(("ATAPI command with zero byte count"));
+  if (BX_SELECTED_CONTROLLER(channel).byte_count == 0)
+    BX_PANIC(("ATAPI command with zero byte count"));
 
-      if (alloc_length < 0)
-	    BX_PANIC(("Allocation length < 0"));
-      if (alloc_length == 0)
-	    alloc_length = BX_SELECTED_CONTROLLER(channel).byte_count;
+  if (alloc_length < 0)
+    BX_PANIC(("Allocation length < 0"));
+  if (alloc_length == 0)
+    alloc_length = BX_SELECTED_CONTROLLER(channel).byte_count;
 
-      BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
-      BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 0;
-      BX_SELECTED_CONTROLLER(channel).status.busy = 0;
-      BX_SELECTED_CONTROLLER(channel).status.drq = 1;
-      BX_SELECTED_CONTROLLER(channel).status.err = 0;
+  BX_SELECTED_CONTROLLER(channel).interrupt_reason.i_o = 1;
+  BX_SELECTED_CONTROLLER(channel).interrupt_reason.c_d = 0;
+  BX_SELECTED_CONTROLLER(channel).status.busy = 0;
+  BX_SELECTED_CONTROLLER(channel).status.drq = 1;
+  BX_SELECTED_CONTROLLER(channel).status.err = 0;
 
-      // no bytes transfered yet
-      if (lazy)
-        BX_SELECTED_CONTROLLER(channel).buffer_index = BX_SELECTED_CONTROLLER(channel).buffer_size;
-      else
-        BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
-      BX_SELECTED_CONTROLLER(channel).drq_index = 0;
+  // no bytes transfered yet
+  if (lazy)
+    BX_SELECTED_CONTROLLER(channel).buffer_index = BX_SELECTED_CONTROLLER(channel).buffer_size;
+  else
+    BX_SELECTED_CONTROLLER(channel).buffer_index = 0;
+  BX_SELECTED_CONTROLLER(channel).drq_index = 0;
 
-      if (BX_SELECTED_CONTROLLER(channel).byte_count > req_length)
-	    BX_SELECTED_CONTROLLER(channel).byte_count = req_length;
+  if (BX_SELECTED_CONTROLLER(channel).byte_count > req_length)
+    BX_SELECTED_CONTROLLER(channel).byte_count = req_length;
 
-      if (BX_SELECTED_CONTROLLER(channel).byte_count > alloc_length)
-	    BX_SELECTED_CONTROLLER(channel).byte_count = alloc_length;
+  if (BX_SELECTED_CONTROLLER(channel).byte_count > alloc_length)
+    BX_SELECTED_CONTROLLER(channel).byte_count = alloc_length;
 
-      BX_SELECTED_DRIVE(channel).atapi.command = command;
-      BX_SELECTED_DRIVE(channel).atapi.drq_bytes = BX_SELECTED_CONTROLLER(channel).byte_count;
-      BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
-
-      // if (lazy) {
-	    // // bias drq_bytes and total_bytes_remaining
-	    // BX_SELECTED_DRIVE(channel).atapi.drq_bytes += 2048;
-	    // BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining += 2048;
-      // }
+  BX_SELECTED_DRIVE(channel).atapi.command = command;
+  BX_SELECTED_DRIVE(channel).atapi.drq_bytes = BX_SELECTED_CONTROLLER(channel).byte_count;
+  BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 }
 
 void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show)
@@ -3571,14 +3576,3 @@ error_recovery_t::error_recovery_t()
   data[6] = 0x00;
   data[7] = 0x00;
 }
-
-Bit16u BX_CPP_AttrRegparmN(1) read_16bit(const Bit8u* buf)
-{
-  return (buf[0] << 8) | buf[1];
-}
-
-Bit32u BX_CPP_AttrRegparmN(1) read_32bit(const Bit8u* buf)
-{
-  return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
-}
- 
