@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.34 2007-03-02 21:03:25 sshwarts Exp $
+// $Id: stack32.cc,v 1.35 2007-11-13 21:07:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,14 +54,14 @@ void BX_CPU_C::POP_Ed(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH_ERX(bxInstruction_c *i)
 {
-  push_32(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx);
+  push_32(BX_READ_32BIT_REG(i->opcodeReg()));
 }
 
 void BX_CPU_C::POP_ERX(bxInstruction_c *i)
 {
   Bit32u erx;
   pop_32(&erx);
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].dword.erx = erx;
+  BX_WRITE_32BIT_REGZ(i->opcodeReg(), erx)
 }
 
 void BX_CPU_C::PUSH32_CS(bxInstruction_c *i)

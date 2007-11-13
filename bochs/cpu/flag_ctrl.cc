@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.28 2007-11-07 10:40:40 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.29 2007-11-13 21:07:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -214,7 +214,6 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
     if ((BX_CPU_THIS_PTR get_IOPL() < 3) && (CR4_VME_ENABLED == 0)) {
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
     pop_16(&flags16);
 #if BX_SUPPORT_VME
@@ -252,7 +251,6 @@ void BX_CPU_C::PUSHF_Fd(bxInstruction_c *i)
   if (v8086_mode() && (BX_CPU_THIS_PTR get_IOPL()<3)) {
     BX_DEBUG(("PUSHFD: #GP(0) in v8086 mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
-    return;
   }
 
   // VM & RF flags cleared in image stored on the stack
@@ -284,7 +282,6 @@ void BX_CPU_C::POPF_Fd(bxInstruction_c *i)
     if (BX_CPU_THIS_PTR get_IOPL() < 3) {
       BX_DEBUG(("POPFD: #GP(0) in v8086 mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
     pop_32(&flags32);
     // v8086-mode: VM, IOPL, VIP, VIF are unaffected

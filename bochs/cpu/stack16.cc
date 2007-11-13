@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.21 2007-03-02 21:03:23 sshwarts Exp $
+// $Id: stack16.cc,v 1.22 2007-11-13 21:07:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 
 void BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
-  push_16(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx);
+  push_16(BX_READ_16BIT_REG(i->opcodeReg()));
 }
 
 void BX_CPU_C::PUSH16_CS(bxInstruction_c *i)
@@ -113,7 +113,7 @@ void BX_CPU_C::POP_RX(bxInstruction_c *i)
 {
   Bit16u rx;
   pop_16(&rx);
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].word.rx = rx;
+  BX_WRITE_16BIT_REG(i->opcodeReg(), rx)
 }
 
 void BX_CPU_C::POP_Ew(bxInstruction_c *i)

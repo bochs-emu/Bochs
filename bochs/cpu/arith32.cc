@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.54 2007-11-06 08:39:25 sshwarts Exp $
+// $Id: arith32.cc,v 1.55 2007-11-13 21:07:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,7 +43,7 @@ void BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
   unsigned opcodeReg = i->opcodeReg();
 
-  Bit32u erx = ++ BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx;
+  Bit32u erx = ++ BX_READ_32BIT_REG(opcodeReg);
   SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_INC32);
 
   BX_CLEAR_64BIT_HIGH(opcodeReg);
@@ -53,7 +53,7 @@ void BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
   unsigned opcodeReg = i->opcodeReg();
 
-  Bit32u erx = -- BX_CPU_THIS_PTR gen_reg[opcodeReg].dword.erx;
+  Bit32u erx = -- BX_READ_32BIT_REG(opcodeReg);
   SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_DEC32);
 
   BX_CLEAR_64BIT_HIGH(opcodeReg);
