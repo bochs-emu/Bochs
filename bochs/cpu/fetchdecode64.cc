@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.123 2007-11-12 18:20:12 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.124 2007-11-13 17:30:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,127 +65,97 @@
 
 // Segment override prefixes
 // -------------------------
-// In 64-bit mode, the CS, DS, ES, and SS segment overrides are ignored.
+// In 64-bit mode the CS, DS, ES, and SS segment overrides are ignored.
 
 
-static BxExecutePtr_tR BxResolve32Mod0[8] = {
-  &BX_CPU_C::Resolve32Mod0Rm0,
-  &BX_CPU_C::Resolve32Mod0Rm1,
-  &BX_CPU_C::Resolve32Mod0Rm2,
-  &BX_CPU_C::Resolve32Mod0Rm3,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod0Rip,
-  &BX_CPU_C::Resolve32Mod0Rm6,
-  &BX_CPU_C::Resolve32Mod0Rm7
+static BxExecutePtr_tR Resolve32Mod0[8] = {
+  &BX_CPU_C::BxResolve32Mod0Rm,
+  &BX_CPU_C::BxResolve32Mod0Rm,
+  &BX_CPU_C::BxResolve32Mod0Rm,
+  &BX_CPU_C::BxResolve32Mod0Rm,
+  NULL, // escape to SIB-byte
+  &BX_CPU_C::BxResolve32Mod0Rip,
+  &BX_CPU_C::BxResolve32Mod0Rm,
+  &BX_CPU_C::BxResolve32Mod0Rm
 };
 
-static BxExecutePtr_tR BxResolve32Mod1or2[8] = {
-  &BX_CPU_C::Resolve32Mod1or2Rm0,
-  &BX_CPU_C::Resolve32Mod1or2Rm1,
-  &BX_CPU_C::Resolve32Mod1or2Rm2,
-  &BX_CPU_C::Resolve32Mod1or2Rm3,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve32Mod1or2Rm5,
-  &BX_CPU_C::Resolve32Mod1or2Rm6,
-  &BX_CPU_C::Resolve32Mod1or2Rm7
+static BxExecutePtr_tR Resolve32Mod0Base[8] = {
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Disp,
+  &BX_CPU_C::BxResolve32Mod0Base,
+  &BX_CPU_C::BxResolve32Mod0Base,
 };
 
-static BxExecutePtr_tR BxResolve32Mod0Base[8] = {
-  &BX_CPU_C::Resolve32Mod0Base0,
-  &BX_CPU_C::Resolve32Mod0Base1,
-  &BX_CPU_C::Resolve32Mod0Base2,
-  &BX_CPU_C::Resolve32Mod0Base3,
-  &BX_CPU_C::Resolve32Mod0Base4,
-  &BX_CPU_C::Resolve32Mod0Base5,
-  &BX_CPU_C::Resolve32Mod0Base6,
-  &BX_CPU_C::Resolve32Mod0Base7,
+static BxExecutePtr_tR Resolve32Mod0BaseIndex[8] = {
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0DispIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
+  &BX_CPU_C::BxResolve32Mod0BaseIndex,
 };
 
-static BxExecutePtr_tR BxResolve32Mod1or2Base[8] = {
-  &BX_CPU_C::Resolve32Mod1or2Base0,
-  &BX_CPU_C::Resolve32Mod1or2Base1,
-  &BX_CPU_C::Resolve32Mod1or2Base2,
-  &BX_CPU_C::Resolve32Mod1or2Base3,
-  &BX_CPU_C::Resolve32Mod1or2Base4,
-  &BX_CPU_C::Resolve32Mod1or2Base5,
-  &BX_CPU_C::Resolve32Mod1or2Base6,
-  &BX_CPU_C::Resolve32Mod1or2Base7,
+static BxExecutePtr_tR Resolve64Mod0[16] = {
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  NULL, // escape to SIB-byte
+  &BX_CPU_C::BxResolve64Mod0Rip,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  NULL, // escape to SIB-byte
+  &BX_CPU_C::BxResolve64Mod0Rip,
+  &BX_CPU_C::BxResolve64Mod0Rm,
+  &BX_CPU_C::BxResolve64Mod0Rm
 };
 
-static BxExecutePtr_tR BxResolve64Mod0[16] = {
-  &BX_CPU_C::Resolve64Mod0Rm0,
-  &BX_CPU_C::Resolve64Mod0Rm1,
-  &BX_CPU_C::Resolve64Mod0Rm2,
-  &BX_CPU_C::Resolve64Mod0Rm3,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod0Rip,
-  &BX_CPU_C::Resolve64Mod0Rm6,
-  &BX_CPU_C::Resolve64Mod0Rm7,
-  &BX_CPU_C::Resolve64Mod0Rm8,
-  &BX_CPU_C::Resolve64Mod0Rm9,
-  &BX_CPU_C::Resolve64Mod0Rm10,
-  &BX_CPU_C::Resolve64Mod0Rm11,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod0Rip,
-  &BX_CPU_C::Resolve64Mod0Rm14,
-  &BX_CPU_C::Resolve64Mod0Rm15
+static BxExecutePtr_tR Resolve64Mod0Base[16] = {
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Disp,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Disp,
+  &BX_CPU_C::BxResolve64Mod0Base,
+  &BX_CPU_C::BxResolve64Mod0Base,
 };
 
-static BxExecutePtr_tR BxResolve64Mod1or2[16] = {
-  &BX_CPU_C::Resolve64Mod1or2Rm0,
-  &BX_CPU_C::Resolve64Mod1or2Rm1,
-  &BX_CPU_C::Resolve64Mod1or2Rm2,
-  &BX_CPU_C::Resolve64Mod1or2Rm3,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod1or2Rm5,
-  &BX_CPU_C::Resolve64Mod1or2Rm6,
-  &BX_CPU_C::Resolve64Mod1or2Rm7,
-  &BX_CPU_C::Resolve64Mod1or2Rm8,
-  &BX_CPU_C::Resolve64Mod1or2Rm9,
-  &BX_CPU_C::Resolve64Mod1or2Rm10,
-  &BX_CPU_C::Resolve64Mod1or2Rm11,
-  NULL, // escape to 2-byte
-  &BX_CPU_C::Resolve64Mod1or2Rm13,
-  &BX_CPU_C::Resolve64Mod1or2Rm14,
-  &BX_CPU_C::Resolve64Mod1or2Rm15
-};
-
-static BxExecutePtr_tR BxResolve64Mod0Base[16] = {
-  &BX_CPU_C::Resolve64Mod0Base0,
-  &BX_CPU_C::Resolve64Mod0Base1,
-  &BX_CPU_C::Resolve64Mod0Base2,
-  &BX_CPU_C::Resolve64Mod0Base3,
-  &BX_CPU_C::Resolve64Mod0Base4,
-  &BX_CPU_C::Resolve64Mod0Base5,
-  &BX_CPU_C::Resolve64Mod0Base6,
-  &BX_CPU_C::Resolve64Mod0Base7,
-  &BX_CPU_C::Resolve64Mod0Base8,
-  &BX_CPU_C::Resolve64Mod0Base9,
-  &BX_CPU_C::Resolve64Mod0Base10,
-  &BX_CPU_C::Resolve64Mod0Base11,
-  &BX_CPU_C::Resolve64Mod0Base12,
-  &BX_CPU_C::Resolve64Mod0Base13,
-  &BX_CPU_C::Resolve64Mod0Base14,
-  &BX_CPU_C::Resolve64Mod0Base15,
-};
-
-static BxExecutePtr_tR BxResolve64Mod1or2Base[16] = {
-  &BX_CPU_C::Resolve64Mod1or2Base0,
-  &BX_CPU_C::Resolve64Mod1or2Base1,
-  &BX_CPU_C::Resolve64Mod1or2Base2,
-  &BX_CPU_C::Resolve64Mod1or2Base3,
-  &BX_CPU_C::Resolve64Mod1or2Base4,
-  &BX_CPU_C::Resolve64Mod1or2Base5,
-  &BX_CPU_C::Resolve64Mod1or2Base6,
-  &BX_CPU_C::Resolve64Mod1or2Base7,
-  &BX_CPU_C::Resolve64Mod1or2Base8,
-  &BX_CPU_C::Resolve64Mod1or2Base9,
-  &BX_CPU_C::Resolve64Mod1or2Base10,
-  &BX_CPU_C::Resolve64Mod1or2Base11,
-  &BX_CPU_C::Resolve64Mod1or2Base12,
-  &BX_CPU_C::Resolve64Mod1or2Base13,
-  &BX_CPU_C::Resolve64Mod1or2Base14,
-  &BX_CPU_C::Resolve64Mod1or2Base15,
+static BxExecutePtr_tR Resolve64Mod0BaseIndex[16] = {
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0DispIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0DispIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
+  &BX_CPU_C::BxResolve64Mod0BaseIndex,
 };
 
 
@@ -2163,7 +2133,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 
   offset = 512*1;
 
-  instruction->ResolveModrm = ResolveDummy;
+  instruction->ResolveModrm = BxResolveDummy;
   instruction->initMetaInfo(/*os32*/ 1,  // operand size 32 override defaults to 1
                             /*as32*/ 1,  // address size 32 override defaults to 1
                             /*os64*/ 0,  // operand size 64 override defaults to 0
@@ -2310,31 +2280,27 @@ fetch_b1:
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0;
     nnn = ((b2 >> 3) & 0x07) | rex_r;
-    rm  = b2 & 0x07;
+    rm  = (b2 & 0x07) | rex_b;
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    instruction->modRMForm.modRMData1 = 0;
+    instruction->modRMForm.modRMData1 = rm;
     instruction->modRMForm.modRMData2 = mod;
     instruction->modRMForm.modRMData3 = 0;
     instruction->modRMForm.modRMData4 = nnn;
 
     if (mod == 0xc0) { // mod == 11b
-      rm |= rex_b;
-      instruction->modRMForm.modRMData1 |= rm;
       instruction->assertModC0();
       goto modrm_done;
     }
 
-    if (rm != 4) rm |= rex_b;
-    instruction->modRMForm.modRMData1 |= rm;
     if (instruction->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          instruction->ResolveModrm = BxResolve64Mod0[rm];
+          instruction->ResolveModrm = Resolve64Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
@@ -2350,7 +2316,7 @@ fetch_b1:
           goto modrm_done;
         }
         if (mod == 0x40) { // mod == 01b
-          instruction->ResolveModrm = BxResolve64Mod1or2[rm];
+          instruction->ResolveModrm = BxResolve64Mod1or2Rm;
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
           if (ilen < remain) {
@@ -2362,7 +2328,7 @@ fetch_b1:
           else return(0);
         }
         // (mod == 0x80) mod == 10b
-        instruction->ResolveModrm = BxResolve64Mod1or2[rm];
+        instruction->ResolveModrm = BxResolve64Mod1or2Rm;
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
         if ((ilen+3) < remain) {
@@ -2384,12 +2350,15 @@ fetch_b1:
         }
         base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
-        scale = sib;
-        instruction->modRMForm.modRMData2 |= (base);
-        instruction->modRMForm.modRMData3 |= (index);
+        scale =  sib;
+        instruction->modRMForm.modRMData3 |= (base);
+        instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
-          instruction->ResolveModrm = BxResolve64Mod0Base[base];
+          if (index == 4)
+            instruction->ResolveModrm = Resolve64Mod0Base[base];
+          else
+            instruction->ResolveModrm = Resolve64Mod0BaseIndex[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
           if ((base & 0x7) == 5)
@@ -2398,13 +2367,19 @@ fetch_b1:
           goto modrm_done;
         }
         if (mod == 0x40) { // mod==01b, rm==4
-          instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
+          if (index == 4)
+            instruction->ResolveModrm = BxResolve64Mod1or2Base;
+          else 
+            instruction->ResolveModrm = BxResolve64Mod1or2BaseIndex;
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
         }
         // (mod == 0x80),  mod==10b, rm==4
-        instruction->ResolveModrm = BxResolve64Mod1or2Base[base];
+        if (index == 4)
+          instruction->ResolveModrm = BxResolve64Mod1or2Base;
+        else 
+          instruction->ResolveModrm = BxResolve64Mod1or2BaseIndex;
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
@@ -2414,7 +2389,7 @@ fetch_b1:
       // 32-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          instruction->ResolveModrm = BxResolve32Mod0[rm];
+          instruction->ResolveModrm = Resolve32Mod0[rm];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
@@ -2430,7 +2405,7 @@ fetch_b1:
           goto modrm_done;
         }
         if (mod == 0x40) { // mod == 01b
-          instruction->ResolveModrm = BxResolve32Mod1or2[rm];
+          instruction->ResolveModrm = BxResolve32Mod1or2Rm;
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
 get_8bit_displ:
@@ -2443,7 +2418,7 @@ get_8bit_displ:
           else return(0);
         }
         // (mod == 0x80) mod == 10b
-        instruction->ResolveModrm = BxResolve32Mod1or2[rm];
+        instruction->ResolveModrm = BxResolve32Mod1or2Rm;
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
 get_32bit_displ:
@@ -2466,12 +2441,15 @@ get_32bit_displ:
         }
         base  = (sib & 0x07) | rex_b; sib >>= 3;
         index = (sib & 0x07) | rex_x; sib >>= 3;
-        scale = sib;
-        instruction->modRMForm.modRMData2 |= (base);
-        instruction->modRMForm.modRMData3 |= (index);
+        scale =  sib;
+        instruction->modRMForm.modRMData3 |= (base);
+        instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
         if (mod == 0x00) { // mod==00b, rm==4
-          instruction->ResolveModrm = BxResolve32Mod0Base[base];
+          if (index == 4)
+            instruction->ResolveModrm = Resolve32Mod0Base[base];
+          else
+            instruction->ResolveModrm = Resolve32Mod0BaseIndex[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
           if ((base & 0x7) == 5)
@@ -2480,13 +2458,19 @@ get_32bit_displ:
           goto modrm_done;
         }
         if (mod == 0x40) { // mod==01b, rm==4
-          instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
+          if (index == 4)
+            instruction->ResolveModrm = BxResolve32Mod1or2Base;
+          else
+            instruction->ResolveModrm = BxResolve32Mod1or2BaseIndex;
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
         }
         // (mod == 0x80),  mod==10b, rm==4
-        instruction->ResolveModrm = BxResolve32Mod1or2Base[base];
+        if (index == 4)
+          instruction->ResolveModrm = BxResolve32Mod1or2Base;
+        else
+          instruction->ResolveModrm = BxResolve32Mod1or2BaseIndex;
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
         goto get_32bit_displ;

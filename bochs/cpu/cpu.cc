@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.180 2007-11-12 18:20:05 sshwarts Exp $
+// $Id: cpu.cc,v 1.181 2007-11-13 17:30:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -363,6 +363,8 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
     return;
   }
 
+  unsigned rep = i->repUsedValue();
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
     while(1) {
@@ -371,8 +373,8 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX --;
       }
-      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
-      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (rep==3 && get_ZF()==0) return;
+      if (rep==2 && get_ZF()!=0) return;
       if (RCX == 0) return;
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -392,8 +394,8 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         RCX = ECX - 1;
       }
-      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
-      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (rep==3 && get_ZF()==0) return;
+      if (rep==2 && get_ZF()!=0) return;
       if (ECX == 0) return;
 
       BX_TICK1_IF_SINGLE_PROCESSOR();
@@ -412,8 +414,8 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
         BX_INSTR_REPEAT_ITERATION(BX_CPU_ID, i);
         CX --;
       }
-      if ((i->repUsedValue()==3) && (get_ZF()==0)) return;
-      if ((i->repUsedValue()==2) && (get_ZF()!=0)) return;
+      if (rep==3 && get_ZF()==0) return;
+      if (rep==2 && get_ZF()!=0) return;
       if (CX == 0) return;
 
       BX_TICK1_IF_SINGLE_PROCESSOR();

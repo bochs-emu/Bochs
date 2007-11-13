@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.354 2007-11-12 18:20:07 sshwarts Exp $
+// $Id: cpu.h,v 1.355 2007-11-13 17:30:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -644,12 +644,12 @@ public:
       Bit8u modRMData4;
 
       //  23..20 (unused)
-      //  19..16 index           (sib)
+      //  19..16 base            (sib)
       Bit8u modRMData3;
 
       //  15..14 mod     (modrm)
       //  13..12 scale           (sib)
-      //  11...8 base            (sib)
+      //  11...8 index           (sib)
       Bit8u modRMData2;
 
       //   7...4 (unused)
@@ -740,10 +740,10 @@ public:
     return (modRMForm.modRMData2 >> 4) & 0x3;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return modRMForm.modRMData3;
+    return (modRMForm.modRMData2) & 0xf;
   }
   BX_CPP_INLINE unsigned sibBase()  {
-    return (modRMForm.modRMData2) & 0xf;
+    return modRMForm.modRMData3;
   }
   BX_CPP_INLINE Bit32u   displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u   displ16u() { return modRMForm.displ16u; }
@@ -800,9 +800,6 @@ public:
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) {
     return metaInfo1 & (1<<5);
-  }
-  BX_CPP_INLINE void setOs64B(unsigned bit) {
-    metaInfo1 = (metaInfo1 & ~(1<<5)) | (bit<<5);
   }
   BX_CPP_INLINE void assertOs64(void) {
     metaInfo1 |= (1<<5);
@@ -2737,124 +2734,49 @@ public: // for now...
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *i);
 
-  BX_SMF void ResolveDummy(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolveDummy(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod0Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod0Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve16Mod1or2Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve16Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve16Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve32Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0DispIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve32Mod1or2Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void Resolve32Mod0Base0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod0Base7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void Resolve32Mod1or2Base0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve32Mod1or2Base7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod1or2Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod1or2Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod1or2BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_X86_64
-  // 64 bit addressing
-  BX_SMF void Resolve64Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm8(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm9(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm10(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm11(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Rm15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve32Mod0Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve64Mod1or2Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm8(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm9(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm10(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm11(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm13(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Rm15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod0DispIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void Resolve64Mod0Base0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base8(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base9(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base10(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base11(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base12(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base13(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod0Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void Resolve64Mod1or2Base0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base2(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base3(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base4(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base5(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base8(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base9(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base10(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base11(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base12(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base13(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base14(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void Resolve64Mod1or2Base15(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod1or2Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod1or2Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxResolve64Mod1or2BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif  // #if BX_SUPPORT_X86_64
 // <TAG-CLASS-CPU-END>
 
