@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.33 2007-10-11 22:44:17 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.34 2007-11-16 08:30:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -67,53 +67,53 @@ BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
 //
 
 static const BxOpcodeInfo_t opcodesADD_EwIw[2] = {
-  /* M */ { BxLockable, &BX_CPU_C::ADD_EEwIw },
-  /* R */ { 0,          &BX_CPU_C::ADD_EGwIw }
+  /* M */ { BxLockable, &BX_CPU_C::ADD_EwMIw },
+  /* R */ { 0,          &BX_CPU_C::ADD_EwRIw }
 };
 
 static const BxOpcodeInfo_t opcodesADD_EdId[2] = {
-  /* M */ { BxLockable, &BX_CPU_C::ADD_EEdId },
-  /* R */ { 0,          &BX_CPU_C::ADD_EGdId }
+  /* M */ { BxLockable, &BX_CPU_C::ADD_EdIdM },
+  /* R */ { 0,          &BX_CPU_C::ADD_EdIdR }
 };
 
 static const BxOpcodeInfo_t opcodesADD_GwEw[2] = {
-  /* M */ { 0,          &BX_CPU_C::ADD_GwEEw },
-  /* R */ { 0,          &BX_CPU_C::ADD_GwEGw }
+  /* M */ { 0,          &BX_CPU_C::ADD_GwEwM },
+  /* R */ { 0,          &BX_CPU_C::ADD_GwEwR }
 };
 
 static const BxOpcodeInfo_t opcodesADD_GdEd[2] = {
-  /* M */ { 0,          &BX_CPU_C::ADD_GdEEd },
-  /* R */ { 0,          &BX_CPU_C::ADD_GdEGd }
+  /* M */ { 0,          &BX_CPU_C::ADD_GdEdM },
+  /* R */ { 0,          &BX_CPU_C::ADD_GdEdR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_GbEb[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_GbEEb },
-  /* R */ { 0,          &BX_CPU_C::MOV_GbEGb }
+  /* M */ { 0,          &BX_CPU_C::MOV_GbEbM },
+  /* R */ { 0,          &BX_CPU_C::MOV_GbEbR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_GwEw[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_GwEEw },
-  /* R */ { 0,          &BX_CPU_C::MOV_GwEGw }
+  /* M */ { 0,          &BX_CPU_C::MOV_GwEwM },
+  /* R */ { 0,          &BX_CPU_C::MOV_GwEwR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_GdEd[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_GdEEd },
-  /* R */ { 0,          &BX_CPU_C::MOV_GdEGd }
+  /* M */ { 0,          &BX_CPU_C::MOV_GdEdM },
+  /* R */ { 0,          &BX_CPU_C::MOV_GdEdR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_EbGb[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_EEbGb },
-  /* R */ { 0,          &BX_CPU_C::MOV_EGbGb }
+  /* M */ { 0,          &BX_CPU_C::MOV_EbGbM },
+  /* R */ { 0,          &BX_CPU_C::MOV_EbGbR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_EwGw[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_EEwGw },
-  /* R */ { 0,          &BX_CPU_C::MOV_EGwGw }
+  /* M */ { 0,          &BX_CPU_C::MOV_EwGwM },
+  /* R */ { 0,          &BX_CPU_C::MOV_EwGwR }
 };
 
 static const BxOpcodeInfo_t opcodesMOV_EdGd[2] = {
-  /* M */ { 0,          &BX_CPU_C::MOV_EEdGd },
-  /* R */ { 0,          &BX_CPU_C::MOV_EGdGd }
+  /* M */ { 0,          &BX_CPU_C::MOV_EdGdM },
+  /* R */ { 0,          &BX_CPU_C::MOV_EdGdR }
 };
 
 

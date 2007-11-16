@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.356 2007-11-15 17:57:55 sshwarts Exp $
+// $Id: cpu.h,v 1.357 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1375,8 +1375,8 @@ public: // for now...
   BX_SMF void ADD_EdGd(bxInstruction_c *);
   BX_SMF void ADD_GbEb(bxInstruction_c *);
 
-  BX_SMF void ADD_GdEEd(bxInstruction_c *);
-  BX_SMF void ADD_GdEGd(bxInstruction_c *);
+  BX_SMF void ADD_GdEdM(bxInstruction_c *);
+  BX_SMF void ADD_GdEdR(bxInstruction_c *);
 
   BX_SMF void ADD_ALIb(bxInstruction_c *);
   BX_SMF void ADD_EAXId(bxInstruction_c *);
@@ -1495,18 +1495,18 @@ public: // for now...
   BX_SMF void XCHG_EdGd(bxInstruction_c *);
   BX_SMF void XCHG_EwGw(bxInstruction_c *);
 
-  BX_SMF void MOV_EEbGb(bxInstruction_c *);
-  BX_SMF void MOV_EGbGb(bxInstruction_c *);
-  BX_SMF void MOV_EEdGd(bxInstruction_c *);
-  BX_SMF void MOV_EGdGd(bxInstruction_c *);
-  BX_SMF void MOV_EEwGw(bxInstruction_c *);
-  BX_SMF void MOV_EGwGw(bxInstruction_c *);
-  BX_SMF void MOV_GbEEb(bxInstruction_c *);
-  BX_SMF void MOV_GbEGb(bxInstruction_c *);
-  BX_SMF void MOV_GdEEd(bxInstruction_c *);
-  BX_SMF void MOV_GdEGd(bxInstruction_c *);
-  BX_SMF void MOV_GwEEw(bxInstruction_c *);
-  BX_SMF void MOV_GwEGw(bxInstruction_c *);
+  BX_SMF void MOV_EbGbM(bxInstruction_c *);
+  BX_SMF void MOV_EbGbR(bxInstruction_c *);
+  BX_SMF void MOV_EdGdM(bxInstruction_c *);
+  BX_SMF void MOV_EdGdR(bxInstruction_c *);
+  BX_SMF void MOV_EwGwM(bxInstruction_c *);
+  BX_SMF void MOV_EwGwR(bxInstruction_c *);
+  BX_SMF void MOV_GbEbM(bxInstruction_c *);
+  BX_SMF void MOV_GbEbR(bxInstruction_c *);
+  BX_SMF void MOV_GdEdM(bxInstruction_c *);
+  BX_SMF void MOV_GdEdR(bxInstruction_c *);
+  BX_SMF void MOV_GwEwM(bxInstruction_c *);
+  BX_SMF void MOV_GwEwR(bxInstruction_c *);
 
   BX_SMF void MOV_EwSw(bxInstruction_c *);
   BX_SMF void LEA_GdM(bxInstruction_c *);
@@ -1743,8 +1743,8 @@ public: // for now...
   BX_SMF void XOR_EbIb(bxInstruction_c *);
   BX_SMF void OR_EbIb(bxInstruction_c *);
   BX_SMF void AND_EbIb(bxInstruction_c *);
-  BX_SMF void ADD_EEdId(bxInstruction_c *);
-  BX_SMF void ADD_EGdId(bxInstruction_c *);
+  BX_SMF void ADD_EdIdR(bxInstruction_c *);
+  BX_SMF void ADD_EdIdM(bxInstruction_c *);
   BX_SMF void OR_EdId(bxInstruction_c *);
   BX_SMF void OR_EwIw(bxInstruction_c *);
   BX_SMF void ADC_EdId(bxInstruction_c *);
@@ -2455,8 +2455,8 @@ public: // for now...
   BX_SMF void CMOV_GwEw(bxInstruction_c *);
 
   BX_SMF void ADD_EwGw(bxInstruction_c *);
-  BX_SMF void ADD_GwEEw(bxInstruction_c *);
-  BX_SMF void ADD_GwEGw(bxInstruction_c *);
+  BX_SMF void ADD_GwEwR(bxInstruction_c *);
+  BX_SMF void ADD_GwEwM(bxInstruction_c *);
 
   BX_SMF void ADD_AXIw(bxInstruction_c *);
   BX_SMF void ADC_EwGw(bxInstruction_c *);
@@ -2476,8 +2476,8 @@ public: // for now...
   BX_SMF void CDQ(bxInstruction_c *);
   BX_SMF void XADD_EwGw(bxInstruction_c *);
 
-  BX_SMF void ADD_EEwIw(bxInstruction_c *);
-  BX_SMF void ADD_EGwIw(bxInstruction_c *);
+  BX_SMF void ADD_EwMIw(bxInstruction_c *);
+  BX_SMF void ADD_EwRIw(bxInstruction_c *);
 
   BX_SMF void ADC_EwIw(bxInstruction_c *);
   BX_SMF void SUB_EwIw(bxInstruction_c *);

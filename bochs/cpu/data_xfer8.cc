@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.26 2007-01-12 22:47:20 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.27 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,23 +41,23 @@ void BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
   BX_CPU_THIS_PTR gen_reg[i->b1() & 0x03].word.byte.rh = i->Ib();
 }
 
-void BX_CPU_C::MOV_EEbGb(bxInstruction_c *i)
+void BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
 {
   write_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
 }
 
-void BX_CPU_C::MOV_EGbGb(bxInstruction_c *i)
+void BX_CPU_C::MOV_EbGbR(bxInstruction_c *i)
 {
   Bit8u op2 = BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL());
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
 }
 
-void BX_CPU_C::MOV_GbEEb(bxInstruction_c *i)
+void BX_CPU_C::MOV_GbEbM(bxInstruction_c *i)
 {
   read_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(),i->extend8bitL()));
 }
 
-void BX_CPU_C::MOV_GbEGb(bxInstruction_c *i)
+void BX_CPU_C::MOV_GbEbR(bxInstruction_c *i)
 {
   Bit8u op2 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op2);

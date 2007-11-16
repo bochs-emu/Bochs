@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.55 2007-11-13 21:07:07 sshwarts Exp $
+// $Id: arith32.cc,v 1.56 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,32 +79,30 @@ void BX_CPU_C::ADD_EdGd(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 }
 
-void BX_CPU_C::ADD_GdEEd(bxInstruction_c *i)
+void BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
-  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(nnn);
+  op1_32 = BX_READ_32BIT_REG(i->nnn());
 
   read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
   sum_32 = op1_32 + op2_32;
   SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
-  BX_WRITE_32BIT_REGZ(nnn, sum_32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
 }
 
-void BX_CPU_C::ADD_GdEGd(bxInstruction_c *i)
+void BX_CPU_C::ADD_GdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
-  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(nnn);
+  op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = BX_READ_32BIT_REG(i->rm());
   sum_32 = op1_32 + op2_32;
 
   SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 
-  BX_WRITE_32BIT_REGZ(nnn, sum_32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), sum_32);
 }
 
 void BX_CPU_C::ADD_EAXId(bxInstruction_c *i)
@@ -283,9 +281,8 @@ void BX_CPU_C::SUB_EdGd(bxInstruction_c *i)
 void BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
-  unsigned nnn = i->nnn();
 
-  op1_32 = BX_READ_32BIT_REG(nnn);
+  op1_32 = BX_READ_32BIT_REG(i->nnn());
 
   if (i->modC0()) {
     op2_32 = BX_READ_32BIT_REG(i->rm());
@@ -297,7 +294,7 @@ void BX_CPU_C::SUB_GdEd(bxInstruction_c *i)
   diff_32 = op1_32 - op2_32;
   SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_SUB32);
 
-  BX_WRITE_32BIT_REGZ(nnn, diff_32);
+  BX_WRITE_32BIT_REGZ(i->nnn(), diff_32);
 }
 
 void BX_CPU_C::SUB_EAXId(bxInstruction_c *i)
@@ -440,7 +437,7 @@ void BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
+void BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
 {
   Bit32u op2_32, op1_32, sum_32;
 
@@ -453,7 +450,7 @@ void BX_CPU_C::ADD_EEdId(bxInstruction_c *i)
   write_RMW_virtual_dword(sum_32);
 }
 
-void BX_CPU_C::ADD_EGdId(bxInstruction_c *i)
+void BX_CPU_C::ADD_EdIdR(bxInstruction_c *i)
 {
   Bit32u op2_32, op1_32, sum_32;
 

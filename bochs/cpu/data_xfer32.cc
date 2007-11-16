@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.41 2007-01-26 22:12:05 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.42 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,25 +52,25 @@ void BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
   BX_WRITE_32BIT_REGZ(i->opcodeReg(), i->Id());
 }
 
-void BX_CPU_C::MOV_EEdGd(bxInstruction_c *i)
+void BX_CPU_C::MOV_EdGdM(bxInstruction_c *i)
 {
   write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
 }
 
-void BX_CPU_C::MOV_EGdGd(bxInstruction_c *i)
+void BX_CPU_C::MOV_EdGdR(bxInstruction_c *i)
 {
   Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
   BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
 }
 
-void BX_CPU_C::MOV_GdEGd(bxInstruction_c *i)
+void BX_CPU_C::MOV_GdEdR(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a general register Gd.
   Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
   BX_WRITE_32BIT_REGZ(i->nnn(), op2_32);
 }
 
-void BX_CPU_C::MOV_GdEEd(bxInstruction_c *i)
+void BX_CPU_C::MOV_GdEdM(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ed.
   read_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));

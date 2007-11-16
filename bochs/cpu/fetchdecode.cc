@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.120 2007-11-15 17:57:56 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.121 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -903,7 +903,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A2 */ { 0, &BX_CPU_C::CPUID },
   /* 0F A3 */ { 0, &BX_CPU_C::BT_EwGw },
   /* 0F A4 */ { BxImmediate_Ib, &BX_CPU_C::SHLD_EwGw },
-  /* 0F A5 */ { 0,                  &BX_CPU_C::SHLD_EwGw },
+  /* 0F A5 */ { 0,              &BX_CPU_C::SHLD_EwGw },
   /* 0F A6 */ { 0, &BX_CPU_C::CMPXCHG_XBTS },
   /* 0F A7 */ { 0, &BX_CPU_C::CMPXCHG_IBTS },
   /* 0F A8 */ { 0, &BX_CPU_C::PUSH16_GS },
@@ -911,7 +911,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F AA */ { 0, &BX_CPU_C::RSM },
   /* 0F AB */ { BxLockable, &BX_CPU_C::BTS_EwGw },
   /* 0F AC */ { BxImmediate_Ib, &BX_CPU_C::SHRD_EwGw },
-  /* 0F AD */ { 0,                  &BX_CPU_C::SHRD_EwGw },
+  /* 0F AD */ { 0,              &BX_CPU_C::SHRD_EwGw },
   /* 0F AE */ { BxGroup15, NULL, BxOpcodeInfoG15 },
   /* 0F AF */ { 0, &BX_CPU_C::IMUL_GwEw },
   /* 0F B0 */ { BxLockable, &BX_CPU_C::CMPXCHG_EbGb },
@@ -1461,7 +1461,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F A2 */ { 0, &BX_CPU_C::CPUID },
   /* 0F A3 */ { 0, &BX_CPU_C::BT_EdGd },
   /* 0F A4 */ { BxImmediate_Ib, &BX_CPU_C::SHLD_EdGd },
-  /* 0F A5 */ { 0,                  &BX_CPU_C::SHLD_EdGd },
+  /* 0F A5 */ { 0,              &BX_CPU_C::SHLD_EdGd },
   /* 0F A6 */ { 0, &BX_CPU_C::CMPXCHG_XBTS },
   /* 0F A7 */ { 0, &BX_CPU_C::CMPXCHG_IBTS },
   /* 0F A8 */ { 0, &BX_CPU_C::PUSH32_GS },
@@ -1469,7 +1469,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo[512*2] = {
   /* 0F AA */ { 0, &BX_CPU_C::RSM },
   /* 0F AB */ { BxLockable, &BX_CPU_C::BTS_EdGd },
   /* 0F AC */ { BxImmediate_Ib, &BX_CPU_C::SHRD_EdGd },
-  /* 0F AD */ { 0,                  &BX_CPU_C::SHRD_EdGd },
+  /* 0F AD */ { 0,              &BX_CPU_C::SHRD_EdGd },
   /* 0F AE */ { BxGroup15, NULL, BxOpcodeInfoG15 },
   /* 0F AF */ { 0, &BX_CPU_C::IMUL_GdEd },
   /* 0F B0 */ { BxLockable, &BX_CPU_C::CMPXCHG_EbGb },

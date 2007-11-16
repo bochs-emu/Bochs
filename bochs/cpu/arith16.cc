@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.49 2007-11-13 21:07:07 sshwarts Exp $
+// $Id: arith16.cc,v 1.50 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ void BX_CPU_C::ADD_EwGw(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 }
 
-void BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
+void BX_CPU_C::ADD_GwEwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, sum_16;
 
@@ -77,7 +77,7 @@ void BX_CPU_C::ADD_GwEEw(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), sum_16);
 }
 
-void BX_CPU_C::ADD_GwEGw(bxInstruction_c *i)
+void BX_CPU_C::ADD_GwEwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, sum_16;
 
@@ -389,7 +389,7 @@ void BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
+void BX_CPU_C::ADD_EwMIw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16, sum_16;
 
@@ -403,7 +403,7 @@ void BX_CPU_C::ADD_EEwIw(bxInstruction_c *i)
   write_RMW_virtual_word(sum_16);
 }
 
-void BX_CPU_C::ADD_EGwIw(bxInstruction_c *i)
+void BX_CPU_C::ADD_EwRIw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16, sum_16;
 

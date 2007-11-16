@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.41 2007-09-19 19:38:09 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.42 2007-11-16 08:30:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,25 +43,25 @@ void BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->opcodeReg(), temp16);
 }
 
-void BX_CPU_C::MOV_EEwGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwGwM(bxInstruction_c *i)
 {
   write_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
 }
 
-void BX_CPU_C::MOV_EGwGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwGwR(bxInstruction_c *i)
 {
   Bit16u op2_16 = BX_READ_16BIT_REG(i->nnn());
   BX_WRITE_16BIT_REG(i->rm(), op2_16);
 }
 
-void BX_CPU_C::MOV_GwEGw(bxInstruction_c *i)
+void BX_CPU_C::MOV_GwEwR(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a general register Gw.
   Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
   BX_WRITE_16BIT_REG(i->nnn(), op2_16);
 }
 
-void BX_CPU_C::MOV_GwEEw(bxInstruction_c *i)
+void BX_CPU_C::MOV_GwEwM(bxInstruction_c *i)
 {
   // 2nd modRM operand Ex, is known to be a memory operand, Ew.
   read_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
