@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.55 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: cpuid.cc,v 1.56 2007-11-16 20:33:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -304,7 +304,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid_function_t *cpuid;
   int i;
 
-  for (int i=0;i<MAX_STD_CPUID_FUNCTION;i++) {
+  for (i=0;i<MAX_STD_CPUID_FUNCTION;i++) {
     BX_CPU_THIS_PTR cpuid_std_function[i].eax = 0;
     BX_CPU_THIS_PTR cpuid_std_function[i].ebx = 0;
     BX_CPU_THIS_PTR cpuid_std_function[i].ecx = 0;
