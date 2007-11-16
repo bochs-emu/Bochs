@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.36 2007-11-16 18:34:14 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.37 2007-11-16 21:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2815,9 +2815,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G3Eq[8] = {
 /* Group 4 */
 /* ******* */
 
-static const BxOpcodeInfo_t BxOpcodeInfoG4[8] = {
-  /* 0 */ { BxLockable, &BX_CPU_C::INC_Eb },
-  /* 1 */ { BxLockable, &BX_CPU_C::DEC_Eb },
+static const BxOpcodeInfo_t BxOpcodeInfoG4M[8] = {
+  /* 0 */ { BxLockable, &BX_CPU_C::INC_EbM },
+  /* 1 */ { BxLockable, &BX_CPU_C::DEC_EbM },
   /* 2 */ { 0, &BX_CPU_C::BxError },
   /* 3 */ { 0, &BX_CPU_C::BxError },
   /* 4 */ { 0, &BX_CPU_C::BxError },
@@ -2825,6 +2825,23 @@ static const BxOpcodeInfo_t BxOpcodeInfoG4[8] = {
   /* 6 */ { 0, &BX_CPU_C::BxError },
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG4R[8] = {
+  /* 0 */ { BxLockable, &BX_CPU_C::INC_EbR },
+  /* 1 */ { BxLockable, &BX_CPU_C::DEC_EbR },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { 0, &BX_CPU_C::BxError },
+  /* 5 */ { 0, &BX_CPU_C::BxError },
+  /* 6 */ { 0, &BX_CPU_C::BxError },
+  /* 7 */ { 0, &BX_CPU_C::BxError }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoModG4[8] = {
+  // attributes defined in main area
+  /* M */ { BxGroupN, NULL, BxOpcodeInfoG4M },
+  /* R */ { BxGroupN, NULL, BxOpcodeInfoG4R }
+};
 
 /* ******* */
 /* Group 5 */

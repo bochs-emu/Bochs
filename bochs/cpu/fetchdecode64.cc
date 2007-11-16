@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.130 2007-11-16 20:49:51 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.131 2007-11-16 21:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -466,7 +466,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FB /w */ { 0, &BX_CPU_C::STI },
   /* FC /w */ { 0, &BX_CPU_C::CLD },
   /* FD /w */ { 0, &BX_CPU_C::STD },
-  /* FE /w */ { BxGroup4, NULL, BxOpcodeInfoG4 },
+  /* FE /w */ { BxSplitMod11b, NULL, BxOpcodeInfoModG4 },
   /* FF /w */ { BxGroup5, NULL, BxOpcodeInfo64G5w },
 
   /* 0F 00 /w */ { BxGroup6, NULL, BxOpcodeInfoG6 },
@@ -995,7 +995,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FB /d */ { 0, &BX_CPU_C::STI },
   /* FC /d */ { 0, &BX_CPU_C::CLD },
   /* FD /d */ { 0, &BX_CPU_C::STD },
-  /* FE /d */ { BxGroup4, NULL, BxOpcodeInfoG4 },
+  /* FE /d */ { BxSplitMod11b, NULL, BxOpcodeInfoModG4 },
   /* FF /d */ { BxGroup5, NULL, BxOpcodeInfo64G5d },
 
   /* 0F 00 /d */ { BxGroup6, NULL, BxOpcodeInfoG6 },
@@ -1524,7 +1524,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64[512*3] = {
   /* FB /q */ { 0, &BX_CPU_C::STI },
   /* FC /q */ { 0, &BX_CPU_C::CLD },
   /* FD /q */ { 0, &BX_CPU_C::STD },
-  /* FE /q */ { BxGroup4, NULL, BxOpcodeInfoG4 },
+  /* FE /q */ { BxSplitMod11b, NULL, BxOpcodeInfoModG4 },
   /* FF /q */ { BxGroup5, NULL, BxOpcodeInfo64G5q },
 
   /* 0F 00 /q */ { BxGroup6, NULL, BxOpcodeInfoG6 },

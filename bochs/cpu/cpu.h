@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.358 2007-11-16 17:45:58 sshwarts Exp $
+// $Id: cpu.h,v 1.359 2007-11-16 21:43:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1821,8 +1821,10 @@ public: // for now...
   BX_SMF void DIV_EAXEd(bxInstruction_c *);
   BX_SMF void IDIV_EAXEd(bxInstruction_c *);
 
-  BX_SMF void INC_Eb(bxInstruction_c *);
-  BX_SMF void DEC_Eb(bxInstruction_c *);
+  BX_SMF void INC_EbR(bxInstruction_c *);
+  BX_SMF void INC_EbM(bxInstruction_c *);
+  BX_SMF void DEC_EbR(bxInstruction_c *);
+  BX_SMF void DEC_EbM(bxInstruction_c *);
 
   BX_SMF void INC_Ed(bxInstruction_c *);
   BX_SMF void DEC_Ed(bxInstruction_c *);
