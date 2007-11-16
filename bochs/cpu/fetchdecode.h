@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.34 2007-11-16 08:30:22 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.35 2007-11-16 17:45:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -65,16 +65,6 @@ BX_CPP_INLINE Bit64u FetchQWORD(Bit8u *iptr)
 //
 // Common FetchDecode Opcode Tables
 //
-
-static const BxOpcodeInfo_t opcodesADD_EwIw[2] = {
-  /* M */ { BxLockable, &BX_CPU_C::ADD_EwMIw },
-  /* R */ { 0,          &BX_CPU_C::ADD_EwRIw }
-};
-
-static const BxOpcodeInfo_t opcodesADD_EdId[2] = {
-  /* M */ { BxLockable, &BX_CPU_C::ADD_EdIdM },
-  /* R */ { 0,          &BX_CPU_C::ADD_EdIdR }
-};
 
 static const BxOpcodeInfo_t opcodesADD_GwEw[2] = {
   /* M */ { 0,          &BX_CPU_C::ADD_GwEwM },
