@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.129 2007-11-16 18:34:14 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.130 2007-11-16 20:49:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1807,9 +1807,6 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r = 0, rex_x = 0, rex_b = 0;
   unsigned rm = 0, mod = 0, nnn = 0;
-#if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  unsigned b3 = 0;
-#endif
 #define SSE_PREFIX_NONE 0
 #define SSE_PREFIX_66   1
 #define SSE_PREFIX_F2   2
@@ -1942,19 +1939,21 @@ fetch_b1:
 
   attr = BxOpcodeInfo64[b1+offset].Attr;
 
+  if (BxOpcodeHasModrm64[b1]) {
+
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
-  // handle 3-byte escape
-  if (attr & Bx3ByteOpcode) {
-    if (ilen < remain) {
-      ilen++;
-      b3 = *iptr++;
+    unsigned b3 = 0;
+    // handle 3-byte escape
+    if (attr & Bx3ByteOpcode) {
+      if (ilen < remain) {
+        ilen++;
+        b3 = *iptr++;
+      }
+      else
+        return(0);
     }
-    else
-      return(0);
-  }
 #endif
 
-  if (BxOpcodeHasModrm64[b1]) {
     // opcode requires modrm byte
     if (ilen < remain) {
       ilen++;
