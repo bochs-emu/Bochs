@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.62 2007-10-11 18:11:59 sshwarts Exp $
+// $Id: mmx.cc,v 1.63 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -1958,16 +1958,9 @@ void BX_CPU_C::PMULHW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
-  if (i->modC0()) {
-    BX_INFO(("MOVNTQ_MqPq: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   BX_CPU_THIS_PTR prepareMMX();
-
   BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
   write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &reg);
-
 #else
   BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);

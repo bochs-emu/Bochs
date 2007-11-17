@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.15 2007-04-09 20:28:15 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.16 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,11 +35,6 @@
 
 void BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LES_GwMp: invalid use of LES, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u reg_16, es;
 
   read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -52,11 +47,6 @@ void BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 
 void BX_CPU_C::LES_GdMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LES_GdMp: invalid use of LES, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u es;
   Bit32u reg_32;
 
@@ -70,11 +60,6 @@ void BX_CPU_C::LES_GdMp(bxInstruction_c *i)
 
 void BX_CPU_C::LDS_GwMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LDS_GwMp: invalid use of LDS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u reg_16, ds;
 
   read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -87,11 +72,6 @@ void BX_CPU_C::LDS_GwMp(bxInstruction_c *i)
 
 void BX_CPU_C::LDS_GdMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LDS_GdMp: invalid use of LDS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u ds;
   Bit32u reg_32;
 
@@ -105,11 +85,6 @@ void BX_CPU_C::LDS_GdMp(bxInstruction_c *i)
 
 void BX_CPU_C::LFS_GwMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LFS_GwMp: invalid use of LFS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u reg_16, fs;
 
   read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -122,11 +97,6 @@ void BX_CPU_C::LFS_GwMp(bxInstruction_c *i)
 
 void BX_CPU_C::LFS_GdMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LFS_GdMp: invalid use of LFS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit32u reg_32;
   Bit16u fs;
 
@@ -141,11 +111,6 @@ void BX_CPU_C::LFS_GdMp(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::LFS_GqMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LFS_GqMp: invalid use of LFS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit64u reg_64;
   Bit16u fs;
 
@@ -160,11 +125,6 @@ void BX_CPU_C::LFS_GqMp(bxInstruction_c *i)
 
 void BX_CPU_C::LGS_GwMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LGS_GwMp: invalid use of LGS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u reg_16, gs;
 
   read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -177,11 +137,6 @@ void BX_CPU_C::LGS_GwMp(bxInstruction_c *i)
 
 void BX_CPU_C::LGS_GdMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LGS_GdMp: invalid use of LGS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit32u reg_32;
   Bit16u gs;
 
@@ -196,11 +151,6 @@ void BX_CPU_C::LGS_GdMp(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::LGS_GqMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LGS_GqMp: invalid use of LGS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit64u reg_64;
   Bit16u gs;
 
@@ -215,11 +165,6 @@ void BX_CPU_C::LGS_GqMp(bxInstruction_c *i)
 
 void BX_CPU_C::LSS_GwMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LSS_GwMp: invalid use of LSS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit16u reg_16, ss;
 
   read_virtual_word(i->seg(), RMAddr(i), &reg_16);
@@ -232,11 +177,6 @@ void BX_CPU_C::LSS_GwMp(bxInstruction_c *i)
 
 void BX_CPU_C::LSS_GdMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LSS_GdMp: invalid use of LSS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit32u reg_32;
   Bit16u ss;
 
@@ -251,11 +191,6 @@ void BX_CPU_C::LSS_GdMp(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::LSS_GqMp(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_DEBUG(("LSS_GqMp: invalid use of LSS, must be memory reference!"));
-    UndefinedOpcode(i);
-  }
-
   Bit64u reg_64;
   Bit16u ss;
 

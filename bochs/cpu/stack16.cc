@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.22 2007-11-13 21:07:07 sshwarts Exp $
+// $Id: stack16.cc,v 1.23 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,18 +213,17 @@ void BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
   push_16(i->Iw());
 }
 
-void BX_CPU_C::PUSH_Ew(bxInstruction_c *i)
+void BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  /* op1_16 is a register or memory reference */
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  }
+  /* pointer, segment address pair */
+  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
 
   push_16(op1_16);
+}
+
+void BX_CPU_C::PUSH_EwR(bxInstruction_c *i)
+{
+  push_16(BX_READ_16BIT_REG(i->rm()));
 }

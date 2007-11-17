@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.179 2007-11-09 12:06:34 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.180 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,7 @@
 
 void BX_CPU_C::UndefinedOpcode(bxInstruction_c *i)
 {
-  BX_DEBUG(("UndefinedOpcode: %02x causes exception 6", (unsigned) i->b1()));
+  BX_DEBUG(("UndefinedOpcode: 0x%02x causes exception 6", (unsigned) i->b1()));
   exception(BX_UD_EXCEPTION, 0, 0);
 }
 
@@ -182,10 +182,6 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    return; // SFENCE instruction
-  }
-
 #if BX_SUPPORT_CLFLUSH
   // check if we could access the memory
   execute_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], RMAddr(i), 1);

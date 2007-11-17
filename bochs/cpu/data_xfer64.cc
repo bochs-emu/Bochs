@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.25 2007-01-12 22:47:20 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.26 2007-11-17 12:44:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,12 +74,6 @@ void BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
 
 void BX_CPU_C::LEA_GqM(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_INFO(("LEA_GqM: op2 is a register"));
-    UndefinedOpcode(i);
-  }
-
-  /* write effective address of op2 in op1 */
   BX_WRITE_64BIT_REG(i->nnn(), RMAddr(i));
 }
 
@@ -128,17 +122,16 @@ void BX_CPU_C::MOV_OqRAX(bxInstruction_c *i)
   write_virtual_qword(i->seg(), i->Iq(), &RAX);
 }
 
-void BX_CPU_C::MOV_EqId(bxInstruction_c *i)
+void BX_CPU_C::MOV_EqIdM(bxInstruction_c *i)
 {
-  Bit64u op2_64 = (Bit32s) i->Id();
+  Bit64u op_64 = (Bit32s) i->Id();
+  write_virtual_qword(i->seg(), RMAddr(i), &op_64);
+}
 
-  /* now write sum back to destination */
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), op2_64);
-  }
-  else {
-    write_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-  }
+void BX_CPU_C::MOV_EqIdR(bxInstruction_c *i)
+{
+  Bit64u op_64 = (Bit32s) i->Id();
+  BX_WRITE_64BIT_REG(i->rm(), op_64);
 }
 
 void BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.35 2007-11-13 21:07:08 sshwarts Exp $
+// $Id: stack32.cc,v 1.36 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -231,20 +231,19 @@ void BX_CPU_C::PUSH_Id(bxInstruction_c *i)
   push_32(i->Id());
 }
 
-void BX_CPU_C::PUSH_Ed(bxInstruction_c *i)
+void BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  }
+  /* pointer, segment address pair */
+  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
 
   push_32(op1_32);
+}
+
+void BX_CPU_C::PUSH_EdR(bxInstruction_c *i)
+{
+  push_32(BX_READ_32BIT_REG(i->rm()));
 }
 
 #if BX_CPU_LEVEL >= 2

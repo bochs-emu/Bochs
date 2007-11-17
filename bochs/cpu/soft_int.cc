@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.32 2006-08-31 18:18:17 sshwarts Exp $
+// $Id: soft_int.cc,v 1.33 2007-11-17 12:44:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,11 +36,6 @@
 
 void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_INFO(("BOUND_GwMa: op2 must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   Bit16s bound_min, bound_max;
   Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
 
@@ -55,11 +50,6 @@ void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 
 void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_INFO(("BOUND_GdMa: op2 must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   Bit32s bound_min, bound_max;
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
 

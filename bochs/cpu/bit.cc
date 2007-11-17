@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.34 2007-10-21 22:07:32 sshwarts Exp $
+// $Id: bit.cc,v 1.35 2007-11-17 12:44:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -579,21 +579,13 @@ void BX_CPU_C::BT_EwGw(bxInstruction_c *i)
   setB_CF((op1_16 >> index) & 0x01);
 }
 
-void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
+void BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index;
   Bit32s displacement32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op2_32 &= 0x1f;
-    setB_CF((op1_32 >> op2_32) & 0x01);
-    return;
-  }
 
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
@@ -603,6 +595,17 @@ void BX_CPU_C::BT_EdGd(bxInstruction_c *i)
   read_virtual_dword(i->seg(), op1_addr, &op1_32);
 
   setB_CF((op1_32 >> index) & 0x01);
+}
+
+void BX_CPU_C::BT_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  op2_32 &= 0x1f;
+
+  setB_CF((op1_32 >> op2_32) & 0x01);
 }
 
 #if BX_SUPPORT_X86_64
@@ -669,25 +672,13 @@ void BX_CPU_C::BTS_EwGw(bxInstruction_c *i)
   setB_CF(bit_i);
 }
 
-void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
+void BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, bit_i, index;
   Bit32s displacement32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op2_32 &= 0x1f;
-    setB_CF((op1_32 >> op2_32) & 0x01);
-    op1_32 |= (((Bit32u) 1) << op2_32);
-
-    /* now write diff back to destination */
-    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-    return;
-  }
 
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
@@ -702,6 +693,20 @@ void BX_CPU_C::BTS_EdGd(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   setB_CF(bit_i);
+}
+
+void BX_CPU_C::BTS_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  op2_32 &= 0x1f;
+  setB_CF((op1_32 >> op2_32) & 0x01);
+  op1_32 |= (((Bit32u) 1) << op2_32);
+
+  /* now write diff back to destination */
+  BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 }
 
 #if BX_SUPPORT_X86_64
@@ -778,25 +783,13 @@ void BX_CPU_C::BTR_EwGw(bxInstruction_c *i)
   setB_CF(temp_cf);
 }
 
-void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
+void BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index;
   Bit32s displacement32;
 
   op2_32 = BX_READ_32BIT_REG(i->nnn());
-
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op2_32 &= 0x1f;
-    setB_CF((op1_32 >> op2_32) & 0x01);
-    op1_32 &= ~(((Bit32u) 1) << op2_32);
-
-    /* now write diff back to destination */
-    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-    return;
-  }
 
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
@@ -812,6 +805,20 @@ void BX_CPU_C::BTR_EdGd(bxInstruction_c *i)
   write_RMW_virtual_dword(op1_32);
 
   setB_CF(temp_cf);
+}
+
+void BX_CPU_C::BTR_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  op2_32 &= 0x1f;
+  setB_CF((op1_32 >> op2_32) & 0x01);
+  op1_32 &= ~(((Bit32u) 1) << op2_32);
+
+  /* now write diff back to destination */
+  BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 }
 
 #if BX_SUPPORT_X86_64
@@ -887,7 +894,7 @@ void BX_CPU_C::BTC_EwGw(bxInstruction_c *i)
   setB_CF(temp_CF);
 }
 
-void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
+void BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
 {
   bx_address op1_addr;
   Bit32u op1_32, op2_32, index_32;
@@ -896,28 +903,30 @@ void BX_CPU_C::BTC_EdGd(bxInstruction_c *i)
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   index_32 = op2_32 & 0x1f;
 
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    op1_addr = 0; // keep compiler happy
-  }
-  else {
-    displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
-    op1_addr = RMAddr(i) + 4 * displacement32;
-    read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
-  }
+  displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
+  op1_addr = RMAddr(i) + 4 * displacement32;
+  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
 
   bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
   op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
   setB_CF(temp_CF);
 
-  /* now write diff back to destination */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
-  }
-  else {
-    write_RMW_virtual_dword(op1_32);
-  }
+  write_RMW_virtual_dword(op1_32);
+}
+
+void BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  op2_32 &= 0x1f;
+
+  bx_bool temp_CF = (op1_32 >> op2_32) & 0x01;
+  op1_32 ^= (((Bit32u) 1) << op2_32);  /* toggle bit */
+  setB_CF(temp_CF);
+
+  BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 }
 
 #if BX_SUPPORT_X86_64

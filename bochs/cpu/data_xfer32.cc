@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.42 2007-11-16 08:30:21 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.43 2007-11-17 12:44:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -79,12 +79,6 @@ void BX_CPU_C::MOV_GdEdM(bxInstruction_c *i)
 
 void BX_CPU_C::LEA_GdM(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_INFO(("LEA_GdM: op2 is a register"));
-    UndefinedOpcode(i);
-  }
-
-  /* write effective address of op2 in op1 */
   BX_WRITE_32BIT_REGZ(i->nnn(), RMAddr(i));
 }
 
@@ -99,20 +93,17 @@ void BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
   write_virtual_dword(i->seg(), i->Id(), &EAX);
 }
 
-void BX_CPU_C::MOV_EdId(bxInstruction_c *i)
+void BX_CPU_C::MOV_EdIdM(bxInstruction_c *i)
 {
-  Bit32u op2_32 = i->Id();
-
-  /* now write sum back to destination */
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
-  }
-  else {
-    write_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-  }
+  Bit32u op_32 = i->Id();
+  write_virtual_dword(i->seg(), RMAddr(i), &op_32);
 }
 
-#if BX_CPU_LEVEL >= 3
+void BX_CPU_C::MOV_EdIdR(bxInstruction_c *i)
+{
+  BX_WRITE_32BIT_REGZ(i->rm(), i->Id());
+}
+
 void BX_CPU_C::MOVZX_GdEb(bxInstruction_c *i)
 {
   Bit8u  op2_8;
@@ -176,25 +167,25 @@ void BX_CPU_C::MOVSX_GdEw(bxInstruction_c *i)
   /* sign extend word op2 into dword op1 */
   BX_WRITE_32BIT_REGZ(i->nnn(), (Bit16s) op2_16);
 }
-#endif
 
-void BX_CPU_C::XCHG_EdGd(bxInstruction_c *i)
+void BX_CPU_C::XCHG_EdGdM(bxInstruction_c *i)
 {
   Bit32u op2_32, op1_32;
 
+  /* pointer, segment address pair */
+  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   op2_32 = BX_READ_32BIT_REG(i->nnn());
+  write_RMW_virtual_dword(op2_32);
 
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    write_RMW_virtual_dword(op2_32);
-  }
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+}
 
+void BX_CPU_C::XCHG_EdGdR(bxInstruction_c *i)
+{
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
+
+  BX_WRITE_32BIT_REGZ(i->rm(),  op2_32);
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 }
 

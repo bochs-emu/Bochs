@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.42 2007-11-16 08:30:21 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.43 2007-11-17 12:44:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -127,11 +127,6 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 
 void BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 {
-  if (i->modC0()) {
-    BX_INFO(("LEA_GwM: op2 is a register"));
-    UndefinedOpcode(i);
-  }
-
   BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) RMAddr(i));
 }
 
@@ -145,17 +140,15 @@ void BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
   write_virtual_word(i->seg(), i->Id(), &AX);
 }
 
-void BX_CPU_C::MOV_EwIw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op2_16 = i->Iw();
+  Bit16u op_16 = i->Iw();
+  write_virtual_word(i->seg(), RMAddr(i), &op_16);
+}
 
-  /* now write sum back to destination */
-  if (i->modC0()) {
-    BX_WRITE_16BIT_REG(i->rm(), op2_16);
-  }
-  else {
-    write_virtual_word(i->seg(), RMAddr(i), &op2_16);
-  }
+void BX_CPU_C::MOV_EwIwR(bxInstruction_c *i)
+{
+  BX_WRITE_16BIT_REG(i->rm(), i->Iw());
 }
 
 #if BX_CPU_LEVEL >= 3
