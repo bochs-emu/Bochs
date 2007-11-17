@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.25 2007-10-21 22:07:33 sshwarts Exp $
+// $Id: shift8.cc,v 1.26 2007-11-17 16:20:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -95,7 +95,7 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -149,7 +149,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -199,7 +199,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -243,7 +243,7 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -282,7 +282,7 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */
@@ -320,7 +320,7 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
+    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   }
   else {
     /* pointer, segment address pair */

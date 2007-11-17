@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.52 2007-11-17 12:44:09 sshwarts Exp $
+// $Id: arith16.cc,v 1.53 2007-11-17 16:20:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,9 +72,7 @@ void BX_CPU_C::ADD_GwEwM(bxInstruction_c *i)
   Bit16u op1_16, op2_16, sum_16;
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
-
   read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-
   sum_16 = op1_16 + op2_16;
   SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 
@@ -161,9 +159,7 @@ void BX_CPU_C::ADC_AXIw(bxInstruction_c *i)
 
   op1_16 = AX;
   op2_16 = i->Iw();
-
   sum_16 = op1_16 + op2_16 + temp_CF;
-
   AX = sum_16;
 
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, sum_16, BX_INSTR_ADD_ADC16(temp_CF));
@@ -501,20 +497,22 @@ void BX_CPU_C::CMP_EwIwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
 }
 
-void BX_CPU_C::NEG_Ew(bxInstruction_c *i)
+void BX_CPU_C::NEG_EwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-    op1_16 = -op1_16;
-    BX_WRITE_16BIT_REG(i->rm(), op1_16);
-  }
-  else {
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    op1_16 = -op1_16;
-    write_RMW_virtual_word(op1_16);
-  }
+  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = -op1_16;
+  write_RMW_virtual_word(op1_16);
+
+  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_NEG16);
+}
+
+void BX_CPU_C::NEG_EwR(bxInstruction_c *i)
+{
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+  op1_16 = -op1_16;
+  BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_NEG16);
 }

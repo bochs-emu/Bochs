@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.132 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.133 2007-11-17 16:20:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ static const bx_bool BxOpcodeHasModrm64[512] = {
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
   /*       -------------------------------           */
            1,1,1,1,0,0,0,0,0,0,0,0,0,1,0,1, /* 0F 00 */
-           1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1, /* 0F 10 */
+           1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 10 */
            1,1,1,1,0,0,0,0,1,1,1,1,1,1,1,1, /* 0F 20 */
            0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0, /* 0F 30 */
            1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* 0F 40 */
@@ -458,8 +458,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* F3 /wr */ { BxPrefix, &BX_CPU_C::BxError }, // REP, REPE/REPZ
   /* F4 /wr */ { 0, &BX_CPU_C::HLT },
   /* F5 /wr */ { 0, &BX_CPU_C::CMC },
-  /* F6 /wr */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /wr */ { BxGroup3, NULL, BxOpcodeInfoG3Ew },
+  /* F6 /wr */ { BxGroup3, NULL, BxOpcodeInfoG3EbR },
+  /* F7 /wr */ { BxGroup3, NULL, BxOpcodeInfoG3EwR },
   /* F8 /wr */ { 0, &BX_CPU_C::CLC },
   /* F9 /wr */ { 0, &BX_CPU_C::STC },
   /* FA /wr */ { 0, &BX_CPU_C::CLI },
@@ -498,13 +498,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /wr */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /wr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /wr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /wr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /wr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /wr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /wr */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /wr */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /wr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /wr */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /wr */ { 0, &BX_CPU_C::MOV_RqDq },
@@ -987,8 +987,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* F3 /dr */ { BxPrefix, &BX_CPU_C::BxError }, // REP,REPE/REPZ
   /* F4 /dr */ { 0, &BX_CPU_C::HLT },
   /* F5 /dr */ { 0, &BX_CPU_C::CMC },
-  /* F6 /dr */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /dr */ { BxGroup3, NULL, BxOpcodeInfoG3Ed },
+  /* F6 /dr */ { BxGroup3, NULL, BxOpcodeInfoG3EbR },
+  /* F7 /dr */ { BxGroup3, NULL, BxOpcodeInfoG3EdR },
   /* F8 /dr */ { 0, &BX_CPU_C::CLC },
   /* F9 /dr */ { 0, &BX_CPU_C::STC },
   /* FA /dr */ { 0, &BX_CPU_C::CLI },
@@ -1027,13 +1027,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /dr */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /dr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /dr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /dr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /dr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /dr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /dr */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /dr */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /dr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /dr */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /dr */ { 0, &BX_CPU_C::MOV_RqDq },
@@ -1516,8 +1516,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* F3 /qr */ { BxPrefix, &BX_CPU_C::BxError }, // REP,REPE/REPZ
   /* F4 /qr */ { 0, &BX_CPU_C::HLT },
   /* F5 /qr */ { 0, &BX_CPU_C::CMC },
-  /* F6 /qr */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /qr */ { BxGroup3, NULL, BxOpcodeInfo64G3Eq },
+  /* F6 /qr */ { BxGroup3, NULL, BxOpcodeInfoG3EbR },
+  /* F7 /qr */ { BxGroup3, NULL, BxOpcodeInfo64G3EqR },
   /* F8 /qr */ { 0, &BX_CPU_C::CLC },
   /* F9 /qr */ { 0, &BX_CPU_C::STC },
   /* FA /qr */ { 0, &BX_CPU_C::CLI },
@@ -1556,13 +1556,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F 15 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /qr */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /qr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /qr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /qr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /qr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /qr */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /qr */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /qr */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /qr */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /qr */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /qr */ { 0, &BX_CPU_C::MOV_RqDq },
@@ -2051,8 +2051,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* F3 /wm */ { BxPrefix, &BX_CPU_C::BxError }, // REP, REPE/REPZ
   /* F4 /wm */ { 0, &BX_CPU_C::HLT },
   /* F5 /wm */ { 0, &BX_CPU_C::CMC },
-  /* F6 /wm */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /wm */ { BxGroup3, NULL, BxOpcodeInfoG3Ew },
+  /* F6 /wm */ { BxGroup3, NULL, BxOpcodeInfoG3EbM },
+  /* F7 /wm */ { BxGroup3, NULL, BxOpcodeInfoG3EwM },
   /* F8 /wm */ { 0, &BX_CPU_C::CLC },
   /* F9 /wm */ { 0, &BX_CPU_C::STC },
   /* FA /wm */ { 0, &BX_CPU_C::CLI },
@@ -2091,13 +2091,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 15 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /wm */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /wm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /wm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /wm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /wm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /wm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /wm */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /wm */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /wm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /wm */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /wm */ { 0, &BX_CPU_C::MOV_RqDq },
@@ -2580,8 +2580,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* F3 /dm */ { BxPrefix, &BX_CPU_C::BxError }, // REP,REPE/REPZ
   /* F4 /dm */ { 0, &BX_CPU_C::HLT },
   /* F5 /dm */ { 0, &BX_CPU_C::CMC },
-  /* F6 /dm */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /dm */ { BxGroup3, NULL, BxOpcodeInfoG3Ed },
+  /* F6 /dm */ { BxGroup3, NULL, BxOpcodeInfoG3EbM },
+  /* F7 /dm */ { BxGroup3, NULL, BxOpcodeInfoG3EdM },
   /* F8 /dm */ { 0, &BX_CPU_C::CLC },
   /* F9 /dm */ { 0, &BX_CPU_C::STC },
   /* FA /dm */ { 0, &BX_CPU_C::CLI },
@@ -2620,13 +2620,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 15 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /dm */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /dm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /dm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /dm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /dm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /dm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /dm */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /dm */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /dm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /dm */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /dm */ { 0, &BX_CPU_C::MOV_RqDq },
@@ -3109,8 +3109,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* F3 /qm */ { BxPrefix, &BX_CPU_C::BxError }, // REP,REPE/REPZ
   /* F4 /qm */ { 0, &BX_CPU_C::HLT },
   /* F5 /qm */ { 0, &BX_CPU_C::CMC },
-  /* F6 /qm */ { BxGroup3, NULL, BxOpcodeInfoG3Eb },
-  /* F7 /qm */ { BxGroup3, NULL, BxOpcodeInfo64G3Eq },
+  /* F6 /qm */ { BxGroup3, NULL, BxOpcodeInfoG3EbM },
+  /* F7 /qm */ { BxGroup3, NULL, BxOpcodeInfo64G3EqM },
   /* F8 /qm */ { 0, &BX_CPU_C::CLC },
   /* F9 /qm */ { 0, &BX_CPU_C::STC },
   /* FA /qm */ { 0, &BX_CPU_C::CLI },
@@ -3149,13 +3149,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F 15 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
   /* 0F 17 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
-  /* 0F 18 /qm */ { 0, &BX_CPU_C::PREFETCH },  // opcode group G16, PREFETCH hints
-  /* 0F 19 /qm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1A /qm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1B /qm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1C /qm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1D /qm */ { 0, &BX_CPU_C::BxError },
-  /* 0F 1E /qm */ { 0, &BX_CPU_C::BxError },
+  /* 0F 18 /qm */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
+  /* 0F 19 /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1A /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1B /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1C /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1D /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
+  /* 0F 1E /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 1F /qm */ { 0, &BX_CPU_C::NOP },      // multi-byte NOP
   /* 0F 20 /qm */ { 0, &BX_CPU_C::MOV_RqCq },
   /* 0F 21 /qm */ { 0, &BX_CPU_C::MOV_RqDq },

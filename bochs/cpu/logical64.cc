@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.18 2007-10-21 23:35:11 sshwarts Exp $
+// $Id: logical64.cc,v 1.19 2007-11-17 16:20:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -134,22 +134,21 @@ void BX_CPU_C::OR_EqId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
 
-void BX_CPU_C::NOT_Eq(bxInstruction_c *i)
+void BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 {
   Bit64u op1_64;
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op1_64 = ~op1_64;
-    BX_WRITE_64BIT_REG(i->rm(), op1_64);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    op1_64 = ~op1_64;
-    write_RMW_virtual_qword(op1_64);
-  }
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = ~op1_64;
+  write_RMW_virtual_qword(op1_64);
+}
+
+void BX_CPU_C::NOT_EqR(bxInstruction_c *i)
+{
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  op1_64 = ~op1_64;
+  BX_WRITE_64BIT_REG(i->rm(), op1_64);
 }
 
 void BX_CPU_C::OR_EqGq(bxInstruction_c *i)
@@ -321,21 +320,24 @@ void BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
 
-void BX_CPU_C::TEST_EqId(bxInstruction_c *i)
+void BX_CPU_C::TEST_EqIdM(bxInstruction_c *i)
 {
   Bit64u op2_64, op1_64;
 
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   op2_64 = (Bit32s) i->Id();
+  op1_64 &= op2_64;
 
-  /* op1_64 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-  }
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
+}
 
+void BX_CPU_C::TEST_EqIdR(bxInstruction_c *i)
+{
+  Bit64u op2_64, op1_64;
+
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op2_64 = (Bit32s) i->Id();
   op1_64 &= op2_64;
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);

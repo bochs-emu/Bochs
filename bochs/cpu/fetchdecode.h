@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.38 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.39 2007-11-17 16:20:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2721,33 +2721,66 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G2Eq[8] = {
 /* Group 3 */
 /* ******* */
 
-static const BxOpcodeInfo_t BxOpcodeInfoG3Eb[8] = {
-  /* 0 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIb },
-  /* 1 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIb },
-  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Eb },
-  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_Eb },
+static const BxOpcodeInfo_t BxOpcodeInfoG3EbM[8] = {
+  /* 0 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIbM },
+  /* 1 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIbM },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EbM },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EbM },
   /* 4 */ { 0,              &BX_CPU_C::MUL_ALEb },
   /* 5 */ { 0,              &BX_CPU_C::IMUL_ALEb },
   /* 6 */ { 0,              &BX_CPU_C::DIV_ALEb },
   /* 7 */ { 0,              &BX_CPU_C::IDIV_ALEb }
 }; 
 
-static const BxOpcodeInfo_t BxOpcodeInfoG3Ew[8] = {
-  /* 0 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIw },
-  /* 1 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIw },
-  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Ew },
-  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_Ew },
+static const BxOpcodeInfo_t BxOpcodeInfoG3EbR[8] = {
+  /* 0 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIbR },
+  /* 1 */ { BxImmediate_Ib, &BX_CPU_C::TEST_EbIbR },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EbR },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EbR },
+  /* 4 */ { 0,              &BX_CPU_C::MUL_ALEb },
+  /* 5 */ { 0,              &BX_CPU_C::IMUL_ALEb },
+  /* 6 */ { 0,              &BX_CPU_C::DIV_ALEb },
+  /* 7 */ { 0,              &BX_CPU_C::IDIV_ALEb }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG3EwM[8] = {
+  /* 0 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIwM },
+  /* 1 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIwM },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EwM },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EwM },
   /* 4 */ { 0,              &BX_CPU_C::MUL_AXEw },
   /* 5 */ { 0,              &BX_CPU_C::IMUL_AXEw },
   /* 6 */ { 0,              &BX_CPU_C::DIV_AXEw },
   /* 7 */ { 0,              &BX_CPU_C::IDIV_AXEw }
 }; 
 
-static const BxOpcodeInfo_t BxOpcodeInfoG3Ed[8] = {
-  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdId },
-  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdId },
-  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Ed },
-  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_Ed },
+static const BxOpcodeInfo_t BxOpcodeInfoG3EwR[8] = {
+  /* 0 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIwR },
+  /* 1 */ { BxImmediate_Iw, &BX_CPU_C::TEST_EwIwR },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EwR },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EwR },
+  /* 4 */ { 0,              &BX_CPU_C::MUL_AXEw },
+  /* 5 */ { 0,              &BX_CPU_C::IMUL_AXEw },
+  /* 6 */ { 0,              &BX_CPU_C::DIV_AXEw },
+  /* 7 */ { 0,              &BX_CPU_C::IDIV_AXEw }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG3EdM[8] = {
+  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdIdM },
+  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdIdM },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EdM },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EdM },
+  /* 4 */ { 0,              &BX_CPU_C::MUL_EAXEd },
+  /* 5 */ { 0,              &BX_CPU_C::IMUL_EAXEd },
+  /* 6 */ { 0,              &BX_CPU_C::DIV_EAXEd },
+  /* 7 */ { 0,              &BX_CPU_C::IDIV_EAXEd }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG3EdR[8] = {
+  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdIdR },
+  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EdIdR },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EdR },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EdR },
   /* 4 */ { 0,              &BX_CPU_C::MUL_EAXEd },
   /* 5 */ { 0,              &BX_CPU_C::IMUL_EAXEd },
   /* 6 */ { 0,              &BX_CPU_C::DIV_EAXEd },
@@ -2755,11 +2788,22 @@ static const BxOpcodeInfo_t BxOpcodeInfoG3Ed[8] = {
 }; 
 
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t BxOpcodeInfo64G3Eq[8] = {
-  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqId },
-  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqId },
-  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_Eq },
-  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_Eq },
+static const BxOpcodeInfo_t BxOpcodeInfo64G3EqM[8] = {
+  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqIdM },
+  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqIdM },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EqM },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EqM },
+  /* 4 */ { 0,              &BX_CPU_C::MUL_RAXEq },
+  /* 5 */ { 0,              &BX_CPU_C::IMUL_RAXEq },
+  /* 6 */ { 0,              &BX_CPU_C::DIV_RAXEq },
+  /* 7 */ { 0,              &BX_CPU_C::IDIV_RAXEq }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfo64G3EqR[8] = {
+  /* 0 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqIdR },
+  /* 1 */ { BxImmediate_Iv, &BX_CPU_C::TEST_EqIdR },
+  /* 2 */ { BxLockable,     &BX_CPU_C::NOT_EqR },
+  /* 3 */ { BxLockable,     &BX_CPU_C::NEG_EqR },
   /* 4 */ { 0,              &BX_CPU_C::MUL_RAXEq },
   /* 5 */ { 0,              &BX_CPU_C::IMUL_RAXEq },
   /* 6 */ { 0,              &BX_CPU_C::DIV_RAXEq },
