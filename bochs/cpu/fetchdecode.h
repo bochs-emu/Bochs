@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.39 2007-11-17 16:20:37 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.40 2007-11-17 18:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2589,16 +2589,28 @@ static const BxOpcodeInfo_t BxOpcode3ByteTableA5[16] = {
 /* Group 1 */
 /* ******* */
 
-static const BxOpcodeInfo_t BxOpcodeInfoG1EbIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG1EbIbM[8] = {
   // attributes defined in main area
-  /* 0 */ { BxLockable, &BX_CPU_C::ADD_EbIb },
-  /* 1 */ { BxLockable, &BX_CPU_C::OR_EbIb  },
-  /* 2 */ { BxLockable, &BX_CPU_C::ADC_EbIb },
-  /* 3 */ { BxLockable, &BX_CPU_C::SBB_EbIb },
-  /* 4 */ { BxLockable, &BX_CPU_C::AND_EbIb },
-  /* 5 */ { BxLockable, &BX_CPU_C::SUB_EbIb },
-  /* 6 */ { BxLockable, &BX_CPU_C::XOR_EbIb },
-  /* 7 */ { 0,          &BX_CPU_C::CMP_EbIb }
+  /* 0 */ { BxLockable, &BX_CPU_C::ADD_EbIbM },
+  /* 1 */ { BxLockable, &BX_CPU_C::OR_EbIbM  },
+  /* 2 */ { BxLockable, &BX_CPU_C::ADC_EbIbM },
+  /* 3 */ { BxLockable, &BX_CPU_C::SBB_EbIbM },
+  /* 4 */ { BxLockable, &BX_CPU_C::AND_EbIbM },
+  /* 5 */ { BxLockable, &BX_CPU_C::SUB_EbIbM },
+  /* 6 */ { BxLockable, &BX_CPU_C::XOR_EbIbM },
+  /* 7 */ { 0,          &BX_CPU_C::CMP_EbIbM }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG1EbIbR[8] = {
+  // attributes defined in main area
+  /* 0 */ { BxLockable, &BX_CPU_C::ADD_EbIbR },
+  /* 1 */ { BxLockable, &BX_CPU_C::OR_EbIbR  },
+  /* 2 */ { BxLockable, &BX_CPU_C::ADC_EbIbR },
+  /* 3 */ { BxLockable, &BX_CPU_C::SBB_EbIbR },
+  /* 4 */ { BxLockable, &BX_CPU_C::AND_EbIbR },
+  /* 5 */ { BxLockable, &BX_CPU_C::SUB_EbIbR },
+  /* 6 */ { BxLockable, &BX_CPU_C::XOR_EbIbR },
+  /* 7 */ { 0,          &BX_CPU_C::CMP_EbIbR }
 }; 
 
 static const BxOpcodeInfo_t BxOpcodeInfoG1EwM[8] = {

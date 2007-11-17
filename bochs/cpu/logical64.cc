@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.19 2007-11-17 16:20:37 sshwarts Exp $
+// $Id: logical64.cc,v 1.20 2007-11-17 18:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,7 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -34,7 +34,7 @@
 
 void BX_CPU_C::XOR_EqGq(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op2_64 = BX_READ_64BIT_REG(i->nnn());
 
@@ -92,9 +92,7 @@ void BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
 
 void BX_CPU_C::XOR_EqId(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
-
-  op2_64 = (Bit32s) i->Id();
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
@@ -114,9 +112,7 @@ void BX_CPU_C::XOR_EqId(bxInstruction_c *i)
 
 void BX_CPU_C::OR_EqId(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
-
-  op2_64 = (Bit32s) i->Id();
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
@@ -153,7 +149,7 @@ void BX_CPU_C::NOT_EqR(bxInstruction_c *i)
 
 void BX_CPU_C::OR_EqGq(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op2_64 = BX_READ_64BIT_REG(i->nnn());
 
@@ -211,7 +207,7 @@ void BX_CPU_C::OR_RAXId(bxInstruction_c *i)
 
 void BX_CPU_C::AND_EqGq(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op2_64 = BX_READ_64BIT_REG(i->nnn());
 
@@ -269,9 +265,7 @@ void BX_CPU_C::AND_RAXId(bxInstruction_c *i)
 
 void BX_CPU_C::AND_EqId(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
-
-  op2_64 = (Bit32s) i->Id();
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
   /* op1_64 is a register or memory reference */
   if (i->modC0()) {
@@ -291,7 +285,7 @@ void BX_CPU_C::AND_EqId(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op2_64 = BX_READ_64BIT_REG(i->nnn());
 
@@ -311,7 +305,7 @@ void BX_CPU_C::TEST_EqGq(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op1_64 = RAX;
   op2_64 = (Bit32s) i->Id();
@@ -322,7 +316,7 @@ void BX_CPU_C::TEST_RAXId(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EqIdM(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   /* pointer, segment address pair */
   read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
@@ -334,7 +328,7 @@ void BX_CPU_C::TEST_EqIdM(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EqIdR(bxInstruction_c *i)
 {
-  Bit64u op2_64, op1_64;
+  Bit64u op1_64, op2_64;
 
   op1_64 = BX_READ_64BIT_REG(i->rm());
   op2_64 = (Bit32s) i->Id();

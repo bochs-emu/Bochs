@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.32 2007-11-17 16:20:37 sshwarts Exp $
+// $Id: logical16.cc,v 1.33 2007-11-17 18:08:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -73,11 +74,10 @@ void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 
 void BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
 {
-  Bit16u op1_16, op2_16;
+  Bit16u op1_16;
 
   op1_16 = AX;
-  op2_16 = i->Iw();
-  op1_16 ^= op2_16;
+  op1_16 ^= i->Iw();
   AX = op1_16;
 
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
@@ -270,19 +270,22 @@ void BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
 }
 
-void BX_CPU_C::TEST_EwGw(bxInstruction_c *i)
+void BX_CPU_C::TEST_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
+  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   op2_16 = BX_READ_16BIT_REG(i->nnn());
+  op1_16 &= op2_16;
+  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+}
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  }
+void BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16;
 
+  op1_16 = BX_READ_16BIT_REG(i->rm());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
 }
