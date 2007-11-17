@@ -1,14 +1,9 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.9 2007-11-06 19:17:42 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.10 2007-11-17 23:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2005 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

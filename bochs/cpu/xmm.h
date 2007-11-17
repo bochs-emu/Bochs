@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.23 2007-07-15 19:03:39 sshwarts Exp $
+// $Id: xmm.h,v 1.24 2007-11-17 23:28:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -19,6 +19,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef BX_SSE_EXTENSIONS_H 
 #define BX_SSE_EXTENSIONS_H

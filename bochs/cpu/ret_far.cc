@@ -1,14 +1,9 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.10 2007-09-25 16:11:32 sshwarts Exp $
+// $Id: ret_far.cc,v 1.11 2007-11-17 23:28:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001  MandrakeSoft S.A.
-//
-//    MandrakeSoft S.A.
-//    43, rue d'Aboukir
-//    75002 Paris - France
-//    http://www.linux-mandrake.com/
-//    http://www.mandrakesoft.com/
+//   Copyright (c) 2005 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public

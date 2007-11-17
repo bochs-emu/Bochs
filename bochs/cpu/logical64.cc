@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.20 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: logical64.cc,v 1.21 2007-11-17 23:28:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -90,42 +90,48 @@ void BX_CPU_C::XOR_RAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
 
-void BX_CPU_C::XOR_EqId(bxInstruction_c *i)
+void BX_CPU_C::XOR_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* op1_64 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op1_64 ^= op2_64;
-    BX_WRITE_64BIT_REG(i->rm(), op1_64);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    op1_64 ^= op2_64;
-    write_RMW_virtual_qword(op1_64);
-  }
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 ^= op2_64;
+  write_RMW_virtual_qword(op1_64);
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
 
-void BX_CPU_C::OR_EqId(bxInstruction_c *i)
+void BX_CPU_C::XOR_EqIdR(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* op1_64 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op1_64 |= op2_64;
-    BX_WRITE_64BIT_REG(i->rm(), op1_64);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    op1_64 |= op2_64;
-    write_RMW_virtual_qword(op1_64);
-  }
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op1_64 ^= op2_64;
+  BX_WRITE_64BIT_REG(i->rm(), op1_64);
+
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
+}
+
+void BX_CPU_C::OR_EqIdM(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 |= op2_64;
+  write_RMW_virtual_qword(op1_64);
+
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
+}
+
+void BX_CPU_C::OR_EqIdR(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op1_64 |= op2_64;
+  BX_WRITE_64BIT_REG(i->rm(), op1_64);
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
@@ -263,22 +269,25 @@ void BX_CPU_C::AND_RAXId(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }
 
-void BX_CPU_C::AND_EqId(bxInstruction_c *i)
+void BX_CPU_C::AND_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* op1_64 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    op1_64 &= op2_64;
-    BX_WRITE_64BIT_REG(i->rm(), op1_64);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    op1_64 &= op2_64;
-    write_RMW_virtual_qword(op1_64);
-  }
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 &= op2_64;
+  write_RMW_virtual_qword(op1_64);
+
+  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
+}
+
+void BX_CPU_C::AND_EqIdR(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64 = (Bit32s) i->Id();
+
+  op1_64 = BX_READ_64BIT_REG(i->rm());
+  op1_64 &= op2_64;
+  BX_WRITE_64BIT_REG(i->rm(), op1_64);
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_LOGIC64);
 }

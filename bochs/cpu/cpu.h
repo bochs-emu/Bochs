@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.363 2007-11-17 18:28:57 sshwarts Exp $
+// $Id: cpu.h,v 1.364 2007-11-17 23:28:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2741,14 +2741,23 @@ public: // for now...
 
   BX_SMF void BSWAP_RRX(bxInstruction_c *);
 
-  BX_SMF void ADD_EqId(bxInstruction_c *);
-  BX_SMF void OR_EqId(bxInstruction_c *);
-  BX_SMF void ADC_EqId(bxInstruction_c *);
-  BX_SMF void SBB_EqId(bxInstruction_c *);
-  BX_SMF void AND_EqId(bxInstruction_c *);
-  BX_SMF void SUB_EqId(bxInstruction_c *);
-  BX_SMF void XOR_EqId(bxInstruction_c *);
-  BX_SMF void CMP_EqId(bxInstruction_c *);
+  BX_SMF void ADD_EqIdM(bxInstruction_c *);
+  BX_SMF void OR_EqIdM(bxInstruction_c *);
+  BX_SMF void ADC_EqIdM(bxInstruction_c *);
+  BX_SMF void SBB_EqIdM(bxInstruction_c *);
+  BX_SMF void AND_EqIdM(bxInstruction_c *);
+  BX_SMF void SUB_EqIdM(bxInstruction_c *);
+  BX_SMF void XOR_EqIdM(bxInstruction_c *);
+  BX_SMF void CMP_EqIdM(bxInstruction_c *);
+
+  BX_SMF void ADD_EqIdR(bxInstruction_c *);
+  BX_SMF void OR_EqIdR(bxInstruction_c *);
+  BX_SMF void ADC_EqIdR(bxInstruction_c *);
+  BX_SMF void SBB_EqIdR(bxInstruction_c *);
+  BX_SMF void AND_EqIdR(bxInstruction_c *);
+  BX_SMF void SUB_EqIdR(bxInstruction_c *);
+  BX_SMF void XOR_EqIdR(bxInstruction_c *);
+  BX_SMF void CMP_EqIdR(bxInstruction_c *);
 
   BX_SMF void ROL_Eq(bxInstruction_c *);
   BX_SMF void ROR_Eq(bxInstruction_c *);
