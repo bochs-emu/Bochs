@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.362 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: cpu.h,v 1.363 2007-11-17 18:28:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1710,12 +1710,19 @@ public: // for now...
   BX_SMF void LFS_GdMp(bxInstruction_c *);
   BX_SMF void LGS_GdMp(bxInstruction_c *);
 
-  BX_SMF void MOVZX_GdEb(bxInstruction_c *);
-  BX_SMF void MOVZX_GwEb(bxInstruction_c *);
-  BX_SMF void MOVZX_GdEw(bxInstruction_c *);
-  BX_SMF void MOVSX_GdEb(bxInstruction_c *);
-  BX_SMF void MOVSX_GwEb(bxInstruction_c *);
-  BX_SMF void MOVSX_GdEw(bxInstruction_c *);
+  BX_SMF void MOVZX_GwEbM(bxInstruction_c *);
+  BX_SMF void MOVZX_GdEbM(bxInstruction_c *);
+  BX_SMF void MOVZX_GdEwM(bxInstruction_c *);
+  BX_SMF void MOVSX_GwEbM(bxInstruction_c *);
+  BX_SMF void MOVSX_GdEbM(bxInstruction_c *);
+  BX_SMF void MOVSX_GdEwM(bxInstruction_c *);
+
+  BX_SMF void MOVZX_GwEbR(bxInstruction_c *);
+  BX_SMF void MOVZX_GdEbR(bxInstruction_c *);
+  BX_SMF void MOVZX_GdEwR(bxInstruction_c *);
+  BX_SMF void MOVSX_GwEbR(bxInstruction_c *);
+  BX_SMF void MOVSX_GdEbR(bxInstruction_c *);
+  BX_SMF void MOVSX_GdEwR(bxInstruction_c *);
 
   BX_SMF void BSWAP_ERX(bxInstruction_c *);
 
