@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.134 2007-11-18 21:38:58 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.135 2007-11-18 22:14:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,39 +115,6 @@ static BxExecutePtr_tR Resolve16Mod1or2[8] = {
   &BX_CPU_C::BxResolve16Mod1or2Rm5,
   &BX_CPU_C::BxResolve16Mod1or2Rm6,
   &BX_CPU_C::BxResolve16Mod1or2Rm7
-};
-
-static BxExecutePtr_tR Resolve32Rm[8] = {
-  &BX_CPU_C::BxResolve32Rm,
-  &BX_CPU_C::BxResolve32Rm,
-  &BX_CPU_C::BxResolve32Rm,
-  &BX_CPU_C::BxResolve32Rm,
-  NULL, // escape to SIB-byte
-  &BX_CPU_C::BxResolve32Disp,
-  &BX_CPU_C::BxResolve32Rm,
-  &BX_CPU_C::BxResolve32Rm
-};
-
-static BxExecutePtr_tR Resolve32Base[8] = {
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Disp,
-  &BX_CPU_C::BxResolve32Base,
-  &BX_CPU_C::BxResolve32Base,
-};
-
-static BxExecutePtr_tR Resolve32BaseIndex[8] = {
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32DispIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
-  &BX_CPU_C::BxResolve32BaseIndex,
 };
 
 // decoding instructions; accessing seg reg's by index
@@ -2649,10 +2616,12 @@ fetch_b1:
       // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
         if (mod == 0x00) { // mod == 00b
-          instruction->ResolveModrm = Resolve32Rm[rm];
+          instruction->ResolveModrm = BxResolve32Rm;
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
+            instruction->ResolveModrm = BxResolve32Disp;
+get_32bit_displ:
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
               iptr += 4;
@@ -2678,14 +2647,7 @@ get_8bit_displ:
           else return(0);
         }
         // (mod == 0x80) mod == 10b
-get_32bit_displ:
-        if ((ilen+3) < remain) {
-          instruction->modRMForm.displ32u = FetchDWORD(iptr);
-          iptr += 4;
-          ilen += 4;
-          goto modrm_done;
-        }
-        else return(0);
+        goto get_32bit_displ;
       }
       else { // mod!=11b, rm==4, s-i-b byte follows
         unsigned sib, base, index, scale;
@@ -2702,22 +2664,23 @@ get_32bit_displ:
         instruction->modRMForm.modRMData3 |= (base);
         instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
-        if (mod == 0x00) { // mod==00b, rm==4
-          if (index == 4)
-            instruction->ResolveModrm = Resolve32Base[base];
-          else
-            instruction->ResolveModrm = Resolve32BaseIndex[base];
-          if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(sreg_mod0_base32[base]);
-          if (base == 0x05)
-            goto get_32bit_displ;
-          // mod==00b, rm==4, base!=5
-          goto modrm_done;
-        }
         if (index == 4)
           instruction->ResolveModrm = BxResolve32Base;
         else
           instruction->ResolveModrm = BxResolve32BaseIndex;
+        if (mod == 0x00) { // mod==00b, rm==4
+          if (BX_NULL_SEG_REG(instruction->seg()))
+            instruction->setSeg(sreg_mod0_base32[base]);
+          if (base == 0x05) {
+            if (index == 4)
+              instruction->ResolveModrm = BxResolve32Disp;
+            else
+              instruction->ResolveModrm = BxResolve32DispIndex;
+            goto get_32bit_displ;
+          }
+          // mod==00b, rm==4, base!=5
+          goto modrm_done;
+        }
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(sreg_mod1or2_base32[base]);
         if (mod == 0x40) // mod==01b, rm==4
