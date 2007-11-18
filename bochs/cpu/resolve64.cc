@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.12 2007-11-17 23:28:32 sshwarts Exp $
+// $Id: resolve64.cc,v 1.13 2007-11-18 19:46:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,60 +35,44 @@
 #if BX_SUPPORT_X86_64
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0Rip(bxInstruction_c *i)
+BX_CPU_C::BxResolve32Rip(bxInstruction_c *i)
 {
   // RIP hasn't been bumped yet when this is called.  must choose the saved value.
-  RMAddr(i) = (Bit32u) (BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s)i->displ32u());
+  RMAddr(i) = (Bit32u) (BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s) i->displ32u());
 }
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0Rip(bxInstruction_c *i)
+BX_CPU_C::BxResolve64Rip(bxInstruction_c *i)
 {
   // RIP hasn't been bumped yet when this is called.  must choose the saved value.
-  RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s)i->displ32u();
+  RMAddr(i) = BX_CPU_THIS_PTR prev_eip + i->ilen() + (Bit32s) i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0Rm(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_64BIT_REG(i->rm());
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0Base(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_64BIT_REG(i->sibBase());
-}
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0Disp(bxInstruction_c *i)
-{
-  RMAddr(i) = (Bit32s) i->displ32u();
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0BaseIndex(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_64BIT_REG(i->sibBase()) + (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale());
-}
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod0DispIndex(bxInstruction_c *i)
+BX_CPU_C::BxResolve64DispIndex(bxInstruction_c *i)
 {
   RMAddr(i) = (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod1or2Rm(bxInstruction_c *i)
+BX_CPU_C::BxResolve64Rm(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_64BIT_REG(i->rm()) + (Bit32s) i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod1or2Base(bxInstruction_c *i)
+BX_CPU_C::BxResolve64Disp(bxInstruction_c *i)
+{
+  RMAddr(i) = (Bit32s) i->displ32u();
+}
+
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve64Base(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_64BIT_REG(i->sibBase()) + (Bit32s) i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve64Mod1or2BaseIndex(bxInstruction_c *i)
+BX_CPU_C::BxResolve64BaseIndex(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_64BIT_REG(i->sibBase()) + (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) + (Bit32s) i->displ32u();
 }

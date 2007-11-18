@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve32.cc,v 1.13 2007-11-17 23:28:32 sshwarts Exp $
+// $Id: resolve32.cc,v 1.14 2007-11-18 19:46:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -33,47 +33,31 @@
 
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0Rm(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_32BIT_REG(i->rm());
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0Base(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase());
-}
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0Disp(bxInstruction_c *i)
-{
-  RMAddr(i) = i->displ32u();
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0BaseIndex(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale());
-}
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod0DispIndex(bxInstruction_c *i)
-{
-  RMAddr(i) = i->displ32u() + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale());
-}
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod1or2Rm(bxInstruction_c *i)
+BX_CPU_C::BxResolve32Rm(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_32BIT_REG(i->rm()) + i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod1or2Base(bxInstruction_c *i)
+BX_CPU_C::BxResolve32Disp(bxInstruction_c *i)
+{
+  RMAddr(i) = i->displ32u();
+}
+
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve32Base(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Mod1or2BaseIndex(bxInstruction_c *i)
+BX_CPU_C::BxResolve32DispIndex(bxInstruction_c *i)
+{
+  RMAddr(i) = i->displ32u() + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale());
+}
+
+  void  BX_CPP_AttrRegparmN(1)
+BX_CPU_C::BxResolve32BaseIndex(bxInstruction_c *i)
 {
   RMAddr(i) = BX_READ_32BIT_REG(i->sibBase()) + (BX_READ_32BIT_REG(i->sibIndex()) << i->sibScale()) + i->displ32u();
 }
