@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.130 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.131 2007-11-18 18:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -307,7 +307,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wr */ { 0, &BX_CPU_C::BxError }, // LEA
   /* 8E /wr */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /wr */ { 0, &BX_CPU_C::POP_Ew },
+  /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
   /* 90 /wr */ { 0, &BX_CPU_C::NOP },
   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -871,7 +871,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dr */ { 0, &BX_CPU_C::BxError }, // LEA
   /* 8E /dr */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /dr */ { 0, &BX_CPU_C::POP_Ed },
+  /* 8F /dr */ { 0, &BX_CPU_C::POP_EdR },
   /* 90 /dr */ { 0, &BX_CPU_C::NOP },
   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -1442,7 +1442,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wm */ { 0, &BX_CPU_C::LEA_GwM },
   /* 8E /wm */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /wm */ { 0, &BX_CPU_C::POP_Ew },
+  /* 8F /wm */ { 0, &BX_CPU_C::POP_EwM },
   /* 90 /wm */ { 0, &BX_CPU_C::NOP },
   /* 91 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -2006,7 +2006,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dm */ { 0, &BX_CPU_C::LEA_GdM },
   /* 8E /dm */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /dm */ { 0, &BX_CPU_C::POP_Ed },
+  /* 8F /dm */ { 0, &BX_CPU_C::POP_EdM },
   /* 90 /dm */ { 0, &BX_CPU_C::NOP },
   /* 91 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },

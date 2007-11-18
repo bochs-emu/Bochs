@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.365 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: cpu.h,v 1.366 2007-11-18 18:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2626,10 +2626,13 @@ public: // for now...
   BX_SMF void POP_RX(bxInstruction_c *);
   BX_SMF void PUSH_ERX(bxInstruction_c *);
   BX_SMF void POP_ERX(bxInstruction_c *);
-  BX_SMF void POP_Ew(bxInstruction_c *);
-  BX_SMF void POP_Ed(bxInstruction_c *);
   BX_SMF void XCHG_RXAX(bxInstruction_c *);
   BX_SMF void XCHG_ERXEAX(bxInstruction_c *);
+
+  BX_SMF void POP_EwM(bxInstruction_c *);
+  BX_SMF void POP_EdM(bxInstruction_c *);
+  BX_SMF void POP_EwR(bxInstruction_c *);
+  BX_SMF void POP_EdR(bxInstruction_c *);
 
   BX_SMF void POPCNT_GwEw(bxInstruction_c *);
   BX_SMF void POPCNT_GdEd(bxInstruction_c *);
@@ -2845,8 +2848,9 @@ public: // for now...
   BX_SMF void MOV_RRXIq(bxInstruction_c *);
   BX_SMF void PUSH_RRX(bxInstruction_c *);
   BX_SMF void POP_RRX(bxInstruction_c *);
-  BX_SMF void POP_Eq(bxInstruction_c *);
   BX_SMF void XCHG_RRXRAX(bxInstruction_c *);
+  BX_SMF void POP_EqR(bxInstruction_c *);
+  BX_SMF void POP_EqM(bxInstruction_c *);
 
   BX_SMF void PUSH64_Id(bxInstruction_c *);
   BX_SMF void PUSH64_FS(bxInstruction_c *);

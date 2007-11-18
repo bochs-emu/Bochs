@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.24 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: stack64.cc,v 1.25 2007-11-18 18:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,26 +32,28 @@
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPU_C::POP_Eq(bxInstruction_c *i)
+void BX_CPU_C::POP_EqM(bxInstruction_c *i)
 {
   Bit64u val64;
 
   pop_64(&val64);
 
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), val64);
+  // Note: there is one little weirdism here.  When 64bit addressing
+  // is used, it is possible to use RSP in the modrm addressing.
+  // If used, the value of RSP after the pop is used to calculate
+  // the address.
+  if (i->as64L() && (i->rm()==4) && (i->sibBase()==4)) {
+    // call method on BX_CPU_C object
+    BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
-  else {
-    // Note: there is one little weirdism here.  When 64bit addressing
-    // is used, it is possible to use RSP in the modrm addressing.
-    // If used, the value of RSP after the pop is used to calculate
-    // the address.
-    if (i->as64L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
-      // call method on BX_CPU_C object
-      BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-    }
-    write_virtual_qword(i->seg(), RMAddr(i), &val64);
-  }
+  write_virtual_qword(i->seg(), RMAddr(i), &val64);
+}
+
+void BX_CPU_C::POP_EqR(bxInstruction_c *i)
+{
+  Bit64u val64;
+  pop_64(&val64);
+  BX_WRITE_64BIT_REG(i->rm(), val64);
 }
 
 void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.36 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: stack32.cc,v 1.37 2007-11-18 18:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,26 +30,28 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-void BX_CPU_C::POP_Ed(bxInstruction_c *i)
+void BX_CPU_C::POP_EdM(bxInstruction_c *i)
 {
   Bit32u val32;
 
   pop_32(&val32);
 
-  if (i->modC0()) {
-    BX_WRITE_32BIT_REGZ(i->rm(), val32);
+  // Note: there is one little weirdism here.  When 32bit addressing
+  // is used, it is possible to use ESP in the modrm addressing.
+  // If used, the value of ESP after the pop is used to calculate
+  // the address.
+  if (i->as32L() && (i->rm()==4) && (i->sibBase()==4)) {
+    // call method on BX_CPU_C object
+    BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
-  else {
-    // Note: there is one little weirdism here.  When 32bit addressing
-    // is used, it is possible to use ESP in the modrm addressing.
-    // If used, the value of ESP after the pop is used to calculate
-    // the address.
-    if (i->as32L() && (!i->modC0()) && (i->rm()==4) && (i->sibBase()==4)) {
-      // call method on BX_CPU_C object
-      BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
-    }
-    write_virtual_dword(i->seg(), RMAddr(i), &val32);
-  }
+  write_virtual_dword(i->seg(), RMAddr(i), &val32);
+}
+
+void BX_CPU_C::POP_EdR(bxInstruction_c *i)
+{
+  Bit32u val32;
+  pop_32(&val32);
+  BX_WRITE_32BIT_REGZ(i->rm(), val32);
 }
 
 void BX_CPU_C::PUSH_ERX(bxInstruction_c *i)

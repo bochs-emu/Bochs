@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.137 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.138 2007-11-18 18:49:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -354,7 +354,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wr */ { 0, &BX_CPU_C::BxError },   // LEA
   /* 8E /wr */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /wr */ { 0, &BX_CPU_C::POP_Ew },
+  /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
   /* 90 /wr */ { 0, &BX_CPU_C::XCHG_RXAX }, // handles XCHG R8w, AX
   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -883,7 +883,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dr */ { 0, &BX_CPU_C::BxError },     // LEA
   /* 8E /dr */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /dr */ { 0, &BX_CPU_C::POP_Eq },
+  /* 8F /dr */ { 0, &BX_CPU_C::POP_EqR },
   /* 90 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX }, // handles XCHG R8d, EAX
   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -1412,7 +1412,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /qr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /qr */ { 0, &BX_CPU_C::BxError },     // LEA
   /* 8E /qr */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /qr */ { 0, &BX_CPU_C::POP_Eq },
+  /* 8F /qr */ { 0, &BX_CPU_C::POP_EqR },
   /* 90 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX }, // handles XCHG R8, RAX
   /* 91 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX },
   /* 92 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX },
@@ -1947,7 +1947,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wm */ { 0, &BX_CPU_C::LEA_GwM },
   /* 8E /wm */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /wm */ { 0, &BX_CPU_C::POP_Ew },
+  /* 8F /wm */ { 0, &BX_CPU_C::POP_EwM },
   /* 90 /wm */ { 0, &BX_CPU_C::XCHG_RXAX }, // handles XCHG R8w, AX
   /* 91 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -2476,7 +2476,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dm */ { 0, &BX_CPU_C::LEA_GdM },
   /* 8E /dm */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /dm */ { 0, &BX_CPU_C::POP_Eq },
+  /* 8F /dm */ { 0, &BX_CPU_C::POP_EqM },
   /* 90 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX }, // handles XCHG R8d, EAX
   /* 91 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -3005,7 +3005,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 8C /qm */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /qm */ { 0, &BX_CPU_C::LEA_GqM },
   /* 8E /qm */ { 0, &BX_CPU_C::MOV_SwEw },
-  /* 8F /qm */ { 0, &BX_CPU_C::POP_Eq },
+  /* 8F /qm */ { 0, &BX_CPU_C::POP_EqM },
   /* 90 /qm */ { 0, &BX_CPU_C::XCHG_RRXRAX }, // handles XCHG R8, RAX
   /* 91 /qm */ { 0, &BX_CPU_C::XCHG_RRXRAX },
   /* 92 /qm */ { 0, &BX_CPU_C::XCHG_RRXRAX },
