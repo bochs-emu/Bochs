@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.366 2007-11-18 21:07:40 sshwarts Exp $
+// $Id: main.cc,v 1.367 2007-11-18 21:09:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1234,8 +1234,8 @@ void bx_signal_handler(int signum)
       bx_gui->show_ips((Bit32u) ips_count);
       ticks_count = bx_pc_system.time_ticks();
       counts++;
-      printf("MIPS: %u\tticks/counts = %u\t\t(%us)\n", 
-            (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
+//    printf("MIPS: %u\tticks/counts = %u\t\t(%us)\n", 
+//          (unsigned) ips_count, (unsigned) (ticks_count/counts), (unsigned) counts);
     }
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
     signal(SIGALRM, bx_signal_handler);
