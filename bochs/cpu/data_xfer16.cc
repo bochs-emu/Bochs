@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.45 2007-11-17 18:28:58 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.46 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,14 +95,9 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
 {
   Bit16u op2_16;
 
-  /* If attempt is made to load the CS register ... */
-  if (i->nnn() == BX_SEG_REG_CS) {
-    UndefinedOpcode(i);
-  }
-
-  /* Illegal to use nonexisting segments */
-  if (i->nnn() >= 6) {
-    BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
+  /* Attempt to load CS or nonexisting segment register */
+  if (i->nnn() >= 6 || i->nnn() == BX_SEG_REG_CS) {
+    BX_INFO(("MOV_EwSw: can't use this segment register %d", i->nnn()));
     UndefinedOpcode(i);
   }
 
@@ -120,8 +115,7 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
     // trap exceptions until the execution boundary following the
     // next instruction is reached.
     // Same code as POP_SS()
-    BX_CPU_THIS_PTR inhibit_mask |=
-      BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
+    BX_CPU_THIS_PTR inhibit_mask |= BX_INHIBIT_INTERRUPTS | BX_INHIBIT_DEBUG;
     BX_CPU_THIS_PTR async_event = 1;
   }
 }

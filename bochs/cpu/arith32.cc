@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.60 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: arith32.cc,v 1.61 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -417,10 +417,9 @@ void BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
   UndefinedOpcode(i);
 }
 
-void BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
+void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
-
   Bit32u op1_32, op2_32, sum_32;
 
   /* XADD dst(r/m), src(r)
@@ -429,25 +428,42 @@ void BX_CPU_C::XADD_EdGd(bxInstruction_c *i)
    * dst  <-- tmp               | op1 = sum
    */
 
+  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   op2_32 = BX_READ_32BIT_REG(i->nnn());
+  sum_32 = op1_32 + op2_32;
+  write_RMW_virtual_dword(sum_32);
 
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-    sum_32 = op1_32 + op2_32;
-    // and write destination into source
-    // Note: if both op1 & op2 are registers, the last one written
-    //       should be the sum, as op1 & op2 may be the same register.
-    //       For example:  XADD AL, AL
-    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
-    BX_WRITE_32BIT_REGZ(i->rm(), sum_32);
-  }
-  else {
-    read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-    sum_32 = op1_32 + op2_32;
-    write_RMW_virtual_dword(sum_32);
-    /* and write destination into source */
-    BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
-  }
+  /* and write destination into source */
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+
+  SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
+#else
+  BX_INFO (("XADD_EdGd not supported for cpulevel <= 3"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit32u op1_32, op2_32, sum_32;
+
+  /* XADD dst(r/m), src(r)
+   * temp <-- src + dst         | sum = op2 + op1
+   * src  <-- dst               | op2 = op1
+   * dst  <-- tmp               | op1 = sum
+   */
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  sum_32 = op1_32 + op2_32;
+
+  // and write destination into source
+  // Note: if both op1 & op2 are registers, the last one written
+  //       should be the sum, as op1 & op2 may be the same register.
+  //       For example:  XADD AL, AL
+  BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+  BX_WRITE_32BIT_REGZ(i->rm(), sum_32);
 
   SET_FLAGS_OSZAPC_S1_32(op1_32, sum_32, BX_INSTR_ADD32);
 #else
@@ -612,32 +628,43 @@ void BX_CPU_C::DEC_EdR(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_DEC32);
 }
 
-void BX_CPU_C::CMPXCHG_EdGd(bxInstruction_c *i)
+void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit32u op1_32, op2_32, diff_32;
 
-  if (i->modC0()) {
-    op1_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  }
-
+  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   diff_32 = EAX - op1_32;
-
   SET_FLAGS_OSZAPC_32(EAX, op1_32, diff_32, BX_INSTR_COMPARE32);
 
   if (diff_32 == 0) {  // if accumulator == dest
     // dest <-- src
     op2_32 = BX_READ_32BIT_REG(i->nnn());
+    write_RMW_virtual_dword(op2_32);
+  }
+  else {
+    // accumulator <-- dest
+    RAX = op1_32;
+  }
+#else
+  BX_INFO(("CMPXCHG_EdGd: not supported for cpulevel <= 3"));
+  UndefinedOpcode(i);
+#endif
+}
 
-    if (i->modC0()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
-    }
-    else {
-      write_RMW_virtual_dword(op2_32);
-    }
+void BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit32u op1_32, op2_32, diff_32;
+
+  op1_32 = BX_READ_32BIT_REG(i->rm());
+  diff_32 = EAX - op1_32;
+  SET_FLAGS_OSZAPC_32(EAX, op1_32, diff_32, BX_INSTR_COMPARE32);
+
+  if (diff_32 == 0) {  // if accumulator == dest
+    // dest <-- src
+    op2_32 = BX_READ_32BIT_REG(i->nnn());
+    BX_WRITE_32BIT_REGZ(i->rm(), op2_32);
   }
   else {
     // accumulator <-- dest

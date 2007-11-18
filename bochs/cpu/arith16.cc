@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.54 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: arith16.cc,v 1.55 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -373,7 +373,7 @@ void BX_CPU_C::CWD(bxInstruction_c *i)
   }
 }
 
-void BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
+void BX_CPU_C::XADD_EwGwM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit16u op1_16, op2_16, sum_16;
@@ -384,25 +384,42 @@ void BX_CPU_C::XADD_EwGw(bxInstruction_c *i)
    * dst  <-- tmp               | op1 = sum
    */
 
+  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   op2_16 = BX_READ_16BIT_REG(i->nnn());
+  sum_16 = op1_16 + op2_16;
+  write_RMW_virtual_word(sum_16);
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-    sum_16 = op1_16 + op2_16;
-    // and write destination into source
-    // Note: if both op1 & op2 are registers, the last one written
-    //       should be the sum, as op1 & op2 may be the same register.
-    //       For example:  XADD AL, AL
-    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
-    BX_WRITE_16BIT_REG(i->rm(), sum_16);
-  }
-  else {
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    sum_16 = op1_16 + op2_16;
-    write_RMW_virtual_word(sum_16);
-    /* and write destination into source */
-    BX_WRITE_16BIT_REG(i->nnn(), op1_16);
-  }
+  /* and write destination into source */
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+
+  SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
+#else
+  BX_INFO(("XADD_EwGw: not supported on < 80486"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::XADD_EwGwR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit16u op1_16, op2_16, sum_16;
+
+  /* XADD dst(r/m), src(r)
+   * temp <-- src + dst         | sum = op2 + op1
+   * src  <-- dst               | op2 = op1
+   * dst  <-- tmp               | op1 = sum
+   */
+
+  op1_16 = BX_READ_16BIT_REG(i->rm());
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+  sum_16 = op1_16 + op2_16;
+
+  // and write destination into source
+  // Note: if both op1 & op2 are registers, the last one written
+  //       should be the sum, as op1 & op2 may be the same register.
+  //       For example:  XADD AL, AL
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+  BX_WRITE_16BIT_REG(i->rm(), sum_16);
 
   SET_FLAGS_OSZAPC_S1_16(op1_16, sum_16, BX_INSTR_ADD16);
 #else
@@ -558,32 +575,43 @@ void BX_CPU_C::DEC_EwR(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_16(op1_16, BX_INSTR_DEC16);
 }
 
-void BX_CPU_C::CMPXCHG_EwGw(bxInstruction_c *i)
+void BX_CPU_C::CMPXCHG_EwGwM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit16u op1_16, op2_16, diff_16;
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  }
-
+  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   diff_16 = AX - op1_16;
-
   SET_FLAGS_OSZAPC_16(AX, op1_16, diff_16, BX_INSTR_COMPARE16);
 
   if (diff_16 == 0) {  // if accumulator == dest
     // dest <-- src
     op2_16 = BX_READ_16BIT_REG(i->nnn());
+    write_RMW_virtual_word(op2_16);
+  }
+  else {
+    // accumulator <-- dest
+    AX = op1_16;
+  }
+#else
+  BX_INFO(("CMPXCHG_EwGw: not supported for cpu-level <= 3"));
+  UndefinedOpcode(i);
+#endif
+}
 
-    if (i->modC0()) {
-      BX_WRITE_16BIT_REG(i->rm(), op2_16);
-    }
-    else {
-      write_RMW_virtual_word(op2_16);
-    }
+void BX_CPU_C::CMPXCHG_EwGwR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit16u op1_16, op2_16, diff_16;
+
+  op1_16 = BX_READ_16BIT_REG(i->rm());
+  diff_16 = AX - op1_16;
+  SET_FLAGS_OSZAPC_16(AX, op1_16, diff_16, BX_INSTR_COMPARE16);
+
+  if (diff_16 == 0) {  // if accumulator == dest
+    // dest <-- src
+    op2_16 = BX_READ_16BIT_REG(i->nnn());
+    BX_WRITE_16BIT_REG(i->rm(), op2_16);
   }
   else {
     // accumulator <-- dest

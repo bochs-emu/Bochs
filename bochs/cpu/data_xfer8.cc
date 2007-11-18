@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.29 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.30 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -105,22 +105,23 @@ void BX_CPU_C::XLAT(bxInstruction_c *i)
   read_virtual_byte(i->seg(), offset, &AL);
 }
 
-void BX_CPU_C::XCHG_EbGb(bxInstruction_c *i)
+void BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
 {
-  Bit8u op2, op1;
+  Bit8u op1, op2;
 
+  /* pointer, segment address pair */
+  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  write_RMW_virtual_byte(op2);
 
-  /* op1 is a register or memory reference */
-  if (i->modC0()) {
-    op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
-    write_RMW_virtual_byte(op2);
-  }
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
+}
 
+void BX_CPU_C::XCHG_EbGbR(bxInstruction_c *i)
+{
+  Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  Bit8u op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+
+  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 }

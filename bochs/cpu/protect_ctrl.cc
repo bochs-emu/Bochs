@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.64 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.65 2007-11-18 18:24:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,8 +387,6 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     UndefinedOpcode(i);
   }
 
-  invalidate_prefetch_q();
-
   /* #GP(0) if the current privilege level is not 0 */
   if (CPL != 0) {
     BX_ERROR(("LTR: The current priveledge level is not 0"));
@@ -401,6 +399,8 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   else {
     read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
   }
+
+  invalidate_prefetch_q();
 
   /* if selector is NULL, invalidate and done */
   if ((raw_selector & BX_SELECTOR_RPL_MASK) == 0) {
@@ -742,12 +742,6 @@ void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 {
   BX_ASSERT(protected_mode());
-
-  /* operand might be a register or memory reference */
-  if (i->modC0()) {
-    BX_ERROR(("LGDT64_Ms: must be memory reference"));
-    UndefinedOpcode(i);
-  }
 
   if (CPL!=0) {
     BX_ERROR(("LGDT64_Ms: CPL != 0 in long mode"));

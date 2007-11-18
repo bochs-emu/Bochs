@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.45 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: arith8.cc,v 1.46 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -335,7 +335,7 @@ void BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
 }
 
-void BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
+void BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit8u op1, op2, sum;
@@ -346,25 +346,42 @@ void BX_CPU_C::XADD_EbGb(bxInstruction_c *i)
    * dst  <-- tmp               | op1 = sum
    */
 
+  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  sum = op1 + op2;
+  write_RMW_virtual_byte(sum);
 
-  if (i->modC0()) {
-    op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-    sum = op1 + op2;
-    // and write destination into source
-    // Note: if both op1 & op2 are registers, the last one written
-    //       should be the sum, as op1 & op2 may be the same register.
-    //       For example:  XADD AL, AL
-    BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
-    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
-  }
-  else {
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
-    sum = op1 + op2;
-    write_RMW_virtual_byte(sum);
-    /* and write destination into source */
-    BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
-  }
+  /* and write destination into source */
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
+
+  SET_FLAGS_OSZAPC_S1_8(op1, sum, BX_INSTR_ADD8);
+#else
+  BX_INFO(("XADD_EbGb: not supported on < 80486"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::XADD_EbGbR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit8u op1, op2, sum;
+
+  /* XADD dst(r/m8), src(r8)
+   * temp <-- src + dst         | sum = op2 + op1
+   * src  <-- dst               | op2 = op1
+   * dst  <-- tmp               | op1 = sum
+   */
+
+  op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  sum = op1 + op2;
+
+  // and write destination into source
+  // Note: if both op1 & op2 are registers, the last one written
+  //       should be the sum, as op1 & op2 may be the same register.
+  //       For example:  XADD AL, AL
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
+  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), sum);
 
   SET_FLAGS_OSZAPC_S1_8(op1, sum, BX_INSTR_ADD8);
 #else
@@ -520,18 +537,12 @@ void BX_CPU_C::DEC_EbR(bxInstruction_c *i)
   SET_FLAGS_OSZAP_RESULT_8(op1_8, BX_INSTR_DEC8);
 }
 
-void BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
+void BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
 {
 #if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
   Bit8u op1_8, op2_8, diff_8;
 
-  if (i->modC0()) {
-    op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  }
-  else {
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
-  }
-
+  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   diff_8 = AL - op1_8;
 
   SET_FLAGS_OSZAPC_8(AL, op1_8, diff_8, BX_INSTR_COMPARE8);
@@ -539,13 +550,32 @@ void BX_CPU_C::CMPXCHG_EbGb(bxInstruction_c *i)
   if (diff_8 == 0) {  // if accumulator == dest
     // dest <-- src
     op2_8 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+    write_RMW_virtual_byte(op2_8);
+  }
+  else {
+    // accumulator <-- dest
+    AL = op1_8;
+  }
 
-    if (i->modC0()) {
-      BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2_8);
-    }
-    else {
-      write_RMW_virtual_byte(op2_8);
-    }
+#else
+  BX_INFO(("CMPXCHG_EbGb: not supported for cpulevel <= 3"));
+  UndefinedOpcode(i);
+#endif
+}
+
+void BX_CPU_C::CMPXCHG_EbGbR(bxInstruction_c *i)
+{
+#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+  Bit8u op1_8, op2_8, diff_8;
+
+  op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  diff_8 = AL - op1_8;
+  SET_FLAGS_OSZAPC_8(AL, op1_8, diff_8, BX_INSTR_COMPARE8);
+
+  if (diff_8 == 0) {  // if accumulator == dest
+    // dest <-- src
+    op2_8 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+    BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2_8);
   }
   else {
     // accumulator <-- dest

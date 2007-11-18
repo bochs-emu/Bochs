@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.27 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.28 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,30 +46,26 @@ void BX_CPU_C::MOV_RRXIq(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->opcodeReg(), i->Iq());
 }
 
-void BX_CPU_C::MOV_EqGq(bxInstruction_c *i)
+void BX_CPU_C::MOV_EqGqM(bxInstruction_c *i)
 {
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
-
-  if (i->modC0()) {
-    BX_WRITE_64BIT_REG(i->rm(), op2_64);
-  }
-  else {
-    write_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-  }
+  write_virtual_qword(i->seg(), RMAddr(i), &BX_READ_64BIT_REG(i->nnn()));
 }
 
-void BX_CPU_C::MOV_GqEq(bxInstruction_c *i)
+void BX_CPU_C::MOV_EqGqR(bxInstruction_c *i)
 {
-  Bit64u op2_64;
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
+  BX_WRITE_64BIT_REG(i->rm(), op2_64);
+}
 
-  if (i->modC0()) {
-    op2_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-  }
+void BX_CPU_C::MOV_GqEqM(bxInstruction_c *i)
+{
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &BX_READ_64BIT_REG(i->nnn()));
+}
 
+void BX_CPU_C::MOV_GqEqR(bxInstruction_c *i)
+{
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
   BX_WRITE_64BIT_REG(i->nnn(), op2_64);
 }
 
@@ -135,103 +131,119 @@ void BX_CPU_C::MOV_EqIdR(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->rm(), op_64);
 }
 
-void BX_CPU_C::MOVZX_GqEb(bxInstruction_c *i)
+void BX_CPU_C::MOVZX_GqEbM(bxInstruction_c *i)
 {
   Bit8u op2_8;
 
-  if (i->modC0()) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
-  }
+  /* pointer, segment address pair */
+  read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
 
   /* zero extend byte op2 into qword op1 */
   BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_8);
 }
 
-void BX_CPU_C::MOVZX_GqEw(bxInstruction_c *i)
+void BX_CPU_C::MOVZX_GqEbR(bxInstruction_c *i)
+{
+  Bit8u op2_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+
+  /* zero extend byte op2 into qword op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_8);
+}
+
+void BX_CPU_C::MOVZX_GqEwM(bxInstruction_c *i)
 {
   Bit16u op2_16;
 
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-  }
+  /* pointer, segment address pair */
+  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
 
   /* zero extend word op2 into qword op1 */
   BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_16);
 }
 
-void BX_CPU_C::MOVSX_GqEb(bxInstruction_c *i)
+void BX_CPU_C::MOVZX_GqEwR(bxInstruction_c *i)
+{
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
+
+  /* zero extend word op2 into qword op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), (Bit64u) op2_16);
+}
+
+void BX_CPU_C::MOVSX_GqEbM(bxInstruction_c *i)
 {
   Bit8u op2_8;
 
-  if (i->modC0()) {
-    op2_8 = BX_READ_8BIT_REGx(i->rm(),i->extend8bitL());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
-  }
+  /* pointer, segment address pair */
+  read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
 
   /* sign extend byte op2 into qword op1 */
   BX_WRITE_64BIT_REG(i->nnn(), (Bit8s) op2_8);
 }
 
-void BX_CPU_C::MOVSX_GqEw(bxInstruction_c *i)
+void BX_CPU_C::MOVSX_GqEbR(bxInstruction_c *i)
+{
+  Bit8u op2_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+
+  /* sign extend byte op2 into qword op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), (Bit8s) op2_8);
+}
+
+void BX_CPU_C::MOVSX_GqEwM(bxInstruction_c *i)
 {
   Bit16u op2_16;
 
-  if (i->modC0()) {
-    op2_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
-  }
+  /* pointer, segment address pair */
+  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
 
   /* sign extend word op2 into qword op1 */
   BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_16);
 }
 
-void BX_CPU_C::MOVSX_GqEd(bxInstruction_c *i)
+void BX_CPU_C::MOVSX_GqEwR(bxInstruction_c *i)
+{
+  Bit16u op2_16 = BX_READ_16BIT_REG(i->rm());
+
+  /* sign extend word op2 into qword op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), (Bit16s) op2_16);
+}
+
+void BX_CPU_C::MOVSX_GqEdM(bxInstruction_c *i)
 {
   Bit32u op2_32;
 
-  if (i->modC0()) {
-    op2_32 = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
-  }
+  /* pointer, segment address pair */
+  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
 
   /* sign extend word op2 into qword op1 */
   BX_WRITE_64BIT_REG(i->nnn(), (Bit32s) op2_32);
 }
 
-void BX_CPU_C::XCHG_EqGq(bxInstruction_c *i)
+void BX_CPU_C::MOVSX_GqEdR(bxInstruction_c *i)
+{
+  Bit32u op2_32 = BX_READ_32BIT_REG(i->rm());
+
+  /* sign extend word op2 into qword op1 */
+  BX_WRITE_64BIT_REG(i->nnn(), (Bit32s) op2_32);
+}
+
+void BX_CPU_C::XCHG_EqGqM(bxInstruction_c *i)
 {
   Bit64u op2_64, op1_64;
 
+  /* pointer, segment address pair */
+  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   op2_64 = BX_READ_64BIT_REG(i->nnn());
+  write_RMW_virtual_qword(op2_64);
 
-  /* op1_64 is a register or memory reference */
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
-    BX_WRITE_64BIT_REG(i->rm(), op2_64);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
-    write_RMW_virtual_qword(op2_64);
-  }
+  BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+}
 
+void BX_CPU_C::XCHG_EqGqR(bxInstruction_c *i)
+{
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
+
+  BX_WRITE_64BIT_REG(i->rm(), op2_64);
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 

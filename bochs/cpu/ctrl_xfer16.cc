@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.41 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.42 2007-11-18 18:24:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -240,11 +240,6 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
-
-  if (i->modC0()) {
-    BX_INFO(("CALL_Ep: op1 is a register"));
-    exception(BX_UD_EXCEPTION, 0, 0);
-  }
 
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
@@ -536,12 +531,6 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   Bit16u op1_16;
 
   invalidate_prefetch_q();
-
-  if (i->modC0()) {
-    /* far indirect must specify a memory address */
-    BX_INFO(("JMP_Ep(): op1 is a register"));
-    exception(BX_UD_EXCEPTION, 0, 0);
-  }
 
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
