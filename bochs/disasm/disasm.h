@@ -207,9 +207,9 @@ private:
   const char **segment_name;
   const char **index16;
 
-  const char *sreg_mod01or10_rm32[8];
-  const char *sreg_mod00_base32[8];
-  const char *sreg_mod01or10_base32[8];
+  const char *sreg_mod01or10_rm32[16];
+  const char *sreg_mod00_base32[16];
+  const char *sreg_mod01or10_base32[16];
   const char *sreg_mod00_rm16[8];
   const char *sreg_mod01or10_rm16[8];
 
