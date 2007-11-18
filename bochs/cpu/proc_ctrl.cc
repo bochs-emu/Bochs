@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.180 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.181 2007-11-18 18:40:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -854,13 +854,10 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
   Bit16u msw;
 
 #if BX_CPU_LEVEL == 2
-  msw = 0xfff0; /* 80286 init value */
-  msw |= (BX_CPU_THIS_PTR cr0.get_TS() << 3) |
-         (BX_CPU_THIS_PTR cr0.get_EM() << 2) |
-         (BX_CPU_THIS_PTR cr0.get_MP() << 1) |
-         (BX_CPU_THIS_PTR cr0.get_PE());
+  msw  = 0xfff0; /* 80286 init value */
+  msw |= BX_CPU_THIS_PTR cr0.val32 & 0x000f;
 #else /* 386+ */
-  msw = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
+  msw  = BX_CPU_THIS_PTR cr0.val32 & 0xffff;
 #endif
 
   if (i->modC0()) {
