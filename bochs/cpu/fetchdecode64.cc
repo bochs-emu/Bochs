@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.139 2007-11-18 19:46:14 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.140 2007-11-18 20:21:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3514,9 +3514,9 @@ fetch_b1:
       instruction->assertOs32();
       offset = 512*2;
     }
-    if (rex_prefix & 0x4) rex_r = 8;
-    if (rex_prefix & 0x2) rex_x = 8;
-    if (rex_prefix & 0x1) rex_b = 8;
+    rex_r = ((rex_prefix & 0x4) << 1);
+    rex_x = ((rex_prefix & 0x2) << 2);
+    rex_b = ((rex_prefix & 0x1) << 3);
   }
 
   // handle 2-byte escape

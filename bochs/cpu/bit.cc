@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.37 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: bit.cc,v 1.38 2007-11-18 20:21:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,12 +36,7 @@
 
 void BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_OF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = getB_OF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -54,12 +49,7 @@ void BX_CPU_C::SETO_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_OF()==0)
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !getB_OF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -72,12 +62,7 @@ void BX_CPU_C::SETNO_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_CF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = getB_CF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -90,12 +75,7 @@ void BX_CPU_C::SETB_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_CF()==0)
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !getB_CF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -108,12 +88,7 @@ void BX_CPU_C::SETNB_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_ZF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = getB_ZF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -126,12 +101,7 @@ void BX_CPU_C::SETZ_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_ZF()==0)
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !getB_ZF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -144,12 +114,7 @@ void BX_CPU_C::SETNZ_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_CF() || get_ZF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = (getB_CF() | getB_ZF());
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -162,12 +127,7 @@ void BX_CPU_C::SETBE_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if ((get_CF()==0) && (get_ZF()==0))
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !(getB_CF() | getB_ZF());
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -180,12 +140,7 @@ void BX_CPU_C::SETNBE_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_SF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = getB_SF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -198,12 +153,7 @@ void BX_CPU_C::SETS_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-  if (get_SF()==0)
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !getB_SF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -216,12 +166,7 @@ void BX_CPU_C::SETNS_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETP_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
- 
-  if (get_PF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = getB_PF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -234,12 +179,7 @@ void BX_CPU_C::SETP_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
-
-   if (get_PF() == 0)
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !getB_PF();
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -552,7 +492,7 @@ void BX_CPU_C::BSWAP_RRX(bxInstruction_c *i)
 
   BX_WRITE_64BIT_REG(i->opcodeReg(), val64);
 }
-#endif  // #if BX_SUPPORT_X86_64
+#endif
 
 void BX_CPU_C::BT_EwGwM(bxInstruction_c *i)
 {
