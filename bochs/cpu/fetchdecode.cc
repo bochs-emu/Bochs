@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.133 2007-11-18 21:07:40 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.134 2007-11-18 21:38:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2627,8 +2627,8 @@ fetch_b1:
 
     // Parse mod-nnn-rm and related bytes
     mod = b2 & 0xc0; // leave unshifted
-    nnn = (b2 >> 3) & 0x07;
-    rm  = b2 & 0x07;
+    nnn = (b2 >> 3) & 0x7;
+    rm  = b2 & 0x7;
 
     // MOVs with CRx and DRx always use register ops and ignore the mod field.
     if ((b1 & ~3) == 0x120)
@@ -2664,10 +2664,10 @@ fetch_b1:
           // mod==00b, rm!=4, rm!=5
           goto modrm_done;
         }
+        instruction->ResolveModrm = BxResolve32Rm;
+        if (BX_NULL_SEG_REG(instruction->seg()))
+          instruction->setSeg(sreg_mod01or10_rm32[rm]);
         if (mod == 0x40) { // mod == 01b
-          instruction->ResolveModrm = BxResolve32Rm;
-          if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(sreg_mod01or10_rm32[rm]);
 get_8bit_displ:
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -2678,9 +2678,6 @@ get_8bit_displ:
           else return(0);
         }
         // (mod == 0x80) mod == 10b
-        instruction->ResolveModrm = BxResolve32Rm;
-        if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(sreg_mod01or10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
           instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2699,8 +2696,8 @@ get_32bit_displ:
         else {
           return(0);
         }
-        base  = sib & 0x07; sib >>= 3;
-        index = sib & 0x07; sib >>= 3;
+        base  = sib & 0x7; sib >>= 3;
+        index = sib & 0x7; sib >>= 3;
         scale = sib;
         instruction->modRMForm.modRMData3 |= (base);
         instruction->modRMForm.modRMData2 |= (index);
@@ -2717,31 +2714,40 @@ get_32bit_displ:
           // mod==00b, rm==4, base!=5
           goto modrm_done;
         }
-        if (mod == 0x40) { // mod==01b, rm==4
-          if (index == 4)
-            instruction->ResolveModrm = BxResolve32Base;
-          else
-            instruction->ResolveModrm = BxResolve32BaseIndex;
-          if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(sreg_mod1or2_base32[base]);
-          goto get_8bit_displ;
-        }
-        // (mod == 0x80),  mod==10b, rm==4
         if (index == 4)
           instruction->ResolveModrm = BxResolve32Base;
         else
           instruction->ResolveModrm = BxResolve32BaseIndex;
         if (BX_NULL_SEG_REG(instruction->seg()))
           instruction->setSeg(sreg_mod1or2_base32[base]);
+        if (mod == 0x40) // mod==01b, rm==4
+          goto get_8bit_displ;
+        // (mod == 0x80),   mod==10b, rm==4
         goto get_32bit_displ;
       }
     }
     else {
       // 16-bit addressing modes, mod==11b handled above
-      if (mod == 0x40) { // mod == 01b
-        instruction->ResolveModrm = Resolve16Mod1or2[rm];
+      if (mod == 0x00) { // mod == 00b
+        instruction->ResolveModrm = Resolve16Mod0[rm];
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(sreg_mod01or10_rm16[rm]);
+          instruction->setSeg(sreg_mod00_rm16[rm]);
+        if (rm == 0x06) {
+get_16bit_displ:
+          if ((ilen+1) < remain) {
+            instruction->modRMForm.displ16u = FetchWORD(iptr);
+            iptr += 2;
+            ilen += 2;
+            goto modrm_done;
+          }
+          else return(0);
+        }
+        goto modrm_done;
+      }
+      instruction->ResolveModrm = Resolve16Mod1or2[rm];
+      if (BX_NULL_SEG_REG(instruction->seg()))
+        instruction->setSeg(sreg_mod01or10_rm16[rm]);
+      if (mod == 0x40) { // mod == 01b
         if (ilen < remain) {
           // 8 sign extended to 16
           instruction->modRMForm.displ16u = (Bit8s) *iptr++;
@@ -2750,32 +2756,8 @@ get_32bit_displ:
         }
         else return(0);
       }
-      if (mod == 0x80) { // mod == 10b
-        instruction->ResolveModrm = Resolve16Mod1or2[rm];
-        if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(sreg_mod01or10_rm16[rm]);
-        if ((ilen+1) < remain) {
-          instruction->modRMForm.displ16u = FetchWORD(iptr);
-          iptr += 2;
-          ilen += 2;
-          goto modrm_done;
-        }
-        else return(0);
-      }
-      // mod must be 00b at this point
-      instruction->ResolveModrm = Resolve16Mod0[rm];
-      if (BX_NULL_SEG_REG(instruction->seg()))
-        instruction->setSeg(sreg_mod00_rm16[rm]);
-      if (rm == 0x06) {
-        if ((ilen+1) < remain) {
-          instruction->modRMForm.displ16u = FetchWORD(iptr);
-          iptr += 2;
-          ilen += 2;
-          goto modrm_done;
-        }
-        else return(0);
-      }
-      // mod=00b rm!=6
+      // (mod == 0x80)      mod == 10b
+      goto get_16bit_displ;
     }
 
 modrm_done:
