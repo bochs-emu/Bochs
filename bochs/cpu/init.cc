@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.143 2007-11-11 20:44:07 sshwarts Exp $
+// $Id: init.cc,v 1.144 2007-11-18 21:07:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -163,95 +163,9 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
 
   // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
-
-// <TAG-INIT-CPU-START>
-  // for decoding instructions: access to seg reg's via index number
-  sreg_mod00_rm16[0] = BX_SEG_REG_DS;
-  sreg_mod00_rm16[1] = BX_SEG_REG_DS;
-  sreg_mod00_rm16[2] = BX_SEG_REG_SS;
-  sreg_mod00_rm16[3] = BX_SEG_REG_SS;
-  sreg_mod00_rm16[4] = BX_SEG_REG_DS;
-  sreg_mod00_rm16[5] = BX_SEG_REG_DS;
-  sreg_mod00_rm16[6] = BX_SEG_REG_DS;
-  sreg_mod00_rm16[7] = BX_SEG_REG_DS;
-
-  sreg_mod01or10_rm16[0] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm16[1] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm16[2] = BX_SEG_REG_SS;
-  sreg_mod01or10_rm16[3] = BX_SEG_REG_SS;
-  sreg_mod01or10_rm16[4] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm16[5] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm16[6] = BX_SEG_REG_SS;
-  sreg_mod01or10_rm16[7] = BX_SEG_REG_DS;
-
-  // the default segment to use for a one-byte modrm with 
-  // mod==01b or mod==10b and rm == i
-  sreg_mod01or10_rm32[0] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[1] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[2] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[3] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[4] = BX_SEG_REG_NULL;
-    // this entry should never be accessed
-    // (escape to 2-byte)
-  sreg_mod01or10_rm32[5] = BX_SEG_REG_SS;
-  sreg_mod01or10_rm32[6] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[7] = BX_SEG_REG_DS;
-#if BX_SUPPORT_X86_64
-  sreg_mod01or10_rm32[8] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[9] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[10] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[11] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[12] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[13] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[14] = BX_SEG_REG_DS;
-  sreg_mod01or10_rm32[15] = BX_SEG_REG_DS;
-#endif
-
-  // the default segment to use for a two-byte modrm with
-  // mod==00b and base == i
-  sreg_mod0_base32[0] = BX_SEG_REG_DS;
-  sreg_mod0_base32[1] = BX_SEG_REG_DS;
-  sreg_mod0_base32[2] = BX_SEG_REG_DS;
-  sreg_mod0_base32[3] = BX_SEG_REG_DS;
-  sreg_mod0_base32[4] = BX_SEG_REG_SS;
-  sreg_mod0_base32[5] = BX_SEG_REG_DS;
-  sreg_mod0_base32[6] = BX_SEG_REG_DS;
-  sreg_mod0_base32[7] = BX_SEG_REG_DS;
-#if BX_SUPPORT_X86_64
-  sreg_mod0_base32[8] = BX_SEG_REG_DS;
-  sreg_mod0_base32[9] = BX_SEG_REG_DS;
-  sreg_mod0_base32[10] = BX_SEG_REG_DS;
-  sreg_mod0_base32[11] = BX_SEG_REG_DS;
-  sreg_mod0_base32[12] = BX_SEG_REG_DS;
-  sreg_mod0_base32[13] = BX_SEG_REG_DS;
-  sreg_mod0_base32[14] = BX_SEG_REG_DS;
-  sreg_mod0_base32[15] = BX_SEG_REG_DS;
-#endif
-
-  // the default segment to use for a two-byte modrm with
-  // mod==01b or mod==10b and base == i
-  sreg_mod1or2_base32[0] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[1] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[2] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[3] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[4] = BX_SEG_REG_SS;
-  sreg_mod1or2_base32[5] = BX_SEG_REG_SS;
-  sreg_mod1or2_base32[6] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[7] = BX_SEG_REG_DS;
-#if BX_SUPPORT_X86_64
-  sreg_mod1or2_base32[8] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[9] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[10] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[11] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[12] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[13] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[14] = BX_SEG_REG_DS;
-  sreg_mod1or2_base32[15] = BX_SEG_REG_DS;
-#endif
-// <TAG-INIT-CPU-END>
+  sprintf(name, "CPU %d", BX_CPU_ID);
 
   mem = addrspace;
-  sprintf(name, "CPU %d", BX_CPU_ID);
 
 #if BX_WITH_WX
   register_wx_state();

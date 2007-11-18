@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.140 2007-11-18 20:21:34 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.141 2007-11-18 21:07:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -83,10 +83,6 @@ static const bx_bool BxOpcodeHasModrm64[512] = {
   /*       -------------------------------           */
   /*       0 1 2 3 4 5 6 7 8 9 a b c d e f           */
 };
-
-// UD2 opcode (according to Intel manuals):
-// Use the 0F0B opcode (UD2 instruction) or the 0FB9H opcode when deliberately 
-// trying to generate an invalid opcode exception (#UD).
 
 /* *********** */
 // LOCK PREFIX //
@@ -200,6 +196,63 @@ static BxExecutePtr_tR Resolve64BaseIndex[16] = {
   &BX_CPU_C::BxResolve64BaseIndex,
 };
 
+// decoding instructions; accessing seg reg's by index
+static unsigned sreg_mod01or10_rm32[16] = {
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_NULL, // escape to SIB-byte
+  BX_SEG_REG_SS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_NULL, // escape to SIB-byte
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+};
+
+static unsigned sreg_mod0_base32[16] = {
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_SS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS
+};
+
+static unsigned sreg_mod1or2_base32[16] = {
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_SS,
+  BX_SEG_REG_SS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS
+};
 
 // common fetchdecode32/64 opcode tables
 #include "fetchdecode.h"
@@ -3596,7 +3649,7 @@ fetch_b1:
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve64Rm;
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
+            instruction->setSeg(sreg_mod01or10_rm32[rm]);
           if (ilen < remain) {
             // 8 sign extended to 32
             instruction->modRMForm.displ32u = (Bit8s) *iptr++;
@@ -3608,7 +3661,7 @@ fetch_b1:
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve64Rm;
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
+          instruction->setSeg(sreg_mod01or10_rm32[rm]);
         if ((ilen+3) < remain) {
           instruction->modRMForm.displ32u = FetchDWORD(iptr);
           iptr += 4;
@@ -3638,7 +3691,7 @@ fetch_b1:
           else
             instruction->ResolveModrm = Resolve64BaseIndex[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
+            instruction->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5)
             goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
@@ -3650,7 +3703,7 @@ fetch_b1:
           else 
             instruction->ResolveModrm = BxResolve64BaseIndex;
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
+            instruction->setSeg(sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
         }
         // (mod == 0x80),  mod==10b, rm==4
@@ -3659,7 +3712,7 @@ fetch_b1:
         else 
           instruction->ResolveModrm = BxResolve64BaseIndex;
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
+          instruction->setSeg(sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
       }
     }
@@ -3685,7 +3738,7 @@ fetch_b1:
         if (mod == 0x40) { // mod == 01b
           instruction->ResolveModrm = BxResolve32Rm;
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
+            instruction->setSeg(sreg_mod01or10_rm32[rm]);
 get_8bit_displ:
           if (ilen < remain) {
             // 8 sign extended to 32
@@ -3698,7 +3751,7 @@ get_8bit_displ:
         // (mod == 0x80) mod == 10b
         instruction->ResolveModrm = BxResolve32Rm;
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod01or10_rm32[rm]);
+          instruction->setSeg(sreg_mod01or10_rm32[rm]);
 get_32bit_displ:
         if ((ilen+3) < remain) {
           instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -3729,7 +3782,7 @@ get_32bit_displ:
           else
             instruction->ResolveModrm = Resolve32BaseIndex[base];
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod0_base32[base]);
+            instruction->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5)
             goto get_32bit_displ;
           // mod==00b, rm==4, base!=5
@@ -3741,7 +3794,7 @@ get_32bit_displ:
           else
             instruction->ResolveModrm = BxResolve32BaseIndex;
           if (BX_NULL_SEG_REG(instruction->seg()))
-            instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
+            instruction->setSeg(sreg_mod1or2_base32[base]);
           goto get_8bit_displ;
         }
         // (mod == 0x80),  mod==10b, rm==4
@@ -3750,7 +3803,7 @@ get_32bit_displ:
         else
           instruction->ResolveModrm = BxResolve32BaseIndex;
         if (BX_NULL_SEG_REG(instruction->seg()))
-          instruction->setSeg(BX_CPU_THIS_PTR sreg_mod1or2_base32[base]);
+          instruction->setSeg(sreg_mod1or2_base32[base]);
         goto get_32bit_displ;
       }
     }

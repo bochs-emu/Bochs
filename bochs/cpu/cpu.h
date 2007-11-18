@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.367 2007-11-18 19:46:14 sshwarts Exp $
+// $Id: cpu.h,v 1.368 2007-11-18 21:07:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1198,21 +1198,6 @@ public: // for now...
   volatile bx_bool INTR;
   volatile bx_bool smi_pending;
   volatile bx_bool nmi_pending;
-
-// <TAG-CLASS-CPU-START>
-  // for decoding instructions; accessing seg reg's by index
-  unsigned sreg_mod00_rm16[8];
-  unsigned sreg_mod01or10_rm16[8];
-#if BX_SUPPORT_X86_64
-  unsigned sreg_mod01or10_rm32[16];
-  unsigned sreg_mod0_base32[16];
-  unsigned sreg_mod1or2_base32[16];
-#else
-  unsigned sreg_mod01or10_rm32[8];
-  unsigned sreg_mod0_base32[8];
-  unsigned sreg_mod1or2_base32[8];
-#endif
-// <TAG-CLASS-CPU-END>
 
   // for exceptions
   jmp_buf jmp_buf_env;
