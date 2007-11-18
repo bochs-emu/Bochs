@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.37 2007-11-18 18:49:19 sshwarts Exp $
+// $Id: stack32.cc,v 1.38 2007-11-18 18:52:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,7 +157,26 @@ void BX_CPU_C::POP32_SS(bxInstruction_c *i)
   BX_CPU_THIS_PTR async_event = 1;
 }
 
-#if BX_CPU_LEVEL >= 2
+void BX_CPU_C::PUSH_Id(bxInstruction_c *i)
+{
+  push_32(i->Id());
+}
+
+void BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
+{
+  Bit32u op1_32;
+
+  /* pointer, segment address pair */
+  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+
+  push_32(op1_32);
+}
+
+void BX_CPU_C::PUSH_EdR(bxInstruction_c *i)
+{
+  push_32(BX_READ_32BIT_REG(i->rm()));
+}
+
 void BX_CPU_C::PUSHAD32(bxInstruction_c *i)
 {
   Bit32u temp_ESP = ESP;
@@ -225,27 +244,6 @@ void BX_CPU_C::POPAD32(bxInstruction_c *i)
   EDX = edx;
   ECX = ecx;
   EAX = eax;
-}
-#endif
-
-void BX_CPU_C::PUSH_Id(bxInstruction_c *i)
-{
-  push_32(i->Id());
-}
-
-void BX_CPU_C::PUSH_EdM(bxInstruction_c *i)
-{
-  Bit32u op1_32;
-
-  /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-
-  push_32(op1_32);
-}
-
-void BX_CPU_C::PUSH_EdR(bxInstruction_c *i)
-{
-  push_32(BX_READ_32BIT_REG(i->rm()));
 }
 
 #if BX_CPU_LEVEL >= 2
