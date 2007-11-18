@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.349 2007-10-30 18:57:46 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.350 2007-11-18 19:53:43 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -52,7 +52,7 @@ case "$target" in
     fi
     ;;
   *-macosx* | *-darwin*)
-    ADD_FLAGS="-fpascal-strings -fno-common -arch ppc -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
+    ADD_FLAGS="-fpascal-strings -fno-common -Wno-four-char-constants -Wno-unknown-pragmas -Dmacintosh"      # required for macosx compile
     DEFAULT_GUI=carbon                # default to carbon
     need_dlcompat_for_plugins=1
     ;;
