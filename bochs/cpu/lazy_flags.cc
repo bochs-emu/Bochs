@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.35 2007-11-06 08:39:25 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.36 2007-11-19 19:55:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,6 +53,9 @@ const bx_bool bx_parity_lookup[256] = {
   0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
   1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 };
+
+// set to 1 if you want to update eflags state after lazy flag evaluation
+#define UPDATE_EFLAGS_LAZY 0
 
 bx_bool BX_CPU_C::get_CFLazy(void)
 {
@@ -281,9 +284,11 @@ bx_bool BX_CPU_C::get_CFLazy(void)
             (unsigned) BX_CPU_THIS_PTR oszapc.instr));
   }
  
+#if UPDATE_EFLAGS_LAZY
   BX_CPU_THIS_PTR lf_flags_status &= 0xfffff0;
   BX_CPU_THIS_PTR eflags.val32 &= ~(1<<0);
   BX_CPU_THIS_PTR eflags.val32 |= (!!cf)<<0;
+#endif
   return(cf);
 }
 
@@ -397,9 +402,11 @@ bx_bool BX_CPU_C::get_AFLazy(void)
           BX_PANIC(("get_AF: OSZAPC: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszapc.instr));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
       BX_CPU_THIS_PTR eflags.val32 |= (!!af)<<4;
+#endif
       return(af);
 
     case BX_LF_INDEX_OSZAP:
@@ -437,9 +444,11 @@ bx_bool BX_CPU_C::get_AFLazy(void)
           BX_PANIC(("get_AF: OSZAP: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszap.instr));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xfff0ff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<4);
       BX_CPU_THIS_PTR eflags.val32 |= (!!af)<<4;
+#endif
       return(af);
 
     default:
@@ -533,9 +542,11 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
           zf = 0;
           BX_PANIC(("get_ZF: OSZAPC: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
       BX_CPU_THIS_PTR eflags.val32 |= zf<<6; // zf always exactly 0 or 1.
+#endif
       return(zf);
 
     case BX_LF_INDEX_OSZAP:
@@ -562,9 +573,11 @@ bx_bool BX_CPU_C::get_ZFLazy(void)
           zf = 0;
           BX_PANIC(("get_ZF: OSZAP: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xff0fff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<6);
       BX_CPU_THIS_PTR eflags.val32 |= zf<<6; // zf always exactly 0 or 1.
+#endif
       return(zf);
 
     default:
@@ -654,9 +667,11 @@ bx_bool BX_CPU_C::get_SFLazy(void)
           sf = 0; // Keep compiler quiet.
           BX_PANIC(("get_SF: OSZAPC: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
       BX_CPU_THIS_PTR eflags.val32 |= (!!sf)<<7;
+#endif
       return(sf);
 
     case BX_LF_INDEX_OSZAP:
@@ -683,9 +698,11 @@ bx_bool BX_CPU_C::get_SFLazy(void)
           sf = 0; // Keep compiler quiet.
           BX_PANIC(("get_SF: OSZAP: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xf0ffff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<7);
       BX_CPU_THIS_PTR eflags.val32 |= (!!sf)<<7;
+#endif
       return(sf);
 
     default:
@@ -917,9 +934,11 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           of = 0; // Keep compiler happy.
           BX_PANIC(("get_OF: OSZAPC: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
       BX_CPU_THIS_PTR eflags.val32 |= (!!of)<<11;
+#endif
       return(of);
 
     case BX_LF_INDEX_OSZAP:
@@ -956,9 +975,11 @@ bx_bool BX_CPU_C::get_OFLazy(void)
           of = 0; // Keep compiler happy.
           BX_PANIC(("get_OF: OSZAP: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0x0fffff;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<11);
       BX_CPU_THIS_PTR eflags.val32 |= (!!of)<<11;
+#endif
       return(of);
 
     default:
@@ -1048,9 +1069,11 @@ bx_bool BX_CPU_C::get_PFLazy(void)
           pf = 0; // Keep compiler quiet.
           BX_PANIC(("get_PF: OSZAPC: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
       BX_CPU_THIS_PTR eflags.val32 |= (pf)<<2; // pf is always 0 or 1 here
+#endif
       return(pf);
 
     case BX_LF_INDEX_OSZAP:
@@ -1077,9 +1100,11 @@ bx_bool BX_CPU_C::get_PFLazy(void)
           pf = 0; // Keep compiler quiet.
           BX_PANIC(("get_PF: OSZAP: unknown instr"));
       }
+#if UPDATE_EFLAGS_LAZY
       BX_CPU_THIS_PTR lf_flags_status &= 0xffff0f;
       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<2);
       BX_CPU_THIS_PTR eflags.val32 |= (pf)<<2; // pf is always 0 or 1 here
+#endif
       return(pf);
 
     default:

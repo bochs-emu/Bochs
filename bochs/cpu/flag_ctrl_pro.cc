@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.27 2007-09-20 17:33:31 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.28 2007-11-19 19:55:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,12 +101,16 @@ BX_CPU_C::write_flags(Bit16u flags, bx_bool change_IOPL, bx_bool change_IF)
 Bit32u BX_CPU_C::force_flags(void)
 {
   if (BX_CPU_THIS_PTR lf_flags_status) {
-    (void) get_CF();
-    (void) get_PF();
-    (void) get_AF();
-    (void) get_ZF();
-    (void) get_SF();
-    (void) get_OF();
+    Bit32u newflags;
+
+    newflags  = get_CF() ? EFlagsCFMask : 0;
+    newflags |= get_PF() ? EFlagsPFMask : 0;
+    newflags |= get_AF() ? EFlagsAFMask : 0;
+    newflags |= get_ZF() ? EFlagsZFMask : 0;
+    newflags |= get_SF() ? EFlagsSFMask : 0;
+    newflags |= get_OF() ? EFlagsOFMask : 0;
+
+    setEFlagsOSZAPC(newflags);
   }
 
   return BX_CPU_THIS_PTR eflags.val32;
