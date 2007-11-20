@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.23 2005-10-13 20:21:35 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.24 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,11 +113,6 @@
 #define BX_INSTR_SHRD16         58
 #define BX_INSTR_SHRD32         59
 #define BX_INSTR_SHRD64         60
-
-#define BX_INSTR_COMPARE8       BX_INSTR_SUB8
-#define BX_INSTR_COMPARE16      BX_INSTR_SUB16
-#define BX_INSTR_COMPARE32      BX_INSTR_SUB32
-#define BX_INSTR_COMPARE64      BX_INSTR_SUB64
 
 
 #define BX_LF_INDEX_OSZAPC  1

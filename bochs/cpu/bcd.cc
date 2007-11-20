@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.19 2007-11-17 23:28:30 sshwarts Exp $
+// $Id: bcd.cc,v 1.20 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -119,44 +119,24 @@ void BX_CPU_C::AAM(bxInstruction_c *i)
   AH = al / imm8;
   AL = al % imm8;
 
-  /* AAM effects the following flags: A,C,O,S,Z,P */
   /* modification of flags A,C,O is undocumented */
-
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  clear_OF();	/* undocumented flag modification */
-  clear_AF();
-  clear_CF();
-
-  /* AAM affects the following flags: S,Z,P */
-  set_SF(AL >= 0x80);
-  set_ZF(AL == 0);
-  set_PF_base(AL);
+  SET_FLAGS_OSZAPC_LOGIC_8(AL);
 }
 
 void BX_CPU_C::AAD(bxInstruction_c *i)
 {
-  Bit8u imm8 = i->Ib();
-
   Bit16u tmp = AH;
-  tmp *= imm8;
+  tmp *= i->Ib();
   tmp += AL;
 
-  AL = tmp & 0xff;
-  AH = 0;
+  AX = (tmp & 0xff);
 
-  /* AAD effects the following flags: A,C,O,S,Z,P */
   /* modification of flags A,C,O is undocumented */
-
   /* The following behaviour seems to match the P6 and 
      its derived processors. */
-  clear_OF();	/* undocumented flag modification */
-  clear_AF();
-  clear_CF();
-
-  set_SF(AL >= 0x80);
-  set_ZF(AL == 0);
-  set_PF_base(AL);
+  SET_FLAGS_OSZAPC_LOGIC_8(AL);
 }
 
 void BX_CPU_C::DAA(bxInstruction_c *)

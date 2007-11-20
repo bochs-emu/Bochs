@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.33 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: logical16.cc,v 1.34 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@ void BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
   op1_16 ^= op2_16;
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::XOR_EwGwR(bxInstruction_c *i)
@@ -49,7 +49,7 @@ void BX_CPU_C::XOR_EwGwR(bxInstruction_c *i)
   op1_16 ^= op2_16;
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
@@ -69,7 +69,7 @@ void BX_CPU_C::XOR_GwEw(bxInstruction_c *i)
 
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
@@ -80,7 +80,7 @@ void BX_CPU_C::XOR_AXIw(bxInstruction_c *i)
   op1_16 ^= i->Iw();
   AX = op1_16;
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
@@ -91,7 +91,7 @@ void BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
   op1_16 ^= i->Iw();
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::XOR_EwIwR(bxInstruction_c *i)
@@ -100,7 +100,7 @@ void BX_CPU_C::XOR_EwIwR(bxInstruction_c *i)
   op1_16 ^= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
@@ -111,7 +111,7 @@ void BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
   op1_16 |= i->Iw();
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::OR_EwIwR(bxInstruction_c *i)
@@ -120,7 +120,7 @@ void BX_CPU_C::OR_EwIwR(bxInstruction_c *i)
   op1_16 |= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::NOT_EwM(bxInstruction_c *i)
@@ -148,7 +148,7 @@ void BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
   op1_16 |= op2_16;
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::OR_EwGwR(bxInstruction_c *i)
@@ -160,7 +160,7 @@ void BX_CPU_C::OR_EwGwR(bxInstruction_c *i)
   op1_16 |= op2_16;
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::OR_GwEw(bxInstruction_c *i)
@@ -177,9 +177,10 @@ void BX_CPU_C::OR_GwEw(bxInstruction_c *i)
   }
 
   op1_16 |= op2_16;
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
 
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::OR_AXIw(bxInstruction_c *i)
@@ -191,7 +192,7 @@ void BX_CPU_C::OR_AXIw(bxInstruction_c *i)
   op1_16 |= op2_16;
   AX = op1_16;
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
@@ -203,7 +204,7 @@ void BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
   op1_16 &= op2_16;
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_EwGwR(bxInstruction_c *i)
@@ -215,7 +216,7 @@ void BX_CPU_C::AND_EwGwR(bxInstruction_c *i)
   op1_16 &= op2_16;
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_GwEw(bxInstruction_c *i)
@@ -232,9 +233,10 @@ void BX_CPU_C::AND_GwEw(bxInstruction_c *i)
   }
 
   op1_16 &= op2_16;
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
 
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_AXIw(bxInstruction_c *i)
@@ -243,11 +245,10 @@ void BX_CPU_C::AND_AXIw(bxInstruction_c *i)
 
   op1_16 = AX;
   op2_16 = i->Iw();
-
   op1_16 &= op2_16;
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
-
   AX = op1_16;
+
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
@@ -258,7 +259,7 @@ void BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
   op1_16 &= i->Iw();
   write_RMW_virtual_word(op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
@@ -267,7 +268,7 @@ void BX_CPU_C::AND_EwIwR(bxInstruction_c *i)
   op1_16 &= i->Iw();
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::TEST_EwGwM(bxInstruction_c *i)
@@ -277,7 +278,7 @@ void BX_CPU_C::TEST_EwGwM(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
@@ -287,7 +288,7 @@ void BX_CPU_C::TEST_EwGwR(bxInstruction_c *i)
   op1_16 = BX_READ_16BIT_REG(i->rm());
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
@@ -298,7 +299,7 @@ void BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
   op2_16 = i->Iw();
   op1_16 &= op2_16;
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::TEST_EwIwM(bxInstruction_c *i)
@@ -308,12 +309,12 @@ void BX_CPU_C::TEST_EwIwM(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   op1_16 &= i->Iw();
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 
 void BX_CPU_C::TEST_EwIwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   op1_16 &= i->Iw();
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_LOGIC16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }

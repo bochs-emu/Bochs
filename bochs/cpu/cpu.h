@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.368 2007-11-18 21:07:40 sshwarts Exp $
+// $Id: cpu.h,v 1.369 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -343,8 +343,6 @@ extern const char* cpu_state_string(Bit32u debug_trap);
 
 #if BX_SUPPORT_X86_64
 #define IsCanonical(offset) ((Bit64u)((((Bit64s)(offset)) >> (BX_LIN_ADDRESS_WIDTH-1)) + 1) < 2)
-#else
-#define IsCanonical(offset) (0)
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -2985,9 +2983,11 @@ public: // for now...
   // write of word/dword to new stack could happen only in legacy mode
   BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit16u data);
   BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit32u data);
+#if BX_SUPPORT_X86_64
   // write of qword to new stack could happen only in 64-bit mode
   // (so stack segment is not relavant)
   BX_SMF void write_new_stack_qword(bx_address offset, bx_bool user, Bit64u data);
+#endif
 
 #if BX_SUPPORT_MISALIGNED_SSE
 
@@ -3066,9 +3066,11 @@ public: // for now...
   BX_SMF void repeat(bxInstruction_c *i, BxExecutePtr_t execute);
   BX_SMF void repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute);
 
+  // linear address for access_linear expected to be canonical !
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
-       unsigned rw, void *data) BX_CPP_AttrRegparmN(3);
+       unsigned rw, void *data);
   BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
+  // linear address for translate_linear expected to be canonical !
   BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
   BX_SMF BX_CPP_INLINE bx_phy_address itranslate_linear(bx_address laddr, unsigned pl)
   {
@@ -3610,6 +3612,39 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAP_RESULT_64(result, ins) \
   SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
+#endif
+
+#define SET_FLAGS_OSZAPC_LOGIC_8(result_8) \
+   SET_FLAGS_OSZAPC_RESULT_8((result_8), BX_INSTR_LOGIC8)
+#define SET_FLAGS_OSZAPC_LOGIC_16(result_16) \
+   SET_FLAGS_OSZAPC_RESULT_16((result_16), BX_INSTR_LOGIC16)
+#define SET_FLAGS_OSZAPC_LOGIC_32(result_32) \
+   SET_FLAGS_OSZAPC_RESULT_32((result_32), BX_INSTR_LOGIC32)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_LOGIC_64(result_64) \
+   SET_FLAGS_OSZAPC_RESULT_64((result_64), BX_INSTR_LOGIC64)
+#endif
+
+#define SET_FLAGS_OSZAPC_ADD_8(op1_8, op2_8, sum_8) \
+  SET_FLAGS_OSZAPC_S1_8((op1_8), (sum_8), BX_INSTR_ADD8)
+#define SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16) \
+  SET_FLAGS_OSZAPC_S1_16((op1_16), (sum_16), BX_INSTR_ADD16)
+#define SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32) \
+  SET_FLAGS_OSZAPC_S1_32((op1_32), (sum_32), BX_INSTR_ADD32)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64) \
+  SET_FLAGS_OSZAPC_S1_64((op1_64), (sum_64), BX_INSTR_ADD64)
+#endif
+
+#define SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8) \
+  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (diff_8), BX_INSTR_SUB8)
+#define SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16) \
+  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (diff_16), BX_INSTR_SUB16)
+#define SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32) \
+  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (diff_32), BX_INSTR_SUB32)
+#if BX_SUPPORT_X86_64
+#define SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64) \
+  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (diff_64), BX_INSTR_SUB64)
 #endif
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)

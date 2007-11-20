@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.33 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: shift32.cc,v 1.34 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,9 +40,11 @@ void BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
   /* op1:op2 << count.  result stored in op1 */
 
   if (i->b1() == 0x1a4)
-    count = i->Ib() & 0x1f;
+    count = i->Ib();
   else // 0x1a5
-    count = CL & 0x1f;
+    count = CL;
+
+  count &= 0x1f; // use only 5 LSB's
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -79,9 +81,11 @@ void BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
   unsigned count;
 
   if (i->b1() == 0x1ac)
-    count = i->Ib() & 0x1f;
+    count = i->Ib();
   else // 0x1ad
-    count = CL & 0x1f;
+    count = CL;
+
+  count &= 0x1f; // use only 5 LSB's
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {

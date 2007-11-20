@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.42 2007-11-17 23:28:33 sshwarts Exp $
+// $Id: string.cc,v 1.43 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1248,7 +1248,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rsi--;
@@ -1273,7 +1273,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       esi--;
@@ -1298,7 +1298,7 @@ void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       si--;
@@ -1329,7 +1329,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 
     diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 2;
@@ -1354,7 +1354,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
 
     diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 2;
@@ -1378,7 +1378,7 @@ void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
     read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
     diff_16 = op1_16 - op2_16;
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       si -= 2;
@@ -1411,7 +1411,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 4;
@@ -1436,7 +1436,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 4;
@@ -1461,7 +1461,7 @@ void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
 
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       si -= 4;
@@ -1493,7 +1493,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rsi -= 8;
@@ -1517,7 +1517,7 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       esi -= 8;
@@ -1578,7 +1578,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
  
     if (BX_CPU_THIS_PTR get_DF()) {
       rdi--;
@@ -1598,7 +1598,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       edi--;
@@ -1618,7 +1618,7 @@ void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
 
     diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_8(op1_8, op2_8, diff_8, BX_INSTR_COMPARE8);
+    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       di--;
@@ -1643,7 +1643,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
     diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 2;
@@ -1662,7 +1662,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
     diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 2;
@@ -1681,7 +1681,7 @@ void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
     read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
     diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_16(op1_16, op2_16, diff_16, BX_INSTR_COMPARE16);
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       di -= 2;
@@ -1706,7 +1706,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 4;
@@ -1725,7 +1725,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 4;
@@ -1744,7 +1744,7 @@ void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
     read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
     diff_32 = op1_32 - op2_32;
 
-    SET_FLAGS_OSZAPC_32(op1_32, op2_32, diff_32, BX_INSTR_COMPARE32);
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       di -= 4;
@@ -1770,7 +1770,7 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
     read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       rdi -= 8;
@@ -1788,7 +1788,7 @@ void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
     read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
     diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_64(op1_64, op2_64, diff_64, BX_INSTR_COMPARE64);
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       edi -= 8;

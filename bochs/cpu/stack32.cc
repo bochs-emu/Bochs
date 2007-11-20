@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.38 2007-11-18 18:52:44 sshwarts Exp $
+// $Id: stack32.cc,v 1.39 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,11 +36,10 @@ void BX_CPU_C::POP_EdM(bxInstruction_c *i)
 
   pop_32(&val32);
 
-  // Note: there is one little weirdism here.  When 32bit addressing
-  // is used, it is possible to use ESP in the modrm addressing.
-  // If used, the value of ESP after the pop is used to calculate
-  // the address.
-  if (i->as32L() && (i->rm()==4) && (i->sibBase()==4)) {
+  // Note: there is one little weirdism here.  It is possible to use 
+  // ESP in the modrm addressing. If used, the value of ESP after the 
+  // pop is used to calculate the address.
+  if (i->rm()==4 && i->sibBase()==4) {
     // call method on BX_CPU_C object
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }

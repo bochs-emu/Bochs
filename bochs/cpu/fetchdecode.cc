@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.136 2007-11-19 19:55:08 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.137 2007-11-20 17:15:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2475,86 +2475,92 @@ BX_CPU_C::fetchDecode32(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 fetch_b1:
   b1 = *iptr++;
   ilen++;
-  attr = BxOpcodeInfo32R[b1+offset].Attr;
 
-  if (attr & BxPrefix) {
-    BX_INSTR_PREFIX(BX_CPU_ID, b1);
-    switch (b1) {
-      case 0x66: // OpSize
-        os_32 = !is_32;
-        offset = os_32 << 9;
-        if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
-        instruction->setOs32B(os_32);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x67: // AddrSize
-        instruction->setAs32B(!is_32);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf2: // REPNE/REPNZ
-        sse_prefix = SSE_PREFIX_F2;
-        instruction->setRepUsed(b1 & 3);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf3: // REP/REPE/REPZ
-        sse_prefix = SSE_PREFIX_F3;
-        instruction->setRepUsed(b1 & 3);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x2e: // CS:
-        instruction->setSeg(BX_SEG_REG_CS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x26: // ES:
-        instruction->setSeg(BX_SEG_REG_ES);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x36: // SS:
-        instruction->setSeg(BX_SEG_REG_SS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x3e: // DS:
-        instruction->setSeg(BX_SEG_REG_DS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x64: // FS:
-        instruction->setSeg(BX_SEG_REG_FS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x65: // GS:
-        instruction->setSeg(BX_SEG_REG_GS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf0: // LOCK:
-        lock = 1;
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      default:
-        BX_PANIC(("fetch_decode: prefix default = 0x%02x", b1));
-        return(0);
-    }
+  switch (b1) {
+    case 0x66: // OpSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      os_32 = !is_32;
+      offset = os_32 << 9;
+      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
+      instruction->setOs32B(os_32);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x67: // AddrSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setAs32B(!is_32);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf2: // REPNE/REPNZ
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      sse_prefix = SSE_PREFIX_F2;
+      instruction->setRepUsed(b1 & 3);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf3: // REP/REPE/REPZ
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      sse_prefix = SSE_PREFIX_F3;
+      instruction->setRepUsed(b1 & 3);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x2e: // CS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_CS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x26: // ES:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_ES);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x36: // SS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_SS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x3e: // DS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_DS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x64: // FS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_FS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x65: // GS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      instruction->setSeg(BX_SEG_REG_GS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf0: // LOCK:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      lock = 1;
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    default:
+      break;
   }
 
   // handle 2-byte escape

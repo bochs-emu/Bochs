@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.77 2007-11-11 20:44:07 sshwarts Exp $
+// $Id: access.cc,v 1.78 2007-11-20 17:15:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -515,8 +515,7 @@ BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -542,6 +541,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("write_virtual_byte(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 1, pl, BX_WRITE, (void *) data);
       return;
     }
@@ -558,8 +563,7 @@ BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -595,6 +599,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("write_virtual_word(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 2, pl, BX_WRITE, (void *) data);
       return;
     }
@@ -611,8 +621,7 @@ BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < (seg->cache.u.segment.limit_scaled-2))) {
+    if (Is64BitMode() || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -648,6 +657,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("write_virtual_dword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 4, pl, BX_WRITE, (void *) data);
       return;
     }
@@ -664,8 +679,7 @@ BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
+    if (Is64BitMode() || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -701,6 +715,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("write_virtual_qword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 8, pl, BX_WRITE, (void *) data);
       return;
     }
@@ -717,8 +737,7 @@ BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -740,6 +759,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_virtual_byte(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 1, pl, BX_READ, (void *) data);
       return;
     }
@@ -756,8 +781,7 @@ BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -789,6 +813,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_virtual_word(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 2, pl, BX_READ, (void *) data);
       return;
     }
@@ -805,8 +835,7 @@ BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < (seg->cache.u.segment.limit_scaled-2))) {
+    if (Is64BitMode() || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -838,6 +867,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_virtual_dword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 4, pl, BX_READ, (void *) data);
       return;
     }
@@ -854,8 +889,7 @@ BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessROK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
+    if (Is64BitMode() || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -887,6 +921,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_virtual_qword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 8, pl, BX_READ, (void *) data);
       return;
     }
@@ -908,8 +948,7 @@ BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset <= seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -938,6 +977,12 @@ accessOK:
 #endif
       // Accelerated attempt falls through to long path.  Do it the
       // old fashioned way...
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_RMW_virtual_byte(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 1, pl, BX_RW, (void *) data);
       return;
     }
@@ -954,8 +999,7 @@ BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < seg->cache.u.segment.limit_scaled)) {
+    if (Is64BitMode() || (offset < seg->cache.u.segment.limit_scaled)) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -992,6 +1036,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_RMW_virtual_word(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 2, pl, BX_RW, (void *) data);
       return;
     }
@@ -1008,8 +1058,7 @@ BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset < (seg->cache.u.segment.limit_scaled-2))) {
+    if (Is64BitMode() || (offset < (seg->cache.u.segment.limit_scaled-2))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -1046,6 +1095,12 @@ accessOK:
         }
       }
 #endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_RMW_virtual_dword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
+      }
+#endif
       access_linear(laddr, 4, pl, BX_RW, (void *) data);
       return;
     }
@@ -1062,8 +1117,7 @@ BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
 
   seg = &BX_CPU_THIS_PTR sregs[s];
   if (seg->cache.valid & SegAccessWOK) {
-    if ((Is64BitMode() && IsCanonical(offset))
-     || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
+    if (Is64BitMode() || (offset <= (seg->cache.u.segment.limit_scaled-7))) {
       unsigned pl;
 accessOK:
       laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
@@ -1098,6 +1152,12 @@ accessOK:
             return;
           }
         }
+      }
+#endif
+#if BX_SUPPORT_X86_64
+      if (! IsCanonical(laddr)) {
+        BX_ERROR(("read_RMW_virtual_qword(): canonical failure"));
+        exception(int_number(seg), 0, 0);
       }
 #endif
       access_linear(laddr, 8, pl, BX_RW, (void *) data);
@@ -1389,6 +1449,7 @@ accessOK:
 }
 
 // assuming the write happens in 64-bit mode
+#if BX_SUPPORT_X86_64
 void BX_CPU_C::write_new_stack_qword(bx_address offset, bx_bool user, Bit64u data)
 {
   bx_address laddr = offset;
@@ -1417,3 +1478,4 @@ void BX_CPU_C::write_new_stack_qword(bx_address offset, bx_bool user, Bit64u dat
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 }
+#endif
