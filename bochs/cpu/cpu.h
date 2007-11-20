@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.369 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: cpu.h,v 1.370 2007-11-20 21:22:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3113,6 +3113,9 @@ public: // for now...
   BX_SMF void reset(unsigned source);
   BX_SMF void shutdown(void);
   BX_SMF void handleCpuModeChange(void);
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_SMF void handleAlignmentCheck(void);
+#endif
 
   BX_SMF void jump_protected(bxInstruction_c *, Bit16u cs, bx_address disp) BX_CPP_AttrRegparmN(3);
   BX_SMF void jmp_task_gate(bx_descriptor_t *gate_descriptor) BX_CPP_AttrRegparmN(1);

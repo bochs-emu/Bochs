@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.30 2007-11-17 23:28:33 sshwarts Exp $
+// $Id: vm8086.cc,v 1.31 2007-11-20 21:22:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -255,6 +255,11 @@ void BX_CPU_C::init_v8086_mode(void)
 #if BX_SUPPORT_ICACHE  // update instruction cache
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  handleAlignmentCheck(); // CPL was modified
+#endif
+
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = 1;
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;

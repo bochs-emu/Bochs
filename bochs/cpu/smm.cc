@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.27 2007-09-20 17:33:35 sshwarts Exp $
+// $Id: smm.cc,v 1.28 2007-11-20 21:22:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -169,6 +169,10 @@ void BX_CPU_C::enter_system_management_mode(void)
 
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check = 0;
 #endif
 
   /* DS (Data Segment) and descriptor cache */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.181 2007-11-18 18:40:38 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.182 2007-11-20 21:22:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1235,6 +1235,19 @@ void BX_CPU_C::handleCpuModeChange(void)
   }
 }
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+void BX_CPU_C::handleAlignmentCheck(void)
+{
+  if (CPL == 3 && BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC()) {
+    BX_CPU_THIS_PTR alignment_check = 1;
+    BX_INFO(("Enable alignment check (#AC exception)"));
+  }
+  else {
+    BX_CPU_THIS_PTR alignment_check = 0;
+  }
+}
+#endif
+
 void BX_CPU_C::SetCR0(Bit32u val_32)
 {
   bx_bool pe = val_32 & 0x01;
@@ -1260,7 +1273,33 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
 
 #if BX_SUPPORT_X86_64
   bx_bool prev_pg = BX_CPU_THIS_PTR cr0.get_PG();
-#endif
+
+  if (prev_pg==0 && pg) {
+    if (BX_CPU_THIS_PTR efer.lme) {
+      if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
+        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode without enabling CR4.PAE !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
+        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
+        exception(BX_GP_EXCEPTION, 0, 0);
+      }
+      BX_CPU_THIS_PTR efer.lma = 1;
+    }
+  }
+  else if (prev_pg==1 && ! pg) {
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+      BX_ERROR(("SetCR0: attempt to leave 64 bit mode directly to legacy mode !"));
+      exception(BX_GP_EXCEPTION, 0, 0);
+    }
+    if (BX_CPU_THIS_PTR efer.lma) {
+      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
+        BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
+      }
+      BX_CPU_THIS_PTR efer.lma = 0;
+    }
+  }
+#endif  // #if BX_SUPPORT_X86_64
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3
@@ -1277,39 +1316,8 @@ void BX_CPU_C::SetCR0(Bit32u val_32)
   BX_CPU_THIS_PTR cr0.val32 = val_32;
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-  if (BX_CPU_THIS_PTR cr0.get_AM() && BX_CPU_THIS_PTR get_AC())
-    BX_CPU_THIS_PTR alignment_check = 1;
-  else 
-    BX_CPU_THIS_PTR alignment_check = 0;
+  handleAlignmentCheck();
 #endif
-
-#if BX_SUPPORT_X86_64
-  if (prev_pg==0 && BX_CPU_THIS_PTR cr0.get_PG()) {
-    if (BX_CPU_THIS_PTR efer.lme) {
-      if (!BX_CPU_THIS_PTR cr4.get_PAE()) {
-        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode without enabling CR4.PAE !"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-      if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
-        BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with CS.L !"));
-        exception(BX_GP_EXCEPTION, 0, 0);
-      }
-      BX_CPU_THIS_PTR efer.lma = 1;
-    }
-  }
-  else if (prev_pg==1 && ! BX_CPU_THIS_PTR cr0.get_PG()) {
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
-      BX_ERROR(("SetCR0: attempt to leave 64 bit mode directly to legacy mode !"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
-    if (BX_CPU_THIS_PTR efer.lma) {
-      if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
-        BX_PANIC(("SetCR0: attempt to leave x86-64 LONG mode with RIP upper != 0 !!!"));
-      }
-      BX_CPU_THIS_PTR efer.lma = 0;
-    }
-  }
-#endif  // #if BX_SUPPORT_X86_64
 
   handleCpuModeChange();
 
@@ -2042,6 +2050,10 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
   BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
+#endif
+
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -2100,6 +2112,10 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  handleAlignmentCheck(); // CPL was modified
 #endif
 
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 24) | 3,
@@ -2171,6 +2187,10 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
+#endif
+
     // set up SS segment, flat, 64-bit DPL=0
     parse_selector(((MSR_STAR >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -2217,6 +2237,10 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    BX_CPU_THIS_PTR alignment_check = 0; // CPL=0
 #endif
 
     // set up SS segment, flat, 32-bit DPL=0
@@ -2307,6 +2331,10 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR updateFetchModeMask();
 #endif
 
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    handleAlignmentCheck(); // CPL was modified
+#endif
+
     // SS base, limit, attributes unchanged
     parse_selector((MSR_STAR >> 48) + 8,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -2341,6 +2369,10 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
 
 #if BX_SUPPORT_ICACHE
     BX_CPU_THIS_PTR updateFetchModeMask();
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+    handleAlignmentCheck(); // CPL was modified
 #endif
 
     // SS base, limit, attributes unchanged
