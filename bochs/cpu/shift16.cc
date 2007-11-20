@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.34 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: shift16.cc,v 1.35 2007-11-20 23:00:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -161,8 +161,8 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   if ( (count & 0x0f) == 0 ) {
     if ( count & 0x10 ) {
       unsigned bit0 = op1_16 & 1;
-      setB_CF(bit0);
-      setB_OF(bit0 ^ (op1_16 >> 15));
+      set_CF(bit0);
+      set_OF(bit0 ^ (op1_16 >> 15));
     }
     return;
   }
@@ -183,8 +183,8 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
    */
   bx_bool temp_CF = (result_16 & 0x01);
 
-  setB_CF(temp_CF);
-  setB_OF(temp_CF ^ (result_16 >> 15));
+  set_CF(temp_CF);
+  set_OF(temp_CF ^ (result_16 >> 15));
 }
 
 void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
@@ -212,8 +212,8 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     if ( count & 0x10 ) {
       unsigned bit14 = (op1_16 >> 14) & 1;
       unsigned bit15 = (op1_16 >> 15);
-      setB_CF(bit15);
-      setB_OF(bit15 ^ bit14);
+      set_CF(bit15);
+      set_OF(bit15 ^ bit14);
     }
     return;
   }
@@ -235,8 +235,8 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   bx_bool result_b15 = (result_16 & 0x8000) != 0;
   bx_bool result_b14 = (result_16 & 0x4000) != 0;
 
-  setB_CF(result_b15);
-  setB_OF(result_b15 ^ result_b14);
+  set_CF(result_b15);
+  set_OF(result_b15 ^ result_b14);
 }
 
 void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
@@ -288,8 +288,8 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
    */
   bx_bool temp_CF = (op1_16 >> (16 - count)) & 0x01;
 
-  setB_CF(temp_CF);
-  setB_OF(temp_CF ^ (result_16 >> 15));
+  set_CF(temp_CF);
+  set_OF(temp_CF ^ (result_16 >> 15));
 }
 
 void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
@@ -333,8 +333,8 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
    * RCR count affects the following flags: C, O
    */
 
-  setB_CF((op1_16 >> (count - 1)) & 0x01);
-  setB_OF((((result_16 << 1) ^ result_16) & 0x8000) > 0);
+  set_CF((op1_16 >> (count - 1)) & 0x01);
+  set_OF((((result_16 << 1) ^ result_16) & 0x8000) > 0);
 }
 
 void BX_CPU_C::SHL_Ew(bxInstruction_c *i)

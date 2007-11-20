@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.143 2007-11-18 22:14:39 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.144 2007-11-20 23:00:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3379,94 +3379,105 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 fetch_b1:
   b1 = *iptr++;
   ilen++;
-  attr = BxOpcodeInfo64R[b1+offset].Attr;
 
-  if (attr & BxPrefix) {
-    BX_INSTR_PREFIX(BX_CPU_ID, b1);
-    rex_prefix = 0;
-    switch (b1) {
-      case 0x66: // OpSize
-        if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
-        if (!instruction->os64L()) {
-          instruction->setOs32B(0);
-          offset = 0;
-        }
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x67: // AddrSize
-        instruction->setAs64B(0);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x40:
-      case 0x41:
-      case 0x42:
-      case 0x43:
-      case 0x44:
-      case 0x45:
-      case 0x46:
-      case 0x47:
-      case 0x48:
-      case 0x49:
-      case 0x4A:
-      case 0x4B:
-      case 0x4C:
-      case 0x4D:
-      case 0x4E:
-      case 0x4F:
-        rex_prefix = b1;
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf2: // REPNE/REPNZ
-        sse_prefix = SSE_PREFIX_F2;
-        instruction->setRepUsed(b1 & 3);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf3: // REP/REPE/REPZ
-        sse_prefix = SSE_PREFIX_F3;
-        instruction->setRepUsed(b1 & 3);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x2e: // CS:
-      case 0x26: // ES:
-      case 0x36: // SS:
-      case 0x3e: // DS:
-        /* ignore segment override prefix */
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x64: // FS:
-        instruction->setSeg(BX_SEG_REG_FS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0x65: // GS:
-        instruction->setSeg(BX_SEG_REG_GS);
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      case 0xf0: // LOCK:
-        lock = 1;
-        if (ilen < remain) {
-          goto fetch_b1;
-        }
-        return(0);
-      default:
-        BX_PANIC(("fetchdecode64: prefix default = 0x%02x", b1));
-        return(0);
-    }
+  switch (b1) {
+    case 0x66: // OpSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      if(!sse_prefix) sse_prefix = SSE_PREFIX_66;
+      if (!instruction->os64L()) {
+        instruction->setOs32B(0);
+        offset = 0;
+      }
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x67: // AddrSize
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      instruction->setAs64B(0);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x40:
+    case 0x41:
+    case 0x42:
+    case 0x43:
+    case 0x44:
+    case 0x45:
+    case 0x46:
+    case 0x47:
+    case 0x48:
+    case 0x49:
+    case 0x4A:
+    case 0x4B:
+    case 0x4C:
+    case 0x4D:
+    case 0x4E:
+    case 0x4F:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = b1;
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf2: // REPNE/REPNZ
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      sse_prefix = SSE_PREFIX_F2;
+      instruction->setRepUsed(b1 & 3);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf3: // REP/REPE/REPZ
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      sse_prefix = SSE_PREFIX_F3;
+      instruction->setRepUsed(b1 & 3);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x2e: // CS:
+    case 0x26: // ES:
+    case 0x36: // SS:
+    case 0x3e: // DS:
+      /* ignore segment override prefix */
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x64: // FS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      instruction->setSeg(BX_SEG_REG_FS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0x65: // GS:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      instruction->setSeg(BX_SEG_REG_GS);
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    case 0xf0: // LOCK:
+      BX_INSTR_PREFIX(BX_CPU_ID, b1);
+      rex_prefix = 0;
+      lock = 1;
+      if (ilen < remain) {
+        goto fetch_b1;
+      }
+      return(0);
+    default:
+      break;
   }
 
   if (rex_prefix) {

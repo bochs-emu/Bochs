@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.29 2007-11-13 21:07:07 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.30 2007-11-20 23:00:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,11 +34,11 @@
 
 void BX_CPU_C::SAHF(bxInstruction_c *i)
 {
-  setB_SF((AH & 0x80) >> 7);
-  setB_ZF((AH & 0x40) >> 6);
-  setB_AF((AH & 0x10) >> 4);
-  setB_CF (AH & 0x01);
-  setB_PF((AH & 0x04) >> 2);
+  set_SF((AH & 0x80) >> 7);
+  set_ZF((AH & 0x40) >> 6);
+  set_AF((AH & 0x10) >> 4);
+  set_CF (AH & 0x01);
+  set_PF((AH & 0x04) >> 2);
 }
 
 void BX_CPU_C::LAHF(bxInstruction_c *i)

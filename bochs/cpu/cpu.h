@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.370 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: cpu.h,v 1.371 2007-11-20 23:00:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1305,11 +1305,6 @@ public: // for now...
       return get_##flag##Lazy(); \
     } \
   BX_SMF void set_##flag(bx_bool val) { \
-    BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
-    BX_CPU_THIS_PTR eflags.val32 &= ~(1<<eflagsBitShift); \
-    BX_CPU_THIS_PTR eflags.val32 |= ((!!val)<<eflagsBitShift); \
-  } \
-  BX_SMF void setB_##flag(bx_bool val) { \
     BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<eflagsBitShift); \
     BX_CPU_THIS_PTR eflags.val32 |= ((val)<<eflagsBitShift); \

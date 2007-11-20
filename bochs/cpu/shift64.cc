@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.23 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: shift64.cc,v 1.24 2007-11-20 23:00:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -156,8 +156,8 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
    */
   bx_bool temp_CF = (result_64 & 0x01);
 
-  setB_CF(temp_CF);
-  setB_OF(temp_CF ^ (result_64 >> 63));
+  set_CF(temp_CF);
+  set_OF(temp_CF ^ (result_64 >> 63));
 }
 
 void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
@@ -199,8 +199,8 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
   bx_bool result_b63 = (result_64 & BX_CONST64(0x8000000000000000)) != 0;
   bx_bool result_b62 = (result_64 & BX_CONST64(0x4000000000000000)) != 0;
 
-  setB_CF(result_b63);
-  setB_OF(result_b63 ^ result_b62);
+  set_CF(result_b63);
+  set_OF(result_b63 ^ result_b62);
 }
 
 void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
@@ -247,8 +247,8 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
    */
   bx_bool temp_CF = (op1_64 >> (64 - count)) & 0x01;
 
-  setB_CF(temp_CF);
-  setB_OF(temp_CF ^ (result_64 >> 63));
+  set_CF(temp_CF);
+  set_OF(temp_CF ^ (result_64 >> 63));
 }
 
 void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
@@ -294,8 +294,8 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
    * RCR count affects the following flags: C, O
    */
 
-  setB_CF((op1_64 >> (count - 1)) & 0x01);
-  setB_OF((((result_64 << 1) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
+  set_CF((op1_64 >> (count - 1)) & 0x01);
+  set_OF((((result_64 << 1) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
 }
 
 void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
