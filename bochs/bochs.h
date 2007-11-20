@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.214 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: bochs.h,v 1.215 2007-11-20 18:36:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -443,6 +443,7 @@ typedef struct {
   bx_bool unsupported_io;
   bx_bool serial;
   bx_bool cdrom;
+  bx_bool print_timestamps;
 #if BX_MAGIC_BREAKPOINT
   bx_bool magic_break_enabled;
 #endif

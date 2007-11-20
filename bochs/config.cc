@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.123 2007-10-24 23:27:39 sshwarts Exp $
+// $Id: config.cc,v 1.124 2007-11-20 18:36:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2837,6 +2837,20 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     }
   }
 #endif
+  else if (!strcmp(params[0], "print_timestamps")) {
+    if (num_params != 2) {
+      PARSE_ERR(("%s: print_timestamps directive: wrong # args.", context));
+    }
+    if (strncmp(params[1], "enabled=", 8)) {
+      PARSE_ERR(("%s: print_timestamps directive malformed.", context));
+    }
+    if (params[1][8] == '0' || params[1][8] == '1') {
+      bx_dbg.print_timestamps = params[1][8] - '0';
+    }
+    else {
+      PARSE_ERR(("%s: print_timestamps directive malformed.", context));
+    }
+  }
   else if (!strcmp(params[0], "ne2k")) {
     int tmp[6];
     char tmpchar[6];
