@@ -731,7 +731,8 @@ i440fxsupport: enabled=1
 #=======================================================================
 #load32bitOSImage: os=nullkernel, path=../kernel.img, iolog=../vga_io.log
 #load32bitOSImage: os=linux, path=../linux.img, iolog=../vga_io.log, initrd=../initrd.img
-#text_snapshot_check: enable
+#text_snapshot_check: enabled=1
+#print_timestamps: enable=1
 
 #-------------------------
 # PCI host device mapping
