@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.46 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.47 2007-11-21 22:36:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -186,33 +186,36 @@ void BX_CPU_C::MOVSX_GwEbR(bxInstruction_c *i)
 }
 #endif
 
-void BX_CPU_C::XCHG_EwGw(bxInstruction_c *i)
+void BX_CPU_C::XCHG_EwGwM(bxInstruction_c *i)
 {
-  Bit16u op2_16, op1_16;
+  Bit16u op1_16, op2_16;
+
+  /* pointer, segment address pair */
+  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op2_16 = BX_READ_16BIT_REG(i->nnn());
+  write_RMW_virtual_word(op2_16);
+
+  BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+}
+
+void BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16;
 
 #if BX_DEBUGGER && BX_MAGIC_BREAKPOINT
-  // (mch) Magic break point
   // Note for mortals: the instruction to trigger this is "xchgw %bx,%bx"
-  if (i->nnn() == 3 && i->modC0() && i->rm() == 3)
+  if (bx_dbg.magic_break_enabled && (i->nnn() == 3) && (i->rm() == 3))
   {
-    if (bx_dbg.magic_break_enabled) BX_CPU_THIS_PTR magic_break = 1;
+    BX_CPU_THIS_PTR magic_break = 1;
+    return;
   }
 #endif
 
+  op1_16 = BX_READ_16BIT_REG(i->rm());
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-  /* op1_16 is a register or memory reference */
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-    BX_WRITE_16BIT_REG(i->rm(), op2_16);
-  }
-  else {
-    /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
-    write_RMW_virtual_word(op2_16);
-  }
-
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
+  BX_WRITE_16BIT_REG(i->rm(),  op2_16);
 }
 
 void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)

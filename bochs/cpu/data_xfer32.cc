@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.45 2007-11-17 18:29:00 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.46 2007-11-21 22:36:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -197,8 +197,8 @@ void BX_CPU_C::XCHG_EdGdR(bxInstruction_c *i)
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   Bit32u op2_32 = BX_READ_32BIT_REG(i->nnn());
 
-  BX_WRITE_32BIT_REGZ(i->rm(),  op2_32);
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
+  BX_WRITE_32BIT_REGZ(i->rm(),  op2_32);
 }
 
 void BX_CPU_C::CMOV_GdEd(bxInstruction_c *i)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.28 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.29 2007-11-21 22:36:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -243,8 +243,8 @@ void BX_CPU_C::XCHG_EqGqR(bxInstruction_c *i)
   Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
   Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
 
-  BX_WRITE_64BIT_REG(i->rm(), op2_64);
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
+  BX_WRITE_64BIT_REG(i->rm(), op2_64);
 }
 
 void BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)

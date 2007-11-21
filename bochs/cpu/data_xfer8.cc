@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.30 2007-11-18 18:24:45 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.31 2007-11-21 22:36:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -122,6 +122,6 @@ void BX_CPU_C::XCHG_EbGbR(bxInstruction_c *i)
   Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
   Bit8u op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
 
-  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
+  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op2);
 }

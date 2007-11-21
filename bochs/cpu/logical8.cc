@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.34 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: logical8.cc,v 1.35 2007-11-21 22:36:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,21 +56,25 @@ void BX_CPU_C::XOR_EbGbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 
-void BX_CPU_C::XOR_GbEb(bxInstruction_c *i)
+void BX_CPU_C::XOR_GbEbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-
-  if (i->modC0()) {
-    op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  }
-  else {
-    read_virtual_byte(i->seg(), RMAddr(i), &op2);
-  }
-
+  read_virtual_byte(i->seg(), RMAddr(i), &op2);
   op1 ^= op2;
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
+  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+}
+
+void BX_CPU_C::XOR_GbEbR(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  op1 ^= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
@@ -171,21 +175,25 @@ void BX_CPU_C::OR_EbGbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 
-void BX_CPU_C::OR_GbEb(bxInstruction_c *i)
+void BX_CPU_C::OR_GbEbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-
-  if (i->modC0()) {
-    op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  }
-  else {
-    read_virtual_byte(i->seg(), RMAddr(i), &op2);
-  }
-
+  read_virtual_byte(i->seg(), RMAddr(i), &op2);
   op1 |= op2;
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
+  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+}
+
+void BX_CPU_C::OR_GbEbR(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  op1 |= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
@@ -227,21 +235,25 @@ void BX_CPU_C::AND_EbGbR(bxInstruction_c *i)
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 
-void BX_CPU_C::AND_GbEb(bxInstruction_c *i)
+void BX_CPU_C::AND_GbEbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-
-  if (i->modC0()) {
-    op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  }
-  else {
-    read_virtual_byte(i->seg(), RMAddr(i), &op2);
-  }
-
+  read_virtual_byte(i->seg(), RMAddr(i), &op2);
   op1 &= op2;
+  BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
+  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+}
+
+void BX_CPU_C::AND_GbEbR(bxInstruction_c *i)
+{
+  Bit8u op1, op2;
+
+  op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
+  op2 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  op1 &= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
