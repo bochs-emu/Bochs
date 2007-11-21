@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.39 2007-11-20 23:00:40 sshwarts Exp $
+// $Id: bit.cc,v 1.40 2007-11-21 22:42:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -192,12 +192,7 @@ void BX_CPU_C::SETNP_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETL_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
- 
-  if (getB_SF() != getB_OF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = (getB_SF() ^ getB_OF());
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -210,12 +205,7 @@ void BX_CPU_C::SETL_Eb(bxInstruction_c *i)
 
 void BX_CPU_C::SETNL_Eb(bxInstruction_c *i)
 {
-  Bit8u result_8;
- 
-  if (getB_SF() == getB_OF())
-    result_8 = 1;
-  else
-    result_8 = 0;
+  Bit8u result_8 = !(getB_SF() ^ getB_OF());
 
   /* now write result back to destination */
   if (i->modC0()) {
