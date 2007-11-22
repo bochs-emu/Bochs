@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.145 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.146 2007-11-22 17:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -373,8 +373,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* C5 /wr */ { 0, &BX_CPU_C::BxError },
   /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
   /* C7 /wr */ { BxImmediate_Iv, &BX_CPU_C::MOV_EwIwR },
-  /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
-  /* C9 /wr */ { 0, &BX_CPU_C::LEAVE },
+  /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
+  /* C9 /wr */ { 0, &BX_CPU_C::LEAVE64 },
   /* CA /wr */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
   /* CB /wr */ { 0, &BX_CPU_C::RETfar16 },
   /* CC /wr */ { 0, &BX_CPU_C::INT3 },
@@ -1966,7 +1966,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* C5 /wm */ { 0, &BX_CPU_C::BxError },
   /* C6 /wm */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbM },
   /* C7 /wm */ { BxImmediate_Iv, &BX_CPU_C::MOV_EwIwM },
-  /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
+  /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wm */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wm */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
   /* CB /wm */ { 0, &BX_CPU_C::RETfar16 },

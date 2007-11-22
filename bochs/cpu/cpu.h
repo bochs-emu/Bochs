@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.372 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: cpu.h,v 1.373 2007-11-22 17:33:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1404,6 +1404,8 @@ public: // for now...
   BX_SMF void DAS(bxInstruction_c *);
   BX_SMF void AAA(bxInstruction_c *);
   BX_SMF void AAS(bxInstruction_c *);
+  BX_SMF void AAM(bxInstruction_c *);
+  BX_SMF void AAD(bxInstruction_c *);
 
   BX_SMF void PUSHAD32(bxInstruction_c *);
   BX_SMF void PUSHAD16(bxInstruction_c *);
@@ -1460,9 +1462,10 @@ public: // for now...
   BX_SMF void MOV_GwEwR(bxInstruction_c *);
 
   BX_SMF void MOV_EwSw(bxInstruction_c *);
+  BX_SMF void MOV_SwEw(bxInstruction_c *);
+
   BX_SMF void LEA_GdM(bxInstruction_c *);
   BX_SMF void LEA_GwM(bxInstruction_c *);
-  BX_SMF void MOV_SwEw(bxInstruction_c *);
 
   BX_SMF void CBW(bxInstruction_c *);
   BX_SMF void CWD(bxInstruction_c *);
@@ -1528,7 +1531,8 @@ public: // for now...
 
   BX_SMF void RETnear32(bxInstruction_c *);
   BX_SMF void RETnear16(bxInstruction_c *);
-  BX_SMF void ENTER_IwIb(bxInstruction_c *);
+  BX_SMF void ENTER16_IwIb(bxInstruction_c *);
+  BX_SMF void ENTER32_IwIb(bxInstruction_c *);
   BX_SMF void LEAVE(bxInstruction_c *);
   BX_SMF void RETfar32(bxInstruction_c *);
   BX_SMF void RETfar16(bxInstruction_c *);
@@ -1540,8 +1544,6 @@ public: // for now...
   BX_SMF void IRET32(bxInstruction_c *);
   BX_SMF void IRET16(bxInstruction_c *);
 
-  BX_SMF void AAM(bxInstruction_c *);
-  BX_SMF void AAD(bxInstruction_c *);
   BX_SMF void SALC(bxInstruction_c *);
   BX_SMF void XLAT(bxInstruction_c *);
 

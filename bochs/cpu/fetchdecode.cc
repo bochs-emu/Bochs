@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.138 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.139 2007-11-22 17:33:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -384,7 +384,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C5 /wr */ { 0, &BX_CPU_C::BxError }, // LDS
   /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
   /* C7 /wr */ { BxImmediate_Iv, &BX_CPU_C::MOV_EwIwR },
-  /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
+  /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wr */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
   /* CB /wr */ { 0, &BX_CPU_C::RETfar16 },
@@ -948,7 +948,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C5 /dr */ { 0, &BX_CPU_C::BxError }, // LDS
   /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
   /* C7 /dr */ { BxImmediate_Iv, &BX_CPU_C::MOV_EdIdR },
-  /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
+  /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
   /* C9 /dr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /dr */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
   /* CB /dr */ { 0, &BX_CPU_C::RETfar32 },
@@ -1519,7 +1519,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C5 /wm */ { 0, &BX_CPU_C::LDS_GwMp },
   /* C6 /wm */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbM },
   /* C7 /wm */ { BxImmediate_Iv, &BX_CPU_C::MOV_EwIwM },
-  /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
+  /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wm */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wm */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
   /* CB /wm */ { 0, &BX_CPU_C::RETfar16 },
@@ -2083,7 +2083,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C5 /dm */ { 0, &BX_CPU_C::LDS_GdMp },
   /* C6 /dm */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbM },
   /* C7 /dm */ { BxImmediate_Iv, &BX_CPU_C::MOV_EdIdM },
-  /* C8 /dm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER_IwIb },
+  /* C8 /dm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
   /* C9 /dm */ { 0, &BX_CPU_C::LEAVE },
   /* CA /dm */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
   /* CB /dm */ { 0, &BX_CPU_C::RETfar32 },

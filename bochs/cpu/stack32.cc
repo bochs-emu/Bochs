@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.39 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: stack32.cc,v 1.40 2007-11-22 17:33:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -246,7 +246,7 @@ void BX_CPU_C::POPAD32(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 2
-void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
+void BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 {
   unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
 
@@ -255,11 +255,7 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   level &= 0x1F;
 
   Bit32u ebp; // Use temp copy in case of exception.
-
-  if (i->os32L())
-    push_32(EBP);
-  else
-    push_16(BP);
+  push_16(BP);
 
   Bit32u frame_ptr32 = ESP;
 
@@ -273,42 +269,72 @@ void BX_CPU_C::ENTER_IwIb(bxInstruction_c *i)
   if (level > 0) {
     /* do level-1 times */
     while (--level) {
-      if (i->os32L()) {
-        Bit32u temp32;
+      Bit16u temp16;
 
-        if (ss32) {
-          ebp -= 4;
-          read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
-        }
-        else { /* 16bit stacksize */
-          ebp -= 4; ebp &= 0xffff;
-          read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
-        }
-        push_32(temp32);
+      if (ss32) {
+        ebp -= 2;
+        read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
       }
-      else { /* 16bit opsize */
-        Bit16u temp16;
-
-        if (ss32) {
-          ebp -= 2;
-          read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
-        }
-        else { /* 16bit stacksize */
-          ebp -= 2; ebp &= 0xffff;
-          read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
-        }
-        push_16(temp16);
+      else { /* 16bit stacksize */
+        ebp -= 2; ebp &= 0xffff;
+        read_virtual_word(BX_SEG_REG_SS, ebp, &temp16);
       }
-    } /* while (--level) */
+      push_16(temp16);
+    }
 
     /* push(frame pointer) */
-    if (i->os32L()) {
-      push_32(frame_ptr32);
+    push_16((Bit16u)frame_ptr32);
+  }
+
+  if (ss32) {
+    EBP = frame_ptr32;
+    ESP -= imm16;
+  }
+  else {
+    BP = (Bit16u) frame_ptr32;
+    SP -= imm16;
+  }
+}
+
+void BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
+{
+  unsigned ss32 = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b;
+
+  Bit16u imm16 = i->Iw();
+  Bit8u level = i->Ib2();
+  level &= 0x1F;
+
+  Bit32u ebp; // Use temp copy in case of exception.
+  push_32(EBP);
+
+  Bit32u frame_ptr32 = ESP;
+
+  if (ss32) {
+    ebp = EBP;
+  }
+  else {
+    ebp = BP;
+  }
+
+  if (level > 0) {
+    /* do level-1 times */
+    while (--level) {
+      Bit32u temp32;
+
+      if (ss32) {
+        ebp -= 4;
+        read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
+      }
+      else { /* 16bit stacksize */
+        ebp -= 4; ebp &= 0xffff;
+        read_virtual_dword(BX_SEG_REG_SS, ebp, &temp32);
+      }
+      push_32(temp32);
     }
-    else { /* 16bit opsize */
-      push_16((Bit16u)frame_ptr32);
-    }
-  } /* if (level > 0) ... */
+
+    /* push(frame pointer) */
+    push_32(frame_ptr32);
+  }
 
   if (ss32) {
     EBP = frame_ptr32;
