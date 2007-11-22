@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.65 2007-11-18 18:24:46 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.66 2007-11-22 21:52:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -656,30 +656,25 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
+  Bit16u limit_16;
+  Bit32u base_32;
+
 #if BX_CPU_LEVEL >= 3
   if (i->os32L()) {
-    Bit16u limit_16;
-    Bit32u base0_31;
-
     read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base0_31);
+    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
 
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
-    BX_CPU_THIS_PTR gdtr.base = base0_31;
+    BX_CPU_THIS_PTR gdtr.base = base_32;
   }
   else
 #endif
   {
-    Bit16u limit_16, base0_15;
-    Bit8u base16_23;
-
     read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_word(i->seg(), RMAddr(i) + 2, &base0_15);
-    read_virtual_byte(i->seg(), RMAddr(i) + 4, &base16_23);
+    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
 
-    /* ignore high 8 bits */
     BX_CPU_THIS_PTR gdtr.limit = limit_16;
-    BX_CPU_THIS_PTR gdtr.base = (base16_23 << 16) | base0_15;
+    BX_CPU_THIS_PTR gdtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
   }
 }
 

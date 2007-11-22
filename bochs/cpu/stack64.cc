@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.27 2007-11-22 17:33:06 sshwarts Exp $
+// $Id: stack64.cc,v 1.28 2007-11-22 21:52:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ void BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
   Bit64u rrx;
   pop_64(&rrx);
-  BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx = rrx;
+  BX_WRITE_64BIT_REG(i->opcodeReg(), rrx);
 }
 
 void BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
