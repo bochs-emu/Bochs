@@ -79,7 +79,7 @@
 // Setting this to 1 will introduce a little code which
 // will panic out if cases which shouldn't happen occur.
 // Set this to 0 for optimal performance.
-#define BX_TIMER_DEBUG 1
+#define BX_TIMER_DEBUG 0
 
 // Settable A20 line.  For efficiency, you can disable
 // having a settable A20 line, eliminating conditional
@@ -131,7 +131,7 @@
 
 #define BX_TLB_SIZE 1024
 #define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
-#define BX_TLB_INDEX_OF(lpf) (((lpf) & BX_TLB_MASK) >> 12)
+#define BX_TLB_INDEX_OF(lpf) ((((unsigned)(lpf)) & BX_TLB_MASK) >> 12)
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this
 // if you plan to use the floppy drive emulation.  But if
