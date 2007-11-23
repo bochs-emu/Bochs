@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.139 2007-11-22 17:33:05 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.140 2007-11-23 16:37:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2797,8 +2797,7 @@ modrm_done:
 
   if (lock) { // lock prefix invalid opcode
     // lock prefix not allowed or destination operand is not memory
-    // only memory destination is marked BxLockable
-    if (/*(mod == 0xc0) || */ !(attr & BxLockable)) {
+    if ((mod == 0xc0) || !(attr & BxLockable)) {
       BX_INFO(("LOCK prefix unallowed (op1=0x%x, attr=0x%x, mod=0x%x, nnn=%u)", b1, attr, mod, nnn));
       UndefinedOpcode(instruction);
     }

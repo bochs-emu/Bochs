@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.40 2007-11-21 22:42:40 sshwarts Exp $
+// $Id: bit.cc,v 1.41 2007-11-23 16:37:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -602,7 +602,7 @@ void BX_CPU_C::BTS_EwGwR(bxInstruction_c *i)
   set_CF((op1_16 >> op2_16) & 0x01);
   op1_16 |= (((Bit16u) 1) << op2_16);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 }
 
@@ -639,7 +639,7 @@ void BX_CPU_C::BTS_EdGdR(bxInstruction_c *i)
   set_CF((op1_32 >> op2_32) & 0x01);
   op1_32 |= (((Bit32u) 1) << op2_32);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 }
 
@@ -677,7 +677,7 @@ void BX_CPU_C::BTS_EqGqR(bxInstruction_c *i)
   set_CF((op1_64 >> op2_64) & 0x01);
   op1_64 |= (((Bit64u) 1) << op2_64);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_64BIT_REG(i->rm(), op1_64);
 }
 #endif
@@ -715,7 +715,7 @@ void BX_CPU_C::BTR_EwGwR(bxInstruction_c *i)
   set_CF((op1_16 >> op2_16) & 0x01);
   op1_16 &= ~(((Bit16u) 1) << op2_16);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 }
 
@@ -753,7 +753,7 @@ void BX_CPU_C::BTR_EdGdR(bxInstruction_c *i)
   set_CF((op1_32 >> op2_32) & 0x01);
   op1_32 &= ~(((Bit32u) 1) << op2_32);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 }
 
@@ -791,7 +791,7 @@ void BX_CPU_C::BTR_EqGqR(bxInstruction_c *i)
   set_CF((op1_64 >> op2_64) & 0x01);
   op1_64 &= ~(((Bit64u) 1) << op2_64);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   BX_WRITE_64BIT_REG(i->rm(), op1_64);
 }
 #endif 
@@ -981,7 +981,7 @@ void BX_CPU_C::BTS_EwIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 |= (((Bit16u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
@@ -1010,7 +1010,7 @@ void BX_CPU_C::BTS_EdIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 |= (((Bit32u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
@@ -1040,7 +1040,7 @@ void BX_CPU_C::BTS_EqIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
@@ -1071,7 +1071,7 @@ void BX_CPU_C::BTC_EwIb(bxInstruction_c *i)
   op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
   set_CF(temp_CF);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
@@ -1099,7 +1099,7 @@ void BX_CPU_C::BTC_EdIb(bxInstruction_c *i)
   op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
   set_CF(temp_CF);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
@@ -1128,7 +1128,7 @@ void BX_CPU_C::BTC_EqIb(bxInstruction_c *i)
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
   set_CF(temp_CF);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
@@ -1156,7 +1156,7 @@ void BX_CPU_C::BTR_EwIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 &= ~(((Bit16u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_16BIT_REG(i->rm(), op1_16);
   }
@@ -1185,7 +1185,7 @@ void BX_CPU_C::BTR_EdIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 &= ~(((Bit32u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
   }
@@ -1215,7 +1215,7 @@ void BX_CPU_C::BTR_EqIb(bxInstruction_c *i)
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
 
-  /* now write diff back to destination */
+  /* now write result back to the destination */
   if (i->modC0()) {
     BX_WRITE_64BIT_REG(i->rm(), op1_64);
   }
