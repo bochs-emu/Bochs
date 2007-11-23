@@ -38,6 +38,8 @@ Changes after 2.3.5 release:
         print_timestamps: enable=1
   - Added --enable-show-ips option to all configuration scripts used to 
     build release binaries, so all future releases will enjoy IPS display.
+  - Enable alignment check in the CPU and #AC exception by default for
+    --cpu-level >= 4 (like in real hardware)
 
 -------------------------------------------------------------------------
 Changes in 2.3.5 (September 16, 2007):
