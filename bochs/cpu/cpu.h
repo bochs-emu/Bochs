@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.373 2007-11-22 17:33:05 sshwarts Exp $
+// $Id: cpu.h,v 1.374 2007-11-23 22:49:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -421,7 +421,6 @@ typedef struct {
   BX_CPP_INLINE Bit32u  get_##name ();                                \
   BX_CPP_INLINE bx_bool getB_##name ();                               \
   BX_CPP_INLINE void    set_##name (Bit8u val);                       \
-  BX_CPP_INLINE void    setB_##name (Bit8u val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                         \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {                     \
@@ -437,10 +436,6 @@ typedef struct {
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {               \
-    BX_CPU_THIS_PTR eflags.val32 =                                    \
-      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((!!val)<<bitnum);  \
-  }                                                                   \
-  BX_CPP_INLINE void BX_CPU_C::setB_##name (Bit8u val) {              \
     BX_CPU_THIS_PTR eflags.val32 =                                    \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);    \
   }
@@ -3767,17 +3762,15 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
   BX_CPU_THIS_PTR lf_flags_status = 0;                   \
 }
 
-#define setEFlagsOSZAP(flags32) {                        \
-  BX_CPU_THIS_PTR eflags.val32 =                         \
-    (BX_CPU_THIS_PTR eflags.val32 & ~EFlagsOSZAPMask) |  \
-    (flags32 & EFlagsOSZAPMask);                         \
-  BX_CPU_THIS_PTR lf_flags_status &= 0x00000f;           \
+#define SET_FLAGS_OxxxxC(new_of, new_cf) {                              \
+    BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0));                \
+    BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
+    BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0;                        \
 }
 
-#define SET_FLAGS_OxxxxC(new_of, new_cf) { \
-    BX_CPU_THIS_PTR eflags.val32 &= ~((1<<11) | (1<<0)); \
-    BX_CPU_THIS_PTR eflags.val32 |= ((!!new_of)<<11) | ((!!new_cf)<<0); \
-    BX_CPU_THIS_PTR lf_flags_status &= 0x0ffff0; \
+#define ASSERT_FLAGS_OxxxxC() {                                         \
+  BX_CPU_THIS_PTR eflags.val32 |= (EFlagsOFMask | EFlagsCFMask);        \
+  BX_CPU_THIS_PTR lf_flags_status &= ~(EFlagsOFMask | EFlagsCFMask);    \
 }
 
 #endif  // #ifndef BX_CPU_H
