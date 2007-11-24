@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.29 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: stack64.cc,v 1.30 2007-11-24 15:27:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,27 +85,19 @@ void BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 void BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
   Bit64u fs;
-
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  pop_64(&fs);
+  // this way is faster and RSP safe
+  read_virtual_qword(BX_SEG_REG_SS, RSP, &fs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP += 8;
 }
 
 void BX_CPU_C::POP64_GS(bxInstruction_c *i)
 {
   Bit64u gs;
-
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  pop_64(&gs);
+  // this way is faster and RSP safe
+  read_virtual_qword(BX_SEG_REG_SS, RSP, &gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP += 8;
 }
 
 void BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
@@ -166,18 +158,11 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
 void BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  // delete frame
-  RSP = RBP;
-
-  // restore frame pointer
   Bit64u temp64;
-  pop_64(&temp64);
+  // restore frame pointer
+  read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
+  RSP = RBP + 8;
   RBP = temp64;
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

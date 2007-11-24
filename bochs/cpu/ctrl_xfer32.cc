@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.55 2007-11-24 14:22:33 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.56 2007-11-24 15:27:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -514,9 +514,7 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
   }
   cs_raw = i->Iw2();
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
+  // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, disp32);
   }
@@ -524,8 +522,6 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
     EIP = disp32;
   }
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
@@ -561,9 +557,7 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
+  // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
   }
@@ -571,8 +565,6 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
     EIP = op1_32;
   }
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);

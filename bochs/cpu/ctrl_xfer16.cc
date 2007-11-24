@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.43 2007-11-24 14:22:33 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.44 2007-11-24 15:27:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -566,9 +566,7 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i), &op1_16);
   read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
+  // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
     BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_16);
     goto done;
@@ -578,8 +576,6 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   EIP = op1_16;
 
 done:
-  BX_CPU_THIS_PTR speculative_rsp = 0;
-
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
