@@ -1,6 +1,6 @@
 diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
---- bochs/cpu/cpu.cc	2007-11-23 18:25:48.671875000 +0200
-+++ bochs-trace-cache/cpu/cpu.cc	2007-11-23 18:17:34.031250000 +0200
+--- bochs/cpu/cpu.cc	2007-11-24 16:22:32.000000000 +0200
++++ bochs-trace-cache/cpu/cpu.cc	2007-11-24 16:29:57.078125000 +0200
 @@ -62,16 +62,19 @@
  #if InstrumentICACHE
  static unsigned iCacheLookups=0;
@@ -205,7 +205,7 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
  // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
  // instructions and then return so that the other processors have a chance to
  // run.  This is used by bochs internal debugger or when simulating 
-@@ -244,48 +309,69 @@
+@@ -244,47 +309,68 @@
        eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
      }
  
@@ -251,8 +251,8 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
 -      bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
 +        bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
  #else
--      debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
-+        debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
+-      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
++        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
  #endif
 -    }
 +      }
@@ -262,16 +262,14 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
 -    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
 -    RIP += i->ilen();
 -    BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
--    BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
--    BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
+-    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
 -    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
 -    BX_TICK1_IF_SINGLE_PROCESSOR();
 +      // decoding instruction compeleted -> continue with execution
 +      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
 +      RIP += i->ilen();
 +      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
-+      BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
-+      BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
++      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
 +      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
 +      BX_TICK1_IF_SINGLE_PROCESSOR();
  
@@ -280,7 +278,8 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
 +      // inform instrumentation about new instruction
 +      BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
  
-     // note instructions generating exceptions never reach this point
+-    // note instructions generating exceptions never reach this point
++      // note instructions generating exceptions never reach this point
  #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
 -    if (dbg_instruction_epilog()) return;
 +      if (dbg_instruction_epilog()) return;
@@ -300,9 +299,9 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
  }
  
 diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
---- bochs/cpu/cpu.h	2007-11-22 19:33:05.000000000 +0200
-+++ bochs-trace-cache/cpu/cpu.h	2007-11-23 17:51:19.750000000 +0200
-@@ -614,9 +614,10 @@
+--- bochs/cpu/cpu.h	2007-11-24 16:22:32.000000000 +0200
++++ bochs-trace-cache/cpu/cpu.h	2007-11-24 16:27:05.218750000 +0200
+@@ -615,9 +615,10 @@
    void (BX_CPU_C::*execute)(bxInstruction_c *);
  #endif
  
@@ -315,7 +314,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    // 18..18  mod==c0 (modrm)
    // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3).
    Bit16u metaInfo3;
-@@ -843,13 +844,22 @@
+@@ -844,13 +845,22 @@
      metaInfo3 = (metaInfo3 & ~3) | (value);
    }
  
@@ -340,7 +339,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    }
  };
  // <TAG-CLASS-INSTRUCTION-END>
-@@ -2915,7 +2925,12 @@
+@@ -2917,7 +2927,12 @@
  #if BX_SUPPORT_X86_64
    BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
  #endif
@@ -353,7 +352,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    BX_SMF void UndefinedOpcode(bxInstruction_c *);
    BX_SMF void BxError(bxInstruction_c *i);
  
-@@ -3740,6 +3755,12 @@
+@@ -3742,6 +3757,12 @@
  #define BxLockable          0x0100 // bit  8
  #define Bx3ByteOpcode       0x0200 // bit  9
  
@@ -368,14 +367,16 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
  #define BxGroup3          BxGroupN
 diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
 --- bochs/cpu/fetchdecode.cc	2007-11-23 18:37:05.000000000 +0200
-+++ bochs-trace-cache/cpu/fetchdecode.cc	2007-11-23 17:51:47.968750000 +0200
-@@ -1,5 +1,5 @@
- /////////////////////////////////////////////////////////////////////////
--// $Id: bochs-trace-cache.patch,v 1.2 2007-11-23 16:41:45 sshwarts Exp $
-+// $Id: bochs-trace-cache.patch,v 1.2 2007-11-23 16:41:45 sshwarts Exp $
- /////////////////////////////////////////////////////////////////////////
- //
- //  Copyright (C) 2001  MandrakeSoft S.A.
++++ bochs-trace-cache/cpu/fetchdecode.cc	2007-11-24 16:27:06.890625000 +0200
+@@ -207,7 +207,7 @@
+   /* 14 /wr */ { BxImmediate_Ib, &BX_CPU_C::ADC_ALIb },
+   /* 15 /wr */ { BxImmediate_Iv, &BX_CPU_C::ADC_AXIw },
+   /* 16 /wr */ { 0, &BX_CPU_C::PUSH16_SS },
+-  /* 17 /wr */ { 0, &BX_CPU_C::POP16_SS },
++  /* 17 /wr */ { BxTraceEnd, &BX_CPU_C::POP16_SS }, // async_event = 1
+   /* 18 /wr */ { 0, &BX_CPU_C::SBB_EbGbR },
+   /* 19 /wr */ { 0, &BX_CPU_C::SBB_EwGwR },
+   /* 1A /wr */ { 0, &BX_CPU_C::SBB_GbEbR },
 @@ -296,22 +296,22 @@
    /* 6D /wr */ { 0, &BX_CPU_C::REP_INSW_YwDX },
    /* 6E /wr */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -415,6 +416,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 80 /wr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
    /* 81 /wr */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EwR },
    /* 82 /wr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
+@@ -326,7 +326,7 @@
+   /* 8B /wr */ { 0, &BX_CPU_C::MOV_GwEwR },
+   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /wr */ { 0, &BX_CPU_C::BxError }, // LEA
+-  /* 8E /wr */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /wr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
+   /* 90 /wr */ { 0, &BX_CPU_C::NOP },
+   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
 @@ -338,7 +338,7 @@
    /* 97 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
    /* 98 /wr */ { 0, &BX_CPU_C::CBW },
@@ -601,6 +611,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 0F AB /wr */ { 0, &BX_CPU_C::BTS_EwGwR },
    /* 0F AC /wr */ { BxImmediate_Ib, &BX_CPU_C::SHRD_EwGw },
    /* 0F AD /wr */ { 0,              &BX_CPU_C::SHRD_EwGw },
+@@ -771,7 +771,7 @@
+   /* 14 /dr */ { BxImmediate_Ib, &BX_CPU_C::ADC_ALIb },
+   /* 15 /dr */ { BxImmediate_Iv, &BX_CPU_C::ADC_EAXId },
+   /* 16 /dr */ { 0, &BX_CPU_C::PUSH32_SS },
+-  /* 17 /dr */ { 0, &BX_CPU_C::POP32_SS },
++  /* 17 /dr */ { BxTraceEnd, &BX_CPU_C::POP32_SS }, // async_event = 1
+   /* 18 /dr */ { 0, &BX_CPU_C::SBB_EbGbR },
+   /* 19 /dr */ { 0, &BX_CPU_C::SBB_EdGdR },
+   /* 1A /dr */ { 0, &BX_CPU_C::SBB_GbEbR },
 @@ -860,22 +860,22 @@
    /* 6D /dr */ { 0, &BX_CPU_C::REP_INSD_YdDX },
    /* 6E /dr */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -640,6 +659,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 80 /dr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
    /* 81 /dr */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EdR },
    /* 82 /dr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
+@@ -890,7 +890,7 @@
+   /* 8B /dr */ { 0, &BX_CPU_C::MOV_GdEdR },
+   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /dr */ { 0, &BX_CPU_C::BxError }, // LEA
+-  /* 8E /dr */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /dr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /dr */ { 0, &BX_CPU_C::POP_EdR },
+   /* 90 /dr */ { 0, &BX_CPU_C::NOP },
+   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
 @@ -902,7 +902,7 @@
    /* 97 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
    /* 98 /dr */ { 0, &BX_CPU_C::CWDE },
@@ -835,6 +863,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 0F BA /dr */ { BxGroup8, NULL, BxOpcodeInfoG8EdIb },
    /* 0F BB /dr */ { 0, &BX_CPU_C::BTC_EdGdR },
    /* 0F BC /dr */ { 0, &BX_CPU_C::BSF_GdEd },
+@@ -1342,7 +1342,7 @@
+   /* 14 /wm */ { BxImmediate_Ib, &BX_CPU_C::ADC_ALIb },
+   /* 15 /wm */ { BxImmediate_Iv, &BX_CPU_C::ADC_AXIw },
+   /* 16 /wm */ { 0, &BX_CPU_C::PUSH16_SS },
+-  /* 17 /wm */ { 0, &BX_CPU_C::POP16_SS },
++  /* 17 /wm */ { BxTraceEnd, &BX_CPU_C::POP16_SS }, // async_event = 1
+   /* 18 /wm */ { BxLockable, &BX_CPU_C::SBB_EbGbM },
+   /* 19 /wm */ { BxLockable, &BX_CPU_C::SBB_EwGwM },
+   /* 1A /wm */ { 0, &BX_CPU_C::SBB_GbEbM },
 @@ -1431,22 +1431,22 @@
    /* 6D /wm */ { 0, &BX_CPU_C::REP_INSW_YwDX },
    /* 6E /wm */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -874,6 +911,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 80 /wm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
    /* 81 /wm */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EwM },
    /* 82 /wm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
+@@ -1461,7 +1461,7 @@
+   /* 8B /wm */ { 0, &BX_CPU_C::MOV_GwEwM },
+   /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /wm */ { 0, &BX_CPU_C::LEA_GwM },
+-  /* 8E /wm */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /wm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /wm */ { 0, &BX_CPU_C::POP_EwM },
+   /* 90 /wm */ { 0, &BX_CPU_C::NOP },
+   /* 91 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
 @@ -1473,7 +1473,7 @@
    /* 97 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
    /* 98 /wm */ { 0, &BX_CPU_C::CBW },
@@ -1069,6 +1115,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 0F BA /wm */ { BxGroup8, NULL, BxOpcodeInfoG8EwIb },
    /* 0F BB /wm */ { BxLockable, &BX_CPU_C::BTC_EwGwM },
    /* 0F BC /wm */ { 0, &BX_CPU_C::BSF_GwEw },
+@@ -1906,7 +1906,7 @@
+   /* 14 /dm */ { BxImmediate_Ib, &BX_CPU_C::ADC_ALIb },
+   /* 15 /dm */ { BxImmediate_Iv, &BX_CPU_C::ADC_EAXId },
+   /* 16 /dm */ { 0, &BX_CPU_C::PUSH32_SS },
+-  /* 17 /dm */ { 0, &BX_CPU_C::POP32_SS },
++  /* 17 /dm */ { BxTraceEnd, &BX_CPU_C::POP32_SS }, // async_event = 1
+   /* 18 /dm */ { BxLockable, &BX_CPU_C::SBB_EbGbM },
+   /* 19 /dm */ { BxLockable, &BX_CPU_C::SBB_EdGdM },
+   /* 1A /dm */ { 0, &BX_CPU_C::SBB_GbEbM },
 @@ -1995,22 +1995,22 @@
    /* 6D /dm */ { 0, &BX_CPU_C::REP_INSD_YdDX },
    /* 6E /dm */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -1108,6 +1163,15 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* 80 /dm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
    /* 81 /dm */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EdM },
    /* 82 /dm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
+@@ -2025,7 +2025,7 @@
+   /* 8B /dm */ { 0, &BX_CPU_C::MOV_GdEdM },
+   /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /dm */ { 0, &BX_CPU_C::LEA_GdM },
+-  /* 8E /dm */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /dm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /dm */ { 0, &BX_CPU_C::POP_EdM },
+   /* 90 /dm */ { 0, &BX_CPU_C::NOP },
+   /* 91 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
 @@ -2037,7 +2037,7 @@
    /* 97 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
    /* 98 /dm */ { 0, &BX_CPU_C::CWDE },
@@ -1546,16 +1610,10 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
  };
  #endif
  
+Files bochs/cpu/fetchdecode.o and bochs-trace-cache/cpu/fetchdecode.o differ
 diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
---- bochs/cpu/fetchdecode64.cc	2007-11-23 18:37:06.000000000 +0200
-+++ bochs-trace-cache/cpu/fetchdecode64.cc	2007-11-23 17:52:02.609375000 +0200
-@@ -1,5 +1,5 @@
- /////////////////////////////////////////////////////////////////////////
--// $Id: bochs-trace-cache.patch,v 1.2 2007-11-23 16:41:45 sshwarts Exp $
-+// $Id: bochs-trace-cache.patch,v 1.2 2007-11-23 16:41:45 sshwarts Exp $
- /////////////////////////////////////////////////////////////////////////
- //
- //  Copyright (C) 2001  MandrakeSoft S.A.
+--- bochs/cpu/fetchdecode64.cc	2007-11-24 16:22:33.000000000 +0200
++++ bochs-trace-cache/cpu/fetchdecode64.cc	2007-11-24 16:29:38.359375000 +0200
 @@ -285,22 +285,22 @@
    /* 6D /wr */ { 0, &BX_CPU_C::REP_INSW_YwDX },
    /* 6E /wr */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -1595,6 +1653,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /wr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
    /* 81 /wr */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EwR },
    /* 82 /wr */ { 0, &BX_CPU_C::BxError },
+@@ -315,7 +315,7 @@
+   /* 8B /wr */ { 0, &BX_CPU_C::MOV_GwEwR },
+   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /wr */ { 0, &BX_CPU_C::BxError },   // LEA
+-  /* 8E /wr */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /wr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
+   /* 90 /wr */ { 0, &BX_CPU_C::XCHG_RXAX }, // handles XCHG R8w, AX
+   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
 @@ -367,20 +367,20 @@
    /* BF /wr */ { BxImmediate_Iv, &BX_CPU_C::MOV_RXIw },
    /* C0 /wr */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -1619,7 +1686,7 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
 +  /* CD /wr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /wr */ { 0, &BX_CPU_C::BxError },
 -  /* CF /wr */ { 0, &BX_CPU_C::IRET16 },
-+  /* CF /wr */ { BxTraceEnd, &BX_CPU_C::IRET16 },
++  /* CF /wr */ { BxTraceEnd, &BX_CPU_C::IRET64 },
    /* D0 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
    /* D1 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
    /* D2 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -1786,6 +1853,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /dr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
    /* 81 /dr */ { BxGroup5 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EdR },
    /* 82 /dr */ { 0, &BX_CPU_C::BxError },
+@@ -844,7 +844,7 @@
+   /* 8B /dr */ { 0, &BX_CPU_C::MOV_GdEdR },
+   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /dr */ { 0, &BX_CPU_C::BxError },     // LEA
+-  /* 8E /dr */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /dr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /dr */ { 0, &BX_CPU_C::POP_EqR },
+   /* 90 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX }, // handles XCHG R8d, EAX
+   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
 @@ -896,20 +896,20 @@
    /* BF /dr */ { BxImmediate_Iv, &BX_CPU_C::MOV_ERXId },
    /* C0 /dr */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -1809,8 +1885,8 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
 +  /* CC /dr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /dr */ { 0, &BX_CPU_C::BxError },
--  /* CF /dr */ { 0, &BX_CPU_C::IRET32 },
-+  /* CF /dr */ { BxTraceEnd, &BX_CPU_C::IRET32 },
+-  /* CF /dr */ { 0, &BX_CPU_C::IRET64 },
++  /* CF /dr */ { BxTraceEnd, &BX_CPU_C::IRET64 },
    /* D0 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
    /* D1 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
    /* D2 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -1977,6 +2053,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /qr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
    /* 81 /qr */ { BxGroup1 | BxImmediate_Iv, NULL, BxOpcodeInfo64G1EqR },
    /* 82 /qr */ { 0, &BX_CPU_C::BxError },
+@@ -1373,7 +1373,7 @@
+   /* 8B /qr */ { 0, &BX_CPU_C::MOV_GqEqR },
+   /* 8C /qr */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /qr */ { 0, &BX_CPU_C::BxError },     // LEA
+-  /* 8E /qr */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /qr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /qr */ { 0, &BX_CPU_C::POP_EqR },
+   /* 90 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX }, // handles XCHG R8, RAX
+   /* 91 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX },
 @@ -1425,20 +1425,20 @@
    /* BF /qr */ { BxImmediate_Iq, &BX_CPU_C::MOV_RRXIq },
    /* C0 /qr */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -2168,6 +2253,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /wm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
    /* 81 /wm */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EwM },
    /* 82 /wm */ { 0, &BX_CPU_C::BxError },
+@@ -1908,7 +1908,7 @@
+   /* 8B /wm */ { 0, &BX_CPU_C::MOV_GwEwM },
+   /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /wm */ { 0, &BX_CPU_C::LEA_GwM },
+-  /* 8E /wm */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /wm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /wm */ { 0, &BX_CPU_C::POP_EwM },
+   /* 90 /wm */ { 0, &BX_CPU_C::XCHG_RXAX }, // handles XCHG R8w, AX
+   /* 91 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
 @@ -1960,20 +1960,20 @@
    /* BF /wm */ { BxImmediate_Iv, &BX_CPU_C::MOV_RXIw },
    /* C0 /wm */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -2191,8 +2285,8 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
 +  /* CC /wm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /wm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /wm */ { 0, &BX_CPU_C::BxError },
--  /* CF /wm */ { 0, &BX_CPU_C::IRET16 },
-+  /* CF /wm */ { BxTraceEnd, &BX_CPU_C::IRET16 },
+-  /* CF /wm */ { 0, &BX_CPU_C::IRET64 },
++  /* CF /wm */ { BxTraceEnd, &BX_CPU_C::IRET64 },
    /* D0 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
    /* D1 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
    /* D2 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -2359,6 +2453,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /dm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
    /* 81 /dm */ { BxGroup1 | BxImmediate_Iv,    NULL, BxOpcodeInfoG1EdM },
    /* 82 /dm */ { 0, &BX_CPU_C::BxError },
+@@ -2437,7 +2437,7 @@
+   /* 8B /dm */ { 0, &BX_CPU_C::MOV_GdEdM },
+   /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /dm */ { 0, &BX_CPU_C::LEA_GdM },
+-  /* 8E /dm */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /dm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /dm */ { 0, &BX_CPU_C::POP_EqM },
+   /* 90 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX }, // handles XCHG R8d, EAX
+   /* 91 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
 @@ -2489,20 +2489,20 @@
    /* BF /dm */ { BxImmediate_Iv, &BX_CPU_C::MOV_ERXId },
    /* C0 /dm */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -2382,8 +2485,8 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
 +  /* CC /dm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /dm */ { 0, &BX_CPU_C::BxError },
--  /* CF /dm */ { 0, &BX_CPU_C::IRET32 },
-+  /* CF /dm */ { BxTraceEnd, &BX_CPU_C::IRET32 },
+-  /* CF /dm */ { 0, &BX_CPU_C::IRET64 },
++  /* CF /dm */ { BxTraceEnd, &BX_CPU_C::IRET64 },
    /* D0 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
    /* D1 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
    /* D2 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -2550,6 +2653,15 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 80 /qm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
    /* 81 /qm */ { BxGroup1 | BxImmediate_Iv, NULL, BxOpcodeInfo64G1EqM },
    /* 82 /qm */ { 0, &BX_CPU_C::BxError },
+@@ -2966,7 +2966,7 @@
+   /* 8B /qm */ { 0, &BX_CPU_C::MOV_GqEqM },
+   /* 8C /qm */ { 0, &BX_CPU_C::MOV_EwSw },
+   /* 8D /qm */ { 0, &BX_CPU_C::LEA_GqM },
+-  /* 8E /qm */ { 0, &BX_CPU_C::MOV_SwEw },
++  /* 8E /qm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+   /* 8F /qm */ { 0, &BX_CPU_C::POP_EqM },
+   /* 90 /qm */ { 0, &BX_CPU_C::XCHG_RRXRAX }, // handles XCHG R8, RAX
+   /* 91 /qm */ { 0, &BX_CPU_C::XCHG_RRXRAX },
 @@ -3018,20 +3018,20 @@
    /* BF /qm */ { BxImmediate_Iq, &BX_CPU_C::MOV_RRXIq },
    /* C0 /qm */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
@@ -2733,7 +2845,6 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    instruction->setB1(b1);
    instruction->setILen(ilen);
    return(1);
-Files bochs/cpu/fetchdecode64.o and bochs-trace-cache/cpu/fetchdecode64.o differ
 diff -ur bochs/cpu/icache.h bochs-trace-cache/cpu/icache.h
 --- bochs/cpu/icache.h	2007-11-22 19:32:00.000000000 +0200
 +++ bochs-trace-cache/cpu/icache.h	2007-11-23 15:37:53.703125000 +0200
