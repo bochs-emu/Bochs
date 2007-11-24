@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.374 2007-11-23 22:49:54 sshwarts Exp $
+// $Id: cpu.h,v 1.375 2007-11-24 14:22:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -440,23 +440,29 @@ typedef struct {
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);    \
   }
 
-#if BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
 
 #define DECLARE_EFLAG_ACCESSOR_AC(bitnum)                             \
-  BX_CPP_INLINE void    clear_AC ();                                  \
+  BX_CPP_INLINE void    clear_AC();                                   \
   BX_CPP_INLINE Bit32u  get_AC();                                     \
   BX_CPP_INLINE bx_bool getB_AC();                                    \
+  BX_CPP_INLINE void    set_AC(bx_bool val);                          \
 
 #define IMPLEMENT_EFLAG_ACCESSOR_AC(bitnum)                           \
   BX_CPP_INLINE void BX_CPU_C::clear_AC () {                          \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                     \
     BX_CPU_THIS_PTR alignment_check = 0;                              \
   }                                                                   \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::get_AC() {                          \
+  BX_CPP_INLINE Bit32u BX_CPU_C::get_AC() {                           \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::getB_AC() {                         \
+  BX_CPP_INLINE Bit32u BX_CPU_C::getB_AC() {                          \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);              \
+  }                                                                   \
+  BX_CPP_INLINE void BX_CPU_C::set_AC(bx_bool val) {                  \
+    BX_CPU_THIS_PTR eflags.val32 =                                    \
+      (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);    \
+    handleAlignmentCheck();                                           \
   }
 
 #endif
@@ -1099,8 +1105,9 @@ public: // for now...
   // so that we can back up when handling faults, exceptions, etc.
   // we need to store the value of the instruction pointer, before
   // each fetch/execute cycle.
-  bx_address prev_eip;
-  bx_address prev_esp;
+  bx_address prev_rip;
+  bx_address prev_rsp;
+  bx_bool    speculative_rsp;
 
 #define BX_INHIBIT_INTERRUPTS 0x01
 #define BX_INHIBIT_DEBUG      0x02
@@ -3276,7 +3283,7 @@ public: // for now...
   DECLARE_EFLAG_ACCESSOR   (ID,  21)
   DECLARE_EFLAG_ACCESSOR   (VIP, 20)
   DECLARE_EFLAG_ACCESSOR   (VIF, 19)
-#if BX_SUPPORT_ALIGNMENT_CHECK
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
   DECLARE_EFLAG_ACCESSOR_AC(     18)
 #else
   DECLARE_EFLAG_ACCESSOR   (AC,  18)

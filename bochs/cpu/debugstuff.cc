@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.85 2007-11-08 18:21:37 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.86 2007-11-24 14:22:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -238,8 +238,8 @@ void BX_CPU_C::debug(bx_address offset)
 #if BX_SUPPORT_X86_64
   BX_INFO(("| RIP=%08x%08x (%08x%08x)", 
     (unsigned) BX_CPU_THIS_PTR eip_reg.dword.rip_upper, (unsigned) EIP,
-    (unsigned) (BX_CPU_THIS_PTR prev_eip >> 32), 
-    (unsigned) (BX_CPU_THIS_PTR prev_eip & 0xffffffff)));
+    (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32), 
+    (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
   BX_INFO(("| CR0=0x%08x CR1=0x%x CR2=0x%08x%08x",
     (unsigned) (BX_CPU_THIS_PTR cr0.val32), 0,
     (unsigned) (BX_CPU_THIS_PTR cr2 >> 32),
@@ -248,7 +248,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.getRegister()));
 #else
   BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
-    (unsigned) BX_CPU_THIS_PTR prev_eip));
+    (unsigned) BX_CPU_THIS_PTR prev_rip));
 
 #if BX_CPU_LEVEL >= 2 && BX_CPU_LEVEL < 4
   BX_INFO(("| CR0=0x%08x CR1=%x CR2=0x%08x CR3=0x%08x",
@@ -440,5 +440,5 @@ void BX_CPU_C::dbg_get_idtr(bx_dbg_global_sreg_t *sreg)
 
 void BX_CPU_C::atexit(void)
 {
-  debug(BX_CPU_THIS_PTR prev_eip);
+  debug(BX_CPU_THIS_PTR prev_rip);
 }

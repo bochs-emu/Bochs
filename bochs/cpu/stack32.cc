@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.40 2007-11-22 17:33:06 sshwarts Exp $
+// $Id: stack32.cc,v 1.41 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,9 +30,17 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RSP ESP
+#endif
+
 void BX_CPU_C::POP_EdM(bxInstruction_c *i)
 {
   Bit32u val32;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   pop_32(&val32);
 
@@ -44,6 +52,8 @@ void BX_CPU_C::POP_EdM(bxInstruction_c *i)
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
   write_virtual_dword(i->seg(), RMAddr(i), &val32);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP_EdR(bxInstruction_c *i)
@@ -79,6 +89,13 @@ void BX_CPU_C::PUSH32_DS(bxInstruction_c *i)
   decrementESPForPush(4, &eSP);
   write_virtual_word(BX_SEG_REG_SS, eSP,
            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+  }
+  else {
+    SP = (Bit16u) eSP;
+  }
 }
 
 void BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
@@ -87,6 +104,13 @@ void BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
   decrementESPForPush(4, &eSP);
   write_virtual_word(BX_SEG_REG_SS, eSP,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+  }
+  else {
+    SP = (Bit16u) eSP;
+  }
 }
 
 void BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
@@ -95,6 +119,13 @@ void BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
   decrementESPForPush(4, &eSP);
   write_virtual_word(BX_SEG_REG_SS, eSP,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+  }
+  else {
+    SP = (Bit16u) eSP;
+  }
 }
 
 void BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
@@ -103,6 +134,13 @@ void BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
   decrementESPForPush(4, &eSP);
   write_virtual_word(BX_SEG_REG_SS, eSP,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+  }
+  else {
+    SP = (Bit16u) eSP;
+  }
 }
 
 void BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
@@ -111,41 +149,78 @@ void BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
   decrementESPForPush(4, &eSP);
   write_virtual_word(BX_SEG_REG_SS, eSP,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
+
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    ESP = eSP;
+  }
+  else {
+    SP = (Bit16u) eSP;
+  }
 }
 
 void BX_CPU_C::POP32_DS(bxInstruction_c *i)
 {
   Bit32u ds;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_32(&ds);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], (Bit16u) ds);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP32_ES(bxInstruction_c *i)
 {
   Bit32u es;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_32(&es);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], (Bit16u) es);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP32_FS(bxInstruction_c *i)
 {
   Bit32u fs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_32(&fs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP32_GS(bxInstruction_c *i)
 {
   Bit32u gs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_32(&gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP32_SS(bxInstruction_c *i)
 {
   Bit32u ss;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_32(&ss);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], (Bit16u) ss);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   // POP SS inhibits interrupts, debug exceptions and single-step
   // trap exceptions until the execution boundary following the
@@ -254,6 +329,9 @@ void BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
   Bit8u level = i->Ib2();
   level &= 0x1F;
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   Bit32u ebp; // Use temp copy in case of exception.
   push_16(BP);
 
@@ -286,6 +364,8 @@ void BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
     push_16((Bit16u)frame_ptr32);
   }
 
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+
   if (ss32) {
     EBP = frame_ptr32;
     ESP -= imm16;
@@ -303,6 +383,9 @@ void BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
   Bit16u imm16 = i->Iw();
   Bit8u level = i->Ib2();
   level &= 0x1F;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   Bit32u ebp; // Use temp copy in case of exception.
   push_32(EBP);
@@ -335,6 +418,8 @@ void BX_CPU_C::ENTER32_IwIb(bxInstruction_c *i)
     /* push(frame pointer) */
     push_32(frame_ptr32);
   }
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   if (ss32) {
     EBP = frame_ptr32;
@@ -372,13 +457,16 @@ void BX_CPU_C::LEAVE(bxInstruction_c *i)
     }
   }
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   // delete frame
 #if BX_CPU_LEVEL >= 3
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP = EBP;
   else
 #endif
-    SP = BP;
+     SP = BP;
 
   // restore frame pointer
 #if BX_CPU_LEVEL >= 3
@@ -394,5 +482,7 @@ void BX_CPU_C::LEAVE(bxInstruction_c *i)
     pop_16(&temp16);
     BP = temp16;
   }
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 #endif

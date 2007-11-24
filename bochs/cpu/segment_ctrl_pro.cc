@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.75 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.76 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -684,7 +684,7 @@ BX_CPU_C::fetch_raw_descriptor(const bx_selector_t *selector,
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
-      debug(BX_CPU_THIS_PTR prev_eip);
+      debug(BX_CPU_THIS_PTR prev_rip);
     }
     if ((index*8 + 7) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor: LDT: index (%x)%x > limit (%x)",
@@ -746,7 +746,7 @@ void BX_CPU_C::fetch_raw_descriptor64(const bx_selector_t *selector,
   else { /* LDT */
     if (BX_CPU_THIS_PTR ldtr.cache.valid==0) {
       BX_PANIC(("fetch_raw_descriptor: LDTR.valid=0"));
-      debug(BX_CPU_THIS_PTR prev_eip);
+      debug(BX_CPU_THIS_PTR prev_rip);
     }
     if ((index*8 + 15) > BX_CPU_THIS_PTR ldtr.cache.u.system.limit_scaled) {
       BX_ERROR(("fetch_raw_descriptor64: LDT: index (%x)%x > limit (%x)",

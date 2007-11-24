@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.26 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: stack16.cc,v 1.27 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -30,6 +30,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RSP ESP
+#endif
 
 void BX_CPU_C::PUSH_RX(bxInstruction_c *i)
 {
@@ -69,36 +73,67 @@ void BX_CPU_C::PUSH16_SS(bxInstruction_c *i)
 void BX_CPU_C::POP16_DS(bxInstruction_c *i)
 {
   Bit16u ds;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&ds);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+
 }
 
 void BX_CPU_C::POP16_ES(bxInstruction_c *i)
 {
   Bit16u es;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&es);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES], es);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP16_FS(bxInstruction_c *i)
 {
   Bit16u fs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&fs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], fs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP16_GS(bxInstruction_c *i)
 {
   Bit16u gs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], gs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP16_SS(bxInstruction_c *i)
 {
   Bit16u ss;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&ss);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], ss);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   // POP SS inhibits interrupts, debug exceptions and single-step
   // trap exceptions until the execution boundary following the
@@ -120,6 +155,9 @@ void BX_CPU_C::POP_EwM(bxInstruction_c *i)
 {
   Bit16u val16;
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_16(&val16);
 
   // Note: there is one little weirdism here.  It is possible to use 
@@ -129,6 +167,8 @@ void BX_CPU_C::POP_EwM(bxInstruction_c *i)
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
   write_virtual_word(i->seg(), RMAddr(i), &val16);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP_EwR(bxInstruction_c *i)

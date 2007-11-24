@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.28 2007-11-22 21:52:55 sshwarts Exp $
+// $Id: stack64.cc,v 1.29 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,9 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
 {
   Bit64u val64;
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_64(&val64);
 
   // Note: there is one little weirdism here.  It is possible to use 
@@ -46,6 +49,8 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
   write_virtual_qword(i->seg(), RMAddr(i), &val64);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP_EqR(bxInstruction_c *i)
@@ -57,7 +62,7 @@ void BX_CPU_C::POP_EqR(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
-  push_64(BX_CPU_THIS_PTR gen_reg[i->opcodeReg()].rrx);
+  push_64(BX_READ_64BIT_REG(i->opcodeReg()));
 }
 
 void BX_CPU_C::POP_RRX(bxInstruction_c *i)
@@ -80,15 +85,27 @@ void BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 void BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
   Bit64u fs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_64(&fs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP64_GS(bxInstruction_c *i)
 {
   Bit64u gs;
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_64(&gs);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
@@ -118,6 +135,9 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
   level &= 0x1F;
   Bit64u bytes_to_push = 8 + level*8 + i->Iw();
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   push_64(RBP);
 
   Bit64u frame_ptr64 = RSP;
@@ -138,13 +158,17 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
     write_virtual_qword(BX_SEG_REG_SS, RSP, &frame_ptr64);
   } /* if (level > 0) ... */
 
-  RBP = frame_ptr64;
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
+  RBP = frame_ptr64;
   RSP -= i->Iw();
 }
 
 void BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   // delete frame
   RSP = RBP;
 
@@ -152,6 +176,8 @@ void BX_CPU_C::LEAVE64(bxInstruction_c *i)
   Bit64u temp64;
   pop_64(&temp64);
   RBP = temp64;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

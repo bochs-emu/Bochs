@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.147 2007-11-23 16:37:06 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.148 2007-11-24 14:22:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -909,7 +909,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* CC /dr */ { 0, &BX_CPU_C::INT3 },
   /* CD /dr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /dr */ { 0, &BX_CPU_C::BxError },
-  /* CF /dr */ { 0, &BX_CPU_C::IRET32 },
+  /* CF /dr */ { 0, &BX_CPU_C::IRET64 },
   /* D0 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D1 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
   /* D2 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -1973,7 +1973,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* CC /wm */ { 0, &BX_CPU_C::INT3 },
   /* CD /wm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /wm */ { 0, &BX_CPU_C::BxError },
-  /* CF /wm */ { 0, &BX_CPU_C::IRET16 },
+  /* CF /wm */ { 0, &BX_CPU_C::IRET64 },
   /* D0 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D1 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
   /* D2 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
@@ -2502,7 +2502,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* CC /dm */ { 0, &BX_CPU_C::INT3 },
   /* CD /dm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /dm */ { 0, &BX_CPU_C::BxError },
-  /* CF /dm */ { 0, &BX_CPU_C::IRET32 },
+  /* CF /dm */ { 0, &BX_CPU_C::IRET64 },
   /* D0 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D1 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
   /* D2 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },

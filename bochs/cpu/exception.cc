@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.95 2007-11-06 19:17:42 sshwarts Exp $
+// $Id: exception.cc,v 1.96 2007-11-24 14:22:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -851,7 +851,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
      // if 1st was a double fault (software INT?), then shutdown
      (BX_CPU_THIS_PTR errorno == 2 && BX_CPU_THIS_PTR curr_exception[0]==BX_ET_DOUBLE_FAULT))
   {
-    debug(BX_CPU_THIS_PTR prev_eip); // print debug information to the log
+    debug(BX_CPU_THIS_PTR prev_rip); // print debug information to the log
 #if BX_DEBUGGER
     // trap into debugger (similar as done when PANIC occured)
     bx_debug_break();
@@ -998,8 +998,9 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code, bx_bool is_INT)
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
     // restore RIP/RSP to value before error occurred
-    RIP = BX_CPU_THIS_PTR prev_eip;
-    RSP = BX_CPU_THIS_PTR prev_esp;
+    RIP = BX_CPU_THIS_PTR prev_rip;
+    if (BX_CPU_THIS_PTR speculative_rsp)
+      RSP = BX_CPU_THIS_PTR prev_rsp;
 
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }

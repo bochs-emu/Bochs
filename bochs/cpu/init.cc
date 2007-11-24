@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.144 2007-11-18 21:07:40 sshwarts Exp $
+// $Id: init.cc,v 1.145 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -718,9 +718,9 @@ void BX_CPU_C::reset(unsigned source)
 
   /* instruction pointer */
 #if BX_CPU_LEVEL < 2
-  BX_CPU_THIS_PTR prev_eip = EIP = 0x00000000;
+  BX_CPU_THIS_PTR prev_rip = EIP = 0x00000000;
 #else /* from 286 up */
-  BX_CPU_THIS_PTR prev_eip = RIP = 0x0000FFF0;
+  BX_CPU_THIS_PTR prev_rip = RIP = 0x0000FFF0;
 #endif
 
   /* CS (Code Segment) and descriptor cache */

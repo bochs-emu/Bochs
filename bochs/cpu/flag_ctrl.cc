@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.31 2007-11-22 21:52:55 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.32 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -30,6 +30,11 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RSP ESP
+#endif
 
 
 void BX_CPU_C::SAHF(bxInstruction_c *i)
@@ -214,6 +219,9 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
       BX_DEBUG(("POPFW: #GP(0) in v8086 (no VME) mode"));
       exception(BX_GP_EXCEPTION, 0, 0);
     }
+    BX_CPU_THIS_PTR speculative_rsp = 1;
+    BX_CPU_THIS_PTR prev_rsp = RSP;
+
     pop_16(&flags16);
 #if BX_SUPPORT_VME
     if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3) {
@@ -233,6 +241,8 @@ void BX_CPU_C::POPF_Fw(bxInstruction_c *i)
     }
 #endif
     changeMask |= EFlagsIFMask;
+
+    BX_CPU_THIS_PTR speculative_rsp = 0;
   }
   else {
     pop_16(&flags16);

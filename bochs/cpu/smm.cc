@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.cc,v 1.28 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: smm.cc,v 1.29 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -106,7 +106,7 @@ void BX_CPU_C::enter_system_management_mode(void)
 
   BX_INFO(("Enter to System Management Mode"));
 
-  // debug(BX_CPU_THIS_PTR prev_eip);
+  // debug(BX_CPU_THIS_PTR prev_rip);
 
   BX_CPU_THIS_PTR in_smm = 1;
 
@@ -124,7 +124,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   }
 
   BX_CPU_THIS_PTR setEFlags(0x2); // Bit1 is always set
-  BX_CPU_THIS_PTR prev_eip = RIP = 0x00008000;
+  BX_CPU_THIS_PTR prev_rip = RIP = 0x00008000;
   BX_CPU_THIS_PTR dr7 = 0x00000400;
 
   // CR0 - PE, EM, TS, and PG flags set to 0; others unmodified

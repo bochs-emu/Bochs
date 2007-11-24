@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-//// $Id: plex86-interface.cc,v 1.9 2007-10-18 22:44:38 sshwarts Exp $
+//// $Id: plex86-interface.cc,v 1.10 2007-11-24 14:22:32 sshwarts Exp $
 ///////////////////////////////////////////////////////////////////////////
 ////
 ////  Copyright (C) 2002  Kevin P. Lawton
@@ -305,8 +305,7 @@ void copyPlex86StateToBochs(BX_CPU_C *cpu)
   cpu->eip_reg.dword.eip    = plex86GuestCPU->eip;
 
   // Set fields used for exception processing.
-  cpu->prev_eip = plex86GuestCPU->eip;
-  cpu->prev_esp = plex86GuestCPU->esp;
+  cpu->prev_rip = plex86GuestCPU->eip;
 
   // ES/CS/SS/DS/FS/GS
   for (unsigned s=0; s<6; s++) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.34 2007-11-17 23:28:32 sshwarts Exp $
+// $Id: soft_int.cc,v 1.35 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,6 +32,11 @@
 
 #if BX_EXTERNAL_DEBUGGER
 #include "extdb.h"
+#endif
+
+// Make code more tidy with a few macros.
+#if BX_SUPPORT_X86_64==0
+#define RSP ESP
 #endif
 
 void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
@@ -75,7 +80,14 @@ void BX_CPU_C::INT1(bxInstruction_c *i)
   trap_debugger(0);
 #endif
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  // interrupt is not RSP safe
   interrupt(1, 1, 0, 0);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
@@ -89,7 +101,14 @@ void BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  // interrupt is not RSP safe
   interrupt(3, 1, 0, 0);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
@@ -103,6 +122,9 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 #endif
 
   Bit8u vector = i->Ib();
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
   if (v8086_mode()) {
 #if BX_SUPPORT_VME
@@ -120,7 +142,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
       {
         // redirect interrupt through virtual-mode idt
         v86_redirect_interrupt(vector);
-        return;
+        goto done;
       }
     }
 #endif
@@ -139,6 +161,11 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
 #endif
 
   interrupt(vector, 1, 0, 0);
+
+done:
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
+
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                       EIP);
@@ -151,7 +178,14 @@ void BX_CPU_C::INTO(bxInstruction_c *i)
 #endif
 
   if (get_OF()) {
+    BX_CPU_THIS_PTR speculative_rsp = 1;
+    BX_CPU_THIS_PTR prev_rsp = RSP;
+
+    // interrupt is not RSP safe
     interrupt(4, 1, 0, 0);
+
+    BX_CPU_THIS_PTR speculative_rsp = 0;
+
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value,
                         EIP);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.182 2007-11-17 23:28:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.183 2007-11-24 14:22:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -220,8 +220,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   // back from an exception() call.  In either case, commit the
   // new EIP/ESP, and set up other environmental fields.  This code
   // mirrors similar code below, after the interrupt() call.
-  BX_CPU_THIS_PTR prev_eip = RIP; // commit new EIP
-  BX_CPU_THIS_PTR prev_esp = RSP; // commit new ESP
+  BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
+  BX_CPU_THIS_PTR speculative_rsp = 0;
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR errorno = 0;
 
@@ -263,7 +263,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #if BX_DEBUGGER
       bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
 #else
-      debug_disasm_instruction(BX_CPU_THIS_PTR prev_eip);
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
 #endif
     }
 #endif
@@ -272,8 +272,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
     BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
-    BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
-    BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
     BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
     BX_TICK1_IF_SINGLE_PROCESSOR();
 
@@ -353,7 +352,7 @@ void BX_CPU_C::repeat(bxInstruction_c *i, BxExecutePtr_t execute)
     }
   }
 
-  RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
+  RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 }
 
 void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
@@ -428,7 +427,7 @@ void BX_CPU_C::repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute)
     }
   }
 
-  RIP = BX_CPU_THIS_PTR prev_eip; // repeat loop not done, restore RIP
+  RIP = BX_CPU_THIS_PTR prev_rip; // repeat loop not done, restore RIP
 }
 
 unsigned BX_CPU_C::handleAsyncEvent(void)
@@ -575,8 +574,8 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     // the new EIP/ESP values.  But here, we call interrupt() much like
     // it was a sofware interrupt instruction, and need to effect the
     // commit here.  This code mirrors similar code above.
-    BX_CPU_THIS_PTR prev_eip = RIP; // commit new RIP
-    BX_CPU_THIS_PTR prev_esp = RSP; // commit new RSP
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    BX_CPU_THIS_PTR speculative_rsp = 0;
     BX_CPU_THIS_PTR EXT = 0;
     BX_CPU_THIS_PTR errorno = 0;
   }
@@ -627,7 +626,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   else {
     // only bother comparing if any breakpoints enabled
     if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-      bx_address iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_eip;
+      bx_address iaddr = BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + BX_CPU_THIS_PTR prev_rip;
       Bit32u dr6_bits = hwdebug_compare(iaddr, 1, BX_HWDebugInstruction, BX_HWDebugInstruction);
       if (dr6_bits)
       {
@@ -785,7 +784,7 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
   }
 
   // Restore EIP since we fudged it to start at the 2nd page boundary.
-  RIP = BX_CPU_THIS_PTR prev_eip;
+  RIP = BX_CPU_THIS_PTR prev_rip;
 
   // Since we cross an instruction boundary, note that we need a prefetch()
   // again on the next instruction.  Perhaps we can optimize this to

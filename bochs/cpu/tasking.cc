@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.41 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: tasking.cc,v 1.42 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -429,7 +429,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     }
   }
 
-  BX_CPU_THIS_PTR prev_eip = EIP = newEIP;
+  BX_CPU_THIS_PTR prev_rip = EIP = newEIP;
 
   EAX = newEAX;
   ECX = newECX;

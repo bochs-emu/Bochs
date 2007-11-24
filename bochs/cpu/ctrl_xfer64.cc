@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.53 2007-11-17 12:44:09 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.54 2007-11-24 14:22:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,6 +44,9 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 
   Bit16u imm16 = i->Iw();
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_64(&return_RIP);
 
   if (! IsCanonical(return_RIP)) {
@@ -53,6 +56,8 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 
   RIP = return_RIP;
   RSP += imm16;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
@@ -65,6 +70,9 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
   pop_64(&return_RIP);
 
   if (! IsCanonical(return_RIP)) {
@@ -73,6 +81,8 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
   }
 
   RIP = return_RIP;
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
@@ -87,9 +97,13 @@ void BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_INFO(("RETfar64_Iw instruction executed ..."));
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
+  // return_protected is not RSP safe
   return_protected(i, i->Iw());
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -105,9 +119,13 @@ void BX_CPU_C::RETfar64(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_INFO(("RETfar64 instruction executed ..."));
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
 
+  // return_protected is not RSP safe
   return_protected(i, 0);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -177,7 +195,13 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  BX_CPU_THIS_PTR call_protected(i, cs_raw, op1_32);
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  // call_protected is not RSP safe
+  call_protected(i, cs_raw, op1_32);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -430,7 +454,14 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
 
   BX_ASSERT(protected_mode());
-  BX_CPU_THIS_PTR jump_protected(i, cs_raw, op1_32);
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  // jump_protected is nto RSP safe
+  jump_protected(i, cs_raw, op1_32);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
@@ -447,7 +478,14 @@ void BX_CPU_C::IRET64(bxInstruction_c *i)
   BX_CPU_THIS_PTR nmi_disable = 0;
 
   BX_ASSERT(protected_mode());
-  iret_protected(i);
+
+  BX_CPU_THIS_PTR speculative_rsp = 1;
+  BX_CPU_THIS_PTR prev_rsp = RSP;
+
+  // long_iret is not RSP safe
+  long_iret(i);
+
+  BX_CPU_THIS_PTR speculative_rsp = 0;
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_IRET,
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);

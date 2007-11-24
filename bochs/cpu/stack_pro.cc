@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.31 2007-11-17 23:28:33 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.32 2007-11-24 14:22:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -353,11 +353,9 @@ void BX_CPU_C::decrementESPForPush(unsigned nBytes, Bit32u *eSP_ptr)
   // And finally, decrement eSP and return the new eSP value.
   eSP -= nBytes;
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
     *eSP_ptr = eSP;
   }
   else {
-    SP = (Bit16u) eSP;
     *eSP_ptr = SP;
   }
 }
