@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.56 2007-11-16 20:33:21 sshwarts Exp $
+// $Id: cpuid.cc,v 1.57 2007-11-25 20:52:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -571,7 +571,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   unsigned features  = BX_CPU_VENDOR_INTEL ? 0 : get_std_cpuid_features();
   features &= 0x0183F3FF;
 #if BX_SUPPORT_3DNOW
-  features |= (1 << 22);  // only AMD is interesting in AMD MMX extensions
+  features |= (1 << 22) | (1 << 30) | (1 << 31);  // only AMD is interesting in AMD MMX extensions
 #endif
 #if BX_SUPPORT_X86_64
   features |= (1 << 29) | (1 << 27) | (1 << 25) | (1 << 20) | (1 << 11);
