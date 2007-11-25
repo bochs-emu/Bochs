@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.102 2007-11-17 23:28:30 sshwarts Exp $
+// $Id: apic.cc,v 1.103 2007-11-25 20:22:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -146,6 +146,11 @@ int apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bx_bool trig
 static void apic_bus_broadcast_eoi(Bit8u vector)
 {
   bx_devices.ioapic->receive_eoi(vector);
+}
+
+void apic_bus_deliver_smi(void)
+{
+  BX_CPU(0)->deliver_SMI();
 }
 
 ////////////////////////////////////

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.41 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.42 2007-11-25 20:22:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -3082,38 +3082,71 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G7M[8] = {
 /* Group 8 */
 /* ******* */
 
-static const BxOpcodeInfo_t BxOpcodeInfoG8EwIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG8EwIbM[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
   /* 3 */ { 0, &BX_CPU_C::BxError },
-  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EwIb  },
-  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EwIb },
-  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EwIb },
-  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EwIb }
+  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EwIbM  },
+  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EwIbM },
+  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EwIbM },
+  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EwIbM }
 }; 
 
-static const BxOpcodeInfo_t BxOpcodeInfoG8EdIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfoG8EwIbR[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
   /* 3 */ { 0, &BX_CPU_C::BxError },
-  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EdIb  },
-  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EdIb },
-  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EdIb },
-  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EdIb }
+  /* 4 */ { BxImmediate_Ib, &BX_CPU_C::BT_EwIbR  },
+  /* 5 */ { BxImmediate_Ib, &BX_CPU_C::BTS_EwIbR },
+  /* 6 */ { BxImmediate_Ib, &BX_CPU_C::BTR_EwIbR },
+  /* 7 */ { BxImmediate_Ib, &BX_CPU_C::BTC_EwIbR }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG8EdIbM[8] = {
+  /* 0 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EdIbM  },
+  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EdIbM },
+  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EdIbM },
+  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EdIbM }
+}; 
+
+static const BxOpcodeInfo_t BxOpcodeInfoG8EdIbR[8] = {
+  /* 0 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { BxImmediate_Ib, &BX_CPU_C::BT_EdIbR  },
+  /* 5 */ { BxImmediate_Ib, &BX_CPU_C::BTS_EdIbR },
+  /* 6 */ { BxImmediate_Ib, &BX_CPU_C::BTR_EdIbR },
+  /* 7 */ { BxImmediate_Ib, &BX_CPU_C::BTC_EdIbR }
 }; 
 
 #if BX_SUPPORT_X86_64
-static const BxOpcodeInfo_t BxOpcodeInfo64G8EqIb[8] = {
+static const BxOpcodeInfo_t BxOpcodeInfo64G8EqIbM[8] = {
   /* 0 */ { 0, &BX_CPU_C::BxError },
   /* 1 */ { 0, &BX_CPU_C::BxError },
   /* 2 */ { 0, &BX_CPU_C::BxError },
   /* 3 */ { 0, &BX_CPU_C::BxError },
-  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EqIb  },
-  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EqIb },
-  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EqIb },
-  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EqIb }
+  /* 4 */ { BxImmediate_Ib,              &BX_CPU_C::BT_EqIbM  },
+  /* 5 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTS_EqIbM },
+  /* 6 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTR_EqIbM },
+  /* 7 */ { BxImmediate_Ib | BxLockable, &BX_CPU_C::BTC_EqIbM }
+};
+
+static const BxOpcodeInfo_t BxOpcodeInfo64G8EqIbR[8] = {
+  /* 0 */ { 0, &BX_CPU_C::BxError },
+  /* 1 */ { 0, &BX_CPU_C::BxError },
+  /* 2 */ { 0, &BX_CPU_C::BxError },
+  /* 3 */ { 0, &BX_CPU_C::BxError },
+  /* 4 */ { BxImmediate_Ib, &BX_CPU_C::BT_EqIbR  },
+  /* 5 */ { BxImmediate_Ib, &BX_CPU_C::BTS_EqIbR },
+  /* 6 */ { BxImmediate_Ib, &BX_CPU_C::BTR_EqIbR },
+  /* 7 */ { BxImmediate_Ib, &BX_CPU_C::BTC_EqIbR }
 };
 #endif
 

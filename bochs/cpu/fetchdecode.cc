@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.140 2007-11-23 16:37:05 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.141 2007-11-25 20:22:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -676,7 +676,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F B7 /wr */ { 0, &BX_CPU_C::MOV_GwEwR }, // MOVZX_GwEw
   /* 0F B8 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8w },
   /* 0F B9 /wr */ { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
-  /* 0F BA /wr */ { BxGroup8, NULL, BxOpcodeInfoG8EwIb },
+  /* 0F BA /wr */ { BxGroup8, NULL, BxOpcodeInfoG8EwIbR },
   /* 0F BB /wr */ { 0, &BX_CPU_C::BTC_EwGwR },
   /* 0F BC /wr */ { 0, &BX_CPU_C::BSF_GwEw },
   /* 0F BD /wr */ { 0, &BX_CPU_C::BSR_GwEw },
@@ -1240,7 +1240,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F B7 /dr */ { 0, &BX_CPU_C::MOVZX_GdEwR },
   /* 0F B8 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8d },
   /* 0F B9 /dr */ { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
-  /* 0F BA /dr */ { BxGroup8, NULL, BxOpcodeInfoG8EdIb },
+  /* 0F BA /dr */ { BxGroup8, NULL, BxOpcodeInfoG8EdIbR },
   /* 0F BB /dr */ { 0, &BX_CPU_C::BTC_EdGdR },
   /* 0F BC /dr */ { 0, &BX_CPU_C::BSF_GdEd },
   /* 0F BD /dr */ { 0, &BX_CPU_C::BSR_GdEd },
@@ -1811,7 +1811,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F B7 /wm */ { 0, &BX_CPU_C::MOV_GwEwM }, // MOVZX_GwEw
   /* 0F B8 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8w },
   /* 0F B9 /wm */ { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
-  /* 0F BA /wm */ { BxGroup8, NULL, BxOpcodeInfoG8EwIb },
+  /* 0F BA /wm */ { BxGroup8, NULL, BxOpcodeInfoG8EwIbM },
   /* 0F BB /wm */ { BxLockable, &BX_CPU_C::BTC_EwGwM },
   /* 0F BC /wm */ { 0, &BX_CPU_C::BSF_GwEw },
   /* 0F BD /wm */ { 0, &BX_CPU_C::BSR_GwEw },
@@ -2375,7 +2375,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F B7 /dm */ { 0, &BX_CPU_C::MOVZX_GdEwM },
   /* 0F B8 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0fb8d },
   /* 0F B9 /dm */ { 0, &BX_CPU_C::UndefinedOpcode }, // UD2 opcode
-  /* 0F BA /dm */ { BxGroup8, NULL, BxOpcodeInfoG8EdIb },
+  /* 0F BA /dm */ { BxGroup8, NULL, BxOpcodeInfoG8EdIbM },
   /* 0F BB /dm */ { BxLockable, &BX_CPU_C::BTC_EdGdM },
   /* 0F BC /dm */ { 0, &BX_CPU_C::BSF_GdEd },
   /* 0F BD /dm */ { 0, &BX_CPU_C::BSR_GdEd },
@@ -2797,7 +2797,8 @@ modrm_done:
 
   if (lock) { // lock prefix invalid opcode
     // lock prefix not allowed or destination operand is not memory
-    if ((mod == 0xc0) || !(attr & BxLockable)) {
+    // mod == 0xc0 can't be BxLockable in fetchdecode tables
+    if (/*(mod == 0xc0) ||*/ !(attr & BxLockable)) {
       BX_INFO(("LOCK prefix unallowed (op1=0x%x, attr=0x%x, mod=0x%x, nnn=%u)", b1, attr, mod, nnn));
       UndefinedOpcode(instruction);
     }

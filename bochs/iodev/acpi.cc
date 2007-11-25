@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.10 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: acpi.cc,v 1.11 2007-11-25 20:22:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -29,7 +29,6 @@
 #define BX_PLUGGABLE
 
 #include "bochs.h"
-#include "cpu/cpu.h"
 #include "iodev.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_ACPI
 
@@ -59,6 +58,8 @@ const Bit8u acpi_sm_iomask[16] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 0, 2, 0, 0, 0
 
 #define ACPI_ENABLE 0xf1
 #define ACPI_DISABLE 0xf0
+
+extern void apic_bus_deliver_smi(void);
 
 int libacpi_LTX_plugin_init(plugin_t *plugin, plugintype_t type, int argc, char *argv[])
 {
@@ -276,7 +277,7 @@ void bx_acpi_ctrl_c::generate_smi(Bit8u value)
   }
 
   if (BX_ACPI_THIS s.pci_conf[0x5b] & 0x02) {
-    BX_CPU(0)->deliver_SMI();
+    apic_bus_deliver_smi();
   }
 }
 

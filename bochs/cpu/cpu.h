@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.375 2007-11-24 14:22:32 sshwarts Exp $
+// $Id: cpu.h,v 1.376 2007-11-25 20:22:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1675,14 +1675,23 @@ public: // for now...
   BX_SMF void BTC_EwGwR(bxInstruction_c *);
   BX_SMF void BTC_EdGdR(bxInstruction_c *);
 
-  BX_SMF void BT_EwIb(bxInstruction_c *);
-  BX_SMF void BT_EdIb(bxInstruction_c *);
-  BX_SMF void BTS_EwIb(bxInstruction_c *);
-  BX_SMF void BTS_EdIb(bxInstruction_c *);
-  BX_SMF void BTR_EwIb(bxInstruction_c *);
-  BX_SMF void BTR_EdIb(bxInstruction_c *);
-  BX_SMF void BTC_EwIb(bxInstruction_c *);
-  BX_SMF void BTC_EdIb(bxInstruction_c *);
+  BX_SMF void BT_EwIbM(bxInstruction_c *);
+  BX_SMF void BT_EdIbM(bxInstruction_c *);
+  BX_SMF void BTS_EwIbM(bxInstruction_c *);
+  BX_SMF void BTS_EdIbM(bxInstruction_c *);
+  BX_SMF void BTR_EwIbM(bxInstruction_c *);
+  BX_SMF void BTR_EdIbM(bxInstruction_c *);
+  BX_SMF void BTC_EwIbM(bxInstruction_c *);
+  BX_SMF void BTC_EdIbM(bxInstruction_c *);
+
+  BX_SMF void BT_EwIbR(bxInstruction_c *);
+  BX_SMF void BT_EdIbR(bxInstruction_c *);
+  BX_SMF void BTS_EwIbR(bxInstruction_c *);
+  BX_SMF void BTS_EdIbR(bxInstruction_c *);
+  BX_SMF void BTR_EwIbR(bxInstruction_c *);
+  BX_SMF void BTR_EdIbR(bxInstruction_c *);
+  BX_SMF void BTC_EwIbR(bxInstruction_c *);
+  BX_SMF void BTC_EdIbR(bxInstruction_c *);
 
   BX_SMF void LES_GwMp(bxInstruction_c *);
   BX_SMF void LDS_GwMp(bxInstruction_c *);
@@ -2770,10 +2779,15 @@ public: // for now...
   BX_SMF void BTR_EqGqR(bxInstruction_c *);
   BX_SMF void BTC_EqGqR(bxInstruction_c *);
 
-  BX_SMF void BT_EqIb(bxInstruction_c *);
-  BX_SMF void BTS_EqIb(bxInstruction_c *);
-  BX_SMF void BTR_EqIb(bxInstruction_c *);
-  BX_SMF void BTC_EqIb(bxInstruction_c *);
+  BX_SMF void BT_EqIbM(bxInstruction_c *);
+  BX_SMF void BTS_EqIbM(bxInstruction_c *);
+  BX_SMF void BTR_EqIbM(bxInstruction_c *);
+  BX_SMF void BTC_EqIbM(bxInstruction_c *);
+
+  BX_SMF void BT_EqIbR(bxInstruction_c *);
+  BX_SMF void BTS_EqIbR(bxInstruction_c *);
+  BX_SMF void BTR_EqIbR(bxInstruction_c *);
+  BX_SMF void BTC_EqIbR(bxInstruction_c *);
 
   BX_SMF void BSWAP_RRX(bxInstruction_c *);
 
