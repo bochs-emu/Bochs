@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.23 2007-07-09 15:16:12 sshwarts Exp $
+// $Id: io_pro.cc,v 1.24 2007-11-26 17:45:48 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,7 +41,6 @@ BX_CPU_C::inp16(Bit16u addr)
     if (! BX_CPU_THIS_PTR allow_io(addr, 2)) {
       BX_DEBUG(("inp16(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return(0);
     }
   }
 
@@ -60,7 +59,6 @@ BX_CPU_C::outp16(Bit16u addr, Bit16u value)
     if (! BX_CPU_THIS_PTR allow_io(addr, 2)) {
       BX_DEBUG(("outp16(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
   }
 
@@ -76,7 +74,6 @@ BX_CPU_C::inp32(Bit16u addr)
     if (! BX_CPU_THIS_PTR allow_io(addr, 4)) {
       BX_DEBUG(("inp32(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return(0);
     }
   }
 
@@ -95,7 +92,6 @@ BX_CPU_C::outp32(Bit16u addr, Bit32u value)
     if (! BX_CPU_THIS_PTR allow_io(addr, 4)) {
       BX_DEBUG(("outp32(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
   }
 
@@ -111,7 +107,6 @@ BX_CPU_C::inp8(Bit16u addr)
     if (! BX_CPU_THIS_PTR allow_io(addr, 1)) {
       BX_DEBUG(("inp8(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return(0);
     }
   }
 
@@ -131,7 +126,6 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
     if (! BX_CPU_THIS_PTR allow_io(addr, 1)) {
       BX_DEBUG(("outp8(): I/O access not allowed !"));
       exception(BX_GP_EXCEPTION, 0, 0);
-      return;
     }
   }
 
