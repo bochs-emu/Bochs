@@ -7,9 +7,9 @@ Changes after 2.3.5 release:
         --enable-popcnt
   - Implemented MTRR emulation, to enable use --enable-mtrr configure
     option. MTRRs is enabled by default when cpu-level >= 6.
-  - Implemented MONITOR/MWAIT instructions including optimized MWAIT CPU
-    state and hardware monitoring of physical address range, to enable
-    use --enable-monitor-mwait configure option
+  - Implemented experimental MONITOR/MWAIT support including optimized 
+    MWAIT CPU state and hardware monitoring of physical address range, 
+    to enable use --enable-monitor-mwait configure option.
   - Removed hostasm optimizations, after Bochs rebenchmarking it was found 
     that the feature bringing no speedup or even sometimes slowes down
     the emulation !
