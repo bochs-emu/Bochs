@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.183 2007-11-24 14:22:32 sshwarts Exp $
+// $Id: cpu.cc,v 1.184 2007-11-27 22:12:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -200,9 +200,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 #endif
     CHECK_MAX_INSTRUCTIONS(max_instr_count);
 #if BX_GDBSTUB
-    if (bx_dbg.gdbstub_enabled) {
-      return;
-    }
+    if (bx_dbg.gdbstub_enabled) return;
 #endif
   }
 

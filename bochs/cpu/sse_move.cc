@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.66 2007-11-25 20:52:40 sshwarts Exp $
+// $Id: sse_move.cc,v 1.67 2007-11-27 22:12:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -491,17 +491,15 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit32u val32;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) 
   {
-    op2 = BX_READ_XMM_REG(i->rm());
-
     /* If the source operand is an XMM register, the high-order 
             96 bits of the destination XMM register are not modified. */
-    op1.xmm32u(0) = op2.xmm32u(0);
+    op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -509,13 +507,13 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
 
     /* If the source operand is a memory location, the high-order
             96 bits of the destination XMM register are cleared to 0s */
-    op1.xmm32u(0) = val32;
-    op1.xmm32u(1) = 0;
-    op1.xmm64u(1) = 0;
+    op.xmm32u(0) = val32;
+    op.xmm32u(1) = 0;
+    op.xmm64u(1) = 0;
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVSS_VssWss: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -553,17 +551,15 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn()), op2;
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
   Bit64u val64;
 
   /* op2 is a register or memory reference */
   if (i->modC0()) 
   {
-    op2 = BX_READ_XMM_REG(i->rm());
-
     /* If the source operand is an XMM register, the high-order 
             64 bits of the destination XMM register are not modified. */
-    op1.xmm64u(0) = op2.xmm64u(0);
+    op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     /* pointer, segment address pair */
@@ -571,12 +567,12 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
 
     /* If the source operand is a memory location, the high-order
             64 bits of the destination XMM register are cleared to 0s */
-    op1.xmm64u(0) = val64;
-    op1.xmm64u(1) = 0;
+    op.xmm64u(0) = val64;
+    op.xmm64u(1) = 0;
   }
 
   /* now write result back to destination */
-  BX_WRITE_XMM_REG(i->nnn(), op1);
+  BX_WRITE_XMM_REG(i->nnn(), op);
 #else
   BX_INFO(("MOVSD_VsdWsd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -724,16 +720,8 @@ void BX_CPU_C::MOVSHDUP_VpsWps(bxInstruction_c *i)
 void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  if (i->modC0()) 
-  {
-    BX_INFO(("MOVLPS_MqVps: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   BX_CPU_THIS_PTR prepareSSE();
-
   write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_LO_QWORD(i->nnn()));
-
 #else
   BX_INFO(("MOVLPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -770,16 +758,8 @@ void BX_CPU_C::MOVHPS_VpsMq(bxInstruction_c *i)
 void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
-  if (i->modC0()) 
-  {
-    BX_INFO(("MOVHPS_MqVps: must be memory reference"));
-    UndefinedOpcode(i);
-  }
-
   BX_CPU_THIS_PTR prepareSSE();
-
   write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_HI_QWORD(i->nnn()));
-
 #else
   BX_INFO(("MOVHPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -892,40 +872,19 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   BxPackedXmmRegister op1;
+  Bit32u op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_32BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+  }
+
+  op1.xmm64u(0) = (Bit64u)(op2);
   op1.xmm64u(1) = 0;
-
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-    Bit64u op2;
-
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2 = BX_READ_64BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2);
-    }
-
-    op1.xmm64u(0) = op2;
-  }
-  else
-#endif
-  {
-    Bit32u op2;
-
-    /* op2 is a register or memory reference */
-    if (i->modC0()) {
-      op2 = BX_READ_32BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op2);
-    }
-
-    op1.xmm64u(0) = (Bit64u)(op2);
-  }
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
@@ -935,47 +894,86 @@ void BX_CPU_C::MOVD_VdqEd(bxInstruction_c *i)
 #endif
 }
 
+#if BX_SUPPORT_X86_64
+
+/* 66 0F 6E */
+void BX_CPU_C::MOVQ_VdqEq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  BxPackedXmmRegister op1;
+  Bit64u op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &op2);
+  }
+
+  op1.xmm64u(0) = op2;
+  op1.xmm64u(1) = 0;
+
+  /* now write result back to destination */
+  BX_WRITE_XMM_REG(i->nnn(), op1);
+#else
+  BX_INFO(("MOVQ_VdqEq: required SSE2, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif
+
 /* 66 0F 7E */
 void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
 
-  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->nnn());
+  Bit32u op2 = BX_READ_XMM_REG_LO_DWORD(i->nnn());
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-    Bit64u op2 = op1.xmm64u(0);
-
-    /* destination is a register or memory reference */
-    if (i->modC0()) {
-      BX_WRITE_64BIT_REG(i->rm(), op2);
-    }
-    else {
-      /* pointer, segment address pair */
-      write_virtual_qword(i->seg(), RMAddr(i), &op2);
-    }
+  /* destination is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_32BIT_REGZ(i->rm(), op2);
   }
-  else
-#endif
-  {
-    Bit32u op2 = op1.xmm32u(0);
-
-    /* destination is a register or memory reference */
-    if (i->modC0()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), op2);
-    }
-    else {
-      /* pointer, segment address pair */
-      write_virtual_dword(i->seg(), RMAddr(i), &op2);
-    }
+  else {
+    /* pointer, segment address pair */
+    write_virtual_dword(i->seg(), RMAddr(i), &op2);
   }
 #else
   BX_INFO(("MOVD_EdVd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+
+/* 66 0F 7E */
+void BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE >= 2
+  BX_CPU_THIS_PTR prepareSSE();
+
+  Bit64u op2 = BX_READ_XMM_REG_LO_QWORD(i->nnn());
+
+  /* destination is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_64BIT_REG(i->rm(), op2);
+  }
+  else {
+    /* pointer, segment address pair */
+    write_virtual_qword(i->seg(), RMAddr(i), &op2);
+  }
+#else
+  BX_INFO(("MOVQ_EqVq: required SSE2, use --enable-sse option"));
+  UndefinedOpcode(i);
+#endif
+}
+
+#endif
 
 /* F3 0F 7E */
 void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
@@ -987,7 +985,7 @@ void BX_CPU_C::MOVQ_VqWq(bxInstruction_c *i)
   Bit64u val64;
 
   if (i->modC0()) {
-    op = BX_READ_XMM_REG(i->rm());
+    op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
   else {
     /* pointer, segment address pair */

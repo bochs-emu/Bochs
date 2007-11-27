@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.42 2007-11-25 20:22:10 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.43 2007-11-27 22:12:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -998,7 +998,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f12[4] = {
   /* F3 */ { 0, &BX_CPU_C::MOVSLDUP_VpsWps }	// SSE3
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f13[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f13M[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVLPS_MqVps },
   /* 66 */ { 0, &BX_CPU_C::MOVLPD_MqVsd },
   /* F2 */ { 0, &BX_CPU_C::BxError },
@@ -1026,7 +1026,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f16[4] = {
   /* F3 */ { 0, &BX_CPU_C::MOVSHDUP_VpsWps }	// SSE3
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f17[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f17M[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVHPS_MqVps },
   /* 66 */ { 0, &BX_CPU_C::MOVHPD_MqVsd },
   /* F2 */ { 0, &BX_CPU_C::BxError },
@@ -1306,6 +1306,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6e[4] = {
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6eQ[4] = {
+  /* -- */ { 0, &BX_CPU_C::MOVQ_PqEq  },
+  /* 66 */ { 0, &BX_CPU_C::MOVQ_VdqEq },
+  /* F2 */ { 0, &BX_CPU_C::BxError },
+  /* F3 */ { 0, &BX_CPU_C::BxError }
+};
+
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6f[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVQ_PqQq     },
   /* 66 */ { 0, &BX_CPU_C::MOVDQA_VdqWdq },
@@ -1358,6 +1365,13 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7d[4] = {
 static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7e[4] = {
   /* -- */ { 0, &BX_CPU_C::MOVD_EdPd },
   /* 66 */ { 0, &BX_CPU_C::MOVD_EdVd },
+  /* F2 */ { 0, &BX_CPU_C::BxError },
+  /* F3 */ { 0, &BX_CPU_C::MOVQ_VqWq }
+};
+
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7eQ[4] = {
+  /* -- */ { 0, &BX_CPU_C::MOVQ_EqPq },
+  /* 66 */ { 0, &BX_CPU_C::MOVQ_EqVq },
   /* F2 */ { 0, &BX_CPU_C::BxError },
   /* F3 */ { 0, &BX_CPU_C::MOVQ_VqWq }
 };

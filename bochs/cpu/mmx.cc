@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.63 2007-11-17 12:44:10 sshwarts Exp $
+// $Id: mmx.cc,v 1.64 2007-11-27 22:12:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -987,31 +987,15 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
 
   BxPackedMmxRegister op;
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
-    }
-  }
-  else
-#endif
-  {
-    MMXUD1(op) = 0;
+  MMXUD1(op) = 0;
 
-    /* op is a register or memory reference */
-    if (i->modC0()) {
-      MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
-    }
-    else {
-      /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
-    }
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    MMXUD0(op) = BX_READ_32BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 
   /* now write result back to destination */
@@ -1021,6 +1005,30 @@ void BX_CPU_C::MOVD_PqEd(bxInstruction_c *i)
   UndefinedOpcode(i);
 #endif
 }
+
+/* 0F 6E */
+#if BX_SUPPORT_X86_64
+
+void BX_CPU_C::MOVQ_PqEq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    MMXUQ(op) = BX_READ_64BIT_REG(i->rm());
+  }
+  else {
+    /* pointer, segment address pair */
+    read_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
+  }
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->nnn(), op);
+}
+
+#endif
 
 /* 0F 6F */
 void BX_CPU_C::MOVQ_PqQq(bxInstruction_c *i)
@@ -1190,27 +1198,12 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
 
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
 
-#if BX_SUPPORT_X86_64
-  if (i->os64L())  /* 64 bit operand size mode */
-  {
-    /* destination is a register or memory reference */
-    if (i->modC0()) {
-      BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
-    }
-    else {
-      write_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
-    }
+  /* destination is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
   }
-  else
-#endif
-  {
-    /* destination is a register or memory reference */
-    if (i->modC0()) {
-      BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
-    }
-    else {
-      write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
-    }
+  else {
+    write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
   }
 
 #else
@@ -1218,6 +1211,26 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
   UndefinedOpcode(i);
 #endif
 }
+
+#if BX_SUPPORT_X86_64
+
+/* 0F 7E */
+void BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
+{
+  BX_CPU_THIS_PTR prepareMMX();
+
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn());
+
+  /* destination is a register or memory reference */
+  if (i->modC0()) {
+    BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
+  }
+  else {
+    write_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
+  }
+}
+
+#endif
 
 /* 0F 7F */
 void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)

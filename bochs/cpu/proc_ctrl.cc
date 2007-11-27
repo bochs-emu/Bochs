@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.182 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.183 2007-11-27 22:12:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,6 @@
 #if BX_SUPPORT_X86_64==0
 // Make life easier for merging code.
 #define RAX EAX
-#define RBX EBX
 #define RCX ECX
 #define RDX EDX
 #endif

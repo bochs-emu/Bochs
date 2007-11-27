@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.376 2007-11-25 20:22:06 sshwarts Exp $
+// $Id: cpu.h,v 1.377 2007-11-27 22:12:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1531,13 +1531,9 @@ public: // for now...
   BX_SMF void MOV_EwIwR(bxInstruction_c *);
   BX_SMF void MOV_EbIbR(bxInstruction_c *);
 
-  BX_SMF void RETnear32(bxInstruction_c *);
-  BX_SMF void RETnear16(bxInstruction_c *);
   BX_SMF void ENTER16_IwIb(bxInstruction_c *);
   BX_SMF void ENTER32_IwIb(bxInstruction_c *);
   BX_SMF void LEAVE(bxInstruction_c *);
-  BX_SMF void RETfar32(bxInstruction_c *);
-  BX_SMF void RETfar16(bxInstruction_c *);
 
   BX_SMF void INT1(bxInstruction_c *);
   BX_SMF void INT3(bxInstruction_c *);
@@ -2593,9 +2589,13 @@ public: // for now...
   BX_SMF void CMPXCHG_IBTS(bxInstruction_c *);
   BX_SMF void CMPXCHG8B(bxInstruction_c *);
   BX_SMF void RETnear32_Iw(bxInstruction_c *);
+  BX_SMF void RETnear32(bxInstruction_c *);
   BX_SMF void RETnear16_Iw(bxInstruction_c *);
+  BX_SMF void RETnear16(bxInstruction_c *);
   BX_SMF void RETfar32_Iw(bxInstruction_c *);
+  BX_SMF void RETfar32(bxInstruction_c *);
   BX_SMF void RETfar16_Iw(bxInstruction_c *);
+  BX_SMF void RETfar16(bxInstruction_c *);
 
   BX_SMF void XADD_EbGbM(bxInstruction_c *);
   BX_SMF void XADD_EwGwM(bxInstruction_c *);
@@ -2868,10 +2868,10 @@ public: // for now...
   BX_SMF void CQO(bxInstruction_c *);
   BX_SMF void XADD_EqGqR(bxInstruction_c *);
   BX_SMF void XADD_EqGqM(bxInstruction_c *);
-  BX_SMF void RETnear64(bxInstruction_c *);
   BX_SMF void RETnear64_Iw(bxInstruction_c *);
-  BX_SMF void RETfar64(bxInstruction_c *);
+  BX_SMF void RETnear64(bxInstruction_c *);
   BX_SMF void RETfar64_Iw(bxInstruction_c *);
+  BX_SMF void RETfar64(bxInstruction_c *);
 
   BX_SMF void CMOV_GqEq(bxInstruction_c *);
 
@@ -2897,21 +2897,23 @@ public: // for now...
   BX_SMF void LGDT64_Ms(bxInstruction_c *);
   BX_SMF void LIDT64_Ms(bxInstruction_c *);
 
-  BX_SMF void SYSCALL(bxInstruction_c *i);
-  BX_SMF void SYSRET(bxInstruction_c *i);
-
-  BX_SMF void SWAPGS(bxInstruction_c *i);
+  BX_SMF void SYSCALL(bxInstruction_c *);
+  BX_SMF void SYSRET(bxInstruction_c *);
+  BX_SMF void SWAPGS(bxInstruction_c *);
+  BX_SMF void RDTSCP(bxInstruction_c *);
+  BX_SMF void CMPXCHG16B(bxInstruction_c *);
 
   BX_SMF void LOOPNE64_Jb(bxInstruction_c *);
   BX_SMF void LOOPE64_Jb(bxInstruction_c *);
   BX_SMF void LOOP64_Jb(bxInstruction_c *);
   BX_SMF void JCXZ64_Jb(bxInstruction_c *);
 
-  BX_SMF void RDTSCP(bxInstruction_c *);
-  BX_SMF void CMPXCHG16B(bxInstruction_c *);
-
+  BX_SMF void MOVQ_EqPq(bxInstruction_c *);
+  BX_SMF void MOVQ_EqVq(bxInstruction_c *);
+  BX_SMF void MOVQ_PqEq(bxInstruction_c *);
+  BX_SMF void MOVQ_VdqEq(bxInstruction_c *);
+  BX_SMF void MOVNTI_MqGq(bxInstruction_c *);
   BX_SMF void POPCNT_GqEq(bxInstruction_c *);
-  BX_SMF void MOVNTI_MqGq(bxInstruction_c *i);
 #endif  // #if BX_SUPPORT_X86_64
 
   BX_SMF void INVLPG(bxInstruction_c *);

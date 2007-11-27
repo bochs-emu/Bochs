@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.141 2007-11-25 20:22:06 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.142 2007-11-27 22:12:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -387,7 +387,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wr */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
-  /* CB /wr */ { 0, &BX_CPU_C::RETfar16 },
+  /* CB /wr */ { 0,              &BX_CPU_C::RETfar16 },
   /* CC /wr */ { 0, &BX_CPU_C::INT3 },
   /* CD /wr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /wr */ { 0, &BX_CPU_C::INTO },
@@ -491,11 +491,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 10 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
-  /* 0F 13 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13 },
+  /* 0F 13 /wr */ { 0, &BX_CPU_C::BxError },  // MOVLPS/PD SSE group
   /* 0F 14 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
-  /* 0F 17 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
+  /* 0F 17 /wr */ { 0, &BX_CPU_C::BxError },  // MOHLPS/PD SSE group
   /* 0F 18 /wr */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
 #if BX_CPU_LEVEL < 6
   /* 0F 19 /wr */ { 0, &BX_CPU_C::BxError },
@@ -951,7 +951,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
   /* C9 /dr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /dr */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
-  /* CB /dr */ { 0, &BX_CPU_C::RETfar32 },
+  /* CB /dr */ { 0,              &BX_CPU_C::RETfar32 },
   /* CC /dr */ { 0, &BX_CPU_C::INT3 },
   /* CD /dr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /dr */ { 0, &BX_CPU_C::INTO },
@@ -1055,11 +1055,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F 10 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
-  /* 0F 13 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13 },
+  /* 0F 13 /dr */ { 0, &BX_CPU_C::BxError },  // MOVLPS/PD SSE group
   /* 0F 14 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
-  /* 0F 17 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
+  /* 0F 17 /dr */ { 0, &BX_CPU_C::BxError },  // MOHLPS/PD SSE group
   /* 0F 18 /dr */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
 #if BX_CPU_LEVEL < 6
   /* 0F 19 /dr */ { 0, &BX_CPU_C::BxError },
@@ -1522,7 +1522,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wm */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wm */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
-  /* CB /wm */ { 0, &BX_CPU_C::RETfar16 },
+  /* CB /wm */ { 0,              &BX_CPU_C::RETfar16 },
   /* CC /wm */ { 0, &BX_CPU_C::INT3 },
   /* CD /wm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /wm */ { 0, &BX_CPU_C::INTO },
@@ -1626,11 +1626,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 10 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
-  /* 0F 13 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13 },
+  /* 0F 13 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13M },
   /* 0F 14 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
-  /* 0F 17 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
+  /* 0F 17 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17M },
   /* 0F 18 /wm */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
 #if BX_CPU_LEVEL < 6
   /* 0F 19 /wm */ { 0, &BX_CPU_C::BxError },
@@ -2086,7 +2086,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C8 /dm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
   /* C9 /dm */ { 0, &BX_CPU_C::LEAVE },
   /* CA /dm */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
-  /* CB /dm */ { 0, &BX_CPU_C::RETfar32 },
+  /* CB /dm */ { 0,              &BX_CPU_C::RETfar32 },
   /* CC /dm */ { 0, &BX_CPU_C::INT3 },
   /* CD /dm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
   /* CE /dm */ { 0, &BX_CPU_C::INTO },
@@ -2190,11 +2190,11 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F 10 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f10 },
   /* 0F 11 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f11 },
   /* 0F 12 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f12 },
-  /* 0F 13 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13 },
+  /* 0F 13 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f13M },
   /* 0F 14 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f14 },
   /* 0F 15 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f15 },
   /* 0F 16 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f16 },
-  /* 0F 17 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17 },
+  /* 0F 17 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f17M },
   /* 0F 18 /dm */ { 0, &BX_CPU_C::PREFETCH }, // opcode group G16, PREFETCH hints
 #if BX_CPU_LEVEL < 6
   /* 0F 19 /dm */ { 0, &BX_CPU_C::BxError },
