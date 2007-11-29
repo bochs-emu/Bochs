@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.21 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: mult32.cc,v 1.22 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
   product_32h = (Bit32u) (product_64 >> 32);
 
   /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_MUL32);
+  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_MUL32);
 
   /* now write product back to destination */
   RAX = product_32l;
@@ -93,7 +93,7 @@ void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
    * IMUL r/m32: condition for clearing CF & OF:
    *   EDX:EAX = sign-extend of EAX
    */
-  SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
 }
 
 void BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
@@ -201,7 +201,7 @@ void BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
    * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
    *   result exactly fits within r32
    */
-  SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
 }
 
 void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
@@ -230,5 +230,5 @@ void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
    * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
    *   result exactly fits within r32
    */
-  SET_FLAGS_OSZAPC_S1S2_32(product_32l, product_32h, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
 }

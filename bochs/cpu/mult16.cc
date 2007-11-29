@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.22 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: mult16.cc,v 1.23 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,7 +52,7 @@ void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
   Bit16u product_16h =  product_32 >> 16;
 
   /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_MUL16);
+  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_MUL16);
 
   /* now write product back to destination */
   AX = product_16l;
@@ -86,7 +86,7 @@ void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
    * IMUL r/m16: condition for clearing CF & OF:
    *   DX:AX = sign-extend of AX
    */
-  SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
 }
 
 void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
@@ -197,7 +197,7 @@ void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
    * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
    *   result exactly fits within r16
    */
-  SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
 }
 
 void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
@@ -226,5 +226,5 @@ void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
    * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
    *   result exactly fits within r16
    */
-  SET_FLAGS_OSZAPC_S1S2_16(product_16l, product_16h, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
 }

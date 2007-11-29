@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.22 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: mult8.cc,v 1.23 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ void BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
   Bit8u product_8h =  product_16 >> 8;
 
   /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S1S2_8(product_8l, product_8h, BX_INSTR_MUL8);
+  SET_FLAGS_OSZAPC_S2_8(product_8h, product_8l, BX_INSTR_MUL8);
 
   /* now write product back to destination */
   AX = product_16;
@@ -79,14 +79,14 @@ void BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
   Bit8u product_8l = (product_16 & 0xFF);
   Bit8u product_8h =  product_16 >> 8;
 
+  /* now write product back to destination */
+  AX = product_16;
+
   /* set EFLAGS:
    * IMUL r/m8: condition for clearing CF & OF:
    *   AX = sign-extend of AL to 16 bits
    */
-  SET_FLAGS_OSZAPC_S1S2_8(product_8l, product_8h, BX_INSTR_IMUL8);
-
-  /* now write product back to destination */
-  AX = product_16;
+  SET_FLAGS_OSZAPC_S2_8(product_8h, product_8l, BX_INSTR_IMUL8);
 }
 
 void BX_CPU_C::DIV_ALEb(bxInstruction_c *i)

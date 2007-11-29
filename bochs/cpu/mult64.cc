@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.19 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: mult64.cc,v 1.20 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -228,12 +228,12 @@ void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 
   long_mul(&product_128,op1_64,op2_64);
 
-  /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_MUL64);
-
   /* now write product back to destination */
   RAX = product_128.lo;
   RDX = product_128.hi;
+
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_MUL64);
 }
 
 void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
@@ -266,7 +266,7 @@ void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
    * IMUL r/m64: condition for clearing CF & OF:
    *   RDX:RAX = sign-extend of RAX
    */
-  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
+  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
 }
 
 void BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
@@ -384,7 +384,7 @@ void BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
    * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
    *   result exactly fits within r64
    */
-  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
+  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
 }
 
 void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
@@ -412,7 +412,7 @@ void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
    * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
    *   result exactly fits within r64
    */
-  SET_FLAGS_OSZAPC_S1S2_64(product_128.lo, product_128.hi, BX_INSTR_IMUL64);
+  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

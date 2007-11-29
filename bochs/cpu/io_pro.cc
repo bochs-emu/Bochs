@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io_pro.cc,v 1.24 2007-11-26 17:45:48 sshwarts Exp $
+// $Id: io_pro.cc,v 1.25 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,7 +135,6 @@ BX_CPU_C::outp8(Bit16u addr, Bit8u value)
 bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
 {
   Bit16u io_base, permission16;
-  unsigned bit_index, i;
 
   if (BX_CPU_THIS_PTR tr.cache.valid==0 || 
       BX_CPU_THIS_PTR tr.cache.type != BX_SYS_SEGMENT_AVAIL_386_TSS)
@@ -166,9 +165,9 @@ bx_bool BX_CPU_C::allow_io(Bit16u addr, unsigned len)
   access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base + addr/8,
                    2, 0, BX_READ, &permission16);
 
-  bit_index = addr & 0x07;
+  unsigned bit_index = addr & 0x07;
   permission16 >>= bit_index;
-  for (i=0; i<len; i++) {
+  for (unsigned i=0; i<len; i++) {
     if (permission16 & 0x01)
       return(0);
     permission16 >>= 1;

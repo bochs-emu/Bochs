@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.377 2007-11-27 22:12:44 sshwarts Exp $
+// $Id: cpu.h,v 1.378 2007-11-29 21:45:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -410,7 +410,6 @@ typedef struct {
    */
   Bit32u val32; // Raw 32-bit value in x86 bit position.  Used to store
                 //   some eflags which are not cached in separate fields.
-  Bit32u VM_cached;
 
   // accessors for all eflags in bx_flags_reg_t
   // The macro is used once for each flag bit
@@ -476,10 +475,10 @@ typedef struct {
 
 #define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                           \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                          \
-    return BX_CPU_THIS_PTR eflags.VM_cached;                          \
+    return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
   BX_CPP_INLINE Bit32u  BX_CPU_C::getB_VM() {                         \
-    return BX_CPU_THIS_PTR eflags.VM_cached > 0;                      \
+    return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);              \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                          \
     set_VM(1);                                                        \
@@ -491,12 +490,10 @@ typedef struct {
     if (long_mode()) return;                                          \
     if (val) {                                                        \
        BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                   \
-       BX_CPU_THIS_PTR eflags.VM_cached = 1;                          \
        if (BX_CPU_THIS_PTR cr0.get_PE())                              \
          BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;               \
     } else {                                                          \
        BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                  \
-       BX_CPU_THIS_PTR eflags.VM_cached = 0;                          \
        if (BX_CPU_THIS_PTR cr0.get_PE())                              \
          BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;           \
     }                                                                 \
@@ -1299,13 +1296,13 @@ public: // for now...
       return (BX_CPU_THIS_PTR eflags.val32 >> eflagsBitShift) & 1; \
     else \
       return get_##flag##Lazy(); \
-    } \
+  } \
   BX_SMF bx_bool get_##flag(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (lfMask)) == 0) \
       return BX_CPU_THIS_PTR eflags.val32 & (1<<eflagsBitShift); \
     else \
       return get_##flag##Lazy(); \
-    } \
+  } \
   BX_SMF void set_##flag(bx_bool val) { \
     BX_CPU_THIS_PTR lf_flags_status &= ~(lfMask); \
     BX_CPU_THIS_PTR eflags.val32 &= ~(1<<eflagsBitShift); \
