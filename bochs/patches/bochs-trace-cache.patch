@@ -1,3 +1,30 @@
+----------------------------------------------------------------------
+Patch name: bochs-trace-cache.patch
+Author: Stanislav Shwartsman
+Date: 2007-11-30
+Status: not applied
+
+Detailed description:
+
+Trace cache speedup for Bochs.
+Provides above 25% simulation speedup in all modes.
+SMP emulation support is still not validated.
+
+Patch was created with:
+  cvs diff -u
+Apply patch to what version:
+  cvs checked out on DATE, release version VER
+Instructions:
+  To patch, go to main bochs directory.
+  Type "patch -p0 < THIS_PATCH_FILE".
+
+After the patch is applied:
+  1. Regerate configure script
+     autoconf configure.in > configure
+  2. Configure with trae cache enabled using --enable-trace-cache
+
+----------------------------------------------------------------------
+
 diff -ur bochs/config.h.in bochs-trace-cache/config.h.in
 --- bochs/config.h.in	2007-11-22 08:28:05.000000000 +0200
 +++ bochs-trace-cache/config.h.in	2007-11-26 19:37:19.218750000 +0200
@@ -14,8 +41,8 @@ diff -ur bochs/config.h.in bochs-trace-cache/config.h.in
  // if 1, don't do gpf on MSRs that we don't implement
  #define BX_IGNORE_BAD_MSR 0
 diff -ur bochs/configure.in bochs-trace-cache/configure.in
---- bochs/configure.in	2007-11-23 14:47:12.000000000 +0200
-+++ bochs-trace-cache/configure.in	2007-11-26 19:39:44.546875000 +0200
+--- bochs/configure.in	2007-11-26 22:38:39.000000000 +0200
++++ bochs-trace-cache/configure.in	2007-11-28 00:16:43.312500000 +0200
 @@ -1006,6 +1006,27 @@
      ]
    )
@@ -49,7 +76,7 @@ diff -ur bochs/configure.in bochs-trace-cache/configure.in
  fi
  
 +if test "$speedup_iCache" = 0 -a "$speedup_TraceCache" = 1; then
-+  AC_MSG_ERROR([iCache is require to compile with trace cache optimization])
++  AC_MSG_ERROR([iCache is required to compile with trace cache optimization])
 +fi
 +
  if test "$speedup_guest2host_tlb" = 1; then
@@ -69,8 +96,8 @@ diff -ur bochs/configure.in bochs-trace-cache/configure.in
  READLINE_LIB=""
  rl_without_curses_ok=no
 diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
---- bochs/cpu/cpu.cc	2007-11-24 16:22:32.000000000 +0200
-+++ bochs-trace-cache/cpu/cpu.cc	2007-11-26 19:32:46.359375000 +0200
+--- bochs/cpu/cpu.cc	2007-11-28 00:12:44.000000000 +0200
++++ bochs-trace-cache/cpu/cpu.cc	2007-11-28 00:16:44.468750000 +0200
 @@ -62,16 +62,20 @@
  #if InstrumentICACHE
  static unsigned iCacheLookups=0;
@@ -223,7 +250,7 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
  // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
  // instructions and then return so that the other processors have a chance to
  // run.  This is used by bochs internal debugger or when simulating 
-@@ -244,47 +359,67 @@
+@@ -242,47 +359,68 @@
        eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
      }
  
@@ -262,6 +289,7 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
 -    if (BX_CPU_THIS_PTR trace) {
 -      // print the instruction that is about to be executed
 +      if (BX_CPU_THIS_PTR trace) {
++        BX_CPU_THIS_PTR trace--;
 +        // print the instruction that is about to be executed
  #if BX_DEBUGGER
 -      bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
@@ -315,9 +343,9 @@ diff -ur bochs/cpu/cpu.cc bochs-trace-cache/cpu/cpu.cc
  }
  
 diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
---- bochs/cpu/cpu.h	2007-11-25 22:22:06.000000000 +0200
-+++ bochs-trace-cache/cpu/cpu.h	2007-11-26 19:30:42.984375000 +0200
-@@ -615,9 +615,10 @@
+--- bochs/cpu/cpu.h	2007-11-29 23:45:10.000000000 +0200
++++ bochs-trace-cache/cpu/cpu.h	2007-11-30 00:08:16.921875000 +0200
+@@ -612,9 +612,10 @@
    void (BX_CPU_C::*execute)(bxInstruction_c *);
  #endif
  
@@ -330,7 +358,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    // 18..18  mod==c0 (modrm)
    // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3).
    Bit16u metaInfo3;
-@@ -844,13 +845,22 @@
+@@ -841,13 +842,22 @@
      metaInfo3 = (metaInfo3 & ~3) | (value);
    }
  
@@ -355,7 +383,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    }
  };
  // <TAG-CLASS-INSTRUCTION-END>
-@@ -2931,7 +2941,12 @@
+@@ -2930,7 +2940,12 @@
  #if BX_SUPPORT_X86_64
    BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
  #endif
@@ -368,7 +396,7 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
    BX_SMF void UndefinedOpcode(bxInstruction_c *);
    BX_SMF void BxError(bxInstruction_c *i);
  
-@@ -3756,6 +3771,12 @@
+@@ -3755,6 +3770,12 @@
  #define BxLockable          0x0100 // bit  8
  #define Bx3ByteOpcode       0x0200 // bit  9
  
@@ -382,8 +410,8 @@ diff -ur bochs/cpu/cpu.h bochs-trace-cache/cpu/cpu.h
  #define BxGroup2          BxGroupN
  #define BxGroup3          BxGroupN
 diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
---- bochs/cpu/fetchdecode.cc	2007-11-25 22:22:06.000000000 +0200
-+++ bochs-trace-cache/cpu/fetchdecode.cc	2007-11-26 19:34:29.234375000 +0200
+--- bochs/cpu/fetchdecode.cc	2007-11-28 00:12:44.000000000 +0200
++++ bochs-trace-cache/cpu/fetchdecode.cc	2007-11-28 00:18:13.921875000 +0200
 @@ -207,7 +207,7 @@
    /* 14 /wr */ { BxImmediate_Ib, &BX_CPU_C::ADC_ALIb },
    /* 15 /wr */ { BxImmediate_Iv, &BX_CPU_C::ADC_AXIw },
@@ -465,13 +493,13 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
    /* C9 /wr */ { 0, &BX_CPU_C::LEAVE },
 -  /* CA /wr */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
--  /* CB /wr */ { 0, &BX_CPU_C::RETfar16 },
+-  /* CB /wr */ { 0,              &BX_CPU_C::RETfar16 },
 -  /* CC /wr */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /wr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 -  /* CE /wr */ { 0, &BX_CPU_C::INTO },
 -  /* CF /wr */ { 0, &BX_CPU_C::IRET16 },
 +  /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
-+  /* CB /wr */ { BxTraceEnd, &BX_CPU_C::RETfar16 },
++  /* CB /wr */ { BxTraceEnd,                  &BX_CPU_C::RETfar16 },
 +  /* CC /wr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /wr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
 +  /* CE /wr */ { BxTraceEnd, &BX_CPU_C::INTO },
@@ -708,13 +736,13 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
    /* C9 /dr */ { 0, &BX_CPU_C::LEAVE },
 -  /* CA /dr */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
--  /* CB /dr */ { 0, &BX_CPU_C::RETfar32 },
+-  /* CB /dr */ { 0,              &BX_CPU_C::RETfar32 },
 -  /* CC /dr */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /dr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 -  /* CE /dr */ { 0, &BX_CPU_C::INTO },
 -  /* CF /dr */ { 0, &BX_CPU_C::IRET32 },
 +  /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
-+  /* CB /dr */ { BxTraceEnd, &BX_CPU_C::RETfar32 },
++  /* CB /dr */ { BxTraceEnd,                  &BX_CPU_C::RETfar32 },
 +  /* CC /dr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
 +  /* CE /dr */ { BxTraceEnd, &BX_CPU_C::INTO },
@@ -960,13 +988,13 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
    /* C9 /wm */ { 0, &BX_CPU_C::LEAVE },
 -  /* CA /wm */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
--  /* CB /wm */ { 0, &BX_CPU_C::RETfar16 },
+-  /* CB /wm */ { 0,              &BX_CPU_C::RETfar16 },
 -  /* CC /wm */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /wm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 -  /* CE /wm */ { 0, &BX_CPU_C::INTO },
 -  /* CF /wm */ { 0, &BX_CPU_C::IRET16 },
 +  /* CA /wm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
-+  /* CB /wm */ { BxTraceEnd, &BX_CPU_C::RETfar16 },
++  /* CB /wm */ { BxTraceEnd,                  &BX_CPU_C::RETfar16 },
 +  /* CC /wm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /wm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
 +  /* CE /wm */ { BxTraceEnd, &BX_CPU_C::INTO },
@@ -1212,13 +1240,13 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
    /* C8 /dm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
    /* C9 /dm */ { 0, &BX_CPU_C::LEAVE },
 -  /* CA /dm */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
--  /* CB /dm */ { 0, &BX_CPU_C::RETfar32 },
+-  /* CB /dm */ { 0,              &BX_CPU_C::RETfar32 },
 -  /* CC /dm */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /dm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 -  /* CE /dm */ { 0, &BX_CPU_C::INTO },
 -  /* CF /dm */ { 0, &BX_CPU_C::IRET32 },
 +  /* CA /dm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
-+  /* CB /dm */ { BxTraceEnd, &BX_CPU_C::RETfar32 },
++  /* CB /dm */ { BxTraceEnd,                  &BX_CPU_C::RETfar32 },
 +  /* CC /dm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
 +  /* CE /dm */ { BxTraceEnd, &BX_CPU_C::INTO },
@@ -1418,9 +1446,46 @@ diff -ur bochs/cpu/fetchdecode.cc bochs-trace-cache/cpu/fetchdecode.cc
  }
  
 diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
---- bochs/cpu/fetchdecode.h	2007-11-25 22:22:10.000000000 +0200
-+++ bochs-trace-cache/cpu/fetchdecode.h	2007-11-26 19:30:46.515625000 +0200
-@@ -2869,10 +2869,10 @@
+--- bochs/cpu/fetchdecode.h	2007-11-30 00:22:24.000000000 +0200
++++ bochs-trace-cache/cpu/fetchdecode.h	2007-11-28 00:16:49.718750000 +0200
+@@ -1,5 +1,5 @@
+ /////////////////////////////////////////////////////////////////////////
+-// $Id: bochs-trace-cache.patch,v 1.5 2007-11-29 22:34:23 sshwarts Exp $
++// $Id: bochs-trace-cache.patch,v 1.5 2007-11-29 22:34:23 sshwarts Exp $
+ /////////////////////////////////////////////////////////////////////////
+ //
+ //   Copyright (c) 2005 Stanislav Shwartsman
+@@ -1306,14 +1306,12 @@
+   /* F3 */ { 0, &BX_CPU_C::BxError }
+ };
+ 
+-#if BX_SUPPORT_X86_64
+ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6eQ[4] = {
+   /* -- */ { 0, &BX_CPU_C::MOVQ_PqEq  },
+   /* 66 */ { 0, &BX_CPU_C::MOVQ_VdqEq },
+   /* F2 */ { 0, &BX_CPU_C::BxError },
+   /* F3 */ { 0, &BX_CPU_C::BxError }
+ };
+-#endif
+ 
+ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f6f[4] = {
+   /* -- */ { 0, &BX_CPU_C::MOVQ_PqQq     },
+@@ -1371,14 +1369,12 @@
+   /* F3 */ { 0, &BX_CPU_C::MOVQ_VqWq }
+ };
+ 
+-#if BX_SUPPORT_X86_64
+ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7eQ[4] = {
+   /* -- */ { 0, &BX_CPU_C::MOVQ_EqPq },
+   /* 66 */ { 0, &BX_CPU_C::MOVQ_EqVq },
+   /* F2 */ { 0, &BX_CPU_C::BxError },
+   /* F3 */ { 0, &BX_CPU_C::MOVQ_VqWq }
+ };
+-#endif
+ 
+ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0f7f[4] = {
+   /* -- */ { 0, &BX_CPU_C::MOVQ_QqPq     },
+@@ -2887,10 +2883,10 @@
    // attributes defined in main area
    /* 0 */ { BxLockable, &BX_CPU_C::INC_EwM },
    /* 1 */ { BxLockable, &BX_CPU_C::DEC_EwM },
@@ -1435,7 +1500,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 6 */ { 0, &BX_CPU_C::PUSH_EwM },
    /* 7 */ { 0, &BX_CPU_C::BxError }
  }; 
-@@ -2881,9 +2881,9 @@
+@@ -2899,9 +2895,9 @@
    // attributes defined in main area
    /* 0 */ { 0, &BX_CPU_C::INC_EwR },
    /* 1 */ { 0, &BX_CPU_C::DEC_EwR },
@@ -1447,7 +1512,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP16_Ep
    /* 6 */ { 0, &BX_CPU_C::PUSH_EwR },
    /* 7 */ { 0, &BX_CPU_C::BxError }
-@@ -2893,10 +2893,10 @@
+@@ -2911,10 +2907,10 @@
    // attributes defined in main area
    /* 0 */ { BxLockable, &BX_CPU_C::INC_EdM },
    /* 1 */ { BxLockable, &BX_CPU_C::DEC_EdM },
@@ -1462,7 +1527,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 6 */ { 0, &BX_CPU_C::PUSH_EdM },
    /* 7 */ { 0, &BX_CPU_C::BxError }
  }; 
-@@ -2905,9 +2905,9 @@
+@@ -2923,9 +2919,9 @@
    // attributes defined in main area
    /* 0 */ { 0, &BX_CPU_C::INC_EdR },
    /* 1 */ { 0, &BX_CPU_C::DEC_EdR },
@@ -1474,7 +1539,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP32_Ep
    /* 6 */ { 0, &BX_CPU_C::PUSH_EdR },
    /* 7 */ { 0, &BX_CPU_C::BxError }
-@@ -2917,10 +2917,10 @@
+@@ -2935,10 +2931,10 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5wM[8] = {
    /* 0 */ { BxLockable, &BX_CPU_C::INC_EwM },
    /* 1 */ { BxLockable, &BX_CPU_C::DEC_EwM },
@@ -1489,7 +1554,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 6 */ { 0, &BX_CPU_C::PUSH_EwM },
    /* 7 */ { 0, &BX_CPU_C::BxError }
  };
-@@ -2928,9 +2928,9 @@
+@@ -2946,9 +2942,9 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5wR[8] = {
    /* 0 */ { 0, &BX_CPU_C::INC_EwR },
    /* 1 */ { 0, &BX_CPU_C::DEC_EwR },
@@ -1501,7 +1566,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP16_Ep
    /* 6 */ { 0, &BX_CPU_C::PUSH_EwR },
    /* 7 */ { 0, &BX_CPU_C::BxError }
-@@ -2939,10 +2939,10 @@
+@@ -2957,10 +2953,10 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5dM[8] = {
    /* 0 */ { BxLockable, &BX_CPU_C::INC_EdM },
    /* 1 */ { BxLockable, &BX_CPU_C::DEC_EdM },
@@ -1516,7 +1581,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 6 */ { 0, &BX_CPU_C::PUSH_EqM },
    /* 7 */ { 0, &BX_CPU_C::BxError }
  };
-@@ -2950,9 +2950,9 @@
+@@ -2968,9 +2964,9 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5dR[8] = {
    /* 0 */ { 0, &BX_CPU_C::INC_EdR },
    /* 1 */ { 0, &BX_CPU_C::DEC_EdR },
@@ -1528,7 +1593,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP32_Ep
    /* 6 */ { 0, &BX_CPU_C::PUSH_EqR },
    /* 7 */ { 0, &BX_CPU_C::BxError }
-@@ -2961,10 +2961,10 @@
+@@ -2979,10 +2975,10 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5qM[8] = {
    /* 0 */ { BxLockable, &BX_CPU_C::INC_EqM },
    /* 1 */ { BxLockable, &BX_CPU_C::DEC_EqM },
@@ -1543,7 +1608,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 6 */ { 0, &BX_CPU_C::PUSH_EqM },
    /* 7 */ { 0, &BX_CPU_C::BxError }
  };
-@@ -2972,9 +2972,9 @@
+@@ -2990,9 +2986,9 @@
  static const BxOpcodeInfo_t BxOpcodeInfo64G5qR[8] = {
    /* 0 */ { 0, &BX_CPU_C::INC_EqR },
    /* 1 */ { 0, &BX_CPU_C::DEC_EqR },
@@ -1555,7 +1620,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP64_Ep
    /* 6 */ { 0, &BX_CPU_C::PUSH_EqR },
    /* 7 */ { 0, &BX_CPU_C::BxError }
-@@ -2988,8 +2988,8 @@
+@@ -3006,8 +3002,8 @@
  static const BxOpcodeInfo_t BxOpcodeInfoG6[8] = {
    /* 0 */ { 0, &BX_CPU_C::SLDT_Ew },
    /* 1 */ { 0, &BX_CPU_C::STR_Ew },
@@ -1566,7 +1631,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 4 */ { 0, &BX_CPU_C::VERR_Ew },
    /* 5 */ { 0, &BX_CPU_C::VERW_Ew },
    /* 6 */ { 0, &BX_CPU_C::BxError },
-@@ -3010,7 +3010,7 @@
+@@ -3028,7 +3024,7 @@
  
  static const BxOpcodeInfo_t opcodesGroupRmMONITOR[8] = {
    /* 0 */ { 0, &BX_CPU_C::MONITOR },
@@ -1575,7 +1640,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 2 */ { 0, &BX_CPU_C::BxError },
    /* 3 */ { 0, &BX_CPU_C::BxError },
    /* 4 */ { 0, &BX_CPU_C::BxError },
-@@ -3026,7 +3026,7 @@
+@@ -3044,7 +3040,7 @@
    /* 3 */ { 0, &BX_CPU_C::BxError },
    /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
    /* 5 */ { 0, &BX_CPU_C::BxError },
@@ -1584,7 +1649,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
    /* 7 */ { 0, &BX_CPU_C::BxError }
  };
  
-@@ -3034,12 +3034,12 @@
+@@ -3052,12 +3048,12 @@
    // attributes defined in main area
    /* 0 */ { 0, &BX_CPU_C::SGDT_Ms },
    /* 1 */ { 0, &BX_CPU_C::SIDT_Ms },
@@ -1601,7 +1666,7 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
  }; 
  
  #if BX_SUPPORT_X86_64
-@@ -3061,19 +3061,19 @@
+@@ -3079,19 +3075,19 @@
    /* 3 */ { 0, &BX_CPU_C::BxError },
    /* 4 */ { 0, &BX_CPU_C::SMSW_Ew },
    /* 5 */ { 0, &BX_CPU_C::BxError },
@@ -1626,10 +1691,9 @@ diff -ur bochs/cpu/fetchdecode.h bochs-trace-cache/cpu/fetchdecode.h
  };
  #endif
  
-Only in bochs-trace-cache/cpu: fetchdecode.o
 diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
---- bochs/cpu/fetchdecode64.cc	2007-11-25 22:22:10.000000000 +0200
-+++ bochs-trace-cache/cpu/fetchdecode64.cc	2007-11-26 19:34:57.875000000 +0200
+--- bochs/cpu/fetchdecode64.cc	2007-11-28 00:12:45.000000000 +0200
++++ bochs-trace-cache/cpu/fetchdecode64.cc	2007-11-28 00:19:18.687500000 +0200
 @@ -285,22 +285,22 @@
    /* 6D /wr */ { 0, &BX_CPU_C::REP_INSW_YwDX },
    /* 6E /wr */ { 0, &BX_CPU_C::REP_OUTSB_DXXb },
@@ -1693,11 +1757,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
    /* C9 /wr */ { 0, &BX_CPU_C::LEAVE64 },
 -  /* CA /wr */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
--  /* CB /wr */ { 0, &BX_CPU_C::RETfar16 },
+-  /* CB /wr */ { 0,              &BX_CPU_C::RETfar16 },
 -  /* CC /wr */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /wr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
-+  /* CB /wr */ { BxTraceEnd, &BX_CPU_C::RETfar16 },
++  /* CB /wr */ { BxTraceEnd,                  &BX_CPU_C::RETfar16 },
 +  /* CC /wr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /wr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /wr */ { 0, &BX_CPU_C::BxError },
@@ -1893,11 +1957,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
    /* C9 /dr */ { 0, &BX_CPU_C::LEAVE64 },
 -  /* CA /dr */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
--  /* CB /dr */ { 0, &BX_CPU_C::RETfar32 },
+-  /* CB /dr */ { 0,              &BX_CPU_C::RETfar32 },
 -  /* CC /dr */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /dr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
-+  /* CB /dr */ { BxTraceEnd, &BX_CPU_C::RETfar32 },
++  /* CB /dr */ { BxTraceEnd,                  &BX_CPU_C::RETfar32 },
 +  /* CC /dr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /dr */ { 0, &BX_CPU_C::BxError },
@@ -2093,11 +2157,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /qr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
    /* C9 /qr */ { 0, &BX_CPU_C::LEAVE64 },
 -  /* CA /qr */ { BxImmediate_Iw, &BX_CPU_C::RETfar64_Iw },
--  /* CB /qr */ { 0, &BX_CPU_C::RETfar64 },
+-  /* CB /qr */ { 0,              &BX_CPU_C::RETfar64 },
 -  /* CC /qr */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /qr */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /qr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar64_Iw },
-+  /* CB /qr */ { BxTraceEnd, &BX_CPU_C::RETfar64 },
++  /* CB /qr */ { BxTraceEnd,                  &BX_CPU_C::RETfar64 },
 +  /* CC /qr */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /qr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /qr */ { 0, &BX_CPU_C::BxError },
@@ -2175,7 +2239,7 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 0F 26 /qr */ { 0, &BX_CPU_C::BxError },
 @@ -1630,22 +1630,22 @@
    /* 0F 7D /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7d }, 
-   /* 0F 7E /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7e }, 
+   /* 0F 7E /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7eQ }, 
    /* 0F 7F /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7f }, 
 -  /* 0F 80 /qr */ { BxImmediate_BrOff32, &BX_CPU_C::JO_Jq },
 -  /* 0F 81 /qr */ { BxImmediate_BrOff32, &BX_CPU_C::JNO_Jq },
@@ -2293,11 +2357,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /wm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
    /* C9 /wm */ { 0, &BX_CPU_C::LEAVE },
 -  /* CA /wm */ { BxImmediate_Iw, &BX_CPU_C::RETfar16_Iw },
--  /* CB /wm */ { 0, &BX_CPU_C::RETfar16 },
+-  /* CB /wm */ { 0,              &BX_CPU_C::RETfar16 },
 -  /* CC /wm */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /wm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /wm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
-+  /* CB /wm */ { BxTraceEnd, &BX_CPU_C::RETfar16 },
++  /* CB /wm */ { BxTraceEnd,                  &BX_CPU_C::RETfar16 },
 +  /* CC /wm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /wm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /wm */ { 0, &BX_CPU_C::BxError },
@@ -2493,11 +2557,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /dm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
    /* C9 /dm */ { 0, &BX_CPU_C::LEAVE64 },
 -  /* CA /dm */ { BxImmediate_Iw, &BX_CPU_C::RETfar32_Iw },
--  /* CB /dm */ { 0, &BX_CPU_C::RETfar32 },
+-  /* CB /dm */ { 0,              &BX_CPU_C::RETfar32 },
 -  /* CC /dm */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /dm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /dm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
-+  /* CB /dm */ { BxTraceEnd, &BX_CPU_C::RETfar32 },
++  /* CB /dm */ { BxTraceEnd,                  &BX_CPU_C::RETfar32 },
 +  /* CC /dm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /dm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /dm */ { 0, &BX_CPU_C::BxError },
@@ -2693,11 +2757,11 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* C8 /qm */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
    /* C9 /qm */ { 0, &BX_CPU_C::LEAVE64 },
 -  /* CA /qm */ { BxImmediate_Iw, &BX_CPU_C::RETfar64_Iw },
--  /* CB /qm */ { 0, &BX_CPU_C::RETfar64 },
+-  /* CB /qm */ { 0,              &BX_CPU_C::RETfar64 },
 -  /* CC /qm */ { 0, &BX_CPU_C::INT3 },
 -  /* CD /qm */ { BxImmediate_Ib, &BX_CPU_C::INT_Ib },
 +  /* CA /qm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar64_Iw },
-+  /* CB /qm */ { BxTraceEnd, &BX_CPU_C::RETfar64 },
++  /* CB /qm */ { BxTraceEnd,                  &BX_CPU_C::RETfar64 },
 +  /* CC /qm */ { BxTraceEnd, &BX_CPU_C::INT3 },
 +  /* CD /qm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
    /* CE /qm */ { 0, &BX_CPU_C::BxError },
@@ -2775,7 +2839,7 @@ diff -ur bochs/cpu/fetchdecode64.cc bochs-trace-cache/cpu/fetchdecode64.cc
    /* 0F 26 /qm */ { 0, &BX_CPU_C::BxError },
 @@ -3223,22 +3223,22 @@
    /* 0F 7D /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7d }, 
-   /* 0F 7E /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7e }, 
+   /* 0F 7E /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7eQ }, 
    /* 0F 7F /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0f7f }, 
 -  /* 0F 80 /qm */ { BxImmediate_BrOff32, &BX_CPU_C::JO_Jq },
 -  /* 0F 81 /qm */ { BxImmediate_BrOff32, &BX_CPU_C::JNO_Jq },
