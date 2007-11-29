@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.42 2007-11-25 20:22:06 sshwarts Exp $
+// $Id: bit.cc,v 1.43 2007-11-29 21:52:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -276,7 +276,8 @@ void BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
     op2_16 >>= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  clear_ZF();
 
   /* now write result back to destination */
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
@@ -307,7 +308,8 @@ void BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
     op2_32 >>= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  clear_ZF();
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -339,7 +341,8 @@ void BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
     op2_64 >>= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
+  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  clear_ZF();
 
   /* now write result back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
@@ -370,7 +373,8 @@ void BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
     op2_16 <<= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_BITSCAN16);
+  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+  clear_ZF();
 
   /* now write result back to destination */
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
@@ -401,7 +405,8 @@ void BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
     op2_32 <<= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_BITSCAN32);
+  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
+  clear_ZF();
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
@@ -433,7 +438,8 @@ void BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
     op2_64 <<= 1;
   }
 
-  SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_BITSCAN64);
+  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
+  clear_ZF();
   
   /* now write result back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
