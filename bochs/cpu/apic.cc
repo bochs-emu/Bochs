@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.cc,v 1.103 2007-11-25 20:22:06 sshwarts Exp $
+// $Id: apic.cc,v 1.104 2007-11-30 17:59:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -148,10 +148,15 @@ static void apic_bus_broadcast_eoi(Bit8u vector)
   bx_devices.ioapic->receive_eoi(vector);
 }
 
+#endif
+
+// available even if APIC is not compiled in
 void apic_bus_deliver_smi(void)
 {
   BX_CPU(0)->deliver_SMI();
 }
+
+#if BX_SUPPORT_APIC
 
 ////////////////////////////////////
 
