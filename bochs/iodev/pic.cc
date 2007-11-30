@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pic.cc,v 1.46 2007-09-28 19:52:04 sshwarts Exp $
+// $Id: pic.cc,v 1.47 2007-11-30 08:56:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -456,6 +456,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIC_THIS s.slave_pic.irr           = 0x00; /* no IRQ's requested */
         BX_PIC_THIS s.slave_pic.lowest_priority = 7;
         BX_PIC_THIS s.slave_pic.INT = 0; /* reprogramming clears previous INTR request */
+        BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
         BX_PIC_THIS s.slave_pic.auto_eoi = 0;
         BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
         if (value & 0x02)
