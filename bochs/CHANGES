@@ -1,4 +1,19 @@
-Changes after 2.3.5 release:
+-------------------------------------------------------------------------
+Changes for coming 2.3.6 release:
+
+Brief summary :
+
++ More than 20% emulation speedup vs Bochs 2.3.5 release!
+
+      - Thanks to Darek Mihocka (http://www.emulators.com) 
+        for providing patches and ideas that made the
+        speedup possible!
+
+- Lots of bugfixes in cpu emulation
+- Bochs bechmarking support
+- Added emulation of Intel SSE4.2 instruction set
+
+Detailed change log :
 
 - CPU
   - Added emulation of SSE4.2 instruction set, to enable use
@@ -40,6 +55,39 @@ Changes after 2.3.5 release:
     build release binaries, so all future releases will enjoy IPS display.
   - Enable alignment check in the CPU and #AC exception by default for
     --cpu-level >= 4 (like in real hardware)
+
+- SF patches applied
+ [1791000] 15h 8600h is reading the wrong stack frame by Sebastian
+
+ [1841421] pic: keep slave_pic.INT and master_pic.IRQ_in bit 2 in sync by Russ Cox
+ [1841420] give segment numbers in exception logs by Russ Cox
+ [1801696] Allow Intel builds on Mac OS X
+ [1830658] Fix >32GB disk banner by Samuel Thibault
+ [1813314] Move #define IPL_* and typedef ipl_entry by Sebastian
+ [1809001] Save PnP Option ROM Product Name string in IPL Boot Table by Sebastian
+ [1821242] Fix for #1801285, Niclist.exe broken by Sebastian
+ [1819567] Code warning cleanup
+ [1816162] Update comment on bios_printf() by Sebastian
+ [1811139] Trivial Fix when BX_PCIBIOS and BX_ROMBIOS32 not defined by Myles Watson 
+ [1811190] Improve HD recognition and CD boot  * 2007-10-11 00:22  5  Closed nobody myles_w 
+ [1811860] Implement %X in bios_printf by Sebastian
+ [1809649] printf %lx %ld %lu by Myles Watson 
+ [1809651] move BX_SUPPORT_FLOPPY by Myles Watson 
+ [1809652] dpte and Int13DPT fixes by Myles Watson 
+ [1809669] clip cylinders to 16383 in hard drive  * 2007-10-08 20:15  5  Closed nobody myles_w 
+ [1799903] Build BIOS on amd64 by Robert Millan 
+ [1799877] Fix for parallel build (make -j2) by Robert Millan 
+
+- these S.F. bugs were closed
+ [1823446] BIOS bug, local APIC #0 not detected
+ [1801285] Niclist.exe broken
+ [1364472] breakpoints sometimes don't work
+  [994451] breakpoint bug
+ [1801295] NSIS installer vs Windows Notepad
+ [1715328] Unreal mode quirk
+ [1503972] debugger doesn't debug first instruction on exception
+ [1069071] div al, byte ptr [ds:0x7c18] fails to execute
+ [1800080] Wrong "BX_MAX_SMP_THREADS_SUPPORTED" assertion  
 
 -------------------------------------------------------------------------
 Changes in 2.3.5 (September 16, 2007):
