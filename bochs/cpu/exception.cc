@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.96 2007-11-24 14:22:33 sshwarts Exp $
+// $Id: exception.cc,v 1.97 2007-11-30 08:49:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,7 +428,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
         IS_DATA_SEGMENT(cs_descriptor.type) ||
         cs_descriptor.dpl>CPL)
     {
-      BX_ERROR(("interrupt(): not accessable or not code segment"));
+      BX_ERROR(("interrupt(): not accessable or not code segment cs=0x%04x", cs_selector.value));
       exception(BX_GP_EXCEPTION, cs_selector.value & 0xfffc, 0);
     }
 

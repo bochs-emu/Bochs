@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.32 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.33 2007-11-30 08:49:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -326,36 +326,5 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
     if (((BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled - temp_ESP) + 1) >= bytes)
       return(1);
     return(0);
-  }
-}
-
-void BX_CPU_C::decrementESPForPush(unsigned nBytes, Bit32u *eSP_ptr)
-{
-  Bit32u eSP;
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    eSP = ESP;
-  else
-    eSP = SP;
-
-  if (protected_mode()) {
-    if (!can_push(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache, eSP, nBytes)) {
-      BX_INFO(("decrementESPForPush: push outside stack limits"));
-      exception(BX_SS_EXCEPTION, 0, 0);
-    }
-  }
-  else { // Real Mode.
-    if ( (eSP>=1) && (eSP<nBytes) ) {
-      BX_PANIC(("decrementESPForPush: eSP=%08x", (unsigned) eSP));
-    }
-  }
-
-  // And finally, decrement eSP and return the new eSP value.
-  eSP -= nBytes;
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    *eSP_ptr = eSP;
-  }
-  else {
-    *eSP_ptr = SP;
   }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack32.cc,v 1.41 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: stack32.cc,v 1.42 2007-11-30 08:49:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,85 +77,32 @@ void BX_CPU_C::POP_ERX(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH32_CS(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value);
 }
 
 void BX_CPU_C::PUSH32_DS(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
-  }
-  else {
-    SP = (Bit16u) eSP;
-  }
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
 }
 
 void BX_CPU_C::PUSH32_ES(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
-  }
-  else {
-    SP = (Bit16u) eSP;
-  }
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
 }
 
 void BX_CPU_C::PUSH32_FS(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
-  }
-  else {
-    SP = (Bit16u) eSP;
-  }
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
 }
 
 void BX_CPU_C::PUSH32_GS(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
-  }
-  else {
-    SP = (Bit16u) eSP;
-  }
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
 }
 
 void BX_CPU_C::PUSH32_SS(bxInstruction_c *i)
 {
-  Bit32u eSP;
-  decrementESPForPush(4, &eSP);
-  write_virtual_word(BX_SEG_REG_SS, eSP,
-            &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
-
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    ESP = eSP;
-  }
-  else {
-    SP = (Bit16u) eSP;
-  }
+  push_32(BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value);
 }
 
 void BX_CPU_C::POP32_DS(bxInstruction_c *i)

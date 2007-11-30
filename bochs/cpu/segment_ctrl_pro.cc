@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.76 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.77 2007-11-30 08:49:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,7 +139,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       parse_descriptor(dword1, dword2, &descriptor);
 
       if (descriptor.valid==0) {
-        BX_ERROR(("load_seg_reg(%s): valid bit cleared", strseg(seg)));
+        BX_ERROR(("load_seg_reg(%s, 0x%04x): invalid segment", strseg(seg), new_value));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
       }
 
@@ -147,7 +147,7 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       if (descriptor.segment==0 || (IS_CODE_SEGMENT(descriptor.type) && 
           IS_CODE_SEGMENT_READABLE(descriptor.type) == 0))
       {
-        BX_ERROR(("load_seg_reg(%s): not data or readable code", strseg(seg)));
+        BX_ERROR(("load_seg_reg(%s, 0x%04x): not data or readable code", strseg(seg), new_value));
         exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
       }
 
@@ -157,14 +157,14 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
           IS_CODE_SEGMENT_NON_CONFORMING(descriptor.type))
       {
         if ((selector.rpl > descriptor.dpl) || (CPL > descriptor.dpl)) {
-          BX_ERROR(("load_seg_reg(%s): RPL & CPL must be <= DPL", strseg(seg)));
+          BX_ERROR(("load_seg_reg(%s, 0x%04x): RPL & CPL must be <= DPL", strseg(seg), new_value));
           exception(BX_GP_EXCEPTION, new_value & 0xfffc, 0);
         }
       }
 
       /* segment must be marked PRESENT else #NP(selector) */
       if (! IS_PRESENT(descriptor)) {
-        BX_ERROR(("load_seg_reg(%s): segment not present", strseg(seg)));
+        BX_ERROR(("load_seg_reg(%s, 0x%04x): segment not present", strseg(seg), new_value));
         exception(BX_NP_EXCEPTION, new_value & 0xfffc, 0);
       }
 
