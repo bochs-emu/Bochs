@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.15 2007-09-15 07:24:04 vruppert Exp $
+// $Id: rombios32.c,v 1.16 2007-12-01 19:26:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -583,9 +583,11 @@ static void bios_shadow_init(PCIDevice *d)
 
     /* remap the BIOS to shadow RAM an keep it read/write while we
        are writing tables */
-    memcpy((void *)BIOS_TMP_STORAGE, (void *)0x000f0000, 0x10000);
     v = pci_config_readb(d, 0x59);
-    v = (v & 0x0f) | (0x30);
+    v &= 0xcf;
+    pci_config_writeb(d, 0x59, v);
+    memcpy((void *)BIOS_TMP_STORAGE, (void *)0x000f0000, 0x10000);
+    v |= 0x30;
     pci_config_writeb(d, 0x59, v);
     memcpy((void *)0x000f0000, (void *)BIOS_TMP_STORAGE, 0x10000);
     

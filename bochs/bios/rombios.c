@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.190 2007-11-12 20:58:37 sshwarts Exp $
+// $Id: rombios.c,v 1.191 2007-12-01 19:26:46 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -296,7 +296,7 @@ typedef unsigned long  Bit32u;
       push di
 
       mov  cx, 10[bp] ; count
-      cmp  cx, #0x00
+      test cx, cx
       je   memsetb_end
       mov  ax, 4[bp] ; segment
       mov  es, ax
@@ -338,7 +338,7 @@ typedef unsigned long  Bit32u;
       push si
 
       mov  cx, 12[bp] ; count
-      cmp  cx, #0x0000
+      test cx, cx
       je   memcpyb_end
       mov  ax, 4[bp] ; dsegment
       mov  es, ax
@@ -385,7 +385,7 @@ typedef unsigned long  Bit32u;
       push si
 
       mov  cx, 12[bp] ; count
-      cmp  cx, #0x0000
+      test cx, cx
       je   memcpyd_end
       mov  ax, 4[bp] ; dsegment
       mov  es, ax
@@ -430,8 +430,7 @@ typedef unsigned long  Bit32u;
       mov  ds, ax
       mov  bx, 6[bp] ; offset
       mov  ax, [bx]
-      inc  bx
-      inc  bx
+      add  bx, 2
       mov  dx, [bx]
       ;; ax = return value (word)
       ;; dx = return value (word)
@@ -460,8 +459,7 @@ typedef unsigned long  Bit32u;
       mov  bx, 6[bp] ; offset
       mov  ax, 8[bp] ; data word
       mov  [bx], ax  ; write data word
-      inc  bx
-      inc  bx
+      add  bx, 2
       mov  ax, 10[bp] ; data word
       mov  [bx], ax  ; write data word
       pop  ds
@@ -498,7 +496,7 @@ typedef unsigned long  Bit32u;
   lcmpul:
     and eax, #0x0000FFFF
     shl ebx, #16
-    add eax, ebx
+    or  eax, ebx
     shr ebx, #16
     SEG SS
       cmp eax, dword ptr [di]
@@ -518,7 +516,7 @@ typedef unsigned long  Bit32u;
   lmulul:
     and eax, #0x0000FFFF
     shl ebx, #16
-    add eax, ebx
+    or  eax, ebx
     SEG SS
     mul eax, dword ptr [di]
     mov ebx, eax
@@ -553,7 +551,7 @@ typedef unsigned long  Bit32u;
   ltstul:
     and eax, #0x0000FFFF
     shl ebx, #16
-    add eax, ebx
+    or  eax, ebx
     shr ebx, #16
     test eax, eax
     ret
@@ -564,7 +562,7 @@ typedef unsigned long  Bit32u;
     jcxz lsr_exit
     and  eax, #0x0000FFFF
     shl  ebx, #16
-    add  eax, ebx
+    or   eax, ebx
   lsr_loop:
     shr  eax, #1
     loop lsr_loop
@@ -580,7 +578,7 @@ typedef unsigned long  Bit32u;
     jcxz lsl_exit
     and  eax, #0x0000FFFF
     shl  ebx, #16
-    add  eax, ebx
+    or   eax, ebx
   lsl_loop:
     shl  eax, #1
     loop lsl_loop
@@ -602,7 +600,7 @@ typedef unsigned long  Bit32u;
   ldivul:
     and  eax, #0x0000FFFF
     shl  ebx, #16
-    add  eax, ebx
+    or   eax, ebx
     xor  edx, edx
     SEG SS
     mov  bx,  2[di]
@@ -941,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.190 $ $Date: 2007-11-12 20:58:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.191 $ $Date: 2007-12-01 19:26:46 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9630,8 +9628,7 @@ pcibios_init_irqs:
   mov  dx, #0x0cfc
   mov  ax, #0x8080
   out  dx, ax ;; reset PIRQ route control
-  inc  dx
-  inc  dx
+  add  dx, 2
   out  dx, ax
   mov  ax, [si+6]
   sub  ax, #0x20
@@ -10117,11 +10114,9 @@ normal_post:
 
 post_default_ints:
   mov  [bx], ax
-  inc  bx
-  inc  bx
+  add  bx, 2
   mov  [bx], dx
-  inc  bx
-  inc  bx
+  add  bx, 2
   loop post_default_ints
 
   ;; set vector 0x79 to zero
