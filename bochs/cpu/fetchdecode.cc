@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.143 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.144 2007-12-01 16:59:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2559,9 +2559,13 @@ fetch_b1:
         goto fetch_b1;
       }
       return(0);
-    case 0x0f: // 2 byte escape
-      b1 |= 0x100;
-      break;
+    case 0x0f: // 2-byte escape
+      if (ilen < remain) {
+        ilen++;
+        b1 = 0x100 | *iptr++;
+        break;
+      }
+      return(0);
     default:
       break;
   }
