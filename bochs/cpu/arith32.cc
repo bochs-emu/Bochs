@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.63 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: arith32.cc,v 1.64 2007-12-01 16:45:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -439,7 +439,7 @@ void BX_CPU_C::CMPXCHG_IBTS(bxInstruction_c *i)
 
 void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, sum_32;
 
   /* XADD dst(r/m), src(r)
@@ -465,7 +465,7 @@ void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
 
 void BX_CPU_C::XADD_EdGdR(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, sum_32;
 
   /* XADD dst(r/m), src(r)
@@ -649,7 +649,7 @@ void BX_CPU_C::DEC_EdR(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, diff_32;
 
   read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
@@ -673,7 +673,7 @@ void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, diff_32;
 
   op1_32 = BX_READ_32BIT_REG(i->rm());
@@ -697,7 +697,7 @@ void BX_CPU_C::CMPXCHG_EdGdR(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 5) || (BX_CPU_LEVEL_HACKED >= 5)
+#if BX_CPU_LEVEL >= 5
   Bit32u op1_64_lo, op1_64_hi, diff;
 
   read_virtual_dword(i->seg(), RMAddr(i), &op1_64_lo);

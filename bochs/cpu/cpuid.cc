@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.57 2007-11-25 20:52:40 sshwarts Exp $
+// $Id: cpuid.cc,v 1.58 2007-12-01 16:45:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -197,7 +197,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 #endif
 
-#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
+#if BX_CPU_LEVEL >= 6
   features |= (1<<24);  // Implement FSAVE/FXRSTOR instructions.
 #endif
 

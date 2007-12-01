@@ -149,8 +149,8 @@
 // CPU level emulation.  Default level is set in
 // the configure script.  BX_CPU_LEVEL defines the CPU level
 // to emulate.  BX_CPU_LEVEL_HACKED is a hack to define the
-// level of some integer instructions, so they can be tested
-// before the rest of the emulation is up to that level.
+// level of some instructions, so they can be tested before
+// the rest of the emulation is up to that level.
 
 #define BX_CPU_LEVEL 0
 #define BX_CPU_LEVEL_HACKED 0

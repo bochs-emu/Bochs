@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.47 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.48 2007-12-01 16:45:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -220,7 +220,7 @@ void BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
 
 void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 6) || (BX_CPU_LEVEL_HACKED >= 6)
+#if BX_CPU_LEVEL >= 6
   // Note: CMOV accesses a memory source operand (read), regardless
   //       of whether condition is true or not.  Thus, exceptions may
   //       occur even if the MOV does not take place.

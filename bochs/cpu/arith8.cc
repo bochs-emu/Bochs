@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.48 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: arith8.cc,v 1.49 2007-12-01 16:45:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -363,7 +363,7 @@ void BX_CPU_C::CMP_ALIb(bxInstruction_c *i)
 
 void BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit8u op1, op2, sum;
 
   /* XADD dst(r/m8), src(r8)
@@ -389,7 +389,7 @@ void BX_CPU_C::XADD_EbGbM(bxInstruction_c *i)
 
 void BX_CPU_C::XADD_EbGbR(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit8u op1, op2, sum;
 
   /* XADD dst(r/m8), src(r8)
@@ -565,7 +565,7 @@ void BX_CPU_C::DEC_EbR(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit8u op1_8, op2_8, diff_8;
 
   read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
@@ -590,7 +590,7 @@ void BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
 
 void BX_CPU_C::CMPXCHG_EbGbR(bxInstruction_c *i)
 {
-#if (BX_CPU_LEVEL >= 4) || (BX_CPU_LEVEL_HACKED >= 4)
+#if BX_CPU_LEVEL >= 4
   Bit8u op1_8, op2_8, diff_8;
 
   op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());

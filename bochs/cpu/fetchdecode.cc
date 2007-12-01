@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.142 2007-11-27 22:12:44 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.143 2007-12-01 16:45:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2559,18 +2559,11 @@ fetch_b1:
         goto fetch_b1;
       }
       return(0);
+    case 0x0f: // 2 byte escape
+      b1 |= 0x100;
+      break;
     default:
       break;
-  }
-
-  // handle 2-byte escape
-  if (b1 == 0x0f) {
-    if (ilen < remain) {
-      ilen++;
-      b1 = 0x100 | *iptr++;
-    }
-    else
-      return(0);
   }
 
   attr = BxOpcodeInfo32R[b1+offset].Attr;
