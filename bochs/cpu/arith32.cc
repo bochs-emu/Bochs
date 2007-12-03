@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.64 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: arith32.cc,v 1.65 2007-12-03 20:48:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -707,10 +707,10 @@ void BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
   diff |= EDX - op1_64_hi;
 
   if (diff == 0) {  // if accumulator == dest
-    assert_ZF();
     // dest <-- src
-    write_RMW_virtual_dword(ECX);
     write_virtual_dword(i->seg(), RMAddr(i), &EBX);
+    write_RMW_virtual_dword(ECX);
+    assert_ZF();
   }
   else {
     clear_ZF();

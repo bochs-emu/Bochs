@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.40 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: arith64.cc,v 1.41 2007-12-03 20:48:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -685,10 +685,10 @@ void BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
   diff |= RDX - op1_64_hi;
 
   if (diff == 0) {  // if accumulator == dest
-    assert_ZF();
     // dest <-- src
-    write_RMW_virtual_qword(RCX);
     write_virtual_qword(i->seg(), RMAddr(i), &RBX);
+    write_RMW_virtual_qword(RCX);
+    assert_ZF();
   }
   else {
     clear_ZF();
