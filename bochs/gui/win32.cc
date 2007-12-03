@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.113 2007-08-18 08:05:30 vruppert Exp $
+// $Id: win32.cc,v 1.114 2007-12-03 20:38:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1042,7 +1042,7 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_NOTIFY:
     lpnmh = (LPNMHDR)lParam;
-    if ((int)lpnmh->code == TTN_NEEDTEXT) {
+    if (lpnmh->code == TTN_NEEDTEXT) {
       lpttt = (LPTOOLTIPTEXT)lParam;
       idTT = (int)wParam;
       hbar_id = idTT - 101;
