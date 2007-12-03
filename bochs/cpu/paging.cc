@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.94 2007-11-20 17:15:33 sshwarts Exp $
+// $Id: paging.cc,v 1.95 2007-12-03 20:49:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1107,23 +1107,8 @@ page_fault:
 
 void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsigned rw, void *data)
 {
-
 #if BX_X86_DEBUGGER
-  if (BX_CPU_THIS_PTR dr7 & 0x000000ff) {
-    // Only compare debug registers if any breakpoints are enabled
-    Bit32u dr6_bits;
-    unsigned opa, opb;
-    opa = BX_HWDebugMemRW; // Read or Write always compares vs 11b
-    if (rw==BX_READ) // only compares vs 11b
-      opb = opa;
-    else // BX_WRITE or BX_RW; also compare vs 01b
-      opb = BX_HWDebugMemW;
-    dr6_bits = hwdebug_compare(laddr, len, opa, opb);
-    if (dr6_bits) {
-      BX_CPU_THIS_PTR debug_trap |= dr6_bits;
-      BX_CPU_THIS_PTR async_event = 1;
-    }
-  }
+  hwbreakpoint_match(laddr, len, rw);
 #endif
 
   Bit32u pageOffset = laddr & 0x00000fff;

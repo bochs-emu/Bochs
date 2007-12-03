@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.379 2007-11-30 08:49:12 sshwarts Exp $
+// $Id: cpu.h,v 1.380 2007-12-03 20:49:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3255,7 +3255,8 @@ public: // for now...
 
 #if BX_X86_DEBUGGER
   // x86 hardware debug support
-  BX_SMF Bit32u hwdebug_compare(bx_address laddr, unsigned size,
+  BX_SMF void   hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
+  BX_SMF Bit32u hwdebug_compare(bx_address laddr, unsigned len,
                                  unsigned opa, unsigned opb);
 #endif
 
