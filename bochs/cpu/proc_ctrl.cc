@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.184 2007-12-03 20:49:24 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.185 2007-12-03 21:43:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1693,8 +1693,6 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 void BX_CPU_C::WRMSR(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
-  invalidate_prefetch_q();
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("WRMSR: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
