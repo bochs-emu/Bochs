@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.19 2007-11-22 17:32:00 sshwarts Exp $
+// $Id: icache.h,v 1.20 2007-12-04 17:34:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -113,7 +113,7 @@ BX_CPP_INLINE void bxPageWriteStampTable::purgeWriteStamps(void)
 
 extern bxPageWriteStampTable pageWriteStampTable;
 
-#define BxICacheEntries (64 * 1024)  // Must be a power of 2.
+#define BxICacheEntries (32 * 1024)  // Must be a power of 2.
 
 struct bxICacheEntry_c
 {
