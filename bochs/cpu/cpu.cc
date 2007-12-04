@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.185 2007-12-03 21:43:14 sshwarts Exp $
+// $Id: cpu.cc,v 1.186 2007-12-04 19:27:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -60,16 +60,16 @@ void flushICaches(void)
 #define InstrumentICACHE 0
 
 #if InstrumentICACHE
-static unsigned iCacheLookups=0;
-static unsigned iCacheMisses=0;
+static Bit32u iCacheLookups=0;
+static Bit32u iCacheMisses=0;
 
-#define InstrICache_StatsMask 0xffffff
+#define InstrICache_StatsMask 0xfffffff
 
 #define InstrICache_Stats() {\
   if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
     BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
-          iCacheLookups, \
-          iCacheMisses,  \
+          (unsigned) iCacheLookups, \
+          (unsigned) iCacheMisses,  \
           (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
     iCacheLookups = iCacheMisses = 0; \
   } \
@@ -86,7 +86,6 @@ static unsigned iCacheMisses=0;
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
 #define RIP EIP
-#define RSP ESP
 #define RCX ECX
 #endif
 

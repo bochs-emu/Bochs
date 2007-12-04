@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.25 2007-11-29 21:52:16 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.26 2007-12-04 19:27:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,11 +109,13 @@
 #define BX_INSTR_IMUL32         55
 #define BX_INSTR_IMUL64         56
 
-#define BX_LF_INDEX_OSZAPC  1
-#define BX_LF_INDEX_OSZAP   2
-
-#define BX_LF_MASK_OSZAPC 0x111111
-#define BX_LF_MASK_OSZAP  0x222220
+#if BX_SUPPORT_X86_64
+  #define BX_LF_SIGN_BIT  63
+  #define BX_LF_SIGN_MASK BX_CONST64(0x8000000000000000)
+#else
+  #define BX_LF_SIGN_BIT  31
+  #define BX_LF_SIGN_MASK 0x80000000
+#endif
 
 typedef struct {
   Bit8u op1_8;

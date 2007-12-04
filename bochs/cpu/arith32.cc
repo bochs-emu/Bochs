@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.65 2007-12-03 20:48:02 sshwarts Exp $
+// $Id: arith32.cc,v 1.66 2007-12-04 19:27:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -42,14 +42,14 @@
 void BX_CPU_C::INC_ERX(bxInstruction_c *i)
 {
   Bit32u erx = ++BX_READ_32BIT_REG(i->opcodeReg());
-  SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_INC32);
+  SET_FLAGS_OSZAPC_INC_32(erx);
   BX_CLEAR_64BIT_HIGH(i->opcodeReg());
 }
 
 void BX_CPU_C::DEC_ERX(bxInstruction_c *i)
 {
   Bit32u erx = --BX_READ_32BIT_REG(i->opcodeReg());
-  SET_FLAGS_OSZAP_RESULT_32(erx, BX_INSTR_DEC32);
+  SET_FLAGS_OSZAPC_DEC_32(erx);
   BX_CLEAR_64BIT_HIGH(i->opcodeReg());
 }
 
@@ -615,7 +615,7 @@ void BX_CPU_C::INC_EdM(bxInstruction_c *i)
   op1_32++;
   write_RMW_virtual_dword(op1_32);
 
-  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_INC32);
+  SET_FLAGS_OSZAPC_INC_32(op1_32);
 }
 
 void BX_CPU_C::INC_EdR(bxInstruction_c *i)
@@ -624,7 +624,7 @@ void BX_CPU_C::INC_EdR(bxInstruction_c *i)
   op1_32++;
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
-  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_INC32);
+  SET_FLAGS_OSZAPC_INC_32(op1_32);
 }
 
 void BX_CPU_C::DEC_EdM(bxInstruction_c *i)
@@ -635,7 +635,7 @@ void BX_CPU_C::DEC_EdM(bxInstruction_c *i)
   op1_32--;
   write_RMW_virtual_dword(op1_32);
 
-  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_DEC32);
+  SET_FLAGS_OSZAPC_DEC_32(op1_32);
 }
 
 void BX_CPU_C::DEC_EdR(bxInstruction_c *i)
@@ -644,7 +644,7 @@ void BX_CPU_C::DEC_EdR(bxInstruction_c *i)
   op1_32--;
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
-  SET_FLAGS_OSZAP_RESULT_32(op1_32, BX_INSTR_DEC32);
+  SET_FLAGS_OSZAPC_DEC_32(op1_32);
 }
 
 void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)

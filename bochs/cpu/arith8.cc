@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.49 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: arith8.cc,v 1.50 2007-12-04 19:27:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -525,22 +525,22 @@ void BX_CPU_C::NEG_EbR(bxInstruction_c *i)
 
 void BX_CPU_C::INC_EbM(bxInstruction_c *i)
 {
-  Bit8u op1;
+  Bit8u op1_8;
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
-  op1++;
-  write_RMW_virtual_byte(op1);
+  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+  op1_8++;
+  write_RMW_virtual_byte(op1_8);
 
-  SET_FLAGS_OSZAP_RESULT_8(op1, BX_INSTR_INC8);
+  SET_FLAGS_OSZAPC_INC_8(op1_8);
 }
 
 void BX_CPU_C::INC_EbR(bxInstruction_c *i)
 {
-  Bit8u op1 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  op1++;
-  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1);
+  Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
+  op1_8++;
+  BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
 
-  SET_FLAGS_OSZAP_RESULT_8(op1, BX_INSTR_INC8);
+  SET_FLAGS_OSZAPC_INC_8(op1_8);
 }
 
 void BX_CPU_C::DEC_EbM(bxInstruction_c *i)
@@ -551,7 +551,7 @@ void BX_CPU_C::DEC_EbM(bxInstruction_c *i)
   op1_8--;
   write_RMW_virtual_byte(op1_8);
 
-  SET_FLAGS_OSZAP_RESULT_8(op1_8, BX_INSTR_DEC8);
+  SET_FLAGS_OSZAPC_DEC_8(op1_8);
 }
 
 void BX_CPU_C::DEC_EbR(bxInstruction_c *i)
@@ -560,7 +560,7 @@ void BX_CPU_C::DEC_EbR(bxInstruction_c *i)
   op1_8--;
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
 
-  SET_FLAGS_OSZAP_RESULT_8(op1_8, BX_INSTR_DEC8);
+  SET_FLAGS_OSZAPC_DEC_8(op1_8);
 }
 
 void BX_CPU_C::CMPXCHG_EbGbM(bxInstruction_c *i)
