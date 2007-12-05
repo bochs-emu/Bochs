@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.381 2007-12-04 19:27:22 sshwarts Exp $
+// $Id: cpu.h,v 1.382 2007-12-05 06:17:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1309,7 +1309,7 @@ public: // for now...
   } \
   BX_SMF void force_##flag(void) { \
     if ( (BX_CPU_THIS_PTR lf_flags_status & (lfMask)) != 0) { \
-      set_##flag(!!get_##flag##Lazy()); \
+      set_##flag(get_##flag##Lazy()); \
     } \
   }
 
@@ -3524,97 +3524,78 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 
 /* op1, op2, result */
 #define SET_FLAGS_OSZAPC_SIZE(size, lf_op1, lf_op2, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR oszapc.op1_##size = (lf_op1); \
+  BX_CPU_THIS_PTR oszapc.op2_##size = (lf_op2); \
+  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
 }
 
 #define SET_FLAGS_OSZAPC_8(op1, op2, result, ins) \
-  SET_FLAGS_OSZAPC_SIZE(_8, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(8, op1, op2, result, ins)
 #define SET_FLAGS_OSZAPC_16(op1, op2, result, ins) \
-  SET_FLAGS_OSZAPC_SIZE(_16, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(16, op1, op2, result, ins)
 #define SET_FLAGS_OSZAPC_32(op1, op2, result, ins) \
-  SET_FLAGS_OSZAPC_SIZE(_32, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(32, op1, op2, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_64(op1, op2, result, ins) \
-  SET_FLAGS_OSZAPC_SIZE(_64, op1, op2, result, ins)
+  SET_FLAGS_OSZAPC_SIZE(64, op1, op2, result, ins)
 #endif
 
 /* op1 and result only */
 #define SET_FLAGS_OSZAPC_S1_SIZE(size, lf_op1, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR oszapc.op1_##size = (lf_op1); \
+  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
 }
 
 #define SET_FLAGS_OSZAPC_S1_8(op1, result, ins) \
-  SET_FLAGS_OSZAPC_S1_SIZE(_8, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(8, op1, result, ins)
 #define SET_FLAGS_OSZAPC_S1_16(op1, result, ins) \
-  SET_FLAGS_OSZAPC_S1_SIZE(_16, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(16, op1, result, ins)
 #define SET_FLAGS_OSZAPC_S1_32(op1, result, ins) \
-  SET_FLAGS_OSZAPC_S1_SIZE(_32, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(32, op1, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_S1_64(op1, result, ins) \
-  SET_FLAGS_OSZAPC_S1_SIZE(_64, op1, result, ins)
+  SET_FLAGS_OSZAPC_S1_SIZE(64, op1, result, ins)
 #endif
 
 /* op2 and result only */
 #define SET_FLAGS_OSZAPC_S2_SIZE(size, lf_op2, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR oszapc.op2_##size = (lf_op2); \
+  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
 }
 
 #define SET_FLAGS_OSZAPC_S2_8(op2, result, ins) \
-  SET_FLAGS_OSZAPC_S2_SIZE(_8, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(8, op2, result, ins)
 #define SET_FLAGS_OSZAPC_S2_16(op2, result, ins) \
-  SET_FLAGS_OSZAPC_S2_SIZE(_16, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(16, op2, result, ins)
 #define SET_FLAGS_OSZAPC_S2_32(op2, result, ins) \
-  SET_FLAGS_OSZAPC_S2_SIZE(_32, op2, result, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(32, op2, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_S2_64(op2, result, ins) \
-  SET_FLAGS_OSZAPC_S2_SIZE(_64, op2, result, ins)
-#endif
-
-/* op1 and op2 only */
-#define SET_FLAGS_OSZAPC_S1S2_SIZE(size, lf_op1, lf_op2, ins) { \
-  BX_CPU_THIS_PTR oszapc.op1##size = lf_op1; \
-  BX_CPU_THIS_PTR oszapc.op2##size = lf_op2; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
-  BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
-}
-
-#define SET_FLAGS_OSZAPC_S1S2_8(op1, op2, ins) \
-  SET_FLAGS_OSZAPC_S1S2_SIZE(_8, op1, op2, ins)
-#define SET_FLAGS_OSZAPC_S1S2_16(op1, op2, ins) \
-  SET_FLAGS_OSZAPC_S1S2_SIZE(_16, op1, op2, ins)
-#define SET_FLAGS_OSZAPC_S1S2_32(op1, op2, ins) \
-  SET_FLAGS_OSZAPC_S1S2_SIZE(_32, op1, op2, ins)
-#if BX_SUPPORT_X86_64
-#define SET_FLAGS_OSZAPC_S1S2_64(op1, op2, ins) \
-  SET_FLAGS_OSZAPC_S1S2_SIZE(_64, op1, op2, ins)
+  SET_FLAGS_OSZAPC_S2_SIZE(64, op2, result, ins)
 #endif
 
 /* result only */
 #define SET_FLAGS_OSZAPC_RESULT_SIZE(size, lf_result, ins) { \
-  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPCMask; \
 }
 
 #define SET_FLAGS_OSZAPC_RESULT_8(result, ins) \
-  SET_FLAGS_OSZAPC_RESULT_SIZE(_8, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(8, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_16(result, ins) \
-  SET_FLAGS_OSZAPC_RESULT_SIZE(_16, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(16, result, ins)
 #define SET_FLAGS_OSZAPC_RESULT_32(result, ins) \
-  SET_FLAGS_OSZAPC_RESULT_SIZE(_32, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(32, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_RESULT_64(result, ins) \
-  SET_FLAGS_OSZAPC_RESULT_SIZE(_64, result, ins)
+  SET_FLAGS_OSZAPC_RESULT_SIZE(64, result, ins)
 #endif
 
 // *******************
@@ -3624,20 +3605,20 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 /* result only */
 #define SET_FLAGS_OSZAP_RESULT_SIZE(size, lf_result, ins) { \
   force_CF(); \
-  BX_CPU_THIS_PTR oszapc.result##size = lf_result; \
-  BX_CPU_THIS_PTR oszapc.instr = ins; \
+  BX_CPU_THIS_PTR oszapc.result = (Bit##size##s)(lf_result); \
+  BX_CPU_THIS_PTR oszapc.instr = (ins); \
   BX_CPU_THIS_PTR lf_flags_status = EFlagsOSZAPMask; \
 }
 
 #define SET_FLAGS_OSZAP_RESULT_8(result, ins) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_8, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(8, result, ins)
 #define SET_FLAGS_OSZAP_RESULT_16(result, ins) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_16, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(16, result, ins)
 #define SET_FLAGS_OSZAP_RESULT_32(result, ins) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_32, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(32, result, ins)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAP_RESULT_64(result, ins) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_64, result, ins)
+  SET_FLAGS_OSZAP_RESULT_SIZE(64, result, ins)
 #endif
 
 // transition to new lazy flags code
@@ -3653,14 +3634,14 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 #endif
 
 #define SET_FLAGS_OSZAPC_ADD_8(op1_8, op2_8, sum_8) \
-  SET_FLAGS_OSZAPC_S1_8((op1_8), (sum_8), BX_INSTR_ADD8)
+  SET_FLAGS_OSZAPC_8((op1_8), (op2_8), (sum_8), BX_INSTR_ADD8)
 #define SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16) \
-  SET_FLAGS_OSZAPC_S1_16((op1_16), (sum_16), BX_INSTR_ADD16)
+  SET_FLAGS_OSZAPC_16((op1_16), (op2_16), (sum_16), BX_INSTR_ADD16)
 #define SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32) \
-  SET_FLAGS_OSZAPC_S1_32((op1_32), (sum_32), BX_INSTR_ADD32)
+  SET_FLAGS_OSZAPC_32((op1_32), (op2_32), (sum_32), BX_INSTR_ADD32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64) \
-  SET_FLAGS_OSZAPC_S1_64((op1_64), (sum_64), BX_INSTR_ADD64)
+  SET_FLAGS_OSZAPC_64((op1_64), (op2_64), (sum_64), BX_INSTR_ADD64)
 #endif
 
 #define SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8) \
@@ -3675,25 +3656,25 @@ BX_CPP_INLINE void BX_CPU_C::set_PF_base(Bit8u val)
 #endif
 
 #define SET_FLAGS_OSZAPC_INC_8(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_8, (result), BX_INSTR_INC8)
+  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_INSTR_INC8)
 #define SET_FLAGS_OSZAPC_INC_16(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_16, (result), BX_INSTR_INC16)
+  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_INSTR_INC16)
 #define SET_FLAGS_OSZAPC_INC_32(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_32, (result), BX_INSTR_INC32)
+  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_INSTR_INC32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_INC_64(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_64, (result), BX_INSTR_INC64)
+  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_INSTR_INC64)
 #endif
 
 #define SET_FLAGS_OSZAPC_DEC_8(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_8, (result), BX_INSTR_DEC8)
+  SET_FLAGS_OSZAP_RESULT_SIZE(8, (result), BX_INSTR_DEC8)
 #define SET_FLAGS_OSZAPC_DEC_16(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_16, (result), BX_INSTR_DEC16)
+  SET_FLAGS_OSZAP_RESULT_SIZE(16, (result), BX_INSTR_DEC16)
 #define SET_FLAGS_OSZAPC_DEC_32(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_32, (result), BX_INSTR_DEC32)
+  SET_FLAGS_OSZAP_RESULT_SIZE(32, (result), BX_INSTR_DEC32)
 #if BX_SUPPORT_X86_64
 #define SET_FLAGS_OSZAPC_DEC_64(result) \
-  SET_FLAGS_OSZAP_RESULT_SIZE(_64, (result), BX_INSTR_DEC64)
+  SET_FLAGS_OSZAP_RESULT_SIZE(64, (result), BX_INSTR_DEC64)
 #endif
 
 IMPLEMENT_EFLAG_ACCESSOR   (ID,  21)
@@ -3712,15 +3693,15 @@ IMPLEMENT_EFLAG_ACCESSOR   (DF,  10)
 IMPLEMENT_EFLAG_ACCESSOR   (IF,   9)
 IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 
-
-// <TAG-DEFINES-DECODE-START>
-//
-// For decoding...
-//
-
 #define BX_TASK_FROM_JUMP         10
 #define BX_TASK_FROM_CALL_OR_INT  11
 #define BX_TASK_FROM_IRET         12
+
+// <TAG-DEFINES-DECODE-START>
+
+//
+// For decoding...
+//
 
 // If the Immediate bit is set, the lowest 3 bits of the attribute
 // specify which kinds of immediate data a required by instruction.
@@ -3770,6 +3751,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxGroup14         BxGroupN
 #define BxGroup15         BxGroupN
 #define BxGroup16         BxGroupN
+
 // <TAG-DEFINES-DECODE-END>
 
 // Can be used as LHS or RHS.

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.26 2007-12-04 19:27:23 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.27 2007-12-05 06:17:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -111,30 +111,26 @@
 
 #if BX_SUPPORT_X86_64
   #define BX_LF_SIGN_BIT  63
-  #define BX_LF_SIGN_MASK BX_CONST64(0x8000000000000000)
 #else
   #define BX_LF_SIGN_BIT  31
-  #define BX_LF_SIGN_MASK 0x80000000
 #endif
 
 typedef struct {
   Bit8u op1_8;
   Bit8u op2_8;
-  Bit8u result_8;
 
   Bit16u op1_16;
   Bit16u op2_16;
-  Bit16u result_16;
 
   Bit32u op1_32;
   Bit32u op2_32;
-  Bit32u result_32;
 
 #if BX_SUPPORT_X86_64
   Bit64u op1_64;
   Bit64u op2_64;
-  Bit64u result_64;
 #endif
+
+  bx_address result;
 
   unsigned instr;
 } bx_lf_flags_entry;
