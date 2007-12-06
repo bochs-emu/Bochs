@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.191 2007-12-01 19:26:46 vruppert Exp $
+// $Id: rombios.c,v 1.192 2007-12-06 16:56:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -430,7 +430,7 @@ typedef unsigned long  Bit32u;
       mov  ds, ax
       mov  bx, 6[bp] ; offset
       mov  ax, [bx]
-      add  bx, 2
+      add  bx, #2
       mov  dx, [bx]
       ;; ax = return value (word)
       ;; dx = return value (word)
@@ -459,7 +459,7 @@ typedef unsigned long  Bit32u;
       mov  bx, 6[bp] ; offset
       mov  ax, 8[bp] ; data word
       mov  [bx], ax  ; write data word
-      add  bx, 2
+      add  bx, #2
       mov  ax, 10[bp] ; data word
       mov  [bx], ax  ; write data word
       pop  ds
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.191 $ $Date: 2007-12-01 19:26:46 $";
+static char bios_cvs_version_string[] = "$Revision: 1.192 $ $Date: 2007-12-06 16:56:32 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9628,7 +9628,7 @@ pcibios_init_irqs:
   mov  dx, #0x0cfc
   mov  ax, #0x8080
   out  dx, ax ;; reset PIRQ route control
-  add  dx, 2
+  add  dx, #2
   out  dx, ax
   mov  ax, [si+6]
   sub  ax, #0x20
@@ -10114,9 +10114,9 @@ normal_post:
 
 post_default_ints:
   mov  [bx], ax
-  add  bx, 2
+  add  bx, #2
   mov  [bx], dx
-  add  bx, 2
+  add  bx, #2
   loop post_default_ints
 
   ;; set vector 0x79 to zero
