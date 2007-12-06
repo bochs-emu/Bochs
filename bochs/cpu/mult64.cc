@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.20 2007-11-29 21:45:10 sshwarts Exp $
+// $Id: mult64.cc,v 1.21 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -233,7 +233,11 @@ void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
   RDX = product_128.hi;
 
   /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_MUL64);
+  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
+  if(product_128.hi != 0)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
@@ -266,7 +270,13 @@ void BX_CPU_C::IMUL_RAXEq(bxInstruction_c *i)
    * IMUL r/m64: condition for clearing CF & OF:
    *   RDX:RAX = sign-extend of RAX
    */
-  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
+
+  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
+  if ((product_128.lo >= 0 && product_128.hi == 0) ||
+      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::DIV_RAXEq(bxInstruction_c *i)
@@ -380,11 +390,12 @@ void BX_CPU_C::IMUL_GqEqId(bxInstruction_c *i)
   /* now write product back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
-  /* set eflags:
-   * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
-   *   result exactly fits within r64
-   */
-  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
+  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
+  if ((product_128.lo >= 0 && product_128.hi == 0) ||
+      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
@@ -408,11 +419,12 @@ void BX_CPU_C::IMUL_GqEq(bxInstruction_c *i)
   /* now write product back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), product_128.lo);
 
-  /* set eflags:
-   * IMUL r64,r/m64,imm64: condition for clearing CF & OF:
-   *   result exactly fits within r64
-   */
-  SET_FLAGS_OSZAPC_S2_64(product_128.hi, product_128.lo, BX_INSTR_IMUL64);
+  SET_FLAGS_OSZAPC_LOGIC_64(product_128.lo);
+  if ((product_128.lo >= 0 && product_128.hi == 0) ||
+      (product_128.lo <  0 && product_128.hi == (Bit64s) BX_CONST64(0xffffffffffffffff)))
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

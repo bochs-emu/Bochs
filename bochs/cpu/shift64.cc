@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.24 2007-11-20 23:00:44 sshwarts Exp $
+// $Id: shift64.cc,v 1.25 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,7 +409,9 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SAR64);
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle undefined SF, ZF and AF flags */
+  set_CF((op1_64 >> (count - 1)) & 1);
+  clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

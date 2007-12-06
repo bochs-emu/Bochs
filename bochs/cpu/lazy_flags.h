@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.27 2007-12-05 06:17:09 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.28 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,21 +93,6 @@
 #define BX_INSTR_SHR16          42
 #define BX_INSTR_SHR32          43
 #define BX_INSTR_SHR64          44
-
-#define BX_INSTR_SAR8           45
-#define BX_INSTR_SAR16          46
-#define BX_INSTR_SAR32          47
-#define BX_INSTR_SAR64          48
-
-#define BX_INSTR_MUL8           49
-#define BX_INSTR_MUL16          50
-#define BX_INSTR_MUL32          51
-#define BX_INSTR_MUL64          52
-
-#define BX_INSTR_IMUL8          53
-#define BX_INSTR_IMUL16         54
-#define BX_INSTR_IMUL32         55
-#define BX_INSTR_IMUL64         56
 
 #if BX_SUPPORT_X86_64
   #define BX_LF_SIGN_BIT  63

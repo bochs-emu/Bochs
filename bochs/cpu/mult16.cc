@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.23 2007-11-29 21:45:10 sshwarts Exp $
+// $Id: mult16.cc,v 1.24 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,13 +50,16 @@ void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
   Bit32u product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
   Bit16u product_16l = (product_32 & 0xFFFF);
   Bit16u product_16h =  product_32 >> 16;
-
-  /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_MUL16);
-
   /* now write product back to destination */
   AX = product_16l;
   DX = product_16h;
+
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_LOGIC_16(product_16l);
+  if(product_16h != 0)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
@@ -86,7 +89,11 @@ void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
    * IMUL r/m16: condition for clearing CF & OF:
    *   DX:AX = sign-extend of AX
    */
-  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_LOGIC_16(product_16l);
+  if(product_32 != (Bit16s)product_32)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
@@ -187,17 +194,20 @@ void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
   }
 
   Bit32s product_32  = op2_16 * op3_16;
-  Bit16u product_16l = (product_32 & 0xFFFF);
-  Bit16u product_16h = (product_32 >> 16);
+  Bit16u product_16 = (product_32 & 0xFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_16BIT_REG(i->nnn(), product_16l);
+  BX_WRITE_16BIT_REG(i->nnn(), product_16);
 
   /* set eflags:
    * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
    *   result exactly fits within r16
    */
-  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_LOGIC_16(product_16);
+  if(product_32 != (Bit16s) product_32)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
@@ -216,15 +226,18 @@ void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
   op1_16 = BX_READ_16BIT_REG(i->nnn());
 
   Bit32s product_32  = op1_16 * op2_16;
-  Bit16u product_16l = (product_32 & 0xFFFF);
-  Bit16u product_16h = (product_32 >> 16);
+  Bit16u product_16 = (product_32 & 0xFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_16BIT_REG(i->nnn(), product_16l);
+  BX_WRITE_16BIT_REG(i->nnn(), product_16);
 
   /* set eflags:
-   * IMUL r16,r/m16,imm16: condition for clearing CF & OF:
+   * IMUL r16,r/m16: condition for clearing CF & OF:
    *   result exactly fits within r16
    */
-  SET_FLAGS_OSZAPC_S2_16(product_16h, product_16l, BX_INSTR_IMUL16);
+  SET_FLAGS_OSZAPC_LOGIC_16(product_16);
+  if(product_32 != (Bit16s) product_32)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.383 2007-12-05 06:27:01 sshwarts Exp $
+// $Id: cpu.h,v 1.384 2007-12-06 16:57:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3767,6 +3767,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define ASSERT_FLAGS_OxxxxC() {                                         \
   BX_CPU_THIS_PTR eflags.val32 |= (EFlagsOFMask | EFlagsCFMask);        \
   BX_CPU_THIS_PTR lf_flags_status &= ~(EFlagsOFMask | EFlagsCFMask);    \
+}
+
+#define SET_FLAGS_OxxxxC(new_of, new_cf) {                              \
+  BX_CPU_THIS_PTR eflags.val32 &= ~((EFlagsOFMask | EFlagsCFMask));     \
+  BX_CPU_THIS_PTR eflags.val32 |= ((new_of)<<11) | (new_cf);            \
+  BX_CPU_THIS_PTR lf_flags_status &= ~((EFlagsOFMask | EFlagsCFMask));  \
 }
 
 #endif  // #ifndef BX_CPU_H

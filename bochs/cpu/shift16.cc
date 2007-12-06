@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.35 2007-11-20 23:00:44 sshwarts Exp $
+// $Id: shift16.cc,v 1.36 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -444,6 +444,9 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
     else {
       result_16 = (op1_16 >> count);
     }
+
+    SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle undefined SF, ZF and AF flags */
+    set_CF((op1_16 >> (count - 1)) & 0x1);
   }
   else {
     if (op1_16 & 0x8000) {
@@ -452,7 +455,12 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
     else {
       result_16 = 0;
     }
+
+    SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle undefined SF, ZF and AF flags */
+    set_CF(result_16 & 0x1);
   }
+
+  clear_OF();  /* signed overflow cannot happen in SAR instruction */
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -461,6 +469,4 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
   else {
     write_RMW_virtual_word(result_16);
   }
-
-  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SAR16);
 }

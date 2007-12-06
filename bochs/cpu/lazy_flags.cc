@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.40 2007-12-05 06:17:09 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.41 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,41 +158,21 @@ bx_bool BX_CPU_C::get_CFLazy(void)
 #endif
       cf = 0;
       break;
-    case BX_INSTR_SAR8:
-      if (BX_CPU_THIS_PTR oszapc.op2_8 < 8) {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_8 >>
-                (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) & 0x01;
-      }
-      else {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_8 & 0x80) > 0;
-      }
-      break;
     case BX_INSTR_SHR8:
       cf = (BX_CPU_THIS_PTR oszapc.op1_8 >>
                 (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) & 0x01;
-      break;
-    case BX_INSTR_SAR16:
-      if (BX_CPU_THIS_PTR oszapc.op2_16 < 16) {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_16 >>
-                (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) & 0x01;
-      }
-      else {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_16 & 0x8000) > 0;
-      }
       break;
     case BX_INSTR_SHR16:
     case BX_INSTR_SHRD16:
       cf = (BX_CPU_THIS_PTR oszapc.op1_16 >>
                 (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) & 0x01;
       break;
-    case BX_INSTR_SAR32:
     case BX_INSTR_SHR32:
     case BX_INSTR_SHRD32:
       cf = (BX_CPU_THIS_PTR oszapc.op1_32 >>
                 (BX_CPU_THIS_PTR oszapc.op2_32 - 1)) & 0x01;
       break;
 #if BX_SUPPORT_X86_64
-    case BX_INSTR_SAR64:
     case BX_INSTR_SHR64:
     case BX_INSTR_SHRD64:
       cf = (BX_CPU_THIS_PTR oszapc.op1_64 >>
@@ -225,46 +205,6 @@ bx_bool BX_CPU_C::get_CFLazy(void)
     case BX_INSTR_SHL64:
        cf = (BX_CPU_THIS_PTR oszapc.op1_64 >>
                 (64 - BX_CPU_THIS_PTR oszapc.op2_64)) & 0x01;
-      break;
-#endif
-    case BX_INSTR_IMUL8:
-      cf = ! ((result_8 < 0x80 &&
-               BX_CPU_THIS_PTR oszapc.op2_8 == 0) ||
-             ((result_8 & 0x80) && 
-               BX_CPU_THIS_PTR oszapc.op2_8 == 0xff));
-      break;
-    case BX_INSTR_IMUL16:
-      cf = ! ((result_16 < 0x8000 &&
-               BX_CPU_THIS_PTR oszapc.op2_16 == 0) ||
-             ((result_16 & 0x8000) && 
-               BX_CPU_THIS_PTR oszapc.op2_16 == 0xffff));
-      break;
-    case BX_INSTR_IMUL32:
-      cf = ! ((result_32 < 0x80000000 &&
-               BX_CPU_THIS_PTR oszapc.op2_32 == 0) ||
-             ((result_32 & 0x80000000) && 
-               BX_CPU_THIS_PTR oszapc.op2_32 == 0xffffffff));
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_IMUL64:
-      cf = ! ((result_64 < BX_CONST64(0x8000000000000000) &&
-               BX_CPU_THIS_PTR oszapc.op2_64 == 0) ||
-             ((result_64 & BX_CONST64(0x8000000000000000)) && 
-               BX_CPU_THIS_PTR oszapc.op2_64 == BX_CONST64(0xffffffffffffffff)));
-      break;
-#endif
-    case BX_INSTR_MUL8:
-      cf = (BX_CPU_THIS_PTR oszapc.op2_8 != 0);
-      break;
-    case BX_INSTR_MUL16:
-      cf = (BX_CPU_THIS_PTR oszapc.op2_16 != 0);
-      break;
-    case BX_INSTR_MUL32:
-      cf = (BX_CPU_THIS_PTR oszapc.op2_32 != 0);
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_MUL64:
-      cf = (BX_CPU_THIS_PTR oszapc.op2_64 != 0);
       break;
 #endif
     default:
@@ -340,16 +280,10 @@ bx_bool BX_CPU_C::get_AFLazy(void)
     case BX_INSTR_LOGIC32:
 #if BX_SUPPORT_X86_64
     case BX_INSTR_LOGIC64:
-    case BX_INSTR_SAR64:
     case BX_INSTR_SHR64:
     case BX_INSTR_SHRD64:
     case BX_INSTR_SHL64:
-    case BX_INSTR_IMUL64:
-    case BX_INSTR_MUL64:
 #endif
-    case BX_INSTR_SAR8:
-    case BX_INSTR_SAR16:
-    case BX_INSTR_SAR32:
     case BX_INSTR_SHR8:
     case BX_INSTR_SHR16:
     case BX_INSTR_SHR32:
@@ -358,12 +292,6 @@ bx_bool BX_CPU_C::get_AFLazy(void)
     case BX_INSTR_SHL8:
     case BX_INSTR_SHL16:
     case BX_INSTR_SHL32:
-    case BX_INSTR_IMUL8:
-    case BX_INSTR_IMUL16:
-    case BX_INSTR_IMUL32:
-    case BX_INSTR_MUL8:
-    case BX_INSTR_MUL16:
-    case BX_INSTR_MUL32:
       af = 0;
       break;
     default:
@@ -450,12 +378,8 @@ bx_bool BX_CPU_C::get_OFLazy(void)
     case BX_INSTR_LOGIC8:
     case BX_INSTR_LOGIC16:
     case BX_INSTR_LOGIC32:
-    case BX_INSTR_SAR8:
-    case BX_INSTR_SAR16:
-    case BX_INSTR_SAR32:
 #if BX_SUPPORT_X86_64
     case BX_INSTR_LOGIC64:
-    case BX_INSTR_SAR64:
 #endif
       of = 0;
       break;
@@ -527,46 +451,6 @@ bx_bool BX_CPU_C::get_OFLazy(void)
       else
         of = (((BX_CPU_THIS_PTR oszapc.op1_64 <<
                (BX_CPU_THIS_PTR oszapc.op2_64 - 1)) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0;
-      break;
-#endif
-    case BX_INSTR_IMUL8:
-      of = ! ((result_8 < 0x80 &&
-               BX_CPU_THIS_PTR oszapc.op2_8 == 0) ||
-             ((result_8 & 0x80) && 
-               BX_CPU_THIS_PTR oszapc.op2_8 == 0xff));
-      break;
-    case BX_INSTR_IMUL16:
-      of = ! ((result_16 < 0x8000 &&
-               BX_CPU_THIS_PTR oszapc.op2_16 == 0) ||
-             ((result_16 & 0x8000) && 
-               BX_CPU_THIS_PTR oszapc.op2_16 == 0xffff));
-      break;
-    case BX_INSTR_IMUL32:
-      of = ! ((result_32 < 0x80000000 &&
-               BX_CPU_THIS_PTR oszapc.op2_32 == 0) ||
-             ((result_32 & 0x80000000) && 
-               BX_CPU_THIS_PTR oszapc.op2_32 == 0xffffffff));
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_IMUL64:
-      of = ! ((result_64 < BX_CONST64(0x8000000000000000) &&
-               BX_CPU_THIS_PTR oszapc.op2_64 == 0) ||
-             ((result_64 & BX_CONST64(0x8000000000000000)) && 
-               BX_CPU_THIS_PTR oszapc.op2_64 == BX_CONST64(0xffffffffffffffff)));
-      break;
-#endif
-    case BX_INSTR_MUL8:
-      of = (BX_CPU_THIS_PTR oszapc.op2_8 != 0);
-      break;
-    case BX_INSTR_MUL16:
-      of = (BX_CPU_THIS_PTR oszapc.op2_16 != 0);
-      break;
-    case BX_INSTR_MUL32:
-      of = (BX_CPU_THIS_PTR oszapc.op2_32 != 0);
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_MUL64:
-      of = (BX_CPU_THIS_PTR oszapc.op2_64 != 0);
       break;
 #endif
     case BX_INSTR_NEG8:

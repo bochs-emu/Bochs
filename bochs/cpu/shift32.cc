@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.35 2007-11-20 23:00:44 sshwarts Exp $
+// $Id: shift32.cc,v 1.36 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -406,5 +406,7 @@ void BX_CPU_C::SAR_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SAR32);
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle undefined SF, ZF and AF flags */
+  set_CF((op1_32 >> (count - 1)) & 1);
+  clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }

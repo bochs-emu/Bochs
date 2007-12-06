@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult8.cc,v 1.23 2007-11-29 21:45:10 sshwarts Exp $
+// $Id: mult8.cc,v 1.24 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -52,11 +52,15 @@ void BX_CPU_C::MUL_ALEb(bxInstruction_c *i)
   Bit8u product_8l = (product_16 & 0xFF);
   Bit8u product_8h =  product_16 >> 8;
 
-  /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S2_8(product_8h, product_8l, BX_INSTR_MUL8);
-
   /* now write product back to destination */
   AX = product_16;
+
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_LOGIC_8(product_8l);
+  if(product_8h != 0)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
@@ -75,9 +79,7 @@ void BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
   }
 
   Bit16s product_16 = op1 * op2;
-
-  Bit8u product_8l = (product_16 & 0xFF);
-  Bit8u product_8h =  product_16 >> 8;
+  Bit8u  product_8 = (product_16 & 0xFF);
 
   /* now write product back to destination */
   AX = product_16;
@@ -86,7 +88,12 @@ void BX_CPU_C::IMUL_ALEb(bxInstruction_c *i)
    * IMUL r/m8: condition for clearing CF & OF:
    *   AX = sign-extend of AL to 16 bits
    */
-  SET_FLAGS_OSZAPC_S2_8(product_8h, product_8l, BX_INSTR_IMUL8);
+
+  SET_FLAGS_OSZAPC_LOGIC_8(product_8);
+  if(product_16 != (Bit8s) product_16)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::DIV_ALEb(bxInstruction_c *i)

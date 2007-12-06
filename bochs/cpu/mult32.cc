@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.22 2007-11-29 21:45:10 sshwarts Exp $
+// $Id: mult32.cc,v 1.23 2007-12-06 16:57:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,12 +58,16 @@ void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
   product_32l = (Bit32u) (product_64 & 0xFFFFFFFF);
   product_32h = (Bit32u) (product_64 >> 32);
 
-  /* set EFLAGS */
-  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_MUL32);
-
   /* now write product back to destination */
   RAX = product_32l;
   RDX = product_32h;
+
+  /* set EFLAGS */
+  SET_FLAGS_OSZAPC_LOGIC_32(product_32l);
+  if(product_32h != 0)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
@@ -93,7 +97,11 @@ void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
    * IMUL r/m32: condition for clearing CF & OF:
    *   EDX:EAX = sign-extend of EAX
    */
-  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_LOGIC_32(product_32l);
+  if(product_64 != (Bit32s)product_64)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
@@ -191,17 +199,20 @@ void BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
   }
 
   Bit64s product_64  = ((Bit64s) op2_32) * ((Bit64s) op3_32);
-  Bit32u product_32l = (product_64 & 0xFFFFFFFF);
-  Bit32u product_32h = (product_64 >> 32);
+  Bit32u product_32 = (product_64 & 0xFFFFFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), product_32l);
+  BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
 
   /* set eflags:
    * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
    *   result exactly fits within r32
    */
-  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_LOGIC_32(product_32);
+  if(product_64 != (Bit32s) product_64)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
 
 void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
@@ -220,15 +231,18 @@ void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
   op1_32 = BX_READ_32BIT_REG(i->nnn());
 
   Bit64s product_64 = ((Bit64s) op1_32) * ((Bit64s) op2_32);
-  Bit32u product_32l = (product_64 & 0xFFFFFFFF);
-  Bit32u product_32h = (product_64 >> 32);
+  Bit32u product_32 = (product_64 & 0xFFFFFFFF);
 
   /* now write product back to destination */
-  BX_WRITE_32BIT_REGZ(i->nnn(), product_32l);
+  BX_WRITE_32BIT_REGZ(i->nnn(), product_32);
 
   /* set eflags:
-   * IMUL r32,r/m32,imm32: condition for clearing CF & OF:
+   * IMUL r32,r/m32: condition for clearing CF & OF:
    *   result exactly fits within r32
    */
-  SET_FLAGS_OSZAPC_S2_32(product_32h, product_32l, BX_INSTR_IMUL32);
+  SET_FLAGS_OSZAPC_LOGIC_32(product_32);
+  if(product_64 != (Bit32s) product_64)
+  {
+    ASSERT_FLAGS_OxxxxC();
+  }
 }
