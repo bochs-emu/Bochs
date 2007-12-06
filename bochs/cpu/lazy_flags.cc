@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.41 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.42 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -158,55 +158,6 @@ bx_bool BX_CPU_C::get_CFLazy(void)
 #endif
       cf = 0;
       break;
-    case BX_INSTR_SHR8:
-      cf = (BX_CPU_THIS_PTR oszapc.op1_8 >>
-                (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) & 0x01;
-      break;
-    case BX_INSTR_SHR16:
-    case BX_INSTR_SHRD16:
-      cf = (BX_CPU_THIS_PTR oszapc.op1_16 >>
-                (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) & 0x01;
-      break;
-    case BX_INSTR_SHR32:
-    case BX_INSTR_SHRD32:
-      cf = (BX_CPU_THIS_PTR oszapc.op1_32 >>
-                (BX_CPU_THIS_PTR oszapc.op2_32 - 1)) & 0x01;
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_SHR64:
-    case BX_INSTR_SHRD64:
-      cf = (BX_CPU_THIS_PTR oszapc.op1_64 >>
-                (BX_CPU_THIS_PTR oszapc.op2_64 - 1)) & 0x01;
-      break;
-#endif
-    case BX_INSTR_SHL8:
-      if (BX_CPU_THIS_PTR oszapc.op2_8 <= 8) {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_8 >>
-                (8 - BX_CPU_THIS_PTR oszapc.op2_8)) & 0x01;
-      }
-      else {
-        cf = 0;
-      }
-      break;
-    case BX_INSTR_SHL16:
-      if (BX_CPU_THIS_PTR oszapc.op2_16 <= 16) {
-        cf = (BX_CPU_THIS_PTR oszapc.op1_16 >>
-                (16 - BX_CPU_THIS_PTR oszapc.op2_16)) & 0x01;
-      }
-      else {
-        cf = 0;
-      }
-      break;
-    case BX_INSTR_SHL32:
-      cf = (BX_CPU_THIS_PTR oszapc.op1_32 >>
-                (32 - BX_CPU_THIS_PTR oszapc.op2_32)) & 0x01;
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_SHL64:
-       cf = (BX_CPU_THIS_PTR oszapc.op1_64 >>
-                (64 - BX_CPU_THIS_PTR oszapc.op2_64)) & 0x01;
-      break;
-#endif
     default:
       cf = 0; // Keep compiler quiet.
       BX_PANIC(("get_CF: OSZAPC: unknown instr %u",
@@ -280,18 +231,7 @@ bx_bool BX_CPU_C::get_AFLazy(void)
     case BX_INSTR_LOGIC32:
 #if BX_SUPPORT_X86_64
     case BX_INSTR_LOGIC64:
-    case BX_INSTR_SHR64:
-    case BX_INSTR_SHRD64:
-    case BX_INSTR_SHL64:
 #endif
-    case BX_INSTR_SHR8:
-    case BX_INSTR_SHR16:
-    case BX_INSTR_SHR32:
-    case BX_INSTR_SHRD16:
-    case BX_INSTR_SHRD32:
-    case BX_INSTR_SHL8:
-    case BX_INSTR_SHL16:
-    case BX_INSTR_SHL32:
       af = 0;
       break;
     default:
@@ -383,76 +323,6 @@ bx_bool BX_CPU_C::get_OFLazy(void)
 #endif
       of = 0;
       break;
-    case BX_INSTR_SHR8:
-      if (BX_CPU_THIS_PTR oszapc.op2_8 == 1)
-        of = (BX_CPU_THIS_PTR oszapc.op1_8 >= 0x80);
-      else
-        of = 0; /* undocumented, but hardware really does it */
-      break;
-    case BX_INSTR_SHR16:
-      if (BX_CPU_THIS_PTR oszapc.op2_16 == 1)
-        of = (BX_CPU_THIS_PTR oszapc.op1_16 >= 0x8000);
-      else
-        of = 0; /* undocumented, but hardware really does it */
-      break;
-    case BX_INSTR_SHR32:
-      if (BX_CPU_THIS_PTR oszapc.op2_32 == 1)
-        of = (BX_CPU_THIS_PTR oszapc.op1_32 >= 0x80000000);
-      else
-        of = 0; /* undocumented, but hardware really does it */
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_SHR64:
-      if (BX_CPU_THIS_PTR oszapc.op2_64 == 1)
-        of = (BX_CPU_THIS_PTR oszapc.op1_64 >= BX_CONST64(0x8000000000000000));
-      else
-        of = 0; /* undocumented, but hardware really does it */
-      break;
-#endif
-    case BX_INSTR_SHRD16:
-      /* undocumented, but this formula works right for any shift count */
-      of = (((result_16 << 1) ^ result_16) & 0x8000) > 0;
-      break;
-    case BX_INSTR_SHRD32:
-      /* undocumented, but this formula works right for any shift count */
-      of = (((result_32 << 1) ^ result_32) & 0x80000000) > 0;
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_SHRD64:
-       /* undocumented, but this formula works right for any shift count */
-      of = (((result_64 << 1) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0;
-      break;
-#endif
-    case BX_INSTR_SHL8:
-      if (BX_CPU_THIS_PTR oszapc.op2_8 == 1)
-        of = ((BX_CPU_THIS_PTR oszapc.op1_8 ^ result_8) & 0x80) > 0;
-      else
-        of = (((BX_CPU_THIS_PTR oszapc.op1_8 <<
-               (BX_CPU_THIS_PTR oszapc.op2_8 - 1)) ^ result_8) & 0x80) > 0;
-      break;
-    case BX_INSTR_SHL16:
-      if (BX_CPU_THIS_PTR oszapc.op2_16 == 1)
-        of = ((BX_CPU_THIS_PTR oszapc.op1_16 ^ result_16) & 0x8000) > 0;
-      else
-        of = (((BX_CPU_THIS_PTR oszapc.op1_16 <<
-               (BX_CPU_THIS_PTR oszapc.op2_16 - 1)) ^ result_16) & 0x8000) > 0;
-      break;
-    case BX_INSTR_SHL32:
-      if (BX_CPU_THIS_PTR oszapc.op2_32 == 1)
-        of = ((BX_CPU_THIS_PTR oszapc.op1_32 ^ result_32) & 0x80000000) > 0;
-      else
-        of = (((BX_CPU_THIS_PTR oszapc.op1_32 <<
-               (BX_CPU_THIS_PTR oszapc.op2_32 - 1)) ^ result_32) & 0x80000000) > 0;
-      break;
-#if BX_SUPPORT_X86_64
-    case BX_INSTR_SHL64:
-      if (BX_CPU_THIS_PTR oszapc.op2_64 == 1)
-        of = ((BX_CPU_THIS_PTR oszapc.op1_64 ^ result_64) & BX_CONST64(0x8000000000000000)) > 0;
-      else
-        of = (((BX_CPU_THIS_PTR oszapc.op1_64 <<
-               (BX_CPU_THIS_PTR oszapc.op2_64 - 1)) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0;
-      break;
-#endif
     case BX_INSTR_NEG8:
     case BX_INSTR_INC8:
       of = (result_8 == 0x80);

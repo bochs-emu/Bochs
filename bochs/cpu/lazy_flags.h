@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.h,v 1.28 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: lazy_flags.h,v 1.29 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,21 +78,6 @@
 #define BX_INSTR_LOGIC16        30
 #define BX_INSTR_LOGIC32        31
 #define BX_INSTR_LOGIC64        32
-
-//      BX_INSTR_SHRD8          not exists, leave number for alignment
-#define BX_INSTR_SHRD16         34
-#define BX_INSTR_SHRD32         35
-#define BX_INSTR_SHRD64         36
-
-#define BX_INSTR_SHL8           37
-#define BX_INSTR_SHL16          38
-#define BX_INSTR_SHL32          39
-#define BX_INSTR_SHL64          40
-
-#define BX_INSTR_SHR8           41
-#define BX_INSTR_SHR16          42
-#define BX_INSTR_SHR32          43
-#define BX_INSTR_SHR64          44
 
 #if BX_SUPPORT_X86_64
   #define BX_LF_SIGN_BIT  63

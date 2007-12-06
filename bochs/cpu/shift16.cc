@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.37 2007-12-06 18:35:33 sshwarts Exp $
+// $Id: shift16.cc,v 1.38 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,6 +37,7 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
+  unsigned of, cf;
 
   /* op1:op2 << count.  result stored in op1 */
   if (i->b1() == 0x1a4)
@@ -56,13 +57,14 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
   }
 
   if (!count) return;
-  // count is 1..31
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
+  /* count < 32, since only lower 5 bits used */
   temp_32 = ((Bit32u)(op1_16) << 16) | (op2_16); // double formed by op1:op2
   result_32 = temp_32 << count;
-  // Hack to act like x86 SHLD when count > 16
+
+  // hack to act like x86 SHLD when count > 16
   if (count > 16) {
     // when count > 16 actually shifting op1:op2:op2 << count,
     // it is the same as shifting op2:op2 by count-16
@@ -79,10 +81,11 @@ void BX_CPU_C::SHLD_EwGw(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  /* set eflags:
-   * SHLD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHL16);
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+
+  cf = (temp_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_16 >> 15); // of = cf ^ result15
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
@@ -90,6 +93,7 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   Bit16u op1_16, op2_16, result_16;
   Bit32u temp_32, result_32;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0x1ac)
     count = i->Ib();
@@ -108,13 +112,14 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
   }
 
   if (!count) return;
-  // count is 1..31
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
 
-  // Hack to act like x86 SHLD when count > 16
+  /* count < 32, since only lower 5 bits used */
   temp_32 = (op2_16 << 16) | op1_16; // double formed by op2:op1
   result_32 = temp_32 >> count;
+
+  // hack to act like x86 SHRD when count > 16
   if (count > 16) {
     // when count > 16 actually shifting op2:op2:op1 >> count,
     // it is the same as shifting op2:op2 by count-16
@@ -131,10 +136,11 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  /* set eflags:
-   * SHRD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHRD16);
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+
+  cf = (op1_16 >> (count - 1)) & 0x1;
+  of = ((result_16 << 1) ^ result_16) >> 15; // of = result14 ^ result15
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
@@ -163,7 +169,7 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     if (count & 0x10) {
       bit0  = (op1_16 & 0x1);
       bit15 = (op1_16 >> 15);
-
+      // of = cf ^ result15
       SET_FLAGS_OxxxxC(bit0 ^ bit15, bit0);
     }
     return;
@@ -181,12 +187,9 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  /* set eflags:
-   * ROL count affects the following flags: C, O
-   */
   bit0  = (result_16 & 0x1);
   bit15 = (result_16 >> 15);
-
+  // of = cf ^ result15
   SET_FLAGS_OxxxxC(bit0 ^ bit15, bit0);
 }
 
@@ -212,11 +215,11 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-  if ( (count & 0x0f) == 0 ) {
-    if ( count & 0x10 ) {
+  if ((count & 0x0f) == 0) {
+    if (count & 0x10) {
       bit14 = (op1_16 >> 14) & 1;
       bit15 = (op1_16 >> 15) & 1;
-
+      // of = result14 ^ result15 
       SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
     }
     return;
@@ -234,12 +237,9 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
   
-  /* set eflags:
-   * ROR count affects the following flags: C, O
-   */
   bit14 = (result_16 >> 14) & 1;
   bit15 = (result_16 >> 15) & 1;
-
+  // of = result14 ^ result15 
   SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
 }
 
@@ -247,10 +247,11 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned of, cf;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -287,19 +288,16 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  /* set eflags:
-   * RCL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (op1_16 >> (16 - count)) & 0x01;
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_16 >> 15));
+  cf = (op1_16 >> (16 - count)) & 0x1;
+  of = cf ^ (result_16 >> 15); // of = cf ^ result15
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned of, cf;
 
   if (i->b1() == 0xc1)
     count = i->Ib();
@@ -332,18 +330,16 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  /* set eflags:
-   * RCR count affects the following flags: C, O
-   */
-
-  set_CF((op1_16 >> (count - 1)) & 0x01);
-  set_OF((((result_16 << 1) ^ result_16) & 0x8000) > 0);
+  cf = (op1_16 >> (count - 1)) & 0x1;
+  of = ((result_16 << 1) ^ result_16) >> 15; // of = result15 ^ result14
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned of = 0, cf = 0;
 
   if (i->b1() == 0xc1)
     count = i->Ib();
@@ -365,7 +361,14 @@ void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
 
   if (!count) return;
 
-  result_16 = (op1_16 << count);
+  if (count <= 16) {
+    result_16 = (op1_16 << count);
+    cf = (op1_16 >> (16 - count)) & 0x1;
+    of = cf ^ (result_16 >> 15); // of = cf ^ result15
+  }
+  else {
+    result_16 = 0;
+  }
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -375,13 +378,15 @@ void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
     write_RMW_virtual_word(result_16);
   }
 
-  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHL16);
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned of, cf;
 
   if (i->b1() == 0xc1)
     count = i->Ib();
@@ -404,7 +409,6 @@ void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   if (!count) return;
 
   result_16 = (op1_16 >> count);
-  SET_FLAGS_OSZAPC_16(op1_16, count, result_16, BX_INSTR_SHR16);
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -413,12 +417,20 @@ void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   else {
     write_RMW_virtual_word(result_16);
   }
+
+  cf = (op1_16 >> (count - 1)) & 0x1;
+  // note, that of == result15 if count == 1 and
+  //            of == 0        if count >= 2
+  of = ((result_16 << 1) ^ result_16) >> 15;
+
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
-  unsigned count;
+  unsigned count, cf;
 
   if (i->b1() == 0xc1)
     count = i->Ib();
@@ -448,8 +460,7 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
       result_16 = (op1_16 >> count);
     }
 
-    SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle undefined SF, ZF and AF flags */
-    set_CF((op1_16 >> (count - 1)) & 0x1);
+    cf = (op1_16 >> (count - 1)) & 0x1;
   }
   else {
     if (op1_16 & 0x8000) {
@@ -459,11 +470,12 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
       result_16 = 0;
     }
 
-    SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle undefined SF, ZF and AF flags */
-    set_CF(result_16 & 0x1);
+    cf = (result_16 & 0x1);
   }
 
-  clear_OF();  /* signed overflow cannot happen in SAR instruction */
+  SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
+  /* signed overflow cannot happen in SAR instruction */
+  SET_FLAGS_OxxxxC(0, cf); 
 
   /* now write result back to destination */
   if (i->modC0()) {

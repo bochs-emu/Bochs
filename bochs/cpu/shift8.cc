@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.30 2007-12-06 18:35:33 sshwarts Exp $
+// $Id: shift8.cc,v 1.31 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     return;
   }
 
-  count &= 0x07; // use only lowest 3 bits
+  count &= 0x7; // use only lowest 3 bits
 
   result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
 
@@ -116,7 +116,8 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     }
     return;
   }
-  count &= 0x07; /* use only bottom 3 bits */
+
+  count &= 0x7; /* use only bottom 3 bits */
 
   result_8 = (op1_8 >> count) | (op1_8 << (8 - count));
 
@@ -142,6 +143,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned of, cf;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -179,19 +181,16 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     write_RMW_virtual_byte(result_8);
   }
 
-  /* set eflags:
-   * RCL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (op1_8 >> (8 - count)) & 0x01;
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_8 >> 7));
+  cf = (op1_8 >> (8 - count)) & 0x01;
+  of = cf ^ (result_8 >> 7);  // of = cf ^ result7
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -224,18 +223,16 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
     write_RMW_virtual_byte(result_8);
   }
 
-  /* set eflags:
-   * RCR count affects the following flags: C, O
-   */
-
-  set_CF((op1_8 >> (count - 1)) & 0x01);
-  set_OF((((result_8 << 1) ^ result_8) & 0x80) > 0);
+  cf = (op1_8 >> (count - 1)) & 0x1;
+  of = ((result_8 << 1) ^ result_8) >> 7; // of = result6 ^ result7
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned of = 0, cf = 0;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -257,7 +254,14 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
 
   if (!count) return;
 
-  result_8 = (op1_8 << count);
+  if (count <= 8) {
+    result_8 = (op1_8 << count);
+    cf = (op1_8 >> (8 - count)) & 0x1;
+    of = cf ^ (result_8 >> 7);
+  }
+  else {
+    result_8 = 0;
+  }
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -267,14 +271,15 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
     write_RMW_virtual_byte(result_8);
   }
 
-  SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHL8);
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
-
 
 void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -306,13 +311,19 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
     write_RMW_virtual_byte(result_8);
   }
 
-  SET_FLAGS_OSZAPC_8(op1_8, count, result_8, BX_INSTR_SHR8);
+  cf = (op1_8 >> (count - 1)) & 0x1;
+  // note, that of == result7 if count == 1 and
+  //            of == 0       if count >= 2
+  of = ((result_8 << 1) ^ result_8) >> 7;
+
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
-  unsigned count;
+  unsigned count, cf;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -342,8 +353,7 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
       result_8 = (op1_8 >> count);
     }
 
-    SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle undefined SF, ZF and AF flags */
-    set_CF((op1_8 >> (count - 1)) & 0x1);
+    cf = (op1_8 >> (count - 1)) & 0x1;
   }
   else {
     if (op1_8 & 0x80) {
@@ -353,11 +363,12 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
       result_8 = 0;
     }
 
-    SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle undefined SF, ZF and AF flags */
-    set_CF(result_8 & 0x1);
+    cf = (result_8 & 0x1);
   }
 
-  clear_OF();  /* signed overflow cannot happen in SAR instruction */
+  SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
+  /* signed overflow cannot happen in SAR instruction */
+  SET_FLAGS_OxxxxC(0, cf); 
 
   /* now write result back to destination */
   if (i->modC0()) {

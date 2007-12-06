@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.26 2007-12-06 18:35:33 sshwarts Exp $
+// $Id: shift64.cc,v 1.27 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,8 +38,7 @@ void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
-
-  /* op1:op2 << count. result stored in op1 */
+  unsigned cf, of;
 
   if (i->b1() == 0x1a4)
     count = i->Ib();
@@ -71,16 +70,18 @@ void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * SHLD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHL64);
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+
+  cf = (op1_64 >> (64 - count)) & 0x1;
+  of = cf ^ (result_64 >> 63); // of = cf ^ result63
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, result_64;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0x1ac)
     count = i->Ib();
@@ -112,16 +113,18 @@ void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * SHRD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHRD64);
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+
+  cf = (op1_64 >> (count - 1)) & 0x1;
+  of = ((result_64 << 1) ^ result_64) >> 63; // of = result62 ^ result63
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
+  unsigned bit0, bit63;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -151,19 +154,17 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * ROL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (result_64 & 0x01);
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_64 >> 63));
+  bit0  = (result_64 & 0x1);
+  bit63 = (result_64 >> 63);
+  // of = cf ^ result63
+  SET_FLAGS_OxxxxC(bit0 ^ bit63, bit0);
 }
 
 void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
 {
-    Bit64u op1_64, result_64;
+  Bit64u op1_64, result_64;
   unsigned count;
+  unsigned bit62, bit63;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -193,20 +194,17 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * ROR count affects the following flags: C, O
-   */
-  bx_bool result_b63 = (result_64 & BX_CONST64(0x8000000000000000)) != 0;
-  bx_bool result_b62 = (result_64 & BX_CONST64(0x4000000000000000)) != 0;
-
-  set_CF(result_b63);
-  set_OF(result_b63 ^ result_b62);
+  bit63 = (result_64 >> 63) & 1;
+  bit62 = (result_64 >> 62) & 1;
+  // of = result62 ^ result63
+  SET_FLAGS_OxxxxC(bit62 ^ bit63, bit63);
 }
 
 void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -242,19 +240,16 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * RCL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (op1_64 >> (64 - count)) & 0x01;
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_64 >> 63));
+  cf = (op1_64 >> (64 - count)) & 0x1;
+  of = cf ^ (result_64 >> 63); // of = cf ^ result63
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
+  unsigned of, cf;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -290,18 +285,16 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  /* set eflags:
-   * RCR count affects the following flags: C, O
-   */
-
-  set_CF((op1_64 >> (count - 1)) & 0x01);
-  set_OF((((result_64 << 1) ^ result_64) & BX_CONST64(0x8000000000000000)) > 0);
+  cf = (op1_64 >> (count - 1)) & 0x1;
+  of = ((result_64 << 1) ^ result_64) >> 63;
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -321,7 +314,10 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
 
   if (!count) return;
 
+  /* count < 64, since only lower 6 bits used */
   result_64 = (op1_64 << count);
+  cf = (op1_64 >> (64 - count)) & 0x1;
+  of = cf ^ (result_64 >> 63);
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -331,13 +327,15 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHL64);
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
 {
   Bit64u op1_64, result_64;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x3f;
@@ -367,7 +365,13 @@ void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  SET_FLAGS_OSZAPC_64(op1_64, count, result_64, BX_INSTR_SHR64);
+  cf = (op1_64 >> (count - 1)) & 0x1;
+  // note, that of == result63 if count == 1 and
+  //            of == 0        if count >= 2
+  of = ((result_64 << 1) ^ result_64) >> 63;
+
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
@@ -393,7 +397,7 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
 
   if (!count) return;
 
-  /* count < 64, since only lower 5 bits used */
+  /* count < 64, since only lower 6 bits used */
   if (op1_64 & BX_CONST64(0x8000000000000000)) {
     result_64 = (op1_64 >> count) | (BX_CONST64(0xffffffffffffffff) << (64 - count));
   }               
@@ -409,7 +413,7 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
     write_RMW_virtual_qword(result_64);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle undefined SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_64(result_64); /* handle SF, ZF and AF flags */
   set_CF((op1_64 >> (count - 1)) & 1);
   clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }

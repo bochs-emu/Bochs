@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.36 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: shift32.cc,v 1.37 2007-12-06 20:39:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,8 +36,7 @@ void BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
-
-  /* op1:op2 << count.  result stored in op1 */
+  unsigned of, cf;
 
   if (i->b1() == 0x1a4)
     count = i->Ib();
@@ -69,16 +68,18 @@ void BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * SHLD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHL32);
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+
+  cf = (op1_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_32 >> 31); // of = cf ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, result_32;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0x1ac)
     count = i->Ib();
@@ -110,16 +111,18 @@ void BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * SHRD count affects the following flags: O,S,Z,A,P,C
-   */
-  SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHRD32);
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+
+  cf = (op1_32 >> (count - 1)) & 0x1;
+  of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::ROL_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned bit0, bit31;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -149,19 +152,17 @@ void BX_CPU_C::ROL_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * ROL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (result_32 & 0x01);
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_32 >> 31));
+  bit0  = (result_32 & 0x1);
+  bit31 = (result_32 >> 31);
+  // of = cf ^ result31
+  SET_FLAGS_OxxxxC(bit0 ^ bit31, bit0);
 }
 
 void BX_CPU_C::ROR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned bit31, bit30;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -191,20 +192,17 @@ void BX_CPU_C::ROR_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * ROR count affects the following flags: C, O
-   */
-  bx_bool result_b31 = (result_32 & 0x80000000) != 0;
-  bx_bool result_b30 = (result_32 & 0x40000000) != 0;
-
-  set_CF(result_b31);
-  set_OF(result_b31 ^ result_b30);
+  bit31 = (result_32 >> 31) & 1;
+  bit30 = (result_32 >> 30) & 1;
+  // of = result30 ^ result31
+  SET_FLAGS_OxxxxC(bit30 ^ bit31, bit31);
 }
 
 void BX_CPU_C::RCL_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -240,19 +238,16 @@ void BX_CPU_C::RCL_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * RCL count affects the following flags: C, O
-   */
-  bx_bool temp_CF = (op1_32 >> (32 - count)) & 0x01;
-
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_32 >> 31));
+  cf = (op1_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_32 >> 31); // of = cf ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::RCR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -288,18 +283,17 @@ void BX_CPU_C::RCR_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  /* set eflags:
-   * RCR count affects the following flags: C, O
-   */
+  cf = (op1_32 >> (count - 1)) & 0x1;
+  of = ((result_32 << 1) ^ result_32) >> 31; // of = result30 ^ result31
+  SET_FLAGS_OxxxxC(of, cf);
 
-  set_CF((op1_32 >> (count - 1)) & 0x01);
-  set_OF((((result_32 << 1) ^ result_32) & 0x80000000) > 0);
 }
 
 void BX_CPU_C::SHL_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned cf, of;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -319,7 +313,10 @@ void BX_CPU_C::SHL_Ed(bxInstruction_c *i)
 
   if (!count) return;
 
+  /* count < 32, since only lower 5 bits used */
   result_32 = (op1_32 << count);
+  cf = (op1_32 >> (32 - count)) & 0x1;
+  of = cf ^ (result_32 >> 31);
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -329,13 +326,15 @@ void BX_CPU_C::SHL_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHL32);
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SHR_Ed(bxInstruction_c *i)
 {
   Bit32u op1_32, result_32;
   unsigned count;
+  unsigned of, cf;
 
   if (i->b1() == 0xc1)
     count = i->Ib() & 0x1f;
@@ -356,7 +355,6 @@ void BX_CPU_C::SHR_Ed(bxInstruction_c *i)
   if (!count) return;
 
   result_32 = (op1_32 >> count);
-  SET_FLAGS_OSZAPC_32(op1_32, count, result_32, BX_INSTR_SHR32);
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -365,6 +363,14 @@ void BX_CPU_C::SHR_Ed(bxInstruction_c *i)
   else {
     write_RMW_virtual_dword(result_32);
   }
+
+  cf = (op1_32 >> (count - 1)) & 0x1;
+  // note, that of == result31 if count == 1 and
+  //            of == 0        if count >= 2
+  of = ((result_32 << 1) ^ result_32) >> 31;
+
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
+  SET_FLAGS_OxxxxC(of, cf);
 }
 
 void BX_CPU_C::SAR_Ed(bxInstruction_c *i)
@@ -406,7 +412,7 @@ void BX_CPU_C::SAR_Ed(bxInstruction_c *i)
     write_RMW_virtual_dword(result_32);
   }
 
-  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle undefined SF, ZF and AF flags */
+  SET_FLAGS_OSZAPC_LOGIC_32(result_32); /* handle SF, ZF and AF flags */
   set_CF((op1_32 >> (count - 1)) & 1);
   clear_OF();  /* signed overflow cannot happen in SAR instruction */
 }
