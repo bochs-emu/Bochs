@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.124 2007-11-20 18:36:26 sshwarts Exp $
+// $Id: config.cc,v 1.125 2007-12-06 22:21:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -3281,7 +3281,7 @@ int bx_write_clock_cmos_options(FILE *fp)
 
   if (strlen(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr()) > 0) {
     fprintf(fp, "cmosimage: file=%s, ", SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr());
-    fprintf(fp, "rtc_init=%s", SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->get()?"image":"time0");
+    fprintf(fp, "rtc_init=%s\n", SIM->get_param_bool(BXPN_CMOSIMAGE_RTC_INIT)->get()?"image":"time0");
   } else {
     fprintf(fp, "# no cmosimage\n");
   }
