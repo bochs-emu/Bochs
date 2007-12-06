@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.95 2007-12-03 20:49:24 sshwarts Exp $
+// $Id: paging.cc,v 1.96 2007-12-06 18:35:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -761,9 +761,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
       ppf = (pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000);
 
 #if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) {
-        combined_access |= (pde & TLB_GlobalPage);  // G
-      }
+      if (BX_CPU_THIS_PTR cr4.get_PGE())
+        combined_access |= (pde & TLB_GlobalPage); // G
 #endif
 
       priv_index =
@@ -827,9 +826,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
       ppf = pte & BX_CONST64(0x000ffffffffff000);
 
 #if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) {
-        combined_access |= (pte & TLB_GlobalPage);  // G
-      }
+      if (BX_CPU_THIS_PTR cr4.get_PGE())
+        combined_access |= (pte & TLB_GlobalPage); // G
 #endif
 
       priv_index =
@@ -889,9 +887,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
       ppf = (pde & 0xffc00000) | (laddr & 0x003ff000);
 
 #if BX_SUPPORT_GLOBAL_PAGES
-      if (BX_CPU_THIS_PTR cr4.get_PGE()) {
-        combined_access |= pde & TLB_GlobalPage;    // {G}
-      }
+      if (BX_CPU_THIS_PTR cr4.get_PGE())
+        combined_access |= pde & TLB_GlobalPage; // {G}
 #endif
 
       priv_index =
@@ -914,12 +911,6 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
     else // else normal 4K page...
 #endif
     {
-      // Update PDE A bit if needed.
-      if (!(pde & 0x20)) {
-        pde |= 0x20;
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
-      }
-
       // Get page table entry
       bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
 

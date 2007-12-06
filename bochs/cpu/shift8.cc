@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.29 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: shift8.cc,v 1.30 2007-12-06 18:35:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,6 +36,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned bit0, bit7;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -53,14 +54,15 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-  if ( (count & 0x07) == 0 ) {
-    if ( count & 0x18 ) {
-      unsigned bit0 = op1_8 & 1;
-      set_CF(bit0);
-      set_OF(bit0 ^ (op1_8 >> 7));
+  if ((count & 0x07) == 0) {
+    if (count & 0x18) {
+      bit0 = (op1_8 &  1);
+      bit7 = (op1_8 >> 7);
+      SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
     }
     return;
   }
+
   count &= 0x07; // use only lowest 3 bits
 
   result_8 = (op1_8 << count) | (op1_8 >> (8 - count));
@@ -76,16 +78,18 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   /* set eflags:
    * ROL count affects the following flags: C, O
    */
-  bx_bool temp_CF = (result_8 & 0x01);
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_8 >> 7));
+  bit0 = (result_8 &  1);
+  bit7 = (result_8 >> 7);
+
+  SET_FLAGS_OxxxxC(bit0 ^ bit7, bit0);
 }
 
 void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
 {
   Bit8u op1_8, result_8;
   unsigned count;
+  unsigned bit6, bit7;
 
   if (i->b1() == 0xc0)
     count = i->Ib();
@@ -103,12 +107,12 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
     read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
   }
 
-  if ( (count & 0x07) == 0 ) {
-    if ( count & 0x18 ) {
-      unsigned bit6 = (op1_8 >> 6) & 1;
-      unsigned bit7 = (op1_8 >> 7);
-      set_CF(bit7);
-      set_OF(bit7 ^ bit6);
+  if ((count & 0x07) == 0) {
+    if (count & 0x18) {
+      bit6 = (op1_8 >> 6) & 1;
+      bit7 = (op1_8 >> 7) & 1;
+
+      SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
     }
     return;
   }
@@ -127,11 +131,11 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   /* set eflags:
    * ROR count affects the following flags: C, O
    */
-  bx_bool result_b7 = (result_8 & 0x80) != 0;
-  bx_bool result_b6 = (result_8 & 0x40) != 0;
 
-  set_CF(result_b7);
-  set_OF(result_b7 ^ result_b6);
+  bit6 = (result_8 >> 6) & 1;
+  bit7 = (result_8 >> 7) & 1;
+
+  SET_FLAGS_OxxxxC(bit6 ^ bit7, bit7);
 }
 
 void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
@@ -164,7 +168,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   }
   else {
     result_8 = (op1_8 << count) | (getB_CF() << (count - 1)) |
-             (op1_8 >> (9 - count));
+               (op1_8 >> (9 - count));
   }
 
   /* now write result back to destination */

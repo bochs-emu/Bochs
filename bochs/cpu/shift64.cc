@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.25 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: shift64.cc,v 1.26 2007-12-06 18:35:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -384,11 +384,11 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
-      op1_64 = BX_READ_64BIT_REG(i->rm());
+    op1_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-      /* pointer, segment address pair */
-      read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    /* pointer, segment address pair */
+    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
   }
 
   if (!count) return;

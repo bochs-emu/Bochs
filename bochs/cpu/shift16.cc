@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.36 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: shift16.cc,v 1.37 2007-12-06 18:35:33 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -141,10 +141,11 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned bit0, bit15;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -158,14 +159,16 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
     read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
   }
 
-  if ( (count & 0x0f) == 0 ) {
-    if ( count & 0x10 ) {
-      unsigned bit0 = op1_16 & 1;
-      set_CF(bit0);
-      set_OF(bit0 ^ (op1_16 >> 15));
+  if ((count & 0x0f) == 0) {
+    if (count & 0x10) {
+      bit0  = (op1_16 & 0x1);
+      bit15 = (op1_16 >> 15);
+
+      SET_FLAGS_OxxxxC(bit0 ^ bit15, bit0);
     }
     return;
   }
+
   count &= 0x0f; // only use bottom 4 bits
 
   result_16 = (op1_16 << count) | (op1_16 >> (16 - count));
@@ -181,20 +184,21 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   /* set eflags:
    * ROL count affects the following flags: C, O
    */
-  bx_bool temp_CF = (result_16 & 0x01);
+  bit0  = (result_16 & 0x1);
+  bit15 = (result_16 >> 15);
 
-  set_CF(temp_CF);
-  set_OF(temp_CF ^ (result_16 >> 15));
+  SET_FLAGS_OxxxxC(bit0 ^ bit15, bit0);
 }
 
 void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 {
   Bit16u op1_16, result_16;
   unsigned count;
+  unsigned bit14, bit15;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -210,13 +214,14 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
 
   if ( (count & 0x0f) == 0 ) {
     if ( count & 0x10 ) {
-      unsigned bit14 = (op1_16 >> 14) & 1;
-      unsigned bit15 = (op1_16 >> 15);
-      set_CF(bit15);
-      set_OF(bit15 ^ bit14);
+      bit14 = (op1_16 >> 14) & 1;
+      bit15 = (op1_16 >> 15) & 1;
+
+      SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
     }
     return;
   }
+
   count &= 0x0f;  // use only 4 LSB's
 
   result_16 = (op1_16 >> count) | (op1_16 << (16 - count));
@@ -232,11 +237,10 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   /* set eflags:
    * ROR count affects the following flags: C, O
    */
-  bx_bool result_b15 = (result_16 & 0x8000) != 0;
-  bx_bool result_b14 = (result_16 & 0x4000) != 0;
+  bit14 = (result_16 >> 14) & 1;
+  bit15 = (result_16 >> 15) & 1;
 
-  set_CF(result_b15);
-  set_OF(result_b15 ^ result_b14);
+  SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
 }
 
 void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
@@ -297,9 +301,9 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -317,9 +321,8 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
 
   if (! count) return;
 
-  result_16 = (op1_16 >> count) |
-          (getB_CF() << (16 - count)) |
-          (op1_16 << (17 - count));
+  result_16 = (op1_16 >> count) | (getB_CF() << (16 - count)) |
+              (op1_16 << (17 - count));
 
   /* now write result back to destination */
   if (i->modC0()) {
@@ -342,9 +345,9 @@ void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -380,9 +383,9 @@ void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
@@ -417,9 +420,9 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count;
 
-  if ( i->b1() == 0xc1 )
+  if (i->b1() == 0xc1)
     count = i->Ib();
-  else if ( i->b1() == 0xd1 )
+  else if (i->b1() == 0xd1)
     count = 1;
   else // 0xd3
     count = CL;
