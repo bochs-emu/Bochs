@@ -109,6 +109,8 @@ OBJS = \
 	segment_ctrl_pro.o \
 	io.o \
 	bit.o \
+	bit16.o \
+	bit32.o \
 	string.o \
 	paging.o \
 	$(EXT_DEBUG_OBJS)
@@ -123,6 +125,7 @@ OBJS64 = \
 	mult64.o \
 	resolve64.o \
 	shift64.o \
+	bit64.o \
 	stack64.o
 
 BX_INCLUDES = ../bochs.h ../config.h
@@ -231,6 +234,30 @@ bcd.o: bcd.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h ../config.h \
   ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h
 bit.o: bit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../cpu/lazy_flags.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h \
+  icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h ../config.h \
+  ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h
+bit16.o: bit16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../cpu/lazy_flags.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h \
+  icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h ../config.h \
+  ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h
+bit32.o: bit32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
+  ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
+  ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
+  ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
+  ../instrument/stubs/instrument.h cpu.h ../cpu/lazy_flags.h \
+  ../disasm/disasm.h ../config.h crregs.h descriptor.h \
+  icache.h apic.h ../cpu/i387.h ../fpu/softfloat.h ../config.h \
+  ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../cpu/xmm.h
+bit64.o: bit64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../bx_debug/debug.h \
   ../config.h ../osdep.h ../bxversion.h ../gui/siminterface.h \
   ../memory/memory.h ../pc_system.h ../plugin.h ../extplugin.h \
   ../gui/gui.h ../gui/textconfig.h ../config.h ../gui/keymap.h \
