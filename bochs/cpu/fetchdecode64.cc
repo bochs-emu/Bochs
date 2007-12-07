@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.152 2007-12-01 16:59:36 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.153 2007-12-07 09:38:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3370,7 +3370,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
 
   offset = 512*1;
 
-  instruction->ResolveModrm = BxResolveDummy;
+  instruction->ResolveModrm = &BX_CPU_C::BxResolveDummy;
   instruction->initMetaInfo(/*os32*/ 1,  // operand size 32 override defaults to 1
                             /*as32*/ 1,  // address size 32 override defaults to 1
                             /*os64*/ 0,  // operand size 64 override defaults to 0
@@ -3547,12 +3547,12 @@ fetch_b1:
     if (instruction->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
-        instruction->ResolveModrm = BxResolve64Rm;
+        instruction->ResolveModrm = &BX_CPU_C::BxResolve64Rm;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
-            instruction->ResolveModrm = BxResolve64Rip;
+            instruction->ResolveModrm = &BX_CPU_C::BxResolve64Rip;
 get_32bit_displ:
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -3596,17 +3596,17 @@ get_8bit_displ:
         instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
-          instruction->ResolveModrm = BxResolve64Base;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve64Base;
         else
-          instruction->ResolveModrm = BxResolve64BaseIndex;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve64BaseIndex;
         if (mod == 0x00) { // mod==00b, rm==4
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
             if (index == 4)
-              instruction->ResolveModrm = BxResolve64Disp;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve64Disp;
             else
-              instruction->ResolveModrm = BxResolve64DispIndex;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve64DispIndex;
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
@@ -3623,12 +3623,12 @@ get_8bit_displ:
     else {
       // 32-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
-        instruction->ResolveModrm = BxResolve32Rm;
+        instruction->ResolveModrm = &BX_CPU_C::BxResolve32Rm;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if ((rm & 0x7) == 5) {
-            instruction->ResolveModrm = BxResolve32Rip;
+            instruction->ResolveModrm = &BX_CPU_C::BxResolve32Rip;
             goto get_32bit_displ;
           }
           // mod==00b, rm!=4, rm!=5
@@ -3657,17 +3657,17 @@ get_8bit_displ:
         instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
-          instruction->ResolveModrm = BxResolve32Base;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
-          instruction->ResolveModrm = BxResolve32BaseIndex;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
         if (mod == 0x00) { // mod==00b, rm==4
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(sreg_mod0_base32[base]);
           if ((base & 0x7) == 5) {
             if (index == 4)
-              instruction->ResolveModrm = BxResolve32Disp;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve32Disp;
             else
-              instruction->ResolveModrm = BxResolve32DispIndex;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve32DispIndex;
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5

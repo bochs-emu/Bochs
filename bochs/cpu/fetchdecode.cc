@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.144 2007-12-01 16:59:36 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.145 2007-12-07 09:38:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2466,7 +2466,7 @@ BX_CPU_C::fetchDecode32(Bit8u *iptr, bxInstruction_c *instruction, unsigned rema
   os_32 = is_32 =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
-  instruction->ResolveModrm = BxResolveDummy;
+  instruction->ResolveModrm = &BX_CPU_C::BxResolveDummy;
   instruction->initMetaInfo(/*os32*/ is_32,  /*as32*/ is_32,
                             /*os64*/     0,  /*as64*/     0);
 
@@ -2618,12 +2618,12 @@ fetch_b1:
     if (instruction->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
-        instruction->ResolveModrm = BxResolve32Rm;
+        instruction->ResolveModrm = &BX_CPU_C::BxResolve32Rm;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(BX_SEG_REG_DS);
           if (rm == 5) {
-            instruction->ResolveModrm = BxResolve32Disp;
+            instruction->ResolveModrm = &BX_CPU_C::BxResolve32Disp;
 get_32bit_displ:
             if ((ilen+3) < remain) {
               instruction->modRMForm.displ32u = FetchDWORD(iptr);
@@ -2667,17 +2667,17 @@ get_8bit_displ:
         instruction->modRMForm.modRMData2 |= (index);
         instruction->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
-          instruction->ResolveModrm = BxResolve32Base;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
-          instruction->ResolveModrm = BxResolve32BaseIndex;
+          instruction->ResolveModrm = &BX_CPU_C::BxResolve32BaseIndex;
         if (mod == 0x00) { // mod==00b, rm==4
           if (BX_NULL_SEG_REG(instruction->seg()))
             instruction->setSeg(sreg_mod0_base32[base]);
           if (base == 0x05) {
             if (index == 4)
-              instruction->ResolveModrm = BxResolve32Disp;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve32Disp;
             else
-              instruction->ResolveModrm = BxResolve32DispIndex;
+              instruction->ResolveModrm = &BX_CPU_C::BxResolve32DispIndex;
             goto get_32bit_displ;
           }
           // mod==00b, rm==4, base!=5
