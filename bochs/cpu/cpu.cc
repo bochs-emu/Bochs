@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.186 2007-12-04 19:27:22 sshwarts Exp $
+// $Id: cpu.cc,v 1.187 2007-12-08 09:26:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -434,7 +434,6 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   //
   if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_SPECIAL) {
     // I made up the bitmask above to mean HALT state.
-#if BX_SUPPORT_SMP == 0
     // for one processor, pass the time as quickly as possible until
     // an interrupt wakes up the CPU.
 #if BX_DEBUGGER
@@ -459,31 +458,21 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         BX_INFO(("handleAsyncEvent: reset detected in HLT state"));
         break;
       }
+      // for multiprocessor simulation, even if this CPU is halted we still
+      // must give the others a chance to simulate.  If an interrupt has 
+      // arrived, then clear the HALT condition; otherwise just return from
+      // the CPU loop with stop_reason STOP_CPU_HALTED.
+#if BX_SUPPORT_SMP
+      if (BX_SMP_PROCESSORS > 1) {
+        // HALT condition remains, return so other CPUs have a chance
+#if BX_DEBUGGER
+        BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
+#endif
+        return 1; // Return to caller of cpu_loop.
+      }
+#endif
       BX_TICK1();
     }
-#else   /* BX_SUPPORT_SMP */
-    // for multiprocessor simulation, even if this CPU is halted we still
-    // must give the others a chance to simulate.  If an interrupt has 
-    // arrived, then clear the HALT condition; otherwise just return from
-    // the CPU loop with stop_reason STOP_CPU_HALTED.
-    if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) || 
-         BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
-    {
-      // interrupt ends the HALT condition
-#if BX_SUPPORT_MONITOR_MWAIT
-      if (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT)
-        BX_CPU_THIS_PTR mem->clear_monitor(BX_CPU_THIS_PTR bx_cpuid);
-#endif
-      BX_CPU_THIS_PTR debug_trap = 0; // clear traps for after resume
-      BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
-    } else {
-      // HALT condition remains, return so other CPUs have a chance
-#if BX_DEBUGGER
-      BX_CPU_THIS_PTR stop_reason = STOP_CPU_HALTED;
-#endif
-      return 1; // Return to caller of cpu_loop.
-    }
-#endif
   } else if (bx_pc_system.kill_bochs_request) {
     // setting kill_bochs_request causes the cpu loop to return ASAP.
     return 1; // Return to caller of cpu_loop.
