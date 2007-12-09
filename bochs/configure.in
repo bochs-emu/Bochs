@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.353 2007-12-01 16:45:15 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.354 2007-12-09 18:36:00 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -1001,6 +1001,27 @@ AC_ARG_ENABLE(repeat-speedups,
     ]
   )
 
+AC_MSG_CHECKING(for instruction trace cache support)
+AC_ARG_ENABLE(trace-cache,
+  [  --enable-trace-cache              support instruction trace cache],
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    speedup_TraceCache=1
+   else
+    AC_MSG_RESULT(no)
+    speedup_TraceCache=0
+   fi],
+  [
+    if test "$speedup_TraceCache " = 1; then
+      AC_MSG_RESULT(yes)
+      speedup_TraceCache=1
+    else
+      AC_MSG_RESULT(no)
+      speedup_TraceCache=0
+    fi
+    ]
+  )
+
 AC_MSG_CHECKING(for instruction cache support)
 AC_ARG_ENABLE(icache,
   [  --enable-icache                   support instruction cache],
@@ -1254,7 +1275,12 @@ if test "$speedups_all" = 1; then
   speedup_guest2host_tlb=1
   speedup_repeat=1
   speedup_iCache=1
+  speedup_TraceCache=1
   speedup_fastcall=1
+fi
+
+if test "$speedup_iCache" = 0 -a "$speedup_TraceCache" = 1; then
+  AC_MSG_ERROR([iCache is required to compile with trace cache optimization])
 fi
 
 if test "$speedup_guest2host_tlb" = 1; then
@@ -1285,6 +1311,12 @@ if test "$speedup_fastcall" = 1; then
   AC_DEFINE(BX_FAST_FUNC_CALL, 1)
 else
   AC_DEFINE(BX_FAST_FUNC_CALL, 0)
+fi
+
+if test "$speedup_TraceCache" = 1; then
+  AC_DEFINE(BX_SUPPORT_TRACE_CACHE, 1)
+else
+  AC_DEFINE(BX_SUPPORT_TRACE_CACHE, 0)
 fi
 
 

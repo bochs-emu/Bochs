@@ -1,14 +1,14 @@
--------------------------------------------------------------------------
 Changes for coming 2.3.6 release:
 
 Brief summary :
 
-+ More than 20% emulation speedup vs Bochs 2.3.5 release!
++ More than 25% emulation speedup vs Bochs 2.3.5 release!
 
       - Thanks to Darek Mihocka (http://www.emulators.com) 
         for providing patches and ideas that made the
         speedup possible!
 
++ Up to 40% speedup vs Bochs 2.3.5 release with trace cache optimization!
 - Lots of bugfixes in cpu emulation
 - Bochs bechmarking support
 - Added emulation of Intel SSE4.2 instruction set
@@ -28,6 +28,10 @@ Detailed change log :
   - Removed hostasm optimizations, after Bochs rebenchmarking it was found 
     that the feature bringing no speedup or even sometimes slowes down
     the emulation !
+  - Merged trace cache optimization patch, the trace cache optimization
+    is enabled by default when configure with --enable-all-optimizations 
+    option, to disable trace cache optimization configure with
+        --disable-trace-cache
   - Many minor bugfixes in CPU emulation (both ia32 and x86-64)
 
 - Bochs Internal Debugger and Disassember
@@ -57,8 +61,6 @@ Detailed change log :
     --cpu-level >= 4 (like in real hardware)
 
 - SF patches applied
- [1791000] 15h 8600h is reading the wrong stack frame by Sebastian
-
  [1841421] pic: keep slave_pic.INT and master_pic.IRQ_in bit 2 in sync by Russ Cox
  [1841420] give segment numbers in exception logs by Russ Cox
  [1801696] Allow Intel builds on Mac OS X
@@ -79,6 +81,9 @@ Detailed change log :
  [1799877] Fix for parallel build (make -j2) by Robert Millan 
 
 - these S.F. bugs were closed
+ [1837354] website bug: View the Source link broken
+ [1801268] Reset from real mode no longer working
+ [1843250] Using forward slashes gives invalid filename
  [1823446] BIOS bug, local APIC #0 not detected
  [1801285] Niclist.exe broken
  [1364472] breakpoints sometimes don't work

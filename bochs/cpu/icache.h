@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.20 2007-12-04 17:34:20 sshwarts Exp $
+// $Id: icache.h,v 1.21 2007-12-09 18:36:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -115,12 +115,21 @@ extern bxPageWriteStampTable pageWriteStampTable;
 
 #define BxICacheEntries (32 * 1024)  // Must be a power of 2.
 
+#if BX_SUPPORT_TRACE_CACHE
+#define BX_MAX_TRACE_LENGTH 16
+#endif
+
 struct bxICacheEntry_c
 {
   bx_phy_address pAddr; // Physical address of the instruction
   Bit32u writeStamp;    // Generation ID. Each write to a physical page
                         // decrements this value
-  bxInstruction_c i;    // The instruction decode information
+#if BX_SUPPORT_TRACE_CACHE
+  Bit32u ilen;          // Trace length in instructions
+  bxInstruction_c i[BX_MAX_TRACE_LENGTH];
+#else
+  bxInstruction_c i;
+#endif
 };
 
 class BOCHSAPI bxICache_c {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.187 2007-12-08 09:26:13 sshwarts Exp $
+// $Id: cpu.cc,v 1.188 2007-12-09 18:36:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -62,16 +62,20 @@ void flushICaches(void)
 #if InstrumentICACHE
 static Bit32u iCacheLookups=0;
 static Bit32u iCacheMisses=0;
+static Bit32u iCacheMergeTraces=0;
+static Bit32u iCacheLength[BX_MAX_TRACE_LENGTH+1];
 
 #define InstrICache_StatsMask 0xfffffff
 
 #define InstrICache_Stats() {\
   if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
-    BX_INFO(("ICACHE lookups: %u, misses: %u, hit rate = %6.2f%% ", \
+    BX_INFO(("ICACHE lookups: %u, misses: %u, merges: %u, hit rate = %6.2f%% ", \
           (unsigned) iCacheLookups, \
           (unsigned) iCacheMisses,  \
+          (unsigned) iCacheMergeTraces, \
           (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
-    iCacheLookups = iCacheMisses = 0; \
+    iCacheLookups = iCacheMisses = iCacheMergeTraces = 0; \
+    for (int i=0;i<=BX_MAX_TRACE_LENGTH;i++) iCacheLength[i] = 0; \
   } \
 }
 #define InstrICache_Increment(v) (v)++
@@ -89,7 +93,118 @@ static Bit32u iCacheMisses=0;
 #define RCX ECX
 #endif
 
-BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_address eipBiased)
+#if BX_SUPPORT_TRACE_CACHE
+
+bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_address eipBiased)
+{
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+  unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
+  bxICacheEntry_c *trace = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
+  Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+
+  InstrICache_Increment(iCacheLookups);
+  InstrICache_Stats();
+
+  if ((trace->pAddr == pAddr) &&
+      (trace->writeStamp == pageWriteStamp))
+  {
+     return trace; // We are lucky - trace cache hit !
+  }
+
+  // We are not so lucky, but let's be optimistic - try to build trace from
+  // incoming instruction bytes stream !
+  trace->pAddr = pAddr;
+  trace->writeStamp = ICacheWriteStampInvalid;
+  trace->ilen = 0;
+
+  InstrICache_Increment(iCacheMisses);
+
+  bx_address remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned maxFetch = 15;
+  if (remainingInPage < 15) maxFetch = remainingInPage;
+  Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+  unsigned ret;
+
+  // We could include in trace maximum BX_MAX_TRACE_LEN instructions
+  unsigned max_length = BX_MAX_TRACE_LENGTH;
+  if ((pageWriteStamp & ICacheWriteStampMask) != ICacheWriteStampStart)
+    max_length = 1;  // seems like the entry has SMC ping-pong problem
+
+  bxInstruction_c *i = trace->i;
+
+  for (unsigned len=0;len<max_length;len++)
+  {
+#if BX_SUPPORT_X86_64
+    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+      ret = fetchDecode64(fetchPtr, i, maxFetch);
+    else
+#endif
+      ret = fetchDecode32(fetchPtr, i, maxFetch);
+
+    if (ret==0) {
+      // Fetching instruction on segment/page boundary
+      if (len > 0) {
+         // The trace is already valid, it has several instructions inside,
+         // in this case just drop the boundary instruction and stop
+         // tracing.
+         break;
+      }
+      // First instruction is boundary fetch, return iStorage and leave 
+      // the trace cache entry invalid (do not cache the instruction)
+      boundaryFetch(fetchPtr, remainingInPage, iStorage);
+      return 0;
+    }
+
+    // add instruction to the trace ...
+    unsigned iLen = i->ilen();
+    trace->writeStamp = pageWriteStamp;
+    trace->ilen++;
+    if (i->getStopTraceAttr()) break;
+
+    // ... and continue to the next instruction
+    remainingInPage -= iLen;
+    if (remainingInPage == 0) break;
+    if (remainingInPage < 15) maxFetch = remainingInPage;
+    fetchPtr += iLen;
+    pAddr += iLen;
+    i++;
+
+    if (mergeTraces(trace, i, pAddr)) break;
+  }
+
+  InstrICache_Increment(iCacheLength[trace->ilen-1]);
+
+  return trace;
+}
+
+bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy_address pAddr)
+{
+  bxICacheEntry_c *e = &(BX_CPU_THIS_PTR iCache.entry[BX_CPU_THIS_PTR iCache.hash(pAddr)]);
+
+  if ((e->pAddr == pAddr) && (e->writeStamp == trace->writeStamp))
+  {
+    // We are lucky - another trace hit !
+    InstrICache_Increment(iCacheMergeTraces);
+
+    // determine max amount of instruction to take from another trace
+    unsigned max_length = e->ilen;
+    if (max_length + trace->ilen > BX_MAX_TRACE_LENGTH)
+        max_length = BX_MAX_TRACE_LENGTH - trace->ilen;
+    if(max_length == 0) return 0;
+
+    memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
+    trace->ilen += max_length;
+    BX_ASSERT(trace->ilen <= BX_MAX_TRACE_LENGTH);
+
+    return 1;
+  }
+
+  return 0;
+} 
+
+#else
+
+bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_address eipBiased)
 {
   unsigned ret;
   bxInstruction_c *i = iStorage;
@@ -160,6 +275,8 @@ BX_CPP_INLINE bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStor
 
   return i;
 }
+
+#endif
 
 // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
 // instructions and then return so that the other processors have a chance to
@@ -241,47 +358,68 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
-    // fetch and decode next instruction
+#if BX_SUPPORT_TRACE_CACHE == 0
+    // fetch and decode single instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
+#else
+    unsigned n, length = 1;
+    bxInstruction_c *i = &iStorage;
+    bxICacheEntry_c *trace = fetchInstructionTrace(&iStorage, eipBiased);
+    if (trace) {
+      i = trace->i; // execute from first instruction in trace
+      length = trace->ilen;
+    }
+    Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    for (n=0; n < length; n++, i++) {
+#endif
 
-    // An instruction will have been fetched using either the normal case,
-    // or the boundary fetch (across pages), by this point.
-    BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
+      BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+      // An instruction will have been fetched using either the normal case,
+      // or the boundary fetch (across pages), by this point.
+      BX_INSTR_FETCH_DECODE_COMPLETED(BX_CPU_ID, i);
 
 #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
-    if (dbg_instruction_prolog()) return;
+      if (dbg_instruction_prolog()) return;
 #endif
 
 #if BX_DISASM
-    if (BX_CPU_THIS_PTR trace) {
-      // print the instruction that is about to be executed
+      if (BX_CPU_THIS_PTR trace) {
+        // print the instruction that is about to be executed
 #if BX_DEBUGGER
-      bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
+        bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
 #else
-      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
 #endif
+      }
+#endif
+
+      // decoding instruction compeleted -> continue with execution
+      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+      RIP += i->ilen();
+      BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
+      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_TICK1_IF_SINGLE_PROCESSOR();
+
+      // inform instrumentation about new instruction
+      BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
+
+      // note instructions generating exceptions never reach this point
+#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
+      if (dbg_instruction_epilog()) return;
+#endif
+
+      CHECK_MAX_INSTRUCTIONS(max_instr_count);
+
+#if BX_SUPPORT_TRACE_CACHE
+      if (currPageWriteStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr))
+        break; // probably it is self modifying code ...
+
+      if (BX_CPU_THIS_PTR async_event) break;
     }
 #endif
-
-    // decoding instruction compeleted -> continue with execution
-    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-    RIP += i->ilen();
-    BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
-    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-    BX_TICK1_IF_SINGLE_PROCESSOR();
-
-    // inform instrumentation about new instruction
-    BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
-
-    // note instructions generating exceptions never reach this point
-#if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
-    if (dbg_instruction_epilog()) return;
-#endif
-
-    CHECK_MAX_INSTRUCTIONS(max_instr_count);
   }  // while (1)
 }
 

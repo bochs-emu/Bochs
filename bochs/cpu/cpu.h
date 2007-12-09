@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.385 2007-12-09 17:40:23 sshwarts Exp $
+// $Id: cpu.h,v 1.386 2007-12-09 18:36:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -612,9 +612,10 @@ public:
   void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
-  // 31..28  (unused)
-  // 27..19  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
+  // 31..29  (unused)
+  // 28..20  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
   //            (leave this one on top so no mask is needed)
+  // 19..19  stop trace (used with trace cache)
   // 18..18  mod==c0 (modrm)
   // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3).
   Bit16u metaInfo3;
@@ -841,13 +842,22 @@ public:
     metaInfo3 = (metaInfo3 & ~3) | (value);
   }
 
+#if BX_SUPPORT_TRACE_CACHE
+  BX_CPP_INLINE void setStopTraceAttr(void) {
+   metaInfo3 |= (1<<3);
+  }
+  BX_CPP_INLINE unsigned getStopTraceAttr(void) {
+    return metaInfo3 & (1<<3);
+  }
+#endif
+
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned b1(void) {
-    return metaInfo3 >> 3;
+    return metaInfo3 >> 4;
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo3 = (metaInfo3 & ~(0x1ff << 3)) | ((b1 & 0x1ff) << 3);
+    metaInfo3 = (metaInfo3 & ~(0x1ff << 4)) | ((b1 & 0x1ff) << 4);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
@@ -2926,7 +2936,12 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
 #endif
+#if BX_SUPPORT_TRACE_CACHE
+  BX_SMF bxICacheEntry_c* fetchInstructionTrace(bxInstruction_c *, bx_address);
+  BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy_address pAddr);
+#else
   BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *, bx_address);
+#endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *i);
 
@@ -3726,6 +3741,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxPrefix            0x0080 // bit  7
 #define BxLockable          0x0100 // bit  8
 #define Bx3ByteOpcode       0x0200 // bit  9
+
+#if BX_SUPPORT_TRACE_CACHE
+  #define BxTraceEnd        0x2000 // bit 13
+#else
+  #define BxTraceEnd        0
+#endif
 
 #define BxGroup1          BxGroupN
 #define BxGroup2          BxGroupN

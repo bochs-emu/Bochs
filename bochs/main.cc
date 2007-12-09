@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.368 2007-11-20 18:36:26 sshwarts Exp $
+// $Id: main.cc,v 1.369 2007-12-09 18:36:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1003,6 +1003,7 @@ void bx_init_hardware()
   BX_INFO(("  Guest2HostTLB support: %s",BX_SupportGuest2HostTLB?"yes":"no"));
   BX_INFO(("  RepeatSpeedups support: %s",BX_SupportRepeatSpeedups?"yes":"no"));
   BX_INFO(("  Icache support: %s",BX_SUPPORT_ICACHE?"yes":"no"));
+  BX_INFO(("  Trace cache support: %s",BX_SUPPORT_TRACE_CACHE?"yes":"no"));
   BX_INFO(("  Fast function calls: %s",BX_FAST_FUNC_CALL?"yes":"no"));
   BX_INFO(("Devices configuration"));
   BX_INFO(("  ACPI support: %s",BX_SUPPORT_ACPI?"yes":"no"));
