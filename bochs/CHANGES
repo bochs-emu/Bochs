@@ -9,6 +9,7 @@ Brief summary :
         speedup possible!
 
 + Up to 40% speedup vs Bochs 2.3.5 release with trace cache optimization!
+
 - Lots of bugfixes in cpu emulation
 - Bochs bechmarking support
 - Added emulation of Intel SSE4.2 instruction set
@@ -70,15 +71,15 @@ Detailed change log :
  [1821242] Fix for #1801285, Niclist.exe broken by Sebastian
  [1819567] Code warning cleanup
  [1816162] Update comment on bios_printf() by Sebastian
- [1811139] Trivial Fix when BX_PCIBIOS and BX_ROMBIOS32 not defined by Myles Watson 
- [1811190] Improve HD recognition and CD boot  * 2007-10-11 00:22  5  Closed nobody myles_w 
+ [1811139] Trivial Fix when BX_PCIBIOS and BX_ROMBIOS32 not defined by Myles Watson
+ [1811190] Improve HD recognition and CD boot by Myles Watson
  [1811860] Implement %X in bios_printf by Sebastian
- [1809649] printf %lx %ld %lu by Myles Watson 
- [1809651] move BX_SUPPORT_FLOPPY by Myles Watson 
- [1809652] dpte and Int13DPT fixes by Myles Watson 
- [1809669] clip cylinders to 16383 in hard drive  * 2007-10-08 20:15  5  Closed nobody myles_w 
- [1799903] Build BIOS on amd64 by Robert Millan 
- [1799877] Fix for parallel build (make -j2) by Robert Millan 
+ [1809649] printf %lx %ld %lu by Myles Watson
+ [1809651] move BX_SUPPORT_FLOPPY by Myles Watson
+ [1809652] dpte and Int13DPT fixes by Myles Watson
+ [1809669] clip cylinders to 16383 in hard drive by Myles Watson
+ [1799903] Build BIOS on amd64 by Robert Millan
+ [1799877] Fix for parallel build (make -j2) by Robert Millan
 
 - these S.F. bugs were closed
  [1837354] website bug: View the Source link broken
@@ -108,7 +109,7 @@ Detailed change log :
 
 - CPU
   - Fixed critical bug with 0x90 opcode (NOP) handling in x86-64 mode
-  - implied stack references where the stack address is not in canonical form 
+  - implied stack references where the stack address is not in canonical form
     should causes a stack exception (#SS)
   - Added emulation of SSE4.1 instruction set (Stanislav)
   - Do not save and restore XMM8-XMM15 registers when not in x86-64 mode
