@@ -78,6 +78,9 @@ The  callback  is  called  each  time,  when  Bochs  starts  to  decode  a new
 instruction.  Through  this callback function Bochs could provide an opcode of
 the instruction, opcode length and an execution mode (16/32/64).
 
+Currently the callback is not supported when trace-cache optimization feature
+is enabled.
+
 
 	void bx_instr_fetch_decode_completed(unsigned cpu, const bxInstruction_c *i);
 
@@ -185,8 +188,8 @@ access.  Note  that  no  page  split  accesses will be generated because Bochs
 splits  page  split  accesses  to  two  different  memory  accesses during its
 execution flow.
 
-Currently the callbacks are not supported in case of guest-to-host-tlb feature
-enabled.
+Currently the callbacks are not supported when guest-to-host-tlb optimization
+is enabled.
 
 
 	void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
@@ -221,6 +224,8 @@ BX_INSTR_MEM_DATA()   hook  because  it  does  not  get  called  for  these
 instructions.  Should  this  be  changed along with some other instructions
 that exhibit this?
 							Brian Slechta
+
+5. BX_INSTR_OPCODE doesn't work with trace cache optimization enabled
 
 Feature requests:
 
