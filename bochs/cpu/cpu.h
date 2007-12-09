@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.384 2007-12-06 16:57:58 sshwarts Exp $
+// $Id: cpu.h,v 1.385 2007-12-09 17:40:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3039,19 +3039,10 @@ public: // for now...
   else                                           \
     read_virtual_dqword(s, off, data);
 
-#define writeVirtualDQwordAligned(s, off, data)  \
-  if (! MXCSR.get_misaligned_exception_mask())   \
-    write_virtual_dqword_aligned(s, off, data);  \
-  else                                           \
-    write_virtual_dqword(s, off, data);
-
 #else // BX_SUPPORT_MISALIGNED_SSE = 0
 
 #define readVirtualDQwordAligned(s, off, data)   \
   read_virtual_dqword_aligned(s, off, data)
-
-#define writeVirtualDQwordAligned(s, off, data)  \
-  write_virtual_dqword_aligned(s, off, data)
 
 #endif
 
