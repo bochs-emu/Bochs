@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.51 2007-10-24 23:08:21 sshwarts Exp $
+// $Id: rfb.cc,v 1.52 2007-12-10 21:01:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -545,7 +545,7 @@ void HandleRfbClient(SOCKET sClient)
                         if(n == 0) {
                             BX_ERROR(("client closed connection."));
                         } else {
-                            BX_ERROR(("error recieving data."));
+                            BX_ERROR(("error receiving data."));
                         }
                         return;
                     }
