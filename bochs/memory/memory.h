@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.43 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: memory.h,v 1.44 2007-12-10 19:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,8 +78,8 @@ private:
 public:
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly
-  size_t  len;
-  size_t  megabytes; // (len in Megabytes)
+  Bit32u  len;
+  Bit32u  megabytes; // (len in Megabytes)
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
 #if BX_DEBUGGER
@@ -88,8 +88,8 @@ public:
 
   BX_MEM_C();
  ~BX_MEM_C();
-  BX_MEM_SMF void    alloc_vector_aligned (size_t bytes, size_t alignment) BX_CPP_AttrRegparmN(2);
-  BX_MEM_SMF void    init_memory(int memsize);
+  BX_MEM_SMF void    alloc_vector_aligned (Bit32u bytes, Bit32u alignment) BX_CPP_AttrRegparmN(2);
+  BX_MEM_SMF void    init_memory(Bit32u memsize);
   BX_MEM_SMF void    cleanup_memory(void);
   BX_MEM_SMF void    enable_smram(bx_bool enable, bx_bool restricted);
   BX_MEM_SMF void    disable_smram(void);

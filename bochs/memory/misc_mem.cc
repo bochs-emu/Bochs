@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.105 2007-11-02 23:30:07 vruppert Exp $
+// $Id: misc_mem.cc,v 1.106 2007-12-10 19:05:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -59,7 +59,7 @@ BX_MEM_C::BX_MEM_C()
 }
 
 void BX_CPP_AttrRegparmN(2)
-BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
+BX_MEM_C::alloc_vector_aligned (Bit32u bytes, Bit32u alignment)
 {
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO (("freeing existing memory vector"));
@@ -68,7 +68,7 @@ BX_MEM_C::alloc_vector_aligned (size_t bytes, size_t alignment)
     BX_MEM_THIS vector = NULL;
   }
   Bit64u test_mask = alignment - 1;
-  BX_MEM_THIS actual_vector = new Bit8u [(unsigned int)(bytes+test_mask)];
+  BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes+test_mask)];
   // round address forward to nearest multiple of alignment.  Alignment 
   // MUST BE a power of two for this to work.
   Bit64u masked = ((Bit64u)(BX_MEM_THIS actual_vector + test_mask)) & ~test_mask;
@@ -86,11 +86,11 @@ BX_MEM_C::~BX_MEM_C()
   cleanup_memory();
 }
 
-void BX_MEM_C::init_memory(int memsize)
+void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.105 2007-11-02 23:30:07 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.106 2007-12-10 19:05:07 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
