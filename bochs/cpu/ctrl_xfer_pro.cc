@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.62 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.63 2007-12-10 23:04:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -165,14 +165,9 @@ BX_CPU_C::branch_near64(bxInstruction_c *i)
 {
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
 
-  if (! i->os32L()) {
-    new_RIP &= 0xffff; // For 16-bit opSize, upper 48 bits of RIP are cleared.
-  }
-  else {
-    if (! IsCanonical(new_RIP)) {
-      BX_ERROR(("branch_near64: canonical RIP violation"));
-      exception(BX_GP_EXCEPTION, 0, 0);
-    }
+  if (! IsCanonical(new_RIP)) {
+    BX_ERROR(("branch_near64: canonical RIP violation"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   RIP = new_RIP;
