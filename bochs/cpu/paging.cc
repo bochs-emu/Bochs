@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.97 2007-12-13 17:16:21 sshwarts Exp $
+// $Id: paging.cc,v 1.98 2007-12-13 21:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1115,12 +1115,12 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
 
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
       }
       else {
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
       }
@@ -1140,29 +1140,27 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
 
 #ifdef BX_LITTLE_ENDIAN
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr,
-                          BX_CPU_THIS_PTR address_xlation.paddress1,
-                          BX_CPU_THIS_PTR address_xlation.len1,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress1,
                              BX_CPU_THIS_PTR address_xlation.len1, data);
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress2,
                              BX_CPU_THIS_PTR address_xlation.len2,
                              ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
       }
       else {
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr,
-                           BX_CPU_THIS_PTR address_xlation.paddress1,
-                           BX_CPU_THIS_PTR address_xlation.len1);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress1,
                               BX_CPU_THIS_PTR address_xlation.len1, data);
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress2,
                               BX_CPU_THIS_PTR address_xlation.len2,
                               ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
@@ -1170,30 +1168,29 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
 
 #else // BX_BIG_ENDIAN
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr,
-                          BX_CPU_THIS_PTR address_xlation.paddress1,
-                          BX_CPU_THIS_PTR address_xlation.len1,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1,
+                            xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress1,
                              BX_CPU_THIS_PTR address_xlation.len1,
                              ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress2,
                              BX_CPU_THIS_PTR address_xlation.len2, data);
       }
       else {
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr,
-                           BX_CPU_THIS_PTR address_xlation.paddress1,
-                           BX_CPU_THIS_PTR address_xlation.len1);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress1,
                               BX_CPU_THIS_PTR address_xlation.len1,
                               ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, BX_CPU_THIS_PTR address_xlation.paddress2,
                               BX_CPU_THIS_PTR address_xlation.len2, data);
       }
@@ -1208,7 +1205,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
       BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr, laddr, len, xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -1249,7 +1246,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, len, data);
       }
       else { // Write
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr, laddr, len);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
 #if BX_SupportGuest2HostTLB
         Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
@@ -1291,32 +1288,32 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
 
 #ifdef BX_LITTLE_ENDIAN
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr,
-                          BX_CPU_THIS_PTR address_xlation.paddress1,
-                          BX_CPU_THIS_PTR address_xlation.len1,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1,
+                            xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1,
             BX_CPU_THIS_PTR address_xlation.len1, data);
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2,
+                            xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress2,
             BX_CPU_THIS_PTR address_xlation.len2,
             ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
       }
       else {
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr,
-                           BX_CPU_THIS_PTR address_xlation.paddress1,
-                           BX_CPU_THIS_PTR address_xlation.len1);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1,
             BX_CPU_THIS_PTR address_xlation.len1, data);
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
             BX_CPU_THIS_PTR address_xlation.paddress2,
-            BX_CPU_THIS_PTR address_xlation.len2);
+            BX_CPU_THIS_PTR address_xlation.len2, slate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress2,
             BX_CPU_THIS_PTR address_xlation.len2,
@@ -1325,33 +1322,33 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
 
 #else // BX_BIG_ENDIAN
       if (rw == BX_READ) {
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr,
-                          BX_CPU_THIS_PTR address_xlation.paddress1,
-                          BX_CPU_THIS_PTR address_xlation.len1,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
+                            BX_CPU_THIS_PTR address_xlation.paddress1,
+                            BX_CPU_THIS_PTR address_xlation.len1,
+                            xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1,
             BX_CPU_THIS_PTR address_xlation.len1,
             ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
-        BX_INSTR_LIN_READ(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2,
-                          xlate_rw);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2,
+                            xlate_rw);
         BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress2,
             BX_CPU_THIS_PTR address_xlation.len2, data);
       }
       else {
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr,
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr,
                            BX_CPU_THIS_PTR address_xlation.paddress1,
-                           BX_CPU_THIS_PTR address_xlation.len1);
+                           BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress1,
             BX_CPU_THIS_PTR address_xlation.len1,
             ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
-        BX_INSTR_LIN_WRITE(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                          BX_CPU_THIS_PTR address_xlation.paddress2,
-                          BX_CPU_THIS_PTR address_xlation.len2);
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
+                            BX_CPU_THIS_PTR address_xlation.paddress2,
+                            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress2,
             BX_CPU_THIS_PTR address_xlation.len2, data);

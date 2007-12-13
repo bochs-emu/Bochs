@@ -173,29 +173,32 @@ instruction execution. In case of repeat instruction the callback will
 be called only once after all repeat iterations. 
 
 
-	void bx_instr_mem_code(unsigned cpu, bx_address linear, unsigned len);
+	void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
+
+The  callback  is  called  each  time,  when Bochs simulator executes a linear
+memory  access.  Note  that  no  page split accesses will be generated because
+Bochs  splits  page split accesses to two different memory accesses during its
+execution  flow.  The  callback  also  will not be generated in case of direct
+physical memory access like in SMM, VMM or SVM modes.
+
+Possible access types are: BX_READ, BX_WRITE and BX_RW. 
+
+Currently  the  callback is not supported when repeat-speedups optimization is
+enabled.
+
+
 	void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned len, unsigned rw);
 
-The  callback  is called each time, when Bochs simulator executes code or data
-memory access. Possible access types are: BX_READ, BX_WRITE and BX_RW.
-
-
-	void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw);
-	void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len);
-
-The  callback  is  called  each  time,  when Bochs simulator executes a memory
-access.  Note  that  no  page  split  accesses will be generated because Bochs
-splits  page  split  accesses  to  two  different  memory  accesses during its
-execution flow.
-
-Currently the callbacks are not supported when guest-to-host-tlb optimization
-is enabled.
+The  callback is called each time, when Bochs simulator executes linear memory
+access.  In  contrast  to  previous  callback it will be called even if memory
+access  fails  because  of  any reason (for example protection failure or page
+fault).
 
 
 	void bx_instr_phy_read(unsigned cpu, bx_address addr, unsigned len);
 	void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len);
 
-These callback functions are a feedback from external memory system.
+These callback functions are the feedback from external memory system.
 
 
 	void bx_instr_inp(Bit16u addr, unsigned len);
@@ -208,10 +211,11 @@ These callback functions are a feedback from various system devices.
 -----------------------------------------------------------------------------
 Known problems:
 
-1. BX_INSTR_MEM_CODE never called from Bochs's code.
-2. BX_INSTR_LIN_READ doesn't work when Guest-To-Host-TLB feature is enabled.
-3. BX_INSTR_LIN_WRITE doesn't work when Guest-To-Host-TLB feature is enabled.
-4.
+1. BX_INSTR_LIN_ACCESS doesn't work when repeat-speedups feature is enabled.
+
+2. BX_INSTR_MEM_DATA doesn't work when repeat-speedups feature is enabled.
+
+3.
 
 While using Bochs as a reference model for simulations, the simulator needs
 information about what loads/stores are taking place with each instruction.

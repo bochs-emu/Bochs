@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.80 2007-12-10 19:08:13 sshwarts Exp $
+// $Id: access.cc,v 1.81 2007-12-13 21:30:04 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -545,6 +545,7 @@ accessOK:
       if (tlbEntry->accessBits & (0x04 << pl)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = laddr & 0xfff;
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_WRITE);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
         pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -603,6 +604,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
           Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -662,6 +664,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
           Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -721,6 +724,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
           Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -771,6 +775,7 @@ accessOK:
       if (tlbEntry->accessBits & (1<<pl)) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = laddr & 0xfff;
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_READ);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         *data = *hostAddr;
         return;
@@ -826,6 +831,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (1<<pl)) { // Read this pl OK.
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_READ);
           Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
           ReadHostWordFromLittleEndian(hostAddr, *data);
           return;
@@ -882,6 +888,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (1<<pl)) { // Read this pl OK.
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_READ);
           Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
           ReadHostDWordFromLittleEndian(hostAddr, *data);
           return;
@@ -938,6 +945,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (1<<pl)) { // Read this pl OK.
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_READ);
           Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
           ReadHostQWordFromLittleEndian(hostAddr, *data);
           return;
@@ -990,6 +998,7 @@ accessOK:
       if (tlbEntry->accessBits & (0x04 << pl)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
         Bit32u pageOffset = laddr & 0xfff;
+        BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_RW);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
         pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -1051,6 +1060,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_RW);
           Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -1111,6 +1121,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_RW);
           Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -1171,6 +1182,7 @@ accessOK:
         // from this CPL.
         if (tlbEntry->accessBits & (0x04 << pl)) {
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
+          BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_RW);
           Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -1432,6 +1444,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     Bit16u *hostAddr = v2h_write_word(laddr, user);
     if (hostAddr) {
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | (laddr & 0xfff), 2, BX_WRITE);
       WriteHostWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -1470,6 +1483,7 @@ accessOK:
 #if BX_SupportGuest2HostTLB
     Bit32u *hostAddr = v2h_write_dword(laddr, user);
     if (hostAddr) {
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | (laddr & 0xfff), 4, BX_WRITE);
       WriteHostDWordToLittleEndian(hostAddr, data);
       return;
     }
@@ -1505,6 +1519,7 @@ void BX_CPU_C::write_new_stack_qword(bx_address offset, bx_bool user, Bit64u dat
 #if BX_SupportGuest2HostTLB
     Bit64u *hostAddr = v2h_write_qword(laddr, user);
     if (hostAddr) {
+      BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | (laddr & 0xfff), 8, BX_WRITE);
       WriteHostQWordToLittleEndian(hostAddr, data);
       return;
     }
