@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.19 2007-12-13 21:41:32 sshwarts Exp $
+// $Id: instrument.h,v 1.20 2007-12-13 21:53:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -109,7 +109,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
-#  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */
@@ -173,7 +173,7 @@ void bx_instr_mem_data(unsigned cpu, bx_address lin, unsigned size, unsigned rw)
 
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
-#  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */

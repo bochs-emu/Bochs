@@ -121,7 +121,7 @@ The  callback  is  called  each time, when Bochs simulator executes a hardware
 interrupt.
 
 
-	void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval);
+	void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, bx_phy_address new_cr3);
 	void bx_instr_cache_cntrl(unsigned cpu, unsigned what);
 
 The  callback  is  called each time, when Bochs simulator executes a cache/tlb

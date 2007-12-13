@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.17 2007-12-13 21:41:32 sshwarts Exp $
+// $Id: instrument.h,v 1.18 2007-12-13 21:53:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -73,10 +73,10 @@ public:
   /* memory accesses */
   unsigned num_data_accesses;
   struct {
-    bx_address laddr; // linear address
-    Bit32u paddr;     // physical address
-    unsigned op;      // BX_READ, BX_WRITE or BX_RW
-    unsigned size;    // 1 .. 8
+    bx_address laddr;     // linear address
+    bx_phy_address paddr; // physical address
+    unsigned op;          // BX_READ, BX_WRITE or BX_RW
+    unsigned size;        // 1 .. 8
   } data_access[MAX_DATA_ACCESSES];
 
   /* branch resolution and target */
@@ -158,7 +158,7 @@ extern bxInstrumentation *icpu;
 
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
-#  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */
@@ -221,7 +221,7 @@ extern bxInstrumentation *icpu;
 
 /* TLB/CACHE control instruction executed */
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
-#  define BX_INSTR_TLB_CNTRL(cpu_id, what, newval)
+#  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
 
 /* execution */

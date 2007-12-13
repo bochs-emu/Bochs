@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.19 2007-12-13 21:41:32 sshwarts Exp $
+// $Id: instrument.cc,v 1.20 2007-12-13 21:53:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector) {}
 void bx_instr_exception(unsigned cpu, unsigned vector) {}
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip) {}
 
-void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, Bit32u newval) {}
+void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, bx_phy_address new_cr3) {}
 void bx_instr_cache_cntrl(unsigned cpu, unsigned what) {}
 void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset) {}
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.18 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: instrument.cc,v 1.19 2007-12-13 21:53:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,10 +51,10 @@ static struct instruction_t {
   bx_bool  is32, is64;
   unsigned num_data_accesses;
   struct {
-    bx_address laddr; // linear address
-    Bit32u paddr;     // physical address
-    unsigned op;      // BX_READ, BX_WRITE or BX_RW
-    unsigned size;    // 1 .. 8
+    bx_address laddr;     // linear address
+    bx_phy_address paddr; // physical address
+    unsigned op;          // BX_READ, BX_WRITE or BX_RW
+    unsigned size;        // 1 .. 8
   } data_access[MAX_DATA_ACCESSES];
   bx_bool is_branch;
   bx_bool is_taken;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.106 2007-11-24 14:22:32 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.107 2007-12-13 21:53:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -567,7 +567,7 @@ void bx_dbg_info_control_regs_command(void)
 {
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list)->get();
   bx_address cr2 = SIM->get_param_num("CR2", dbg_cpu_list)->get();
-  Bit32u cr3 = SIM->get_param_num("CR3", dbg_cpu_list)->get();
+  bx_phy_address cr3 = SIM->get_param_num("CR3", dbg_cpu_list)->get();
   dbg_printf("CR0=0x%08x\n", cr0);
   dbg_printf("    PG=paging=%d\n", (cr0>>31) & 1);
   dbg_printf("    CD=cache disable=%d\n", (cr0>>30) & 1);
