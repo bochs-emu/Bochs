@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.107 2007-12-13 21:53:52 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.108 2007-12-13 22:56:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -72,8 +72,6 @@ static struct {
   Bit32u   default_addr;
   unsigned next_bpoint_id;
 } bx_debugger;
-
-#define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
 
 typedef struct {
   FILE    *fp;
@@ -1456,7 +1454,10 @@ one_more:
     // setting should have no effect, although a low setting does
     // lead to poor performance because cpu_loop is returning and 
     // getting called again, over and over.
-    int quantum = BX_DBG_DEFAULT_ICOUNT_QUANTUM;
+
+#define BX_DBG_DEFAULT_ICOUNT_QUANTUM 5
+
+    Bit32u quantum = (BX_SMP_PROCESSORS>1) ? BX_DBG_DEFAULT_ICOUNT_QUANTUM : 0;
     int cpu;
     for (cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
       BX_CPU(cpu)->guard_found.guard_found = 0;
@@ -1478,6 +1479,7 @@ one_more:
       // cpus set stop, too bad.
     }
 
+#if BX_SUPPORT_SMP
     // increment time tick only after all processors have had their chance.
     if (BX_SMP_PROCESSORS == 1) {
       // all ticks are handled inside the cpu loop
@@ -1501,6 +1503,7 @@ one_more:
 
       BX_TICKN(max_executed);
     }
+#endif
   }
 
   sim_running->set(0);
