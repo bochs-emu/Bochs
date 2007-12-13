@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.154 2007-12-09 18:36:05 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.155 2007-12-13 18:42:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3893,8 +3893,8 @@ modrm_done:
      instruction->setSeg(BX_SEG_REG_DS);
 
 #if BX_SUPPORT_TRACE_CACHE
-  // set stop-trace attribute for invalid instructions
-  if(instruction->execute == &BX_CPU_C::BxError) {
+  // set stop-trace attribute for invalid and string instructions
+  if(instruction->execute == &BX_CPU_C::BxError || instruction->repUsedL()) {
      instruction->setStopTraceAttr();
   }
 #endif
