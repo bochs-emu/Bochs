@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.185 2007-12-03 21:43:14 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.186 2007-12-13 21:41:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1999,6 +1999,8 @@ void BX_CPU_C::MWAIT(bxInstruction_c *i)
   // Execution of this instruction completes.  The processor
   // will remain in a optimized state until one of the above 
   // conditions is met.
+
+  BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_begin, CACHE_LINE_SIZE, ECX);
 
 #if BX_USE_IDLE_HACK  
   bx_gui->sim_is_idle();

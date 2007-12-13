@@ -42,6 +42,13 @@ RESET BUTTON on the simulator's control panel.
 The  callback is called each time, when Bochs' emulated CPU enters to the HALT
 state. 
 
+	void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flags);
+
+The callback is called each time, when Bochs' emulated CPU enters to the MWAIT
+state.  The  callback  receives  monitored  memory  range and MWAIT flags as a
+parameters.
+
+
 	void bx_instr_new_instruction(unsigned cpu);
 
 The  callback  is  called  each  time,  when Bochs completes (commits) already

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.16 2007-12-13 21:30:05 sshwarts Exp $
+// $Id: instrument.h,v 1.17 2007-12-13 21:41:32 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,6 +126,8 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_SHUTDOWN(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)           icpu[cpu_id].bx_instr_reset()
 #  define BX_INSTR_HLT(cpu_id)
+#  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
+
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id) icpu[cpu_id].bx_instr_new_instruction()
 
 /* called from command line debugger */
@@ -190,6 +192,7 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_SHUTDOWN(cpu_id)
 #  define BX_INSTR_RESET(cpu_id)
 #  define BX_INSTR_HLT(cpu_id)
+#  define BX_INSTR_MWAIT(cpu_id, addr, len, flags)
 #  define BX_INSTR_NEW_INSTRUCTION(cpu_id)
 
 /* called from command line debugger */
