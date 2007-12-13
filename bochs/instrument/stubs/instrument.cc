@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.16 2007-03-14 21:15:15 sshwarts Exp $
+// $Id: instrument.cc,v 1.17 2007-12-13 17:16:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -70,7 +70,7 @@ void bx_instr_outp2(Bit16u addr, unsigned len, unsigned val) {}
 void bx_instr_mem_code(unsigned cpu, bx_address linear, unsigned size) {}
 void bx_instr_mem_data(unsigned cpu, bx_address linear, unsigned size, unsigned rw) {}
 
-void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len) {}
+void bx_instr_lin_read(unsigned cpu, bx_address lin, bx_address phy, unsigned len, unsigned rw) {}
 void bx_instr_lin_write(unsigned cpu, bx_address lin, bx_address phy, unsigned len) {}
 
 void bx_instr_phy_write(unsigned cpu, bx_address addr, unsigned len) {}

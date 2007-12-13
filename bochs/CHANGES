@@ -34,6 +34,7 @@ Detailed change log :
     option, to disable trace cache optimization configure with
         --disable-trace-cache
   - Many minor bugfixes in CPU emulation (both ia32 and x86-64)
+  - Updated CPU instrumentation callbacks
 
 - Bochs Internal Debugger and Disassember
   - Many fixes in Bochs internal debugger and disassembler, some debugger
