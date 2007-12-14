@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.29 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.30 2007-12-14 22:41:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -247,47 +247,280 @@ void BX_CPU_C::XCHG_EqGqR(bxInstruction_c *i)
   BX_WRITE_64BIT_REG(i->rm(), op2_64);
 }
 
-void BX_CPU_C::CMOV_GqEq(bxInstruction_c *i)
-{
-  // Note: CMOV accesses a memory source operand (read), regardless
-  //       of whether condition is true or not.  Thus, exceptions may
-  //       occur even if the MOV does not take place.
+// Note: CMOV accesses a memory source operand (read), regardless
+//       of whether condition is true or not.  Thus, exceptions may
+//       occur even if the MOV does not take place.
 
-  bx_bool condition = 0;
+void BX_CPU_C::CMOVO_GqEqM(bxInstruction_c *i)
+{
   Bit64u op2_64;
 
-  switch (i->b1()) {
-    // CMOV opcodes:
-    case 0x140: condition = get_OF(); break;
-    case 0x141: condition = !get_OF(); break;
-    case 0x142: condition = get_CF(); break;
-    case 0x143: condition = !get_CF(); break;
-    case 0x144: condition = get_ZF(); break;
-    case 0x145: condition = !get_ZF(); break;
-    case 0x146: condition = get_CF() || get_ZF(); break;
-    case 0x147: condition = !get_CF() && !get_ZF(); break;
-    case 0x148: condition = get_SF(); break;
-    case 0x149: condition = !get_SF(); break;
-    case 0x14A: condition = get_PF(); break;
-    case 0x14B: condition = !get_PF(); break;
-    case 0x14C: condition = getB_SF() != getB_OF(); break;
-    case 0x14D: condition = getB_SF() == getB_OF(); break;
-    case 0x14E: condition = get_ZF() || (getB_SF() != getB_OF()); break;
-    case 0x14F: condition = !get_ZF() && (getB_SF() == getB_OF()); break;
-    default:
-      BX_PANIC(("CMOV_GqEq: default case"));
-  }
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
 
-  if (i->modC0()) {
-    op2_64 = BX_READ_64BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
-  }
-
-  if (condition)
+  if (get_OF())
     BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVO_GqEqR(bxInstruction_c *i)
+{
+  if (get_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNO_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (!get_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNO_GqEqR(bxInstruction_c *i)
+{
+  if (!get_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVB_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_CF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVB_GqEqR(bxInstruction_c *i)
+{
+  if (get_CF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNB_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (!get_CF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNB_GqEqR(bxInstruction_c *i)
+{
+  if (!get_CF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVZ_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVZ_GqEqR(bxInstruction_c *i)
+{
+  if (get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNZ_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (!get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNZ_GqEqR(bxInstruction_c *i)
+{
+  if (!get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVBE_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_CF() || get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVBE_GqEqR(bxInstruction_c *i)
+{
+  if (get_CF() || get_ZF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNBE_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (! (get_CF() || get_ZF()))
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNBE_GqEqR(bxInstruction_c *i)
+{
+  if (! (get_CF() || get_ZF()))
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVS_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_SF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVS_GqEqR(bxInstruction_c *i)
+{
+  if (get_SF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNS_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (!get_SF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNS_GqEqR(bxInstruction_c *i)
+{
+  if (!get_SF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVP_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_PF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVP_GqEqR(bxInstruction_c *i)
+{
+  if (get_PF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNP_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (!get_PF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNP_GqEqR(bxInstruction_c *i)
+{
+  if (!get_PF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVL_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (getB_SF() != getB_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVL_GqEqR(bxInstruction_c *i)
+{
+  if (getB_SF() != getB_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNL_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (getB_SF() == getB_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNL_GqEqR(bxInstruction_c *i)
+{
+  if (getB_SF() == getB_OF())
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVLE_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (get_ZF() || (getB_SF() != getB_OF()))
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVLE_GqEqR(bxInstruction_c *i)
+{
+  if (get_ZF() || (getB_SF() != getB_OF()))
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
+}
+
+void BX_CPU_C::CMOVNLE_GqEqM(bxInstruction_c *i)
+{
+  Bit64u op2_64;
+
+  /* pointer, segment address pair */
+  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+
+  if (! get_ZF() && (getB_SF() == getB_OF()))
+    BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+}
+
+void BX_CPU_C::CMOVNLE_GqEqR(bxInstruction_c *i)
+{
+  if (! get_ZF() && (getB_SF() == getB_OF()))
+    BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

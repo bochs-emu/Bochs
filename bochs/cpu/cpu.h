@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.389 2007-12-14 21:29:36 sshwarts Exp $
+// $Id: cpu.h,v 1.390 2007-12-14 22:41:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2146,391 +2146,391 @@ public: // for now...
 #endif
 
   /* MMX */
-  BX_SMF void PUNPCKLBW_PqQd(bxInstruction_c *i);
-  BX_SMF void PUNPCKLWD_PqQd(bxInstruction_c *i);
-  BX_SMF void PUNPCKLDQ_PqQd(bxInstruction_c *i);
-  BX_SMF void PACKSSWB_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPGTB_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPGTW_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPGTD_PqQq(bxInstruction_c *i);
-  BX_SMF void PACKUSWB_PqQq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHBW_PqQq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHWD_PqQq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHDQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PACKSSDW_PqQq(bxInstruction_c *i);
-  BX_SMF void MOVD_PqEd(bxInstruction_c *i);
-  BX_SMF void MOVQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPEQB_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPEQW_PqQq(bxInstruction_c *i);
-  BX_SMF void PCMPEQD_PqQq(bxInstruction_c *i);
-  BX_SMF void EMMS(bxInstruction_c *i);
-  BX_SMF void MOVD_EdPd(bxInstruction_c *i);
-  BX_SMF void MOVQ_QqPq(bxInstruction_c *i);
-  BX_SMF void PSRLW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSRLD_PqQq(bxInstruction_c *i);
-  BX_SMF void PSRLQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULLW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBUSB_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBUSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PAND_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDUSB_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDUSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PANDN_PqQq(bxInstruction_c *i);
-  BX_SMF void PSRAW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSRAD_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULHW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBSB_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBSW_PqQq(bxInstruction_c *i);
-  BX_SMF void POR_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDSB_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PXOR_PqQq(bxInstruction_c *i);
-  BX_SMF void PSLLW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSLLD_PqQq(bxInstruction_c *i);
-  BX_SMF void PSLLQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PMADDWD_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBB_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBD_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDB_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDW_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDD_PqQq(bxInstruction_c *i);
-  BX_SMF void PSRLW_PqIb(bxInstruction_c *i);
-  BX_SMF void PSRAW_PqIb(bxInstruction_c *i);
-  BX_SMF void PSLLW_PqIb(bxInstruction_c *i);
-  BX_SMF void PSRLD_PqIb(bxInstruction_c *i);
-  BX_SMF void PSRAD_PqIb(bxInstruction_c *i);
-  BX_SMF void PSLLD_PqIb(bxInstruction_c *i);
-  BX_SMF void PSRLQ_PqIb(bxInstruction_c *i);
-  BX_SMF void PSLLQ_PqIb(bxInstruction_c *i);
+  BX_SMF void PUNPCKLBW_PqQd(bxInstruction_c *);
+  BX_SMF void PUNPCKLWD_PqQd(bxInstruction_c *);
+  BX_SMF void PUNPCKLDQ_PqQd(bxInstruction_c *);
+  BX_SMF void PACKSSWB_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPGTB_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPGTW_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPGTD_PqQq(bxInstruction_c *);
+  BX_SMF void PACKUSWB_PqQq(bxInstruction_c *);
+  BX_SMF void PUNPCKHBW_PqQq(bxInstruction_c *);
+  BX_SMF void PUNPCKHWD_PqQq(bxInstruction_c *);
+  BX_SMF void PUNPCKHDQ_PqQq(bxInstruction_c *);
+  BX_SMF void PACKSSDW_PqQq(bxInstruction_c *);
+  BX_SMF void MOVD_PqEd(bxInstruction_c *);
+  BX_SMF void MOVQ_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPEQB_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPEQW_PqQq(bxInstruction_c *);
+  BX_SMF void PCMPEQD_PqQq(bxInstruction_c *);
+  BX_SMF void EMMS(bxInstruction_c *);
+  BX_SMF void MOVD_EdPd(bxInstruction_c *);
+  BX_SMF void MOVQ_QqPq(bxInstruction_c *);
+  BX_SMF void PSRLW_PqQq(bxInstruction_c *);
+  BX_SMF void PSRLD_PqQq(bxInstruction_c *);
+  BX_SMF void PSRLQ_PqQq(bxInstruction_c *);
+  BX_SMF void PMULLW_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBUSB_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBUSW_PqQq(bxInstruction_c *);
+  BX_SMF void PAND_PqQq(bxInstruction_c *);
+  BX_SMF void PADDUSB_PqQq(bxInstruction_c *);
+  BX_SMF void PADDUSW_PqQq(bxInstruction_c *);
+  BX_SMF void PANDN_PqQq(bxInstruction_c *);
+  BX_SMF void PSRAW_PqQq(bxInstruction_c *);
+  BX_SMF void PSRAD_PqQq(bxInstruction_c *);
+  BX_SMF void PMULHW_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBSB_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBSW_PqQq(bxInstruction_c *);
+  BX_SMF void POR_PqQq(bxInstruction_c *);
+  BX_SMF void PADDSB_PqQq(bxInstruction_c *);
+  BX_SMF void PADDSW_PqQq(bxInstruction_c *);
+  BX_SMF void PXOR_PqQq(bxInstruction_c *);
+  BX_SMF void PSLLW_PqQq(bxInstruction_c *);
+  BX_SMF void PSLLD_PqQq(bxInstruction_c *);
+  BX_SMF void PSLLQ_PqQq(bxInstruction_c *);
+  BX_SMF void PMADDWD_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBB_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBW_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBD_PqQq(bxInstruction_c *);
+  BX_SMF void PADDB_PqQq(bxInstruction_c *);
+  BX_SMF void PADDW_PqQq(bxInstruction_c *);
+  BX_SMF void PADDD_PqQq(bxInstruction_c *);
+  BX_SMF void PSRLW_PqIb(bxInstruction_c *);
+  BX_SMF void PSRAW_PqIb(bxInstruction_c *);
+  BX_SMF void PSLLW_PqIb(bxInstruction_c *);
+  BX_SMF void PSRLD_PqIb(bxInstruction_c *);
+  BX_SMF void PSRAD_PqIb(bxInstruction_c *);
+  BX_SMF void PSLLD_PqIb(bxInstruction_c *);
+  BX_SMF void PSRLQ_PqIb(bxInstruction_c *);
+  BX_SMF void PSLLQ_PqIb(bxInstruction_c *);
   /* MMX */
 
 #if BX_SUPPORT_3DNOW
-  BX_SMF void PFPNACC_PqQq(bxInstruction_c *i);
-  BX_SMF void PI2FW_PqQq(bxInstruction_c *i);
-  BX_SMF void PI2FD_PqQq(bxInstruction_c *i);
-  BX_SMF void PF2IW_PqQq(bxInstruction_c *i);
-  BX_SMF void PF2ID_PqQq(bxInstruction_c *i);
-  BX_SMF void PFNACC_PqQq(bxInstruction_c *i);
-  BX_SMF void PFCMPGE_PqQq(bxInstruction_c *i);
-  BX_SMF void PFMIN_PqQq(bxInstruction_c *i);
-  BX_SMF void PFRCP_PqQq(bxInstruction_c *i);
-  BX_SMF void PFRSQRT_PqQq(bxInstruction_c *i);
-  BX_SMF void PFSUB_PqQq(bxInstruction_c *i);
-  BX_SMF void PFADD_PqQq(bxInstruction_c *i);
-  BX_SMF void PFCMPGT_PqQq(bxInstruction_c *i);
-  BX_SMF void PFMAX_PqQq(bxInstruction_c *i);
-  BX_SMF void PFRCPIT1_PqQq(bxInstruction_c *i);
-  BX_SMF void PFRSQIT1_PqQq(bxInstruction_c *i);
-  BX_SMF void PFSUBR_PqQq(bxInstruction_c *i);
-  BX_SMF void PFACC_PqQq(bxInstruction_c *i);
-  BX_SMF void PFCMPEQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PFMUL_PqQq(bxInstruction_c *i);
-  BX_SMF void PFRCPIT2_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULHRW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSWAPD_PqQq(bxInstruction_c *i);
+  BX_SMF void PFPNACC_PqQq(bxInstruction_c *);
+  BX_SMF void PI2FW_PqQq(bxInstruction_c *);
+  BX_SMF void PI2FD_PqQq(bxInstruction_c *);
+  BX_SMF void PF2IW_PqQq(bxInstruction_c *);
+  BX_SMF void PF2ID_PqQq(bxInstruction_c *);
+  BX_SMF void PFNACC_PqQq(bxInstruction_c *);
+  BX_SMF void PFCMPGE_PqQq(bxInstruction_c *);
+  BX_SMF void PFMIN_PqQq(bxInstruction_c *);
+  BX_SMF void PFRCP_PqQq(bxInstruction_c *);
+  BX_SMF void PFRSQRT_PqQq(bxInstruction_c *);
+  BX_SMF void PFSUB_PqQq(bxInstruction_c *);
+  BX_SMF void PFADD_PqQq(bxInstruction_c *);
+  BX_SMF void PFCMPGT_PqQq(bxInstruction_c *);
+  BX_SMF void PFMAX_PqQq(bxInstruction_c *);
+  BX_SMF void PFRCPIT1_PqQq(bxInstruction_c *);
+  BX_SMF void PFRSQIT1_PqQq(bxInstruction_c *);
+  BX_SMF void PFSUBR_PqQq(bxInstruction_c *);
+  BX_SMF void PFACC_PqQq(bxInstruction_c *);
+  BX_SMF void PFCMPEQ_PqQq(bxInstruction_c *);
+  BX_SMF void PFMUL_PqQq(bxInstruction_c *);
+  BX_SMF void PFRCPIT2_PqQq(bxInstruction_c *);
+  BX_SMF void PMULHRW_PqQq(bxInstruction_c *);
+  BX_SMF void PSWAPD_PqQq(bxInstruction_c *);
 #endif
 
   /* SSE */
-  BX_SMF void FXSAVE(bxInstruction_c *i);
-  BX_SMF void FXRSTOR(bxInstruction_c *i);
-  BX_SMF void LDMXCSR(bxInstruction_c *i);
-  BX_SMF void STMXCSR(bxInstruction_c *i);
-  BX_SMF void PREFETCH(bxInstruction_c *i);
+  BX_SMF void FXSAVE(bxInstruction_c *);
+  BX_SMF void FXRSTOR(bxInstruction_c *);
+  BX_SMF void LDMXCSR(bxInstruction_c *);
+  BX_SMF void STMXCSR(bxInstruction_c *);
+  BX_SMF void PREFETCH(bxInstruction_c *);
   /* SSE */
 
   /* SSE */
-  BX_SMF void MOVUPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MOVSS_VssWss(bxInstruction_c *i);
-  BX_SMF void MOVUPS_WpsVps(bxInstruction_c *i);
-  BX_SMF void MOVSS_WssVss(bxInstruction_c *i);
-  BX_SMF void MOVLPS_VpsMq(bxInstruction_c *i);
-  BX_SMF void MOVLPS_MqVps(bxInstruction_c *i);
-  BX_SMF void MOVHPS_VpsMq(bxInstruction_c *i);
-  BX_SMF void MOVHPS_MqVps(bxInstruction_c *i);
-  BX_SMF void MOVAPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MOVAPS_WpsVps(bxInstruction_c *i);
-  BX_SMF void CVTPI2PS_VpsQq(bxInstruction_c *i);
-  BX_SMF void CVTSI2SS_VssEd(bxInstruction_c *i);
-  BX_SMF void MOVNTPS_MpsVps(bxInstruction_c *i);
-  BX_SMF void CVTTPS2PI_PqWps(bxInstruction_c *i);
-  BX_SMF void CVTTSS2SI_GdWss(bxInstruction_c *i);
-  BX_SMF void CVTPS2PI_PqWps(bxInstruction_c *i);
-  BX_SMF void CVTSS2SI_GdWss(bxInstruction_c *i);
-  BX_SMF void UCOMISS_VssWss(bxInstruction_c *i);
-  BX_SMF void COMISS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MOVMSKPS_GdVRps(bxInstruction_c *i);
-  BX_SMF void SQRTPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void SQRTSS_VssWss(bxInstruction_c *i);
-  BX_SMF void RSQRTPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void RSQRTSS_VssWss(bxInstruction_c *i);
-  BX_SMF void RCPPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void RCPSS_VssWss(bxInstruction_c *i);
-  BX_SMF void ADDPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void ADDSS_VssWss(bxInstruction_c *i);
-  BX_SMF void MULPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MULSS_VssWss(bxInstruction_c *i);
-  BX_SMF void SUBPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void SUBSS_VssWss(bxInstruction_c *i);
-  BX_SMF void MINPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MINSS_VssWss(bxInstruction_c *i);
-  BX_SMF void DIVPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void DIVSS_VssWss(bxInstruction_c *i);
-  BX_SMF void MAXPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void MAXSS_VssWss(bxInstruction_c *i);
-  BX_SMF void PSHUFW_PqQqIb(bxInstruction_c *i);
-  BX_SMF void PSHUFLW_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *i);
-  BX_SMF void CMPSS_VssWssIb(bxInstruction_c *i);
-  BX_SMF void PINSRW_PqEwIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_GdPqIb(bxInstruction_c *i);
-  BX_SMF void SHUFPS_VpsWpsIb(bxInstruction_c *i);
-  BX_SMF void PMOVMSKB_GdPRq(bxInstruction_c *i);
-  BX_SMF void PMINUB_PqQq(bxInstruction_c *i);
-  BX_SMF void PMAXUB_PqQq(bxInstruction_c *i);
-  BX_SMF void PAVGB_PqQq(bxInstruction_c *i);
-  BX_SMF void PAVGW_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULHUW_PqQq(bxInstruction_c *i);
-  BX_SMF void MOVNTQ_MqPq(bxInstruction_c *i);
-  BX_SMF void PMINSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PMAXSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSADBW_PqQq(bxInstruction_c *i);
-  BX_SMF void MASKMOVQ_PqPRq(bxInstruction_c *i);
+  BX_SMF void MOVUPS_VpsWps(bxInstruction_c *);
+  BX_SMF void MOVSS_VssWss(bxInstruction_c *);
+  BX_SMF void MOVUPS_WpsVps(bxInstruction_c *);
+  BX_SMF void MOVSS_WssVss(bxInstruction_c *);
+  BX_SMF void MOVLPS_VpsMq(bxInstruction_c *);
+  BX_SMF void MOVLPS_MqVps(bxInstruction_c *);
+  BX_SMF void MOVHPS_VpsMq(bxInstruction_c *);
+  BX_SMF void MOVHPS_MqVps(bxInstruction_c *);
+  BX_SMF void MOVAPS_VpsWps(bxInstruction_c *);
+  BX_SMF void MOVAPS_WpsVps(bxInstruction_c *);
+  BX_SMF void CVTPI2PS_VpsQq(bxInstruction_c *);
+  BX_SMF void CVTSI2SS_VssEd(bxInstruction_c *);
+  BX_SMF void MOVNTPS_MpsVps(bxInstruction_c *);
+  BX_SMF void CVTTPS2PI_PqWps(bxInstruction_c *);
+  BX_SMF void CVTTSS2SI_GdWss(bxInstruction_c *);
+  BX_SMF void CVTPS2PI_PqWps(bxInstruction_c *);
+  BX_SMF void CVTSS2SI_GdWss(bxInstruction_c *);
+  BX_SMF void UCOMISS_VssWss(bxInstruction_c *);
+  BX_SMF void COMISS_VpsWps(bxInstruction_c *);
+  BX_SMF void MOVMSKPS_GdVRps(bxInstruction_c *);
+  BX_SMF void SQRTPS_VpsWps(bxInstruction_c *);
+  BX_SMF void SQRTSS_VssWss(bxInstruction_c *);
+  BX_SMF void RSQRTPS_VpsWps(bxInstruction_c *);
+  BX_SMF void RSQRTSS_VssWss(bxInstruction_c *);
+  BX_SMF void RCPPS_VpsWps(bxInstruction_c *);
+  BX_SMF void RCPSS_VssWss(bxInstruction_c *);
+  BX_SMF void ADDPS_VpsWps(bxInstruction_c *);
+  BX_SMF void ADDSS_VssWss(bxInstruction_c *);
+  BX_SMF void MULPS_VpsWps(bxInstruction_c *);
+  BX_SMF void MULSS_VssWss(bxInstruction_c *);
+  BX_SMF void SUBPS_VpsWps(bxInstruction_c *);
+  BX_SMF void SUBSS_VssWss(bxInstruction_c *);
+  BX_SMF void MINPS_VpsWps(bxInstruction_c *);
+  BX_SMF void MINSS_VssWss(bxInstruction_c *);
+  BX_SMF void DIVPS_VpsWps(bxInstruction_c *);
+  BX_SMF void DIVSS_VssWss(bxInstruction_c *);
+  BX_SMF void MAXPS_VpsWps(bxInstruction_c *);
+  BX_SMF void MAXSS_VssWss(bxInstruction_c *);
+  BX_SMF void PSHUFW_PqQqIb(bxInstruction_c *);
+  BX_SMF void PSHUFLW_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void CMPPS_VpsWpsIb(bxInstruction_c *);
+  BX_SMF void CMPSS_VssWssIb(bxInstruction_c *);
+  BX_SMF void PINSRW_PqEwIb(bxInstruction_c *);
+  BX_SMF void PEXTRW_GdPqIb(bxInstruction_c *);
+  BX_SMF void SHUFPS_VpsWpsIb(bxInstruction_c *);
+  BX_SMF void PMOVMSKB_GdPRq(bxInstruction_c *);
+  BX_SMF void PMINUB_PqQq(bxInstruction_c *);
+  BX_SMF void PMAXUB_PqQq(bxInstruction_c *);
+  BX_SMF void PAVGB_PqQq(bxInstruction_c *);
+  BX_SMF void PAVGW_PqQq(bxInstruction_c *);
+  BX_SMF void PMULHUW_PqQq(bxInstruction_c *);
+  BX_SMF void MOVNTQ_MqPq(bxInstruction_c *);
+  BX_SMF void PMINSW_PqQq(bxInstruction_c *);
+  BX_SMF void PMAXSW_PqQq(bxInstruction_c *);
+  BX_SMF void PSADBW_PqQq(bxInstruction_c *);
+  BX_SMF void MASKMOVQ_PqPRq(bxInstruction_c *);
   /* SSE */
 
   /* SSE2 */
-  BX_SMF void MOVSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void MOVSD_WsdVsd(bxInstruction_c *i);
-  BX_SMF void CVTPI2PD_VpdQq(bxInstruction_c *i);
-  BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *i);
-  BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *i);
-  BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *i);
-  BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *i);
-  BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *i);
-  BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *i);            	
-  BX_SMF void COMISD_VpdWpd(bxInstruction_c *i);   
-  BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *i);
-  BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void ADDPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void ADDSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void MULPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void MULSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void CVTPS2PD_VpsWps(bxInstruction_c *i);
-  BX_SMF void CVTPD2PS_VpdWpd(bxInstruction_c *i);
-  BX_SMF void CVTSD2SS_VsdWsd(bxInstruction_c *i);
-  BX_SMF void CVTSS2SD_VssWss(bxInstruction_c *i);
-  BX_SMF void CVTDQ2PS_VpsWdq(bxInstruction_c *i);
-  BX_SMF void CVTPS2DQ_VdqWps(bxInstruction_c *i);
-  BX_SMF void CVTTPS2DQ_VdqWps(bxInstruction_c *i);
-  BX_SMF void SUBPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void SUBSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void MINPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void MINSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void DIVPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void DIVSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void MAXPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void MAXSD_VsdWsd(bxInstruction_c *i);
-  BX_SMF void PUNPCKLBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKLWD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void UNPCKLPS_VpsWdq(bxInstruction_c *i);
-  BX_SMF void PACKSSWB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPGTB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPGTW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPGTD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PACKUSWB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHWD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void UNPCKHPS_VpsWdq(bxInstruction_c *i);
-  BX_SMF void PACKSSDW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKLQDQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PUNPCKHQDQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MOVD_VdqEd(bxInstruction_c *i);
-  BX_SMF void PSHUFD_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PSHUFHW_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PCMPEQB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPEQW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MOVD_EdVd(bxInstruction_c *i);
-  BX_SMF void MOVQ_VqWq(bxInstruction_c *i);
-  BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *i);
-  BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *i);
-  BX_SMF void MOVNTI_MdGd(bxInstruction_c *i);
-  BX_SMF void PINSRW_VdqEwIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_GdUdqIb(bxInstruction_c *i);
-  BX_SMF void SHUFPD_VpdWpdIb(bxInstruction_c *i);
-  BX_SMF void PSRLW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRLD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRLQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PADDQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULLW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MOVQ_WqVq(bxInstruction_c *i);
-  BX_SMF void MOVDQ2Q_PqVRq(bxInstruction_c *i);
-  BX_SMF void MOVQ2DQ_VdqQq(bxInstruction_c *i);
-  BX_SMF void PMOVMSKB_GdUdq(bxInstruction_c *i);
-  BX_SMF void PSUBUSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSUBUSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMINUB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void ANDPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void PADDUSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDUSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXUB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void PAVGB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRAW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRAD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PAVGW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULHUW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULHW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void CVTTPD2DQ_VqWpd(bxInstruction_c *i);
-  BX_SMF void CVTPD2DQ_VqWpd(bxInstruction_c *i);
-  BX_SMF void CVTDQ2PD_VpdWq(bxInstruction_c *i);
-  BX_SMF void PSUBSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSUBSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMINSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void ORPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void PADDSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void XORPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void PSLLW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSLLD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSLLQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULUDQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULUDQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMADDWD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSADBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void MASKMOVDQU_VdqUdq(bxInstruction_c *i);
-  BX_SMF void PSUBB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSUBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSUBD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSUBQ_PqQq(bxInstruction_c *i);
-  BX_SMF void PSUBQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PADDD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSRLW_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSRAW_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLW_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLD_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSRAD_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLD_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLQ_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSRLDQ_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLQ_UdqIb(bxInstruction_c *i);
-  BX_SMF void PSLLDQ_UdqIb(bxInstruction_c *i);
+  BX_SMF void MOVSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void MOVSD_WsdVsd(bxInstruction_c *);
+  BX_SMF void CVTPI2PD_VpdQq(bxInstruction_c *);
+  BX_SMF void CVTSI2SD_VsdEd(bxInstruction_c *);
+  BX_SMF void CVTTPD2PI_PqWpd(bxInstruction_c *);
+  BX_SMF void CVTTSD2SI_GdWsd(bxInstruction_c *);
+  BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *);
+  BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *);
+  BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *);            	
+  BX_SMF void COMISD_VpdWpd(bxInstruction_c *);   
+  BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *);
+  BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void ADDPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void ADDSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void MULPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void MULSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void CVTPS2PD_VpsWps(bxInstruction_c *);
+  BX_SMF void CVTPD2PS_VpdWpd(bxInstruction_c *);
+  BX_SMF void CVTSD2SS_VsdWsd(bxInstruction_c *);
+  BX_SMF void CVTSS2SD_VssWss(bxInstruction_c *);
+  BX_SMF void CVTDQ2PS_VpsWdq(bxInstruction_c *);
+  BX_SMF void CVTPS2DQ_VdqWps(bxInstruction_c *);
+  BX_SMF void CVTTPS2DQ_VdqWps(bxInstruction_c *);
+  BX_SMF void SUBPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void SUBSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void MINPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void MINSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void DIVPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void DIVSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void MAXPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void MAXSD_VsdWsd(bxInstruction_c *);
+  BX_SMF void PUNPCKLBW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKLWD_VdqWdq(bxInstruction_c *);
+  BX_SMF void UNPCKLPS_VpsWdq(bxInstruction_c *);
+  BX_SMF void PACKSSWB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPGTB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPGTW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPGTD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PACKUSWB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKHBW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKHWD_VdqWdq(bxInstruction_c *);
+  BX_SMF void UNPCKHPS_VpsWdq(bxInstruction_c *);
+  BX_SMF void PACKSSDW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKLQDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PUNPCKHQDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void MOVD_VdqEd(bxInstruction_c *);
+  BX_SMF void PSHUFD_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PSHUFHW_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PCMPEQB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPEQW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPEQD_VdqWdq(bxInstruction_c *);
+  BX_SMF void MOVD_EdVd(bxInstruction_c *);
+  BX_SMF void MOVQ_VqWq(bxInstruction_c *);
+  BX_SMF void CMPPD_VpdWpdIb(bxInstruction_c *);
+  BX_SMF void CMPSD_VsdWsdIb(bxInstruction_c *);
+  BX_SMF void MOVNTI_MdGd(bxInstruction_c *);
+  BX_SMF void PINSRW_VdqEwIb(bxInstruction_c *);
+  BX_SMF void PEXTRW_GdUdqIb(bxInstruction_c *);
+  BX_SMF void SHUFPD_VpdWpdIb(bxInstruction_c *);
+  BX_SMF void PSRLW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSRLD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSRLQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDQ_PqQq(bxInstruction_c *);
+  BX_SMF void PADDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULLW_VdqWdq(bxInstruction_c *);
+  BX_SMF void MOVQ_WqVq(bxInstruction_c *);
+  BX_SMF void MOVDQ2Q_PqVRq(bxInstruction_c *);
+  BX_SMF void MOVQ2DQ_VdqQq(bxInstruction_c *);
+  BX_SMF void PMOVMSKB_GdUdq(bxInstruction_c *);
+  BX_SMF void PSUBUSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSUBUSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMINUB_VdqWdq(bxInstruction_c *);
+  BX_SMF void ANDPS_VpsWps(bxInstruction_c *);
+  BX_SMF void PADDUSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDUSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXUB_VdqWdq(bxInstruction_c *);
+  BX_SMF void ANDNPS_VpsWps(bxInstruction_c *);
+  BX_SMF void PAVGB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSRAW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSRAD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PAVGW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULHUW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULHW_VdqWdq(bxInstruction_c *);
+  BX_SMF void CVTTPD2DQ_VqWpd(bxInstruction_c *);
+  BX_SMF void CVTPD2DQ_VqWpd(bxInstruction_c *);
+  BX_SMF void CVTDQ2PD_VpdWq(bxInstruction_c *);
+  BX_SMF void PSUBSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSUBSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMINSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void ORPS_VpsWps(bxInstruction_c *);
+  BX_SMF void PADDSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void XORPS_VpsWps(bxInstruction_c *);
+  BX_SMF void PSLLW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSLLD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSLLQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULUDQ_PqQq(bxInstruction_c *);
+  BX_SMF void PMULUDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMADDWD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSADBW_VdqWdq(bxInstruction_c *);
+  BX_SMF void MASKMOVDQU_VdqUdq(bxInstruction_c *);
+  BX_SMF void PSUBB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSUBW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSUBD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSUBQ_PqQq(bxInstruction_c *);
+  BX_SMF void PSUBQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PADDD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSRLW_UdqIb(bxInstruction_c *);
+  BX_SMF void PSRAW_UdqIb(bxInstruction_c *);
+  BX_SMF void PSLLW_UdqIb(bxInstruction_c *);
+  BX_SMF void PSRLD_UdqIb(bxInstruction_c *);
+  BX_SMF void PSRAD_UdqIb(bxInstruction_c *);
+  BX_SMF void PSLLD_UdqIb(bxInstruction_c *);
+  BX_SMF void PSRLQ_UdqIb(bxInstruction_c *);
+  BX_SMF void PSRLDQ_UdqIb(bxInstruction_c *);
+  BX_SMF void PSLLQ_UdqIb(bxInstruction_c *);
+  BX_SMF void PSLLDQ_UdqIb(bxInstruction_c *);
   /* SSE2 */
 
   /* SSE3 */
-  BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *i);
-  BX_SMF void MOVSLDUP_VpsWps(bxInstruction_c *i);
-  BX_SMF void MOVSHDUP_VpsWps(bxInstruction_c *i);
-  BX_SMF void HADDPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void HADDPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void HSUBPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void HSUBPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void LDDQU_VdqMdq(bxInstruction_c *i);
+  BX_SMF void MOVDDUP_VpdWq(bxInstruction_c *);
+  BX_SMF void MOVSLDUP_VpsWps(bxInstruction_c *);
+  BX_SMF void MOVSHDUP_VpsWps(bxInstruction_c *);
+  BX_SMF void HADDPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void HADDPS_VpsWps(bxInstruction_c *);
+  BX_SMF void HSUBPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void HSUBPS_VpsWps(bxInstruction_c *);
+  BX_SMF void ADDSUBPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void ADDSUBPS_VpsWps(bxInstruction_c *);
+  BX_SMF void LDDQU_VdqMdq(bxInstruction_c *);
   /* SSE3 */
 
   // 3-byte opcodes
 #if (BX_SUPPORT_SSE >= 4) || (BX_SUPPORT_SSE >= 3 && BX_SUPPORT_SSE_EXTENSION > 0)
   /* SSE3E */
-  BX_SMF void PSHUFB_PqQq(bxInstruction_c *i);
-  BX_SMF void PHADDW_PqQq(bxInstruction_c *i);
-  BX_SMF void PHADDD_PqQq(bxInstruction_c *i);
-  BX_SMF void PHADDSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PMADDUBSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PHSUBSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PHSUBW_PqQq(bxInstruction_c *i);
-  BX_SMF void PHSUBD_PqQq(bxInstruction_c *i);
-  BX_SMF void PSIGNB_PqQq(bxInstruction_c *i);
-  BX_SMF void PSIGNW_PqQq(bxInstruction_c *i);
-  BX_SMF void PSIGND_PqQq(bxInstruction_c *i);
-  BX_SMF void PMULHRSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PABSB_PqQq(bxInstruction_c *i);
-  BX_SMF void PABSW_PqQq(bxInstruction_c *i);
-  BX_SMF void PABSD_PqQq(bxInstruction_c *i);
-  BX_SMF void PALIGNR_PqQqIb(bxInstruction_c *i);
+  BX_SMF void PSHUFB_PqQq(bxInstruction_c *);
+  BX_SMF void PHADDW_PqQq(bxInstruction_c *);
+  BX_SMF void PHADDD_PqQq(bxInstruction_c *);
+  BX_SMF void PHADDSW_PqQq(bxInstruction_c *);
+  BX_SMF void PMADDUBSW_PqQq(bxInstruction_c *);
+  BX_SMF void PHSUBSW_PqQq(bxInstruction_c *);
+  BX_SMF void PHSUBW_PqQq(bxInstruction_c *);
+  BX_SMF void PHSUBD_PqQq(bxInstruction_c *);
+  BX_SMF void PSIGNB_PqQq(bxInstruction_c *);
+  BX_SMF void PSIGNW_PqQq(bxInstruction_c *);
+  BX_SMF void PSIGND_PqQq(bxInstruction_c *);
+  BX_SMF void PMULHRSW_PqQq(bxInstruction_c *);
+  BX_SMF void PABSB_PqQq(bxInstruction_c *);
+  BX_SMF void PABSW_PqQq(bxInstruction_c *);
+  BX_SMF void PABSD_PqQq(bxInstruction_c *);
+  BX_SMF void PALIGNR_PqQqIb(bxInstruction_c *);
 
-  BX_SMF void PSHUFB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHADDW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHADDD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHADDSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMADDUBSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHSUBSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHSUBW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHSUBD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSIGNB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSIGNW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PSIGND_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULHRSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PABSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PABSW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PABSD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void PSHUFB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHADDW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHADDD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHADDSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMADDUBSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHSUBSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHSUBW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHSUBD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSIGNB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSIGNW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PSIGND_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULHRSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PABSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PABSW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PABSD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PALIGNR_VdqWdqIb(bxInstruction_c *);
   /* SSE3E */
 
   /* SSE4.1 */
-  BX_SMF void PBLENDVB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void BLENDVPS_VpsWps(bxInstruction_c *i);
-  BX_SMF void BLENDVPD_VpdWpd(bxInstruction_c *i);
-  BX_SMF void PTEST_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULDQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPEQQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PACKUSDW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMOVSXBW_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMOVSXBD_VdqWd(bxInstruction_c *i);
-  BX_SMF void PMOVSXBQ_VdqWw(bxInstruction_c *i);
-  BX_SMF void PMOVSXWD_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMOVSXWQ_VdqWd(bxInstruction_c *i);
-  BX_SMF void PMOVSXDQ_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMOVZXBW_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMOVZXBD_VdqWd(bxInstruction_c *i);
-  BX_SMF void PMOVZXBQ_VdqWw(bxInstruction_c *i);
-  BX_SMF void PMOVZXWD_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMOVZXWQ_VdqWd(bxInstruction_c *i);
-  BX_SMF void PMOVZXDQ_VdqWq(bxInstruction_c *i);
-  BX_SMF void PMINSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMINSD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMINUW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMINUD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXSB_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXSD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXUW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMAXUD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PMULLD_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PHMINPOSUW_VdqWdq(bxInstruction_c *i);
-  BX_SMF void ROUNDPS_VpsWpsIb(bxInstruction_c *i);
-  BX_SMF void ROUNDPD_VpdWpdIb(bxInstruction_c *i);
-  BX_SMF void ROUNDSS_VssWssIb(bxInstruction_c *i);
-  BX_SMF void ROUNDSD_VsdWsdIb(bxInstruction_c *i);
-  BX_SMF void BLENDPS_VpsWpsIb(bxInstruction_c *i);
-  BX_SMF void BLENDPD_VpdWpdIb(bxInstruction_c *i);
-  BX_SMF void PBLENDW_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PEXTRB_HbdUdqIb(bxInstruction_c *i);
-  BX_SMF void PEXTRW_HwdUdqIb(bxInstruction_c *i);
-  BX_SMF void PEXTRD_HdUdqIb(bxInstruction_c *i);
-  BX_SMF void EXTRACTPS_HdUpsIb(bxInstruction_c *i);
-  BX_SMF void PINSRB_VdqEbIb(bxInstruction_c *i);
-  BX_SMF void INSERTPS_VpsWssIb(bxInstruction_c *i);
-  BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *i);
-  BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *i);
-  BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *i);
-  BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *i);
+  BX_SMF void PBLENDVB_VdqWdq(bxInstruction_c *);
+  BX_SMF void BLENDVPS_VpsWps(bxInstruction_c *);
+  BX_SMF void BLENDVPD_VpdWpd(bxInstruction_c *);
+  BX_SMF void PTEST_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULDQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPEQQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PACKUSDW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMOVSXBW_VdqWq(bxInstruction_c *);
+  BX_SMF void PMOVSXBD_VdqWd(bxInstruction_c *);
+  BX_SMF void PMOVSXBQ_VdqWw(bxInstruction_c *);
+  BX_SMF void PMOVSXWD_VdqWq(bxInstruction_c *);
+  BX_SMF void PMOVSXWQ_VdqWd(bxInstruction_c *);
+  BX_SMF void PMOVSXDQ_VdqWq(bxInstruction_c *);
+  BX_SMF void PMOVZXBW_VdqWq(bxInstruction_c *);
+  BX_SMF void PMOVZXBD_VdqWd(bxInstruction_c *);
+  BX_SMF void PMOVZXBQ_VdqWw(bxInstruction_c *);
+  BX_SMF void PMOVZXWD_VdqWq(bxInstruction_c *);
+  BX_SMF void PMOVZXWQ_VdqWd(bxInstruction_c *);
+  BX_SMF void PMOVZXDQ_VdqWq(bxInstruction_c *);
+  BX_SMF void PMINSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMINSD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMINUW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMINUD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXSB_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXSD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXUW_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMAXUD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PMULLD_VdqWdq(bxInstruction_c *);
+  BX_SMF void PHMINPOSUW_VdqWdq(bxInstruction_c *);
+  BX_SMF void ROUNDPS_VpsWpsIb(bxInstruction_c *);
+  BX_SMF void ROUNDPD_VpdWpdIb(bxInstruction_c *);
+  BX_SMF void ROUNDSS_VssWssIb(bxInstruction_c *);
+  BX_SMF void ROUNDSD_VsdWsdIb(bxInstruction_c *);
+  BX_SMF void BLENDPS_VpsWpsIb(bxInstruction_c *);
+  BX_SMF void BLENDPD_VpdWpdIb(bxInstruction_c *);
+  BX_SMF void PBLENDW_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PEXTRB_HbdUdqIb(bxInstruction_c *);
+  BX_SMF void PEXTRW_HwdUdqIb(bxInstruction_c *);
+  BX_SMF void PEXTRD_HdUdqIb(bxInstruction_c *);
+  BX_SMF void EXTRACTPS_HdUpsIb(bxInstruction_c *);
+  BX_SMF void PINSRB_VdqEbIb(bxInstruction_c *);
+  BX_SMF void INSERTPS_VpsWssIb(bxInstruction_c *);
+  BX_SMF void PINSRD_VdqEdIb(bxInstruction_c *);
+  BX_SMF void DPPS_VpsWpsIb(bxInstruction_c *);
+  BX_SMF void DPPD_VpdWpdIb(bxInstruction_c *);
+  BX_SMF void MPSADBW_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void MOVNTDQA_VdqMdq(bxInstruction_c *);
   /* SSE4.1 */
 
   /* SSE4.2 */
-  BX_SMF void CRC32_GdEb(bxInstruction_c *i);
-  BX_SMF void CRC32_GdEv(bxInstruction_c *i);
-  BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *i);
-  BX_SMF void PCMPESTRM_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PCMPESTRI_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *i);
-  BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *i);
+  BX_SMF void CRC32_GdEb(bxInstruction_c *);
+  BX_SMF void CRC32_GdEv(bxInstruction_c *);
+  BX_SMF void PCMPGTQ_VdqWdq(bxInstruction_c *);
+  BX_SMF void PCMPESTRM_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PCMPESTRI_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PCMPISTRM_VdqWdqIb(bxInstruction_c *);
+  BX_SMF void PCMPISTRI_VdqWdqIb(bxInstruction_c *);
   /* SSE4.2 */
 #endif
 
@@ -2896,7 +2896,39 @@ public: // for now...
   BX_SMF void RETfar64_Iw(bxInstruction_c *);
   BX_SMF void RETfar64(bxInstruction_c *);
 
-  BX_SMF void CMOV_GqEq(bxInstruction_c *);
+  BX_SMF void CMOVO_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNO_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVB_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNB_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVZ_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVBE_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVS_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNS_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVP_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNP_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVL_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNL_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVLE_GqEqM(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GqEqM(bxInstruction_c *);
+
+  BX_SMF void CMOVO_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNO_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVB_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNB_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVZ_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVBE_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVS_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNS_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVP_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNP_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVL_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNL_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVLE_GqEqR(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GqEqR(bxInstruction_c *);
 
   BX_SMF void MOV_RRXIq(bxInstruction_c *);
   BX_SMF void PUSH_RRX(bxInstruction_c *);
@@ -2958,13 +2990,13 @@ public: // for now...
 #endif
 #if BX_SUPPORT_TRACE_CACHE
   BX_SMF bxICacheEntry_c* fetchInstructionTrace(bxInstruction_c *, bx_address);
-  BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy_address pAddr);
+  BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *, bx_phy_address pAddr);
   BX_SMF void instrumentTraces(void);
 #else
   BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *, bx_address);
 #endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
-  BX_SMF void BxError(bxInstruction_c *i);
+  BX_SMF void BxError(bxInstruction_c *);
 
   BX_SMF void BxResolveDummy(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -3030,7 +3062,7 @@ public: // for now...
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32u max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
-  BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i);
+  BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
   BX_SMF void prefetch(void);
   BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void) 
   {
@@ -3104,7 +3136,7 @@ public: // for now...
 
   BX_SMF void branch_near32(Bit32u new_EIP) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
-  BX_SMF void branch_near64(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_near64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   BX_SMF void branch_far32(bx_selector_t *selector, 
        bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl);
@@ -3112,28 +3144,28 @@ public: // for now...
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SupportRepeatSpeedups
-  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSB(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff,
+  BX_SMF Bit32u FastRepMOVSD(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
        unsigned dstSeg, bx_address dstOff, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSB(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
        Bit8u  val, Bit32u  byteCount);
-  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSW(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
        Bit16u val, Bit32u  wordCount);
-  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address dstOff,
+  BX_SMF Bit32u FastRepSTOSD(bxInstruction_c *, unsigned dstSeg, bx_address dstOff,
        Bit32u val, Bit32u dwordCount);
 
-  BX_SMF Bit32u FastRepINSW(bxInstruction_c *i, bx_address dstOff,
+  BX_SMF Bit32u FastRepINSW(bxInstruction_c *, bx_address dstOff,
        Bit16u port, Bit32u wordCount);
-  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address srcOff, 
+  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff, 
        Bit16u port, Bit32u wordCount);
 #endif
 
-  BX_SMF void repeat(bxInstruction_c *i, BxExecutePtr_t execute);
-  BX_SMF void repeat_ZFL(bxInstruction_c *i, BxExecutePtr_t execute);
+  BX_SMF void repeat(bxInstruction_c *, BxExecutePtr_t execute);
+  BX_SMF void repeat_ZFL(bxInstruction_c *, BxExecutePtr_t execute);
 
   // linear address for access_linear expected to be canonical !
   BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
@@ -3346,13 +3378,13 @@ public: // for now...
 
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
-  BX_SMF void prepareFPU(bxInstruction_c *i, bx_bool = 1, bx_bool = 1);
+  BX_SMF void prepareFPU(bxInstruction_c *, bx_bool = 1, bx_bool = 1);
   BX_SMF void FPU_check_pending_exceptions(void);
   BX_SMF void FPU_stack_underflow(int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(void);
   BX_SMF int  FPU_exception(int exception);
-  BX_SMF int  fpu_save_environment(bxInstruction_c *i);
-  BX_SMF int  fpu_load_environment(bxInstruction_c *i);
+  BX_SMF int  fpu_save_environment(bxInstruction_c *);
+  BX_SMF int  fpu_load_environment(bxInstruction_c *);
 #endif
 
 #if BX_SUPPORT_MMX || BX_SUPPORT_SSE
