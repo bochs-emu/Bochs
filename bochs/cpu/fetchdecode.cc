@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.147 2007-12-13 18:42:31 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.148 2007-12-14 20:41:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1514,7 +1514,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* C0 /wm */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Eb },
   /* C1 /wm */ { BxGroup2 | BxImmediate_Ib, NULL, BxOpcodeInfoG2Ew },
   /* C2 /wm */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETnear16_Iw },
-  /* C3 /wm */ { BxTraceEnd,              &BX_CPU_C::RETnear16 },
+  /* C3 /wm */ { BxTraceEnd,                  &BX_CPU_C::RETnear16 },
   /* C4 /wm */ { 0, &BX_CPU_C::LES_GwMp },
   /* C5 /wm */ { 0, &BX_CPU_C::LDS_GwMp },
   /* C6 /wm */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbM },

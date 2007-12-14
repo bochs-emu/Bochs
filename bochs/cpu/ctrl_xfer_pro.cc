@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.63 2007-12-10 23:04:18 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.64 2007-12-14 20:41:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -139,6 +139,12 @@ BX_CPU_C::branch_near32(Bit32u new_EIP)
     BX_ERROR(("branch_near: offset outside of CS limits"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+#if BX_SUPPORT_TRACE_CACHE
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
+
   EIP = new_EIP;
 }
 
@@ -169,6 +175,11 @@ BX_CPU_C::branch_near64(bxInstruction_c *i)
     BX_ERROR(("branch_near64: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+#if BX_SUPPORT_TRACE_CACHE
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
 
   RIP = new_RIP;
 }

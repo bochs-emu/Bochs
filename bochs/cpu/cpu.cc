@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.189 2007-12-14 11:27:44 sshwarts Exp $
+// $Id: cpu.cc,v 1.190 2007-12-14 20:41:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,7 +65,7 @@ static Bit32u iCacheMisses=0;
 static Bit32u iCacheMergeTraces=0;
 static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
-#define InstrICache_StatsMask 0xfffffff
+#define InstrICache_StatsMask 0x3ffffff
 
 #define InstrICache_Stats() {\
   if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
@@ -120,7 +120,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
   // We are not so lucky, but let's be optimistic - try to build trace from
   // incoming instruction bytes stream !
   trace->pAddr = pAddr;
-  trace->writeStamp = ICacheWriteStampInvalid;
+  trace->writeStamp = pageWriteStamp;
   trace->ilen = 0;
 
   InstrICache_Increment(iCacheMisses);
@@ -138,7 +138,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
   bxInstruction_c *i = trace->i;
 
-  for (unsigned len=0;len<max_length;len++)
+  for (unsigned len=0;len<max_length;len++,i++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -157,25 +157,33 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
       }
       // First instruction is boundary fetch, return iStorage and leave 
       // the trace cache entry invalid (do not cache the instruction)
+      trace->writeStamp = ICacheWriteStampInvalid;
       boundaryFetch(fetchPtr, remainingInPage, iStorage);
       return 0;
     }
 
     // add instruction to the trace ...
     unsigned iLen = i->ilen();
-    trace->writeStamp = pageWriteStamp;
     trace->ilen++;
-    if (i->getStopTraceAttr()) break;
 
     // ... and continue to the next instruction
     remainingInPage -= iLen;
     if (remainingInPage == 0) break;
     if (remainingInPage < 15) maxFetch = remainingInPage;
-    fetchPtr += iLen;
     pAddr += iLen;
-    i++;
+    fetchPtr += iLen;
 
-    if (mergeTraces(trace, i, pAddr)) break;
+    if (i->getStopTraceAttr()) {
+      unsigned b1 = i->b1() & 0x1f0;
+      if (b1 == 0x70 || b1 == 0x180) {    // JCC instruction
+         // try cross JCC branch merge of traces
+         mergeTraces(trace, i+1, pAddr);
+      }
+      break;
+    }
+
+    // try to find a trace starting from current pAddr and merge
+    if (mergeTraces(trace, i+1, pAddr)) break;
   }
 
   return trace;
@@ -368,6 +376,11 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   BX_CPU_THIS_PTR errorno = 0;
 
   while (1) {
+
+#if BX_SUPPORT_TRACE_CACHE
+    // clear stop trace magic indication that probably was set by branch32/64
+    BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+#endif
 
     // First check on events which occurred for previous instructions
     // (traps) and ones which are asynchronous to the CPU

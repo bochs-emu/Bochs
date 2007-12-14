@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.188 2007-12-14 11:27:44 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.189 2007-12-14 20:41:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,14 +136,16 @@ void BX_CPU_C::CLTS(bxInstruction_c *i)
 void BX_CPU_C::INVD(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
-  invalidate_prefetch_q();
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("INVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  invalidate_prefetch_q();
+
   BX_DEBUG(("INVD: Flush internal caches !"));
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
+
 #if BX_SUPPORT_ICACHE
   flushICaches();
 #endif
@@ -157,14 +159,16 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
 void BX_CPU_C::WBINVD(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
-  invalidate_prefetch_q();
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("WBINVD: priveledge check failed, generate #GP(0)"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  invalidate_prefetch_q();
+
   BX_DEBUG(("WBINVD: Flush internal caches !"));
+  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
+
 #if BX_SUPPORT_ICACHE
   flushICaches();
 #endif
@@ -178,8 +182,11 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
 void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 {
 #if BX_SUPPORT_CLFLUSH
+  bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
   // check if we could access the memory
-  execute_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], RMAddr(i), 1);
+  if ((seg->cache.valid & SegAccessROK4G) != SegAccessROK4G) {
+    execute_virtual_checks(seg, RMAddr(i), 1);
+  }
 #else
   BX_INFO(("CLFLUSH: not supported, enable with SSE2"));
   UndefinedOpcode(i);
@@ -587,9 +594,8 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
     case 0: // CR0 (MSW)
       SetCR0(val_32);
       break;
-
     case 1: /* CR1 */
-      BX_PANIC(("MOV_CdRd: CR1 not implemented yet"));
+      BX_PANIC(("MOV_CdRd:CR1 not implemented yet"));
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CdRd:CR2 = %08x", (unsigned) val_32));
@@ -819,12 +825,12 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
   Bit16u msw;
   Bit32u cr0;
 
-  invalidate_prefetch_q();
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("LMSW: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+  invalidate_prefetch_q();
 
   if (i->modC0()) {
     msw = BX_READ_16BIT_REG(i->rm());

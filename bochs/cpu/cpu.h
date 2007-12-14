@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.387 2007-12-14 11:27:44 sshwarts Exp $
+// $Id: cpu.h,v 1.388 2007-12-14 20:41:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1199,7 +1199,10 @@ public: // for now...
 #define BX_DEBUG_TRAP_SPECIAL       (0xf8000000)
 
   Bit32u   debug_trap; // holds DR6 value (16bit) to be set as well
-  volatile bx_bool async_event;
+  volatile Bit32u  async_event;
+
+#define BX_ASYNC_EVENT_STOP_TRACE   (0x80000000)
+
   volatile bx_bool INTR;
   volatile bx_bool smi_pending;
   volatile bx_bool nmi_pending;
