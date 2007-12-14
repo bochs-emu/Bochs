@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.188 2007-12-09 18:36:03 sshwarts Exp $
+// $Id: cpu.cc,v 1.189 2007-12-14 11:27:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,25 +57,30 @@ void flushICaches(void)
   pageWriteStampTable.resetWriteStamps();
 }
 
-#define InstrumentICACHE 0
+#define InstrumentTRACECACHE 0
 
-#if InstrumentICACHE
+#if InstrumentTRACECACHE
 static Bit32u iCacheLookups=0;
 static Bit32u iCacheMisses=0;
 static Bit32u iCacheMergeTraces=0;
-static Bit32u iCacheLength[BX_MAX_TRACE_LENGTH+1];
+static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 #define InstrICache_StatsMask 0xfffffff
 
 #define InstrICache_Stats() {\
   if ((iCacheLookups & InstrICache_StatsMask) == 0) { \
-    BX_INFO(("ICACHE lookups: %u, misses: %u, merges: %u, hit rate = %6.2f%% ", \
+    BX_INFO(("ICACHE lookups: %u, misses: %u, merges: %u, hit rate = %3.2f%%", \
           (unsigned) iCacheLookups, \
           (unsigned) iCacheMisses,  \
           (unsigned) iCacheMergeTraces, \
           (iCacheLookups-iCacheMisses) * 100.0 / iCacheLookups)); \
+    for (unsigned trace_len_idx=0; trace_len_idx<BX_MAX_TRACE_LENGTH;trace_len_idx++) { \
+      BX_INFO(("trace[%02d]: %u\t(%3.2f%%)", trace_len_idx+1, \
+         iCacheTraceLengh[trace_len_idx], \
+         iCacheTraceLengh[trace_len_idx] * 100.0/(iCacheLookups-iCacheMisses))); \
+      iCacheTraceLengh[trace_len_idx] = 0; \
+    } \
     iCacheLookups = iCacheMisses = iCacheMergeTraces = 0; \
-    for (int i=0;i<=BX_MAX_TRACE_LENGTH;i++) iCacheLength[i] = 0; \
   } \
 }
 #define InstrICache_Increment(v) (v)++
@@ -85,7 +90,7 @@ static Bit32u iCacheLength[BX_MAX_TRACE_LENGTH+1];
 #define InstrICache_Increment(v)
 #endif
 
-#endif // BX_SUPPORT_ICACHE
+#endif // InstrumentTRACECACHE
 
 // Make code more tidy with a few macros.
 #if BX_SUPPORT_X86_64==0
@@ -108,6 +113,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
   if ((trace->pAddr == pAddr) &&
       (trace->writeStamp == pageWriteStamp))
   {
+     InstrICache_Increment(iCacheTraceLengh[trace->ilen-1]);
      return trace; // We are lucky - trace cache hit !
   }
 
@@ -172,8 +178,6 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
     if (mergeTraces(trace, i, pAddr)) break;
   }
 
-  InstrICache_Increment(iCacheLength[trace->ilen-1]);
-
   return trace;
 }
 
@@ -201,6 +205,30 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy
 
   return 0;
 } 
+
+void BX_CPU_C::instrumentTraces(void)
+{
+  Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
+  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.entry;
+  Bit32u trace_length[BX_MAX_TRACE_LENGTH], invalid_entries = 0;
+  unsigned i;
+
+  for (i=0; i < BX_MAX_TRACE_LENGTH; i++) trace_length[i] = 0;
+
+  for (i=0; i<BxICacheEntries; i++, e++) {
+    if (e->writeStamp == currPageWriteStamp)
+      trace_length[e->ilen-1]++;
+    else 
+      invalid_entries++;
+  }
+
+  for (i=0; i < BX_MAX_TRACE_LENGTH; i++) {
+    BX_INFO(("traces[%02d]: %u\t%f%%", i+1,
+       trace_length[i], trace_length[i]*100.0/BxICacheEntries));
+  }
+  BX_INFO(("invalid entries: %u\t%f%%",
+       invalid_entries, invalid_entries*100.0/BxICacheEntries));
+}
 
 #else
 

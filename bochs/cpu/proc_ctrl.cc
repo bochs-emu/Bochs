@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.187 2007-12-14 10:15:12 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.188 2007-12-14 11:27:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -189,8 +189,6 @@ void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
 {
-  Bit32u val_32;
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_DdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -202,15 +200,15 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
+  invalidate_prefetch_q();
+
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
   if (!i->modC0())
     BX_PANIC(("MOV_DdRd(): rm field not a register!"));
 
-  invalidate_prefetch_q();
-
-  val_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -325,6 +323,8 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
+  if (!i->modC0())
+    BX_PANIC(("MOV_RdDd(): rm field not a register!"));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -389,17 +389,19 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
-   */
-
-  invalidate_prefetch_q();
-
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
     BX_ERROR(("MOV_DqRq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+  invalidate_prefetch_q();
+
+  /* This instruction is always treated as a register-to-register,
+   * regardless of the encoding of the MOD field in the MODRM byte.   
+   */
+  if (!i->modC0())
+    BX_PANIC(("MOV_DqRq(): rm field not a register!"));
 
   Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
 
@@ -497,15 +499,17 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
   BX_ASSERT(protected_mode());
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
-   */
-
   /* #GP(0) if CPL is not 0 */
   if (CPL != 0) {
     BX_ERROR(("MOV_RqDq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+  /* This instruction is always treated as a register-to-register,
+   * regardless of the encoding of the MOD field in the MODRM byte.   
+   */
+  if (!i->modC0())
+    BX_PANIC(("MOV_RqDq(): rm field not a register!"));
 
   switch (i->nnn()) {
     case 0: // DR0
@@ -558,9 +562,6 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
 {
-  // mov general register data to control register
-  Bit32u val_32;
-
   if (!real_mode() && CPL!=0) {
     BX_ERROR(("MOV_CdRd: CPL!=0 not in real mode"));
     exception(BX_GP_EXCEPTION, 0, 0);
@@ -572,13 +573,15 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
+  invalidate_prefetch_q();
+
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
    */
+  if (!i->modC0())
+    BX_PANIC(("MOV_CdRd(): rm field not a register!"));
 
-  invalidate_prefetch_q();
-
-  val_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u val_32 = BX_READ_32BIT_REG(i->rm());
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
@@ -674,9 +677,6 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 {
-  // mov general register data to control register
-  Bit64u val_64;
-
   BX_ASSERT(protected_mode());
 
   /* NOTES:
@@ -684,6 +684,12 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
    *   r/m field specifies general register
    *   reg field specifies which special register
    */
+
+  /* #GP(0) if CPL is not 0 */
+  if (CPL!=0) {
+    BX_ERROR(("MOV_CqRq: #GP(0) if CPL is not 0"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
 
   /* This instruction is always treated as a register-to-register,
    * regardless of the encoding of the MOD field in the MODRM byte.   
@@ -693,13 +699,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  /* #GP(0) if CPL is not 0 */
-  if (CPL!=0) {
-    BX_ERROR(("MOV_CqRq: #GP(0) if CPL is not 0"));
-    exception(BX_GP_EXCEPTION, 0, 0);
-  }
-
-  val_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u val_64 = BX_READ_64BIT_REG(i->rm());
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
@@ -760,17 +760,17 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
    *   reg field specifies which special register
    */
 
-  /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
-   */
-  if (!i->modC0())
-    BX_PANIC(("MOV_RqCq(): rm field not a register!"));
-
   /* #GP(0) if CPL is not 0 */
   if (CPL!=0) {
     BX_ERROR(("MOV_RqCq: #GP(0) if CPL is not 0"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
+
+  /* This instruction is always treated as a register-to-register,
+   * regardless of the encoding of the MOD field in the MODRM byte.   
+   */
+  if (!i->modC0())
+    BX_PANIC(("MOV_RqCq(): rm field not a register!"));
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
