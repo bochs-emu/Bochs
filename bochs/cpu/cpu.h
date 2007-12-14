@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.388 2007-12-14 20:41:09 sshwarts Exp $
+// $Id: cpu.h,v 1.389 2007-12-14 21:29:36 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1630,22 +1630,39 @@ public: // for now...
   BX_SMF void JLE_Jd(bxInstruction_c *);
   BX_SMF void JNLE_Jd(bxInstruction_c *);
 
-  BX_SMF void SETO_Eb(bxInstruction_c *);
-  BX_SMF void SETNO_Eb(bxInstruction_c *);
-  BX_SMF void SETB_Eb(bxInstruction_c *);
-  BX_SMF void SETNB_Eb(bxInstruction_c *);
-  BX_SMF void SETZ_Eb(bxInstruction_c *);
-  BX_SMF void SETNZ_Eb(bxInstruction_c *);
-  BX_SMF void SETBE_Eb(bxInstruction_c *);
-  BX_SMF void SETNBE_Eb(bxInstruction_c *);
-  BX_SMF void SETS_Eb(bxInstruction_c *);
-  BX_SMF void SETNS_Eb(bxInstruction_c *);
-  BX_SMF void SETP_Eb(bxInstruction_c *);
-  BX_SMF void SETNP_Eb(bxInstruction_c *);
-  BX_SMF void SETL_Eb(bxInstruction_c *);
-  BX_SMF void SETNL_Eb(bxInstruction_c *);
-  BX_SMF void SETLE_Eb(bxInstruction_c *);
-  BX_SMF void SETNLE_Eb(bxInstruction_c *);
+  BX_SMF void SETO_EbR(bxInstruction_c *);
+  BX_SMF void SETNO_EbR(bxInstruction_c *);
+  BX_SMF void SETB_EbR(bxInstruction_c *);
+  BX_SMF void SETNB_EbR(bxInstruction_c *);
+  BX_SMF void SETZ_EbR(bxInstruction_c *);
+  BX_SMF void SETNZ_EbR(bxInstruction_c *);
+  BX_SMF void SETBE_EbR(bxInstruction_c *);
+  BX_SMF void SETNBE_EbR(bxInstruction_c *);
+  BX_SMF void SETS_EbR(bxInstruction_c *);
+  BX_SMF void SETNS_EbR(bxInstruction_c *);
+  BX_SMF void SETP_EbR(bxInstruction_c *);
+  BX_SMF void SETNP_EbR(bxInstruction_c *);
+  BX_SMF void SETL_EbR(bxInstruction_c *);
+  BX_SMF void SETNL_EbR(bxInstruction_c *);
+  BX_SMF void SETLE_EbR(bxInstruction_c *);
+  BX_SMF void SETNLE_EbR(bxInstruction_c *);
+
+  BX_SMF void SETO_EbM(bxInstruction_c *);
+  BX_SMF void SETNO_EbM(bxInstruction_c *);
+  BX_SMF void SETB_EbM(bxInstruction_c *);
+  BX_SMF void SETNB_EbM(bxInstruction_c *);
+  BX_SMF void SETZ_EbM(bxInstruction_c *);
+  BX_SMF void SETNZ_EbM(bxInstruction_c *);
+  BX_SMF void SETBE_EbM(bxInstruction_c *);
+  BX_SMF void SETNBE_EbM(bxInstruction_c *);
+  BX_SMF void SETS_EbM(bxInstruction_c *);
+  BX_SMF void SETNS_EbM(bxInstruction_c *);
+  BX_SMF void SETP_EbM(bxInstruction_c *);
+  BX_SMF void SETNP_EbM(bxInstruction_c *);
+  BX_SMF void SETL_EbM(bxInstruction_c *);
+  BX_SMF void SETNL_EbM(bxInstruction_c *);
+  BX_SMF void SETLE_EbM(bxInstruction_c *);
+  BX_SMF void SETNLE_EbM(bxInstruction_c *);
 
   BX_SMF void CPUID(bxInstruction_c *);
 
