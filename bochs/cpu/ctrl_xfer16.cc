@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.44 2007-11-24 15:27:27 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.45 2007-12-14 23:15:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -539,18 +539,20 @@ void BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
 #endif
 }
 
-void BX_CPU_C::JMP_Ew(bxInstruction_c *i)
+void BX_CPU_C::JMP_EwM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
+  Bit16u new_IP;
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
-  }
-  else {
-    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  }
+  read_virtual_word(i->seg(), RMAddr(i), &new_IP);
 
-  Bit32u new_EIP = op1_16;
+  branch_near32((Bit32u) new_IP);
+
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
+}
+
+void BX_CPU_C::JMP_EwR(bxInstruction_c *i)
+{
+  Bit32u new_EIP = BX_READ_16BIT_REG(i->rm());
   branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }

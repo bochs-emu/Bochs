@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.56 2007-11-24 15:27:39 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.57 2007-12-14 23:15:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -527,21 +527,22 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::JMP_Ed(bxInstruction_c *i)
+void BX_CPU_C::JMP_EdM(bxInstruction_c *i)
 {
   Bit32u new_EIP;
 
-  /* op1_32 is a register or memory reference */
-  if (i->modC0()) {
-    new_EIP = BX_READ_32BIT_REG(i->rm());
-  }
-  else {
-    /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
-  }
+  /* pointer, segment address pair */
+  read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
 
   branch_near32(new_EIP);
 
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
+}
+
+void BX_CPU_C::JMP_EdR(bxInstruction_c *i)
+{
+  Bit32u new_EIP = BX_READ_32BIT_REG(i->rm());
+  branch_near32(new_EIP);
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 

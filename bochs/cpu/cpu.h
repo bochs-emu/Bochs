@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.390 2007-12-14 22:41:43 sshwarts Exp $
+// $Id: cpu.h,v 1.391 2007-12-14 23:15:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1978,10 +1978,13 @@ public: // for now...
   BX_SMF void CALL_Ew(bxInstruction_c *);
   BX_SMF void CALL32_Ep(bxInstruction_c *);
   BX_SMF void CALL16_Ep(bxInstruction_c *);
-  BX_SMF void JMP_Ed(bxInstruction_c *);
-  BX_SMF void JMP_Ew(bxInstruction_c *);
   BX_SMF void JMP32_Ep(bxInstruction_c *);
   BX_SMF void JMP16_Ep(bxInstruction_c *);
+
+  BX_SMF void JMP_EdR(bxInstruction_c *);
+  BX_SMF void JMP_EwR(bxInstruction_c *);
+  BX_SMF void JMP_EdM(bxInstruction_c *);
+  BX_SMF void JMP_EwM(bxInstruction_c *);
 
   BX_SMF void PUSH_EwR(bxInstruction_c *);
   BX_SMF void PUSH_EdR(bxInstruction_c *);

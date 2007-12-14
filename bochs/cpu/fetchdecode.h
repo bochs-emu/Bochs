@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.45 2007-12-09 18:36:05 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.46 2007-12-14 23:15:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2889,7 +2889,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5wM[8] = {
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_EwM },
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_Ew },
   /* 3 */ { BxTraceEnd, &BX_CPU_C::CALL16_Ep }, 
-  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_Ew },
+  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EwM },
   /* 5 */ { BxTraceEnd, &BX_CPU_C::JMP16_Ep },
   /* 6 */ { 0, &BX_CPU_C::PUSH_EwM },
   /* 7 */ { 0, &BX_CPU_C::BxError }
@@ -2901,7 +2901,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5wR[8] = {
   /* 1 */ { 0, &BX_CPU_C::DEC_EwR },
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_Ew },
   /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL16_Ep
-  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_Ew  },
+  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EwR  },
   /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP16_Ep
   /* 6 */ { 0, &BX_CPU_C::PUSH_EwR },
   /* 7 */ { 0, &BX_CPU_C::BxError }
@@ -2913,7 +2913,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5dM[8] = {
   /* 1 */ { BxLockable, &BX_CPU_C::DEC_EdM },
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_Ed },
   /* 3 */ { BxTraceEnd, &BX_CPU_C::CALL32_Ep },
-  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_Ed },
+  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EdM },
   /* 5 */ { BxTraceEnd, &BX_CPU_C::JMP32_Ep },
   /* 6 */ { 0, &BX_CPU_C::PUSH_EdM },
   /* 7 */ { 0, &BX_CPU_C::BxError }
@@ -2925,7 +2925,7 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5dR[8] = {
   /* 1 */ { 0, &BX_CPU_C::DEC_EdR },
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_Ed },
   /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL32_Ep
-  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_Ed  },
+  /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EdR  },
   /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP32_Ep
   /* 6 */ { 0, &BX_CPU_C::PUSH_EdR },
   /* 7 */ { 0, &BX_CPU_C::BxError }
