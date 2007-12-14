@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.186 2007-12-13 21:41:32 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.187 2007-12-14 10:15:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -143,9 +143,7 @@ void BX_CPU_C::INVD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_DEBUG(("INVD: Flush caches and TLB !"));
-  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_INVD);
-  TLB_flush(1); // 1 = Flush Global entries too
+  BX_DEBUG(("INVD: Flush internal caches !"));
 #if BX_SUPPORT_ICACHE
   flushICaches();
 #endif
@@ -166,9 +164,7 @@ void BX_CPU_C::WBINVD(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  BX_DEBUG(("WBINVD: Flush caches and TLB !"));
-  BX_INSTR_CACHE_CNTRL(BX_CPU_ID, BX_INSTR_WBINVD);
-  TLB_flush(1); // 1 = Flush Global entries too
+  BX_DEBUG(("WBINVD: Flush internal caches !"));
 #if BX_SUPPORT_ICACHE
   flushICaches();
 #endif
