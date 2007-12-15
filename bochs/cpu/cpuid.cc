@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.58 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: cpuid.cc,v 1.59 2007-12-15 17:42:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -415,7 +415,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //   [14:14] MCA: Machine Check Architecture
   //   [15:15] CMOV: Cond Mov/Cmp Instructions
   //   [16:16] PAT: Page Attribute Table
-  //   [17:17] PSE: Page-Size Extensions
+  //   [17:17] PSE-36: Physical Address Extensions
   //   [18:18] Processor Serial Number
   //   [19:19] CLFLUSH: CLFLUSH Instruction support
   //   [20:20] Reserved
@@ -527,7 +527,9 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //     [7:7]   Misaligned SSE support
   //     [8:8]   3DNow! prefetch support
   //     [9:9]   OS visible workarounds
-  //     [10:31] Reserved
+  //     [10:10] Reserved
+  //     [11:11] SSE5A
+  //     [12:31] Reserved
 #if BX_SUPPORT_X86_64
   cpuid->ecx = 1 | (1<<8);
 #endif
@@ -554,7 +556,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   // [*] [14:14] MCA: Machine Check Architecture
   // [*] [15:15] CMOV: Cond Mov/Cmp Instructions
   // [*] [16:16] PAT: Page Attribute Table
-  // [*] [17:17] PSE: Page-Size Extensions
+  // [*] [17:17] PSE-36: Physical Address Extensions
   //     [18:19] Reserved
   //     [20:20] No-Execute page protection
   //     [21:21] Reserved

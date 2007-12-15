@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.68 2007-12-01 16:45:17 sshwarts Exp $
+// $Id: sse_move.cc,v 1.69 2007-12-15 17:42:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1140,6 +1140,30 @@ void BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 #else
   BX_INFO(("MOVNTPS_MpsVps: required SSE, use --enable-sse option"));
+  UndefinedOpcode(i);                      
+#endif
+}
+
+/* MOVNTSD: F2 0F 2B */
+void BX_CPU_C::MOVNTSD_MsdVsd(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE4A
+  BX_CPU_THIS_PTR prepareSSE();
+  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_XMM_REG_LO_QWORD(i->nnn()));
+#else
+  BX_INFO(("MOVNTSD_MsdVsd: required SSE4A, use --enable-sse4a option"));
+  UndefinedOpcode(i);                      
+#endif
+}
+
+/* MOVNTSS: F3 0F 2B */
+void BX_CPU_C::MOVNTSS_MssVss(bxInstruction_c *i)
+{
+#if BX_SUPPORT_SSE4A
+  BX_CPU_THIS_PTR prepareSSE();
+  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_XMM_REG_LO_DWORD(i->nnn()));
+#else
+  BX_INFO(("MOVNTSS_MssVss: required SSE4A, use --enable-sse4a option"));
   UndefinedOpcode(i);                      
 #endif
 }

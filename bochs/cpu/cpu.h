@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.391 2007-12-14 23:15:52 sshwarts Exp $
+// $Id: cpu.h,v 1.392 2007-12-15 17:42:20 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2537,6 +2537,15 @@ public: // for now...
   /* SSE4.2 */
 #endif
 
+  /* SSE4A */
+  BX_SMF void MOVNTSS_MssVss(bxInstruction_c *);
+  BX_SMF void MOVNTSD_MsdVsd(bxInstruction_c *);
+  BX_SMF void EXTRQ_VdqUdq(bxInstruction_c *);
+  BX_SMF void EXTRQ_VdqIbIb(bxInstruction_c *);
+  BX_SMF void INSERTQ_VdqUdqIbIb(bxInstruction_c *);
+  BX_SMF void INSERTQ_VdqUdq(bxInstruction_c *);
+  /* SSE4A */
+
   /*** Duplicate SSE instructions ***/
   // Although in implementation, these instructions are aliased to the
   // another function, it's nice to have them call a separate function when
@@ -3769,12 +3778,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 // specify which kinds of immediate data a required by instruction.
 
 #define BxImmediate         0x000f // bits 3..0: any immediate
-#define BxImmediate_Ib      0x0001 // 8 bits regardless
+#define BxImmediate_Ib      0x0001 // 8 bit
 #define BxImmediate_Ib_SE   0x0002 // sign extend to OS size
-#define BxImmediate_Iv      0x0003 // 16 or 32 depending on OS size
-#define BxImmediate_Iw      0x0004 // 16 bits regardless
-#define BxImmediate_IvIw    0x0005 // call_Ap
-#define BxImmediate_IwIb    0x0006 // enter_IwIb
+#define BxImmediate_Iw      0x0003 // 16 bit or SSE4A IbIb immediate
+#define BxImmediate_IvIw    0x0004 // call_Ap, not encodable in 64-bit mode
+#define BxImmediate_IwIb    0x0005 // enter_IwIb
+#define BxImmediate_Id      0x0006 // 32 bit
 #define BxImmediate_O       0x0007 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
 #define BxImmediate_BrOff8  0x0008 // Relative branch offset byte
 #define BxImmediate_BrOff16 0x0009 // Relative branch offset word, not encodable in 64-bit mode
@@ -3782,6 +3791,8 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #if BX_SUPPORT_X86_64
 #define BxImmediate_Iq      0x000B // 64 bit override
 #endif
+
+#define BxImmediate_IbIb    BxImmediate_Iw
 
 // Lookup for opcode and attributes in another opcode tables
 // Totally 7 opcode groups supported
