@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.56 2007-12-16 21:21:29 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.57 2007-12-16 21:40:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,10 +44,7 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 
   Bit16u imm16 = i->Iw();
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  pop_64(&return_RIP);
+  read_virtual_qword(BX_SEG_REG_SS, RSP, &return_RIP);
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
@@ -55,9 +52,7 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   }
 
   RIP = return_RIP;
-  RSP += imm16;
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP += 8 + imm16;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
@@ -70,19 +65,15 @@ void BX_CPU_C::RETnear64(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  BX_CPU_THIS_PTR speculative_rsp = 1;
-  BX_CPU_THIS_PTR prev_rsp = RSP;
-
-  pop_64(&return_RIP);
+  read_virtual_qword(BX_SEG_REG_SS, RSP, &return_RIP);
 
   if (! IsCanonical(return_RIP)) {
-    BX_ERROR(("RETnear64: canonical RIP violation"));
+    BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
   RIP = return_RIP;
-
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  RSP += 8;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }

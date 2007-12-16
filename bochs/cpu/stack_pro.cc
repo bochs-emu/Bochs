@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.33 2007-11-30 08:49:12 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.34 2007-12-16 21:40:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,29 +78,15 @@ void BX_CPU_C::push_32(Bit32u value32)
 }
 
 /* push 64 bit operand */
+#if BX_SUPPORT_X86_64
 void BX_CPU_C::push_64(Bit64u value64)
 {
-  /* must use StackAddrSize, and either RSP, ESP or SP accordingly */
-#if BX_CPU_LEVEL >= 3
-#if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
-  {
-    write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
-    RSP -= 8;
-  }
-  else
-#endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_qword(BX_SEG_REG_SS, (Bit32u) (ESP-8), &value64);
-    ESP -= 8;
-  }
-  else
-#endif
-  {
-    write_virtual_qword(BX_SEG_REG_SS, (Bit16u) (SP-8), &value64);
-    SP  -= 8;
-  }
+  BX_ASSERT(StackAddrSize64());
+
+  write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
+  RSP -= 8;
 }
+#endif
 
 /* pop 16 bit operand from the stack */
 void BX_CPU_C::pop_16(Bit16u *value16_ptr)
@@ -159,32 +145,15 @@ void BX_CPU_C::pop_32(Bit32u *value32_ptr)
 }
 
 /* pop 64 bit operand from the stack */
+#if BX_SUPPORT_X86_64
 void BX_CPU_C::pop_64(Bit64u *value64_ptr)
 {
-  bx_address temp_RSP;
+  BX_ASSERT(StackAddrSize64());
 
-#if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
-    temp_RSP = RSP;
-  else
-#endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_RSP = ESP;
-  else
-    temp_RSP = SP;
-
-  read_virtual_qword(BX_SEG_REG_SS, temp_RSP, value64_ptr);
-
-#if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
-    RSP += 8;
-  else
-#endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    ESP += 8;
-  else
-    SP  += 8;
+  read_virtual_qword(BX_SEG_REG_SS, RSP, value64_ptr);
+  RSP += 8;
 }
+#endif
 
   bx_bool BX_CPP_AttrRegparmN(3)
 BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
