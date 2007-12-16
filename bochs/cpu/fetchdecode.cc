@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.150 2007-12-15 17:42:20 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.151 2007-12-16 20:47:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2840,15 +2840,27 @@ modrm_done:
           return(0);
         }
         break;
+      case BxImmediate_IbIb:
+        if (ilen < remain) {
+          instruction->IxIxForm.Ib = *iptr++;
+          ilen++;
+        }
+        else return(0);
+        if (ilen < remain) {
+          instruction->IxIxForm.Ib2 = *iptr;
+          ilen++;
+        }
+        else {
+          return(0);
+        }
+        break;
       case BxImmediate_IwIb:
         if ((ilen+1) < remain) {
           instruction->IxIxForm.Iw = FetchWORD(iptr);
           iptr += 2;
           ilen += 2;
         }
-        else {
-          return(0);
-        }
+        else return(0);
         if (ilen < remain) {
           instruction->IxIxForm.Ib2 = *iptr;
           ilen++;

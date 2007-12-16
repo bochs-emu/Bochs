@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.81 2007-12-13 21:30:04 sshwarts Exp $
+// $Id: access.cc,v 1.82 2007-12-16 20:47:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1434,7 +1434,7 @@ accessOK:
     laddr = seg->cache.u.segment.base + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 2, BX_WRITE);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (user && BX_CPU_THIS_PTR alignment_check) {
+    if (BX_CPU_THIS_PTR alignment_check) {
       if (laddr & 1) {
         BX_ERROR(("write_new_stack_word(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
@@ -1473,7 +1473,7 @@ accessOK:
     laddr = seg->cache.u.segment.base + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 4, BX_WRITE);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (user && BX_CPU_THIS_PTR alignment_check) {
+    if (BX_CPU_THIS_PTR alignment_check) {
       if (laddr & 3) {
         BX_ERROR(("write_new_stack_dword(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
@@ -1509,7 +1509,7 @@ void BX_CPU_C::write_new_stack_qword(bx_address offset, bx_bool user, Bit64u dat
   if (IsCanonical(offset)) {
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 8, BX_WRITE);
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
-    if (user && BX_CPU_THIS_PTR alignment_check) {
+    if (BX_CPU_THIS_PTR alignment_check) {
       if (laddr & 7) {
         BX_ERROR(("write_new_stack_qword(): #AC misaligned access"));
         exception(BX_AC_EXCEPTION, 0, 0);
