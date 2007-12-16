@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.34 2007-12-16 21:40:44 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.35 2007-12-16 21:46:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -229,11 +229,11 @@ BX_CPU_C::can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes)
       esp = ((esp-bytes) & 0xffff) + bytes;
     }
     if (esp < bytes) {
-      BX_INFO(("can_push(): expand-up: esp < N"));
+      BX_ERROR(("can_push(): expand-up: esp < N"));
       return(0);
     }
     if ((esp-1) > descriptor->u.segment.limit_scaled) {
-      BX_INFO(("can_push(): expand-up: SP > limit"));
+      BX_ERROR(("can_push(): expand-up: SP > limit"));
       return(0);
     }
     /* all checks pass */
@@ -261,7 +261,7 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
   }
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid==0) {
-    BX_ERROR(("can_pop(): SS invalidated."));
+    BX_ERROR(("can_pop(): SS invalidated"));
     return(0); /* never gets here */
   }
 
@@ -284,7 +284,7 @@ bx_bool BX_CPU_C::can_pop(Bit32u bytes)
       BX_ERROR(("can_pop(): SS.limit = 0"));
       return(0);
     }
-    if ( temp_ESP == expand_down_limit ) {
+    if (temp_ESP == expand_down_limit) {
       BX_ERROR(("can_pop(): found SP=ffff"));
       return(0);
     }
