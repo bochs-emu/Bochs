@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.42 2007-10-29 15:39:18 sshwarts Exp $
+// $Id: io.cc,v 1.43 2007-12-16 21:03:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,12 +65,12 @@ Bit32u BX_CPU_C::FastRepINSW(bxInstruction_c *i, bx_address dstOff, Bit16u port,
   if (laddrDst & 1) return 0;
 
 #if BX_SupportGuest2HostTLB
-  hostAddrDst = v2h_write_byte(laddrDst, CPL==3);
+  hostAddrDst = v2h_write_byte(laddrDst, CPL);
 #else
   bx_phy_address paddrDst;
 
   if (BX_CPU_THIS_PTR cr0.get_PG())
-    paddrDst = dtranslate_linear(laddrDst, CPL==3, BX_WRITE);
+    paddrDst = dtranslate_linear(laddrDst, CPL, BX_WRITE);
   else
     paddrDst = laddrDst;
 
@@ -192,12 +192,12 @@ Bit32u BX_CPU_C::FastRepOUTSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   if (laddrSrc & 1) return 0;
 
 #if BX_SupportGuest2HostTLB
-  hostAddrSrc = v2h_read_byte(laddrSrc, CPL==3);
+  hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
 #else
   bx_phy_address paddrSrc;
 
   if (BX_CPU_THIS_PTR cr0.get_PG())
-    paddrSrc = dtranslate_linear(laddrSrc, CPL==3, BX_READ);
+    paddrSrc = dtranslate_linear(laddrSrc, CPL, BX_READ);
   else
     paddrSrc = laddrSrc;
 

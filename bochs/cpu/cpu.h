@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.393 2007-12-16 20:47:09 sshwarts Exp $
+// $Id: cpu.h,v 1.394 2007-12-16 21:03:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3103,12 +3103,12 @@ public: // for now...
   BX_SMF void read_virtual_tword(unsigned seg, bx_address offset, floatx80 *data) BX_CPP_AttrRegparmN(3);
 #endif
   // write of word/dword to new stack could happen only in legacy mode
-  BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit16u data);
-  BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, bx_bool user, Bit32u data);
+  BX_SMF void write_new_stack_word(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit16u data);
+  BX_SMF void write_new_stack_dword(bx_segment_reg_t *seg, bx_address offset, unsigned curr_pl, Bit32u data);
 #if BX_SUPPORT_X86_64
   // write of qword to new stack could happen only in 64-bit mode
   // (so stack segment is not relavant)
-  BX_SMF void write_new_stack_qword(bx_address offset, bx_bool user, Bit64u data);
+  BX_SMF void write_new_stack_qword(bx_address offset, unsigned curr_pl, Bit64u data);
 #endif
 
 #if BX_SUPPORT_MISALIGNED_SSE
@@ -3136,14 +3136,14 @@ public: // for now...
   BX_SMF void write_RMW_virtual_qword(Bit64u val64) BX_CPP_AttrRegparmN(1);
 
 #if BX_SupportGuest2HostTLB
-  BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u* v2h_read_word(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u* v2h_read_dword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u* v2h_read_qword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit8u* v2h_write_byte(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit16u* v2h_write_word(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u* v2h_write_dword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit64u* v2h_write_qword(bx_address laddr, unsigned pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u* v2h_read_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u* v2h_read_word(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u* v2h_read_dword(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u* v2h_read_qword(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit8u* v2h_write_byte(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit16u* v2h_write_word(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u* v2h_write_dword(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit64u* v2h_write_qword(bx_address laddr, unsigned curr_pl) BX_CPP_AttrRegparmN(2);
 #endif
 
   BX_SMF void branch_near32(Bit32u new_EIP) BX_CPP_AttrRegparmN(1);
@@ -3180,19 +3180,21 @@ public: // for now...
   BX_SMF void repeat_ZFL(bxInstruction_c *, BxExecutePtr_t execute);
 
   // linear address for access_linear expected to be canonical !
-  BX_SMF void access_linear(bx_address address, unsigned length, unsigned pl,
+  BX_SMF void access_linear(bx_address address, unsigned length, unsigned curr_pl,
        unsigned rw, void *data);
-  BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
+  BX_SMF void page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw, unsigned access_type);
+
   // linear address for translate_linear expected to be canonical !
-  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type);
-  BX_SMF BX_CPP_INLINE bx_phy_address itranslate_linear(bx_address laddr, unsigned pl)
+  BX_SMF bx_phy_address translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type);
+  BX_SMF BX_CPP_INLINE bx_phy_address itranslate_linear(bx_address laddr, unsigned curr_pl)
   {
-    return translate_linear(laddr, pl, BX_READ, CODE_ACCESS);
+    return translate_linear(laddr, curr_pl, BX_READ, CODE_ACCESS);
   }
-  BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned pl, unsigned rw)
+  BX_SMF BX_CPP_INLINE bx_phy_address dtranslate_linear(bx_address laddr, unsigned curr_pl, unsigned rw)
   {
-    return translate_linear(laddr, pl, rw, DATA_ACCESS);
+    return translate_linear(laddr, curr_pl, rw, DATA_ACCESS);
   }
+
   BX_SMF void TLB_flush(bx_bool invalidateGlobal);
   BX_SMF void TLB_invlpg(bx_address laddr);
   BX_SMF void TLB_init(void);

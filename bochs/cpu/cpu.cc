@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.190 2007-12-14 20:41:09 sshwarts Exp $
+// $Id: cpu.cc,v 1.191 2007-12-16 21:03:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -860,7 +860,7 @@ void BX_CPU_C::prefetch(void)
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     // aligned block guaranteed to be all in one page, same A20 address
-    pAddr = itranslate_linear(laddr, CPL==3);
+    pAddr = itranslate_linear(laddr, CPL);
     pAddr = A20ADDR(pAddr);
   }
   else

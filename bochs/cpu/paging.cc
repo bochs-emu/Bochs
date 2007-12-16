@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.98 2007-12-13 21:30:04 sshwarts Exp $
+// $Id: paging.cc,v 1.99 2007-12-16 21:03:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -311,23 +311,26 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 
 
 // Each entry in the TLB cache has 3 entries:
+//
 //   lpf:         Linear Page Frame (page aligned linear address of page)
-//     bits 32..12 Linear page frame.
-//     bits 11..0  Invalidate index.
+//     bits 32..12  Linear page frame.
+//     bits 11...0  Invalidate index.
+//
 //   ppf:         Physical Page Frame (page aligned phy address of page)
+//
+//   hostPageAddr:
+//                Host Page Frame address used for direct access to
+//                the mem.vector[] space allocated for the guest physical
+//                memory.  If this is zero, it means that a pointer
+//                to the host space could not be generated, likely because
+//                that page of memory is not standard memory (it might
+//                be memory mapped IO, ROM, etc).
+//
 //   accessBits:
-//     bits 32..11: Host Page Frame address used for direct access to
-//                  the mem.vector[] space allocated for the guest physical
-//                  memory.  If this is zero, it means that a pointer
-//                  to the host space could not be generated, likely because
-//                  that page of memory is not standard memory (it might
-//                  be memory mapped IO, ROM, etc).
-//     bits  9..10: (currently unused)
 //
-//     bit   8:     Page is a global page.
+//     bit  31:     Page is a global page.
 //
-//
-//       The following 4 bits are used for a very efficient permissions
+//       The following bits are used for a very efficient permissions
 //       check.  The goal is to be able, using only the current privilege
 //       level and access type, to determine if the page tables allow the
 //       access to occur or at least should rewalk the page tables.  On
@@ -339,43 +342,51 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //       value, necessitating a TLB flush when CR0.WP changes.
 //
 //       The test is:
-//         OK = 0x1 << ( (W<<1) | U )   [W:1=write, 0=read, U:1=CPL3,0=CPL0-2]
+//         OK = 0x1 << ( (W<<2) | CPL ) [W:1=write, 0=read]
 //       
 //       Thus for reads, it is:
-//         OK = 0x1 << (          U )
+//         OK = 0x01 << (        CPL )
 //       And for writes:
-//         OK = 0x4 << (          U )
+//         OK = 0x10 << (        CPL )
 //
-//     bit 7:       a Write from User   privilege is OK
-//     bit 6:       a Write from System privilege is OK
-//     bit 5:       a Read  from User   privilege is OK
-//     bit 4:       a Read  from System privilege is OK
+//     bit 15:       a Write from CPL=3 is OK
+//     bit 14:       a Write from CPL=2 is OK
+//     bit 13:       a Write from CPL=1 is OK
+//     bit 12:       a Write from CPL=0 is OK
 //
-//       And the lowest 4 bits are as above, except that they also indicate
+//     bit 11:       a Read  from CPL=3 is OK
+//     bit 10:       a Read  from CPL=2 is OK
+//     bit  9:       a Read  from CPL=1 is OK
+//     bit  8:       a Read  from CPL=0 is OK
+//
+//       And the lowest bits are as above, except that they also indicate
 //       that hostPageAddr is valid, so we do not separately need to test 
 //       that pointer against NULL.  These have smaller constants for us
 //       to be able to use smaller encodings in the trace generators.  Note
-//       that whenever bit n (n=0,1,2,3) is set, then also n+4 is set.
+//       that whenever bit n (n=0..7) is set, then also n+8 is set.
 //       (The opposite is of course not true)
 //
-//     bit 3:       a Write from User   privilege is OK, hostPageAddr is valid
-//     bit 2:       a Write from System privilege is OK, hostPageAddr is valid
-//     bit 1:       a Read  from User   privilege is OK, hostPageAddr is valid
-//     bit 0:       a Read  from System privilege is OK, hostPageAddr is valid
+//     bit  7:      a Write from CPL=3 is OK, hostPageAddr is valid
+//     bit  6:      a Write from CPL=2 is OK, hostPageAddr is valid
+//     bit  5:      a Write from CPL=1 is OK, hostPageAddr is valid
+//     bit  4:      a Write from CPL=0 is OK, hostPageAddr is valid
+//
+//     bit  3:      a Read  from CPL=3 is OK, hostPageAddr is valid
+//     bit  2:      a Read  from CPL=2 is OK, hostPageAddr is valid
+//     bit  1:      a Read  from CPL=1 is OK, hostPageAddr is valid
+//     bit  0:      a Read  from CPL=0 is OK, hostPageAddr is valid
 //
 
-#define TLB_GlobalPage       0x100
+#define TLB_WriteUserOK       0x8000
+#define TLB_WriteSysOK        0x7000
+#define TLB_ReadUserOK        0x0800
+#define TLB_ReadSysOK         0x0700
+#define TLB_WriteUserPtrOK    0x0080
+#define TLB_WriteSysPtrOK     0x0070
+#define TLB_ReadUserPtrOK     0x0008
+#define TLB_ReadSysPtrOK      0x0007
 
-#define TLB_WriteUserOK       0x80
-#define TLB_WriteSysOK        0x40
-#define TLB_ReadUserOK        0x20
-#define TLB_ReadSysOK         0x10
-#define TLB_WriteUserPtrOK    0x08
-#define TLB_WriteSysPtrOK     0x04
-#define TLB_ReadUserPtrOK     0x02
-#define TLB_ReadSysPtrOK      0x01
-
-#define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+#define TLB_GlobalPage        0x80000000
 
 // === TLB Instrumentation section ==============================
 
@@ -578,11 +589,11 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
 #define ERROR_RESERVED          0x08
 #define ERROR_CODE_ACCESS       0x10
 
-void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
+void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned user, unsigned rw, unsigned access_type)
 {
   unsigned error_code = fault;
 
-  error_code |= (pl << 2) | (rw << 1);
+  error_code |= (user << 2) | (rw << 1);
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.nxe && (access_type == CODE_ACCESS))
     error_code |= ERROR_CODE_ACCESS; // I/D = 1
@@ -604,8 +615,10 @@ void BX_CPU_C::page_fault(unsigned fault, bx_address laddr, unsigned pl, unsigne
 #define PAGING_PML4_RESERVED_BITS 0x00000180    /* bits 7,8 */
 #define PAGING_PDPE_RESERVED_BITS 0x00000180    /* bits 7,8 - we not support 1G paging */
 
+#define PAGE_DIRECTORY_NX_BIT (BX_CONST64(0x8000000000000000))
+
 // Translate a linear address to a physical address
-bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigned rw, unsigned access_type)
+bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, unsigned rw, unsigned access_type)
 {
   Bit32u   accessBits, combined_access = 0;
   unsigned priv_index;
@@ -614,6 +627,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
   // 32 bit entries although cr3 is expanded to 64 bits.
   bx_phy_address paddress, ppf, poffset;
   bx_bool isWrite = (rw >= BX_WRITE); // write or r-m-w
+
+  unsigned pl = (curr_pl == 3);
 
   poffset = laddr & 0x00000fff; // physical offset
 
@@ -630,7 +645,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
     paddress   = tlbEntry->ppf | poffset;
     accessBits = tlbEntry->accessBits;
 
-    if (accessBits & (0x10 << ((isWrite<<1) | pl)))
+    if (accessBits & (0x0100 << ((isWrite<<2) | curr_pl)))
       return(paddress);
 
     // The current access does not have permission according to the info
@@ -1011,7 +1026,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned pl, unsigne
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr) {
     // All access allowed also via direct pointer
-    accessBits |= (accessBits & 0xf0) >> 4; 
+    accessBits |= (accessBits & 0xff00) >> 8; 
   }
 #endif
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
@@ -1096,7 +1111,7 @@ page_fault:
 }
 #endif
 
-void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsigned rw, void *data)
+void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned rw, void *data)
 {
 #if BX_X86_DEBUGGER
   hwbreakpoint_match(laddr, len, rw);
@@ -1111,7 +1126,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
     if ( (pageOffset + len) <= 4096 ) {
       // Access within single page.
       BX_CPU_THIS_PTR address_xlation.paddress1 =
-          dtranslate_linear(laddr, pl, xlate_rw);
+          dtranslate_linear(laddr, curr_pl, xlate_rw);
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
 
       if (rw == BX_READ) {
@@ -1129,14 +1144,14 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned pl, unsign
     else {
       // access across 2 pages
       BX_CPU_THIS_PTR address_xlation.paddress1 =
-          dtranslate_linear(laddr, pl, xlate_rw);
+          dtranslate_linear(laddr, curr_pl, xlate_rw);
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
       BX_CPU_THIS_PTR address_xlation.len2 = len -
           BX_CPU_THIS_PTR address_xlation.len1;
       BX_CPU_THIS_PTR address_xlation.pages     = 2;
       BX_CPU_THIS_PTR address_xlation.paddress2 =
           dtranslate_linear(laddr + BX_CPU_THIS_PTR address_xlation.len1,
-                            pl, xlate_rw);
+                            curr_pl, xlate_rw);
 
 #ifdef BX_LITTLE_ENDIAN
       if (rw == BX_READ) {

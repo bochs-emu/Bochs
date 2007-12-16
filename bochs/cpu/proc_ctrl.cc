@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.189 2007-12-14 20:41:09 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.190 2007-12-16 21:03:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1943,7 +1943,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
   laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + addr;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
-    paddr = dtranslate_linear(laddr, CPL==3, BX_READ);
+    paddr = dtranslate_linear(laddr, CPL, BX_READ);
     paddr = A20ADDR(paddr);
   }
   else

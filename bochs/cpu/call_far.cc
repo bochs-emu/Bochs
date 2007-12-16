@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.22 2007-11-17 23:28:30 sshwarts Exp $
+// $Id: call_far.cc,v 1.23 2007-12-16 21:03:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -362,7 +362,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
           // add cpl to the selector value
           new_stack.selector.value = (0xfffc & new_stack.selector.value) |
             new_stack.selector.rpl;
-          bx_bool user = (cs_descriptor.dpl == 3);
 
           if (ss_descriptor.u.segment.d_b)
             temp_ESP = ESP_for_cpl_x;
@@ -371,31 +370,31 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 
           // push pointer of old stack onto new stack
           if (gate_descriptor.type==BX_386_CALL_GATE) {
-            write_new_stack_dword(&new_stack, temp_ESP-4, user, return_SS);
-            write_new_stack_dword(&new_stack, temp_ESP-8, user, return_ESP);
+            write_new_stack_dword(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_SS);
+            write_new_stack_dword(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_ESP);
             temp_ESP -= 8;
 
             for (unsigned i=param_count; i>0; i--) {
               temp_ESP -= 4;
-              write_new_stack_dword(&new_stack, temp_ESP, user, parameter_dword[i-1]);
+              write_new_stack_dword(&new_stack, temp_ESP, cs_descriptor.dpl, parameter_dword[i-1]);
             }
             // push return address onto new stack
-            write_new_stack_dword(&new_stack, temp_ESP-4, user, return_CS);
-            write_new_stack_dword(&new_stack, temp_ESP-8, user, return_EIP);
+            write_new_stack_dword(&new_stack, temp_ESP-4, cs_descriptor.dpl, return_CS);
+            write_new_stack_dword(&new_stack, temp_ESP-8, cs_descriptor.dpl, return_EIP);
             temp_ESP -= 8;
           }
           else {
-            write_new_stack_word(&new_stack, temp_ESP-2, user, return_SS);
-            write_new_stack_word(&new_stack, temp_ESP-4, user, (Bit16u) return_ESP);
+            write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_SS);
+            write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_ESP);
             temp_ESP -= 4;
 
             for (unsigned i=param_count; i>0; i--) {
               temp_ESP -= 2;
-              write_new_stack_word(&new_stack, temp_ESP, user, parameter_word[i-1]);
+              write_new_stack_word(&new_stack, temp_ESP, cs_descriptor.dpl, parameter_word[i-1]);
             }
             // push return address onto new stack
-            write_new_stack_word(&new_stack, temp_ESP-2, user, return_CS);
-            write_new_stack_word(&new_stack, temp_ESP-4, user, (Bit16u) return_EIP);
+            write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl, return_CS);
+            write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl, (Bit16u) return_EIP);
             temp_ESP -= 4;
           }
 
@@ -523,14 +522,13 @@ BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 
     Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
     Bit64u old_RSP = RSP;
-    bx_bool user = (cs_descriptor.dpl == 3);
 
     // push old stack long pointer onto new stack
-    write_new_stack_qword(RSP_for_cpl_x -  8, user, old_SS);
-    write_new_stack_qword(RSP_for_cpl_x - 16, user, old_RSP);
+    write_new_stack_qword(RSP_for_cpl_x -  8, cs_descriptor.dpl, old_SS);
+    write_new_stack_qword(RSP_for_cpl_x - 16, cs_descriptor.dpl, old_RSP);
     // push long pointer to return address onto new stack
-    write_new_stack_qword(RSP_for_cpl_x - 24, user, old_CS);
-    write_new_stack_qword(RSP_for_cpl_x - 32, user, old_RIP);
+    write_new_stack_qword(RSP_for_cpl_x - 24, cs_descriptor.dpl, old_CS);
+    write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 32;
 
     // prepare new stack null SS selector
