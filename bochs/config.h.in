@@ -764,8 +764,8 @@ typedef
 #error With CPU level < 5, you must disable MMX support !
 #endif
 
-#if (!BX_SUPPORT_FPU && BX_CPU_LEVEL >= 5)
-#error With CPU level >= 5, you must enable FPU support !
+#if (!BX_SUPPORT_FPU && BX_CPU_LEVEL > 4)
+#error With CPU level > 4, you must enable FPU support !
 #endif
 
 #if (BX_SUPPORT_MMX && !BX_SUPPORT_FPU)
@@ -778,6 +778,14 @@ typedef
 
 #if (BX_SUPPORT_3DNOW && !BX_SUPPORT_MMX)
 #error "3DNow! cannot be compiled without MMX support !"
+#endif
+
+#if (BX_SUPPORT_SSE4A && BX_SUPPORT_SSE < 3)
+#error "SSE4A cannot be compiled without SSE3 support !"
+#endif
+
+#if (BX_SUPPORT_SSE5A && !BX_SUPPORT_SSE4A)
+#error "SSE5A cannot be compiled without SSE4A support !"
 #endif
 
 #if (BX_SUPPORT_SSE && !BX_SUPPORT_MMX)
