@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.36 2007-11-17 23:28:32 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.37 2007-12-16 20:37:59 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -55,13 +55,13 @@ static void mxcsr_to_softfloat_status_word(float_status_t &status, bx_mxcsr_t mx
 }
 
 // handle DAZ
-static float32 handleDAZ(float32 op)
+BX_CPP_INLINE float32 handleDAZ(float32 op)
 {
   if (float32_class(op) == float_denormal) op &= ((Bit32u)(1) << 31);
   return op;                      
 }
 
-static float64 handleDAZ(float64 op)
+BX_CPP_INLINE float64 handleDAZ(float64 op)
 {
   if (float64_class(op) == float_denormal) op &= ((Bit64u)(1) << 63);
   return op;
