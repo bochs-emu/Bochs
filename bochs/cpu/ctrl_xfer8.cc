@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer8.cc,v 1.23 2007-11-17 18:08:46 sshwarts Exp $
+// $Id: ctrl_xfer8.cc,v 1.24 2007-12-16 21:21:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,12 +47,10 @@ void BX_CPU_C::JCXZ_Jb(bxInstruction_c *i)
     if (i->os32L()==0) new_EIP &= 0x0000ffff;
     branch_near32(new_EIP);
     BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, new_EIP);
+    return;
   }
-#if BX_INSTRUMENTATION
-  else {
-    BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
-  }
-#endif
+
+  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
 void BX_CPU_C::LOOPNE_Jb(bxInstruction_c *i)
