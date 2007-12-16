@@ -10,8 +10,8 @@ Brief summary :
 
 + Up to 40% speedup vs Bochs 2.3.5 release with trace cache optimization!
 
-- Lots of bugfixes in cpu emulation
-- Bochs bechmarking support
+- Lots of bugfixes in CPU emulation
+- Bochs benchmarking support
 - Added emulation of Intel SSE4.2 instruction set
 
 Detailed change log :
@@ -27,8 +27,8 @@ Detailed change log :
     MWAIT CPU state and hardware monitoring of physical address range, 
     to enable use --enable-monitor-mwait configure option.
   - Removed hostasm optimizations, after Bochs rebenchmarking it was found 
-    that the feature bringing no speedup or even sometimes slowes down
-    the emulation !
+    that the feature bringing no speedup or even sometimes slows down
+    emulation!
   - Merged trace cache optimization patch, the trace cache optimization
     is enabled by default when configure with --enable-all-optimizations 
     option, to disable trace cache optimization configure with
@@ -36,7 +36,7 @@ Detailed change log :
   - Many minor bugfixes in CPU emulation (both ia32 and x86-64)
   - Updated CPU instrumentation callbacks
 
-- Bochs Internal Debugger and Disassember
+- Bochs Internal Debugger and Disassembler
   - Many fixes in Bochs internal debugger and disassembler, some debugger
     interfaces significantly changed due transition to the param tree
     architecture
@@ -44,7 +44,7 @@ Detailed change log :
     directly from Bochs debugger
 
 - Configure and compile
-  - Rename configure option --enable-4meg-pages to --enable-large-pages.
+  - Renamed configure option --enable-4meg-pages to --enable-large-pages.
     The option enables page size extensions (PSE) which refers to 2M pages
     as well.
   - Removed --enable-save-restore configure option, save/restore feature 
@@ -63,6 +63,7 @@ Detailed change log :
     --cpu-level >= 4 (like in real hardware)
 
 - SF patches applied
+ [1850183] Get memory access mode in BX_INSTR_LIN_READ by Lluis Vilanova
  [1841421] pic: keep slave_pic.INT and master_pic.IRQ_in bit 2 in sync by Russ Cox
  [1841420] give segment numbers in exception logs by Russ Cox
  [1801696] Allow Intel builds on Mac OS X
