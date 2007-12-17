@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.396 2007-12-17 18:48:25 sshwarts Exp $
+// $Id: cpu.h,v 1.397 2007-12-17 19:52:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1513,13 +1513,6 @@ public: // for now...
   BX_SMF void REP_LODSD_EAXXd(bxInstruction_c *);
   BX_SMF void REP_SCASD_EAXXd(bxInstruction_c *);
 
-  BX_SMF void MOVSB_XbYb(bxInstruction_c *);
-  BX_SMF void MOVSW_XwYw(bxInstruction_c *);
-  BX_SMF void MOVSD_XdYd(bxInstruction_c *);
-  BX_SMF void STOSB_YbAL(bxInstruction_c *);
-  BX_SMF void STOSW_YwAX(bxInstruction_c *);
-  BX_SMF void STOSD_YdEAX(bxInstruction_c *);
-
   // qualified by address size
   BX_SMF void CMPSB16_XbYb(bxInstruction_c *);
   BX_SMF void CMPSW16_XwYw(bxInstruction_c *);
@@ -1541,6 +1534,20 @@ public: // for now...
   BX_SMF void LODSB32_ALXb(bxInstruction_c *);
   BX_SMF void LODSW32_AXXw(bxInstruction_c *);
   BX_SMF void LODSD32_EAXXd(bxInstruction_c *);
+
+  BX_SMF void STOSB16_YbAL(bxInstruction_c *);
+  BX_SMF void STOSW16_YwAX(bxInstruction_c *);
+  BX_SMF void STOSD16_YdEAX(bxInstruction_c *);
+  BX_SMF void STOSB32_YbAL(bxInstruction_c *);
+  BX_SMF void STOSW32_YwAX(bxInstruction_c *);
+  BX_SMF void STOSD32_YdEAX(bxInstruction_c *);
+
+  BX_SMF void MOVSB16_XbYb(bxInstruction_c *);
+  BX_SMF void MOVSW16_XwYw(bxInstruction_c *);
+  BX_SMF void MOVSD16_XdYd(bxInstruction_c *);
+  BX_SMF void MOVSB32_XbYb(bxInstruction_c *);
+  BX_SMF void MOVSW32_XwYw(bxInstruction_c *);
+  BX_SMF void MOVSD32_XdYd(bxInstruction_c *);
 
   BX_SMF void MOV_EdIdM(bxInstruction_c *);
   BX_SMF void MOV_EwIwM(bxInstruction_c *);
@@ -2730,6 +2737,42 @@ public: // for now...
   BX_SMF void XOR_RAXId(bxInstruction_c *);
   BX_SMF void CMP_RAXId(bxInstruction_c *);
 
+  BX_SMF void ADD_EqGqM(bxInstruction_c *);
+  BX_SMF void OR_EqGqM(bxInstruction_c *);
+  BX_SMF void ADC_EqGqM(bxInstruction_c *);
+  BX_SMF void SBB_EqGqM(bxInstruction_c *);
+  BX_SMF void AND_EqGqM(bxInstruction_c *);
+  BX_SMF void SUB_EqGqM(bxInstruction_c *);
+  BX_SMF void XOR_EqGqM(bxInstruction_c *);
+  BX_SMF void CMP_EqGqM(bxInstruction_c *);
+
+  BX_SMF void ADD_EqGqR(bxInstruction_c *);
+  BX_SMF void OR_EqGqR(bxInstruction_c *);
+  BX_SMF void ADC_EqGqR(bxInstruction_c *);
+  BX_SMF void SBB_EqGqR(bxInstruction_c *);
+  BX_SMF void AND_EqGqR(bxInstruction_c *);
+  BX_SMF void SUB_EqGqR(bxInstruction_c *);
+  BX_SMF void XOR_EqGqR(bxInstruction_c *);
+  BX_SMF void CMP_EqGqR(bxInstruction_c *);
+
+  BX_SMF void ADD_EqIdM(bxInstruction_c *);
+  BX_SMF void OR_EqIdM(bxInstruction_c *);
+  BX_SMF void ADC_EqIdM(bxInstruction_c *);
+  BX_SMF void SBB_EqIdM(bxInstruction_c *);
+  BX_SMF void AND_EqIdM(bxInstruction_c *);
+  BX_SMF void SUB_EqIdM(bxInstruction_c *);
+  BX_SMF void XOR_EqIdM(bxInstruction_c *);
+  BX_SMF void CMP_EqIdM(bxInstruction_c *);
+
+  BX_SMF void ADD_EqIdR(bxInstruction_c *);
+  BX_SMF void OR_EqIdR(bxInstruction_c *);
+  BX_SMF void ADC_EqIdR(bxInstruction_c *);
+  BX_SMF void SBB_EqIdR(bxInstruction_c *);
+  BX_SMF void AND_EqIdR(bxInstruction_c *);
+  BX_SMF void SUB_EqIdR(bxInstruction_c *);
+  BX_SMF void XOR_EqIdR(bxInstruction_c *);
+  BX_SMF void CMP_EqIdR(bxInstruction_c *);
+
   BX_SMF void TEST_EqGqR(bxInstruction_c *);
   BX_SMF void TEST_EqGqM(bxInstruction_c *);
   BX_SMF void TEST_RAXId(bxInstruction_c *);
@@ -2755,21 +2798,29 @@ public: // for now...
   BX_SMF void MOV_EqIdR(bxInstruction_c *);
   BX_SMF void MOV_EqIdM(bxInstruction_c *);
 
-  BX_SMF void MOVSQ_XqYq(bxInstruction_c *);
-  BX_SMF void STOSQ_YqRAX(bxInstruction_c *);
+  // repeatable instructions
+  BX_SMF void REP_MOVSQ_XqYq(bxInstruction_c *);
+  BX_SMF void REP_CMPSQ_XqYq(bxInstruction_c *);
+  BX_SMF void REP_STOSQ_YqRAX(bxInstruction_c *);
+  BX_SMF void REP_LODSQ_RAXXq(bxInstruction_c *);
+  BX_SMF void REP_SCASQ_RAXXq(bxInstruction_c *);
 
   // qualified by address size
   BX_SMF void CMPSB64_XbYb(bxInstruction_c *);
   BX_SMF void CMPSW64_XwYw(bxInstruction_c *);
   BX_SMF void CMPSD64_XdYd(bxInstruction_c *);
-
   BX_SMF void SCASB64_ALXb(bxInstruction_c *);
   BX_SMF void SCASW64_AXXw(bxInstruction_c *);
   BX_SMF void SCASD64_EAXXd(bxInstruction_c *);
-
   BX_SMF void LODSB64_ALXb(bxInstruction_c *);
   BX_SMF void LODSW64_AXXw(bxInstruction_c *);
   BX_SMF void LODSD64_EAXXd(bxInstruction_c *);
+  BX_SMF void STOSB64_YbAL(bxInstruction_c *);
+  BX_SMF void STOSW64_YwAX(bxInstruction_c *);
+  BX_SMF void STOSD64_YdEAX(bxInstruction_c *);
+  BX_SMF void MOVSB64_XbYb(bxInstruction_c *);
+  BX_SMF void MOVSW64_XwYw(bxInstruction_c *);
+  BX_SMF void MOVSD64_XdYd(bxInstruction_c *);
 
   BX_SMF void CMPSQ32_XqYq(bxInstruction_c *);
   BX_SMF void CMPSQ64_XqYq(bxInstruction_c *);
@@ -2777,17 +2828,10 @@ public: // for now...
   BX_SMF void SCASQ64_RAXXq(bxInstruction_c *);
   BX_SMF void LODSQ32_RAXXq(bxInstruction_c *);
   BX_SMF void LODSQ64_RAXXq(bxInstruction_c *);
-
-  BX_SMF void REP_MOVSQ_XqYq(bxInstruction_c *);
-  BX_SMF void REP_CMPSQ_XqYq(bxInstruction_c *);
-  BX_SMF void REP_STOSQ_YqRAX(bxInstruction_c *);
-  BX_SMF void REP_LODSQ_RAXXq(bxInstruction_c *);
-  BX_SMF void REP_SCASQ_RAXXq(bxInstruction_c *);
-
-  BX_SMF void ENTER64_IwIb(bxInstruction_c *);
-  BX_SMF void LEAVE64(bxInstruction_c *);
-
-  BX_SMF void IRET64(bxInstruction_c *);
+  BX_SMF void STOSQ32_YqRAX(bxInstruction_c *);
+  BX_SMF void STOSQ64_YqRAX(bxInstruction_c *);
+  BX_SMF void MOVSQ32_XqYq(bxInstruction_c *);
+  BX_SMF void MOVSQ64_XqYq(bxInstruction_c *);
 
   BX_SMF void CALL_Jq(bxInstruction_c *);
   BX_SMF void JMP_Jq(bxInstruction_c *);
@@ -2808,6 +2852,11 @@ public: // for now...
   BX_SMF void JNL_Jq(bxInstruction_c *);
   BX_SMF void JLE_Jq(bxInstruction_c *);
   BX_SMF void JNLE_Jq(bxInstruction_c *);
+
+  BX_SMF void ENTER64_IwIb(bxInstruction_c *);
+  BX_SMF void LEAVE64(bxInstruction_c *);
+
+  BX_SMF void IRET64(bxInstruction_c *);
 
   BX_SMF void MOV_CqRq(bxInstruction_c *);
   BX_SMF void MOV_DqRq(bxInstruction_c *);
@@ -2855,42 +2904,6 @@ public: // for now...
   BX_SMF void BTC_EqIbR(bxInstruction_c *);
 
   BX_SMF void BSWAP_RRX(bxInstruction_c *);
-
-  BX_SMF void ADD_EqGqM(bxInstruction_c *);
-  BX_SMF void OR_EqGqM(bxInstruction_c *);
-  BX_SMF void ADC_EqGqM(bxInstruction_c *);
-  BX_SMF void SBB_EqGqM(bxInstruction_c *);
-  BX_SMF void AND_EqGqM(bxInstruction_c *);
-  BX_SMF void SUB_EqGqM(bxInstruction_c *);
-  BX_SMF void XOR_EqGqM(bxInstruction_c *);
-  BX_SMF void CMP_EqGqM(bxInstruction_c *);
-
-  BX_SMF void ADD_EqGqR(bxInstruction_c *);
-  BX_SMF void OR_EqGqR(bxInstruction_c *);
-  BX_SMF void ADC_EqGqR(bxInstruction_c *);
-  BX_SMF void SBB_EqGqR(bxInstruction_c *);
-  BX_SMF void AND_EqGqR(bxInstruction_c *);
-  BX_SMF void SUB_EqGqR(bxInstruction_c *);
-  BX_SMF void XOR_EqGqR(bxInstruction_c *);
-  BX_SMF void CMP_EqGqR(bxInstruction_c *);
-
-  BX_SMF void ADD_EqIdM(bxInstruction_c *);
-  BX_SMF void OR_EqIdM(bxInstruction_c *);
-  BX_SMF void ADC_EqIdM(bxInstruction_c *);
-  BX_SMF void SBB_EqIdM(bxInstruction_c *);
-  BX_SMF void AND_EqIdM(bxInstruction_c *);
-  BX_SMF void SUB_EqIdM(bxInstruction_c *);
-  BX_SMF void XOR_EqIdM(bxInstruction_c *);
-  BX_SMF void CMP_EqIdM(bxInstruction_c *);
-
-  BX_SMF void ADD_EqIdR(bxInstruction_c *);
-  BX_SMF void OR_EqIdR(bxInstruction_c *);
-  BX_SMF void ADC_EqIdR(bxInstruction_c *);
-  BX_SMF void SBB_EqIdR(bxInstruction_c *);
-  BX_SMF void AND_EqIdR(bxInstruction_c *);
-  BX_SMF void SUB_EqIdR(bxInstruction_c *);
-  BX_SMF void XOR_EqIdR(bxInstruction_c *);
-  BX_SMF void CMP_EqIdR(bxInstruction_c *);
 
   BX_SMF void ROL_Eq(bxInstruction_c *);
   BX_SMF void ROR_Eq(bxInstruction_c *);
@@ -3836,11 +3849,11 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxRMGroup           0x0040 // Group encoding: 100
 #define Bx3ByteOpIndex      0x0050 // Group encoding: 101
 #define Bx3ByteOpTable      0x0060 // Group encoding: 110
-                                   // Group encoding: 111
 
 #define BxPrefix            0x0080 // bit  7
 #define BxLockable          0x0100 // bit  8
 #define Bx3ByteOpcode       0x0200 // bit  9
+#define BxRepeatable        0x0400 // bit 10
 
 #if BX_SUPPORT_TRACE_CACHE
   #define BxTraceEnd        0x2000 // bit 13
