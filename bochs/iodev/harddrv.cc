@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.203 2007-11-12 21:04:17 sshwarts Exp $
+// $Id: harddrv.cc,v 1.204 2007-12-17 18:08:27 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.203 2007-11-12 21:04:17 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.204 2007-12-17 18:08:27 vruppert Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -2209,6 +2209,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           set_signature(channel, BX_SLAVE_SELECTED(channel));
           BX_SELECTED_CONTROLLER(channel).error_register = 0x01;
           BX_SELECTED_CONTROLLER(channel).status.drq = 0;
+          raise_interrupt(channel);
           break;
 
         case 0x91: // INITIALIZE DRIVE PARAMETERS
