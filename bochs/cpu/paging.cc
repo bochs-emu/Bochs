@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.99 2007-12-16 21:03:46 sshwarts Exp $
+// $Id: paging.cc,v 1.100 2007-12-17 18:48:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1328,7 +1328,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
             BX_CPU_THIS_PTR address_xlation.len1, data);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr + BX_CPU_THIS_PTR address_xlation.len1,
             BX_CPU_THIS_PTR address_xlation.paddress2,
-            BX_CPU_THIS_PTR address_xlation.len2, slate_rw);
+            BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS,
             BX_CPU_THIS_PTR address_xlation.paddress2,
             BX_CPU_THIS_PTR address_xlation.len2,

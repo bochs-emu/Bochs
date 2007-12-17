@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.395 2007-12-16 21:40:44 sshwarts Exp $
+// $Id: cpu.h,v 1.396 2007-12-17 18:48:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1497,22 +1497,6 @@ public: // for now...
   BX_SMF void TEST_AXIw(bxInstruction_c *);
 
   // repeatable instructions
-  BX_SMF void MOVSB_XbYb(bxInstruction_c *);
-  BX_SMF void MOVSW_XwYw(bxInstruction_c *);
-  BX_SMF void MOVSD_XdYd(bxInstruction_c *);
-  BX_SMF void CMPSB_XbYb(bxInstruction_c *);
-  BX_SMF void CMPSW_XwYw(bxInstruction_c *);
-  BX_SMF void CMPSD_XdYd(bxInstruction_c *);
-  BX_SMF void STOSB_YbAL(bxInstruction_c *);
-  BX_SMF void LODSB_ALXb(bxInstruction_c *);
-  BX_SMF void SCASB_ALXb(bxInstruction_c *);
-  BX_SMF void STOSW_YwAX(bxInstruction_c *);
-  BX_SMF void LODSW_AXXw(bxInstruction_c *);
-  BX_SMF void SCASW_AXXw(bxInstruction_c *);
-  BX_SMF void STOSD_YdEAX(bxInstruction_c *);
-  BX_SMF void LODSD_EAXXd(bxInstruction_c *);
-  BX_SMF void SCASD_EAXXd(bxInstruction_c *);
-
   BX_SMF void REP_MOVSB_XbYb(bxInstruction_c *);
   BX_SMF void REP_MOVSW_XwYw(bxInstruction_c *);
   BX_SMF void REP_MOVSD_XdYd(bxInstruction_c *);
@@ -1528,6 +1512,35 @@ public: // for now...
   BX_SMF void REP_STOSD_YdEAX(bxInstruction_c *);
   BX_SMF void REP_LODSD_EAXXd(bxInstruction_c *);
   BX_SMF void REP_SCASD_EAXXd(bxInstruction_c *);
+
+  BX_SMF void MOVSB_XbYb(bxInstruction_c *);
+  BX_SMF void MOVSW_XwYw(bxInstruction_c *);
+  BX_SMF void MOVSD_XdYd(bxInstruction_c *);
+  BX_SMF void STOSB_YbAL(bxInstruction_c *);
+  BX_SMF void STOSW_YwAX(bxInstruction_c *);
+  BX_SMF void STOSD_YdEAX(bxInstruction_c *);
+
+  // qualified by address size
+  BX_SMF void CMPSB16_XbYb(bxInstruction_c *);
+  BX_SMF void CMPSW16_XwYw(bxInstruction_c *);
+  BX_SMF void CMPSD16_XdYd(bxInstruction_c *);
+  BX_SMF void CMPSB32_XbYb(bxInstruction_c *);
+  BX_SMF void CMPSW32_XwYw(bxInstruction_c *);
+  BX_SMF void CMPSD32_XdYd(bxInstruction_c *);
+
+  BX_SMF void SCASB16_ALXb(bxInstruction_c *);
+  BX_SMF void SCASW16_AXXw(bxInstruction_c *);
+  BX_SMF void SCASD16_EAXXd(bxInstruction_c *);
+  BX_SMF void SCASB32_ALXb(bxInstruction_c *);
+  BX_SMF void SCASW32_AXXw(bxInstruction_c *);
+  BX_SMF void SCASD32_EAXXd(bxInstruction_c *);
+
+  BX_SMF void LODSB16_ALXb(bxInstruction_c *);
+  BX_SMF void LODSW16_AXXw(bxInstruction_c *);
+  BX_SMF void LODSD16_EAXXd(bxInstruction_c *);
+  BX_SMF void LODSB32_ALXb(bxInstruction_c *);
+  BX_SMF void LODSW32_AXXw(bxInstruction_c *);
+  BX_SMF void LODSD32_EAXXd(bxInstruction_c *);
 
   BX_SMF void MOV_EdIdM(bxInstruction_c *);
   BX_SMF void MOV_EwIwM(bxInstruction_c *);
@@ -2743,10 +2756,27 @@ public: // for now...
   BX_SMF void MOV_EqIdM(bxInstruction_c *);
 
   BX_SMF void MOVSQ_XqYq(bxInstruction_c *);
-  BX_SMF void CMPSQ_XqYq(bxInstruction_c *);
   BX_SMF void STOSQ_YqRAX(bxInstruction_c *);
-  BX_SMF void LODSQ_RAXXq(bxInstruction_c *);
-  BX_SMF void SCASQ_RAXXq(bxInstruction_c *);
+
+  // qualified by address size
+  BX_SMF void CMPSB64_XbYb(bxInstruction_c *);
+  BX_SMF void CMPSW64_XwYw(bxInstruction_c *);
+  BX_SMF void CMPSD64_XdYd(bxInstruction_c *);
+
+  BX_SMF void SCASB64_ALXb(bxInstruction_c *);
+  BX_SMF void SCASW64_AXXw(bxInstruction_c *);
+  BX_SMF void SCASD64_EAXXd(bxInstruction_c *);
+
+  BX_SMF void LODSB64_ALXb(bxInstruction_c *);
+  BX_SMF void LODSW64_AXXw(bxInstruction_c *);
+  BX_SMF void LODSD64_EAXXd(bxInstruction_c *);
+
+  BX_SMF void CMPSQ32_XqYq(bxInstruction_c *);
+  BX_SMF void CMPSQ64_XqYq(bxInstruction_c *);
+  BX_SMF void SCASQ32_RAXXq(bxInstruction_c *);
+  BX_SMF void SCASQ64_RAXXq(bxInstruction_c *);
+  BX_SMF void LODSQ32_RAXXq(bxInstruction_c *);
+  BX_SMF void LODSQ64_RAXXq(bxInstruction_c *);
 
   BX_SMF void REP_MOVSQ_XqYq(bxInstruction_c *);
   BX_SMF void REP_CMPSQ_XqYq(bxInstruction_c *);

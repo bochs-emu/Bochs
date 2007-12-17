@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.44 2007-12-16 21:03:46 sshwarts Exp $
+// $Id: string.cc,v 1.45 2007-12-17 18:48:26 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1210,23 +1210,50 @@ void BX_CPU_C::MOVSQ_XqYq(bxInstruction_c *i)
 
 void BX_CPU_C::REP_CMPSB_XbYb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB_XbYb);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB64_XbYb);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB32_XbYb);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSB16_XbYb);
 }
 
 void BX_CPU_C::REP_CMPSW_XwYw(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW_XwYw);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW64_XwYw);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW32_XwYw);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSW16_XwYw);
 }
 
 void BX_CPU_C::REP_CMPSD_XdYd(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD_XdYd);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD64_XdYd);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD32_XdYd);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSD16_XdYd);
 }
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ_XqYq);
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ64_XqYq);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::CMPSQ32_XqYq);
 }
 #endif
 
@@ -1234,304 +1261,322 @@ void BX_CPU_C::REP_CMPSQ_XqYq(bxInstruction_c *i)
 // CMPSB/CMPSW/CMPSD/CMPSQ methods
 //
 
-void BX_CPU_C::CMPSB_XbYb(bxInstruction_c *i)
+/* 16 bit address size */
+void BX_CPU_C::CMPSB16_XbYb(bxInstruction_c *i)
 {
   Bit8u op1_8, op2_8, diff_8;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
-    Bit64u rdi = RDI;
+  Bit16u si = SI;
+  Bit16u di = DI;
 
-    read_virtual_byte(i->seg(), rsi, &op1_8);
-    read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+  read_virtual_byte(i->seg(), si, &op1_8);
+  read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
 
-    diff_8 = op1_8 - op2_8;
+  diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi--;
-      rdi--;
-    }
-    else {
-      rsi++;
-      rdi++;
-    }
-
-    RDI = rdi;
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si--;
+    di--;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u esi = ESI;
-    Bit32u edi = EDI;
-
-    read_virtual_byte(i->seg(), esi, &op1_8);
-    read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
-
-    diff_8 = op1_8 - op2_8;
-
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi--;
-      edi--;
-    }
-    else {
-      esi++;
-      edi++;
-    }
-
-    // zero extension of RSI/RDI
-    RDI = edi;
-    RSI = esi;
+  else {
+    si++;
+    di++;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u si = SI;
-    Bit16u di = DI;
 
-    read_virtual_byte(i->seg(), si, &op1_8);
-    read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
-
-    diff_8 = op1_8 - op2_8;
-
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si--;
-      di--;
-    }
-    else {
-      si++;
-      di++;
-    }
-
-    DI = di;
-    SI = si;
-  }
+  DI = di;
+  SI = si;
 }
 
-/* 16 bit opsize mode */
-void BX_CPU_C::CMPSW_XwYw(bxInstruction_c *i)
+/* 32 bit address size */
+void BX_CPU_C::CMPSB32_XbYb(bxInstruction_c *i)
+{
+  Bit8u op1_8, op2_8, diff_8;
+
+  Bit32u esi = ESI;
+  Bit32u edi = EDI;
+
+  read_virtual_byte(i->seg(), esi, &op1_8);
+  read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
+
+  diff_8 = op1_8 - op2_8;
+
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi--;
+    edi--;
+  }
+  else {
+    esi++;
+    edi++;
+  }
+
+  // zero extension of RSI/RDI
+  RDI = edi;
+  RSI = esi;
+}
+
+#if BX_SUPPORT_X86_64
+/* 64 bit address size */
+void BX_CPU_C::CMPSB64_XbYb(bxInstruction_c *i)
+{
+  Bit8u op1_8, op2_8, diff_8;
+
+  Bit64u rsi = RSI;
+  Bit64u rdi = RDI;
+
+  read_virtual_byte(i->seg(), rsi, &op1_8);
+  read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+
+  diff_8 = op1_8 - op2_8;
+
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi--;
+    rdi--;
+  }
+  else {
+    rsi++;
+    rdi++;
+  }
+
+  RDI = rdi;
+  RSI = rsi;
+}
+#endif
+
+/* 16 bit opsize mode, 16 bit address size */
+void BX_CPU_C::CMPSW16_XwYw(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16, diff_16;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
-    Bit64u rdi = RDI;
+  Bit16u si = SI;
+  Bit16u di = DI;
 
-    read_virtual_word(i->seg(), rsi, &op1_16);
-    read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
+  read_virtual_word(i->seg(), si, &op1_16);
+  read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
-    diff_16 = op1_16 - op2_16;
+  diff_16 = op1_16 - op2_16;
 
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 2;
-      rdi -= 2;
-    }
-    else {
-      rsi += 2;
-      rdi += 2;
-    }
-
-    RDI = rdi;
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si -= 2;
+    di -= 2;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u esi = ESI;
-    Bit32u edi = EDI;
-
-    read_virtual_word(i->seg(), esi, &op1_16);
-    read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
-
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 2;
-      edi -= 2;
-    }
-    else {
-      esi += 2;
-      edi += 2;
-    }
-
-    // zero extension of RSI/RDI
-    RDI = edi;
-    RSI = esi;
+  else {
+    si += 2;
+    di += 2;
   }
-  else
-  { /* 16 bit address mode */
-    Bit16u si = SI;
-    Bit16u di = DI;
 
-    read_virtual_word(i->seg(), si, &op1_16);
-    read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
-
-    diff_16 = op1_16 - op2_16;
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si -= 2;
-      di -= 2;
-    }
-    else {
-      si += 2;
-      di += 2;
-    }
-
-    DI = di;
-    SI = si;
-  }
+  DI = di;
+  SI = si;
 }
 
-/* 32 bit opsize mode */
-void BX_CPU_C::CMPSD_XdYd(bxInstruction_c *i)
+/* 16 bit opsize mode, 32 bit address size */
+void BX_CPU_C::CMPSW32_XwYw(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16, diff_16;
+
+  Bit32u esi = ESI;
+  Bit32u edi = EDI;
+
+  read_virtual_word(i->seg(), esi, &op1_16);
+  read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
+
+  diff_16 = op1_16 - op2_16;
+
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 2;
+    edi -= 2;
+  }
+  else {
+    esi += 2;
+    edi += 2;
+  }
+
+  // zero extension of RSI/RDI
+  RDI = edi;
+  RSI = esi;
+}
+
+#if BX_SUPPORT_X86_64
+/* 16 bit opsize mode, 64 bit address size */
+void BX_CPU_C::CMPSW64_XwYw(bxInstruction_c *i)
+{
+  Bit16u op1_16, op2_16, diff_16;
+
+  Bit64u rsi = RSI;
+  Bit64u rdi = RDI;
+
+  read_virtual_word(i->seg(), rsi, &op1_16);
+  read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
+
+  diff_16 = op1_16 - op2_16;
+
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 2;
+    rdi -= 2;
+  }
+  else {
+    rsi += 2;
+    rdi += 2;
+  }
+
+  RDI = rdi;
+  RSI = rsi;
+}
+#endif
+
+/* 32 bit opsize mode, 16 bit address size */
+void BX_CPU_C::CMPSD16_XdYd(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
-    Bit64u rdi = RDI;
+  Bit16u si = SI;
+  Bit16u di = DI;
 
-    Bit32u op1_32, op2_32, diff_32;
+  read_virtual_dword(i->seg(), si, &op1_32);
+  read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
 
-    read_virtual_dword(i->seg(), rsi, &op1_32);
-    read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
+  diff_32 = op1_32 - op2_32;
 
-    diff_32 = op1_32 - op2_32;
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 4;
-      rdi -= 4;
-    }
-    else {
-      rsi += 4;
-      rdi += 4;
-    }
-
-    RDI = rdi;
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si -= 4;
+    di -= 4;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u esi = ESI;
-    Bit32u edi = EDI;
-
-    read_virtual_dword(i->seg(), esi, &op1_32);
-    read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
-
-    diff_32 = op1_32 - op2_32;
-
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 4;
-      edi -= 4;
-    }
-    else {
-      esi += 4;
-      edi += 4;
-    }
-
-    // zero extension of RSI/RDI
-    RDI = edi;
-    RSI = esi;
+  else {
+    si += 4;
+    di += 4;
   }
-  else
-  { /* 16 bit address mode */
-    Bit16u si = SI;
-    Bit16u di = DI;
 
-    read_virtual_dword(i->seg(), si, &op1_32);
-    read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
+  DI = di;
+  SI = si;
+}
 
-    diff_32 = op1_32 - op2_32;
+/* 32 bit opsize mode, 32 bit address size */
+void BX_CPU_C::CMPSD32_XdYd(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, diff_32;
 
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+  Bit32u esi = ESI;
+  Bit32u edi = EDI;
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si -= 4;
-      di -= 4;
-    }
-    else {
-      si += 4;
-      di += 4;
-    }
+  read_virtual_dword(i->seg(), esi, &op1_32);
+  read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
 
-    DI = di;
-    SI = si;
+  diff_32 = op1_32 - op2_32;
+
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 4;
+    edi -= 4;
   }
+  else {
+    esi += 4;
+    edi += 4;
+  }
+
+  // zero extension of RSI/RDI
+  RDI = edi;
+  RSI = esi;
 }
 
 #if BX_SUPPORT_X86_64
 
-/* 64 bit opsize mode */
-void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
+/* 32 bit opsize mode, 64 bit address size */
+void BX_CPU_C::CMPSD64_XdYd(bxInstruction_c *i)
+{
+  Bit32u op1_32, op2_32, diff_32;
+
+  Bit64u rsi = RSI;
+  Bit64u rdi = RDI;
+
+  read_virtual_dword(i->seg(), rsi, &op1_32);
+  read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
+
+  diff_32 = op1_32 - op2_32;
+
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 4;
+    rdi -= 4;
+  }
+  else {
+    rsi += 4;
+    rdi += 4;
+  }
+
+  RDI = rdi;
+  RSI = rsi;
+}
+
+/* 64 bit opsize mode, 32 bit address size */
+void BX_CPU_C::CMPSQ32_XqYq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64, diff_64;
 
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
-    Bit64u rdi = RDI;
+  Bit32u esi = ESI;
+  Bit32u edi = EDI;
 
-    read_virtual_qword(i->seg(), rsi, &op1_64);
-    read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
+  read_virtual_qword(i->seg(), esi, &op1_64);
+  read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
 
-    diff_64 = op1_64 - op2_64;
+  diff_64 = op1_64 - op2_64;
 
-    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 8;
-      rdi -= 8;
-    }
-    else {
-      rsi += 8;
-      rdi += 8;
-    }
-
-    RDI = rdi;
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 8;
+    edi -= 8;
   }
-  else /* 32 bit address size */
-  {
-    Bit32u esi = ESI;
-    Bit32u edi = EDI;
-
-    read_virtual_qword(i->seg(), esi, &op1_64);
-    read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
-
-    diff_64 = op1_64 - op2_64;
-
-    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 8;
-      edi -= 8;
-    }
-    else {
-      esi += 8;
-      edi += 8;
-    }
-
-    // zero extension of RSI/RDI
-    RDI = edi;
-    RSI = esi;
+  else {
+    esi += 8;
+    edi += 8;
   }
+
+  // zero extension of RSI/RDI
+  RDI = edi;
+  RSI = esi;
+}
+
+/* 64 bit opsize mode, 64 bit address size */
+void BX_CPU_C::CMPSQ64_XqYq(bxInstruction_c *i)
+{
+  Bit64u op1_64, op2_64, diff_64;
+
+  Bit64u rsi = RSI;
+  Bit64u rdi = RDI;
+
+  read_virtual_qword(i->seg(), rsi, &op1_64);
+  read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
+
+  diff_64 = op1_64 - op2_64;
+
+  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 8;
+    rdi -= 8;
+  }
+  else {
+    rsi += 8;
+    rdi += 8;
+  }
+
+  RDI = rdi;
+  RSI = rsi;
 }
 
 #endif
@@ -1542,23 +1587,50 @@ void BX_CPU_C::CMPSQ_XqYq(bxInstruction_c *i)
 
 void BX_CPU_C::REP_SCASB_ALXb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB_ALXb);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB64_ALXb);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB32_ALXb);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASB16_ALXb);
 }
 
 void BX_CPU_C::REP_SCASW_AXXw(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW_AXXw);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW64_AXXw);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW32_AXXw);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASW16_AXXw);
 }
 
 void BX_CPU_C::REP_SCASD_EAXXd(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD_EAXXd);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD64_EAXXd);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD32_EAXXd);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASD16_EAXXd);
 }
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ_RAXXq);
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ64_RAXXq);
+  else
+    BX_CPU_THIS_PTR repeat_ZFL(i, &BX_CPU_C::SCASQ32_RAXXq);
 }
 #endif
 
@@ -1566,240 +1638,266 @@ void BX_CPU_C::REP_SCASQ_RAXXq(bxInstruction_c *i)
 // SCASB/SCASW/SCASD/SCASQ methods
 //
 
-void BX_CPU_C::SCASB_ALXb(bxInstruction_c *i)
+/* 16 bit address size */
+void BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
 {
   Bit8u op1_8 = AL, op2_8, diff_8;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rdi = RDI;
+  Bit16u di = DI;
 
-    read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+  read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
 
-    diff_8 = op1_8 - op2_8;
+  diff_8 = op1_8 - op2_8;
 
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
  
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rdi--;
-    }
-    else {
-      rdi++;
-    }
-
-    RDI = rdi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    di--;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u edi = EDI;
-
-    read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
-
-    diff_8 = op1_8 - op2_8;
-
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      edi--;
-    }
-    else {
-      edi++;
-    }
-
-    // zero extension of RDI
-    RDI = edi;
+  else {
+    di++;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u di = DI;
 
-    read_virtual_byte(BX_SEG_REG_ES, di, &op2_8);
-
-    diff_8 = op1_8 - op2_8;
-
-    SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      di--;
-    }
-    else {
-      di++;
-    }
-
-    DI = di;
-  }
+  DI = di;
 }
 
-/* 16 bit opsize mode */
-void BX_CPU_C::SCASW_AXXw(bxInstruction_c *i)
+/* 32 bit address size */
+void BX_CPU_C::SCASB32_ALXb(bxInstruction_c *i)
+{
+  Bit8u op1_8 = AL, op2_8, diff_8;
+
+  Bit32u edi = EDI;
+
+  read_virtual_byte(BX_SEG_REG_ES, edi, &op2_8);
+
+  diff_8 = op1_8 - op2_8;
+
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    edi--;
+  }
+  else {
+    edi++;
+  }
+
+  // zero extension of RDI
+  RDI = edi;
+}
+
+#if BX_SUPPORT_X86_64
+/* 64 bit address size */
+void BX_CPU_C::SCASB64_ALXb(bxInstruction_c *i)
+{
+  Bit8u op1_8 = AL, op2_8, diff_8;
+
+  Bit64u rdi = RDI;
+
+  read_virtual_byte(BX_SEG_REG_ES, rdi, &op2_8);
+
+  diff_8 = op1_8 - op2_8;
+
+  SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rdi--;
+  }
+  else {
+    rdi++;
+  }
+
+  RDI = rdi;
+}
+#endif
+
+/* 16 bit opsize mode, 16 bit address size */
+void BX_CPU_C::SCASW16_AXXw(bxInstruction_c *i)
 {
   Bit16u op1_16 = AX, op2_16, diff_16;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rdi = RDI;
+  Bit16u di = DI;
 
-    read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
-    diff_16 = op1_16 - op2_16;
+  read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
 
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+  diff_16 = op1_16 - op2_16;
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rdi -= 2;
-    }
-    else {
-      rdi += 2;
-    }
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
-    RDI = rdi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    di -= 2;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u edi = EDI;
-
-    read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      edi -= 2;
-    }
-    else {
-      edi += 2;
-    }
-
-    // zero extension of RDI
-    RDI = edi;
+  else {
+    di += 2;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u di = DI;
 
-    read_virtual_word(BX_SEG_REG_ES, di, &op2_16);
-    diff_16 = op1_16 - op2_16;
-
-    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      di -= 2;
-    }
-    else {
-      di += 2;
-    }
-
-    DI = di;
-  }
+  DI = di;
 }
 
-/* 32 bit opsize mode */
-void BX_CPU_C::SCASD_EAXXd(bxInstruction_c *i)
+/* 16 bit opsize mode, 32 bit address size */
+void BX_CPU_C::SCASW32_AXXw(bxInstruction_c *i)
+{
+  Bit16u op1_16 = AX, op2_16, diff_16;
+
+  Bit32u edi = EDI;
+
+  read_virtual_word(BX_SEG_REG_ES, edi, &op2_16);
+  diff_16 = op1_16 - op2_16;
+
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    edi -= 2;
+  }
+  else {
+    edi += 2;
+  }
+
+  // zero extension of RDI
+  RDI = edi;
+}
+
+#if BX_SUPPORT_X86_64
+/* 16 bit opsize mode, 64 bit address size */
+void BX_CPU_C::SCASW64_AXXw(bxInstruction_c *i)
+{
+  Bit16u op1_16 = AX, op2_16, diff_16;
+
+  Bit64u rdi = RDI;
+
+  read_virtual_word(BX_SEG_REG_ES, rdi, &op2_16);
+
+  diff_16 = op1_16 - op2_16;
+
+  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rdi -= 2;
+  }
+  else {
+    rdi += 2;
+  }
+
+  RDI = rdi;
+}
+#endif
+
+/* 32 bit opsize mode, 16 bit address size */
+void BX_CPU_C::SCASD16_EAXXd(bxInstruction_c *i)
 {
   Bit32u op1_32 = EAX, op2_32, diff_32;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rdi = RDI;
+  Bit16u di = DI;
 
-    read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
-    diff_32 = op1_32 - op2_32;
+  read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
 
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+  diff_32 = op1_32 - op2_32;
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rdi -= 4;
-    }
-    else {
-      rdi += 4;
-    }
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
-    RDI = rdi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    di -= 4;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L()) {
-    Bit32u edi = EDI;
-
-    read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
-    diff_32 = op1_32 - op2_32;
-
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      edi -= 4;
-    }
-    else {
-      edi += 4;
-    }
-
-    // zero extension of RDI
-    RDI = edi;
+  else {
+    di += 4;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u di = DI;
 
-    read_virtual_dword(BX_SEG_REG_ES, di, &op2_32);
-    diff_32 = op1_32 - op2_32;
+  DI = di;
+}
 
-    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+/* 32 bit opsize mode, 32 bit address size */
+void BX_CPU_C::SCASD32_EAXXd(bxInstruction_c *i)
+{
+  Bit32u op1_32 = EAX, op2_32, diff_32;
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      di -= 4;
-    }
-    else {
-      di += 4;
-    }
+  Bit32u edi = EDI;
 
-    DI = di;
+  read_virtual_dword(BX_SEG_REG_ES, edi, &op2_32);
+
+  diff_32 = op1_32 - op2_32;
+
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    edi -= 4;
   }
+  else {
+    edi += 4;
+  }
+
+  // zero extension of RDI
+  RDI = edi;
 }
 
 #if BX_SUPPORT_X86_64
 
-/* 64 bit opsize mode */
-void BX_CPU_C::SCASQ_RAXXq(bxInstruction_c *i)
+/* 32 bit opsize mode, 64 bit address size */
+void BX_CPU_C::SCASD64_EAXXd(bxInstruction_c *i)
+{
+  Bit32u op1_32 = EAX, op2_32, diff_32;
+
+  Bit64u rdi = RDI;
+
+  read_virtual_dword(BX_SEG_REG_ES, rdi, &op2_32);
+
+  diff_32 = op1_32 - op2_32;
+
+  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rdi -= 4;
+  }
+  else {
+    rdi += 4;
+  }
+
+  RDI = rdi;
+}
+
+/* 64 bit opsize mode, 32 bit address size */
+void BX_CPU_C::SCASQ32_RAXXq(bxInstruction_c *i)
 {
   Bit64u op1_64 = RAX, op2_64, diff_64;
 
-  if (i->as64L()) {
-    Bit64u rdi = RDI;
+  Bit32u edi = EDI;
 
-    read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
-    diff_64 = op1_64 - op2_64;
+  read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
 
-    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+  diff_64 = op1_64 - op2_64;
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rdi -= 8;
-    }
-    else {
-      rdi += 8;
-    }
+  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
-    RDI = rdi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    edi -= 8;
   }
-  else
-  {
-    Bit32u edi = EDI;
-
-    read_virtual_qword(BX_SEG_REG_ES, edi, &op2_64);
-    diff_64 = op1_64 - op2_64;
-
-    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      edi -= 8;
-    }
-    else {
-      edi += 8;
-    }
-
-    // zero extension of RDI
-    RDI = edi;
+  else {
+    edi += 8;
   }
+
+  // zero extension of RDI
+  RDI = edi;
+}
+
+/* 64 bit opsize mode, 64 bit address size */
+void BX_CPU_C::SCASQ64_RAXXq(bxInstruction_c *i)
+{
+  Bit64u op1_64 = RAX, op2_64, diff_64;
+
+  Bit64u rdi = RDI;
+
+  read_virtual_qword(BX_SEG_REG_ES, rdi, &op2_64);
+
+  diff_64 = op1_64 - op2_64;
+
+  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rdi -= 8;
+  }
+  else {
+    rdi += 8;
+  }
+
+  RDI = rdi;
 }
 
 #endif
@@ -2079,23 +2177,50 @@ void BX_CPU_C::STOSQ_YqRAX(bxInstruction_c *i)
 
 void BX_CPU_C::REP_LODSB_ALXb(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB_ALXb);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB64_ALXb);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB32_ALXb);
+  else
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSB16_ALXb);
 }
 
 void BX_CPU_C::REP_LODSW_AXXw(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW_AXXw);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW64_AXXw);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW32_AXXw);
+  else
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSW16_AXXw);
 }
 
 void BX_CPU_C::REP_LODSD_EAXXd(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD_EAXXd);
+#if BX_SUPPORT_X86_64
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD64_EAXXd);
+  else
+#endif
+  if (i->as32L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD32_EAXXd);
+  else
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSD16_EAXXd);
 }
 
 #if BX_SUPPORT_X86_64
 void BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
 {
-  BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ_RAXXq);
+  if (i->as64L())
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ64_RAXXq);
+  else
+    BX_CPU_THIS_PTR repeat(i, &BX_CPU_C::LODSQ32_RAXXq);
 }
 #endif
 
@@ -2103,218 +2228,213 @@ void BX_CPU_C::REP_LODSQ_RAXXq(bxInstruction_c *i)
 // LODSB/LODSW/LODSD/LODSQ methods
 //
 
-void BX_CPU_C::LODSB_ALXb(bxInstruction_c *i)
+/* 16 bit address size */
+void BX_CPU_C::LODSB16_ALXb(bxInstruction_c *i)
 {
-  Bit8u al;
+  Bit16u si = SI;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
+  read_virtual_byte(i->seg(), si, &AL);
 
-    read_virtual_byte(i->seg(), rsi, &al);
-
-    AL = al;
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi--;
-    }
-    else {
-      rsi++;
-    }
-
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si--;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L())
-  {
-    Bit32u esi = ESI;
-
-    read_virtual_byte(i->seg(), esi, &al);
-
-    AL = al;
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi--;
-    }
-    else {
-      esi++;
-    }
-
-    // zero extension of RSI
-    RSI = esi;
+  else {
+    si++;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u si = SI;
 
-    read_virtual_byte(i->seg(), si, &al);
-
-    AL = al;
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si--;
-    }
-    else {
-      si++;
-    }
-
-    SI = si;
-  }
+  SI = si;
 }
 
-/* 16 bit opsize mode */
-void BX_CPU_C::LODSW_AXXw(bxInstruction_c *i)
+/* 32 bit address size */
+void BX_CPU_C::LODSB32_ALXb(bxInstruction_c *i)
 {
-  Bit16u ax;
+  Bit32u esi = ESI;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
+  read_virtual_byte(i->seg(), esi, &AL);
 
-    read_virtual_word(i->seg(), rsi, &ax);
-    AX = ax;
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 2;
-    }
-    else {
-      rsi += 2;
-    }
-
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi--;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L())
-  {
-    Bit32u esi = ESI;
-
-    read_virtual_word(i->seg(), esi, &ax);
-    AX = ax;
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 2;
-    }
-    else {
-      esi += 2;
-    }
-
-    // zero extension of RSI
-    RSI = esi;
+  else {
+    esi++;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u si = SI;
 
-    read_virtual_word(i->seg(), si, &ax);
-    AX = ax;
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si -= 2;
-    }
-    else {
-      si += 2;
-    }
-
-    SI = si;
-  }
+  // zero extension of RSI
+  RSI = esi;
 }
 
-/* 32 bit opsize mode */
-void BX_CPU_C::LODSD_EAXXd(bxInstruction_c *i)
+#if BX_SUPPORT_X86_64
+/* 64 bit address size */
+void BX_CPU_C::LODSB64_ALXb(bxInstruction_c *i)
+{
+  Bit64u rsi = RSI;
+
+  read_virtual_byte(i->seg(), rsi, &AL);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi--;
+  }
+  else {
+    rsi++;
+  }
+
+  RSI = rsi;
+}
+#endif
+
+/* 16 bit opsize mode, 16 bit address size */
+void BX_CPU_C::LODSW16_AXXw(bxInstruction_c *i)
+{
+  Bit16u si = SI;
+
+  read_virtual_word(i->seg(), si, &AX);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si -= 2;
+  }
+  else {
+    si += 2;
+  }
+
+  SI = si;
+}
+
+/* 16 bit opsize mode, 32 bit address size */
+void BX_CPU_C::LODSW32_AXXw(bxInstruction_c *i)
+{
+  Bit32u esi = ESI;
+
+  read_virtual_word(i->seg(), esi, &AX);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 2;
+  }
+  else {
+    esi += 2;
+  }
+
+  // zero extension of RSI
+  RSI = esi;
+}
+
+#if BX_SUPPORT_X86_64
+/* 16 bit opsize mode, 64 bit address size */
+void BX_CPU_C::LODSW64_AXXw(bxInstruction_c *i)
+{
+  Bit64u rsi = RSI;
+
+  read_virtual_word(i->seg(), rsi, &AX);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 2;
+  }
+  else {
+    rsi += 2;
+  }
+
+  RSI = rsi;
+}
+#endif
+
+/* 32 bit opsize mode, 16 bit address size */
+void BX_CPU_C::LODSD16_EAXXd(bxInstruction_c *i)
 {
   Bit32u eax;
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
+  Bit16u si = SI;
 
-    read_virtual_dword(i->seg(), rsi, &eax);
-    RAX = eax;
+  read_virtual_dword(i->seg(), si, &eax);
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 4;
-    }
-    else {
-      rsi += 4;
-    }
+  RAX = eax;
 
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    si -= 4;
   }
-  else
-#endif  // #if BX_SUPPORT_X86_64
-  if (i->as32L())
-  {
-    Bit32u esi = ESI;
-
-    read_virtual_dword(i->seg(), esi, &eax);
-    RAX = eax;
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 4;
-    }
-    else {
-      esi += 4;
-    }
-
-    // zero extension of RSI
-    RSI = esi;
+  else {
+    si += 4;
   }
-  else
-  { /* 16bit address mode */
-    Bit16u si = SI;
 
-    read_virtual_dword(i->seg(), si, &eax);
-    RAX = eax;
+  SI = si;
+}
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      si -= 4;
-    }
-    else {
-      si += 4;
-    }
+/* 32 bit opsize mode, 32 bit address size */
+void BX_CPU_C::LODSD32_EAXXd(bxInstruction_c *i)
+{
+  Bit32u eax;
 
-    SI = si;
+  Bit32u esi = ESI;
+
+  read_virtual_dword(i->seg(), esi, &eax);
+
+  RAX = eax;
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 4;
   }
+  else {
+    esi += 4;
+  }
+
+  // zero extension of RSI
+  RSI = esi;
 }
 
 #if BX_SUPPORT_X86_64
 
-/* 64 bit opsize mode */
-void BX_CPU_C::LODSQ_RAXXq(bxInstruction_c *i)
+/* 32 bit opsize mode, 64 bit address size */
+void BX_CPU_C::LODSD64_EAXXd(bxInstruction_c *i)
 {
-  Bit64u rax;
+  Bit32u eax;
 
-  if (i->as64L()) {
-    Bit64u rsi = RSI;
+  Bit64u rsi = RSI;
 
-    read_virtual_qword(i->seg(), rsi, &rax);
-    RAX = rax;
+  read_virtual_dword(i->seg(), rsi, &eax);
 
-    if (BX_CPU_THIS_PTR get_DF()) {
-      rsi -= 8;
-    }
-    else {
-      rsi += 8;
-    }
+  RAX = eax;
 
-    RSI = rsi;
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 4;
   }
-  else /* 32 bit address size */
-  {
-    Bit32u esi = ESI;
-
-    read_virtual_qword(i->seg(), esi, &rax);
-    RAX = rax;
-
-    if (BX_CPU_THIS_PTR get_DF()) {
-      esi -= 8;
-    }
-    else {
-      esi += 8;
-    }
-
-    // zero extension of RSI
-    RSI = esi;
+  else {
+    rsi += 4;
   }
+
+  RSI = rsi;
+}
+
+/* 64 bit opsize mode, 32 bit address size */
+void BX_CPU_C::LODSQ32_RAXXq(bxInstruction_c *i)
+{
+  Bit32u esi = ESI;
+
+  read_virtual_qword(i->seg(), esi, &RAX);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    esi -= 8;
+  }
+  else {
+    esi += 8;
+  }
+
+  // zero extension of RSI
+  RSI = esi;
+}
+
+/* 64 bit opsize mode, 64 bit address size */
+void BX_CPU_C::LODSQ64_RAXXq(bxInstruction_c *i)
+{
+  Bit64u rsi = RSI;
+
+  read_virtual_qword(i->seg(), rsi, &RAX);
+
+  if (BX_CPU_THIS_PTR get_DF()) {
+    rsi -= 8;
+  }
+  else {
+    rsi += 8;
+  }
+
+  RSI = rsi;
 }
 
 #endif
