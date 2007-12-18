@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.35 2007-12-16 21:46:39 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.36 2007-12-18 21:08:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -91,57 +91,41 @@ void BX_CPU_C::push_64(Bit64u value64)
 /* pop 16 bit operand from the stack */
 void BX_CPU_C::pop_16(Bit16u *value16_ptr)
 {
-  bx_address temp_RSP;
-
 #if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
-    temp_RSP = RSP;
-  else
-#endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_RSP = ESP;
-  else
-    temp_RSP = SP;
-
-  read_virtual_word(BX_SEG_REG_SS, temp_RSP, value16_ptr);
-
-#if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
+  if (StackAddrSize64()) {
+    read_virtual_word(BX_SEG_REG_SS, RSP, value16_ptr);
     RSP += 2;
+  }
   else
 #endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    read_virtual_word(BX_SEG_REG_SS, ESP, value16_ptr);
     ESP += 2;
-  else
+  }
+  else {
+    read_virtual_word(BX_SEG_REG_SS, SP, value16_ptr);
     SP  += 2;
+  }
 }
 
 /* pop 32 bit operand from the stack */
 void BX_CPU_C::pop_32(Bit32u *value32_ptr)
 {
-  bx_address temp_RSP;
-
 #if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
-    temp_RSP = RSP;
-  else
-#endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
-    temp_RSP = ESP;
-  else
-    temp_RSP = SP;
-
-  read_virtual_dword(BX_SEG_REG_SS, temp_RSP, value32_ptr);
-
-#if BX_SUPPORT_X86_64
-  if (StackAddrSize64())
+  if (StackAddrSize64()) {
+    read_virtual_dword(BX_SEG_REG_SS, RSP, value32_ptr);
     RSP += 4;
+  }
   else
 #endif
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
+  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    read_virtual_dword(BX_SEG_REG_SS, ESP, value32_ptr);
     ESP += 4;
-  else
+  }
+  else {
+    read_virtual_dword(BX_SEG_REG_SS, SP, value32_ptr);
     SP  += 4;
+  }
 }
 
 /* pop 64 bit operand from the stack */
