@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.47 2007-12-15 17:42:20 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.48 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -1752,7 +1752,7 @@ static const BxOpcodeInfo_t BxOpcodeGroupSSE_0ff6[4] = {
   /* F3 */ { 0, &BX_CPU_C::BxError }
 };
 
-static const BxOpcodeInfo_t BxOpcodeGroupSSE_0ff7[4] = {
+static const BxOpcodeInfo_t BxOpcodeGroupSSE_0ff7M[4] = {
   /* -- */ { 0, &BX_CPU_C::MASKMOVQ_PqPRq     },
   /* 66 */ { 0, &BX_CPU_C::MASKMOVDQU_VdqUdq },
   /* F2 */ { 0, &BX_CPU_C::BxError },

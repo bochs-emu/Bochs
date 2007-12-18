@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.69 2007-12-15 17:42:24 sshwarts Exp $
+// $Id: sse_move.cc,v 1.70 2007-12-18 21:41:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -789,11 +789,6 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
   BX_CPU_THIS_PTR prepareSSE();
-
-  if (! i->modC0()) {
-    BX_INFO(("MASKMOVDQU_VdqUdq: unexpected memory reference"));
-    UndefinedOpcode(i);
-  }
 
   bx_address rdi;
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()), 

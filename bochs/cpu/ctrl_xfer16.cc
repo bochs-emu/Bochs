@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.46 2007-12-16 21:21:29 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.47 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -574,11 +574,6 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
   if (protected_mode()) {
     iret_protected(i);
     goto done;
-  }
-
-  if (! can_pop(6)) {
-    BX_ERROR(("IRET: top 6 bytes of stack not within stack limits"));
-    exception(BX_SS_EXCEPTION, 0, 0);
   }
 
   pop_16(&ip);

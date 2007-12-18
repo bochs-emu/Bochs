@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.64 2007-11-27 22:12:45 sshwarts Exp $
+// $Id: mmx.cc,v 1.65 2007-12-18 21:41:43 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2432,11 +2432,6 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
-
-  if (! i->modC0()) {
-    BX_INFO(("MASKMOVQ_PqPRq: unexpected memory reference"));
-    UndefinedOpcode(i);
-  }
 
   bx_address rdi;
   BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), 

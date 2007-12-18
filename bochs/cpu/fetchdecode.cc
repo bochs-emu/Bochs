@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.152 2007-12-17 19:52:00 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.153 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -737,7 +737,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F F4 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /wr */ { 0, &BX_CPU_C::BxError }, // MASKMOVxx SSE group
   /* 0F F8 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -1301,7 +1301,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 0F F4 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /dr */ { 0, &BX_CPU_C::BxError }, // MASKMOVxx SSE group
   /* 0F F8 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -1872,7 +1872,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F F4 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7M }, 
   /* 0F F8 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -2436,7 +2436,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 0F F4 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7M }, 
   /* 0F F8 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -2606,7 +2606,7 @@ fetch_b1:
 
     i->modRMForm.modRMData1 = rm;
     i->modRMForm.modRMData2 = mod;
-    i->modRMForm.modRMData3 = 0;
+    i->modRMForm.modRMData3 = rm;  // initialize with rm to use BxResolve32Base
     i->modRMForm.modRMData4 = nnn;
     i->modRMForm.displ32u = 0;
 
@@ -2618,7 +2618,7 @@ fetch_b1:
     if (i->as32L()) {
       // 32-bit addressing modes; note that mod==11b handled above
       if (rm != 4) { // no s-i-b byte
-        i->ResolveModrm = &BX_CPU_C::BxResolve32Rm;
+        i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(BX_SEG_REG_DS);
@@ -2663,7 +2663,7 @@ get_8bit_displ:
         base  = sib & 0x7; sib >>= 3;
         index = sib & 0x7; sib >>= 3;
         scale = sib;
-        i->modRMForm.modRMData3 |= (base);
+        i->modRMForm.modRMData3  = (base);
         i->modRMForm.modRMData2 |= (index);
         i->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
@@ -2836,6 +2836,15 @@ modrm_done:
           return(0);
         }
         break;
+      case BxImmediate_Id:
+        if ((ilen+3) < remain) {
+          i->modRMForm.Id = FetchDWORD(iptr);
+          ilen += 4;
+        }
+        else {
+          return(0);
+        }
+        break;
       case BxImmediate_IbIb:
         if (ilen < remain) {
           i->IxIxForm.Ib = *iptr++;
@@ -2923,16 +2932,6 @@ modrm_done:
         if ((ilen+1) < remain) {
           i->modRMForm.Id = (Bit16s) FetchWORD(iptr);
           ilen += 2;
-        }
-        else {
-          return(0);
-        }
-        break;
-      case BxImmediate_Id:
-      case BxImmediate_BrOff32:
-        if ((ilen+3) < remain) {
-          i->modRMForm.Id = FetchDWORD(iptr);
-          ilen += 4;
         }
         else {
           return(0);

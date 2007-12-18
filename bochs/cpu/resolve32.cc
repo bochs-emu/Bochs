@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve32.cc,v 1.14 2007-11-18 19:46:14 sshwarts Exp $
+// $Id: resolve32.cc,v 1.15 2007-12-18 21:41:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -31,12 +31,6 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
-  void  BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolve32Rm(bxInstruction_c *i)
-{
-  RMAddr(i) = BX_READ_32BIT_REG(i->rm()) + i->displ32u();
-}
 
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve32Disp(bxInstruction_c *i)

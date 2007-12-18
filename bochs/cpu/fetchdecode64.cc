@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.160 2007-12-17 19:52:00 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.161 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -691,7 +691,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /wr */ { 0, &BX_CPU_C::BxError }, // MASKMOVxx SSE group
   /* 0F F8 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /wr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -1220,7 +1220,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /dr */ { 0, &BX_CPU_C::BxError }, // MASKMOVxx SSE group
   /* 0F F8 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /dr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -1749,7 +1749,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 0F F4 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /qr */ { 0, &BX_CPU_C::BxError }, // MASKMOVxx SSE group
   /* 0F F8 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /qr */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -2284,7 +2284,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7M }, 
   /* 0F F8 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /wm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -2813,7 +2813,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7M }, 
   /* 0F F8 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /dm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -3342,7 +3342,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
   /* 0F F4 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff4 }, 
   /* 0F F5 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff5 }, 
   /* 0F F6 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff6 }, 
-  /* 0F F7 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7 }, 
+  /* 0F F7 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff7M }, 
   /* 0F F8 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff8 }, 
   /* 0F F9 /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ff9 }, 
   /* 0F FA /qm */ { BxPrefixSSE, NULL, BxOpcodeGroupSSE_0ffa }, 
@@ -3535,7 +3535,7 @@ fetch_b1:
 
     i->modRMForm.modRMData1 = rm;
     i->modRMForm.modRMData2 = mod;
-    i->modRMForm.modRMData3 = 0;
+    i->modRMForm.modRMData3 = rm;  // initialize with rm to use BxResolve64Base
     i->modRMForm.modRMData4 = nnn;
     i->modRMForm.displ32u = 0;
 
@@ -3547,7 +3547,7 @@ fetch_b1:
     if (i->as64L()) {
       // 64-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
-        i->ResolveModrm = &BX_CPU_C::BxResolve64Rm;
+        i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(BX_SEG_REG_DS);
@@ -3592,7 +3592,7 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
-        i->modRMForm.modRMData3 |= (base);
+        i->modRMForm.modRMData3  = (base);
         i->modRMForm.modRMData2 |= (index);
         i->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
@@ -3623,7 +3623,7 @@ get_8bit_displ:
     else {
       // 32-bit addressing modes; note that mod==11b handled above
       if ((rm & 0x7) != 4) { // no s-i-b byte
-        i->ResolveModrm = &BX_CPU_C::BxResolve32Rm;
+        i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         if (mod == 0x00) { // mod == 00b
           if (BX_NULL_SEG_REG(i->seg()))
             i->setSeg(BX_SEG_REG_DS);
@@ -3653,7 +3653,7 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
-        i->modRMForm.modRMData3 |= (base);
+        i->modRMForm.modRMData3  = (base);
         i->modRMForm.modRMData2 |= (index);
         i->modRMForm.modRMData2 |= (scale<<4);
         if (index == 4)
@@ -3683,18 +3683,6 @@ get_8bit_displ:
     }
 
 modrm_done:
-
-    /*
-    BX_DEBUG (("as_64=%d os_64=%d as_32=%d os_32=%d b1=%04x b2=%04x ofs=%4d rm=%d mod=%d nnn=%d",
-                     i->as64L(),
-                     i->os64L(),
-                     i->as32L(),
-                     i->os32L(),
-                     b1,b2,offset,
-                     i->modRMForm.rm,
-                     mod,
-                     nnn));
-    */
 
     // Resolve ExecutePtr and additional opcode Attr
     const BxOpcodeInfo_t *OpcodeInfoPtr;
@@ -3804,6 +3792,15 @@ modrm_done:
           return(0);
         }
         break;
+      case BxImmediate_Id:
+        if ((ilen+3) < remain) {
+          i->modRMForm.Id = FetchDWORD(iptr);
+          ilen += 4;
+        }
+        else {
+          return(0);
+        }
+        break;
       case BxImmediate_Iq: // MOV Rx,imm64
         if ((ilen+7) < remain) {
           i->IqForm.Iq = FetchQWORD(iptr);
@@ -3864,16 +3861,6 @@ modrm_done:
         if (ilen < remain) {
           i->modRMForm.Id = (Bit8s) (*iptr);
           ilen++;
-        }
-        else {
-          return(0);
-        }
-        break;
-      case BxImmediate_Id:
-      case BxImmediate_BrOff32:
-        if ((ilen+3) < remain) {
-          i->modRMForm.Id = FetchDWORD(iptr);
-          ilen += 4;
         }
         else {
           return(0);

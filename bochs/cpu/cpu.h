@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.397 2007-12-17 19:52:00 sshwarts Exp $
+// $Id: cpu.h,v 1.398 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3073,7 +3073,6 @@ public: // for now...
   BX_SMF void BxResolve16Mod1or2Rm6(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve16Mod1or2Rm7(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void BxResolve32Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve32BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3082,7 +3081,6 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void BxResolve32Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Rip(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void BxResolve64Rm(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Disp(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64Base(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve64BaseIndex(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3835,10 +3833,11 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxImmediate_O       0x0008 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
 #define BxImmediate_BrOff8  0x0009 // Relative branch offset byte
 #define BxImmediate_BrOff16 0x000A // Relative branch offset word, not encodable in 64-bit mode
-#define BxImmediate_BrOff32 0x000B // Relative branch offset dword
 #if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x000C // 64 bit override
+#define BxImmediate_Iq      0x000B // 64 bit override
 #endif
+
+#define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword
 
 // Lookup for opcode and attributes in another opcode tables
 // Totally 7 opcode groups supported
@@ -3849,6 +3848,7 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define BxRMGroup           0x0040 // Group encoding: 100
 #define Bx3ByteOpIndex      0x0050 // Group encoding: 101
 #define Bx3ByteOpTable      0x0060 // Group encoding: 110
+                                   // Group encoding: 111
 
 #define BxPrefix            0x0080 // bit  7
 #define BxLockable          0x0100 // bit  8

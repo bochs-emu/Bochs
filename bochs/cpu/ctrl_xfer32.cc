@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.58 2007-12-16 21:21:29 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.59 2007-12-18 21:41:41 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -566,11 +566,6 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
   }
 
   Bit32u eip, ecs, eflags;
-
-  if (! can_pop(12)) {
-    BX_ERROR(("IRETD: to 12 bytes of stack not within stack limits"));
-    exception(BX_SS_EXCEPTION, 0, 0);
-  }
 
   pop_32(&eip);
 
