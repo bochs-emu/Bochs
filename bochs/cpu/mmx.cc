@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.65 2007-12-18 21:41:43 sshwarts Exp $
+// $Id: mmx.cc,v 1.66 2007-12-19 23:21:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2434,7 +2434,7 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareMMX();
 
   bx_address rdi;
-  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), 
+  BxPackedMmxRegister op = BX_READ_MMX_REG(i->nnn()), tmp,
     mask = BX_READ_MMX_REG(i->rm());
 
 #if BX_SUPPORT_X86_64
@@ -2450,24 +2450,21 @@ void BX_CPU_C::MASKMOVQ_PqPRq(bxInstruction_c *i)
       rdi = DI;
   }
 
-  /* partial write, no data will be written to memory if mask is all 0s */
-  if(MMXUB0(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+0, &MMXUB0(op));
-  if(MMXUB1(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+1, &MMXUB1(op));
-  if(MMXUB2(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+2, &MMXUB2(op));
-  if(MMXUB3(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+3, &MMXUB3(op));
-  if(MMXUB4(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+4, &MMXUB4(op));
-  if(MMXUB5(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+5, &MMXUB5(op));
-  if(MMXUB6(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+6, &MMXUB6(op));
-  if(MMXUB7(mask) & 0x80)
-      write_virtual_byte(BX_SEG_REG_DS, rdi+7, &MMXUB7(op));
+  if (MMXUQ(mask) == 0) return;
 
+  /* do read-modify-write for efficiency */
+  read_RMW_virtual_qword(BX_SEG_REG_DS, rdi, (Bit64u *) &tmp);
+
+  if(MMXUB0(mask) & 0x80) MMXUB0(tmp) = MMXUB0(op);
+  if(MMXUB1(mask) & 0x80) MMXUB1(tmp) = MMXUB1(op);
+  if(MMXUB2(mask) & 0x80) MMXUB2(tmp) = MMXUB2(op);
+  if(MMXUB3(mask) & 0x80) MMXUB3(tmp) = MMXUB3(op);
+  if(MMXUB4(mask) & 0x80) MMXUB4(tmp) = MMXUB4(op);
+  if(MMXUB5(mask) & 0x80) MMXUB5(tmp) = MMXUB5(op);
+  if(MMXUB6(mask) & 0x80) MMXUB6(tmp) = MMXUB6(op);
+  if(MMXUB7(mask) & 0x80) MMXUB7(tmp) = MMXUB7(op);
+
+  write_RMW_virtual_qword(MMXUQ(tmp));
 #else
   BX_INFO(("MASKMOVQ_PqPRq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.153 2007-12-18 21:41:41 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.154 2007-12-19 23:21:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2584,7 +2584,7 @@ fetch_b1:
       }
       else
         return(0);
-  }
+    }
 #endif
 
     // opcode requires modrm byte

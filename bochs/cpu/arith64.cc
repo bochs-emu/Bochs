@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.42 2007-12-04 19:27:22 sshwarts Exp $
+// $Id: arith64.cc,v 1.43 2007-12-19 23:21:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -678,7 +678,7 @@ void BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64_lo);
+  read_RMW_virtual_qword(i->seg(), RMAddr(i),     &op1_64_lo);
   read_RMW_virtual_qword(i->seg(), RMAddr(i) + 8, &op1_64_hi);
 
   diff  = RAX - op1_64_lo;
@@ -686,8 +686,9 @@ void BX_CPU_C::CMPXCHG16B(bxInstruction_c *i)
 
   if (diff == 0) {  // if accumulator == dest
     // dest <-- src
-    write_virtual_qword(i->seg(), RMAddr(i), &RBX);
     write_RMW_virtual_qword(RCX);
+    // write permissions already checked by read_RMW_virtual_qword
+    write_virtual_qword(i->seg(), RMAddr(i), &RBX);
     assert_ZF();
   }
   else {
