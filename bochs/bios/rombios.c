@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.192 2007-12-06 16:56:32 sshwarts Exp $
+// $Id: rombios.c,v 1.193 2007-12-20 18:12:11 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -939,7 +939,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.192 $ $Date: 2007-12-06 16:56:32 $";
+static char bios_cvs_version_string[] = "$Revision: 1.193 $ $Date: 2007-12-20 18:12:11 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2584,7 +2584,7 @@ Bit16u device;
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN | ATA_CB_DC_SRST);
 
 // 8.2.1 (b) -- wait for BSY
-  if (await_ide(BSY, iobase1, 20)) return;
+  await_ide(BSY, iobase1, 20);
 
 // 8.2.1 (f) -- clear SRST
   outb(iobase2+ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
@@ -2599,10 +2599,10 @@ Bit16u device;
     sn = inb(iobase1+ATA_CB_SN);
 
     if ( (sc==0x01) && (sn==0x01) ) {
-    if (type == ATA_TYPE_ATA) //ATA
-      await_ide(NOT_BSY_RDY, iobase1, IDE_TIMEOUT);
-    else //ATAPI
-      await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
+      if (type == ATA_TYPE_ATA) //ATA
+        await_ide(NOT_BSY_RDY, iobase1, IDE_TIMEOUT);
+      else //ATAPI
+        await_ide(NOT_BSY, iobase1, IDE_TIMEOUT);
     }
 
 // 8.2.1 (h) -- wait for not BSY
