@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.217 2007-12-09 18:36:00 sshwarts Exp $
+// $Id: bochs.h,v 1.218 2007-12-20 18:32:14 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -85,6 +85,7 @@ extern "C" {
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #  include <sys/param.h> /* for MAXPATHLEN */
+#  include <sys/time.h>
 #  include <utime.h>
 #else
 #  ifndef WIN32
