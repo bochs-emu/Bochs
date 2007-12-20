@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.32 2007-12-16 21:46:39 sshwarts Exp $
+// $Id: vm8086.cc,v 1.33 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -132,9 +132,9 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
     exception(BX_SS_EXCEPTION, 0, 0);
   }
 
-  pop_16(&ip);
-  pop_16(&cs_raw);
-  pop_16(&flags16);
+  ip      = pop_16();
+  cs_raw  = pop_16();
+  flags16 = pop_16();
 
 #if BX_SUPPORT_VME
   if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3)
@@ -189,9 +189,9 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
     exception(BX_SS_EXCEPTION, 0, 0);
   }
   
-  pop_32(&eip);
-  pop_32(&cs_raw);
-  pop_32(&flags32);
+  eip     = pop_32();
+  cs_raw  = pop_32();
+  flags32 = pop_32();
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
   RIP = eip;

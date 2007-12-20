@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.46 2007-12-14 21:29:36 sshwarts Exp $
+// $Id: bit.cc,v 1.47 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 void BX_CPU_C::SETO_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_OF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETO_EbR(bxInstruction_c *i)
@@ -48,7 +48,7 @@ void BX_CPU_C::SETO_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNO_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !getB_OF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNO_EbR(bxInstruction_c *i)
@@ -59,7 +59,7 @@ void BX_CPU_C::SETNO_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETB_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_CF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETB_EbR(bxInstruction_c *i)
@@ -70,7 +70,7 @@ void BX_CPU_C::SETB_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNB_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !getB_CF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNB_EbR(bxInstruction_c *i)
@@ -81,7 +81,7 @@ void BX_CPU_C::SETNB_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETZ_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_ZF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETZ_EbR(bxInstruction_c *i)
@@ -92,7 +92,7 @@ void BX_CPU_C::SETZ_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNZ_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !getB_ZF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNZ_EbR(bxInstruction_c *i)
@@ -103,7 +103,7 @@ void BX_CPU_C::SETNZ_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETBE_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = (getB_CF() | getB_ZF());
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETBE_EbR(bxInstruction_c *i)
@@ -114,7 +114,7 @@ void BX_CPU_C::SETBE_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNBE_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !(getB_CF() | getB_ZF());
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNBE_EbR(bxInstruction_c *i)
@@ -125,7 +125,7 @@ void BX_CPU_C::SETNBE_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETS_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_SF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETS_EbR(bxInstruction_c *i)
@@ -136,7 +136,7 @@ void BX_CPU_C::SETS_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNS_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !getB_SF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNS_EbR(bxInstruction_c *i)
@@ -147,7 +147,7 @@ void BX_CPU_C::SETNS_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETP_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_PF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETP_EbR(bxInstruction_c *i)
@@ -158,7 +158,7 @@ void BX_CPU_C::SETP_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNP_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !getB_PF();
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNP_EbR(bxInstruction_c *i)
@@ -169,7 +169,7 @@ void BX_CPU_C::SETNP_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETL_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = (getB_SF() ^ getB_OF());
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETL_EbR(bxInstruction_c *i)
@@ -180,7 +180,7 @@ void BX_CPU_C::SETL_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNL_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !(getB_SF() ^ getB_OF());
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNL_EbR(bxInstruction_c *i)
@@ -191,7 +191,7 @@ void BX_CPU_C::SETNL_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETLE_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = getB_ZF() | (getB_SF() ^ getB_OF());
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETLE_EbR(bxInstruction_c *i)
@@ -203,7 +203,7 @@ void BX_CPU_C::SETLE_EbR(bxInstruction_c *i)
 void BX_CPU_C::SETNLE_EbM(bxInstruction_c *i)
 {
   Bit8u result_8 = !(getB_ZF() | (getB_SF() ^ getB_OF()));
-  write_virtual_byte(i->seg(), RMAddr(i), &result_8);
+  write_virtual_byte(i->seg(), RMAddr(i), result_8);
 }
 
 void BX_CPU_C::SETNLE_EbR(bxInstruction_c *i)

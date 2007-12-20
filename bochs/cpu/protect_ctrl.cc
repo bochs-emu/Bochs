@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.66 2007-11-22 21:52:55 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.67 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -272,7 +272,7 @@ void BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
     }
   }
   else {
-    write_virtual_word(i->seg(), RMAddr(i), &val16);
+    write_virtual_word(i->seg(), RMAddr(i), val16);
   }
 }
 
@@ -293,7 +293,7 @@ void BX_CPU_C::STR_Ew(bxInstruction_c *i)
     }
   }
   else {
-    write_virtual_word(i->seg(), RMAddr(i), &val16);
+    write_virtual_word(i->seg(), RMAddr(i), val16);
   }
 }
 
@@ -629,8 +629,8 @@ void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
 
-  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-  write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
+  write_virtual_word(i->seg(), RMAddr(i), limit_16);
+  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
 }
 
 void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
@@ -638,8 +638,8 @@ void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
 
-  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-  write_virtual_dword(i->seg(), RMAddr(i)+2, &base_32);
+  write_virtual_word(i->seg(), RMAddr(i), limit_16);
+  write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
 }
 
 void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
@@ -721,8 +721,8 @@ void BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR gdtr.base;
 
-  write_virtual_word (i->seg(), RMAddr(i), &limit_16);
-  write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
+  write_virtual_word (i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
@@ -730,8 +730,8 @@ void BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
   Bit64u base_64  = BX_CPU_THIS_PTR idtr.base;
 
-  write_virtual_word(i->seg(), RMAddr(i), &limit_16);
-  write_virtual_qword(i->seg(), RMAddr(i)+2, &base_64);
+  write_virtual_word(i->seg(), RMAddr(i), limit_16);
+  write_virtual_qword(i->seg(), RMAddr(i)+2, base_64);
 }
 
 void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)

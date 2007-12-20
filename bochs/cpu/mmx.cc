@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.66 2007-12-19 23:21:11 sshwarts Exp $
+// $Id: mmx.cc,v 1.67 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -1203,7 +1203,7 @@ void BX_CPU_C::MOVD_EdPd(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->rm(), MMXUD0(op));
   }
   else {
-    write_virtual_dword(i->seg(), RMAddr(i), &(MMXUD0(op)));
+    write_virtual_dword(i->seg(), RMAddr(i), MMXUD0(op));
   }
 
 #else
@@ -1226,7 +1226,7 @@ void BX_CPU_C::MOVQ_EqPq(bxInstruction_c *i)
     BX_WRITE_64BIT_REG(i->rm(), MMXUQ(op));
   }
   else {
-    write_virtual_qword(i->seg(), RMAddr(i), &(MMXUQ(op)));
+    write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(op));
   }
 }
 
@@ -1245,7 +1245,7 @@ void BX_CPU_C::MOVQ_QqPq(bxInstruction_c *i)
     BX_WRITE_MMX_REG(i->rm(), op);
   }
   else {
-    write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(op));
   }
 #else
   BX_INFO(("MOVQ_QqPq: required MMX, use --enable-mmx option"));
@@ -1973,7 +1973,7 @@ void BX_CPU_C::MOVNTQ_MqPq(bxInstruction_c *i)
 #if BX_SUPPORT_3DNOW || BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareMMX();
   BxPackedMmxRegister reg = BX_READ_MMX_REG(i->nnn());
-  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &reg);
+  write_virtual_qword(i->seg(), RMAddr(i), MMXUQ(reg));
 #else
   BX_INFO(("MOVNTQ_MqPq: required SSE or 3DNOW, use --enable-sse or --enable-3dnow options"));
   UndefinedOpcode(i);

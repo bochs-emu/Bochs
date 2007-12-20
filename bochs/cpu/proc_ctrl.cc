@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.190 2007-12-16 21:03:46 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.191 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -870,7 +870,7 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
     }
   }
   else {
-    write_virtual_word(i->seg(), RMAddr(i), &msw);
+    write_virtual_word(i->seg(), RMAddr(i), msw);
   }
 }
 #endif

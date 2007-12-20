@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.51 2007-12-15 17:42:21 sshwarts Exp $
+// $Id: sse.cc,v 1.52 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1190,7 +1190,7 @@ void BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
-    write_virtual_byte(i->seg(), RMAddr(i), &result);
+    write_virtual_byte(i->seg(), RMAddr(i), result);
   }
 #else
   BX_INFO(("PEXTRB_HbdUdqIb: required SSE4, use --enable-sse option"));
@@ -1212,7 +1212,7 @@ void BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
-    write_virtual_word(i->seg(), RMAddr(i), &result);
+    write_virtual_word(i->seg(), RMAddr(i), result);
   }
 #else
   BX_INFO(("PEXTRW_HwdUdqIb: required SSE4, use --enable-sse option"));
@@ -1238,7 +1238,7 @@ void BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
        BX_WRITE_64BIT_REG(i->nnn(), result);
      }
      else {
-       write_virtual_qword(i->seg(), RMAddr(i), &result);
+       write_virtual_qword(i->seg(), RMAddr(i), result);
      }
   }
   else
@@ -1251,7 +1251,7 @@ void BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
        BX_WRITE_32BIT_REGZ(i->nnn(), result);
      }
      else {
-       write_virtual_dword(i->seg(), RMAddr(i), &result);
+       write_virtual_dword(i->seg(), RMAddr(i), result);
      }
   }
 #else
@@ -1274,7 +1274,7 @@ void BX_CPU_C::EXTRACTPS_HdUpsIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
-    write_virtual_dword(i->seg(), RMAddr(i), &result);
+    write_virtual_dword(i->seg(), RMAddr(i), result);
   }
 #else
   BX_INFO(("EXTRACTPS_HdUpsIb: required SSE4, use --enable-sse option"));

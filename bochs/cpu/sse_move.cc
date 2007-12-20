@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.70 2007-12-18 21:41:44 sshwarts Exp $
+// $Id: sse_move.cc,v 1.71 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -86,7 +86,7 @@ void BX_CPU_C::STMXCSR(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   Bit32u mxcsr = BX_MXCSR_REGISTER & MXCSR_MASK;
-  write_virtual_dword(i->seg(), RMAddr(i), &mxcsr);
+  write_virtual_dword(i->seg(), RMAddr(i), mxcsr);
 #else
   BX_INFO(("STMXCSR: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -537,7 +537,7 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    write_virtual_dword(i->seg(), RMAddr(i), &val32);
+    write_virtual_dword(i->seg(), RMAddr(i), val32);
   }
 #else
   BX_INFO(("MOVSS_WssVss: required SSE, use --enable-sse option"));
@@ -596,7 +596,7 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), RMAddr(i), &val64);
+    write_virtual_qword(i->seg(), RMAddr(i), val64);
   }
 #else
   BX_INFO(("MOVSD_WsdVsd: required SSE2, use --enable-sse option"));
@@ -721,7 +721,7 @@ void BX_CPU_C::MOVLPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_LO_QWORD(i->nnn()));
+  write_virtual_qword(i->seg(), RMAddr(i), BX_XMM_REG_LO_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVLPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -759,7 +759,7 @@ void BX_CPU_C::MOVHPS_MqVps(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 1
   BX_CPU_THIS_PTR prepareSSE();
-  write_virtual_qword(i->seg(), RMAddr(i), &BX_XMM_REG_HI_QWORD(i->nnn()));
+  write_virtual_qword(i->seg(), RMAddr(i), BX_XMM_REG_HI_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVHPS_MqVps: required SSE, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -811,7 +811,7 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   for(unsigned j=0; j<16; j++) 
   {
     if(mask.xmmubyte(j) & 0x80)
-        write_virtual_byte(BX_SEG_REG_DS, rdi+j, &op.xmmubyte(j));
+        write_virtual_byte(BX_SEG_REG_DS, rdi+j, op.xmmubyte(j));
   }
 
 #else
@@ -936,7 +936,7 @@ void BX_CPU_C::MOVD_EdVd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    write_virtual_dword(i->seg(), RMAddr(i), &op2);
+    write_virtual_dword(i->seg(), RMAddr(i), op2);
   }
 #else
   BX_INFO(("MOVD_EdVd: required SSE2, use --enable-sse option"));
@@ -960,7 +960,7 @@ void BX_CPU_C::MOVQ_EqVq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    write_virtual_qword(i->seg(), RMAddr(i), &op2);
+    write_virtual_qword(i->seg(), RMAddr(i), op2);
   }
 #else
   BX_INFO(("MOVQ_EqVq: required SSE2, use --enable-sse option"));
@@ -1013,7 +1013,7 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
     BX_WRITE_XMM_REG(i->rm(), op);
   }
   else {
-    write_virtual_qword(i->seg(), RMAddr(i), &(op.xmm64u(0)));
+    write_virtual_qword(i->seg(), RMAddr(i), op.xmm64u(0));
   }
 #else
   BX_INFO(("MOVQ_WqVq: required SSE2, use --enable-sse option"));
@@ -1101,8 +1101,7 @@ void BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
 void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
-  Bit32u val32 = BX_READ_32BIT_REG(i->nnn());
-  write_virtual_dword(i->seg(), RMAddr(i), &val32);
+  write_virtual_dword(i->seg(), RMAddr(i), BX_READ_32BIT_REG(i->nnn()));
 #else
   BX_INFO(("MOVNTI_MdGd: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -1115,8 +1114,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 void BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE >= 2
-  Bit64u val64 = BX_READ_64BIT_REG(i->nnn());
-  write_virtual_qword(i->seg(), RMAddr(i), &val64);
+  write_virtual_qword(i->seg(), RMAddr(i), BX_READ_64BIT_REG(i->nnn()));
 #else
   BX_INFO(("MOVNTI_MqGq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -1144,7 +1142,7 @@ void BX_CPU_C::MOVNTSD_MsdVsd(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE4A
   BX_CPU_THIS_PTR prepareSSE();
-  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_XMM_REG_LO_QWORD(i->nnn()));
+  write_virtual_dword(i->seg(), RMAddr(i), BX_READ_XMM_REG_LO_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVNTSD_MsdVsd: required SSE4A, use --enable-sse4a option"));
   UndefinedOpcode(i);                      
@@ -1156,7 +1154,7 @@ void BX_CPU_C::MOVNTSS_MssVss(bxInstruction_c *i)
 {
 #if BX_SUPPORT_SSE4A
   BX_CPU_THIS_PTR prepareSSE();
-  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_XMM_REG_LO_DWORD(i->nnn()));
+  write_virtual_dword(i->seg(), RMAddr(i), BX_READ_XMM_REG_LO_DWORD(i->nnn()));
 #else
   BX_INFO(("MOVNTSS_MssVss: required SSE4A, use --enable-sse4a option"));
   UndefinedOpcode(i);                      

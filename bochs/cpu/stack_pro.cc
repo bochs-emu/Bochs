@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.36 2007-12-18 21:08:55 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.37 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,18 +38,18 @@ void BX_CPU_C::push_16(Bit16u value16)
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64())
   {
-    write_virtual_word(BX_SEG_REG_SS, RSP-2, &value16);
+    write_virtual_word(BX_SEG_REG_SS, RSP-2, value16);
     RSP -= 2;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (ESP-2), &value16);
+    write_virtual_word(BX_SEG_REG_SS, (Bit32u) (ESP-2), value16);
     ESP -= 2;
   }
   else
   {
-    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (SP-2), &value16);
+    write_virtual_word(BX_SEG_REG_SS, (Bit16u) (SP-2), value16);
     SP  -= 2;
   }
 }
@@ -61,18 +61,18 @@ void BX_CPU_C::push_32(Bit32u value32)
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64())
   {
-    write_virtual_dword(BX_SEG_REG_SS, RSP-4, &value32);
+    write_virtual_dword(BX_SEG_REG_SS, RSP-4, value32);
     RSP -= 4;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) { /* StackAddrSize = 32 */
-    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (ESP-4), &value32);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit32u) (ESP-4), value32);
     ESP -= 4;
   }
   else
   {
-    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (SP-4), &value32);
+    write_virtual_dword(BX_SEG_REG_SS, (Bit16u) (SP-4), value32);
     SP  -= 4;
   }
 }
@@ -83,59 +83,71 @@ void BX_CPU_C::push_64(Bit64u value64)
 {
   BX_ASSERT(StackAddrSize64());
 
-  write_virtual_qword(BX_SEG_REG_SS, RSP-8, &value64);
+  write_virtual_qword(BX_SEG_REG_SS, RSP-8, value64);
   RSP -= 8;
 }
 #endif
 
 /* pop 16 bit operand from the stack */
-void BX_CPU_C::pop_16(Bit16u *value16_ptr)
+Bit16u BX_CPU_C::pop_16(void)
 {
+  Bit16u value16;
+
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    read_virtual_word(BX_SEG_REG_SS, RSP, value16_ptr);
+    read_virtual_word(BX_SEG_REG_SS, RSP, &value16);
     RSP += 2;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    read_virtual_word(BX_SEG_REG_SS, ESP, value16_ptr);
+    read_virtual_word(BX_SEG_REG_SS, ESP, &value16);
     ESP += 2;
   }
   else {
-    read_virtual_word(BX_SEG_REG_SS, SP, value16_ptr);
+    read_virtual_word(BX_SEG_REG_SS, SP, &value16);
     SP  += 2;
   }
+
+  return value16;
 }
 
 /* pop 32 bit operand from the stack */
-void BX_CPU_C::pop_32(Bit32u *value32_ptr)
+Bit32u BX_CPU_C::pop_32()
 {
+  Bit32u value32;
+
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    read_virtual_dword(BX_SEG_REG_SS, RSP, value32_ptr);
+    read_virtual_dword(BX_SEG_REG_SS, RSP, &value32);
     RSP += 4;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    read_virtual_dword(BX_SEG_REG_SS, ESP, value32_ptr);
+    read_virtual_dword(BX_SEG_REG_SS, ESP, &value32);
     ESP += 4;
   }
   else {
-    read_virtual_dword(BX_SEG_REG_SS, SP, value32_ptr);
+    read_virtual_dword(BX_SEG_REG_SS, SP, &value32);
     SP  += 4;
   }
+
+  return value32;
 }
 
 /* pop 64 bit operand from the stack */
 #if BX_SUPPORT_X86_64
-void BX_CPU_C::pop_64(Bit64u *value64_ptr)
+Bit64u BX_CPU_C::pop_64()
 {
+  Bit64u value64;
+
   BX_ASSERT(StackAddrSize64());
 
-  read_virtual_qword(BX_SEG_REG_SS, RSP, value64_ptr);
+  read_virtual_qword(BX_SEG_REG_SS, RSP, &value64);
   RSP += 8;
+
+  return value64;
 }
 #endif
 

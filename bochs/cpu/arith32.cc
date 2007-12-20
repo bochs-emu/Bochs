@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.67 2007-12-19 23:21:11 sshwarts Exp $
+// $Id: arith32.cc,v 1.68 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -710,7 +710,7 @@ void BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
     // dest <-- src
     write_RMW_virtual_dword(ECX);
     // write permissions already checked by read_RMW_virtual_dword
-    write_virtual_dword(i->seg(), RMAddr(i), &EBX);
+    write_virtual_dword(i->seg(), RMAddr(i), EBX);
     assert_ZF();
   }
   else {

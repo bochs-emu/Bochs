@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.12 2007-03-23 21:27:13 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.13 2007-12-20 18:29:42 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -317,7 +317,7 @@ void BX_CPU_C::FST_SINGLE_REAL(bxInstruction_c *i)
         return;
   }
 
-  write_virtual_dword(i->seg(), RMAddr(i), &save_reg);
+  write_virtual_dword(i->seg(), RMAddr(i), save_reg);
 
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -353,7 +353,7 @@ void BX_CPU_C::FST_DOUBLE_REAL(bxInstruction_c *i)
         return;
   }
 
-  write_virtual_qword(i->seg(), RMAddr(i), &save_reg);
+  write_virtual_qword(i->seg(), RMAddr(i), save_reg);
 
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -419,7 +419,7 @@ void BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
         return;
   }
 
-  write_virtual_word(i->seg(), RMAddr(i), (Bit16u*)(&save_reg));
+  write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
 
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -457,7 +457,7 @@ void BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
          return;
   }
 
-  write_virtual_dword(i->seg(), RMAddr(i), (Bit32u*)(&save_reg));
+  write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
 
   if (pop_stack)
      BX_CPU_THIS_PTR the_i387.FPU_pop();
@@ -493,7 +493,7 @@ void BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
          return;
   }
 
-  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u*)(&save_reg));
+  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTP_QWORD_INTEGER: required FPU, configure --enable-fpu"));
@@ -560,8 +560,8 @@ void BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
   }
 
   // write packed bcd to memory
-  write_virtual_qword(i->seg(), RMAddr(i),     &save_reg_lo);
-  write_virtual_word (i->seg(), RMAddr(i) + 8, &save_reg_hi);
+  write_virtual_qword(i->seg(), RMAddr(i),     save_reg_lo);
+  write_virtual_word (i->seg(), RMAddr(i) + 8, save_reg_hi);
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
@@ -597,7 +597,7 @@ void BX_CPU_C::FISTTP16(bxInstruction_c *i)
         return;
   }
 
-  write_virtual_word(i->seg(), RMAddr(i), (Bit16u*)(&save_reg));
+  write_virtual_word(i->seg(), RMAddr(i), (Bit16u)(save_reg));
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP16: required SSE3, use --enable-sse option"));
@@ -633,7 +633,7 @@ void BX_CPU_C::FISTTP32(bxInstruction_c *i)
          return;
   }
 
-  write_virtual_dword(i->seg(), RMAddr(i), (Bit32u*)(&save_reg));
+  write_virtual_dword(i->seg(), RMAddr(i), (Bit32u)(save_reg));
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP32: required SSE3, use --enable-sse option"));
@@ -669,7 +669,7 @@ void BX_CPU_C::FISTTP64(bxInstruction_c *i)
          return;
   }
 
-  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u*)(&save_reg));
+  write_virtual_qword(i->seg(), RMAddr(i), (Bit64u)(save_reg));
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 #else
   BX_INFO(("FISTTP64: required SSE3, use --enable-sse option"));

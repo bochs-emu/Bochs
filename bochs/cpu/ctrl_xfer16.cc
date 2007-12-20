@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.47 2007-12-18 21:41:41 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.48 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,8 +39,6 @@
 
 void BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 {
-  Bit16u return_IP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -48,7 +46,7 @@ void BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
-  pop_16(&return_IP);
+  Bit16u return_IP = pop_16();
 
   if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
   {
@@ -72,8 +70,6 @@ void BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 
 void BX_CPU_C::RETnear16(bxInstruction_c *i)
 {
-  Bit16u return_IP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -81,7 +77,7 @@ void BX_CPU_C::RETnear16(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
-  pop_16(&return_IP);
+  Bit16u return_IP = pop_16();
 
   if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) 
   {
@@ -117,8 +113,8 @@ void BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
     goto done;
   }
 
-  pop_16(&ip);
-  pop_16(&cs_raw);
+  ip     = pop_16();
+  cs_raw = pop_16();
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = (Bit32u) ip;
@@ -154,8 +150,8 @@ void BX_CPU_C::RETfar16(bxInstruction_c *i)
     goto done;
   }
 
-  pop_16(&ip);
-  pop_16(&cs_raw);
+  ip     = pop_16();
+  cs_raw = pop_16();
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = (Bit32u) ip;
@@ -576,9 +572,9 @@ void BX_CPU_C::IRET16(bxInstruction_c *i)
     goto done;
   }
 
-  pop_16(&ip);
-  pop_16(&cs_raw);
-  pop_16(&flags);
+  ip     = pop_16();
+  cs_raw = pop_16();
+  flags  = pop_16();
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], cs_raw);
   EIP = (Bit32u) ip;

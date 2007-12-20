@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.398 2007-12-18 21:41:41 sshwarts Exp $
+// $Id: cpu.h,v 1.399 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3122,13 +3122,13 @@ public: // for now...
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
   }
 
-  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
-  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
-  BX_SMF void execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned length) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u *data) BX_CPP_AttrRegparmN(3);
-  BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u *data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void read_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void execute_virtual_checks(bx_segment_reg_t *seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_byte(unsigned seg, bx_address offset, Bit8u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_word(unsigned seg, bx_address offset, Bit16u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_dword(unsigned seg, bx_address offset, Bit32u data) BX_CPP_AttrRegparmN(3);
+  BX_SMF void write_virtual_qword(unsigned seg, bx_address offset, Bit64u data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
   BX_SMF void write_virtual_dqword_aligned(unsigned s, bx_address off, Bit8u *data) BX_CPP_AttrRegparmN(3);
 #if BX_SUPPORT_FPU
@@ -3347,11 +3347,11 @@ public: // for now...
 #endif
   BX_SMF void    push_16(Bit16u value16);
   BX_SMF void    push_32(Bit32u value32);
-  BX_SMF void    pop_16(Bit16u *value16_ptr);
-  BX_SMF void    pop_32(Bit32u *value32_ptr);
+  BX_SMF Bit16u  pop_16(void);
+  BX_SMF Bit32u  pop_32(void);
 #if BX_SUPPORT_X86_64
   BX_SMF void    push_64(Bit64u value64);
-  BX_SMF void    pop_64(Bit64u *value64_ptr);
+  BX_SMF Bit64u  pop_64(void);
 #endif
   BX_SMF bx_bool can_push(bx_descriptor_t *descriptor, Bit32u esp, Bit32u bytes) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_bool can_pop(Bit32u bytes);

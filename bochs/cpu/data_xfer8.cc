@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.31 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.32 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
 {
-  write_virtual_byte(i->seg(), RMAddr(i), &BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL()));
+  write_virtual_byte(i->seg(), RMAddr(i), BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL()));
 }
 
 void BX_CPU_C::MOV_EbGbR(bxInstruction_c *i)
@@ -71,13 +71,13 @@ void BX_CPU_C::MOV_ALOd(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 {
-  write_virtual_byte(i->seg(), i->Id(), &AL);
+  write_virtual_byte(i->seg(), i->Id(), AL);
 }
 
 void BX_CPU_C::MOV_EbIbM(bxInstruction_c *i)
 {
   Bit8u op_8 = i->Ib();
-  write_virtual_byte(i->seg(), RMAddr(i), &op_8);
+  write_virtual_byte(i->seg(), RMAddr(i), op_8);
 }
 
 void BX_CPU_C::MOV_EbIbR(bxInstruction_c *i)

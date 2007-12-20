@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.30 2007-11-24 15:27:55 sshwarts Exp $
+// $Id: stack64.cc,v 1.31 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,12 +34,10 @@
 
 void BX_CPU_C::POP_EqM(bxInstruction_c *i)
 {
-  Bit64u val64;
-
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
-  pop_64(&val64);
+  Bit64u val64 = pop_64();
 
   // Note: there is one little weirdism here.  It is possible to use 
   // RSP in the modrm addressing. If used, the value of RSP after the 
@@ -48,16 +46,14 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
     // call method on BX_CPU_C object
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));
   }
-  write_virtual_qword(i->seg(), RMAddr(i), &val64);
+  write_virtual_qword(i->seg(), RMAddr(i), val64);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
 void BX_CPU_C::POP_EqR(bxInstruction_c *i)
 {
-  Bit64u val64;
-  pop_64(&val64);
-  BX_WRITE_64BIT_REG(i->rm(), val64);
+  BX_WRITE_64BIT_REG(i->rm(), pop_64());
 }
 
 void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
@@ -67,9 +63,7 @@ void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 
 void BX_CPU_C::POP_RRX(bxInstruction_c *i)
 {
-  Bit64u rrx;
-  pop_64(&rrx);
-  BX_WRITE_64BIT_REG(i->opcodeReg(), rrx);
+  BX_WRITE_64BIT_REG(i->opcodeReg(), pop_64());
 }
 
 void BX_CPU_C::PUSH64_FS(bxInstruction_c *i)
@@ -142,12 +136,12 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
       RBP -= 8;
       read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
       RSP -= 8;
-      write_virtual_qword(BX_SEG_REG_SS, RSP, &temp64);
+      write_virtual_qword(BX_SEG_REG_SS, RSP, temp64);
     } /* while (--level) */
 
     /* push(frame pointer) */
     RSP -= 8;
-    write_virtual_qword(BX_SEG_REG_SS, RSP, &frame_ptr64);
+    write_virtual_qword(BX_SEG_REG_SS, RSP, frame_ptr64);
   } /* if (level > 0) ... */
 
   BX_CPU_THIS_PTR speculative_rsp = 0;

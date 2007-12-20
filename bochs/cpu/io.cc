@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.44 2007-12-17 21:13:55 sshwarts Exp $
+// $Id: io.cc,v 1.45 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -338,12 +338,12 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
   if (i->as64L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, RDI, value8);
 
     value8 = BX_INP(DX, 1);
 
     /* no seg override possible */
-    write_virtual_byte(BX_SEG_REG_ES, RDI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, RDI, value8);
 
     if (BX_CPU_THIS_PTR get_DF())
       RDI--;
@@ -355,12 +355,12 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
    if (i->as32L()) {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, EDI, value8);
 
     value8 = BX_INP(DX, 1);
 
     /* no seg override possible */
-    write_virtual_byte(BX_SEG_REG_ES, EDI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, EDI, value8);
 
     if (BX_CPU_THIS_PTR get_DF()) {
       RDI = EDI - 1;
@@ -372,12 +372,12 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
   else {
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_byte(BX_SEG_REG_ES, DI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, DI, value8);
 
     value8 = BX_INP(DX, 1);
 
     /* no seg override possible */
-    write_virtual_byte(BX_SEG_REG_ES, DI, &value8);
+    write_virtual_byte(BX_SEG_REG_ES, DI, value8);
 
     if (BX_CPU_THIS_PTR get_DF())
       DI--;
@@ -399,12 +399,12 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_word(BX_SEG_REG_ES, rdi, &value16);
+    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
 
     value16 = BX_INP(DX, 2);
 
     /* no seg override allowed */
-    write_virtual_word(BX_SEG_REG_ES, rdi, &value16);
+    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
 
     if (BX_CPU_THIS_PTR get_DF())
       rdi -= 2;
@@ -458,12 +458,12 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_word(BX_SEG_REG_ES, rdi, &value16);
+    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
 
     value16 = BX_INP(DX, 2);
 
     /* no seg override allowed */
-    write_virtual_word(BX_SEG_REG_ES, rdi, &value16);
+    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
 doIncr:
@@ -508,12 +508,12 @@ void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
 
   // Write a zero to memory, to trigger any segment or page
   // faults before reading from IO port.
-  write_virtual_dword(BX_SEG_REG_ES, rdi, &value32);
+  write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
 
   value32 = BX_INP(DX, 4);
 
   /* no seg override allowed */
-  write_virtual_dword(BX_SEG_REG_ES, rdi, &value32);
+  write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {

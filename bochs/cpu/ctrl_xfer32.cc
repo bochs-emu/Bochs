@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.59 2007-12-18 21:41:41 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.60 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -40,8 +40,6 @@
 
 void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 {
-  Bit32u return_EIP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -50,7 +48,7 @@ void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
   Bit16u imm16 = i->Iw();
-  pop_32(&return_EIP);
+  Bit32u return_EIP = pop_32();
   branch_near32(return_EIP);
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
     ESP += imm16;
@@ -64,8 +62,6 @@ void BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
 void BX_CPU_C::RETnear32(bxInstruction_c *i)
 {
-  Bit32u return_EIP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
@@ -73,7 +69,7 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
 
-  pop_32(&return_EIP);
+  Bit32u return_EIP = pop_32();
   branch_near32(return_EIP);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
@@ -83,7 +79,7 @@ void BX_CPU_C::RETnear32(bxInstruction_c *i)
 
 void BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-  Bit32u eip, ecs_raw;
+  Bit32u eip, cs_raw;
 
   invalidate_prefetch_q();
 
@@ -101,10 +97,10 @@ void BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
     goto done;
   }
 
-  pop_32(&eip);
-  pop_32(&ecs_raw);
+  eip    = pop_32();
+  cs_raw = pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
   EIP = eip;
 
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -121,7 +117,7 @@ done:
 
 void BX_CPU_C::RETfar32(bxInstruction_c *i)
 {
-  Bit32u eip, ecs_raw;
+  Bit32u eip, cs_raw;
 
   invalidate_prefetch_q();
 
@@ -137,10 +133,10 @@ void BX_CPU_C::RETfar32(bxInstruction_c *i)
     goto done;
   }
 
-  pop_32(&eip);
-  pop_32(&ecs_raw); /* 32bit pop, MSW discarded */
+  eip    = pop_32();
+  cs_raw = pop_32(); /* 32bit pop, MSW discarded */
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) ecs_raw);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs_raw);
   EIP = eip;
 
 done:
@@ -565,9 +561,7 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     goto done;
   }
 
-  Bit32u eip, ecs, eflags;
-
-  pop_32(&eip);
+  Bit32u eip = pop_32();
 
   // CS.LIMIT in real mode is 0xffff
   if (eip > 0xffff) {
@@ -575,11 +569,10 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  pop_32(&ecs);
-  pop_32(&eflags);
-  ecs &= 0xffff;
+  Bit16u cs     = pop_32() & 0xffff;
+  Bit32u eflags = pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)ecs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)cs);
   EIP = eip;
   writeEFlags(eflags, 0x00257fd5); // VIF, VIP, VM unchanged
 

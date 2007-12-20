@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.47 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.48 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -54,7 +54,7 @@ void BX_CPU_C::MOV_ERXId(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EdGdM(bxInstruction_c *i)
 {
-  write_virtual_dword(i->seg(), RMAddr(i), &BX_READ_32BIT_REG(i->nnn()));
+  write_virtual_dword(i->seg(), RMAddr(i), BX_READ_32BIT_REG(i->nnn()));
 }
 
 void BX_CPU_C::MOV_EdGdR(bxInstruction_c *i)
@@ -90,13 +90,12 @@ void BX_CPU_C::MOV_EAXOd(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OdEAX(bxInstruction_c *i)
 {
-  write_virtual_dword(i->seg(), i->Id(), &EAX);
+  write_virtual_dword(i->seg(), i->Id(), EAX);
 }
 
 void BX_CPU_C::MOV_EdIdM(bxInstruction_c *i)
 {
-  Bit32u op_32 = i->Id();
-  write_virtual_dword(i->seg(), RMAddr(i), &op_32);
+  write_virtual_dword(i->seg(), RMAddr(i), i->Id());
 }
 
 void BX_CPU_C::MOV_EdIdR(bxInstruction_c *i)

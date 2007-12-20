@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.48 2007-12-01 16:45:16 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.49 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -46,7 +46,7 @@ void BX_CPU_C::XCHG_RXAX(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EwGwM(bxInstruction_c *i)
 {
-  write_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
+  write_virtual_word(i->seg(), RMAddr(i), BX_READ_16BIT_REG(i->nnn()));
 }
 
 void BX_CPU_C::MOV_EwGwR(bxInstruction_c *i)
@@ -87,7 +87,7 @@ void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
     }
   }
   else {
-    write_virtual_word(i->seg(), RMAddr(i), &seg_reg);
+    write_virtual_word(i->seg(), RMAddr(i), seg_reg);
   }
 }
 
@@ -132,13 +132,12 @@ void BX_CPU_C::MOV_AXOd(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
 {
-  write_virtual_word(i->seg(), i->Id(), &AX);
+  write_virtual_word(i->seg(), i->Id(), AX);
 }
 
 void BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op_16 = i->Iw();
-  write_virtual_word(i->seg(), RMAddr(i), &op_16);
+  write_virtual_word(i->seg(), RMAddr(i), i->Iw());
 }
 
 void BX_CPU_C::MOV_EwIwR(bxInstruction_c *i)

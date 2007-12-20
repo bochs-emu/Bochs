@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.83 2007-12-16 21:03:45 sshwarts Exp $
+// $Id: access.cc,v 1.84 2007-12-20 18:29:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -524,7 +524,7 @@ BX_CPU_C::v2h_write_qword(bx_address laddr, unsigned curr_pl)
 #endif   // BX_SupportGuest2HostTLB
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
+BX_CPU_C::write_virtual_byte(unsigned s, bx_address offset, Bit8u data)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -548,7 +548,7 @@ accessOK:
 #if BX_SUPPORT_ICACHE
         pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-        *hostAddr = *data;
+        *hostAddr = data;
         return;
       }
     }
@@ -559,7 +559,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_WRITE, (void *) data);
+    access_linear(laddr, 1, CPL, BX_WRITE, (void *) &data);
     return;
   }
 
@@ -572,7 +572,7 @@ accessOK:
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u *data)
+BX_CPU_C::write_virtual_word(unsigned s, bx_address offset, Bit16u data)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -605,7 +605,7 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          WriteHostWordToLittleEndian(hostAddr, *data);
+          WriteHostWordToLittleEndian(hostAddr, data);
           return;
         }
       }
@@ -617,7 +617,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_WRITE, (void *) data);
+    access_linear(laddr, 2, CPL, BX_WRITE, (void *) &data);
     return;
   }
 
@@ -630,7 +630,7 @@ accessOK:
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
+BX_CPU_C::write_virtual_dword(unsigned s, bx_address offset, Bit32u data)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -663,7 +663,7 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          WriteHostDWordToLittleEndian(hostAddr, *data);
+          WriteHostDWordToLittleEndian(hostAddr, data);
           return;
         }
       }
@@ -675,7 +675,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_WRITE, (void *) data);
+    access_linear(laddr, 4, CPL, BX_WRITE, (void *) &data);
     return;
   }
 
@@ -688,7 +688,7 @@ accessOK:
 }
 
   void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
+BX_CPU_C::write_virtual_qword(unsigned s, bx_address offset, Bit64u data)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
@@ -721,7 +721,7 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          WriteHostQWordToLittleEndian(hostAddr, *data);
+          WriteHostQWordToLittleEndian(hostAddr, data);
           return;
         }
       }
@@ -733,7 +733,7 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_WRITE, (void *) data);
+    access_linear(laddr, 8, CPL, BX_WRITE, (void *) &data);
     return;
   }
 
@@ -1356,8 +1356,8 @@ BX_CPU_C::write_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
   // Write Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
 
-  write_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
-  write_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
+  write_virtual_qword(s, offset+Host1stDWordOffset, qwords[0]);
+  write_virtual_qword(s, offset+Host2ndDWordOffset, qwords[1]);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -1387,8 +1387,8 @@ BX_CPU_C::read_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 BX_CPU_C::write_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 {
   // store floating point register
-  write_virtual_qword(s, offset+0, &data->fraction);
-  write_virtual_word (s, offset+8, &data->exp);
+  write_virtual_qword(s, offset+0, data->fraction);
+  write_virtual_word (s, offset+8, data->exp);
 }
 
 #endif
