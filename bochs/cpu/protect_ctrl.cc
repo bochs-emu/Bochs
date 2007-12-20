@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.67 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.68 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ void BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   }
 
   op2_16 = BX_READ_16BIT_REG(i->nnn());
@@ -84,7 +84,7 @@ void BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   /* if selector null, clear ZF and done */
@@ -186,7 +186,7 @@ void BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   /* if selector null, clear ZF and done */
@@ -320,7 +320,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   invalidate_prefetch_q();
@@ -397,7 +397,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
     raw_selector = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   invalidate_prefetch_q();
@@ -484,7 +484,7 @@ void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   /* if selector null, clear ZF and done */
@@ -572,7 +572,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &raw_selector);
+    raw_selector = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   /* if selector null, clear ZF and done */
@@ -659,23 +659,13 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
   Bit16u limit_16;
   Bit32u base_32;
 
-#if BX_CPU_LEVEL >= 3
-  if (i->os32L()) {
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
+  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
 
-    BX_CPU_THIS_PTR gdtr.limit = limit_16;
-    BX_CPU_THIS_PTR gdtr.base = base_32;
-  }
-  else
-#endif
-  {
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
+  if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
-    BX_CPU_THIS_PTR gdtr.limit = limit_16;
-    BX_CPU_THIS_PTR gdtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
-  }
+  BX_CPU_THIS_PTR gdtr.limit = limit_16;
+  BX_CPU_THIS_PTR gdtr.base = base_32;
 }
 
 void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
@@ -695,23 +685,13 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
   Bit16u limit_16;
   Bit32u base_32;
 
-#if BX_CPU_LEVEL >= 3
-  if (i->os32L()) {
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
+  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
 
-    BX_CPU_THIS_PTR idtr.limit = limit_16;
-    BX_CPU_THIS_PTR idtr.base = base_32;
-  }
-  else
-#endif
-  {
-    read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-    read_virtual_dword(i->seg(), RMAddr(i) + 2, &base_32);
+  if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
-    BX_CPU_THIS_PTR idtr.limit = limit_16;
-    BX_CPU_THIS_PTR idtr.base = base_32 & 0x00ffffff; /* ignore upper 8 bits */
-  }
+  BX_CPU_THIS_PTR idtr.limit = limit_16;
+  BX_CPU_THIS_PTR idtr.base = base_32;
 }
 
 #if BX_SUPPORT_X86_64
@@ -748,8 +728,8 @@ void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16;
   Bit64u base_64;
 
-  read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-  read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
+  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
@@ -769,8 +749,8 @@ void BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
   Bit16u limit_16;
   Bit64u base_64;
 
-  read_virtual_word(i->seg(), RMAddr(i), &limit_16);
-  read_virtual_qword(i->seg(), RMAddr(i) + 2, &base_64);
+  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;

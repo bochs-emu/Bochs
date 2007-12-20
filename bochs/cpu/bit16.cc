@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.1 2007-12-07 10:59:18 sshwarts Exp $
+// $Id: bit16.cc,v 1.2 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void BX_CPU_C::BSF_GwEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   if (op2_16 == 0) {
@@ -75,7 +75,7 @@ void BX_CPU_C::BSR_GwEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   if (op2_16 == 0) {
@@ -108,7 +108,7 @@ void BX_CPU_C::BT_EwGwM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 2 * displacement32;
 
   /* pointer, segment address pair */
-  read_virtual_word(i->seg(), op1_addr, &op1_16);
+  op1_16 = read_virtual_word(i->seg(), op1_addr);
 
   set_CF((op1_16 >> index) & 0x01);
 }
@@ -135,7 +135,7 @@ void BX_CPU_C::BTS_EwGwM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 2 * displacement32;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
 
   bit_i = (op1_16 >> index) & 0x01;
   op1_16 |= (((Bit16u) 1) << index);
@@ -171,7 +171,7 @@ void BX_CPU_C::BTR_EwGwM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 2 * displacement32;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
 
   bx_bool temp_cf = (op1_16 >> index) & 0x01;
   op1_16 &= ~(((Bit16u) 1) << index);
@@ -207,7 +207,7 @@ void BX_CPU_C::BTC_EwGwM(bxInstruction_c *i)
 
   displacement16 = ((Bit16s) (op2_16 & 0xfff0)) / 16;
   op1_addr = RMAddr(i) + 2 * displacement16;
-  read_RMW_virtual_word(i->seg(), op1_addr, &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
 
   bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
   op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
@@ -237,10 +237,8 @@ void BX_CPU_C::BTC_EwGwR(bxInstruction_c *i)
 
 void BX_CPU_C::BT_EwIbM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-  Bit8u op2_8 = i->Ib() & 0xf;
-
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit8u  op2_8  = i->Ib() & 0xf;
 
   set_CF((op1_16 >> op2_8) & 0x01);
 }
@@ -255,11 +253,9 @@ void BX_CPU_C::BT_EwIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EwIbM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 |= (((Bit16u) 1) << op2_8);
   write_RMW_virtual_word(op1_16);
@@ -269,11 +265,9 @@ void BX_CPU_C::BTS_EwIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EwIbR(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 |= (((Bit16u) 1) << op2_8);
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
@@ -283,11 +277,9 @@ void BX_CPU_C::BTS_EwIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EwIbM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
   write_RMW_virtual_word(op1_16);
@@ -297,11 +289,9 @@ void BX_CPU_C::BTC_EwIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EwIbR(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 ^= (((Bit16u) 1) << op2_8);  /* toggle bit */
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
@@ -311,11 +301,9 @@ void BX_CPU_C::BTC_EwIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EwIbM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 &= ~(((Bit16u) 1) << op2_8);
   write_RMW_virtual_word(op1_16);
@@ -325,11 +313,9 @@ void BX_CPU_C::BTR_EwIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EwIbR(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
   Bit8u op2_8 = i->Ib() & 0xf;
 
-  op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
   bx_bool temp_CF = (op1_16 >> op2_8) & 0x01;
   op1_16 &= ~(((Bit16u) 1) << op2_8);
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
@@ -349,7 +335,7 @@ void BX_CPU_C::POPCNT_GwEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   op1_16 = 0;

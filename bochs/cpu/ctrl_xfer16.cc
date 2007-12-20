@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.48 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.49 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,7 +236,7 @@ void BX_CPU_C::CALL_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+    op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
@@ -262,8 +262,8 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
+  op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -505,9 +505,7 @@ void BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_EwM(bxInstruction_c *i)
 {
-  Bit16u new_IP;
-
-  read_virtual_word(i->seg(), RMAddr(i), &new_IP);
+  Bit16u new_IP = read_virtual_word(i->seg(), RMAddr(i));
 
   branch_near32((Bit32u) new_IP);
 
@@ -529,8 +527,8 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
-  read_virtual_word(i->seg(), RMAddr(i)+2, &cs_raw);
+  op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.52 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: sse.cc,v 1.53 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -1297,7 +1297,7 @@ void BX_CPU_C::PINSRB_VdqEbIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_byte(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_byte(i->seg(), RMAddr(i));
   }
 
   op1.xmmubyte(i->Ib() & 0xF) = op2;
@@ -1327,7 +1327,7 @@ void BX_CPU_C::INSERTPS_VpsWssIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   op1.xmm32u((control >> 4) & 3) = op2;
@@ -1364,7 +1364,7 @@ void BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op2);
+      op2 = read_virtual_qword(i->seg(), RMAddr(i));
     }
 
     op1.xmm64u(i->Ib() & 1) = op2;
@@ -1380,7 +1380,7 @@ void BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op2);
+      op2 = read_virtual_dword(i->seg(), RMAddr(i));
     }
 
     op1.xmm32u(i->Ib() & 3) = op2;
@@ -2169,7 +2169,7 @@ void BX_CPU_C::PINSRW_VdqEwIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   op1.xmm16u(count) = op2;

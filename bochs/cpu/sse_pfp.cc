@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_pfp.cc,v 1.37 2007-12-16 20:37:59 sshwarts Exp $
+// $Id: sse_pfp.cc,v 1.38 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -109,7 +109,7 @@ void BX_CPU_C::CVTPI2PS_VpsQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -146,7 +146,7 @@ void BX_CPU_C::CVTPI2PD_VpdQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   result.xmm64u(0) = int32_to_float64(MMXUD0(op));
@@ -184,7 +184,7 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op);
+      op = read_virtual_qword(i->seg(), RMAddr(i));
     }
 
     result = int64_to_float64(op, status_word);
@@ -200,7 +200,7 @@ void BX_CPU_C::CVTSI2SD_VsdEd(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op);
+      op = read_virtual_dword(i->seg(), RMAddr(i));
     }
 
     result = int32_to_float64(op);
@@ -241,7 +241,7 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_qword(i->seg(), RMAddr(i), &op);
+      op = read_virtual_qword(i->seg(), RMAddr(i));
     }
 
     result = int64_to_float32(op, status_word);
@@ -257,7 +257,7 @@ void BX_CPU_C::CVTSI2SS_VssEd(bxInstruction_c *i)
     }
     else {
       /* pointer, segment address pair */
-      read_virtual_dword(i->seg(), RMAddr(i), &op);
+      op = read_virtual_dword(i->seg(), RMAddr(i));
     }
 
     result = int32_to_float32(op, status_word);
@@ -292,7 +292,7 @@ void BX_CPU_C::CVTTPS2PI_PqWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -379,7 +379,7 @@ void BX_CPU_C::CVTTSD2SI_GdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -427,7 +427,7 @@ void BX_CPU_C::CVTTSS2SI_GdWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -478,7 +478,7 @@ void BX_CPU_C::CVTPS2PI_PqWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -567,7 +567,7 @@ void BX_CPU_C::CVTSD2SI_GdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -615,7 +615,7 @@ void BX_CPU_C::CVTSS2SI_GdWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -662,7 +662,7 @@ void BX_CPU_C::CVTPS2PD_VpsWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -754,7 +754,7 @@ void BX_CPU_C::CVTSD2SS_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -789,7 +789,7 @@ void BX_CPU_C::CVTSS2SD_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1039,7 +1039,7 @@ void BX_CPU_C::CVTDQ2PD_VpdWq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   Bit32u r0 = (Bit32u)(op & 0xFFFFFFFF);
@@ -1073,7 +1073,7 @@ void BX_CPU_C::UCOMISS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1112,7 +1112,7 @@ void BX_CPU_C::UCOMISD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1151,7 +1151,7 @@ void BX_CPU_C::COMISS_VpsWps(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1190,7 +1190,7 @@ void BX_CPU_C::COMISD_VpdWpd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1317,7 +1317,7 @@ void BX_CPU_C::SQRTSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1351,7 +1351,7 @@ void BX_CPU_C::SQRTSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1479,7 +1479,7 @@ void BX_CPU_C::ADDSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1519,7 +1519,7 @@ void BX_CPU_C::ADDSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1653,7 +1653,7 @@ void BX_CPU_C::MULSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1693,7 +1693,7 @@ void BX_CPU_C::MULSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1827,7 +1827,7 @@ void BX_CPU_C::SUBSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -1867,7 +1867,7 @@ void BX_CPU_C::SUBSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2009,7 +2009,7 @@ void BX_CPU_C::MINSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2050,7 +2050,7 @@ void BX_CPU_C::MINSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2185,7 +2185,7 @@ void BX_CPU_C::DIVSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2225,7 +2225,7 @@ void BX_CPU_C::DIVSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2367,7 +2367,7 @@ void BX_CPU_C::MAXSD_VsdWsd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2408,7 +2408,7 @@ void BX_CPU_C::MAXSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2779,7 +2779,7 @@ void BX_CPU_C::CMPSD_VsdWsdIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    op2 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -2838,7 +2838,7 @@ void BX_CPU_C::CMPSS_VssWssIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2);
+    op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -3092,7 +3092,7 @@ void BX_CPU_C::ROUNDSS_VssWssIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -3137,7 +3137,7 @@ void BX_CPU_C::ROUNDSD_VsdWsdIb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;

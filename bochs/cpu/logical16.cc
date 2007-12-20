@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical16.cc,v 1.35 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: logical16.cc,v 1.36 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,7 +34,7 @@ void BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 ^= op2_16;
   write_RMW_virtual_word(op1_16);
@@ -57,7 +57,7 @@ void BX_CPU_C::XOR_GwEwM(bxInstruction_c *i)
   Bit16u op1_16, op2_16;
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
-  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   op1_16 ^= op2_16;
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
@@ -91,7 +91,7 @@ void BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op1_16 ^= i->Iw();
   write_RMW_virtual_word(op1_16);
 
@@ -111,7 +111,7 @@ void BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op1_16 |= i->Iw();
   write_RMW_virtual_word(op1_16);
 
@@ -131,7 +131,7 @@ void BX_CPU_C::NOT_EwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op1_16 = ~op1_16;
   write_RMW_virtual_word(op1_16);
 }
@@ -147,7 +147,7 @@ void BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 |= op2_16;
   write_RMW_virtual_word(op1_16);
@@ -172,7 +172,7 @@ void BX_CPU_C::OR_GwEwM(bxInstruction_c *i)
   Bit16u op1_16, op2_16;
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
-  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   op1_16 |= op2_16;
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
@@ -207,7 +207,7 @@ void BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
   write_RMW_virtual_word(op1_16);
@@ -232,7 +232,7 @@ void BX_CPU_C::AND_GwEwM(bxInstruction_c *i)
   Bit16u op1_16, op2_16;
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
-  read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+  op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   op1_16 &= op2_16;
   BX_WRITE_16BIT_REG(i->nnn(), op1_16);
 
@@ -267,7 +267,7 @@ void BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
 {
   Bit16u op1_16;
 
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op1_16 &= i->Iw();
   write_RMW_virtual_word(op1_16);
 
@@ -287,7 +287,7 @@ void BX_CPU_C::TEST_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   op1_16 &= op2_16;
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
@@ -316,11 +316,8 @@ void BX_CPU_C::TEST_AXIw(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EwIwM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   op1_16 &= i->Iw();
-
   SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 }
 

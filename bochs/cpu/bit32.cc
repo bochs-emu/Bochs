@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.1 2007-12-07 10:59:18 sshwarts Exp $
+// $Id: bit32.cc,v 1.2 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ void BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   if (op2_32 == 0) {
@@ -77,7 +77,7 @@ void BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   if (op2_32 == 0) {
@@ -111,7 +111,7 @@ void BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 4 * displacement32;
 
   /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), op1_addr, &op1_32);
+  op1_32 = read_virtual_dword(i->seg(), op1_addr);
 
   set_CF((op1_32 >> index) & 0x01);
 }
@@ -140,7 +140,7 @@ void BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 4 * displacement32;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
 
   bit_i = (op1_32 >> index) & 0x01;
   op1_32 |= (((Bit32u) 1) << index);
@@ -177,7 +177,7 @@ void BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 4 * displacement32;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
 
   bx_bool temp_cf = (op1_32 >> index) & 0x01;
   op1_32 &= ~(((Bit32u) 1) << index);
@@ -213,7 +213,7 @@ void BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
 
   displacement32 = ((Bit32s) (op2_32 & 0xffffffe0)) / 32;
   op1_addr = RMAddr(i) + 4 * displacement32;
-  read_RMW_virtual_dword(i->seg(), op1_addr, &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), op1_addr);
 
   bx_bool temp_CF = (op1_32 >> index_32) & 0x01;
   op1_32 ^= (((Bit32u) 1) << index_32);  /* toggle bit */
@@ -239,10 +239,8 @@ void BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
 
 void BX_CPU_C::BT_EdIbM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-  Bit8u op2_8 = i->Ib() & 0x1f;
-
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  Bit32u op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  Bit8u  op2_8  = i->Ib() & 0x1f;
 
   set_CF((op1_32 >> op2_8) & 0x01);
 }
@@ -257,11 +255,9 @@ void BX_CPU_C::BT_EdIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 |= (((Bit32u) 1) << op2_8);
   write_RMW_virtual_dword(op1_32);
@@ -271,11 +267,9 @@ void BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EdIbR(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 |= (((Bit32u) 1) << op2_8);
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
@@ -285,11 +279,9 @@ void BX_CPU_C::BTS_EdIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
   write_RMW_virtual_dword(op1_32);
@@ -299,11 +291,9 @@ void BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
@@ -313,11 +303,9 @@ void BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 &= ~(((Bit32u) 1) << op2_8);
   write_RMW_virtual_dword(op1_32);
@@ -327,11 +315,9 @@ void BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EdIbR(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
   Bit8u op2_8 = i->Ib() & 0x1f;
 
-  op1_32 = BX_READ_32BIT_REG(i->rm());
+  Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 &= ~(((Bit32u) 1) << op2_8);
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
@@ -351,7 +337,7 @@ void BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   op1_32 = 0;

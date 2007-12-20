@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.49 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.50 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,8 +64,8 @@ void BX_CPU_C::MOV_GwEwR(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_GwEwM(bxInstruction_c *i)
 {
-  // 2nd modRM operand Ex, is known to be a memory operand, Ew.
-  read_virtual_word(i->seg(), RMAddr(i), &BX_READ_16BIT_REG(i->nnn()));
+  Bit16u val16 = read_virtual_word(i->seg(), RMAddr(i));
+  BX_WRITE_16BIT_REG(i->nnn(), val16);
 }
 
 void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
@@ -105,7 +105,7 @@ void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[i->nnn()], op2_16);
@@ -127,7 +127,7 @@ void BX_CPU_C::LEA_GwM(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_AXOd(bxInstruction_c *i)
 {
-  read_virtual_word(i->seg(), i->Id(), &AX);
+  AX = read_virtual_word(i->seg(), i->Id());
 }
 
 void BX_CPU_C::MOV_OdAX(bxInstruction_c *i)
@@ -148,10 +148,7 @@ void BX_CPU_C::MOV_EwIwR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 3
 void BX_CPU_C::MOVZX_GwEbM(bxInstruction_c *i)
 {
-  Bit8u op2_8;
-
-  /* pointer, segment address pair */
-  read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
+  Bit8u op2_8 = read_virtual_byte(i->seg(), RMAddr(i));
 
   /* zero extend byte op2 into word op1 */
   BX_WRITE_16BIT_REG(i->nnn(), (Bit16u) op2_8);
@@ -167,10 +164,7 @@ void BX_CPU_C::MOVZX_GwEbR(bxInstruction_c *i)
 
 void BX_CPU_C::MOVSX_GwEbM(bxInstruction_c *i)
 {
-  Bit8u op2_8;
-
-  /* pointer, segment address pair */
-  read_virtual_byte(i->seg(), RMAddr(i), &op2_8);
+  Bit8u op2_8 = read_virtual_byte(i->seg(), RMAddr(i));
 
   /* sign extend byte op2 into word op1 */
   BX_WRITE_16BIT_REG(i->nnn(), (Bit8s) op2_8);
@@ -189,8 +183,7 @@ void BX_CPU_C::XCHG_EwGwM(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
   op2_16 = BX_READ_16BIT_REG(i->nnn());
   write_RMW_virtual_word(op2_16);
 
@@ -254,7 +247,8 @@ void BX_CPU_C::CMOV_GwEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i)
+);
   }
 
   if (condition) {

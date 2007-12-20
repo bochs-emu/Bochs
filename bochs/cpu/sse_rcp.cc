@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_rcp.cc,v 1.14 2007-11-17 23:28:33 sshwarts Exp $
+// $Id: sse_rcp.cc,v 1.15 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -389,7 +389,7 @@ void BX_CPU_C::RCPSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   op = approximate_rcp(op);
@@ -738,7 +738,7 @@ void BX_CPU_C::RSQRTSS_VssWss(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op);
+    op = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   op = approximate_rsqrt(op);

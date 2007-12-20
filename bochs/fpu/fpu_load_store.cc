@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.13 2007-12-20 18:29:42 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.14 2007-12-20 20:58:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -72,8 +72,7 @@ void BX_CPU_C::FLD_SINGLE_REAL(bxInstruction_c *i)
       return; 
   }
 
-  float32 load_reg;
-  read_virtual_dword(i->seg(), RMAddr(i), &load_reg);
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status = 
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -104,8 +103,7 @@ void BX_CPU_C::FLD_DOUBLE_REAL(bxInstruction_c *i)
       return; 
   }
 
-  float64 load_reg;
-  read_virtual_qword(i->seg(), RMAddr(i), &load_reg);
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status = 
      FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -160,8 +158,7 @@ void BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
       return; 
   }
 
-  Bit16s load_reg;
-  read_virtual_word(i->seg(), RMAddr(i), (Bit16u*)(&load_reg));
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   floatx80 result = int32_to_floatx80((Bit32s) load_reg);
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -185,8 +182,7 @@ void BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
       return; 
   }
 
-  Bit32s load_reg;
-  read_virtual_dword(i->seg(), RMAddr(i), (Bit32u*)(&load_reg));
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   floatx80 result = int32_to_floatx80(load_reg);
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -210,8 +206,7 @@ void BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
       return; 
   }
 
-  Bit64s load_reg;
-  read_virtual_qword(i->seg(), RMAddr(i), (Bit64u*)(&load_reg));
+  Bit64s load_reg = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
   floatx80 result = int64_to_floatx80(load_reg);
 
   BX_CPU_THIS_PTR the_i387.FPU_push();
@@ -235,12 +230,9 @@ void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
       return; 
   }
 
-  Bit16u hi2;
-  Bit64u lo8;
-
   // read packed bcd from memory
-  read_virtual_qword(i->seg(), RMAddr(i),     &lo8);
-  read_virtual_word (i->seg(), RMAddr(i) + 8, &hi2);
+  Bit16u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
+  Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
 
   Bit64s scale = 1; 
   Bit64s val64 = 0;

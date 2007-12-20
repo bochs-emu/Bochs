@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.24 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: mult16.cc,v 1.25 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   Bit32u product_32  = ((Bit32u) op1_16) * ((Bit32u) op2_16);
@@ -74,7 +74,7 @@ void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
+    op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
 
   Bit32s product_32  = ((Bit32s) op1_16) * ((Bit32s) op2_16);
@@ -109,7 +109,7 @@ void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), &op2_16);
+    op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   if (op2_16 == 0)
@@ -148,7 +148,7 @@ void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
+    op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
 
   if (op2_16 == 0)
@@ -190,7 +190,7 @@ void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
+    op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
 
   Bit32s product_32  = op2_16 * op3_16;
@@ -220,7 +220,7 @@ void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_word(i->seg(), RMAddr(i), (Bit16u *) &op2_16);
+    op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.57 2007-12-16 21:40:44 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.58 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,15 +36,11 @@
 
 void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 {
-  Bit64u return_RIP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  Bit16u imm16 = i->Iw();
-
-  read_virtual_qword(BX_SEG_REG_SS, RSP, &return_RIP);
+  Bit64u return_RIP = read_virtual_qword(BX_SEG_REG_SS, RSP);
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
@@ -52,20 +48,18 @@ void BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
   }
 
   RIP = return_RIP;
-  RSP += 8 + imm16;
+  RSP += 8 + i->Iw();
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_RET, RIP);
 }
 
 void BX_CPU_C::RETnear64(bxInstruction_c *i)
 {
-  Bit64u return_RIP;
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
 #endif
 
-  read_virtual_qword(BX_SEG_REG_SS, RSP, &return_RIP);
+  Bit64u return_RIP = read_virtual_qword(BX_SEG_REG_SS, RSP);
 
   if (! IsCanonical(return_RIP)) {
     BX_ERROR(("RETnear64_Iw: canonical RIP violation"));
@@ -154,7 +148,7 @@ void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (! IsCanonical(op1_64))
@@ -181,8 +175,8 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 #endif
 
   /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  read_virtual_word(i->seg(), RMAddr(i)+8, &cs_raw);
+  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+8);
 
   BX_ASSERT(protected_mode());
 
@@ -372,7 +366,7 @@ void BX_CPU_C::JMP_Eq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
-    read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (! IsCanonical(op1_64)) {
@@ -393,8 +387,8 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
+  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
 
   BX_ASSERT(protected_mode());
 

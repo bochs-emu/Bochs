@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.45 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: io.cc,v 1.46 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -581,7 +581,7 @@ void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
   else
     esi = SI;
 
-  read_virtual_byte(i->seg(), esi, &value8);
+  value8 = read_virtual_byte(i->seg(), esi);
 
   BX_OUTP(DX, value8, 1);
 
@@ -666,14 +666,14 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
       incr = wordCount << 1; // count * 2.
     }
     else {
-      read_virtual_word(i->seg(), esi, &value16);
+      value16 = read_virtual_word(i->seg(), esi);
       BX_OUTP(DX, value16, 2);
     }
   }
   else
 #endif
   {
-    read_virtual_word(i->seg(), esi, &value16);
+    value16 = read_virtual_word(i->seg(), esi);
     BX_OUTP(DX, value16, 2);
   }
 
@@ -720,8 +720,7 @@ void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
   else
     esi =  SI;
 
-  Bit32u value32=0;
-  read_virtual_dword(i->seg(), esi, &value32);
+  Bit32u value32 = read_virtual_dword(i->seg(), esi);
   BX_OUTP(DX, value32, 4);
 
 #if BX_SUPPORT_X86_64

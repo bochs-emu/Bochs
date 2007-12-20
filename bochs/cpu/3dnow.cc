@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.18 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.19 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -52,7 +52,7 @@ void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -78,7 +78,7 @@ void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -109,7 +109,7 @@ void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   float_status_t status_word;
@@ -217,7 +217,7 @@ void BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op2);
+    MMXUQ(op2) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   Bit32s product1 = Bit32s(MMXSW0(op1)) * Bit32s(MMXSW0(op2)) + 0x8000;
@@ -247,7 +247,7 @@ void BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), (Bit64u *) &op);
+    MMXUQ(op) = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   MMXUD0(result) = MMXUD1(op);

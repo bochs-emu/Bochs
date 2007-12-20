@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_compare.cc,v 1.10 2007-04-02 10:46:57 sshwarts Exp $
+// $Id: fpu_compare.cc,v 1.11 2007-12-20 20:58:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -261,8 +261,7 @@ void BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
       return;
   }
 
-  float32 load_reg;
-  read_virtual_dword(i->seg(), RMAddr(i), &load_reg);
+  float32 load_reg = read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status = 
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -305,8 +304,7 @@ void BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
       return;
   }
 
-  float64 load_reg;
-  read_virtual_qword(i->seg(), RMAddr(i), &load_reg);
+  float64 load_reg = read_virtual_qword(i->seg(), RMAddr(i));
 
   float_status_t status = 
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -349,8 +347,7 @@ void BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
       return;
   }
 
-  Bit16s load_reg;
-  read_virtual_word(i->seg(), RMAddr(i), (Bit16u*)(&load_reg));
+  Bit16s load_reg = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
 
   float_status_t status = 
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());
@@ -393,8 +390,7 @@ void BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
       return;
   }
 
-  Bit32s load_reg;
-  read_virtual_dword(i->seg(), RMAddr(i), (Bit32u*)(&load_reg));
+  Bit32s load_reg = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
 
   float_status_t status = 
       FPU_pre_exception_handling(BX_CPU_THIS_PTR the_i387.get_control_word());

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.28 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: stack16.cc,v 1.29 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -170,10 +170,7 @@ void BX_CPU_C::PUSH_Iw(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH_EwM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
-
-  /* pointer, segment address pair */
-  read_virtual_word(i->seg(), RMAddr(i), &op1_16);
+  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
 
   push_16(op1_16);
 }
@@ -222,25 +219,25 @@ void BX_CPU_C::POPAD16(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
   {
     Bit32u temp_ESP = ESP;
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0), &di);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  2), &si);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4), &bp);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8), &bx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 10), &dx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12), &cx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 14), &ax);
+    di = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  0));
+    si = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  2));
+    bp = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  4));
+    bx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP +  8));
+    dx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 10));
+    cx = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 12));
+    ax = read_virtual_word(BX_SEG_REG_SS, (Bit32u) (temp_ESP + 14));
     ESP += 16;
   }
   else
   {
     Bit16u temp_SP = SP;
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0), &di);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  2), &si);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4), &bp);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8), &bx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 10), &dx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12), &cx);
-    read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 14), &ax);
+    di = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  0));
+    si = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  2));
+    bp = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  4));
+    bx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP +  8));
+    dx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 10));
+    cx = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 12));
+    ax = read_virtual_word(BX_SEG_REG_SS, (Bit16u) (temp_SP + 14));
     SP += 16;
   }
 

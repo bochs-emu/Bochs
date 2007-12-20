@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical64.cc,v 1.24 2007-11-21 22:36:02 sshwarts Exp $
+// $Id: logical64.cc,v 1.25 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,8 +36,7 @@ void BX_CPU_C::XOR_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -62,7 +61,7 @@ void BX_CPU_C::XOR_GqEqM(bxInstruction_c *i)
   Bit64u op1_64, op2_64;
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   op1_64 ^= op2_64;
 
   /* now write result back to destination */
@@ -102,8 +101,7 @@ void BX_CPU_C::XOR_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op1_64 ^= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -125,8 +123,7 @@ void BX_CPU_C::OR_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op1_64 |= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -148,8 +145,7 @@ void BX_CPU_C::NOT_EqM(bxInstruction_c *i)
 {
   Bit64u op1_64;
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op1_64 = ~op1_64;
   write_RMW_virtual_qword(op1_64);
 }
@@ -165,8 +161,7 @@ void BX_CPU_C::OR_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 |= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -191,7 +186,7 @@ void BX_CPU_C::OR_GqEqM(bxInstruction_c *i)
   Bit64u op1_64, op2_64;
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   op1_64 |= op2_64;
 
   /* now write result back to destination */
@@ -231,8 +226,7 @@ void BX_CPU_C::AND_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
@@ -257,7 +251,7 @@ void BX_CPU_C::AND_GqEqM(bxInstruction_c *i)
   Bit64u op1_64, op2_64;
 
   op1_64 = BX_READ_64BIT_REG(i->nnn());
-  read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+  op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   op1_64 &= op2_64;
 
   /* now write result back to destination */
@@ -296,8 +290,7 @@ void BX_CPU_C::AND_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64 = (Bit32s) i->Id();
 
-  /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op1_64 &= op2_64;
   write_RMW_virtual_qword(op1_64);
 
@@ -319,8 +312,7 @@ void BX_CPU_C::TEST_EqGqM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  /* pointer, segment address pair */
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   op1_64 &= op2_64;
 
@@ -353,8 +345,7 @@ void BX_CPU_C::TEST_EqIdM(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
 
-  /* pointer, segment address pair */
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = (Bit32s) i->Id();
   op1_64 &= op2_64;
 

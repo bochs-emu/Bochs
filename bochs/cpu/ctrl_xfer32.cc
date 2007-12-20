@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.60 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.61 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,7 +213,7 @@ void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
-    read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+    op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   if (op1_32 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
@@ -240,8 +240,8 @@ void BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 #endif
 
   /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
+  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
 
   BX_CPU_THIS_PTR speculative_rsp = 1;
   BX_CPU_THIS_PTR prev_rsp = RSP;
@@ -495,10 +495,8 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_EdM(bxInstruction_c *i)
 {
-  Bit32u new_EIP;
-
   /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), RMAddr(i), &new_EIP);
+  Bit32u new_EIP = read_virtual_dword(i->seg(), RMAddr(i));
 
   branch_near32(new_EIP);
 
@@ -521,8 +519,8 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   /* pointer, segment address pair */
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
-  read_virtual_word(i->seg(), RMAddr(i)+4, &cs_raw);
+  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
+  cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {

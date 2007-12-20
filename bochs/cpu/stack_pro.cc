@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack_pro.cc,v 1.37 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: stack_pro.cc,v 1.38 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,17 +95,17 @@ Bit16u BX_CPU_C::pop_16(void)
 
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    read_virtual_word(BX_SEG_REG_SS, RSP, &value16);
+    value16 = read_virtual_word(BX_SEG_REG_SS, RSP);
     RSP += 2;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    read_virtual_word(BX_SEG_REG_SS, ESP, &value16);
+    value16 = read_virtual_word(BX_SEG_REG_SS, ESP);
     ESP += 2;
   }
   else {
-    read_virtual_word(BX_SEG_REG_SS, SP, &value16);
+    value16 = read_virtual_word(BX_SEG_REG_SS, SP);
     SP  += 2;
   }
 
@@ -119,17 +119,17 @@ Bit32u BX_CPU_C::pop_32()
 
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) {
-    read_virtual_dword(BX_SEG_REG_SS, RSP, &value32);
+    value32 = read_virtual_dword(BX_SEG_REG_SS, RSP);
     RSP += 4;
   }
   else
 #endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-    read_virtual_dword(BX_SEG_REG_SS, ESP, &value32);
+    value32 = read_virtual_dword(BX_SEG_REG_SS, ESP);
     ESP += 4;
   }
   else {
-    read_virtual_dword(BX_SEG_REG_SS, SP, &value32);
+    value32 = read_virtual_dword(BX_SEG_REG_SS, SP);
     SP  += 4;
   }
 
@@ -140,11 +140,9 @@ Bit32u BX_CPU_C::pop_32()
 #if BX_SUPPORT_X86_64
 Bit64u BX_CPU_C::pop_64()
 {
-  Bit64u value64;
-
   BX_ASSERT(StackAddrSize64());
 
-  read_virtual_qword(BX_SEG_REG_SS, RSP, &value64);
+  Bit64u value64 = read_virtual_qword(BX_SEG_REG_SS, RSP);
   RSP += 8;
 
   return value64;

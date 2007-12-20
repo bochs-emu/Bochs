@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical32.cc,v 1.36 2007-11-21 22:36:01 sshwarts Exp $
+// $Id: logical32.cc,v 1.37 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,7 +39,7 @@ void BX_CPU_C::XOR_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   op1_32 ^= op2_32;
   write_RMW_virtual_dword(op1_32);
@@ -64,7 +64,7 @@ void BX_CPU_C::XOR_GdEdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32;
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
-  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+  op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op1_32 ^= op2_32;
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 
@@ -98,7 +98,7 @@ void BX_CPU_C::XOR_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32 ^= i->Id();
   write_RMW_virtual_dword(op1_32);
 
@@ -118,7 +118,7 @@ void BX_CPU_C::OR_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32 |= i->Id();
   write_RMW_virtual_dword(op1_32);
 
@@ -138,7 +138,7 @@ void BX_CPU_C::NOT_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32 = ~op1_32;
   write_RMW_virtual_dword(op1_32);
 }
@@ -154,7 +154,7 @@ void BX_CPU_C::OR_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   op1_32 |= op2_32;
   write_RMW_virtual_dword(op1_32);
@@ -179,7 +179,7 @@ void BX_CPU_C::OR_GdEdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32;
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
-  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+  op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op1_32 |= op2_32;
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 
@@ -214,7 +214,7 @@ void BX_CPU_C::AND_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   op1_32 &= op2_32;
   write_RMW_virtual_dword(op1_32);
@@ -239,7 +239,7 @@ void BX_CPU_C::AND_GdEdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32;
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
-  read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+  op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op1_32 &= op2_32;
   BX_WRITE_32BIT_REGZ(i->nnn(), op1_32);
 
@@ -274,7 +274,7 @@ void BX_CPU_C::AND_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
-  read_RMW_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32 &= i->Id();
   write_RMW_virtual_dword(op1_32);
 
@@ -294,7 +294,7 @@ void BX_CPU_C::TEST_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32;
 
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   op1_32 &= op2_32;
 
@@ -325,11 +325,8 @@ void BX_CPU_C::TEST_EAXId(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EdIdM(bxInstruction_c *i)
 {
-  Bit32u op1_32;
-
-  read_virtual_dword(i->seg(), RMAddr(i), &op1_32);
+  Bit32u op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op1_32 &= i->Id();
-
   SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
 }
 

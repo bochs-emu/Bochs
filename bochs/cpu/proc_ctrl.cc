@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.191 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.192 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -836,7 +836,7 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw = BX_READ_16BIT_REG(i->rm());
   }
   else {
-    read_virtual_word(i->seg(), RMAddr(i), &msw);
+    msw = read_virtual_word(i->seg(), RMAddr(i));
   }
 
   // LMSW does not affect PG,CD,NW,AM,WP,NE,ET bits, and cannot clear PE

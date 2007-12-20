@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.27 2007-12-06 20:39:11 sshwarts Exp $
+// $Id: shift64.cc,v 1.28 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,7 +53,7 @@ void BX_CPU_C::SHLD_EqGq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -96,7 +96,7 @@ void BX_CPU_C::SHRD_EqGq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -139,7 +139,7 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (! count) return;
@@ -179,7 +179,7 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (! count) return;
@@ -219,7 +219,7 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -264,7 +264,7 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -309,7 +309,7 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -350,7 +350,7 @@ void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -392,7 +392,7 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+    op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (!count) return;

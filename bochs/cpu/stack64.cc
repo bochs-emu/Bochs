@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.31 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: stack64.cc,v 1.32 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -78,18 +78,16 @@ void BX_CPU_C::PUSH64_GS(bxInstruction_c *i)
 
 void BX_CPU_C::POP64_FS(bxInstruction_c *i)
 {
-  Bit64u fs;
   // this way is faster and RSP safe
-  read_virtual_qword(BX_SEG_REG_SS, RSP, &fs);
+  Bit64u fs = read_virtual_qword(BX_SEG_REG_SS, RSP);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS], (Bit16u) fs);
   RSP += 8;
 }
 
 void BX_CPU_C::POP64_GS(bxInstruction_c *i)
 {
-  Bit64u gs;
   // this way is faster and RSP safe
-  read_virtual_qword(BX_SEG_REG_SS, RSP, &gs);
+  Bit64u gs = read_virtual_qword(BX_SEG_REG_SS, RSP);
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], (Bit16u) gs);
   RSP += 8;
 }
@@ -102,10 +100,7 @@ void BX_CPU_C::PUSH64_Id(bxInstruction_c *i)
 
 void BX_CPU_C::PUSH_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
-  /* pointer, segment address pair */
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  Bit64u op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
 
   push_64(op1_64);
 }
@@ -134,7 +129,7 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
       Bit64u temp64;
 
       RBP -= 8;
-      read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
+      temp64 = read_virtual_qword(BX_SEG_REG_SS, RBP);
       RSP -= 8;
       write_virtual_qword(BX_SEG_REG_SS, RSP, temp64);
     } /* while (--level) */
@@ -152,9 +147,8 @@ void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
 
 void BX_CPU_C::LEAVE64(bxInstruction_c *i)
 {
-  Bit64u temp64;
   // restore frame pointer
-  read_virtual_qword(BX_SEG_REG_SS, RBP, &temp64);
+  Bit64u temp64 = read_virtual_qword(BX_SEG_REG_SS, RBP);
   RSP = RBP + 8;
   RBP = temp64;
 }

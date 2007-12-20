@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.1 2007-12-07 10:59:18 sshwarts Exp $
+// $Id: bit64.cc,v 1.2 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,7 +44,7 @@ void BX_CPU_C::BSF_GqEq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+    op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (op2_64 == 0) {
@@ -76,7 +76,7 @@ void BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+    op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   if (op2_64 == 0) {
@@ -110,7 +110,7 @@ void BX_CPU_C::BT_EqGqM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 8 * displacement64;
 
   /* pointer, segment address pair */
-  read_virtual_qword(i->seg(), op1_addr, &op1_64);
+  op1_64 = read_virtual_qword(i->seg(), op1_addr);
 
   set_CF((op1_64 >> index) & 0x01);
 }
@@ -138,7 +138,7 @@ void BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 8 * displacement64;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
 
   bit_i = (op1_64 >> index) & 0x01;
   op1_64 |= (((Bit64u) 1) << index);
@@ -174,7 +174,7 @@ void BX_CPU_C::BTR_EqGqM(bxInstruction_c *i)
   op1_addr = RMAddr(i) + 8 * displacement64;
 
   /* pointer, segment address pair */
-  read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
 
   bx_bool temp_cf = (op1_64 >> index) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << index);
@@ -210,7 +210,7 @@ void BX_CPU_C::BTC_EqGqM(bxInstruction_c *i)
   index = op2_64 & 0x3f;
   displacement64 = ((Bit64s) (op2_64 & BX_CONST64(0xffffffffffffffc0))) / 64;
   op1_addr = RMAddr(i) + 8 * displacement64;
-  read_RMW_virtual_qword(i->seg(), op1_addr, &op1_64);
+  op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
 
   bx_bool temp_CF = (op1_64 >> index) & 0x01;
   op1_64 ^= (((Bit64u) 1) << index);  /* toggle bit */
@@ -236,10 +236,8 @@ void BX_CPU_C::BTC_EqGqR(bxInstruction_c *i)
 
 void BX_CPU_C::BT_EqIbM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-  Bit8u op2_8 = i->Ib() & 0x3f;
-
-  read_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  Bit64u op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
+  Bit8u  op2_8  = i->Ib() & 0x3f;
 
   set_CF((op1_64 >> op2_8) & 0x01);
 }
@@ -254,11 +252,9 @@ void BX_CPU_C::BT_EqIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EqIbM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
   write_RMW_virtual_qword(op1_64);
@@ -268,11 +264,9 @@ void BX_CPU_C::BTS_EqIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTS_EqIbR(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 |= (((Bit64u) 1) << op2_8);
   BX_WRITE_64BIT_REG(i->rm(), op1_64);
@@ -282,11 +276,9 @@ void BX_CPU_C::BTS_EqIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EqIbM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
   write_RMW_virtual_qword(op1_64);
@@ -296,11 +288,9 @@ void BX_CPU_C::BTC_EqIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTC_EqIbR(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 ^= (((Bit64u) 1) << op2_8);  /* toggle bit */
   BX_WRITE_64BIT_REG(i->rm(), op1_64);
@@ -310,11 +300,9 @@ void BX_CPU_C::BTC_EqIbR(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EqIbM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  read_RMW_virtual_qword(i->seg(), RMAddr(i), &op1_64);
+  Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
   write_RMW_virtual_qword(op1_64);
@@ -348,7 +336,7 @@ void BX_CPU_C::POPCNT_GqEq(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_qword(i->seg(), RMAddr(i), &op2_64);
+    op2_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
   op1_64 = 0;

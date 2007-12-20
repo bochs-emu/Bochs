@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logical8.cc,v 1.35 2007-11-21 22:36:02 sshwarts Exp $
+// $Id: logical8.cc,v 1.36 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -36,7 +36,7 @@ void BX_CPU_C::XOR_EbGbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 ^= op2;
   write_RMW_virtual_byte(op1);
@@ -61,7 +61,7 @@ void BX_CPU_C::XOR_GbEbM(bxInstruction_c *i)
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  read_virtual_byte(i->seg(), RMAddr(i), &op2);
+  op2 = read_virtual_byte(i->seg(), RMAddr(i));
   op1 ^= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
@@ -95,7 +95,7 @@ void BX_CPU_C::XOR_EbIbM(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op1 ^= op2;
   write_RMW_virtual_byte(op1);
 
@@ -117,7 +117,7 @@ void BX_CPU_C::OR_EbIbM(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op1 |= op2;
   write_RMW_virtual_byte(op1);
 
@@ -139,7 +139,7 @@ void BX_CPU_C::NOT_EbM(bxInstruction_c *i)
 {
   Bit8u op1_8;
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+  op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op1_8 = ~op1_8;
   write_RMW_virtual_byte(op1_8);
 }
@@ -155,7 +155,7 @@ void BX_CPU_C::OR_EbGbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 |= op2;
   write_RMW_virtual_byte(op1);
@@ -180,7 +180,7 @@ void BX_CPU_C::OR_GbEbM(bxInstruction_c *i)
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  read_virtual_byte(i->seg(), RMAddr(i), &op2);
+  op2 = read_virtual_byte(i->seg(), RMAddr(i));
   op1 |= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
@@ -215,7 +215,7 @@ void BX_CPU_C::AND_EbGbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 &= op2;
   write_RMW_virtual_byte(op1);
@@ -240,7 +240,7 @@ void BX_CPU_C::AND_GbEbM(bxInstruction_c *i)
   Bit8u op1, op2;
 
   op1 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  read_virtual_byte(i->seg(), RMAddr(i), &op2);
+  op2 = read_virtual_byte(i->seg(), RMAddr(i));
   op1 &= op2;
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 
@@ -275,7 +275,7 @@ void BX_CPU_C::AND_EbIbM(bxInstruction_c *i)
 {
   Bit8u op1, op2 = i->Ib();
 
-  read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op1 &= op2;
   write_RMW_virtual_byte(op1);
 
@@ -297,7 +297,7 @@ void BX_CPU_C::TEST_EbGbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
 
-  read_virtual_byte(i->seg(), RMAddr(i), &op1);
+  op1 = read_virtual_byte(i->seg(), RMAddr(i));
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
   op1 &= op2;
 
@@ -317,8 +317,10 @@ void BX_CPU_C::TEST_EbGbR(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 {
-  Bit8u op1 = AL;
-  Bit8u op2 = i->Ib();
+  Bit8u op1, op2;
+
+  op1 = AL;
+  op2 = i->Ib();
   op1 &= op2;
 
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
@@ -326,11 +328,8 @@ void BX_CPU_C::TEST_ALIb(bxInstruction_c *i)
 
 void BX_CPU_C::TEST_EbIbM(bxInstruction_c *i)
 {
-  Bit8u op1;
-
-  read_virtual_byte(i->seg(), RMAddr(i), &op1);
+  Bit8u op1 = read_virtual_byte(i->seg(), RMAddr(i));
   op1 &= i->Ib();
-
   SET_FLAGS_OSZAPC_LOGIC_8(op1);
 }
 

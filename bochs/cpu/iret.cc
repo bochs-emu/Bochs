@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.23 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: iret.cc,v 1.24 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -19,7 +19,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -30,7 +30,6 @@
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
-
 
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::iret_protected(bxInstruction_c *i)
@@ -112,8 +111,8 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
   /* NT = 0: INTERRUPT RETURN ON STACK -or STACK_RETURN_TO_V86 */
   unsigned top_nbytes_same, top_nbytes_outer;
-  Bit32u new_eip, new_esp, temp_ESP, new_eflags;
-  Bit16u new_ip, new_flags;
+  Bit32u new_eip = 0, new_esp, temp_ESP, new_eflags = 0;
+  Bit16u new_ip = 0, new_flags = 0;
   Bit32u ss_offset;
 
   /* 16bit opsize  |   32bit opsize
@@ -149,9 +148,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     temp_ESP = SP;
 
   if (i->os32L()) {
-    read_virtual_word (BX_SEG_REG_SS, temp_ESP + 4, &raw_cs_selector);
-    read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0, &new_eip);
-    read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8, &new_eflags);
+    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_ESP + 4);
+    new_eip         = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 0);
+    new_eflags      = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 8);
 
     // if VM=1 in flags image on stack then STACK_RETURN_TO_V86
     if (new_eflags & EFlagsVMMask) {
@@ -163,15 +162,15 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
   }
   else {
-    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 2, &raw_cs_selector);
-    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0, &new_ip);
-    read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4, &new_flags);
+    raw_cs_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 2);
+    new_ip          = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
+    new_flags       = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
   }
 
   parse_selector(raw_cs_selector, &cs_selector);
 
   // return CS selector must be non-null, else #GP(0)
-  if ( (raw_cs_selector & 0xfffc) == 0 ) {
+  if ((raw_cs_selector & 0xfffc) == 0) {
     BX_ERROR(("iret: return CS selector null"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -218,7 +217,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_ip, cs_selector.rpl);
 
       /* load flags with third word on stack */
-      write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL ());
+      write_flags(new_flags, CPL==0, CPL<=BX_CPU_THIS_PTR get_IOPL());
     }
 
     /* increment stack by 6/12 */
@@ -245,7 +244,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     /* examine return SS selector and associated descriptor */
-    read_virtual_word(BX_SEG_REG_SS, temp_ESP + ss_offset, &raw_ss_selector);
+    raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_ESP + ss_offset);
 
     /* selector must be non-null, else #GP(0) */
     if ( (raw_ss_selector & 0xfffc) == 0 ) {
@@ -292,20 +291,14 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     }
 
     if (i->os32L()) {
-      read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  0, &new_eip);
-      read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  8, &new_eflags);
-      read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 12, &new_esp);
+      new_eip    = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  0);
+      new_eflags = read_virtual_dword(BX_SEG_REG_SS, temp_ESP +  8);
+      new_esp    = read_virtual_dword(BX_SEG_REG_SS, temp_ESP + 12);
     }
     else {
-      Bit16u new_sp = 0;
-
-      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0, &new_ip);
-      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4, &new_flags);
-      read_virtual_word(BX_SEG_REG_SS, temp_ESP + 6, &new_sp);
-
-      new_eip = new_ip;
-      new_esp = new_sp;
-      new_eflags = new_flags;
+      new_eip    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 0);
+      new_eflags = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 4);
+      new_esp    = read_virtual_word(BX_SEG_REG_SS, temp_ESP + 6);
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */
@@ -386,9 +379,9 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   if (i->os64L()) {
     Bit64u new_rflags = 0;
 
-    read_virtual_word (BX_SEG_REG_SS, temp_RSP +  8, &raw_cs_selector);
-    read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0, &new_rip);
-    read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16, &new_rflags);
+    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP +  8);
+    new_rip         = read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
+    new_rflags      = read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
 
     new_eflags = (Bit32u) new_rflags;
     top_nbytes_outer = 40;
@@ -401,13 +394,10 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       exception(BX_SS_EXCEPTION, 0, 0);
     }
 
-    Bit32u return_EIP = 0;
+    raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP + 4);
+    new_rip         = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0);
+    new_eflags      = read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8);
 
-    read_virtual_word (BX_SEG_REG_SS, temp_RSP + 4, &raw_cs_selector);
-    read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 0, &return_EIP);
-    read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 8, &new_eflags);
-
-    new_rip = return_EIP;
     top_nbytes_outer = 20;
     top_nbytes_same = 12;
     ss_offset = 16;
@@ -419,14 +409,10 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       exception(BX_SS_EXCEPTION, 0, 0);
     }
 
-    Bit16u return_IP = 0, new_flags = 0;
+    raw_cs_selector  = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2);
+    new_rip          = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0);
+    new_eflags       = read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4);
 
-    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 2, &raw_cs_selector);
-    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 0, &return_IP);
-    read_virtual_word(BX_SEG_REG_SS, temp_RSP + 4, &new_flags);
-
-    new_rip = return_IP;
-    new_eflags = (Bit32u) new_flags;
     top_nbytes_outer = 10;
     top_nbytes_same = 6;
     ss_offset = 8;
@@ -506,7 +492,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     /* examine return SS selector and associated descriptor */
-    read_virtual_word(BX_SEG_REG_SS, temp_RSP + ss_offset, &raw_ss_selector);
+    raw_ss_selector = read_virtual_word(BX_SEG_REG_SS, temp_RSP + ss_offset);
 
     if ((raw_ss_selector & 0xfffc) == 0) {
       if (! IS_LONG64_SEGMENT(cs_descriptor) || (cs_selector.rpl == 3)) {
@@ -554,17 +540,13 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
 
     if (i->os64L()) {
-      read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 24, &new_rsp);
+      new_rsp = read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 24);
     }
     else if (i->os32L()) {
-      Bit32u return_ESP = 0;
-      read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12, &return_ESP);
-      new_rsp = return_ESP;
+      new_rsp = (Bit64u) read_virtual_dword(BX_SEG_REG_SS, temp_RSP + 12);
     }
     else {
-      Bit16u return_SP = 0;
-      read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6, &return_SP);
-      new_rsp = return_SP;
+      new_rsp = (Bit64u) read_virtual_word(BX_SEG_REG_SS, temp_RSP + 6);
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */

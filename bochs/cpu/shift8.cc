@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.31 2007-12-06 20:39:11 sshwarts Exp $
+// $Id: shift8.cc,v 1.32 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if ((count & 0x07) == 0) {
@@ -104,7 +104,7 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if ((count & 0x07) == 0) {
@@ -160,7 +160,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
  
   if (! count) return;
@@ -207,7 +207,7 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if (! count) return;
@@ -249,7 +249,7 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -296,7 +296,7 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if (!count) return;
@@ -340,7 +340,7 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_RMW_virtual_byte(i->seg(), RMAddr(i), &op1_8);
+    op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
 
   if (!count) return;

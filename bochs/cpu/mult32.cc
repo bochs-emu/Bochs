@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.23 2007-12-06 16:57:59 sshwarts Exp $
+// $Id: mult32.cc,v 1.24 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,7 +51,7 @@ void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   product_64  = ((Bit64u) op1_32) * ((Bit64u) op2_32);
@@ -82,7 +82,7 @@ void BX_CPU_C::IMUL_EAXEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
+    op2_32 = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   Bit64s product_64  = ((Bit64s) op1_32) * ((Bit64s) op2_32);
@@ -117,7 +117,7 @@ void BX_CPU_C::DIV_EAXEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), &op2_32);
+    op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   if (op2_32 == 0) {
@@ -155,7 +155,7 @@ void BX_CPU_C::IDIV_EAXEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
+    op2_32 = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   if (op2_32 == 0)
@@ -195,7 +195,7 @@ void BX_CPU_C::IMUL_GdEdId(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
+    op2_32 = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   Bit64s product_64  = ((Bit64s) op2_32) * ((Bit64s) op3_32);
@@ -225,7 +225,7 @@ void BX_CPU_C::IMUL_GdEd(bxInstruction_c *i)
   }
   else {
     /* pointer, segment address pair */
-    read_virtual_dword(i->seg(), RMAddr(i), (Bit32u *) &op2_32);
+    op2_32 = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   }
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());

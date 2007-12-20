@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.84 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: access.cc,v 1.85 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -745,11 +745,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
+  Bit8u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_virtual_byte(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit8u data;
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
@@ -767,8 +768,8 @@ accessOK:
         Bit32u pageOffset = laddr & 0xfff;
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_READ);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
-        *data = *hostAddr;
-        return;
+        data = *hostAddr;
+        return data;
       }
     }
 #endif
@@ -778,8 +779,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_READ, (void *) data);
-    return;
+    access_linear(laddr, 1, CPL, BX_READ, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -790,11 +791,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_word(unsigned s, bx_address offset, Bit16u *data)
+  Bit16u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_virtual_word(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit16u data;
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
@@ -821,8 +823,8 @@ accessOK:
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_READ);
           Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
-          ReadHostWordFromLittleEndian(hostAddr, *data);
-          return;
+          ReadHostWordFromLittleEndian(hostAddr, data);
+          return data;
         }
       }
     }
@@ -833,8 +835,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_READ, (void *) data);
-    return;
+    access_linear(laddr, 2, CPL, BX_READ, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -845,11 +847,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
+  Bit32u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_virtual_dword(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit32u data;
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
@@ -876,8 +879,8 @@ accessOK:
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_READ);
           Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
-          ReadHostDWordFromLittleEndian(hostAddr, *data);
-          return;
+          ReadHostDWordFromLittleEndian(hostAddr, data);
+          return data;
         }
       }
     }
@@ -888,8 +891,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_READ, (void *) data);
-    return;
+    access_linear(laddr, 4, CPL, BX_READ, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -900,11 +903,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
+  Bit64u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_virtual_qword(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit64u data;
 
   if ((seg->cache.valid & SegAccessROK4G) == SegAccessROK4G) {
 accessOK:
@@ -931,8 +935,8 @@ accessOK:
           bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
           BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_READ);
           Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
-          ReadHostQWordFromLittleEndian(hostAddr, *data);
-          return;
+          ReadHostQWordFromLittleEndian(hostAddr, data);
+          return data;
         }
       }
     }
@@ -943,8 +947,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_READ, (void *) data);
-    return;
+    access_linear(laddr, 8, CPL, BX_READ, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessROK) {
@@ -960,11 +964,12 @@ accessOK:
 // address translation info is kept across read/write calls //
 //////////////////////////////////////////////////////////////
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset, Bit8u *data)
+  Bit8u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_RMW_virtual_byte(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit8u data;
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
@@ -985,9 +990,9 @@ accessOK:
 #if BX_SUPPORT_ICACHE
         pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-        *data = *hostAddr;
+        data = *hostAddr;
         BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
-        return;
+        return data;
       }
     }
 #endif
@@ -999,8 +1004,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 1, CPL, BX_RW, (void *) data);
-    return;
+    access_linear(laddr, 1, CPL, BX_RW, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessWOK) {
@@ -1011,11 +1016,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset, Bit16u *data)
+  Bit16u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_RMW_virtual_word(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit16u data;
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
@@ -1045,9 +1051,9 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          ReadHostWordFromLittleEndian(hostAddr, *data);
+          ReadHostWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
-          return;
+          return data;
         }
       }
     }
@@ -1058,8 +1064,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 2, CPL, BX_RW, (void *) data);
-    return;
+    access_linear(laddr, 2, CPL, BX_RW, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessWOK) {
@@ -1070,11 +1076,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset, Bit32u *data)
+  Bit32u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_RMW_virtual_dword(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit32u data;
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
@@ -1104,9 +1111,9 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          ReadHostDWordFromLittleEndian(hostAddr, *data);
+          ReadHostDWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
-          return;
+          return data;
         }
       }
     }
@@ -1117,8 +1124,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 4, CPL, BX_RW, (void *) data);
-    return;
+    access_linear(laddr, 4, CPL, BX_RW, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessWOK) {
@@ -1129,11 +1136,12 @@ accessOK:
   goto accessOK;
 }
 
-  void BX_CPP_AttrRegparmN(3)
-BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset, Bit64u *data)
+  Bit64u BX_CPP_AttrRegparmN(2)
+BX_CPU_C::read_RMW_virtual_qword(unsigned s, bx_address offset)
 {
   bx_address laddr;
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[s];
+  Bit64u data;
 
   if ((seg->cache.valid & SegAccessWOK4G) == SegAccessWOK4G) {
 accessOK:
@@ -1163,9 +1171,9 @@ accessOK:
 #if BX_SUPPORT_ICACHE
           pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
 #endif
-          ReadHostQWordFromLittleEndian(hostAddr, *data);
+          ReadHostQWordFromLittleEndian(hostAddr, data);
           BX_CPU_THIS_PTR address_xlation.pages = (bx_ptr_equiv_t) hostAddr;
-          return;
+          return data;
         }
       }
     }
@@ -1176,8 +1184,8 @@ accessOK:
       exception(int_number(seg), 0, 0);
     }
 #endif
-    access_linear(laddr, 8, CPL, BX_RW, (void *) data);
-    return;
+    access_linear(laddr, 8, CPL, BX_RW, (void *) &data);
+    return data;
   }
 
   if (seg->cache.valid & SegAccessWOK) {
@@ -1333,8 +1341,8 @@ BX_CPU_C::read_virtual_dqword(unsigned s, bx_address offset, Bit8u *data)
   // Read Double Quadword.
   Bit64u *qwords = (Bit64u*) data;
 
-  read_virtual_qword(s, offset+Host1stDWordOffset, &qwords[0]);
-  read_virtual_qword(s, offset+Host2ndDWordOffset, &qwords[1]);
+  qwords[0] = read_virtual_qword(s, offset+Host1stDWordOffset);
+  qwords[1] = read_virtual_qword(s, offset+Host2ndDWordOffset);
 }
 
   void BX_CPP_AttrRegparmN(3)
@@ -1379,8 +1387,8 @@ BX_CPU_C::write_virtual_dqword_aligned(unsigned s, bx_address offset, Bit8u *dat
 BX_CPU_C::read_virtual_tword(unsigned s, bx_address offset, floatx80 *data)
 {
   // read floating point register
-  read_virtual_qword(s, offset+0, &data->fraction);
-  read_virtual_word (s, offset+8, &data->exp);
+  data->fraction = read_virtual_qword(s, offset+0);
+  data->exp      = read_virtual_word (s, offset+8);
 }
 
   void BX_CPP_AttrRegparmN(3)

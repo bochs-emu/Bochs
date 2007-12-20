@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.35 2007-11-24 14:22:34 sshwarts Exp $
+// $Id: soft_int.cc,v 1.36 2007-12-20 20:58:37 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,8 +44,8 @@ void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
   Bit16s bound_min, bound_max;
   Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-  read_virtual_word(i->seg(), RMAddr(i),   (Bit16u *) &bound_min);
-  read_virtual_word(i->seg(), RMAddr(i)+2, (Bit16u *) &bound_max);
+  bound_min = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
+  bound_max = (Bit16s) read_virtual_word(i->seg(), RMAddr(i)+2);
 
   if (op1_16 < bound_min || op1_16 > bound_max) {
     BX_INFO(("BOUND_GdMa: fails bounds test"));
@@ -58,8 +58,8 @@ void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
   Bit32s bound_min, bound_max;
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
 
-  read_virtual_dword(i->seg(), RMAddr(i),   (Bit32u *) &bound_min);
-  read_virtual_dword(i->seg(), RMAddr(i)+4, (Bit32u *) &bound_max);
+  bound_min = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
+  bound_max = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i)+4);
 
   if (op1_32 < bound_min || op1_32 > bound_max) {
     BX_INFO(("BOUND_GdMa: fails bounds test"));
