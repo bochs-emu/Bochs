@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.58 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.59 2007-12-21 17:30:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -442,67 +442,116 @@ void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
+//
+// There is some weirdness in LOOP instructions definition. If an exception
+// was generated during the instruction execution (for example #GP fault
+// because EIP was beyond CS segment limits) CPU state should restore the
+// state prior to instruction execution. 
+//
+// The final point that we are not allowed to decrement ECX register before
+// it is known that no exceptions can happen.
+//
+
 void BX_CPU_C::LOOPNE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    if (((--RCX) != 0) && (get_ZF()==0)) {
+    Bit64u count = RCX;
+
+    if (((--count) != 0) && (get_ZF()==0)) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
+
+    RCX = count;
   }
   else {
-    RCX = ECX - 1;
-    if (RCX != 0 && (get_ZF()==0)) {
+    Bit32u count = ECX;
+
+    if (((--count) != 0) && (get_ZF()==0)) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
-  }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    RCX = count;
+  }
 }
 
 void BX_CPU_C::LOOPE64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    if (((--RCX)!=0) && get_ZF()) {
+    Bit64u count = RCX;
+
+    if (((--count) != 0) && get_ZF()) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
+
+    RCX = count;
   }
   else {
-    RCX = ECX - 1;
-    if (RCX != 0 && get_ZF()) {
+    Bit32u count = ECX;
+
+    if (((--count) != 0) && get_ZF()) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
-  }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    RCX = count;
+  }
 }
 
 void BX_CPU_C::LOOP64_Jb(bxInstruction_c *i)
 {
   if (i->as64L()) {
-    if ((--RCX) != 0) {
+    Bit64u count = RCX;
+
+    if ((--count) != 0) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
+
+    RCX = count;
   }
   else {
-    RCX = ECX - 1;
-    if (RCX != 0) {
+    Bit32u count = ECX;
+
+    if ((--count) != 0) {
       branch_near64(i);
       BX_INSTR_CNEAR_BRANCH_TAKEN(BX_CPU_ID, RIP);
-      return;
     }
-  }
+#if BX_INSTRUMENTATION
+    else {
+      BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    }
+#endif
 
-  BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
+    RCX = count;
+  }
 }
 
 #endif /* if BX_SUPPORT_X86_64 */

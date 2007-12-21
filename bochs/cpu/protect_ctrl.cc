@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.68 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.69 2007-12-21 17:30:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -656,11 +656,8 @@ void BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit16u limit_16;
-  Bit32u base_32;
-
-  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
-  base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit32u base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -682,11 +679,8 @@ void BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit16u limit_16;
-  Bit32u base_32;
-
-  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
-  base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit32u base_32 = read_virtual_dword(i->seg(), RMAddr(i) + 2);
 
   if (i->os32L() == 0) base_32 &= 0x00ffffff; /* ignore upper 8 bits */
 
@@ -725,11 +719,8 @@ void BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit16u limit_16;
-  Bit64u base_64;
-
-  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
-  base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit64u base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
 
   BX_CPU_THIS_PTR gdtr.limit = limit_16;
   BX_CPU_THIS_PTR gdtr.base = base_64;
@@ -746,11 +737,8 @@ void BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  Bit16u limit_16;
-  Bit64u base_64;
-
-  limit_16 = read_virtual_word(i->seg(), RMAddr(i));
-  base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
+  Bit16u limit_16 = read_virtual_word(i->seg(), RMAddr(i));
+  Bit64u base_64 = read_virtual_qword(i->seg(), RMAddr(i) + 2);
 
   BX_CPU_THIS_PTR idtr.limit = limit_16;
   BX_CPU_THIS_PTR idtr.base = base_64;

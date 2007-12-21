@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.33 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.34 2007-12-21 17:30:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -77,8 +77,7 @@ void BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EbIbM(bxInstruction_c *i)
 {
-  Bit8u op_8 = i->Ib();
-  write_virtual_byte(i->seg(), RMAddr(i), op_8);
+  write_virtual_byte(i->seg(), RMAddr(i), i->Ib());
 }
 
 void BX_CPU_C::MOV_EbIbR(bxInstruction_c *i)
@@ -113,8 +112,8 @@ void BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
   /* pointer, segment address pair */
   op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   op2 = BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL());
-  write_RMW_virtual_byte(op2);
 
+  write_RMW_virtual_byte(op2);
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), op1);
 }
 

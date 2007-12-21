@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer64.cc,v 1.32 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: data_xfer64.cc,v 1.33 2007-12-21 17:30:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -53,8 +53,7 @@ void BX_CPU_C::MOV_EqGqM(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EqGqR(bxInstruction_c *i)
 {
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->nnn());
-  BX_WRITE_64BIT_REG(i->rm(), op2_64);
+  BX_WRITE_64BIT_REG(i->rm(), BX_READ_64BIT_REG(i->nnn()));
 }
 
 void BX_CPU_C::MOV_GqEqM(bxInstruction_c *i)
@@ -65,8 +64,7 @@ void BX_CPU_C::MOV_GqEqM(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_GqEqR(bxInstruction_c *i)
 {
-  Bit64u op2_64 = BX_READ_64BIT_REG(i->rm());
-  BX_WRITE_64BIT_REG(i->nnn(), op2_64);
+  BX_WRITE_64BIT_REG(i->nnn(), BX_READ_64BIT_REG(i->rm()));
 }
 
 void BX_CPU_C::LEA_GqM(bxInstruction_c *i)
@@ -212,8 +210,8 @@ void BX_CPU_C::XCHG_EqGqM(bxInstruction_c *i)
 
   op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
   op2_64 = BX_READ_64BIT_REG(i->nnn());
-  write_RMW_virtual_qword(op2_64);
 
+  write_RMW_virtual_qword(op2_64);
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }
 
