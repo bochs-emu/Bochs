@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.401 2007-12-21 10:33:39 sshwarts Exp $
+// $Id: cpu.h,v 1.402 2007-12-21 18:24:19 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2664,8 +2664,73 @@ public: // for now...
   BX_SMF void LOADALL(bxInstruction_c *);
 #endif
 
-  BX_SMF void CMOV_GdEd(bxInstruction_c *);
-  BX_SMF void CMOV_GwEw(bxInstruction_c *);
+  BX_SMF void CMOVO_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNO_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVB_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNB_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVZ_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVBE_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVS_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNS_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVP_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNP_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVL_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNL_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVLE_GwEwM(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GwEwM(bxInstruction_c *);
+
+  BX_SMF void CMOVO_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNO_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVB_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNB_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVZ_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVBE_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVS_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNS_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVP_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNP_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVL_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNL_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVLE_GwEwR(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GwEwR(bxInstruction_c *);
+
+  BX_SMF void CMOVO_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNO_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVB_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNB_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVZ_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVBE_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVS_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNS_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVP_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNP_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVL_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNL_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVLE_GdEdM(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GdEdM(bxInstruction_c *);
+
+  BX_SMF void CMOVO_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNO_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVB_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNB_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVZ_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNZ_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVBE_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNBE_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVS_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNS_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVP_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNP_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVL_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNL_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVLE_GdEdR(bxInstruction_c *);
+  BX_SMF void CMOVNLE_GdEdR(bxInstruction_c *);
 
   BX_SMF void CWDE(bxInstruction_c *);
   BX_SMF void CDQ(bxInstruction_c *);
