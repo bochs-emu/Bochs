@@ -25,12 +25,8 @@ who'd like to see Bochs run as fast as Virtual PC.
 Paths we can explore to get more speed :
 4.1 virtualization : plex86
 4.2 dynamic translation : qemu, patch from h.johansson
-4.3 optimizations of instructions path / host asm (Conn Clark has been
-working on this, and an anonymous patch for win32 
-http://sourceforge.net/tracker/index.php?func=detail&aid=867044&group_id=12580&atid=312580
-)
 Status:
-Not done yet.
+Some work has been done for Bochs 2.2.6 but still long way is ahead.
 
 2. Plugin architecture
 2.1 The plugin architecture can be reworked if we want to support
