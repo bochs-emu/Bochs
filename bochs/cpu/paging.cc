@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.100 2007-12-17 18:48:25 sshwarts Exp $
+// $Id: paging.cc,v 1.101 2007-12-21 10:33:39 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -552,7 +552,7 @@ void BX_CPU_C::TLB_flush(bx_bool invalidateGlobal)
 void BX_CPU_C::TLB_invlpg(bx_address laddr)
 {
 #if BX_USE_TLB
-  Bit32u TLB_index = BX_TLB_INDEX_OF(laddr);
+  Bit32u TLB_index = BX_TLB_INDEX_OF(laddr, 0);
   BX_CPU_THIS_PTR TLB.entry[TLB_index].lpf = BX_INVALID_TLB_ENTRY;
   InstrTLB_Increment(tlbEntryFlushes); // A TLB entry flush occurred.
 #endif
@@ -637,7 +637,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   InstrTLB_Stats();
 
   bx_address lpf = LPFOf(laddr);
-  Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
+  Bit32u TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   if (tlbEntry->lpf == lpf) 
@@ -1050,7 +1050,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 
   // see if page is in the TLB first
 #if BX_USE_TLB
-  Bit32u TLB_index = BX_TLB_INDEX_OF(lpf);
+  Bit32u TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry  = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
   if (tlbEntry->lpf == lpf) {
@@ -1222,7 +1222,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
       if (rw == BX_READ) {
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
 #if BX_SupportGuest2HostTLB
-        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
@@ -1263,7 +1263,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
       else { // Write
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
 #if BX_SupportGuest2HostTLB
-        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr);
+        Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
         bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
         bx_address lpf = LPFOf(laddr);
 
