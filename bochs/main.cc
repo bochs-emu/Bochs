@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.369 2007-12-09 18:36:00 sshwarts Exp $
+// $Id: main.cc,v 1.370 2007-12-21 21:16:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -990,7 +990,6 @@ void bx_init_hardware()
   else
     BX_INFO(("  SSE support: %d",BX_SUPPORT_SSE));
   BX_INFO(("  CLFLUSH support: %s",BX_SUPPORT_CLFLUSH?"yes":"no"));
-  BX_INFO(("  v8086 mode support: %s",BX_SUPPORT_V8086_MODE?"yes":"no"));
   BX_INFO(("  VME support: %s",BX_SUPPORT_VME?"yes":"no"));
   BX_INFO(("  3dnow! support: %s",BX_SUPPORT_3DNOW?"yes":"no"));
   BX_INFO(("  PAE support: %s",BX_SUPPORT_PAE?"yes":"no"));
