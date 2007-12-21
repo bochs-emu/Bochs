@@ -131,7 +131,7 @@
 
 #define BX_TLB_SIZE 1024
 #define BX_TLB_MASK ((BX_TLB_SIZE-1) << 12)
-#define BX_TLB_INDEX_OF(lpf) ((((unsigned)(lpf)) & BX_TLB_MASK) >> 12)
+#define BX_TLB_INDEX_OF(lpf, len) ((((unsigned)(lpf) + (len)) & BX_TLB_MASK) >> 12)
 
 // Compile in support for DMA & FLOPPY IO.  You'll need this
 // if you plan to use the floppy drive emulation.  But if
