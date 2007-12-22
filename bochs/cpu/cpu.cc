@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.191 2007-12-16 21:03:45 sshwarts Exp $
+// $Id: cpu.cc,v 1.192 2007-12-22 12:43:17 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
   InstrICache_Increment(iCacheMisses);
 
-  bx_address remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
   unsigned maxFetch = 15;
   if (remainingInPage < 15) maxFetch = remainingInPage;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
@@ -168,8 +168,10 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
     // ... and continue to the next instruction
     remainingInPage -= iLen;
-    if (remainingInPage == 0) break;
-    if (remainingInPage < 15) maxFetch = remainingInPage;
+    if (remainingInPage < 15) {
+      if (remainingInPage == 0) break;
+      maxFetch = remainingInPage;
+    }
     pAddr += iLen;
     fetchPtr += iLen;
 
@@ -212,7 +214,7 @@ bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy
   }
 
   return 0;
-} 
+}
 
 void BX_CPU_C::instrumentTraces(void)
 {
@@ -273,7 +275,7 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
   // iCache miss. No validated instruction with matching fetch parameters
   // is in the iCache. Or we're not compiling iCache support in, in which
   // case we always have an iCache miss.  :^)
-  bx_address remainingInPage = (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
   unsigned maxFetch = 15;
   if (remainingInPage < 15) maxFetch = remainingInPage;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
