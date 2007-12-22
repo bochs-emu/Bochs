@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.61 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.62 2007-12-22 22:02:08 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -537,6 +537,9 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
 void BX_CPU_C::IRET32(bxInstruction_c *i)
 {
+  Bit32u eip, eflags;
+  Bit16u cs;
+
   invalidate_prefetch_q();
 
 #if BX_DEBUGGER
@@ -558,8 +561,8 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     iret_protected(i);
     goto done;
   }
-
-  Bit32u eip = pop_32();
+  
+  eip = pop_32();
 
   // CS.LIMIT in real mode is 0xffff
   if (eip > 0xffff) {
@@ -567,8 +570,8 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  Bit16u cs     = pop_32() & 0xffff;
-  Bit32u eflags = pop_32();
+  cs     = pop_32() & 0xffff;
+  eflags = pop_32();
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)cs);
   EIP = eip;
