@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.162 2007-12-21 18:24:19 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.163 2007-12-22 17:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3354,9 +3354,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo64M[512*3] = {
 };
 
   unsigned
-BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *i, unsigned remain)
+BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
 {
   // remain must be at least 1
+  unsigned remain = (remainingInPage < 15) ? remainingInPage : 15;
 
   unsigned b1, b2, ilen=0, attr, lock=0;
   unsigned imm_mode, offset, rex_r = 0, rex_x = 0, rex_b = 0;

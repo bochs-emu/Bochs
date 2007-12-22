@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.192 2007-12-22 12:43:17 sshwarts Exp $
+// $Id: cpu.cc,v 1.193 2007-12-22 17:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,8 +126,6 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
   InstrICache_Increment(iCacheMisses);
 
   unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-  unsigned maxFetch = 15;
-  if (remainingInPage < 15) maxFetch = remainingInPage;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
   unsigned ret;
 
@@ -142,10 +140,10 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, i, maxFetch);
+      ret = fetchDecode64(fetchPtr, i, remainingInPage);
     else
 #endif
-      ret = fetchDecode32(fetchPtr, i, maxFetch);
+      ret = fetchDecode32(fetchPtr, i, remainingInPage);
 
     if (ret==0) {
       // Fetching instruction on segment/page boundary
@@ -168,10 +166,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
     // ... and continue to the next instruction
     remainingInPage -= iLen;
-    if (remainingInPage < 15) {
-      if (remainingInPage == 0) break;
-      maxFetch = remainingInPage;
-    }
+    if (remainingInPage == 0) break;
     pAddr += iLen;
     fetchPtr += iLen;
 
@@ -276,8 +271,6 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
   // is in the iCache. Or we're not compiling iCache support in, in which
   // case we always have an iCache miss.  :^)
   unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
-  unsigned maxFetch = 15;
-  if (remainingInPage < 15) maxFetch = remainingInPage;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
 #if BX_SUPPORT_ICACHE
@@ -288,10 +281,10 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchPtr, i, maxFetch);
+    ret = fetchDecode64(fetchPtr, i, remainingInPage);
   else
 #endif
-    ret = fetchDecode32(fetchPtr, i, maxFetch);
+    ret = fetchDecode32(fetchPtr, i, remainingInPage);
 
   if (ret==0) {
     // return iStorage and leave icache entry invalid (do not cache instr)
@@ -934,14 +927,11 @@ void BX_CPU_C::boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstru
     fetchBuffer[j] = *fetchPtr++;
   }
 #if BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
     ret = fetchDecode64(fetchBuffer, i, 15);
-  }
   else
 #endif
-  {
     ret = fetchDecode32(fetchBuffer, i, 15);
-  }
 
   if (ret==0) {
     BX_INFO(("fetchDecode #GP(0): too many instruction prefixes"));

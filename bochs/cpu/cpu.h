@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.402 2007-12-21 18:24:19 sshwarts Exp $
+// $Id: cpu.h,v 1.403 2007-12-22 17:17:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3104,9 +3104,9 @@ public: // for now...
   BX_SMF void MONITOR(bxInstruction_c *);
   BX_SMF void MWAIT(bxInstruction_c *);
 
-  BX_SMF unsigned fetchDecode32(Bit8u *, bxInstruction_c *, unsigned);
+  BX_SMF unsigned fetchDecode32(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-  BX_SMF unsigned fetchDecode64(Bit8u *, bxInstruction_c *, unsigned);
+  BX_SMF unsigned fetchDecode64(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
 #if BX_SUPPORT_TRACE_CACHE
   BX_SMF bxICacheEntry_c* fetchInstructionTrace(bxInstruction_c *, bx_address);
