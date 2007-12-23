@@ -63,6 +63,7 @@ Detailed change log :
     --cpu-level >= 4 (like in real hardware)
 
 - SF patches applied
+ [1857149] Define some IPL values by Sebastian
  [1850183] Get memory access mode in BX_INSTR_LIN_READ by Lluis Vilanova
  [1841421] pic: keep slave_pic.INT and master_pic.IRQ_in bit 2 in sync by Russ Cox
  [1841420] give segment numbers in exception logs by Russ Cox

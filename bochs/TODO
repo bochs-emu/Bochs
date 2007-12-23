@@ -26,7 +26,7 @@ Paths we can explore to get more speed :
 4.1 virtualization : plex86
 4.2 dynamic translation : qemu, patch from h.johansson
 Status:
-Some work has been done for Bochs 2.2.6 but still long way is ahead.
+Some work has been done for Bochs 2.3.6 but still long way is ahead.
 
 2. Plugin architecture
 2.1 The plugin architecture can be reworked if we want to support
