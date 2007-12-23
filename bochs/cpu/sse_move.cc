@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.72 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: sse_move.cc,v 1.73 2007-12-23 17:39:10 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -767,7 +767,6 @@ void BX_CPU_C::LDDQU_VdqMdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op);
-
 #else
   BX_INFO(("LDDQU_VdqMdq: required SSE3, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -782,7 +781,7 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
 
   bx_address rdi;
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()), 
-    mask = BX_READ_XMM_REG(i->rm());
+    mask = BX_READ_XMM_REG(i->rm()), temp;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) { 	/* 64 bit address mode */
@@ -797,12 +796,18 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
       rdi = DI;
   }
 
-  /* partial write, no data will be written to memory if mask is all 0s */
-  for(unsigned j=0; j<16; j++) 
-  {
-    if(mask.xmmubyte(j) & 0x80)
-        write_virtual_byte(BX_SEG_REG_DS, rdi+j, op.xmmubyte(j));
+  /* no data will be written to memory if mask is all 0s */
+  if ((mask.xmm64u(0) | mask.xmm64u(1)) == 0) return;
+
+  /* implement as read-modify-write for efficiency */
+  read_virtual_dqword(BX_SEG_REG_DS, rdi, (Bit8u *) &temp);
+
+  for(unsigned j=0; j<16; j++) {
+    if(mask.xmmubyte(j) & 0x80) temp.xmmubyte(j) = op.xmmubyte(j);
   }
+
+  /* and write result back to the memory */
+  write_virtual_dqword(BX_SEG_REG_DS, rdi, (Bit8u *) &temp);
 
 #else
   BX_INFO(("MASKMOVDQU_VdqUdq: required SSE2, use --enable-sse option"));
