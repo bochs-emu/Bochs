@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.69 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: arith32.cc,v 1.70 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -592,7 +592,7 @@ void BX_CPU_C::NEG_EdM(bxInstruction_c *i)
   Bit32u op1_32;
 
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
-  op1_32 = -op1_32;
+  op1_32 = (Bit32u) -op1_32;
   write_RMW_virtual_dword(op1_32);
 
   SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_NEG32);
@@ -601,7 +601,7 @@ void BX_CPU_C::NEG_EdM(bxInstruction_c *i)
 void BX_CPU_C::NEG_EdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->rm());
-  op1_32 = -op1_32;
+  op1_32 = (Bit32u) -op1_32;
   BX_WRITE_32BIT_REGZ(i->rm(), op1_32);
 
   SET_FLAGS_OSZAPC_RESULT_32(op1_32, BX_INSTR_NEG32);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.101 2007-12-21 10:33:39 sshwarts Exp $
+// $Id: paging.cc,v 1.102 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -671,8 +671,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     if (long_mode())
     {
       // Get PML4 entry
-      bx_phy_address pml4_addr = BX_CPU_THIS_PTR cr3_masked |
-                  ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36);
+      bx_phy_address pml4_addr = (bx_phy_address)(BX_CPU_THIS_PTR cr3_masked |
+                  ((laddr & BX_CONST64(0x0000ff8000000000)) >> 36));
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
 
       if (!(pml4 & 0x01)) {
@@ -702,13 +702,13 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, pml4_addr, 8, &pml4);
       }
 
-      pdpe_addr = (pml4 & BX_CONST64(0x000ffffffffff000)) |
-                ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27);
+      pdpe_addr = (bx_phy_address)((pml4 & BX_CONST64(0x000ffffffffff000)) |
+                                 ((laddr & BX_CONST64(0x0000007fc0000000)) >> 27));
     }
     else
 #endif
     {
-      pdpe_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27);
+      pdpe_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xc0000000) >> 27));
     }
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pdpe_addr, 8, &pdpe);
@@ -737,8 +737,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
       BX_PANIC(("PAE PDPE: Only 32 bit physical address space is emulated !"));
     }
 
-    bx_phy_address pde_addr = (pdpe & BX_CONST64(0x000ffffffffff000))
-                          | ((laddr & 0x3fe00000) >> 18);
+    bx_phy_address pde_addr = (bx_phy_address)((pdpe & BX_CONST64(0x000ffffffffff000))
+                          | ((laddr & 0x3fe00000) >> 18));
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 8, &pde);
 
@@ -773,7 +773,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #endif
 
       // Make up the physical page frame address.
-      ppf = (pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000);
+      ppf = (bx_phy_address)((pde & BX_CONST64(0x000fffffffe00000)) | (laddr & 0x001ff000));
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE())
@@ -805,8 +805,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
     else {
       // 4k pages, Get page table entry
-      bx_phy_address pte_addr = (pde & BX_CONST64(0x000ffffffffff000)) | 
-                             ((laddr & 0x001ff000) >> 9);
+      bx_phy_address pte_addr = (bx_phy_address)((pde & BX_CONST64(0x000ffffffffff000)) | 
+                             ((laddr & 0x001ff000) >> 9));
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
 
@@ -838,7 +838,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #endif
 
       // Make up the physical page frame address.
-      ppf = pte & BX_CONST64(0x000ffffffffff000);
+      ppf = (bx_phy_address)(pte & BX_CONST64(0x000ffffffffff000));
 
 #if BX_SUPPORT_GLOBAL_PAGES
       if (BX_CPU_THIS_PTR cr4.get_PGE())
@@ -881,7 +881,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     // CR4.PAE==0 (and EFER.LMA==0)
     Bit32u pde, pte;
 
-    bx_phy_address pde_addr = BX_CPU_THIS_PTR cr3_masked | ((laddr & 0xffc00000) >> 20);
+    bx_phy_address pde_addr = (bx_phy_address) (BX_CPU_THIS_PTR cr3_masked |
+                           ((laddr & 0xffc00000) >> 20));
 
     BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pde_addr, 4, &pde);
 
@@ -927,7 +928,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 #endif
     {
       // Get page table entry
-      bx_phy_address pte_addr = (pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10);
+      bx_phy_address pte_addr = (bx_phy_address)((pde & 0xfffff000) | ((laddr & 0x003ff000) >> 10));
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 4, &pte);
 
@@ -1045,7 +1046,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
   }
 
   bx_address lpf = LPFOf(laddr); // linear page frame
-  bx_address poffset = laddr & 0x00000fff; // physical offset
+  bx_phy_address poffset = (bx_phy_address)(laddr & 0x00000fff); // physical offset
   bx_phy_address paddress;
 
   // see if page is in the TLB first
@@ -1082,7 +1083,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 	break;
       }
     }
-    paddress = pt_address + (laddr & offset_mask);
+    paddress = pt_address + (bx_phy_address)(laddr & offset_mask);
   } 
   else   // not PAE
 #endif
@@ -1099,7 +1100,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 	break;
       }
     }
-    paddress = pt_address + (laddr & offset_mask);
+    paddress = pt_address + (bx_phy_address)(laddr & offset_mask);
   }
 
   *phy = paddress;
@@ -1217,7 +1218,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
     // Paging off.
     if ( (pageOffset + len) <= 4096 ) {
       // Access within single page.
-      BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
+      BX_CPU_THIS_PTR address_xlation.paddress1 = (bx_phy_address) laddr;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
       if (rw == BX_READ) {
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
@@ -1227,13 +1228,13 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
         bx_address lpf = LPFOf(laddr);
 
         if (tlbEntry->lpf == lpf) {
-          BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, len, data);
+          BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
         tlbEntry->lpf = lpf;
-        tlbEntry->ppf = lpf;
+        tlbEntry->ppf = (bx_phy_address) lpf;
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
             BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, A20ADDR(lpf), BX_WRITE, DATA_ACCESS);
@@ -1258,7 +1259,7 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
 #endif  // BX_SupportGuest2HostTLB
 
         // Let access fall through to the following for this iteration.
-        BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, laddr, len, data);
+        BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
       }
       else { // Write
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, laddr, len, xlate_rw);
@@ -1268,12 +1269,13 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
         bx_address lpf = LPFOf(laddr);
 
         if (tlbEntry->lpf == lpf) {
-          BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, len, data);
+          BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
           return;
         }
         // We haven't seen this page, or it's been bumped before.
 
-        tlbEntry->lpf = tlbEntry->ppf = lpf;
+        tlbEntry->lpf = lpf;
+        tlbEntry->ppf = (bx_phy_address) lpf;
         // TLB.entry[tlbIndex].ppf field not used for PG==0.
         // Request a direct write pointer so we can do either R or W.
         tlbEntry->hostPageAddr = (bx_hostpageaddr_t)
@@ -1288,18 +1290,18 @@ void BX_CPU_C::access_linear(bx_address laddr, unsigned len, unsigned curr_pl, u
           tlbEntry->accessBits = 0;
 #endif  // BX_SupportGuest2HostTLB
 
-        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, laddr, len, data);
+        BX_CPU_THIS_PTR mem->writePhysicalPage(BX_CPU_THIS, (bx_phy_address) laddr, len, data);
       }
     }
     else {
       // Access spans two pages.
-      BX_CPU_THIS_PTR address_xlation.paddress1 = laddr;
+      BX_CPU_THIS_PTR address_xlation.paddress1 = (bx_phy_address) laddr;
       BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
       BX_CPU_THIS_PTR address_xlation.len2 = len -
           BX_CPU_THIS_PTR address_xlation.len1;
       BX_CPU_THIS_PTR address_xlation.pages     = 2;
-      BX_CPU_THIS_PTR address_xlation.paddress2 = laddr +
-          BX_CPU_THIS_PTR address_xlation.len1;
+      BX_CPU_THIS_PTR address_xlation.paddress2 = (bx_phy_address) (laddr +
+          BX_CPU_THIS_PTR address_xlation.len1);
 
 #ifdef BX_LITTLE_ENDIAN
       if (rw == BX_READ) {

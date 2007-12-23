@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.2 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: bit64.cc,v 1.3 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -130,7 +130,7 @@ void BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
   bx_address op1_addr;
   Bit64u op1_64, op2_64, index;
   Bit64s displacement64;
-  Bit64u bit_i;
+  bx_bool bit_i;
 
   op2_64 = BX_READ_64BIT_REG(i->nnn());
   index = op2_64 & 0x3f;

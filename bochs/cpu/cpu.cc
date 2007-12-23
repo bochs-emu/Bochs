@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.193 2007-12-22 17:17:40 sshwarts Exp $
+// $Id: cpu.cc,v 1.194 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_address eipBiased)
 {
-  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
+  bx_phy_address pAddr = (bx_phy_address)(BX_CPU_THIS_PTR pAddrA20Page + eipBiased);
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
   bxICacheEntry_c *trace = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
@@ -839,7 +839,7 @@ void BX_CPU_C::prefetch(void)
 
   // Calculate RIP at the beginning of the page.
   bx_address eipPageOffset0 = RIP - (laddr & 0xfff);
-  BX_CPU_THIS_PTR eipPageBias = -eipPageOffset0;
+  BX_CPU_THIS_PTR eipPageBias = (bx_address) -eipPageOffset0;
   BX_CPU_THIS_PTR eipPageWindowSize = 4096;
 
   if (! Is64BitMode()) {

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.24 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: iret.cc,v 1.25 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -60,7 +60,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     if (BX_CPU_THIS_PTR tr.cache.valid==0)
       BX_PANIC(("IRET: TR not valid"));
-    Bit32u base32 = BX_CPU_THIS_PTR tr.cache.u.system.base;
+    Bit32u base32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;
 
     // examine back link selector in TSS addressed by current TR:
     access_linear(base32, 2, 0, BX_READ, &raw_link_selector);
@@ -377,13 +377,10 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   unsigned top_nbytes_same = 0; /* stop compiler warnings */
 
   if (i->os64L()) {
-    Bit64u new_rflags = 0;
-
     raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP +  8);
     new_rip         = read_virtual_qword(BX_SEG_REG_SS, temp_RSP +  0);
-    new_rflags      = read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
+    new_eflags      = (Bit32u) read_virtual_qword(BX_SEG_REG_SS, temp_RSP + 16);
 
-    new_eflags = (Bit32u) new_rflags;
     top_nbytes_outer = 40;
     ss_offset = 32;
   }

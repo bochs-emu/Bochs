@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.29 2007-12-20 20:58:38 sshwarts Exp $
+// $Id: fpu.cc,v 1.30 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -132,9 +132,9 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
     else   /* Real or V86 Mode */
     {
         Bit32u fp_ip = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fcs) << 4) +
-              (BX_CPU_THIS_PTR the_i387.fip);
+              (Bit32u)(BX_CPU_THIS_PTR the_i387.fip);
         Bit32u fp_dp = ((Bit32u)(BX_CPU_THIS_PTR the_i387.fds) << 4) +
-              (BX_CPU_THIS_PTR the_i387.fdp);
+              (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp);
 
         if (i->os32L() || i->os64L())
         {

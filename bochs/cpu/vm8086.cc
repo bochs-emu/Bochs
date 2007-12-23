@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.35 2007-12-21 21:14:48 sshwarts Exp $
+// $Id: vm8086.cc,v 1.36 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,7 +50,8 @@
 void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector,
                               Bit32u flags32)
 {
-  Bit32u temp_ESP, new_esp, esp_laddr;
+  Bit32u temp_ESP, new_esp;
+  bx_address esp_laddr;
   Bit16u raw_es_selector, raw_ds_selector, raw_fs_selector,
          raw_gs_selector, raw_ss_selector;
 

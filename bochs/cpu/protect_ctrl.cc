@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.69 2007-12-21 17:30:49 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.70 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -627,7 +627,7 @@ void BX_CPU_C::VERW_Ew(bxInstruction_c *i)
 void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR gdtr.limit;
-  Bit32u base_32  = BX_CPU_THIS_PTR gdtr.base;
+  Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR gdtr.base;
 
   write_virtual_word(i->seg(), RMAddr(i), limit_16);
   write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);
@@ -636,7 +636,7 @@ void BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 void BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 {
   Bit16u limit_16 = BX_CPU_THIS_PTR idtr.limit;
-  Bit32u base_32  = BX_CPU_THIS_PTR idtr.base;
+  Bit32u base_32  = (Bit32u) BX_CPU_THIS_PTR idtr.base;
 
   write_virtual_word(i->seg(), RMAddr(i), limit_16);
   write_virtual_dword(i->seg(), RMAddr(i)+2, base_32);

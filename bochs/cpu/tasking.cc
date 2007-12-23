@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: tasking.cc,v 1.43 2007-12-13 23:17:50 sshwarts Exp $
+// $Id: tasking.cc,v 1.44 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -176,9 +176,9 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
     new_TSS_max = 103;
   }
 
-  obase32 = BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
+  obase32 = (Bit32u) BX_CPU_THIS_PTR tr.cache.u.system.base;        // old TSS.base
   old_TSS_limit = BX_CPU_THIS_PTR tr.cache.u.system.limit_scaled;
-  nbase32 = tss_descriptor->u.system.base;                 // new TSS.base
+  nbase32 = (Bit32u) tss_descriptor->u.system.base;                 // new TSS.base
   new_TSS_limit = tss_descriptor->u.system.limit_scaled;
 
   // TSS must have valid limit, else #TS(TSS selector)
@@ -359,7 +359,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_CALL_OR_INT)
   {
     // set the new task's busy bit
-    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
+    bx_address laddr = BX_CPU_THIS_PTR gdtr.base + (tss_selector->index<<3) + 4;
     access_linear(laddr, 4, 0, BX_READ,  &dword2);
     dword2 |= 0x00000200;
     access_linear(laddr, 4, 0, BX_WRITE, &dword2);
@@ -371,7 +371,7 @@ void BX_CPU_C::task_switch(bx_selector_t *tss_selector,
   // effect on Busy bit of old task
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
-    Bit32u laddr = BX_CPU_THIS_PTR gdtr.base +
+    bx_address laddr = BX_CPU_THIS_PTR gdtr.base +
             (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
     access_linear(laddr, 4, 0, BX_READ,  &temp32);
     temp32 &= ~0x00000200;

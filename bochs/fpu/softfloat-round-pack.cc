@@ -85,7 +85,7 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
     int roundBits = absZ & 0x7F;
     absZ = (absZ + roundIncrement)>>7;
     absZ &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
-    Bit32s z = absZ;
+    Bit32s z = (Bit32s) absZ;
     if (zSign) z = -z;
     if ((absZ>>32) || (z && ((z < 0) ^ zSign))) {
         float_raise(status, float_flag_invalid);

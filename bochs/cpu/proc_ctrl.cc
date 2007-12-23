@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.192 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.193 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -335,16 +335,16 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // DR0
-      val_32 = BX_CPU_THIS_PTR dr0;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr0;
       break;
     case 1: // DR1
-      val_32 = BX_CPU_THIS_PTR dr1;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr1;
       break;
     case 2: // DR2
-      val_32 = BX_CPU_THIS_PTR dr2;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr2;
       break;
     case 3: // DR3
-      val_32 = BX_CPU_THIS_PTR dr3;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR dr3;
       break;
 
     case 4: // DR4
@@ -594,9 +594,6 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
     case 0: // CR0 (MSW)
       SetCR0(val_32);
       break;
-    case 1: /* CR1 */
-      BX_PANIC(("MOV_CdRd:CR1 not implemented yet"));
-      break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CdRd:CR2 = %08x", (unsigned) val_32));
       BX_CPU_THIS_PTR cr2 = val_32;
@@ -650,13 +647,9 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
     case 0: // CR0 (MSW)
       val_32 = BX_CPU_THIS_PTR cr0.val32;
       break;
-    case 1: /* CR1 */
-      BX_PANIC(("MOV_RdCd: CR1 not implemented yet"));
-      val_32 = 0;
-      break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RdCd: reading CR2"));
-      val_32 = BX_CPU_THIS_PTR cr2;
+      val_32 = (Bit32u) BX_CPU_THIS_PTR cr2;
       break;
     case 3: // CR3
       BX_DEBUG(("MOV_RdCd: reading CR3"));
@@ -709,10 +702,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
 
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
-      SetCR0(val_64);
-      break;
-    case 1: /* CR1 */
-      BX_PANIC(("MOV_CqRq: CR1 not implemented yet"));
+      SetCR0((Bit32u) val_64);
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", 
@@ -726,7 +716,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
           BX_PANIC(("CR3 write: Only 32 bit physical address space is emulated !"));
       }
       // Reserved bits take on value of MOV instruction
-      CR3_change(val_64);
+      CR3_change((bx_phy_address) val_64);
       BX_INSTR_TLB_CNTRL(BX_CPU_ID, BX_INSTR_MOV_CR3, val_64);
       break;
     case 4: // CR4
@@ -734,7 +724,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       //  any reserved bit of CR4
       BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", 
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
-      if (! SetCR4(val_64))
+      if (! SetCR4((Bit32u) val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
       break;
 #if BX_SUPPORT_APIC
@@ -781,10 +771,6 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
   switch (i->nnn()) {
     case 0: // CR0 (MSW)
       val_64 = BX_CPU_THIS_PTR cr0.val32;
-      break;
-    case 1: /* CR1 */
-      BX_PANIC(("MOV_RqCq: CR1 not implemented yet"));
-      val_64 = 0;
       break;
     case 2: /* CR2 */
       BX_DEBUG(("MOV_RqCq: read of CR2"));
@@ -2346,7 +2332,7 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1;  /* data/code segment */
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
-    writeEFlags(R11, EFlagsValidMask);
+    writeEFlags((Bit32u) R11, EFlagsValidMask);
 
     RIP = temp_RIP;
   }

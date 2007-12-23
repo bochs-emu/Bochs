@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith16.cc,v 1.60 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: arith16.cc,v 1.61 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -538,7 +538,7 @@ void BX_CPU_C::NEG_EwM(bxInstruction_c *i)
   Bit16u op1_16;
 
   op1_16 = read_RMW_virtual_word(i->seg(), RMAddr(i));
-  op1_16 = -op1_16;
+  op1_16 = (Bit16u) -op1_16;
   write_RMW_virtual_word(op1_16);
 
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_NEG16);
@@ -547,7 +547,7 @@ void BX_CPU_C::NEG_EwM(bxInstruction_c *i)
 void BX_CPU_C::NEG_EwR(bxInstruction_c *i)
 {
   Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
-  op1_16 = -op1_16;
+  op1_16 = (Bit16u) -op1_16;
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   SET_FLAGS_OSZAPC_RESULT_16(op1_16, BX_INSTR_NEG16);

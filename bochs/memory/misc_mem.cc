@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.106 2007-12-10 19:05:07 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.107 2007-12-23 17:21:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.106 2007-12-10 19:05:07 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.107 2007-12-23 17:21:28 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -243,7 +243,7 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
         return;
       }
     } else {
-      romaddress = (bx_phy_address)-size;
+      romaddress = (bx_phy_address)(-size);
     }
     offset = romaddress & BIOS_MASK;
     if ((romaddress & 0xf0000) < 0xf0000) {

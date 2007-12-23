@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.125 2007-12-06 22:21:40 sshwarts Exp $
+// $Id: config.cc,v 1.126 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1736,7 +1736,7 @@ static int parse_bochsrc(const char *rcfile)
   do {
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
-    int len = strlen(line);
+    size_t len = strlen(line);
     if ((len>0) && (line[len-1] < ' '))
       line[len-1] = '\0';
     if ((ret != NULL) && strlen(line)) {

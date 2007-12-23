@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.68 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: mmx.cc,v 1.69 2007-12-23 17:21:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -40,7 +40,7 @@ Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 */
   if(value < -128) return -128;
   if(value >  127) return  127;
-  return value;
+  return (Bit8s) value;
 }
 
 Bit16s BX_CPP_AttrRegparmN(1) SaturateDwordSToWordS(Bit32s value)
@@ -54,7 +54,7 @@ Bit16s BX_CPP_AttrRegparmN(1) SaturateDwordSToWordS(Bit32s value)
 */
   if(value < -32768) return -32768;
   if(value >  32767) return  32767;
-  return value;
+  return (Bit16s) value;
 }
 
 Bit8u BX_CPP_AttrRegparmN(1) SaturateWordSToByteU(Bit16s value)
@@ -67,7 +67,7 @@ Bit8u BX_CPP_AttrRegparmN(1) SaturateWordSToByteU(Bit16s value)
 */
   if(value < 0) return 0;
   if(value > 255) return 255;
-  return value;
+  return (Bit8u) value;
 }
 
 Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
@@ -81,7 +81,7 @@ Bit16u BX_CPP_AttrRegparmN(1) SaturateDwordSToWordU(Bit32s value)
 */
   if(value < 0) return 0;
   if(value > 65535) return 65535;
-  return value;
+  return (Bit16u) value;
 }
 
 void BX_CPU_C::print_state_MMX(void)
