@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.193 2007-12-20 18:12:11 vruppert Exp $
+// $Id: rombios.c,v 1.194 2007-12-23 19:46:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -175,6 +175,11 @@
 #define IPL_TABLE_ENTRIES    8
 #define IPL_COUNT_OFFSET     0x0080  /* u16: number of valid table entries */
 #define IPL_SEQUENCE_OFFSET  0x0082  /* u16: next boot device */
+#define IPL_SIZE             0xff
+#define IPL_TYPE_FLOPPY      0x01
+#define IPL_TYPE_HARDDISK    0x02
+#define IPL_TYPE_CDROM       0x03
+#define IPL_TYPE_BEV         0x80
 
   // Define the application NAME
 #if defined(BX_QEMU)
@@ -939,7 +944,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.193 $ $Date: 2007-12-20 18:12:11 $";
+static char bios_cvs_version_string[] = "$Revision: 1.194 $ $Date: 2007-12-23 19:46:27 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1882,21 +1887,21 @@ init_boot_vectors()
   Bit16u ss = get_SS();
 
   /* Clear out the IPL table. */
-  memsetb(IPL_SEG, IPL_TABLE_OFFSET, 0, 0xff);
+  memsetb(IPL_SEG, IPL_TABLE_OFFSET, 0, IPL_SIZE);
 
   /* Floppy drive */
-  e.type = 1; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
+  e.type = IPL_TYPE_FLOPPY; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
   memcpyb(IPL_SEG, IPL_TABLE_OFFSET + count * sizeof (e), ss, &e, sizeof (e));
   count++;
 
   /* First HDD */
-  e.type = 2; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
+  e.type = IPL_TYPE_HARDDISK; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
   memcpyb(IPL_SEG, IPL_TABLE_OFFSET + count * sizeof (e), ss, &e, sizeof (e));
   count++;
 
 #if BX_ELTORITO_BOOT
   /* CDROM */
-  e.type = 3; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
+  e.type = IPL_TYPE_CDROM; e.flags = 0; e.vector = 0; e.description = 0; e.reserved = 0;
   memcpyb(IPL_SEG, IPL_TABLE_OFFSET + count * sizeof (e), ss, &e, sizeof (e));
   count++;
 #endif
@@ -1934,7 +1939,7 @@ print_boot_device(type)
   Bit16u type;
 {
   /* NIC appears as type 0x80 */
-  if (type == 0x80 ) type = 0x4;
+  if (type == IPL_TYPE_BEV) type = 0x4;
   if (type == 0 || type > 0x4) BX_PANIC("Bad drive type\n"); 
   printf("Booting from %s...\n", drivetypes[type]);
 }
@@ -7783,10 +7788,10 @@ Bit16u seq_nr;
   print_boot_device(e.type);
 
   switch(e.type) {
-  case 0x01: /* FDD */
-  case 0x02: /* HDD */
+  case IPL_TYPE_FLOPPY: /* FDD */
+  case IPL_TYPE_HARDDISK: /* HDD */
 
-    bootdrv = (e.type == 0x02) ? 0x80 : 0x00;
+    bootdrv = (e.type == IPL_TYPE_HARDDISK) ? 0x80 : 0x00;
     bootseg = 0x07c0;
     status = 0;
 
@@ -7827,7 +7832,7 @@ ASM_END
 
     /* Always check the signature on a HDD boot sector; on FDD, only do
      * the check if the CMOS doesn't tell us to skip it */
-    if ((e.type != 0x01) || !((inb_cmos(0x38) & 0x01))) {
+    if ((e.type != IPL_TYPE_FLOPPY) || !((inb_cmos(0x38) & 0x01))) {
       if (read_word(bootseg,0x1fe) != 0xaa55) {
         print_boot_failure(e.type, 0);
         return;
@@ -7840,7 +7845,7 @@ ASM_END
   break;
 
 #if BX_ELTORITO_BOOT
-  case 0x03: /* CD-ROM */
+  case IPL_TYPE_CDROM: /* CD-ROM */
     status = cdrom_boot();
 
     // If failure
@@ -7858,7 +7863,7 @@ ASM_END
     break;
 #endif
 
-  case 0x80: /* Expansion ROM with a Bootstrap Entry Vector (a far pointer) */
+  case IPL_TYPE_BEV: /* Expansion ROM with a Bootstrap Entry Vector (a far pointer) */
     bootseg = e.vector >> 16;
     bootip = e.vector & 0xffff;
     break;
@@ -9982,7 +9987,7 @@ block_count_rounded:
   cmp  bx, #IPL_TABLE_ENTRIES
   je   no_bev                  ;; Get out if the table is full
   shl  bx, #0x4                ;; Turn count into offset (entries are 16 bytes)
-  mov  0[bx], #0x80            ;; This entry is a BEV device
+  mov  0[bx], #IPL_TYPE_BEV    ;; This entry is a BEV device
   mov  6[bx], cx               ;; Build a far pointer from the segment...
   mov  4[bx], ax               ;; and the offset
   cmp  di, #0x0000
