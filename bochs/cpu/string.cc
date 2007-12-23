@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.48 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: string.cc,v 1.49 2007-12-23 18:09:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1995,11 +1995,9 @@ void BX_CPU_C::REP_STOSQ_YqRAX(bxInstruction_c *i)
 // 16 bit address size
 void BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
 {
-  Bit8u al = AL;
-
   Bit16u di = DI;
 
-  write_virtual_byte(BX_SEG_REG_ES, di, al);
+  write_virtual_byte(BX_SEG_REG_ES, di, AL);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     di--;
@@ -2014,10 +2012,7 @@ void BX_CPU_C::STOSB16_YbAL(bxInstruction_c *i)
 // 32 bit address size
 void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 {
-  Bit8u al = AL;
-
   Bit32u incr = 1;
-
   Bit32u edi = EDI;
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
@@ -2026,7 +2021,7 @@ void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
    */
   if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
   {
-    Bit32u byteCount = FastRepSTOSB(i, BX_SEG_REG_ES, edi, al, ECX);
+    Bit32u byteCount = FastRepSTOSB(i, BX_SEG_REG_ES, edi, AL, ECX);
     if (byteCount) {
       // Decrement the ticks count by the number of iterations, minus
       // one, since the main cpu loop will decrement one.  Also,
@@ -2041,13 +2036,13 @@ void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
       incr = byteCount;
     }
     else {
-      write_virtual_byte(BX_SEG_REG_ES, edi, al);
+      write_virtual_byte(BX_SEG_REG_ES, edi, AL);
     }
   }
   else
 #endif
   {
-    write_virtual_byte(BX_SEG_REG_ES, edi, al);
+    write_virtual_byte(BX_SEG_REG_ES, edi, AL);
   }
 
   if (BX_CPU_THIS_PTR get_DF()) {
@@ -2065,11 +2060,9 @@ void BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
 // 64 bit address size
 void BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 {
-  Bit8u al = AL;
-
   Bit64u rdi = RDI;
 
-  write_virtual_byte(BX_SEG_REG_ES, rdi, al);
+  write_virtual_byte(BX_SEG_REG_ES, rdi, AL);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi--;
@@ -2085,10 +2078,9 @@ void BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
 /* 16 bit opsize mode, 16 bit address size */
 void BX_CPU_C::STOSW16_YwAX(bxInstruction_c *i)
 {
-  Bit16u ax = AX;
   Bit16u di = DI;
 
-  write_virtual_word(BX_SEG_REG_ES, di, ax);
+  write_virtual_word(BX_SEG_REG_ES, di, AX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     di -= 2;
@@ -2103,11 +2095,9 @@ void BX_CPU_C::STOSW16_YwAX(bxInstruction_c *i)
 /* 16 bit opsize mode, 32 bit address size */
 void BX_CPU_C::STOSW32_YwAX(bxInstruction_c *i)
 {
-  Bit16u ax = AX;
-
   Bit32u edi = EDI;
 
-  write_virtual_word(BX_SEG_REG_ES, edi, ax);
+  write_virtual_word(BX_SEG_REG_ES, edi, AX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     edi -= 2;
@@ -2124,11 +2114,9 @@ void BX_CPU_C::STOSW32_YwAX(bxInstruction_c *i)
 /* 16 bit opsize mode, 32 bit address size */
 void BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
 {
-  Bit16u ax = AX;
-
   Bit64u rdi = RDI;
 
-  write_virtual_word(BX_SEG_REG_ES, rdi, ax);
+  write_virtual_word(BX_SEG_REG_ES, rdi, AX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 2;
@@ -2144,11 +2132,9 @@ void BX_CPU_C::STOSW64_YwAX(bxInstruction_c *i)
 /* 32 bit opsize mode, 16 bit address size */
 void BX_CPU_C::STOSD16_YdEAX(bxInstruction_c *i)
 {
-  Bit32u eax = EAX;
-
   Bit16u di = DI;
 
-  write_virtual_dword(BX_SEG_REG_ES, di, eax);
+  write_virtual_dword(BX_SEG_REG_ES, di, EAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     di -= 4;
@@ -2163,10 +2149,9 @@ void BX_CPU_C::STOSD16_YdEAX(bxInstruction_c *i)
 /* 32 bit opsize mode, 32 bit address size */
 void BX_CPU_C::STOSD32_YdEAX(bxInstruction_c *i)
 {
-  Bit32u eax = EAX;
   Bit32u edi = EDI;
 
-  write_virtual_dword(BX_SEG_REG_ES, edi, eax);
+  write_virtual_dword(BX_SEG_REG_ES, edi, EAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     edi -= 4;
@@ -2184,11 +2169,9 @@ void BX_CPU_C::STOSD32_YdEAX(bxInstruction_c *i)
 /* 32 bit opsize mode, 32 bit address size */
 void BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
 {
-  Bit32u eax = EAX;
-
   Bit64u rdi = RDI;
 
-  write_virtual_dword(BX_SEG_REG_ES, rdi, eax);
+  write_virtual_dword(BX_SEG_REG_ES, rdi, EAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 4;
@@ -2203,11 +2186,9 @@ void BX_CPU_C::STOSD64_YdEAX(bxInstruction_c *i)
 /* 64 bit opsize mode, 32 bit address size */
 void BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
 {
-  Bit64u rax = RAX;
-
   Bit32u edi = EDI;
 
-  write_virtual_qword(BX_SEG_REG_ES, edi, rax);
+  write_virtual_qword(BX_SEG_REG_ES, edi, RAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     edi -= 8;
@@ -2223,10 +2204,9 @@ void BX_CPU_C::STOSQ32_YqRAX(bxInstruction_c *i)
 /* 64 bit opsize mode, 64 bit address size */
 void BX_CPU_C::STOSQ64_YqRAX(bxInstruction_c *i)
 {
-  Bit64u rax = RAX;
   Bit64u rdi = RDI;
 
-  write_virtual_qword(BX_SEG_REG_ES, rdi, rax);
+  write_virtual_qword(BX_SEG_REG_ES, rdi, RAX);
 
   if (BX_CPU_THIS_PTR get_DF()) {
     rdi -= 8;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.47 2007-12-23 17:46:44 sshwarts Exp $
+// $Id: io.cc,v 1.48 2007-12-23 18:09:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -389,12 +389,11 @@ void BX_CPU_C::INSB_YbDX(bxInstruction_c *i)
 // input word from port to string
 void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 {
-  bx_address rdi;
   Bit16u value16=0;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    rdi = RDI;
+    Bit64u rdi = RDI;
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
@@ -415,12 +414,13 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
   else
 #endif
   {
+    Bit32u edi;
     Bit32u incr = 2;
 
     if (i->as32L())
-      rdi = EDI;
+      edi = EDI;
     else
-      rdi = DI;
+      edi = DI;
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
@@ -437,7 +437,7 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
       BX_ASSERT(wordCount > 0);
 
-      wordCount = FastRepINSW(i, rdi, DX, wordCount);
+      wordCount = FastRepINSW(i, edi, DX, wordCount);
       if (wordCount)
       {
         // Decrement the ticks count by the number of iterations, minus
@@ -459,12 +459,12 @@ void BX_CPU_C::INSW_YwDX(bxInstruction_c *i)
 
     // Write a zero to memory, to trigger any segment or page
     // faults before reading from IO port.
-    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
+    write_virtual_word(BX_SEG_REG_ES, edi, value16);
 
     value16 = BX_INP(DX, 2);
 
     /* no seg override allowed */
-    write_virtual_word(BX_SEG_REG_ES, rdi, value16);
+    write_virtual_word(BX_SEG_REG_ES, edi, value16);
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
 doIncr:
@@ -493,49 +493,65 @@ void BX_CPU_C::INSD_YdDX(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  bx_address rdi;
-
-#if BX_SUPPORT_X86_64
-  if (i->as64L())
-    rdi = RDI;
-  else
-#endif
-   if (i->as32L())
-    rdi = EDI;
-  else
-    rdi =  DI;
-
-  Bit32u value32=0;
-
-  // Write a zero to memory, to trigger any segment or page
-  // faults before reading from IO port.
-  write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
-
-  value32 = BX_INP(DX, 4);
-
-  /* no seg override allowed */
-  write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
-
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u rdi = RDI;
+
+    // Write a zero to memory, to trigger any segment or page
+    // faults before reading from IO port.
+    write_virtual_dword(BX_SEG_REG_ES, rdi, 0);
+
+    Bit32u value32 = BX_INP(DX, 4);
+
+    /* no seg override allowed */
+    write_virtual_dword(BX_SEG_REG_ES, rdi, value32);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RDI -= 4;
+      rdi -= 4;
     else
-      RDI += 4;
+      rdi += 4;
+
+    RDI = rdi;
   }
   else
 #endif
   if (i->as32L()) {
+    Bit32u edi = EDI;
+
+    // Write a zero to memory, to trigger any segment or page
+    // faults before reading from IO port.
+    write_virtual_dword(BX_SEG_REG_ES, edi, 0);
+
+    Bit32u value32 = BX_INP(DX, 4);
+
+    /* no seg override allowed */
+    write_virtual_dword(BX_SEG_REG_ES, edi, value32);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RDI = EDI - 4;
+      edi -= 4;
     else
-      RDI = EDI + 4;
+      edi += 4;
+
+    RDI = edi;
   }
   else {
+    Bit16u di = DI;
+
+    // Write a zero to memory, to trigger any segment or page
+    // faults before reading from IO port.
+    write_virtual_dword(BX_SEG_REG_ES, di, 0);
+
+    Bit32u value32 = BX_INP(DX, 4);
+
+    /* no seg override allowed */
+    write_virtual_dword(BX_SEG_REG_ES, di, value32);
+
     if (BX_CPU_THIS_PTR get_DF())
-      DI -= 4;
+      di -= 4;
     else
-      DI += 4;
+      di += 4;
+
+    DI = di;
   }
 }
 
@@ -564,65 +580,70 @@ void BX_CPU_C::REP_OUTSD_DXXd(bxInstruction_c *i)
 
 void BX_CPU_C::OUTSB_DXXb(bxInstruction_c *i)
 {
-  Bit8u value8;
-  bx_address esi;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 1)) {
     BX_DEBUG(("OUTSB_DXXb: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-#if BX_SUPPORT_X86_64
-  if (i->as64L())
-    esi = RSI;
-  else
-#endif
-  if (i->as32L())
-    esi = ESI;
-  else
-    esi = SI;
-
-  value8 = read_virtual_byte(i->seg(), esi);
-
-  BX_OUTP(DX, value8, 1);
+  Bit8u value8;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u rsi = RSI;
+
+    value8 = read_virtual_byte(i->seg(), rsi);
+    BX_OUTP(DX, value8, 1);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RSI--;
+      rsi--;
     else
-      RSI++;
+      rsi++;
+
+    RSI = rsi;
   }
   else
 #endif
   if (i->as32L()) {
+    Bit32u esi = ESI;
+
+    value8 = read_virtual_byte(i->seg(), esi);
+    BX_OUTP(DX, value8, 1);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RSI = ESI-1;
+      esi--;
     else
-      RSI = ESI+1;
+      esi++;
+
+    RSI = esi;
   }
   else {
+    Bit16u si = SI;
+
+    value8 = read_virtual_byte(i->seg(), si);
+    BX_OUTP(DX, value8, 1);
+
     if (BX_CPU_THIS_PTR get_DF())
-      SI--;
+      si--;
     else
-      SI++;
+      si++;
+
+    SI = si;
   }
 }
 
 // output word string to port
 void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
 {
-  bx_address rsi;
-  Bit16u value16;
-
   if (! BX_CPU_THIS_PTR allow_io(DX, 2)) {
     BX_DEBUG(("OUTSW_DXXw: I/O access not allowed !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
+  Bit16u value16;
+
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
-    rsi = RSI;
+    Bit64u rsi = RSI;
 
     value16 = read_virtual_word(i->seg(), rsi);
     BX_OUTP(DX, value16, 2);
@@ -637,12 +658,13 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
   else
 #endif
   {
+    Bit32u esi;
     Bit32u incr = 2;
   
     if (i->as32L())
-      rsi = ESI;
+      esi = ESI;
     else
-      rsi =  SI;
+      esi =  SI;
 
 #if (BX_SupportRepeatSpeedups) && (BX_DEBUGGER == 0)
     /* If conditions are right, we can transfer IO to physical memory
@@ -656,7 +678,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
       else
         wordCount =  CX;
 
-      wordCount = FastRepOUTSW(i, i->seg(), rsi, DX, wordCount);
+      wordCount = FastRepOUTSW(i, i->seg(), esi, DX, wordCount);
       if (wordCount) {
         // Decrement eCX.  Note, the main loop will decrement 1 also, so
         // decrement by one less than expected, like the case above.
@@ -669,14 +691,14 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
         incr = wordCount << 1; // count * 2.
       }
       else {
-        value16 = read_virtual_word(i->seg(), rsi);
+        value16 = read_virtual_word(i->seg(), esi);
         BX_OUTP(DX, value16, 2);
       }
     }
     else
 #endif
     {
-      value16 = read_virtual_word(i->seg(), rsi);
+      value16 = read_virtual_word(i->seg(), esi);
       BX_OUTP(DX, value16, 2);
     }
 
@@ -703,41 +725,49 @@ void BX_CPU_C::OUTSD_DXXd(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  bx_address rsi;
-
-#if BX_SUPPORT_X86_64
-  if (i->as64L())
-    rsi = RSI;
-  else
-#endif
-  if (i->as32L())
-    rsi = ESI;
-  else
-    rsi =  SI;
-
-  Bit32u value32 = read_virtual_dword(i->seg(), rsi);
-  BX_OUTP(DX, value32, 4);
+  Bit32u value32;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) {
+    Bit64u rsi = RSI;
+
+    value32 = read_virtual_dword(i->seg(), rsi);
+    BX_OUTP(DX, value32, 4);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RSI = RSI - 4;
+      rsi -= 4;
     else
-      RSI = RSI + 4;
+      rsi += 4;
+
+    RSI = rsi;
   }
   else
 #endif
   if (i->as32L()) {
+    Bit32u esi = ESI;
+
+    value32 = read_virtual_dword(i->seg(), esi);
+    BX_OUTP(DX, value32, 4);
+
     if (BX_CPU_THIS_PTR get_DF())
-      RSI = ESI - 4;
+      esi -= 4;
     else
-      RSI = ESI + 4;
+      esi += 4;
+
+    RSI = esi;
   }
   else {
+    Bit16u si = SI;
+
+    value32 = read_virtual_dword(i->seg(), si);
+    BX_OUTP(DX, value32, 4);
+
     if (BX_CPU_THIS_PTR get_DF())
-      SI = SI - 4;
+      si -= 4;
     else
-      SI = SI + 4;
+      si += 4;
+
+    SI = si;
   }
 }
 
