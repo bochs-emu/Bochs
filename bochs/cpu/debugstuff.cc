@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.86 2007-11-24 14:22:33 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.87 2007-12-25 21:42:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,8 +32,12 @@
 
 
 #if BX_DISASM
+
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
+#if BX_DEBUGGER
+  bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
+#else
   bx_phy_address phy_addr;
   Bit8u   instr_buf[16];
   char    char_buf[512];
@@ -73,7 +77,9 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   else {
     BX_INFO(("(instruction unavailable) page not present"));
   }
+#endif  // #if BX_DEBUGGER
 }
+
 #endif  // #if BX_DISASM
 
 const char* cpu_mode_string(unsigned cpu_mode)
