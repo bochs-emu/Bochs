@@ -7,17 +7,20 @@
  <!--content starts here-->
  <img src="images/logo.gif" alt="A Window, Tux, and the BSD Daemon" width="160" height="175" align="right">
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3.5</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Latest release:</b> Bochs 2.3.6</font><BR><BR>
 
-About a year after the last stable one we have a new intermediate (bugfix+) release.
-Here is the list of changes since version 2.3:
+Version 2.3.6 is an intermediate (bugfix+) release. It includes a lot of bugfixes
+and a few new features.<BR>
+Here is a brief summary of changes :
 <ul>
-<li> Critical problems fixed for x86-64 support in CPU and Bochs internal debugger
-<li> ACPI support
-<li> The release compiled with x86-64 and ACPI
-<li> Hard disk emulation supports ATA-6 (LBA48 addressing, UDMA modes)
-<li> Added emulation of Intel SSE4.1 instruction set
-<li> Lots of bugfixes
+<li>More than 25% emulation speedup vs Bochs 2.3.5 release!<br>
+Thanks to Darek Mihocka (http://www.emulators.com)<br>
+for providing patches and ideas that made the speedup possible!<br>
+		      
+<li>Up to 40% speedup vs Bochs 2.3.5 release with trace cache optimization!
+<li>Lots of bugfixes in CPU emulation
+<li>Bochs benchmarking support
+<li>Added emulation of Intel SSE4.2 instruction set
 </ul>
 
 The binary packages for Linux and Windows are built with these featues :
@@ -30,28 +33,27 @@ The binary packages for Linux and Windows are built with these featues :
 </ul>
 
 <BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_5_FINAL">
-Details on what has changed since version 2.3
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_6_FINAL">
+Details on what has changed since version 2.3.5
 </a>
 
 <BR/><BR/>
 
- <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3</font><BR><BR>
+ <BR><font face="arial, helvetica" color="#1e029a" size="4"><b>Previous release:</b> Bochs 2.3.5</font><BR><BR>
 
-About seven months after the last intermediate one we have a new stable release.
-Here is the list of changes since version 2.2.6:
+About a year after the last stable one we have a new intermediate (bugfix+) release.
+Here is the list of changes since version 2.3:
 <ul>
-<li> limited save/restore support added (config + log options, hardware state)
-<li> configuration parameter handling rewritten to a parameter tree
-<li> lots of cpu and internal debugger fixes
-<li> hard disk geometry autodetection now supported by most of the image types
-<li> hard disk emulation now supports ATA-3 (multiple sector transfers)
-<li> VBE memory size increased to 8MB and several VGA/VBE fixes
-<li> updated LGPL'd VGABIOS to version 0.6a
+<li> Critical problems fixed for x86-64 support in CPU and Bochs internal debugger
+<li> ACPI support
+<li> The release compiled with x86-64 and ACPI
+<li> Hard disk emulation supports ATA-6 (LBA48 addressing, UDMA modes)
+<li> Added emulation of Intel SSE4.1 instruction set
+<li> Lots of bugfixes
 </ul>
 <BR/>
-<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_FINAL">
-Details on what has changed since version 2.2.6
+<a href="http://bochs.cvs.sourceforge.net/bochs/bochs/CHANGES?view=markup&content-type=text/vnd.viewcvs-markup&revision=REL_2_3_5_FINAL">
+Details on what has changed since version 2.3
 </a>
 
 
@@ -60,7 +62,8 @@ Details on what has changed since version 2.2.6
 The latest release of Bochs is available in these file formats :<BR>
 <ul>
 <li> Win32 binary NSIS installer package (EXE)
-<li> SMP binary for win32 (ZIP) - Bochs installation is required
+<li> Win32 binary with P4 CPU support (ZIP) - Bochs installation is required
+<li> Win32 binary with P4 + SMP support (ZIP) - Bochs installation is required
 <li> Linux binary RPM
 <li> Platform independant source package (TAR.GZ)
 <li> Win32 specific source package prepared for MSVC (ZIP)
