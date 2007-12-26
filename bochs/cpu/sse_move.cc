@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.73 2007-12-23 17:39:10 sshwarts Exp $
+// $Id: sse_move.cc,v 1.74 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -146,8 +146,8 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   else
 #endif
   {
-    xmm.xmm32u(2) = (BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
-    xmm.xmm32u(3) = (BX_CPU_THIS_PTR the_i387.fcs);
+    xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+    xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
   }
  
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
@@ -170,8 +170,8 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   else
 #endif
   {
-    xmm.xmm32u(0) = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
-    xmm.xmm32u(1) = (BX_CPU_THIS_PTR the_i387.fds);
+    xmm.xmm32u(0) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
+    xmm.xmm32u(1) =         (BX_CPU_THIS_PTR the_i387.fds);
   }
 
 #if BX_SUPPORT_SSE >= 1

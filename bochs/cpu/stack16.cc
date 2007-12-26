@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.29 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: stack16.cc,v 1.30 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -80,7 +80,6 @@ void BX_CPU_C::POP16_DS(bxInstruction_c *i)
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS], ds);
 
   BX_CPU_THIS_PTR speculative_rsp = 0;
-
 }
 
 void BX_CPU_C::POP16_ES(bxInstruction_c *i)

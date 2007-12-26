@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mmx.cc,v 1.69 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: mmx.cc,v 1.70 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -2417,7 +2417,7 @@ void BX_CPU_C::PSADBW_PqQq(bxInstruction_c *i)
   temp += abs(MMXUB6(op1) - MMXUB6(op2));
   temp += abs(MMXUB7(op1) - MMXUB7(op2));
 
-  MMXUW0(op1) = (Bit64u) temp;
+  MMXUQ(op1) = (Bit64u) temp;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->nnn(), op1);

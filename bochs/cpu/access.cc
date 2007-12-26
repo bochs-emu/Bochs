@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: access.cc,v 1.86 2007-12-21 10:33:39 sshwarts Exp $
+// $Id: access.cc,v 1.87 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -337,7 +337,7 @@ int BX_CPU_C::int_number(bx_segment_reg_t *seg)
   Bit8u* BX_CPP_AttrRegparmN(2) 
 BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
 {
-  Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
@@ -345,7 +345,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
     // from this CPL.
     if (tlbEntry->accessBits & (1<<curr_pl)) { // Read this pl OK.
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = laddr & 0xfff;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
       return hostAddr;
     }
@@ -357,7 +357,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, unsigned curr_pl)
   Bit8u* BX_CPP_AttrRegparmN(2) 
 BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
 {
-  Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf)
@@ -366,7 +366,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
     // from this CPL.
     if (tlbEntry->accessBits & (0x10 << curr_pl)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = laddr & 0xfff;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -382,7 +382,7 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, unsigned curr_pl)
 BX_CPU_C::v2h_read(bx_address laddr, unsigned curr_pl, unsigned len)
 {
   // Make sure access does not span 2 pages.
-  Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, len);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf) {
@@ -390,7 +390,7 @@ BX_CPU_C::v2h_read(bx_address laddr, unsigned curr_pl, unsigned len)
     // from this CPL.
     if (tlbEntry->accessBits & (1<<curr_pl)) { // Read this pl OK.
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = laddr & 0xfff;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
       return hostAddr;
     }
@@ -403,7 +403,7 @@ BX_CPU_C::v2h_read(bx_address laddr, unsigned curr_pl, unsigned len)
 BX_CPU_C::v2h_write(bx_address laddr, unsigned curr_pl, unsigned len)
 {
   // Make sure access does not span 2 pages.
-  Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, len);
+  unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, len);
   bx_address lpf = LPFOf(laddr);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
   if (tlbEntry->lpf == lpf)
@@ -412,7 +412,7 @@ BX_CPU_C::v2h_write(bx_address laddr, unsigned curr_pl, unsigned len)
     // from this CPL.
     if (tlbEntry->accessBits & (0x10 << curr_pl)) {
       bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-      Bit32u pageOffset = laddr & 0xfff;
+      Bit32u pageOffset = PAGE_OFFSET(laddr);
       Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
       pageWriteStampTable.decWriteStamp(tlbEntry->ppf);
@@ -436,7 +436,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_WRITE);
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -444,7 +444,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_WRITE);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -492,7 +492,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -500,7 +500,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_WRITE);
         Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -548,7 +548,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -556,7 +556,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_WRITE);
         Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -604,7 +604,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -612,7 +612,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_WRITE);
         Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -653,7 +653,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_READ);
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -661,7 +661,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_READ);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
         data = *hostAddr;
@@ -707,7 +707,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -715,7 +715,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_READ);
         Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
         ReadHostWordFromLittleEndian(hostAddr, data);
@@ -761,7 +761,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -769,7 +769,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_READ);
         Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
         ReadHostDWordFromLittleEndian(hostAddr, data);
@@ -815,7 +815,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -823,7 +823,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (1<<CPL)) { // Read this pl OK.
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_READ);
         Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
         ReadHostQWordFromLittleEndian(hostAddr, data);
@@ -866,7 +866,7 @@ accessOK:
     laddr = BX_CPU_THIS_PTR get_segment_base(s) + offset;
     BX_INSTR_MEM_DATA(BX_CPU_ID, laddr, 1, BX_RW);
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 0);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -874,7 +874,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 1, BX_RW);
         Bit8u *hostAddr = (Bit8u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -926,7 +926,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 1);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -934,7 +934,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 2, BX_RW);
         Bit16u *hostAddr = (Bit16u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -984,7 +984,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 3);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -992,7 +992,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 4, BX_RW);
         Bit32u *hostAddr = (Bit32u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE
@@ -1042,7 +1042,7 @@ accessOK:
     }
 #endif
 #if BX_SupportGuest2HostTLB
-    Bit32u tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
+    unsigned tlbIndex = BX_TLB_INDEX_OF(laddr, 7);
     bx_address lpf = LPFOf(laddr);
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[tlbIndex];
     if (tlbEntry->lpf == lpf) {
@@ -1050,7 +1050,7 @@ accessOK:
       // from this CPL.
       if (tlbEntry->accessBits & (0x10 << CPL)) {
         bx_hostpageaddr_t hostPageAddr = tlbEntry->hostPageAddr;
-        Bit32u pageOffset = laddr & 0xfff;
+        Bit32u pageOffset = PAGE_OFFSET(laddr);
         BX_INSTR_LIN_ACCESS(BX_CPU_ID, laddr, tlbEntry->ppf | pageOffset, 8, BX_RW);
         Bit64u *hostAddr = (Bit64u*) (hostPageAddr | pageOffset);
 #if BX_SUPPORT_ICACHE

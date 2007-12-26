@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.87 2007-12-25 21:42:38 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.88 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -45,7 +45,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 
   static char letters[] = "0123456789ABCDEF";
   static disassembler bx_disassemble;
-  unsigned remainsInPage = 0x1000 - (offset & 0xfff);
+  unsigned remainsInPage = 0x1000 - PAGE_OFFSET(offset);
 
   bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset, &phy_addr);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.23 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: mult64.cc,v 1.24 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -48,10 +48,10 @@ void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
 
   int i,j,k;
 
-  op_1[0] = op1 & 0xffffffff;
-  op_1[1] = op1 >> 32;
-  op_2[0] = op2 & 0xffffffff;
-  op_2[1] = op2 >> 32;
+  op_1[0] = (Bit32u)(op1 & 0xffffffff);
+  op_1[1] = (Bit32u)(op1 >> 32);
+  op_2[0] = (Bit32u)(op2 & 0xffffffff);
+  op_2[1] = (Bit32u)(op2 >> 32);
 
   for (i = 0; i < 4; i++) result[i] = 0;
 
@@ -59,10 +59,10 @@ void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
     for (j = 0; j < 2; j++) {
       nn = (Bit64u) op_1[i] * (Bit64u) op_2[j];
       k = i + j;
-      c = partial_add(&result[k++],nn & 0xffffffff);
-      c = partial_add(&result[k++],(nn >> 32) + c);
+      c = partial_add(&result[k++], (Bit32u)(nn & 0xffffffff));
+      c = partial_add(&result[k++], (Bit32u)(nn >> 32) + c);
       while (k < 4 && c != 0) {
-        c = partial_add(&result[k++],c);
+        c = partial_add(&result[k++], c);
       }
     }
   }

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.25 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: iret.cc,v 1.26 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -451,7 +451,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     /* load CS:EIP from stack */
     /* load CS-cache with new code segment descriptor */
-    branch_far32(&cs_selector, &cs_descriptor, new_rip, CPL);
+    branch_far32(&cs_selector, &cs_descriptor, (Bit32u) new_rip, CPL);
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |

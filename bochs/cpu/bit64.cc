@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.3 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: bit64.cc,v 1.4 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -312,11 +312,9 @@ void BX_CPU_C::BTR_EqIbM(bxInstruction_c *i)
 
 void BX_CPU_C::BTR_EqIbR(bxInstruction_c *i)
 {
-  Bit64u op1_64;
-
   Bit8u op2_8 = i->Ib() & 0x3f;
 
-  op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
   bx_bool temp_CF = (op1_64 >> op2_8) & 0x01;
   op1_64 &= ~(((Bit64u) 1) << op2_8);
   BX_WRITE_64BIT_REG(i->rm(), op1_64);

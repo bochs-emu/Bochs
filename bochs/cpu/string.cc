@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.49 2007-12-23 18:09:34 sshwarts Exp $
+// $Id: string.cc,v 1.50 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -108,14 +108,14 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
-    bytesFitSrc = 1 + (laddrSrc & 0xfff);
-    bytesFitDst = 1 + (laddrDst & 0xfff);
+    bytesFitSrc = 1 + PAGE_OFFSET(laddrSrc);
+    bytesFitDst = 1 + PAGE_OFFSET(laddrDst);
     pointerDelta = (signed int) -1;
   }
   else {
     // Counting upward.
-    bytesFitSrc = (0x1000 - (laddrSrc & 0xfff));
-    bytesFitDst = (0x1000 - (laddrDst & 0xfff));
+    bytesFitSrc = 0x1000 - PAGE_OFFSET(laddrSrc);
+    bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
     pointerDelta = (signed int)  1;
   }
 
@@ -257,14 +257,14 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
     // Note: 1st word must not cross page boundary.
     if (((laddrSrc & 0xfff) > 0xffe) || ((laddrDst & 0xfff) > 0xffe))
        return 0;
-    wordsFitSrc = (2 + (laddrSrc & 0xfff)) >> 1;
-    wordsFitDst = (2 + (laddrDst & 0xfff)) >> 1;
+    wordsFitSrc = (2 + PAGE_OFFSET(laddrSrc)) >> 1;
+    wordsFitDst = (2 + PAGE_OFFSET(laddrDst)) >> 1;
     pointerDelta = (signed int) -2;
   }
   else {
     // Counting upward.
-    wordsFitSrc = (0x1000 - (laddrSrc & 0xfff)) >> 1;
-    wordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 1;
+    wordsFitSrc = (0x1000 - PAGE_OFFSET(laddrSrc)) >> 1;
+    wordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 1;
     pointerDelta = (signed int)  2;
   }
 
@@ -407,14 +407,14 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
     // Note: 1st dword must not cross page boundary.
     if (((laddrSrc & 0xfff) > 0xffc) || ((laddrDst & 0xfff) > 0xffc))
       return 0;    
-    dwordsFitSrc = (4 + (laddrSrc & 0xfff)) >> 2;
-    dwordsFitDst = (4 + (laddrDst & 0xfff)) >> 2;
+    dwordsFitSrc = (4 + PAGE_OFFSET(laddrSrc)) >> 2;
+    dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int) -4;
   }
   else {
     // Counting upward.
-    dwordsFitSrc = (0x1000 - (laddrSrc & 0xfff)) >> 2;
-    dwordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 2;
+    dwordsFitSrc = (0x1000 - PAGE_OFFSET(laddrSrc)) >> 2;
+    dwordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int)  4;
   }
 
@@ -525,12 +525,12 @@ Bit32u BX_CPU_C::FastRepSTOSB(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   // See how many bytes can fit in the rest of this page.
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
-    bytesFitDst = 1 + (laddrDst & 0xfff);
+    bytesFitDst = 1 + PAGE_OFFSET(laddrDst);
     pointerDelta = (signed int) -1;
   }
   else {
     // Counting upward.
-    bytesFitDst = (0x1000 - (laddrDst & 0xfff));
+    bytesFitDst = 0x1000 - PAGE_OFFSET(laddrDst);
     pointerDelta = (signed int)  1;
   }
 
@@ -627,12 +627,12 @@ Bit32u BX_CPU_C::FastRepSTOSW(bxInstruction_c *i, unsigned dstSeg, bx_address ds
     // Counting downward.
     // Note: 1st word must not cross page boundary.
     if ((laddrDst & 0xfff) > 0xffe) return 0;
-    wordsFitDst = (2 + (laddrDst & 0xfff)) >> 1;
+    wordsFitDst = (2 + PAGE_OFFSET(laddrDst)) >> 1;
     pointerDelta = (signed int) -2;
   }
   else {
     // Counting upward.
-    wordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 1;
+    wordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 1;
     pointerDelta = (signed int)  2;
   }
 
@@ -730,12 +730,12 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
     if ((laddrDst & 0xfff) > 0xffc) return 0;    
-    dwordsFitDst = (4 + (laddrDst & 0xfff)) >> 2;
+    dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int) -4;
   }
   else {
     // Counting upward.
-    dwordsFitDst = (0x1000 - (laddrDst & 0xfff)) >> 2;
+    dwordsFitDst = (0x1000 - PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int)  4;
   }
 

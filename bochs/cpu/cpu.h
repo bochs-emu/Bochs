@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.403 2007-12-22 17:17:40 sshwarts Exp $
+// $Id: cpu.h,v 1.404 2007-12-26 23:07:44 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1261,6 +1261,8 @@ public: // for now...
 #endif
 
 #endif  // #if BX_USE_TLB
+
+#define PAGE_OFFSET(laddr) ((Bit32u)(laddr) & 0xfff)
 
   // An instruction cache.  Each entry should be exactly 32 bytes, and
   // this structure should be aligned on a 32-byte boundary to be friendly
