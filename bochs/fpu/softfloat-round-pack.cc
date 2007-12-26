@@ -82,7 +82,7 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status)
             }
         }
     }
-    int roundBits = absZ & 0x7F;
+    int roundBits = (int)(absZ & 0x7F);
     absZ = (absZ + roundIncrement)>>7;
     absZ &= ~(((roundBits ^ 0x40) == 0) & roundNearestEven);
     Bit32s z = (Bit32s) absZ;
@@ -295,7 +295,7 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
             }
         }
     }
-    roundBits = zSig & 0x3FF;
+    roundBits = (Bit16s)(zSig & 0x3FF);
     if (0x7FD <= (Bit16u) zExp) {
         if ((0x7FD < zExp)
              || ((zExp == 0x7FD)
@@ -308,7 +308,7 @@ float64 roundAndPackFloat64(int zSign, Bit16s zExp, Bit64u zSig, float_status_t 
             int isTiny = (zExp < -1) || (zSig + roundIncrement < BX_CONST64(0x8000000000000000));
             shift64RightJamming(zSig, -zExp, &zSig);
             zExp = 0;
-            roundBits = zSig & 0x3FF;
+            roundBits = (Bit16s)(zSig & 0x3FF);
             if (isTiny && roundBits) {
                 float_raise(status, float_flag_underflow);
                 if(get_flush_underflow_to_zero(status)) {

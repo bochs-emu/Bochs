@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pc_system.h,v 1.42 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: pc_system.h,v 1.43 2007-12-26 18:39:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -156,7 +156,7 @@ public:
   // when A20 line is disabled, mask physical memory addresses to:
   //    286:      20 bits
   //    386:      20 bits
-  Bit32u  a20_mask;
+  bx_phy_address a20_mask;
 
   volatile bx_bool kill_bochs_request;
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_load_store.cc,v 1.14 2007-12-20 20:58:38 sshwarts Exp $
+// $Id: fpu_load_store.cc,v 1.15 2007-12-26 18:39:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -231,7 +231,7 @@ void BX_CPU_C::FBLD_PACKED_BCD(bxInstruction_c *i)
   }
 
   // read packed bcd from memory
-  Bit16u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
+  Bit64u lo8 = read_virtual_qword(i->seg(), RMAddr(i));
   Bit16u hi2 = read_virtual_word (i->seg(), RMAddr(i) + 8);
 
   Bit64s scale = 1; 

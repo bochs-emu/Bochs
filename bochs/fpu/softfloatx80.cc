@@ -199,7 +199,7 @@ floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status)
 
     int shiftCount = 0x403E - bExp;
     bSig >>= shiftCount;
-    Bit32s scale = bSig;
+    Bit32s scale = (Bit32s) bSig;
     if (bSign) scale = -scale; /* -32768..32767 */
     return
         roundAndPackFloatx80(80, aSign, aExp+scale, aSig, 0, status);

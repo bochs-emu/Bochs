@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.218 2007-12-20 18:32:14 sshwarts Exp $
+// $Id: bochs.h,v 1.219 2007-12-26 18:39:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -193,9 +193,9 @@ void print_tree(bx_param_c *node, int level = 0);
 #define BX_GET_ENABLE_A20()         bx_pc_system.get_enable_a20()
 
 #if BX_SUPPORT_A20
-#  define A20ADDR(x)                ((x) & bx_pc_system.a20_mask)
+#  define A20ADDR(x)                ((bx_phy_address)(x) & bx_pc_system.a20_mask)
 #else
-#  define A20ADDR(x)                (x)
+#  define A20ADDR(x)                ((bx_phy_address)(x))
 #endif
 
 #if BX_SUPPORT_SMP

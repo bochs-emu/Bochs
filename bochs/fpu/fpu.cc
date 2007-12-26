@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.30 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: fpu.cc,v 1.31 2007-12-26 18:39:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -95,12 +95,12 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_dword(i->seg(), RMAddr(i) + 0x04, tmp);
             tmp = 0xffff0000 | BX_CPU_THIS_PTR the_i387.get_tag_word();
             write_virtual_dword(i->seg(), RMAddr(i) + 0x08, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
+            tmp = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
             write_virtual_dword(i->seg(), RMAddr(i) + 0x0c, tmp);
             tmp  = (BX_CPU_THIS_PTR the_i387.fcs & 0xffff) |
                           ((Bit32u)(BX_CPU_THIS_PTR the_i387.foo)) << 16;
             write_virtual_dword(i->seg(), RMAddr(i) + 0x10, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
+            tmp = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
             write_virtual_dword(i->seg(), RMAddr(i) + 0x14, tmp);
             tmp = 0xffff0000 | (BX_CPU_THIS_PTR the_i387.fds);
             write_virtual_dword(i->seg(), RMAddr(i) + 0x18, tmp);
@@ -117,11 +117,11 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
             write_virtual_word(i->seg(), RMAddr(i) + 0x02, tmp);
             tmp = BX_CPU_THIS_PTR the_i387.get_tag_word();
             write_virtual_word(i->seg(), RMAddr(i) + 0x04, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fip) & 0xffff;
+            tmp = (Bit16u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffff;
             write_virtual_word(i->seg(), RMAddr(i) + 0x06, tmp);
             tmp = (BX_CPU_THIS_PTR the_i387.fcs);
             write_virtual_word(i->seg(), RMAddr(i) + 0x08, tmp);
-            tmp = (BX_CPU_THIS_PTR the_i387.fdp) & 0xffff;
+            tmp = (Bit16u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffff;
             write_virtual_word(i->seg(), RMAddr(i) + 0x0a, tmp);
             tmp = (BX_CPU_THIS_PTR the_i387.fds);
             write_virtual_word(i->seg(), RMAddr(i) + 0x0c, tmp);
@@ -511,11 +511,11 @@ void BX_CPU_C::print_state_FPU()
   fprintf(stderr, "tag word:     0x%04x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.foo;
   fprintf(stderr, "operand:      0x%04x\n", reg);
-  reg = BX_CPU_THIS_PTR the_i387.fip & 0xffffffff;
+  reg = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
   fprintf(stderr, "fip:          0x%08x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.fcs;
   fprintf(stderr, "fcs:          0x%04x\n", reg);
-  reg = BX_CPU_THIS_PTR the_i387.fdp & 0xffffffff;
+  reg = (Bit32u)(BX_CPU_THIS_PTR the_i387.fdp) & 0xffffffff;
   fprintf(stderr, "fdp:          0x%08x\n", reg);
   reg = BX_CPU_THIS_PTR the_i387.fds;
   fprintf(stderr, "fds:          0x%04x\n", reg);

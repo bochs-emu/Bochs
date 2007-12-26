@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.144 2007-10-24 23:16:41 sshwarts Exp $
+// $Id: vga.cc,v 1.145 2007-12-26 18:39:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -122,7 +122,7 @@ bx_vga_c::~bx_vga_c()
 
 void bx_vga_c::init(void)
 {
-  unsigned i,len,string_i;
+  unsigned i,string_i;
   unsigned x,y;
 #if BX_SUPPORT_VBE  
   Bit16u max_xres, max_yres, max_bpp;
@@ -132,6 +132,7 @@ void bx_vga_c::init(void)
   char *ptr;
   char string[512];
   char *extname;
+  size_t len;
 #if BX_SUPPORT_VBE  
   unsigned addr;
 #endif

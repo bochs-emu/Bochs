@@ -99,7 +99,7 @@ float32 int64_to_float32(Bit64s a, float_status_t &status)
     Bit64u absA = zSign ? -a : a;
     int shiftCount = countLeadingZeros64(absA) - 40;
     if (0 <= shiftCount) {
-        return packFloat32(zSign, 0x95 - shiftCount, absA<<shiftCount);
+        return packFloat32(zSign, 0x95 - shiftCount, (Bit32u)(absA<<shiftCount));
     }
     else {
         shiftCount += 7;
@@ -109,7 +109,7 @@ float32 int64_to_float32(Bit64s a, float_status_t &status)
         else {
             absA <<= shiftCount;
         }
-        return roundAndPackFloat32(zSign, 0x9C - shiftCount, absA, status);
+        return roundAndPackFloat32(zSign, 0x9C - shiftCount, (Bit32u) absA, status);
     }
 }
 
@@ -1641,7 +1641,7 @@ float64 float64_sqrt(float64 a, float_status_t &status)
     }
     zExp = ((aExp - 0x3FF)>>1) + 0x3FE;
     aSig |= BX_CONST64(0x0010000000000000);
-    zSig = estimateSqrt32(aExp, aSig>>21);
+    zSig = estimateSqrt32(aExp, (Bit32u)(aSig>>21));
     aSig <<= 9 - (aExp & 1);
     zSig = estimateDiv128To64(aSig, 0, zSig<<32) + (zSig<<30);
     if ((zSig & 0x1FF) <= 5) {
