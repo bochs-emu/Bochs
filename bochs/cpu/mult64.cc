@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.24 2007-12-26 23:07:44 sshwarts Exp $
+// $Id: mult64.cc,v 1.25 2007-12-30 17:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
 void long_neg(Bit128s *n)
 {
   Bit64u t = n->lo;
-  n->lo = (Bit64u) -n->lo;
+  n->lo = - (Bit64s)(n->lo);
   if (t - 1 > t) --n->hi;
   n->hi = ~n->hi;
 }

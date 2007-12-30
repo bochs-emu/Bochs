@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith64.cc,v 1.46 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: arith64.cc,v 1.47 2007-12-30 17:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -571,7 +571,7 @@ void BX_CPU_C::NEG_EqM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_64 = read_RMW_virtual_qword(i->seg(), RMAddr(i));
-  op1_64 = (Bit64u) -op1_64;
+  op1_64 = - (Bit64s)(op1_64);
   write_RMW_virtual_qword(op1_64);
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_NEG64);
@@ -580,7 +580,7 @@ void BX_CPU_C::NEG_EqM(bxInstruction_c *i)
 void BX_CPU_C::NEG_EqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
-  op1_64 = (Bit64u) -op1_64;
+  op1_64 = - (Bit64s)(op1_64);
   BX_WRITE_64BIT_REG(i->rm(), op1_64);
 
   SET_FLAGS_OSZAPC_RESULT_64(op1_64, BX_INSTR_NEG64);

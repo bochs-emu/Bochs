@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith8.cc,v 1.51 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: arith8.cc,v 1.52 2007-12-30 17:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -509,7 +509,7 @@ void BX_CPU_C::NEG_EbM(bxInstruction_c *i)
   Bit8u op1_8;
 
   op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
-  op1_8 = -op1_8;
+  op1_8 = - (Bit8s)(op1_8);
   write_RMW_virtual_byte(op1_8);
 
   SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_INSTR_NEG8);
@@ -518,7 +518,7 @@ void BX_CPU_C::NEG_EbM(bxInstruction_c *i)
 void BX_CPU_C::NEG_EbR(bxInstruction_c *i)
 {
   Bit8u op1_8 = BX_READ_8BIT_REGx(i->rm(), i->extend8bitL());
-  op1_8 = -op1_8;
+  op1_8 = - (Bit8s)(op1_8);
   BX_WRITE_8BIT_REGx(i->rm(), i->extend8bitL(), op1_8);
 
   SET_FLAGS_OSZAPC_RESULT_8(op1_8, BX_INSTR_NEG8);

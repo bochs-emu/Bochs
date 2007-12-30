@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.88 2007-12-26 23:07:44 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.89 2007-12-30 17:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,9 +39,9 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
 #else
   bx_phy_address phy_addr;
-  Bit8u   instr_buf[16];
-  char    char_buf[512];
-  unsigned i=0;
+  Bit8u  instr_buf[16];
+  char   char_buf[512];
+  size_t i=0;
 
   static char letters[] = "0123456789ABCDEF";
   static disassembler bx_disassemble;

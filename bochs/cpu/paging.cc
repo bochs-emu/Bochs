@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.103 2007-12-26 23:07:44 sshwarts Exp $
+// $Id: paging.cc,v 1.104 2007-12-30 17:53:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1041,7 +1041,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
 bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
 {
   if (BX_CPU_THIS_PTR cr0.get_PG() == 0) {
-    *phy = laddr;
+    *phy = (bx_phy_address) laddr;
     return 1;
   }
 
@@ -1077,7 +1077,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
       if (!(pte & 1))
 	goto page_fault;
-      pt_address = pte & BX_CONST64(0x000ffffffffff000);
+      pt_address = (bx_phy_address)(pte & BX_CONST64(0x000ffffffffff000));
       if (level == 1 && (pte & 0x80)) { // PSE page
 	offset_mask = 0x1fffff;
 	break;
