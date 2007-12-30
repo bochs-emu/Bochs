@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.60 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: pciusb.cc,v 1.61 2007-12-30 18:02:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -89,7 +89,7 @@ void usb_dump_packet(Bit8u *data, unsigned size)
 
 int set_usb_string(Bit8u *buf, const char *str)
 {
-  int len, i;
+  size_t len, i;
   Bit8u *q;
 
   q = buf;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.19 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_null.cc,v 1.20 2007-12-30 18:02:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -98,17 +98,17 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
   this->rxarg = rxarg;
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
-  txlog = fopen ("ne2k-tx.log", "wb");
-  if (!txlog) BX_PANIC (("open ne2k-tx.log failed"));
-  txlog_txt = fopen ("ne2k-txdump.txt", "wb");
-  if (!txlog_txt) BX_PANIC (("open ne2k-txdump.txt failed"));
-  fprintf (txlog_txt, "null packetmover readable log file\n");
-  fprintf (txlog_txt, "net IF = %s\n", netif);
-  fprintf (txlog_txt, "MAC address = ");
+  txlog = fopen("ne2k-tx.log", "wb");
+  if (!txlog) BX_PANIC(("open ne2k-tx.log failed"));
+  txlog_txt = fopen("ne2k-txdump.txt", "wb");
+  if (!txlog_txt) BX_PANIC(("open ne2k-txdump.txt failed"));
+  fprintf(txlog_txt, "null packetmover readable log file\n");
+  fprintf(txlog_txt, "net IF = %s\n", netif);
+  fprintf(txlog_txt, "MAC address = ");
   for (int i=0; i<6; i++) 
-    fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
-  fprintf (txlog_txt, "\n--\n");
-  fflush (txlog_txt);
+    fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
+  fprintf(txlog_txt, "\n--\n");
+  fflush(txlog_txt);
 #endif
 }
 
@@ -119,20 +119,20 @@ bx_null_pktmover_c::sendpkt(void *buf, unsigned io_len)
   BX_DEBUG (("sendpkt length %u", io_len));
   // dump raw bytes to a file, eventually dump in pcap format so that
   // tcpdump -r FILE can interpret them for us.
-  unsigned int n = fwrite (buf, io_len, 1, txlog);
-  if (n != 1) BX_ERROR (("fwrite to txlog failed, io_len = %u", io_len));
+  size_t n = fwrite (buf, io_len, 1, txlog);
+  if (n != 1) BX_ERROR(("fwrite to txlog failed, io_len = %u", io_len));
   // dump packet in hex into an ascii log file
-  fprintf (txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+  fprintf(txlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
   Bit8u *charbuf = (Bit8u *)buf;
   for (n=0; n<io_len; n++) {
     if (((n % 16) == 0) && n>0)
-      fprintf (txlog_txt, "\n");
-    fprintf (txlog_txt, "%02x ", charbuf[n]);
+      fprintf(txlog_txt, "\n");
+    fprintf(txlog_txt, "%02x ", charbuf[n]);
   }
-  fprintf (txlog_txt, "\n--\n");
+  fprintf(txlog_txt, "\n--\n");
   // flush log so that we see the packets as they arrive w/o buffering
-  fflush (txlog);
-  fflush (txlog_txt);
+  fflush(txlog);
+  fflush(txlog_txt);
 #endif
 }
 
@@ -148,20 +148,20 @@ void bx_null_pktmover_c::rx_timer_handler (void *this_ptr)
     BX_DEBUG (("receive packet length %u", io_len));
     // dump raw bytes to a file, eventually dump in pcap format so that
     // tcpdump -r FILE can interpret them for us.
-    int n = fwrite (buf, io_len, 1, class_ptr->rxlog);
-    if (n != 1) BX_ERROR (("fwrite to rxlog failed, io_len = %u", io_len));
+    size_t n = fwrite (buf, io_len, 1, class_ptr->rxlog);
+    if (n != 1) BX_ERROR(("fwrite to rxlog failed, io_len = %u", io_len));
     // dump packet in hex into an ascii log file
-    fprintf (class_ptr->rxlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
+    fprintf(class_ptr->rxlog_txt, "NE2K transmitting a packet, length %u\n", io_len);
     Bit8u *charbuf = (Bit8u *)buf;
     for (n=0; n<io_len; n++) {
       if (((n % 16) == 0) && n>0)
-	fprintf (class_ptr->rxlog_txt, "\n");
-      fprintf (class_ptr->rxlog_txt, "%02x ", charbuf[n]);
+	fprintf(class_ptr->rxlog_txt, "\n");
+      fprintf(class_ptr->rxlog_txt, "%02x ", charbuf[n]);
     }
-    fprintf (class_ptr->rxlog_txt, "\n--\n");
+    fprintf(class_ptr->rxlog_txt, "\n--\n");
     // flush log so that we see the packets as they arrive w/o buffering
-    fflush (class_ptr->rxlog);
-    fflush (class_ptr->rxlog_txt);
+    fflush(class_ptr->rxlog);
+    fflush(class_ptr->rxlog_txt);
   }
 #endif
 }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dis_groups.cc,v 1.38 2007-09-19 19:38:10 sshwarts Exp $
+// $Id: dis_groups.cc,v 1.39 2007-12-30 18:02:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -588,11 +588,12 @@ void disassembler::Jb(const x86_insn *insn)
   Bit8s imm8 = (Bit8s) fetch_byte();
 
   if (insn->is_64) {
-    Bit64u imm64 = (Bit64s) imm8;
+    Bit64u imm64 = (Bit8s) imm8;
     dis_sprintf(".+0x%08x%08x", GET32H(imm64), GET32L(imm64));
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_eip + (Bit64s) imm64; target += db_base;
+      Bit64u target = db_eip + imm64;
+      target += db_base;
       dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
     }
 
@@ -600,20 +601,21 @@ void disassembler::Jb(const x86_insn *insn)
   }
 
   if (insn->os_32) {
-    Bit32u imm32 = (Bit32s) imm8;
+    Bit32u imm32 = (Bit8s) imm8;
     dis_sprintf(".+0x%08x", (unsigned) imm32);
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit32u target = db_eip + (Bit32s) imm32; target += db_base;
+      Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
+      target += db_base;
       dis_sprintf(" (0x%08x)", target);
     }
   }
   else {
-    Bit16u imm16 = (Bit16s) imm8;
+    Bit16u imm16 = (Bit8s) imm8;
     dis_sprintf(".+0x%04x", (unsigned) imm16);
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit16u target = (db_eip + (Bit16s) imm16) & 0xffff;
+      Bit16u target = (Bit16u)((db_eip + (Bit16s) imm16) & 0xffff);
       dis_sprintf(" (0x%08x)", target + db_base);
     }
   }
@@ -638,11 +640,12 @@ void disassembler::Jd(const x86_insn *insn)
   Bit32s imm32 = (Bit32s) fetch_dword();
 
   if (insn->is_64) {
-    Bit64u imm64 = (Bit64s) imm32;
+    Bit64u imm64 = (Bit32s) imm32;
     dis_sprintf(".+0x%08x%08x", GET32H(imm64), GET32L(imm64));
 
     if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-      Bit64u target = db_eip + (Bit64s) imm64; target += db_base;
+      Bit64u target = db_eip + (Bit64s) imm64;
+      target += db_base;
       dis_sprintf(" (0x%08x%08x)", GET32H(target), GET32L(target));
     }
 
@@ -650,9 +653,9 @@ void disassembler::Jd(const x86_insn *insn)
   }
 
   dis_sprintf(".+0x%08x", (unsigned) imm32);
-
   if (db_base != BX_JUMP_TARGET_NOT_REQ) {
-    Bit32u target = db_eip + (Bit32s) imm32; target += db_base;
+    Bit32u target = (Bit32u)(db_eip + (Bit32s) imm32);
+    target += db_base;
     dis_sprintf(" (0x%08x)", target);
   }
 }

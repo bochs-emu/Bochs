@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.108 2007-12-13 22:56:35 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.109 2007-12-30 18:02:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1070,7 +1070,7 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
   bx_phy_address paddr;
   laddr &= BX_CONST64(0xfffffffffffff000);
 
-  bx_bool paddr_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
+  bx_bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(laddr, &paddr);
   if (paddr_valid) {
     dbg_printf("linear page 0x" FMT_ADDRX " maps to physical page 0x%08x\n", laddr, paddr);
   }
