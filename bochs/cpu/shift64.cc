@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.28 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: shift64.cc,v 1.29 2007-12-30 20:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,12 +126,12 @@ void BX_CPU_C::ROL_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit63;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -166,12 +166,12 @@ void BX_CPU_C::ROR_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned bit62, bit63;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -206,12 +206,12 @@ void BX_CPU_C::RCL_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -251,12 +251,12 @@ void BX_CPU_C::RCR_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -296,12 +296,12 @@ void BX_CPU_C::SHL_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -337,12 +337,12 @@ void BX_CPU_C::SHR_Eq(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -379,12 +379,12 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
   Bit64u op1_64, result_64;
   unsigned count;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib() & 0x3f;
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // (i->b1() == 0xd3)
-    count = CL & 0x3f;
+  if (i->b1() == 0xd3)
+    count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
+
+  count &= 0x3f;
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {

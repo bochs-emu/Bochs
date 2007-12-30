@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.32 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: shift8.cc,v 1.33 2007-12-30 20:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,12 +38,10 @@ void BX_CPU_C::ROL_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit7;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -91,12 +89,10 @@ void BX_CPU_C::ROR_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned bit6, bit7;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -145,14 +141,10 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
-
-  count = (count & 0x1f) % 9;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -162,6 +154,8 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
     /* pointer, segment address pair */
     op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
+
+  count = (count & 0x1f) % 9;
  
   if (! count) return;
 
@@ -192,14 +186,10 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
-
-  count = (count & 0x1f) % 9;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -209,6 +199,8 @@ void BX_CPU_C::RCR_Eb(bxInstruction_c *i)
     /* pointer, segment address pair */
     op1_8 = read_RMW_virtual_byte(i->seg(), RMAddr(i));
   }
+
+  count = (count & 0x1f) % 9;
 
   if (! count) return;
 
@@ -234,12 +226,10 @@ void BX_CPU_C::SHL_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   count &= 0x1f;
 
@@ -281,12 +271,10 @@ void BX_CPU_C::SHR_Eb(bxInstruction_c *i)
   unsigned count;
   unsigned cf, of;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   count &= 0x1f;
 
@@ -325,12 +313,10 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
   Bit8u op1_8, result_8;
   unsigned count, cf;
 
-  if (i->b1() == 0xc0)
-    count = i->Ib();
-  else if (i->b1() == 0xd0)
-    count = 1;
-  else // 0xd2
+  if (i->b1() == 0xd2)
     count = CL;
+  else // 0xc0 or 0xd0
+    count = i->Ib();
 
   count &= 0x1f;
 

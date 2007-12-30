@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.405 2007-12-30 17:53:12 sshwarts Exp $
+// $Id: cpu.h,v 1.406 2007-12-30 20:16:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3887,18 +3887,19 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 // specify which kinds of immediate data a required by instruction.
 
 #define BxImmediate         0x000f // bits 3..0: any immediate
-#define BxImmediate_Ib      0x0001 // 8 bit
-#define BxImmediate_Ib_SE   0x0002 // sign extend to OS size
-#define BxImmediate_Iw      0x0003 // 16 bit
-#define BxImmediate_IbIb    0x0004 // SSE4A
-#define BxImmediate_IwIb    0x0005 // enter_IwIb
-#define BxImmediate_IvIw    0x0006 // call_Ap, not encodable in 64-bit mode
-#define BxImmediate_Id      0x0007 // 32 bit
-#define BxImmediate_O       0x0008 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
-#define BxImmediate_BrOff8  0x0009 // Relative branch offset byte
-#define BxImmediate_BrOff16 0x000A // Relative branch offset word, not encodable in 64-bit mode
+#define BxImmediate_I1      0x0001 // imm8 = 1
+#define BxImmediate_Ib      0x0002 // 8 bit
+#define BxImmediate_Ib_SE   0x0003 // sign extend to OS size
+#define BxImmediate_Iw      0x0004 // 16 bit
+#define BxImmediate_IbIb    0x0005 // SSE4A
+#define BxImmediate_IwIb    0x0006 // enter_IwIb
+#define BxImmediate_IvIw    0x0007 // call_Ap, not encodable in 64-bit mode
+#define BxImmediate_Id      0x0008 // 32 bit
+#define BxImmediate_O       0x0009 // MOV_ALOd, mov_OdAL, mov_eAXOv, mov_OveAX
+#define BxImmediate_BrOff8  0x000A // Relative branch offset byte
+#define BxImmediate_BrOff16 0x000B // Relative branch offset word, not encodable in 64-bit mode
 #if BX_SUPPORT_X86_64
-#define BxImmediate_Iq      0x000B // 64 bit override
+#define BxImmediate_Iq      0x000C // 64 bit override
 #endif
 
 #define BxImmediate_BrOff32 BxImmediate_Id // Relative branch offset dword

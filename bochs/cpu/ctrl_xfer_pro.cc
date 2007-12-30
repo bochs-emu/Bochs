@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.64 2007-12-14 20:41:09 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.65 2007-12-30 20:16:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,18 +43,18 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
   if (descriptor->valid==0 || descriptor->segment==0 ||
           IS_DATA_SEGMENT(descriptor->type))
   {
-    BX_ERROR(("check_cs: not a valid code segment !"));
+    BX_ERROR(("check_cs(0x%04x): not a valid code segment !", cs_raw));
     exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
   }
 
 #if BX_SUPPORT_X86_64
   if (descriptor->u.segment.l) {
     if (! BX_CPU_THIS_PTR efer.lma) {
-      BX_PANIC(("check_cs: attempt to jump to long mode without enabling EFER.LMA !"));
+      BX_PANIC(("check_cs(0x%04x): attempt to jump to long mode without enabling EFER.LMA !", cs_raw));
     }
 
     if (descriptor->u.segment.d_b) {
-      BX_ERROR(("check_cs: Both L and D bits enabled for segment descriptor !"));
+      BX_ERROR(("check_cs(0x%04x): Both L and D bits enabled for segment descriptor !", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
@@ -63,27 +63,27 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
   // if non-conforming, code segment descriptor DPL must = CPL else #GP(selector)
   if (IS_CODE_SEGMENT_NON_CONFORMING(descriptor->type)) {
     if (descriptor->dpl != check_cpl) {
-      BX_ERROR(("check_cs: non-conforming code seg descriptor dpl != cpl"));
+      BX_ERROR(("check_cs(0x%04x): non-conforming code seg descriptor dpl != cpl", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
 
     /* RPL of destination selector must be <= CPL else #GP(selector) */
     if (check_rpl > check_cpl) {
-      BX_ERROR(("check_cs: non-conforming code seg selector rpl > cpl"));
+      BX_ERROR(("check_cs(0x%04x): non-conforming code seg selector rpl > cpl", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
   // if conforming, then code segment descriptor DPL must <= CPL else #GP(selector)
   else {
     if (descriptor->dpl > check_cpl) {
-      BX_ERROR(("check_cs: conforming code seg descriptor dpl > cpl"));
+      BX_ERROR(("check_cs(0x%04x): conforming code seg descriptor dpl > cpl", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc, 0);
     }
   }
 
   // code segment must be present else #NP(selector)
   if (! descriptor->p) {
-    BX_ERROR(("check_cs: code segment not present !"));
+    BX_ERROR(("check_cs(0x%04x): code segment not present !", cs_raw));
     exception(BX_NP_EXCEPTION, cs_raw & 0xfffc, 0);
   }
 }

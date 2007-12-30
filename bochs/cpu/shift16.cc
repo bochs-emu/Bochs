@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.39 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: shift16.cc,v 1.40 2007-12-30 20:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -149,12 +149,10 @@ void BX_CPU_C::ROL_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned bit0, bit15;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -199,12 +197,10 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned bit14, bit15;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   /* op1 is a register or memory reference */
   if (i->modC0()) {
@@ -249,12 +245,10 @@ void BX_CPU_C::RCL_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   count = (count & 0x1f) % 17;
 
@@ -299,12 +293,10 @@ void BX_CPU_C::RCR_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   count = (count & 0x1f) % 17;
 
@@ -341,12 +333,10 @@ void BX_CPU_C::SHL_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned of = 0, cf = 0;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
 
@@ -388,12 +378,10 @@ void BX_CPU_C::SHR_Ew(bxInstruction_c *i)
   unsigned count;
   unsigned of, cf;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   count &= 0x1f; /* use only 5 LSB's */
 
@@ -432,12 +420,10 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
   Bit16u op1_16, result_16;
   unsigned count, cf;
 
-  if (i->b1() == 0xc1)
-    count = i->Ib();
-  else if (i->b1() == 0xd1)
-    count = 1;
-  else // 0xd3
+  if (i->b1() == 0xd3)
     count = CL;
+  else // 0xc1 or 0xd1
+    count = i->Ib();
 
   count &= 0x1f;  /* use only 5 LSB's */
 

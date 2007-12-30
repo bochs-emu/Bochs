@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.156 2007-12-22 17:17:40 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.157 2007-12-30 20:16:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -392,8 +392,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* CD /wr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
   /* CE /wr */ { BxTraceEnd, &BX_CPU_C::INTO },
   /* CF /wr */ { BxTraceEnd, &BX_CPU_C::IRET16 },
-  /* D0 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
-  /* D1 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
+  /* D0 /wr */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Eb },
+  /* D1 /wr */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Ew },
   /* D2 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D3 /wr */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
   /* D4 /wr */ { BxImmediate_Ib, &BX_CPU_C::AAM },
@@ -956,8 +956,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* CD /dr */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
   /* CE /dr */ { BxTraceEnd, &BX_CPU_C::INTO },
   /* CF /dr */ { BxTraceEnd, &BX_CPU_C::IRET32 },
-  /* D0 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
-  /* D1 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
+  /* D0 /dr */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Eb },
+  /* D1 /dr */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Ed },
   /* D2 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D3 /dr */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
   /* D4 /dr */ { BxImmediate_Ib, &BX_CPU_C::AAM },
@@ -1527,8 +1527,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* CD /wm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
   /* CE /wm */ { BxTraceEnd, &BX_CPU_C::INTO },
   /* CF /wm */ { BxTraceEnd, &BX_CPU_C::IRET16 },
-  /* D0 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
-  /* D1 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
+  /* D0 /wm */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Eb },
+  /* D1 /wm */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Ew },
   /* D2 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D3 /wm */ { BxGroup2, NULL, BxOpcodeInfoG2Ew },
   /* D4 /wm */ { BxImmediate_Ib, &BX_CPU_C::AAM },
@@ -2091,8 +2091,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* CD /dm */ { BxImmediate_Ib | BxTraceEnd, &BX_CPU_C::INT_Ib },
   /* CE /dm */ { BxTraceEnd, &BX_CPU_C::INTO },
   /* CF /dm */ { BxTraceEnd, &BX_CPU_C::IRET32 },
-  /* D0 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
-  /* D1 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
+  /* D0 /dm */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Eb },
+  /* D1 /dm */ { BxGroup2 | BxImmediate_I1, NULL, BxOpcodeInfoG2Ed },
   /* D2 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Eb },
   /* D3 /dm */ { BxGroup2, NULL, BxOpcodeInfoG2Ed },
   /* D4 /dm */ { BxImmediate_Ib, &BX_CPU_C::AAM },
@@ -2806,6 +2806,9 @@ modrm_done:
   imm_mode = attr & BxImmediate;
   if (imm_mode) {
     switch (imm_mode) {
+      case BxImmediate_I1:
+        i->modRMForm.Ib = 1;
+        break;
       case BxImmediate_Ib:
         if (ilen < remain) {
           i->modRMForm.Ib = *iptr;

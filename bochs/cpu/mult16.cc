@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.25 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: mult16.cc,v 1.26 2007-12-30 20:16:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -225,7 +225,7 @@ void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
 
   op1_16 = BX_READ_16BIT_REG(i->nnn());
 
-  Bit32s product_32  = op1_16 * op2_16;
+  Bit32s product_32 = op1_16 * op2_16;
   Bit16u product_16 = (product_32 & 0xFFFF);
 
   /* now write product back to destination */
