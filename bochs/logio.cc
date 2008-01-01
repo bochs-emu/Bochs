@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: logio.cc,v 1.63 2007-12-30 18:02:22 sshwarts Exp $
+// $Id: logio.cc,v 1.64 2008-01-01 18:12:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -616,7 +616,7 @@ void logfunctions::fatal(const char *prefix, const char *fmt, va_list ap, int ex
 iofunc_t *io = NULL;
 logfunc_t *genlog = NULL;
 
-void bx_center_print(FILE *file, char *line, int maxwidth)
+void bx_center_print(FILE *file, const char *line, unsigned maxwidth)
 {
   size_t len = strlen(line);
   if (len > maxwidth)

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.219 2007-12-26 18:39:15 sshwarts Exp $
+// $Id: bochs.h,v 1.220 2008-01-01 18:12:31 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -200,12 +200,12 @@ void print_tree(bx_param_c *node, int level = 0);
 
 #if BX_SUPPORT_SMP
 #  define BX_TICK1_IF_SINGLE_PROCESSOR() \
-             if (BX_SMP_PROCESSORS == 1) BX_TICK1()
-#  define BX_TICKN_IF_SINGLE_PROCESSOR() \
-             if (BX_SMP_PROCESSORS == 1) BX_TICKN(n)
+              if (BX_SMP_PROCESSORS == 1) BX_TICK1()
+#  define BX_TICKN_IF_SINGLE_PROCESSOR(n) \
+              if (BX_SMP_PROCESSORS == 1) BX_TICKN(n)
 #else
-#  define BX_TICK1_IF_SINGLE_PROCESSOR() BX_TICK1()
-#  define BX_TICKN_IF_SINGLE_PROCESSOR() BX_TICKN(n)
+#  define BX_TICK1_IF_SINGLE_PROCESSOR()  BX_TICK1()
+#  define BX_TICKN_IF_SINGLE_PROCESSOR(n) BX_TICKN(n)
 #endif
 
 // you can't use static member functions on the CPU, if there are going
@@ -515,7 +515,7 @@ extern bx_bool bx_gui_sighandler;
   #define BX_SMP_PROCESSORS 1
 #endif
 
-void bx_center_print(FILE *file, char *line, int maxwidth);
+void bx_center_print(FILE *file, const char *line, unsigned maxwidth);
 
 #define BX_USE_PS2_MOUSE 1
 
