@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.197 2008-01-05 10:21:25 sshwarts Exp $
+// $Id: cpu.cc,v 1.198 2008-01-05 10:45:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -408,7 +408,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     bxInstruction_c *i = fetchInstructionTrace(&iStorage, &length, eipBiased);
     Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
-    for (n=0; n < length; n++, i++) {
+    for(;;i++) {
 #endif
 
       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
@@ -447,6 +447,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
 #if BX_SUPPORT_TRACE_CACHE
+      if (--length == 0) break;
+
       if (currPageWriteStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr))
         break; // probably it is self modifying code ...
 
