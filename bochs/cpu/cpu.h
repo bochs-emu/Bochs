@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.406 2007-12-30 20:16:34 sshwarts Exp $
+// $Id: cpu.h,v 1.407 2008-01-05 10:21:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3112,7 +3112,7 @@ public: // for now...
   BX_SMF unsigned fetchDecode64(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
 #if BX_SUPPORT_TRACE_CACHE
-  BX_SMF bxICacheEntry_c* fetchInstructionTrace(bxInstruction_c *, bx_address);
+  BX_SMF bxInstruction_c* fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, bx_address eipBiased);
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *, bx_phy_address pAddr);
   BX_SMF void instrumentTraces(void);
 #else

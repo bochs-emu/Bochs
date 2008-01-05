@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.196 2007-12-30 17:53:12 sshwarts Exp $
+// $Id: cpu.cc,v 1.197 2008-01-05 10:21:25 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -100,7 +100,7 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 #if BX_SUPPORT_TRACE_CACHE
 
-bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_address eipBiased)
+bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, bx_address eipBiased)
 {
   bx_phy_address pAddr = (bx_phy_address)(BX_CPU_THIS_PTR pAddrA20Page + eipBiased);
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
@@ -113,8 +113,10 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
   if ((trace->pAddr == pAddr) &&
       (trace->writeStamp == pageWriteStamp))
   {
+     // We are lucky - trace cache hit !
      InstrICache_Increment(iCacheTraceLengh[trace->ilen-1]);
-     return trace; // We are lucky - trace cache hit !
+     *len = trace->ilen;
+     return trace->i;
   }
 
   // We are not so lucky, but let's be optimistic - try to build trace from
@@ -136,7 +138,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
   bxInstruction_c *i = trace->i;
 
-  for (unsigned len=0;len<max_length;len++,i++)
+  for (unsigned n=0;n<max_length;n++,i++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -147,7 +149,7 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
 
     if (ret==0) {
       // Fetching instruction on segment/page boundary
-      if (len > 0) {
+      if (n > 0) {
          // The trace is already valid, it has several instructions inside,
          // in this case just drop the boundary instruction and stop
          // tracing.
@@ -157,7 +159,9 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
       // the trace cache entry invalid (do not cache the instruction)
       trace->writeStamp = ICacheWriteStampInvalid;
       boundaryFetch(fetchPtr, remainingInPage, iStorage);
-      return 0;
+
+      *len = 1;
+      return iStorage;
     }
 
     // add instruction to the trace ...
@@ -183,7 +187,8 @@ bxICacheEntry_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, bx_a
     if (mergeTraces(trace, i+1, pAddr)) break;
   }
 
-  return trace;
+  *len = trace->ilen;
+  return trace->i;
 }
 
 bx_bool BX_CPU_C::mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *i, bx_phy_address pAddr)
@@ -394,17 +399,13 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
     }
 
+
 #if BX_SUPPORT_TRACE_CACHE == 0
     // fetch and decode single instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
 #else
     unsigned n, length = 1;
-    bxInstruction_c *i = &iStorage;
-    bxICacheEntry_c *trace = fetchInstructionTrace(&iStorage, eipBiased);
-    if (trace) {
-      i = trace->i; // execute from first instruction in trace
-      length = trace->ilen;
-    }
+    bxInstruction_c *i = fetchInstructionTrace(&iStorage, &length, eipBiased);
     Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
     for (n=0; n < length; n++, i++) {
