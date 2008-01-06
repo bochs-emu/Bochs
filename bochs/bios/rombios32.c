@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.17 2007-12-09 15:37:27 vruppert Exp $
+// $Id: rombios32.c,v 1.18 2008-01-06 20:57:24 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -376,6 +376,7 @@ void delay_ms(int n)
 }
 
 int smp_cpus;
+uint32_t cpuid_signature;
 uint32_t cpuid_features;
 uint32_t cpuid_ext_features;
 unsigned long ram_size;
@@ -392,6 +393,7 @@ void cpu_probe(void)
 {
     uint32_t eax, ebx, ecx, edx;
     cpuid(1, eax, ebx, ecx, edx);
+    cpuid_signature = eax;
     cpuid_features = edx;
     cpuid_ext_features = ecx;
 }
