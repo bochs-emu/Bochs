@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.194 2007-12-23 19:46:27 sshwarts Exp $
+// $Id: rombios.c,v 1.195 2008-01-06 21:00:18 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,7 +944,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.194 $ $Date: 2007-12-23 19:46:27 $";
+static char bios_cvs_version_string[] = "$Revision: 1.195 $ $Date: 2008-01-06 21:00:18 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -9924,8 +9924,8 @@ rom_scan:
   ;;   2         ROM length in 512-byte blocks
   ;;   3         ROM initialization entry point (FAR CALL)
 
-  mov  cx, #0xc000
 rom_scan_loop:
+  push ax       ;; Save AX
   mov  ds, cx
   mov  ax, #0x0004 ;; start with increment of 4 (512-byte) blocks = 2k
   cmp [0], #0xAA55 ;; look for signature
@@ -10006,7 +10006,8 @@ rom_scan_increment:
   shl  ax, #5   ;; convert 512-bytes blocks to 16-byte increments
                 ;; because the segment selector is shifted left 4 bits.
   add  cx, ax
-  cmp  cx, #0xe000
+  pop  ax       ;; Restore AX
+  cmp  cx, ax
   jbe  rom_scan_loop
 
   xor  ax, ax   ;; Restore DS back to 0000:
@@ -10290,6 +10291,12 @@ post_default_ints:
 #endif
   out  0xa1, AL ;slave  pic: unmask IRQ 12, 13, 14
 
+  mov  cx, #0xc000  ;; init vga bios
+  mov  ax, #0xc780
+  call rom_scan
+
+  call _print_bios_banner
+
 #if BX_ROMBIOS32
   call rombios32_init
 #else
@@ -10298,12 +10305,6 @@ post_default_ints:
   call pcibios_init_irqs
 #endif //BX_PCIBIOS
 #endif
-
-  call _init_boot_vectors
-
-  call rom_scan
-
-  call _print_bios_banner
 
   ;;
   ;; Floppy setup
@@ -10340,9 +10341,14 @@ post_default_ints:
   ;;
 #endif // BX_ELTORITO_BOOT
 
+  call _init_boot_vectors
+
+  mov  cx, #0xc800  ;; init option roms
+  mov  ax, #0xe000
+  call rom_scan
+
   sti        ;; enable interrupts
   int  #0x19
-
 
 .org 0xe2c3 ; NMI Handler Entry Point
 nmi:
