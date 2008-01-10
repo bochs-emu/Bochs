@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve64.cc,v 1.15 2007-12-18 21:41:44 sshwarts Exp $
+// $Id: resolve64.cc,v 1.16 2008-01-10 21:32:12 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,14 +37,12 @@
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve32Rip(bxInstruction_c *i)
 {
-  // RIP hasn't been bumped yet when this is called. Must choose the saved value.
-  RMAddr(i) = (Bit32u) (BX_CPU_THIS_PTR prev_rip + i->ilen() + (Bit32s) i->displ32u());
+  RMAddr(i) = EIP + i->displ32u();
 }
   void  BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve64Rip(bxInstruction_c *i)
 {
-  // RIP hasn't been bumped yet when this is called. Must choose the saved value.
-  RMAddr(i) = BX_CPU_THIS_PTR prev_rip + i->ilen() + (Bit32s) i->displ32u();
+  RMAddr(i) = RIP + (Bit32s) i->displ32u();
 }
 
   void  BX_CPP_AttrRegparmN(1)
