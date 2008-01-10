@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.200 2008-01-10 20:26:49 sshwarts Exp $
+// $Id: cpu.cc,v 1.201 2008-01-10 20:32:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -428,7 +428,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
       // decoding instruction compeleted -> continue with execution
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-      EIP += i->ilen();
+      RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute, (i)); // might iterate repeat instruction
       BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
       BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
