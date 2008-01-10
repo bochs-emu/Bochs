@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.59 2007-12-21 17:30:49 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.60 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -148,6 +148,7 @@ void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
@@ -173,6 +174,8 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -366,6 +369,7 @@ void BX_CPU_C::JMP_Eq(bxInstruction_c *i)
     op1_64 = BX_READ_64BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
   }
 
@@ -386,6 +390,8 @@ void BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   Bit32u op1_32;
 
   invalidate_prefetch_q();
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   cs_raw = read_virtual_word (i->seg(), RMAddr(i)+4);

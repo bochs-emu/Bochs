@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.53 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: sse.cc,v 1.54 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -46,6 +46,7 @@ void BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -79,6 +80,7 @@ void BX_CPU_C::PHADDW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -113,6 +115,7 @@ void BX_CPU_C::PHADDD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -142,6 +145,7 @@ void BX_CPU_C::PHADDSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -177,6 +181,7 @@ void BX_CPU_C::PMADDUBSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -210,6 +215,7 @@ void BX_CPU_C::PHSUBSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -245,6 +251,7 @@ void BX_CPU_C::PHSUBW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -279,6 +286,7 @@ void BX_CPU_C::PHSUBD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -308,6 +316,7 @@ void BX_CPU_C::PSIGNB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -337,6 +346,7 @@ void BX_CPU_C::PSIGNW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -366,6 +376,7 @@ void BX_CPU_C::PSIGND_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -395,6 +406,7 @@ void BX_CPU_C::PMULHRSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -428,6 +440,7 @@ void BX_CPU_C::PABSB_VdqWdq(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -469,6 +482,7 @@ void BX_CPU_C::PABSW_VdqWdq(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -502,6 +516,7 @@ void BX_CPU_C::PABSD_VdqWdq(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -533,6 +548,7 @@ void BX_CPU_C::PBLENDVB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -562,6 +578,7 @@ void BX_CPU_C::BLENDVPS_VpsWps(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -593,6 +610,7 @@ void BX_CPU_C::BLENDVPD_VpdWpd(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -622,6 +640,7 @@ void BX_CPU_C::PTEST_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -653,6 +672,7 @@ void BX_CPU_C::PMULDQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -681,6 +701,7 @@ void BX_CPU_C::PCMPEQQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -712,6 +733,7 @@ void BX_CPU_C::PACKUSDW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -746,6 +768,7 @@ void BX_CPU_C::PCMPGTQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -777,6 +800,7 @@ void BX_CPU_C::PMINSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -806,6 +830,7 @@ void BX_CPU_C::PMINSD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -836,6 +861,7 @@ void BX_CPU_C::PMINUW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -870,6 +896,7 @@ void BX_CPU_C::PMINUD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -900,6 +927,7 @@ void BX_CPU_C::PMAXSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -929,6 +957,7 @@ void BX_CPU_C::PMAXSD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -959,6 +988,7 @@ void BX_CPU_C::PMAXUW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -993,6 +1023,7 @@ void BX_CPU_C::PMAXUD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1023,6 +1054,7 @@ void BX_CPU_C::PMULLD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1058,6 +1090,7 @@ void BX_CPU_C::PHMINPOSUW_VdqWdq(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -1095,6 +1128,7 @@ void BX_CPU_C::BLENDPS_VpsWpsIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1126,6 +1160,7 @@ void BX_CPU_C::BLENDPD_VpdWpdIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1155,6 +1190,7 @@ void BX_CPU_C::PBLENDW_VdqWdqIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1190,6 +1226,8 @@ void BX_CPU_C::PEXTRB_HbdUdqIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
     write_virtual_byte(i->seg(), RMAddr(i), result);
   }
 #else
@@ -1212,6 +1250,8 @@ void BX_CPU_C::PEXTRW_HwdUdqIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
     write_virtual_word(i->seg(), RMAddr(i), result);
   }
 #else
@@ -1238,6 +1278,8 @@ void BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
        BX_WRITE_64BIT_REG(i->nnn(), result);
      }
      else {
+       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+       /* pointer, segment address pair */
        write_virtual_qword(i->seg(), RMAddr(i), result);
      }
   }
@@ -1251,6 +1293,8 @@ void BX_CPU_C::PEXTRD_HdUdqIb(bxInstruction_c *i)
        BX_WRITE_32BIT_REGZ(i->nnn(), result);
      }
      else {
+       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+       /* pointer, segment address pair */
        write_virtual_dword(i->seg(), RMAddr(i), result);
      }
   }
@@ -1274,6 +1318,8 @@ void BX_CPU_C::EXTRACTPS_HdUpsIb(bxInstruction_c *i)
     BX_WRITE_32BIT_REGZ(i->nnn(), result);
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
     write_virtual_dword(i->seg(), RMAddr(i), result);
   }
 #else
@@ -1296,6 +1342,7 @@ void BX_CPU_C::PINSRB_VdqEbIb(bxInstruction_c *i)
     op2 = BX_READ_16BIT_REG(i->rm()); // won't allow reading of AH/CH/BH/DH
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2 = read_virtual_byte(i->seg(), RMAddr(i));
   }
@@ -1326,6 +1373,7 @@ void BX_CPU_C::INSERTPS_VpsWssIb(bxInstruction_c *i)
     op2 = temp.xmm32u((control >> 6) & 3);
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2 = read_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -1363,6 +1411,7 @@ void BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
       op2 = BX_READ_64BIT_REG(i->rm());
     }
     else {
+      BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       /* pointer, segment address pair */
       op2 = read_virtual_qword(i->seg(), RMAddr(i));
     }
@@ -1379,6 +1428,7 @@ void BX_CPU_C::PINSRD_VdqEdIb(bxInstruction_c *i)
       op2 = BX_READ_32BIT_REG(i->rm());
     }
     else {
+      BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
       /* pointer, segment address pair */
       op2 = read_virtual_dword(i->seg(), RMAddr(i));
     }
@@ -1407,6 +1457,7 @@ void BX_CPU_C::MPSADBW_VdqWdqIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1450,6 +1501,7 @@ void BX_CPU_C::PUNPCKLBW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1492,6 +1544,7 @@ void BX_CPU_C::PUNPCKLWD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1527,6 +1580,7 @@ void BX_CPU_C::UNPCKLPS_VpsWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1557,6 +1611,7 @@ void BX_CPU_C::PACKSSWB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1600,6 +1655,7 @@ void BX_CPU_C::PCMPGTB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1629,6 +1685,7 @@ void BX_CPU_C::PCMPGTW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1663,6 +1720,7 @@ void BX_CPU_C::PCMPGTD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1693,6 +1751,7 @@ void BX_CPU_C::PACKUSWB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1736,6 +1795,7 @@ void BX_CPU_C::PUNPCKHBW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1778,6 +1838,7 @@ void BX_CPU_C::PUNPCKHWD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1813,6 +1874,7 @@ void BX_CPU_C::UNPCKHPS_VpsWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1843,6 +1905,7 @@ void BX_CPU_C::PACKSSDW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1878,6 +1941,7 @@ void BX_CPU_C::PUNPCKLQDQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1906,6 +1970,7 @@ void BX_CPU_C::PUNPCKHQDQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -1935,6 +2000,7 @@ void BX_CPU_C::PSHUFD_VdqWdqIb(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -1966,6 +2032,7 @@ void BX_CPU_C::PSHUFHW_VdqWdqIb(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -1998,6 +2065,7 @@ void BX_CPU_C::PSHUFLW_VdqWdqIb(bxInstruction_c *i)
     op = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op);
   }
@@ -2029,6 +2097,7 @@ void BX_CPU_C::PCMPEQB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2058,6 +2127,7 @@ void BX_CPU_C::PCMPEQW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2092,6 +2162,7 @@ void BX_CPU_C::PCMPEQD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2168,6 +2239,7 @@ void BX_CPU_C::PINSRW_VdqEwIb(bxInstruction_c *i)
     op2 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2 = read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -2213,6 +2285,7 @@ void BX_CPU_C::SHUFPS_VpsWpsIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2244,6 +2317,7 @@ void BX_CPU_C::SHUFPD_VpdWpdIb(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2272,6 +2346,7 @@ void BX_CPU_C::PSRLW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2316,6 +2391,7 @@ void BX_CPU_C::PSRLD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2356,6 +2432,7 @@ void BX_CPU_C::PSRLQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2394,6 +2471,7 @@ void BX_CPU_C::PADDQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2422,6 +2500,7 @@ void BX_CPU_C::PMULLW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2465,6 +2544,7 @@ void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2500,6 +2580,7 @@ void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2535,6 +2616,7 @@ void BX_CPU_C::PMINUB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2566,6 +2648,7 @@ void BX_CPU_C::ANDPS_VpsWps(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2594,6 +2677,7 @@ void BX_CPU_C::PADDUSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2623,6 +2707,7 @@ void BX_CPU_C::PADDUSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2657,6 +2742,7 @@ void BX_CPU_C::PMAXUB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2688,6 +2774,7 @@ void BX_CPU_C::ANDNPS_VpsWps(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2716,6 +2803,7 @@ void BX_CPU_C::PAVGB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2745,6 +2833,7 @@ void BX_CPU_C::PSRAW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2806,6 +2895,7 @@ void BX_CPU_C::PSRAD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2855,6 +2945,7 @@ void BX_CPU_C::PAVGW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2889,6 +2980,7 @@ void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2932,6 +3024,7 @@ void BX_CPU_C::PMULHW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -2975,6 +3068,7 @@ void BX_CPU_C::PSUBSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3004,6 +3098,7 @@ void BX_CPU_C::PSUBSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3038,6 +3133,7 @@ void BX_CPU_C::PMINSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3074,6 +3170,7 @@ void BX_CPU_C::ORPS_VpsWps(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3102,6 +3199,7 @@ void BX_CPU_C::PADDSB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3131,6 +3229,7 @@ void BX_CPU_C::PADDSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3165,6 +3264,7 @@ void BX_CPU_C::PMAXSW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3201,6 +3301,7 @@ void BX_CPU_C::XORPS_VpsWps(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3229,6 +3330,7 @@ void BX_CPU_C::PSLLW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3273,6 +3375,7 @@ void BX_CPU_C::PSLLD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3313,6 +3416,7 @@ void BX_CPU_C::PSLLQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3351,6 +3455,7 @@ void BX_CPU_C::PMULUDQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3379,6 +3484,7 @@ void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3417,6 +3523,7 @@ void BX_CPU_C::PSADBW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3463,6 +3570,7 @@ void BX_CPU_C::PSUBB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3492,6 +3600,7 @@ void BX_CPU_C::PSUBW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3526,6 +3635,7 @@ void BX_CPU_C::PSUBD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3556,6 +3666,7 @@ void BX_CPU_C::PSUBQ_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3584,6 +3695,7 @@ void BX_CPU_C::PADDB_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3613,6 +3725,7 @@ void BX_CPU_C::PADDW_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
@@ -3647,6 +3760,7 @@ void BX_CPU_C::PADDD_VdqWdq(bxInstruction_c *i)
     op2 = BX_READ_XMM_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.50 2007-12-30 20:16:34 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.51 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -236,6 +236,7 @@ void BX_CPU_C::CALL_Ew(bxInstruction_c *i)
     op1_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
 
@@ -261,6 +262,8 @@ void BX_CPU_C::CALL16_Ep(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);
@@ -505,6 +508,8 @@ void BX_CPU_C::JNLE_Jw(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_EwM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   Bit16u new_IP = read_virtual_word(i->seg(), RMAddr(i));
 
   branch_near32((Bit32u) new_IP);
@@ -526,6 +531,8 @@ void BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
   Bit16u op1_16;
 
   invalidate_prefetch_q();
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_16 = read_virtual_word(i->seg(), RMAddr(i));
   cs_raw = read_virtual_word(i->seg(), RMAddr(i)+2);

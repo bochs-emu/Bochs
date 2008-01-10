@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult16.cc,v 1.26 2007-12-30 20:16:35 sshwarts Exp $
+// $Id: mult16.cc,v 1.27 2008-01-10 19:37:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -43,6 +43,7 @@ void BX_CPU_C::MUL_AXEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -73,6 +74,7 @@ void BX_CPU_C::IMUL_AXEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -108,6 +110,7 @@ void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -121,14 +124,6 @@ void BX_CPU_C::DIV_AXEw(bxInstruction_c *i)
 
   if (quotient_32 != quotient_16l)
     exception(BX_DE_EXCEPTION, 0, 0);
-
-  /* set EFLAGS:
-   * DIV affects the following flags: O,S,Z,A,P,C are undefined
-   */
-
-#if INTEL_DIV_FLAG_BUG == 1
-  assert_CF();
-#endif
 
   /* now write quotient back to destination */
   AX = quotient_16l;
@@ -147,6 +142,7 @@ void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -165,14 +161,6 @@ void BX_CPU_C::IDIV_AXEw(bxInstruction_c *i)
   if (quotient_32 != quotient_16l)
     exception(BX_DE_EXCEPTION, 0, 0);
 
-  /* set EFLAGS:
-   * IDIV affects the following flags: O,S,Z,A,P,C are undefined
-   */
-
-#if INTEL_DIV_FLAG_BUG == 1
-  assert_CF();
-#endif
-
   /* now write quotient back to destination */
   AX = quotient_16l;
   DX = remainder_16;
@@ -189,6 +177,7 @@ void BX_CPU_C::IMUL_GwEwIw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }
@@ -219,6 +208,7 @@ void BX_CPU_C::IMUL_GwEw(bxInstruction_c *i)
     op2_16 = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_16 = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   }

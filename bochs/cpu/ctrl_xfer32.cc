@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.62 2007-12-22 22:02:08 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.63 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -213,6 +213,7 @@ void BX_CPU_C::CALL_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
 
@@ -238,6 +239,8 @@ void BX_CPU_C::CALL32_Ep(bxInstruction_c *i)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -495,6 +498,8 @@ void BX_CPU_C::JMP_Ap(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_EdM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   /* pointer, segment address pair */
   Bit32u new_EIP = read_virtual_dword(i->seg(), RMAddr(i));
 
@@ -517,6 +522,8 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
   Bit32u op1_32;
 
   invalidate_prefetch_q();
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));

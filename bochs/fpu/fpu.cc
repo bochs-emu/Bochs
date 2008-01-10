@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu.cc,v 1.31 2007-12-26 18:39:15 sshwarts Exp $
+// $Id: fpu.cc,v 1.32 2008-01-10 19:37:56 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -50,11 +50,13 @@ void BX_CPU_C::prepareFPU(bxInstruction_c *i,
     BX_CPU_THIS_PTR the_i387.fip = BX_CPU_THIS_PTR prev_rip;
 
     if (! i->modC0()) {
-         BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
-         BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
+       BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+       BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
+       BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
     } else {
-         BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-         BX_CPU_THIS_PTR the_i387.fdp = 0;
+       BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
+       BX_CPU_THIS_PTR the_i387.fdp = 0;
     }
   }
 }
@@ -83,6 +85,8 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
 
 int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
     if (protected_mode())  /* Protected Mode */
     {
         if (i->os32L() || i->os64L())
@@ -186,6 +190,8 @@ int BX_CPU_C::fpu_save_environment(bxInstruction_c *i)
 int BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 {
     int offset;
+
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
     if (protected_mode())  /* Protected Mode */
     {
@@ -314,6 +320,9 @@ void BX_CPU_C::FLDCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   Bit16u cwd = read_virtual_word(i->seg(), RMAddr(i));
   FPU_CONTROL_WORD = cwd;
 
@@ -338,7 +347,11 @@ void BX_CPU_C::FNSTCW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+
   Bit16u cwd = BX_CPU_THIS_PTR the_i387.get_control_word();
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   write_virtual_word(i->seg(), RMAddr(i), cwd);
 #else
   BX_INFO(("FNSTCW: required FPU, configure --enable-fpu"));
@@ -350,7 +363,11 @@ void BX_CPU_C::FNSTSW(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, !CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+
   Bit16u swd = BX_CPU_THIS_PTR the_i387.get_status_word();
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   write_virtual_word(i->seg(), RMAddr(i), swd);
 #else
   BX_INFO(("FNSTSW: required FPU, configure --enable-fpu"));
@@ -373,6 +390,7 @@ void BX_CPU_C::FRSTOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_FPU
   BX_CPU_THIS_PTR prepareFPU(i, CHECK_PENDING_EXCEPTIONS, !UPDATE_LAST_OPCODE);
+
   int offset = fpu_load_environment(i);
 
   /* read all registers in stack order. */

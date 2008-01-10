@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.193 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.194 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -56,8 +56,14 @@ void BX_CPU_C::PREFETCH(bxInstruction_c *i)
     BX_ERROR(("PREFETCH: use of register is undefined opcode"));
     UndefinedOpcode(i);
   }
+
+#if BX_INSTRUMENTATION
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   BX_INSTR_PREFETCH_HINT(BX_CPU_ID, i->nnn(), i->seg(), RMAddr(i));
+#endif
+
 #else
+  BX_INFO(("PREFETCH: required SSE or 3DNOW support"));
   UndefinedOpcode(i);
 #endif
 }
@@ -185,6 +191,7 @@ void BX_CPU_C::CLFLUSH(bxInstruction_c *i)
   bx_segment_reg_t *seg = &BX_CPU_THIS_PTR sregs[i->seg()];
   // check if we could access the memory
   if ((seg->cache.valid & SegAccessROK4G) != SegAccessROK4G) {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     execute_virtual_checks(seg, RMAddr(i), 1);
   }
 #else
@@ -822,6 +829,8 @@ void BX_CPU_C::LMSW_Ew(bxInstruction_c *i)
     msw = BX_READ_16BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
     msw = read_virtual_word(i->seg(), RMAddr(i));
   }
 
@@ -856,6 +865,8 @@ void BX_CPU_C::SMSW_Ew(bxInstruction_c *i)
     }
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+    /* pointer, segment address pair */
     write_virtual_word(i->seg(), RMAddr(i), msw);
   }
 }

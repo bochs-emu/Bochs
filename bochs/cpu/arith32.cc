@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: arith32.cc,v 1.71 2007-12-30 17:53:12 sshwarts Exp $
+// $Id: arith32.cc,v 1.72 2008-01-10 19:37:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -57,6 +57,8 @@ void BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   sum_32 = op1_32 + op2_32;
@@ -80,6 +82,8 @@ void BX_CPU_C::ADD_EdGdR(bxInstruction_c *i)
 void BX_CPU_C::ADD_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -120,6 +124,8 @@ void BX_CPU_C::ADC_EdGdM(bxInstruction_c *i)
 
   Bit32u op1_32, op2_32, sum_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   sum_32 = op1_32 + op2_32 + temp_CF;
@@ -147,6 +153,8 @@ void BX_CPU_C::ADC_GdEdM(bxInstruction_c *i)
   bx_bool temp_CF = getB_CF();
 
   Bit32u op1_32, op2_32, sum_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -189,6 +197,8 @@ void BX_CPU_C::SBB_EdGdM(bxInstruction_c *i)
 
   Bit32u op1_32, op2_32, diff_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   diff_32 = op1_32 - (op2_32 + temp_CF);
@@ -216,6 +226,8 @@ void BX_CPU_C::SBB_GdEdM(bxInstruction_c *i)
   bx_bool temp_CF = getB_CF();
 
   Bit32u op1_32, op2_32, diff_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -259,6 +271,8 @@ void BX_CPU_C::SBB_EdIdM(bxInstruction_c *i)
 
   Bit32u op1_32, op2_32 = i->Id(), diff_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   diff_32 = op1_32 - (op2_32 + temp_CF);
   write_RMW_virtual_dword(diff_32);
@@ -283,6 +297,8 @@ void BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   diff_32 = op1_32 - op2_32;
@@ -306,6 +322,8 @@ void BX_CPU_C::SUB_EdGdR(bxInstruction_c *i)
 void BX_CPU_C::SUB_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -343,6 +361,8 @@ void BX_CPU_C::CMP_EdGdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   diff_32 = op1_32 - op2_32;
@@ -364,6 +384,8 @@ void BX_CPU_C::CMP_EdGdR(bxInstruction_c *i)
 void BX_CPU_C::CMP_GdEdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = BX_READ_32BIT_REG(i->nnn());
   op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
@@ -448,6 +470,8 @@ void BX_CPU_C::XADD_EdGdM(bxInstruction_c *i)
    * dst  <-- tmp               | op1 = sum
    */
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   sum_32 = op1_32 + op2_32;
@@ -496,6 +520,8 @@ void BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, sum_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = i->Id();
   sum_32 = op1_32 + op2_32;
@@ -523,6 +549,8 @@ void BX_CPU_C::ADC_EdIdM(bxInstruction_c *i)
 
   Bit32u op1_32, op2_32 = i->Id(), sum_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   sum_32 = op1_32 + op2_32 + temp_CF;
   write_RMW_virtual_dword(sum_32);
@@ -547,6 +575,8 @@ void BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32 = i->Id(), diff_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   diff_32 = op1_32 - op2_32;
   write_RMW_virtual_dword(diff_32);
@@ -568,6 +598,8 @@ void BX_CPU_C::SUB_EdIdR(bxInstruction_c *i)
 void BX_CPU_C::CMP_EdIdM(bxInstruction_c *i)
 {
   Bit32u op1_32, op2_32, diff_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   op2_32 = i->Id();
@@ -591,6 +623,8 @@ void BX_CPU_C::NEG_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32 = - (Bit32s)(op1_32);
   write_RMW_virtual_dword(op1_32);
@@ -610,6 +644,8 @@ void BX_CPU_C::NEG_EdR(bxInstruction_c *i)
 void BX_CPU_C::INC_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32++;
@@ -631,6 +667,8 @@ void BX_CPU_C::DEC_EdM(bxInstruction_c *i)
 {
   Bit32u op1_32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   op1_32--;
   write_RMW_virtual_dword(op1_32);
@@ -651,6 +689,8 @@ void BX_CPU_C::CMPXCHG_EdGdM(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 4
   Bit32u op1_32, op2_32, diff_32;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   diff_32 = EAX - op1_32;
@@ -699,6 +739,8 @@ void BX_CPU_C::CMPXCHG8B(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
   Bit32u op1_64_lo, op1_64_hi, diff;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   // check write permission for following write
   op1_64_lo = read_RMW_virtual_dword(i->seg(), RMAddr(i));

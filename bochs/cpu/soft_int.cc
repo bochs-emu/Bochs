@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.36 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: soft_int.cc,v 1.37 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,6 +44,8 @@ void BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
   Bit16s bound_min, bound_max;
   Bit16s op1_16 = BX_READ_16BIT_REG(i->nnn());
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   bound_min = (Bit16s) read_virtual_word(i->seg(), RMAddr(i));
   bound_max = (Bit16s) read_virtual_word(i->seg(), RMAddr(i)+2);
 
@@ -57,6 +59,8 @@ void BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 {
   Bit32s bound_min, bound_max;
   Bit32s op1_32 = BX_READ_32BIT_REG(i->nnn());
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   bound_min = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i));
   bound_max = (Bit32s) read_virtual_dword(i->seg(), RMAddr(i)+4);

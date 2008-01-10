@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer8.cc,v 1.34 2007-12-21 17:30:49 sshwarts Exp $
+// $Id: data_xfer8.cc,v 1.35 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,6 +44,8 @@ void BX_CPU_C::MOV_RHIb(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EbGbM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   write_virtual_byte(i->seg(), RMAddr(i), BX_READ_8BIT_REGx(i->nnn(), i->extend8bitL()));
 }
 
@@ -55,6 +57,8 @@ void BX_CPU_C::MOV_EbGbR(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_GbEbM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   Bit8u val8 = read_virtual_byte(i->seg(), RMAddr(i));
   BX_WRITE_8BIT_REGx(i->nnn(), i->extend8bitL(), val8);
 }
@@ -77,6 +81,8 @@ void BX_CPU_C::MOV_OdAL(bxInstruction_c *i)
 
 void BX_CPU_C::MOV_EbIbM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   write_virtual_byte(i->seg(), RMAddr(i), i->Ib());
 }
 
@@ -108,6 +114,8 @@ void BX_CPU_C::XLAT(bxInstruction_c *i)
 void BX_CPU_C::XCHG_EbGbM(bxInstruction_c *i)
 {
   Bit8u op1, op2;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   /* pointer, segment address pair */
   op1 = read_RMW_virtual_byte(i->seg(), RMAddr(i));

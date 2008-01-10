@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.164 2007-12-30 20:16:34 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.165 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3371,7 +3371,7 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
 
   offset = 512*1;
 
-  i->ResolveModrm = &BX_CPU_C::BxResolveDummy;
+  i->ResolveModrm = 0;
   i->initMetaInfo(/*os32*/ 1,  // operand size 32 override defaults to 1
                             /*as32*/ 1,  // address size 32 override defaults to 1
                             /*os64*/ 0,  // operand size 64 override defaults to 0

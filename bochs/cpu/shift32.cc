@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift32.cc,v 1.39 2007-12-30 20:16:35 sshwarts Exp $
+// $Id: shift32.cc,v 1.40 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,6 +50,7 @@ void BX_CPU_C::SHLD_EdGd(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -93,6 +94,7 @@ void BX_CPU_C::SHRD_EdGd(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -136,6 +138,7 @@ void BX_CPU_C::ROL_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -176,6 +179,7 @@ void BX_CPU_C::ROR_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -216,6 +220,7 @@ void BX_CPU_C::RCL_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -261,6 +266,7 @@ void BX_CPU_C::RCR_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -307,6 +313,7 @@ void BX_CPU_C::SHL_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -348,6 +355,7 @@ void BX_CPU_C::SHR_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -390,6 +398,7 @@ void BX_CPU_C::SAR_Ed(bxInstruction_c *i)
     op1_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   }

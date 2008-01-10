@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.198 2008-01-05 10:45:05 sshwarts Exp $
+// $Id: cpu.cc,v 1.199 2008-01-10 19:37:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -404,14 +404,12 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
     // fetch and decode single instruction
     bxInstruction_c *i = fetchInstruction(&iStorage, eipBiased);
 #else
-    unsigned n, length = 1;
+    unsigned length;
     bxInstruction_c *i = fetchInstructionTrace(&iStorage, &length, eipBiased);
     Bit32u currPageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
 
     for(;;i++) {
 #endif
-
-      BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
       // An instruction will have been fetched using either the normal case,
       // or the boundary fetch (across pages), by this point.

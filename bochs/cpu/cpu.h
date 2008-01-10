@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.407 2008-01-05 10:21:25 sshwarts Exp $
+// $Id: cpu.h,v 1.408 2008-01-10 19:37:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3120,8 +3120,6 @@ public: // for now...
 #endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *);
-
-  BX_SMF void BxResolveDummy(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void BxResolve16Mod0Rm0(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxResolve16Mod0Rm1(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

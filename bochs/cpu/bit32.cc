@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit32.cc,v 1.3 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: bit32.cc,v 1.4 2008-01-10 19:37:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,6 +44,7 @@ void BX_CPU_C::BSF_GdEd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -76,6 +77,7 @@ void BX_CPU_C::BSR_GdEd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }
@@ -104,8 +106,9 @@ void BX_CPU_C::BT_EdGdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32, index;
   Bit32s displacement32;
 
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = RMAddr(i) + 4 * displacement32;
@@ -134,8 +137,9 @@ void BX_CPU_C::BTS_EdGdM(bxInstruction_c *i)
   Bit32s displacement32;
   bx_bool bit_i;
 
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = RMAddr(i) + 4 * displacement32;
@@ -171,8 +175,9 @@ void BX_CPU_C::BTR_EdGdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32, index;
   Bit32s displacement32;
 
-  op2_32 = BX_READ_32BIT_REG(i->nnn());
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
+  op2_32 = BX_READ_32BIT_REG(i->nnn());
   index = op2_32 & 0x1f;
   displacement32 = ((Bit32s) (op2_32&0xffffffe0)) / 32;
   op1_addr = RMAddr(i) + 4 * displacement32;
@@ -209,6 +214,8 @@ void BX_CPU_C::BTC_EdGdM(bxInstruction_c *i)
   Bit32u op1_32, op2_32, index_32;
   Bit32s displacement32;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   op2_32 = BX_READ_32BIT_REG(i->nnn());
   index_32 = op2_32 & 0x1f;
 
@@ -240,6 +247,8 @@ void BX_CPU_C::BTC_EdGdR(bxInstruction_c *i)
 
 void BX_CPU_C::BT_EdIbM(bxInstruction_c *i)
 {
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   Bit32u op1_32 = read_virtual_dword(i->seg(), RMAddr(i));
   Bit8u  op2_8  = i->Ib() & 0x1f;
 
@@ -257,6 +266,8 @@ void BX_CPU_C::BT_EdIbR(bxInstruction_c *i)
 void BX_CPU_C::BTS_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
@@ -282,6 +293,8 @@ void BX_CPU_C::BTC_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
 
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
   op1_32 ^= (((Bit32u) 1) << op2_8);  /* toggle bit */
@@ -305,6 +318,8 @@ void BX_CPU_C::BTC_EdIbR(bxInstruction_c *i)
 void BX_CPU_C::BTR_EdIbM(bxInstruction_c *i)
 {
   Bit8u op2_8 = i->Ib() & 0x1f;
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), RMAddr(i));
   bx_bool temp_CF = (op1_32 >> op2_8) & 0x01;
@@ -337,6 +352,7 @@ void BX_CPU_C::POPCNT_GdEd(bxInstruction_c *i)
     op2_32 = BX_READ_32BIT_REG(i->rm());
   }
   else {
+    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
     /* pointer, segment address pair */
     op2_32 = read_virtual_dword(i->seg(), RMAddr(i));
   }

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: resolve16.cc,v 1.13 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: resolve16.cc,v 1.14 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,12 +29,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
-  void BX_CPP_AttrRegparmN(1)
-BX_CPU_C::BxResolveDummy(bxInstruction_c *)
-{
-  return; // used when no memory access is needed
-}
 
   void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::BxResolve16Mod0Rm0(bxInstruction_c *i)

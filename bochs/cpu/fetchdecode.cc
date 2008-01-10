@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.157 2007-12-30 20:16:34 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.158 2008-01-10 19:37:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2467,7 +2467,7 @@ BX_CPU_C::fetchDecode32(Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
   os_32 = is_32 =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
-  i->ResolveModrm = &BX_CPU_C::BxResolveDummy;
+  i->ResolveModrm = 0;
   i->initMetaInfo(/*os32*/ is_32,  /*as32*/ is_32,
                             /*os64*/     0,  /*as64*/     0);
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.104 2007-12-30 17:53:12 sshwarts Exp $
+// $Id: paging.cc,v 1.105 2008-01-10 19:37:55 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -569,6 +569,7 @@ void BX_CPU_C::INVLPG(bxInstruction_c* i)
   }
 
 #if BX_USE_TLB
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
   bx_address laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + RMAddr(i);
   TLB_invlpg(laddr);
   InstrTLB_Increment(tlbEntryInvlpg);
