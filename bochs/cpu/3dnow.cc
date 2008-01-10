@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: 3dnow.cc,v 1.20 2008-01-10 19:37:51 sshwarts Exp $
+// $Id: 3dnow.cc,v 1.21 2008-01-10 20:26:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2002 Stanislav Shwartsman
@@ -46,6 +46,8 @@ void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
 
+  BX_CPU_THIS_PTR prepareMMX();
+
   /* op is a register or memory reference */
   if (i->modC0()) {
     op = BX_READ_MMX_REG(i->rm());
@@ -72,6 +74,8 @@ void BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
+
+  BX_CPU_THIS_PTR prepareMMX();
 
   /* op is a register or memory reference */
   if (i->modC0()) {
@@ -104,6 +108,8 @@ void BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 void BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 {
   BxPackedMmxRegister result, op;
+
+  BX_CPU_THIS_PTR prepareMMX();
 
   /* op is a register or memory reference */
   if (i->modC0()) {
