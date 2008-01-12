@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.410 2008-01-10 20:32:23 sshwarts Exp $
+// $Id: cpu.h,v 1.411 2008-01-12 16:40:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1987,8 +1987,11 @@ public: // for now...
   BX_SMF void DEC_EwM(bxInstruction_c *);
   BX_SMF void DEC_EdM(bxInstruction_c *);
 
-  BX_SMF void CALL_Ed(bxInstruction_c *);
-  BX_SMF void CALL_Ew(bxInstruction_c *);
+  BX_SMF void CALL_EdR(bxInstruction_c *);
+  BX_SMF void CALL_EwR(bxInstruction_c *);
+  BX_SMF void CALL_EdM(bxInstruction_c *);
+  BX_SMF void CALL_EwM(bxInstruction_c *);
+
   BX_SMF void CALL32_Ep(bxInstruction_c *);
   BX_SMF void CALL16_Ep(bxInstruction_c *);
   BX_SMF void JMP32_Ep(bxInstruction_c *);
@@ -2984,13 +2987,15 @@ public: // for now...
   BX_SMF void DIV_RAXEq(bxInstruction_c *);
   BX_SMF void IDIV_RAXEq(bxInstruction_c *);
 
-  BX_SMF void INC_EqR(bxInstruction_c *);
-  BX_SMF void DEC_EqR(bxInstruction_c *);
   BX_SMF void INC_EqM(bxInstruction_c *);
   BX_SMF void DEC_EqM(bxInstruction_c *);
-  BX_SMF void CALL_Eq(bxInstruction_c *);
+  BX_SMF void INC_EqR(bxInstruction_c *);
+  BX_SMF void DEC_EqR(bxInstruction_c *);
+  BX_SMF void CALL_EqM(bxInstruction_c *);
+  BX_SMF void CALL_EqR(bxInstruction_c *);
   BX_SMF void CALL64_Ep(bxInstruction_c *);
-  BX_SMF void JMP_Eq(bxInstruction_c *);
+  BX_SMF void JMP_EqM(bxInstruction_c *);
+  BX_SMF void JMP_EqR(bxInstruction_c *);
   BX_SMF void JMP64_Ep(bxInstruction_c *);
   BX_SMF void PUSH_EqR(bxInstruction_c *);
   BX_SMF void PUSH_EqM(bxInstruction_c *);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.60 2008-01-10 19:37:52 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.61 2008-01-12 16:40:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -136,21 +136,35 @@ void BX_CPU_C::CALL_Jq(bxInstruction_c *i)
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
 }
 
-void BX_CPU_C::CALL_Eq(bxInstruction_c *i)
+void BX_CPU_C::CALL_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
+
+  if (! IsCanonical(op1_64))
+  {
+    BX_ERROR(("CALL_Eq: canonical RIP violation"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
-  }
+
+  push_64(RIP);
+  RIP = op1_64;
+
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, RIP);
+}
+
+void BX_CPU_C::CALL_EqR(bxInstruction_c *i)
+{
+#if BX_DEBUGGER
+  BX_CPU_THIS_PTR show_flag |= Flag_call;
+#endif
+
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
 
   if (! IsCanonical(op1_64))
   {
@@ -197,7 +211,15 @@ void BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 
 void BX_CPU_C::JMP_Jq(bxInstruction_c *i)
 {
-  branch_near64(i);
+  Bit64u new_RIP = RIP + (Bit32s) i->Id();
+
+  if (! IsCanonical(new_RIP)) {
+    BX_ERROR(("JMP_Jq: canonical RIP violation"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  RIP = new_RIP;
+
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
 }
 
@@ -361,17 +383,25 @@ void BX_CPU_C::JNLE_Jq(bxInstruction_c *i)
   BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(BX_CPU_ID);
 }
 
-void BX_CPU_C::JMP_Eq(bxInstruction_c *i)
+void BX_CPU_C::JMP_EqM(bxInstruction_c *i)
 {
-  Bit64u op1_64;
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
-  if (i->modC0()) {
-    op1_64 = BX_READ_64BIT_REG(i->rm());
+  Bit64u op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
+
+  if (! IsCanonical(op1_64)) {
+    BX_ERROR(("JMP_Eq: canonical RIP violation"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
-  }
+
+  RIP = op1_64;
+
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, RIP);
+}
+
+void BX_CPU_C::JMP_EqR(bxInstruction_c *i)
+{
+  Bit64u op1_64 = BX_READ_64BIT_REG(i->rm());
 
   if (! IsCanonical(op1_64)) {
     BX_ERROR(("JMP_Eq: canonical RIP violation"));

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer16.cc,v 1.51 2008-01-10 19:37:52 sshwarts Exp $
+// $Id: ctrl_xfer16.cc,v 1.52 2008-01-12 16:40:38 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -224,21 +224,35 @@ done:
                       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 }
 
-void BX_CPU_C::CALL_Ew(bxInstruction_c *i)
+void BX_CPU_C::CALL_EwM(bxInstruction_c *i)
 {
-  Bit16u op1_16;
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
 
-  if (i->modC0()) {
-    op1_16 = BX_READ_16BIT_REG(i->rm());
+  Bit16u op1_16 = read_virtual_word(i->seg(), RMAddr(i));
+
+  if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("CALL_Ew: IP out of CS limits!"));
+    exception(BX_GP_EXCEPTION, 0, 0);
   }
-  else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    op1_16 = read_virtual_word(i->seg(), RMAddr(i));
-  }
+
+  push_16(IP);
+  EIP = op1_16;
+
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_CALL, EIP);
+}
+
+void BX_CPU_C::CALL_EwR(bxInstruction_c *i)
+{
+  Bit16u op1_16 = BX_READ_16BIT_REG(i->rm());
+
+#if BX_DEBUGGER
+  BX_CPU_THIS_PTR show_flag |= Flag_call;
+#endif
 
   if (op1_16 > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
   {
@@ -294,7 +308,15 @@ void BX_CPU_C::JMP_Jw(bxInstruction_c *i)
 {
   Bit32u new_EIP = EIP + (Bit32s) i->Id();
   new_EIP &= 0x0000ffff;
-  branch_near32(new_EIP);
+
+  if (new_EIP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("JMP_Jw: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  EIP = new_EIP;
+
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
 }
 
@@ -512,16 +534,30 @@ void BX_CPU_C::JMP_EwM(bxInstruction_c *i)
 
   Bit16u new_IP = read_virtual_word(i->seg(), RMAddr(i));
 
-  branch_near32((Bit32u) new_IP);
+  if (new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("JMP_Ew: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  EIP = new_IP;
 
   BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
 }
 
 void BX_CPU_C::JMP_EwR(bxInstruction_c *i)
 {
-  Bit32u new_EIP = BX_READ_16BIT_REG(i->rm());
-  branch_near32(new_EIP);
-  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_EIP);
+  Bit16u new_IP = BX_READ_16BIT_REG(i->rm());
+
+  if (new_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
+  {
+    BX_ERROR(("JMP_Ew: offset outside of CS limits"));
+    exception(BX_GP_EXCEPTION, 0, 0);
+  }
+
+  EIP = new_IP;
+
+  BX_INSTR_UCNEAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_JMP, new_IP);
 }
 
 /* Far indirect jump */
