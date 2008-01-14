@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.195 2008-01-06 21:00:18 sshwarts Exp $
+// $Id: rombios.c,v 1.196 2008-01-14 19:10:37 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,7 +944,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.195 $ $Date: 2008-01-06 21:00:18 $";
+static char bios_cvs_version_string[] = "$Revision: 1.196 $ $Date: 2008-01-14 19:10:37 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -2656,14 +2656,6 @@ Bit32u lba;
   if (mode == ATA_MODE_PIO32) blksize>>=2;
   else blksize>>=1;
 
-  //!!FIXME!! this only works up to 28-bit LBA
-  // sector will be 0 only on lba access. Convert to lba-chs
-  if (sector == 0) {
-    sector = (Bit16u) (lba & 0x000000ffL);
-    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
-  }
-
   // Reset count of transferred data
   write_word(ebda_seg, &EbdaData->ata.trsfsectors,0);
   write_dword(ebda_seg, &EbdaData->ata.trsfbytes,0L);
@@ -2673,6 +2665,24 @@ Bit32u lba;
   if (status & ATA_CB_STAT_BSY) return 1;
 
   outb(iobase2 + ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
+
+  // sector will be 0 only on lba access. Convert to lba-chs
+  if (sector == 0) {
+    if ((count >= 1 << 8) || (lba + count >= 1UL << 28)) {
+      outb(iobase1 + ATA_CB_FR, 0x00);
+      outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
+      outb(iobase1 + ATA_CB_SN, lba >> 24);
+      outb(iobase1 + ATA_CB_CL, 0);
+      outb(iobase1 + ATA_CB_CH, 0);
+      command |= 0x04;
+      count &= (1UL << 8) - 1;
+      lba &= (1UL << 24) - 1;
+      }
+    sector = (Bit16u) (lba & 0x000000ffL);
+    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+  }
+
   outb(iobase1 + ATA_CB_FR, 0x00);
   outb(iobase1 + ATA_CB_SC, count);
   outb(iobase1 + ATA_CB_SN, sector);
@@ -2797,14 +2807,6 @@ Bit32u lba;
   if (mode == ATA_MODE_PIO32) blksize>>=2;
   else blksize>>=1;
 
-  //!!FIXME!! this only works up to 28-bit LBA
-  // sector will be 0 only on lba access. Convert to lba-chs
-  if (sector == 0) {
-    sector = (Bit16u) (lba & 0x000000ffL);
-    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
-    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
-  }
-
   // Reset count of transferred data
   write_word(ebda_seg, &EbdaData->ata.trsfsectors,0);
   write_dword(ebda_seg, &EbdaData->ata.trsfbytes,0L);
@@ -2814,6 +2816,24 @@ Bit32u lba;
   if (status & ATA_CB_STAT_BSY) return 1;
 
   outb(iobase2 + ATA_CB_DC, ATA_CB_DC_HD15 | ATA_CB_DC_NIEN);
+
+  // sector will be 0 only on lba access. Convert to lba-chs
+  if (sector == 0) {
+    if ((count >= 1 << 8) || (lba + count >= 1UL << 28)) {
+      outb(iobase1 + ATA_CB_FR, 0x00);
+      outb(iobase1 + ATA_CB_SC, (count >> 8) & 0xff);
+      outb(iobase1 + ATA_CB_SN, lba >> 24);
+      outb(iobase1 + ATA_CB_CL, 0);
+      outb(iobase1 + ATA_CB_CH, 0);
+      command |= 0x04;
+      count &= (1UL << 8) - 1;
+      lba &= (1UL << 24) - 1;
+      }
+    sector = (Bit16u) (lba & 0x000000ffL);
+    cylinder = (Bit16u) ((lba>>8) & 0x0000ffffL);
+    head = ((Bit16u) ((lba>>24) & 0x0000000fL)) | ATA_CB_DH_LBA;
+  }
+
   outb(iobase1 + ATA_CB_FR, 0x00);
   outb(iobase1 + ATA_CB_SC, count);
   outb(iobase1 + ATA_CB_SN, sector);
