@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.11 2007-11-25 20:22:10 sshwarts Exp $
+// $Id: acpi.cc,v 1.12 2008-01-14 18:39:05 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -139,6 +139,7 @@ void bx_acpi_ctrl_c::init(void)
   } init_vals[] = {
     { 0x00, 0x86 }, { 0x01, 0x80 },
     { 0x02, 0x13 }, { 0x03, 0x71 },
+    { 0x08, 0x03 },                 // revision number
     { 0x0a, 0x80 },                 // other bridge device
     { 0x0b, 0x06 },                 // bridge device
     { 0x0e, 0x00 },                 // header type
@@ -420,7 +421,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
       default:
         BX_INFO(("ACPI write to PM register 0x%02x not implemented yet", reg));
     }
-  } else if ((address & 0xffe0) == BX_ACPI_THIS s.sm_base) {
+  } else if ((address & 0xfff0) == BX_ACPI_THIS s.sm_base) {
     if (((BX_ACPI_THIS s.pci_conf[0x04] & 0x01) == 0) &&
         ((BX_ACPI_THIS s.pci_conf[0xd2] & 0x01) == 0)) {
       return;
@@ -561,7 +562,7 @@ void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
         goto set_value;
         break;
       case 0x40:
-        value8 = (value8 & 0xfc) | 0x01;
+        value8 = (value8 & 0xc0) | 0x01;
       case 0x41:
       case 0x42:
       case 0x43:
@@ -569,7 +570,7 @@ void bx_acpi_ctrl_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
         goto set_value;
         break;
       case 0x90:
-        value8 = (value8 & 0xfc) | 0x01;
+        value8 = (value8 & 0xf0) | 0x01;
       case 0x91:
       case 0x92:
       case 0x93:
