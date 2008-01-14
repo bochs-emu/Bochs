@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.cc,v 1.204 2007-12-17 18:08:27 vruppert Exp $
+// $Id: harddrv.cc,v 1.205 2008-01-14 20:47:11 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -174,7 +174,7 @@ void bx_hard_drive_c::init(void)
   char  ata_name[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: harddrv.cc,v 1.204 2007-12-17 18:08:27 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: harddrv.cc,v 1.205 2008-01-14 20:47:11 sshwarts Exp $"));
 
   for (channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     sprintf(ata_name, "ata.%d.resources", channel);
@@ -428,12 +428,11 @@ void bx_hard_drive_c::init(void)
             disk_size = BX_HD_THIS channels[channel].drives[device].hard_drive->hd_size;
             if (image_mode != BX_ATA_MODE_VMWARE3 && image_mode != BX_ATA_MODE_VMWARE4) {
               cyl = (int)(disk_size / (heads * spt * 512));
-              if (disk_size == (Bit64u)(cyl * heads * spt * 512)) {
-                BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
-                SIM->get_param_num("cylinders", base)->set(cyl);
-              } else {
+              if (disk_size != (Bit64u)(cyl * heads * spt * 512)) {
                 BX_PANIC(("ata%d-%d: geometry autodetection failed", channel, device));
               }
+              BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders = cyl;
+              SIM->get_param_num("cylinders", base)->set(cyl);
             } else {
               cyl = BX_HD_THIS channels[channel].drives[device].hard_drive->cylinders;
               heads = BX_HD_THIS channels[channel].drives[device].hard_drive->heads;
