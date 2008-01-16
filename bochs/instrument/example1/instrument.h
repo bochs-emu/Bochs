@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.18 2007-12-13 21:53:55 sshwarts Exp $
+// $Id: instrument.h,v 1.19 2008-01-16 22:54:46 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,6 +157,7 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_HWINTERRUPT(cpu_id, vector, cs, eip) icpu[cpu_id].bx_instr_hwinterrupt(vector, cs, eip)
 
 /* TLB/CACHE control instruction executed */
+#  define BX_INSTR_CLFLUSH(cpu_id, laddr, paddr)
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)
@@ -220,6 +221,7 @@ extern bxInstrumentation *icpu;
 #  define BX_INSTR_HWINTERRUPT(cpu_id, vector, cs, eip)
 
 /* TLB/CACHE control instruction executed */
+#  define BX_INSTR_CLFLUSH(cpu_id, laddr, paddr)
 #  define BX_INSTR_CACHE_CNTRL(cpu_id, what)
 #  define BX_INSTR_TLB_CNTRL(cpu_id, what, new_cr3)
 #  define BX_INSTR_PREFETCH_HINT(cpu_id, what, seg, offset)

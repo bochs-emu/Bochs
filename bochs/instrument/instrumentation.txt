@@ -121,6 +121,11 @@ The  callback  is  called  each time, when Bochs simulator executes a hardware
 interrupt.
 
 
+	void bx_instr_clflush(unsigned cpu, bx_address laddr, bx_phy_address paddr);
+
+The callback is called each time the CLFLUSH instruction is executed.
+
+
 	void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, bx_phy_address new_cr3);
 	void bx_instr_cache_cntrl(unsigned cpu, unsigned what);
 
