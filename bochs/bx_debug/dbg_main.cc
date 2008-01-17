@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: dbg_main.cc,v 1.109 2007-12-30 18:02:22 sshwarts Exp $
+// $Id: dbg_main.cc,v 1.110 2008-01-17 15:39:45 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1236,8 +1236,8 @@ void bx_dbg_show_param_command(char *param)
 // return non zero to cause a stop
 int bx_dbg_show_symbolic(void) 
 {
-  static unsigned   last_cpu_mode = 0;
-  static bx_address last_cr3 = 0;
+  static unsigned last_cpu_mode = 0;
+  static bx_phy_address last_cr3 = 0;
 
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
@@ -1249,7 +1249,7 @@ int bx_dbg_show_symbolic(void)
     }
 
     if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
-      dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_ADDRX "\n", 
+      dbg_printf(FMT_TICK ": address space switched. CR3: 0x08x\n", 
         bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
   }
 
@@ -3115,7 +3115,7 @@ void bx_dbg_dump_table(void)
     return;
   }
 
-  printf("cr3: 0x" FMT_ADDRX "\n", BX_CPU(dbg_cpu)->cr3);
+  printf("cr3: 0x08x\n", BX_CPU(dbg_cpu)->cr3);
 
   lin = 0; 
   phy = 0; 
