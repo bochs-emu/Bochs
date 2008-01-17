@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.cc,v 1.14 2006-06-17 12:09:55 sshwarts Exp $
+// $Id: instrument.cc,v 1.15 2008-01-17 21:35:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -142,7 +142,7 @@ void bxInstrumentation::bx_instr_opcode(Bit8u *opcode_bytes, unsigned len, bx_bo
   opcode_size = len;
 }
 
-void bxInstrumentation::bx_instr_fetch_decode_completed(const bxInstruction_c *i)
+void bxInstrumentation::bx_instr_fetch_decode_completed(bxInstruction_c *i)
 {
   if(active) valid = 1; 
 }

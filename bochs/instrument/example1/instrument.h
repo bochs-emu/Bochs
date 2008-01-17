@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.19 2008-01-16 22:54:46 sshwarts Exp $
+// $Id: instrument.h,v 1.20 2008-01-17 21:35:21 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,7 +103,7 @@ public:
   void bx_instr_far_branch(unsigned what, Bit16u new_cs, bx_address new_eip);
 
   void bx_instr_opcode(Bit8u *opcode, unsigned len, bx_bool is32, bx_bool is64);
-  void bx_instr_fetch_decode_completed(const bxInstruction_c *i);
+  void bx_instr_fetch_decode_completed(bxInstruction_c *i);
 
   void bx_instr_prefix(Bit8u prefix);
 
