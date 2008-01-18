@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.195 2008-01-16 22:56:17 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.196 2008-01-18 08:57:35 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2087,6 +2087,9 @@ void BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
   ESP = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
   EIP = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSENTER,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 #else
   BX_INFO(("SYSENTER: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
@@ -2151,6 +2154,9 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 
   ESP = ECX;
   EIP = EDX;
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSEXIT,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, EIP);
 #else
   BX_INFO(("SYSEXIT: use --enable-sep to enable SYSENTER/SYSEXIT support"));
   UndefinedOpcode (i);
@@ -2281,6 +2287,9 @@ void BX_CPU_C::SYSCALL(bxInstruction_c *i)
     BX_CPU_THIS_PTR clear_RF();
     RIP = temp_RIP;
   }
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSCALL,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::SYSRET(bxInstruction_c *i)
@@ -2362,8 +2371,6 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
     writeEFlags((Bit32u) R11, EFlagsValidMask);
-
-    RIP = temp_RIP;
   }
   else { // (!64BIT_MODE)
     // Return to 32-bit legacy mode, set up CS segment, flat, 32-bit DPL=3
@@ -2406,6 +2413,9 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   RIP = temp_RIP;
+
+  BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_SYSRET,
+                      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
 }
 
 void BX_CPU_C::SWAPGS(bxInstruction_c *i)
