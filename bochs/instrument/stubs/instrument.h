@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instrument.h,v 1.26 2008-01-17 21:35:21 sshwarts Exp $
+// $Id: instrument.h,v 1.27 2008-01-18 08:56:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -34,12 +34,18 @@
 #define BX_INSTR_INVD         20
 #define BX_INSTR_WBINVD       21
 
-#define BX_INSTR_IS_CALL  10
-#define BX_INSTR_IS_RET   11
-#define BX_INSTR_IS_IRET  12
-#define BX_INSTR_IS_JMP   13
-#define BX_INSTR_IS_INT   14
+// possible types passed to BX_INSTR_FAR_BRANCH()
+#define BX_INSTR_IS_CALL      10
+#define BX_INSTR_IS_RET       11
+#define BX_INSTR_IS_IRET      12
+#define BX_INSTR_IS_JMP       13
+#define BX_INSTR_IS_INT       14
+#define BX_INSTR_IS_SYSCALL   15
+#define BX_INSTR_IS_SYSRET    16
+#define BX_INSTR_IS_SYSENTER  17
+#define BX_INSTR_IS_SYSEXIT   18
 
+// possible types passed to BX_INSTR_PREFETCH_HINT()
 #define BX_INSTR_PREFETCH_NTA 0
 #define BX_INSTR_PREFETCH_T0  1
 #define BX_INSTR_PREFETCH_T1  2
