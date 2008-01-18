@@ -165,20 +165,20 @@ This callback is called each time when WRMSR instruction is executed.
 MSR number and written value passed as parameters to the callback function.
 
 
-	void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i);
+	void bx_instr_repeat_iteration(unsigned cpu, bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator starts a new repeat
 iteration.
 
 
-	void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
+	void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator starts a new
 instruction execution. In case of repeat instruction the callback will
 be called only once before the first iteration will be started. 
 
 
-	void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *i);
+	void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator finishes any
 instruction execution. In case of repeat instruction the callback will
