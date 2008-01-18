@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.412 2008-01-14 19:03:50 sshwarts Exp $
+// $Id: cpu.h,v 1.413 2008-01-18 09:36:13 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3919,6 +3919,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
   #define BxTraceEnd        0x2000 // bit 13
 #else
   #define BxTraceEnd        0
+#endif
+
+#ifdef BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
+  #define BxTraceJCC      BxTraceEnd
+#else
+  #define BxTraceJCC      0
 #endif
 
 #define BxGroup1          BxGroupN

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.22 2007-12-21 12:38:57 sshwarts Exp $
+// $Id: icache.h,v 1.23 2008-01-18 09:36:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -116,7 +116,7 @@ extern bxPageWriteStampTable pageWriteStampTable;
 #define BxICacheEntries (32 * 1024)  // Must be a power of 2.
 
 #if BX_SUPPORT_TRACE_CACHE
-#define BX_MAX_TRACE_LENGTH 16
+  #define BX_MAX_TRACE_LENGTH 16
 #endif
 
 struct bxICacheEntry_c

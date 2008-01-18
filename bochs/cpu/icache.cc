@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.2 2008-01-17 21:16:23 sshwarts Exp $
+// $Id: icache.cc,v 1.3 2008-01-18 09:36:15 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -83,9 +83,6 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 #if BX_SUPPORT_TRACE_CACHE
 
-// we want to allow speculative tracing
-#define BX_TRACE_CACHE_NO_SPECULATIVE_TRACING 0
-
 bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, bx_address eipBiased)
 {
   bx_phy_address pAddr = (bx_phy_address)(BX_CPU_THIS_PTR pAddrA20Page + eipBiased);
@@ -161,14 +158,13 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
     fetchPtr += iLen;
 
     if (i->getStopTraceAttr()) {
-      unsigned b1 = i->b1() & 0x1f0;
-      if (b1 != 0x70 && b1 != 0x180) {    // JCC instruction
-        break;
-      }
 #if BX_TRACE_CACHE_NO_SPECULATIVE_TRACING
-      mergeTraces(trace, i+1, pAddr);
-      break;
+      unsigned b1 = i->b1() & 0x1f0;
+      if (b1 == 0x70 || b1 == 0x180) {    // JCC instruction
+        mergeTraces(trace, i+1, pAddr);
+      }
 #endif
+      break;
     }
 
     // try to find a trace starting from current pAddr and merge
