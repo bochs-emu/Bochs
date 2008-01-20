@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.413 2008-01-18 09:36:13 sshwarts Exp $
+// $Id: cpu.h,v 1.414 2008-01-20 20:11:16 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3910,13 +3910,12 @@ IMPLEMENT_EFLAG_ACCESSOR   (TF,   8)
 #define Bx3ByteOpTable      0x0060 // Group encoding: 110
                                    // Group encoding: 111
 
-#define BxPrefix            0x0080 // bit  7
-#define BxLockable          0x0100 // bit  8
-#define Bx3ByteOpcode       0x0200 // bit  9
-#define BxRepeatable        0x0400 // bit 10
+#define BxLockable          0x0080 // bit  7
+#define Bx3ByteOpcode       0x0100 // bit  8
+#define BxRepeatable        0x0200 // bit  9
 
 #if BX_SUPPORT_TRACE_CACHE
-  #define BxTraceEnd        0x2000 // bit 13
+  #define BxTraceEnd        0x1000 // bit 12
 #else
   #define BxTraceEnd        0
 #endif
