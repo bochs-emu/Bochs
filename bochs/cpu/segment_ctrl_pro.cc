@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.77 2007-11-30 08:49:12 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.78 2008-01-20 17:46:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -101,14 +101,16 @@ BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid = 1;
 
       /* now set accessed bit in descriptor */
-      dword2 |= 0x0100;
-      if (ss_selector.ti == 0) { /* GDT */
-        access_linear(BX_CPU_THIS_PTR gdtr.base + ss_selector.index*8 + 4, 4, 0,
-          BX_WRITE, &dword2);
-      }
-      else { /* LDT */
-        access_linear(BX_CPU_THIS_PTR ldtr.cache.u.system.base + ss_selector.index*8 + 4, 4, 0,
-          BX_WRITE, &dword2);
+      if (!(dword2 & 0x0100)) {
+        dword2 |= 0x0100;
+        if (ss_selector.ti == 0) { /* GDT */
+          access_linear(BX_CPU_THIS_PTR gdtr.base + ss_selector.index*8 + 4, 4, 0,
+            BX_WRITE, &dword2);
+        }
+        else { /* LDT */
+          access_linear(BX_CPU_THIS_PTR ldtr.cache.u.system.base + ss_selector.index*8 + 4, 4, 0,
+            BX_WRITE, &dword2);
+        }
       }
 
       return;

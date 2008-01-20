@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.71 2008-01-10 19:37:55 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.72 2008-01-20 17:46:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -472,9 +472,11 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
 
   /* mark as busy */
-  dword2 |= 0x00000200; /* set busy bit */
-  access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0,
-      BX_WRITE, &dword2);
+  if (!(dword2 & 0x0200)) {
+    dword2 |= 0x0200; /* set busy bit */
+    access_linear(BX_CPU_THIS_PTR gdtr.base + selector.index*8 + 4, 4, 0,
+        BX_WRITE, &dword2);
+  }
 }
 
 void BX_CPU_C::VERR_Ew(bxInstruction_c *i)
