@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32.c,v 1.18 2008-01-06 20:57:24 sshwarts Exp $
+// $Id: rombios32.c,v 1.19 2008-01-21 15:06:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -342,6 +342,9 @@ void bios_printf(int flags, const char *fmt, ...)
     va_list ap;
     char buf[1024];
     const char *s;
+
+    if ((flags & BIOS_PRINTF_DEBHALT) == BIOS_PRINTF_DEBHALT)
+        outb(PANIC_PORT2, 0x00);
 
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
@@ -1386,5 +1389,9 @@ void rombios32_init(void)
             acpi_bios_init();
         
         bios_lock_shadow_ram();
+
+        BX_INFO("bios_table_cur_addr: 0x%08lx\n", bios_table_cur_addr);
+        if (bios_table_cur_addr > bios_table_end_addr)
+            BX_PANIC("bios_table_end_addr overflow!\n");
     }
 }

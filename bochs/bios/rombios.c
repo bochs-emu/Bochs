@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.196 2008-01-14 19:10:37 vruppert Exp $
+// $Id: rombios.c,v 1.197 2008-01-21 15:06:28 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -944,7 +944,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.196 $ $Date: 2008-01-14 19:10:37 $";
+static char bios_cvs_version_string[] = "$Revision: 1.197 $ $Date: 2008-01-21 15:06:28 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -10049,7 +10049,6 @@ bios_table_area_start:
 ;- POST -
 ;--------
 .org 0xe05b ; POST Entry Point
-bios_table_area_end:
 post:
 
   xor ax, ax
@@ -11106,5 +11105,6 @@ static Bit8u vgafont8[128*8]=
 
 ASM_START
 .org 0xcc00
+bios_table_area_end:
 // bcc-generated data will be placed here
 ASM_END
