@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bochs.h,v 1.220 2008-01-01 18:12:31 sshwarts Exp $
+// $Id: bochs.h,v 1.221 2008-01-21 21:36:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -448,7 +448,7 @@ typedef struct {
   bx_bool serial;
   bx_bool cdrom;
   bx_bool print_timestamps;
-#if BX_MAGIC_BREAKPOINT
+#if BX_DEBUGGER
   bx_bool magic_break_enabled;
 #endif
 #if BX_GDBSTUB

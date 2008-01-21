@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.202 2008-01-17 21:15:23 sshwarts Exp $
+// $Id: cpu.cc,v 1.203 2008-01-21 21:36:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -65,9 +65,7 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR break_point = 0;
-#if BX_MAGIC_BREAKPOINT
   BX_CPU_THIS_PTR magic_break = 0;
-#endif
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
 
@@ -865,13 +863,11 @@ bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
     }
   }
 
-#if BX_MAGIC_BREAKPOINT
   if (BX_CPU_THIS_PTR magic_break) {
     BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
     BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
     return(1); // on a breakpoint
   }
-#endif
 
   // convenient point to see if user typed Ctrl-C
   if (bx_guard.interrupt_requested &&

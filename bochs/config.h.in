@@ -952,9 +952,6 @@ typedef
 // External Debugger
 #define BX_EXTERNAL_DEBUGGER 0
 
-// Magic breakpoints
-#define BX_MAGIC_BREAKPOINT 1
-
 #ifdef WIN32
 #define BX_FLOPPY0_NAME "Floppy Disk A:"
 #define BX_FLOPPY1_NAME "Floppy Disk B:"

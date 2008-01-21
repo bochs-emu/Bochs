@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.53 2008-01-10 19:37:52 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.54 2008-01-21 21:36:58 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -209,7 +209,7 @@ void BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
 {
   Bit16u op1_16, op2_16;
 
-#if BX_DEBUGGER && BX_MAGIC_BREAKPOINT
+#if BX_DEBUGGER
   // Note for mortals: the instruction to trigger this is "xchgw %bx,%bx"
   if (bx_dbg.magic_break_enabled && (i->nnn() == 3) && (i->rm() == 3))
   {

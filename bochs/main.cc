@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: main.cc,v 1.370 2007-12-21 21:16:34 sshwarts Exp $
+// $Id: main.cc,v 1.371 2008-01-21 21:36:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1151,7 +1151,7 @@ void bx_init_bx_dbg(void)
   bx_dbg.record_io = 0;
   bx_dbg.serial = 0;
   bx_dbg.cdrom = 0;
-#if BX_MAGIC_BREAKPOINT
+#if BX_DEBUGGER
   bx_dbg.magic_break_enabled = 0;
 #endif
 #if BX_GDBSTUB

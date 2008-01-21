@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.414 2008-01-20 20:11:16 sshwarts Exp $
+// $Id: cpu.h,v 1.415 2008-01-21 21:36:57 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1226,9 +1226,7 @@ public: // for now...
 #if BX_DEBUGGER
   bx_phy_address watchpoint;
   Bit8u break_point;
-#if BX_MAGIC_BREAKPOINT
   Bit8u magic_break;
-#endif
   Bit8u stop_reason;
   Bit8u trace_reg;
   Bit8u mode_break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.127 2008-01-21 21:03:34 sshwarts Exp $
+// $Id: config.cc,v 1.128 2008-01-21 21:36:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2813,9 +2813,8 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     PARSE_ERR(("%s: Bochs is not compiled with gdbstub support", context));
 #endif
   }
-
-#if BX_MAGIC_BREAKPOINT
   else if (!strcmp(params[0], "magic_break")) {
+#if BX_DEBUGGER
     if (num_params != 2) {
       PARSE_ERR(("%s: magic_break directive: wrong # args.", context));
     }
@@ -2833,8 +2832,10 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     else {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
     }
-  }
+#else
+    PARSE_ERR(("%s: Bochs is not compiled with internal debugger support", context));
 #endif
+  }
   else if (!strcmp(params[0], "print_timestamps")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: print_timestamps directive: wrong # args.", context));
