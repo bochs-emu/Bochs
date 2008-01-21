@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.197 2008-01-21 15:06:28 sshwarts Exp $
+// $Id: rombios.c,v 1.198 2008-01-21 21:42:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -180,15 +180,6 @@
 #define IPL_TYPE_HARDDISK    0x02
 #define IPL_TYPE_CDROM       0x03
 #define IPL_TYPE_BEV         0x80
-
-  // Define the application NAME
-#if defined(BX_QEMU)
-#  define BX_APPNAME "QEMU"
-#elif defined(PLEX86)
-#  define BX_APPNAME "Plex86"
-#else
-#  define BX_APPNAME "Bochs"
-#endif
 
   // Sanity Checks
 #if BX_USE_ATADRV && BX_CPU<3
@@ -944,7 +935,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.197 $ $Date: 2008-01-21 15:06:28 $";
+static char bios_cvs_version_string[] = "$Revision: 1.198 $ $Date: 2008-01-21 21:42:42 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 

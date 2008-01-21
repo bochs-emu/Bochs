@@ -170,6 +170,17 @@ DefinitionBlock (
             /* PIIX PCI to ISA irq remapping */
             OperationRegion (P40C, PCI_Config, 0x60, 0x04)
 
+            /* Real-time clock */
+            Device (RTC)
+            {
+                Name (_HID, EisaId ("PNP0B00"))
+                Name (_CRS, ResourceTemplate ()
+                {
+                    IO (Decode16, 0x0070, 0x0070, 0x10, 0x02)
+                    IRQNoFlags () {8}
+                    IO (Decode16, 0x0072, 0x0072, 0x02, 0x06)
+                })
+            }
 
             /* Keyboard seems to be important for WinXP install */
             Device (KBD)

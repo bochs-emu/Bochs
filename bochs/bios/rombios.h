@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.4 2007-02-20 09:36:55 vruppert Exp $
+// $Id: rombios.h,v 1.5 2008-01-21 21:42:42 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -57,3 +57,12 @@
 #define PM_IO_BASE        0xb000
 #define SMB_IO_BASE       0xb100
 #define CPU_COUNT_ADDR    0xf000
+
+  // Define the application NAME
+#if defined(BX_QEMU)
+#  define BX_APPNAME "QEMU"
+#elif defined(PLEX86)
+#  define BX_APPNAME "Plex86"
+#else
+#  define BX_APPNAME "Bochs"
+#endif
