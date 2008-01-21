@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.126 2007-12-23 17:21:27 sshwarts Exp $
+// $Id: config.cc,v 1.127 2008-01-21 21:03:34 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2517,8 +2517,6 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
     if (SIM->get_param_num(BXPN_KBD_PASTE_DELAY)->get() < 1000) {
       PARSE_ERR (("%s: keyboard_paste_delay not big enough!", context));
     }
-  } else if (!strcmp(params[0], "floppy_command_delay")) {
-    PARSE_WARN(("%s: floppy_command_delay is DEPRECATED (now using hardware timing).", context));
   } else if (!strcmp(params[0], "ips")) {
     PARSE_WARN(("%s: ips directive is DEPRECATED (use cpu directive parameter 'ips').", context));
     if (num_params != 2) {
@@ -3038,15 +3036,6 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_string(BXPN_DISPLAYLIB_OPTIONS)->set(&params[2][8]);
       }
     }
-  }
-  // Old timing options have been replaced by the 'clock' option
-  else if (!strcmp(params[0], "pit")) // Deprecated
-  {
-    PARSE_ERR(("ERROR: pit directive is DEPRECATED, use clock: instead"));
-  }
-  else if (!strcmp(params[0], "time0")) // Deprectated
-  {
-    PARSE_ERR(("ERROR: time0 directive is DEPRECATED, use clock: instead"));
   }
   // user-defined options handled by registered functions
   else if ((i = SIM->find_user_option(params[0])) >= 0)
