@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.22 2007-10-18 22:44:39 sshwarts Exp $
+// $Id: extdb.cc,v 1.23 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -115,10 +115,10 @@ void bx_external_debugger(BX_CPU_C *cpu)
      }
 }
 
-void trap_debugger(bx_bool callnow)
+void trap_debugger(bx_bool callnow, BX_CPU_C *cpu)
 {
   regs.debug_state = debug_step;
   if (callnow) {
-    bx_external_debugger(BX_CPU_THIS);
+    bx_external_debugger(cpu);
   }
 }

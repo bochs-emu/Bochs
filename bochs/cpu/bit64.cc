@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.5 2008-01-10 19:37:51 sshwarts Exp $
+// $Id: bit64.cc,v 1.6 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -145,10 +145,8 @@ void BX_CPU_C::BTS_EqGqM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_64 = read_RMW_virtual_qword(i->seg(), op1_addr);
-
   bit_i = (op1_64 >> index) & 0x01;
   op1_64 |= (((Bit64u) 1) << index);
-
   write_RMW_virtual_qword(op1_64);
 
   set_CF(bit_i);

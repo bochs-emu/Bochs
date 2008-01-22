@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.37 2008-01-10 19:37:55 sshwarts Exp $
+// $Id: soft_int.cc,v 1.38 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -81,7 +81,7 @@ void BX_CPU_C::INT1(bxInstruction_c *i)
 #endif
 
 #if BX_EXTERNAL_DEBUGGER
-  trap_debugger(0);
+  trap_debugger(0, BX_CPU_THIS);
 #endif
 
   BX_CPU_THIS_PTR speculative_rsp = 1;

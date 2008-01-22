@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.3 2008-01-18 09:36:15 sshwarts Exp $
+// $Id: icache.cc,v 1.4 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -83,9 +83,9 @@ static Bit32u iCacheTraceLengh[BX_MAX_TRACE_LENGTH];
 
 #if BX_SUPPORT_TRACE_CACHE
 
-bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, bx_address eipBiased)
+bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, Bit32u eipBiased)
 {
-  bx_phy_address pAddr = (bx_phy_address)(BX_CPU_THIS_PTR pAddrA20Page + eipBiased);
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrA20Page + eipBiased;
   unsigned iCacheHash = BX_CPU_THIS_PTR iCache.hash(pAddr);
   bxICacheEntry_c *trace = &(BX_CPU_THIS_PTR iCache.entry[iCacheHash]);
   Bit32u pageWriteStamp = *(BX_CPU_THIS_PTR currPageWriteStampPtr);
@@ -110,18 +110,13 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
 
   InstrICache_Increment(iCacheMisses);
 
-  unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
   unsigned ret;
 
-  // We could include in trace maximum BX_MAX_TRACE_LEN instructions
-  unsigned max_length = BX_MAX_TRACE_LENGTH;
-  if ((pageWriteStamp & ICacheWriteStampMask) != ICacheWriteStampStart)
-    max_length = 1;  // seems like the entry has SMC ping-pong problem
-
   bxInstruction_c *i = trace->i;
 
-  for (unsigned n=0;n<max_length;n++,i++)
+  for (unsigned n=0;n<BX_MAX_TRACE_LENGTH;n++,i++)
   {
 #if BX_SUPPORT_X86_64
     if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -226,7 +221,7 @@ void BX_CPU_C::instrumentTraces(void)
 
 #else // BX_SUPPORT_TRACE_CACHE == 0
 
-bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_address eipBiased)
+bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased)
 {
   unsigned ret;
   bxInstruction_c *i = iStorage;
@@ -259,7 +254,7 @@ bxInstruction_c* BX_CPU_C::fetchInstruction(bxInstruction_c *iStorage, bx_addres
   // iCache miss. No validated instruction with matching fetch parameters
   // is in the iCache. Or we're not compiling iCache support in, in which
   // case we always have an iCache miss.  :^)
-  unsigned remainingInPage = (unsigned)(BX_CPU_THIS_PTR eipPageWindowSize - eipBiased);
+  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
 
 #if BX_SUPPORT_ICACHE

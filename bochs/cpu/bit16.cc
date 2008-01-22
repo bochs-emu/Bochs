@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit16.cc,v 1.4 2008-01-10 19:37:51 sshwarts Exp $
+// $Id: bit16.cc,v 1.5 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -145,10 +145,8 @@ void BX_CPU_C::BTS_EwGwM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
-
   bit_i = (op1_16 >> index) & 0x01;
   op1_16 |= (((Bit16u) 1) << index);
-
   write_RMW_virtual_word(op1_16);
 
   set_CF(bit_i);
@@ -183,7 +181,6 @@ void BX_CPU_C::BTR_EwGwM(bxInstruction_c *i)
 
   /* pointer, segment address pair */
   op1_16 = read_RMW_virtual_word(i->seg(), op1_addr);
-
   bx_bool temp_cf = (op1_16 >> index) & 0x01;
   op1_16 &= ~(((Bit16u) 1) << index);
 
@@ -223,8 +220,6 @@ void BX_CPU_C::BTC_EwGwM(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_16 >> index_16) & 0x01;
   op1_16 ^= (((Bit16u) 1) << index_16);  /* toggle bit */
-  set_CF(temp_CF);
-
   write_RMW_virtual_word(op1_16);
 
   set_CF(temp_CF);
@@ -240,8 +235,6 @@ void BX_CPU_C::BTC_EwGwR(bxInstruction_c *i)
 
   bx_bool temp_CF = (op1_16 >> op2_16) & 0x01;
   op1_16 ^= (((Bit16u) 1) << op2_16);  /* toggle bit */
-  set_CF(temp_CF);
-
   BX_WRITE_16BIT_REG(i->rm(), op1_16);
 
   set_CF(temp_CF);

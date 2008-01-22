@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.415 2008-01-21 21:36:57 sshwarts Exp $
+// $Id: cpu.h,v 1.416 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -409,7 +409,7 @@ typedef struct {
   BX_CPP_INLINE void    clear_##name ();                              \
   BX_CPP_INLINE Bit32u  get_##name ();                                \
   BX_CPP_INLINE bx_bool getB_##name ();                               \
-  BX_CPP_INLINE void    set_##name (Bit8u val);                       \
+  BX_CPP_INLINE void    set_##name (bx_bool val);                     \
 
 #define IMPLEMENT_EFLAG_ACCESSOR(name,bitnum)                         \
   BX_CPP_INLINE void BX_CPU_C::assert_##name () {                     \
@@ -424,7 +424,7 @@ typedef struct {
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_##name () {                     \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
-  BX_CPP_INLINE void BX_CPU_C::set_##name (Bit8u val) {               \
+  BX_CPP_INLINE void BX_CPU_C::set_##name (bx_bool val) {             \
     BX_CPU_THIS_PTR eflags.val32 =                                    \
       (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);    \
   }
@@ -445,7 +445,7 @@ typedef struct {
   BX_CPP_INLINE Bit32u BX_CPU_C::get_AC() {                           \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
-  BX_CPP_INLINE Bit32u BX_CPU_C::getB_AC() {                          \
+  BX_CPP_INLINE bx_bool BX_CPU_C::getB_AC() {                         \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);              \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::set_AC(bx_bool val) {                  \
@@ -461,13 +461,13 @@ typedef struct {
   BX_CPP_INLINE void    clear_VM();                                   \
   BX_CPP_INLINE Bit32u  get_VM();                                     \
   BX_CPP_INLINE bx_bool getB_VM();                                    \
-  BX_CPP_INLINE void    set_VM(Bit32u val);
+  BX_CPP_INLINE void    set_VM(bx_bool val);
 
 #define IMPLEMENT_EFLAG_ACCESSOR_VM(bitnum)                           \
   BX_CPP_INLINE Bit32u  BX_CPU_C::get_VM() {                          \
     return BX_CPU_THIS_PTR eflags.val32 & (1 << bitnum);              \
   }                                                                   \
-  BX_CPP_INLINE Bit32u  BX_CPU_C::getB_VM() {                         \
+  BX_CPP_INLINE bx_bool BX_CPU_C::getB_VM() {                         \
     return 1 & (BX_CPU_THIS_PTR eflags.val32 >> bitnum);              \
   }                                                                   \
   BX_CPP_INLINE void BX_CPU_C::assert_VM() {                          \
@@ -476,16 +476,11 @@ typedef struct {
   BX_CPP_INLINE void BX_CPU_C::clear_VM() {                           \
     set_VM(0);                                                        \
   }                                                                   \
-  BX_CPP_INLINE void BX_CPU_C::set_VM(Bit32u val) {                   \
-    if (long_mode()) return;                                          \
-    if (val) {                                                        \
-       BX_CPU_THIS_PTR eflags.val32 |= (1<<bitnum);                   \
-       if (BX_CPU_THIS_PTR cr0.get_PE())                              \
-         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;               \
-    } else {                                                          \
-       BX_CPU_THIS_PTR eflags.val32 &= ~(1<<bitnum);                  \
-       if (BX_CPU_THIS_PTR cr0.get_PE())                              \
-         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;           \
+  BX_CPP_INLINE void BX_CPU_C::set_VM(bx_bool val) {                  \
+    if (!long_mode()) {                                               \
+      BX_CPU_THIS_PTR eflags.val32 =                                  \
+        (BX_CPU_THIS_PTR eflags.val32&~(1<<bitnum))|((val)<<bitnum);  \
+      handleCpuModeChange();                                          \
     }                                                                 \
   }
 
@@ -1209,7 +1204,7 @@ public: // for now...
 
   // Boundaries of current page, based on EIP
   bx_address eipPageBias;
-  bx_address eipPageWindowSize;
+  Bit32u     eipPageWindowSize;
   Bit8u     *eipFetchPtr;
   bx_phy_address pAddrA20Page; // Guest physical address of current instruction
                                // page with A20() already applied.
@@ -1263,19 +1258,19 @@ public: // for now...
 #endif
 
   struct {
-    bx_address rm_addr; // The address offset after resolution.
+    bx_address rm_addr;       // The address offset after resolution
     bx_phy_address paddress1; // physical address after translation of 1st len1 bytes of data
     bx_phy_address paddress2; // physical address after translation of 2nd len2 bytes of data
-    Bit32u len1;        // Number of bytes in page 1
-    Bit32u len2;        // Number of bytes in page 2
-    bx_ptr_equiv_t pages;      // Number of pages access spans (1 or 2).  Also used
-                        //   for the case when a native host pointer is
-                        //   available for the R-M-W instructions.  The host
-                        //   pointer is stuffed here.  Since this field has
-                        //   to be checked anyways (and thus cached), if it
-                        //   is greated than 2 (the maximum possible for
-                        //   normal cases) it is a native pointer and is used
-                        //   for a direct write access.
+    Bit32u len1;              // Number of bytes in page 1
+    Bit32u len2;              // Number of bytes in page 2
+    bx_ptr_equiv_t pages;     // Number of pages access spans (1 or 2).  Also used
+                              // for the case when a native host pointer is
+                              // available for the R-M-W instructions.  The host
+                              // pointer is stuffed here.  Since this field has
+                              // to be checked anyways (and thus cached), if it
+                              // is greated than 2 (the maximum possible for
+                              // normal cases) it is a native pointer and is used
+                              // for a direct write access.
   } address_xlation;
 
 #if BX_EXTERNAL_DEBUGGER
@@ -3105,11 +3100,11 @@ public: // for now...
   BX_SMF unsigned fetchDecode64(Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
 #if BX_SUPPORT_TRACE_CACHE
-  BX_SMF bxInstruction_c* fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, bx_address eipBiased);
+  BX_SMF bxInstruction_c* fetchInstructionTrace(bxInstruction_c *iStorage, unsigned *len, Bit32u eipBiased);
   BX_SMF bx_bool mergeTraces(bxICacheEntry_c *trace, bxInstruction_c *, bx_phy_address pAddr);
   BX_SMF void instrumentTraces(void);
 #else
-  BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *, bx_address);
+  BX_SMF bxInstruction_c* fetchInstruction(bxInstruction_c *iStorage, Bit32u eipBiased);
 #endif
   BX_SMF void UndefinedOpcode(bxInstruction_c *);
   BX_SMF void BxError(bxInstruction_c *);
@@ -3537,8 +3532,6 @@ BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 #define BX_HWDebugMemRW         0x03
 #endif
 
-#include <assert.h>
-
 BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 {
 #if BX_SUPPORT_X86_64
@@ -3551,6 +3544,13 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
 #endif
    return (Bit32u)(BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base);
 }
+
+BX_CPP_INLINE Bit32u BX_CPU_C::read_eflags(void)
+{
+   return BX_CPU_THIS_PTR force_flags();
+}
+
+#include <assert.h>
 
 BX_CPP_INLINE Bit8u BX_CPU_C::get_reg8l(unsigned reg)
 {
@@ -3667,7 +3667,7 @@ BX_CPP_INLINE bx_bool BX_CPU_C::protected_mode(void)
   return (BX_CPU_THIS_PTR cpu_mode >= BX_MODE_IA32_PROTECTED);
 }
 
-BX_CPP_INLINE unsigned BX_CPU_C::long_mode(void)
+BX_CPP_INLINE bx_bool BX_CPU_C::long_mode(void)
 {
 #if BX_SUPPORT_X86_64
   return BX_CPU_THIS_PTR efer.lma;

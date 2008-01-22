@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl_pro.cc,v 1.29 2007-11-20 21:22:03 sshwarts Exp $
+// $Id: flag_ctrl_pro.cc,v 1.30 2008-01-22 16:20:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -47,7 +47,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::setEFlags(Bit32u val)
 
   BX_CPU_THIS_PTR eflags.val32 = val;
   BX_CPU_THIS_PTR lf_flags_status = 0; // OSZAPC flags are known.
-  BX_CPU_THIS_PTR set_VM(val & EFlagsVMMask);
+
+  handleCpuModeChange(); // VM flag might be changed
 }
 
   void BX_CPP_AttrRegparmN(2)
@@ -133,17 +134,3 @@ Bit16u BX_CPU_C::read_flags(void)
 
   return(flags16);
 }
-
-#if BX_CPU_LEVEL >= 3
-Bit32u BX_CPU_C::read_eflags(void)
-{
-  Bit32u flags32 = BX_CPU_THIS_PTR force_flags();
-
-  /*
-   * 386+: real-mode: bit15 cleared, bits 14..12 are last loaded value
-   *       protected-mode: bit 15 clear, bit 14 = last loaded, IOPL?
-   */
-
-  return(flags32);
-}
-#endif
