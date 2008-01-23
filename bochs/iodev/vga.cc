@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.145 2007-12-26 18:39:15 sshwarts Exp $
+// $Id: vga.cc,v 1.146 2008-01-23 18:10:33 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1210,6 +1210,11 @@ void bx_vga_c::write(Bit32u address, Bit32u value, unsigned io_len, bx_bool no_l
           BX_DEBUG(("io write 0x3c5=0x%02x: clocking mode reg: ignoring",
                       (unsigned) value));
 #endif
+          if ((value & 0x20) > 0) {
+            bx_gui->clear_screen();
+          } else if ((BX_VGA_THIS s.sequencer.reg1 & 0x20) > 0) {
+            needs_update = 1;
+          }
           BX_VGA_THIS s.sequencer.reg1 = value & 0x3d;
           BX_VGA_THIS s.x_dotclockdiv2 = ((value & 0x08) > 0);
           break;
@@ -1557,7 +1562,8 @@ void bx_vga_c::update(void)
 
   /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
   if (!BX_VGA_THIS s.vga_enabled || !BX_VGA_THIS s.attribute_ctrl.video_enabled
-      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1)
+      || !BX_VGA_THIS s.sequencer.reset2 || !BX_VGA_THIS s.sequencer.reset1
+      || (BX_VGA_THIS s.sequencer.reg1 & 0x20))
     return;
 
   /* skip screen update if the vertical retrace is in progress
