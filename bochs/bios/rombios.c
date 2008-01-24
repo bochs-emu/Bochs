@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.c,v 1.198 2008-01-21 21:42:42 vruppert Exp $
+// $Id: rombios.c,v 1.199 2008-01-24 21:57:22 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -935,7 +935,7 @@ Bit16u cdrom_boot();
 
 #endif // BX_ELTORITO_BOOT
 
-static char bios_cvs_version_string[] = "$Revision: 1.198 $ $Date: 2008-01-21 21:42:42 $";
+static char bios_cvs_version_string[] = "$Revision: 1.199 $ $Date: 2008-01-24 21:57:22 $";
 
 #define BIOS_COPYRIGHT_STRING "(c) 2002 MandrakeSoft S.A. Written by Kevin Lawton & the Bochs team."
 
@@ -1112,7 +1112,7 @@ static struct {
       { 0x5300, 0x532e,   none,   none, 0x20 }, /* Del */
       {   none,   none,   none,   none, none },
       {   none,   none,   none,   none, none },
-      { 0x565c, 0x567c,   none,   none, none }, /* \| */    
+      { 0x565c, 0x567c,   none,   none, none }, /* \| */
       { 0x5700, 0x5700,   none,   none, none }, /* F11 */
       { 0x5800, 0x5800,   none,   none, none }  /* F12 */
       };
@@ -1871,7 +1871,7 @@ print_bios_banner()
 
 
 static void
-init_boot_vectors() 
+init_boot_vectors()
 {
   ipl_entry_t e;
   Bit16u count = 0;
@@ -1931,7 +1931,7 @@ print_boot_device(type)
 {
   /* NIC appears as type 0x80 */
   if (type == IPL_TYPE_BEV) type = 0x4;
-  if (type == 0 || type > 0x4) BX_PANIC("Bad drive type\n"); 
+  if (type == 0 || type > 0x4) BX_PANIC("Bad drive type\n");
   printf("Booting from %s...\n", drivetypes[type]);
 }
 
@@ -3039,7 +3039,7 @@ ASM_END
       sc = inb(iobase1 + ATA_CB_SC);
 
       // Check if command completed
-      if(((inb(iobase1 + ATA_CB_SC)&0x7)==0x3) && 
+      if(((inb(iobase1 + ATA_CB_SC)&0x7)==0x3) &&
          ((status & (ATA_CB_STAT_RDY | ATA_CB_STAT_ERR)) == ATA_CB_STAT_RDY)) break;
 
       if (status & ATA_CB_STAT_ERR) {
@@ -3263,7 +3263,7 @@ atapi_is_ready(device)
         BX_DEBUG_ATA("Device reports MEDIUM NOT PRESENT\n");
         return -1;
       }
-  
+
       if (asc == 0x04 && ascq == 0x01 && !in_progress) {
         /* IN PROGRESS OF BECOMING READY */
         printf("Waiting for device to detect medium... ");
@@ -8405,7 +8405,7 @@ int19_relocated: ;; Boot function, relocated
 
   push bp
   mov  bp, sp
-  
+
   ;; Reset SS and SP
   mov  ax, #0xfffe
   mov  sp, ax
@@ -9778,7 +9778,7 @@ rombios32_05:
   mov eax, #0x00040000
   call eax
 
-  ;; reset the memory (some boot loaders such as syslinux suppose 
+  ;; reset the memory (some boot loaders such as syslinux suppose
   ;; that the memory is set to zero)
   mov edi, #0x00040000
   mov ecx, #0x40000 / 4
@@ -9914,7 +9914,7 @@ checksum_loop:
   ret
 
 
-;; We need a copy of this string, but we are not actually a PnP BIOS, 
+;; We need a copy of this string, but we are not actually a PnP BIOS,
 ;; so make sure it is *not* aligned, so OSes will not see it if they scan.
 .align 16
   db 0
@@ -9961,11 +9961,11 @@ block_count_rounded:
   push cx       ;; Push seg
   push #0x0003  ;; Push offset
 
-  ;; Point ES:DI at "$PnP", which tells the ROM that we are a PnP BIOS.  
+  ;; Point ES:DI at "$PnP", which tells the ROM that we are a PnP BIOS.
   ;; That should stop it grabbing INT 19h; we will use its BEV instead.
   mov  ax, #0xf000
   mov  es, ax
-  lea  di, pnp_string 
+  lea  di, pnp_string
 
   mov  bp, sp   ;; Call ROM init routine using seg:off on stack
   db   0xff     ;; call_far ss:[bp+0]
@@ -9975,8 +9975,8 @@ block_count_rounded:
   add  sp, #2   ;; Pop offset value
   pop  cx       ;; Pop seg value (restore CX)
 
-  ;; Look at the ROM's PnP Expansion header.  Properly, we're supposed 
-  ;; to init all the ROMs and then go back and build an IPL table of 
+  ;; Look at the ROM's PnP Expansion header.  Properly, we're supposed
+  ;; to init all the ROMs and then go back and build an IPL table of
   ;; all the bootable devices, but we can get away with one pass.
   mov  ds, cx       ;; ROM base
   mov  bx, 0x001a   ;; 0x1A is the offset into ROM header that contains...
@@ -9984,7 +9984,7 @@ block_count_rounded:
   cmp  ax, #0x5024  ;; we look for signature "$PnP"
   jne  no_bev
   mov  ax, 2[bx]
-  cmp  ax, #0x506e 
+  cmp  ax, #0x506e
   jne  no_bev
   mov  ax, 0x1a[bx] ;; 0x1A is also the offset into the expansion header of...
   cmp  ax, #0x0000  ;; the Bootstrap Entry Vector, or zero if there is none.
@@ -9992,7 +9992,7 @@ block_count_rounded:
 
   ;; Found a device that thinks it can boot the system.  Record its BEV and product name string.
   mov  di, 0x10[bx]            ;; Pointer to the product name string or zero if none
-  mov  bx, #IPL_SEG            ;; Go to the segment where the IPL table lives 
+  mov  bx, #IPL_SEG            ;; Go to the segment where the IPL table lives
   mov  ds, bx
   mov  bx, IPL_COUNT_OFFSET    ;; Read the number of entries so far
   cmp  bx, #IPL_TABLE_ENTRIES
