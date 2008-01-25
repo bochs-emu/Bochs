@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer32.cc,v 1.52 2008-01-10 19:37:52 sshwarts Exp $
+// $Id: data_xfer32.cc,v 1.53 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -99,11 +99,6 @@ void BX_CPU_C::MOV_EdIdM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_dword(i->seg(), RMAddr(i), i->Id());
-}
-
-void BX_CPU_C::MOV_EdIdR(bxInstruction_c *i)
-{
-  BX_WRITE_32BIT_REGZ(i->rm(), i->Id());
 }
 
 void BX_CPU_C::MOVZX_GdEbM(bxInstruction_c *i)

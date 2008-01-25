@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.167 2008-01-20 20:11:17 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.168 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -316,7 +316,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wr */ { 0, &BX_CPU_C::BxError },   // LEA
   /* 8E /wr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
+  /* 8F /wr */ { 0, &BX_CPU_C::POP_RX },    // POP_EwR
   /* 90 /wr */ { 0, &BX_CPU_C::XCHG_RXAX }, // handles XCHG R8w, AX
   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -371,8 +371,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* C3 /wr */ { BxTraceEnd,                  &BX_CPU_C::RETnear16 },
   /* C4 /wr */ { 0, &BX_CPU_C::BxError },
   /* C5 /wr */ { 0, &BX_CPU_C::BxError },
-  /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
-  /* C7 /wr */ { BxImmediate_Iw, &BX_CPU_C::MOV_EwIwR },
+  /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb }, // MOV_EbIbR
+  /* C7 /wr */ { BxImmediate_Iw, &BX_CPU_C::MOV_RXIw }, // MOV_EwIwR
   /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
   /* C9 /wr */ { 0, &BX_CPU_C::LEAVE64 },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
@@ -845,7 +845,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dr */ { 0, &BX_CPU_C::BxError },     // LEA
   /* 8E /dr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /dr */ { 0, &BX_CPU_C::POP_EqR },
+  /* 8F /dr */ { 0, &BX_CPU_C::POP_RRX },     // POP_EqR
   /* 90 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX }, // handles XCHG R8d, EAX
   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -900,8 +900,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* C3 /dr */ { BxTraceEnd,                  &BX_CPU_C::RETnear64 },
   /* C4 /dr */ { 0, &BX_CPU_C::BxError },
   /* C5 /dr */ { 0, &BX_CPU_C::BxError },
-  /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
-  /* C7 /dr */ { BxImmediate_Id, &BX_CPU_C::MOV_EdIdR },
+  /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb  }, // MOV_EbIbR
+  /* C7 /dr */ { BxImmediate_Id, &BX_CPU_C::MOV_ERXId }, // MOV_EdIdR
   /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
   /* C9 /dr */ { 0, &BX_CPU_C::LEAVE64 },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
@@ -1374,7 +1374,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* 8C /qr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /qr */ { 0, &BX_CPU_C::BxError },     // LEA
   /* 8E /qr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /qr */ { 0, &BX_CPU_C::POP_EqR },
+  /* 8F /qr */ { 0, &BX_CPU_C::POP_RRX },     // POP_EqR
   /* 90 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX }, // handles XCHG R8, RAX
   /* 91 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX },
   /* 92 /qr */ { 0, &BX_CPU_C::XCHG_RRXRAX },
@@ -1429,7 +1429,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo64R[512*3] = {
   /* C3 /qr */ { BxTraceEnd,                  &BX_CPU_C::RETnear64 },
   /* C4 /qr */ { 0, &BX_CPU_C::BxError },
   /* C5 /qr */ { 0, &BX_CPU_C::BxError },
-  /* C6 /qr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
+  /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb  }, // MOV_EbIbR
   /* C7 /qr */ { BxImmediate_Id, &BX_CPU_C::MOV_EqIdR },
   /* C8 /qr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER64_IwIb },
   /* C9 /qr */ { 0, &BX_CPU_C::LEAVE64 },
@@ -3532,10 +3532,12 @@ fetch_b1:
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->modRMForm.modRMData1 = rm;
-    i->modRMForm.modRMData2 = mod;
-    i->modRMForm.modRMData3 = rm;  // initialize with rm to use BxResolve64Base
-    i->modRMForm.modRMData4 = nnn;
+    i->metaData.modRMData1 = rm;
+    i->metaData.modRMData2 = mod;
+    i->metaData.modRMData3 = rm;  // initialize with rm to use BxResolve64Base
+    i->metaData.modRMData4 = nnn;
+
+    // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
     if (mod == 0xc0) { // mod == 11b
@@ -3591,9 +3593,9 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
-        i->modRMForm.modRMData3  = (base);
-        i->modRMForm.modRMData2 |= (index);
-        i->modRMForm.modRMData2 |= (scale<<4);
+        i->metaData.modRMData3  = (base);
+        i->metaData.modRMData2 |= (index);
+        i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
         else
@@ -3652,9 +3654,9 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
-        i->modRMForm.modRMData3  = (base);
-        i->modRMForm.modRMData2 |= (index);
-        i->modRMForm.modRMData2 |= (scale<<4);
+        i->metaData.modRMData3  = (base);
+        i->metaData.modRMData2 |= (index);
+        i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
@@ -3744,7 +3746,7 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     i->execute = BxOpcodeInfo64R[b1+offset].ExecutePtr;
-    i->IxForm.opcodeReg = (b1 & 7) | rex_b;
+    i->metaData.modRMData1 = (b1 & 7) | rex_b;
   }
 
   if (lock) { // lock prefix invalid opcode

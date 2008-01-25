@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.49 2008-01-12 16:40:38 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.50 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -2922,13 +2922,13 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5wM[8] = {
 
 static const BxOpcodeInfo_t BxOpcodeInfoG5wR[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, &BX_CPU_C::INC_EwR },
-  /* 1 */ { 0, &BX_CPU_C::DEC_EwR },
+  /* 0 */ { 0, &BX_CPU_C::INC_RX },  // DEC_EwR
+  /* 1 */ { 0, &BX_CPU_C::DEC_RX },  // DEC_EwR
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_EwR },
   /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL16_Ep
   /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EwR  },
   /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP16_Ep
-  /* 6 */ { 0, &BX_CPU_C::PUSH_EwR },
+  /* 6 */ { 0, &BX_CPU_C::PUSH_RX }, // PUSH_EwR
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
 
@@ -2946,13 +2946,13 @@ static const BxOpcodeInfo_t BxOpcodeInfoG5dM[8] = {
 
 static const BxOpcodeInfo_t BxOpcodeInfoG5dR[8] = {
   // attributes defined in main area
-  /* 0 */ { 0, &BX_CPU_C::INC_EdR },
-  /* 1 */ { 0, &BX_CPU_C::DEC_EdR },
+  /* 0 */ { 0, &BX_CPU_C::INC_ERX },  // INC_EdR
+  /* 1 */ { 0, &BX_CPU_C::DEC_ERX },  // DEC_EdR
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_EdR },
-  /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL32_Ep
+  /* 3 */ { 0, &BX_CPU_C::BxError },  // CALL32_Ep
   /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EdR  },
-  /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP32_Ep
-  /* 6 */ { 0, &BX_CPU_C::PUSH_EdR },
+  /* 5 */ { 0, &BX_CPU_C::BxError },  // JMP32_Ep
+  /* 6 */ { 0, &BX_CPU_C::PUSH_ERX }, // PUSH_EdR
   /* 7 */ { 0, &BX_CPU_C::BxError }
 }; 
 
@@ -2969,13 +2969,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5wM[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G5wR[8] = {
-  /* 0 */ { 0, &BX_CPU_C::INC_EwR },
-  /* 1 */ { 0, &BX_CPU_C::DEC_EwR },
+  /* 0 */ { 0, &BX_CPU_C::INC_RX },  // INC_EwR
+  /* 1 */ { 0, &BX_CPU_C::DEC_RX },  // DEC_EwR
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_EqR },
   /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL16_Ep
   /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EqR  },
   /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP16_Ep
-  /* 6 */ { 0, &BX_CPU_C::PUSH_EwR },
+  /* 6 */ { 0, &BX_CPU_C::PUSH_RX }, // PUSH_EwR
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
@@ -2991,13 +2991,13 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5dM[8] = {
 };
 
 static const BxOpcodeInfo_t BxOpcodeInfo64G5dR[8] = {
-  /* 0 */ { 0, &BX_CPU_C::INC_EdR },
-  /* 1 */ { 0, &BX_CPU_C::DEC_EdR },
+  /* 0 */ { 0, &BX_CPU_C::INC_ERX },  // INC_EdR
+  /* 1 */ { 0, &BX_CPU_C::DEC_ERX },  // DEC_EdR
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_EqR },
-  /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL32_Ep
+  /* 3 */ { 0, &BX_CPU_C::BxError },  // CALL32_Ep
   /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EqR  },
-  /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP32_Ep
-  /* 6 */ { 0, &BX_CPU_C::PUSH_EqR },
+  /* 5 */ { 0, &BX_CPU_C::BxError },  // JMP32_Ep
+  /* 6 */ { 0, &BX_CPU_C::PUSH_RRX }, // PUSH_EqR
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 
@@ -3016,10 +3016,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo64G5qR[8] = {
   /* 0 */ { 0, &BX_CPU_C::INC_EqR },
   /* 1 */ { 0, &BX_CPU_C::DEC_EqR },
   /* 2 */ { BxTraceEnd, &BX_CPU_C::CALL_EqR },
-  /* 3 */ { 0, &BX_CPU_C::BxError }, // CALL64_Ep
+  /* 3 */ { 0, &BX_CPU_C::BxError },  // CALL64_Ep
   /* 4 */ { BxTraceEnd, &BX_CPU_C::JMP_EqR  },
-  /* 5 */ { 0, &BX_CPU_C::BxError }, // JMP64_Ep
-  /* 6 */ { 0, &BX_CPU_C::PUSH_EqR },
+  /* 5 */ { 0, &BX_CPU_C::BxError },  // JMP64_Ep
+  /* 6 */ { 0, &BX_CPU_C::PUSH_RRX }, // PUSH_EqR
   /* 7 */ { 0, &BX_CPU_C::BxError }
 };
 #endif

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.416 2008-01-22 16:20:30 sshwarts Exp $
+// $Id: cpu.h,v 1.417 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -597,53 +597,55 @@ public:
   void (BX_CPU_C::*execute)(bxInstruction_c *);
 #endif
 
-  // 31..29  (unused)
-  // 28..20  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
-  //            (leave this one on top so no mask is needed)
-  // 19..19  stop trace (used with trace cache)
-  // 18..18  mod==c0 (modrm)
-  // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3).
-  Bit16u metaInfo3;
+  struct {
+    // 31..29  (unused)
+    // 28..20  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
+    //            (leave this one on top so no mask is needed)
+    // 19..19  stop trace (used with trace cache)
+    // 18..18  mod==c0 (modrm)
+    // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3)
+    Bit16u metaInfo3;
 
-  // 15..12  (unused)
-  // 11...8  ilen (0..15)
-  Bit8u  metaInfo2;
+    // 15..12  (unused)
+    // 11...8  ilen (0..15)
+    Bit8u  metaInfo2;
 
-  //  7...7  extend8bit
-  //  6...6  as64
-  //  5...5  os64
-  //  4...4  as32
-  //  3...3  os32
-  //  2...0  seg
-  Bit8u  metaInfo1;
+    //  7...7  extend8bit
+    //  6...6  as64
+    //  5...5  os64
+    //  4...4  as32
+    //  3...3  os32
+    //  2...0  seg
+    Bit8u  metaInfo1;
+  } metaInfo;
+
+  struct {
+    //  31..28 (unused)
+    //  27..24 nnn     (modrm)
+    Bit8u  modRMData4;
+
+    //  23..20 (unused)
+    //  19..16 base            (sib)
+    Bit8u  modRMData3;
+
+    //  15..14 mod     (modrm)
+    //  13..12 scale           (sib)
+    //  11...8 index           (sib)
+    Bit8u  modRMData2;
+
+    //   7...4 (unused)
+    //   3...0 rm      (modrm)   // also used for opcodeReg()
+    Bit8u  modRMData1;
+  } metaData;
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
     struct {
-
-      //  31..28 (unused)
-      //  27..24 nnn     (modrm)
-      Bit8u modRMData4;
-
-      //  23..20 (unused)
-      //  19..16 base            (sib)
-      Bit8u modRMData3;
-
-      //  15..14 mod     (modrm)
-      //  13..12 scale           (sib)
-      //  11...8 index           (sib)
-      Bit8u modRMData2;
-
-      //   7...4 (unused)
-      //   3...0 rm      (modrm)
-      Bit8u modRMData1;
-
       union {
-        Bit32u   Id;
-        Bit16u   Iw;
-        Bit8u    Ib;
+        Bit32u Id;
+        Bit16u Iw;
+        Bit8u  Ib;
       };
-
       union {
         Bit16u displ16u; // for 16-bit modrm forms
         Bit32u displ32u; // for 32-bit modrm forms
@@ -651,36 +653,20 @@ public:
     } modRMForm;
 
     struct {
-      Bit32u dummy;
       union {
-        Bit32u   Id;
-        Bit16u   Iw;
-        Bit8u    Ib;
+        Bit32u Id;
+        Bit16u Iw;
+        Bit8u  Ib;
       };
       union {
-        Bit32u   Id2; // Not used (for alignment)
-        Bit16u   Iw2;
-        Bit8u    Ib2;
+        Bit32u Id2; // Not used (for alignment)
+        Bit16u Iw2;
+        Bit8u  Ib2;
       };
     } IxIxForm;
 
-    struct {
-      // For opcodes which don't use modRM, but which encode the
-      // register in the low 3 bits of the opcode, extended by the
-      // REX.B bit on x86-64, the register value is cached in opcodeReg.
-      Bit32u opcodeReg;
-      union {
-        Bit32u   Id;
-        Bit16u   Iw;
-        Bit8u    Ib;
-      };
-      Bit32u dummy;
-    } IxForm;
-
 #if BX_SUPPORT_X86_64
-    // Form: [opcode/Iq].  These opcode never use a modrm sequence.
     struct {
-      Bit32u opcodeReg;
       Bit64u   Iq;  // for MOV Rx,imm64
     } IqForm;
 #endif
@@ -688,9 +674,8 @@ public:
 
   BX_CPP_INLINE unsigned opcodeReg() {
     // The opcodeReg form (low 3 bits of the opcode byte (extended
-    // by REX.B on x86-64) can be accessed by IxForm or IqForm.  They
-    // are aligned in the same place, so it doesn't matter.
-    return IxForm.opcodeReg;
+    // by REX.B on x86-64) to be used with IxIxForm or IqForm.
+    return metaData.modRMData1;
   }
   // used in FPU only
   BX_CPP_INLINE unsigned modrm() { 
@@ -700,32 +685,32 @@ public:
     return mod() | rm() | (nnn() << 3);
 #endif
   }
-  BX_CPP_INLINE unsigned mod() { return modRMForm.modRMData2 & 0xc0; }
+  BX_CPP_INLINE unsigned mod() { return metaData.modRMData2 & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
   {
     // This is a cheaper way to test for modRM instructions where
     // the mod field is 0xc0.  FetchDecode flags this condition since
     // it is quite common to be tested for.
-    return metaInfo3 & (1<<2);
+    return metaInfo.metaInfo3 & (1<<2);
   }
   BX_CPP_INLINE unsigned assertModC0()
   {
-    return metaInfo3 |= (1<<2);
+    return metaInfo.metaInfo3 |= (1<<2);
   }
   BX_CPP_INLINE unsigned nnn() {
-    return modRMForm.modRMData4;
+    return metaData.modRMData4;
   }
   BX_CPP_INLINE unsigned rm() {
-    return modRMForm.modRMData1;
+    return metaData.modRMData1;
   }
   BX_CPP_INLINE unsigned sibScale()  {
-    return (modRMForm.modRMData2 >> 4) & 0x3;
+    return (metaData.modRMData2 >> 4) & 0x3;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return (modRMForm.modRMData2) & 0xf;
+    return (metaData.modRMData2) & 0xf;
   }
   BX_CPP_INLINE unsigned sibBase()  {
-    return modRMForm.modRMData3;
+    return metaData.modRMData3;
   }
   BX_CPP_INLINE Bit32u   displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u   displ16u() { return modRMForm.displ16u; }
@@ -746,46 +731,46 @@ public:
   BX_CPP_INLINE void initMetaInfo(unsigned os32, unsigned as32,
                                   unsigned os64, unsigned as64)
   {
-    metaInfo1 = BX_SEG_REG_NULL | (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
-    metaInfo2 = 0;
-    metaInfo3 = 0;
+    metaInfo.metaInfo1 = BX_SEG_REG_NULL | (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
+    metaInfo.metaInfo2 = 0;
+    metaInfo.metaInfo3 = 0;
   }
   BX_CPP_INLINE unsigned seg(void) {
-    return metaInfo1 & 7;
+    return metaInfo.metaInfo1 & 7;
   }
   BX_CPP_INLINE void setSeg(unsigned val) {
-    metaInfo1 = (metaInfo1 & ~7) | val;
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~7) | val;
   }
 
   BX_CPP_INLINE unsigned os32L(void) {
-    return metaInfo1 & (1<<3);
+    return metaInfo.metaInfo1 & (1<<3);
   }
   BX_CPP_INLINE unsigned os32B(void) {
-    return (metaInfo1 >> 3) & 1;
+    return (metaInfo.metaInfo1 >> 3) & 1;
   }
   BX_CPP_INLINE void setOs32B(unsigned bit) {
-    metaInfo1 = (metaInfo1 & ~(1<<3)) | (bit<<3);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<3)) | (bit<<3);
   }
   BX_CPP_INLINE void assertOs32(void) {
-    metaInfo1 |= (1<<3);
+    metaInfo.metaInfo1 |= (1<<3);
   }
 
   BX_CPP_INLINE unsigned as32L(void) {
-    return metaInfo1 & (1<<4);
+    return metaInfo.metaInfo1 & (1<<4);
   }
   BX_CPP_INLINE unsigned as32B(void) {
-    return (metaInfo1 >> 4) & 1;
+    return (metaInfo.metaInfo1 >> 4) & 1;
   }
   BX_CPP_INLINE void setAs32B(unsigned bit) {
-    metaInfo1 = (metaInfo1 & ~(1<<4)) | (bit<<4);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<4)) | (bit<<4);
   }
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned os64L(void) {
-    return metaInfo1 & (1<<5);
+    return metaInfo.metaInfo1 & (1<<5);
   }
   BX_CPP_INLINE void assertOs64(void) {
-    metaInfo1 |= (1<<5);
+    metaInfo.metaInfo1 |= (1<<5);
   }
 #else
   BX_CPP_INLINE unsigned os64L(void) { return 0; }
@@ -793,10 +778,10 @@ public:
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned as64L(void) {
-    return metaInfo1 & (1<<6);
+    return metaInfo.metaInfo1 & (1<<6);
   }
   BX_CPP_INLINE void setAs64B(unsigned bit) {
-    metaInfo1 = (metaInfo1 & ~(1<<6)) | (bit<<6);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~(1<<6)) | (bit<<6);
   }
 #else
   BX_CPP_INLINE unsigned as64L(void) { return 0; }
@@ -804,46 +789,46 @@ public:
 
 #if BX_SUPPORT_X86_64
   BX_CPP_INLINE unsigned extend8bitL(void) {
-    return metaInfo1 & (1<<7);
+    return metaInfo.metaInfo1 & (1<<7);
   }
   BX_CPP_INLINE void assertExtend8bit(void) {
-    metaInfo1 |= (1<<7);
+    metaInfo.metaInfo1 |= (1<<7);
   }
 #endif
 
   BX_CPP_INLINE unsigned ilen(void) {
-    return metaInfo2;
+    return metaInfo.metaInfo2;
   }
   BX_CPP_INLINE void setILen(unsigned ilen) {
-    metaInfo2 = ilen;
+    metaInfo.metaInfo2 = ilen;
   }
 
   BX_CPP_INLINE unsigned repUsedL(void) {
-    return metaInfo3 & 3;
+    return metaInfo.metaInfo3 & 3;
   }
   BX_CPP_INLINE unsigned repUsedValue(void) {
-    return metaInfo3 & 3;
+    return metaInfo.metaInfo3 & 3;
   }
   BX_CPP_INLINE void setRepUsed(unsigned value) {
-    metaInfo3 = (metaInfo3 & ~3) | (value);
+    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~3) | (value);
   }
 
 #if BX_SUPPORT_TRACE_CACHE
   BX_CPP_INLINE void setStopTraceAttr(void) {
-   metaInfo3 |= (1<<3);
+   metaInfo.metaInfo3 |= (1<<3);
   }
   BX_CPP_INLINE unsigned getStopTraceAttr(void) {
-    return metaInfo3 & (1<<3);
+    return metaInfo.metaInfo3 & (1<<3);
   }
 #endif
 
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned b1(void) {
-    return metaInfo3 >> 4;
+    return metaInfo.metaInfo3 >> 4;
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo3 = (metaInfo3 & ~(0x1ff << 4)) | ((b1 & 0x1ff) << 4);
+    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~(0x1ff << 4)) | ((b1 & 0x1ff) << 4);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>
@@ -1539,10 +1524,6 @@ public: // for now...
   BX_SMF void MOV_EwIwM(bxInstruction_c *);
   BX_SMF void MOV_EbIbM(bxInstruction_c *);
 
-  BX_SMF void MOV_EdIdR(bxInstruction_c *);
-  BX_SMF void MOV_EwIwR(bxInstruction_c *);
-  BX_SMF void MOV_EbIbR(bxInstruction_c *);
-
   BX_SMF void ENTER16_IwIb(bxInstruction_c *);
   BX_SMF void ENTER32_IwIb(bxInstruction_c *);
   BX_SMF void LEAVE(bxInstruction_c *);
@@ -1967,11 +1948,7 @@ public: // for now...
   BX_SMF void IDIV_EAXEd(bxInstruction_c *);
 
   BX_SMF void INC_EbR(bxInstruction_c *);
-  BX_SMF void INC_EwR(bxInstruction_c *);
-  BX_SMF void INC_EdR(bxInstruction_c *);
   BX_SMF void DEC_EbR(bxInstruction_c *);
-  BX_SMF void DEC_EwR(bxInstruction_c *);
-  BX_SMF void DEC_EdR(bxInstruction_c *);
 
   BX_SMF void INC_EbM(bxInstruction_c *);
   BX_SMF void INC_EwM(bxInstruction_c *);
@@ -1994,11 +1971,6 @@ public: // for now...
   BX_SMF void JMP_EwR(bxInstruction_c *);
   BX_SMF void JMP_EdM(bxInstruction_c *);
   BX_SMF void JMP_EwM(bxInstruction_c *);
-
-  BX_SMF void PUSH_EwR(bxInstruction_c *);
-  BX_SMF void PUSH_EdR(bxInstruction_c *);
-  BX_SMF void PUSH_EwM(bxInstruction_c *);
-  BX_SMF void PUSH_EdM(bxInstruction_c *);
 
   BX_SMF void SLDT_Ew(bxInstruction_c *);
   BX_SMF void STR_Ew(bxInstruction_c *);
@@ -2747,17 +2719,18 @@ public: // for now...
   BX_SMF void DEC_RX(bxInstruction_c *);
   BX_SMF void INC_ERX(bxInstruction_c *);
   BX_SMF void DEC_ERX(bxInstruction_c *);
-  BX_SMF void PUSH_RX(bxInstruction_c *);
-  BX_SMF void POP_RX(bxInstruction_c *);
-  BX_SMF void PUSH_ERX(bxInstruction_c *);
-  BX_SMF void POP_ERX(bxInstruction_c *);
   BX_SMF void XCHG_RXAX(bxInstruction_c *);
   BX_SMF void XCHG_ERXEAX(bxInstruction_c *);
 
+  BX_SMF void PUSH_RX(bxInstruction_c *);
+  BX_SMF void PUSH_EwM(bxInstruction_c *);
+  BX_SMF void PUSH_ERX(bxInstruction_c *);
+  BX_SMF void PUSH_EdM(bxInstruction_c *);
+
+  BX_SMF void POP_RX(bxInstruction_c *);
   BX_SMF void POP_EwM(bxInstruction_c *);
+  BX_SMF void POP_ERX(bxInstruction_c *);
   BX_SMF void POP_EdM(bxInstruction_c *);
-  BX_SMF void POP_EwR(bxInstruction_c *);
-  BX_SMF void POP_EdR(bxInstruction_c *);
 
   BX_SMF void POPCNT_GwEw(bxInstruction_c *);
   BX_SMF void POPCNT_GdEd(bxInstruction_c *);
@@ -2990,8 +2963,6 @@ public: // for now...
   BX_SMF void JMP_EqM(bxInstruction_c *);
   BX_SMF void JMP_EqR(bxInstruction_c *);
   BX_SMF void JMP64_Ep(bxInstruction_c *);
-  BX_SMF void PUSH_EqR(bxInstruction_c *);
-  BX_SMF void PUSH_EqM(bxInstruction_c *);
   BX_SMF void PUSHF_Fq(bxInstruction_c *);
   BX_SMF void POPF_Fq(bxInstruction_c *);
 
@@ -3042,11 +3013,11 @@ public: // for now...
   BX_SMF void CMOVNLE_GqEqR(bxInstruction_c *);
 
   BX_SMF void MOV_RRXIq(bxInstruction_c *);
+  BX_SMF void PUSH_EqM(bxInstruction_c *);
   BX_SMF void PUSH_RRX(bxInstruction_c *);
+  BX_SMF void POP_EqM(bxInstruction_c *);
   BX_SMF void POP_RRX(bxInstruction_c *);
   BX_SMF void XCHG_RRXRAX(bxInstruction_c *);
-  BX_SMF void POP_EqR(bxInstruction_c *);
-  BX_SMF void POP_EqM(bxInstruction_c *);
 
   BX_SMF void PUSH64_Id(bxInstruction_c *);
   BX_SMF void PUSH64_FS(bxInstruction_c *);

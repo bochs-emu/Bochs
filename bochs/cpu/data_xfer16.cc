@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.54 2008-01-21 21:36:58 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.55 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -147,11 +147,6 @@ void BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_word(i->seg(), RMAddr(i), i->Iw());
-}
-
-void BX_CPU_C::MOV_EwIwR(bxInstruction_c *i)
-{
-  BX_WRITE_16BIT_REG(i->rm(), i->Iw());
 }
 
 #if BX_CPU_LEVEL >= 3

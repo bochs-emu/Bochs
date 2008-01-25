@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.160 2008-01-20 20:11:17 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.161 2008-01-25 19:34:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -327,7 +327,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /wr */ { 0, &BX_CPU_C::BxError }, // LEA
   /* 8E /wr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /wr */ { 0, &BX_CPU_C::POP_EwR },
+  /* 8F /wr */ { 0, &BX_CPU_C::POP_RX },  // POP_EwR
   /* 90 /wr */ { 0, &BX_CPU_C::NOP },
   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -382,8 +382,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C3 /wr */ { BxTraceEnd,                  &BX_CPU_C::RETnear16 },
   /* C4 /wr */ { 0, &BX_CPU_C::BxError }, // LES
   /* C5 /wr */ { 0, &BX_CPU_C::BxError }, // LDS
-  /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
-  /* C7 /wr */ { BxImmediate_Iw, &BX_CPU_C::MOV_EwIwR },
+  /* C6 /wr */ { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb }, // MOV_EbIbR
+  /* C7 /wr */ { BxImmediate_Iw, &BX_CPU_C::MOV_RXIw }, // MOV_EwIwR
   /* C8 /wr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER16_IwIb },
   /* C9 /wr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /wr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar16_Iw },
@@ -891,7 +891,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
   /* 8D /dr */ { 0, &BX_CPU_C::BxError }, // LEA
   /* 8E /dr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /dr */ { 0, &BX_CPU_C::POP_EdR },
+  /* 8F /dr */ { 0, &BX_CPU_C::POP_ERX }, // POP_EdR
   /* 90 /dr */ { 0, &BX_CPU_C::NOP },
   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
   /* 92 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -946,8 +946,8 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* C3 /dr */ { BxTraceEnd,                  &BX_CPU_C::RETnear32 },
   /* C4 /dr */ { 0, &BX_CPU_C::BxError }, // LES
   /* C5 /dr */ { 0, &BX_CPU_C::BxError }, // LDS
-  /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_EbIbR },
-  /* C7 /dr */ { BxImmediate_Id, &BX_CPU_C::MOV_EdIdR },
+  /* C6 /dr */ { BxImmediate_Ib, &BX_CPU_C::MOV_RLIb  }, // MOV_EbIbR
+  /* C7 /dr */ { BxImmediate_Id, &BX_CPU_C::MOV_ERXId }, // MOV_EdIdR
   /* C8 /dr */ { BxImmediate_IwIb, &BX_CPU_C::ENTER32_IwIb },
   /* C9 /dr */ { 0, &BX_CPU_C::LEAVE },
   /* CA /dr */ { BxImmediate_Iw | BxTraceEnd, &BX_CPU_C::RETfar32_Iw },
@@ -2605,10 +2605,12 @@ fetch_b1:
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->modRMForm.modRMData1 = rm;
-    i->modRMForm.modRMData2 = mod;
-    i->modRMForm.modRMData3 = rm;  // initialize with rm to use BxResolve32Base
-    i->modRMForm.modRMData4 = nnn;
+    i->metaData.modRMData1 = rm;
+    i->metaData.modRMData2 = mod;
+    i->metaData.modRMData3 = rm;  // initialize with rm to use BxResolve32Base
+    i->metaData.modRMData4 = nnn;
+
+    // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
 
     if (mod == 0xc0) { // mod == 11b
@@ -2664,9 +2666,9 @@ get_8bit_displ:
         base  = sib & 0x7; sib >>= 3;
         index = sib & 0x7; sib >>= 3;
         scale = sib;
-        i->modRMForm.modRMData3  = (base);
-        i->modRMForm.modRMData2 |= (index);
-        i->modRMForm.modRMData2 |= (scale<<4);
+        i->metaData.modRMData3  = (base);
+        i->metaData.modRMData2 |= (index);
+        i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
@@ -2790,7 +2792,7 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     i->execute = BxOpcodeInfo32R[b1+offset].ExecutePtr;
-    i->IxForm.opcodeReg = b1 & 7;
+    i->metaData.modRMData1 = b1 & 7;
   }
 
   if (lock) { // lock prefix invalid opcode

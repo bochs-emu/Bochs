@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.34 2008-01-10 19:37:56 sshwarts Exp $
+// $Id: stack64.cc,v 1.35 2008-01-25 19:34:30 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -51,11 +51,6 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
   BX_CPU_THIS_PTR speculative_rsp = 0;
 }
 
-void BX_CPU_C::POP_EqR(bxInstruction_c *i)
-{
-  BX_WRITE_64BIT_REG(i->rm(), pop_64());
-}
-
 void BX_CPU_C::PUSH_RRX(bxInstruction_c *i)
 {
   push_64(BX_READ_64BIT_REG(i->opcodeReg()));
@@ -105,11 +100,6 @@ void BX_CPU_C::PUSH_EqM(bxInstruction_c *i)
   Bit64u op1_64 = read_virtual_qword(i->seg(), RMAddr(i));
 
   push_64(op1_64);
-}
-
-void BX_CPU_C::PUSH_EqR(bxInstruction_c *i)
-{
-  push_64(BX_READ_64BIT_REG(i->rm()));
 }
 
 void BX_CPU_C::ENTER64_IwIb(bxInstruction_c *i)
