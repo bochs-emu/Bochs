@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.147 2008-01-26 00:00:30 vruppert Exp $
+// $Id: vga.cc,v 1.148 2008-01-26 19:01:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -385,12 +385,12 @@ void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler 
   BX_INFO(("interval=" FMT_LL "u", interval));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
-       interval, 1, 1, "vga");
+       (Bit32u)interval, 1, 1, "vga");
     vga_update_interval->set_handler(f_param);
     vga_update_interval->set_runtime_param(1);
   }
   if (interval < 300000) {
-    BX_VGA_THIS s.blink_counter = 300000 / interval;
+    BX_VGA_THIS s.blink_counter = 300000 / (unsigned)interval;
   } else {
     BX_VGA_THIS s.blink_counter = 1;
   }
@@ -2104,7 +2104,7 @@ void bx_vga_c::update(void)
     unsigned long cursor_address, cursor_x, cursor_y;
     bx_vga_tminfo_t tm_info;
     unsigned VDE, MSL, cols, rows, cWidth;
-    static bx_bool cs_counter = 1;
+    static unsigned cs_counter = 1;
     static bx_bool cs_visible = 0;
 
     cs_counter--;
