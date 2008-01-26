@@ -28,7 +28,7 @@
 #error unsupported APM mode
 #endif
 
-APMSYM(out_str):      
+APMSYM(out_str):
   push eax
   push ebx
   mov ebx, eax
@@ -44,7 +44,7 @@ APMSYM(out_str2):
   pop ebx
   pop eax
   ret
-  
+
 APMSYM(07_poweroff_str):
   .ascii "Shutdown"
   db 0
@@ -54,17 +54,17 @@ APMSYM(07_suspend_str):
 APMSYM(07_standby_str):
   .ascii "Standby"
   db 0
-  
+
 #if DEBUG_APM
-APMSYM(put_str):      
+APMSYM(put_str):
   push edx
   mov dx, #INFO_PORT
   call APMSYM(out_str)
   pop edx
   ret
-  
+
 ; print the hex number in eax
-APMSYM(put_num):      
+APMSYM(put_num):
   push eax
   push ebx
   push ecx
@@ -98,22 +98,22 @@ APMSYM(put_reg):
   outb dx, al
   shr eax, #8
   outb dx, al
-  
+
   mov eax,ebx
   call APMSYM(put_num)
-  
+
   mov al, #0x3b
   outb dx,al
   mov al, #0x20
   outb dx,al
-  ret  
+  ret
 
 APMSYM(put_regs):
   push eax
   push edx
   push ebx
   mov dx, #INFO_PORT
-  
+
   mov ebx, eax
   mov eax, #0x3d584145 // 'EAX='
   call APMSYM(put_reg)
@@ -133,7 +133,7 @@ APMSYM(put_regs):
   mov ebx, edi
   mov eax, #0x3d494445 // 'EDI='
   call APMSYM(put_reg)
-  
+
   mov al, #0x0a
   outb dx, al
   pop ebx
@@ -149,7 +149,7 @@ _apm32_entry:
 _apm16_entry:
 #endif
   pushf
-  
+
 #if defined(APM_REAL)
 _apmreal_entry:
 #endif
@@ -167,15 +167,15 @@ APMSYM(00):
 
   mov ah, #1 // APM major version
   mov al, #2 // APM minor version
-  
+
   mov bh, #0x50 // 'P'
   mov bl, #0x4d // 'M'
-  
+
   // bit 0 : 16 bit interface supported
   // bit 1 : 32 bit interface supported
   mov cx, #0x3
   jmp APMSYM(ok)
-  
+
 ;-----------------
 ; APM real mode interface connect
 APMSYM(01):
@@ -190,7 +190,7 @@ APMSYM(02):
   jne APMSYM(03)
 
   mov bx, #_apm16_entry
-  
+
   mov ax, #0xf000 // 16 bit code segment base
   mov si, #0xfff0 // 16 bit code segment size
   mov cx, #0xf000 // data segment address
@@ -234,22 +234,22 @@ APMSYM(05):
 APMSYM(07):
   cmp al, #0x07
   jne APMSYM(08)
-  
+
   cmp bx, #1
   jne APMSYM(ok)
-  
+
   cmp cx, #3
   je APMSYM(07_poweroff)
-  
+
   cmp cx, #2
   je APMSYM(07_suspend)
-  
+
   cmp cx, #1
   je APMSYM(07_standby)
-  
+
   jne APMSYM(ok)
-  
-APMSYM(07_poweroff):  
+
+APMSYM(07_poweroff):
   // send power off event to emulator
   cli
   mov dx, #0x8900
@@ -297,7 +297,7 @@ APMSYM(0a):
   // mov ch, #0x8 // charging
   mov cl, #0xff // unknown remaining time
   // mov cl, #50
-  mov dx, #0xffff // unknown remaining time 
+  mov dx, #0xffff // unknown remaining time
   mov si, #0      // zero battery
   // mov si, #1      // one battery
   jmp APMSYM(ok)
@@ -309,16 +309,16 @@ APMSYM(0b):
   jne APMSYM(0e)
   mov ah, #0x80 // no event pending
   jmp APMSYM(error)
-   
+
 ;-----------------
 ; APM Driver Version
 APMSYM(0e):
   cmp al, #0x0e
   jne APMSYM(0f)
-  
+
   mov ah, #1
   mov al, #2
-  
+
   jmp APMSYM(ok)
 
 ;-----------------
@@ -347,7 +347,7 @@ APMSYM(ok):
 #if defined(APM_REAL)
   jmp iret_modify_cf
 #else
-  retf  
+  retf
 #endif
 APMSYM(unimplemented):
 APMSYM(error):

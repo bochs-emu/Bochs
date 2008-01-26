@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios32start.S,v 1.3 2006-10-02 06:29:38 vruppert Exp $
+// $Id: rombios32start.S,v 1.4 2008-01-26 09:15:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  32 bit Bochs BIOS init code
@@ -38,7 +38,7 @@ _start:
 
   jmp rombios32_init
 
-  .code16                        
+  .code16
 smp_ap_boot_code_start:
   xor %ax, %ax
   mov %ax, %ds
@@ -65,9 +65,9 @@ smm_relocation_start:
   mov $0x00, %al
   movw $0xb3, %dx
   outb %al, %dx
-  rsm                
+  rsm
 smm_relocation_end:
-        
+
 /* minimal SMM code to enable or disable ACPI */
 smm_code_start:
   movw $0xb2, %dx
@@ -92,7 +92,7 @@ smm_code_start:
   inw %dx, %ax
   orw $1, %ax
   outw %ax, %dx
-  
+
 2:
   rsm
 smm_code_end:

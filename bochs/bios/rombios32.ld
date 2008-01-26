@@ -4,16 +4,16 @@ ENTRY(_start);
 SECTIONS
 {
         . = 0x00040000;
-        .text     : { *(.text)    } 
+        .text     : { *(.text)    }
         .rodata    : { *(.rodata) }
         . = ALIGN(4096);
-        .data     : { *(.data)    } 
+        .data     : { *(.data)    }
         __bss_start = . ;
         .bss      : { *(.bss) *(COMMON) }
         _end = . ;
-        /DISCARD/ : { *(.stab) 
+        /DISCARD/ : { *(.stab)
                      *(.stabstr)
                      *(.comment)
-                     *(.note)    
+                     *(.note)
                   }
 }

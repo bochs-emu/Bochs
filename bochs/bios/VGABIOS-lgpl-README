@@ -37,14 +37,14 @@ You can get a very basic debugging system: messages printed by the vgabios.
 You have to register the "unmapped" device driver in plex86 or bochs, and make
 sure it grabs port 0xfff0.
 
-Comment the #undef DEBUG at the beginning of vgabios.c. 
-You can then use the "printf" function in the bios. 
+Comment the #undef DEBUG at the beginning of vgabios.c.
+You can then use the "printf" function in the bios.
 
 
 Testing
 -------
-Look at the "testvga.c" file in the archive. This is a minimal Turbo C 2.0 
-source file that calls a few int10 functions. Feel free to modify it to suit 
+Look at the "testvga.c" file in the archive. This is a minimal Turbo C 2.0
+source file that calls a few int10 functions. Feel free to modify it to suit
 your needs.
 
 
@@ -52,7 +52,7 @@ Copyright and License
 ---------------------
 This program has been written by Christophe Bothamy
 It is protected by the GNU Lesser Public License, which you should
-have received a copy of along with this package. 
+have received a copy of along with this package.
 
 
 Reverse Engineering
@@ -71,11 +71,11 @@ These fonts are public domain
 
 The source code is based on information taken from :
 - Kevin Lawton's vga card emulation for bochs/plex86
-- Ralf Brown's interrupts list avalaible at 
+- Ralf Brown's interrupts list avalaible at
   http://www.cs.cmu.edu/afs/cs/user/ralf/pub/WWW/files.html
 - Finn Thogersons' VGADOC4b available at http://home.worldonline.dk/~finth/
 - Michael Abrash's Graphics Programming Black Book
-- Francois Gervais' book "programmation des cartes graphiques cga-ega-vga" 
+- Francois Gervais' book "programmation des cartes graphiques cga-ega-vga"
   edited by sybex
 - DOSEMU 1.0.1 source code for several tables values and formulas
 
@@ -133,12 +133,12 @@ vgabios-0.5a : Mar 07 2005
 vgabios-0.4c : Nov 06 2003
   - Christophe
     . fix font problem on initial screen of NT4 Loader
-    
+
 vgabios-0.4b : Nov 04 2003
-  - Volker 
+  - Volker
     . fix offset of character tables
     . optimizations of CRT controller accesses
-    . VBE i/o registers changed to 0x01CE/CF 
+    . VBE i/o registers changed to 0x01CE/CF
       (suggestion from Daniel Gimpelevich)
     . "noclear" flag stored in BIOS area
     . fix character height returned by get_font_info function
@@ -156,9 +156,9 @@ vgabios-0.3b : Nov 23 2002
   - Christophe
     . added lfb-mode numbers (patch from mathis)
     . updated the Makefile
-    . removed display of copyrights. 
+    . removed display of copyrights.
     . changed the Copyright string to "LGPL VGABios developers"
-  - Volker 
+  - Volker
     . set the cursor shape depending on the current font height
     . clear BL before calling int 0x10 function 0x1103 in vgabios_init_func
     . added some text font functions
@@ -176,7 +176,7 @@ vgabios-0.3a : Mar 10 2002
   - Jeroen
     . updated vbebios implementation to new api
     . added vbe_display_api documentation
-    . added 640x400x8, 640x480x8, 800x600x8, 1024x768 
+    . added 640x400x8, 640x480x8, 800x600x8, 1024x768
       (>640x480 needs a special bochs patch atm)
     . added 320x200x8 vbe support (uses the standard 320x200x8 vga mode to
       display, this allows for testing & having something on screen as well,
@@ -195,7 +195,7 @@ vgabios-0.2a : Nov 09 2001
     . Fixed DS and ES that where inverted in the int10 parameters list!
     . The following have been implemented :
 	- function ax=1a00, ax=1a01, ah=1b
-	- function ax=1130                
+	- function ax=1130
     . Added debug messages for unimplemented/unknown functions
       Must be compiled with DEBUG defined. The output is trapped
       by the unknown-ioport driver of plex/bochs (port 0xfff0 is used)

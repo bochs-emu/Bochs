@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rombios.h,v 1.5 2008-01-21 21:42:42 vruppert Exp $
+// $Id: rombios.h,v 1.6 2008-01-26 09:15:27 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006 Volker Ruppert
@@ -42,13 +42,13 @@
 
 #define printf(format, p...)  bios_printf(BIOS_PRINTF_SCREEN, format, ##p)
 
-// Defines the output macros. 
-// BX_DEBUG goes to INFO port until we can easily choose debug info on a 
+// Defines the output macros.
+// BX_DEBUG goes to INFO port until we can easily choose debug info on a
 // per-device basis. Debug info are sent only in debug mode
 #if DEBUG_ROMBIOS
-#  define BX_DEBUG(format, p...)  bios_printf(BIOS_PRINTF_INFO, format, ##p)    
+#  define BX_DEBUG(format, p...)  bios_printf(BIOS_PRINTF_INFO, format, ##p)
 #else
-#  define BX_DEBUG(format, p...) 
+#  define BX_DEBUG(format, p...)
 #endif
 #define BX_INFO(format, p...)   bios_printf(BIOS_PRINTF_INFO, format, ##p)
 #define BX_PANIC(format, p...)  bios_printf(BIOS_PRINTF_DEBHALT, format, ##p)

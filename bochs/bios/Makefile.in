@@ -58,7 +58,7 @@ BIOS_BUILD_DATE = "-DBIOS_BUILD_DATE=\"$(BUILDDATE)\""
 	$(CXX) -c $(BX_INCDIRS) $(CXXFLAGS) $(LOCAL_CXXFLAGS) @CXXFP@$< @OFP@$@
 
 
-bios: biossums BIOS-bochs-latest BIOS-bochs-legacy 
+bios: biossums BIOS-bochs-latest BIOS-bochs-legacy
 
 clean:
 	@RMCOMMAND@ *.o *.a *.s _rombios*_.c rombios*.txt rombios*.sym
