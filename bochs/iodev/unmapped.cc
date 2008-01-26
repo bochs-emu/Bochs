@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: unmapped.cc,v 1.24 2006-09-10 17:18:44 vruppert Exp $
+// $Id: unmapped.cc,v 1.25 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -242,9 +242,9 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
 	    // BX_DEBUG(("unsupported IO write to port %04x of %02x",
 	    // address, value));
       break;
-    
+
     case 0x8900: // Shutdown port, could be moved in a PM device
-                 // or a host <-> guest communication device 
+                 // or a host <-> guest communication device
       switch (value) {
         case 'S': if (BX_UM_THIS s.shutdown == 0) BX_UM_THIS s.shutdown = 1; break;
         case 'h': if (BX_UM_THIS s.shutdown == 1) BX_UM_THIS s.shutdown = 2; break;
@@ -254,7 +254,7 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 'o': if (BX_UM_THIS s.shutdown == 5) BX_UM_THIS s.shutdown = 6; break;
         case 'w': if (BX_UM_THIS s.shutdown == 6) BX_UM_THIS s.shutdown = 7; break;
         case 'n': if (BX_UM_THIS s.shutdown == 7) BX_UM_THIS s.shutdown = 8; break;
-#if BX_DEBUGGER 
+#if BX_DEBUGGER
         // Very handy for debugging:
 	// output 'D' to port 8900, and bochs quits to debugger
         case 'D': bx_debug_break (); break;

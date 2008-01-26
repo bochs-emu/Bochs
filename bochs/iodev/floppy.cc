@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: floppy.cc,v 1.108 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: floppy.cc,v 1.109 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -139,7 +139,7 @@ void bx_floppy_ctrl_c::init(void)
 {
   Bit8u i;
 
-  BX_DEBUG(("Init $Id: floppy.cc,v 1.108 2007-09-28 19:51:59 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: floppy.cc,v 1.109 2008-01-26 22:24:01 sshwarts Exp $"));
   DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F2; addr<=0x03F7; addr++) {
@@ -521,7 +521,7 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
         value = 0x20;
       }
       break;
-      
+
     case 0x3F6: // Reserved for future floppy controllers
                 // This address shared with the hard drive controller
       value = DEV_hd_read_handler(bx_devices.pluginHardDrive, address, io_len);
@@ -1087,7 +1087,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
       break;
 
     default: // invalid or unsupported command; these are captured in write() above
-      BX_PANIC(("You should never get here! cmd = 0x%02x", 
+      BX_PANIC(("You should never get here! cmd = 0x%02x",
                 BX_FD_THIS s.command[0]));
   }
 #endif
@@ -1140,7 +1140,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       reg.reg_EDX = offset >> 9;  //    / 512
       reg.reg_EBX = (DWORD) buffer;
       reg.reg_EAX = BX_FD_THIS s.media[drive].raw_floppy_win95_drv;
-      DeviceIoControl(hFile, VWIN32_DIOC_DOS_INT25, 
+      DeviceIoControl(hFile, VWIN32_DIOC_DOS_INT25,
                       &reg, sizeof(reg), &reg, sizeof(reg), &ret_cnt, NULL);
       CloseHandle(hFile);
       // I don't know why this returns 28 instead of 512, but it works
@@ -1185,7 +1185,7 @@ void bx_floppy_ctrl_c::floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer,
       reg.reg_EDX = offset >> 9;  //    / 512
       reg.reg_EBX = (DWORD) buffer;
       reg.reg_EAX = BX_FD_THIS s.media[drive].raw_floppy_win95_drv;
-      DeviceIoControl(hFile, VWIN32_DIOC_DOS_INT26, 
+      DeviceIoControl(hFile, VWIN32_DIOC_DOS_INT26,
                       &reg, sizeof(reg), &reg, sizeof(reg), (LPDWORD) &ret_cnt, NULL);
       CloseHandle(hFile);
       // I don't know why this returns 28 instead of 512, but it works
@@ -1293,7 +1293,7 @@ void bx_floppy_ctrl_c::timer()
       BX_FD_THIS raise_interrupt();
       BX_FD_THIS s.reset_sensei = 4;
       break;
-    
+
     case 0x00: // nothing pending?
       break;
 
@@ -1645,8 +1645,8 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         reg.reg_ECX = 0x0860;
         reg.reg_EDX = (DWORD) &params;
         reg.reg_EBX = media->raw_floppy_win95_drv+1;
-        //reg.reg_Flags = 0x0001;     // assume error (carry flag is set) 
-        if (DeviceIoControl(hFile, VWIN32_DIOC_DOS_IOCTL , 
+        //reg.reg_Flags = 0x0001;     // assume error (carry flag is set)
+        if (DeviceIoControl(hFile, VWIN32_DIOC_DOS_IOCTL ,
             &reg, sizeof(reg), &reg, sizeof(reg), &ret_cnt, NULL)) {
           tracks = params.cylinders;
           heads  = params.num_heads;
@@ -1672,7 +1672,7 @@ bx_bool bx_floppy_ctrl_c::evaluate_media(Bit8u devtype, Bit8u type, char *path, 
         media->fd = open(sTemp, BX_RDWR);
     } else {
       media->fd = open(path, BX_RDWR);
-    } 
+    }
 #else
     media->fd = open(path, BX_RDWR);
 #endif
@@ -1845,7 +1845,7 @@ void bx_floppy_ctrl_c::enter_result_phase(void)
     BX_FD_THIS s.result_size = 1;
     BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
     return;
-  } 
+  }
 
   switch (BX_FD_THIS s.pending_command) {
     case 0x04: // get status
@@ -1888,7 +1888,7 @@ void bx_floppy_ctrl_c::enter_result_phase(void)
     case 0x45: // write normal data
     case 0xc5:
       BX_FD_THIS s.result_size = 7;
-      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;    
+      BX_FD_THIS s.result[0] = BX_FD_THIS s.status_reg0;
       BX_FD_THIS s.result[1] = BX_FD_THIS s.status_reg1;
       BX_FD_THIS s.result[2] = BX_FD_THIS s.status_reg2;
       BX_FD_THIS s.result[3] = BX_FD_THIS s.cylinder[drive];

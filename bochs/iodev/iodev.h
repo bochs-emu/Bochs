@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodev.h,v 1.89 2007-09-28 19:52:02 sshwarts Exp $
+// $Id: iodev.h,v 1.90 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,9 +74,9 @@ typedef void   (*bx_write_handler_t)(void *, Bit32u, Bit32u, unsigned);
 // bx_devmodel_c declaration
 //////////////////////////////////////////////////////////////////////
 
-// This class defines virtual methods that are common to all devices. 
-// Child classes do not need to implement all of them, because in this 
-// definition they are defined as empty, as opposed to being pure 
+// This class defines virtual methods that are common to all devices.
+// Child classes do not need to implement all of them, because in this
+// definition they are defined as empty, as opposed to being pure
 // virtual (= 0).
 class BOCHSAPI bx_devmodel_c : public logfunctions {
   public:
@@ -99,7 +99,7 @@ class bx_list_c;
 class BOCHSAPI bx_pci_device_stub_c {
 public:
   virtual ~bx_pci_device_stub_c() {}
-  
+
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len) {
     return 0;
   }
@@ -153,12 +153,12 @@ public:
   virtual unsigned set_cd_media_status(Bit32u handle, unsigned status) {
     STUBFUNC(HD, set_cd_media_status); return 0;
   }
-  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) 
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len)
   {
     STUBFUNC(HD, virt_read_handler); return 0;
   }
   virtual void   virt_write_handler(Bit32u address,
-      Bit32u value, unsigned io_len) 
+      Bit32u value, unsigned io_len)
   {
     STUBFUNC(HD, virt_write_handler);
   }
@@ -212,7 +212,7 @@ public:
   virtual unsigned registerDMA16Channel(
     unsigned channel,
     void (* dmaRead)(Bit16u *data_word),
-    void (* dmaWrite)(Bit16u *data_word),   
+    void (* dmaWrite)(Bit16u *data_word),
     const char *name)
   {
     STUBFUNC(dma, registerDMA16Channel); return 0;
@@ -234,13 +234,13 @@ public:
 class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
 public:
   virtual void raise_irq(unsigned irq_no) {
-    STUBFUNC(pic, raise_irq); 
+    STUBFUNC(pic, raise_irq);
   }
   virtual void lower_irq(unsigned irq_no) {
-    STUBFUNC(pic, lower_irq); 
+    STUBFUNC(pic, lower_irq);
   }
   virtual void set_mode(bx_bool ma_sl, Bit8u mode) {
-    STUBFUNC(pic, set_mode); 
+    STUBFUNC(pic, set_mode);
   }
   virtual Bit8u IAC(void) {
     STUBFUNC(pic, IAC); return 0;
@@ -252,9 +252,9 @@ public:
 
 class BOCHSAPI bx_vga_stub_c : public bx_devmodel_c {
 public:
-  virtual void redraw_area(unsigned x0, unsigned y0, 
+  virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {
-    STUBFUNC(vga, redraw_area);  
+    STUBFUNC(vga, redraw_area);
   }
   virtual Bit8u mem_read(Bit32u addr) {
     STUBFUNC(vga, mem_read);  return 0;
@@ -262,12 +262,12 @@ public:
   virtual void mem_write(Bit32u addr, Bit8u value) {
     STUBFUNC(vga, mem_write);
   }
-  virtual void get_text_snapshot(Bit8u **text_snapshot, 
+  virtual void get_text_snapshot(Bit8u **text_snapshot,
                                  unsigned *txHeight, unsigned *txWidth) {
-    STUBFUNC(vga, get_text_snapshot); 
+    STUBFUNC(vga, get_text_snapshot);
   }
   virtual void trigger_timer(void *this_ptr) {
-    STUBFUNC(vga, trigger_timer); 
+    STUBFUNC(vga, trigger_timer);
   }
   virtual Bit8u get_actl_palette_idx(Bit8u index) {
     return 0;
@@ -519,7 +519,7 @@ private:
 #define PORTS 0x10000
   struct io_handler_struct **read_port_to_handler;
   struct io_handler_struct **write_port_to_handler;
-  
+
   // more for informative purposes, the names of the devices which
   // are use each of the IRQ 0..15 lines are stored here
   char *irq_handler_name[BX_MAX_IRQS];

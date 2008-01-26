@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tap.cc,v 1.28 2006-11-23 17:21:58 vruppert Exp $
+// $Id: eth_tap.cc,v 1.29 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -58,7 +58,7 @@
 //
 // host$ ping 10.0.0.2
 // PING 10.0.0.2 (10.0.0.2) from 10.0.0.1 : 56(84) bytes of data.
-// 
+//
 // Netstat output:
 // 20:29:59.018776 fe:fd:0:0:0:0 fe:fd:0:0:0:1 0800 98: 10.0.0.1 > 10.0.0.2: icmp: echo request
 //      4500 0054 2800 0000 4001 3ea7 0a00 0001
@@ -71,19 +71,19 @@
 //      3949 0000 0809 0a0b 0c0d 0e0f 1011 1213
 //      1415 1617 1819
 //
-// I suspect it may be related to the fact that ping 10.0.0.1 from the 
-// host also doesn't work.  Why wouldn't the host respond to its own IP 
+// I suspect it may be related to the fact that ping 10.0.0.1 from the
+// host also doesn't work.  Why wouldn't the host respond to its own IP
 // address on the tap0 device?
 //
 // Theoretically, if you set up packet forwarding (with masquerading) on the
 // host, you should be able to get Bochs talking to anyone on the internet.
-// 
+//
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -159,7 +159,7 @@ protected:
 //
 
 // the constructor
-bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif, 
+bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
@@ -232,8 +232,8 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
       BX_ERROR (("execute script '%s' on %s failed", script, intname));
     }
 
-  // Start the rx poll 
-  this->rx_timer_index = 
+  // Start the rx poll
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				1, 1, "eth_tap"); // continuous, active
   this->rxh   = rxh;
@@ -249,7 +249,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   fprintf (txlog_txt, "tap packetmover readable log file\n");
   fprintf (txlog_txt, "net IF = %s\n", netif);
   fprintf (txlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf (txlog_txt, "\n--\n");
   fflush (txlog_txt);
@@ -261,7 +261,7 @@ bx_tap_pktmover_c::bx_tap_pktmover_c(const char *netif,
   fprintf (rxlog_txt, "tap packetmover readable log file\n");
   fprintf (rxlog_txt, "net IF = %s\n", netif);
   fprintf (rxlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf (rxlog_txt, "\n--\n");
   fflush (rxlog_txt);
@@ -331,7 +331,7 @@ void bx_tap_pktmover_c::rx_timer ()
   rxbuf = buf+2;
   nbytes-=2;
 #endif
-  
+
 #if defined(__linux__)
   // hack: TAP device likes to create an ethernet header which has
   // the same source and destination address FE:FD:00:00:00:00.

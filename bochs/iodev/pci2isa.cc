@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci2isa.cc,v 1.42 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: pci2isa.cc,v 1.43 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -70,7 +70,7 @@ void bx_piix3_c::init(void)
   // called once when bochs initializes
 
   Bit8u devfunc = BX_PCI_DEVICE(1,0);
-  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI2ISA, 
+  DEV_register_pci_handlers(this, &devfunc, BX_PLUGIN_PCI2ISA,
       "PIIX3 PCI-to-ISA bridge");
 
   DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);

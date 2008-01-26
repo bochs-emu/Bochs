@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.cc,v 1.55 2007-09-28 19:52:05 sshwarts Exp $
+// $Id: sb16.cc,v 1.56 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -27,7 +27,7 @@
 // This file (SB16.CC) written and donated by Josef Drexler
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -1025,7 +1025,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
        case 0xe1:
          // none, o1/2: version major.minor
          DSP.dataout.put(4);
-         if (DSP.dataout.put(5) == 0) 
+         if (DSP.dataout.put(5) == 0)
          {
              writelog(WAVELOG(3), "DSP version couldn't be written - buffer overflow");
          }
@@ -1040,12 +1040,12 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          break;
 
          // write test register
-       case 0xe4: 
+       case 0xe4:
          DSP.datain.get(&DSP.testreg);
          break;
 
          // read test register
-       case 0xe8: 
+       case 0xe8:
          DSP.dataout.put(DSP.testreg);
          break;
 
@@ -1058,7 +1058,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          break;
 
          // ??? - Win98 needs this
-        case 0xf9: 
+        case 0xf9:
           DSP.datain.get(&value8);
           switch (value8) {
             case 0x0e:
@@ -1076,7 +1076,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
           break;
 
          // unknown command
-       default: 
+       default:
          writelog(WAVELOG(3), "unknown DSP command %x, ignored",
                  DSP.datain.currentcommand());
          break;
@@ -1091,7 +1091,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
   // command: 8bit, 16bit, in/out, single/auto, fifo
   // mode: mono/stereo, signed/unsigned
-  //   (for info on command and mode see sound blaster programmer's manual, 
+  //   (for info on command and mode see sound blaster programmer's manual,
   //    cmds bx and cx)
   // length: number of samples - not number of bytes
   // comp: bit-coded are: type of compression; ref-byte; highspeed
@@ -1456,7 +1456,7 @@ void bx_sb16_c::mixer_writedata(Bit32u value)
   int i;
 
   // do some action depending on what register was written
-  switch (MIXER.regindex) 
+  switch (MIXER.regindex)
   {
     case 0:  // initialize mixer
       writelog(BOTHLOG(4), "Initializing mixer...");
@@ -1615,7 +1615,7 @@ void bx_sb16_c::set_irq_dma()
   int oldDMA8, oldDMA16;
 
   // set the IRQ according to the value in mixer register 0x80
-  switch (MIXER.reg[0x80]) 
+  switch (MIXER.reg[0x80])
   {
     case 1:
       newirq = 2;
@@ -1631,7 +1631,7 @@ void bx_sb16_c::set_irq_dma()
       break;
     default:
       newirq = 5;
-      writelog(BOTHLOG(3), "Bad value %02x in mixer register 0x80. IRQ set to %d", 
+      writelog(BOTHLOG(3), "Bad value %02x in mixer register 0x80. IRQ set to %d",
               MIXER.reg[0x80], newirq);
       MIXER.reg[0x80] = 2;
   }
@@ -1648,7 +1648,7 @@ void bx_sb16_c::set_irq_dma()
   oldDMA8=BX_SB16_DMAL;
   switch (MIXER.reg[0x81] & 0x0f)
   {
-    case 1: 
+    case 1:
       BX_SB16_DMAL = 0;
       break;
     case 2:
@@ -1710,7 +1710,7 @@ void bx_sb16_c::set_irq_dma()
   if(!isInitialized) {
     isInitialized=1;
   } else {
-    writelog(BOTHLOG(1), "Resources set to I%d D%d H%d", 
+    writelog(BOTHLOG(1), "Resources set to I%d D%d H%d",
              BX_SB16_IRQ, BX_SB16_DMAL, BX_SB16_DMAH);
   }
 }
@@ -1805,7 +1805,7 @@ void bx_sb16_c::mpu_command(Bit32u value)
        case 0xd0:  // d0 and df: prefix for midi command
        case 0xdf:  // like uart mode, but only a single command
           MPU.singlecommand = 1;
-          writelog(MIDILOG(4), "MPU: prefix %02x received", 
+          writelog(MIDILOG(4), "MPU: prefix %02x received",
                   MPU.cmd.currentcommand());
           break;
        default:
@@ -1815,7 +1815,7 @@ void bx_sb16_c::mpu_command(Bit32u value)
      }
 
      // Need to put an MPU_ACK into the data port if command successful
-     // we'll fake it even if we didn't process the command, so as to 
+     // we'll fake it even if we didn't process the command, so as to
      // allow detection of the MPU 401.
      if (MPU.dataout.put(0xfe) == 0)
         writelog(MIDILOG(3), "MPU_ACK error - output buffer full");
@@ -1894,7 +1894,7 @@ void bx_sb16_c::mpu_mididata(Bit32u value)
       // denotes the end of a SYSEX chunk, not the start of a message
       {
          ismidicommand = 0;     // first, it's not a command
-         MPU.midicmd.newcommand(MPU.midicmd.currentcommand(), 
+         MPU.midicmd.newcommand(MPU.midicmd.currentcommand(),
                              MPU.midicmd.bytes());
          // Then, set needed bytes to current buffer
          // because we didn't know the length before
@@ -1906,7 +1906,7 @@ void bx_sb16_c::mpu_mididata(Bit32u value)
       if (MPU.midicmd.hascommand() == 1)
       {
          writelog(MIDILOG(3), "Midi command %02x incomplete, has %d of %d bytes.",
-                 MPU.midicmd.currentcommand(), MPU.midicmd.bytes(), 
+                 MPU.midicmd.currentcommand(), MPU.midicmd.bytes(),
                  MPU.midicmd.commandbytes() );
          // write as much as we can. Should we do this?
          processmidicommand(0);
@@ -1934,7 +1934,7 @@ void bx_sb16_c::mpu_mididata(Bit32u value)
       if (MPU.midicmd.commanddone() == 1)
       {
          // the command is complete, process it
-         writelog(MIDILOG(5), "Midi command %02x complete, has %d bytes.", 
+         writelog(MIDILOG(5), "Midi command %02x complete, has %d bytes.",
                  MPU.midicmd.currentcommand(), MPU.midicmd.bytes() );
          processmidicommand(0);
          // and remove the command from the buffer
@@ -1978,7 +1978,7 @@ void bx_sb16_c::emul_write(Bit32u value)
     {
        writelog(3, "emulator command %02x unknown, ignored.", value);
        return;
-    }       
+    }
     writelog(5, "emulator command %02x, needs %d arguments",
               value, cmdlength[value]);
     EMUL.dataout.newcommand(value, cmdlength[value]);
@@ -2056,20 +2056,20 @@ void bx_sb16_c::emul_write(Bit32u value)
        case 5: EMUL.dataout.get(&value8); // dump emulator state
          switch (value8)
          {
-           case 0: 
+           case 0:
              EMUL.datain.puts("SB16 Emulator for Bochs\n");
              break;
-           case 1: 
-             EMUL.datain.puts("UART mode=%d (force=%d)\n", 
+           case 1:
+             EMUL.datain.puts("UART mode=%d (force=%d)\n",
                             MPU.uartmode, MPU.forceuartmode);
              break;
-           case 2: 
+           case 2:
              EMUL.datain.puts("timer=%d\n", MPU.current_timer);
              break;
-           case 3: 
+           case 3:
              EMUL.datain.puts("%d remappings active\n", EMUL.remaps);
              break;
-           case 4: 
+           case 4:
              EMUL.datain.puts("Resources are A%3x I%d D%d H%d T%d P%3x; Adlib at %3x\n",
                             BX_SB16_IO, BX_SB16_IRQ, BX_SB16_DMAL,
                             BX_SB16_DMAH, 6, BX_SB16_IOMPU, BX_SB16_IOADLIB);
@@ -2083,7 +2083,7 @@ void bx_sb16_c::emul_write(Bit32u value)
                             (OPL.mode == opl3)?"OPL3\n":
                             "unknown");
              break;
-           default: 
+           default:
              EMUL.datain.puts("no info. Only slots 0..5 have values.\n");
              break;
          }
@@ -2098,7 +2098,7 @@ void bx_sb16_c::emul_write(Bit32u value)
          else if (BX_SB16_THIS midimode == 1)
            BX_SB16_OUTPUT->closemidioutput();
          BX_SB16_THIS midimode = 0;
-         
+
          if ((BX_SB16_THIS wavemode == 2) ||
              (BX_SB16_THIS wavemode == 3))
          {
@@ -2164,7 +2164,7 @@ void bx_sb16_c::opl_entermode(bx_sb16_fm_mode newmode)
     opl_keyonoff(i, 0);
 
   OPL.mode = newmode;
-  
+
   if (OPL.timer_running != 0)
   {
       bx_pc_system.deactivate_timer(OPL.timer_handle);
@@ -2197,7 +2197,7 @@ void bx_sb16_c::opl_entermode(bx_sb16_fm_mode newmode)
   OPL.oper[BX_SB16_FM_NOP-1][BX_SB16_FM_OPB-1] = 0;
 
   // initialize the channels
-  
+
   // first zero all values
   for (i=0; i<BX_SB16_FM_NCH; i++)
   {
@@ -2267,7 +2267,7 @@ Bit32u bx_sb16_c::opl_status(int chipid)
   return status;
 }
 
-// set the register index for one of the OPL2's or the 
+// set the register index for one of the OPL2's or the
 // base or advanced register index for the OPL3
 void bx_sb16_c::opl_index(Bit32u value, int chipid)
 {
@@ -2380,7 +2380,7 @@ break_here:
     // Composite Sine Wave and Note-sel (ignored)
     case 0x08:
       if (value != 0)
-        writelog(MIDILOG(3), 
+        writelog(MIDILOG(3),
                 "Warning: write of %02x to CSW/Note-sel ignored", value);
       break;
 
@@ -2733,7 +2733,7 @@ void bx_sb16_c::opl_setfreq(int channel)
 
   OPL.chan[channel].freqch = 0;
 
-  // definition: 
+  // definition:
   // low-byte of freq:  8 bit F-Number, LSB's
   // high-byte of freq: [2 reserved][KEY-ON][3 block][2 F-Number MSB's]
   // [KEY-ON] is ignored by this function
@@ -2785,7 +2785,7 @@ void bx_sb16_c::opl_setfreq(int channel)
          keyfreq = realfreq << (--octave);
          octave = -octave;
       }
-  
+
       // this is a reasonable approximation for keyfreq /= 1.059463
       // (that value is 2**(1/12), which is the difference between two keys)
       while ( (keyfreq -= ( (keyfreq * 1000) / 17817) ) > freqC)
@@ -2856,7 +2856,7 @@ void bx_sb16_c::opl_midichannelinit(int channel)
 
 /* Handlers for the midi commands/midi file output */
 
-// Write the header of the midi file. Track length is 0x7fffffff 
+// Write the header of the midi file. Track length is 0x7fffffff
 // until we know how long it's really going to be
 
 void bx_sb16_c::initmidifile()
@@ -2864,10 +2864,10 @@ void bx_sb16_c::initmidifile()
   struct {
     Bit8u chunk[4];
     Bit32u chunklen;  // all values in BIG Endian!
-    Bit16u smftype; 
+    Bit16u smftype;
     Bit16u tracknum;
     Bit16u timecode;  // 0x80 + deltatimesperquarter << 8
-  } midiheader = 
+  } midiheader =
 #ifdef BX_LITTLE_ENDIAN
       { "MTh", 0x06000000, 0, 0x0100, 0x8001 };
 #else
@@ -2879,7 +2879,7 @@ void bx_sb16_c::initmidifile()
     Bit8u chunk[4];
     Bit32u chunklen;
     Bit8u data[15];
-  } trackheader = 
+  } trackheader =
 #ifdef BX_LITTLE_ENDIAN
       { "MTr", 0xffffff7f,
 #else
@@ -2888,13 +2888,13 @@ void bx_sb16_c::initmidifile()
        { 0x00,0xff,0x51,3,0x07,0xa1,0x20,    // set tempo 120 (0x7a120 us per quarter)
          0x00,0xff,0x58,4,4,2,0x18,0x08 }};  // time sig 4/4
   trackheader.chunk[3] = 'k';
-    
+
   fwrite(&midiheader, 1, 14, MIDIDATA);
   fwrite(&trackheader, 1, 23, MIDIDATA);
 }
 
 // write the midi command to the midi file
-  
+
 void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
 {
   /* We need to determine the time elapsed since the last MIDI command */
@@ -2908,7 +2908,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
          writelog(MIDILOG(4), "Initializing Midi output.");
          if (BX_SB16_OUTPUT->openmidioutput(SIM->get_param_string(BXPN_SB16_MIDIFILE)->getptr()) == BX_SOUND_OUTPUT_OK)
            MPU.outputinit = 1;
-         else 
+         else
            MPU.outputinit = 0;
          if (MPU.outputinit != 1)
          {
@@ -2916,7 +2916,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
              BX_SB16_THIS midimode = 0;
          }
       }
-      BX_SB16_OUTPUT->sendmidicommand(deltatime, command, length, data); 
+      BX_SB16_OUTPUT->sendmidicommand(deltatime, command, length, data);
       return;
   }
   else if (BX_SB16_THIS midimode < 2)
@@ -2926,7 +2926,7 @@ void bx_sb16_c::writemidicommand(int command, int length, Bit8u data[])
     writedeltatime(deltatime);
 
   fputc(command, MIDIDATA);
-  if ((command == 0xf0) || 
+  if ((command == 0xf0) ||
       (command == 0xf7))    // write event length for sysex/meta events
     writedeltatime(length);
 
@@ -2941,9 +2941,9 @@ int bx_sb16_c::currentdeltatime()
   int deltatime;
 
   // counting starts at first access
-  if (MPU.last_delta_time == 0xffffffff) 
+  if (MPU.last_delta_time == 0xffffffff)
     MPU.last_delta_time = MPU.current_timer;
- 
+
   deltatime = MPU.current_timer - MPU.last_delta_time;
   MPU.last_delta_time = MPU.current_timer;
 
@@ -3073,7 +3073,7 @@ int bx_sb16_c::converttodeltatime(Bit32u deltatime, Bit8u value[4])
       count = 1;
       value[0] = 0;
   }
-  else 
+  else
   {
       while ((deltatime > 0) && (count < 4))   // split into parts
       {                                        // of seven bits
@@ -3104,7 +3104,7 @@ void bx_sb16_c::writedeltatime(Bit32u deltatime)
 
 void bx_sb16_c::finishmidifile()
 {
-  struct { 
+  struct {
     Bit8u delta, statusbyte, metaevent, length;
   } metatrackend = { 0, 0xff, 0x2f, 0 };
 
@@ -3134,7 +3134,7 @@ void bx_sb16_c::finishmidifile()
 
 void bx_sb16_c::initvocfile()
 {
-  struct { 
+  struct {
     char id[20];
     Bit16u headerlen;  // All in LITTLE Endian!
     Bit16u version;
@@ -3153,7 +3153,7 @@ void bx_sb16_c::initvocfile()
 }
 
 // write one block to the voc file
-void bx_sb16_c::writevocblock(int block, 
+void bx_sb16_c::writevocblock(int block,
                            Bit32u headerlen, Bit8u header[],
                            Bit32u datalen, Bit8u data[])
 {
@@ -3207,7 +3207,7 @@ Bit32u bx_sb16_c::read(Bit32u address, unsigned io_len)
   UNUSED(this_ptr);
 #endif  // !BX_USE_SB16_SMF
 
-  switch (address) 
+  switch (address)
   {
     // 2x0: FM Music Status Port
     // 2x8 and 388 are aliases
@@ -3555,7 +3555,7 @@ bx_bool bx_sb16_buffer::full(void)
 bx_bool bx_sb16_buffer::get(Bit8u *data)
 {
   if (empty() != 0)
-  { 
+  {
       // Buffer is empty. Still, if it was initialized, return
       // the last byte again.
       if ( length > 0 )

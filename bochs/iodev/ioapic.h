@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.h,v 1.24 2007-09-28 19:52:02 sshwarts Exp $
+// $Id: ioapic.h,v 1.25 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -56,14 +56,14 @@ public:
   void clear_delivery_status() { lo &= ~(1<<12); }
   void set_remote_irr() { lo |= (1<<14); }
   void clear_remote_irr() { lo &= ~(1<<14); }
-  
+
   Bit32u get_lo_part () const { return lo; }
   Bit32u get_hi_part () const  { return hi; }
   void set_lo_part (Bit32u val_lo_part) {
     // keep high 32 bits of value, replace low 32, ignore R/O bits
     lo = val_lo_part & 0xffffafff;
   }
-  void set_hi_part (Bit32u val_hi_part) { 
+  void set_hi_part (Bit32u val_hi_part) {
     // keep low 32 bits of value, replace high 32
     hi = val_hi_part;
   }

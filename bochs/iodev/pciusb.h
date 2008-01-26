@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.h,v 1.30 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: pciusb.h,v 1.31 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -50,7 +50,7 @@
 #define USB_MSG_DETACH   0x101
 #define USB_MSG_RESET    0x102
 
-#define USB_RET_NODEV  (-1) 
+#define USB_RET_NODEV  (-1)
 #define USB_RET_NAK    (-2)
 #define USB_RET_STALL  (-3)
 #define USB_RET_BABBLE (-4)

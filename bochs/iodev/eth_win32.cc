@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_win32.cc,v 1.26 2006-02-02 18:49:30 vruppert Exp $
+// $Id: eth_win32.cc,v 1.27 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -37,7 +37,7 @@
 // Download it from http://netgroup-serv.polito.it/winpcap
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -156,7 +156,7 @@ typedef struct _ADAPTER {
 	UINT ReadTimeOut; // WARNING: maybe invalid before winpcap 2.2
 } ADAPTER, *LPADAPTER;
 
-typedef struct _PACKET {  
+typedef struct _PACKET {
 	HANDLE       hEvent;
 	OVERLAPPED   OverLapped;
 	PVOID        Buffer;
@@ -192,7 +192,7 @@ LPPACKET  (*PacketAllocatePacket)  (void);
 VOID      (*PacketInitPacket)      (LPPACKET, PVOID, UINT);
 VOID      (*PacketFreePacket)      (LPPACKET);
 
-// template filter for a unicast mac address and all 
+// template filter for a unicast mac address and all
 // multicast/broadcast frames
 static const struct bpf_insn macfilter[] = {
   BPF_STMT(BPF_LD|BPF_W|BPF_ABS, 2),
@@ -210,10 +210,10 @@ static const struct bpf_insn macfilter[] = {
 //
 class bx_win32_pktmover_c : public eth_pktmover_c {
 public:
-  bx_win32_pktmover_c(const char *netif, const char *macaddr, 
+  bx_win32_pktmover_c(const char *netif, const char *macaddr,
 	  eth_rx_handler_t rxh, void *rxarg, char *script);
   void sendpkt(void *buf, unsigned io_len);
-private: 
+private:
   struct bpf_insn filter[8];
   int rx_timer_index;
   static void rx_timer_handler(void *);
@@ -328,7 +328,7 @@ bx_win32_pktmover_c::bx_win32_pktmover_c(
   fprintf (pktlog_txt, "host adapter = %s\n", netif);
   fprintf (pktlog_txt, "guest MAC address = ");
   int i;
-  for (i=0; i<6; i++) 
+  for (i=0; i<6; i++)
     fprintf (pktlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "\n");
   fprintf (pktlog_txt, "--\n");
   fflush (pktlog_txt);

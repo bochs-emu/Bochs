@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth.h,v 1.17 2006-12-27 15:21:03 vruppert Exp $
+// $Id: eth.h,v 1.18 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -67,7 +67,7 @@ class eth_locator_c {
 public:
   static eth_pktmover_c *create(const char *type, const char *netif,
 				const char *macaddr,
-				eth_rx_handler_t rxh, 
+				eth_rx_handler_t rxh,
 				void *rxarg,
 				char *script);
 protected:
@@ -75,7 +75,7 @@ protected:
   virtual ~eth_locator_c() {}
   virtual eth_pktmover_c *allocate(const char *netif,
 				const char *macaddr,
-				eth_rx_handler_t rxh, 
+				eth_rx_handler_t rxh,
 				void *rxarg,
 				char *script) = 0;
 private:

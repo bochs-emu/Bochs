@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.h,v 1.1 2004-02-09 22:23:48 danielg4 Exp $
+// $Id: soundosx.h,v 1.2 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.H) written and donated by Brian Huffman
@@ -60,7 +60,7 @@ private:
     Bit8u WaveData[BX_SOUND_OSX_NBUF][BX_SOUND_OUTPUT_WAVEPACKETSIZE];
     int WaveLength[BX_SOUND_OSX_NBUF];
     int head, tail;  // buffer pointers
-    
+
 #ifdef BX_SOUND_OSX_use_converter
     int WavePlaying;
 #endif

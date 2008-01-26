@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.cc,v 1.13 2006-09-10 17:18:44 vruppert Exp $
+// $Id: pcidev.cc,v 1.14 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
-/*  
+/*
  *  PCIDEV: PCI host device mapping
  *  Copyright (C) 2003 - Frank Cornelis
  *
@@ -26,7 +26,7 @@
  */
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -279,7 +279,7 @@ Bit32u bx_pcidev_c::pci_read_handler(Bit8u address, unsigned io_len)
   if (ret == -1)
     BX_ERROR(("pcidev config read error"));
 
-  // we don't use the host irq line but our own bochs irq line  
+  // we don't use the host irq line but our own bochs irq line
   if (address == PCI_INTERRUPT_LINE) {
     io.value = (io.value & 0xffffff00) | (BX_PCIDEV_THIS irq & 0xff);
   }
@@ -348,7 +348,7 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
     BX_PCIDEV_THIS regions[io_reg_idx].config_value = base;
     /* remap the I/O or memory handler if required using io.value
      * We assume that an I/O memory region will stay and I/O memory
-     * region. And that an I/O port region also will stay an I/O port 
+     * region. And that an I/O port region also will stay an I/O port
      * region.
      */
     if ((base & PCI_BASE_ADDRESS_SPACE) == PCI_BASE_ADDRESS_SPACE_MEMORY) {
@@ -411,7 +411,7 @@ Bit32u bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
 #endif  // !BX_USE_PCIDEV_SMF
   struct region_struct *region = (struct region_struct *)param;
   int ret = -1;
-  
+
   int fd = BX_PCIDEV_THIS pcidev_fd;
   if (fd == -1)
     return 0xffffffff;
@@ -434,7 +434,7 @@ Bit32u bx_pcidev_c::read(void *param, Bit32u address, unsigned io_len)
 	BX_ERROR(("pcidev read I/O error"));
   	io.value = 0xffffffff;
   }
-  
+
   return io.value;
 }
 

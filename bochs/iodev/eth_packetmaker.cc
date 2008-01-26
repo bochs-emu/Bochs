@@ -1,12 +1,12 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_packetmaker.cc,v 1.14 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_packetmaker.cc,v 1.15 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NP_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -120,7 +120,7 @@ eth_ETHmaker::ishandler(const eth_packet& outpacket) {
      ) {
     return 1;
   }
-  return 0;  
+  return 0;
 }
 
 bx_bool

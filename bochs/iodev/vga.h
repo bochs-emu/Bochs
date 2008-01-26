@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.59 2008-01-26 00:00:31 vruppert Exp $
+// $Id: vga.h,v 1.60 2008-01-26 22:24:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -96,7 +96,7 @@
 
   #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
-  
+
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_KB		(VBE_DISPI_TOTAL_VIDEO_MEMORY_MB * 1024)
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES 	(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB * 1024)
 
@@ -283,7 +283,7 @@ protected:
     bx_bool y_doublescan;
     Bit8u last_bpp;
 
-#if BX_SUPPORT_VBE    
+#if BX_SUPPORT_VBE
     Bit16u  vbe_cur_dispi;
     Bit16u  vbe_xres;
     Bit16u  vbe_yres;
@@ -295,7 +295,7 @@ protected:
     bx_bool vbe_enabled;
     Bit16u  vbe_curindex;
     Bit32u  vbe_visible_screen_size; /**< in bytes */
-    Bit16u  vbe_offset_x;		 /**< Virtual screen x start (in pixels) */ 
+    Bit16u  vbe_offset_x;		 /**< Virtual screen x start (in pixels) */
     Bit16u  vbe_offset_y;		 /**< Virtual screen y start (in pixels) */
     Bit16u  vbe_virtual_xres;
     Bit16u  vbe_virtual_yres;
@@ -304,7 +304,7 @@ protected:
     bx_bool vbe_lfb_enabled;
     bx_bool vbe_get_capabilities;
     bx_bool vbe_8bit_dac;
-#endif    
+#endif
   } s;  // state information
 
 

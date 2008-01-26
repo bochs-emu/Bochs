@@ -1,8 +1,8 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcidev.h,v 1.5 2006-08-05 20:04:23 vruppert Exp $
+// $Id: pcidev.h,v 1.6 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
-/*  
+/*
  *  PCIDEV: PCI host device mapping
  *  Copyright (C) 2003 - Frank Cornelis
  *
@@ -48,7 +48,7 @@ public:
 
   virtual Bit32u pci_read_handler(Bit8u address, unsigned io_len);
   virtual void   pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
-  
+
   int pcidev_fd; // to access the pcidev
 
   // resource mapping

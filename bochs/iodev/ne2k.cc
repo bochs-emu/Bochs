@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.cc,v 1.95 2007-11-01 18:14:28 sshwarts Exp $
+// $Id: ne2k.cc,v 1.96 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -28,10 +28,10 @@
 // NE2000/ether stuff.
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #include "iodev.h"
 #if BX_SUPPORT_NE2K
 
@@ -60,7 +60,7 @@ void libne2k_LTX_plugin_fini(void)
 {
   delete theNE2kDevice;
 }
-  
+
 bx_ne2k_c::bx_ne2k_c()
 {
   put("NE2K");
@@ -250,7 +250,7 @@ void bx_ne2k_c::after_restore_state(void)
 //
 Bit32u bx_ne2k_c::read_cr(void)
 {
-  Bit32u val = 
+  Bit32u val =
          (((BX_NE2K_THIS s.CR.pgsel    & 0x03) << 6) |
 	  ((BX_NE2K_THIS s.CR.rdma_cmd & 0x07) << 3) |
 	  (BX_NE2K_THIS s.CR.tx_packet << 2) |
@@ -324,7 +324,7 @@ void bx_ne2k_c::write_cr(Bit32u value)
     // some more debug
     if (BX_NE2K_THIS s.tx_timer_active)
       BX_PANIC(("CR write, tx timer still active"));
-    
+
     // Schedule a timer to trigger a tx-complete interrupt
     // The number of microseconds is the bit-time / 10.
     // The bit-time is the preamble+sfd (64 bits), the
@@ -363,7 +363,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
 {
   Bit32u retval = 0;
 
-  if ((io_len == 2) && (address & 0x1)) 
+  if ((io_len == 2) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word read"));
 
   // ROM'd MAC address
@@ -399,7 +399,7 @@ bx_ne2k_c::chipmem_read(Bit32u address, unsigned int io_len)
 void BX_CPP_AttrRegparmN(3)
 bx_ne2k_c::chipmem_write(Bit32u address, Bit32u value, unsigned io_len)
 {
-  if ((io_len == 2) && (address & 0x1)) 
+  if ((io_len == 2) && (address & 0x1))
     BX_PANIC(("unaligned chipmem word write"));
 
   if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
@@ -434,7 +434,7 @@ bx_ne2k_c::asic_read(Bit32u offset, unsigned int io_len)
   case 0x0:  // Data register
     //
     // A read remote-DMA command must have been issued,
-    // and the source-address and length registers must  
+    // and the source-address and length registers must
     // have been initialised.
     //
     if (io_len > BX_NE2K_THIS s.remote_bytes) {
@@ -907,7 +907,7 @@ void bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0x6:
     BX_NE2K_THIS s.physaddr[offset - 1] = value;
     break;
-    
+
   case 0x7:  // CURR
     BX_NE2K_THIS s.curr_page = value;
     break;
@@ -925,7 +925,7 @@ void bx_ne2k_c::page1_write(Bit32u offset, Bit32u value, unsigned io_len)
 
   default:
     BX_PANIC(("page 1 write register 0x%02x out of range", offset));
-  }  
+  }
 }
 
 //
@@ -1061,13 +1061,13 @@ void bx_ne2k_c::page2_write(Bit32u offset, Bit32u value, unsigned io_len)
   case 0xf:
     BX_PANIC(("page 2 write to reserved register 0x%02x", offset));
     break;
-   
+
   default:
     BX_PANIC(("page 2 write, illegal register 0x%02x", offset));
     break;
   }
 }
-  
+
 //
 // page3_read/page3_write - writes to this page are illegal
 //
@@ -1177,7 +1177,7 @@ Bit32u bx_ne2k_c::read(Bit32u address, unsigned io_len)
 // mainline when the CPU attempts a write in the i/o space registered
 // by this ne2000 instance
 //
-void bx_ne2k_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, 
+void bx_ne2k_c::write_handler(void *this_ptr, Bit32u address, Bit32u value,
 			 unsigned io_len)
 {
 #if !BX_USE_NE2K_SMF
@@ -1262,7 +1262,7 @@ void bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
 {
     // BX_DEBUG(("rx_handler with length %d", len));
   bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
-  
+
   class_ptr->rx_frame(buf, len);
 }
 
@@ -1300,7 +1300,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   pages = (io_len + 4 + 4 + 255)/256;
 
   if (BX_NE2K_THIS s.curr_page < BX_NE2K_THIS s.bound_ptr) {
-    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;    
+    avail = BX_NE2K_THIS s.bound_ptr - BX_NE2K_THIS s.curr_page;
   } else {
     avail = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start) -
       (BX_NE2K_THIS s.curr_page - BX_NE2K_THIS s.bound_ptr);
@@ -1310,7 +1310,7 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   // Avoid getting into a buffer overflow condition by not attempting
   // to do partial receives. The emulation to handle this condition
   // seems particularly painful.
-  if ((avail < pages) 
+  if ((avail < pages)
 #if BX_NE2K_NEVER_FULL_RING
       || (avail == pages)
 #endif
@@ -1374,17 +1374,17 @@ void bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     memcpy(startptr + 4, buf, io_len);
     BX_NE2K_THIS s.curr_page = nextpage;
   } else {
-    int endbytes = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page) 
+    int endbytes = (BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.curr_page)
       * 256;
     memcpy(startptr, pkthdr, 4);
     memcpy(startptr + 4, buf, endbytes - 4);
     startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256 -
 				 BX_NE2K_MEMSTART];
     memcpy(startptr, (void *)(pktbuf + endbytes - 4),
-	   io_len - endbytes + 8);    
+	   io_len - endbytes + 8);
     BX_NE2K_THIS s.curr_page = nextpage;
   }
-  
+
   BX_NE2K_THIS s.RSR.rx_ok = 1;
   BX_NE2K_THIS s.RSR.rx_mbit = (bx_bool)((pktbuf[0] & 0x01) > 0);
 
@@ -1401,7 +1401,7 @@ void bx_ne2k_c::init(void)
   char devname[16];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: ne2k.cc,v 1.95 2007-11-01 18:14:28 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: ne2k.cc,v 1.96 2008-01-26 22:24:02 sshwarts Exp $"));
 
   // Read in values from config interface
   base = (bx_list_c*) SIM->get_param(BXPN_NE2K);
@@ -1415,7 +1415,7 @@ void bx_ne2k_c::init(void)
     BX_NE2K_THIS s.pci_enabled = 1;
     strcpy(devname, "NE2000 PCI NIC");
     BX_NE2K_THIS s.devfunc = 0x00;
-    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc, 
+    DEV_register_pci_handlers(this, &BX_NE2K_THIS s.devfunc,
         BX_PLUGIN_NE2K, devname);
 
     for (unsigned i=0; i<256; i++)
@@ -1501,17 +1501,17 @@ void bx_ne2k_c::init(void)
   BX_NE2K_THIS s.macaddr[9]  = BX_NE2K_THIS s.physaddr[4];
   BX_NE2K_THIS s.macaddr[10] = BX_NE2K_THIS s.physaddr[5];
   BX_NE2K_THIS s.macaddr[11] = BX_NE2K_THIS s.physaddr[5];
-    
+
   // ne2k signature
-  for (int i = 12; i < 32; i++) 
+  for (int i = 12; i < 32; i++)
     BX_NE2K_THIS s.macaddr[i] = 0x57;
-    
+
   // Attach to the simulated ethernet dev
   const char *ethmod = SIM->get_param_enum("ethmod", base)->get_selected();
   BX_NE2K_THIS ethdev = eth_locator_c::create(ethmod,
                                               SIM->get_param_string("ethdev", base)->getptr(),
                                               (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                              rx_handler, 
+                                              rx_handler,
                                               this,
                                               SIM->get_param_string("script", base)->getptr());
 
@@ -1522,7 +1522,7 @@ void bx_ne2k_c::init(void)
 
     BX_NE2K_THIS ethdev = eth_locator_c::create("null", NULL,
                                                 (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                                rx_handler, 
+                                                rx_handler,
                                                 this, "");
     if (BX_NE2K_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
@@ -1699,7 +1699,7 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x0005:
     case 0x0006:  BX_DUPLICATE(0x0005);
       dbg_printf ("NCR = Number of Collisions Register (read-only) = 0x%02x\n", BX_NE2K_THIS s.num_coll);
-      dbg_printf ("TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n", 
+      dbg_printf ("TBCR1,TBCR0 = Transmit Byte Count = %02x %02x\n",
 	  BX_HIGH_BYTE (BX_NE2K_THIS s.tx_bytes),
 	  BX_LOW_BYTE (BX_NE2K_THIS s.tx_bytes));
       dbg_printf ("FIFO = %02x\n", BX_NE2K_THIS s.fifo);
@@ -1718,10 +1718,10 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       break;
     case 0x0008:
     case 0x0009:  BX_DUPLICATE(0x0008);
-      dbg_printf ("CRDA1,0 = Current remote DMA address = %02x %02x\n", 
+      dbg_printf ("CRDA1,0 = Current remote DMA address = %02x %02x\n",
 	  BX_HIGH_BYTE (BX_NE2K_THIS s.remote_dma),
 	  BX_LOW_BYTE (BX_NE2K_THIS s.remote_dma));
-      dbg_printf ("RSAR1,0 = Remote start address = %02x %02x\n", 
+      dbg_printf ("RSAR1,0 = Remote start address = %02x %02x\n",
 	  BX_HIGH_BYTE(s.remote_start),
 	  BX_LOW_BYTE(s.remote_start));
       break;
@@ -1803,7 +1803,7 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x0106:  BX_DUPLICATE(0x0101);
       dbg_printf ("MAC address registers are located at page 1, registers 1-6.\n");
       dbg_printf ("The MAC address is ");
-      for (i=0; i<=5; i++) 
+      for (i=0; i<=5; i++)
 	dbg_printf ("%02x%c", BX_NE2K_THIS s.physaddr[i], i<5?':' : '\n');
       break;
     case 0x0107:
@@ -1827,7 +1827,7 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
     case 0x0202:  BX_DUPLICATE(0x0001);
       dbg_printf ("PSTART = Page start register = %02x\n", BX_NE2K_THIS s.page_start);
       dbg_printf ("PSTOP = Page stop register = %02x\n", BX_NE2K_THIS s.page_stop);
-      dbg_printf ("Local DMA address = %02x %02x\n", 
+      dbg_printf ("Local DMA address = %02x %02x\n",
 	  BX_HIGH_BYTE(BX_NE2K_THIS s.local_dma),
 	  BX_LOW_BYTE(BX_NE2K_THIS s.local_dma));
       break;
@@ -1839,7 +1839,7 @@ void bx_ne2k_c::print_info (FILE *fp, int page, int reg, int brief)
       break;
     case 0x0206:
     case 0x0207:  BX_DUPLICATE(0x0206);
-      dbg_printf ("Address Counter= %02x %02x\n", 
+      dbg_printf ("Address Counter= %02x %02x\n",
 	 BX_HIGH_BYTE(BX_NE2K_THIS s.address_cnt),
 	 BX_LOW_BYTE(BX_NE2K_THIS s.address_cnt));
       break;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: acpi.cc,v 1.12 2008-01-14 18:39:05 vruppert Exp $
+// $Id: acpi.cc,v 1.13 2008-01-26 22:24:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2006  Volker Ruppert
@@ -24,7 +24,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -84,7 +84,7 @@ Bit64u muldiv64(Bit64u a, Bit32u b, Bit32u c)
       Bit32u high, low;
 #else
       Bit32u low, high;
-#endif            
+#endif
     } l;
   } u, res;
   Bit64u rl, rh;
@@ -256,7 +256,7 @@ Bit16u bx_acpi_ctrl_c::get_pmsts(void)
 void bx_acpi_ctrl_c::pm_update_sci(void)
 {
   Bit16u pmsts = get_pmsts();
-  bx_bool sci_level = (((pmsts & BX_ACPI_THIS s.pmen) & 
+  bx_bool sci_level = (((pmsts & BX_ACPI_THIS s.pmen) &
                       (RTC_EN | PWRBTN_EN | GBL_EN | TMROF_EN)) != 0);
   BX_ACPI_THIS set_irq_level(sci_level);
   // schedule a timer interruption if needed

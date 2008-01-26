@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.h,v 1.6 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: busmouse.h,v 1.7 2008-01-26 22:24:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -36,7 +36,7 @@
 #  define BX_BUSM_THIS theBusMouse->
 #else
 #  define BX_BUSM_SMF
-#  define BX_BUSM_THIS 
+#  define BX_BUSM_THIS
 #endif
 
 #define BUS_MOUSE_IRQ  5

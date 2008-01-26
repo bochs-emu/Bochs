@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.cc,v 1.40 2007-09-28 19:52:06 sshwarts Exp $
+// $Id: svga_cirrus.cc,v 1.41 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -459,7 +459,7 @@ void bx_svga_cirrus_c::after_restore_state(void)
   }
 }
 
-void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, 
+void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0,
                               unsigned width, unsigned height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1;
@@ -804,7 +804,7 @@ void bx_svga_cirrus_c::mem_write(Bit32u addr, Bit8u value)
   }
 }
 
-void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot, 
+void bx_svga_cirrus_c::get_text_snapshot(Bit8u **text_snapshot,
                                     unsigned *txHeight, unsigned *txWidth)
 {
   BX_CIRRUS_THIS bx_vga_c::get_text_snapshot(text_snapshot,txHeight,txWidth);
@@ -1375,7 +1375,7 @@ void bx_svga_cirrus_c::svga_update(void)
                     }
                   }
                   vid_ptr  += pitch;
-                  tile_ptr += info.pitch; 
+                  tile_ptr += info.pitch;
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
@@ -1412,7 +1412,7 @@ void bx_svga_cirrus_c::svga_update(void)
                     }
                   }
                   vid_ptr  += pitch;
-                  tile_ptr += info.pitch; 
+                  tile_ptr += info.pitch;
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
@@ -1450,7 +1450,7 @@ void bx_svga_cirrus_c::svga_update(void)
                     }
                   }
                   vid_ptr  += pitch;
-                  tile_ptr += info.pitch; 
+                  tile_ptr += info.pitch;
                 }
                 draw_hardware_cursor(xc, yc, &info);
                 bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
@@ -2545,10 +2545,10 @@ void bx_svga_cirrus_c::svga_bitblt()
   }
 
   if ((BX_CIRRUS_THIS bitblt.bltmodeext & CIRRUS_BLTMODEEXT_SOLIDFILL) &&
-      (BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSDEST | 
+      (BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSDEST |
                              CIRRUS_BLTMODE_TRANSPARENTCOMP |
-                             CIRRUS_BLTMODE_PATTERNCOPY | 
-                             CIRRUS_BLTMODE_COLOREXPAND)) == 
+                             CIRRUS_BLTMODE_PATTERNCOPY |
+                             CIRRUS_BLTMODE_COLOREXPAND)) ==
       (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
     BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
     BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
@@ -2956,7 +2956,7 @@ void bx_svga_cirrus_c::svga_simplebitblt()
   Bit8u *dst;
   unsigned bits, bits_xor, bitmask;
   int pattern_x, srcskipleft;
-  
+
   if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
     pattern_x = BX_CIRRUS_THIS control.reg[0x2f] & 0x1f;
     srcskipleft = pattern_x / 3;

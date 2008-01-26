@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: busmouse.cc,v 1.7 2007-09-28 19:51:59 sshwarts Exp $
+// $Id: busmouse.cc,v 1.8 2008-01-26 22:24:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -28,7 +28,7 @@
 // Initial code by Ben Lunt 'fys frontiernet net'
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -70,7 +70,7 @@ bx_busm_c::~bx_busm_c()
 
 void bx_busm_c::init(void)
 {
-  BX_DEBUG(("Init $Id: busmouse.cc,v 1.7 2007-09-28 19:51:59 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: busmouse.cc,v 1.8 2008-01-26 22:24:00 sshwarts Exp $"));
 
   DEV_register_irq(BUS_MOUSE_IRQ, "Bus Mouse");
 
@@ -85,8 +85,8 @@ void bx_busm_c::init(void)
 
   BX_BUSM_THIS mouse_delayed_dx = 0;
   BX_BUSM_THIS mouse_delayed_dy = 0;
-  BX_BUSM_THIS current_x = 
-  BX_BUSM_THIS current_y = 
+  BX_BUSM_THIS current_x =
+  BX_BUSM_THIS current_y =
   BX_BUSM_THIS current_b = 0;
 
   BX_BUSM_THIS sig_port_sequ = 0;
@@ -95,14 +95,14 @@ void bx_busm_c::init(void)
   BX_BUSM_THIS cur_command   = 0;
 
   // the control port values
-  BX_BUSM_THIS control_val             = 
-  BX_BUSM_THIS control.mode_set        = 
-  BX_BUSM_THIS control.modeA_select    = 
-  BX_BUSM_THIS control.portA_dir       = 
-  BX_BUSM_THIS control.portC_upper_dir = 
-  BX_BUSM_THIS control.modeBC_select   = 
-  BX_BUSM_THIS control.portB_dir       = 
-  BX_BUSM_THIS control.portC_lower_dir = 
+  BX_BUSM_THIS control_val             =
+  BX_BUSM_THIS control.mode_set        =
+  BX_BUSM_THIS control.modeA_select    =
+  BX_BUSM_THIS control.portA_dir       =
+  BX_BUSM_THIS control.portC_upper_dir =
+  BX_BUSM_THIS control.modeBC_select   =
+  BX_BUSM_THIS control.portB_dir       =
+  BX_BUSM_THIS control.portC_lower_dir =
   BX_BUSM_THIS control_val             = 0;
 
   BX_INFO(("Initialized BusMouse"));
@@ -233,7 +233,7 @@ void bx_busm_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x02:  // read y
         case 0x07:
           BX_BUSM_THIS cur_command = (Bit8u) value;
-          break;      
+          break;
         case 0x80: // reset
           BX_BUSM_THIS cur_command = 0x00;
           BX_BUSM_THIS command_val = 0x80;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pci_ide.cc,v 1.30 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: pci_ide.cc,v 1.31 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -29,7 +29,7 @@
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -81,7 +81,7 @@ void bx_pci_ide_c::init(void)
   unsigned i;
 
   Bit8u devfunc = BX_PCI_DEVICE(1,1);
-  DEV_register_pci_handlers(this, &devfunc, 
+  DEV_register_pci_handlers(this, &devfunc,
       BX_PLUGIN_PCI_IDE, "PIIX3 PCI IDE controller");
 
   // register BM-DMA timer
@@ -155,9 +155,9 @@ void bx_pci_ide_c::register_state(void)
     BXRS_HEX_PARAM_FIELD(ctrl, status, BX_PIDE_THIS s.bmdma[i].status);
     BXRS_HEX_PARAM_FIELD(ctrl, dtpr, BX_PIDE_THIS s.bmdma[i].dtpr);
     BXRS_HEX_PARAM_FIELD(ctrl, prd_current, BX_PIDE_THIS s.bmdma[i].prd_current);
-    BXRS_PARAM_SPECIAL32(ctrl, buffer_top,  
+    BXRS_PARAM_SPECIAL32(ctrl, buffer_top,
        BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
-    BXRS_PARAM_SPECIAL32(ctrl, buffer_idx,  
+    BXRS_PARAM_SPECIAL32(ctrl, buffer_idx,
        BX_PIDE_THIS param_save_handler, BX_PIDE_THIS param_restore_handler);
   }
 }

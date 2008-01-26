@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_hid.cc,v 1.6 2007-09-28 19:52:06 sshwarts Exp $
+// $Id: usb_hid.cc,v 1.7 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -23,7 +23,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -77,7 +77,7 @@ static const Bit8u bx_mouse_config_descriptor[] = {
   0x01,       /*  u8  bNumInterfaces; (1) */
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
-  0xa0,       /*  u8  bmAttributes; 
+  0xa0,       /*  u8  bmAttributes;
 			 Bit 7: must be set,
 			     6: Self-powered,
 			     5: Remote wakeup,
@@ -125,11 +125,11 @@ static const Bit8u bx_mouse_config_descriptor[] = {
 };
 
 static const Bit8u bx_mouse_hid_report_descriptor[] = {
-  0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 
+  0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01,
   0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
-  0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 
+  0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01,
   0x81, 0x02, 0x95, 0x01, 0x75, 0x05, 0x81, 0x01,
-  0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x15, 0x81, 
+  0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x15, 0x81,
   0x25, 0x7F, 0x75, 0x08, 0x95, 0x02, 0x81, 0x06,
   0xC0, 0xC0,
 };
@@ -142,7 +142,7 @@ static const Bit8u bx_tablet_config_descriptor[] = {
   0x01,       /*  u8  bNumInterfaces; (1) */
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
-  0xa0,       /*  u8  bmAttributes; 
+  0xa0,       /*  u8  bmAttributes;
 			 Bit 7: must be set,
 			     6: Self-powered,
 			     5: Remote wakeup,
@@ -246,7 +246,7 @@ static const Bit8u bx_keypad_config_descriptor[] = {
   0x02,       /*  u8  bNumInterfaces; (2) */
   0x01,       /*  u8  bConfigurationValue; */
   0x04,       /*  u8  iConfiguration; */
-  0xa0,       /*  u8  bmAttributes; 
+  0xa0,       /*  u8  bmAttributes;
 			 Bit 7: must be set,
 			     6: Self-powered,
 			     5: Remote wakeup,
@@ -442,11 +442,11 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
         case USB_DT_DEVICE:
           if ((d.type == USB_DEV_TYPE_MOUSE) ||
               (d.type == USB_DEV_TYPE_TABLET)) {
-            memcpy(data, bx_mouse_dev_descriptor, 
+            memcpy(data, bx_mouse_dev_descriptor,
                    sizeof(bx_mouse_dev_descriptor));
             ret = sizeof(bx_mouse_dev_descriptor);
           } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-            memcpy(data, bx_keypad_dev_descriptor, 
+            memcpy(data, bx_keypad_dev_descriptor,
                    sizeof(bx_keypad_dev_descriptor));
             ret = sizeof(bx_keypad_dev_descriptor);
 	  } else {
@@ -455,15 +455,15 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
           break;
         case USB_DT_CONFIG:
           if (d.type == USB_DEV_TYPE_MOUSE) {
-            memcpy(data, bx_mouse_config_descriptor, 
+            memcpy(data, bx_mouse_config_descriptor,
                    sizeof(bx_mouse_config_descriptor));
             ret = sizeof(bx_mouse_config_descriptor);
           } else if (d.type == USB_DEV_TYPE_TABLET) {
-            memcpy(data, bx_tablet_config_descriptor, 
+            memcpy(data, bx_tablet_config_descriptor,
                    sizeof(bx_tablet_config_descriptor));
             ret = sizeof(bx_tablet_config_descriptor);
           } else if (d.type == USB_DEV_TYPE_KEYPAD) {
-            memcpy(data, bx_keypad_config_descriptor, 
+            memcpy(data, bx_keypad_config_descriptor,
                    sizeof(bx_keypad_config_descriptor));
             ret = sizeof(bx_keypad_config_descriptor);
           } else {
@@ -531,20 +531,20 @@ int usb_hid_device_t::handle_control(int request, int value, int index, int leng
       switch(value >> 8) {
         case 0x22:
           if (d.type == USB_DEV_TYPE_MOUSE) {
-            memcpy(data, bx_mouse_hid_report_descriptor, 
+            memcpy(data, bx_mouse_hid_report_descriptor,
                    sizeof(bx_mouse_hid_report_descriptor));
             ret = sizeof(bx_mouse_hid_report_descriptor);
           } else if (d.type == USB_DEV_TYPE_TABLET) {
-            memcpy(data, bx_tablet_hid_report_descriptor, 
+            memcpy(data, bx_tablet_hid_report_descriptor,
                    sizeof(bx_tablet_hid_report_descriptor));
             ret = sizeof(bx_tablet_hid_report_descriptor);
           } else if (d.type == USB_DEV_TYPE_KEYPAD) {
             if (index == 0) {
-              memcpy(data, bx_keypad_hid_report_descriptor1, 
+              memcpy(data, bx_keypad_hid_report_descriptor1,
                      sizeof(bx_keypad_hid_report_descriptor1));
               ret = sizeof(bx_keypad_hid_report_descriptor1);
             } else {
-              memcpy(data, bx_keypad_hid_report_descriptor2, 
+              memcpy(data, bx_keypad_hid_report_descriptor2,
                      sizeof(bx_keypad_hid_report_descriptor2));
               ret = sizeof(bx_keypad_hid_report_descriptor2);
             }
@@ -752,7 +752,7 @@ bx_bool usb_hid_device_t::key_enq(Bit8u *scan_code)
       break;
     }
   }
-  
+
   if (!fnd) {
     memset(s.key_pad_packet, 0, 8);
     memset(s.saved_key, 0, 8);

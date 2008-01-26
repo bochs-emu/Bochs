@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soundosx.cc,v 1.7 2006-03-03 20:29:50 vruppert Exp $
+// $Id: soundosx.cc,v 1.8 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 // This file (SOUNDOSX.CC) written and donated by Brian Huffman
@@ -112,7 +112,7 @@ int bx_sound_osx_c::openmidioutput(char *device)
     // Connect the devices up
     AUGraphConnectNodeInput (MidiGraph, synthNode, 1, outputNode, 0);
     AUGraphUpdate (MidiGraph, NULL);
-    
+
     // Open and initialize the audio units
     AUGraphOpen (MidiGraph);
     AUGraphInitialize (MidiGraph);
@@ -192,7 +192,7 @@ int bx_sound_osx_c::openwaveoutput(char *device)
     AudioUnitInputCallback input;
     input.inputProc = MyRenderer;
     input.inputProcRefCon = (void *) this;
-    AudioUnitSetProperty (WaveOutputUnit, kAudioUnitProperty_SetInputCallback, 
+    AudioUnitSetProperty (WaveOutputUnit, kAudioUnitProperty_SetInputCallback,
         kAudioUnitScope_Global, 0, &input, sizeof(input));
 #endif
 
@@ -229,7 +229,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
 
 #ifdef BX_SOUND_OSX_use_converter
     if ( (frequency == oldfreq) &&
-        (bits == oldbits) && 
+        (bits == oldbits) &&
         (stereo == oldstereo) &&
         (format == oldformat) )
         return BX_SOUND_OUTPUT_OK;    // nothing to do
@@ -263,7 +263,7 @@ int bx_sound_osx_c::startwaveplayback(int frequency, int bits, int stereo, int f
     if (srcFormat.mChannelsPerFrame == 1 && dstFormat.mChannelsPerFrame == 2) {
         // map single-channel input to both output channels
         SInt32 map[2] = {0,0};
-        AudioConverterSetProperty (WaveConverter, kAudioConverterChannelMap, 
+        AudioConverterSetProperty (WaveConverter, kAudioConverterChannelMap,
                             sizeof(map), (void*) map);
     }
 

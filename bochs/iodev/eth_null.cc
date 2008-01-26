@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_null.cc,v 1.20 2007-12-30 18:02:22 sshwarts Exp $
+// $Id: eth_null.cc,v 1.21 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,10 +32,10 @@
 // rfc0903: rarp
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -83,15 +83,15 @@ protected:
 //
 
 // the constructor
-bx_null_pktmover_c::bx_null_pktmover_c(const char *netif, 
+bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
 				       char *script)
 {
 #if BX_ETH_NULL_LOGGING
-  // Start the rx poll 
-  this->rx_timer_index = 
+  // Start the rx poll
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				1, 1, "eth_null"); // continuous, active
   this->rxh   = rxh;
@@ -105,7 +105,7 @@ bx_null_pktmover_c::bx_null_pktmover_c(const char *netif,
   fprintf(txlog_txt, "null packetmover readable log file\n");
   fprintf(txlog_txt, "net IF = %s\n", netif);
   fprintf(txlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf(txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf(txlog_txt, "\n--\n");
   fflush(txlog_txt);

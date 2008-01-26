@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sb16.h,v 1.28 2007-09-28 19:52:05 sshwarts Exp $
+// $Id: sb16.h,v 1.29 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -75,12 +75,12 @@
    Any of the address lengths can be zero to disable that particular
    subdevice. Turning off the DSP still leaves FM music enabled on the
    BX_SB16_IOADLIB ports, unless those are disabled as well.
-   
+
    BX_SB16_IOMPULEN should be 4 or 2. In the latter case, the emulator
    is completely invisible, and runtime changes are not possible
 
    BX_SB16_IOADLIBLEN should be 2 or 4. If 0, Ports 0x388.. don't
-   get used, but the OPL2 can still be accessed at 0x228..0x229. 
+   get used, but the OPL2 can still be accessed at 0x228..0x229.
    If 2, the usual Adlib emulation is enabled. If 4, an OPL3 is
    emulated at adresses 0x388..0x38b, or two separate OPL2's.
 */
@@ -106,7 +106,7 @@ struct bx_sb16_ins_map {
 #define BX_SB16_FM_NOP       36 // OPL3 has 36 operators
 #define BX_SB16_FM_OPB       6  // one operator has 6 bytes
 typedef Bit8u bx_sb16_fm_operator[BX_SB16_FM_OPB];
-   /* Explanation of the values: 
+   /* Explanation of the values:
       (note [xx] is one bit for xx; [5 xx] is five bits for xx,
       all bits listed MSB to LSB)
 
@@ -275,7 +275,7 @@ private:
   friend struct bx_sb16_opl_struct;
   struct bx_sb16_opl_struct {
     bx_sb16_fm_mode mode;
-    // modes: single: one OPL2 (OPL3 disabled), 
+    // modes: single: one OPL2 (OPL3 disabled),
     //        adlib:  one OPL2 (no OPL3),
     //        dual:   two seperate OPL2
     //        opl3:   one OPL3 (enabled)

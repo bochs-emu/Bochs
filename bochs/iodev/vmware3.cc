@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vmware3.cc,v 1.18 2007-10-24 23:17:30 sshwarts Exp $
+// $Id: vmware3.cc,v 1.19 2008-01-26 22:24:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -8,26 +8,26 @@
  *
  * Author: Sharvil Nanavati, for Net Integration Technologies, Inc.
  * Contact: snrrrub@yahoo.com
- *  
+ *
  * Copyright (C) 2003 Net Integration Technologies, Inc.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -42,7 +42,7 @@ const off_t vmware3_image_t::INVALID_OFFSET=(off_t)-1;
 #define DTOH32_HEADER(field) (header.field = (dtoh32(header.field)))
 #define HTOD32_HEADER(field) (header.field = (htod32(header.field)))
 
-int vmware3_image_t::read_header(int fd, COW_Header & header) 
+int vmware3_image_t::read_header(int fd, COW_Header & header)
 {
     int res;
 
@@ -72,7 +72,7 @@ int vmware3_image_t::read_header(int fd, COW_Header & header)
     return res;
 }
 
-int vmware3_image_t::write_header(int fd, COW_Header & hostHeader) 
+int vmware3_image_t::write_header(int fd, COW_Header & hostHeader)
 {
     COW_Header header;
 
@@ -181,7 +181,7 @@ char * vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
     return name;
 }
 
-/* 
+/*
  * This function will panic if errors occur when attempting to open an image
  * file. Now if only I could use exceptions to handle the errors in an elegant
  * fashion...
@@ -216,7 +216,7 @@ int vmware3_image_t::open(const char * pathname)
 
     tlb_size  = header.tlb_size_sectors * 512;
     slb_count = (1 << FL_SHIFT) / tlb_size;
-    
+
     // we must have at least one chain
     unsigned count = header.number_of_chains;
     if (count < 1) count = 1;
@@ -242,11 +242,11 @@ int vmware3_image_t::open(const char * pathname)
         current->flb = new unsigned [current->header.flb_count];
         if(current->flb == 0)
             BX_PANIC(("cannot allocate %d bytes for flb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
-        
+
         current->slb = new unsigned * [current->header.flb_count];
         if(current->slb == 0)
             BX_PANIC(("cannot allocate %d bytes for slb in vmware3 COW Disk '%s'", current->header.flb_count * 4, filename));
-        
+
         unsigned j;
         for(j = 0; j < current->header.flb_count; ++j)
         {
@@ -258,7 +258,7 @@ int vmware3_image_t::open(const char * pathname)
         current->tlb = new Bit8u [tlb_size];
         if(current->tlb == 0)
             BX_PANIC(("cannot allocate %d bytes for tlb in vmware3 COW Disk '%s'", tlb_size, filename));
-        
+
         if(::lseek(current->fd, current->header.flb_offset_sectors * 512, SEEK_SET) < 0)
             BX_PANIC(("unable to seek vmware3 COW Disk file '%s'", filename));
 
@@ -384,13 +384,13 @@ bool vmware3_image_t::sync()
     unsigned relative_offset = (unsigned)(current->offset - current->min_offset);
     unsigned i = relative_offset >> FL_SHIFT;
     unsigned j = (relative_offset & ~FL_MASK) / tlb_size;
-    
+
     if (current->slb[i][j] == 0)
     {
         if (current->flb[i] == 0)
         {
             unsigned slb_size = slb_count * 4;
-            
+
             /* Re-write the FLB */
             current->flb[i] = current->header.next_sector_to_allocate;
             if(::lseek(current->fd, current->header.flb_offset_sectors * 512, SEEK_SET) < 0)

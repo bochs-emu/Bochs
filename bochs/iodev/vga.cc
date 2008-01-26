@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.148 2008-01-26 19:01:31 vruppert Exp $
+// $Id: vga.cc,v 1.149 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -26,7 +26,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -124,7 +124,7 @@ void bx_vga_c::init(void)
 {
   unsigned i,string_i;
   unsigned x,y;
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
   Bit16u max_xres, max_yres, max_bpp;
 #endif
   int argc;
@@ -133,7 +133,7 @@ void bx_vga_c::init(void)
   char string[512];
   char *extname;
   size_t len;
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
   unsigned addr;
 #endif
 
@@ -278,14 +278,14 @@ void bx_vga_c::init(void)
 #endif // !BX_SUPPORT_CLGD54XX
 
   /* video card with BIOS ROM */
-  DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00); 
+  DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0xcf) | 0x00);
 
   BX_VGA_THIS s.charmap_address = 0;
   BX_VGA_THIS s.x_dotclockdiv2 = 0;
   BX_VGA_THIS s.y_doublescan = 0;
   BX_VGA_THIS s.last_bpp = 8;
 
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
     // The following is for the vbe display extension
 
   BX_VGA_THIS s.vbe_enabled=0;
@@ -294,12 +294,12 @@ void bx_vga_c::init(void)
     for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-    }    
+    }
     if (!BX_SUPPORT_PCIUSB || !SIM->get_param_bool(BXPN_USB1_ENABLED)->get()) {
       for (addr=VBE_DISPI_IOPORT_INDEX_OLD; addr<=VBE_DISPI_IOPORT_DATA_OLD; addr++) {
         DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
         DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
-      }    
+      }
     }
     DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                  VBE_DISPI_LFB_PHYSICAL_ADDRESS,
@@ -341,10 +341,10 @@ void bx_vga_c::init(void)
       BX_VGA_THIS s.vbe_max_bpp=max_bpp;
     }
     BX_VGA_THIS extension_init = 1;
-  
+
     BX_INFO(("VBE Bochs Display Extension Enabled"));
   }
-#endif  
+#endif
 }
 
 void bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
@@ -1577,7 +1577,7 @@ void bx_vga_c::update(void)
   if ((bx_pc_system.time_usec() % 13888) < 70)
     return;
 
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
     // specific VBE code display update code
@@ -1594,7 +1594,7 @@ void bx_vga_c::update(void)
     iWidth=BX_VGA_THIS s.vbe_xres;
     iHeight=BX_VGA_THIS s.vbe_yres;
     pitch = BX_VGA_THIS s.line_offset;
-    Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS s.vbe_virtual_start]; 
+    Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS s.vbe_virtual_start];
 
     if (bx_gui->graphics_tile_info(&info)) {
       if (info.is_indexed) {
@@ -1710,7 +1710,7 @@ void bx_vga_c::update(void)
                       }
                     }
                     vid_ptr  += pitch;
-                    tile_ptr += info.pitch; 
+                    tile_ptr += info.pitch;
                   }
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                   SET_TILE_UPDATED (xti, yti, 0);
@@ -1746,7 +1746,7 @@ void bx_vga_c::update(void)
                       }
                     }
                     vid_ptr  += pitch;
-                    tile_ptr += info.pitch; 
+                    tile_ptr += info.pitch;
                   }
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                   SET_TILE_UPDATED (xti, yti, 0);
@@ -1783,7 +1783,7 @@ void bx_vga_c::update(void)
                       }
                     }
                     vid_ptr  += pitch;
-                    tile_ptr += info.pitch; 
+                    tile_ptr += info.pitch;
                   }
                   bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
                   SET_TILE_UPDATED (xti, yti, 0);
@@ -1842,7 +1842,7 @@ void bx_vga_c::update(void)
     // after a vbe display update, don't try to do any 'normal vga' updates anymore
     return;
   }
-#endif  
+#endif
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
   //   BX_VGA_THIS s.graphics_ctrl.shift_reg:
@@ -1917,7 +1917,7 @@ void bx_vga_c::update(void)
         } else { // output data in serial fashion with each display plane
                  // output on its associated serial output.  Standard EGA/VGA format
 
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
           if (BX_VGA_THIS s.vbe_enabled)
           {
             plane0 = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
@@ -2218,7 +2218,7 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
   Bit32u offset;
   Bit8u *plane0, *plane1, *plane2, *plane3;
 
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
   // if in a vbe enabled mode, read from the vbe_memory
   if ((BX_VGA_THIS s.vbe_enabled) && (BX_VGA_THIS s.vbe_bpp != VBE_DISPI_BPP_4))
   {
@@ -2228,7 +2228,7 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
   {
         return 0xff;
   }
-#endif  
+#endif
 
 #if defined(VGA_TRACE_FEATURE)
 //  BX_DEBUG(("8-bit memory read from 0x%08x", addr));
@@ -2270,7 +2270,7 @@ Bit8u bx_vga_c::mem_read(Bit32u addr)
     return BX_VGA_THIS s.memory[(offset & ~0x03) + (offset % 4)*65536];
   }
 
-#if BX_SUPPORT_VBE  
+#if BX_SUPPORT_VBE
   if (BX_VGA_THIS s.vbe_enabled)
   {
     plane0 = &BX_VGA_THIS s.memory[(0<<VBE_DISPI_4BPP_PLANE_SHIFT) + (BX_VGA_THIS s.vbe_bank<<16)];
@@ -3028,7 +3028,7 @@ bx_vga_c::vbe_mem_write(Bit32u addr, Bit8u value)
       BX_VGA_THIS s.vga_mem_updated = 1;
       SET_TILE_UPDATED (x_tileno, y_tileno, 1);
     }
-  }  
+  }
 }
 
 Bit32u bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
@@ -3057,14 +3057,14 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
   else
   {
     // data register read
-    
+
     switch (BX_VGA_THIS s.vbe_curindex)
     {
       case VBE_DISPI_INDEX_ID: // Display Interface ID check
       {
         return BX_VGA_THIS s.vbe_cur_dispi;
       } break;
-      
+
       case VBE_DISPI_INDEX_XRES: // x resolution
       {
         if (BX_VGA_THIS s.vbe_get_capabilities) {
@@ -3082,7 +3082,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
           return BX_VGA_THIS s.vbe_yres;
         }
       } break;
-      
+
       case VBE_DISPI_INDEX_BPP: // bpp
       {
         if (BX_VGA_THIS s.vbe_get_capabilities) {
@@ -3101,7 +3101,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
           retval |= VBE_DISPI_8BIT_DAC;
         return retval;
       } break;
-      
+
       case VBE_DISPI_INDEX_BANK: // current bank
       {
         return BX_VGA_THIS s.vbe_bank;
@@ -3122,18 +3122,18 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
       	return BX_VGA_THIS s.vbe_virtual_xres;
       	
       } break;
-      
+
       case VBE_DISPI_INDEX_VIRT_HEIGHT:
       {
       	return BX_VGA_THIS s.vbe_virtual_yres;      	
       } break;
-        
+
 
       default:
       {
         BX_PANIC(("VBE unknown data read index 0x%x",BX_VGA_THIS s.vbe_curindex));
       } break;
-    }      
+    }
   }
   BX_PANIC(("VBE_read shouldn't reach this"));
   return 0; /* keep compiler happy */
@@ -3148,21 +3148,21 @@ void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, u
 }
 
 Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
-{ 
+{
 #else
   UNUSED(this_ptr);
-#endif  
+#endif
   bx_bool new_vbe_8bit_dac;
   bx_bool needs_update = 0;
   unsigned i;
 
 //  BX_INFO(("VBE_write %x = %x (len %x)", address, value, io_len));
-  
+
   switch(address)
   {
-    // index register    
+    // index register
     case VBE_DISPI_IOPORT_INDEX:
-    // legacy index register    
+    // legacy index register
     case VBE_DISPI_IOPORT_INDEX_OLD:
 
       BX_VGA_THIS s.vbe_curindex = (Bit16u) value;
@@ -3298,7 +3298,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           {
             unsigned depth=0;
 
-            // setup virtual resolution to be the same as current reso      
+            // setup virtual resolution to be the same as current reso
             BX_VGA_THIS s.vbe_virtual_yres=BX_VGA_THIS s.vbe_yres;
             BX_VGA_THIS s.vbe_virtual_xres=BX_VGA_THIS s.vbe_xres;
 
@@ -3310,41 +3310,41 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             switch((BX_VGA_THIS s.vbe_bpp))
             {
               // Default pixel sizes
-              case VBE_DISPI_BPP_8: 
+              case VBE_DISPI_BPP_8:
                 BX_VGA_THIS s.vbe_bpp_multiplier = 1;
                 BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres;
                 depth=8;
                 break;
 
-              case VBE_DISPI_BPP_4: 
+              case VBE_DISPI_BPP_4:
                 BX_VGA_THIS s.vbe_bpp_multiplier = 1;
                 BX_VGA_THIS s.line_offset = (BX_VGA_THIS s.vbe_virtual_xres >> 3);
                 depth=4;
                 break;
 
               case VBE_DISPI_BPP_15:
-                BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 2;
                 BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 2;
                 depth=15;
-                break;        	          
+                break;
 
               case VBE_DISPI_BPP_16:
-                BX_VGA_THIS s.vbe_bpp_multiplier = 2; 
+                BX_VGA_THIS s.vbe_bpp_multiplier = 2;
                 BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 2;
                 depth=16;
-                break;        	          
+                break;
 
-              case VBE_DISPI_BPP_24: 
-                BX_VGA_THIS s.vbe_bpp_multiplier = 3; 
+              case VBE_DISPI_BPP_24:
+                BX_VGA_THIS s.vbe_bpp_multiplier = 3;
                 BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres * 3;
                 depth=24;
-                break;        	          
+                break;
 
-              case VBE_DISPI_BPP_32: 
-                BX_VGA_THIS s.vbe_bpp_multiplier = 4; 
+              case VBE_DISPI_BPP_32:
+                BX_VGA_THIS s.vbe_bpp_multiplier = 4;
                 BX_VGA_THIS s.line_offset = BX_VGA_THIS s.vbe_virtual_xres << 2;
                 depth=32;
-                break;        	          
+                break;
             }
             BX_VGA_THIS s.vbe_visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS s.vbe_yres;
 
@@ -3365,7 +3365,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           {
             BX_INFO(("VBE disabling"));
             BX_VGA_THIS s.vbe_lfb_enabled=0;
-          }     
+          }
           BX_VGA_THIS s.vbe_enabled=(bx_bool)(value & VBE_DISPI_ENABLED);
           BX_VGA_THIS s.vbe_get_capabilities=(bx_bool)((value & VBE_DISPI_GETCAPS) != 0);
           new_vbe_8bit_dac=(bx_bool)((value & VBE_DISPI_8BIT_DAC) != 0);
@@ -3447,7 +3447,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
           // basicly 2 situations
 
-          // situation 1: 
+          // situation 1:
           //   MAX_VIDEO_MEMORY / virt_width >= yres
           //        adjust result height
           //   else
@@ -3487,18 +3487,18 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_VGA_THIS s.vbe_visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS s.vbe_yres;
 
         } break;
-	/*      
+	/*
         case VBE_DISPI_INDEX_VIRT_HEIGHT:
         {
           BX_INFO(("VBE virtual height %x",value));
 
         } break;
-	*/  
+	*/
         default:
         {
           BX_PANIC(("VBE unknown data write index 0x%x",BX_VGA_THIS s.vbe_curindex));
-        } break;      
-      }        
+        } break;
+      }
       if (needs_update) {
         BX_VGA_THIS s.vga_mem_updated = 1;
         for (unsigned xti = 0; xti < BX_NUM_X_TILES; xti++) {
@@ -3508,7 +3508,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
       break;
-	  
+
   } // end switch address
 }
 

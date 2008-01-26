@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: keyboard.h,v 1.40 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: keyboard.h,v 1.41 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -203,12 +203,12 @@ private:
   // clipboard, which must be accessed using platform independent code in the
   // gui.  Because every gui has its own way of managing the clipboard memory
   // (in X windows, you're supposed to call Xfree for example), in the platform
-  // specific code we make a copy of the clipboard buffer with 
+  // specific code we make a copy of the clipboard buffer with
   // "new Bit8u[length]".  Then the pointer is passed into
   // bx_keyb_c::paste_bytes, along with the length.  The gui code never touches
   // the pastebuf again, and does not free it.  The keyboard code is
   // responsible for deallocating the paste buffer using delete [] buf.  The
-  // paste buffer is binary data, and it is probably NOT null terminated.  
+  // paste buffer is binary data, and it is probably NOT null terminated.
   //
   // Summary: A paste buffer is allocated (new) in the platform-specific gui
   // code, passed to the keyboard model, and is freed (delete[]) when it is no

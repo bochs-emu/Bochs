@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.cc,v 1.13 2007-10-24 23:16:09 sshwarts Exp $
+// $Id: hdimage.cc,v 1.14 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,7 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
+/////////////////////////////////////////////////////////////////////////
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
 // platforms that require a special tag on exported symbols, BX_PLUGGABLE
@@ -57,7 +57,7 @@ int default_image_t::open(const char* pathname)
 int default_image_t::open(const char* pathname, int flags)
 {
 #ifdef WIN32
-  HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
+  HANDLE hFile = CreateFile(pathname, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile != INVALID_HANDLE_VALUE) {
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
@@ -159,9 +159,9 @@ int concat_image_t::open(const char* pathname0)
       // open failed.
       // if no FD was opened successfully, return -1 (fail).
       if (i==0) return -1;
-      // otherwise, it only means that all images in the series have 
+      // otherwise, it only means that all images in the series have
       // been opened.  Record the number of fds opened successfully.
-      maxfd = i; 
+      maxfd = i;
       break;
     }
     BX_DEBUG(("concat_image: open image %s, fd[%d] = %d", pathname, i, fd_table[i]));
@@ -204,7 +204,7 @@ void concat_image_t::close()
 
 Bit64s concat_image_t::lseek(Bit64s offset, int whence)
 {
-  if ((offset % 512) != 0) 
+  if ((offset % 512) != 0)
     BX_PANIC( ("lseek HD with offset not multiple of 512"));
   BX_DEBUG(("concat_image_t.lseek(%d)", whence));
   // is this offset in this disk image?
@@ -279,7 +279,6 @@ sparse_image_t::sparse_image_t ()
   pagetable = NULL;
 }
 
-
 /*
 void showpagetable(Bit32u * pagetable, size_t numpages)
 {
@@ -294,7 +293,6 @@ void showpagetable(Bit32u * pagetable, size_t numpages)
  printf("\n");
 }
 */
-
 
 void sparse_image_t::read_header()
 {
@@ -387,417 +385,409 @@ void sparse_image_t::read_header()
 
 int sparse_image_t::open (const char* pathname0)
 {
- pathname = strdup(pathname0);
- BX_DEBUG(("sparse_image_t.open"));
+  pathname = strdup(pathname0);
+  BX_DEBUG(("sparse_image_t.open"));
 
- fd = ::open(pathname, O_RDWR
+  fd = ::open(pathname, O_RDWR
 #ifdef O_BINARY
    | O_BINARY
 #endif
    );
 
- if (fd < 0)
- {
-   // open failed.
-   return -1;
- }
- BX_DEBUG(("sparse_image: open image %s", pathname));
+  if (fd < 0)
+  {
+    return -1; // open failed
+  }
+  BX_DEBUG(("sparse_image: open image %s", pathname));
 
- read_header();
+  read_header();
 
- struct stat stat_buf;
- if (0 != fstat(fd, &stat_buf)) panic(("fstat() returns error!"));
+  struct stat stat_buf;
+  if (fstat(fd, &stat_buf) != 0) panic(("fstat() returns error!"));
 
- underlying_filesize = stat_buf.st_size;
+  underlying_filesize = stat_buf.st_size;
 
- if ((underlying_filesize % pagesize) != 0)
-   panic("size of sparse disk image is not multiple of page size");
+  if ((underlying_filesize % pagesize) != 0)
+    panic("size of sparse disk image is not multiple of page size");
 
- underlying_current_filepos = 0;
- if (-1 == ::lseek(fd, 0, SEEK_SET))
-   panic("error while seeking to start of file");
+  underlying_current_filepos = 0;
+  if (-1 == ::lseek(fd, 0, SEEK_SET))
+    panic("error while seeking to start of file");
 
- lseek(0, SEEK_SET);
+  lseek(0, SEEK_SET);
 
- //showpagetable(pagetable, header.numpages);
+  //showpagetable(pagetable, header.numpages);
 
- char * parentpathname = strdup(pathname);
- char lastchar = ::increment_string(parentpathname, -1);
+  char * parentpathname = strdup(pathname);
+  char lastchar = ::increment_string(parentpathname, -1);
 
- if ((lastchar >= '0') && (lastchar <= '9'))
- {
-   struct stat stat_buf;
-   if (0 == stat(parentpathname, &stat_buf))
-   {
-     parent_image = new sparse_image_t();
-     int ret = parent_image->open(parentpathname);
-     if (ret != 0) return ret;
-     if (    (parent_image->pagesize != pagesize)
-         ||  (parent_image->total_size != total_size))
-     {
-       panic("child drive image does not have same page count/page size configuration");
-     }
-   }
- }
+  if ((lastchar >= '0') && (lastchar <= '9'))
+  {
+    struct stat stat_buf;
+    if (0 == stat(parentpathname, &stat_buf))
+    {
+      parent_image = new sparse_image_t();
+      int ret = parent_image->open(parentpathname);
+      if (ret != 0) return ret;
+      if (    (parent_image->pagesize != pagesize)
+          ||  (parent_image->total_size != total_size))
+      {
+        panic("child drive image does not have same page count/page size configuration");
+      }
+    }
+  }
 
- if (parentpathname != NULL) free(parentpathname);
+  if (parentpathname != NULL) free(parentpathname);
 
- if (dtoh32(header.version) == SPARSE_HEADER_VERSION) {
-   hd_size = dtoh64(header.disk);
- }
+  if (dtoh32(header.version) == SPARSE_HEADER_VERSION) {
+    hd_size = dtoh64(header.disk);
+  }
 
- return 0; // success.
+  return 0; // success
 }
 
 void sparse_image_t::close()
 {
- BX_DEBUG(("concat_image_t.close"));
- if (pathname != NULL)
- {
-   free(pathname);
- }
+  BX_DEBUG(("concat_image_t.close"));
+  if (pathname != NULL)
+  {
+    free(pathname);
+  }
 #ifdef _POSIX_MAPPED_FILES
- if (mmap_header != NULL)
- {
-   int ret = munmap(mmap_header, mmap_length);
-   if (ret != 0)
-     BX_INFO(("failed to un-memory map sparse disk file"));
- }
- pagetable = NULL; // We didn't malloc it
+  if (mmap_header != NULL)
+  {
+    int ret = munmap(mmap_header, mmap_length);
+    if (ret != 0)
+      BX_INFO(("failed to un-memory map sparse disk file"));
+  }
+  pagetable = NULL; // We didn't malloc it
 #endif
- if (fd > -1) {
+  if (fd > -1) {
     ::close(fd);
- }
- if (pagetable != NULL)
- {
-   delete [] pagetable;
- }
- if (parent_image != NULL)
- {
-   delete parent_image;
- }
+  }
+  if (pagetable != NULL)
+  {
+    delete [] pagetable;
+  }
+  if (parent_image != NULL)
+  {
+    delete parent_image;
+  }
 }
 
 Bit64s sparse_image_t::lseek(Bit64s offset, int whence)
 {
- //showpagetable(pagetable, header.numpages);
+  //showpagetable(pagetable, header.numpages);
 
- if ((offset % 512) != 0)
+  if ((offset % 512) != 0)
     BX_PANIC( ("lseek HD with offset not multiple of 512"));
- if (whence != SEEK_SET)
-   BX_PANIC( ("lseek HD with whence not SEEK_SET"));
+  if (whence != SEEK_SET)
+    BX_PANIC( ("lseek HD with whence not SEEK_SET"));
 
- BX_DEBUG(("sparse_image_t.lseek(%d)", whence));
+  BX_DEBUG(("sparse_image_t.lseek(%d)", whence));
 
- if (offset > total_size)
- {
-   BX_PANIC(("sparse_image_t.lseek to byte %ld failed", (long)offset));
+  if (offset > total_size)
+  {
+    BX_PANIC(("sparse_image_t.lseek to byte %ld failed", (long)offset));
     return -1;
   }
 
- //printf("Seeking to position %ld\n", (long) offset);
+  //printf("Seeking to position %ld\n", (long) offset);
 
- set_virtual_page((Bit32u)(offset >> pagesize_shift));
- position_page_offset = (Bit32u)(offset & pagesize_mask);
+  set_virtual_page((Bit32u)(offset >> pagesize_shift));
+  position_page_offset = (Bit32u)(offset & pagesize_mask);
 
- return 0;
+  return 0;
 }
 
 inline Bit64s sparse_image_t::get_physical_offset()
 {
- Bit64s physical_offset = data_start;
- physical_offset += ((Bit64s)position_physical_page << pagesize_shift);
- physical_offset += position_page_offset;
-
- return physical_offset;
+  Bit64s physical_offset = data_start;
+  physical_offset += ((Bit64s)position_physical_page << pagesize_shift);
+  physical_offset += position_page_offset;
+  return physical_offset;
 }
 
 void sparse_image_t::set_virtual_page(Bit32u new_virtual_page)
 {
- position_virtual_page = new_virtual_page;
-
- position_physical_page = dtoh32(pagetable[position_virtual_page]);
+  position_virtual_page = new_virtual_page;
+  position_physical_page = dtoh32(pagetable[position_virtual_page]);
 }
 
 ssize_t sparse_image_t::read_page_fragment(Bit32u read_virtual_page, Bit32u read_page_offset, size_t read_size, void * buf)
 {
- if (read_virtual_page != position_virtual_page)
- {
-   set_virtual_page(read_virtual_page);
- }
+  if (read_virtual_page != position_virtual_page)
+  {
+    set_virtual_page(read_virtual_page);
+  }
 
- position_page_offset = read_page_offset;
+  position_page_offset = read_page_offset;
 
- if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
- {
-   if (parent_image != NULL)
-   {
-     return parent_image->read_page_fragment(read_virtual_page, read_page_offset, read_size, buf);
-   }
-   else
-   {
-     memset(buf, 0, read_size);
-   }
- }
- else
- {
-   Bit64s physical_offset = get_physical_offset();
+  if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
+  {
+    if (parent_image != NULL)
+    {
+      return parent_image->read_page_fragment(read_virtual_page, read_page_offset, read_size, buf);
+    }
+    else
+    {
+      memset(buf, 0, read_size);
+    }
+  }
+  else
+  {
+    Bit64s physical_offset = get_physical_offset();
 
-   if (physical_offset != underlying_current_filepos)
-   {
-     off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
-     // underlying_current_filepos update deferred
-     if (ret == -1)
-       panic(strerror(errno));
-   }
+    if (physical_offset != underlying_current_filepos)
+    {
+      off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
+      // underlying_current_filepos update deferred
+      if (ret == -1)
+        panic(strerror(errno));
+    }
 
-   //printf("Reading %s at position %ld size %d\n", pathname, (long) physical_offset, (long) read_size);
-   ssize_t readret = ::read(fd, buf, read_size);
+    //printf("Reading %s at position %ld size %d\n", pathname, (long) physical_offset, (long) read_size);
+    ssize_t readret = ::read(fd, buf, read_size);
 
-   if (readret == -1)
-   {
-     panic(strerror(errno));
-   }
+    if (readret == -1)
+    {
+      panic(strerror(errno));
+    }
 
-   if ((size_t)readret != read_size)
-   {
-     panic("could not read block contents from file");
-   }
+    if ((size_t)readret != read_size)
+    {
+      panic("could not read block contents from file");
+    }
 
-   underlying_current_filepos = physical_offset + read_size;
- }
+    underlying_current_filepos = physical_offset + read_size;
+  }
 
- return read_size;
+  return read_size;
 }
 
 ssize_t sparse_image_t::read(void* buf, size_t count)
 {
- //showpagetable(pagetable, header.numpages);
- ssize_t total_read = 0;
+  //showpagetable(pagetable, header.numpages);
+  ssize_t total_read = 0;
 
- if (bx_dbg.disk)
+  if (bx_dbg.disk)
     BX_DEBUG(("sparse_image_t.read %ld bytes", (long)count));
 
- while (count != 0)
- {
-   size_t can_read = pagesize - position_page_offset;
-   if (count < can_read) can_read = count;
+  while (count != 0)
+  {
+    size_t can_read = pagesize - position_page_offset;
+    if (count < can_read) can_read = count;
 
-   BX_ASSERT (can_read != 0);
+    BX_ASSERT (can_read != 0);
 
-   size_t  was_read = read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
+    size_t was_read = read_page_fragment(position_virtual_page, position_page_offset, can_read, buf);
 
-   BX_ASSERT(was_read == can_read);
+    BX_ASSERT(was_read == can_read);
 
-   total_read += can_read;
+    total_read += can_read;
 
-   position_page_offset += can_read;
-   if (position_page_offset == pagesize)
-   {
-     position_page_offset = 0;
-     set_virtual_page(position_virtual_page + 1);
-   }
+    position_page_offset += can_read;
+    if (position_page_offset == pagesize)
+    {
+      position_page_offset = 0;
+      set_virtual_page(position_virtual_page + 1);
+    }
 
-   BX_ASSERT(position_page_offset < pagesize);
+    BX_ASSERT(position_page_offset < pagesize);
 
-   buf = (((Bit8u *) buf) + can_read);
-   count -= can_read;
- }
+    buf = (((Bit8u *) buf) + can_read);
+    count -= can_read;
+  }
 
- return total_read;
+  return total_read;
 }
 
 void sparse_image_t::panic(const char * message)
 {
- char buffer[1024];
- if (message == NULL)
- {
-   snprintf(buffer, sizeof(buffer), "error with sparse disk image %s", pathname);
- }
- else
- {
-   snprintf(buffer, sizeof(buffer), "error with sparse disk image %s - %s", pathname, message);
- }
- BX_PANIC((buffer));
+  char buffer[1024];
+  if (message == NULL)
+  {
+    snprintf(buffer, sizeof(buffer), "error with sparse disk image %s", pathname);
+  }
+  else
+  {
+    snprintf(buffer, sizeof(buffer), "error with sparse disk image %s - %s", pathname, message);
+  }
+  BX_PANIC((buffer));
 }
 
 ssize_t sparse_image_t::write (const void* buf, size_t count)
 {
- //showpagetable(pagetable, header.numpages);
+  //showpagetable(pagetable, header.numpages);
 
- ssize_t total_written = 0;
+  ssize_t total_written = 0;
 
- Bit32u  update_pagetable_start = position_virtual_page;
- Bit32u  update_pagetable_count = 0;
+  Bit32u update_pagetable_start = position_virtual_page;
+  Bit32u update_pagetable_count = 0;
 
- if (bx_dbg.disk)
+  if (bx_dbg.disk)
     BX_DEBUG(("sparse_image_t.write %ld bytes", (long)count));
 
- while (count != 0)
- {
-   size_t can_write = pagesize - position_page_offset;
-   if (count < can_write) can_write = count;
+  while (count != 0)
+  {
+    size_t can_write = pagesize - position_page_offset;
+    if (count < can_write) can_write = count;
 
-   BX_ASSERT (can_write != 0);
+    BX_ASSERT (can_write != 0);
 
-   if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
-   {
-     // We just add on another page at the end of the file
-     // Reclamation, compaction etc should currently be done off-line
+    if (position_physical_page == SPARSE_PAGE_NOT_ALLOCATED)
+    {
+      // We just add on another page at the end of the file
+      // Reclamation, compaction etc should currently be done off-line
 
-     Bit64s data_size = underlying_filesize - data_start;
-     BX_ASSERT((data_size % pagesize) == 0);
+      Bit64s data_size = underlying_filesize - data_start;
+      BX_ASSERT((data_size % pagesize) == 0);
 
+      Bit32u data_size_pages = (Bit32u)(data_size / pagesize);
+      Bit32u next_data_page = data_size_pages;
 
-     Bit32u  data_size_pages = (Bit32u)(data_size / pagesize);
-     Bit32u  next_data_page = data_size_pages;
+      pagetable[position_virtual_page] = htod32(next_data_page);
+      position_physical_page = next_data_page;
 
-     pagetable[position_virtual_page] = htod32(next_data_page);
-     position_physical_page = next_data_page;
+      Bit64s page_file_start = data_start + ((Bit64s)position_physical_page << pagesize_shift);
 
-     Bit64s page_file_start = data_start + ((Bit64s)position_physical_page << pagesize_shift);
+      if (parent_image != NULL)
+      {
+        // If we have a parent, we must merge our portion with the parent
+        void *writebuffer = NULL;
 
-     if (parent_image != NULL)
-     {
-       // If we have a parent, we must merge our portion with the parent
-       void * writebuffer = NULL;
+        if (can_write == pagesize)
+        {
+          writebuffer = (void *) buf;
+        }
+        else
+        {
+          writebuffer = malloc(pagesize);
+          if (writebuffer == NULL)
+            panic("Cannot allocate sufficient memory for page-merge in write");
 
-       if (can_write == pagesize)
-       {
-         writebuffer = (void *) buf;
-       }
-       else
-       {
-         writebuffer = malloc(pagesize);
-         if (writebuffer == NULL)
-           panic("Cannot allocate sufficient memory for page-merge in write");
+          // Read entire page - could optimize, but simple for now
+          parent_image->read_page_fragment(position_virtual_page, 0, pagesize, writebuffer);
 
-         // Read entire page - could optimize, but simple for now
-         parent_image->read_page_fragment(position_virtual_page, 0, pagesize, writebuffer);
+          void *dest_start = ((Bit8u *) writebuffer) + position_page_offset;
+          memcpy(dest_start, buf, can_write);
+        }
 
-         void * dest_start = ((Bit8u *) writebuffer) + position_page_offset;
-         memcpy(dest_start, buf, can_write);
-       }
+        int ret = (int)::lseek(fd, page_file_start, SEEK_SET);
+        // underlying_current_filepos update deferred
+        if (ret == -1) panic(strerror(errno));
 
-       int ret;
-       ret = (int)::lseek(fd, page_file_start, SEEK_SET);
-       // underlying_current_filepos update deferred
-       if (-1 == ret) panic(strerror(errno));
+        ret = ::write(fd, writebuffer, pagesize);
+        if (ret == -1) panic(strerror(errno));
 
-       ret = ::write(fd, writebuffer, pagesize);
+        if (pagesize != (Bit32u)ret) panic("failed to write entire merged page to disk");
 
-       if (-1 == ret) panic(strerror(errno));
+        if (can_write != pagesize)
+        {
+          free(writebuffer);
+        }
+      }
+      else
+      {
+        // We need to write a zero page because read has been returning zeroes
+        // We seek as close to the page end as possible, and then write a little
+        // This produces a sparse file which has blanks
+        // Also very quick, even when pagesize is massive
+        int ret = (int)::lseek(fd, page_file_start + pagesize - 4, SEEK_SET);
+        // underlying_current_filepos update deferred
+        if (ret == -1) panic(strerror(errno));
 
-       if (pagesize != (Bit32u)ret) panic("failed to write entire merged page to disk");
+        Bit32u zero = 0;
+        ret = ::write(fd, &zero, 4);
+        if (ret == -1) panic(strerror(errno));
 
-       if (can_write != pagesize)
-       {
-         free(writebuffer);
-       }
-     }
-     else
-     {
-       // We need to write a zero page because read has been returning zeroes
-       // We seek as close to the page end as possible, and then write a little
-       // This produces a sparse file which has blanks
-       // Also very quick, even when pagesize is massive
-       int ret;
-       ret = (int)::lseek(fd, page_file_start + pagesize - 4, SEEK_SET);
-       // underlying_current_filepos update deferred
-       if (-1 == ret) panic(strerror(errno));
+        if (ret != 4) panic("failed to write entire blank page to disk");
+      }
 
-       Bit32u  zero = 0;
-       ret = ::write(fd, &zero, 4);
+      update_pagetable_count = (position_virtual_page - update_pagetable_start) + 1;
+      underlying_filesize = underlying_current_filepos = page_file_start + pagesize;
+    }
 
-       if (-1 == ret) panic(strerror(errno));
+    BX_ASSERT(position_physical_page != SPARSE_PAGE_NOT_ALLOCATED);
 
-       if (4 != ret) panic("failed to write entire blank page to disk");
-     }
+    Bit64s physical_offset = get_physical_offset();
 
-     update_pagetable_count = (position_virtual_page - update_pagetable_start) + 1;
-     underlying_filesize = underlying_current_filepos = page_file_start + pagesize;
-   }
+    if (physical_offset != underlying_current_filepos)
+    {
+      off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
+      // underlying_current_filepos update deferred
+      if (ret == -1)
+        panic(strerror(errno));
+    }
 
-   BX_ASSERT(position_physical_page != SPARSE_PAGE_NOT_ALLOCATED);
+    //printf("Writing at position %ld size %d\n", (long) physical_offset, can_write);
+    ssize_t writeret = ::write(fd, buf, can_write);
 
-   Bit64s physical_offset = get_physical_offset();
+    if (writeret == -1)
+    {
+      panic(strerror(errno));
+    }
 
-   if (physical_offset != underlying_current_filepos)
-   {
-     off_t ret = ::lseek(fd, (off_t)physical_offset, SEEK_SET);
-     // underlying_current_filepos update deferred
-     if (ret == -1)
-       panic(strerror(errno));
-   }
+    if ((size_t)writeret != can_write)
+    {
+      panic("could not write block contents to file");
+    }
 
-   //printf("Writing at position %ld size %d\n", (long) physical_offset, can_write);
-   ssize_t writeret = ::write(fd, buf, can_write);
+    underlying_current_filepos = physical_offset + can_write;
+ 
+    total_written += can_write;
 
-   if (writeret == -1)
-   {
-     panic(strerror(errno));
-   }
+    position_page_offset += can_write;
+    if (position_page_offset == pagesize)
+    {
+      position_page_offset = 0;
+      set_virtual_page(position_virtual_page + 1);
+    }
 
-   if ((size_t)writeret != can_write)
-   {
-     panic("could not write block contents to file");
-   }
+    BX_ASSERT(position_page_offset < pagesize);
 
-   underlying_current_filepos = physical_offset + can_write;
+    buf = (((Bit8u *) buf) + can_write);
+    count -= can_write;
+  }
 
-   total_written += can_write;
-
-   position_page_offset += can_write;
-   if (position_page_offset == pagesize)
-   {
-     position_page_offset = 0;
-     set_virtual_page(position_virtual_page + 1);
-   }
-
-   BX_ASSERT(position_page_offset < pagesize);
-
-   buf = (((Bit8u *) buf) + can_write);
-   count -= can_write;
- }
-
- if (update_pagetable_count != 0)
- {
-   bx_bool done = 0;
-   off_t pagetable_write_from = sizeof(header) + (sizeof(Bit32u) * update_pagetable_start);
-   size_t  write_bytecount = update_pagetable_count * sizeof(Bit32u);
+  if (update_pagetable_count != 0)
+  {
+    bx_bool done = 0;
+    off_t pagetable_write_from = sizeof(header) + (sizeof(Bit32u) * update_pagetable_start);
+    size_t write_bytecount = update_pagetable_count * sizeof(Bit32u);
 
 #ifdef _POSIX_MAPPED_FILES
-   if (mmap_header != NULL)
-   {
-     // Sync from the beginning of the page
-     size_t system_page_offset = pagetable_write_from & system_pagesize_mask;
-     void * start = ((Bit8u *) mmap_header + pagetable_write_from - system_page_offset);
+    if (mmap_header != NULL)
+    {
+      // Sync from the beginning of the page
+      size_t system_page_offset = pagetable_write_from & system_pagesize_mask;
+      void *start = ((Bit8u *) mmap_header + pagetable_write_from - system_page_offset);
 
-     int ret = msync(start, system_page_offset + write_bytecount, MS_ASYNC);
+      int ret = msync(start, system_page_offset + write_bytecount, MS_ASYNC);
 
-     if (ret != 0)
-       panic(strerror(errno));
+      if (ret != 0)
+        panic(strerror(errno));
 
-     done = 1;
-   }
+      done = 1;
+    }
 #endif
 
-   if (!done)
-   {
-     int ret = (int)::lseek(fd, pagetable_write_from, SEEK_SET);
-     // underlying_current_filepos update deferred
-     if (ret == -1) panic(strerror(errno));
+    if (!done)
+    {
+      int ret = (int)::lseek(fd, pagetable_write_from, SEEK_SET);
+      // underlying_current_filepos update deferred
+      if (ret == -1) panic(strerror(errno));
 
-     //printf("Writing header at position %ld size %ld\n", (long) pagetable_write_from, (long) write_bytecount);
-     ret = ::write(fd, &pagetable[update_pagetable_start], write_bytecount);
-     if (ret == -1) panic(strerror(errno));
-     if ((size_t)ret != write_bytecount) panic("could not write entire updated block header");
+      //printf("Writing header at position %ld size %ld\n", (long) pagetable_write_from, (long) write_bytecount);
+      ret = ::write(fd, &pagetable[update_pagetable_start], write_bytecount);
+      if (ret == -1) panic(strerror(errno));
+      if ((size_t)ret != write_bytecount) panic("could not write entire updated block header");
 
-     underlying_current_filepos = pagetable_write_from + write_bytecount;
-   }
- }
+      underlying_current_filepos = pagetable_write_from + write_bytecount;
+    }
+  }
 
- return total_written;
+  return total_written;
 }
 
 #if DLL_HD_SUPPORT
@@ -820,55 +810,55 @@ void (*vdisk_close) (int vunit);
 
 int dll_image_t::open (const char* pathname)
 {
-    if (hlib_vdisk == 0) {
-      hlib_vdisk = LoadLibrary("vdisk.dll");
-      if (hlib_vdisk != 0) {
-        vdisk_read = (void (*)(int,int,void*))        GetProcAddress(hlib_vdisk,"vdisk_read");
-        vdisk_write = (void (*)(int,int,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
-        vdisk_open = (int (*)(const char *,int,int))  GetProcAddress(hlib_vdisk,"vdisk_open");
-        vdisk_close = (void (*)(int))                 GetProcAddress(hlib_vdisk,"vdisk_close");
-      }
-    }
+  if (hlib_vdisk == 0) {
+    hlib_vdisk = LoadLibrary("vdisk.dll");
     if (hlib_vdisk != 0) {
-      vunit = vdisk_open(pathname,0x10000,64);
-      vblk = 0;
-    } else {
-      vunit = -2;
+      vdisk_read = (void (*)(int,int,void*))        GetProcAddress(hlib_vdisk,"vdisk_read");
+      vdisk_write = (void (*)(int,int,const void*)) GetProcAddress(hlib_vdisk,"vdisk_write");
+      vdisk_open = (int (*)(const char *,int,int))  GetProcAddress(hlib_vdisk,"vdisk_open");
+      vdisk_close = (void (*)(int))                 GetProcAddress(hlib_vdisk,"vdisk_close");
     }
-    return vunit;
+  }
+  if (hlib_vdisk != 0) {
+    vunit = vdisk_open(pathname,0x10000,64);
+    vblk = 0;
+  } else {
+    vunit = -2;
+  }
+  return vunit;
 }
 
 void dll_image_t::close ()
 {
-   if (vunit >= 0 && hlib_vdisk != 0) {
-     vdisk_close(vunit);
-   }
+  if (vunit >= 0 && hlib_vdisk != 0) {
+    vdisk_close(vunit);
+  }
 }
 
 Bit64s dll_image_t::lseek(Bit64s offset, int whence)
 {
-      vblk = (int)(offset >> 9);
-      return 0;
+  vblk = (int)(offset >> 9);
+  return 0;
 }
 
 ssize_t dll_image_t::read (void* buf, size_t count)
 {
-      if (vunit >= 0 && hlib_vdisk != 0) {
-         vdisk_read(vunit,vblk,buf);
-         return count;
-      } else {
-         return -1;
-      }
+  if (vunit >= 0 && hlib_vdisk != 0) {
+    vdisk_read(vunit,vblk,buf);
+    return count;
+  } else {
+    return -1;
+  }
 }
 
 ssize_t dll_image_t::write (const void* buf, size_t count)
 {
-      if (vunit >= 0 && hlib_vdisk != 0) {
-        vdisk_write(vunit,vblk,buf);
-        return count;
-      } else {
-         return -1;
-      }
+  if (vunit >= 0 && hlib_vdisk != 0) {
+    vdisk_write(vunit,vblk,buf);
+    return count;
+  } else {
+    return -1;
+  }
 }
 #endif // DLL_HD_SUPPORT
 
@@ -883,8 +873,7 @@ redolog_t::redolog_t()
   extent_next = (Bit32u)0;
 }
 
-void
-redolog_t::print_header()
+void redolog_t::print_header()
 {
   BX_INFO(("redolog : Standard Header : magic='%s', type='%s', subtype='%s', version = %d.%d",
            header.standard.magic, header.standard.type, header.standard.subtype,
@@ -898,7 +887,6 @@ redolog_t::print_header()
              dtoh64(header.specific.disk)));
   } else if (dtoh32(header.standard.version) == STANDARD_HEADER_V1) {
     redolog_header_v1_t header_v1;
-
     memcpy(&header_v1, &header, STANDARD_HEADER_SIZE);
     BX_INFO(("redolog : Specific Header : #entries=%d, bitmap size=%d, exent size = %d disk size = " FMT_LL "d",
              dtoh32(header_v1.specific.catalog),
@@ -908,108 +896,99 @@ redolog_t::print_header()
   }
 }
 
-int 
-redolog_t::make_header (const char* type, Bit64u size)
+int redolog_t::make_header(const char* type, Bit64u size)
 {
-        Bit32u entries, extent_size, bitmap_size;
-        Bit64u maxsize;
-        Bit32u flip=0;
+  Bit32u entries, extent_size, bitmap_size;
+  Bit64u maxsize;
+  Bit32u flip=0;
 
-        // Set standard header values
-        strcpy((char*)header.standard.magic, STANDARD_HEADER_MAGIC);
-        strcpy((char*)header.standard.type, REDOLOG_TYPE);
-        strcpy((char*)header.standard.subtype, type);
-        header.standard.version = htod32(STANDARD_HEADER_VERSION);
-        header.standard.header = htod32(STANDARD_HEADER_SIZE);
+  // Set standard header values
+  strcpy((char*)header.standard.magic, STANDARD_HEADER_MAGIC);
+  strcpy((char*)header.standard.type, REDOLOG_TYPE);
+  strcpy((char*)header.standard.subtype, type);
+  header.standard.version = htod32(STANDARD_HEADER_VERSION);
+  header.standard.header = htod32(STANDARD_HEADER_SIZE);
 
-        entries = 512;
-        bitmap_size = 1;
+  entries = 512;
+  bitmap_size = 1;
 
-        // Compute #entries and extent size values
-        do {
-                extent_size = 8 * bitmap_size * 512;
+  // Compute #entries and extent size values
+  do {
+    extent_size = 8 * bitmap_size * 512;
 
-                header.specific.catalog = htod32(entries);
-                header.specific.bitmap = htod32(bitmap_size);
-                header.specific.extent = htod32(extent_size);
-                
-                maxsize = (Bit64u)entries * (Bit64u)extent_size;
+    header.specific.catalog = htod32(entries);
+    header.specific.bitmap = htod32(bitmap_size);
+    header.specific.extent = htod32(extent_size);
 
-                flip++;
+    maxsize = (Bit64u)entries * (Bit64u)extent_size;
 
-                if(flip&0x01) bitmap_size *= 2;
-                else entries *= 2;
-        } while (maxsize < size);
+    flip++;
 
-        header.specific.disk = htod64(size);
-        
-        print_header();
+    if(flip&0x01) bitmap_size *= 2;
+    else entries *= 2;
+  } while (maxsize < size);
 
-        catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
-        bitmap = (Bit8u*)malloc(dtoh32(header.specific.bitmap));
+  header.specific.disk = htod64(size);
 
-        if ((catalog == NULL) || (bitmap==NULL))
-                BX_PANIC(("redolog : could not malloc catalog or bitmap"));
+  print_header();
 
-        for (Bit32u i=0; i<dtoh32(header.specific.catalog); i++)
-                catalog[i] = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
+  catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
+  bitmap = (Bit8u*)malloc(dtoh32(header.specific.bitmap));
 
-        bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
-        extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
+  if ((catalog == NULL) || (bitmap==NULL))
+    BX_PANIC(("redolog : could not malloc catalog or bitmap"));
 
-        BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
-        BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
+  for (Bit32u i=0; i<dtoh32(header.specific.catalog); i++)
+    catalog[i] = htod32(REDOLOG_PAGE_NOT_ALLOCATED);
 
-        return 0;
+  bitmap_blocs = 1 + (dtoh32(header.specific.bitmap) - 1) / 512;
+  extent_blocs = 1 + (dtoh32(header.specific.extent) - 1) / 512;
+
+  BX_DEBUG(("redolog : each bitmap is %d blocs", bitmap_blocs));
+  BX_DEBUG(("redolog : each extent is %d blocs", extent_blocs));
+
+  return 0;
 }
 
-int 
-redolog_t::create (const char* filename, const char* type, Bit64u size)
+int redolog_t::create(const char* filename, const char* type, Bit64u size)
 {
-        int filedes;
+  BX_INFO(("redolog : creating redolog %s", filename));
 
-        BX_INFO(("redolog : creating redolog %s", filename));
-
-        filedes = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
+  int filedes = ::open(filename, O_RDWR | O_CREAT | O_TRUNC
 #ifdef O_BINARY
             | O_BINARY
 #endif
-              , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
+            , S_IWUSR | S_IRUSR | S_IRGRP | S_IWGRP);
 
-        return create(filedes, type, size);
+  return create(filedes, type, size);
 }
 
-int 
-redolog_t::create (int filedes, const char* type, Bit64u size)
+int redolog_t::create(int filedes, const char* type, Bit64u size)
 {
-        fd = filedes;
+  fd = filedes;
 
-        if (fd < 0)
-        {
-                // open failed.
-                return -1;
-        }
+  if (fd < 0)
+  {
+    return -1; // open failed
+  }
 
-        if (make_header(type, size) < 0)
-        {
-                return -1;
-        }
+  if (make_header(type, size) < 0)
+  {
+    return -1;
+  }
 
-        // Write header
-        ::write(fd, &header, dtoh32(header.standard.header));
+  // Write header
+  ::write(fd, &header, dtoh32(header.standard.header));
 
-        // Write catalog
-        // FIXME could mmap
-        ::write(fd, catalog, dtoh32(header.specific.catalog) * sizeof (Bit32u));
+  // Write catalog
+  // FIXME could mmap
+  ::write(fd, catalog, dtoh32(header.specific.catalog) * sizeof (Bit32u));
 
-        return 0;
+  return 0;
 }
 
-int 
-redolog_t::open(const char* filename, const char *type)
+int redolog_t::open(const char* filename, const char *type)
 {
-  int res;
-
   fd = ::open(filename, O_RDWR
 #ifdef O_BINARY
               | O_BINARY
@@ -1023,10 +1002,10 @@ redolog_t::open(const char* filename, const char *type)
   }
   BX_INFO(("redolog : open image %s", filename));
 
-  res = ::read(fd, &header, sizeof(header));
+  int res = ::read(fd, &header, sizeof(header));
   if (res != STANDARD_HEADER_SIZE)
   {
-    BX_PANIC(("redolog : could not read header")); 
+    BX_PANIC(("redolog : could not read header"));
     return -1;
   }
 
@@ -1034,25 +1013,25 @@ redolog_t::open(const char* filename, const char *type)
 
   if (strcmp((char*)header.standard.magic, STANDARD_HEADER_MAGIC) != 0)
   {
-    BX_PANIC(("redolog : Bad header magic")); 
+    BX_PANIC(("redolog : Bad header magic"));
     return -1;
   }
 
   if (strcmp((char*)header.standard.type, REDOLOG_TYPE) != 0)
   {
-    BX_PANIC(("redolog : Bad header type")); 
+    BX_PANIC(("redolog : Bad header type"));
     return -1;
   }
   if (strcmp((char*)header.standard.subtype, type) != 0)
   {
-    BX_PANIC(("redolog : Bad header subtype")); 
+    BX_PANIC(("redolog : Bad header subtype"));
     return -1;
   }
 
   if ((dtoh32(header.standard.version) != STANDARD_HEADER_VERSION) &&
       (dtoh32(header.standard.version) != STANDARD_HEADER_V1))
   {
-    BX_PANIC(("redolog : Bad header version")); 
+    BX_PANIC(("redolog : Bad header version"));
     return -1;
   }
 
@@ -1064,14 +1043,14 @@ redolog_t::open(const char* filename, const char *type)
   }
 
   catalog = (Bit32u*)malloc(dtoh32(header.specific.catalog) * sizeof(Bit32u));
-        
+
   // FIXME could mmap
   ::lseek(fd,dtoh32(header.standard.header),SEEK_SET);
   res = ::read(fd, catalog, dtoh32(header.specific.catalog) * sizeof(Bit32u));
 
   if (res !=  (ssize_t)(dtoh32(header.specific.catalog) * sizeof(Bit32u)))
   {
-    BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog))); 
+    BX_PANIC(("redolog : could not read catalog %d=%d",res, dtoh32(header.specific.catalog)));
     return -1;
   }
 
@@ -1276,7 +1255,6 @@ ssize_t redolog_t::write(const void* buf, size_t count)
   return written;
 }
 
-
 /*** growing_image_t function definitions ***/
 
 growing_image_t::growing_image_t()
@@ -1319,7 +1297,6 @@ ssize_t growing_image_t::write(const void* buf, size_t count)
   return redolog->write((char*) buf, count);
 }
 
-
 /*** undoable_image_t function definitions ***/
 
 undoable_image_t::undoable_image_t(const char* _redolog_name)
@@ -1348,7 +1325,7 @@ int undoable_image_t::open(const char* pathname)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  // if redolog name was set 
+  // if redolog name was set
   if ( redolog_name != NULL) {
     if ( strcmp(redolog_name, "") != 0 ) {
       logname = (char*)malloc(strlen(redolog_name) + 1);
@@ -1403,7 +1380,7 @@ ssize_t undoable_image_t::read(void* buf, size_t count)
   // This should be fixed if count != 512
   if ((size_t)redolog->read((char*) buf, count) != count)
     return ro_disk->read((char*) buf, count);
-  else 
+  else
     return count;
 }
 
@@ -1411,7 +1388,6 @@ ssize_t undoable_image_t::write(const void* buf, size_t count)
 {
   return redolog->write((char*) buf, count);
 }
-
 
 /*** volatile_image_t function definitions ***/
 
@@ -1443,7 +1419,7 @@ int volatile_image_t::open(const char* pathname)
     return -1;
 
   hd_size = ro_disk->hd_size;
-  // if redolog name was set 
+  // if redolog name was set
   if ( redolog_name != NULL) {
     if ( strcmp(redolog_name, "") != 0 ) {
       logname = redolog_name;
@@ -1470,7 +1446,7 @@ int volatile_image_t::open(const char* pathname)
     BX_PANIC(("Can't create volatile redolog '%s'", redolog_temp));
     return -1;
   }
-        
+
 #if (!defined(WIN32)) && !BX_WITH_MACOS
   // on unix it is legal to delete an open file
   unlink(redolog_temp);
@@ -1508,7 +1484,7 @@ ssize_t volatile_image_t::read(void* buf, size_t count)
   // This should be fixed if count != 512
   if ((size_t)redolog->read((char*) buf, count) != count)
     return ro_disk->read((char*) buf, count);
-  else 
+  else
     return count;
 }
 
@@ -1609,7 +1585,7 @@ int z_undoable_image_t::open(const char* pathname)
   if (ro_disk->open(pathname)<0)
     return -1;
 
-  // If redolog name was set 
+  // If redolog name was set
   if ( redolog_name != NULL) {
     if ( strcmp(redolog_name, "") != 0) {
       logname = (char*)malloc(strlen(redolog_name) + 1);
@@ -1658,7 +1634,7 @@ ssize_t z_undoable_image_t::read(void* buf, size_t count)
   // This should be fixed if count != 512
   if (redolog->read((char*) buf, count) != count)
     return ro_disk->read((char*) buf, count);
-  else 
+  else
     return count;
 }
 
@@ -1699,7 +1675,7 @@ int z_volatile_image_t::open(const char* pathname)
   if (ro_disk->open(pathname)<0)
     return -1;
 
-  // if redolog name was set 
+  // if redolog name was set
   if (redolog_name != NULL) {
     if (strcmp(redolog_name, "") !=0 ) {
       logname = redolog_name;
@@ -1765,7 +1741,7 @@ ssize_t z_volatile_image_t::read (void* buf, size_t count)
   // This should be fixed if count != 512
   if (redolog->read((char*) buf, count) != count)
     return ro_disk->read((char*) buf, count);
-  else 
+  else
     return count;
 }
 

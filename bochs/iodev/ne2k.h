@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ne2k.h,v 1.22 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: ne2k.h,v 1.23 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -55,7 +55,7 @@ class eth_pktmover_c;
 typedef struct {
     //
     // ne2k register state
-   
+
     //
     // Page 0
     //
@@ -68,7 +68,7 @@ typedef struct {
 	Bit8u	 pgsel;		// PS0,PS1 - Page select
     } CR;
     // Interrupt Status Register - 07h read/write
-    struct {  
+    struct {
 	bx_bool  pkt_rx;       	// PRX - packet received with no errors
 	bx_bool  pkt_tx;       	// PTX - packet transmitted with no errors
 	bx_bool  rx_err;	// RXE - packet received with 1 or more errors
@@ -165,7 +165,7 @@ typedef struct {
 
     //
     // Page 2  - diagnostic use only
-    // 
+    //
     //   Command Register 00h (repeated)
     //
     //   Page Start Register 01h read  (repeated)

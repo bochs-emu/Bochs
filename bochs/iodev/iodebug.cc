@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: iodebug.cc,v 1.22 2006-11-01 15:44:38 vruppert Exp $
+// $Id: iodebug.cc,v 1.23 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -189,7 +189,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *dat
       }
       case 8: {
         Bit64u data64 = * ((Bit64u *) data);
-        fprintf(stderr,"%08X%08x\n", 
+        fprintf(stderr,"%08X%08x\n",
             (unsigned) (data64 >> 32),
             (unsigned) (data64 & 0xffffffff));
 	break;
@@ -249,7 +249,7 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, Bit32u addr, unsigned len, void *data
       }
       case 8: {
         Bit64u data64 = * ((Bit64u *) data);
-        fprintf(stderr,"%08X%08x\n", 
+        fprintf(stderr,"%08X%08x\n",
             (unsigned) (data64 >> 32),
             (unsigned) (data64 & 0xffffffff));
 	break;

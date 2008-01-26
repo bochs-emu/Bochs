@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pcipnic.cc,v 1.25 2007-11-01 18:14:28 sshwarts Exp $
+// $Id: pcipnic.cc,v 1.26 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd.
@@ -20,7 +20,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 
 #define BX_PLUGGABLE
@@ -82,7 +82,7 @@ void bx_pcipnic_c::init(void)
   BX_PNIC_THIS ethdev = eth_locator_c::create(ethmod,
                                               SIM->get_param_string("ethdev", base)->getptr(),
                                               (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                              rx_handler, 
+                                              rx_handler,
                                               this,
                                               SIM->get_param_string("script", base)->getptr());
 
@@ -93,7 +93,7 @@ void bx_pcipnic_c::init(void)
 
     BX_PNIC_THIS ethdev = eth_locator_c::create("null", NULL,
                                                 (const char *) SIM->get_param_string("macaddr", base)->getptr(),
-                                                rx_handler, 
+                                                rx_handler,
                                                 this, "");
     if (BX_PNIC_THIS ethdev == NULL)
       BX_PANIC(("could not locate null module"));
@@ -214,24 +214,24 @@ Bit32u bx_pcipnic_c::read(Bit32u address, unsigned io_len)
   case PNIC_REG_STAT :
     val = BX_PNIC_THIS s.rStatus;
     break;
-    
+
   case PNIC_REG_LEN :
     val = BX_PNIC_THIS s.rLength;
     break;
-    
+
   case PNIC_REG_DATA :
     if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
       BX_PANIC(("PNIC read at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
     val = BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor ++];
     break;
-    
+
   default :
     val = 0; // keep compiler happy
     BX_PANIC(("unsupported io read from address=0x%04x!", (unsigned) address));
     break;
   }
-  
+
   BX_DEBUG(("val =  0x%04x", (Bit16u) val));
 
   return(val);
@@ -264,7 +264,7 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     BX_PNIC_THIS s.rCmd = value;
     BX_PNIC_THIS exec_command();
     break;
-    
+
   case PNIC_REG_LEN :
     if ( value > PNIC_DATA_SIZE )
       BX_PANIC(("PNIC bad length %u written to length register, max is %u",
@@ -272,14 +272,14 @@ void bx_pcipnic_c::write(Bit32u address, Bit32u value, unsigned io_len)
     BX_PNIC_THIS s.rLength = value;
     BX_PNIC_THIS s.rDataCursor = 0;
     break;
-    
+
   case PNIC_REG_DATA :
     if ( BX_PNIC_THIS s.rDataCursor >= BX_PNIC_THIS s.rLength )
       BX_PANIC(("PNIC write at %u, beyond end of data register array",
 		BX_PNIC_THIS s.rDataCursor));
     BX_PNIC_THIS s.rData[BX_PNIC_THIS s.rDataCursor ++] = value;
     break;
-    
+
   default:
     BX_PANIC(("unsupported io write to address=0x%04x!", (unsigned) address));
     break;
@@ -298,7 +298,7 @@ void bx_pcipnic_c::pnic_timer(void)
   // Do nothing atm
 
 }
-  
+
 // pci configuration space read callback handler
 Bit32u bx_pcipnic_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
@@ -430,7 +430,7 @@ void bx_pcipnic_c::exec_command(void)
   if ( ilength != BX_PNIC_THIS s.rDataCursor )
     BX_PANIC(("PNIC command issued with incomplete data (should be %u, is %u)",
 	      ilength, BX_PNIC_THIS s.rDataCursor ));
-  
+
   switch ( command ) {
   case PNIC_CMD_NOOP :
     status = PNIC_STATUS_OK;

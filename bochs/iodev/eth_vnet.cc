@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_vnet.cc,v 1.21 2007-09-04 07:45:31 vruppert Exp $
+// $Id: eth_vnet.cc,v 1.22 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // virtual Ethernet locator
@@ -191,7 +191,7 @@ private:
   void tftp_send_data(
     Bit8u *buffer,
     unsigned sourceport, unsigned targetport,
-    unsigned block_nr);  
+    unsigned block_nr);
   void tftp_send_ack(
     Bit8u *buffer,
     unsigned sourceport, unsigned targetport,
@@ -345,7 +345,7 @@ void bx_vnet_pktmover_c::pktmover_init(
   register_layer4_handler(0x11,INET_PORT_BOOTP_SERVER,udpipv4_dhcp_handler);
   register_layer4_handler(0x11,INET_PORT_TFTP_SERVER,udpipv4_tftp_handler);
 
-  this->rx_timer_index = 
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
                               	 0, 0, "eth_vnet");
 
@@ -356,10 +356,10 @@ void bx_vnet_pktmover_c::pktmover_init(
   fprintf (pktlog_txt, "TFTP root = %s\n", netif);
   fprintf (pktlog_txt, "host MAC address = ");
   int i;
-  for (i=0; i<6; i++) 
+  for (i=0; i<6; i++)
     fprintf (pktlog_txt, "%02x%s", 0xff & host_macaddr[i], i<5?":" : "\n");
   fprintf (pktlog_txt, "guest MAC address = ");
-  for (i=0; i<6; i++) 
+  for (i=0; i<6; i++)
     fprintf (pktlog_txt, "%02x%s", 0xff & guest_macaddr[i], i<5?":" : "\n");
   fprintf (pktlog_txt, "--\n");
   fflush (pktlog_txt);
@@ -399,7 +399,7 @@ void bx_vnet_pktmover_c::guest_to_host(const Bit8u *buf, unsigned io_len)
     pcaphdr.len = io_len;
     pcap_dump((u_char *)pktlog_pcap, &pcaphdr, buf);
     fflush((FILE *)pktlog_pcap);
-  } 
+  }
 #endif
 
   this->tx_time = (64 + 96 + 4 * 8 + io_len * 8) / 10;
@@ -452,7 +452,7 @@ void bx_vnet_pktmover_c::rx_timer(void)
     pcaphdr.len = packet_len;
     pcap_dump((u_char *)pktlog_pcap, &pcaphdr, packet_buffer);
     fflush((FILE *)pktlog_pcap);
-  } 
+  }
 #endif
 }
 
@@ -757,9 +757,9 @@ void bx_vnet_pktmover_c::process_udpipv4(
   layer4_handler_t func;
 
   if (l4pkt_len < 8) return;
-  udp_sourceport = get_net2(&l4pkt[0]); 
-  udp_targetport = get_net2(&l4pkt[2]); 
-  udp_len = get_net2(&l4pkt[4]); 
+  udp_sourceport = get_net2(&l4pkt[0]);
+  udp_targetport = get_net2(&l4pkt[2]);
+  udp_len = get_net2(&l4pkt[4]);
 
   func = get_layer4_handler(0x11,udp_targetport);
   if (func != (layer4_handler_t)NULL) {
@@ -1296,7 +1296,7 @@ void bx_vnet_pktmover_c::udpipv4_tftp_handler_ns(
       break;
     default:
       BX_ERROR(("TFTP unknown opt %d", get_net2(data)));
-  } 
+  }
 }
 
 void bx_vnet_pktmover_c::tftp_send_error(
@@ -1307,7 +1307,7 @@ void bx_vnet_pktmover_c::tftp_send_error(
   put_net2(buffer, TFTP_ERROR);
   put_net2(buffer + 2, code);
   strcpy((char*)buffer + 4, msg);
-  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, strlen(msg) + 5);  
+  host_to_guest_udpipv4_packet(sourceport, targetport, buffer, strlen(msg) + 5);
   tftp_tid = 0;
 }
 
@@ -1337,20 +1337,20 @@ void bx_vnet_pktmover_c::tftp_send_data(
     tftp_send_error(buffer, sourceport, targetport, 1, msg);
     return;
   }
-  
+
   if (fseek(fp, (block_nr - 1) * TFTP_BUFFER_SIZE, SEEK_SET) < 0) {
     tftp_send_error(buffer, sourceport, targetport, 3, "Block not seekable");
     return;
   }
-  
+
   rd = fread(buffer + 4, 1, TFTP_BUFFER_SIZE, fp);
   fclose(fp);
-  
+
   if (rd < 0) {
     tftp_send_error(buffer, sourceport, targetport, 3, "Block not readable");
     return;
   }
-  
+
   put_net2(buffer, TFTP_DATA);
   put_net2(buffer + 2, block_nr);
   host_to_guest_udpipv4_packet(sourceport, targetport, buffer, rd + 4);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ioapic.cc,v 1.35 2007-09-28 19:52:02 sshwarts Exp $
+// $Id: ioapic.cc,v 1.36 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -50,8 +50,8 @@ static bx_bool ioapic_write(unsigned long a20addr, unsigned long len, void *data
 
 void bx_io_redirect_entry_t::sprintf_self(char *buf)
 {
-  sprintf(buf, "dest=%02x, masked=%d, trig_mode=%d, remote_irr=%d, polarity=%d, delivery_status=%d, dest_mode=%d, delivery_mode=%d, vector=%02x", 
-     (unsigned) destination(), 
+  sprintf(buf, "dest=%02x, masked=%d, trig_mode=%d, remote_irr=%d, polarity=%d, delivery_status=%d, dest_mode=%d, delivery_mode=%d, vector=%02x",
+     (unsigned) destination(),
      (unsigned) is_masked(),
      (unsigned) trigger_mode(),
      (unsigned) remote_irr(),
@@ -70,7 +70,7 @@ void bx_io_redirect_entry_t::register_state(bx_param_c *parent)
 
 #define BX_IOAPIC_BASE_ADDR (0xfec00000)
 
-bx_ioapic_c::bx_ioapic_c() 
+bx_ioapic_c::bx_ioapic_c()
   : bx_generic_apic_c(BX_IOAPIC_BASE_ADDR)
 {
   put("IOAP");
@@ -88,7 +88,7 @@ void bx_ioapic_c::init(void)
   base_addr = BX_IOAPIC_BASE_ADDR;
   set_id(BX_IOAPIC_DEFAULT_ID);
   ioregsel = 0;
-  DEV_register_memory_handlers(&bx_ioapic, 
+  DEV_register_memory_handlers(&bx_ioapic,
       ioapic_read, ioapic_write, base_addr, base_addr + 0xfff);
   // all interrupts masked
   for (int i=0; i<BX_IOAPIC_NUM_PINS; i++) {
@@ -162,9 +162,9 @@ void bx_ioapic_c::write_aligned(bx_phy_address address, Bit32u *value)
       int index = (ioregsel - 0x10) >> 1;
       if (index >= 0 && index < BX_IOAPIC_NUM_PINS) {
 	bx_io_redirect_entry_t *entry = ioredtbl + index;
-	if (ioregsel&1) 
+	if (ioregsel&1)
 	  entry->set_hi_part(*value);
-	else 
+	else
 	  entry->set_lo_part(*value);
 	char buf[1024];
 	entry->sprintf_self(buf);

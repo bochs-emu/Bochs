@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_fbsd.cc,v 1.33 2006-11-19 16:16:35 vruppert Exp $
+// $Id: eth_fbsd.cc,v 1.34 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -38,7 +38,7 @@
 //   - TCP performance seems to be abysmal; I think this is
 //     a timing problem somewhere.
 //   - I haven't handled the case where multiple frames arrive
-//     in a single BPF read. 
+//     in a single BPF read.
 //
 //   The /dev/bpf* devices need to be set up with the appropriate
 //  permissions for this to work.
@@ -49,10 +49,10 @@
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -75,7 +75,7 @@ extern "C" {
 
 #define BX_BPF_INSNSIZ  8    // number of bpf insns
 
-// template filter for a unicast mac address and all 
+// template filter for a unicast mac address and all
 // multicast/broadcast frames
 static const struct bpf_insn macfilter[] = {
     BPF_STMT(BPF_LD|BPF_W|BPF_ABS, 2),                  // A <- P[2:4]
@@ -101,7 +101,7 @@ static const struct bpf_insn promiscfilter[] = {
 //
 class bx_fbsd_pktmover_c : public eth_pktmover_c {
 public:
-  bx_fbsd_pktmover_c(const char *netif, 
+  bx_fbsd_pktmover_c(const char *netif,
 		     const char *macaddr,
 		     eth_rx_handler_t rxh,
 		     void *rxarg, char *script);
@@ -126,7 +126,7 @@ class bx_fbsd_locator_c : public eth_locator_c {
 public:
   bx_fbsd_locator_c(void) : eth_locator_c("fbsd") {}
 protected:
-  eth_pktmover_c *allocate(const char *netif, 
+  eth_pktmover_c *allocate(const char *netif,
 			   const char *macaddr,
 			   eth_rx_handler_t rxh,
 			   void *rxarg, char *script) {
@@ -144,7 +144,7 @@ protected:
 // Open a bpf file descriptor, and attempt to bind to
 // the specified netif (Replicates libpcap open code)
 //
-bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif, 
+bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
@@ -167,7 +167,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
 	if(errno == EACCES)
 		break;
   } while (this->bpf_fd == -1);
-  
+
   if (this->bpf_fd == -1) {
     BX_PANIC(("eth_freebsd: could not open packet filter: %s", strerror(errno)));
     return;
@@ -201,7 +201,7 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
     close(this->bpf_fd);
     this->bpf_fd == -1;
   }
-  
+
   // Verify that the device is an ethernet.
   if (ioctl(this->bpf_fd, BIOCGDLT, (caddr_t)&v) < 0) {
     BX_PANIC(("eth_freebsd: could not retrieve datalink type: %s", strerror(errno)));
@@ -268,8 +268,8 @@ bx_fbsd_pktmover_c::bx_fbsd_pktmover_c(const char *netif,
     return;
   }
 
-  // Start the rx poll 
-  this->rx_timer_index = 
+  // Start the rx poll
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_BPF_POLL,
 				1, 1, "eth_fbsd"); // continuous, active
 
@@ -336,7 +336,7 @@ void
 bx_fbsd_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-    unsigned char rxbuf[BX_PACKET_BUFSIZE]; 
+    unsigned char rxbuf[BX_PACKET_BUFSIZE];
   struct bpf_hdr *bhdr;
     struct bpf_stat bstat;
     static struct bpf_stat previous_bstat;
@@ -389,7 +389,7 @@ bx_fbsd_pktmover_c::rx_timer(void)
 
 	// Advance bhdr and phdr pointers to next packet
 	bhdr = (struct bpf_hdr*) ((char*) bhdr + BPF_WORDALIGN(bhdr->bh_hdrlen + bhdr->bh_caplen));
-  }  
+  }
 }
 
 #endif /* if BX_NETWORKING && defined(ETH_FBSD) */

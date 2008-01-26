@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: parallel.cc,v 1.33 2007-09-28 19:52:03 sshwarts Exp $
+// $Id: parallel.cc,v 1.34 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -25,12 +25,12 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
 ////////////////////////////////////////////////////////
-// This code was just a few stubs until Volker.Ruppert@t-online.de 
+// This code was just a few stubs until Volker.Ruppert@t-online.de
 // fixed it up in November 2001.
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -77,7 +77,7 @@ void bx_parallel_c::init(void)
   char name[16], pname[20];
   bx_list_c *base;
 
-  BX_DEBUG(("Init $Id: parallel.cc,v 1.33 2007-09-28 19:52:03 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: parallel.cc,v 1.34 2008-01-26 22:24:02 sshwarts Exp $"));
 
   for (unsigned i=0; i<BX_N_PARALLEL_PORTS; i++) {
     sprintf(pname, "ports.parallel.%d", i+1);

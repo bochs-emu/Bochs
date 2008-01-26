@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_arpback.cc,v 1.18 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_arpback.cc,v 1.19 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -32,10 +32,10 @@
 // rfc0903: rarp
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -96,13 +96,13 @@ protected:
 //
 
 // the constructor
-bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif, 
+bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
 				       char *script)
 {
-  this->rx_timer_index = 
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				1, 1, "eth_arpback"); // continuous, active
   this->rxh   = rxh;
@@ -110,7 +110,7 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
   //bufvalid=0;
   packetmaker.init();
 #if BX_ETH_NULL_LOGGING
-  // Start the rx poll 
+  // Start the rx poll
   // eventually Bryce wants txlog to dump in pcap format so that
   // tcpdump -r FILE can read it and interpret packets.
   txlog = fopen ("ne2k-tx.log", "wb");
@@ -120,7 +120,7 @@ bx_arpback_pktmover_c::bx_arpback_pktmover_c(const char *netif,
   fprintf (txlog_txt, "arpback packetmover readable log file\n");
   fprintf (txlog_txt, "net IF = %s\n", netif);
   fprintf (txlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf (txlog_txt, "\n--\n");
   fflush (txlog_txt);
@@ -191,7 +191,7 @@ void bx_arpback_pktmover_c::rx_timer (void)
 //int nbytes = 0;
 //struct bpf_hdr *bhdr;
   eth_packet rubble;
-  
+
   if(packetmaker.getpacket(rubble)) {
     //bufvalid=0;
     void * buf=rubble.buf;

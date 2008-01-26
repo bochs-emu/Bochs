@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: harddrv.h,v 1.50 2007-09-28 19:52:01 sshwarts Exp $
+// $Id: harddrv.h,v 1.51 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -171,8 +171,8 @@ class bx_hard_drive_c : public bx_hard_drive_stub_c {
 public:
   bx_hard_drive_c();
   virtual ~bx_hard_drive_c();
-  virtual void   init();
-  virtual void   reset(unsigned type);
+  virtual void     init();
+  virtual void     reset(unsigned type);
   virtual Bit32u   get_device_handle(Bit8u channel, Bit8u device);
   virtual Bit32u   get_first_cd_handle(void);
   virtual unsigned get_cd_media_status(Bit32u handle);
@@ -184,14 +184,15 @@ public:
 #endif
   virtual void     register_state(void);
 
-  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len) {
-    return read_handler (this, address, io_len);
+  virtual Bit32u virt_read_handler(Bit32u address, unsigned io_len)
+  {
+    return read_handler(this, address, io_len);
   }
-  virtual void virt_write_handler(Bit32u address, 
-      Bit32u value, unsigned io_len)
+  virtual void virt_write_handler(Bit32u address, Bit32u value, unsigned io_len)
   {
     write_handler(this, address, value, io_len);
   }
+
 #if !BX_USE_HD_SMF
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len);
@@ -211,7 +212,7 @@ private:
   BX_HD_SMF void identify_ATAPI_drive(Bit8u channel);
   BX_HD_SMF void command_aborted(Bit8u channel, unsigned command);
 
-  BX_HD_SMF void init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy = false) BX_CPP_AttrRegparmN(3);
+  BX_HD_SMF void init_send_atapi_command(Bit8u channel, Bit8u command, int req_length, int alloc_length, bx_bool lazy = false);
   BX_HD_SMF void ready_to_send_atapi(Bit8u channel) BX_CPP_AttrRegparmN(1);
   BX_HD_SMF void raise_interrupt(Bit8u channel) BX_CPP_AttrRegparmN(1);
   BX_HD_SMF void atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bx_bool show);

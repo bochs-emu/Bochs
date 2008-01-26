@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom_amigaos.cc,v 1.13 2006-02-20 21:58:05 vruppert Exp $
+// $Id: cdrom_amigaos.cc,v 1.14 2008-01-26 22:24:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -90,7 +90,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
   sscanf(dev, "%s%s", amiga_cd_device, buf);
   amiga_cd_unit = atoi(buf);
- 
+
   CDMP = CreateMsgPort();
   if (CDMP != NULL) {
     CDIO = (struct IOExtTD *)CreateIORequest(CDMP, sizeof(struct IOExtTD));
@@ -121,7 +121,7 @@ cdrom_interface::insert_cdrom(char *dev)
   Bit8u cdb[6];
   Bit8u buf[2*BX_CD_FRAMESIZE];
   Bit8u i = 0;
-  
+
   memset(cdb,0,sizeof(cdb));
 
   cdb[0] = SCSI_DA_START_STOP_UNIT;
@@ -134,7 +134,7 @@ cdrom_interface::insert_cdrom(char *dev)
   CDIO->iotd_Req.io_Command = CMD_READ;
   CDIO->iotd_Req.io_Length  = BX_CD_FRAMESIZE;
   CDIO->iotd_Req.io_Offset  = BX_CD_FRAMESIZE;
-  
+
   for(i = 0; i < 200; i++) /*it takes a while for the cdrom to validate*/
   {
   	DoIO((struct IORequest *)CDIO);
@@ -186,7 +186,7 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
   cdb[6] = start_track;
   cdb[7] = sizeof(TOC)>>8;
   cdb[8] = sizeof(TOC)&0xFF;
-  
+
   DoSCSI((UBYTE *)buf, sizeof(TOC), cdb, sizeof(cdb), SCSIF_READ);
 
   *length = toc->length + 4;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga_cirrus.h,v 1.12 2007-09-28 19:52:06 sshwarts Exp $
+// $Id: svga_cirrus.h,v 1.13 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 // Copyright (c) 2004 Makoto Suzuki (suzu)
@@ -69,11 +69,11 @@ public:
 
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void redraw_area(unsigned x0, unsigned y0, 
+  virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual Bit8u mem_read(Bit32u addr);
   virtual void mem_write(Bit32u addr, Bit8u value);
-  virtual void get_text_snapshot(Bit8u **text_snapshot, 
+  virtual void get_text_snapshot(Bit8u **text_snapshot,
                                  unsigned *txHeight, unsigned *txWidth);
   virtual void trigger_timer(void *this_ptr);
   virtual Bit8u get_actl_palette_idx(Bit8u index);

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: hdimage.h,v 1.9 2007-03-10 12:53:54 vruppert Exp $
+// $Id: hdimage.h,v 1.10 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2005  MandrakeSoft S.A.
@@ -193,7 +193,7 @@ class concat_image_t : public device_image_t
   public:
       // Default constructor
       concat_image_t();
-      
+
       // Open a image. Returns non-negative if successful.
       int open(const char* pathname);
 
@@ -341,7 +341,7 @@ class dll_image_t : public device_image_t
 #endif
 
 // REDOLOG class
-class redolog_t 
+class redolog_t
 {
   public:
       redolog_t();
@@ -533,7 +533,7 @@ class z_undoable_image_t : public device_image_t
   private:
       redolog_t       *redolog;       // Redolog instance
       z_ro_image_t    *ro_disk;       // Read-only compressed flat disk instance
-      Bit64u          size;           
+      Bit64u          size;
       char            *redolog_name;  // Redolog name
 };
 
@@ -566,7 +566,7 @@ class z_volatile_image_t : public device_image_t
   private:
       redolog_t       *redolog;       // Redolog instance
       z_ro_image_t    *ro_disk;       // Read-only compressed flat disk instance
-      Bit64u          size;           
+      Bit64u          size;
       char            *redolog_name;  // Redolog name
       char            *redolog_temp;  // Redolog temporary file name
 };

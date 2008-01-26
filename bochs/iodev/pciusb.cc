@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pciusb.cc,v 1.61 2007-12-30 18:02:22 sshwarts Exp $
+// $Id: pciusb.cc,v 1.62 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -52,7 +52,7 @@
   */
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -523,7 +523,7 @@ void bx_pciusb_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_USB_THIS hub[0].usb_command.host_reset = (value & 0x02) ? 1: 0;
       BX_USB_THIS hub[0].usb_command.schedule = (value & 0x01) ? 1: 0;
 
-      // HCRESET 
+      // HCRESET
       if (BX_USB_THIS hub[0].usb_command.host_reset) {
         BX_USB_THIS reset(0);
         for (unsigned i=0; i<USB_NUM_PORTS; i++) {
@@ -716,7 +716,7 @@ void bx_pciusb_c::usb_timer(void)
 
   // If command.schedule = 1, then run schedule
   //  *** This assumes that we can complete the frame within the 1ms time allowed ***
-  // Actually, not complete, but reach the end of the frame.  This means that there may still 
+  // Actually, not complete, but reach the end of the frame.  This means that there may still
   //  be TDs and QHs that were BREADTH defined and will be executed on the next cycle/iteration.
 
   if (BX_USB_THIS busy) {
@@ -732,7 +732,7 @@ void bx_pciusb_c::usb_timer(void)
     struct HCSTACK stack[USB_STACK_SIZE+1];  // queue stack for this item only
     Bit32s stk = 0;
     Bit32u item, address, lastvertaddr = 0, queue_num = 0;
-    Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base + 
+    Bit32u frame, frm_addr = BX_USB_THIS hub[0].usb_frame_base.frame_base +
                                 (BX_USB_THIS hub[0].usb_frame_num.frame_num << 2);
     DEV_MEM_READ_PHYSICAL(frm_addr, 4, &frame);
     if ((frame & 1) == 0) {
@@ -766,7 +766,7 @@ void bx_pciusb_c::usb_timer(void)
           stack[stk].d = HC_VERT;
           stack[stk].q = (item & 0x0002) ? 1 : 0;
           stack[stk].t = (item & 0x0001) ? 1 : 0;
-          BX_DEBUG(("Queue %3i: 0x%08X %i %i  0x%08X %i %i", queue_num, 
+          BX_DEBUG(("Queue %3i: 0x%08X %i %i  0x%08X %i %i", queue_num,
             stack[stk-1].next, stack[stk-1].q, stack[stk-1].t,
             stack[stk].next, stack[stk].q, stack[stk].t));
           queue_num++;
@@ -863,7 +863,7 @@ void bx_pciusb_c::usb_timer(void)
 }
 
 bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td) {
-  
+
   int i, len = 0, ret = 0;
   usb_device_t *dev = NULL;
 
@@ -966,7 +966,7 @@ bx_bool bx_pciusb_c::DoTransfer(Bit32u address, Bit32u queue_num, struct TD *td)
 }
 
 // If the request fails, set the stall bit ????
-void bx_pciusb_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble, 
+void bx_pciusb_c::set_status(struct TD *td, bx_bool stalled, bx_bool data_buffer_error, bx_bool babble,
                              bx_bool nak, bx_bool crc_time_out, bx_bool bitstuff_error, Bit16u act_len)
 {
   // clear out the bits we can modify and/or want zero
@@ -1132,7 +1132,7 @@ void bx_pciusb_c::usb_set_connect_status(Bit8u port, int type, bx_bool connected
           BX_USB_THIS hub[0].usb_port[port].line_dminus = 0;  //  dminus=1 & dplus=0 = low speed  (at idle time)
           BX_USB_THIS hub[0].usb_port[port].line_dplus = 1;   //  dminus=0 & dplus=1 = high speed (at idle time)
         }
-        BX_USB_THIS hub[0].usb_port[port].status = 1;       // 
+        BX_USB_THIS hub[0].usb_port[port].status = 1;       //
         BX_USB_THIS hub[0].usb_port[port].connect_changed = 1;
         BX_USB_THIS hub[0].usb_port[port].able_changed = 1;
 
@@ -1381,7 +1381,7 @@ int usb_device_t::handle_packet(USBPacket *p)
 
 
 // USB runtime parameter handler
- 
+
 const char *bx_pciusb_c::usb_param_handler(bx_param_string_c *param, int set, const char *val, int maxlen)
 {
   usbdev_type type = USB_DEV_TYPE_NONE;

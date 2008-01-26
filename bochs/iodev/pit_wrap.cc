@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////
-// $Id: pit_wrap.cc,v 1.67 2007-09-28 19:52:05 sshwarts Exp $
+// $Id: pit_wrap.cc,v 1.68 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -123,7 +123,7 @@ int bx_pit_c::init(void)
   bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
   BX_DEBUG(("deactivated timer."));
   if (BX_PIT_THIS s.timer.get_next_event_time()) {
-    bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+    bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0],
 				(Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				0);
     BX_DEBUG(("activated timer."));
@@ -194,7 +194,7 @@ void bx_pit_c::handle_timer()
     bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
-      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0],
 				  (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));
@@ -335,7 +335,7 @@ void bx_pit_c::write(Bit32u address, Bit32u dvalue, unsigned io_len)
     bx_virt_timer.deactivate_timer(BX_PIT_THIS s.timer_handle[0]);
     BX_DEBUG(("deactivated timer."));
     if(BX_PIT_THIS s.timer.get_next_event_time()) {
-      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0], 
+      bx_virt_timer.activate_timer(BX_PIT_THIS s.timer_handle[0],
 				  (Bit32u)BX_MAX(1,TICKS_TO_USEC(BX_PIT_THIS s.timer.get_next_event_time())),
 				  0);
       BX_DEBUG(("activated timer."));

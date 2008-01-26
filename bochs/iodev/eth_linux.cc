@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_linux.cc,v 1.22 2005-12-10 18:37:35 vruppert Exp $
+// $Id: eth_linux.cc,v 1.23 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,10 +41,10 @@
 //
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -96,7 +96,7 @@ static const struct sock_filter promiscfilter[] = {
 //
 class bx_linux_pktmover_c : public eth_pktmover_c {
 public:
-  bx_linux_pktmover_c(const char *netif, 
+  bx_linux_pktmover_c(const char *netif,
 		     const char *macaddr,
 		     eth_rx_handler_t rxh,
 		     void *rxarg,
@@ -122,7 +122,7 @@ class bx_linux_locator_c : public eth_locator_c {
 public:
   bx_linux_locator_c(void) : eth_locator_c("linux") {}
 protected:
-  eth_pktmover_c *allocate(const char *netif, 
+  eth_pktmover_c *allocate(const char *netif,
 			   const char *macaddr,
 			   eth_rx_handler_t rxh,
 			   void *rxarg, char *script) {
@@ -137,7 +137,7 @@ protected:
 
 // the constructor
 //
-bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif, 
+bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
@@ -160,7 +160,7 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
     this->fd = -1;
     return;
   }
-  
+
   // Translate interface name to index
   //
   memset(&ifr, 0, sizeof(ifr));
@@ -225,8 +225,8 @@ bx_linux_pktmover_c::bx_linux_pktmover_c(const char *netif,
     return;
   }
 
-  // Start the rx poll 
-  this->rx_timer_index = 
+  // Start the rx poll
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, BX_PACKET_POLL,
 				1, 1, "eth_linux"); // continuous, active
 
@@ -261,7 +261,7 @@ void
 bx_linux_pktmover_c::rx_timer(void)
 {
   int nbytes = 0;
-  Bit8u rxbuf[BX_PACKET_BUFSIZE]; 
+  Bit8u rxbuf[BX_PACKET_BUFSIZE];
   struct sockaddr_ll sll;
   socklen_t fromlen;
 

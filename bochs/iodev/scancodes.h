@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: scancodes.h,v 1.5 2006-03-07 18:16:41 sshwarts Exp $
+// $Id: scancodes.h,v 1.6 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -24,7 +24,7 @@
 // Translation table of the 8042
 extern unsigned char translation8042[256];
 
-typedef struct { 
+typedef struct {
   const char *make;
   const char *brek;
 } scancode;

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: serial.cc,v 1.79 2007-10-24 23:16:21 sshwarts Exp $
+// $Id: serial.cc,v 1.80 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004  MandrakeSoft S.A.
@@ -33,7 +33,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -1319,9 +1319,9 @@ bx_serial_c::rx_timer(void)
           tval.tv_usec = 0;
           FD_ZERO(&fds);
           int socketid = BX_SER_THIS s[port].socket_id;
-          if (socketid >= 0) FD_SET(socketid, &fds);  
+          if (socketid >= 0) FD_SET(socketid, &fds);
           if ((socketid >= 0) && (select(socketid+1, &fds, NULL, NULL, &tval) == 1)) {
-#ifdef WIN32 
+#ifdef WIN32
             (void) ::recv(socketid, (char*) &chbuf, 1, 0);
 #else
             (void)   read(socketid, &chbuf, 1);
@@ -1331,7 +1331,7 @@ bx_serial_c::rx_timer(void)
           }
         }
 #endif
-        break;    
+        break;
       case BX_SER_MODE_RAW:
 #if USE_RAW_SERIAL
         int data;

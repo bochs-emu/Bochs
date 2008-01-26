@@ -1,16 +1,16 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: pit82c54.cc,v 1.30 2007-09-28 19:52:04 sshwarts Exp $
+// $Id: pit82c54.cc,v 1.31 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 /*
  * Emulator of an Intel 8254/82C54 Programmable Interval Timer.
  * Greg Alexander <yakovlev@usa.com>
  *
- * 
+ *
  * Things I am unclear on (greg):
  * 1.)What happens if both the status and count registers are latched,
  *  but the first of the two count registers has already been read?
- *  I.E.: 
+ *  I.E.:
  *   latch count 0 (16-bit)
  *   Read count 0 (read LSByte)
  *   READ_BACK status of count 0
@@ -22,7 +22,7 @@
  * 4.)I implemented the 8254 description of mode 0, not the 82C54 one.
  * 5.)clock() calls represent a rising clock edge followed by a falling
  *  clock edge.
- * 6.)What happens when we trigger mode 1 in the middle of a 2-part 
+ * 6.)What happens when we trigger mode 1 in the middle of a 2-part
  *  write?
  */
 

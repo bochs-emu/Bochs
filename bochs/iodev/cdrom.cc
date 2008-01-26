@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cdrom.cc,v 1.89 2006-03-26 00:38:57 vruppert Exp $
+// $Id: cdrom.cc,v 1.90 2008-01-26 22:24:00 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define BX_IODEV_CDROM_H
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -91,7 +91,7 @@ extern "C" {
 
 #elif (defined(__NetBSD__) || defined(__NetBSD_kernel__) || defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__))
 // OpenBSD pre version 2.7 may require extern "C" { } structure around
-// all the includes, because the i386 sys/disklabel.h contains code which 
+// all the includes, because the i386 sys/disklabel.h contains code which
 // c++ considers invalid.
 #include <sys/types.h>
 #include <sys/param.h>
@@ -133,7 +133,7 @@ extern "C" {
 
 // These definitions were taken from mount_cd9660.c
 // There are some similar definitions in IOCDTypes.h
-// however there seems to be some dissagreement in 
+// however there seems to be some dissagreement in
 // the definition of CDTOC.length
 struct _CDMSF {
 	u_char   minute;
@@ -244,7 +244,7 @@ typedef struct _CDROM_TOC_SESSION_DATA {
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #define BX_CD_FRAMESIZE 2048
-#define CD_FRAMESIZE 2048 
+#define CD_FRAMESIZE 2048
 #endif
 
 #include <stdio.h>
@@ -275,7 +275,7 @@ static kern_return_t FindEjectableCDMedia( io_iterator_t *mediaIterator,
     }
   kernResult = IOServiceGetMatchingServices( *masterPort,
                                              classesToMatch, mediaIterator );
-  if ( (kernResult != KERN_SUCCESS) || (*mediaIterator == NULL) ) 
+  if ( (kernResult != KERN_SUCCESS) || (*mediaIterator == NULL) )
     fprintf( stderr, "No ejectable CD media found.\n kernResult = %d\n", kernResult );
 
   return kernResult;
@@ -340,7 +340,7 @@ static struct _CDTOC * ReadTOC( const char * devpath ) {
   CFDataRef data = 0;
   mach_port_t port = 0;
   char * devname;
-  
+
   if (( devname = strrchr( devpath, '/' )) != NULL ) {
     ++devname;
   }
@@ -358,7 +358,7 @@ static struct _CDTOC * ReadTOC( const char * devpath ) {
     fprintf( stderr, "IOServiceGetMatchingServices failed\n" );
     goto Exit;
   }
-  
+
   service = IOIteratorNext( iterator );
 
   IOObjectRelease( iterator );
@@ -419,7 +419,7 @@ static struct _CDTOC * ReadTOC( const char * devpath ) {
     CFRelease( properties );
 
   }
-  
+
 
  Exit:
 
@@ -532,7 +532,7 @@ cdrom_interface::cdrom_interface(char *dev)
 
 void
 cdrom_interface::init(void) {
-  BX_DEBUG(("Init $Id: cdrom.cc,v 1.89 2006-03-26 00:38:57 vruppert Exp $"));
+  BX_DEBUG(("Init $Id: cdrom.cc,v 1.90 2008-01-26 22:24:00 sshwarts Exp $"));
   BX_INFO(("file = '%s'",path));
 }
 
@@ -566,7 +566,7 @@ cdrom_interface::insert_cdrom(char *dev)
     if(osinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
       // Use direct device access under windows NT/2k/XP
 
-      // With all the backslashes it's hard to see, but to open D: drive 
+      // With all the backslashes it's hard to see, but to open D: drive
       // the name would be: \\.\d:
       sprintf(drive, "\\\\.\\%s", path);
       BX_INFO (("Using direct access for cdrom."));
@@ -642,7 +642,7 @@ cdrom_interface::insert_cdrom(char *dev)
     }
     fd=1;
   } else {
-    hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL); 
+    hFile=CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
     if (hFile !=(void *)0xFFFFFFFF)
       fd=1;
     if (!using_file) {
@@ -656,15 +656,15 @@ cdrom_interface::insert_cdrom(char *dev)
         mach_port_t masterPort = NULL;
         io_iterator_t mediaIterator;
         kern_return_t kernResult;
-        
-        BX_INFO(( "Insert CDROM" )); 
-        
+
+        BX_INFO(( "Insert CDROM" ));
+
         kernResult = FindEjectableCDMedia( &mediaIterator, &masterPort );
         if ( kernResult != KERN_SUCCESS ) {
           BX_INFO (("Unable to find CDROM"));
           return 0;
         }
-        
+
         kernResult = GetDeviceFilePath( mediaIterator, CDDevicePath, sizeof( CDDevicePath ) );
         if ( kernResult != KERN_SUCCESS ) {
           BX_INFO (("Unable to get CDROM device file path" ));
@@ -889,7 +889,7 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
             buf[len++] = 0;
             buf[len++] = 0;
           }
-        }    
+        }
         buf[0] = ((len-2) >> 8) & 0xff;
         buf[1] = (len-2) & 0xff;
         break;
@@ -1092,7 +1092,7 @@ cdrom_interface::read_toc(Bit8u* buf, int* length, bx_bool msf, int start_track,
 #if 1
   {
   struct _CDTOC * toc = ReadTOC( CDDevicePath );
-  
+
   if ((start_track > toc->last_session) && (start_track != 0xaa))
     return 0;
 
@@ -1193,11 +1193,11 @@ cdrom_interface::capacity()
 
     if (fd < 0) {
       BX_PANIC(("cdrom: capacity: file not open."));
-    } 
-    
+    }
+
     if( fstat(fd, &buf) != 0 )
       BX_PANIC(("cdrom: capacity: stat() failed."));
-  
+
     return(buf.st_size);
   }
 #elif (defined(__NetBSD__) || defined(__NetBSD_kernel__) || defined(__OpenBSD__))
@@ -1354,7 +1354,7 @@ cdrom_interface::capacity()
   }
 
   size_t toc_entries = ( toc->length - 2 ) / sizeof( struct _CDTOC_Desc );
-  
+
   BX_DEBUG(( "reading %d toc entries\n", toc_entries ));
 
   int start_sector = -1;
@@ -1385,7 +1385,7 @@ cdrom_interface::capacity()
       data_track = toc->trackdesc[i].point;
       start_sector = MSF_TO_LBA(toc->trackdesc[i].p);
     }
-  }  
+  }
 
   free( toc );
 

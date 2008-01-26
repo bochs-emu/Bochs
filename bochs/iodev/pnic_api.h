@@ -1,6 +1,6 @@
 /*
  * Constants etc. for the Bochs/Etherboot pseudo-NIC
- * 
+ *
  * This header file must be valid C and C++.
  *
  * Operation of the pseudo-NIC (PNIC) is pretty simple.  To write a

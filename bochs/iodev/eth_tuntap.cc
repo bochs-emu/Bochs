@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: eth_tuntap.cc,v 1.26 2006-11-23 17:21:59 vruppert Exp $
+// $Id: eth_tuntap.cc,v 1.27 2008-01-26 22:24:01 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -27,10 +27,10 @@
 // eth_tuntap.cc  - TUN/TAP interface by Renzo Davoli <renzo@cs.unibo.it>
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
- 
+
 #define NO_DEVICE_INCLUDES
 #include "iodev.h"
 
@@ -116,7 +116,7 @@ protected:
 //
 
 // the constructor
-bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif, 
+bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
 				       const char *macaddr,
 				       eth_rx_handler_t rxh,
 				       void *rxarg,
@@ -163,7 +163,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   close(sock);
 
   fd = open (filename, O_RDWR);
-#endif 
+#endif
   char intname[IFNAMSIZ];
   strcpy(intname,netif);
   fd=tun_alloc(intname);
@@ -191,8 +191,8 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
       BX_ERROR (("execute script '%s' on %s failed", script, intname));
     }
 
-  // Start the rx poll 
-  this->rx_timer_index = 
+  // Start the rx poll
+  this->rx_timer_index =
     bx_pc_system.register_timer(this, this->rx_timer_handler, 1000,
 				1, 1, "eth_tuntap"); // continuous, active
   this->rxh   = rxh;
@@ -208,7 +208,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   fprintf (txlog_txt, "tuntap packetmover readable log file\n");
   fprintf (txlog_txt, "net IF = %s\n", netif);
   fprintf (txlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf (txlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf (txlog_txt, "\n--\n");
   fflush (txlog_txt);
@@ -220,7 +220,7 @@ bx_tuntap_pktmover_c::bx_tuntap_pktmover_c(const char *netif,
   fprintf (rxlog_txt, "tuntap packetmover readable log file\n");
   fprintf (rxlog_txt, "net IF = %s\n", netif);
   fprintf (rxlog_txt, "MAC address = ");
-  for (int i=0; i<6; i++) 
+  for (int i=0; i<6; i++)
     fprintf (rxlog_txt, "%02x%s", 0xff & macaddr[i], i<5?":" : "");
   fprintf (rxlog_txt, "\n--\n");
   fflush (rxlog_txt);
@@ -379,12 +379,12 @@ int tun_alloc(char *dev)
 #ifdef __linux__
   memset(&ifr, 0, sizeof(ifr));
 
-  /* Flags: IFF_TUN   - TUN device (no Ethernet headers) 
-   *        IFF_TAP   - TAP device  
+  /* Flags: IFF_TUN   - TUN device (no Ethernet headers)
+   *        IFF_TAP   - TAP device
    *
-   *        IFF_NO_PI - Do not provide packet information  
-   */ 
-  ifr.ifr_flags = IFF_TAP | IFF_NO_PI; 
+   *        IFF_NO_PI - Do not provide packet information
+   */
+  ifr.ifr_flags = IFF_TAP | IFF_NO_PI;
   strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
   if ((err = ioctl(fd, TUNSETIFF, (void *) &ifr)) < 0) {
     close(fd);
@@ -397,6 +397,6 @@ int tun_alloc(char *dev)
 #endif
 
   return fd;
-}              
+}
 
 #endif /* if BX_NETWORKING && defined HAVE_TUNTAP */

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: usb_msd.cc,v 1.7 2007-09-28 19:52:07 sshwarts Exp $
+// $Id: usb_msd.cc,v 1.8 2008-01-26 22:24:02 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2007  Volker Ruppert
@@ -22,7 +22,7 @@
 
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For
-// platforms that require a special tag on exported symbols, BX_PLUGGABLE 
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
 // is used to know when we are exporting symbols and when we are importing.
 #define BX_PLUGGABLE
 
@@ -94,7 +94,7 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x01,       /*  u8  bNumInterfaces; (1) */
   0x01,       /*  u8  bConfigurationValue; */
   0x00,       /*  u8  iConfiguration; */
-  0xc0,       /*  u8  bmAttributes; 
+  0xc0,       /*  u8  bmAttributes;
                         Bit 7: must be set,
                             6: Self-powered,
                             5: Remote wakeup,
@@ -111,7 +111,7 @@ static const Bit8u bx_msd_config_descriptor[] = {
   0x06,       /*  u8  if_bInterfaceSubClass; SCSI */
   0x50,       /*  u8  if_bInterfaceProtocol; Bulk Only */
   0x00,       /*  u8  if_iInterface; */
-     
+
   /* Bulk-In endpoint */
   0x07,       /*  u8  ep_bLength; */
   0x05,       /*  u8  ep_bDescriptorType; Endpoint */

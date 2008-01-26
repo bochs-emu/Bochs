@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: virt_timer.cc,v 1.35 2007-10-24 23:17:16 sshwarts Exp $
+// $Id: virt_timer.cc,v 1.36 2008-01-26 22:24:03 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -368,7 +368,7 @@ void bx_virt_timer_c::next_event_time_update(void)
   if(init_done) {
     bx_pc_system.deactivate_timer(system_timer_id);
     BX_ASSERT(virtual_next_event_time);
-    bx_pc_system.activate_timer(system_timer_id, 
+    bx_pc_system.activate_timer(system_timer_id,
 				(Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 				0);
   }
@@ -563,7 +563,7 @@ void bx_virt_timer_c::timer_handler(void)
   last_usec=last_usec + usec_delta;
   bx_pc_system.deactivate_timer(system_timer_id);
   BX_ASSERT(virtual_next_event_time);
-  bx_pc_system.activate_timer(system_timer_id, 
+  bx_pc_system.activate_timer(system_timer_id,
 			      (Bit32u)BX_MIN(0x7FFFFFFF,BX_MAX(1,TICKS_TO_USEC(virtual_next_event_time))),
 			      0);
 }
