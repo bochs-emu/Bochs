@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: macintosh.cc,v 1.26 2006-02-21 21:35:08 vruppert Exp $
+// $Id: macintosh.cc,v 1.27 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -135,6 +135,7 @@ GWorldPtr            gOffWorld;
 Ptr                  gMyBuffer;
 static unsigned      vga_bpp=8;
 static EventModifiers oldMods = 0;
+static unsigned int text_rows=25, text_cols=80;
 
 // HEADERBAR STUFF
 int             numPixMaps = 0, toolPixMaps = 0;
@@ -877,18 +878,18 @@ void bx_macintosh_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is 80*nrows*2 bytes long.
-//     This represents 80 characters wide by 'nrows' high, with
-//     each character being 2 bytes.  The first by is the
-//     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
+// format of old_text & new_text: each is tm_info.line_offset*text_rows
+//     bytes long. Each character consists of 2 bytes.  The first by is
+//     the character value, the second is the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
 
 void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
-                                                                                        unsigned long cursor_x, unsigned long cursor_y,
-                 bx_vga_tminfo_t tm_info, unsigned nrows)
+                 unsigned long cursor_x, unsigned long cursor_y,
+                 bx_vga_tminfo_t tm_info)
 {
         int           i;
         unsigned char achar;
@@ -898,20 +899,18 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         Rect          destRect;
         RGBColor      fgColor, bgColor;
         GrafPtr       oldPort;
-        unsigned      nchars, ncols;
+        unsigned      nchars;
         OSErr         theError;
         
         GetPort(&oldPort);
         
         SetPort(win);
 
-        ncols = width/8;
-
         //current cursor position
-        cursori = (cursor_y*ncols + cursor_x)*2;
+        cursori = (cursor_y * text_cols + cursor_x) * 2;
 
         // Number of characters on screen, variable number of rows
-        nchars = ncols*nrows;
+        nchars = text_cols * text_rows;
         
         for (i=0; i<nchars*2; i+=2)
         {
@@ -939,8 +938,8 @@ void bx_macintosh_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                                 RGBBackColor(&bgColor);
                         }
                         
-                        x = ((i/2) % ncols)*FONT_WIDTH;
-                        y = ((i/2) / ncols)*FONT_HEIGHT;
+                        x = ((i/2) % text_cols)*FONT_WIDTH;
+                        y = ((i/2) / text_cols)*FONT_HEIGHT;
 
                         SetRect(&destRect, x, y,
                                 x+FONT_WIDTH, y+FONT_HEIGHT);
@@ -1122,6 +1121,8 @@ void bx_macintosh_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheig
     CreateTile();
   }
   if (fheight > 0) {
+        text_cols = x / fwidth;
+        text_rows = y / fheight;
         if (fwidth != 8) {
           x = x * 8 / fwidth;
         }

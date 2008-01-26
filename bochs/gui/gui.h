@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.54 2007-09-28 19:51:44 sshwarts Exp $
+// $Id: gui.h,v 1.55 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ public:
                  unsigned x_tilesize, unsigned y_tilesize, unsigned header_bar_y) = 0;
   virtual void text_update(Bit8u *old_text, Bit8u *new_text,
                           unsigned long cursor_x, unsigned long cursor_y,
-                          bx_vga_tminfo_t tm_info, unsigned rows) = 0;
+                          bx_vga_tminfo_t tm_info) = 0;
   virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y) = 0;
   virtual bx_svga_tileinfo_t *graphics_tile_info(bx_svga_tileinfo_t *info);
   virtual Bit8u *graphics_tile_get(unsigned x, unsigned y, unsigned *w, unsigned *h);
@@ -193,11 +193,11 @@ protected:
 // Then, each method must be defined later in the file.
 #define DECLARE_GUI_VIRTUAL_METHODS()                                       \
 virtual void specific_init(int argc, char **argv,                           \
-         unsigned x_tilesize, unsigned y_tilesize,                      \
-         unsigned header_bar_y);                                        \
+         unsigned x_tilesize, unsigned y_tilesize,                          \
+         unsigned header_bar_y);                                            \
 virtual void text_update(Bit8u *old_text, Bit8u *new_text,                  \
-                  unsigned long cursor_x, unsigned long cursor_y,       \
-                  bx_vga_tminfo_t tm_info, unsigned rows);              \
+                  unsigned long cursor_x, unsigned long cursor_y,           \
+                  bx_vga_tminfo_t tm_info);                                 \
 virtual void graphics_tile_update(Bit8u *snapshot, unsigned x, unsigned y); \
 virtual void handle_events(void);                                           \
 virtual void flush(void);                                                   \

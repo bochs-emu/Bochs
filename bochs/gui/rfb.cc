@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.52 2007-12-10 21:01:25 sshwarts Exp $
+// $Id: rfb.cc,v 1.53 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -702,16 +702,13 @@ void bx_rfb_gui_c::clear_screen(void)
 // cursor_y: new y location of cursor
 // tm_info:  this structure contains information for additional
 //           features in text mode (cursor shape, line offset,...)
-// nrows:    number of text rows (unused here)
 
-void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t tm_info, unsigned nrows)
+void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t tm_info)
 {
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
   unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
   bx_bool force_update=0, gfxchar;
-
-  UNUSED(nrows);
 
   if(charmap_updated) {
     force_update = 1;

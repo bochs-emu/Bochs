@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: beos.cc,v 1.29 2006-06-20 17:17:46 sshwarts Exp $
+// $Id: beos.cc,v 1.30 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,8 +126,7 @@ static BScreen *screen;
 static unsigned long rowsize_padded=0;
 static uint8 *rawdata = NULL;
 
-//static int rows=25, columns=80;
-
+static unsigned int text_rows=25, text_cols=80;
 static unsigned font_width, font_height;
 static Bit8u blank_line[80];
 static unsigned dimension_x, dimension_y;
@@ -322,22 +321,21 @@ void bx_beos_gui_c::clear_screen(void)
 
 void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      bx_vga_tminfo_t tm_info, unsigned nrows)
+                      bx_vga_tminfo_t tm_info)
 {
   unsigned i, x, y;
   BPoint point;
   unsigned char achar;
-  unsigned nchars, ncols;
+  unsigned nchars;
 
   aWindow->Lock();
 
   // Number of characters on screen, variable number of rows
-  ncols = dimension_x/8;
-  nchars = ncols*nrows;
+  nchars = text_cols * text_rows;
 
   // first draw over character at original block cursor location
-  if ( (prev_block_cursor_y*ncols + prev_block_cursor_x) < nchars ) {
-    achar = new_text[(prev_block_cursor_y*ncols + prev_block_cursor_x)*2];
+  if ( (prev_block_cursor_y*text_cols + prev_block_cursor_x) < nchars ) {
+    achar = new_text[(prev_block_cursor_y*text_cols + prev_block_cursor_x)*2];
     point.Set(prev_block_cursor_x*8, prev_block_cursor_y*16 + bx_headerbar_y);
     aView->DrawBitmap(vgafont[achar], point );
   }
@@ -348,8 +346,8 @@ void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     {
       achar = new_text[i];
 
-      x = (i/2) % ncols;
-      y = (i/2) / ncols;
+      x = (i/2) % text_cols;
+      y = (i/2) / text_cols;
 
       point.Set(x*8, y*16 + bx_headerbar_y);
       aView->DrawBitmap(vgafont[achar], point );
@@ -360,8 +358,8 @@ void bx_beos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   prev_block_cursor_y = cursor_y;
 
   // now draw character at new block cursor location in reverse
-  if ((cursor_y*ncols + cursor_x) < nchars) {
-    achar = new_text[(cursor_y*ncols + cursor_x)*2];
+  if ((cursor_y*text_cols + cursor_x) < nchars) {
+    achar = new_text[(cursor_y*text_cols + cursor_x)*2];
     point.Set(cursor_x*8, cursor_y*16 + bx_headerbar_y);
     aView->set_inv_text_colors();
     aView->DrawBitmap(vgafont[achar], point );
@@ -408,6 +406,8 @@ void bx_beos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, u
     BX_PANIC(("%d bpp graphics mode not supported yet", bpp));
   }
   if (fheight > 0) {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
     if (fwidth != 8) {
       x = x * 8 / fwidth;
     }

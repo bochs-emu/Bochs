@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.h,v 1.58 2007-09-28 19:52:07 sshwarts Exp $
+// $Id: vga.h,v 1.59 2008-01-26 00:00:31 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -272,6 +272,7 @@ protected:
     unsigned line_offset;
     unsigned line_compare;
     unsigned vertical_display_end;
+    unsigned blink_counter;
     bx_bool  vga_tile_updated[BX_NUM_X_TILES][BX_NUM_Y_TILES];
     Bit8u *memory;
     Bit32u memsize;

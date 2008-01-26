@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.36 2006-08-30 18:16:36 vruppert Exp $
+// $Id: term.cc,v 1.37 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -63,7 +63,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 #define LOG_THIS theGui->
 
 bx_bool initialized = 0;
-static unsigned int text_cols = 80, text_rows = 25;
+static unsigned int text_rows = 25, text_cols = 80;
 
 static short curses_color[8] = {
   /* 0 */ COLOR_BLACK,
@@ -587,15 +587,13 @@ get_term_char(Bit8u vga_char[])
 	void
 bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
-	bx_vga_tminfo_t tm_info, unsigned nrows)
+	bx_vga_tminfo_t tm_info)
 {
   unsigned char *old_line, *new_line, *new_start;
   unsigned char cAttr;
   unsigned int hchars, rows, x, y;
   chtype ch;
   bx_bool force_update = 0;
-
-  UNUSED(nrows);
 
   if(charmap_updated) {
     force_update = 1;

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.34 2007-03-23 08:30:22 sshwarts Exp $
+// $Id: carbon.cc,v 1.35 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -144,6 +144,7 @@ Ptr                  gMyBuffer;
 ProcessSerialNumber  gProcessSerNum;
 static unsigned      vga_bpp=8;
 static EventModifiers oldMods = 0;
+static unsigned int text_rows=25, text_cols=80;
 
 enum {
   TEXT_MODE,
@@ -1142,18 +1143,18 @@ void bx_carbon_gui_c::clear_screen(void)
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is 80*nrows*2 bytes long.
-//     This represents 80 characters wide by 'nrows' high, with
-//     each character being 2 bytes.  The first by is the
-//     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
+// format of old_text & new_text: each is tm_info.line_offset*text_rows
+//     bytes long. Each character consists of 2 bytes.  The first by is
+//     the character value, the second is the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
 
 void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned long cursor_x, unsigned long cursor_y,
-  bx_vga_tminfo_t tm_info, unsigned nrows)
+  bx_vga_tminfo_t tm_info)
 {
   int           i;
   unsigned char achar;
@@ -1165,7 +1166,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   GrafPtr       oldPort, savePort;
   GDHandle      saveDevice;
   GrafPtr       winGrafPtr = GetWindowPort(win);
-  unsigned      nchars, ncols;
+  unsigned      nchars;
   OSErr         theError;
   
   screen_state = TEXT_MODE;
@@ -1185,13 +1186,11 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   
   SetPortWindowPort(win);
 
-  ncols = width/font_width;
-
   //current cursor position
-  cursori = (cursor_y*ncols + cursor_x)*2;
+  cursori = (cursor_y * text_cols + cursor_x) * 2;
 
   // Number of characters on screen, variable number of rows
-  nchars = ncols*nrows;
+  nchars = text_cols * text_rows;
   
   for (i=0; i<nchars*2; i+=2)
   {
@@ -1219,8 +1218,8 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
         RGBBackColor(&bgColor);
       }
 
-      x = ((i/2) % ncols)*font_width;
-      y = ((i/2) / ncols)*font_height;
+      x = ((i/2) % text_cols)*font_width;
+      y = ((i/2) / text_cols)*font_height;
 
       SetRect(&destRect, x, y,
         x+font_width, y+font_height);
@@ -1447,6 +1446,8 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
   }
 
   if (fheight > 0) {
+    text_cols = x / fwidth;
+    text_rows = y / fheight;
     if( fwidth != font_width || fheight != font_height ) {
        font_width = fwidth;
        font_height = fheight;

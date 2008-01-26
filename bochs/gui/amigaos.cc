@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: amigaos.cc,v 1.23 2006-02-22 19:43:55 vruppert Exp $
+// $Id: amigaos.cc,v 1.24 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -37,6 +37,7 @@
 #include "amigagui.h"
 
 unsigned long __stack = 100000;
+static unsigned int text_rows=25, text_cols=80;
 
 class bx_amigaos_gui_c : public bx_gui_c {
 public:
@@ -444,24 +445,22 @@ bx_amigaos_gui_c::clear_screen(void)
   void
 bx_amigaos_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 					  unsigned long cursor_x, unsigned long cursor_y,
-					  bx_vga_tminfo_t tm_info, unsigned nrows)
+					  bx_vga_tminfo_t tm_info)
 {
 int i;
 int	cursori;
-unsigned nchars, ncols;
+unsigned nchars;
 char achar;
 char string[80];
 int	x, y;
 static int previ;
 unsigned int fgcolor, bgcolor;
 
-	ncols = w/8;
-
 	//current cursor position
-	cursori = (cursor_y*ncols + cursor_x)*2;
+	cursori = (cursor_y * text_cols + cursor_x) * 2;
 
 	// Number of characters on screen, variable number of rows
-	nchars = ncols*nrows;
+	nchars = text_cols * text_rows;
 
 	for (i=0; i<nchars*2; i+=2)
 	{
@@ -483,8 +482,8 @@ unsigned int fgcolor, bgcolor;
 			}
 
 
-			x = ((i/2) % ncols)*window->RPort->TxWidth;
-			y = ((i/2) / ncols)*window->RPort->TxHeight;
+			x = ((i/2) % text_cols)*window->RPort->TxWidth;
+			y = ((i/2) / text_cols)*window->RPort->TxHeight;
 		
 			Move(window->RPort, bx_borderleft + x, bx_bordertop + bx_headerbar_y + y + window->RPort->TxBaseline);
 			Text(window->RPort, &achar, 1);
@@ -674,6 +673,8 @@ bx_amigaos_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
 	int xdiff = w - x;
 
 	if (fheight > 0) {
+	  text_cols = x / fwidth;
+	  text_rows = y / fheight;
 	  if (fwidth != 8) {
 		x = x * 8 / fwidth;
 	  }

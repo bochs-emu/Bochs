@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.146 2008-01-23 18:10:33 vruppert Exp $
+// $Id: vga.cc,v 1.147 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -381,12 +381,18 @@ void bx_vga_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_wr
 void bx_vga_c::init_systemtimer(bx_timer_handler_t f_timer, param_event_handler f_param)
 {
   bx_param_num_c *vga_update_interval = SIM->get_param_num(BXPN_VGA_UPDATE_INTERVAL);
-  BX_INFO(("interval=%u", vga_update_interval->get()));
+  Bit64u interval = vga_update_interval->get();
+  BX_INFO(("interval=" FMT_LL "u", interval));
   if (BX_VGA_THIS timer_id == BX_NULL_TIMER_HANDLE) {
     BX_VGA_THIS timer_id = bx_pc_system.register_timer(this, f_timer,
-       vga_update_interval->get (), 1, 1, "vga");
-    vga_update_interval->set_handler (f_param);
-    vga_update_interval->set_runtime_param (1);
+       interval, 1, 1, "vga");
+    vga_update_interval->set_handler(f_param);
+    vga_update_interval->set_runtime_param(1);
+  }
+  if (interval < 300000) {
+    BX_VGA_THIS s.blink_counter = 300000 / interval;
+  } else {
+    BX_VGA_THIS s.blink_counter = 1;
   }
 }
 
@@ -1557,7 +1563,7 @@ void bx_vga_c::update(void)
   unsigned iHeight, iWidth;
 
   /* no screen update necessary */
-  if (BX_VGA_THIS s.vga_mem_updated==0)
+  if ((BX_VGA_THIS s.vga_mem_updated==0) && BX_VGA_THIS s.graphics_ctrl.graphics_alpha)
     return;
 
   /* skip screen update when vga/video is disabled or the sequencer is in reset mode */
@@ -2098,10 +2104,23 @@ void bx_vga_c::update(void)
     unsigned long cursor_address, cursor_x, cursor_y;
     bx_vga_tminfo_t tm_info;
     unsigned VDE, MSL, cols, rows, cWidth;
+    static bx_bool cs_counter = 1;
+    static bx_bool cs_visible = 0;
+
+    cs_counter--;
+    if ((BX_VGA_THIS s.vga_mem_updated==0) && (cs_counter > 0))
+      return;
 
     tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
                             BX_VGA_THIS s.CRTC.reg[13]);
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
+    if (!cs_visible) {
+      tm_info.cs_start |= 0x20;
+    }
+    if (cs_counter == 0) {
+      cs_visible = !cs_visible;
+      cs_counter = BX_VGA_THIS s.blink_counter;
+    }
     tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
     tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
     tm_info.line_compare = BX_VGA_THIS s.line_compare;
@@ -2149,8 +2168,7 @@ void bx_vga_c::update(void)
       BX_VGA_THIS s.last_bpp = 8;
     }
     // pass old text snapshot & new VGA memory contents
-    start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
-                    BX_VGA_THIS s.CRTC.reg[13]);
+    start_address = tm_info.start_address;
     cursor_address = 2*((BX_VGA_THIS s.CRTC.reg[0x0e] << 8) +
                      BX_VGA_THIS s.CRTC.reg[0x0f]);
     if (cursor_address < start_address) {
@@ -2162,12 +2180,14 @@ void bx_vga_c::update(void)
     }
     bx_gui->text_update(BX_VGA_THIS s.text_snapshot,
                         &BX_VGA_THIS s.memory[start_address],
-                        cursor_x, cursor_y, tm_info, rows);
-    // screen updated, copy new VGA memory contents into text snapshot
-    memcpy(BX_VGA_THIS s.text_snapshot,
-           &BX_VGA_THIS s.memory[start_address],
-           2*cols*rows);
-    BX_VGA_THIS s.vga_mem_updated = 0;
+                        cursor_x, cursor_y, tm_info);
+    if (BX_VGA_THIS s.vga_mem_updated) {
+      // screen updated, copy new VGA memory contents into text snapshot
+      memcpy(BX_VGA_THIS s.text_snapshot,
+             &BX_VGA_THIS s.memory[start_address],
+             tm_info.line_offset*rows);
+      BX_VGA_THIS s.vga_mem_updated = 0;
+    }
   }
 }
 

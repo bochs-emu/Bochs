@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: nogui.cc,v 1.23 2006-02-21 21:35:08 vruppert Exp $
+// $Id: nogui.cc,v 1.24 2008-01-26 00:00:29 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -150,14 +150,13 @@ bx_nogui_gui_c::clear_screen(void)
   void
 bx_nogui_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      bx_vga_tminfo_t tm_info, unsigned nrows)
+                      bx_vga_tminfo_t tm_info)
 {
   UNUSED(old_text);
   UNUSED(new_text);
   UNUSED(cursor_x);
   UNUSED(cursor_y);
   UNUSED(tm_info);
-  UNUSED(nrows);
 }
 
   int

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.108 2007-10-24 23:09:59 sshwarts Exp $
+// $Id: x.cc,v 1.109 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1183,7 +1183,7 @@ void bx_x_gui_c::clear_screen(void)
 
 void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-                      bx_vga_tminfo_t tm_info, unsigned nrows)
+                      bx_vga_tminfo_t tm_info)
 {
   Bit8u *old_line, *new_line, *text_base;
   Bit8u cChar;
@@ -1195,7 +1195,6 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned char cell[64];
   unsigned long text_palette[16];
 
-  UNUSED(nrows);
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d",font_height));
     for (unsigned c = 0; c<256; c++) {

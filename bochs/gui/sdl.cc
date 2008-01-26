@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.69 2006-10-15 16:23:09 vruppert Exp $
+// $Id: sdl.cc,v 1.70 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -102,7 +102,7 @@ unsigned half_res_x, half_res_y;
 int headerbar_height;
 static unsigned bx_bitmap_left_xorigin = 0;  // pixels from left
 static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
-static unsigned int text_cols = 80, text_rows = 25;
+static unsigned int text_rows = 25, text_cols = 80;
 Bit8u h_panning = 0, v_panning = 0;
 Bit16u line_compare = 1023;
 int fontwidth = 8, fontheight = 16;
@@ -421,8 +421,7 @@ void bx_sdl_gui_c::text_update(
     Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    bx_vga_tminfo_t tm_info,
-    unsigned nrows)
+    bx_vga_tminfo_t tm_info)
 {
   Bit8u *pfont_row, *old_line, *new_line, *text_base;
   unsigned int cs_y, i, x, y;
@@ -437,7 +436,6 @@ void bx_sdl_gui_c::text_update(
   bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
   Uint32 text_palette[16];
 
-  UNUSED(nrows);
   forceUpdate = 0;
   if(charmap_updated)
   {

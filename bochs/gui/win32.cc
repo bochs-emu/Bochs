@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.114 2007-12-03 20:38:55 sshwarts Exp $
+// $Id: win32.cc,v 1.115 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1499,11 +1499,10 @@ void bx_win32_gui_c::clear_screen(void) {
 // cursor_y: new y location of cursor
 // tm_info:  this structure contains information for additional
 //           features in text mode (cursor shape, line offset,...)
-// nrows:    number of text rows (unused here)
 
 void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 			   unsigned long cursor_x, unsigned long cursor_y,
-                           bx_vga_tminfo_t tm_info, unsigned nrows)
+                           bx_vga_tminfo_t tm_info)
 {
   HDC hdc;
   unsigned char data[64];
@@ -1523,7 +1522,6 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   EnterCriticalSection(&stInfo.drawCS);
 
-  UNUSED(nrows);
   if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {

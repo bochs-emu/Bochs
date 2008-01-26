@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.12 2006-10-14 15:53:47 vruppert Exp $
+// $Id: svga.cc,v 1.13 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -141,8 +141,7 @@ void bx_svga_gui_c::text_update(
     Bit8u *new_text,
     unsigned long cursor_x,
     unsigned long cursor_y,
-    bx_vga_tminfo_t tm_info,
-    unsigned nrows)
+    bx_vga_tminfo_t tm_info)
 {
   Bit8u *old_line, *new_line;
   unsigned int curs, hchars, i, j, offset, rows, x, y;
@@ -151,7 +150,6 @@ void bx_svga_gui_c::text_update(
   bx_bool force_update = 0;
   int text_palette[16];
 
-  UNUSED(nrows);
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d", fontheight));
     for (unsigned c = 0; c<256; c++) {

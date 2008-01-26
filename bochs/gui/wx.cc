@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.90 2007-09-28 19:51:58 sshwarts Exp $
+// $Id: wx.cc,v 1.91 2008-01-26 00:00:30 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -1196,11 +1196,10 @@ DrawBochsBitmap(int x, int y, int width, int height, char *bmap, char color, int
 // cursor_y: new y location of cursor
 // tm_info:  this structure contains information for additional
 //           features in text mode (cursor shape, line offset,...)
-// nrows:    number of text rows (unused here)
 
 void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
                       unsigned long cursor_x, unsigned long cursor_y,
-          bx_vga_tminfo_t tm_info, unsigned nrows)
+          bx_vga_tminfo_t tm_info)
 {
   IFDBG_VGA(wxLogDebug (wxT ("text_update")));
 
@@ -1211,7 +1210,6 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, gfxchar, split_screen;
 
-  UNUSED(nrows);
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
