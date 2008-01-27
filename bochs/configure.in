@@ -2,7 +2,7 @@ dnl // Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.50)
 AC_INIT(bochs.h)
-AC_REVISION([[$Id: configure.in,v 1.358 2008-01-21 21:36:54 sshwarts Exp $]])
+AC_REVISION([[$Id: configure.in,v 1.359 2008-01-27 18:02:21 sshwarts Exp $]])
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_HEADER(ltdlconf.h)
 
@@ -2922,6 +2922,6 @@ AC_OUTPUT(Makefile iodev/Makefile bx_debug/Makefile bios/Makefile \
 	 disasm/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 fpu/Makefile doc/docbook/Makefile \
 	 build/linux/bochs-dlx \
-	 bxversion.h build/macosx/Info.plist \
+	 bxversion.h bxversion.rc build/macosx/Info.plist \
 	 build/win32/nsis/Makefile build/win32/nsis/bochs.nsi \
 	 host/linux/pcidev/Makefile)

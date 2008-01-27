@@ -183,3 +183,4 @@ BEGIN
     EDITTEXT        IDCPUVAL15, 380, 170, 50, 14, ES_READONLY | ES_RIGHT
 END
 
+#include "bxversion.rc"
