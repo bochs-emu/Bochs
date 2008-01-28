@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sdl.cc,v 1.70 2008-01-26 00:00:30 vruppert Exp $
+// $Id: sdl.cc,v 1.71 2008-01-28 21:52:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -434,36 +434,36 @@ void bx_sdl_gui_c::text_update(
   Bit16u font_row, mask;
   Bit8u cfstart, cfwidth, cfheight, split_fontrows, split_textrow;
   bx_bool cursor_visible, gfxcharw9, invert, forceUpdate, split_screen;
+  bx_bool blink_mode, blink_state;
   Uint32 text_palette[16];
 
   forceUpdate = 0;
-  if(charmap_updated)
-  {
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      forceUpdate = 1;
+  }
+  if (charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
   }
-  for (i=0; i<16; i++)
-  {
+  for (i=0; i<16; i++) {
     text_palette[i] = palette[DEV_vga_get_actl_pal_idx(i)];
   }
-  if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning))
-  {
+  if ((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
     forceUpdate = 1;
     h_panning = tm_info.h_panning;
     v_panning = tm_info.v_panning;
   }
-  if(tm_info.line_compare != line_compare)
-  {
+  if (tm_info.line_compare != line_compare) {
     forceUpdate = 1;
     line_compare = tm_info.line_compare;
   }
-  if( sdl_screen )
-  {
+  if (sdl_screen) {
     disp = sdl_screen->pitch/4;
     buf_row = (Uint32 *)sdl_screen->pixels + headerbar_height*disp;
-  }
-  else
-  {
+  } else {
     disp = sdl_fullscreen->pitch/4;
     buf_row = (Uint32 *)sdl_fullscreen->pixels;
   }
@@ -548,7 +548,13 @@ void bx_sdl_gui_c::text_update(
 
 	// Get Foreground/Background pixel colors
 	fgcolor = text_palette[new_text[1] & 0x0F];
-	bgcolor = text_palette[(new_text[1] >> 4) & 0x0F];
+        if (blink_mode) {
+          bgcolor = text_palette[(new_text[1] >> 4) & 0x07];
+          if (!blink_state && (new_text[1] & 0x80))
+            fgcolor = bgcolor;
+        } else {
+          bgcolor = text_palette[(new_text[1] >> 4) & 0x0F];
+        }
 	invert = ((offset == curs) && (cursor_visible));
 	gfxcharw9 = ((tm_info.line_graphics) && ((new_text[0] & 0xE0) == 0xC0));
 
@@ -1479,7 +1485,7 @@ void bx_sdl_gui_c::show_headerbar(void)
   } while( --rowsleft );
   SDL_UpdateRect( sdl_screen, 0,res_y+headerbar_height,res_x,statusbar_height);
   for (unsigned i=0; i<statusitem_count; i++) {
-    sdl_set_status_text(i+1, statusitem_text[i], statusitem_active[i]);
+    sdl_set_status_text(i+1, statusitem_text[i], statusitem_active[i+1]);
   }
 }
 

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: x.cc,v 1.109 2008-01-26 00:00:30 vruppert Exp $
+// $Id: x.cc,v 1.110 2008-01-28 21:52:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1192,9 +1192,16 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
   bx_bool forceUpdate = 0, split_screen;
+  bx_bool blink_state, blink_mode;
   unsigned char cell[64];
   unsigned long text_palette[16];
 
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      forceUpdate = 1;
+  }
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d",font_height));
     for (unsigned c = 0; c<256; c++) {
@@ -1326,8 +1333,13 @@ void bx_x_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
         cChar = new_text[0];
         new_foreground = new_text[1] & 0x0f;
-        new_background = (new_text[1] & 0xf0) >> 4;
-
+        if (blink_mode) {
+          new_background = (new_text[1] & 0x70) >> 4;
+          if (!blink_state && (new_text[1] & 0x80))
+            new_foreground = new_background;
+        } else {
+          new_background = (new_text[1] & 0xf0) >> 4;
+        }
         XSetForeground(bx_x_display, gc, text_palette[new_foreground]);
         XSetBackground(bx_x_display, gc, text_palette[new_background]);
 

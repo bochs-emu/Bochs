@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vga.cc,v 1.149 2008-01-26 22:24:02 sshwarts Exp $
+// $Id: vga.cc,v 1.150 2008-01-28 21:52:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2106,6 +2106,7 @@ void bx_vga_c::update(void)
     unsigned VDE, MSL, cols, rows, cWidth;
     static unsigned cs_counter = 1;
     static bx_bool cs_visible = 0;
+    bx_bool cs_toggle = 0;
 
     cs_counter--;
     if ((BX_VGA_THIS s.vga_mem_updated==0) && (cs_counter > 0))
@@ -2114,12 +2115,13 @@ void bx_vga_c::update(void)
     tm_info.start_address = 2*((BX_VGA_THIS s.CRTC.reg[12] << 8) +
                             BX_VGA_THIS s.CRTC.reg[13]);
     tm_info.cs_start = BX_VGA_THIS s.CRTC.reg[0x0a] & 0x3f;
-    if (!cs_visible) {
-      tm_info.cs_start |= 0x20;
-    }
     if (cs_counter == 0) {
+      cs_toggle = 1;
       cs_visible = !cs_visible;
       cs_counter = BX_VGA_THIS s.blink_counter;
+    }
+    if (!cs_visible) {
+      tm_info.cs_start |= 0x20;
     }
     tm_info.cs_end = BX_VGA_THIS s.CRTC.reg[0x0b] & 0x1f;
     tm_info.line_offset = BX_VGA_THIS s.CRTC.reg[0x13] << 2;
@@ -2127,7 +2129,15 @@ void bx_vga_c::update(void)
     tm_info.h_panning = BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning & 0x0f;
     tm_info.v_panning = BX_VGA_THIS s.CRTC.reg[0x08] & 0x1f;
     tm_info.line_graphics = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics;
-    tm_info.split_hpanning =  BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat;
+    tm_info.split_hpanning = BX_VGA_THIS s.attribute_ctrl.mode_ctrl.pixel_panning_compat;
+    tm_info.blink_flags = 0;
+    if (BX_VGA_THIS s.attribute_ctrl.mode_ctrl.blink_intensity) {
+      tm_info.blink_flags |= BX_TEXT_BLINK_MODE;
+      if (cs_toggle)
+        tm_info.blink_flags |= BX_TEXT_BLINK_TOGGLE;
+      if (cs_visible)
+        tm_info.blink_flags |= BX_TEXT_BLINK_STATE;
+    }
     if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
       if (tm_info.h_panning >= 8)
         tm_info.h_panning = 0;

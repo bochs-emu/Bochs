@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: gui.h,v 1.55 2008-01-26 00:00:29 vruppert Exp $
+// $Id: gui.h,v 1.56 2008-01-28 21:52:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -34,6 +34,10 @@
 #define BX_GUI_DLG_SAVE_RESTORE 0x20
 #define BX_GUI_DLG_ALL          0x3F
 
+#define BX_TEXT_BLINK_MODE      0x01
+#define BX_TEXT_BLINK_TOGGLE    0x02
+#define BX_TEXT_BLINK_STATE     0x04
+
 typedef struct {
   Bit16u  start_address;
   Bit8u   cs_start;
@@ -44,6 +48,7 @@ typedef struct {
   Bit8u   v_panning;
   bx_bool line_graphics;
   bx_bool split_hpanning;
+  Bit8u   blink_flags;
 } bx_vga_tminfo_t;
 
 typedef struct {

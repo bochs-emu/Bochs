@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: term.cc,v 1.37 2008-01-26 00:00:30 vruppert Exp $
+// $Id: term.cc,v 1.38 2008-01-28 21:52:09 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  MandrakeSoft S.A.
@@ -575,17 +575,16 @@ get_term_char(Bit8u vga_char[])
 // new_text: array of character/attributes making up the current
 //           contents, which should now be displayed.  See below
 //
-// format of old_text & new_text: each is 4000 bytes long.
-//     This represents 80 characters wide by 25 high, with
-//     each character being 2 bytes.  The first by is the
-//     character value, the second is the attribute byte.
-//     I currently don't handle the attribute byte.
+// format of old_text & new_text: each is tm_info.line_offset*text_rows
+//     bytes long. Each character consists of 2 bytes.  The first by is
+//     the character value, the second is the attribute byte.
 //
 // cursor_x: new x location of cursor
 // cursor_y: new y location of cursor
+// tm_info:  this structure contains information for additional
+//           features in text mode (cursor shape, line offset,...)
 
-	void
-bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
+void bx_term_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 	unsigned long cursor_x, unsigned long cursor_y,
 	bx_vga_tminfo_t tm_info)
 {
