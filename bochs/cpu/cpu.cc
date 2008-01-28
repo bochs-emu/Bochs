@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.204 2008-01-22 16:20:30 sshwarts Exp $
+// $Id: cpu.cc,v 1.205 2008-01-28 20:09:40 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,11 +103,6 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
 
   while (1) {
 
-#if BX_SUPPORT_TRACE_CACHE
-    // clear stop trace magic indication that probably was set by branch32/64
-    BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
-#endif
-
     // First check on events which occurred for previous instructions
     // (traps) and ones which are asynchronous to the CPU
     // (hardware interrupts).
@@ -117,6 +112,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
         return;
       }
     }
+
+no_async_event:
 
     Bit32u eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
@@ -170,12 +167,15 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
       CHECK_MAX_INSTRUCTIONS(max_instr_count);
 
 #if BX_SUPPORT_TRACE_CACHE
-      if (--length == 0) break;
+      if (BX_CPU_THIS_PTR async_event) {
+        // clear stop trace magic indication that probably was set by branch32/64
+        BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
+        break;
+      }
 
-      if (currPageWriteStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr))
-        break; // probably it is self modifying code ...
-
-      if (BX_CPU_THIS_PTR async_event) break;
+      // check for end of the trace and self modifying code
+      if ((--length == 0) || currPageWriteStamp != *(BX_CPU_THIS_PTR currPageWriteStampPtr))
+        goto no_async_event;
     }
 #endif
   }  // while (1)
