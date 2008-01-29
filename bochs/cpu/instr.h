@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.1 2008-01-29 17:37:37 sshwarts Exp $
+// $Id: instr.h,v 1.2 2008-01-29 22:26:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -145,16 +145,16 @@ public:
   BX_CPP_INLINE unsigned rm() {
     return metaData.modRMData1;
   }
-  BX_CPP_INLINE unsigned sibScale()  {
+  BX_CPP_INLINE unsigned sibScale() {
     return (metaData.modRMData2 >> 4) & 0x3;
   }
   BX_CPP_INLINE unsigned sibIndex() {
     return (metaData.modRMData2) & 0xf;
   }
-  BX_CPP_INLINE void setSibBase(unsigned base)  {
+  BX_CPP_INLINE void setSibBase(unsigned base) {
     metaData.modRMData3 = base;
   }
-  BX_CPP_INLINE unsigned sibBase()  {
+  BX_CPP_INLINE unsigned sibBase() {
     return metaData.modRMData3;
   }
   BX_CPP_INLINE Bit32u displ32u() { return modRMForm.displ32u; }

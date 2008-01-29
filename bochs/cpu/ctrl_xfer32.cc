@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.65 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.66 2008-01-29 22:26:29 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -579,7 +579,7 @@ void BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 
 void BX_CPU_C::IRET32(bxInstruction_c *i)
 {
-  Bit32u eip, eflags;
+  Bit32u eip, eflags32;
   Bit16u cs;
 
   invalidate_prefetch_q();
@@ -612,12 +612,12 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0, 0);
   }
 
-  cs     = pop_32() & 0xffff;
-  eflags = pop_32();
+  cs       = pop_32() & 0xffff;
+  eflags32 = pop_32();
 
-  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u)cs);
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], (Bit16u) cs);
   EIP = eip;
-  writeEFlags(eflags, 0x00257fd5); // VIF, VIP, VM unchanged
+  writeEFlags(eflags32, 0x00257fd5); // VIF, VIP, VM unchanged
 
 done:
   BX_CPU_THIS_PTR speculative_rsp = 0;
