@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.12 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: ret_far.cc,v 1.13 2008-01-29 17:13:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -19,7 +19,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-
+////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -31,7 +31,6 @@
 #define RIP EIP
 #define RSP ESP
 #endif
-
 
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)

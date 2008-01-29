@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.h,v 1.50 2008-01-25 19:34:29 sshwarts Exp $
+// $Id: fetchdecode.h,v 1.51 2008-01-29 17:13:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -21,17 +21,14 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #ifndef BX_COMMON_FETCHDECODE_TABLES_H
 #define BX_COMMON_FETCHDECODE_TABLES_H
-
 
 typedef struct BxOpcodeInfo_t {
   Bit16u         Attr;
   BxExecutePtr_t ExecutePtr;
   const BxOpcodeInfo_t *AnotherArray;
 } BxOpcodeInfo_t;
-
 
 //
 // This file contains common IA-32/X86-64 opcode tables, like FPU opcode

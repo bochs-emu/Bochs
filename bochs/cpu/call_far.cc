@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: call_far.cc,v 1.24 2007-12-20 20:58:37 sshwarts Exp $
+// $Id: call_far.cc,v 1.25 2008-01-29 17:13:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -21,7 +21,6 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
@@ -31,7 +30,6 @@
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
-
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)

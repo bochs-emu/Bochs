@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl.cc,v 1.18 2008-01-10 19:37:55 sshwarts Exp $
+// $Id: segment_ctrl.cc,v 1.19 2008-01-29 17:13:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -26,12 +26,10 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 void BX_CPU_C::LES_GwMp(bxInstruction_c *i)
 {

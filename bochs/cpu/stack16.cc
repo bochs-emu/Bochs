@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.32 2008-01-25 19:34:30 sshwarts Exp $
+// $Id: stack16.cc,v 1.33 2008-01-29 17:13:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,7 +24,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 /////////////////////////////////////////////////////////////////////////
-
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"

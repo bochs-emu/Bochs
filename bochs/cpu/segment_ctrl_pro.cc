@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: segment_ctrl_pro.cc,v 1.79 2008-01-20 20:11:17 sshwarts Exp $
+// $Id: segment_ctrl_pro.cc,v 1.80 2008-01-29 17:13:09 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -29,7 +29,6 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
   void BX_CPP_AttrRegparmN(2)
 BX_CPU_C::load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value)

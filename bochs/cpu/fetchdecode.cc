@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.161 2008-01-25 19:34:29 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.162 2008-01-29 17:13:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -23,6 +23,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -313,7 +315,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 7E /wr */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JLE_Jw },
   /* 7F /wr */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JNLE_Jw },
   /* 80 /wr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
-  /* 81 /wr */ { BxGroup1 | BxImmediate_Iw,    NULL, BxOpcodeInfoG1EwR },
+  /* 81 /wr */ { BxGroup1 | BxImmediate_Iw, NULL, BxOpcodeInfoG1EwR },
   /* 82 /wr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
   /* 83 /wr */ { BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1EwR },
   /* 84 /wr */ { 0, &BX_CPU_C::TEST_EbGbR },
@@ -324,10 +326,10 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 89 /wr */ { 0, &BX_CPU_C::MOV_EwGwR },
   /* 8A /wr */ { 0, &BX_CPU_C::MOV_GbEbR },
   /* 8B /wr */ { 0, &BX_CPU_C::MOV_GwEwR },
-  /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSw },
+  /* 8C /wr */ { 0, &BX_CPU_C::MOV_EwSwR },
   /* 8D /wr */ { 0, &BX_CPU_C::BxError }, // LEA
-  /* 8E /wr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
-  /* 8F /wr */ { 0, &BX_CPU_C::POP_RX },  // POP_EwR
+  /* 8E /wr */ { 0, &BX_CPU_C::MOV_SwEw },
+  /* 8F /wr */ { 0, &BX_CPU_C::POP_RX }, // POP_EwR
   /* 90 /wr */ { 0, &BX_CPU_C::NOP },
   /* 91 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
   /* 92 /wr */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -877,7 +879,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 7E /dr */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JLE_Jd },
   /* 7F /dr */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JNLE_Jd },
   /* 80 /dr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
-  /* 81 /dr */ { BxGroup1 | BxImmediate_Id,    NULL, BxOpcodeInfoG1EdR },
+  /* 81 /dr */ { BxGroup1 | BxImmediate_Id, NULL, BxOpcodeInfoG1EdR },
   /* 82 /dr */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbR },
   /* 83 /dr */ { BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1EdR },
   /* 84 /dr */ { 0, &BX_CPU_C::TEST_EbGbR },
@@ -888,9 +890,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32R[512*2] = {
   /* 89 /dr */ { 0, &BX_CPU_C::MOV_EdGdR },
   /* 8A /dr */ { 0, &BX_CPU_C::MOV_GbEbR },
   /* 8B /dr */ { 0, &BX_CPU_C::MOV_GdEdR },
-  /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSw },
+  /* 8C /dr */ { 0, &BX_CPU_C::MOV_EwSwR },
   /* 8D /dr */ { 0, &BX_CPU_C::BxError }, // LEA
-  /* 8E /dr */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+  /* 8E /dr */ { 0, &BX_CPU_C::MOV_SwEw },
   /* 8F /dr */ { 0, &BX_CPU_C::POP_ERX }, // POP_EdR
   /* 90 /dr */ { 0, &BX_CPU_C::NOP },
   /* 91 /dr */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -1448,7 +1450,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 7E /wm */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JLE_Jw },
   /* 7F /wm */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JNLE_Jw },
   /* 80 /wm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
-  /* 81 /wm */ { BxGroup1 | BxImmediate_Iw,    NULL, BxOpcodeInfoG1EwM },
+  /* 81 /wm */ { BxGroup1 | BxImmediate_Iw, NULL, BxOpcodeInfoG1EwM },
   /* 82 /wm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
   /* 83 /wm */ { BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1EwM },
   /* 84 /wm */ { 0, &BX_CPU_C::TEST_EbGbM },
@@ -1459,9 +1461,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 89 /wm */ { 0, &BX_CPU_C::MOV_EwGwM },
   /* 8A /wm */ { 0, &BX_CPU_C::MOV_GbEbM },
   /* 8B /wm */ { 0, &BX_CPU_C::MOV_GwEwM },
-  /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSw },
+  /* 8C /wm */ { 0, &BX_CPU_C::MOV_EwSwM },
   /* 8D /wm */ { 0, &BX_CPU_C::LEA_GwM },
-  /* 8E /wm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+  /* 8E /wm */ { 0, &BX_CPU_C::MOV_SwEw },
   /* 8F /wm */ { 0, &BX_CPU_C::POP_EwM },
   /* 90 /wm */ { 0, &BX_CPU_C::NOP },
   /* 91 /wm */ { 0, &BX_CPU_C::XCHG_RXAX },
@@ -2012,7 +2014,7 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 7E /dm */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JLE_Jd },
   /* 7F /dm */ { BxImmediate_BrOff8 | BxTraceJCC, &BX_CPU_C::JNLE_Jd },
   /* 80 /dm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
-  /* 81 /dm */ { BxGroup1 | BxImmediate_Id,    NULL, BxOpcodeInfoG1EdM },
+  /* 81 /dm */ { BxGroup1 | BxImmediate_Id, NULL, BxOpcodeInfoG1EdM },
   /* 82 /dm */ { BxGroup1 | BxImmediate_Ib, NULL, BxOpcodeInfoG1EbIbM },
   /* 83 /dm */ { BxGroup1 | BxImmediate_Ib_SE, NULL, BxOpcodeInfoG1EdM },
   /* 84 /dm */ { 0, &BX_CPU_C::TEST_EbGbM },
@@ -2023,9 +2025,9 @@ static const BxOpcodeInfo_t BxOpcodeInfo32M[512*2] = {
   /* 89 /dm */ { 0, &BX_CPU_C::MOV_EdGdM },
   /* 8A /dm */ { 0, &BX_CPU_C::MOV_GbEbM },
   /* 8B /dm */ { 0, &BX_CPU_C::MOV_GdEdM },
-  /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSw },
+  /* 8C /dm */ { 0, &BX_CPU_C::MOV_EwSwM },
   /* 8D /dm */ { 0, &BX_CPU_C::LEA_GdM },
-  /* 8E /dm */ { BxTraceEnd, &BX_CPU_C::MOV_SwEw }, // async_event = 1
+  /* 8E /dm */ { 0, &BX_CPU_C::MOV_SwEw },
   /* 8F /dm */ { 0, &BX_CPU_C::POP_EdM },
   /* 90 /dm */ { 0, &BX_CPU_C::NOP },
   /* 91 /dm */ { 0, &BX_CPU_C::XCHG_ERXEAX },
@@ -2607,7 +2609,7 @@ fetch_b1:
 
     i->metaData.modRMData1 = rm;
     i->metaData.modRMData2 = mod;
-    i->metaData.modRMData3 = rm;  // initialize with rm to use BxResolve32Base
+    i->setSibBase(rm);            // initialize with rm to use BxResolve32Base
     i->metaData.modRMData4 = nnn;
 
     // initialize displ32 with zero to include cases with no diplacement
@@ -2666,7 +2668,7 @@ get_8bit_displ:
         base  = sib & 0x7; sib >>= 3;
         index = sib & 0x7; sib >>= 3;
         scale = sib;
-        i->metaData.modRMData3  = (base);
+        i->setSibBase(base);
         i->metaData.modRMData2 |= (index);
         i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)

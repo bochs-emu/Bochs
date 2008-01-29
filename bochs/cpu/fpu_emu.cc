@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fpu_emu.cc,v 1.5 2007-10-15 22:07:52 sshwarts Exp $
+// $Id: fpu_emu.cc,v 1.6 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
@@ -19,7 +19,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 /////////////////////////////////////////////////////////////////////////
-
 
 #define LOG_THIS BX_CPU_THIS_PTR
 #include "bochs.h"

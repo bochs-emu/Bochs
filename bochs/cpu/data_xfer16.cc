@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: data_xfer16.cc,v 1.55 2008-01-25 19:34:29 sshwarts Exp $
+// $Id: data_xfer16.cc,v 1.56 2008-01-29 17:13:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,12 +25,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
-
 
 void BX_CPU_C::MOV_RXIw(bxInstruction_c *i)
 {
@@ -69,7 +67,7 @@ void BX_CPU_C::MOV_GwEwM(bxInstruction_c *i)
   BX_WRITE_16BIT_REG(i->nnn(), val16);
 }
 
-void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
+void BX_CPU_C::MOV_EwSwR(bxInstruction_c *i)
 {
   /* Illegal to use nonexisting segments */
   if (i->nnn() >= 6) {
@@ -79,19 +77,26 @@ void BX_CPU_C::MOV_EwSw(bxInstruction_c *i)
 
   Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
 
-  if (i->modC0()) {
-    if ( i->os32L() ) {
-      BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
-    }
-    else {
-      BX_WRITE_16BIT_REG(i->rm(), seg_reg);
-    }
+  if ( i->os32L() ) {
+    BX_WRITE_32BIT_REGZ(i->rm(), seg_reg);
   }
   else {
-    BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
-    /* pointer, segment address pair */
-    write_virtual_word(i->seg(), RMAddr(i), seg_reg);
+    BX_WRITE_16BIT_REG(i->rm(), seg_reg);
   }
+}
+
+void BX_CPU_C::MOV_EwSwM(bxInstruction_c *i)
+{
+  /* Illegal to use nonexisting segments */
+  if (i->nnn() >= 6) {
+    BX_INFO(("MOV_EwSw: using of nonexisting segment register %d", i->nnn()));
+    UndefinedOpcode(i);
+  }
+
+  BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
+
+  Bit16u seg_reg = BX_CPU_THIS_PTR sregs[i->nnn()].selector.value;
+  write_virtual_word(i->seg(), RMAddr(i), seg_reg);
 }
 
 void BX_CPU_C::MOV_SwEw(bxInstruction_c *i)

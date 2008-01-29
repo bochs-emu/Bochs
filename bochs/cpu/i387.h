@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: i387.h,v 1.33 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: i387.h,v 1.34 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2004 Stanislav Shwartsman
@@ -19,7 +19,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-
+/////////////////////////////////////////////////////////////////////////
 
 #ifndef _BX_I387_RELATED_EXTENSIONS_H_
 #define _BX_I387_RELATED_EXTENSIONS_H_

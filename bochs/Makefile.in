@@ -698,7 +698,7 @@ load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
   bx_debug/debug.h ./config.h ./osdep.h bxversion.h gui/siminterface.h \
   memory/memory.h pc_system.h plugin.h extplugin.h gui/gui.h \
   gui/textconfig.h ./config.h gui/keymap.h instrument/stubs/instrument.h \
-  cpu/cpu.h cpu/crregs.h ./cpu/lazy_flags.h ./disasm/disasm.h \
+  cpu/cpu.h cpu/instr.h cpu/crregs.h ./cpu/lazy_flags.h ./disasm/disasm.h \
   ./config.h cpu/descriptor.h cpu/icache.h iodev/iodev.h ./bochs.h \
   ./iodev/pci.h ./iodev/pci2isa.h ./iodev/pci_ide.h ./iodev/pcivga.h \
   ./iodev/vga.h ./iodev/svga_cirrus.h ./iodev/biosdev.h ./iodev/cmos.h \
@@ -710,8 +710,8 @@ load32bitOShack.o: load32bitOShack.@CPP_SUFFIX@ bochs.h config.h osdep.h \
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h ./config.h \
   ./osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h gui/gui.h gui/textconfig.h ./config.h gui/keymap.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/crregs.h ./cpu/lazy_flags.h \
-  ./disasm/disasm.h ./config.h cpu/descriptor.h \
+  instrument/stubs/instrument.h cpu/cpu.h cpu/instr.h cpu/crregs.h \
+  ./cpu/lazy_flags.h ./disasm/disasm.h ./config.h cpu/descriptor.h \
   cpu/icache.h iodev/iodev.h ./bochs.h ./iodev/pci.h ./iodev/pci2isa.h \
   ./iodev/pci_ide.h ./iodev/pcivga.h ./iodev/vga.h ./iodev/svga_cirrus.h \
   ./iodev/biosdev.h ./iodev/cmos.h ./iodev/dma.h ./iodev/floppy.h \
@@ -723,8 +723,8 @@ logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h ./config.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h ./config.h \
   ./osdep.h bxversion.h gui/siminterface.h memory/memory.h pc_system.h \
   plugin.h extplugin.h gui/gui.h gui/textconfig.h ./config.h gui/keymap.h \
-  instrument/stubs/instrument.h cpu/cpu.h cpu/crregs.h ./cpu/lazy_flags.h \
-  ./disasm/disasm.h ./config.h cpu/descriptor.h \
+  instrument/stubs/instrument.h cpu/cpu.h cpu/instr.h cpu/crregs.h \
+  ./cpu/lazy_flags.h ./disasm/disasm.h ./config.h cpu/descriptor.h \
   cpu/icache.h iodev/iodev.h ./bochs.h ./iodev/pci.h ./iodev/pci2isa.h \
   ./iodev/pci_ide.h ./iodev/pcivga.h ./iodev/vga.h ./iodev/svga_cirrus.h \
   ./iodev/biosdev.h ./iodev/cmos.h ./iodev/dma.h ./iodev/floppy.h \
@@ -740,8 +740,8 @@ osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h ./config.h
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h bx_debug/debug.h \
   ./config.h ./osdep.h bxversion.h gui/siminterface.h memory/memory.h \
   pc_system.h plugin.h extplugin.h gui/gui.h gui/textconfig.h ./config.h \
-  gui/keymap.h instrument/stubs/instrument.h cpu/cpu.h cpu/crregs.h ./cpu/lazy_flags.h \
-  ./disasm/disasm.h ./config.h cpu/descriptor.h \
+  gui/keymap.h instrument/stubs/instrument.h cpu/cpu.h cpu/instr.h cpu/crregs.h \
+  ./cpu/lazy_flags.h ./disasm/disasm.h ./config.h cpu/descriptor.h \
   cpu/icache.h iodev/iodev.h ./bochs.h ./iodev/pci.h ./iodev/pci2isa.h \
   ./iodev/pci_ide.h ./iodev/pcivga.h ./iodev/vga.h ./iodev/svga_cirrus.h \
   ./iodev/biosdev.h ./iodev/cmos.h ./iodev/dma.h ./iodev/floppy.h \

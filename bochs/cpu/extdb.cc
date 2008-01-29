@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: extdb.cc,v 1.23 2008-01-22 16:20:30 sshwarts Exp $
+// $Id: extdb.cc,v 1.24 2008-01-29 17:13:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
@@ -18,7 +18,6 @@ TRegs regs;
 char debug_loaded = 0;
 
 void (*call_debugger)(TRegs *,Bit8u *, Bit32u);
-
 
 void bx_external_debugger(BX_CPU_C *cpu)
 {

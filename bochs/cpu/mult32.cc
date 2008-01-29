@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult32.cc,v 1.26 2008-01-10 19:37:54 sshwarts Exp $
+// $Id: mult32.cc,v 1.27 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -25,18 +25,15 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 /////////////////////////////////////////////////////////////////////////
 
-
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-
 #if BX_SUPPORT_X86_64==0
 #define RAX EAX
 #define RDX EDX
 #endif
-
 
 void BX_CPU_C::MUL_EAXEd(bxInstruction_c *i)
 {

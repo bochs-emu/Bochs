@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: flag_ctrl.cc,v 1.33 2007-12-20 18:29:38 sshwarts Exp $
+// $Id: flag_ctrl.cc,v 1.34 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -23,8 +23,7 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
-
-
+/////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -35,7 +34,6 @@
 #if BX_SUPPORT_X86_64==0
 #define RSP ESP
 #endif
-
 
 void BX_CPU_C::SAHF(bxInstruction_c *i)
 {

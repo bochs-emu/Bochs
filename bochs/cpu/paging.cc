@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.106 2008-01-16 22:39:55 sshwarts Exp $
+// $Id: paging.cc,v 1.107 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -24,7 +24,6 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 /////////////////////////////////////////////////////////////////////////
-
 
 // Notes from merge of x86-64 enhancements:
 //   Looks like for x86-64/PAE=1/PTE with PSE=1, the

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: jmp_far.cc,v 1.10 2007-11-17 23:28:31 sshwarts Exp $
+// $Id: jmp_far.cc,v 1.11 2008-01-29 17:13:07 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -19,7 +19,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307 USA
 //
-
+////////////////////////////////////////////////////////////////////////
 
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
@@ -30,7 +30,6 @@
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP
 #endif
-
 
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
