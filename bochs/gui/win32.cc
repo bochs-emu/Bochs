@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: win32.cc,v 1.115 2008-01-26 00:00:30 vruppert Exp $
+// $Id: win32.cc,v 1.116 2008-01-29 17:16:14 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -1509,7 +1509,7 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
   unsigned int curs, hchars, i, offset, rows, x, y, xc, yc;
-  BOOL forceUpdate = FALSE;
+  BOOL forceUpdate = FALSE, blink_state, blink_mode;
 #if !BX_USE_WINDOWS_FONTS
   Bit8u *text_base;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
@@ -1522,6 +1522,12 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
 
   EnterCriticalSection(&stInfo.drawCS);
 
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      forceUpdate = 1;
+  }
   if (charmap_updated) {
     for (unsigned c = 0; c<256; c++) {
       if (char_changed[c]) {
@@ -1641,7 +1647,13 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if (forceUpdate || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
-        cAttr = new_text[1];
+        if (blink_mode) {
+          cAttr = new_text[1] & 0x7F;
+          if (!blink_state && (new_text[1] & 0x80))
+            cAttr = (cAttr & 0x70) | (cAttr >> 4);
+        } else {
+          cAttr = new_text[1];
+        }
         DrawBitmap(hdc, vgafont[cChar], xc, yc, cfwidth, cfheight, font_col,
                    font_row, SRCCOPY, cAttr);
         if (offset == curs) {
@@ -1701,7 +1713,13 @@ void bx_win32_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if (forceUpdate || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
-        cAttr = new_text[1];
+        if (blink_mode) {
+          cAttr = new_text[1] & 0x7F;
+          if (!blink_state && (new_text[1] & 0x80))
+            cAttr = (cAttr & 0x70) | (cAttr >> 4);
+        } else {
+          cAttr = new_text[1];
+        }
         DrawChar(hdc, cChar, xc, yc, cAttr, 1, 0);
         if (offset == curs) {
           DrawChar(hdc, cChar, xc, yc, cAttr, tm_info.cs_start, tm_info.cs_end);
@@ -2139,11 +2157,6 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-  // The highest background bit usually means blinking characters. No idea
-  // how to implement that so for now it's just implemented as color.
-  // Note: it is also possible to program the VGA controller to have the
-  // high bit for the foreground color enable blinking characters.
-
   COLORREF crFore = SetTextColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
   COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(cColor&0xf));
   BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
@@ -2260,11 +2273,6 @@ void DrawChar (HDC hdc, unsigned char c, int xStart, int yStart,
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
   hFontOld=(HFONT)SelectObject(MemoryDC, hFont[FontId]);
-
-  // The highest background bit usually means blinking characters. No idea
-  // how to implement that so for now it's just implemented as color.
-  // Note: it is also possible to program the VGA controller to have the
-  // high bit for the foreground color enable blinking characters.
 
   COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(cColor&0xf));
   COLORREF crBack = SetBkColor(MemoryDC, GetColorRef((cColor>>4)&0xf));
