@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: rfb.cc,v 1.53 2008-01-26 00:00:29 vruppert Exp $
+// $Id: rfb.cc,v 1.54 2008-01-30 22:06:52 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2000  Psyon.Org!
@@ -708,8 +708,14 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
   Bit8u *old_line, *new_line;
   Bit8u cAttr, cChar;
   unsigned int  curs, hchars, offset, rows, x, y, xc, yc;
-  bx_bool force_update=0, gfxchar;
+  bx_bool force_update=0, gfxchar, blink_state, blink_mode;
 
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      force_update = 1;
+  }
   if(charmap_updated) {
     force_update = 1;
     charmap_updated = 0;
@@ -741,7 +747,13 @@ void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long c
       if (force_update || (old_text[0] != new_text[0])
           || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
-        cAttr = new_text[1];
+        if (blink_mode) {
+          cAttr = new_text[1] & 0x7F;
+          if (!blink_state && (new_text[1] & 0x80))
+            cAttr = (cAttr & 0x70) | (cAttr >> 4);
+        } else {
+          cAttr = new_text[1];
+        }
         gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
         xc = x * font_width;
         DrawChar(xc, yc, font_width, font_height, 0, (char *)&vga_charmap[cChar<<5], cAttr, gfxchar);
