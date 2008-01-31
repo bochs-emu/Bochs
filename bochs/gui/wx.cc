@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////
-// $Id: wx.cc,v 1.91 2008-01-26 00:00:30 vruppert Exp $
+// $Id: wx.cc,v 1.92 2008-01-31 21:45:18 vruppert Exp $
 /////////////////////////////////////////////////////////////////
 //
 // wxWidgets VGA display for Bochs.  wx.cc implements a custom
@@ -1208,13 +1208,19 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned int curs, hchars, offset, rows, x, y, xc, yc, yc2, cs_y;
   Bit8u cfwidth, cfheight, cfheight2, font_col, font_row, font_row2;
   Bit8u split_textrow, split_fontrows;
-  bx_bool forceUpdate = 0, gfxchar, split_screen;
+  bx_bool forceUpdate = 0, gfxchar, split_screen, blink_state, blink_mode;
 
+  // first check if the screen needs to be redrawn completely
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      forceUpdate = 1;
+  }
   if(charmap_updated) {
     forceUpdate = 1;
     charmap_updated = 0;
   }
-
   if((tm_info.h_panning != h_panning) || (tm_info.v_panning != v_panning)) {
     forceUpdate = 1;
     h_panning = tm_info.h_panning;
@@ -1225,7 +1231,7 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
     line_compare = tm_info.line_compare;
   }
 
-  // first invalidate character at previous and new cursor location
+  // invalidate character at previous and new cursor location
   if((wxCursorY < text_rows) && (wxCursorX < text_cols)) {
     curs = wxCursorY * tm_info.line_offset + wxCursorX * 2;
     old_text[curs] = ~new_text[curs];
@@ -1307,7 +1313,13 @@ void bx_wx_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       if(forceUpdate || (old_text[0] != new_text[0])
          || (old_text[1] != new_text[1])) {
         cChar = new_text[0];
-        cAttr = new_text[1];
+        if (blink_mode) {
+          cAttr = new_text[1] & 0x7F;
+          if (!blink_state && (new_text[1] & 0x80))
+            cAttr = (cAttr & 0x70) | (cAttr >> 4);
+        } else {
+          cAttr = new_text[1];
+        }
         gfxchar = tm_info.line_graphics && ((cChar & 0xE0) == 0xC0);
         DrawBochsBitmap(xc, yc, cfwidth, cfheight, (char *)&vga_charmap[cChar<<5],
                         cAttr, font_col, font_row, gfxchar);
