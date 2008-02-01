@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: svga.cc,v 1.13 2008-01-26 00:00:30 vruppert Exp $
+// $Id: svga.cc,v 1.14 2008-02-01 18:10:36 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  This library is free software; you can redistribute it and/or
@@ -147,9 +147,16 @@ void bx_svga_gui_c::text_update(
   unsigned int curs, hchars, i, j, offset, rows, x, y;
   char s[] = " ";
   int fg, bg;
-  bx_bool force_update = 0;
+  bx_bool force_update = 0, blink_state, blink_mode;
   int text_palette[16];
 
+  // first check if the screen needs to be redrawn completely
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      force_update = 1;
+  }
   if (charmap_updated) {
     BX_INFO(("charmap update. Font Height is %d", fontheight));
     for (unsigned c = 0; c<256; c++) {
@@ -169,7 +176,7 @@ void bx_svga_gui_c::text_update(
     text_palette[i] = DEV_vga_get_actl_pal_idx(i);
   }
 
-  // first invalidate character at previous and new cursor location
+  // invalidate character at previous and new cursor location
   if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
     curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
     old_text[curs] = ~new_text[curs];
@@ -195,7 +202,13 @@ void bx_svga_gui_c::text_update(
           || (old_text[1] != new_text[1])) {
         s[0] = new_text[0];
         fg = text_palette[new_text[1] & 0x0F];
-        bg = text_palette[(new_text[1] & 0xF0) >> 4];
+        if (blink_mode) {
+          bg = text_palette[(new_text[1] & 0x70) >> 4];
+          if (!blink_state && (new_text[1] & 0x80))
+            fg = bg;
+        } else {
+          bg = text_palette[(new_text[1] & 0xF0) >> 4];
+        }
         if (offset == curs) {
           gl_setfontcolors(fg, bg);
         } else {
