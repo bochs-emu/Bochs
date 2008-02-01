@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.90 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.91 2008-02-01 13:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -50,9 +50,6 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   bx_bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + offset, &phy_addr);
   if (valid && BX_CPU_THIS_PTR mem!=NULL) {
     BX_CPU_THIS_PTR mem->dbg_fetch_mem(BX_CPU_THIS, phy_addr, 16, instr_buf);
-    char_buf[i++] = '>';
-    char_buf[i++] = '>';
-    char_buf[i++] = ' ';
     unsigned isize = bx_disassemble.disasm(
         BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b,
         BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64,
@@ -68,7 +65,7 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
         char_buf[i++] = letters[(instr_buf[j] >> 0) & 0xf];
       }
       char_buf[i] = 0;
-      BX_INFO(("%s", char_buf));
+      BX_INFO((">> %s", char_buf));
     }
     else {
       BX_INFO(("(instruction unavailable) page split instruction"));

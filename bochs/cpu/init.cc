@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.150 2008-01-31 21:44:28 vruppert Exp $
+// $Id: init.cc,v 1.151 2008-02-01 13:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -730,7 +730,6 @@ void BX_CPU_C::reset(unsigned source)
    *        286     F000         FF0000        FFFF   FFF0
    *        386+    F000       FFFF0000        FFFF   FFF0
    */
-
   parse_selector(0xf000, 
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
@@ -756,10 +755,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_ICACHE
   BX_CPU_THIS_PTR updateFetchModeMask();
+  flushICaches();
 #endif
 
   /* DS (Data Segment) and descriptor cache */
-
   parse_selector(0x0000, 
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
 
@@ -873,7 +872,6 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR smbase = 0x30000;
 
   BX_CPU_THIS_PTR cr0.setRegister(0);
-
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386

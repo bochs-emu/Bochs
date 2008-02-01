@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.196 2008-01-18 08:57:35 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.197 2008-02-01 13:25:23 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1214,6 +1214,8 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
 void BX_CPU_C::handleCpuModeChange(void)
 {
+  unsigned mode = BX_CPU_THIS_PTR cpu_mode;
+
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.lma) {
     if (! BX_CPU_THIS_PTR cr0.get_PE()) {
@@ -1221,34 +1223,30 @@ void BX_CPU_C::handleCpuModeChange(void)
     }
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l) {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-      BX_DEBUG(("Long Mode Activated"));
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
       if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
         BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
       }
-      BX_DEBUG(("Compatibility Mode Activated"));
     }
   }
   else 
 #endif
   {
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
-      if (BX_CPU_THIS_PTR get_VM()) {
+      if (BX_CPU_THIS_PTR get_VM())
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_V8086;
-        BX_DEBUG(("VM8086 Mode Activated"));
-      }
-      else {
+      else
         BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_PROTECTED;
-        BX_DEBUG(("Protected Mode Activated"));
-      }
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-      BX_DEBUG(("Real Mode Activated"));
     }
   }
+
+  if (mode != BX_CPU_THIS_PTR cpu_mode)
+    BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 }
 
 #if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
