@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: config.cc,v 1.128 2008-01-21 21:36:54 sshwarts Exp $
+// $Id: config.cc,v 1.129 2008-02-01 20:38:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -2289,8 +2289,10 @@ static Bit32s parse_line_formatted(const char *context, int num_params, char *pa
         SIM->get_param_enum(tmppath)->set(BX_BOOT_DISKC);
       } else if (!strcmp(params[i], "cdrom")) {
         SIM->get_param_enum(tmppath)->set(BX_BOOT_CDROM);
+      } else if (!strcmp(params[i], "network")) {
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_NETWORK);
       } else {
-        PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk' or 'cdrom'.", context, params[i]));
+        PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk', 'cdrom' or 'network'.", context, params[i]));
       }
     }
     if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() == BX_BOOT_NONE) {
