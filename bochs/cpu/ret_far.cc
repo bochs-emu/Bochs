@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ret_far.cc,v 1.13 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: ret_far.cc,v 1.14 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -53,7 +53,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_X86_64
   if (StackAddrSize64()) temp_RSP = RSP;
-  else 
+  else
 #endif
   {
     if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) temp_RSP = ESP;
@@ -62,14 +62,14 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    /* operand size=64: in long mode 1st and 2nd quadword on the stack 
+    /* operand size=64: in long mode 1st and 2nd quadword on the stack
        must be in canonical address space */
 
     raw_cs_selector = read_virtual_word (BX_SEG_REG_SS, temp_RSP + 8);
     return_RIP      = read_virtual_qword(BX_SEG_REG_SS, temp_RSP);
 
     stack_param_offset = 16;
-  } 
+  }
   else
 #endif
   if (i->os32L()) {
@@ -140,9 +140,9 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
     branch_far64(&cs_selector, &cs_descriptor, return_RIP, CPL);
 
 #if BX_SUPPORT_X86_64
-    if (StackAddrSize64()) 
+    if (StackAddrSize64())
       RSP += stack_param_offset + pop_bytes;
-    else 
+    else
 #endif
     {
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
@@ -256,7 +256,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_X86_64
     if (StackAddrSize64()) RSP = return_RSP + pop_bytes;
-    else 
+    else
 #endif
     if (ss_descriptor.u.segment.d_b)
       ESP = (Bit32u) return_RSP + pop_bytes;

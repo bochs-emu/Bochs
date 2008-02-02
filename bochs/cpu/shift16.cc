@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift16.cc,v 1.42 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: shift16.cc,v 1.43 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -125,7 +125,7 @@ void BX_CPU_C::SHRD_EwGw(bxInstruction_c *i)
     // it is the same as shifting op2:op2 by count-16
     result_32 |= (op1_16 << (32 - count));
   }
-  
+
   result_16 = result_32;
 
   /* now write result back to destination */
@@ -217,7 +217,7 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
     if (count & 0x10) {
       bit14 = (op1_16 >> 14) & 1;
       bit15 = (op1_16 >> 15) & 1;
-      // of = result14 ^ result15 
+      // of = result14 ^ result15
       SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
     }
     return;
@@ -234,10 +234,10 @@ void BX_CPU_C::ROR_Ew(bxInstruction_c *i)
   else {
     write_RMW_virtual_word(result_16);
   }
-  
+
   bit14 = (result_16 >> 14) & 1;
   bit15 = (result_16 >> 15) & 1;
-  // of = result14 ^ result15 
+  // of = result14 ^ result15
   SET_FLAGS_OxxxxC(bit14 ^ bit15, bit15);
 }
 
@@ -468,7 +468,7 @@ void BX_CPU_C::SAR_Ew(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_LOGIC_16(result_16); /* handle SF, ZF and AF flags */
   /* signed overflow cannot happen in SAR instruction */
-  SET_FLAGS_OxxxxC(0, cf); 
+  SET_FLAGS_OxxxxC(0, cf);
 
   /* now write result back to destination */
   if (i->modC0()) {

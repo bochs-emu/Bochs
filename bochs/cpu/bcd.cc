@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bcd.cc,v 1.21 2008-01-29 17:13:05 sshwarts Exp $
+// $Id: bcd.cc,v 1.22 2008-02-02 21:46:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -32,7 +32,7 @@
 
 void BX_CPU_C::AAA(bxInstruction_c *)
 {
-  /* 
+  /*
    *  Note: This instruction incorrectly documented in Intel's materials.
    *        The right description is:
    *
@@ -70,7 +70,7 @@ void BX_CPU_C::AAA(bxInstruction_c *)
   /* AAA affects also the following flags: Z,S,O,P */
   /* modification of the flags is undocumented */
 
-  /* The following behaviour seems to match the P6 and 
+  /* The following behaviour seems to match the P6 and
      its derived processors. */
   clear_OF();
   clear_SF(); /* sign is always 0 because bits 4-7 of AL are zeroed */
@@ -98,7 +98,7 @@ void BX_CPU_C::AAS(bxInstruction_c *)
   /* AAS affects also the following flags: Z,S,O,P */
   /* modification of the flags is undocumented */
 
-  /* The following behaviour seems to match the P6 and 
+  /* The following behaviour seems to match the P6 and
      its derived processors. */
   clear_OF();
   clear_SF(); /* sign is always 0 because bits 4-7 of AL are zeroed */
@@ -118,7 +118,7 @@ void BX_CPU_C::AAM(bxInstruction_c *i)
   AL = al % imm8;
 
   /* modification of flags A,C,O is undocumented */
-  /* The following behaviour seems to match the P6 and 
+  /* The following behaviour seems to match the P6 and
      its derived processors. */
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
 }
@@ -132,7 +132,7 @@ void BX_CPU_C::AAD(bxInstruction_c *i)
   AX = (tmp & 0xff);
 
   /* modification of flags A,C,O is undocumented */
-  /* The following behaviour seems to match the P6 and 
+  /* The following behaviour seems to match the P6 and
      its derived processors. */
   SET_FLAGS_OSZAPC_LOGIC_8(AL);
 }
@@ -176,7 +176,7 @@ void BX_CPU_C::DAS(bxInstruction_c *)
    * Pentium Processor Family Developer's Manual, volume 3.  It seems
    * to have changed from earlier processor's manuals.  I'm not sure
    * if this is a correction in the algorithm printed, or Intel has
-   * changed the handling of instruction. Validated against Intel 
+   * changed the handling of instruction. Validated against Intel
    * Pentium family hardware.
    */
 

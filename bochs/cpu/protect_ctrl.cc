@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: protect_ctrl.cc,v 1.73 2008-01-29 06:23:49 sshwarts Exp $
+// $Id: protect_ctrl.cc,v 1.74 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -367,7 +367,7 @@ void BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
   /* if selector doesn't point to an LDT descriptor #GP(selector) */
   if (descriptor.valid == 0 || descriptor.segment ||
-         descriptor.type != BX_SYS_SEGMENT_LDT) 
+         descriptor.type != BX_SYS_SEGMENT_LDT)
   {
     BX_ERROR(("LLDT: doesn't point to an LDT descriptor!"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
@@ -444,8 +444,8 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
   /* #GP(selector) if object is not a TSS or is already busy */
   if (descriptor.valid==0 || descriptor.segment ||
-         (descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS && 
-          descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS)) 
+         (descriptor.type!=BX_SYS_SEGMENT_AVAIL_286_TSS &&
+          descriptor.type!=BX_SYS_SEGMENT_AVAIL_386_TSS))
   {
     BX_ERROR(("LTR: doesn't point to an available TSS descriptor!"));
     exception(BX_GP_EXCEPTION, raw_selector & 0xfffc, 0);
@@ -467,7 +467,7 @@ void BX_CPU_C::LTR_Ew(bxInstruction_c *i)
   BX_CPU_THIS_PTR tr.selector = selector;
   BX_CPU_THIS_PTR tr.cache    = descriptor;
   BX_CPU_THIS_PTR tr.cache.valid = 1;
-  // tr.cache.type should not have busy bit, or it would not get 
+  // tr.cache.type should not have busy bit, or it would not get
   // through the conditions above.
   BX_ASSERT((BX_CPU_THIS_PTR tr.cache.type & 2) == 0);
 

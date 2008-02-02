@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: lazy_flags.cc,v 1.43 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: lazy_flags.cc,v 1.44 2008-02-02 21:46:52 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -161,7 +161,7 @@ bx_bool BX_CPU_C::get_CFLazy(void)
       BX_PANIC(("get_CF: OSZAPC: unknown instr %u",
             (unsigned) BX_CPU_THIS_PTR oszapc.instr));
   }
- 
+
   return(cf);
 }
 

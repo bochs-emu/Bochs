@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: string.cc,v 1.51 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: string.cc,v 1.52 2008-02-02 21:46:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -64,7 +64,7 @@ Bit32u BX_CPU_C::FastRepMOVSB(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
 #else
   bx_phy_address paddrSrc;
-  
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL, BX_READ);
   }
@@ -210,7 +210,7 @@ Bit32u BX_CPU_C::FastRepMOVSW(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
 #else
   bx_phy_address paddrSrc;
-  
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL, BX_READ);
   }
@@ -360,7 +360,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
   hostAddrSrc = v2h_read_byte(laddrSrc, CPL);
 #else
   bx_phy_address paddrSrc;
-  
+
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
     paddrSrc = dtranslate_linear(laddrSrc, CPL, BX_READ);
   }
@@ -404,7 +404,7 @@ Bit32u BX_CPU_C::FastRepMOVSD(bxInstruction_c *i, unsigned srcSeg, bx_address sr
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
     if (((laddrSrc & 0xfff) > 0xffc) || ((laddrDst & 0xfff) > 0xffc))
-      return 0;    
+      return 0;
     dwordsFitSrc = (4 + PAGE_OFFSET(laddrSrc)) >> 2;
     dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int) -4;
@@ -727,7 +727,7 @@ Bit32u BX_CPU_C::FastRepSTOSD(bxInstruction_c *i, unsigned dstSeg, bx_address ds
   if (BX_CPU_THIS_PTR get_DF()) {
     // Counting downward.
     // Note: 1st dword must not cross page boundary.
-    if ((laddrDst & 0xfff) > 0xffc) return 0;    
+    if ((laddrDst & 0xfff) > 0xffc) return 0;
     dwordsFitDst = (4 + PAGE_OFFSET(laddrDst)) >> 2;
     pointerDelta = (signed int) -4;
   }
@@ -1689,7 +1689,7 @@ void BX_CPU_C::SCASB16_ALXb(bxInstruction_c *i)
   diff_8 = op1_8 - op2_8;
 
   SET_FLAGS_OSZAPC_SUB_8(op1_8, op2_8, diff_8);
- 
+
   if (BX_CPU_THIS_PTR get_DF()) {
     di--;
   }

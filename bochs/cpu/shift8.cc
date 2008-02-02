@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift8.cc,v 1.35 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: shift8.cc,v 1.36 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -157,7 +157,7 @@ void BX_CPU_C::RCL_Eb(bxInstruction_c *i)
   }
 
   count = (count & 0x1f) % 9;
- 
+
   if (! count) return;
 
   if (count==1) {
@@ -359,7 +359,7 @@ void BX_CPU_C::SAR_Eb(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_LOGIC_8(result_8); /* handle SF, ZF and AF flags */
   /* signed overflow cannot happen in SAR instruction */
-  SET_FLAGS_OxxxxC(0, cf); 
+  SET_FLAGS_OxxxxC(0, cf);
 
   /* now write result back to destination */
   if (i->modC0()) {

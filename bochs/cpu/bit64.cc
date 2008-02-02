@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit64.cc,v 1.7 2008-01-29 17:13:05 sshwarts Exp $
+// $Id: bit64.cc,v 1.8 2008-02-02 21:46:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -93,7 +93,7 @@ void BX_CPU_C::BSR_GqEq(bxInstruction_c *i)
 
   SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
   clear_ZF();
-  
+
   /* now write result back to destination */
   BX_WRITE_64BIT_REG(i->nnn(), op1_64);
 }

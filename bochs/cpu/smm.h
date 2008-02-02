@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: smm.h,v 1.4 2007-03-23 21:27:12 sshwarts Exp $
+// $Id: smm.h,v 1.5 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2006 Stanislav Shwartsman
@@ -29,7 +29,7 @@
 
 #define SMM_SAVE_STATE_MAP_SIZE 128
 
-#if BX_SUPPORT_X86_64 
+#if BX_SUPPORT_X86_64
 
 // for x86-64 configuration using AMD Athlon 64 512-byte SMM save state map
 // revision ID according to QEMU/Bochs BIOS

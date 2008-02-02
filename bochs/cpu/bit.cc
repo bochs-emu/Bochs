@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: bit.cc,v 1.50 2008-01-29 17:13:05 sshwarts Exp $
+// $Id: bit.cc,v 1.51 2008-02-02 21:46:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -433,7 +433,7 @@ void BX_CPU_C::CRC32_GdEv(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), BitReflect32(op2));
-  
+
 #else
   BX_INFO(("CRC32_GdEv: required SSE4_2 support, required SSE4.2, use --enable-sse and --enable-sse-extension options"));
   UndefinedOpcode(i);

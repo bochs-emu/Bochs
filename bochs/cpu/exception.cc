@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: exception.cc,v 1.99 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: exception.cc,v 1.100 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -95,7 +95,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
     exception(BX_GP_EXCEPTION, vector*16 + 2, 0);
   }
 
-  if (gate_descriptor.type != BX_386_INTERRUPT_GATE && 
+  if (gate_descriptor.type != BX_386_INTERRUPT_GATE &&
       gate_descriptor.type != BX_386_TRAP_GATE)
   {
     BX_ERROR(("interrupt(long mode): unsupported gate type %u",
@@ -139,7 +139,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // descriptor AR byte must indicate code seg
   // and code segment descriptor DPL<=CPL, else #GP(selector+EXT)
-  if (cs_descriptor.valid==0 || cs_descriptor.segment==0 || 
+  if (cs_descriptor.valid==0 || cs_descriptor.segment==0 ||
       IS_DATA_SEGMENT(cs_descriptor.type) ||
       cs_descriptor.dpl>CPL)
   {
@@ -162,7 +162,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error_code
 
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
-  if ((IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) 
+  if ((IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type)
                         && cs_descriptor.dpl<CPL) || (ist != 0))
   {
     Bit64u RSP_for_cpl_x;
@@ -561,24 +561,24 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       if (is_v8086_mode)
       {
         if (gate_descriptor.type>=14) { // 386 int/trap gate
-          write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl, 
+          write_new_stack_dword(&new_stack, temp_ESP-4,  cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl, 
+          write_new_stack_dword(&new_stack, temp_ESP-8,  cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl, 
+          write_new_stack_dword(&new_stack, temp_ESP-12, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl, 
+          write_new_stack_dword(&new_stack, temp_ESP-16, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
           temp_ESP -= 16;
         }
         else {
-          write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl, 
+          write_new_stack_word(&new_stack, temp_ESP-2, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl, 
+          write_new_stack_word(&new_stack, temp_ESP-4, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_FS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-6, cs_descriptor.dpl, 
+          write_new_stack_word(&new_stack, temp_ESP-6, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector.value);
-          write_new_stack_word(&new_stack, temp_ESP-8, cs_descriptor.dpl, 
+          write_new_stack_word(&new_stack, temp_ESP-8, cs_descriptor.dpl,
               BX_CPU_THIS_PTR sregs[BX_SEG_REG_ES].selector.value);
           temp_ESP -= 8;
         }
@@ -626,7 +626,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bx_bool is_INT, bx_bool is_error
       // set RPL of CS to CPL
       load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
       EIP = gate_dest_offset;
-          
+
       // if INTERRUPT GATE set IF to 0
       if (!(gate_descriptor.type & 1)) // even is int-gate
         BX_CPU_THIS_PTR clear_IF();

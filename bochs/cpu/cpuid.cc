@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpuid.cc,v 1.60 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: cpuid.cc,v 1.61 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -112,11 +112,11 @@ Bit32u BX_CPU_C::get_cpu_version_information()
 
 #endif  // BX_CPU_LEVEL > 3
 
-  return (extended_family << 20) | 
-         (extended_model << 16) | 
-         (family << 8) | 
+  return (extended_family << 20) |
+         (extended_model << 16) |
+         (family << 8) |
          (model<<4) | stepping;
-}       
+}
 
 /* Get CPU extended feature flags. */
 Bit32u BX_CPU_C::get_extended_cpuid_features()
@@ -167,8 +167,8 @@ Bit32u BX_CPU_C::get_extended_cpuid_features()
 
 #if BX_SUPPORT_POPCNT || (BX_SUPPORT_SSE >= 5) || (BX_SUPPORT_SSE >= 4 && BX_SUPPORT_SSE_EXTENSION > 0)
   features |= (1<<23);  // support POPCNT instruction
-#endif  
-  
+#endif
+
   return features;
 }
 
@@ -238,7 +238,7 @@ Bit32u BX_CPU_C::get_std_cpuid_features()
 
 #if BX_SUPPORT_SMP
   // Intel(R) HyperThreading Technology
-  if (SIM->get_param_num(BXPN_CPU_NTHREADS)->get() > 1) 
+  if (SIM->get_param_num(BXPN_CPU_NTHREADS)->get() > 1)
     features |= (1<<28);
 #endif
 
@@ -328,7 +328,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 #if BX_CPU_LEVEL <= 5
   // 486 and Pentium processors
   cpuid->eax = 1;
-#else 
+#else
   // for Pentium Pro, Pentium II, Pentium 4 processors
   cpuid->eax = BX_SUPPORT_MONITOR_MWAIT ? 5 : 2;
 #endif
@@ -356,7 +356,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
   cpuid->eax = get_cpu_version_information();
 
-  // EBX:      
+  // EBX:
   //   [7:0]   Brand ID
   //   [15:8]  CLFLUSH cache line size (value*8 = cache line size in bytes)
   //   [23:16] Number of logical processors in one physical processor
@@ -519,7 +519,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   //     [1:1]   AMD CmpLegacy
   //     [2:2]   AMD Secure Virtual Machine Technology
   //     [3:3]   Extended APIC Space
-  //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8) 
+  //     [4:4]   Alternative CR8 (treat lock mov cr0 as mov cr8)
   //     [5:5]   LZCNT support
   //     [6:6]   SSE4A support
   //     [7:7]   Misaligned SSE support
@@ -535,7 +535,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ecx |= (1<<7);
 #endif
 
-  // EDX: 
+  // EDX:
   // Many of the bits in EDX are the same as EAX [*] for AMD
   // [*] [0:0]   FPU on chip
   // [*] [1:1]   VME: Virtual-8086 Mode enhancements
@@ -580,7 +580,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
 
 #if BX_CPU_VENDOR_INTEL
   // Processor Brand String, use the value that is returned
-  // by the first processor in the Pentium 4 family 
+  // by the first processor in the Pentium 4 family
   // (according to Intel manual)
 
   // ------------------------------------------------------
@@ -605,7 +605,7 @@ void BX_CPU_C::set_cpuid_defaults(void)
   cpuid->ecx = 0x20202020; // "    "
   cpuid->edx = 0x00202020; // "    "
 #else
-  // Processor Brand String, use the value given 
+  // Processor Brand String, use the value given
   // in AMD manuals.
 
   // ------------------------------------------------------

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: mult64.cc,v 1.26 2008-01-10 19:37:54 sshwarts Exp $
+// $Id: mult64.cc,v 1.27 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -210,7 +210,7 @@ void BX_CPU_C::MUL_RAXEq(bxInstruction_c *i)
 {
   Bit64u op1_64, op2_64;
   Bit128u product_128;
-  
+
   op1_64 = RAX;
 
   /* op2 is a register or memory reference */
@@ -339,7 +339,7 @@ void BX_CPU_C::IDIV_RAXEq(bxInstruction_c *i)
     /* pointer, segment address pair */
     op2_64 = (Bit64s) read_virtual_qword(i->seg(), RMAddr(i));
   }
- 
+
   if (op2_64 == 0) {
     exception(BX_DE_EXCEPTION, 0, 0);
   }

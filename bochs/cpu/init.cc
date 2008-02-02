@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: init.cc,v 1.151 2008-02-01 13:25:23 sshwarts Exp $
+// $Id: init.cc,v 1.152 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -160,7 +160,7 @@ void BX_CPU_C::initialize(BX_MEM_C *addrspace)
   BX_CPU_THIS_PTR local_apic.init();
 #endif
 
-  // in SMP mode, the prefix of the CPU will be changed to [CPUn] in 
+  // in SMP mode, the prefix of the CPU will be changed to [CPUn] in
   // bx_local_apic_c::set_id as soon as the apic ID is assigned.
   sprintf(name, "CPU %d", BX_CPU_ID);
 
@@ -188,7 +188,7 @@ void BX_CPU_C::register_wx_state(void)
     sprintf(cpu_title, "CPU %d", BX_CPU_ID);
     sprintf(cpu_pname, "%s.%d", BXPN_WX_CPU_STATE, BX_CPU_ID);
     if (SIM->get_param(cpu_pname) == NULL) {
-      bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE), 
+      bx_list_c *list = new bx_list_c(SIM->get_param(BXPN_WX_CPU_STATE),
          cpu_name, cpu_title, 60);
 
 #define DEFPARAM_NORMAL(name,field) \
@@ -304,7 +304,7 @@ void BX_CPU_C::register_state(void)
   char name[10];
 
   sprintf(name, "cpu%d", BX_CPU_ID);
-  
+
   bx_list_c *cpu = new bx_list_c(SIM->get_bochs_root(), name, name, 60);
 
   BXRS_PARAM_SPECIAL32(cpu, cpu_version, param_save_handler, param_restore_handler);
@@ -342,7 +342,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, EDI);
   BXRS_HEX_PARAM_SIMPLE(cpu, EIP);
 #endif
-  BXRS_PARAM_SPECIAL32(cpu, EFLAGS, 
+  BXRS_PARAM_SPECIAL32(cpu, EFLAGS,
          param_save_handler, param_restore_handler);
 #if BX_CPU_LEVEL >= 3
   BXRS_HEX_PARAM_FIELD(cpu, DR0, dr0);
@@ -362,12 +362,12 @@ void BX_CPU_C::register_state(void)
   for(i=0; i<6; i++) {
     bx_segment_reg_t *segment = &BX_CPU_THIS_PTR sregs[i];
     bx_list_c *sreg = new bx_list_c(cpu, strseg(segment), 9);
-    BXRS_PARAM_SPECIAL16(sreg, selector, 
+    BXRS_PARAM_SPECIAL16(sreg, selector,
            param_save_handler, param_restore_handler);
     BXRS_HEX_PARAM_FIELD(sreg, base, segment->cache.u.segment.base);
     BXRS_HEX_PARAM_FIELD(sreg, limit, segment->cache.u.segment.limit);
     BXRS_HEX_PARAM_FIELD(sreg, limit_scaled, segment->cache.u.segment.limit_scaled);
-    BXRS_PARAM_SPECIAL8 (sreg, ar_byte, 
+    BXRS_PARAM_SPECIAL8 (sreg, ar_byte,
            param_save_handler, param_restore_handler);
     BXRS_PARAM_BOOL(sreg, granularity, segment->cache.u.segment.g);
     BXRS_PARAM_BOOL(sreg, d_b, segment->cache.u.segment.d_b);
@@ -730,7 +730,7 @@ void BX_CPU_C::reset(unsigned source)
    *        286     F000         FF0000        FFFF   FFF0
    *        386+    F000       FFFF0000        FFFF   FFF0
    */
-  parse_selector(0xf000, 
+  parse_selector(0xf000,
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
 #if BX_CPU_LEVEL >= 2
@@ -759,7 +759,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   /* DS (Data Segment) and descriptor cache */
-  parse_selector(0x0000, 
+  parse_selector(0x0000,
           &BX_CPU_THIS_PTR sregs[BX_SEG_REG_DS].selector);
 
 #if BX_CPU_LEVEL >= 2
@@ -1093,7 +1093,7 @@ void BX_CPU_C::assert_checks(void)
         BX_PANIC(("assert_checks: unconsistent cpu_mode BX_MODE_LONG_COMPAT !"));
     }
   }
-  else 
+  else
 #endif
   {
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
@@ -1161,7 +1161,7 @@ void BX_CPU_C::assert_checks(void)
       case BX_SYS_SEGMENT_BUSY_386_TSS:
       case BX_SYS_SEGMENT_AVAIL_386_TSS:
         break;
-      default:    
+      default:
         BX_PANIC(("assert_checks: TR is not TSS type !"));
     }
   }

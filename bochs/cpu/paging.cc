@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: paging.cc,v 1.107 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: paging.cc,v 1.108 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -126,7 +126,7 @@
 //
 //   63..63: NX                  |
 //   62..52: available           | Long mode
-//   51..32: page base address   | 
+//   51..32: page base address   |
 //   31..12: page base address
 //   11.. 9: available
 //        8: G (Pentium Pro+), 0=reserved otherwise
@@ -147,8 +147,8 @@
 //     0: Code can be executed from the mapped physical pages
 //     1: Code cannot be executed
 //   The NX bit can only be set when the no-execute page-protection
-//   feature is enabled by setting EFER.NXE=1, If EFER.NXE=0, the 
-//   NX bit is treated as reserved. In this case, #PF occurs if the 
+//   feature is enabled by setting EFER.NXE=1, If EFER.NXE=0, the
+//   NX bit is treated as reserved. In this case, #PF occurs if the
 //   NX bit is not cleared to zero.
 //
 // G: Global flag
@@ -169,9 +169,9 @@
 //
 // PAT: Page-Attribute Table
 //   This bit is only present in the lowest level of the page
-//   translation hierarchy. The PAT bit is the high-order bit 
-//   of a 3-bit index into the PAT register. The other two 
-//   bits involved in forming the index are the PCD and PWT 
+//   translation hierarchy. The PAT bit is the high-order bit
+//   of a 3-bit index into the PAT register. The other two
+//   bits involved in forming the index are the PCD and PWT
 //   bits.
 //
 // D: Dirty bit:
@@ -342,7 +342,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //
 //       The test is:
 //         OK = 0x1 << ( (W<<2) | CPL ) [W:1=write, 0=read]
-//       
+//
 //       Thus for reads, it is:
 //         OK = 0x01 << (        CPL )
 //       And for writes:
@@ -359,7 +359,7 @@ static unsigned priv_check[BX_PRIV_CHECK_SIZE];
 //     bit  8:       a Read  from CPL=0 is OK
 //
 //       And the lowest bits are as above, except that they also indicate
-//       that hostPageAddr is valid, so we do not separately need to test 
+//       that hostPageAddr is valid, so we do not separately need to test
 //       that pointer against NULL.  These have smaller constants for us
 //       to be able to use smaller encodings in the trace generators.  Note
 //       that whenever bit n (n=0..7) is set, then also n+8 is set.
@@ -639,7 +639,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   unsigned TLB_index = BX_TLB_INDEX_OF(lpf, 0);
   bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR TLB.entry[TLB_index];
 
-  if (tlbEntry->lpf == lpf) 
+  if (tlbEntry->lpf == lpf)
   {
     paddress   = tlbEntry->ppf | poffset;
     accessBits = tlbEntry->accessBits;
@@ -804,7 +804,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
     }
     else {
       // 4k pages, Get page table entry
-      bx_phy_address pte_addr = (bx_phy_address)((pde & BX_CONST64(0x000ffffffffff000)) | 
+      bx_phy_address pte_addr = (bx_phy_address)((pde & BX_CONST64(0x000ffffffffff000)) |
                              ((laddr & 0x001ff000) >> 9));
 
       BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, pte_addr, 8, &pte);
@@ -852,7 +852,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
         (combined_access & 0x06) |             // bit 2,1
         (isWrite);                             // bit 0
 
-      if (!priv_check[priv_index] || nx_fault) 
+      if (!priv_check[priv_index] || nx_fault)
         page_fault(ERROR_PROTECTION, laddr, pl, isWrite, access_type);
 
       // Update PDPE A bit if needed.
@@ -1021,12 +1021,12 @@ bx_phy_address BX_CPU_C::translate_linear(bx_address laddr, unsigned curr_pl, un
   // pointer in the TLB cache. Note if the request is vetoed, NULL
   // will be returned, and it's OK to OR zero in anyways.
   BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr =
-    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, 
+    (bx_hostpageaddr_t) BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
        A20ADDR(ppf), rw, access_type);
 
   if (BX_CPU_THIS_PTR TLB.entry[TLB_index].hostPageAddr) {
     // All access allowed also via direct pointer
-    accessBits |= (accessBits & 0xff00) >> 8; 
+    accessBits |= (accessBits & 0xff00) >> 8;
   }
 #endif
   BX_CPU_THIS_PTR TLB.entry[TLB_index].accessBits = accessBits;
@@ -1083,7 +1083,7 @@ bx_bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy)
       }
     }
     paddress = pt_address + (bx_phy_address)(laddr & offset_mask);
-  } 
+  }
   else   // not PAE
 #endif
   {

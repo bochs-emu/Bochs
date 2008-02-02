@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack64.cc,v 1.36 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: stack64.cc,v 1.37 2008-02-02 21:46:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -39,8 +39,8 @@ void BX_CPU_C::POP_EqM(bxInstruction_c *i)
 
   Bit64u val64 = pop_64();
 
-  // Note: there is one little weirdism here.  It is possible to use 
-  // RSP in the modrm addressing. If used, the value of RSP after the 
+  // Note: there is one little weirdism here.  It is possible to use
+  // RSP in the modrm addressing. If used, the value of RSP after the
   // pop is used to calculate the address.
   //if (i->rm()==4 && i->sibBase()==4) {
     // call method on BX_CPU_C object

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: vm8086.cc,v 1.37 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: vm8086.cc,v 1.38 2008-02-02 21:46:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -131,7 +131,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
 #if BX_SUPPORT_VME
   if (CR4_VME_ENABLED && BX_CPU_THIS_PTR get_IOPL() < 3)
   {
-    if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) || 
+    if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
          (flags16 & EFlagsTFMask))
     {
       BX_DEBUG(("iret16_stack_return_from_v86(): #GP(0) in VME mode"));
@@ -142,7 +142,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
     EIP = (Bit32u) ip;
 
     // IF, IOPL unchanged, EFLAGS.VIF = TMP_FLAGS.IF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
                             EFlagsDFMask | EFlagsNTMask | EFlagsVIFMask;
     Bit32u flags32 = (Bit32u) flags16;
     if (BX_CPU_THIS_PTR get_IF()) flags32 |= EFlagsVIFMask;
@@ -168,7 +168,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
   Bit32u eip, cs_raw, flags32;
   // Build a mask of the following bits:
   // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-  Bit32u change_mask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsIFMask 
+  Bit32u change_mask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsIFMask
                          | EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
 
 #if BX_CPU_LEVEL >= 4
@@ -180,7 +180,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
     BX_DEBUG(("iret32_stack_return_from_v86(): can't pop 12 bytes from the stack"));
     exception(BX_SS_EXCEPTION, 0, 0);
   }
-  
+
   eip     = pop_32();
   cs_raw  = pop_32();
   flags32 = pop_32();

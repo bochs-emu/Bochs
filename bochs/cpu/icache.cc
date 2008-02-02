@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.cc,v 1.4 2008-01-22 16:20:30 sshwarts Exp $
+// $Id: icache.cc,v 1.5 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -133,7 +133,7 @@ bxInstruction_c* BX_CPU_C::fetchInstructionTrace(bxInstruction_c *iStorage, unsi
          // tracing.
          break;
       }
-      // First instruction is boundary fetch, return iStorage and leave 
+      // First instruction is boundary fetch, return iStorage and leave
       // the trace cache entry invalid (do not cache the instruction)
       trace->writeStamp = ICacheWriteStampInvalid;
       boundaryFetch(fetchPtr, remainingInPage, iStorage);
@@ -207,7 +207,7 @@ void BX_CPU_C::instrumentTraces(void)
   for (i=0; i<BxICacheEntries; i++, e++) {
     if (e->writeStamp == currPageWriteStamp)
       trace_length[e->ilen-1]++;
-    else 
+    else
       invalid_entries++;
   }
 

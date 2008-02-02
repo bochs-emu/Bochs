@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: io.cc,v 1.51 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: io.cc,v 1.52 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -659,7 +659,7 @@ void BX_CPU_C::OUTSW_DXXw(bxInstruction_c *i)
   {
     Bit32u esi;
     Bit32u incr = 2;
-  
+
     if (i->as32L())
       esi = ESI;
     else

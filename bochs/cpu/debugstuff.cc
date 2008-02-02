@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: debugstuff.cc,v 1.91 2008-02-01 13:25:23 sshwarts Exp $
+// $Id: debugstuff.cc,v 1.92 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -118,7 +118,7 @@ const char* cpu_state_string(Bit32u debug_trap)
 
 void BX_CPU_C::debug(bx_address offset)
 {
-  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()), 
+  BX_INFO(("CPU is in %s (%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
     cpu_state_string(BX_CPU_THIS_PTR debug_trap)));
   BX_INFO(("CS.d_b = %u bit",
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b ? 32 : 16));
@@ -239,9 +239,9 @@ void BX_CPU_C::debug(bx_address offset)
 #endif
 
 #if BX_SUPPORT_X86_64
-  BX_INFO(("| RIP=%08x%08x (%08x%08x)", 
+  BX_INFO(("| RIP=%08x%08x (%08x%08x)",
     (unsigned) BX_CPU_THIS_PTR eip_reg.dword.rip_upper, (unsigned) EIP,
-    (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32), 
+    (unsigned) (BX_CPU_THIS_PTR prev_rip >> 32),
     (unsigned) (BX_CPU_THIS_PTR prev_rip & 0xffffffff)));
   BX_INFO(("| CR0=0x%08x CR1=0x%x CR2=0x%08x%08x",
     (unsigned) (BX_CPU_THIS_PTR cr0.val32), 0,

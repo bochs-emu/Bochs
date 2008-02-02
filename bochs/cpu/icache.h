@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: icache.h,v 1.24 2008-01-29 17:13:07 sshwarts Exp $
+// $Id: icache.h,v 1.25 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -41,9 +41,9 @@ const Bit32u ICacheFetchModeMask     = ~ICacheWriteStampMask;
 
 class bxPageWriteStampTable
 {
-  // A table (dynamically allocated) to store write-stamp generation IDs.  
-  // Each time a write occurs to a physical page, a generation ID is 
-  // decremented. Only iCache entries which have write stamps matching 
+  // A table (dynamically allocated) to store write-stamp generation IDs.
+  // Each time a write occurs to a physical page, a generation ID is
+  // decremented. Only iCache entries which have write stamps matching
   // the physical page write stamp are valid.
 
   Bit32u *pageWriteStampTable;
@@ -66,17 +66,17 @@ public:
 
   BX_CPP_INLINE Bit32u getPageWriteStamp(bx_phy_address pAddr) const
   {
-    if (pAddr < memSizeInBytes) 
+    if (pAddr < memSizeInBytes)
        return pageWriteStampTable[pAddr>>12];
-    else 
+    else
        return ICacheWriteStampInvalid;
   }
 
   BX_CPP_INLINE const Bit32u *getPageWriteStampPtr(bx_phy_address pAddr) const
   {
-    if (pAddr < memSizeInBytes) 
+    if (pAddr < memSizeInBytes)
        return &pageWriteStampTable[pAddr>>12];
-    else 
+    else
        return &ICacheWriteStampInvalid;
   }
 
@@ -161,7 +161,7 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 BX_CPP_INLINE void bxICache_c::purgeICacheEntries(void)
 {
   bxICacheEntry_c* e = entry;
-    
+
   // Since the write stamps may overflow if we always simply decrese them,
   // this function has to be called often enough that we can reset them
   // (without invalidating the cache).

@@ -26,7 +26,7 @@ TODO (know issues in CPU model):
 [!] Some of APIC functionality still not implemented, for example
 
     - Globally disabled APIC
-    - NMI, SMI, INIT signals, LVT pins handling 
+    - NMI, SMI, INIT signals, LVT pins handling
     - Filter interrupts according processor priority (PPR)
 
 [!] REP NOP is PAUSE (on P4/XEON)
@@ -35,7 +35,7 @@ TODO (know issues in CPU model):
     This processor should yield to the other one, as we are anyhow waiting
     for a lock, and any other processor is responsible for this.
 
-[!] AMD and Intel x86_64 implementations are different. 
+[!] AMD and Intel x86_64 implementations are different.
     Currently Bochs emulation is according to AMD version.
     Do we need to support both ?
 

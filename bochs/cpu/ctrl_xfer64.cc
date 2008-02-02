@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer64.cc,v 1.62 2008-01-29 17:13:06 sshwarts Exp $
+// $Id: ctrl_xfer64.cc,v 1.63 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -480,7 +480,7 @@ void BX_CPU_C::JCXZ64_Jb(bxInstruction_c *i)
 // There is some weirdness in LOOP instructions definition. If an exception
 // was generated during the instruction execution (for example #GP fault
 // because EIP was beyond CS segment limits) CPU state should restore the
-// state prior to instruction execution. 
+// state prior to instruction execution.
 //
 // The final point that we are not allowed to decrement ECX register before
 // it is known that no exceptions can happen.

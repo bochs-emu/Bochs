@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse.cc,v 1.54 2008-01-10 19:37:55 sshwarts Exp $
+// $Id: sse.cc,v 1.55 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -51,7 +51,7 @@ void BX_CPU_C::PSHUFB_VdqWdq(bxInstruction_c *i)
     readVirtualDQwordAligned(i->seg(), RMAddr(i), (Bit8u *) &op2);
   }
 
-  for(unsigned j=0; j<16; j++) 
+  for(unsigned j=0; j<16; j++)
   {
     unsigned mask = op2.xmmubyte(j);
     if (mask & 0x80)
@@ -1468,7 +1468,7 @@ void BX_CPU_C::MPSADBW_VdqWdqIb(bxInstruction_c *i)
   for (unsigned j=0; j < 8; j++)
   {
      result.xmm16u(j) = 0;
-    
+
      for (unsigned k=0; k < 4; k++) {
         Bit8u temp1 = op1.xmmubyte(j + k + dst_offset);
         Bit8u temp2 = op2.xmmubyte(    k + src_offset);
@@ -1477,7 +1477,7 @@ void BX_CPU_C::MPSADBW_VdqWdqIb(bxInstruction_c *i)
         else
             result.xmm16u(j) += (temp2 - temp1);
      }
-  } 
+  }
 
   BX_WRITE_XMM_REG(i->nnn(), result);
 #else
@@ -2187,7 +2187,7 @@ void BX_CPU_C::EXTRQ_VdqIbIb(bxInstruction_c *i)
   BX_PANIC(("EXTRQ_VdqIbIb: still not implemented"));
 #else
   BX_INFO(("EXTRQ_VdqIbIb: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -2198,7 +2198,7 @@ void BX_CPU_C::EXTRQ_VdqUdq(bxInstruction_c *i)
   BX_PANIC(("EXTRQ_VdqUdq: still not implemented"));
 #else
   BX_INFO(("EXTRQ_VdqUdq: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -2209,7 +2209,7 @@ void BX_CPU_C::INSERTQ_VdqUdqIbIb(bxInstruction_c *i)
   BX_PANIC(("INSERTQ_VdqUdqIbIb: still not implemented"));
 #else
   BX_INFO(("INSERTQ_VdqUdqIbIb: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -2220,7 +2220,7 @@ void BX_CPU_C::INSERTQ_VdqUdq(bxInstruction_c *i)
   BX_PANIC(("INSERTQ_VdqUdq: still not implemented"));
 #else
   BX_INFO(("INSERTQ_VdqUdq: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -2551,9 +2551,9 @@ void BX_CPU_C::PSUBUSB_VdqWdq(bxInstruction_c *i)
 
   result.xmm64u(0) = result.xmm64u(1) = 0;
 
-  for(unsigned j=0; j<16; j++) 
+  for(unsigned j=0; j<16; j++)
   {
-      if(op1.xmmubyte(j) > op2.xmmubyte(j)) 
+      if(op1.xmmubyte(j) > op2.xmmubyte(j))
       {
           result.xmmubyte(j) = op1.xmmubyte(j) - op2.xmmubyte(j);
       }
@@ -2587,9 +2587,9 @@ void BX_CPU_C::PSUBUSW_VdqWdq(bxInstruction_c *i)
 
   result.xmm64u(0) = result.xmm64u(1) = 0;
 
-  for(unsigned j=0; j<8; j++) 
+  for(unsigned j=0; j<8; j++)
   {
-      if(op1.xmm16u(j) > op2.xmm16u(j)) 
+      if(op1.xmm16u(j) > op2.xmm16u(j))
       {
            result.xmm16u(j) = op1.xmm16u(j) - op2.xmm16u(j);
       }
@@ -3005,7 +3005,7 @@ void BX_CPU_C::PMULHUW_VdqWdq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_XMM_REG(i->nnn(), op1);
-#else                                        
+#else
   BX_INFO(("PMULHUW_VdqWdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
 #endif
@@ -3495,7 +3495,7 @@ void BX_CPU_C::PMADDWD_VdqWdq(bxInstruction_c *i)
         result.xmm32u(j) = 0x80000000;
     }
     else {
-      result.xmm32u(j) = 
+      result.xmm32u(j) =
         Bit32s(op1.xmm16s(2*j+0)) * Bit32s(op2.xmm16s(2*j+0)) +
         Bit32s(op1.xmm16s(2*j+1)) * Bit32s(op2.xmm16s(2*j+1));
     }

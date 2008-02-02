@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.h,v 1.419 2008-01-29 22:26:29 sshwarts Exp $
+// $Id: cpu.h,v 1.420 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -85,9 +85,9 @@
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
-/* WARNING: 
+/* WARNING:
    Only BX_CPU_C member functions can use these shortcuts safely!
-   Functions that use the shortcuts outside of BX_CPU_C might work 
+   Functions that use the shortcuts outside of BX_CPU_C might work
    when BX_USE_CPU_SMF=1 but will fail when BX_USE_CPU_SMF=0
    (for example in SMP mode).
 */
@@ -321,7 +321,7 @@
 
 #define BX_MODE_IA32_REAL       0x0   // CR0.PE=0                |
 #define BX_MODE_IA32_V8086      0x1   // CR0.PE=1, EFLAGS.VM=1   | EFER.LMA=0
-#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   | 
+#define BX_MODE_IA32_PROTECTED  0x2   // CR0.PE=1, EFLAGS.VM=0   |
 #define BX_MODE_LONG_COMPAT     0x3   // EFER.LMA = 1, CR0.PE=1, CS.L=0
 #define BX_MODE_LONG_64         0x4   // EFER.LMA = 1, CR0.PE=1, CS.L=1
 
@@ -789,7 +789,7 @@ public: // for now...
   // esi: source index
   // edi: destination index
   // esp: stack pointer
-  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS];
+  bx_gen_reg_t gen_reg[BX_GENERAL_REGISTERS+1];
 
   // instruction pointer
   bx_eip_reg_t eip_reg;
@@ -863,7 +863,7 @@ public: // for now...
   Bit32u smbase;
 
 #if BX_CPU_LEVEL >= 5
-  bx_regs_msr_t msr;  
+  bx_regs_msr_t msr;
 #endif
 
 #if BX_SUPPORT_FPU || BX_SUPPORT_MMX
@@ -1725,13 +1725,13 @@ public: // for now...
 
 #if BX_SUPPORT_FPU
   // load/store
-  BX_SMF void FLD_STi(bxInstruction_c *);  
+  BX_SMF void FLD_STi(bxInstruction_c *);
   BX_SMF void FLD_SINGLE_REAL(bxInstruction_c *);
   BX_SMF void FLD_DOUBLE_REAL(bxInstruction_c *);
   BX_SMF void FLD_EXTENDED_REAL(bxInstruction_c *);
   BX_SMF void FILD_WORD_INTEGER(bxInstruction_c *);
   BX_SMF void FILD_DWORD_INTEGER(bxInstruction_c *);
-  BX_SMF void FILD_QWORD_INTEGER(bxInstruction_c *);  
+  BX_SMF void FILD_QWORD_INTEGER(bxInstruction_c *);
   BX_SMF void FBLD_PACKED_BCD(bxInstruction_c *);
 
   BX_SMF void FST_STi(bxInstruction_c *);
@@ -1762,13 +1762,13 @@ public: // for now...
   BX_SMF void FNSTSW_AX(bxInstruction_c *);
 
   // const
-  BX_SMF void FLD1(bxInstruction_c *); 
+  BX_SMF void FLD1(bxInstruction_c *);
   BX_SMF void FLDL2T(bxInstruction_c *);
   BX_SMF void FLDL2E(bxInstruction_c *);
   BX_SMF void FLDPI(bxInstruction_c *);
   BX_SMF void FLDLG2(bxInstruction_c *);
   BX_SMF void FLDLN2(bxInstruction_c *);
-  BX_SMF void FLDZ(bxInstruction_c *);                        
+  BX_SMF void FLDZ(bxInstruction_c *);
 
   // add
   BX_SMF void FADD_ST0_STj(bxInstruction_c *);
@@ -1827,7 +1827,7 @@ public: // for now...
   BX_SMF void FICOM_DWORD_INTEGER(bxInstruction_c *);
   BX_SMF void FCMOV_ST0_STj(bxInstruction_c *);
 
-  BX_SMF void FCOMPP(bxInstruction_c *);  
+  BX_SMF void FCOMPP(bxInstruction_c *);
   BX_SMF void FUCOMPP(bxInstruction_c *);
 
   // misc
@@ -2023,7 +2023,7 @@ public: // for now...
   BX_SMF void CVTPD2PI_PqWpd(bxInstruction_c *);
   BX_SMF void CVTSD2SI_GdWsd(bxInstruction_c *);
   BX_SMF void UCOMISD_VsdWsd(bxInstruction_c *);            	
-  BX_SMF void COMISD_VpdWpd(bxInstruction_c *);   
+  BX_SMF void COMISD_VpdWpd(bxInstruction_c *);
   BX_SMF void MOVMSKPD_GdVRpd(bxInstruction_c *);
   BX_SMF void SQRTPD_VpdWpd(bxInstruction_c *);
   BX_SMF void SQRTSD_VsdWsd(bxInstruction_c *);
@@ -2866,13 +2866,13 @@ public: // for now...
   BX_SMF bx_bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy);
 #endif
   BX_SMF void     atexit(void);
-  
+
   // now for some ancillary functions...
   BX_SMF void cpu_loop(Bit32u max_instr_count);
   BX_SMF unsigned handleAsyncEvent(void);
   BX_SMF void boundaryFetch(Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
   BX_SMF void prefetch(void);
-  BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void) 
+  BX_SMF BX_CPP_INLINE void invalidate_prefetch_q(void)
   {
     BX_CPU_THIS_PTR eipPageWindowSize = 0;
   }
@@ -2942,9 +2942,9 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
-  BX_SMF void branch_far32(bx_selector_t *selector, 
+  BX_SMF void branch_far32(bx_selector_t *selector,
        bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl);
-  BX_SMF void branch_far64(bx_selector_t *selector, 
+  BX_SMF void branch_far64(bx_selector_t *selector,
        bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl);
 
 #if BX_SupportRepeatSpeedups
@@ -2964,7 +2964,7 @@ public: // for now...
 
   BX_SMF Bit32u FastRepINSW(bxInstruction_c *, bx_address dstOff,
        Bit16u port, Bit32u wordCount);
-  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff, 
+  BX_SMF Bit32u FastRepOUTSW(bxInstruction_c *, unsigned srcSeg, bx_address srcOff,
        Bit16u port, Bit32u wordCount);
 #endif
 
@@ -3217,7 +3217,7 @@ public: // for now...
 
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {
-  fetchModeMask = 
+  fetchModeMask =
 #if BX_SUPPORT_X86_64
     ((BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)<<30) |
 #endif
@@ -3239,7 +3239,7 @@ BX_CPP_INLINE bx_address BX_CPU_C::get_segment_base(unsigned seg)
    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64) {
      if (seg < BX_SEG_REG_FS)
        return 0;
-     else 
+     else
        return BX_CPU_THIS_PTR sregs[seg].cache.u.segment.base;
    }
 #endif

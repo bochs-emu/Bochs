@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: stack16.cc,v 1.33 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: stack16.cc,v 1.34 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -145,8 +145,8 @@ void BX_CPU_C::POP_EwM(bxInstruction_c *i)
 
   Bit16u val16 = pop_16();
 
-  // Note: there is one little weirdism here.  It is possible to use 
-  // SP in the modrm addressing. If used, the value of SP after the 
+  // Note: there is one little weirdism here.  It is possible to use
+  // SP in the modrm addressing. If used, the value of SP after the
   // pop is used to calculate the address.
   //if (i->rm()==4 && i->sibBase()==4) {
     BX_CPU_CALL_METHODR (i->ResolveModrm, (i));

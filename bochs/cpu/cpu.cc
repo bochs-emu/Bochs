@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: cpu.cc,v 1.205 2008-01-28 20:09:40 sshwarts Exp $
+// $Id: cpu.cc,v 1.206 2008-02-02 21:46:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -44,9 +44,9 @@
 
 // The CHECK_MAX_INSTRUCTIONS macro allows cpu_loop to execute a few
 // instructions and then return so that the other processors have a chance to
-// run.  This is used by bochs internal debugger or when simulating 
+// run.  This is used by bochs internal debugger or when simulating
 // multiple processors.
-// 
+//
 // If maximum instructions have been executed, return. The zero-count
 // means run forever.
 #if BX_SUPPORT_SMP || BX_DEBUGGER
@@ -69,8 +69,8 @@ void BX_CPU_C::cpu_loop(Bit32u max_instr_count)
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 #endif
 
-  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) 
-  { 
+  if (setjmp(BX_CPU_THIS_PTR jmp_buf_env))
+  {
     // only from exception function we can get here ...
     BX_INSTR_NEW_INSTRUCTION(BX_CPU_ID);
 #if BX_DEBUGGER || BX_EXTERNAL_DEBUGGER || BX_GDBSTUB
@@ -338,7 +338,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
     while (1)
 #endif
     {
-      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) || 
+      if ((BX_CPU_INTR && (BX_CPU_THIS_PTR get_IF() || (BX_CPU_THIS_PTR debug_trap & BX_DEBUG_TRAP_MWAIT_IF))) ||
            BX_CPU_THIS_PTR nmi_pending || BX_CPU_THIS_PTR smi_pending)
       {
         // interrupt ends the HALT condition
@@ -355,7 +355,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
         break;
       }
       // for multiprocessor simulation, even if this CPU is halted we still
-      // must give the others a chance to simulate.  If an interrupt has 
+      // must give the others a chance to simulate.  If an interrupt has
       // arrived, then clear the HALT condition; otherwise just return from
       // the CPU loop with stop_reason STOP_CPU_HALTED.
 #if BX_SUPPORT_SMP
@@ -534,7 +534,7 @@ unsigned BX_CPU_C::handleAsyncEvent(void)
   if ( !(BX_CPU_INTR ||
          BX_CPU_THIS_PTR debug_trap ||
          BX_HRQ ||
-         BX_CPU_THIS_PTR get_TF() 
+         BX_CPU_THIS_PTR get_TF()
 #if BX_X86_DEBUGGER
          || (BX_CPU_THIS_PTR dr7 & 0xff)
 #endif
@@ -586,7 +586,7 @@ void BX_CPU_C::prefetch(void)
 
   BX_CPU_THIS_PTR pAddrA20Page = pAddr & 0xfffff000;
   BX_CPU_THIS_PTR eipFetchPtr =
-    BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS, 
+    BX_CPU_THIS_PTR mem->getHostMemAddr(BX_CPU_THIS,
           BX_CPU_THIS_PTR pAddrA20Page, BX_READ, CODE_ACCESS);
 
   // Sanity checks
@@ -729,16 +729,16 @@ bx_bool BX_CPU_C::dbg_instruction_epilog(void)
 extern unsigned dbg_show_mask;
 
 bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
-{ 
+{
   Bit64u tt = bx_pc_system.time_ticks();
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
   BX_CPU_THIS_PTR guard_found.cs  = cs;
   BX_CPU_THIS_PTR guard_found.eip = debug_eip;
-  BX_CPU_THIS_PTR guard_found.laddr = 
+  BX_CPU_THIS_PTR guard_found.laddr =
     BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + debug_eip;
-  BX_CPU_THIS_PTR guard_found.is_32bit_code = 
+  BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
 
@@ -747,7 +747,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
   // loop due to a long jump. Thats why we check at start of instr.
   // Downside is that we show the instruction about to be executed
   // (not the one generating the mode switch).
-  if (BX_CPU_THIS_PTR mode_break && 
+  if (BX_CPU_THIS_PTR mode_break &&
      (BX_CPU_THIS_PTR dbg_cpu_mode != BX_CPU_THIS_PTR get_cpu_mode()))
   {
     BX_INFO(("[" FMT_LL "d] Caught mode switch breakpoint, switching from '%s' to '%s'",
@@ -791,7 +791,7 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
           (tt != BX_CPU_THIS_PTR guard_found.time_tick))
       {
         for (unsigned i=0; i<bx_guard.iaddr.num_linear; i++) {
-          if (bx_guard.iaddr.lin[i].enabled && 
+          if (bx_guard.iaddr.lin[i].enabled &&
              (bx_guard.iaddr.lin[i].addr == BX_CPU_THIS_PTR guard_found.laddr))
           {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
@@ -834,12 +834,12 @@ bx_bool BX_CPU_C::dbg_check_begin_instr_bpoint(void)
 bx_bool BX_CPU_C::dbg_check_end_instr_bpoint(void)
 {
   BX_CPU_THIS_PTR guard_found.icount++;
-  BX_CPU_THIS_PTR guard_found.cs  = 
+  BX_CPU_THIS_PTR guard_found.cs  =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   BX_CPU_THIS_PTR guard_found.eip = RIP;
-  BX_CPU_THIS_PTR guard_found.laddr = 
+  BX_CPU_THIS_PTR guard_found.laddr =
     BX_CPU_THIS_PTR get_segment_base(BX_SEG_REG_CS) + RIP;
-  BX_CPU_THIS_PTR guard_found.is_32bit_code = 
+  BX_CPU_THIS_PTR guard_found.is_32bit_code =
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
   BX_CPU_THIS_PTR guard_found.is_64bit_code = Is64BitMode();
 

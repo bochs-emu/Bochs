@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: proc_ctrl.cc,v 1.197 2008-02-01 13:25:23 sshwarts Exp $
+// $Id: proc_ctrl.cc,v 1.198 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -69,10 +69,10 @@ void BX_CPU_C::PREFETCH(bxInstruction_c *i)
 }
 
 //
-// The shutdown state is very similar to the state following the exection 
-// if HLT instruction. In this mode the processor stops executing 
-// instructions until #NMI, #SMI, #RESET or #INIT is received. If 
-// shutdown occurs why in NMI interrupt handler or in SMM, a hardware 
+// The shutdown state is very similar to the state following the exection
+// if HLT instruction. In this mode the processor stops executing
+// instructions until #NMI, #SMI, #RESET or #INIT is received. If
+// shutdown occurs why in NMI interrupt handler or in SMM, a hardware
 // reset must be used to restart the processor execution.
 //
 void BX_CPU_C::shutdown(void)
@@ -90,7 +90,7 @@ void BX_CPU_C::shutdown(void)
 
   BX_INSTR_HLT(BX_CPU_ID);
 
-#if BX_USE_IDLE_HACK  
+#if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();
 #endif
 
@@ -124,7 +124,7 @@ void BX_CPU_C::HLT(bxInstruction_c *i)
 
   BX_INSTR_HLT(BX_CPU_ID);
 
-#if BX_USE_IDLE_HACK  
+#if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();
 #endif
 }
@@ -235,7 +235,7 @@ void BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_DdRd(): rm field not a register!"));
@@ -353,7 +353,7 @@ void BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
   }
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RdDd(): rm field not a register!"));
@@ -430,7 +430,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_DqRq(): rm field not a register!"));
@@ -492,7 +492,7 @@ void BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
            (((val_64>>28) & 3)==2) )
       {
         // IO breakpoints (10b) are not yet supported.
-        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint", 
+        BX_PANIC(("MOV_DqRq: write of %08x:%08x contains IO breakpoint",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       }
       if ( (((val_64>>18) & 3)==2) ||
@@ -538,7 +538,7 @@ void BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
   }
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RqDq(): rm field not a register!"));
@@ -608,7 +608,7 @@ void BX_CPU_C::MOV_CdRd(bxInstruction_c *i)
   invalidate_prefetch_q();
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_CdRd(): rm field not a register!"));
@@ -663,7 +663,7 @@ void BX_CPU_C::MOV_RdCd(bxInstruction_c *i)
    */
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RdCd(): rm field not a register!"));
@@ -716,7 +716,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
   }
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_CqRq(): rm field not a register!"));
@@ -730,12 +730,12 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
       SetCR0((Bit32u) val_64);
       break;
     case 2: /* CR2 */
-      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x", 
+      BX_DEBUG(("MOV_CqRq: write to CR2 of %08x:%08x",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       BX_CPU_THIS_PTR cr2 = val_64;
       break;
     case 3: // CR3
-      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x", 
+      BX_DEBUG(("MOV_CqRq: write to CR3 of %08x:%08x",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       if (val_64 & BX_CONST64(0xffffffff00000000)) {
           BX_PANIC(("CR3 write: Only 32 bit physical address space is emulated !"));
@@ -747,7 +747,7 @@ void BX_CPU_C::MOV_CqRq(bxInstruction_c *i)
     case 4: // CR4
       //  Protected mode: #GP(0) if attempt to write a 1 to
       //  any reserved bit of CR4
-      BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x", 
+      BX_DEBUG(("MOV_CqRq: write to CR4 of %08x:%08x",
           (Bit32u)(val_64 >> 32), (Bit32u)(val_64 & 0xFFFFFFFF)));
       if (! SetCR4((Bit32u) val_64))
         exception(BX_GP_EXCEPTION, 0, 0);
@@ -788,7 +788,7 @@ void BX_CPU_C::MOV_RqCq(bxInstruction_c *i)
   }
 
   /* This instruction is always treated as a register-to-register,
-   * regardless of the encoding of the MOD field in the MODRM byte.   
+   * regardless of the encoding of the MOD field in the MODRM byte.
    */
   if (!i->modC0())
     BX_PANIC(("MOV_RqCq(): rm field not a register!"));
@@ -923,7 +923,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
 
   if (v8086_mode()) BX_PANIC(("proc_ctrl: LOADALL in v8086 mode unsupported"));
 
-  if (BX_CPU_THIS_PTR cr0.get_PE()) 
+  if (BX_CPU_THIS_PTR cr0.get_PE())
   {
     BX_PANIC(("LOADALL not yet supported for protected mode"));
   }
@@ -1084,7 +1084,7 @@ void BX_CPU_C::LOADALL(bxInstruction_c *i)
   {
     BX_PANIC(("loadall: SS invalid"));
   }
-  
+
   /* CS */
   BX_CPU_THIS_PTR mem->readPhysicalPage(BX_CPU_THIS, 0x822, 2, &cs_raw);
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value = cs_raw;
@@ -1231,7 +1231,7 @@ void BX_CPU_C::handleCpuModeChange(void)
       }
     }
   }
-  else 
+  else
 #endif
   {
     if (BX_CPU_THIS_PTR cr0.get_PE()) {
@@ -1400,7 +1400,7 @@ bx_bool BX_CPU_C::SetCR4(Bit32u val_32)
   // need to GP(0) if LMA=1 and PAE=1->0
   if ((BX_CPU_THIS_PTR efer.lma)
       && (!(val_32 >> 5) & 1)
-      && (BX_CPU_THIS_PTR cr4.get_PAE())) 
+      && (BX_CPU_THIS_PTR cr4.get_PAE()))
   {
     BX_ERROR(("SetCR4: attempt to change PAE when EFER.LMA=1"));
     return 0;
@@ -1471,7 +1471,7 @@ void BX_CPU_C::set_TSC (Bit32u newval)
 {
   // compute the correct setting of tsc_last_reset so that a get_TSC()
   // will return newval
-  BX_CPU_THIS_PTR msr.tsc_last_reset = 
+  BX_CPU_THIS_PTR msr.tsc_last_reset =
             bx_pc_system.time_ticks() - (Bit64u) newval;
 
   // verify
@@ -1520,25 +1520,25 @@ void BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_SEP
     case BX_MSR_SYSENTER_CS:
-      RAX = BX_CPU_THIS_PTR msr.sysenter_cs_msr;  
-      RDX = 0; 
+      RAX = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
+      RDX = 0;
       return;
 
-    case BX_MSR_SYSENTER_ESP: 
-      RAX = BX_CPU_THIS_PTR msr.sysenter_esp_msr; 
-      RDX = 0; 
+    case BX_MSR_SYSENTER_ESP:
+      RAX = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
+      RDX = 0;
       return;
 
-    case BX_MSR_SYSENTER_EIP: 
-      RAX = BX_CPU_THIS_PTR msr.sysenter_eip_msr; 
-      RDX = 0; 
+    case BX_MSR_SYSENTER_EIP:
+      RAX = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
+      RDX = 0;
       return;
-#endif 
+#endif
 
 #if BX_SUPPORT_MTRR
     case BX_MSR_MTRRCAP:   // read only MSR
       RAX = 0x508;
-      RDX = 0; 
+      RDX = 0;
       return;
 
     case BX_MSR_MTRRPHYSBASE0:
@@ -1724,10 +1724,10 @@ void BX_CPU_C::WRMSR(bxInstruction_c *i)
       return;
     }
     case BX_MSR_SYSENTER_ESP:
-      BX_CPU_THIS_PTR msr.sysenter_esp_msr = EAX; 
+      BX_CPU_THIS_PTR msr.sysenter_esp_msr = EAX;
       return;
-    case BX_MSR_SYSENTER_EIP: 
-      BX_CPU_THIS_PTR msr.sysenter_eip_msr = EAX; 
+    case BX_MSR_SYSENTER_EIP:
+      BX_CPU_THIS_PTR msr.sysenter_eip_msr = EAX;
       return;
 #endif
 
@@ -1925,7 +1925,7 @@ void BX_CPU_C::check_monitor(bx_phy_address begin_addr, unsigned len)
 void BX_CPU_C::MONITOR(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // TODO: #UD when CPL > 0 and 
+  // TODO: #UD when CPL > 0 and
   //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
   BX_DEBUG(("MONITOR instruction executed EAX = 0x08x", (unsigned) EAX));
 
@@ -1952,7 +1952,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
 
   read_virtual_checks(&BX_CPU_THIS_PTR sregs[i->seg()], addr, 1);
 
-  // set MONITOR 
+  // set MONITOR
   laddr = BX_CPU_THIS_PTR get_segment_base(i->seg()) + addr;
 
   if (BX_CPU_THIS_PTR cr0.get_PG()) {
@@ -1976,7 +1976,7 @@ void BX_CPU_C::MONITOR(bxInstruction_c *i)
 void BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
-  // TODO: #UD when CPL > 0 and 
+  // TODO: #UD when CPL > 0 and
   //       MSR 0xC0010015[MONITOR_MWAIT_USER_UNABLE] = 1
   BX_DEBUG(("MWAIT instruction executed ECX = 0x%08x", ECX));
 
@@ -2012,12 +2012,12 @@ void BX_CPU_C::MWAIT(bxInstruction_c *i)
     BX_CPU_THIS_PTR debug_trap |= BX_DEBUG_TRAP_MWAIT_IF;
   BX_CPU_THIS_PTR async_event = 1; // so processor knows to check
   // Execution of this instruction completes.  The processor
-  // will remain in a optimized state until one of the above 
+  // will remain in a optimized state until one of the above
   // conditions is met.
 
   BX_INSTR_MWAIT(BX_CPU_ID, BX_CPU_THIS_PTR monitor.monitor_begin, CACHE_LINE_SIZE, ECX);
 
-#if BX_USE_IDLE_HACK  
+#if BX_USE_IDLE_HACK
   bx_gui->sim_is_idle();
 #endif
 
@@ -2112,7 +2112,7 @@ void BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 
   invalidate_prefetch_q();
 
-  parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) | 3, 
+  parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 16) | 3,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = 1;
@@ -2306,7 +2306,7 @@ void BX_CPU_C::SYSRET(bxInstruction_c *i)
   }
 
   invalidate_prefetch_q();
-  
+
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
   {
     if (i->os64L()) {

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.65 2007-12-30 20:16:34 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.66 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -35,7 +35,7 @@
 #define RIP EIP
 #endif
 
-/* pass zero in check_rpl if no needed selector RPL checking for 
+/* pass zero in check_rpl if no needed selector RPL checking for
    non-conforming segments */
 void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)
 {
@@ -130,7 +130,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   invalidate_prefetch_q();
 }
 
-  void BX_CPP_AttrRegparmN(1) 
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::branch_near32(Bit32u new_EIP)
 {
   // check always, not only in protected mode
@@ -148,7 +148,7 @@ BX_CPU_C::branch_near32(Bit32u new_EIP)
   EIP = new_EIP;
 }
 
-void BX_CPU_C::branch_far32(bx_selector_t *selector, 
+void BX_CPU_C::branch_far32(bx_selector_t *selector,
            bx_descriptor_t *descriptor, Bit32u eip, Bit8u cpl)
 {
   /* instruction pointer must be in code segment limit else #GP(0) */
@@ -166,7 +166,7 @@ void BX_CPU_C::branch_far32(bx_selector_t *selector,
 }
 
 #if BX_SUPPORT_X86_64
-  void BX_CPP_AttrRegparmN(1) 
+  void BX_CPP_AttrRegparmN(1)
 BX_CPU_C::branch_near64(bxInstruction_c *i)
 {
   Bit64u new_RIP = RIP + (Bit32s) i->Id();
@@ -185,7 +185,7 @@ BX_CPU_C::branch_near64(bxInstruction_c *i)
 }
 #endif
 
-void BX_CPU_C::branch_far64(bx_selector_t *selector, 
+void BX_CPU_C::branch_far64(bx_selector_t *selector,
            bx_descriptor_t *descriptor, bx_address rip, Bit8u cpl)
 {
 #if BX_SUPPORT_X86_64

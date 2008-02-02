@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: xmm.h,v 1.24 2007-11-17 23:28:33 sshwarts Exp $
+// $Id: xmm.h,v 1.25 2008-02-02 21:46:54 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -21,7 +21,7 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_SSE_EXTENSIONS_H 
+#ifndef BX_SSE_EXTENSIONS_H
 #define BX_SSE_EXTENSIONS_H
 
 /* XMM REGISTER */
@@ -104,7 +104,7 @@ typedef union bx_xmm_reg_t {
 /* store only low 32 bit of the register, rest of the register unchanged */
 #define BX_WRITE_XMM_REG_LO_DWORD(index, reg32) \
     { (BX_CPU_THIS_PTR xmm[index]).xmm32u(0) = (reg32); }
- 
+
 
 /* MXCSR REGISTER */
 
@@ -162,7 +162,7 @@ typedef union bx_xmm_reg_t {
 
 #define MXCSR_RESET 0x00001F80  /* reset value of the MXCSR register */
 
-struct BOCHSAPI bx_mxcsr_t 
+struct BOCHSAPI bx_mxcsr_t
 {
   Bit32u mxcsr;
 
@@ -217,7 +217,7 @@ struct BOCHSAPI bx_mxcsr_t
   is  represented  by  the saturated value -128 (0x80). If it is greater
   than 127, it is represented by the saturated value 127 (0x7F).
 */
-Bit8s SaturateWordSToByteS(Bit16s value) 
+Bit8s SaturateWordSToByteS(Bit16s value)
 BX_CPP_AttrRegparmN(1);
 
 /*
@@ -227,7 +227,7 @@ BX_CPP_AttrRegparmN(1);
   greater  than  32767,  it  is represented by the saturated value 32767
   (0x7FFF).
 */
-Bit16s SaturateDwordSToWordS(Bit32s value) 
+Bit16s SaturateDwordSToWordS(Bit32s value)
 BX_CPP_AttrRegparmN(1);
 
 /*
@@ -236,7 +236,7 @@ BX_CPP_AttrRegparmN(1);
   is  represented  by  the  saturated value zero (0x00).If it is greater
   than 255 it is represented by the saturated value 255 (0xFF).
 */
-Bit8u SaturateWordSToByteU(Bit16s value) 
+Bit8u SaturateWordSToByteU(Bit16s value)
 BX_CPP_AttrRegparmN(1);
 
 /*
@@ -246,7 +246,7 @@ BX_CPP_AttrRegparmN(1);
   (0x0000).  If  it  is greater  than  65535,  it  is represented by
   the saturated value 65535 (0xFFFF).
 */
-Bit16u SaturateDwordSToWordU(Bit32s value) 
+Bit16u SaturateDwordSToWordU(Bit32s value)
 BX_CPP_AttrRegparmN(1);
 
 #endif // BX_SUPPORT_SSE

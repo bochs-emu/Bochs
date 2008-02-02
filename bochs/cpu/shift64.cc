@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: shift64.cc,v 1.31 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: shift64.cc,v 1.32 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -407,7 +407,7 @@ void BX_CPU_C::SAR_Eq(bxInstruction_c *i)
   /* count < 64, since only lower 6 bits used */
   if (op1_64 & BX_CONST64(0x8000000000000000)) {
     result_64 = (op1_64 >> count) | (BX_CONST64(0xffffffffffffffff) << (64 - count));
-  }               
+  }
   else {
     result_64 = (op1_64 >> count);
   }

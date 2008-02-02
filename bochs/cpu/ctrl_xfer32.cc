@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer32.cc,v 1.66 2008-01-29 22:26:29 sshwarts Exp $
+// $Id: ctrl_xfer32.cc,v 1.67 2008-02-02 21:46:50 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -603,7 +603,7 @@ void BX_CPU_C::IRET32(bxInstruction_c *i)
     iret_protected(i);
     goto done;
   }
-  
+
   eip = pop_32();
 
   // CS.LIMIT in real mode is 0xffff

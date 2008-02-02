@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: apic.h,v 1.36 2007-10-15 22:07:52 sshwarts Exp $
+// $Id: apic.h,v 1.37 2008-02-02 21:46:49 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2002 Zwane Mwaikambo, Stanislav Shwartsman
@@ -68,7 +68,7 @@ public:
 #define BX_NUM_LOCAL_APICS  BX_SMP_PROCESSORS
 #define BX_LAPIC_MAX_INTS   256
 
-class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c 
+class BOCHSAPI bx_local_apic_c : public bx_generic_apic_c
 {
   Bit32u  spurious_vector;
   bx_bool software_enabled;

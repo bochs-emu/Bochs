@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: soft_int.cc,v 1.38 2008-01-22 16:20:30 sshwarts Exp $
+// $Id: soft_int.cc,v 1.39 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -137,7 +137,7 @@ void BX_CPU_C::INT_Ib(bxInstruction_c *i)
       Bit8u vme_redirection_bitmap;
       Bit16u io_base;
 
-      access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102, 
+      access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + 102,
             2, 0, BX_READ, &io_base);
       access_linear(BX_CPU_THIS_PTR tr.cache.u.system.base + io_base - 32 + (vector >> 3),
             1, 0, BX_READ, &vme_redirection_bitmap);

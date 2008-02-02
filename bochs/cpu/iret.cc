@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: iret.cc,v 1.26 2007-12-26 23:07:44 sshwarts Exp $
+// $Id: iret.cc,v 1.27 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2005 Stanislav Shwartsman
@@ -197,7 +197,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
       branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
       // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-      Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+      Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
                               EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
 #if BX_CPU_LEVEL >= 4
       changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
@@ -309,7 +309,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
     branch_far32(&cs_selector, &cs_descriptor, new_eip, cs_selector.rpl);
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | 
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask |
                             EFlagsDFMask | EFlagsNTMask | EFlagsRFMask;
 #if BX_CPU_LEVEL >= 4
     changeMask |= (EFlagsIDMask | EFlagsACMask);  // ID/AC
@@ -353,7 +353,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
   BX_DEBUG (("LONG MODE IRET"));
 
-  if (BX_CPU_THIS_PTR get_NT()) { 
+  if (BX_CPU_THIS_PTR get_NT()) {
     BX_ERROR(("iret64: return from nested task in x86-64 mode !"));
     exception(BX_GP_EXCEPTION, 0, 0);
   }
@@ -467,9 +467,9 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     writeEFlags(new_eflags, changeMask);
 
     /* we are NOT in 64-bit mode */
-    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) 
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       ESP += top_nbytes_same;
-    else 
+    else
        SP += top_nbytes_same;
   }
   else { /* INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL or 64 BIT MODE */
@@ -552,7 +552,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     branch_far64(&cs_selector, &cs_descriptor, new_rip, cs_selector.rpl);
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
-    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask | 
+    Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
                             EFlagsNTMask | EFlagsRFMask | EFlagsIDMask | EFlagsACMask;
     if (prev_cpl <= BX_CPU_THIS_PTR get_IOPL())
       changeMask |= EFlagsIFMask;

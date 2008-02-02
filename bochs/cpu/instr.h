@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.2 2008-01-29 22:26:29 sshwarts Exp $
+// $Id: instr.h,v 1.3 2008-02-02 21:46:51 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -120,7 +120,7 @@ public:
     return metaData.modRMData1;
   }
   // used in FPU only
-  BX_CPP_INLINE unsigned modrm() { 
+  BX_CPP_INLINE unsigned modrm() {
 #if BX_SUPPORT_X86_64
     return mod() | (rm() & 7) | ((nnn() & 7) << 3);
 #else

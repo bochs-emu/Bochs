@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_string.cc,v 1.4 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: sse_string.cc,v 1.5 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2007 Stanislav Shwartsman
@@ -239,7 +239,7 @@ static Bit16u aggregate(bx_bool BoolRes[16][16], unsigned len1, unsigned len2, B
           break;
         }
       }
- 
+
       if (res)
         result |= (1<<j);
     }
@@ -328,7 +328,7 @@ void BX_CPU_C::PCMPESTRM_VdqWdqIb(bxInstruction_c *i)
   }
   Bit16u result2 = aggregate(BoolRes, len1, len2, imm8);
 
-  // As defined by imm8[6], result2 is then either stored to the least 
+  // As defined by imm8[6], result2 is then either stored to the least
   // significant bits of XMM0 (zero extended to 128 bits) or expanded
   // into a byte/word-mask and then stored to XMM0
   if (imm8 & 0x40) {
@@ -457,7 +457,7 @@ void BX_CPU_C::PCMPISTRM_VdqWdqIb(bxInstruction_c *i)
   unsigned len2 = find_eos(op2, imm8);
   Bit16u result2 = aggregate(BoolRes, len1, len2, imm8);
 
-  // As defined by imm8[6], result2 is then either stored to the least 
+  // As defined by imm8[6], result2 is then either stored to the least
   // significant bits of XMM0 (zero extended to 128 bits) or expanded
   // into a byte/word-mask and then stored to XMM0
   if (imm8 & 0x40) {

@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: sse_move.cc,v 1.76 2008-01-29 17:13:09 sshwarts Exp $
+// $Id: sse_move.cc,v 1.77 2008-02-02 21:46:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2003 Stanislav Shwartsman
@@ -131,9 +131,9 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
   xmm.xmm16u(3) = BX_CPU_THIS_PTR the_i387.foo;
 
-  /* 
+  /*
    * x87 FPU IP Offset (32/64 bits)
-   * The contents of this field differ depending on the current 
+   * The contents of this field differ depending on the current
    * addressing mode (16/32/64 bit) when the FXSAVE instruction was executed:
    *   + 64-bit mode - 64-bit IP offset
    *   + 32-bit mode - 32-bit IP offset
@@ -152,19 +152,19 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm32u(2) = (Bit32u)(BX_CPU_THIS_PTR the_i387.fip) & 0xffffffff;
     xmm.xmm32u(3) =         (BX_CPU_THIS_PTR the_i387.fcs);
   }
- 
+
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
 
-  /* 
+  /*
    * x87 FPU Instruction Operand (Data) Pointer Offset (32/64 bits)
-   * The contents of this field differ depending on the current 
+   * The contents of this field differ depending on the current
    * addressing mode (16/32 bit) when the FXSAVE instruction was executed:
    *   + 64-bit mode - 64-bit offset
    *   + 32-bit mode - 32-bit offset
    *   + 16-bit mode - low 16 bits are offset; high 16 bits are reserved.
-   * x87 DS FPU Instruction Operand (Data) Pointer Selector 
+   * x87 DS FPU Instruction Operand (Data) Pointer Selector
    *   + 16 bit, in 16/32 bit mode only
    */
 #if BX_SUPPORT_X86_64
@@ -197,7 +197,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
     xmm.xmm64u(0) = fp.fraction;
     xmm.xmm64u(1) = 0;
     xmm.xmm16u(4) = fp.exp;
-    
+
     write_virtual_dqword_aligned(i->seg(), RMAddr(i)+index*16+32, (Bit8u *) &xmm);
   }
 
@@ -212,7 +212,7 @@ void BX_CPU_C::FXSAVE(bxInstruction_c *i)
   {
     // save XMM8-XMM15 only in 64-bit mode
     if (index < 8 || Is64BitMode()) {
-       write_virtual_dqword_aligned(i->seg(), 
+       write_virtual_dqword_aligned(i->seg(),
            RMAddr(i)+index*16+160, (Bit8u *) &(BX_CPU_THIS_PTR xmm[index]));
     }
   }
@@ -245,7 +245,7 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   BX_CPU_CALL_METHODR(i->ResolveModrm, (i));
 
   read_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *) &xmm);
-  
+
   BX_CPU_THIS_PTR the_i387.cwd = xmm.xmm16u(0);
   BX_CPU_THIS_PTR the_i387.swd = xmm.xmm16u(1);
   BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
@@ -305,10 +305,10 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
   /*                                 FTW
    *
-   * Note that the original format for FTW can be recreated from the stored 
-   * FTW valid bits and the stored 80-bit FP data (assuming the stored data 
+   * Note that the original format for FTW can be recreated from the stored
+   * FTW valid bits and the stored 80-bit FP data (assuming the stored data
    * was not the contents of MMX registers) using the following table:
-    
+
      | Exponent | Exponent | Fraction | J,M bits | FTW valid | x87 FTW |
      |  all 1s  |  all 0s  |  all 0s  |          |           |         |
      -------------------------------------------------------------------
@@ -335,12 +335,12 @@ void BX_CPU_C::FXRSTOR(bxInstruction_c *i)
    *
    * The J-bit is defined to be the 1-bit binary integer to the left of
    * the decimal place in the significand.
-   * 
-   * The M-bit is defined to be the most significant bit of the fractional 
-   * portion of the significand (i.e., the bit immediately to the right of 
-   * the decimal place). When the M-bit is the most significant bit of the 
-   * fractional portion  of the significand, it must be  0 if the fraction 
-   * is all 0's.  
+   *
+   * The M-bit is defined to be the most significant bit of the fractional
+   * portion of the significand (i.e., the bit immediately to the right of
+   * the decimal place). When the M-bit is the most significant bit of the
+   * fractional portion  of the significand, it must be  0 if the fraction
+   * is all 0's.
    */
 
   for(index = 7;index >= 0; index--, twd <<= 2, tag_byte <<= 1)
@@ -505,9 +505,9 @@ void BX_CPU_C::MOVSS_VssWss(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
   /* op2 is a register or memory reference */
-  if (i->modC0()) 
+  if (i->modC0())
   {
-    /* If the source operand is an XMM register, the high-order 
+    /* If the source operand is an XMM register, the high-order
             96 bits of the destination XMM register are not modified. */
     op.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->rm());
   }
@@ -537,9 +537,9 @@ void BX_CPU_C::MOVSS_WssVss(bxInstruction_c *i)
   Bit32u val32 = BX_READ_XMM_REG_LO_DWORD(i->nnn());
 
   /* destination is a register or memory reference */
-  if (i->modC0()) 
+  if (i->modC0())
   {
-    /* If the source operand is an XMM register, the high-order 
+    /* If the source operand is an XMM register, the high-order
             96 bits of the destination XMM register are not modified. */
     BX_WRITE_XMM_REG_LO_DWORD(i->rm(), val32);
   }
@@ -563,9 +563,9 @@ void BX_CPU_C::MOVSD_VsdWsd(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
   /* op2 is a register or memory reference */
-  if (i->modC0()) 
+  if (i->modC0())
   {
-    /* If the source operand is an XMM register, the high-order 
+    /* If the source operand is an XMM register, the high-order
             64 bits of the destination XMM register are not modified. */
     op.xmm64u(0) = BX_READ_XMM_REG_LO_QWORD(i->rm());
   }
@@ -594,9 +594,9 @@ void BX_CPU_C::MOVSD_WsdVsd(bxInstruction_c *i)
   Bit64u val64 = BX_READ_XMM_REG_LO_QWORD(i->nnn());
 
   /* destination is a register or memory reference */
-  if (i->modC0()) 
+  if (i->modC0())
   {
-    /* If the source operand is an XMM register, the high-order 
+    /* If the source operand is an XMM register, the high-order
             64 bits of the destination XMM register are not modified. */
     BX_WRITE_XMM_REG_LO_QWORD(i->rm(), val64);
   }
@@ -805,13 +805,13 @@ void BX_CPU_C::MASKMOVDQU_VdqUdq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareSSE();
 
   bx_address rdi;
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()), 
+  BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn()),
     mask = BX_READ_XMM_REG(i->rm()), temp;
 
 #if BX_SUPPORT_X86_64
   if (i->as64L()) { 	/* 64 bit address mode */
       rdi = RDI;
-  } 
+  }
   else
 #endif
   if (i->as32L()) {
@@ -872,7 +872,7 @@ void BX_CPU_C::MOVMSKPD_GdVRpd(bxInstruction_c *i)
 
   if(op.xmm32u(1) & 0x80000000) val32 |= 0x1;
   if(op.xmm32u(3) & 0x80000000) val32 |= 0x2;
- 
+
   BX_WRITE_32BIT_REGZ(i->rm(), val32);
 #else
   BX_INFO(("MOVMSKPD_GdVRpd: required SSE2, use --enable-sse option"));
@@ -1030,7 +1030,7 @@ void BX_CPU_C::MOVQ_WqVq(bxInstruction_c *i)
 
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->nnn());
 
-  if (i->modC0()) 
+  if (i->modC0())
   {
     op.xmm64u(1) = 0; /* zero-extension to 128 bits */
     BX_WRITE_XMM_REG(i->rm(), op);
@@ -1092,26 +1092,26 @@ void BX_CPU_C::PMOVMSKB_GdUdq(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->rm());
   Bit32u result = 0;
 
-  if(op.xmmubyte(0x0) & 0x80) result |= 0x0001; 
-  if(op.xmmubyte(0x1) & 0x80) result |= 0x0002; 
-  if(op.xmmubyte(0x2) & 0x80) result |= 0x0004; 
-  if(op.xmmubyte(0x3) & 0x80) result |= 0x0008; 
-  if(op.xmmubyte(0x4) & 0x80) result |= 0x0010; 
-  if(op.xmmubyte(0x5) & 0x80) result |= 0x0020; 
-  if(op.xmmubyte(0x6) & 0x80) result |= 0x0040; 
-  if(op.xmmubyte(0x7) & 0x80) result |= 0x0080; 
-  if(op.xmmubyte(0x8) & 0x80) result |= 0x0100; 
-  if(op.xmmubyte(0x9) & 0x80) result |= 0x0200; 
-  if(op.xmmubyte(0xA) & 0x80) result |= 0x0400; 
-  if(op.xmmubyte(0xB) & 0x80) result |= 0x0800; 
-  if(op.xmmubyte(0xC) & 0x80) result |= 0x1000; 
-  if(op.xmmubyte(0xD) & 0x80) result |= 0x2000; 
-  if(op.xmmubyte(0xE) & 0x80) result |= 0x4000; 
-  if(op.xmmubyte(0xF) & 0x80) result |= 0x8000; 
+  if(op.xmmubyte(0x0) & 0x80) result |= 0x0001;
+  if(op.xmmubyte(0x1) & 0x80) result |= 0x0002;
+  if(op.xmmubyte(0x2) & 0x80) result |= 0x0004;
+  if(op.xmmubyte(0x3) & 0x80) result |= 0x0008;
+  if(op.xmmubyte(0x4) & 0x80) result |= 0x0010;
+  if(op.xmmubyte(0x5) & 0x80) result |= 0x0020;
+  if(op.xmmubyte(0x6) & 0x80) result |= 0x0040;
+  if(op.xmmubyte(0x7) & 0x80) result |= 0x0080;
+  if(op.xmmubyte(0x8) & 0x80) result |= 0x0100;
+  if(op.xmmubyte(0x9) & 0x80) result |= 0x0200;
+  if(op.xmmubyte(0xA) & 0x80) result |= 0x0400;
+  if(op.xmmubyte(0xB) & 0x80) result |= 0x0800;
+  if(op.xmmubyte(0xC) & 0x80) result |= 0x1000;
+  if(op.xmmubyte(0xD) & 0x80) result |= 0x2000;
+  if(op.xmmubyte(0xE) & 0x80) result |= 0x4000;
+  if(op.xmmubyte(0xF) & 0x80) result |= 0x8000;
 
   /* now write result back to destination */
   BX_WRITE_32BIT_REGZ(i->nnn(), result);
-  
+
 #else
   BX_INFO(("PMOVMSKB_GdUdq: required SSE2, use --enable-sse option"));
   UndefinedOpcode(i);
@@ -1134,7 +1134,7 @@ void BX_CPU_C::MOVNTI_MdGd(bxInstruction_c *i)
 #endif
 }
 
-#if BX_SUPPORT_X86_64 
+#if BX_SUPPORT_X86_64
 
 /* 0F C3 */
 void BX_CPU_C::MOVNTI_MqGq(bxInstruction_c *i)
@@ -1161,7 +1161,7 @@ void BX_CPU_C::MOVNTPS_MpsVps(bxInstruction_c *i)
   write_virtual_dqword_aligned(i->seg(), RMAddr(i), (Bit8u *)(&BX_READ_XMM_REG(i->nnn())));
 #else
   BX_INFO(("MOVNTPS_MpsVps: required SSE, use --enable-sse option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -1174,7 +1174,7 @@ void BX_CPU_C::MOVNTSD_MsdVsd(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i), BX_READ_XMM_REG_LO_QWORD(i->nnn()));
 #else
   BX_INFO(("MOVNTSD_MsdVsd: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
@@ -1187,7 +1187,7 @@ void BX_CPU_C::MOVNTSS_MssVss(bxInstruction_c *i)
   write_virtual_dword(i->seg(), RMAddr(i), BX_READ_XMM_REG_LO_DWORD(i->nnn()));
 #else
   BX_INFO(("MOVNTSS_MssVss: required SSE4A, use --enable-sse4a option"));
-  UndefinedOpcode(i);                      
+  UndefinedOpcode(i);
 #endif
 }
 
