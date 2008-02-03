@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: carbon.cc,v 1.35 2008-01-26 00:00:29 vruppert Exp $
+// $Id: carbon.cc,v 1.36 2008-02-03 10:04:02 vruppert Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -1156,95 +1156,119 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
   unsigned long cursor_x, unsigned long cursor_y,
   bx_vga_tminfo_t tm_info)
 {
-  int           i;
-  unsigned char achar;
-  int           x, y;
-  static int    previ;
-  int           cursori;
+  unsigned char cAttr, cChar;
   Rect          destRect;
   RGBColor      fgColor, bgColor;
   GrafPtr       oldPort, savePort;
   GDHandle      saveDevice;
   GrafPtr       winGrafPtr = GetWindowPort(win);
-  unsigned      nchars;
   OSErr         theError;
-  
+  Bit8u         *old_line, *new_line;
+  unsigned int  curs, hchars, offset, rows, x, xc, y, xc;
+  bx_bool       forceUpdate = 0, blink_mode, blink_state;
+  static unsigned prev_cursor_x=0;
+  static unsigned prev_cursor_y=0;
+
   screen_state = TEXT_MODE;
 
-  if( charmap_updated == 1 ) {
+  // first check if the screen needs to be redrawn completely
+  blink_mode = (tm_info.blink_flags & BX_TEXT_BLINK_MODE) > 0;
+  blink_state = (tm_info.blink_flags & BX_TEXT_BLINK_STATE) > 0;
+  if (blink_mode) {
+    if (tm_info.blink_flags & BX_TEXT_BLINK_TOGGLE)
+      forceUpdate = 1;
+  }
+  if (charmap_updated == 1) {
     CreateVGAFont(vga_charmap);
     charmap_updated = 0;
+    forceUpdate = 1;
   }
-  
-/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get ())
-  {
-    GetGWorld(&savePort, &saveDevice);
 
-    SetGWorld(gOffWorld, NULL);
-  }*/
+  // invalidate character at previous and new cursor location
+  if((prev_cursor_y < text_rows) && (prev_cursor_x < text_cols)) {
+    curs = prev_cursor_y * tm_info.line_offset + prev_cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  }
+  if((tm_info.cs_start <= tm_info.cs_end) && (tm_info.cs_start < fontheight) &&
+     (cursor_y < text_rows) && (cursor_x < text_cols)) {
+    curs = cursor_y * tm_info.line_offset + cursor_x * 2;
+    old_text[curs] = ~new_text[curs];
+  } else {
+    curs = 0xffff;
+  }
+
   GetPort(&oldPort);
-  
+
   SetPortWindowPort(win);
 
-  //current cursor position
-  cursori = (cursor_y * text_cols + cursor_x) * 2;
+  rows = text_rows;
+  y = 0;
+  do {
+    hchars = text_cols;
+    new_line = new_text;
+    old_line = old_text;
+    x = 0;
+    offset = y * tm_info.line_offset;
+    do {
+      if (forceUpdate || (old_text[0] != new_text[0])
+          || (old_text[1] != new_text[1])) {
+        cChar = new_text[0];
+        cAttr = new_text[1];
 
-  // Number of characters on screen, variable number of rows
-  nchars = text_cols * text_rows;
-  
-  for (i=0; i<nchars*2; i+=2)
-  {
-    if (i == cursori || i == previ || new_text[i] != old_text[i] || new_text[i+1] != old_text[i+1])
-    {
-      achar = new_text[i];
-      
-//    fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
-//    bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
-      
-//    RGBForeColor(&fgColor);
-//    RGBBackColor(&bgColor);
-      
-      if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
-      {
-        PmForeColor(new_text[i+1] & 0x0F);
-        PmBackColor((new_text[i+1] & 0xF0) >> 4);
+        if (blink_mode) {
+          cAttr = new_text[1] & 0x7F;
+          if (!blink_state && (new_text[1] & 0x80))
+            cAttr = (cAttr & 0x70) | (cAttr >> 4);
+        }
+        if (offset == curs) {
+          cAttr = (cAttr >> 4) | (cAttr << 4);
+	}
+
+        if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
+          PmForeColor(new_text[1] & 0x0F);
+          if (blink_mode) {
+            PmBackColor((new_text[1] & 0x70) >> 4);
+            if (!blink_state && (new_text[1] & 0x80))
+              PmForeColor((new_text[1] & 0x70) >> 4);
+          } else {
+            PmBackColor((new_text[1] & 0xF0) >> 4);
+          }
+        } else {
+          fgColor = (**gCTable).ctTable[new_text[1] & 0x0F].rgb;
+          bgColor = (**gCTable).ctTable[(new_text[1] & 0xF0) >> 4].rgb;
+
+          RGBForeColor(&fgColor);
+          RGBBackColor(&bgColor);
+        }
+
+        xc = x * font_width;
+        yc = y * font_height;
+
+        SetRect(&destRect, xc, yc,
+          xc+font_width, yc+font_height);
+
+        CopyBits(vgafont[cChar], WINBITMAP(win),
+          &srcTextRect, &destRect, srcCopy, NULL);
+
+        if ((theError = QDError()) != noErr)
+          BX_ERROR(("mac: CopyBits returned %hd", theError));
       }
-      else
-      {
-        fgColor = (**gCTable).ctTable[new_text[i+1] & 0x0F].rgb;
-        bgColor = (**gCTable).ctTable[(new_text[i+1] & 0xF0) >> 4].rgb;
-      
-        RGBForeColor(&fgColor);
-        RGBBackColor(&bgColor);
-      }
-
-      x = ((i/2) % text_cols)*font_width;
-      y = ((i/2) / text_cols)*font_height;
-
-      SetRect(&destRect, x, y,
-        x+font_width, y+font_height);
-        
-      CopyBits( vgafont[achar], WINBITMAP(win),
-        &srcTextRect, &destRect, srcCopy, NULL);
-
-      if ((theError = QDError()) != noErr)
-        BX_ERROR(("mac: CopyBits returned %hd", theError));
-
-      if (i == cursori)   //invert the current cursor block
-      {
-        InvertRect(&destRect);
-      }
-      
-    }
-  }
+      x++;
+      new_text+=2;
+      old_text+=2;
+      offset+=2;
+    } while (--hchars);
+    y++;
+    new_text = new_line + tm_info.line_offset;
+    old_text = old_line + tm_info.line_offset;
+  } while (--rows);
  
-//previous cursor position
-  previ = cursori;
-  
+  //previous cursor position
+  prev_cursor_x = cursor_x;
+  prev_cursor_y = cursor_y;
+
   SetPort(oldPort);
-/*  if (gOffWorld != NULL) //(SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get())
-    SetGWorld(savePort, saveDevice);
-*/
+
   windowUpdatesPending = true;
 }
 
