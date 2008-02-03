@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.cc,v 1.62 2007-11-01 18:03:48 sshwarts Exp $
+// $Id: memory.cc,v 1.63 2008-02-03 20:27:05 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -104,7 +104,7 @@ BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
 
 mem_write:
 
-  // all memory access feets in single 4K page 
+  // all memory access feets in single 4K page
   if (a20addr < BX_MEM_THIS len) {
 #if BX_SUPPORT_ICACHE
     pageWriteStampTable.decWriteStamp(a20addr);
@@ -217,7 +217,7 @@ BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, voi
 #if BX_SUPPORT_IODEBUG
     bx_iodebug_c::mem_read(cpu, a20addr, len, data);
 #endif
- 
+
     BX_INSTR_PHY_READ(cpu->which_cpu(), a20addr, len);
 
 #if BX_DEBUGGER

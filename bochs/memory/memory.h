@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: memory.h,v 1.44 2007-12-10 19:05:07 sshwarts Exp $
+// $Id: memory.h,v 1.45 2008-02-03 20:27:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -74,7 +74,7 @@ private:
   bx_bool *monitor_active;
   Bit32u   n_monitors;
 #endif
-  
+
 public:
   Bit8u   *actual_vector;
   Bit8u   *vector;   // aligned correctly

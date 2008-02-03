@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: misc_mem.cc,v 1.108 2007-12-30 18:02:22 sshwarts Exp $
+// $Id: misc_mem.cc,v 1.109 2008-02-03 20:27:06 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2002  MandrakeSoft S.A.
@@ -69,7 +69,7 @@ BX_MEM_C::alloc_vector_aligned (Bit32u bytes, Bit32u alignment)
   }
   Bit64u test_mask = alignment - 1;
   BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes+test_mask)];
-  // round address forward to nearest multiple of alignment.  Alignment 
+  // round address forward to nearest multiple of alignment.  Alignment
   // MUST BE a power of two for this to work.
   Bit64u masked = ((Bit64u)(BX_MEM_THIS actual_vector + test_mask)) & ~test_mask;
   BX_MEM_THIS vector = (Bit8u *)masked;
@@ -77,7 +77,7 @@ BX_MEM_C::alloc_vector_aligned (Bit32u bytes, Bit32u alignment)
   BX_ASSERT (sizeof(masked) >= sizeof(BX_MEM_THIS vector));
   // sanity check: after realignment, everything fits in allocated space
   BX_ASSERT (BX_MEM_THIS vector+bytes <= BX_MEM_THIS actual_vector+bytes+test_mask);
-  BX_INFO (("allocated memory at %p. after alignment, vector=%p", 
+  BX_INFO (("allocated memory at %p. after alignment, vector=%p",
 	BX_MEM_THIS actual_vector, BX_MEM_THIS vector));
 }
 
@@ -90,7 +90,7 @@ void BX_MEM_C::init_memory(Bit32u memsize)
 {
   unsigned idx;
 
-  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.108 2007-12-30 18:02:22 sshwarts Exp $"));
+  BX_DEBUG(("Init $Id: misc_mem.cc,v 1.109 2008-02-03 20:27:06 sshwarts Exp $"));
 
   alloc_vector_aligned(memsize+ BIOSROMSZ + EXROMSIZE  + 4096, BX_MEM_VECTOR_ALIGN);
   BX_MEM_THIS len  = memsize;
@@ -372,7 +372,7 @@ bx_bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
     if ((addr & 0xfffe0000) == 0x000a0000) {
       if (BX_MEM_THIS smram_enable || cpu->smm_mode())
         *buf = BX_MEM_THIS vector[addr];
-      else 
+      else
         *buf = DEV_vga_mem_read(addr);
     }
 #if BX_SUPPORT_PCI
@@ -438,7 +438,7 @@ bx_bool BX_MEM_C::dbg_set_mem(bx_phy_address addr, unsigned len, Bit8u *buf)
     if ((addr & 0xfffe0000) == 0x000a0000) {
       if (BX_MEM_THIS smram_enable)
         BX_MEM_THIS vector[addr] = *buf;
-      else 
+      else
         DEV_vga_mem_write(addr, *buf);
     }
 #if BX_SUPPORT_PCI
@@ -474,7 +474,7 @@ bx_bool BX_MEM_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit32u *
 
   if (addr2 >= BX_MEM_THIS len)
     return(0); // error, specified address past last phy mem addr
-  
+
   unsigned len = 1 + addr2 - addr1;
   *crc = crc32(BX_MEM_THIS vector + addr1, len);
 
@@ -630,7 +630,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address a20Addr, unsigned 
  * One needs to provide both a read_handler and a write_handler.
  * XXX: maybe we should check for overlapping memory handlers
  */
-  bx_bool 
+  bx_bool
 BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
 		memory_handler_t write_handler, bx_phy_address begin_addr, bx_phy_address end_addr)
 {
@@ -652,7 +652,7 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
   return 1;
 }
 
-  bx_bool 
+  bx_bool
 BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler_t write_handler,
 		bx_phy_address begin_addr, bx_phy_address end_addr)
 {
@@ -661,10 +661,10 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
   for (unsigned page_idx = begin_addr >> 20; page_idx <= end_addr >> 20; page_idx++) {
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
-    while (memory_handler && 
+    while (memory_handler &&
          memory_handler->read_handler != read_handler &&
-         memory_handler->write_handler != write_handler && 
-         memory_handler->begin != begin_addr && 
+         memory_handler->write_handler != write_handler &&
+         memory_handler->begin != begin_addr &&
          memory_handler->end != end_addr)
     {
       prev = memory_handler;
@@ -679,7 +679,7 @@ BX_MEM_C::unregisterMemoryHandlers(memory_handler_t read_handler, memory_handler
     else
       BX_MEM_THIS memory_handlers[page_idx] = memory_handler->next;
     delete memory_handler;
-  }  
+  }
   return ret;
 }
 
@@ -734,7 +734,7 @@ void BX_MEM_C::clear_monitor(unsigned cpu)
 bx_bool BX_MEM_C::is_monitor(bx_phy_address begin_addr, unsigned len)
 {
   if (BX_MEM_THIS n_monitors == 0) return 0;
-  
+
   for (int i=0; i<BX_SMP_PROCESSORS;i++) {
     if (BX_MEM_THIS monitor_active[i]) {
       if (BX_CPU(i)->is_monitor(begin_addr, len))
