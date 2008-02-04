@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: instr.h,v 1.3 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: instr.h,v 1.4 2008-02-04 21:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //   Copyright (c) 2008 Stanislav Shwartsman
@@ -40,16 +40,14 @@ public:
 #endif
 
   struct {
-    // 31..29  (unused)
-    // 28..20  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
+    // 15...7  b1 (9bits of opcode; 1byte-op=0..255, 2byte-op=256..511
     //            (leave this one on top so no mask is needed)
-    // 19..19  stop trace (used with trace cache)
-    // 18..18  mod==c0 (modrm)
-    // 17..16  repUsed (0=none, 2=0xF2, 3=0xF3)
+    //  6...1  (unused - 6 bits)
+    //  0...0  stop trace (used with trace cache)
     Bit16u metaInfo3;
 
-    // 15..12  (unused)
-    // 11...8  ilen (0..15)
+    //  7...4  (unused)
+    //  3...0  ilen (0..15)
     Bit8u  metaInfo2;
 
     //  7...7  extend8bit
@@ -57,27 +55,42 @@ public:
     //  5...5  os64
     //  4...4  as32
     //  3...3  os32
-    //  2...0  seg
+    //  2...2  mod==c0 (modrm)
+    //  1...0  repUsed (0=none, 2=0xF2, 3=0xF3)
     Bit8u  metaInfo1;
   } metaInfo;
 
   struct {
-    //  31..28 (unused)
-    //  27..24 nnn     (modrm)
-    Bit8u  modRMData4;
+    //   (unused, keep for alignment)
+    //   (will be used for SSE5 destination override later)
+    Bit8u  metaData8;
 
-    //  23..20 (unused)
-    //  19..16 base            (sib)
-    Bit8u  modRMData3;
+    //   7...0 modrm
+    Bit8u  metaData7;
 
-    //  15..14 mod     (modrm)
-    //  13..12 scale           (sib)
-    //  11...8 index           (sib)
-    Bit8u  modRMData2;
+    //   7...3 (unused)
+    //   2...0 seg
+    Bit8u  metaData6;
+
+    //   7...4 (unused)
+    //   3...0 nnn     (modrm)
+    Bit8u  metaData5;
+
+    //   7...4 (unused)
+    //   3...0 base            (sib)
+    Bit8u  metaData4;
+
+    //   7...4 (unused)
+    //   3...0 index           (sib)
+    Bit8u  metaData3;
+
+    //   7...2 (unused)
+    //   1...0 scale           (sib)
+    Bit8u  metaData2;
 
     //   7...4 (unused)
     //   3...0 rm      (modrm)   // also used for opcodeReg()
-    Bit8u  modRMData1;
+    Bit8u  metaData1;
   } metaData;
 
   union {
@@ -114,48 +127,54 @@ public:
 #endif
   };
 
-  BX_CPP_INLINE unsigned opcodeReg() {
+  BX_CPP_INLINE void setOpcodeReg(unsigned opreg) {
     // The opcodeReg form (low 3 bits of the opcode byte (extended
     // by REX.B on x86-64) to be used with IxIxForm or IqForm.
-    return metaData.modRMData1;
+    metaData.metaData1 = opreg;
   }
-  // used in FPU only
+  BX_CPP_INLINE unsigned opcodeReg() {
+    return metaData.metaData1;
+  }
+  BX_CPP_INLINE void setModRM(unsigned modrm) {
+    metaData.metaData7 = modrm;
+  }
   BX_CPP_INLINE unsigned modrm() {
-#if BX_SUPPORT_X86_64
-    return mod() | (rm() & 7) | ((nnn() & 7) << 3);
-#else
-    return mod() | rm() | (nnn() << 3);
-#endif
+    return metaData.metaData7;
   }
-  BX_CPP_INLINE unsigned mod() { return metaData.modRMData2 & 0xc0; }
   BX_CPP_INLINE unsigned modC0()
   {
     // This is a cheaper way to test for modRM instructions where
     // the mod field is 0xc0.  FetchDecode flags this condition since
     // it is quite common to be tested for.
-    return metaInfo.metaInfo3 & (1<<2);
+    return metaInfo.metaInfo1 & (1<<2);
   }
   BX_CPP_INLINE unsigned assertModC0()
   {
-    return metaInfo.metaInfo3 |= (1<<2);
+    return metaInfo.metaInfo1 |= (1<<2);
   }
   BX_CPP_INLINE unsigned nnn() {
-    return metaData.modRMData4;
+    return metaData.metaData5;
   }
   BX_CPP_INLINE unsigned rm() {
-    return metaData.modRMData1;
+    return metaData.metaData1;
+  }
+  BX_CPP_INLINE void setSibScale(unsigned scale) {
+    metaData.metaData2 = scale;
   }
   BX_CPP_INLINE unsigned sibScale() {
-    return (metaData.modRMData2 >> 4) & 0x3;
+    return metaData.metaData2;
+  }
+  BX_CPP_INLINE void setSibIndex(unsigned index) {
+    metaData.metaData3 = index;
   }
   BX_CPP_INLINE unsigned sibIndex() {
-    return (metaData.modRMData2) & 0xf;
+    return metaData.metaData3;
   }
   BX_CPP_INLINE void setSibBase(unsigned base) {
-    metaData.modRMData3 = base;
+    metaData.metaData4 = base;
   }
   BX_CPP_INLINE unsigned sibBase() {
-    return metaData.modRMData3;
+    return metaData.metaData4;
   }
   BX_CPP_INLINE Bit32u displ32u() { return modRMForm.displ32u; }
   BX_CPP_INLINE Bit16u displ16u() { return modRMForm.displ16u; }
@@ -173,18 +192,18 @@ public:
   // is for Logical comparisons, eg if (i->os32L() && i->as32L()).  If you
   // want a bx_bool value, use os32B() etc.  This makes for smaller
   // code, when a strict 0 or 1 is not necessary.
-  BX_CPP_INLINE void initMetaInfo(unsigned os32, unsigned as32,
-                                  unsigned os64, unsigned as64)
+  BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
-    metaInfo.metaInfo1 = BX_SEG_REG_NULL | (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
+    metaInfo.metaInfo1 = (os32<<3) | (as32<<4) | (os64<<5) | (as64<<6);
     metaInfo.metaInfo2 = 0;
     metaInfo.metaInfo3 = 0;
+    metaData.metaData6 = BX_SEG_REG_NULL;
   }
   BX_CPP_INLINE unsigned seg(void) {
-    return metaInfo.metaInfo1 & 7;
+    return metaData.metaData6;
   }
   BX_CPP_INLINE void setSeg(unsigned val) {
-    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~7) | val;
+    metaData.metaData6 = val;
   }
 
   BX_CPP_INLINE unsigned os32L(void) {
@@ -249,13 +268,13 @@ public:
   }
 
   BX_CPP_INLINE unsigned repUsedL(void) {
-    return metaInfo.metaInfo3 & 3;
+    return metaInfo.metaInfo1 & 3;
   }
   BX_CPP_INLINE unsigned repUsedValue(void) {
-    return metaInfo.metaInfo3 & 3;
+    return metaInfo.metaInfo1 & 3;
   }
   BX_CPP_INLINE void setRepUsed(unsigned value) {
-    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~3) | (value);
+    metaInfo.metaInfo1 = (metaInfo.metaInfo1 & ~3) | (value);
   }
 
 #if BX_SUPPORT_TRACE_CACHE
@@ -270,10 +289,10 @@ public:
   // Note this is the highest field, and thus needs no masking.
   // DON'T PUT ANY FIELDS HIGHER THAN THIS ONE WITHOUT ADDING A MASK.
   BX_CPP_INLINE unsigned b1(void) {
-    return metaInfo.metaInfo3 >> 4;
+    return metaInfo.metaInfo3 >> 7;
   }
   BX_CPP_INLINE void setB1(unsigned b1) {
-    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~(0x1ff << 4)) | ((b1 & 0x1ff) << 4);
+    metaInfo.metaInfo3 = (metaInfo.metaInfo3 & ~(0x1ff << 7)) | ((b1 & 0x1ff) << 7);
   }
 };
 // <TAG-CLASS-INSTRUCTION-END>

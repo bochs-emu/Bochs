@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////
-// $Id: ctrl_xfer_pro.cc,v 1.66 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: ctrl_xfer_pro.cc,v 1.67 2008-02-04 21:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -103,17 +103,19 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.lma) {
+    unsigned mode = BX_CPU_THIS_PTR cpu_mode;
     if (descriptor->u.segment.l) {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_64;
-      BX_DEBUG(("Long Mode Activated"));
       loadSRegLMNominal(BX_SEG_REG_CS, selector->value, cpl);
     }
     else {
       BX_CPU_THIS_PTR cpu_mode = BX_MODE_LONG_COMPAT;
-      BX_DEBUG(("Compatibility Mode Activated"));
       if (BX_CPU_THIS_PTR eip_reg.dword.rip_upper != 0) {
         BX_PANIC(("handleCpuModeChange: leaving long mode with RIP upper != 0 !"));
       }
+    }
+    if (mode != BX_CPU_THIS_PTR cpu_mode) {
+      BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
     }
   }
 #endif

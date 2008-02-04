@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode.cc,v 1.163 2008-02-02 21:46:50 sshwarts Exp $
+// $Id: fetchdecode.cc,v 1.164 2008-02-04 21:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -2470,8 +2470,8 @@ BX_CPU_C::fetchDecode32(Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
 
   i->ResolveModrm = 0;
-  i->initMetaInfo(/*os32*/ is_32,  /*as32*/ is_32,
-                  /*os64*/     0,  /*as64*/     0);
+  i->init(/*os32*/ is_32,  /*as32*/ is_32,
+          /*os64*/     0,  /*as64*/     0);
 
   offset = os_32 << 9; // * 512
 
@@ -2607,10 +2607,10 @@ fetch_b1:
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->metaData.modRMData1 = rm;
-    i->metaData.modRMData2 = mod;
+    i->setModRM(b2);
+    i->metaData.metaData1 = rm;
     i->setSibBase(rm);            // initialize with rm to use BxResolve32Base
-    i->metaData.modRMData4 = nnn;
+    i->metaData.metaData5 = nnn;
 
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
@@ -2668,9 +2668,9 @@ get_8bit_displ:
         base  = sib & 0x7; sib >>= 3;
         index = sib & 0x7; sib >>= 3;
         scale = sib;
+        i->setSibIndex(index);
+        i->setSibScale(scale);
         i->setSibBase(base);
-        i->metaData.modRMData2 |= (index);
-        i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
@@ -2794,7 +2794,7 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     i->execute = BxOpcodeInfo32R[b1+offset].ExecutePtr;
-    i->metaData.modRMData1 = b1 & 7;
+    i->setOpcodeReg(b1 & 7);
   }
 
   if (lock) { // lock prefix invalid opcode
@@ -2974,7 +2974,7 @@ modrm_done:
 void BX_CPU_C::BxError(bxInstruction_c *i)
 {
   BX_DEBUG(("BxError: i with opcode=0x%x", i->b1()));
-  BX_DEBUG(("mod was %x, nnn was %u, rm was %u", i->mod(), i->nnn(), i->rm()));
+  BX_DEBUG(("modrm was 0x%02x, nnn was %u, rm was %u", i->modrm(), i->nnn(), i->rm()));
   BX_DEBUG(("WARNING: Encountered an unknown i (signalling illegal i)"));
 
   BX_CPU_THIS_PTR UndefinedOpcode(i);

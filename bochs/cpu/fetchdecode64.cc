@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////
-// $Id: fetchdecode64.cc,v 1.170 2008-02-02 21:46:51 sshwarts Exp $
+// $Id: fetchdecode64.cc,v 1.171 2008-02-04 21:28:53 sshwarts Exp $
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2001  MandrakeSoft S.A.
@@ -3372,10 +3372,10 @@ BX_CPU_C::fetchDecode64(Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
   unsigned rex_prefix = 0;
 
   i->ResolveModrm = 0;
-  i->initMetaInfo(/*os32*/ 1,  // operand size 32 override defaults to 1
-                  /*as32*/ 1,  // address size 32 override defaults to 1
-                  /*os64*/ 0,  // operand size 64 override defaults to 0
-                  /*as64*/ 1); // address size 64 override defaults to 1
+  i->init(/*os32*/ 1,  // operand size 32 override defaults to 1
+          /*as32*/ 1,  // address size 32 override defaults to 1
+          /*os64*/ 0,  // operand size 64 override defaults to 0
+          /*as64*/ 1); // address size 64 override defaults to 1
 
 fetch_b1:
   b1 = *iptr++;
@@ -3534,10 +3534,10 @@ fetch_b1:
     if ((b1 & ~3) == 0x120)
       mod = 0xc0;
 
-    i->metaData.modRMData1 = rm;
-    i->metaData.modRMData2 = mod;
+    i->setModRM(b2);
+    i->metaData.metaData1 = rm;
     i->setSibBase(rm);            // initialize with rm to use BxResolve32Base
-    i->metaData.modRMData4 = nnn;
+    i->metaData.metaData5 = nnn;
 
     // initialize displ32 with zero to include cases with no diplacement
     i->modRMForm.displ32u = 0;
@@ -3595,9 +3595,9 @@ get_8bit_displ:
         base  = (sib & 0x7) | rex_b; sib >>= 3;
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
+        i->setSibIndex(index);
+        i->setSibScale(scale);
         i->setSibBase(base);
-        i->metaData.modRMData2 |= (index);
-        i->metaData.modRMData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve64Base;
         else
@@ -3657,8 +3657,8 @@ get_8bit_displ:
         index = (sib & 0x7) | rex_x; sib >>= 3;
         scale =  sib;
         i->setSibBase(base);
-        i->metaData.modRMData2 |= (index);
-        i->metaData.modRMData2 |= (scale<<4);
+        i->metaData.metaData2 |= (index);
+        i->metaData.metaData2 |= (scale<<4);
         if (index == 4)
           i->ResolveModrm = &BX_CPU_C::BxResolve32Base;
         else
@@ -3748,7 +3748,7 @@ modrm_done:
     // the if() above after fetching the 2nd byte, so this path is
     // taken in all cases if a modrm byte is NOT required.
     i->execute = BxOpcodeInfo64R[b1+offset].ExecutePtr;
-    i->metaData.modRMData1 = (b1 & 7) | rex_b;
+    i->setOpcodeReg((b1 & 7) | rex_b);
   }
 
   if (lock) { // lock prefix invalid opcode
